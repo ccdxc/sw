@@ -188,6 +188,17 @@ model_check_uplinks(dev_handle_t *dev_handles[], uint32_t max_handles, HntapSwit
 
 }
 
+static bool
+is_broadcast(mac_addr_t mac_addr) {
+
+    for (int i = 0; i < ETHER_ADDR_LEN; i++) {
+        if (mac_addr[i] != 0xff) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void
 hntap_model_send_process (dev_handle_t *dev_handle, char *pktbuf, int size)
 {
@@ -682,10 +693,25 @@ hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles,
                          TLOG("Retransmitted TCP packet, seqno: 0x%x, dropping\n", dev_handle->flowtcp[0].seq);
                      continue;
                  }
-                 if (parallel) {
-                     hntap_model_send_process(dev_handle, pktbuf, nread + offset);
-                 } else {
-                     hntap_model_send_recv_process(dev_handle, pktbuf, nread + offset);
+                 mac_addr_t dmacAddr;
+                 struct ether_header *eth;
+                 eth = (struct ether_header*)(pktbuf);
+                 memcpy(&dmacAddr, eth->ether_dhost, sizeof(mac_addr_t));
+                 if (dev_handle->tap_ep == TAP_ENDPOINT_NET && is_broadcast(dmacAddr)) {
+		     /* If broadcast, send it on both uplinks */
+		     for (uint32_t k = 0 ; k < max_handles; k++) {
+			 if (parallel) {
+		             hntap_model_send_process(dev_handles[k], pktbuf, nread + offset);
+			 } else {
+			     hntap_model_send_recv_process(dev_handles[k], pktbuf, nread + offset);
+			 }
+		     }
+	         } else {
+                     if (parallel) {
+                         hntap_model_send_process(dev_handle, pktbuf, nread + offset);
+                     } else {
+                         hntap_model_send_recv_process(dev_handle, pktbuf, nread + offset);
+                     }
                  }
             }
         }

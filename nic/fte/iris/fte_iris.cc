@@ -216,8 +216,6 @@ ctx_t::lookup_flow_objs()
             dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
             HAL_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
-        dif_ = hal::find_if_by_handle(dep_->if_handle);
-        HAL_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
     } else {
         HAL_TRACE_INFO("fte: dest ep unknown, key={}", key_);
         if (!hal::is_forwarding_mode_host_pinned() &&
@@ -226,12 +224,25 @@ ctx_t::lookup_flow_objs()
             dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
             if (dep_) {
                 HAL_TRACE_INFO("fte: dst ep found by L2 lookup, key={}", key_);
-                dif_ = hal::find_if_by_handle(dep_->if_handle);
-                dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
+	 	dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
             }
         }
     }
 
+    if (dep_) {
+        dif_ = hal::find_if_by_handle(dep_->if_handle);
+        HAL_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
+         /* Check if LIF is known for the dep */
+        if (dif_->if_type == intf::IF_TYPE_ENIC) {
+             hal::lif_t *dlif = if_get_lif(dif_);
+             if (dlif == NULL) {
+                 /* Ignore the lookup as we don't know the lif yet */
+                 HAL_TRACE_INFO("fte: ignoring dep lookup as lif not found or discovered yet.");
+                 dif_ = NULL;
+                 dep_ = NULL;
+             }
+        }
+    }
     return HAL_RET_OK;
 }
 //-----------------------------------------------------------------------------

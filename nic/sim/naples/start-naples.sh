@@ -67,7 +67,7 @@ cd "$LOG_DIR"
 
 if [ $WITH_QEMU == 1 ]; then
     echo "Running Capri model WITH Qemu"
-    cd $PLATFORM_DIR/bin && sh setup_pcie.sh && cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=info -d type=eth,bdf=03:00.0,lif=4,intr_base=0,devcmd_pa=0x13809f000,devcmddb_pa=0x1380a0000 > $LOG_DIR/model.log 2>&1 &
+    cd $PLATFORM_DIR/bin && sh setup_pcie.sh && cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=info -d type=eth,bdf=03:00.0,lif=2,intr_base=0,devcmd_pa=0x13809b000,devcmddb_pa=0x13809c000 > $LOG_DIR/model.log 2>&1 &
     PID=`ps -eaf | grep model_server | grep -v grep | awk '{print $2}'`
 else
     echo "Running Capri model WITHOUT Qemu"

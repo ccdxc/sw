@@ -1,0 +1,61 @@
+# Scale config file representative of Goldman per NAPLES node scale configs
+# The ordering here will be the order of objects created via Agent REST
+---
+objects:
+- kind: Namespace
+  name: scale-vrf
+  count: 4
+  rest-endpoint: "/api/namespaces/"
+  spec-file: "generated/namespaces.json"
+- kind: Network
+  name: scale-nw
+  count: 8
+  rest-endpoint: "/api/networks/"
+  spec-file: "generated/networks.json"
+- kind: Endpoint
+  name: scale-ep
+  count: 32
+  rest-endpoint: "/api/endpoints/"
+  spec-file: "generated/endpoints_sim.json"
+- kind: SGPolicy
+  name: scale-sg-policy
+  count: 1
+  rest-endpoint: "/api/security/policies/"
+  spec-file: "generated/16_rules.json"
+- kind: Tunnel
+  name: scale-gre-tunnel
+  count: 8
+  rest-endpoint: "/api/tunnels/"
+  spec-file: "generated/tunnels.json"
+- kind: TCPProxyPolicy
+  name: scale-tcp-proxy
+  count: 1
+  rest-endpoint: "/api/tcp/proxies/"
+  spec-file: "generated/tcp_proxy_policies.json"
+#- kind: IPSecSAEncrypt
+#  name: scale-ipsec-encrypt-sa
+#  count: 4
+#  rest-endpoint: "/api/ipsec/encryption/"
+#  spec-file: "generated/ipsec_encryption.json"
+#- kind: IPSecSADecrypt
+#  name: scale-ipsec-decrypt-sa
+#  count: 4
+#  rest-endpoint: "/api/ipsec/decryption/"
+#  spec-file: "generated/ipsec_decryption.json"
+#- kind: IPSecPolicy
+#  name: scale-ipsec-policies
+#  count: 2
+#  rest-endpoint: "/api/ipsec/policies/"
+#  spec-file: "generated/ipsec_policies.json"
+
+# TODO Uncomment this section while validating mirror sessions and ipfix in dev
+#- kind: FlowExportPolicy
+#  name: scale-flow-export-ipfix
+#  count: 8
+#  rest-endpoint: "/api/telemetry/flowexports/"
+#  spec-file: "generated/flow_export_policies.json"
+#- kind: MirrorSession
+#  name: scale-mirror
+#  rest-endpoint: "/api/mirror/sessions/"
+#  count: 8
+#  spec-file: "generated/mirrors.json"

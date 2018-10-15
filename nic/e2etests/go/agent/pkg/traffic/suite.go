@@ -42,10 +42,9 @@ type suite struct {
 }
 
 func EpsReachable(ep *netproto.Endpoint, otherEp *netproto.Endpoint) bool {
-	if ep != otherEp && ep.GetNamespace() == otherEp.GetNamespace() &&
-		((ep.Spec.GetNetworkName() == otherEp.Spec.GetNetworkName() &&
-			ep.Spec.Interface != otherEp.Spec.Interface) ||
-			(ep.Spec.GetNetworkName() != otherEp.Spec.GetNetworkName())) {
+	if ep.GetName() != otherEp.GetName() && ep.GetNamespace() == otherEp.GetNamespace() &&
+		(ep.Spec.GetNetworkName() == otherEp.Spec.GetNetworkName() && ep.Spec.Interface != otherEp.Spec.Interface) {
+		fmt.Println("EP EP", ep, otherEp)
 		return true
 	}
 	return false
@@ -172,8 +171,10 @@ func (*suite) runModule(module string, trafficHelper TrafficHelper, agentCfg *pk
 				getNetworkFromConfig(epPair.Dst.Spec.GetNetworkName(), agentCfg.Networks),
 				dstIntf)
 			/* If differet Network, setup routes */
-			if srcEphandle.GetNetwork() != dstEphandle.GetNetwork() {
+			if epPair.Src.Spec.GetNetworkName() != epPair.Dst.Spec.GetNetworkName() {
 				setUpRoute(srcEphandle, dstEphandle)
+			} else {
+				sendGarp(srcEphandle, dstEphandle)
 			}
 			if err := test.Run(srcEphandle, dstEphandle); err != nil {
 				/* On purpose not cleaning to delete EPs for debugging */

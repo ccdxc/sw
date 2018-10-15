@@ -1603,6 +1603,46 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                               ret);
             }
         }
+
+        // Update mcast oiflist
+        if (hal_if->lif_handle == HAL_HANDLE_INVALID) {
+            if (pd_if_args.new_lif) {
+                // Add oif
+                ret = if_update_oif_lists(hal_if_clone, true);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to add Enic to oiflist. ret: {}",
+                                  ret);
+                    goto end;
+                }
+            }
+        } else {
+            if (!pd_if_args.new_lif) {
+                // Delete oif
+                ret = if_update_oif_lists(hal_if, false);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to del Enic from oiflist. ret: {}",
+                                  ret);
+                    goto end;
+                }
+            } else {
+                // Delete
+                ret = if_update_oif_lists(hal_if, false);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to del Enic from oiflist. ret: {}",
+                                  ret);
+                    goto end;
+                }
+
+                // Add
+                ret = if_update_oif_lists(hal_if_clone, true);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to add Enic to oiflist. ret: {}",
+                                  ret);
+                    goto end;
+                }
+            }
+        }
+
     }
 
     // Change Flood replication entry for change of native l2seg
@@ -2171,6 +2211,10 @@ enic_update_lif (if_t *hal_if,
     if_make_clone(hal_if, (if_t **)&dhl_entry.cloned_obj);
     *new_hal_if = (if_t *)dhl_entry.cloned_obj;
 
+    if (new_lif) {
+        (*new_hal_if)->lif_handle = new_lif->hal_handle;
+    }
+
     // form ctxt and call infra update object
     dhl_entry.handle = hal_if->hal_handle;
     dhl_entry.obj = hal_if;
@@ -2246,6 +2290,9 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
     }
 
     if_make_clone(hal_if, (if_t **)&dhl_entry.cloned_obj);
+    if (app_ctxt.lif) {
+        ((if_t *)(dhl_entry.cloned_obj))->lif_handle = app_ctxt.lif->hal_handle;
+    }
 
     // form ctxt and call infra update object
     dhl_entry.handle = hal_if->hal_handle;

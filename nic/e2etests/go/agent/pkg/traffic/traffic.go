@@ -101,6 +101,21 @@ func setUpRoute(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
 		srcEp.Interface.MacAddress)
 }
 
+func sendGarp(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
+
+	cmd := []string {"arping", "-c", "1", "-U", srcEp.GetIP()}
+	if _, err := srcEp.AppEngine.RunCommand(cmd, 0, false); err != nil {
+		return err
+	}
+
+	cmd = []string {"arping", "-c", "1", "-U", dstEp.GetIP()}
+	if _, err := dstEp.AppEngine.RunCommand(cmd, 0, false); err != nil {
+		return err
+	}
+	
+	return nil
+}
+
 func deleteRoute(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
 
 	if err := srcEp.AppEngine.RouteDelete(dstEp.GetIP(), defaultRoute(srcEp.GetNetwork())); err != nil {
