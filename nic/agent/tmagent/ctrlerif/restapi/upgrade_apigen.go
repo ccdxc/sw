@@ -44,7 +44,6 @@ func (s *RestServer) runUpgradeMetricsGetHandler(r *http.Request) (interface{}, 
 			Key:  mux.Vars(r)["Meta.Name"],
 		},
 	}
-	o.Meta = new(delphi.ObjectMeta)
 	o.Meta.Kind = "UpgradeMetrics"
 	o.Meta.Key = mux.Vars(r)["Meta.Name"]
 	log.Infof("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)

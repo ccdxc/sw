@@ -1,4 +1,4 @@
  basepath: "github.com/pensando/sw/penctl/cmd/metrics/templates"
  templates:
    - template: "restgen.tmpl"
-     outputpath: "{FILE}.go"
+     outputpath: "{FILE}_gen.go"

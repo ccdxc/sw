@@ -36,5 +36,6 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
+* `penctl metrics kind <penctl_metrics_kind.rst>`_ 	 - Show Metrics from Naples On Non-Listed Kind
 * `penctl metrics upgrademetrics <penctl_metrics_upgrademetrics.rst>`_ 	 - Show UpgradeMetrics from Naples
 

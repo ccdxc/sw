@@ -2,9 +2,9 @@ SRC := $(shell ls ${GOPATH}/src/github.com/pensando/sw/nic/upgrade_manager/upgra
 DEST := $(SRC:%.proto=%.pb.go)
 NAMES = $(notdir $(basename $(SRC)))
 NICDIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi
-NICFILES := ${NICDIR}/${NAMES}_api.go
+NICFILES := ${NICDIR}/${NAMES}_apigen.go
 PENDIR := ${GOPATH}/src/github.com/pensando/sw/penctl/cmd
-PENFILES := ${PENDIR}/${NAMES}.go
+PENFILES := ${PENDIR}/${NAMES}_gen.go
 
 $(info $$NICDIR: ${NICDIR})
 $(info $$PENDIR: ${PENDIR})

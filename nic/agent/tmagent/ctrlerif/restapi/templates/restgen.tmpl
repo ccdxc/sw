@@ -39,7 +39,6 @@ import (
 				Key: mux.Vars(r)["Meta.Name"],
 			},
 		}
-		o.Meta = new(delphi.ObjectMeta)
 		o.Meta.Kind = "{{.GetName}}"
 		o.Meta.Key = mux.Vars(r)["Meta.Name"]
 		log.Infof("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)

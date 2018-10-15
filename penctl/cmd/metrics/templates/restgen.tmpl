@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var name string
+var {{$pkgName}}name string
  {{$msgs := .Messages}}
  {{range $msgs}}
     {{if (HasSuffix .GetName "Metrics")}}
@@ -25,7 +25,7 @@ var name string
 	func {{ToLower .GetName}}ShowCmdHandler(cmd *cobra.Command, args []string) {
 		var resp []byte
 		if cmd.Flags().Changed("name") {
-			resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/default/"+name+"/")
+			resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/default/"+{{$pkgName}}name+"/")
 		} else {
 			resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/")
 		}
@@ -43,7 +43,7 @@ var name string
  {{range $msgs}}
     {{if (HasSuffix .GetName "Metrics")}}
                 metricsShowCmd.AddCommand({{ToLower .GetName}}ShowCmd)
-		{{ToLower .GetName}}ShowCmd.Flags().StringVarP(&name, "name", "n", "", "Name/Key for metrics object")
+		{{ToLower .GetName}}ShowCmd.Flags().StringVarP(&{{$pkgName}}name, "name", "n", "", "Name/Key for metrics object")
     {{end}}
  {{end}}
         }

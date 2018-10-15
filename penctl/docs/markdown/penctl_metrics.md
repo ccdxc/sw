@@ -28,5 +28,6 @@ Show metrics from Naples
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
+* [penctl metrics kind](penctl_metrics_kind.md)	 - Show Metrics from Naples On Non-Listed Kind
 * [penctl metrics upgrademetrics](penctl_metrics_upgrademetrics.md)	 - Show UpgradeMetrics from Naples
 

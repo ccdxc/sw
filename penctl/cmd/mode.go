@@ -15,7 +15,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
-	"github.com/pensando/sw/venice/utils/apigen/validators"
+	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
 var modeManagedCmd = &cobra.Command{
@@ -59,7 +59,7 @@ func init() {
 func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
 	for _, cluster := range clusters {
 		ep := strings.Split(cluster, ":")
-		if impl.HostAddr(ep[0]) != true {
+		if vldtor.HostAddr(ep[0]) != true {
 			str := "Not valid hostaddr: " + ep[0]
 			return errors.New(str)
 		}
@@ -72,13 +72,13 @@ func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
 		str := "Not valid mode: " + mode
 		return errors.New(str)
 	}
-	if !impl.IPAddr(mgmtIP) {
+	if !vldtor.IPAddr(mgmtIP) {
 		return errors.New("Not valid management-ip")
 	}
-	if !impl.HostAddr(hostName) {
+	if !vldtor.HostAddr(hostName) {
 		return errors.New("Not valid host name")
 	}
-	if !impl.MacAddr(priMac) {
+	if !vldtor.MacAddr(priMac) {
 		return errors.New("Not valid mac address")
 	}
 	return nil
