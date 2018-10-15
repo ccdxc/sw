@@ -26,7 +26,9 @@ heartbeat_monitor_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     clock_gettime(CLOCK_MONOTONIC, &curr_ts);
     // skip main thread as it is gRPC wait call all the time
-    for (uint32_t tid = HAL_THREAD_ID_CFG + 1; tid < HAL_THREAD_ID_MAX; tid++) {
+    for (uint32_t tid = HAL_THREAD_ID_CFG + 1;
+         (tid != HAL_THREAD_ID_DELPHI_CLIENT) && (tid < HAL_THREAD_ID_MAX);
+         tid++) {
         if ((hal_thread = hal_thread_get(tid)) != NULL) {
             hb_ts = hal_thread->heartbeat_ts();
             ts_diff = sdk::timestamp_diff(&curr_ts, &hb_ts);

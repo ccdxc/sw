@@ -33,16 +33,14 @@ DebugServiceImpl::RegisterGet(ServerContext *context,
                               const RegisterRequestMsg *req_msg,
                               RegisterResponseMsg *rsp_msg)
 {
-    uint64_t val  = 0x0;
+    uint32_t val = 0x0;
 
     for (int i = 0; i < req_msg->request_size(); ++i) {
         debug::RegisterRequest req = req_msg->request(i);
 
         debug::RegisterResponse *rsp = rsp_msg->add_response();
         debug::RegisterData     *reg_data = rsp->mutable_data();
-
-        val  = hal::pd::asic_reg_read(req.addr());
-
+        hal::pd::asic_reg_read(req.addr(), &val, 1, true);
         reg_data->set_value(std::to_string(val));
         rsp->set_api_status(types::API_STATUS_OK);
     }

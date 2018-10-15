@@ -32,7 +32,7 @@ cpupkt_hbm_write(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
 static inline bool
 cpupkt_hbm_read(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
 {
-    hal_ret_t rv = hal::pd::asic_mem_read(addr, data, size_in_bytes);
+    hal_ret_t rv = hal::pd::asic_mem_read(addr, data, size_in_bytes, true);
     return rv == HAL_RET_OK ? true : false;
 }
 
@@ -512,7 +512,7 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
 }
 
 hal_ret_t
-pd_cpupkt_poll_receive(pd_func_args_t *pd_func_args)
+pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
 {
     hal_ret_t   ret = HAL_RET_OK;
     pd_cpupkt_poll_receive_args_t *args = pd_func_args->pd_cpupkt_poll_receive;
@@ -521,7 +521,7 @@ pd_cpupkt_poll_receive(pd_func_args_t *pd_func_args)
     uint8_t** data = args->data;
     size_t* data_len = args->data_len;
 
-    if(!ctxt) {
+    if (!ctxt) {
         return HAL_RET_INVALID_ARG;
     }
     //HAL_TRACE_DEBUG("cpupkt:Starting packet poll for queue: {}", ctxt->rx.num_queues);

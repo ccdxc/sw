@@ -159,62 +159,46 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
 
 //------------------------------------------------------------------------------
 // public API for register read operations
-// NOTE: this is always a blocking call and this API runs in the calling
-//       thread's context
 //------------------------------------------------------------------------------
-static hal_ret_t
-asic_reg_read_impl (uint64_t addr, uint32_t *data, uint32_t num_words)
+hal_ret_t
+asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words,
+               bool read_thru)
 {
-    hal_ret_t rc = HAL_RET_OK;
+    hal_ret_t    rc = HAL_RET_OK;
 
-    if (is_asic_rw_thread() == false) {
+    if (is_asic_rw_thread() || (read_thru == true)) {
+        pal_ret_t prc = sdk::lib::pal_reg_read(addr, data, num_words);
+        rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    } else {
         rc = asic_do_read(HAL_ASIC_RW_OPERATION_REG_READ,
                           addr, (uint8_t *)data, num_words);
-    } else {
-        sdk::lib::pal_reg_read(addr, data, num_words);
     }
 
     if (rc != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error reading reg addr:{}", addr);
+        HAL_TRACE_ERR("Error reading reg addr : {}", addr);
         HAL_ASSERT(0);
     }
 
     return rc;
 }
 
-uint32_t
-asic_reg_read (uint64_t addr)
-{
-    uint32_t data = 0;
-    asic_reg_read_impl(addr, &data, 1);
-    return data;
-}
-
-hal_ret_t
-asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words)
-{
-    return asic_reg_read_impl(addr, data, num_words);
-}
-
 //------------------------------------------------------------------------------
 // public API for memory read operations
-// NOTE: this is always a blocking call and this API runs in the calling
-//       thread's context
 //------------------------------------------------------------------------------
 hal_ret_t
-asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len)
+asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
 {
     hal_ret_t   rc = HAL_RET_OK;
 
-    if (is_asic_rw_thread() == false) {
-        rc = asic_do_read(HAL_ASIC_RW_OPERATION_MEM_READ, addr, data, len);
-    } else {
+    if (is_asic_rw_thread() || (read_thru == true)) {
         pal_ret_t prc = sdk::lib::pal_mem_read(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    } else {
+        rc = asic_do_read(HAL_ASIC_RW_OPERATION_MEM_READ, addr, data, len);
     }
 
     if (rc != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error reading mem addr:{} data:{}", addr, data);
+        HAL_TRACE_ERR("Error reading mem addr : {} data : {}", addr, data);
     }
     return rc;
 }
