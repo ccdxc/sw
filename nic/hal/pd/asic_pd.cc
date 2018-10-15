@@ -264,10 +264,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
 // blocking and non-blocking writes
 //------------------------------------------------------------------------------
 hal_ret_t
-asic_reg_write (uint64_t addr,
-                uint32_t *data,
-                uint32_t num_words,
-                bool     blocking)
+asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words, bool blocking)
 {
     hal_ret_t rc = HAL_RET_OK;
 

@@ -801,7 +801,7 @@ pd_cpupkt_program_send_ring_doorbell(pd_func_args_t *pd_func_args)
 
     HAL_TRACE_DEBUG("ringing Doorbell with addr: {:#x} data: {:#x}",
                     addr, data);
-    hal::pd::asic_ring_doorbell(addr, data);
+    hal::pd::asic_ring_doorbell(addr, data, false);
     return HAL_RET_OK;
 }
 
