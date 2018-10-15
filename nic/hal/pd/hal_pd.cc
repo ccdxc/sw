@@ -7,9 +7,6 @@
 #include "nic/hal/pd/pd_api_c.h"
 
 namespace hal {
-
-extern bool gl_super_user;
-
 namespace pd {
 
 pd_func_t   *g_pd_funcs;
@@ -603,7 +600,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
                           0x0,    // use all control cores
                           hal::pd::asic_rw_start,
                           hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
-                          gl_super_user ? SCHED_RR : SCHED_OTHER,
+                          hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
                           hal_cfg);
     HAL_ABORT(hal_thread != NULL);
     hal_thread->start(hal_thread);

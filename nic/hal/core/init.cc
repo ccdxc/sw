@@ -177,6 +177,21 @@ hal_thread_add (sdk::lib::thread *hal_thread)
 }
 
 //------------------------------------------------------------------------------
+// return appropriate scheduling policy for a thread, given its role
+//------------------------------------------------------------------------------
+int
+hal_thread_sched_policy (sdk::lib::thread_role_t thread_role)
+{
+    if (gl_super_user == false) {
+        return SCHED_OTHER;
+    } else if (thread_role == sdk::lib::THREAD_ROLE_DATA) {
+        return SCHED_FIFO;
+    }
+    //return SCHED_RR;
+    return SCHED_OTHER;
+}
+
+//------------------------------------------------------------------------------
 // compute the thread's scheduling policy & priority, given its role
 // TODO: should we just use SCHED_OTHER for all control threads and return
 //       default priority ? asic-rw can bump it up a bit after calling this API
@@ -186,20 +201,10 @@ hal_thread_priority (sdk::lib::thread_role_t role)
 {
     int    prio, sched_policy;
 
-    if (role == sdk::lib::THREAD_ROLE_DATA) {
-        sched_policy = gl_super_user ? SCHED_FIFO : SCHED_OTHER;
-    } else {
-        sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
-    }
-    if (gl_super_user) {
-        if (sched_policy == SCHED_FIFO) {
-            prio = sched_get_priority_max(SCHED_FIFO);
-        } else if (sched_policy == SCHED_RR) {
-            prio = sched_get_priority_max(SCHED_RR);
-        }
-    } else {
-        // all threads run with SCHED_OTHER policy
-        prio = sched_get_priority_max(SCHED_OTHER);
+    sched_policy = hal_thread_sched_policy(role);
+    prio = sched_get_priority_max(sched_policy);
+    if (sched_policy == SCHED_FIFO) {
+        prio = 50;    // TODO: hack !!
     }
     return prio;
 }
@@ -264,13 +269,10 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
     // switch to real-time scheduling
     sched_param.sched_priority =
         hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL);
-    if (gl_super_user) {
-        HAL_TRACE_DEBUG("Switching to real-time scheduling for main thread");
-        rv = sched_setscheduler(0, SCHED_RR, &sched_param);
-    } else {
-        HAL_TRACE_DEBUG("Using non-real-time scheduling for main thread");
-        rv = sched_setscheduler(0, SCHED_OTHER, &sched_param);
-    }
+    rv =
+        sched_setscheduler(0,
+            hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
+            &sched_param);
     if (rv != 0) {
         HAL_TRACE_ERR("sched_setscheduler failure, err : {}", rv);
         return HAL_RET_ERR;
@@ -284,7 +286,7 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
                           0x0,    // use all control cores
                           sdk::lib::thread::dummy_entry_func,
                           sched_param.sched_priority,
-                          gl_super_user ? SCHED_RR : SCHED_OTHER,
+                          hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
                           NULL);
     hal_thread->set_data(hal_thread);
     hal_thread->set_pthread_id(pthread_self());
@@ -300,16 +302,12 @@ hal_ret_t
 hal_thread_init (hal_cfg_t *hal_cfg)
 {
     uint32_t            i, tid;
-    int                 sched_policy, rt_sched_policy;
     char                thread_name[16];
     uint64_t            data_cores_mask = hal_cfg->data_cores_mask;
     uint64_t            cores_mask = 0x0;
     sdk::lib::thread    *hal_thread;
 
     // spawn data core threads and pin them to their cores
-    rt_sched_policy = gl_super_user ? SCHED_FIFO : SCHED_OTHER;
-    sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
-
     if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
         for (i = 0; i < hal_cfg->num_data_threads; i++) {
             // pin each data thread to a specific core
@@ -323,7 +321,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                                   tid, sdk::lib::THREAD_ROLE_DATA,
                                   cores_mask, fte_pkt_loop_start,
                                   hal_thread_priority(sdk::lib::THREAD_ROLE_DATA),
-                                  rt_sched_policy,
+                                  hal_thread_sched_policy(sdk::lib::THREAD_ROLE_DATA),
                                   hal_cfg);
             HAL_ABORT(hal_thread != NULL);
             data_cores_mask = data_cores_mask & (data_cores_mask-1);
@@ -338,7 +336,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                           0x0,    // use all control cores
                           periodic_thread_start,
                           hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
-                          sched_policy,
+                          hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
                           NULL);
     HAL_ABORT(hal_thread != NULL);
     hal_thread->start(hal_thread);

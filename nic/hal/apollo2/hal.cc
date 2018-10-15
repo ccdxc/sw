@@ -99,6 +99,9 @@ hal_init (hal_cfg_t *hal_cfg)
     if (!getenv("DISABLE_LOGGING") && hal_logger_init(hal_cfg) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
     }
+    if (gl_super_user) {
+        HAL_TRACE_DEBUG("Running as superuser ...");
+    }
 
     // do HAL state initialization
     HAL_ABORT(hal_state_init(hal_cfg) == HAL_RET_OK);

@@ -203,7 +203,7 @@ hal_init (hal_cfg_t *hal_cfg)
     if (user && !strcmp(user, "root")) {
         gl_super_user = true;
     }
-    gl_super_user = false;    // TODO: temporary until bringup issues are resolved
+    //gl_super_user = false;    // TODO: temporary until bringup issues are resolved
 
     // do SDK initialization, if any
     hal_sdk_init();
@@ -225,6 +225,9 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Initializing HAL ...");
     if (!getenv("DISABLE_LOGGING") && hal_logger_init(hal_cfg) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
+    }
+    if (gl_super_user) {
+        HAL_TRACE_DEBUG("Running as superuser ...");
     }
 
     // do HAL state initialization
