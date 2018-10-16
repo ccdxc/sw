@@ -1,21 +1,41 @@
 OutDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi
 
-default: restgen swaggergen goimports
-	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
-	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
-	--gofast_out=plugins=grpc:. endpoint.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto route.proto security.proto service.proto sgpolicy.proto tenant.proto tunnel.proto tcp_proxy.proto
+# all the sources for which .pb.go is generated
+SRC := endpoint.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto route.proto security.proto service.proto sgpolicy.proto tenant.proto tunnel.proto tcp_proxy.proto
 
-restgen:
+#these wont have _api.go generated
+FILTER_OUT_API := match.proto port.proto service.proto
+
+#additionally these wont have swagger spec generated
+FILTER_OUT_SWAGGER := interface.proto
+
+SRC1 :=  $(filter-out ${FILTER_OUT_API}, ${SRC})
+SRC2 :=  $(filter-out ${FILTER_OUT_SWAGGER}, ${SRC1})
+
+DEST := $(SRC:%.proto=%.pb.go) $(SRC1:%.proto=$(OutDir)/%_api_test.go) $(SRC1:%.proto=$(OutDir)/%_api.go) $(SRC1:%.proto=$(OutDir)/restclient/%_client.go) $(SRC2:%.proto=$(OutDir)/docs/swagger/%.swagger.json)
+
+default: ${DEST}
+
+endpoint.pb.% interface.pb.% ipsec.pb.% match.pb.% namespace.pb.% nat.pb.% network.pb.% port.pb.% route.pb.% security.pb.% service.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% tcp_proxy.pb.%:  ${SRC}
 	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
-	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/templates/rest.yml,log_dir=${OutDir}/tmp,logtostderr=false,v=7:${OutDir} endpoint.proto interface.proto ipsec.proto namespace.proto nat.proto network.proto route.proto security.proto sgpolicy.proto tenant.proto tunnel.proto tcp_proxy.proto
-	goimports -local "github.com/pensando/sw" -l -w ${OutDir}/*.go
+	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
+	--gofast_out=plugins=grpc:. ${SRC}
+	goimports -local "github.com/pensando/sw" -l -w *.go
+
+${OutDir}/%_api.go ${OutDir}/%_api_test.go ${OutDir}/restclient/%_client.go : %.proto
+	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
+	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
+	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/templates/rest.yml,log_dir=${OutDir}/tmp,logtostderr=false,v=7:${OutDir} ${SRC1}
+	cd ${OutDir} && goimports -local "github.com/pensando/sw" -l -w *.go
 
 # Generating documentation for interface.proto is ignnored, Currently we don't intened to expose enic and uplink creates directly to the user
-swaggergen:
+${OutDir}/docs/swagger/%.swagger.json : %.proto
 	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
-	--swagger_out=logtostderr=false,v=7,log_dir=${OutDir}/tmp:${OutDir}/docs/swagger endpoint.proto ipsec.proto namespace.proto nat.proto network.proto route.proto security.proto sgpolicy.proto tenant.proto tunnel.proto tcp_proxy.proto
+	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
+	--swagger_out=logtostderr=false,v=7,log_dir=${OutDir}/tmp:${OutDir}/docs/swagger $^
 
-goimports: restgen
-	goimports -local "github.com/pensando/sw" -l -w *.go
+gen-clean:
+	rm -f ${DEST}

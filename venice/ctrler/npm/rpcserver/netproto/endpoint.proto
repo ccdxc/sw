@@ -1,7 +1,6 @@
 // network object
 
 syntax = "proto3";
-
 package netproto;
 
 // Mandatory imports.

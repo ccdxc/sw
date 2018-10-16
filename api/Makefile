@@ -4,7 +4,9 @@ DEL_BAK = rm *.bak_
 SCHEMA_PROTOS = meta.proto common.proto export.proto
 
 TO_GEN = labels fields
-all:
+all: generated/manifest
+
+generated/manifest: meta.proto common.proto $(shell ls protos/*.proto)
 	$(MAKE) bld_proto
 	$(MAKE) fix
 	$(MAKE) genschema
@@ -33,3 +35,5 @@ genapi:
 clean:
 	$(MAKE) -C mock clean
 	@rm -rf generated/*
+
+gen-clean: clean

@@ -98,7 +98,7 @@ message PortStatus {
                                  (gogoproto.jsontag) = "oper-status,omitempty"];
     // Operational Speed in case of AutoNeg
     string OperSpeed        = 2 [(venice.check) = "StrEnum(PortSpec.PortSpeed)",
-                                 (gogoproto.jsontag) = "oper-status,omitempty"];
+                                 (gogoproto.jsontag) = "oper-speed,omitempty"];
     // PortID in the datapath
     uint64 PortID           = 3 [(gogoproto.jsontag) = "id,omitempty"];
 }

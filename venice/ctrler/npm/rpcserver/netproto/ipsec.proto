@@ -1,7 +1,6 @@
 // IPSec model
 
 syntax = "proto3";
-
 package netproto;
 
 // Mandatory imports.
@@ -117,7 +116,7 @@ message IPSecSAEncryptSpec {
                                  (gogoproto.jsontag) = "authentication-algorithm,omitempty"];
 
     // Authentication Key
-    string AuthKey          = 3 [(gogoproto.jsontag) = "authentication-key, omitempty"];
+    string AuthKey          = 3 [(gogoproto.jsontag) = "authentication-key,omitempty"];
 
     // SA Encrypt Algorithm
     string EncryptAlgo      = 4 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",
@@ -226,7 +225,7 @@ message IPSecSADecryptSpec {
                                      (gogoproto.jsontag) = "authentication-algorithm,omitempty"];
 
     // Authentication Key
-    string AuthKey              = 3 [(gogoproto.jsontag) = "authentication-key, omitempty"];
+    string AuthKey              = 3 [(gogoproto.jsontag) = "authentication-key,omitempty"];
 
     // SA Decrypt Algorithm
     string DecryptAlgo          = 4 [(venice.check) = "StrEnum(EncryptionAlgorithm.Type)",

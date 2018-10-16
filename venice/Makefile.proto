@@ -1,0 +1,34 @@
+# this file must be included by individual make files after defining SCHEMA_PROTOS and/or SERVICE_PROTOS
+#
+# Example makefile:
+#
+#SCHEMA_PROTOS = selector.proto
+#include ../../venice/Makefile.proto
+
+
+FIX_PROTO = sed -i.bak_ 's/github.com\/golang\/protobuf\/proto/github.com\/gogo\/protobuf\/proto/'
+FIX_VER = sed -i.bak_ 's/proto.ProtoPackageIsVersion/proto.GoGoProtoPackageIsVersion/'
+
+DEST = $(SCHEMA_PROTOS:.proto=_local_schema.go)  $(SCHEMA_PROTOS:.proto=.pb.go) $(SERVICE_PROTOS:.proto=.pb.go)
+all: ${DEST}
+
+%_local_schema.go: %.proto
+	${GOPATH}/src/github.com/pensando/sw/tools/scripts/genschema.sh $^
+	goimports -local "github.com/pensando/sw" -l -w $@
+	${FIX_VER} $@
+	${FIX_PROTO} $@
+	rm $@.bak_
+
+%.pb.go: %.proto
+	@protoc -I. \
+		-I${GOPATH}/src/github.com/pensando/sw/vendor \
+		-I${GOPATH}/src \
+		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
+		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
+		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+		-I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/gogoproto \
+		--gogofast_out=${EXTRA_GOFAST_OUT}Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor,plugins=grpc:. $^
+	goimports -local "github.com/pensando/sw" -l -w $@
+
+gen-clean:
+	rm -f ${DEST}

@@ -497,7 +497,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			if err != nil {
 				status := apierrors.FromError(err)
 				log.Errorf("Error updating smartNIC object: %+v err: %v status: %v", nic, err, status)
-				return intErrResp, errors.Wrapf(err, "Error updating smartNIC object: %+v")
+				return intErrResp, errors.Wrapf(err, "Error updating smartNIC object")
 			}
 
 			// Create or Update the Host

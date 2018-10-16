@@ -29,6 +29,7 @@ venice/utils/objstore/client/mock
 # Lists all the vendored packages that need to be installed prior to the build.
 TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway \
 							./vendor/github.com/gogo/protobuf/protoc-gen-gofast \
+							./vendor/github.com/gogo/protobuf/protoc-gen-gogofast \
 							./vendor/github.com/golang/protobuf/protoc-gen-go \
 							./venice/utils/apigen/protoc-gen-pensando \
 							./vendor/golang.org/x/tools/cmd/goimports \
@@ -82,7 +83,7 @@ checks: goimports-src golint-src govet-src
 # gen does all the autogeneration. viz venice cli, proto sources. Ensure that any new autogen target is added to TO_GEN above
 gen:
 	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} || exit 1; done
-	@${PWD}/venice/cli/scripts/gen.sh
+	$(MAKE) -C ${PWD}/venice/cli/gen
 
 # goimports-src formats the source and orders imports
 # Target directories is needed only for goipmorts where it doesn't accept package names.
@@ -174,6 +175,9 @@ cluster-stop:
 cluster-restart:
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
 	tools/scripts/startSim.py
+
+gen-clean:
+	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Cleaning $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} gen-clean || exit 1; done
 
 clean:
 	@$(MAKE) c-stop >/dev/null 2>&1
