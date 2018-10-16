@@ -3497,6 +3497,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe = {
 			.op = IONIC_V1_ADMIN_CREATE_QP,
+			.type_state = to_ionic_qp_type(attr->qp_type),
 			.dbid_flags = cpu_to_le16(ionic_dbid(dev, pd->ibpd.uobject)),
 			.id_ver = cpu_to_le32(qp->qpid | ver),
 			.qp = {
