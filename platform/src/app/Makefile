@@ -13,6 +13,7 @@ SUBDIRS = \
 	pcieutil \
 	regio \
 	nicmgrd \
+	asicerrord \
 	$(NULL)
 
 TOPDIR = ../..
