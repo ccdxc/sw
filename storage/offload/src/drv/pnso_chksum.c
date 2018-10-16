@@ -30,23 +30,12 @@ fill_chksum_desc(uint32_t algo_type, uint32_t buf_len,
 	desc->u.cd_bits.cc_integrity_src = 1;
 	desc->u.cd_bits.cc_src_is_list = flat_buf ? 0 : 1;
 
-	switch (algo_type) {
-	case PNSO_CHKSUM_TYPE_MCRC64:
-		desc->u.cd_bits.cc_integrity_type = 1;
-		break;
-	case PNSO_CHKSUM_TYPE_CRC32C:
-		desc->u.cd_bits.cc_integrity_type = 2;
-		break;
-	case PNSO_CHKSUM_TYPE_ADLER32:
-		desc->u.cd_bits.cc_integrity_type = 3;
-		break;
-	case PNSO_CHKSUM_TYPE_MADLER32:
-		desc->u.cd_bits.cc_integrity_type = 4;
-		break;
-	default:
-		OSAL_ASSERT(0);
-		break;
-	}
+	/*
+	 * due to PNSO_CHKSUM_TYPE_NONE, subtract by 1 to align with
+	 * HW/SW constants
+	 *
+	 */
+	desc->u.cd_bits.cc_integrity_type = algo_type - 1;
 
 	desc->cd_datain_len = buf_len;
 
