@@ -12,10 +12,10 @@ import { UserDataReadyMap } from './';
 
 import { AuthService } from '@app/services/generated/auth.service';
 import {
-          IApiStatus, IAuthRoleBindingList, AuthRoleBindingList,
-          AuthRoleBinding, IAuthRoleList, AuthRole, IAuthUserList,
-          AuthUserList, AuthUser, AuthRoleList
-        } from '@sdk/v1/models/generated/auth';
+  IApiStatus, IAuthRoleBindingList, AuthRoleBindingList,
+  AuthRoleBinding, IAuthRoleList, AuthRole, IAuthUserList,
+  AuthUserList, AuthUser, AuthRoleList
+} from '@sdk/v1/models/generated/auth';
 
 
 /**
@@ -257,7 +257,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param $event
    * @param role
    */
-  onAddUser($event, role) {
+  onAddUser($event) {
     this.isToShowAddUserPanel = true;
   }
 

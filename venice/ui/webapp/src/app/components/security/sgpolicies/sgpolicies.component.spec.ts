@@ -5,7 +5,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { SharedModule } from '@app/components/shared/shared.module';
-import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive';
+import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
 import { ControllerService } from '@app/services/controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';

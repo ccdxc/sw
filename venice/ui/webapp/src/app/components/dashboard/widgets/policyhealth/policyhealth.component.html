@@ -10,17 +10,17 @@
       <div class="policyhealth-content-div" fxLayout="column" fxLayoutAlign="center">
         <div class="policyhealth-chart-div">
           <canvas id="policy_health_text" class="policyhealt-label-canvas"></canvas>
-          <p-chart type="doughnut" [data]="data" [options]="options" (onDataSelect)="itemClick($event, 'policy_health')"></p-chart>
+          <p-chart type="doughnut" [data]="data" [options]="options" (onDataSelect)="itemClick($event)"></p-chart>
         </div>
 
         <div class="policyhealth-total-count-label-div">Total 
-          <span class="policyhealth-total-count-label-span">{{venice_total_policies|number}} </span> 
+          <span class="policyhealth-total-count-label-span">{{veniceTotalPolicies|number}} </span> 
           Policies
         </div>
 
         <div class="policyhealth-category-labels-div">
-            <span class="policyhealth-category-labels-span policyhealth-category-labels-vio-span">{{venice_total_violated_policies|number}} VIO</span>
-            <span class="policyhealth-category-labels-span policyhealth-category-labels-ok-span">{{venice_total_ok_policies|number}} OK</span>
+            <span class="policyhealth-category-labels-span policyhealth-category-labels-vio-span">{{veniceTotalViolatedPolicies|number}} VIO</span>
+            <span class="policyhealth-category-labels-span policyhealth-category-labels-ok-span">{{veniceTotalOkPolicies|number}} OK</span>
         </div>
       </div>
     </div>

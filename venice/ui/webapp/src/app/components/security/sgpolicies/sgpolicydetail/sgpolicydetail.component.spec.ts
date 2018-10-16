@@ -30,7 +30,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive';
+import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
 
 
 

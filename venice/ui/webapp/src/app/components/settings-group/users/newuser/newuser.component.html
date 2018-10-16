@@ -5,14 +5,14 @@
                 <div class="newuser-panel-rolegroup-header-add-property-label">Full Name:</div>
                 <div class="newuser-panel-rolegroup-header-add-property-value">
                     <input fxFlex="200px" formControlName="fullname" class="newuser-input-item newuser-fullname" spellcheck="false" type="text"
-                        pInputText placeholder="Full Name..." [ngClass]="errorChecker.isErrorState(newAuthUser.$formGroup.get('spec.fullname')) ? 'error' : ''">
+                        pInputText placeholder="Full Name..." [ngClass]="isErrorState(newAuthUser.$formGroup.get('spec.fullname')) ? 'error' : ''">
                 </div>
             </div>
             <div fxLayout="row" formGroupName="spec">
                 <div class="newuser-panel-rolegroup-header-add-property-label">Email:</div>
                 <div class="newuser-panel-rolegroup-header-add-property-value ">
                     <input fxFlex="200px" formControlName="email" class="newuser-input-item newuser-email" spellcheck="false" type="email" pInputText
-                        placeholder="Email" [ngClass]="errorChecker.isErrorState(newAuthUser.$formGroup.get('spec.email')) ? 'error' : ''">
+                        placeholder="Email" [ngClass]="isErrorState(newAuthUser.$formGroup.get('spec.email')) ? 'error' : ''">
                 </div>
             </div>
         </div>
@@ -21,14 +21,14 @@
                 <div class="newuser-panel-rolegroup-header-add-property-label">Login Name:</div>
                 <div class="newuser-panel-rolegroup-header-add-property-value">
                     <input fxFlex="200px" formControlName="name" class="newuser-input-item newuser-loginname" spellcheck="false" type="text"
-                        pInputText placeholder="Login Name..." [ngClass]="errorChecker.isErrorState(newAuthUser.$formGroup.get('meta.name')) ? 'error' : ''" >
+                        pInputText placeholder="Login Name..." [ngClass]="isErrorState(newAuthUser.$formGroup.get('meta.name')) ? 'error' : ''" >
                 </div>
             </div>
             <div fxLayout="row" formGroupName="spec">
                 <div class="newuser-panel-rolegroup-header-add-property-label">Password:</div>
                 <div class="newuser-panel-rolegroup-header-add-property-value">
                     <input fxFlex="200px" formControlName="password" class="newuser-input-item newuser-Password" 
-                        [ngClass]="errorChecker.isErrorState(newAuthUser.$formGroup.get('spec.password')) ? 'error' : ''" spellcheck="false" type="password"
+                        [ngClass]="isErrorState(newAuthUser.$formGroup.get('spec.password')) ? 'error' : ''" spellcheck="false" type="password"
                         pInputText placeholder="Password...">
                 </div>
             </div>
@@ -53,11 +53,11 @@
     </div>
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
             <div fxFlex="nogrow">
-                <button (click)="onCancelAddUser($event, role)" tabindex="0" (keydown)="($event.which ==13)? onCancelAddUser($event) : return"
+                <button (click)="onCancelAddUser($event)" tabindex="0" (keydown)="($event.which ==13)? onCancelAddUser($event) : ''"
                     class="global-button-neutral newuser-addnewuser newuser-addnewuser-clear">Cancel</button>
             </div>
             <div fxFlex="nogrow">
-                <button (click)="onSaveAddUser($event, role)" tabindex="0" (keydown)="($event.which ==13)? onSaveAddUser($event) : return "
+                <button (click)="onSaveAddUser($event)" tabindex="0" (keydown)="($event.which ==13)? onSaveAddUser($event) : ''"
                     class="global-button-primary newuser-addnewuser newuser-addnewuser-save"
                     [disabled]="!isAllInputsValidated()">Save</button>
             </div>

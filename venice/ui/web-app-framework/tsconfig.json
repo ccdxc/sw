@@ -20,7 +20,8 @@
     "paths": {
       "@testapp/*": ["app/test/*"],
       "@modules/*": ["app/modules/*"],
-      "@env/*": ["environments/*"]
+      "@env/*": ["environments/*"],
+      "@angular/*": [ "../node_modules/@angular/*"]
     }
   },
 }

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestroy , OnChanges, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, ViewEncapsulation } from '@angular/core';
 import { Validators } from '@angular/forms';
 
 import { UsersComponent } from '../users.component';
@@ -7,7 +7,7 @@ import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
-import {AuthRoleBinding, AuthUser} from '@sdk/v1/models/generated/auth';
+import { AuthRoleBinding, AuthUser } from '@sdk/v1/models/generated/auth';
 
 
 @Component({
@@ -49,14 +49,18 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
 
   }
 
+  isErrorState(control) {
+    return this.errorChecker.isErrorState(control, null);
+  }
+
   /**
    * override super.api()
    */
-  ngOnDestroy() {  }
+  ngOnDestroy() { }
 
   ngOnChanges() {
-      this.populateRolebindingOptions();
-      this.selectedRolebindings.length = 0;
+    this.populateRolebindingOptions();
+    this.selectedRolebindings.length = 0;
   }
 
   getClassName(): string {
@@ -96,14 +100,14 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   }
 
 
-  onSaveAddUser($event, role) {
+  onSaveAddUser($event) {
     const errors = this.getAllFormgroupErrors(this.newAuthUser.$formGroup);
     if (errors === null) {
       this.addUser();
     }
   }
 
-  onCancelAddUser($event, role) {
+  onCancelAddUser($event) {
     console.log(this.getClassName() + '.onCancelAddUser()');
     this.newAuthUser.$formGroup.reset();
     this.selectedRolebindings.length = 0;
@@ -118,7 +122,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   isAllInputsValidated() {
     const hasFormGroupError = this.getAllFormgroupErrors(this.newAuthUser.$formGroup);
     const hasSelectedRole = (this.selectedRolebindings && this.selectedRolebindings.length > 0);
-    return (hasFormGroupError === null) && (hasSelectedRole ) ;
+    return (hasFormGroupError === null) && (hasSelectedRole);
   }
 
 

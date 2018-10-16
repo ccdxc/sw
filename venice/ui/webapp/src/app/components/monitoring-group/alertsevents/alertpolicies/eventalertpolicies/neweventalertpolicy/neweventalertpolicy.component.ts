@@ -67,7 +67,10 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
         value: destination.meta.name,
       });
     });
+  }
 
+  isErrorState(control) {
+    return this.errorChecker.isErrorState(control, null);
   }
 
   ngAfterViewInit() {

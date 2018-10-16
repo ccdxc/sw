@@ -24,7 +24,8 @@
       "@common/*": ["app/common/*"],
       "@lib/*": ["app/lib/*"],
       "@env/*": ["environments/*"],
-      "@sdk/*": ["../../venice-sdk/*"]
+      "@sdk/*": ["../../venice-sdk/*"],
+      "@angular/*": [ "../node_modules/@angular/*"]
     },
   },
 }

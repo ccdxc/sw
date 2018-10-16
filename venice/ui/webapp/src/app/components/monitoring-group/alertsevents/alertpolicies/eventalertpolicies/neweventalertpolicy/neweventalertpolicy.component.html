@@ -8,7 +8,7 @@
     <div fxFlex fxLayout="column">
       <div fxFlex fxLayout="row" class="neweventalertpolicy-row" formGroupName="meta"> <!-- First row-->
         <input fxFlex="300px" formControlName="name"
-              class="neweventalertpolicy-name" [ngClass]="errorChecker.isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false"
+              class="neweventalertpolicy-name" [ngClass]="isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false"
               type="text"  pInputText  placeholder="Unique Policy Name...">
         <!-- Commented out as it still isn't decided whether there will be a description -->
         <!-- <input fxFlex class="neweventalertpolicy-description" spellcheck="false" type="text"  pInputText  placeholder="Brief Description (optional)..."> -->

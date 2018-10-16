@@ -3,7 +3,7 @@
     <div fxFlex class="eventalertpolicies-tablecontainer">
       <ng-container *ngTemplateOutlet="Header"></ng-container>
       <ng-container *ngTemplateOutlet="Table"></ng-container>
-      <div *ngIf="creatingMode || editingMode" class="eventalertpolicies-overlay"></div>
+      <div *ngIf="creatingMode || showEditingForm" class="eventalertpolicies-overlay"></div>
     </div>
 </div>
 

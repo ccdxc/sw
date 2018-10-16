@@ -14,7 +14,7 @@ export class RecursivelistComponent implements OnInit {
 
   @Output() itemClick: EventEmitter<any> = new EventEmitter();
 
-  protected list: any;
+  list: any;
   constructor() { }
 
   ngOnInit() {

@@ -20,7 +20,7 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
   @Input() data: Array<any>;
   @Output() expandAllAlertsClick: EventEmitter<any> = new EventEmitter();
 
-  protected alertnumber = {
+  alertnumber = {
     total: 0,
     critical: 0,
     warning: 0,

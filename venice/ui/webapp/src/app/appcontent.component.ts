@@ -31,12 +31,12 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
   providers: []
 })
 export class AppcontentComponent extends CommonComponent implements OnInit, OnDestroy {
-  protected os = '';
-  protected browsertype = '';
-  protected browserversion = '';
+  os = '';
+  browsertype = '';
+  browserversion = '';
 
 
-  private _currentComponent: any;
+  _currentComponent: any;
 
   // is Left-hand-side item click function registered?
   private _boolInitApp = false;

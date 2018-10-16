@@ -411,7 +411,7 @@ ui:
 	npm version;
 	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz;
 	$(MAKE) ui-venice-sdk
-	cd venice/ui/webapp && ng build --e prod
+	cd venice/ui/webapp && ng build --prod && npm run svgo
 
 ui-autogen:
 	printf "\n+++++++++++++++++ Generating ui-autogen +++++++++++++++++\n";

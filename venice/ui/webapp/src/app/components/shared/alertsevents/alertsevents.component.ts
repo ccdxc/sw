@@ -121,7 +121,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   selectedAlerts: any[];
 
   // Will hold mapping from severity types to counts
-  protected alertNumbers = {
+  alertNumbers = {
   };
 
   // The current alert severity filter, set to null if it is on All.

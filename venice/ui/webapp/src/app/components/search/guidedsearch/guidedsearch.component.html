@@ -46,7 +46,7 @@
           <span class="guidesearch-title-label-left">Has:</span><span class="guidesearch-title-label-right">Field</span>
           <i class="guidesearch-set-selectfield fa "  tabindex="0"  
             (click)="setShowSelectField($event)" 
-            (keydown)="($event.which ==13)? setShowSelectField($event) : return "
+            (keydown)="($event.which ==13)? setShowSelectField($event) : ''"
             [ngClass]="{'fa-plus':!isToSelectField,'fa-remove':isToSelectField}"  fxFlex="26px"
             title="{{isToSelectField? 'Clear Field Search' : 'Open Field Search'}}"
             ></i> 
@@ -66,7 +66,7 @@
           <span class="guidesearch-title-label-left">Tag:</span><span class="guidesearch-title-label-right">Label</span>
           <i class="guidesearch-set-selectlabel fa "  tabindex="0"  
             (click)="setShowSelectLabel($event)" 
-            (keydown)="($event.which ==13)? setShowSelectLabel($event) : return "
+            (keydown)="($event.which ==13)? setShowSelectLabel($event) : ''"
              [ngClass]="{'fa-plus':!isToSelectLabel,'fa-remove':isToSelectLabel}"  fxFlex="26px"
             title="{{isToSelectLabel? 'Clear Label Search' : 'Open Label Search'}}"
           ></i> 
@@ -78,10 +78,10 @@
   </div>
   <div class="guidesearch-button-div" fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
       <div fxFlex="nogrow">
-          <span (click)="onCancelGuidedSearchClick($event)" tabindex="0"  (keydown)="($event.which ==13)? onCancelGuidedSearchClick($event) : return" class="global-button-neutral guidesearch-clear">CLEAR</span>
+          <span (click)="onCancelGuidedSearchClick($event)" tabindex="0"  (keydown)="($event.which ==13)? onCancelGuidedSearchClick($event) : ''" class="global-button-neutral guidesearch-clear">CLEAR</span>
       </div>
       <div fxFlex="nogrow">
-        <span (click)="onProceedGuidedSearchClick($event)"  tabindex="0"  (keydown)="($event.which ==13)? onProceedGuidedSearchClick($event) : return "  class="global-button-primary guidesearch-search">SEARCH</span>
+        <span (click)="onProceedGuidedSearchClick($event)"  tabindex="0"  (keydown)="($event.which ==13)? onProceedGuidedSearchClick($event) : ''"  class="global-button-primary guidesearch-search">SEARCH</span>
       </div>
       
   </div>

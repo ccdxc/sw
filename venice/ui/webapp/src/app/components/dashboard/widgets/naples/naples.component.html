@@ -12,7 +12,7 @@
     <div fxFlex=40 class="naples-center">
       <div class="naples-chart-div">
         <canvas id="naples_text" class="naples-label-canvas"></canvas>
-        <p-chart type="doughnut" [data]="data" [options]="options" (onDataSelect)="itemClick($event, 'naples')"></p-chart>
+        <p-chart type="doughnut" [data]="data" [options]="options" (onDataSelect)="itemClick($event)"></p-chart>
       </div>
     </div>
     <div [ngStyle]="_background_img_right" fxFlex=30 fxLayout="column" fxLayoutAlign="center" class="naples-right">

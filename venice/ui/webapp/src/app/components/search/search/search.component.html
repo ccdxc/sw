@@ -18,14 +18,14 @@
         </ul>
         <i *ngIf="loading" class="ui-autocomplete-loader fa fa-circle-o-notch fa-spin fa-fw" fxFlex="26px"></i> 
         <i class="ui-autocomplete-token-icon-btn searchwidget-autocomplete-token-icon-rmAll  fa fa-fw fa-close " (click)="clearSearchInputText($event)"
-             (keydown)="($event.which ==13)? clearSearchInputText($event) : return "  tabindex="0" 
+             (keydown)="($event.which ==13)? clearSearchInputText($event) :  ''"  tabindex="0" 
             *ngIf="showSearchIcons()" fxFlex="26px" title="Clear sarch input text"></i>
         <i class="ui-autocomplete-token-icon-icon-btn searchwidget-autocomplete-token-icon-search   fa fa-fw fa-search" (click)="onInvokeSearch($event, true)"
-            (keydown)="($event.which ==13)? onInvokeSearch($event, true) : return "  tabindex="0" 
+            (keydown)="($event.which ==13)? onInvokeSearch($event, true) : '' "  tabindex="0" 
             *ngIf="showSearchIcons()" fxFlex="26px" title="Click to see more suggestions"></i>
         <i class="ui-autocomplete-token-icon-btn searchwidget-autocomplete-token-icon-guided fa fa-fw  " 
             (click)="showGuidedSearch($event)"  [ngClass]="{'fa-chevron-down':!isInGuidedSearchMode,'fa-close':isInGuidedSearchMode}"  fxFlex="26px"
-            (keydown)="($event.which ==13)? showGuidedSearch($event) : return "  tabindex="0" 
+            (keydown)="($event.which ==13)? showGuidedSearch($event) : '' "  tabindex="0" 
             title="{{isInGuidedSearchMode? 'Close advanced search panel' : 'Advanced Search'}}"  ></i> 
         
     </div>

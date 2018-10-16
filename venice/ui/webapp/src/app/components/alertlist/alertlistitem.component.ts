@@ -14,7 +14,7 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
   @Output() alertClick: EventEmitter<any> = new EventEmitter();
 
 
-  protected alert;
+  alert;
   constructor() { }
 
   ngOnInit() {
