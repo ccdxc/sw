@@ -3,8 +3,13 @@
  * All rights reserved.
  *
  */
-#include "osal.h"
+#include <netdevice.h>
+
+#include "sonic_dev.h"
+#include "sonic_lif.h"
 #include "sonic_api_int.h"
+
+#include "osal.h"
 
 #include "pnso_utils.h"
 #include "pnso_chain.h"
@@ -518,4 +523,28 @@ putil_is_service_in_batch(uint8_t flags)
 	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
 			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
 			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
+}
+
+/* TODO-stats: get rid of local 'get_per_core_resource()' */
+struct per_core_resource *
+putil_get_per_core_resource(void)
+{
+	struct lif *lif;
+	struct per_core_resource *pcr;
+
+	lif = sonic_get_lif();
+	if (!lif) {
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	pcr = sonic_get_per_core_res(lif);
+	if (!pcr) {
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	return pcr;
+out:
+	return NULL;
 }

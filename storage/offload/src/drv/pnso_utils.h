@@ -83,4 +83,6 @@ void pprint_chain_sgl_pdma(uint64_t sgl_pa);
 
 bool putil_is_service_in_batch(uint8_t flags);
 
+struct per_core_resource *putil_get_per_core_resource(void);
+
 #endif  /* __PNSO_UTILS_H__ */
