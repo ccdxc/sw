@@ -185,5 +185,9 @@ class _Logger:
         logger.debug("END: %s()  Status:%d" % (inspect.stack()[1][3], status))
         return
 
+    def header(self, string):
+        hdr = "-" * 20
+        self.info(hdr + string + hdr)
+        return
 
 Logger = _Logger(types.loglevel.INFO)

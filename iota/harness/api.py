@@ -128,3 +128,14 @@ def GetDataVlans():
 
 def GetVeniceHostnames():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceHostnames()
+
+def PrintCommandResults(cmd):
+    Logger.info("Command Results on workload: %s" % cmd.workload_name)
+    Logger.header('COMMAND')
+    Logger.info("%s" % cmd.command)
+    Logger.header('STDOUT')
+    for line in cmd.stdout.split('\n'):
+        Logger.info(line)
+    Logger.header('STDERR')
+    for line in cmd.stderr.split('\n'):
+        Logger.info(line)

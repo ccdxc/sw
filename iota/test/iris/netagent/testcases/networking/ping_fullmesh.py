@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import time
+import pdb
 
 import iota.harness.api as api
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc_pb2
@@ -37,10 +38,7 @@ def Verify(tc):
 
     result = api.types.status.SUCCESS
     for cmd in tc.resp.commands:
-        api.Logger.debug("Command Results on workload: %s" % cmd.workload_name)
-        api.Logger.debug("- Command = %s" % cmd.command)
-        api.Logger.debug("- stdout = %s" % cmd.stdout)
-        api.Logger.debug("- stderr = %s" % cmd.stderr)
+        api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             result = api.types.status.FAILURE
     return result
