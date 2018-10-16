@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -14,6 +15,7 @@ import (
 )
 
 var agentClient iota.IotaAgentApiClient
+var stubNaplesContainer *Utils.Container
 
 func stubRunCmd(cmdArgs []string, timeout int, background bool, shell bool,
 	env []string) (int, string, error) {
@@ -22,7 +24,12 @@ func stubRunCmd(cmdArgs []string, timeout int, background bool, shell bool,
 
 func stubGetContainer(name string,
 	registry string, containerID string, mountDir string) (*Utils.Container, error) {
-	return nil, nil
+	var err error
+	stubNaplesContainer, err = Utils.NewContainer(naplesSimName, "alpine", "", "")
+	if err != nil {
+		log.Fatal("container create failed")
+	}
+	return stubNaplesContainer, nil
 }
 
 func TestMain(m *testing.M) {
@@ -254,8 +261,8 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 
 	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
 
-	triggerMsg := iota.TriggerMsg{NodeName: "naples", TriggerOp: iota.TriggerOp_EXEC_CMDS,
-		Commands: []*iota.Command{&iota.Command{WorkloadName: "test-workload", CommandOrPkt: &iota.Command_Command{Command: "ls"}}}}
+	triggerMsg := iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
+		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "test-workload", Command: "ls"}}}
 
 	triggeResp, err := agentClient.Trigger(context.Background(), &triggerMsg)
 	if err != nil {

@@ -344,12 +344,41 @@ func (ctr *Container) IsHealthy() bool {
 
 	inspectData, err := _DockerClient.ContainerInspect(_DockerCtx,
 		ctr.ctrID)
-	if err != nil || (inspectData.State.Health.Status != "starting" &&
-		inspectData.State.Health.Status != "healthy") {
+	if err != nil {
 		return false
 	}
 
+	if inspectData.State.Health != nil {
+		if inspectData.State.Health.Status != "healthy" {
+			return false
+		}
+	} else {
+		/* There is no health , check whether its running. */
+		if !inspectData.State.Running {
+			return false
+		}
+	}
+
 	return true
+}
+
+//WaitForHealthy waits until container healthy
+func (ctr *Container) WaitForHealthy(healthyTimeout time.Duration) error {
+	timeout := time.After(healthyTimeout * time.Second)
+	tick := time.Tick(1 * time.Second)
+
+	for {
+		select {
+		case <-timeout:
+			return errors.New("container not healthy")
+		case <-tick:
+			if ctr.IsHealthy() {
+				return nil
+			}
+		}
+
+	}
+
 }
 
 //CheckProcessRunning Checks whether process running

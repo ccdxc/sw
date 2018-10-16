@@ -236,6 +236,89 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 	return resp, nil
 }
 
+func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+
+	for idx, cmd := range req.GetCommands() {
+		for _, n := range ts.Nodes {
+			if cmd.GetNodeName() == n.Node.Name {
+				cidx := len(ts.Nodes[idx].TriggerInfo)
+				triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
+					TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
+				ts.Nodes[idx].TriggerInfo[cidx] = triggerMsg
+			}
+
+		}
+	}
+	// Triggers
+	triggers := func(ctx context.Context) error {
+		pool, ctx := errgroup.WithContext(ctx)
+
+		for _, node := range ts.Nodes {
+			node := node
+			pool.Go(func() error {
+				for idx, _ := range node.TriggerInfo {
+					if err := node.Trigger(idx); err != nil {
+						return err
+					}
+				}
+				return nil
+			})
+
+		}
+		return pool.Wait()
+	}
+
+	resetTriggers := func() {
+		for _, node := range ts.Nodes {
+			node.TriggerInfo = nil
+			node.TriggerResp = nil
+		}
+	}
+
+	err := triggers(context.Background())
+	defer resetTriggers()
+	if err != nil {
+		log.Errorf("TOPO SVC | Trigger | Trigger Call Failed. %v", err)
+		return nil, err
+	}
+
+	triggerResp := &iota.TriggerMsg{TriggerMode: req.GetTriggerMode(),
+		TriggerOp: req.GetTriggerOp()}
+	/* Dequeing the commands in same order as it was queued before. */
+	for idx, cmd := range req.GetCommands() {
+		for _, n := range ts.Nodes {
+			if cmd.GetNodeName() == n.Node.Name {
+				cmdResp := ts.Nodes[idx].TriggerInfo[0]
+				ts.Nodes[idx].TriggerInfo = ts.Nodes[idx].TriggerInfo[1:]
+				triggerResp.Commands = append(triggerResp.Commands, cmdResp.GetCommands()[0])
+			}
+
+		}
+	}
+
+	return triggerResp, nil
+}
+
+func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+
+	for idx, cmd := range req.GetCommands() {
+		for _, n := range ts.Nodes {
+			if cmd.GetNodeName() == n.Node.Name {
+				triggerMsg := &iota.TriggerMsg{Commands: req.GetCommands(),
+					TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
+				ts.Nodes[idx].TriggerInfo[0] = triggerMsg
+				if err := ts.Nodes[idx].Trigger(0); err != nil {
+					req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+					return req, err
+				}
+				req.Commands = ts.Nodes[idx].TriggerResp[0].GetCommands()
+			}
+		}
+	}
+
+	return req, nil
+}
+
 // Trigger triggers a workload
 func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | Trigger. Received Request Msg: %v", req)
@@ -247,35 +330,11 @@ func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*
 		return req, nil
 	}
 
-	for idx, n := range ts.Nodes {
-		if req.NodeName == n.Node.Name {
-			ts.Nodes[idx].TriggerInfo = req
-		}
+	if req.GetTriggerMode() == iota.TriggerMode_TRIGGER_PARALLEL {
+		return ts.runParallelTrigger(ctx, req)
 	}
 
-	// Triggers
-	triggers := func(ctx context.Context) error {
-		pool, ctx := errgroup.WithContext(ctx)
-
-		for _, node := range ts.Nodes {
-			node := node
-			if node.Node.Name == req.NodeName {
-				pool.Go(func() error {
-					return node.Trigger()
-				})
-			}
-
-		}
-		return pool.Wait()
-	}
-	err := triggers(context.Background())
-	if err != nil {
-		log.Errorf("TOPO SVC | Trigger | Trigger Call Failed. %v", err)
-		return nil, err
-	}
-
-	// TODO return fully formed resp here
-	return req, nil
+	return ts.runSerialTrigger(ctx, req)
 }
 
 // CheckClusterHealth checks the e2e cluster health

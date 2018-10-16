@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	nodeAddTimeout = 300
+	nodeAddTimeout       = 300
+	naplesHealthyTimeout = 120
 )
 
 //IotaNode interface

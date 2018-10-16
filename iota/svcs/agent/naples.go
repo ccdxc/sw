@@ -19,13 +19,13 @@ const (
 	naplesVMBringUpScript = "naples_vm_bringup.py"
 	naplesCfgDir          = "/naples/nic/conf"
 	hntapCfgFile          = "hntap-cfg.json"
-	hntapProcessName      = "nic_infra_hntap"
 	naplesDataDir         = Common.DstIotaAgentDir + "/naples"
 )
 
 var (
 	naplesProcessess = [...]string{"hal", "netagent", "nic_infra_hntap", "cap_model"}
 	hntapCfgTempFile = "/tmp/hntap-cfg.json"
+	hntapProcessName = "nic_infra_hntap"
 )
 
 type naplesNode struct {
@@ -104,6 +104,13 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 	var err error
 	if naples.container, err = Utils.GetContainer(naplesSimName, "", naplesSimName, ""); err != nil {
 		return errors.Wrap(err, "Naples sim not running!")
+	}
+
+	naples.logger.Println("Naples bring up successfull")
+
+	if err := naples.container.WaitForHealthy(naplesHealthyTimeout); err != nil {
+		naples.container = nil
+		return errors.Wrap(err, "Naples healthy timeout exceeded")
 	}
 
 	naples.simName = name
@@ -223,7 +230,6 @@ func (naples *naplesNode) configureWorkloadInHntap(in *iota.Workload) error {
 	if naples.container != nil {
 		if retCode, _, _, _ := naples.container.RunCommand(noitfyHntapCmd, 0, false, false); retCode != 0 {
 			naples.logger.Println("Error in sending signal to Hntap")
-			return errors.New("Error in sending hntap signal")
 		}
 	}
 
@@ -305,12 +311,6 @@ func (naples *naplesNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error)
 	validate := func() error {
 		switch in.TriggerOp {
 		case iota.TriggerOp_EXEC_CMDS:
-		case iota.TriggerOp_TX_PKT:
-			naples.logger.Errorf("Tx Pkt trigger not supported yet")
-			return errors.New("Not supported")
-		case iota.TriggerOp_RX_PKT:
-			naples.logger.Errorf("Rx Pkt trigger not supported yet")
-			return errors.New("Not supported")
 		case iota.TriggerOp_TERMINATE_ALL_CMDS:
 			naples.logger.Errorf("Terminate all commands trigger not supported yet")
 			return errors.New("Not supported")

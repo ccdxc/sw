@@ -9,5 +9,6 @@ type TestNode struct {
 	Node *iota.Node
 	//Workloads   []*iota.Workload
 	AgentClient iota.IotaAgentApiClient
-	TriggerInfo *iota.TriggerMsg
+	TriggerInfo []*iota.TriggerMsg
+	TriggerResp []*iota.TriggerMsg
 }

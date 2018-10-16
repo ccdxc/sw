@@ -195,11 +195,16 @@ message Workload {
 
 enum TriggerOp {
     TYPE_NONE           = 0;
-    TX_PKT              = 1;
-    RX_PKT              = 2;
     EXEC_CMDS           = 3;
     TERMINATE_ALL_CMDS  = 4;
 }
+
+enum TriggerMode {
+    MODE_NONE           = 0;
+    TRIGGER_SERIAL      = 1;
+    TRIGGER_PARALLEL    = 2;
+}
+
 
 message TriggerMsg {
     //API Status
@@ -208,9 +213,9 @@ message TriggerMsg {
     // Type of the trigger operation
     TriggerOp trigger_op                    = 2;
 
-
-    // Node on which trigger needs to be executed
-    string node_name                        = 3;
+    // Trigger mode specifies whether commands have to be
+    // executed serially or in parallel
+    TriggerMode trigger_mode                = 3;
 
     // Command Request params
     repeated Command    commands            = 4;
@@ -223,13 +228,13 @@ enum CommandMode {
 }
 message Command {
     // Whether to run the command in foreground or background
-    CommandMode     mode                = 1;
+    CommandMode     mode            = 1;
 
     // Fully qualified command line that needs to be called
-    oneof command_or_pkt {
-        string          command     = 2;
-        string          packet      = 3;
-    }
+    string          command         = 2;
+
+    // Node on which trigger needs to be executed
+    string          node_name       = 3;
 
     // Workload name of the command
     string          workload_name   = 4;
@@ -247,8 +252,6 @@ message Command {
     // command handle. Useful only for background commands
     string          handle          = 8;
 
-    // received packet for the command
-    string          rx_pkt          = 9;
 }
 
 // Captures the overall health of the e2e cluster
@@ -302,7 +305,7 @@ message TestBedMsg {
     string user                         = 10;
 
     // Password for logging into the nodes
-    string passwd                         = 11;
+    string passwd                       = 11;
 }
 
 // WorkloadCopyDirection defines direction whether to copy in or copy out

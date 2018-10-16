@@ -116,7 +116,7 @@ func (agent *Service) DeleteWorkload(ctx context.Context, in *iota.Workload) (*i
 func (agent *Service) Trigger(ctx context.Context, in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	agent.logger.Printf("Trigger messasge received : %v", in)
 	/* Check if the node running an instance to add a workload */
-	if agent.node == nil || agent.node.NodeName() != in.GetNodeName() {
+	if agent.node == nil {
 		agent.logger.Println("Invalid trigger message received on unintialized node")
 		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 	}
