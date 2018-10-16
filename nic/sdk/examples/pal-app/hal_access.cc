@@ -6,6 +6,7 @@
 #include <string.h>
 #include "include/sdk/pal.hpp"
 #include "include/sdk/types.hpp"
+#include "include/sdk/timestamp.hpp"
 
 void tcam_mem_dump(uint64_t base_addr,
                    uint32_t num_entries,
@@ -71,6 +72,9 @@ int main (int argc, char **argv)
     sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW);
     uint64_t addr = 0x0;
     uint64_t data = 0x0;
+    uint8_t data8[32];
+    uint64_t count;
+    timespec_t start_ts, end_ts, ts_diff;
 
     if (argc < 2) {
         printf("Usage: %s <hbm_read/hbm_write/tcam_read>\n", argv[0]);
@@ -107,9 +111,20 @@ int main (int argc, char **argv)
 
         sdk::lib::pal_ring_doorbell(addr, data);
 
+    } else if (!strcmp(argv[1], "loop_test")) {
+        sscanf(argv[2], "%" SCNx64, &addr);
+        sscanf(argv[3], "%" SCNx64, &count);
+        clock_gettime(CLOCK_MONOTONIC, &start_ts);
+        while (count--) {
+          sdk::lib::pal_mem_read(addr, data8, 8);
+        }
+        clock_gettime(CLOCK_MONOTONIC, &end_ts);
+        ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
+        printf("time %lus.%luns\n", ts_diff.tv_sec, ts_diff.tv_nsec);
     } else {
         printf("Usage: %s <hbm_read/hbm_write/tcam_read>\n", argv[0]);
     }
+
 
     return 0;
 }
