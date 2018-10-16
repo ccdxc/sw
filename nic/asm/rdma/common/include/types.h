@@ -944,6 +944,7 @@ struct rsqwqe_t {
 #define KEY_ENTRY_T struct key_entry_t
 #define LOG_SIZEOF_KEY_ENTRY_T  6   // 2^6 = 64 bytes
 #define LOG_SIZEOF_KEY_ENTRY_T_BITS (LOG_SIZEOF_KEY_ENTRY_T + LOG_BITS_PER_BYTE)
+#define KEY_ENTRY_SIZE_BYTES    64
 
 // index = lkey >> KEY_INDEX_SHIFT
 #define KEY_INDEX_GET(_key_index_r, _key_r) \
@@ -1387,6 +1388,7 @@ struct resp_rx_send_fml_t {
 #define AQ_STATS_DUMP_TYPE_EQ   2
 #define AQ_STATS_DUMP_TYPE_PT   3
 #define AQ_STATS_DUMP_TYPE_KT   4
+#define AQ_STATS_DUMP_TYPE_AQ   5
 
 struct aqwqe_t {
 	op: 8;

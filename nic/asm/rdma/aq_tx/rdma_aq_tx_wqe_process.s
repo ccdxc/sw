@@ -10,6 +10,7 @@ struct aqwqe_t d;
 struct aq_tx_s1_t0_k k;
 
 #define IN_TO_S_P to_s1_info
+#define IN_S2S_P  t0_s2s_aqcb_to_wqe_info
 
 #define PHV_GLOBAL_COMMON_P phv_global_common
     
@@ -17,6 +18,8 @@ struct aq_tx_s1_t0_k k;
 #define K_SQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, sqcb_base_addr_hi) 
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)    
+#define K_CB_ADDR CAPRI_KEY_RANGE(IN_S2S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
+
 %%
 
     .param      tx_dummy
@@ -362,7 +365,9 @@ stats_dump:
     .brcase     AQ_STATS_DUMP_TYPE_KT
         b           kt_dump
         nop
-    .brcase     5
+    .brcase     AQ_STATS_DUMP_TYPE_AQ
+        b           aq_dump
+        nop
     .brcase     6
     .brcase     7
     .brcase     8
@@ -376,6 +381,16 @@ stats_dump:
         b           exit
         nop
     .brend
+
+aq_dump:
+    add     r1, r0, K_CB_ADDR
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB_UNIT_SIZE_BYTES, r1)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB_UNIT_SIZE_BYTES, d.{stats.dma_addr}.dx)
+
+    b           prepare_feedback
+    nop
 
 pt_dump:
 
@@ -391,7 +406,15 @@ pt_dump:
     nop
 
 kt_dump:
+    KT_BASE_ADDR_GET2(r4, r3)
+    add         r3, r0, d.{id_ver}.wx
+    KEY_ENTRY_ADDR_GET(r4, r4, r3)
     
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, KEY_ENTRY_SIZE_BYTES, r4)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, KEY_ENTRY_SIZE_BYTES, d.{stats.dma_addr}.dx) 
+
     b           prepare_feedback
     nop
 

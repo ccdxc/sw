@@ -158,6 +158,16 @@ header_type aq_tx_aqcb_to_modqp_t {
     }
 }
 
+// TODO: migrate to phv global later.
+// phv global has only 25 bits for cb_addr. if we change it to 28bits, 
+// lot of macros cannot be reused in aq asm code and need to be redefined 
+// specific to aq. hence for now cb_addr is being populated in s2s.
+header_type aq_tx_aqcb_to_wqe_t {
+    fields {
+        cb_addr             : 34;
+    }
+}
+
 /**** global header unions ****/
 
 @pragma pa_header_union ingress common_global
@@ -206,6 +216,10 @@ metadata aq_tx_to_stage_fb_info_t to_s6_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_aqcb_to_wqe_info
+metadata aq_tx_aqcb_to_wqe_t t0_s2s_aqcb_to_wqe_info;
+@pragma scratch_metadata
+metadata aq_tx_aqcb_to_wqe_t t0_s2s_aqcb_to_wqe_info_scr;
 
 //Table-1
 @pragma pa_header_union ingress common_t1_s2s t1_s2s_wqe2_to_sqcb0_info t1_s2s_sqcb0_to_rqcb0_info
@@ -264,6 +278,7 @@ action aq_tx_aqwqe_process () {
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
     
     // stage to stage
+    modify_field(t0_s2s_aqcb_to_wqe_info_scr.cb_addr, t0_s2s_aqcb_to_wqe_info.cb_addr);
 }
 
 action aq_tx_modify_qp_2_process () {

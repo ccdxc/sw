@@ -14,6 +14,7 @@ DUMP_TYPE_CQ=1
 DUMP_TYPE_EQ=2
 DUMP_TYPE_PT=3
 DUMP_TYPE_KT=4
+DUMP_TYPE_AQ=5
 
 DBG_WR_CTRL='dbg_wr_ctrl'
 DBG_WR_DATA='dbg_wr_data'
@@ -573,6 +574,41 @@ class RdmaRespRxStats(Packet):
         BitField("pad", 0, 192),
     ]
 
+class RdmaKeyTableEntry(Packet):
+    name = "RdmaKeyTableEntry"
+    fields_desc = [
+        ByteField("user_key", 0),
+        BitField("state", 0, 4),
+        BitField("type", 0, 4),
+        ByteField("acc_ctrl", 0),
+        ByteField("log_page_size", 0),
+        IntField("len", 0),
+        LongField("base_va", 0),
+        IntField("pt_base", 0),
+        IntField("pd", 0),
+        BitField("rsvd1", 0, 19),
+        BitField("override_lif_vld", 0, 1),
+        BitField("override_lif", 0, 12),
+        ByteField("flags", 0),
+        X3BytesField("qp", 0),
+        IntField("mr_l_key", 0),
+        IntField("mr_cookie", 0),
+        BitField("rsvd2", 0, 192)
+    ]
+
+class RdmaPageTableEntry(Packet):
+    name = "RdmaPageTableEntry"
+    fields_desc = [
+        LELongField("pa_0", 0),
+        LELongField("pa_1", 0),
+        LELongField("pa_2", 0),
+        LELongField("pa_3", 0),
+        LELongField("pa_4", 0),
+        LELongField("pa_5", 0),
+        LELongField("pa_6", 0),
+        LELongField("pa_7", 0),
+    ]
+
 def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
     cmd_str = "echo -n 'tbl " + str(tbl_type) + " idx " + str(tbl_index) + " post' > " + DBG_WR_CTRL
     #print cmd_str
@@ -635,7 +671,21 @@ path = PATH_PREFIX+args.pcie_id+'/lif'+str(args.lif)+PATH_SUFFIX
 #print path
 os.chdir(path)
 
-if args.sqcb0 is not None:
+if args.cqcb is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_CQ, args.cqcb, 0, 64)
+    cqcb = RdmaCQstate(bin_str)
+    cqcb.show()
+elif args.eqcb is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_EQ, args.cqcb, 0, 64)
+    eqcb = RdmaEQstate(bin_str)
+    eqcb.show()
+elif args.aqcb is not None:
+    #for now qid is ignored for aqcb dump.
+    #qstate is dumped for the aq on which this rdmactl command is issued.
+    bin_str = exec_dump_cmd(DUMP_TYPE_AQ, 1, 0, 64)
+    aqcb = RdmaAQstate(bin_str)
+    aqcb.show()
+elif args.sqcb0 is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.sqcb0, 0, 64)
     sqcb0 = RdmaSQCB0state(bin_str)
     sqcb0.show()
@@ -683,5 +733,11 @@ elif args.resp_rx_stats is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.resp_rx_stats, 1024+320, 64)
     resp_rx_stats = RdmaRespRxStats(bin_str)
     resp_rx_stats.show()
-
-
+elif args.kt_entry is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_KT, args.kt_entry, 0, 64)
+    kt_entry = RdmaKeyTableEntry(bin_str)
+    kt_entry.show()
+elif args.pt_entry is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_PT, args.pt_entry, 0, 64)
+    pt_entry = RdmaPageTableEntry(bin_str)
+    pt_entry.show()
