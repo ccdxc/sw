@@ -63,6 +63,13 @@ func (c *ConfigService) GenerateConfigs(ctx context.Context, req *iota.GenerateC
 	return resp, nil
 }
 
+func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*iota.AuthMsg, error) {
+	log.Infof("CFG SVC | DEBUG | GenerateConfigs. Received Request Msg: %v", req)
+	return req, nil
+}
+
+
+
 // PushConfig pushes the config
 func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*iota.ConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | PushConfig. Received Request Msg: %v", req)

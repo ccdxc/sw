@@ -13,7 +13,12 @@ import "types.proto";
 // Config Management Service
 service ConfigMgmtApi {
 
+    // MakeCluster brings up a Venice Cluster
     rpc MakeCluster(MakeClusterMsg) returns (MakeClusterMsg) {};
+
+    // ConfigureAuth will perform the following actions:
+    // Create an admin role, assign super admin privileges, log in and return the JWT Token back
+    rpc ConfigureAuth(AuthMsg) returns (AuthMsg) {};
 
     rpc InitCfgService(InitConfigMsg) returns (InitConfigMsg) {};
 
@@ -26,6 +31,11 @@ service ConfigMgmtApi {
 
     // Query API queries the base config to match any parameters
     rpc QueryConfig(ConfigQueryMsg) returns (ConfigMsg) {};
+}
+
+message AuthMsg {
+    string AuthToken                    = 1;
+    IotaAPIResponse api_response        = 2;
 }
 
 message MakeClusterMsg {
@@ -58,8 +68,9 @@ message GenerateConfigMsg {
 }
 
 message ConfigMsg {
-    IotaAPIResponse api_response    = 1;
-    repeated ConfigObject configs   = 2;
+    repeated ConfigObject configs   = 1;
+    string AuthToken                = 2;
+    IotaAPIResponse api_response    = 3;
 }
 
 enum CfgMethodType {
