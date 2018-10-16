@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -422,18 +421,9 @@ func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, 
 		Cmd:          cmd,
 	})
 
-	var b bytes.Buffer
-	printline := func(reader *bufio.Reader) {
-		for {
-			//Looks like we need to discard 8 bytes as its contains non UTF stuff.
-			reader.Discard(8)
-			line, _, ferr := reader.ReadLine()
-			if ferr == io.EOF {
-				return
-			}
-			b.WriteString(string(line) + "\n")
-		}
-	}
+	var stdoutBuf, stderrBuf bytes.Buffer
+	stdout := io.MultiWriter(&stdoutBuf)
+	stderr := io.MultiWriter(&stderrBuf)
 
 	hResp, err := ctr.client.ContainerExecAttach(ctr.ctx, resp.ID,
 		types.ExecConfig{})
@@ -451,10 +441,9 @@ func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, 
 	retCode := 0
 	for !background {
 		cmdResp, _ := ctr.client.ContainerExecInspect(ctr.ctx, resp.ID)
-		printline(hResp.Reader)
+		StdCopy(stdout, stderr, hResp.Reader)
 		if cmdResp.Running == false {
 			retCode = cmdResp.ExitCode
-			fmt.Println("Command exit code : ", cmdResp.ExitCode)
 			if cmdResp.ExitCode != 0 {
 				err = errors.New("Command Failed")
 			}
@@ -462,7 +451,7 @@ func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, 
 		}
 	}
 
-	return ((int32)(retCode)), b.String(), "", err
+	return ((int32)(retCode)), stdoutBuf.String(), stderrBuf.String(), err
 }
 
 func bringUpAppContainer(name string, registry string, mountTarget string) (*string, error) {

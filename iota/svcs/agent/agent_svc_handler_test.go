@@ -262,7 +262,7 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
 
 	triggerMsg := iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
-		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "test-workload", Command: "ls"}}}
+		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "test-workload", Command: "lsas"}}}
 
 	triggeResp, err := agentClient.Trigger(context.Background(), &triggerMsg)
 	if err != nil {
@@ -270,7 +270,7 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 	}
 
 	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
-		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "test-workload", Command: "cat anaconda-post.log"}}}
+		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "test-workload", Command: "ping -c 10 127.0.0.1"}}}
 
 	triggeResp, err = agentClient.Trigger(context.Background(), &triggerMsg)
 	if err != nil {
