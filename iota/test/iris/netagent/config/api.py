@@ -7,15 +7,12 @@ import grpc
 
 import iota.harness.api as api
 
-AGENT_URL=None
-AGENT_UUID=None
+AGENT_URLS=[]
 
-def Init(agent_ip, agent_uuid):
-    global AGENT_URL
-    AGENT_URL = 'http://%s:9007/' % agent_ip
-
-    global AGENT_UUID
-    AGENT_UUID = agent_uuid
+def Init(agent_ips):
+    global AGENT_URLS
+    for agent_ip in agent_ips:
+        AGENT_URLS.append('http://%s:9007/' % agent_ip)
     return
 
 def __rest_api_handler(url, obj):
@@ -24,6 +21,7 @@ def __rest_api_handler(url, obj):
         json_data = obj.to_JSON()
     else:
         json_data = json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o)))
+    api.Logger.info("URL = ", url)
     api.Logger.info("JSON Data = ", json_data)
     headers = {'Content-type': 'application/json'}
     response = requests.post(url, data=json_data, headers=headers)
@@ -31,15 +29,16 @@ def __rest_api_handler(url, obj):
     assert(response.status_code == requests.codes.ok)
     return
 
-def __config(objlist, url):
+def __config(objlist, rest_api_path):
     agent_objlist = []
-    for obj in objlist:
-        __rest_api_handler(url, obj)
+    for agent_url in AGENT_URLS:
+        url = agent_url + rest_api_path
+        for obj in objlist:
+            __rest_api_handler(url, obj)
     return
 
 def ConfigureTenants(objlist):
-    url = AGENT_URL + 'api/tenants/'
-    __config(objlist, url)
+    __config(objlist, 'api/tenants/')
     return
 
 def ConfigureSecurityProfiles(objlist):
@@ -47,23 +46,17 @@ def ConfigureSecurityProfiles(objlist):
     return
 
 def ConfigureSecurityGroupPolicies(objlist):
-    url = AGENT_URL + 'api/security/policies/'
-    __config(objlist, url)
+    __config(objlist, 'api/security/policies/')
     return
 
 def ConfigureSecurityGroups(objlist):
-    url = AGENT_URL + 'api/sgs/'
-    #__config(objlist, url)
+    #__config(objlist, 'api/sgs/')
     return
 
 def ConfigureNetworks(objlist):
-    url = AGENT_URL + 'api/networks/'
-    __config(objlist, url)
+    __config(objlist, 'api/networks/')
     return
 
 def ConfigureEndpoints(objlist):
-    url = AGENT_URL + 'api/endpoints/'
-    for obj in objlist:
-        setattr(obj.spec, "node-uuid", "uuid-%s" % AGENT_UUID)
-    __config(objlist, url)
+    __config(objlist, 'api/endpoints/')
     return

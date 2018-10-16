@@ -25,7 +25,7 @@ setup:
     #   before the testcases start.
     #   Each step will be invoked in the order below.
     config  : 
-        - step : bringup.push_static_config
+        - step : config.push_static_config
 
 # Section: 'common'
 # List of common actions to be invoked during test phase.

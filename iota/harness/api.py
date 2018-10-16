@@ -120,14 +120,17 @@ def GetVeniceMgmtIpAddresses():
 def GetNaplesMgmtIpAddresses():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesMgmtIpAddresses()
 
-def GetNaplesNodeUUIDs():
-    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesUUIDs()
+def GetNaplesNodeUuidMap():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesUuidMap()
 
 def GetDataVlans():
     return store.GetTestbed().GetDataVlans()
 
 def GetVeniceHostnames():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceHostnames()
+
+def GetNaplesHostnames():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesHostnames()
 
 def PrintCommandResults(cmd):
     Logger.info("Command Results on workload: %s" % cmd.workload_name)

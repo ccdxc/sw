@@ -36,9 +36,10 @@ class _Testbed:
         if not ts:
             return msg
         msg.switch_port_id = int(self.tbspec.DataNetworks.DataSwitch.Port)
-        msg.naples_image = ts.GetImages().naples
-        msg.venice_image = ts.GetImages().venice
-        msg.driver_sources = ts.GetImages().drivers
+        if not GlobalOptions.rerun:
+            msg.naples_image = ts.GetImages().naples
+            msg.venice_image = ts.GetImages().venice
+            msg.driver_sources = ts.GetImages().drivers
 
         # TBD: Get it from warmd.json
         msg.user = self.tbspec.Provision.Username

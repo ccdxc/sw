@@ -133,16 +133,23 @@ class Topology(object):
                 ips.append(n.MgmtIpAddress())
         return ips
 
-    def GetNaplesUUIDs(self):
-        ips = []
+    def GetNaplesUuidMap(self):
+        uuid_map = {}
         for n in self.__nodes.values():
             if n.Role() == topo_pb2.PERSONALITY_NAPLES:
-                ips.append(n.UUID())
-        return ips
+                uuid_map[n.Name()] = n.UUID()
+        return uuid_map
 
     def GetVeniceHostnames(self):
         ips = []
         for n in self.__nodes.values():
             if n.Role() == topo_pb2.PERSONALITY_VENICE:
+                ips.append(n.Name())
+        return ips
+
+    def GetNaplesHostnames(self):
+        ips = []
+        for n in self.__nodes.values():
+            if n.Role() == topo_pb2.PERSONALITY_NAPLES:
                 ips.append(n.Name())
         return ips

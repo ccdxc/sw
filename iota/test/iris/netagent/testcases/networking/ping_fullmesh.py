@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 import time
-import pdb
 
 import iota.harness.api as api
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc_pb2
