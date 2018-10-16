@@ -70,9 +70,10 @@ func (app *containerWorkload) SendArpProbe(ip string, intf string, vlan int) err
 		intf = vlanIntf(intf, vlan)
 	}
 	arpCmd := []string{"arping", "-c", "1", "-U", ip, "-I", intf}
-	if retCode, stdout, _ := Utils.Run(arpCmd, 0, false, false, nil); retCode != 0 {
+	if retCode, stdout, _, _ := app.RunCommand(arpCmd, 0, false, false); retCode != 0 {
 		return errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, stdout)
 	}
+
 
 	return nil
 
