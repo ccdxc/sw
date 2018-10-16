@@ -23,6 +23,6 @@ func (n *TestNode) Trigger(index int) error {
 		return fmt.Errorf("adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
 	}
 
-	n.TriggerResp[index] = resp
+	n.TriggerResp = append(n.TriggerResp, resp)
 	return nil
 }
