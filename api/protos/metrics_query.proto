@@ -37,19 +37,7 @@ message TimeRange {
 enum TsdbFunctionType {
     NONE = 0; // none
     MEAN = 1; // returns average of the fields
-}
-
-// MetricSpec specifies a selector for metrics within the selected
-// objects. It consists of a tag selector, list of fields, ordered
-// list of aggregator functions and a FilterSpec
-message MetricSpec {
-    // Tags select a metric based on tags attached to the metric.
-    labels.Selector Tags = 1 [(gogoproto.jsontag) = "tags,omitempty"];
-    // Fields select the metric fields to be included in the result
-    // Empty will include all fields, must contain at least one non-tag field
-    repeated string Fields = 2 [(gogoproto.jsontag) = "fields,omitempty"];
-    // Functions specify an operation function to be applied, example mean()/min()/max()
-    string Function   = 3 [(gogoproto.jsontag) = "function,omitempty", (venice.check) = "StrEnum(TsdbFunctionType)"];
+    MAX  = 2; // returns maximum of the fields
 }
 
 // PaginationSpec specifies how many metrics instances to include
@@ -70,21 +58,31 @@ message QuerySpec {
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     // ObjectSelectot selects one or more objects of the same kind for query
     ObjectSelector O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    // Fields select the metric fields to be included in the result
+    // Empty will include all fields, must contain at least one non-tag field
+    repeated string Fields = 3 [(gogoproto.jsontag) = "fields,omitempty", (venice.check)="RegExp(name)"];
+    // Functions specify an operation function to be applied, example mean()/max()
+    string Function   = 4 [(gogoproto.jsontag) = "function,omitempty", (venice.check) = "StrEnum(TsdbFunctionType)"];
     // TimeRange specifies the time interval for the query
-    TimeRange Time = 3 [(gogoproto.jsontag) = "time,omitempty"];
-    // MetricSpec specifies the metrics within the selected objects
-    MetricSpec Metrics = 4 [(gogoproto.jsontag) = "metrics,omitempty"];
+    TimeRange Time = 5 [(gogoproto.jsontag) = "time,omitempty"];
+    // GroupbyTime groups series based on the interval specified
+    string GroupbyTime = 6 [(gogoproto.jsontag) = "group-by-time,omitempty", (venice.check)="Duration()"];
+    // GroupbyField groups series based on the field specified
+    string GroupbyField = 7 [(gogoproto.jsontag) = "group-by-field,omitempty", (venice.check)="RegExp(name)"];
     // PaginatioSpec specifies the number of series to include
-    PaginationSpec Pagination = 5 [(gogoproto.jsontag) = "pagination,omitempty"];
+    PaginationSpec Pagination = 8 [(gogoproto.jsontag) = "pagination,omitempty"];
 }
 
 //
 message ResultSeries {
+    // Name of the series
     string Name = 1 [(gogoproto.jsontag) = "name,omitempty"];
+    // Tags are the TSDB tags in the query response
+    map <string, string> Tags = 2 [(gogoproto.jsontag) = "tags,omitempty"];
     // columns list all available fields in tsdb
-    repeated string Columns = 2 [(gogoproto.jsontag) = "columns,omitempty"];
+    repeated string Columns = 3 [(gogoproto.jsontag) = "columns,omitempty"];
     // values contain field values received frpm tsdb, it is in the form of [][]interface{}
-    repeated api.InterfaceSlice Values = 3 [(gogoproto.jsontag) = "values"];
+    repeated api.InterfaceSlice Values = 4 [(gogoproto.jsontag) = "values"];
 }
 
 

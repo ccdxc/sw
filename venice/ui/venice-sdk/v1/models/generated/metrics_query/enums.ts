@@ -13,9 +13,10 @@ export enum LabelsRequirement_operator {
     'notIn' = "notIn",
 }
 
-export enum Metrics_queryMetricSpec_function {
+export enum Metrics_queryQuerySpec_function {
     'NONE' = "NONE",
     'MEAN' = "MEAN",
+    'MAX' = "MAX",
 }
 
 
@@ -56,7 +57,7 @@ export class AllEnums {
     }
 
     LabelsRequirement_operator = LabelsRequirement_operator;
-    Metrics_queryMetricSpec_function = Metrics_queryMetricSpec_function;
+    Metrics_queryQuerySpec_function = Metrics_queryQuerySpec_function;
 
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
 }

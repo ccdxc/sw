@@ -20,7 +20,6 @@ export * from './api-watch-event-list.model';
 export * from './googleprotobuf-any.model';
 export * from './labels-requirement.model';
 export * from './labels-selector.model';
-export * from './metrics-query-metric-spec.model';
 export * from './metrics-query-object-selector.model';
 export * from './metrics-query-pagination-spec.model';
 export * from './metrics-query-query-response.model';

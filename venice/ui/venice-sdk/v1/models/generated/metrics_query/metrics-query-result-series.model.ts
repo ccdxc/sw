@@ -11,6 +11,7 @@ import { ApiInterfaceSlice, IApiInterfaceSlice } from './api-interface-slice.mod
 
 export interface IMetrics_queryResultSeries {
     'name'?: string;
+    'tags'?: object;
     'columns'?: Array<string>;
     'values'?: Array<IApiInterfaceSlice>;
 }
@@ -18,11 +19,15 @@ export interface IMetrics_queryResultSeries {
 
 export class Metrics_queryResultSeries extends BaseModel implements IMetrics_queryResultSeries {
     'name': string = null;
+    'tags': object = null;
     'columns': Array<string> = null;
     'values': Array<ApiInterfaceSlice> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
             type: 'string'
+        },
+        'tags': {
+            type: 'object'
         },
         'columns': {
             type: 'Array<string>'
@@ -66,6 +71,11 @@ export class Metrics_queryResultSeries extends BaseModel implements IMetrics_que
         } else if (Metrics_queryResultSeries.hasDefaultValue('name')) {
             this['name'] = Metrics_queryResultSeries.propInfo['name'].default;
         }
+        if (values && values['tags'] != null) {
+            this['tags'] = values['tags'];
+        } else if (Metrics_queryResultSeries.hasDefaultValue('tags')) {
+            this['tags'] = Metrics_queryResultSeries.propInfo['tags'].default;
+        }
         if (values) {
             this.fillModelArray<string>(this, 'columns', values['columns']);
         }
@@ -81,6 +91,7 @@ export class Metrics_queryResultSeries extends BaseModel implements IMetrics_que
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'name': new FormControl(this['name']),
+                'tags': new FormControl(this['tags']),
                 'columns': new FormArray([]),
                 'values': new FormArray([]),
             });
@@ -95,6 +106,7 @@ export class Metrics_queryResultSeries extends BaseModel implements IMetrics_que
     setFormGroupValues() {
         if (this._formGroup) {
             this._formGroup.controls['name'].setValue(this['name']);
+            this._formGroup.controls['tags'].setValue(this['tags']);
             this.fillModelArray<string>(this, 'columns', this['columns']);
             this.fillModelArray<ApiInterfaceSlice>(this, 'values', this['values'], ApiInterfaceSlice);
         }

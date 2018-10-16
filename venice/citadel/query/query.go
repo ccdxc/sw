@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/metrics_query"
 	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/globals"
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -47,6 +49,7 @@ func (q *Server) Stop() {
 
 // validate is the function to validate query parameters
 func (q *Server) validate(qs *metrics_query.QuerySpec) error {
+
 	if qs == nil {
 		return fmt.Errorf("query parameter rquired")
 	}
@@ -57,6 +60,34 @@ func (q *Server) validate(qs *metrics_query.QuerySpec) error {
 
 	if qs.Tenant == "" {
 		return fmt.Errorf("tenant rquired")
+	}
+
+	qs.Function = strings.ToUpper(qs.Function)
+
+	if _, ok := metrics_query.TsdbFunctionType_value[qs.Function]; !ok {
+		return fmt.Errorf("function %s did not match allowed strings", qs.Function)
+	}
+
+	for _, v := range qs.Fields {
+		if !validators.RegExp(v, []string{"name"}) {
+			return fmt.Errorf("failed to validate field %s", v)
+		}
+	}
+
+	if qs.GroupbyField != "" {
+		if !validators.RegExp(qs.GroupbyField, []string{"name"}) {
+			return fmt.Errorf("failed to validate field %s", qs.GroupbyField)
+		}
+	}
+
+	if qs.Selector != nil {
+		if _, err := qs.Selector.PrintSQL(); err != nil {
+			return err
+		}
+	}
+
+	if !validators.Duration(qs.GroupbyTime) {
+		return fmt.Errorf("failed to validate group-by-time %s", qs.GroupbyTime)
 	}
 
 	return nil
@@ -96,6 +127,7 @@ func (q *Server) Query(c context.Context, qs *metrics_query.QuerySpec) (*metrics
 		for _, s := range citadelResp.Series {
 			rs := &metrics_query.ResultSeries{
 				Name:    s.Name,
+				Tags:    s.Tags,
 				Columns: s.Columns,
 				Values:  []*api.InterfaceSlice{},
 			}
@@ -143,17 +175,43 @@ func buildCitadelQuery(qs *metrics_query.QuerySpec) (string, error) {
 	measurement := qs.Kind
 	fields := "*"
 
-	if qs.Metrics != nil && qs.Metrics.Tags != nil {
-		tags, err := qs.Metrics.Tags.PrintSQL()
-		if err != nil {
-			return "", err
-		}
-		if tags != "" {
-			fields = tags
+	if len(qs.Fields) > 0 {
+		fields = strings.Join(qs.Fields, ",")
+	}
+
+	if qs.Function != "" {
+		switch qs.Function {
+		case metrics_query.TsdbFunctionType_MEAN.String():
+			fields = fmt.Sprintf("%s(%s)", qs.Function, fields)
+		case metrics_query.TsdbFunctionType_MAX.String():
+			fields = fmt.Sprintf("%s(%s),*", qs.Function, fields)
+		case metrics_query.TsdbFunctionType_NONE.String():
+			//none
 		}
 	}
 
 	q := fmt.Sprintf("SELECT %s FROM %s", fields, measurement)
+
+	if qs.Selector != nil {
+		sel, err := qs.Selector.PrintSQL()
+		if err != nil {
+			return "", err
+		}
+		q += fmt.Sprintf(" WHERER %s", sel)
+	}
+
+	var groupby []string
+	if qs.GroupbyTime != "" {
+		groupby = append(groupby, fmt.Sprintf("time(%s)", qs.GroupbyTime))
+	}
+
+	if qs.GroupbyField != "" {
+		groupby = append(groupby, fmt.Sprintf("%s", qs.GroupbyField))
+	}
+
+	if len(groupby) > 0 {
+		q += fmt.Sprintf(" GROUP BY %s", strings.Join(groupby, ","))
+	}
 
 	return q, nil
 }

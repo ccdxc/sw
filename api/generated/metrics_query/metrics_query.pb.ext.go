@@ -28,33 +28,6 @@ var _ validators.DummyVar
 var validatorMapMetrics_query = make(map[string]map[string][]func(string, interface{}) error)
 
 // Clone clones the object into into or creates one of into is nil
-func (m *MetricSpec) Clone(into interface{}) (interface{}, error) {
-	var out *MetricSpec
-	var ok bool
-	if into == nil {
-		out = &MetricSpec{}
-	} else {
-		out, ok = into.(*MetricSpec)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *MetricSpec) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Function = "NONE"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *ObjectSelector) Clone(into interface{}) (interface{}, error) {
 	var out *ObjectSelector
 	var ok bool
@@ -157,8 +130,10 @@ func (m *QuerySpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *QuerySpec) Defaults(ver string) bool {
 	var ret bool
-	if m.Metrics != nil {
-		ret = m.Metrics.Defaults(ver) || ret
+	ret = true
+	switch ver {
+	default:
+		m.Function = "NONE"
 	}
 	return ret
 }
@@ -207,34 +182,6 @@ func (m *TimeRange) Defaults(ver string) bool {
 
 // Validators
 
-func (m *MetricSpec) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if m.Tags != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Tags"
-		if errs := m.Tags.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	if vs, ok := validatorMapMetrics_query["MetricSpec"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapMetrics_query["MetricSpec"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
 func (m *ObjectSelector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Selector != nil {
@@ -267,16 +214,6 @@ func (m *QueryResult) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *QuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if m.Metrics != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Metrics"
-		if errs := m.Metrics.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 
 	dlmtr := "."
 	if path == "" {
@@ -285,6 +222,19 @@ func (m *QuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	npath := path + dlmtr + "ObjectSelector"
 	if errs := m.ObjectSelector.Validate(ver, npath, ignoreStatus); errs != nil {
 		ret = append(ret, errs...)
+	}
+	if vs, ok := validatorMapMetrics_query["QuerySpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapMetrics_query["QuerySpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
 	}
 	return ret
 }
@@ -307,12 +257,44 @@ func init() {
 
 	validatorMapMetrics_query = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapMetrics_query["MetricSpec"] = make(map[string][]func(string, interface{}) error)
-	validatorMapMetrics_query["MetricSpec"]["all"] = append(validatorMapMetrics_query["MetricSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*MetricSpec)
+	validatorMapMetrics_query["QuerySpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapMetrics_query["QuerySpec"]["all"] = append(validatorMapMetrics_query["QuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*QuerySpec)
+		args := make([]string, 0)
+		args = append(args, "name")
+
+		for _, v := range m.Fields {
+			if !validators.RegExp(v, args) {
+				return fmt.Errorf("%v failed validation", path+"."+"Fields")
+			}
+		}
+		return nil
+	})
+
+	validatorMapMetrics_query["QuerySpec"]["all"] = append(validatorMapMetrics_query["QuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*QuerySpec)
 
 		if _, ok := TsdbFunctionType_value[m.Function]; !ok {
-			return errors.New("MetricSpec.Function did not match allowed strings")
+			return errors.New("QuerySpec.Function did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapMetrics_query["QuerySpec"]["all"] = append(validatorMapMetrics_query["QuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*QuerySpec)
+		args := make([]string, 0)
+		args = append(args, "name")
+
+		if !validators.RegExp(m.GroupbyField, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"GroupbyField")
+		}
+		return nil
+	})
+
+	validatorMapMetrics_query["QuerySpec"]["all"] = append(validatorMapMetrics_query["QuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*QuerySpec)
+		if !validators.Duration(m.GroupbyTime) {
+			return fmt.Errorf("%v validation failed", path+"."+"GroupbyTime")
 		}
 		return nil
 	})

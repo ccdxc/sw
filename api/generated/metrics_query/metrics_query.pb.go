@@ -11,7 +11,6 @@
 		svc_metrics_query.proto
 
 	It has these top-level messages:
-		MetricSpec
 		ObjectSelector
 		PaginationSpec
 		QueryResponse
@@ -53,60 +52,25 @@ const (
 	TsdbFunctionType_NONE TsdbFunctionType = 0
 	//
 	TsdbFunctionType_MEAN TsdbFunctionType = 1
+	//
+	TsdbFunctionType_MAX TsdbFunctionType = 2
 )
 
 var TsdbFunctionType_name = map[int32]string{
 	0: "NONE",
 	1: "MEAN",
+	2: "MAX",
 }
 var TsdbFunctionType_value = map[string]int32{
 	"NONE": 0,
 	"MEAN": 1,
+	"MAX":  2,
 }
 
 func (x TsdbFunctionType) String() string {
 	return proto.EnumName(TsdbFunctionType_name, int32(x))
 }
 func (TsdbFunctionType) EnumDescriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{0} }
-
-// MetricSpec specifies a selector for metrics within the selected
-// objects. It consists of a tag selector, list of fields, ordered
-// list of aggregator functions and a FilterSpec
-type MetricSpec struct {
-	// Tags select a metric based on tags attached to the metric.
-	Tags *labels.Selector `protobuf:"bytes,1,opt,name=Tags,json=tags,omitempty" json:"tags,omitempty"`
-	// Fields select the metric fields to be included in the result
-	// Empty will include all fields, must contain at least one non-tag field
-	Fields []string `protobuf:"bytes,2,rep,name=Fields,json=fields,omitempty" json:"fields,omitempty"`
-	// Functions specify an operation function to be applied, example mean()/min()/max()
-	Function string `protobuf:"bytes,3,opt,name=Function,json=function,omitempty,proto3" json:"function,omitempty"`
-}
-
-func (m *MetricSpec) Reset()                    { *m = MetricSpec{} }
-func (m *MetricSpec) String() string            { return proto.CompactTextString(m) }
-func (*MetricSpec) ProtoMessage()               {}
-func (*MetricSpec) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{0} }
-
-func (m *MetricSpec) GetTags() *labels.Selector {
-	if m != nil {
-		return m.Tags
-	}
-	return nil
-}
-
-func (m *MetricSpec) GetFields() []string {
-	if m != nil {
-		return m.Fields
-	}
-	return nil
-}
-
-func (m *MetricSpec) GetFunction() string {
-	if m != nil {
-		return m.Function
-	}
-	return ""
-}
 
 // ObjectSelector selects one or more objects of the same Kind
 // for the metrics query
@@ -124,7 +88,7 @@ type ObjectSelector struct {
 func (m *ObjectSelector) Reset()                    { *m = ObjectSelector{} }
 func (m *ObjectSelector) String() string            { return proto.CompactTextString(m) }
 func (*ObjectSelector) ProtoMessage()               {}
-func (*ObjectSelector) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{1} }
+func (*ObjectSelector) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{0} }
 
 func (m *ObjectSelector) GetName() string {
 	if m != nil {
@@ -166,7 +130,7 @@ type PaginationSpec struct {
 func (m *PaginationSpec) Reset()                    { *m = PaginationSpec{} }
 func (m *PaginationSpec) String() string            { return proto.CompactTextString(m) }
 func (*PaginationSpec) ProtoMessage()               {}
-func (*PaginationSpec) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{2} }
+func (*PaginationSpec) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{1} }
 
 func (m *PaginationSpec) GetOffset() int32 {
 	if m != nil {
@@ -191,7 +155,7 @@ type QueryResponse struct {
 func (m *QueryResponse) Reset()                    { *m = QueryResponse{} }
 func (m *QueryResponse) String() string            { return proto.CompactTextString(m) }
 func (*QueryResponse) ProtoMessage()               {}
-func (*QueryResponse) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{3} }
+func (*QueryResponse) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{2} }
 
 func (m *QueryResponse) GetResults() []*QueryResult {
 	if m != nil {
@@ -211,7 +175,7 @@ type QueryResult struct {
 func (m *QueryResult) Reset()                    { *m = QueryResult{} }
 func (m *QueryResult) String() string            { return proto.CompactTextString(m) }
 func (*QueryResult) ProtoMessage()               {}
-func (*QueryResult) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{4} }
+func (*QueryResult) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{3} }
 
 func (m *QueryResult) GetStatementId() int32 {
 	if m != nil {
@@ -237,18 +201,39 @@ type QuerySpec struct {
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
 	// ObjectSelectot selects one or more objects of the same kind for query
 	ObjectSelector `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
+	// Fields select the metric fields to be included in the result
+	// Empty will include all fields, must contain at least one non-tag field
+	Fields []string `protobuf:"bytes,3,rep,name=Fields,json=fields,omitempty" json:"fields,omitempty"`
+	// Functions specify an operation function to be applied, example mean()/max()
+	Function string `protobuf:"bytes,4,opt,name=Function,json=function,omitempty,proto3" json:"function,omitempty"`
 	// TimeRange specifies the time interval for the query
-	Time *TimeRange `protobuf:"bytes,3,opt,name=Time,json=time,omitempty" json:"time,omitempty"`
-	// MetricSpec specifies the metrics within the selected objects
-	Metrics *MetricSpec `protobuf:"bytes,4,opt,name=Metrics,json=metrics,omitempty" json:"metrics,omitempty"`
+	Time *TimeRange `protobuf:"bytes,5,opt,name=Time,json=time,omitempty" json:"time,omitempty"`
+	// GroupbyTime groups series based on the interval specified
+	GroupbyTime string `protobuf:"bytes,6,opt,name=GroupbyTime,json=group-by-time,omitempty,proto3" json:"group-by-time,omitempty"`
+	// GroupbyField groups series based on the field specified
+	GroupbyField string `protobuf:"bytes,7,opt,name=GroupbyField,json=group-by-field,omitempty,proto3" json:"group-by-field,omitempty"`
 	// PaginatioSpec specifies the number of series to include
-	Pagination *PaginationSpec `protobuf:"bytes,5,opt,name=Pagination,json=pagination,omitempty" json:"pagination,omitempty"`
+	Pagination *PaginationSpec `protobuf:"bytes,8,opt,name=Pagination,json=pagination,omitempty" json:"pagination,omitempty"`
 }
 
 func (m *QuerySpec) Reset()                    { *m = QuerySpec{} }
 func (m *QuerySpec) String() string            { return proto.CompactTextString(m) }
 func (*QuerySpec) ProtoMessage()               {}
-func (*QuerySpec) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{5} }
+func (*QuerySpec) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{4} }
+
+func (m *QuerySpec) GetFields() []string {
+	if m != nil {
+		return m.Fields
+	}
+	return nil
+}
+
+func (m *QuerySpec) GetFunction() string {
+	if m != nil {
+		return m.Function
+	}
+	return ""
+}
 
 func (m *QuerySpec) GetTime() *TimeRange {
 	if m != nil {
@@ -257,11 +242,18 @@ func (m *QuerySpec) GetTime() *TimeRange {
 	return nil
 }
 
-func (m *QuerySpec) GetMetrics() *MetricSpec {
+func (m *QuerySpec) GetGroupbyTime() string {
 	if m != nil {
-		return m.Metrics
+		return m.GroupbyTime
 	}
-	return nil
+	return ""
+}
+
+func (m *QuerySpec) GetGroupbyField() string {
+	if m != nil {
+		return m.GroupbyField
+	}
+	return ""
 }
 
 func (m *QuerySpec) GetPagination() *PaginationSpec {
@@ -273,24 +265,33 @@ func (m *QuerySpec) GetPagination() *PaginationSpec {
 
 //
 type ResultSeries struct {
-	//
+	// Name of the series
 	Name string `protobuf:"bytes,1,opt,name=Name,json=name,omitempty,proto3" json:"name,omitempty"`
+	// Tags are the TSDB tags in the query response
+	Tags map[string]string `protobuf:"bytes,2,rep,name=Tags,json=tags,omitempty" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// columns list all available fields in tsdb
-	Columns []string `protobuf:"bytes,2,rep,name=Columns,json=columns,omitempty" json:"columns,omitempty"`
+	Columns []string `protobuf:"bytes,3,rep,name=Columns,json=columns,omitempty" json:"columns,omitempty"`
 	// values contain field values received frpm tsdb, it is in the form of [][]interface{}
-	Values []*api.InterfaceSlice `protobuf:"bytes,3,rep,name=Values,json=values" json:"values"`
+	Values []*api.InterfaceSlice `protobuf:"bytes,4,rep,name=Values,json=values" json:"values"`
 }
 
 func (m *ResultSeries) Reset()                    { *m = ResultSeries{} }
 func (m *ResultSeries) String() string            { return proto.CompactTextString(m) }
 func (*ResultSeries) ProtoMessage()               {}
-func (*ResultSeries) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{6} }
+func (*ResultSeries) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{5} }
 
 func (m *ResultSeries) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
+}
+
+func (m *ResultSeries) GetTags() map[string]string {
+	if m != nil {
+		return m.Tags
+	}
+	return nil
 }
 
 func (m *ResultSeries) GetColumns() []string {
@@ -320,7 +321,7 @@ type TimeRange struct {
 func (m *TimeRange) Reset()                    { *m = TimeRange{} }
 func (m *TimeRange) String() string            { return proto.CompactTextString(m) }
 func (*TimeRange) ProtoMessage()               {}
-func (*TimeRange) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{7} }
+func (*TimeRange) Descriptor() ([]byte, []int) { return fileDescriptorMetricsQuery, []int{6} }
 
 func (m *TimeRange) GetBegin() *api.Timestamp {
 	if m != nil {
@@ -337,7 +338,6 @@ func (m *TimeRange) GetEnd() *api.Timestamp {
 }
 
 func init() {
-	proto.RegisterType((*MetricSpec)(nil), "metrics_query.MetricSpec")
 	proto.RegisterType((*ObjectSelector)(nil), "metrics_query.ObjectSelector")
 	proto.RegisterType((*PaginationSpec)(nil), "metrics_query.PaginationSpec")
 	proto.RegisterType((*QueryResponse)(nil), "metrics_query.QueryResponse")
@@ -347,55 +347,6 @@ func init() {
 	proto.RegisterType((*TimeRange)(nil), "metrics_query.TimeRange")
 	proto.RegisterEnum("metrics_query.TsdbFunctionType", TsdbFunctionType_name, TsdbFunctionType_value)
 }
-func (m *MetricSpec) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MetricSpec) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.Tags != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Tags.Size()))
-		n1, err := m.Tags.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n1
-	}
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			dAtA[i] = 0x12
-			i++
-			l = len(s)
-			for l >= 1<<7 {
-				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
-				l >>= 7
-				i++
-			}
-			dAtA[i] = uint8(l)
-			i++
-			i += copy(dAtA[i:], s)
-		}
-	}
-	if len(m.Function) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Function)))
-		i += copy(dAtA[i:], m.Function)
-	}
-	return i, nil
-}
-
 func (m *ObjectSelector) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -433,11 +384,11 @@ func (m *ObjectSelector) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Selector.Size()))
-		n2, err := m.Selector.MarshalTo(dAtA[i:])
+		n1, err := m.Selector.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n1
 	}
 	return i, nil
 }
@@ -553,48 +504,71 @@ func (m *QuerySpec) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintMetricsQuery(dAtA, i, uint64(m.TypeMeta.Size()))
-	n3, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n2, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n2
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintMetricsQuery(dAtA, i, uint64(m.ObjectSelector.Size()))
+	n3, err := m.ObjectSelector.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n3
-	dAtA[i] = 0x12
-	i++
-	i = encodeVarintMetricsQuery(dAtA, i, uint64(m.ObjectSelector.Size()))
-	n4, err := m.ObjectSelector.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			dAtA[i] = 0x1a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
 	}
-	i += n4
+	if len(m.Function) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Function)))
+		i += copy(dAtA[i:], m.Function)
+	}
 	if m.Time != nil {
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Time.Size()))
-		n5, err := m.Time.MarshalTo(dAtA[i:])
+		n4, err := m.Time.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	if len(m.GroupbyTime) > 0 {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.GroupbyTime)))
+		i += copy(dAtA[i:], m.GroupbyTime)
+	}
+	if len(m.GroupbyField) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.GroupbyField)))
+		i += copy(dAtA[i:], m.GroupbyField)
+	}
+	if m.Pagination != nil {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Pagination.Size()))
+		n5, err := m.Pagination.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n5
-	}
-	if m.Metrics != nil {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Metrics.Size()))
-		n6, err := m.Metrics.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n6
-	}
-	if m.Pagination != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Pagination.Size()))
-		n7, err := m.Pagination.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n7
 	}
 	return i, nil
 }
@@ -620,9 +594,26 @@ func (m *ResultSeries) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(len(m.Name)))
 		i += copy(dAtA[i:], m.Name)
 	}
+	if len(m.Tags) > 0 {
+		for k, _ := range m.Tags {
+			dAtA[i] = 0x12
+			i++
+			v := m.Tags[k]
+			mapSize := 1 + len(k) + sovMetricsQuery(uint64(len(k))) + 1 + len(v) + sovMetricsQuery(uint64(len(v)))
+			i = encodeVarintMetricsQuery(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintMetricsQuery(dAtA, i, uint64(len(k)))
+			i += copy(dAtA[i:], k)
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintMetricsQuery(dAtA, i, uint64(len(v)))
+			i += copy(dAtA[i:], v)
+		}
+	}
 	if len(m.Columns) > 0 {
 		for _, s := range m.Columns {
-			dAtA[i] = 0x12
+			dAtA[i] = 0x1a
 			i++
 			l = len(s)
 			for l >= 1<<7 {
@@ -637,7 +628,7 @@ func (m *ResultSeries) MarshalTo(dAtA []byte) (int, error) {
 	}
 	if len(m.Values) > 0 {
 		for _, msg := range m.Values {
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x22
 			i++
 			i = encodeVarintMetricsQuery(dAtA, i, uint64(msg.Size()))
 			n, err := msg.MarshalTo(dAtA[i:])
@@ -669,21 +660,21 @@ func (m *TimeRange) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.Begin.Size()))
-		n8, err := m.Begin.MarshalTo(dAtA[i:])
+		n6, err := m.Begin.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n8
+		i += n6
 	}
 	if m.End != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintMetricsQuery(dAtA, i, uint64(m.End.Size()))
-		n9, err := m.End.MarshalTo(dAtA[i:])
+		n7, err := m.End.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n9
+		i += n7
 	}
 	return i, nil
 }
@@ -697,26 +688,6 @@ func encodeVarintMetricsQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *MetricSpec) Size() (n int) {
-	var l int
-	_ = l
-	if m.Tags != nil {
-		l = m.Tags.Size()
-		n += 1 + l + sovMetricsQuery(uint64(l))
-	}
-	if len(m.Fields) > 0 {
-		for _, s := range m.Fields {
-			l = len(s)
-			n += 1 + l + sovMetricsQuery(uint64(l))
-		}
-	}
-	l = len(m.Function)
-	if l > 0 {
-		n += 1 + l + sovMetricsQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *ObjectSelector) Size() (n int) {
 	var l int
 	_ = l
@@ -785,12 +756,26 @@ func (m *QuerySpec) Size() (n int) {
 	n += 1 + l + sovMetricsQuery(uint64(l))
 	l = m.ObjectSelector.Size()
 	n += 1 + l + sovMetricsQuery(uint64(l))
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			l = len(s)
+			n += 1 + l + sovMetricsQuery(uint64(l))
+		}
+	}
+	l = len(m.Function)
+	if l > 0 {
+		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
 	if m.Time != nil {
 		l = m.Time.Size()
 		n += 1 + l + sovMetricsQuery(uint64(l))
 	}
-	if m.Metrics != nil {
-		l = m.Metrics.Size()
+	l = len(m.GroupbyTime)
+	if l > 0 {
+		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
+	l = len(m.GroupbyField)
+	if l > 0 {
 		n += 1 + l + sovMetricsQuery(uint64(l))
 	}
 	if m.Pagination != nil {
@@ -806,6 +791,14 @@ func (m *ResultSeries) Size() (n int) {
 	l = len(m.Name)
 	if l > 0 {
 		n += 1 + l + sovMetricsQuery(uint64(l))
+	}
+	if len(m.Tags) > 0 {
+		for k, v := range m.Tags {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovMetricsQuery(uint64(len(k))) + 1 + len(v) + sovMetricsQuery(uint64(len(v)))
+			n += mapEntrySize + 1 + sovMetricsQuery(uint64(mapEntrySize))
+		}
 	}
 	if len(m.Columns) > 0 {
 		for _, s := range m.Columns {
@@ -848,147 +841,6 @@ func sovMetricsQuery(x uint64) (n int) {
 }
 func sozMetricsQuery(x uint64) (n int) {
 	return sovMetricsQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *MetricSpec) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowMetricsQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MetricSpec: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MetricSpec: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMetricsQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Tags == nil {
-				m.Tags = &labels.Selector{}
-			}
-			if err := m.Tags.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMetricsQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Function", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMetricsQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Function = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipMetricsQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthMetricsQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *ObjectSelector) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1520,6 +1372,64 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Function", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Function = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
 			}
 			var msglen int
@@ -1551,11 +1461,11 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Metrics", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupbyTime", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowMetricsQuery
@@ -1565,26 +1475,51 @@ func (m *QuerySpec) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthMetricsQuery
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Metrics == nil {
-				m.Metrics = &MetricSpec{}
-			}
-			if err := m.Metrics.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.GroupbyTime = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupbyField", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.GroupbyField = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -1698,6 +1633,124 @@ func (m *ResultSeries) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMetricsQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMetricsQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tags == nil {
+				m.Tags = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowMetricsQuery
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowMetricsQuery
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthMetricsQuery
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowMetricsQuery
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthMetricsQuery
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipMetricsQuery(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthMetricsQuery
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Tags[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Columns", wireType)
 			}
 			var stringLen uint64
@@ -1725,7 +1778,7 @@ func (m *ResultSeries) Unmarshal(dAtA []byte) error {
 			}
 			m.Columns = append(m.Columns, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Values", wireType)
 			}
@@ -2001,61 +2054,66 @@ var (
 func init() { proto.RegisterFile("metrics_query.proto", fileDescriptorMetricsQuery) }
 
 var fileDescriptorMetricsQuery = []byte{
-	// 882 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x55, 0x4f, 0x8f, 0xdb, 0x44,
-	0x14, 0xaf, 0x9b, 0x3f, 0xbb, 0x79, 0xd9, 0x0d, 0xe9, 0xa4, 0x80, 0x77, 0x81, 0xf5, 0x2a, 0x12,
-	0x28, 0xa0, 0x12, 0x57, 0x59, 0xa9, 0x88, 0x03, 0x42, 0x78, 0x95, 0x4a, 0x45, 0xda, 0x6c, 0x49,
-	0x02, 0x12, 0xa7, 0x6a, 0xe2, 0xbc, 0x98, 0x41, 0xf6, 0xd8, 0x64, 0xc6, 0x45, 0x7b, 0xe0, 0xca,
-	0x85, 0x03, 0x47, 0x6e, 0x7c, 0x00, 0xce, 0x7c, 0x88, 0x1e, 0xfb, 0x09, 0x2c, 0xb4, 0xdc, 0xfc,
-	0x29, 0x90, 0xc7, 0xf6, 0x76, 0xec, 0x6c, 0x51, 0x4f, 0x9e, 0xf7, 0x9b, 0xf7, 0xde, 0xbc, 0x3f,
-	0xbf, 0xf7, 0x0c, 0x83, 0x00, 0xe5, 0x96, 0xb9, 0xe2, 0xd9, 0x4f, 0x31, 0x6e, 0xaf, 0xc6, 0xd1,
-	0x36, 0x94, 0x21, 0x39, 0xac, 0x80, 0xc7, 0xef, 0x7b, 0x61, 0xe8, 0xf9, 0x68, 0xd3, 0x88, 0xd9,
-	0x94, 0xf3, 0x50, 0x52, 0xc9, 0x42, 0x2e, 0x72, 0xe5, 0xe3, 0xa9, 0xc7, 0xe4, 0x0f, 0xf1, 0x6a,
-	0xec, 0x86, 0x81, 0x1d, 0x21, 0x17, 0x94, 0xaf, 0x43, 0x5b, 0xfc, 0x6c, 0x3f, 0x47, 0xce, 0x5c,
-	0xb4, 0x63, 0xc9, 0x7c, 0x91, 0x99, 0x7a, 0xc8, 0x75, 0x6b, 0x9b, 0x71, 0xd7, 0x8f, 0xd7, 0x58,
-	0xba, 0xf9, 0x54, 0x73, 0xe3, 0x85, 0x5e, 0x68, 0x2b, 0x78, 0x15, 0x6f, 0x94, 0xa4, 0x04, 0x75,
-	0x2a, 0xd4, 0x3f, 0x7c, 0xcd, 0xab, 0x59, 0x8c, 0x01, 0x4a, 0x5a, 0xa8, 0x3d, 0xfc, 0x1f, 0xb5,
-	0x0d, 0x43, 0x7f, 0x2d, 0x6c, 0x81, 0x3e, 0xba, 0x32, 0xdc, 0xbe, 0x81, 0x85, 0x4f, 0x57, 0xe8,
-	0xd7, 0x2d, 0x86, 0xff, 0x1a, 0x00, 0x17, 0xaa, 0x60, 0x8b, 0x08, 0x5d, 0xe2, 0x40, 0x73, 0x49,
-	0x3d, 0x61, 0x1a, 0xa7, 0xc6, 0xa8, 0x3b, 0xe9, 0x8f, 0x73, 0xa3, 0xf1, 0xa2, 0x30, 0x72, 0x48,
-	0x9a, 0x58, 0x3d, 0x49, 0x3d, 0xf1, 0x20, 0x0c, 0x98, 0xc4, 0x20, 0x92, 0x57, 0xf3, 0x9a, 0x4c,
-	0x1e, 0x41, 0xfb, 0xb1, 0x8a, 0xce, 0xbc, 0x7b, 0xda, 0x18, 0x75, 0x9c, 0xfb, 0x69, 0x62, 0xf5,
-	0xf3, 0x78, 0x35, 0xab, 0x1d, 0x84, 0x7c, 0x0f, 0xfb, 0x8f, 0x63, 0xee, 0x66, 0x05, 0x36, 0x1b,
-	0xa7, 0xc6, 0xa8, 0xe3, 0x9c, 0xfd, 0xf5, 0xeb, 0xd1, 0xd1, 0x42, 0x6e, 0xa7, 0x3c, 0x0e, 0x46,
-	0x4b, 0xb1, 0x5e, 0x95, 0xf7, 0xcb, 0xab, 0x08, 0x3f, 0x4e, 0x13, 0x8b, 0x6c, 0x0a, 0x40, 0x73,
-	0x7c, 0x0b, 0x36, 0xfc, 0xed, 0x2e, 0xf4, 0x2e, 0x57, 0x3f, 0xa2, 0x2b, 0xcb, 0x4c, 0xc8, 0x43,
-	0x68, 0xce, 0x68, 0x80, 0xe6, 0x5d, 0xf5, 0x92, 0xca, 0x8b, 0xd3, 0x00, 0xf5, 0xbc, 0xaa, 0x72,
-	0x96, 0xd7, 0x12, 0x39, 0xe5, 0xb2, 0x88, 0x4e, 0xe5, 0x25, 0x15, 0xa2, 0xe7, 0x55, 0x47, 0xc8,
-	0x97, 0xd0, 0xc9, 0x5e, 0x12, 0x11, 0x75, 0xd1, 0x6c, 0x2a, 0xd3, 0x77, 0xd3, 0xc4, 0x1a, 0xf0,
-	0x12, 0xd4, 0xac, 0x6f, 0x03, 0xc9, 0x0c, 0xf6, 0xcb, 0xb0, 0xcd, 0xd6, 0x6b, 0x1a, 0xf3, 0x4e,
-	0x56, 0x8d, 0xb2, 0xb7, 0x7a, 0x35, 0x76, 0xb1, 0xe1, 0x2f, 0xd0, 0x7b, 0x4a, 0x3d, 0xc6, 0x15,
-	0x97, 0x55, 0xdb, 0x1f, 0x41, 0xfb, 0x72, 0xb3, 0x11, 0x28, 0x55, 0xe3, 0x5b, 0x79, 0x6a, 0xa1,
-	0x42, 0xf4, 0xd4, 0xea, 0x08, 0x39, 0x83, 0xd6, 0x79, 0x18, 0x73, 0xa9, 0xaa, 0xd8, 0x72, 0x06,
-	0x69, 0x62, 0xbd, 0xe5, 0x66, 0x80, 0x66, 0x55, 0x07, 0x86, 0x1b, 0x38, 0xfc, 0x26, 0x1b, 0xcd,
-	0x39, 0x8a, 0x28, 0xe4, 0x02, 0xc9, 0xb7, 0xb0, 0x37, 0x47, 0x11, 0xfb, 0x32, 0xe3, 0x5d, 0x63,
-	0xd4, 0x9d, 0x1c, 0x8f, 0xab, 0x83, 0x5d, 0xaa, 0xc7, 0xbe, 0x74, 0xde, 0x4e, 0x13, 0xeb, 0xde,
-	0x36, 0x57, 0xd7, 0x5e, 0xd9, 0x85, 0x86, 0x7f, 0x18, 0xd0, 0xd5, 0x2c, 0xc9, 0x19, 0x74, 0x17,
-	0x92, 0x4a, 0x0c, 0x90, 0xcb, 0x27, 0xeb, 0x22, 0xd3, 0x7e, 0x9a, 0x58, 0x07, 0xa2, 0x84, 0x9f,
-	0xb1, 0xf5, 0xbc, 0x22, 0x91, 0x05, 0xb4, 0x17, 0xb8, 0x65, 0x98, 0x93, 0xb9, 0x3b, 0x79, 0xaf,
-	0x16, 0x5a, 0xee, 0x3b, 0x57, 0xc9, 0xcb, 0x26, 0xd4, 0x59, 0x2f, 0x5b, 0x1d, 0x19, 0xfe, 0xd9,
-	0x80, 0x8e, 0x8a, 0xac, 0x28, 0xbe, 0xb1, 0x2c, 0x06, 0xee, 0x70, 0x4c, 0x23, 0x36, 0xce, 0xd8,
-	0x7d, 0x81, 0x92, 0x3a, 0x83, 0x17, 0x89, 0x75, 0xe7, 0x65, 0x62, 0x19, 0x69, 0x62, 0xed, 0x3d,
-	0x60, 0xdc, 0x67, 0x1c, 0xe7, 0xe5, 0x81, 0x2c, 0xc1, 0xb8, 0x54, 0x85, 0xef, 0x4e, 0x3e, 0xa8,
-	0x45, 0x55, 0xe5, 0xba, 0x73, 0xac, 0xf9, 0xe9, 0x65, 0x0b, 0x46, 0x67, 0x79, 0x55, 0x26, 0x5f,
-	0x43, 0x73, 0xc9, 0x02, 0x54, 0x1c, 0xef, 0x4e, 0xcc, 0x9a, 0xe3, 0xec, 0x6a, 0x4e, 0xb9, 0x87,
-	0xc5, 0x26, 0x60, 0xd5, 0x89, 0xa9, 0xca, 0x64, 0x09, 0x7b, 0xf9, 0x6e, 0x11, 0x8a, 0xf7, 0xdd,
-	0xc9, 0x51, 0xcd, 0xdd, 0xab, 0xcd, 0x93, 0xf7, 0xb5, 0xb8, 0xd5, 0xfb, 0xba, 0x03, 0x11, 0x0a,
-	0xf0, 0x8a, 0xbe, 0xc5, 0x40, 0xd4, 0x0b, 0x50, 0xe5, 0xb7, 0x63, 0xa6, 0x89, 0x75, 0x3f, 0xba,
-	0xc1, 0x34, 0xff, 0xb7, 0xa2, 0xc3, 0xbf, 0x0d, 0x38, 0xd0, 0x3b, 0x7b, 0xb3, 0x2d, 0x8c, 0x37,
-	0xde, 0x16, 0x9f, 0xc3, 0xde, 0x79, 0xe8, 0xc7, 0x01, 0x2f, 0xd7, 0xa0, 0x4a, 0xd0, 0xcd, 0x21,
-	0x3d, 0xc1, 0x1d, 0x88, 0x7c, 0x06, 0xed, 0xef, 0xa8, 0x1f, 0xa3, 0x30, 0x1b, 0x8a, 0x73, 0x03,
-	0xc5, 0x8a, 0x27, 0x5c, 0xe2, 0x76, 0x43, 0x5d, 0x5c, 0xf8, 0xcc, 0x45, 0x07, 0xd2, 0xc4, 0x6a,
-	0x3f, 0x57, 0x6a, 0xf3, 0xe2, 0x3b, 0xfc, 0xdd, 0x80, 0xce, 0x4d, 0x87, 0xc8, 0x39, 0xb4, 0x1c,
-	0xf4, 0x18, 0x2f, 0xb8, 0xd5, 0xcb, 0xb9, 0xc5, 0x02, 0x14, 0x92, 0x06, 0x51, 0x3e, 0xac, 0xab,
-	0x4c, 0x41, 0x1f, 0xd6, 0x1a, 0x40, 0xbe, 0x80, 0xc6, 0x94, 0xaf, 0x0b, 0x9a, 0xd5, 0x5d, 0xdc,
-	0x4b, 0x13, 0xeb, 0x10, 0xf9, 0x5a, 0x73, 0x50, 0x15, 0x3f, 0xf9, 0x08, 0xfa, 0xf5, 0xbd, 0x4d,
-	0xf6, 0xa1, 0x39, 0xbb, 0x9c, 0x4d, 0xfb, 0x77, 0xb2, 0xd3, 0xc5, 0xf4, 0xab, 0x59, 0xdf, 0x70,
-	0x0e, 0x5e, 0x5c, 0x9f, 0x18, 0x2f, 0xaf, 0x4f, 0x8c, 0x7f, 0xae, 0x4f, 0x8c, 0xa7, 0xc6, 0xaa,
-	0xad, 0xfe, 0x4e, 0x67, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0x50, 0x41, 0x51, 0xd3, 0xe2, 0x07,
-	0x00, 0x00,
+	// 976 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x55, 0x4f, 0x6f, 0xe3, 0x44,
+	0x14, 0x5f, 0xe7, 0x5f, 0x9b, 0x49, 0x5b, 0xb2, 0xd3, 0xc2, 0xba, 0x05, 0xea, 0x2a, 0x62, 0xa5,
+	0x2c, 0x6a, 0x93, 0x55, 0x2b, 0xb1, 0x80, 0x84, 0xd0, 0xba, 0xa4, 0x68, 0x91, 0xda, 0x2e, 0x4e,
+	0x60, 0x41, 0x42, 0x5a, 0x4d, 0x9c, 0x17, 0x33, 0x60, 0x8f, 0x8d, 0x67, 0xbc, 0x90, 0x03, 0xd7,
+	0x5e, 0x38, 0x70, 0xe4, 0xce, 0xb1, 0x1f, 0x04, 0xed, 0x71, 0x3f, 0x81, 0x85, 0x7a, 0xf4, 0xa7,
+	0x40, 0x1e, 0xdb, 0x65, 0xec, 0xa6, 0xab, 0x3d, 0x65, 0xde, 0x6f, 0xde, 0x7b, 0xf3, 0xde, 0xf3,
+	0xef, 0xf7, 0x82, 0x36, 0x3d, 0x10, 0x21, 0xb5, 0xf9, 0xf3, 0x5f, 0x22, 0x08, 0x17, 0x83, 0x20,
+	0xf4, 0x85, 0x8f, 0xd7, 0x4b, 0xe0, 0xce, 0x7b, 0x8e, 0xef, 0x3b, 0x2e, 0x0c, 0x49, 0x40, 0x87,
+	0x84, 0x31, 0x5f, 0x10, 0x41, 0x7d, 0xc6, 0x33, 0xe7, 0x9d, 0x91, 0x43, 0xc5, 0x8f, 0xd1, 0x74,
+	0x60, 0xfb, 0xde, 0x30, 0x00, 0xc6, 0x09, 0x9b, 0xf9, 0x43, 0xfe, 0xeb, 0xf0, 0x05, 0x30, 0x6a,
+	0xc3, 0x30, 0x12, 0xd4, 0xe5, 0x69, 0xa8, 0x03, 0x4c, 0x8d, 0x1e, 0x52, 0x66, 0xbb, 0xd1, 0x0c,
+	0x8a, 0x34, 0x07, 0x4a, 0x1a, 0xc7, 0x77, 0xfc, 0xa1, 0x84, 0xa7, 0xd1, 0x5c, 0x5a, 0xd2, 0x90,
+	0xa7, 0xdc, 0xfd, 0xfe, 0x2d, 0xaf, 0xa6, 0x35, 0x7a, 0x20, 0x48, 0xee, 0xf6, 0xf0, 0x35, 0x6e,
+	0x73, 0x0a, 0xee, 0x8c, 0x0f, 0x39, 0xb8, 0x60, 0x0b, 0x3f, 0x7c, 0x83, 0x08, 0x97, 0x4c, 0xc1,
+	0xad, 0x46, 0xf4, 0xfe, 0xa8, 0xa1, 0x8d, 0xf3, 0xe9, 0x4f, 0x60, 0x8b, 0x71, 0x7e, 0x81, 0x1f,
+	0xa2, 0xc6, 0x19, 0xf1, 0x40, 0xaf, 0xed, 0x69, 0xfd, 0xb6, 0x89, 0x93, 0xd8, 0xd8, 0x60, 0xc4,
+	0x83, 0x7d, 0xdf, 0xa3, 0x02, 0xbc, 0x40, 0x2c, 0xac, 0x8a, 0x8d, 0x3f, 0x42, 0xad, 0x09, 0x30,
+	0xc2, 0x84, 0x5e, 0x97, 0x31, 0x5b, 0x49, 0x6c, 0x74, 0x85, 0x44, 0x94, 0xa8, 0x1b, 0x08, 0xfe,
+	0x1c, 0xb5, 0xd3, 0x97, 0x78, 0x40, 0x6c, 0xd0, 0x1b, 0x32, 0xf4, 0x5e, 0x12, 0x1b, 0x9b, 0xac,
+	0x00, 0x95, 0xe8, 0x65, 0x20, 0x3e, 0x43, 0xab, 0x45, 0xd9, 0x7a, 0x73, 0x4f, 0xeb, 0x77, 0x0e,
+	0xbb, 0x83, 0xac, 0xcf, 0x41, 0x81, 0x9b, 0xef, 0x24, 0xb1, 0x81, 0x8b, 0xae, 0x95, 0x84, 0x4b,
+	0xb0, 0xde, 0xef, 0x68, 0xe3, 0x29, 0x71, 0x28, 0x93, 0x5f, 0x79, 0x1c, 0x80, 0x9d, 0xb6, 0x76,
+	0x3e, 0x9f, 0x73, 0x10, 0xba, 0xb6, 0xa7, 0xf5, 0x9b, 0x59, 0x6b, 0xbe, 0x44, 0xd4, 0xd6, 0xaa,
+	0x08, 0x3e, 0x42, 0xcd, 0x63, 0x3f, 0x62, 0x42, 0x4e, 0xb1, 0x69, 0x6e, 0x26, 0xb1, 0xf1, 0x96,
+	0x9d, 0x02, 0x4a, 0x54, 0x15, 0xe8, 0xcd, 0xd1, 0xfa, 0xd7, 0x29, 0x69, 0x2d, 0xe0, 0x81, 0xcf,
+	0x38, 0xe0, 0x6f, 0xd0, 0x8a, 0x05, 0x3c, 0x72, 0x05, 0xd7, 0xb5, 0xbd, 0x7a, 0xbf, 0x73, 0xb8,
+	0x33, 0x28, 0x53, 0xbe, 0x70, 0x8f, 0x5c, 0x61, 0xbe, 0x9d, 0xc4, 0xc6, 0xdd, 0x30, 0x73, 0x57,
+	0x5e, 0xb9, 0x09, 0xf5, 0xfe, 0xd2, 0x50, 0x47, 0x89, 0xc4, 0x47, 0xa8, 0x33, 0x16, 0x44, 0x80,
+	0x07, 0x4c, 0x3c, 0x99, 0xe5, 0x9d, 0x76, 0x93, 0xd8, 0x58, 0xe3, 0x05, 0xfc, 0x9c, 0xce, 0xac,
+	0x92, 0x85, 0xc7, 0xa8, 0x35, 0x86, 0x90, 0x02, 0xd7, 0x6b, 0xb2, 0xb4, 0x77, 0x2b, 0xa5, 0x65,
+	0xb9, 0x33, 0x97, 0x6c, 0x6c, 0x5c, 0x9e, 0xd5, 0xb1, 0x55, 0x91, 0xde, 0xdf, 0x4d, 0xd4, 0x96,
+	0x95, 0xe5, 0xc3, 0xd7, 0x26, 0xb2, 0x9a, 0xce, 0xe1, 0xfa, 0x80, 0x04, 0x74, 0x30, 0x59, 0x04,
+	0x70, 0x0a, 0x82, 0x98, 0x9b, 0x2f, 0x63, 0xe3, 0xce, 0xab, 0xd8, 0xd0, 0x92, 0xd8, 0x58, 0xd9,
+	0xa7, 0xcc, 0xa5, 0x0c, 0xac, 0xe2, 0x80, 0x27, 0x48, 0x3b, 0x97, 0x83, 0xef, 0x1c, 0xbe, 0x5f,
+	0xa9, 0xaa, 0xcc, 0x75, 0x73, 0x47, 0xc9, 0xb3, 0x91, 0x4a, 0x4f, 0x65, 0x79, 0xd9, 0xc6, 0x27,
+	0xa8, 0x75, 0x22, 0x55, 0xa7, 0xd7, 0xf7, 0xea, 0xfd, 0xb6, 0xf9, 0xc1, 0xe5, 0xc5, 0xf6, 0x9a,
+	0x05, 0xce, 0xe8, 0xb7, 0xa0, 0x9f, 0x92, 0xf3, 0x41, 0xda, 0x63, 0xa6, 0x4b, 0xb5, 0xc7, 0x2a,
+	0x82, 0xbf, 0x47, 0xab, 0x27, 0x11, 0xb3, 0x53, 0x8a, 0xe5, 0xa4, 0x3f, 0xba, 0xbc, 0xd8, 0xde,
+	0x1e, 0x8b, 0x70, 0xc4, 0x22, 0xaf, 0x3f, 0xe1, 0xb3, 0x69, 0x71, 0x9f, 0xf6, 0x9b, 0xa6, 0xc5,
+	0xf3, 0x1c, 0x50, 0xf9, 0x7b, 0x13, 0xc3, 0x5f, 0xa1, 0xc6, 0x84, 0x7a, 0x90, 0x6b, 0x41, 0xaf,
+	0xf4, 0x9e, 0x5e, 0x59, 0x84, 0x39, 0x90, 0x89, 0x5a, 0xd0, 0xb2, 0xa8, 0xcb, 0x36, 0x7e, 0x86,
+	0x3a, 0x5f, 0x86, 0x7e, 0x14, 0x4c, 0x17, 0x32, 0x65, 0x4b, 0x56, 0xfa, 0xe0, 0xf2, 0x62, 0x1b,
+	0x7d, 0x11, 0x85, 0x52, 0x20, 0xfd, 0xb4, 0xb4, 0x7b, 0x4e, 0xea, 0x74, 0x30, 0x5d, 0x1c, 0x54,
+	0xf2, 0xdd, 0x76, 0x81, 0x7f, 0x40, 0x6b, 0x79, 0x62, 0x39, 0x4e, 0x7d, 0x45, 0x66, 0xde, 0x5f,
+	0x32, 0x4d, 0xfd, 0x3a, 0x85, 0x1c, 0xa2, 0x92, 0xfc, 0xd6, 0x1b, 0x4c, 0x10, 0xfa, 0x5f, 0xc2,
+	0xfa, 0xea, 0x52, 0x12, 0x94, 0x35, 0x6e, 0xea, 0x49, 0x6c, 0x6c, 0x05, 0xd7, 0x98, 0xf2, 0xcc,
+	0x52, 0xb4, 0xf7, 0x4f, 0x0d, 0xad, 0xa9, 0xec, 0xbe, 0xde, 0x98, 0xda, 0x1b, 0x6f, 0xcc, 0x67,
+	0xa8, 0x31, 0x21, 0x4e, 0x21, 0x9d, 0xfb, 0xaf, 0x91, 0xce, 0x20, 0xf5, 0x1b, 0x31, 0x11, 0x2e,
+	0xf2, 0xaf, 0x46, 0x1c, 0x5e, 0xfa, 0x6a, 0x25, 0x1b, 0x7f, 0x82, 0x56, 0x8e, 0x7d, 0x37, 0xf2,
+	0x58, 0xc1, 0x52, 0xb9, 0x15, 0xec, 0x0c, 0x52, 0xb7, 0xc2, 0x0d, 0x08, 0x3f, 0x42, 0xad, 0x6f,
+	0x89, 0x1b, 0x01, 0xd7, 0x1b, 0xb2, 0xaa, 0x4d, 0x29, 0xb9, 0x27, 0x4c, 0x40, 0x38, 0x27, 0x36,
+	0x8c, 0x5d, 0x6a, 0x83, 0x89, 0x92, 0xd8, 0x68, 0xbd, 0x90, 0x6e, 0x56, 0xfe, 0xbb, 0xf3, 0x08,
+	0xb5, 0xaf, 0x8b, 0xc4, 0x5d, 0x54, 0xff, 0x19, 0x16, 0xd9, 0x28, 0xac, 0xf4, 0x88, 0xb7, 0x50,
+	0x53, 0x3a, 0x66, 0x7f, 0x28, 0x56, 0x66, 0x7c, 0x5a, 0xfb, 0x58, 0xeb, 0xfd, 0xa9, 0xa1, 0xf6,
+	0x35, 0x29, 0xf1, 0x31, 0x6a, 0x9a, 0xe0, 0x50, 0x96, 0x2b, 0x7e, 0x23, 0x53, 0x3c, 0xf5, 0x80,
+	0x0b, 0xe2, 0x05, 0xd9, 0x0a, 0x9d, 0xa6, 0x0e, 0xea, 0x0a, 0xad, 0x00, 0xf8, 0x33, 0x54, 0x1f,
+	0xb1, 0x59, 0x2e, 0xfe, 0x6a, 0x8a, 0xbb, 0x49, 0x6c, 0xac, 0x03, 0x53, 0x89, 0x54, 0x36, 0x3f,
+	0x1c, 0xa2, 0x6e, 0x55, 0x7f, 0x78, 0x15, 0x35, 0xce, 0xce, 0xcf, 0x46, 0xdd, 0x3b, 0xe9, 0xe9,
+	0x74, 0xf4, 0xf8, 0xac, 0xab, 0xe1, 0x15, 0x54, 0x3f, 0x7d, 0xfc, 0x5d, 0xb7, 0x66, 0xae, 0xbd,
+	0xbc, 0xda, 0xd5, 0x5e, 0x5d, 0xed, 0x6a, 0xff, 0x5e, 0xed, 0x6a, 0x4f, 0xb5, 0x69, 0x4b, 0xfe,
+	0xad, 0x1e, 0xfd, 0x17, 0x00, 0x00, 0xff, 0xff, 0x0b, 0x53, 0xf4, 0x83, 0x9b, 0x08, 0x00, 0x00,
 }

@@ -17,40 +17,6 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-func encodeHTTPMetricSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPMetricSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req MetricSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqMetricSpec encodes GRPC request
-func EncodeGrpcReqMetricSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MetricSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqMetricSpec decodes GRPC request
-func DecodeGrpcReqMetricSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*MetricSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespMetricSpec encodes GRC response
-func EncodeGrpcRespMetricSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespMetricSpec decodes GRPC response
-func DecodeGrpcRespMetricSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPObjectSelector(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

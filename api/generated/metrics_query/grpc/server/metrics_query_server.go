@@ -35,7 +35,6 @@ func (s *smetrics_queryMetrics_queryBackend) regMsgsFunc(l log.Logger, scheme *r
 	l.Infof("registering message for smetrics_queryMetrics_queryBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"metrics_query.MetricSpec":     apisrvpkg.NewMessage("metrics_query.MetricSpec"),
 		"metrics_query.ObjectSelector": apisrvpkg.NewMessage("metrics_query.ObjectSelector"),
 		"metrics_query.PaginationSpec": apisrvpkg.NewMessage("metrics_query.PaginationSpec"),
 		"metrics_query.QueryResponse":  apisrvpkg.NewMessage("metrics_query.QueryResponse"),

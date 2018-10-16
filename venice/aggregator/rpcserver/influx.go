@@ -22,10 +22,6 @@ type influxSelect struct {
 func InfluxQuery(qs *metrics_query.QuerySpec) ([]string, error) {
 	var is influxSelect
 
-	if qs.Metrics == nil {
-		return nil, fmt.Errorf("No metrics specified")
-	}
-
 	is.measurement = qs.Kind
 	is.fields = " * " // send everying for now
 	// TODO incorporate tenant/ns/name
@@ -36,14 +32,6 @@ func InfluxQuery(qs *metrics_query.QuerySpec) ([]string, error) {
 		}
 
 		is.objSel = labelSel
-	}
-
-	if qs.Metrics.Tags != nil {
-		tags, err := qs.Metrics.Tags.PrintSQL()
-		if err != nil {
-			return nil, err
-		}
-		is.metricSel = tags
 	}
 
 	if qs.Pagination != nil {
