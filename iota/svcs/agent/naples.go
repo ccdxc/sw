@@ -281,6 +281,14 @@ func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error)
 
 	}
 
+	if err := wload.SendArpProbe(strings.Split(in.GetIpAddress(), "/")[0], in.GetInterface(),
+		int(in.GetEncapVlan())); err != nil {
+		naples.logger.Errorf("Error in sending arp probe", err.Error())
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		wload.TearDown()
+		return resp, nil
+	}
+
 	naples.worloadMap[in.GetWorkloadName()] = wload
 
 	/* Notify Hntap of the workload */

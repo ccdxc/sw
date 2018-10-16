@@ -23,6 +23,7 @@ type workload interface {
 	AddInterface(name string, macAddress string, ipaddress string, vlan int) error
 	MoveInterface(name string) error
 	IsWorkloadHealthy() bool
+	SendArpProbe(ip string, intf string, vlan int) error
 	TearDown()
 }
 
@@ -53,6 +54,24 @@ func (app *containerWorkload) MoveInterface(name string) error {
 
 	if err := app.containerHandle.AttachInterface(name); err != nil {
 		return errors.Wrap(err, "Interface attach failed")
+	}
+
+	return nil
+
+}
+
+func (app *containerWorkload) SendArpProbe(ip string, intf string, vlan int) error {
+
+	if ip == "" {
+		return nil
+	}
+
+	if vlan != 0 {
+		intf = vlanIntf(intf, vlan)
+	}
+	arpCmd := []string{"arping", "-c", "1", "-U", ip, "-I", intf}
+	if retCode, stdout, _ := Utils.Run(arpCmd, 0, false, false, nil); retCode != 0 {
+		return errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, stdout)
 	}
 
 	return nil
