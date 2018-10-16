@@ -774,11 +774,14 @@ clock_get(ClockResponse *response)
 }
 
 hal_ret_t
-hbm_bw_get(void *rsp)
+hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
 {
+    hal_ret_t   ret = HAL_RET_OK;
     pd::pd_hbm_bw_get_args_t hbm_bw_args;
 
     memset(&hbm_bw_args, 0, sizeof(pd::pd_hbm_bw_get_args_t));
+    hbm_bw_args.num_samples = req->num_samples();
+    hbm_bw_args.sleep_interval = req->sleep_interval();
 
     hbm_bw_args.hbm_bw =
         (hal::pd::asic_hbm_bw_t*)HAL_MALLOC(HAL_MEM_ALLOC_DEBUG_CLI,
@@ -786,7 +789,23 @@ hbm_bw_get(void *rsp)
                                     * hal::pd::ASIC_BLOCK_MAX
                                     * sizeof(hal::pd::asic_hbm_bw_t));
 
-    return pd::asic_pd_hbm_bw_get(&hbm_bw_args);
+    ret = pd::asic_pd_hbm_bw_get(&hbm_bw_args);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    for (uint32_t i = 0; i < (hbm_bw_args.num_samples * hal::pd::ASIC_BLOCK_MAX); i ++) {
+        auto response = rsp->add_response();
+        auto hbm_bw = &hbm_bw_args.hbm_bw[i];
+        response->mutable_average()->set_read(hbm_bw->avg.read);
+        response->mutable_average()->set_write(hbm_bw->avg.write);
+        response->mutable_maximum()->set_read(hbm_bw->max.read);
+        response->mutable_maximum()->set_write(hbm_bw->max.write);
+        response->set_clk_diff(hbm_bw->clk_diff);
+        response->set_type(debug::CapriBlock(hbm_bw->type));
+    }
+
+    return ret;
 }
 
 }    // namespace hal

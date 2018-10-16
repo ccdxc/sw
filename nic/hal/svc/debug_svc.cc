@@ -402,20 +402,18 @@ DebugServiceImpl::ClockGet(ServerContext *context,
     return Status::OK;
 }
 
-#if 0
 Status
 DebugServiceImpl::HbmBwGet(ServerContext *context,
-                           const Empty *request,
-                           HbmBwGetResponse *rsp)
+                           const HbmBwGetRequestMsg *req,
+                           HbmBwGetResponseMsg *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd HBM BW Get Request");
 
-    void *resp = NULL;
+    HbmBwGetRequest request = req->request(0);
 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    hal::hbm_bw_get(resp);
+    hal::hbm_bw_get(&request, rsp);
     hal::hal_cfg_db_close();
 
     return Status::OK;
 }
-#endif

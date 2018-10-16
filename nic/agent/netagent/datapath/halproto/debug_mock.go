@@ -475,6 +475,24 @@ func (mr *MockDebugClientMockRecorder) FteSpanUpdate(ctx, in interface{}, opts .
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FteSpanUpdate", reflect.TypeOf((*MockDebugClient)(nil).FteSpanUpdate), varargs...)
 }
 
+// HbmBwGet mocks base method
+func (m *MockDebugClient) HbmBwGet(ctx context.Context, in *HbmBwGetRequestMsg, opts ...grpc.CallOption) (*HbmBwGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "HbmBwGet", varargs...)
+	ret0, _ := ret[0].(*HbmBwGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HbmBwGet indicates an expected call of HbmBwGet
+func (mr *MockDebugClientMockRecorder) HbmBwGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmBwGet", reflect.TypeOf((*MockDebugClient)(nil).HbmBwGet), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -730,4 +748,17 @@ func (m *MockDebugServer) FteSpanUpdate(arg0 context.Context, arg1 *FteSpanReque
 // FteSpanUpdate indicates an expected call of FteSpanUpdate
 func (mr *MockDebugServerMockRecorder) FteSpanUpdate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FteSpanUpdate", reflect.TypeOf((*MockDebugServer)(nil).FteSpanUpdate), arg0, arg1)
+}
+
+// HbmBwGet mocks base method
+func (m *MockDebugServer) HbmBwGet(arg0 context.Context, arg1 *HbmBwGetRequestMsg) (*HbmBwGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "HbmBwGet", arg0, arg1)
+	ret0, _ := ret[0].(*HbmBwGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HbmBwGet indicates an expected call of HbmBwGet
+func (mr *MockDebugServerMockRecorder) HbmBwGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmBwGet", reflect.TypeOf((*MockDebugServer)(nil).HbmBwGet), arg0, arg1)
 }

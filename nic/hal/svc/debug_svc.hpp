@@ -52,6 +52,10 @@ using debug::FteSpanResponseMsg;
 using debug::FteSpanRequest;
 using debug::FteSpanResponse;
 using debug::ClockResponse;
+using debug::HbmBwGetRequest;
+using debug::HbmBwGetRequestMsg;
+using debug::HbmBwGetResponse;
+using debug::HbmBwGetResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -106,6 +110,9 @@ public:
     Status ClockGet(ServerContext *context,
                     const Empty *req,
                     ClockResponse *rsp);
+    Status HbmBwGet(ServerContext *context,
+                    const HbmBwGetRequestMsg *req,
+                    HbmBwGetResponseMsg *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__

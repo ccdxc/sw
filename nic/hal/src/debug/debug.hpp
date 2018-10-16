@@ -24,6 +24,10 @@ using debug::FteSpanResponseMsg;
 using debug::FteSpanRequest;
 using debug::FteSpanResponse;
 using debug::ClockResponse;
+using debug::HbmBwGetRequest;
+using debug::HbmBwGetRequestMsg;
+using debug::HbmBwGetResponse;
+using debug::HbmBwGetResponseMsg;
 
 namespace hal {
 
@@ -69,7 +73,7 @@ hal_ret_t flush_logs (FlushLogsResponse *rsp);
 hal_ret_t thread_get (ThreadResponseMsg *rsp);
 
 // HBM BW
-hal_ret_t hbm_bw_get(void *rsp);
+hal_ret_t hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp);
 
 // FTE span APIs
 hal_ret_t fte_span_create(FteSpanRequest& req,
