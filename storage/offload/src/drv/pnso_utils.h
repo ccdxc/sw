@@ -32,20 +32,27 @@ pnso_error_t ring_spec_info_fill(uint32_t ring_id,
 		    		 struct ring_spec *spec,
 		    		 void *desc,
 		    		 uint32_t num_descs);
-struct cpdc_sgl *
+pnso_error_t
+pc_res_sgl_packed_get(const struct per_core_resource *pc_res,
+		      const struct service_buf_list *svc_blist,
+		      uint32_t block_size,
+		      enum mem_pool_type mpool_type,
+		      struct service_cpdc_sgl *svc_sgl);
+void pc_res_sgl_put(const struct per_core_resource *pc_res,
+		    struct service_cpdc_sgl *svc_sgl);
+pnso_error_t
 pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
-			  uint32_t block_size,
 			  const struct service_buf_list *svc_blist,
+			  uint32_t block_size,
 			  enum mem_pool_type vec_type,
-			  uint32_t *ret_total_len);
+			  struct service_cpdc_sgl *svc_sgl);
 void pc_res_sgl_vec_put(const struct per_core_resource *pc_res,
-			enum mem_pool_type vec_type,
-			struct cpdc_sgl *sgl_vec);
+			struct service_cpdc_sgl *svc_sgl);
 struct chain_sgl_pdma *
 pc_res_sgl_pdma_packed_get(const struct per_core_resource *pc_res,
-			   const struct service_buf_list *svc_blist);
+                           const struct service_buf_list *svc_blist);
 void pc_res_sgl_pdma_put(const struct per_core_resource *pc_res,
-			 struct chain_sgl_pdma *sgl_pdma);
+                         struct chain_sgl_pdma *sgl_pdma);
 struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
                       const struct service_buf_list *svc_blist);
@@ -55,12 +62,9 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			      uint32_t max_len,
 			      uint64_t *ret_addr,
 			      uint32_t *ret_len);
-struct interm_buf_list *
-pc_res_interm_buf_list_get(const struct per_core_resource *pc_res,
-			   enum mem_pool_type blist_type,
-			   enum mem_pool_type buf_type);
-void pc_res_interm_buf_list_put(const struct per_core_resource *pc_res,
-                                struct interm_buf_list *iblist);
+pnso_error_t svc_interm_buf_list_get(struct service_info *svc_info);
+void svc_interm_buf_list_put(struct service_info *svc_info);
+
 struct mem_pool *
 pc_res_mpool_get(const struct per_core_resource *pc_res,
 		 enum mem_pool_type type);

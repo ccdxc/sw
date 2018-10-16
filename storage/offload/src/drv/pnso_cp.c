@@ -15,6 +15,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_seq.h"
+#include "pnso_utils.h"
 
 static inline bool
 is_dflag_zero_pad_enabled(uint16_t flags)
@@ -56,6 +57,73 @@ pad_buffer_with_zeroes(uint16_t flags, struct pnso_buffer_list *buf_list)
 	}
 }
 
+<<<<<<< HEAD
+=======
+static bool
+is_compression_desc_valid(const struct pnso_compression_desc *desc)
+{
+	pnso_error_t err = EINVAL;
+
+	if (!is_cp_algo_type_valid(desc->algo_type)) {
+		OSAL_LOG_ERROR("invalid cp algo type specified! algo_type: %hu err: %d",
+				desc->algo_type, err);
+		return false;
+	}
+
+	if (!is_cp_threshold_len_valid(desc->threshold_len)) {
+		OSAL_LOG_ERROR("invalid cp threshold len specified! threshold_len: %hu err: %d",
+				desc->threshold_len, err);
+		return false;
+	}
+
+	if (!is_cp_flags_valid(desc->flags)) {
+		OSAL_LOG_ERROR("invalid cp flags specified! flags: %hu err: %d",
+				desc->flags, err);
+		return false;
+	}
+
+	OSAL_LOG_INFO("compression desc is valid algo_type: %hu threshold_len: %hu flags: %hu",
+			desc->algo_type, desc->threshold_len, desc->flags);
+
+	return true;
+}
+
+static pnso_error_t __attribute__((unused))
+validate_setup_input(const struct service_info *svc_info,
+		const struct service_params *svc_params)
+{
+	pnso_error_t err = EINVAL;
+
+	if (!svc_info || !svc_params) {
+		OSAL_LOG_ERROR("invalid input specified! svc_info: %p svc_params: %p err: %d",
+				svc_info, svc_params, err);
+		return err;
+	}
+
+	if (!svc_params->sp_src_blist || !svc_params->sp_dst_blist) {
+		OSAL_LOG_ERROR("invalid src/dst buffers specified! sp_src_blist: %p sp_dst_blist: %p err: %d",
+				svc_params->sp_src_blist,
+				svc_params->sp_dst_blist, err);
+		return err;
+	}
+
+	if (svc_info->si_src_blist.len == 0 || 
+	    svc_info->si_src_blist.len > MAX_CPDC_SRC_BUF_LEN) {
+		OSAL_LOG_ERROR("invalid src buf len specified! len: %u err: %d",
+				svc_info->si_src_blist.len, err);
+		return err;
+	}
+
+	if (!svc_params->u.sp_cp_desc) {
+		OSAL_LOG_ERROR("invalid desc specified! sp_desc: %p err: %d",
+				svc_params->u.sp_cp_desc, err);
+		return err;
+	}
+
+	return PNSO_OK;
+}
+
+>>>>>>> Optimize intermediate buffer implementation for the sweet spot of 8K size,
 static void
 fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 		struct cpdc_sgl *dst_sgl, struct cpdc_status_desc *status_desc,
@@ -93,7 +161,6 @@ compress_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pc_res;
 	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
-	size_t src_buf_len;
 	uint16_t flags, threshold_len;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -103,7 +170,16 @@ compress_setup(struct service_info *svc_info,
 	flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
 
+<<<<<<< HEAD
 	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+=======
+	if (svc_info->si_src_blist.len == 0 || 
+	    svc_info->si_src_blist.len > MAX_CPDC_SRC_BUF_LEN) {
+		OSAL_LOG_ERROR("invalid src buf len specified! src_buf_len: %u err: %d",
+				svc_info->si_src_blist.len, err);
+		goto out;
+	}
+>>>>>>> Optimize intermediate buffer implementation for the sweet spot of 8K size,
 
 	pc_res = svc_info->si_pc_res;
 	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
@@ -124,15 +200,15 @@ compress_setup(struct service_info *svc_info,
 		goto out_cp_desc;
 	}
 
-	err = cpdc_update_service_info_sgls(svc_info, svc_params);
+	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain cp src/dst sgl from pool! err: %d",
 				err);
 		goto out_status_desc;
 	}
 
-	fill_cp_desc(cp_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
-			status_desc, src_buf_len, threshold_len);
+	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl, svc_info->si_dst_sgl.sgl,
+			status_desc, svc_info->si_src_blist.len, threshold_len);
 	clear_insert_header(flags, cp_desc);
 	pad_buffer_with_zeroes(flags, svc_params->sp_src_blist);
 
@@ -329,7 +405,7 @@ compress_read_status(const struct service_info *svc_info)
 
 	if (cp_desc->u.cd_bits.cc_enabled &&
 			cp_desc->u.cd_bits.cc_insert_header) {
-		dst_sgl = svc_info->si_dst_sgl;
+		dst_sgl = svc_info->si_dst_sgl.sgl;
 		cp_hdr_pa = sonic_devpa_to_hostpa(dst_sgl->cs_addr_0);
 		cp_hdr = (struct pnso_compression_header *)
 			sonic_phy_to_virt(cp_hdr_pa);
@@ -430,7 +506,7 @@ out:
 }
 
 static void
-compress_teardown(const struct service_info *svc_info)
+compress_teardown(struct service_info *svc_info)
 {
 	pnso_error_t err;
 	struct cpdc_desc *cp_desc;
@@ -443,8 +519,8 @@ compress_teardown(const struct service_info *svc_info)
 	OSAL_ASSERT(svc_info);
 	CPDC_PPRINT_DESC(svc_info->si_desc);
 
-	cpdc_release_sgl(svc_info->si_dst_sgl);
-	cpdc_release_sgl(svc_info->si_src_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
 
 	pc_res = svc_info->si_pc_res;
 	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];

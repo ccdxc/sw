@@ -66,7 +66,6 @@ enum mem_pool_type {
 	MPOOL_TYPE_CRYPTO_AOL,
 	MPOOL_TYPE_CRYPTO_AOL_VECTOR,
 	MPOOL_TYPE_CRYPTO_SGL_VECTOR,
-	MPOOL_TYPE_INTERM_BUF_LIST,
 	MPOOL_TYPE_CHAIN_SGL_PDMA,
 	MPOOL_TYPE_SERVICE_CHAIN,
 	MPOOL_TYPE_SERVICE_CHAIN_ENTRY,
@@ -213,6 +212,16 @@ mpool_get_object_phy_addr(enum mem_pool_type mpool_type,
 		return (uint64_t)object;
 	else
 		return sonic_virt_to_phy(object);
+}
+
+static inline void *
+mpool_get_object_alloc_addr(enum mem_pool_type mpool_type,
+			    uint64_t object_pa)
+{
+	if (mpool_type_is_rmem(mpool_type))
+		return (void *)object_pa;
+	else
+		return sonic_phy_to_virt(object_pa);
 }
 
 static inline void

@@ -19,22 +19,18 @@
 /* CRYPTO common/utility functions */
 void crypto_pprint_aol(uint64_t aol_pa);
 void crypto_pprint_desc(const struct crypto_desc *desc);
-pnso_error_t crypto_update_service_info_aols(struct service_info *svc_info,
-		const struct service_params *svc_params);
-struct crypto_aol *
+
+pnso_error_t
 crypto_aol_packed_get(const struct per_core_resource *pc_res,
 		      const struct service_buf_list *svc_blist,
-		      enum mem_pool_type *ret_mpool_type,
-		      uint32_t *ret_total_len);
-struct crypto_aol *
+		      struct service_crypto_aol *svc_aol);
+pnso_error_t
 crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
 		          uint32_t block_size,
 		          const struct service_buf_list *svc_blist,
-		          enum mem_pool_type *ret_mpool_type,
-		          uint32_t *ret_total_len);
+		          struct service_crypto_aol *svc_aol);
 void crypto_aol_put(const struct per_core_resource *pc_res,
-		    enum mem_pool_type mpool_type,
-		    struct crypto_aol *aol);
+		    struct service_crypto_aol *svc_aol);
 pnso_error_t crypto_desc_status_convert(uint64_t status);
 
 #endif /* __PNSO_CRYPTO_CMN_H__ */

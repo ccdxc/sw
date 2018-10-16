@@ -62,7 +62,6 @@ decompress_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pc_res;
 	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
-	size_t src_buf_len, dst_buf_len;
 	uint16_t flags;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -94,15 +93,15 @@ decompress_setup(struct service_info *svc_info,
 		goto out_dc_desc;
 	}
 
-	err = cpdc_update_service_info_sgls(svc_info, svc_params);
+	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dc src/dst sgl from pool! err: %d",
 				err);
 		goto out_status_desc;
 	}
 
-	fill_dc_desc(dc_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
-			status_desc, src_buf_len, dst_buf_len);
+	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl, svc_info->si_dst_sgl.sgl,
+			status_desc, svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
 	clear_dc_header_present(flags, dc_desc);
 
 	svc_info->si_type = PNSO_SVC_TYPE_DECOMPRESS;
@@ -312,7 +311,7 @@ out:
 }
 
 static void
-decompress_teardown(const struct service_info *svc_info)
+decompress_teardown(struct service_info *svc_info)
 {
 	pnso_error_t err;
 	struct cpdc_desc *dc_desc;
@@ -325,8 +324,8 @@ decompress_teardown(const struct service_info *svc_info)
 	OSAL_ASSERT(svc_info);
 	CPDC_PPRINT_DESC(svc_info->si_desc);
 
-	cpdc_release_sgl(svc_info->si_dst_sgl);
-	cpdc_release_sgl(svc_info->si_src_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
 
 	pc_res = svc_info->si_pc_res;
 	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];

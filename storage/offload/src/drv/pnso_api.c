@@ -190,12 +190,6 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 OSAL_EXPORT_SYMBOL(pnso_set_key_desc_idx);
 
 /* TODO: these are just stubs, so that linking with dependent libraries passes */
-pnso_error_t pnso_init(struct pnso_init_params *init_params)
-{
-	return 0;
-}
-OSAL_EXPORT_SYMBOL(pnso_init);
-
 pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res)
 {

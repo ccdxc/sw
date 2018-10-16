@@ -178,8 +178,8 @@ ut_hash_setup_buffer(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_NE(svc_info.si_src_sgl, nullptr);
-	EXPECT_NE(svc_info.si_dst_sgl, nullptr);
+	EXPECT_NE(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_NE(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 	EXPECT_EQ(hash_desc->u.cd_bits.cc_src_is_list, 1);
 	EXPECT_EQ(hash_desc->u.cd_bits.cc_hash_enabled, 1);
@@ -199,8 +199,8 @@ ut_hash_setup_buffer(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_NE(svc_info.si_src_sgl, nullptr);
-	EXPECT_NE(svc_info.si_dst_sgl, nullptr);
+	EXPECT_NE(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_NE(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 	EXPECT_EQ(hash_desc->u.cd_bits.cc_src_is_list, 1);
 	EXPECT_EQ(hash_desc->u.cd_bits.cc_hash_enabled, 1);
@@ -334,8 +334,8 @@ void ut_hash_setup_per_block(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_EQ(svc_info.si_src_sgl, nullptr);
-	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
+	EXPECT_EQ(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_EQ(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
 	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
@@ -379,8 +379,8 @@ void ut_hash_setup_per_block(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_EQ(svc_info.si_src_sgl, nullptr);
-	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
+	EXPECT_EQ(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_EQ(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
 	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
@@ -423,8 +423,8 @@ void ut_hash_setup_per_block(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_EQ(svc_info.si_src_sgl, nullptr);
-	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
+	EXPECT_EQ(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_EQ(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
 	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
@@ -467,8 +467,8 @@ void ut_hash_setup_per_block(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_EQ(svc_info.si_src_sgl, nullptr);
-	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
+	EXPECT_EQ(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_EQ(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
 	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
@@ -513,8 +513,8 @@ void ut_hash_setup_per_block(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_EQ(svc_info.si_src_sgl, nullptr);
-	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
+	EXPECT_EQ(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_EQ(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
 	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
@@ -557,8 +557,8 @@ void ut_hash_setup_per_block(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_EQ(svc_info.si_src_sgl, nullptr);
-	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
+	EXPECT_EQ(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_EQ(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
 	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
@@ -601,8 +601,8 @@ void ut_hash_setup_per_block(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_EQ(svc_info.si_src_sgl, nullptr);
-	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
+	EXPECT_EQ(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_EQ(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
 	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;
@@ -645,8 +645,8 @@ void ut_hash_setup_per_block(void) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_EQ(svc_info.si_src_sgl, nullptr);
-	EXPECT_EQ(svc_info.si_dst_sgl, nullptr);
+	EXPECT_EQ(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_EQ(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 
 	block_count = (interm_fbuf->len + (block_size - 1)) / block_size;

@@ -166,8 +166,8 @@ TEST_F(pnso_cp_test, ut_cp_setup) {
 	status_desc = (struct cpdc_status_desc *) svc_info.si_status_desc;
 	EXPECT_NE(status_desc, nullptr);
 
-	EXPECT_NE(svc_info.si_src_sgl, nullptr);
-	EXPECT_NE(svc_info.si_dst_sgl, nullptr);
+	EXPECT_NE(svc_info.si_src_sgl.sgl, nullptr);
+	EXPECT_NE(svc_info.si_dst_sgl.sgl, nullptr);
 	EXPECT_EQ(svc_info.si_svc_status, nullptr);
 	/* ------------------------------------------------------------------ */
 

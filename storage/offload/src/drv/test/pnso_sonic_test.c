@@ -1050,10 +1050,8 @@ exec_decrypt_dc_req(struct thread_state *tstate)
 		memset(svc_req, 0, sizeof(*svc_req));
 		memset(svc_res, 0, sizeof(*svc_res));
 
-		pbuf_convert_buffer_list_p2v(rstate->buflists[3].buflist);
 		fixup_dc_buffer(rstate->buflists[3].buflist, data_len);
-		pbuf_pprint_buffer_list(rstate->buflists[3].buflist);
-		pbuf_convert_buffer_list_v2p(rstate->buflists[3].buflist);
+		fixup_dc_buffer(rstate->buflists[1].buflist, data_len);
 
 		svc_req->sgl = rstate->buflists[3].buflist;
 		svc_req->num_services = 2;
@@ -1571,15 +1569,15 @@ init_cp_hdr_fmt(void)
 typedef int (*exec_test_fn_t)(void *arg);
 
 static exec_test_fn_t exec_test_fn[] = {
-	//exec_cp_dc_test,
+	exec_cp_dc_test,
 	// exec_hash_test,
 	// exec_hash_per_block_test,
 	// exec_chksum_test,
 	// exec_chksum_per_block_test,
 	// exec_cp_hash_test,
 	// exec_cp_hash_per_block_test,
-	//exec_crypto_test,
-	exec_cp_crypto_dc_test,
+	exec_crypto_test,
+	// exec_cp_crypto_dc_test,
 };
 
 static int

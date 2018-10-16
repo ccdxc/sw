@@ -8,6 +8,7 @@
 #include <kernel.h>
 
 #include "osal_logger.h"
+#include "osal_setup.h"
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_api_int.h"
@@ -87,6 +88,7 @@ pnso_init(struct pnso_init_params *pnso_init)
 
 	return err;
 }
+OSAL_EXPORT_SYMBOL(pnso_init);
 
 void
 pnso_deinit(void)
@@ -141,18 +143,13 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 	 * Intermediate buffers are allocated as vectors of contiguous buffers,
 	 * each vector handles the max request buffer size.
 	 */
-        num_buf_vecs = pc_num_bufs / PNSO_NOMINAL_NUM_BUFS;
+        num_buf_vecs = pc_num_bufs / INTERM_BUF_NOMINAL_NUM_BUFS;
 	OSAL_ASSERT(num_buf_vecs);
 
 	err = mpool_create(MPOOL_TYPE_RMEM_INTERM_BUF, num_buf_vecs,
-			   PNSO_NOMINAL_NUM_BUFS * pc_init->pnso_init.block_size,
+			   INTERM_BUF_NOMINAL_NUM_BUFS * pc_init->pnso_init.block_size,
 			   PNSO_MEM_ALIGN_NONE,
 			   &pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
-	if (!err)
-		err = mpool_create(MPOOL_TYPE_INTERM_BUF_LIST,
-			   pc_init->max_seq_sq_descs,
-			   sizeof(struct interm_buf_list), PNSO_MEM_ALIGN_NONE,
-			   &pc_res->mpools[MPOOL_TYPE_INTERM_BUF_LIST]);
 	if (!err)
 		err = mpool_create(MPOOL_TYPE_CHAIN_SGL_PDMA,
 			   pc_init->max_seq_sq_descs,
@@ -161,7 +158,6 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 			   &pc_res->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 	if (!err) {
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_INTERM_BUF_LIST]);
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 	}
 
@@ -171,7 +167,6 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 static void
 pc_res_interm_buf_deinit(struct per_core_resource *pc_res)
 {
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_INTERM_BUF_LIST]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 }

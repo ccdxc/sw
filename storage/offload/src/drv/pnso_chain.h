@@ -63,6 +63,7 @@ extern "C" {
 #endif
 
 #include "pnso_chain_params.h"
+#include "pnso_init.h"
 
 /* service flags */
 #define CHAIN_SFLAG_LONE_SERVICE	(1 << 0)
@@ -118,7 +119,7 @@ struct service_ops {
 	pnso_error_t (*write_result)(struct service_info *svc_info);
 
 	/* releases descriptor, etc. to the pool and conducts cleanup task */
-	void (*teardown)(const struct service_info *svc_info);
+	void (*teardown)(struct service_info *svc_info);
 };
 
 struct sequencer_info {
@@ -141,17 +142,6 @@ struct service_deps {
 	uint32_t sd_dst_data_len;	/* for compressed output buffer len */
 };
 
-struct interm_buf_list {
-	enum mem_pool_type blist_type;
-	enum mem_pool_type buf_type;
-	union {
-		struct pnso_buffer_list blist;
-		uint8_t b[sizeof(struct pnso_buffer_list) +
-			  sizeof(struct pnso_flat_buffer)];
-	};
-        void *ibuf;
-};
-
 enum service_buf_list_type {
 	SERVICE_BUF_LIST_TYPE_HOST,
 	SERVICE_BUF_LIST_TYPE_RMEM,
@@ -159,8 +149,29 @@ enum service_buf_list_type {
 };
 
 struct service_buf_list {
-	enum service_buf_list_type sbl_type;
-	struct pnso_buffer_list    *sbl_blist;
+	enum service_buf_list_type type;
+	uint32_t                   len;
+	struct pnso_buffer_list    *blist;
+};
+
+struct interm_buf_list {
+	enum mem_pool_type buf_type;
+	union {
+		struct pnso_buffer_list blist;
+		uint8_t b[sizeof(struct pnso_buffer_list) +
+			  (sizeof(struct pnso_flat_buffer) *
+			   INTERM_BUF_MAX_NUM_NOMINAL_BUFS)];
+	};
+};
+
+struct service_cpdc_sgl {
+	struct cpdc_sgl    *sgl;
+	enum mem_pool_type mpool_type;
+};
+
+struct service_crypto_aol {
+	struct crypto_aol  *aol;
+	enum mem_pool_type mpool_type;
 };
 
 struct service_info {
@@ -170,19 +181,15 @@ struct service_info {
 	uint16_t si_block_size;
 	uint16_t si_desc_flags;		/* caller supplied desc flags */
 	uint32_t si_num_tags;		/* for tracking # of hash or checksum */
-	uint32_t si_src_len;
-	uint32_t si_dst_len;
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
 	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */
 	void *si_istatus_desc;		/* intermediate status desc */
 
-	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
-	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
-	struct crypto_aol *si_src_aol;	/* src input buffer converted to aol */
-	struct crypto_aol *si_dst_aol;	/* dst input buffer converted to aol */
-	enum mem_pool_type si_src_aol_mptype;
-	enum mem_pool_type si_dst_aol_mptype;
+	struct service_cpdc_sgl	si_src_sgl;	/* src input buffer converted to sgl */
+	struct service_cpdc_sgl	si_dst_sgl;	/* dst input buffer converted to sgl */
+	struct service_crypto_aol si_src_aol;	/* src input buffer converted to aol */
+	struct service_crypto_aol si_dst_aol;	/* dst input buffer converted to aol */
 
 	union {
 		struct cpdc_chain_params   si_cpdc_chain;
@@ -200,7 +207,7 @@ struct service_info {
 	struct pnso_service_status *si_svc_status;
 	struct service_buf_list si_src_blist;
 	struct service_buf_list si_dst_blist;
-	struct interm_buf_list *si_iblist;
+	struct interm_buf_list si_iblist;
 	struct chain_sgl_pdma *si_sgl_pdma;
 };
 
@@ -277,28 +284,34 @@ void chn_execute_chain(struct service_chain *chain);
 void chn_destroy_chain(struct service_chain *chain);
 
 static inline bool
-chn_service_is_in_chain(struct service_info *svc_info)
+chn_service_is_in_chain(const struct service_info *svc_info)
 {
 	return !(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE);
 }
 
 static inline bool
-chn_service_is_first(struct service_info *svc_info)
+chn_service_is_first(const struct service_info *svc_info)
 {
 	return !!(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
 }
 
 static inline bool
-chn_service_is_last(struct service_info *svc_info)
+chn_service_is_last(const struct service_info *svc_info)
 {
 	return !!(svc_info->si_flags & CHAIN_SFLAG_LAST_SERVICE);
 }
 
 static inline bool
-chn_service_has_sub_chain(struct service_info *svc_info)
+chn_service_has_sub_chain(const struct service_info *svc_info)
 {
 	return chn_service_is_in_chain(svc_info) &&
 	       !chn_service_is_last(svc_info);
+}
+
+static inline bool
+chn_service_has_interm_blist(const struct service_info *svc_info)
+{
+	return !!svc_info->si_iblist.blist.count;
 }
 
 #ifdef __cplusplus

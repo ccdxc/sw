@@ -17,6 +17,7 @@
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_utils.h"
 
 /*
  * TODO:
@@ -213,155 +214,6 @@ cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc)
 	/* TODO-cpdc: print SHA */
 }
 
-void
-cpdc_release_sgl(struct cpdc_sgl *sgl)
-{
-	pnso_error_t err;
-	struct lif *lif;
-	struct per_core_resource *pc_res;
-	struct mem_pool *cpdc_sgl_mpool;
-	struct cpdc_sgl *sgl_next;
-	uint32_t iter;
-
-	if (!sgl)
-		return;
-
-	lif = sonic_get_lif();
-	if (!lif) {
-		OSAL_ASSERT(lif);
-		return;
-	}
-
-	pc_res = sonic_get_per_core_res(lif);
-	if (!pc_res) {
-		OSAL_ASSERT(pc_res);
-		return;
-	}
-
-	cpdc_sgl_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_SGL];
-	if (!cpdc_sgl_mpool) {
-		OSAL_ASSERT(cpdc_sgl_mpool);
-		return;
-	}
-
-	iter = 0;
-	while (sgl) {
-		sgl_next = sgl->cs_next ?
-			(struct cpdc_sgl *) sonic_phy_to_virt(sgl->cs_next) :
-			NULL;
-		iter++;
-
-		err = mpool_put_object(cpdc_sgl_mpool, sgl);
-		if (err) {
-			OSAL_LOG_ERROR("failed to return cpdc sgl desc to pool! #: %2d sgl 0x%llx err: %d",
-					iter, (uint64_t) sgl, err);
-			OSAL_ASSERT(err);
-		}
-
-		sgl = sgl_next;
-	}
-}
-
-static struct cpdc_sgl *
-populate_sgl(const struct pnso_buffer_list *buf_list)
-{
-	pnso_error_t err = EINVAL;
-	struct lif *lif;
-	struct per_core_resource *pc_res;
-	struct mem_pool *cpdc_sgl_mpool;
-	struct cpdc_sgl *sgl_head = NULL;
-	struct cpdc_sgl *sgl_prev = NULL;
-	struct cpdc_sgl *sgl = NULL;
-	uint32_t count;
-	uint32_t i;
-
-	lif = sonic_get_lif();
-	if (!lif) {
-		OSAL_ASSERT(lif);
-		goto out;
-	}
-
-	pc_res = sonic_get_per_core_res(lif);
-	if (!pc_res) {
-		OSAL_ASSERT(pc_res);
-		goto out;
-	}
-
-	cpdc_sgl_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_SGL];
-	if (!cpdc_sgl_mpool) {
-		OSAL_ASSERT(cpdc_sgl_mpool);
-		goto out;
-	}
-
-	i = 0;
-	count = buf_list->count;
-	while (count) {
-		sgl = (struct cpdc_sgl *) mpool_get_object(cpdc_sgl_mpool);
-		if (!sgl) {
-			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain cpdc sgl desc from pool! err: %d",
-					err);
-			goto out;
-		}
-		memset(sgl, 0, sizeof(struct cpdc_sgl));
-
-		if (!sgl_head)
-			sgl_head = sgl;
-		else
-			sgl_prev->cs_next = (uint64_t) sonic_virt_to_phy(sgl);
-
-		sgl->cs_addr_0 =
-			sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
-		sgl->cs_len_0 = buf_list->buffers[i].len;
-		i++;
-		count--;
-
-		if (count == 0) {
-			sgl->cs_next = 0;
-			break;
-		}
-
-		if (count && buf_list->buffers[i].len) {
-			sgl->cs_addr_1 =
-				sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
-			sgl->cs_len_1 = buf_list->buffers[i].len;
-			i++;
-			count--;
-		} else {
-			sgl->cs_next = 0;
-			break;
-		}
-
-		if (count && buf_list->buffers[i].len) {
-			sgl->cs_addr_2 =
-				sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
-			sgl->cs_len_2 = buf_list->buffers[i].len;
-			i++;
-			count--;
-		} else {
-			sgl->cs_next = 0;
-			break;
-		}
-
-		sgl_prev = sgl;
-	}
-
-	return sgl_head;
-
-out:
-	cpdc_release_sgl(sgl_head);
-	return NULL;
-}
-
-static struct cpdc_sgl	*
-convert_buffer_list_to_sgl(const struct pnso_buffer_list *buf_list)
-{
-	if (!buf_list || buf_list->count == 0)
-		return NULL;
-
-	return populate_sgl(buf_list);
-}
-
 uint32_t
 cpdc_get_desc_size(void)
 {
@@ -498,21 +350,16 @@ cpdc_put_sgl(struct per_core_resource *pc_res, bool per_block,
 }
 
 pnso_error_t
-cpdc_update_service_info_sgl(struct service_info *svc_info,
-		const struct service_params *svc_params)
+cpdc_update_service_info_sgl(struct service_info *svc_info)
 {
-	pnso_error_t err = PNSO_OK;
-	struct cpdc_sgl	*sgl;
+	pnso_error_t err;
 
-	sgl = convert_buffer_list_to_sgl(svc_params->sp_src_blist);
-	if (!sgl) {
-		err = EINVAL;
+	err = pc_res_sgl_packed_get(svc_info->si_pc_res, &svc_info->si_src_blist,
+			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+			&svc_info->si_src_sgl);
+	if (err) {
 		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
-		goto out;
 	}
-	svc_info->si_src_sgl = sgl;
-
-out:
 	return err;
 }
 
@@ -582,34 +429,30 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 }
 
 pnso_error_t
-cpdc_update_service_info_sgls(struct service_info *svc_info,
-		const struct service_params *svc_params)
+cpdc_update_service_info_sgls(struct service_info *svc_info)
 {
-	pnso_error_t err = PNSO_OK;
-	struct cpdc_sgl	*sgl;
+	pnso_error_t err;
 
-	sgl = convert_buffer_list_to_sgl(svc_params->sp_src_blist);
-	if (!sgl) {
-		err = EINVAL;
+	err = pc_res_sgl_packed_get(svc_info->si_pc_res, &svc_info->si_src_blist,
+			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+			&svc_info->si_src_sgl);
+	if (err) {
 		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
 		goto out;
 	}
-	svc_info->si_src_sgl = sgl;
 
-	sgl = convert_buffer_list_to_sgl(svc_params->sp_dst_blist);
-	if (!sgl) {
-		err = EINVAL;
+	err = pc_res_sgl_packed_get(svc_info->si_pc_res, &svc_info->si_dst_blist,
+			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
+			&svc_info->si_dst_sgl);
+	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dst sgl from pool! err: %d", err);
 		goto out_sgl;
 	}
-	svc_info->si_dst_sgl = sgl;
-	svc_info->si_dst_blist.sbl_type = SERVICE_BUF_LIST_TYPE_DFLT;
-	svc_info->si_dst_blist.sbl_blist = svc_params->sp_dst_blist;
 
 	return err;
 
 out_sgl:
-	cpdc_release_sgl(svc_info->si_src_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
 out:
 	return err;
 }

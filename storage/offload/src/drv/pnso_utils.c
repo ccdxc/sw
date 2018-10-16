@@ -31,31 +31,103 @@ ring_spec_info_fill(uint32_t ring_id,
 	return EINVAL;
 }
 
-struct cpdc_sgl *
-pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
-			  uint32_t block_size,
-			  const struct service_buf_list *svc_blist,
-			  enum mem_pool_type vec_type,
-			  uint32_t *ret_total_len)
+pnso_error_t
+pc_res_sgl_packed_get(const struct per_core_resource *pc_res,
+		      const struct service_buf_list *svc_blist,
+		      uint32_t block_size,
+		      enum mem_pool_type mpool_type,
+		      struct service_cpdc_sgl *svc_sgl)
 {
 	struct buffer_list_iter buffer_list_iter;
 	struct buffer_list_iter *iter;
-	struct cpdc_sgl *sgl_vec_head;
+	struct cpdc_sgl *sgl_prev = NULL;
+	struct cpdc_sgl *sgl;
+	uint32_t total_len;
+
+	if (!svc_blist->blist || svc_blist->blist->count == 0)
+		return EINVAL;
+
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+	svc_sgl->mpool_type = mpool_type;
+	svc_sgl->sgl = NULL;
+	total_len = 0;
+	while (iter) {
+		sgl = pc_res_mpool_object_get(pc_res, mpool_type);
+		if (!sgl) {
+			OSAL_LOG_ERROR("cannot obtain sgl_vec from pool, "
+				       "current_len %u", total_len);
+			goto out;
+		}
+		memset(sgl, 0, sizeof(*sgl));
+		iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&sgl->cs_addr_0, &sgl->cs_len_0);
+		if (iter)
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&sgl->cs_addr_1, &sgl->cs_len_1);
+		if (iter)
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&sgl->cs_addr_2, &sgl->cs_len_2);
+		total_len += sgl->cs_len_0 + sgl->cs_len_1 + sgl->cs_len_2;
+
+		if (!svc_sgl->sgl)
+			svc_sgl->sgl = sgl;
+		else
+			sgl_prev->cs_next = sonic_virt_to_phy(sgl);
+		sgl_prev = sgl;
+	}
+
+	return PNSO_OK;
+out:
+	pc_res_sgl_put(pc_res, svc_sgl);
+	return ENOMEM;
+}
+
+void
+pc_res_sgl_put(const struct per_core_resource *pc_res,
+	       struct service_cpdc_sgl *svc_sgl)
+{
+	struct cpdc_sgl *sgl_next;
+	struct cpdc_sgl *sgl;
+
+	sgl = svc_sgl->sgl;
+	while (sgl) {
+		sgl_next = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) :
+					  NULL;
+		pc_res_mpool_object_put(pc_res, svc_sgl->mpool_type, (void *)sgl);
+		sgl = sgl_next;
+	}
+	svc_sgl->sgl = NULL;
+}
+
+pnso_error_t
+pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
+			  const struct service_buf_list *svc_blist,
+			  uint32_t block_size,
+			  enum mem_pool_type vec_type,
+			  struct service_cpdc_sgl *svc_sgl)
+{
+	struct buffer_list_iter buffer_list_iter;
+	struct buffer_list_iter *iter;
 	struct cpdc_sgl *sgl_vec;
+	uint32_t total_len;
 	uint32_t vec_count;
 	uint32_t cur_count;
 
-	*ret_total_len = 0;
-	sgl_vec_head = pc_res_mpool_object_get_with_count(pc_res, vec_type,
+	if (!svc_blist->blist || svc_blist->blist->count == 0)
+		return EINVAL;
+
+	total_len = 0;
+	svc_sgl->mpool_type = vec_type;
+	svc_sgl->sgl = pc_res_mpool_object_get_with_count(pc_res, vec_type,
 							  &vec_count);
-	if (!sgl_vec_head) {
+	if (!svc_sgl->sgl ) {
 		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s",
                                mem_pool_get_type_str(vec_type));
 		goto out;
 	}
 
 	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
-	sgl_vec = sgl_vec_head;
+	sgl_vec = svc_sgl->sgl;
 	cur_count = 0;
 	while (iter && (cur_count < vec_count)) {
 		memset(sgl_vec, 0, sizeof(*sgl_vec));
@@ -67,31 +139,30 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
 		if (iter)
 			iter = buffer_list_iter_addr_len_get(iter, block_size,
 					&sgl_vec->cs_addr_2, &sgl_vec->cs_len_2);
-		*ret_total_len += sgl_vec->cs_len_0 + sgl_vec->cs_len_1 +
-				  sgl_vec->cs_len_2;
-
+		total_len += sgl_vec->cs_len_0 + sgl_vec->cs_len_1 +
+			     sgl_vec->cs_len_2;
 		sgl_vec++;
 		cur_count++;
 	}
 
 	if (iter) {
 		OSAL_LOG_ERROR("buffer_list total length exceeds SGL vector, "
-			       "current_len %u", *ret_total_len);
+			       "current_len %u", total_len);
 		goto out;
         }
 
-	return sgl_vec_head;
+	return PNSO_OK;
 out:
-	pc_res_mpool_object_put(pc_res, vec_type, sgl_vec_head);
-	return NULL;
+	pc_res_sgl_vec_put(pc_res, svc_sgl);
+	return ENOMEM;
 }
 
 void
 pc_res_sgl_vec_put(const struct per_core_resource *pc_res,
-		   enum mem_pool_type vec_type,
-		   struct cpdc_sgl *sgl_vec)
+		   struct service_cpdc_sgl *svc_sgl)
 {
-	pc_res_mpool_object_put(pc_res, vec_type, sgl_vec);
+	pc_res_mpool_object_put(pc_res, svc_sgl->mpool_type,
+				svc_sgl->sgl);
 }
 
 /*
@@ -143,10 +214,10 @@ struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
                       const struct service_buf_list *svc_blist)
 {
-	const struct pnso_buffer_list *buf_list = svc_blist->sbl_blist;
+	const struct pnso_buffer_list *buf_list = svc_blist->blist;
 
 	memset(iter, 0, sizeof(*iter));
-	iter->blist_type = svc_blist->sbl_type;
+	iter->blist_type = svc_blist->type;
 	if (buf_list->count) {
 		iter->cur_count = buf_list->count;
 		iter->cur_list = &buf_list->buffers[0];
@@ -202,44 +273,92 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 	return iter;
 }
 
-struct interm_buf_list *
-pc_res_interm_buf_list_get(const struct per_core_resource *pc_res,
-			   enum mem_pool_type blist_type,
-			   enum mem_pool_type buf_type)
+pnso_error_t
+svc_interm_buf_list_get(struct service_info *svc_info)
 {
-        struct interm_buf_list	*iblist;
-        uint32_t		buf_size;
+	struct interm_buf_list	*iblist;
+	struct pnso_flat_buffer	*iblist_buf;
+	void			*ibuf;
+	uint32_t		buf_size;
+	uint32_t		req_size;
+	uint32_t		size_left;
 
-	iblist = pc_res_mpool_object_get(pc_res, blist_type);
-	if (iblist) {
-		memset(iblist, 0, sizeof(*iblist));
-		iblist->blist_type = blist_type;
-		iblist->buf_type = buf_type;
-		iblist->ibuf = pc_res_mpool_object_get_with_size(pc_res, buf_type,
-                                                                 &buf_size);
-		if (iblist->ibuf) {
+	/*
+	 * Produce output to intermediate buffers if there is a chain subordinate.
+ 	 * Noe that when such buffers are involved, a PDMA could be needed to
+	 * transfer the output data to the application's destination buffers.
+	 * PDMA has the following requirements:
+	 * 1) The source data must come from one single contiguous buffer, and
+	 * 2) The entire transfer must fit in one single chain_sgl_pdma descriptor.
+	 *
+	 * The current implementation optimizes for the sweet spot of 8K size,
+	 * i.e., one single source of up to 8K, which has these desired properties:
+	 * a) The smaller size provides for a larger pool of intermediate buffers
+	 *    from which large batch operations may draw, and
+	 * b) A given transfer will not exceed a chain_sgl_pdma descriptor.
+	 *
+	 * Before we proceed, 2 observations can be made: first, if the
+	 * application does not supply any destination buffers, then no PDMA
+	 * will be needed. Second, if application destination buffers are
+	 * present and they are longer than 8K, intermediate buffers will not
+	 * be used and HW will be set up to output directly to the app's buffers. 
+	 */
+	OSAL_ASSERT(chn_service_has_sub_chain(svc_info));
+	iblist = &svc_info->si_iblist;
+        iblist->blist.count = 0;
+	iblist_buf = &iblist->blist.buffers[0];
 
-			/* Note that rmem_obj address is already physical */
-			iblist->blist.count = 1;
-			iblist->blist.buffers[0].buf = mpool_get_object_phy_addr(buf_type,
-									iblist->ibuf);
-			iblist->blist.buffers[0].len = buf_size;
-			return iblist;
+	req_size = svc_info->si_dst_blist.len ?
+		   svc_info->si_dst_blist.len : svc_info->si_src_blist.len;
+	if (!svc_info->si_dst_blist.blist ||
+	    (req_size <= INTERM_BUF_NOMINAL_BUF_SIZE)) {
+
+		iblist->buf_type = MPOOL_TYPE_RMEM_INTERM_BUF;
+		size_left = req_size;
+		while (size_left  &&
+		       (iblist->blist.count < INTERM_BUF_MAX_NUM_NOMINAL_BUFS)) {
+
+			ibuf = pc_res_mpool_object_get_with_size(
+				svc_info->si_pc_res, iblist->buf_type, &buf_size);
+			if (!ibuf)
+				goto out;
+
+			iblist->blist.count++;
+			iblist_buf->buf = mpool_get_object_phy_addr(
+						iblist->buf_type, ibuf);
+			iblist_buf->len = size_left > buf_size ?
+					  buf_size : size_left;
+			size_left -= iblist_buf->len;
+			iblist_buf++;
 		}
+
+		/*
+		 * Switch si_dst_blist to using intermediate buffers
+	         */
+		svc_info->si_dst_blist.type = SERVICE_BUF_LIST_TYPE_RMEM;
+		svc_info->si_dst_blist.len = req_size;
+		svc_info->si_dst_blist.blist = &iblist->blist;
 	}
 
-	pc_res_interm_buf_list_put(pc_res, iblist);
-	return NULL;
+	return PNSO_OK;
+out:
+	svc_interm_buf_list_put(svc_info);
+	return ENOMEM;
 }
 
 void
-pc_res_interm_buf_list_put(const struct per_core_resource *pc_res,
-                           struct interm_buf_list *iblist)
+svc_interm_buf_list_put(struct service_info *svc_info)
 {
-	if (iblist) {
-		if (iblist->ibuf)
-			pc_res_mpool_object_put(pc_res, iblist->buf_type, iblist->ibuf);
-		pc_res_mpool_object_put(pc_res, iblist->blist_type, iblist);
+	struct interm_buf_list	*iblist = &svc_info->si_iblist;
+	struct pnso_flat_buffer	*iblist_buf = &iblist->blist.buffers[0];
+	void			*ibuf;
+
+	while (iblist->blist.count) {;
+		OSAL_ASSERT(iblist_buf->buf);
+		ibuf = mpool_get_object_alloc_addr(iblist->buf_type, iblist_buf->buf);
+		pc_res_mpool_object_put(svc_info->si_pc_res, iblist->buf_type, ibuf);
+                iblist_buf++;
+                iblist->blist.count--;
         }
 }
 
@@ -323,9 +442,9 @@ pc_res_mpool_object_put(const struct per_core_resource *pc_res,
 {
 	struct mem_pool *mpool;
 
-	mpool = pc_res_mpool_get(pc_res, type);
-	if (mpool && obj) {
-		if (mpool_put_object(mpool, obj)) {
+	if (obj) {
+		mpool = pc_res_mpool_get(pc_res, type);
+		if (mpool && mpool_put_object(mpool, obj)) {
 			OSAL_LOG_ERROR("cannot return pc_res object to pool %s",
 					mem_pool_get_type_str(type));
 		}

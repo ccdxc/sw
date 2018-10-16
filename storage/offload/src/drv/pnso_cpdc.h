@@ -41,6 +41,8 @@ extern "C" {
  * @cs_rsvd_3: specifies a 'reserved' field for future use.
  *
  */
+#define CPDC_SGL_TUPLE_LEN_MAX	65536
+
 struct cpdc_sgl {
 	uint64_t cs_addr_0;	/* 1st buffer */
 	uint32_t cs_len_0;

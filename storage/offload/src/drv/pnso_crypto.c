@@ -13,8 +13,8 @@
 #include "pnso_cpdc.h"
 #include "sonic_api_int.h"
 
-#define CRYPTO_NUM_DESCS_PER_AOL_VEC	PNSO_NOMINAL_NUM_BUFS
-#define CRYPTO_NUM_DESCS_PER_SGL_VEC	PNSO_NOMINAL_NUM_BUFS
+#define CRYPTO_NUM_DESCS_PER_AOL_VEC	INTERM_BUF_MAX_NUM_BUFS
+#define CRYPTO_NUM_DESCS_PER_SGL_VEC	INTERM_BUF_MAX_NUM_BUFS
 
 static void
 deinit_mpools(struct per_core_resource *pc_res)

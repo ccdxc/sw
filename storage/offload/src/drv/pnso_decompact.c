@@ -60,7 +60,7 @@ decompact_write_result(struct service_info *svc_info)
 }
 
 static void
-decompact_teardown(const struct service_info *svc_info)
+decompact_teardown(struct service_info *svc_info)
 {
 	/* EOPNOTSUPP */
 }

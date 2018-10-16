@@ -53,13 +53,8 @@ void cpdc_pprint_desc(const struct cpdc_desc *desc);
 
 void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);
 
-pnso_error_t cpdc_update_service_info_sgl(struct service_info *svc_info,
-		const struct service_params *svc_params);
-
-pnso_error_t cpdc_update_service_info_sgls(struct service_info *svc_info,
-		const struct service_params *svc_params);
-
-void cpdc_release_sgl(struct cpdc_sgl *sgl);
+pnso_error_t cpdc_update_service_info_sgl(struct service_info *svc_info);
+pnso_error_t cpdc_update_service_info_sgls(struct service_info *svc_info);
 
 struct cpdc_desc *cpdc_get_desc(struct per_core_resource *pc_res,
 		bool per_block);
