@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import grpc
+import copy
 
 from iota.harness.infra.utils.logger import Logger as Logger
 
@@ -14,23 +15,24 @@ import iota.harness.infra.utils.parser as parser
 
 from iota.harness.infra.glopts import GlobalOptions
 
-IotaSvcChannel = None
-TopoSvcStub = None
-CfgSvcStub = None
+gl_iota_svc_channel = None
+gl_topo_svc_stub = None
+gl_cfg_svc_stub = None
+gl_workloads = {}
 
 def Init():
     server = 'localhost:' + str(GlobalOptions.svcport)
     Logger.info("Creating GRPC Channel to IOTA Service %s" % server)
-    IotaSvcChannel = grpc.insecure_channel(server)
+    gl_iota_svc_channel = grpc.insecure_channel(server)
     Logger.debug("Waiting for IOTA Service to be UP")
-    grpc.channel_ready_future(IotaSvcChannel).result()
+    grpc.channel_ready_future(gl_iota_svc_channel).result()
     Logger.info("Connected to IOTA Service")
 
-    global TopoSvcStub
-    TopoSvcStub = topo_svc.TopologyApiStub(IotaSvcChannel)
+    global gl_topo_svc_stub
+    gl_topo_svc_stub = topo_svc.TopologyApiStub(gl_iota_svc_channel)
 
-    global CfgSvcStub
-    CfgSvcStub = cfg_svc.ConfigMgmtApiStub(IotaSvcChannel)
+    global gl_cfg_svc_stub
+    gl_cfg_svc_stub = cfg_svc.ConfigMgmtApiStub(gl_iota_svc_channel)
     return
 
 def __rpc(req, rpcfn):
@@ -45,54 +47,72 @@ def __rpc(req, rpcfn):
     return resp
 
 def CleanupTestbed(req):
-    global TopoSvcStub
-    Logger.info("Cleaning up Testbed:")
-    return __rpc(req, TopoSvcStub.CleanUpTestBed)
+    global gl_topo_svc_stub
+    Logger.debug("Cleaning up Testbed:")
+    return __rpc(req, gl_topo_svc_stub.CleanUpTestBed)
 
 def InitTestbed(req):
-    global TopoSvcStub
-    Logger.info("Initializing Testbed:")
-    return __rpc(req, TopoSvcStub.InitTestBed)
+    global gl_topo_svc_stub
+    Logger.debug("Initializing Testbed:")
+    return __rpc(req, gl_topo_svc_stub.InitTestBed)
 
 def AddNodes(req):
-    global TopoSvcStub
-    Logger.info("Add Nodes:")
-    return __rpc(req, TopoSvcStub.AddNodes)
+    global gl_topo_svc_stub
+    Logger.debug("Add Nodes:")
+    return __rpc(req, gl_topo_svc_stub.AddNodes)
 
 def AddWorkloads(req):
-    global TopoSvcStub
-    Logger.info("Add Workloads:")
-    return __rpc(req, TopoSvcStub.AddWorkloads)
+    global gl_workloads
+    for wl in req.workloads:
+        wl_copy = copy.deepcopy(wl)
+        gl_workloads[wl.workload_name] = wl_copy
+
+    global gl_topo_svc_stub
+    Logger.debug("Add Workloads:")
+    return __rpc(req, gl_topo_svc_stub.AddWorkloads)
+
+def DeleteWorkloads(req):
+    global gl_workloads
+    for wl in req.workloads:
+        del gl_workloads[wl.workload_name]
+
+    global gl_topo_svc_stub
+    Logger.debug("Delete Workloads:")
+    return __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
+
+def GetWorkloads():
+    global gl_workloads
+    return gl_workloads.values()
 
 def Trigger(req):
-    global TopoSvcStub
-    Logger.info("Trigger Message:")
-    return __rpc(req, TopoSvcStub.Trigger)
+    global gl_topo_svc_stub
+    Logger.debug("Trigger Message:")
+    return __rpc(req, gl_topo_svc_stub.Trigger)
 
 def PushConfig(req):
-    global CfgSvcStub
-    Logger.info("Push Config:")
-    return __rpc(req, CfgSvcStub.PushConfig)
+    global gl_cfg_svc_stub
+    Logger.debug("Push Config:")
+    return __rpc(req, gl_cfg_svc_stub.PushConfig)
 
 def QueryConfig(req):
-    global CfgSvcStub
-    Logger.info("Query Config:")
-    return __rpc(req, CfgSvcStub.QueryConfig)
+    global gl_cfg_svc_stub
+    Logger.debug("Query Config:")
+    return __rpc(req, gl_cfg_svc_stub.QueryConfig)
 
 def InitCfgService(req):
-    global CfgSvcStub
-    Logger.info("Init Config Service:")
-    return __rpc(req, CfgSvcStub.InitCfgService)
+    global gl_cfg_svc_stub
+    Logger.debug("Init Config Service:")
+    return __rpc(req, gl_cfg_svc_stub.InitCfgService)
 
 def GenerateConfigs(req):
-    global CfgSvcStub
-    Logger.info("Generate Configs:")
-    return __rpc(req, CfgSvcStub.GenerateConfigs)
+    global gl_cfg_svc_stub
+    Logger.debug("Generate Configs:")
+    return __rpc(req, gl_cfg_svc_stub.GenerateConfigs)
 
 def MakeCluster(req):
-    global CfgSvcStub
-    Logger.info("Make Cluster:")
-    return __rpc(req, CfgSvcStub.MakeCluster)
+    global gl_cfg_svc_stub
+    Logger.debug("Make Cluster:")
+    return __rpc(req, gl_cfg_svc_stub.MakeCluster)
 
 def GetVeniceMgmtIpAddresses():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceMgmtIpAddresses()

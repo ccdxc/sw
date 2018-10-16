@@ -3,6 +3,7 @@ import sys
 import pdb
 import os
 import ipaddress
+import time
 
 if __name__ == '__main__':
     topdir = os.path.dirname(sys.argv[0]) + '../../../../../'
@@ -61,6 +62,12 @@ def __prepare_ip_address_str_for_endpoint(ep):
              str(ipaddress.ip_network(nw_spec_subnet).prefixlen)
     return ip_str
 
+def __get_l2segment_vlan_for_endpoint(ep):
+    nw_name = getattr(ep.spec, 'network-name')
+    nw_obj = __find_network(nw_name)
+    assert(nw_obj)
+    return getattr(nw_obj.spec, 'vlan-id')
+
 def __add_workloads():
     for ep in ep_json_obj.endpoints:
         req = topo_svc.WorkloadMsg()
@@ -73,9 +80,11 @@ def __add_workloads():
         ep_msg.mac_address = getattr(ep.spec, 'mac-address')
         ep_msg.interface = ep.spec.interface
         ep_msg.interface_type = topo_svc.INTERFACE_TYPE_SRIOV
+        ep_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
         resp = api.AddWorkloads(req)
 
 def Main(step):
+    #time.sleep(120)
     api.Logger.SetLoggingLevel(api.types.loglevel.DEBUG)
     api.Init()
     agent_ips = api.GetNaplesMgmtIpAddresses()

@@ -64,6 +64,6 @@ def ConfigureNetworks(objlist):
 def ConfigureEndpoints(objlist):
     url = AGENT_URL + 'api/endpoints/'
     for obj in objlist:
-        setattr(obj.spec, "node-uuid", AGENT_UUID)
+        setattr(obj.spec, "node-uuid", "uuid-%s" % AGENT_UUID)
     __config(objlist, url)
     return
