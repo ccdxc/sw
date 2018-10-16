@@ -26,7 +26,7 @@ type RolloutState struct {
 
 	fsm [][]fsmNode
 
-	numPreUpgradeFailures int // number of failures seen so far (computed from status)
+	numPreUpgradeFailures int32 // number of failures seen so far (computed from status)
 }
 
 func (sm *Statemgr) handleRolloutEvent(et kvstore.WatchEventType, ro *roproto.Rollout) {

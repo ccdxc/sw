@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"sync/atomic"
 
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
@@ -134,8 +135,10 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 			switch s.Op {
 			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgFail
+				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
 			case protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICPreupgFail
+				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
 			case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICUpgFail
 			case protos.SmartNICOp_SmartNICDisruptiveUpgrade:

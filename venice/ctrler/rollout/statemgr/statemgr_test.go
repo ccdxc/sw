@@ -227,7 +227,7 @@ func checkNoPendingSmartNICOp(t *testing.T, stateMgr *Statemgr, node string, op 
 }
 
 // 	Add a response on node if op is present in the Spec and not present in Status
-func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op protos.SmartNICOp, version string) (bool, interface{}) {
+func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op protos.SmartNICOp, version, status string) (bool, interface{}) {
 	sros, err := stateMgr.ListSmartNICRollouts()
 	AssertOk(t, err, "Error Listing SmartNICRollouts")
 	for _, vro := range sros {
@@ -254,8 +254,8 @@ func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op
 		newOpStatus = append(newOpStatus, protos.SmartNICOpStatus{
 			Op:       op,
 			Version:  version,
-			OpStatus: "success",
-			Message:  "successful op in venice",
+			OpStatus: status,
+			Message:  status + " op in venice",
 		})
 		status := protos.SmartNICRolloutStatus{
 			OpStatus: newOpStatus,
@@ -510,7 +510,7 @@ func TestSNICOnlyRollout(t *testing.T) {
 
 	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
-			return addSmartNICResponseFilter(t, stateMgr, snic, op, version)
+			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
 		}
 	}
 
@@ -578,7 +578,7 @@ func TestFutureRollout(t *testing.T) {
 
 	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
 		return func() (bool, interface{}) {
-			return addSmartNICResponseFilter(t, stateMgr, snic, op, version)
+			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
 		}
 	}
 
@@ -593,4 +593,116 @@ func TestFutureRollout(t *testing.T) {
 	AssertConsistently(t, checkNoSmartNICReq("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec not to have PreCheck till timeout", "100ms", "2s")
 	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICDisruptiveUpgrade), "Expected naples1 spec to have outstanding RunVersion Op")
 
+}
+
+// When a preupgrade fails, the rollout should go to Failed state
+func TestPreUpgFail(t *testing.T) {
+	const version = "v1.1"
+	// create  state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{})
+	AssertOk(t, err, "Error creating StateMgr")
+	defer stateMgr.Stop()
+
+	createNode := func(name string) { createNodeHelper(stateMgr, name) }
+	createSNIC := func(name string, labels map[string]string) { createSNICHelper(stateMgr, name, labels) }
+
+	createNode("node1")
+
+	createSNIC("naples1", map[string]string{"l1": "n1"})
+
+	ro := roproto.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   t.Name(),
+			Tenant: "default",
+		},
+		Spec: roproto.RolloutSpec{
+			Version:                     version,
+			ScheduledStartTime:          nil,
+			Duration:                    "",
+			Strategy:                    "",
+			MaxParallel:                 3,
+			MaxNICFailuresBeforeAbort:   0,
+			OrderConstraints:            nil,
+			Suspend:                     false,
+			SmartNICsOnly:               true,
+			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
+		},
+	}
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &ro,
+	}
+	stateMgr.RolloutWatcher <- evt
+
+	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "fail")
+		}
+	}
+
+	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
+}
+
+// When one smartNIC does not respond to preupgrade, the rollout should go to Failed state
+func TestPreUpgTimeout(t *testing.T) {
+
+	savedPreupgradeTimeout := preUpgradeTimeout
+	preUpgradeTimeout = 100 * time.Millisecond
+	defer func() {
+		preUpgradeTimeout = savedPreupgradeTimeout
+	}()
+
+	const version = "v1.1"
+	// create  state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{})
+	AssertOk(t, err, "Error creating StateMgr")
+	defer stateMgr.Stop()
+
+	createNode := func(name string) { createNodeHelper(stateMgr, name) }
+	createSNIC := func(name string, labels map[string]string) { createSNICHelper(stateMgr, name, labels) }
+
+	createNode("node1")
+
+	createSNIC("naples1", map[string]string{"l1": "n1"})
+	createSNIC("naples0", map[string]string{"l1": "n1"})
+
+	ro := roproto.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   t.Name(),
+			Tenant: "default",
+		},
+		Spec: roproto.RolloutSpec{
+			Version:                     version,
+			ScheduledStartTime:          nil,
+			Duration:                    "",
+			Strategy:                    "",
+			MaxParallel:                 3,
+			MaxNICFailuresBeforeAbort:   0,
+			OrderConstraints:            nil,
+			Suspend:                     false,
+			SmartNICsOnly:               true,
+			SmartNICMustMatchConstraint: false, // hence smartnic upgrade only
+		},
+	}
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &ro,
+	}
+	stateMgr.RolloutWatcher <- evt
+
+	addSmartNICResponse := func(snic string, op protos.SmartNICOp) func() (bool, interface{}) {
+		return func() (bool, interface{}) {
+			return addSmartNICResponseFilter(t, stateMgr, snic, op, version, "success")
+		}
+	}
+
+	AssertEventually(t, addSmartNICResponse("naples1", protos.SmartNICOp_SmartNICPreCheckForDisruptive), "Expected naples1 spec to have outstanding Precheck Op")
+	AssertEventually(t, func() (bool, interface{}) { return IsFSMInState(t, stateMgr, t.Name(), fsmstRolloutFail) }, "Expecting Rollout to be in Failure  state", "100ms", "2s")
 }

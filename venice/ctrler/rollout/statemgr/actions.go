@@ -382,16 +382,19 @@ Loop:
 					}
 				case <-time.After(preUpgradeTimeout):
 					log.Debugf("Timeout waiting for status update of smartNIC %s", snicState.Name)
-					snicROState.UpdateSmartNICRolloutStatus(&protos.SmartNICRolloutStatus{
-						OpStatus: []protos.SmartNICOpStatus{
-							{
-								Op:       op,
-								Version:  version,
-								OpStatus: "timeout",
-								Message:  "Timeout waiting for status from smartNIC",
+					snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
+					if err == nil {
+						snicROState.UpdateSmartNICRolloutStatus(&protos.SmartNICRolloutStatus{
+							OpStatus: []protos.SmartNICOpStatus{
+								{
+									Op:       op,
+									Version:  version,
+									OpStatus: "timeout",
+									Message:  "Timeout waiting for status from smartNIC",
+								},
 							},
-						},
-					})
+						})
+					}
 					break WaitLoop
 				}
 			}

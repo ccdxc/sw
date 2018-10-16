@@ -150,6 +150,7 @@ var roFSM = [][]fsmNode{
 		fsmEvAllSmartNICPreUpgOK:      {nextSt: fsmstWaitForSchedule, actFn: fsmAcWaitForSchedule},
 		fsmEvSomeSmartNICPreUpgFail:   {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 		fsmEvOneSmartNICPreupgSuccess: {nextSt: fsmstPreCheckingSmartNIC}, // TODO
+		fsmEvOneSmartNICPreupgFail:    {nextSt: fsmstPreCheckingSmartNIC}, // TODO
 	},
 	fsmstWaitForSchedule: {
 		fsmEvScheduleNow: {nextSt: fsmstRollingOutVenice, actFn: fsmAcIssueNextVeniceRollout},
@@ -231,12 +232,8 @@ func fsmAcWaitForSchedule(ros *RolloutState) {
 		return
 	}
 	t, err := ros.Spec.ScheduledStartTime.Time()
-	if err != nil {
-		ros.eventChan <- fsmEvScheduleNow
-		return
-	}
 	now := time.Now()
-	if now.After(t) { // specified time is in the past
+	if err != nil || now.After(t) { // specified time is in the past
 		ros.eventChan <- fsmEvScheduleNow
 		return
 	}

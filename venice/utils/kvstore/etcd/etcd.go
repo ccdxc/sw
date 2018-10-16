@@ -162,9 +162,11 @@ func (e *etcdStore) putHelper(ctx context.Context, key string, obj runtime.Objec
 func (e *etcdStore) Create(ctx context.Context, key string, obj runtime.Object) error {
 	// Do a version check before storing to kvstore. Without this check, an non-API object can be store in kvstore
 	// but the Create call would fail
-	if _, err := e.objVersioner.GetVersion(obj); err != nil {
+	_, err := runtime.GetObjectMeta(obj)
+	if err != nil {
 		return err
 	}
+
 	_, resp, err := e.putHelper(ctx, key, obj, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
 	if err != nil {
 		return err
@@ -241,7 +243,8 @@ func (e *etcdStore) PrefixDelete(ctx context.Context, prefix string) error {
 func (e *etcdStore) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
 	// Do a version check before storing to kvstore. Without this check, an non-API object can be store in kvstore
 	// but the Create call would fail
-	if _, err := e.objVersioner.GetVersion(obj); err != nil {
+	_, err := runtime.GetObjectMeta(obj)
+	if err != nil {
 		return err
 	}
 
