@@ -441,6 +441,8 @@ func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, 
 		return -1, "", "", err
 	}
 
+	//Looks like we need to discard 8 bytes as its contains non UTF stuff.
+	hResp.Reader.Discard(8)
 	err = ctr.client.ContainerExecStart(ctr.ctx, resp.ID, types.ExecStartCheck{})
 	if err != nil {
 		return -1, "", "", err

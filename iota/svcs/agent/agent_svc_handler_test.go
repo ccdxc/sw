@@ -269,6 +269,14 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 		t.Errorf("Trigger call failed. Err: %v", err)
 	}
 
+	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
+		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "test-workload", Command: "cat anaconda-post.log"}}}
+
+	triggeResp, err = agentClient.Trigger(context.Background(), &triggerMsg)
+	if err != nil {
+		t.Errorf("Trigger call failed. Err: %v", err)
+	}
+
 	TestUtils.Assert(t, triggeResp.GetApiResponse().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Trigger msg failed!")
 
 	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
