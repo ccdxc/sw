@@ -17,7 +17,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "177.75.132.2",
+            "destination": "10.5.7.2",
             "transport": "TCP/8000"
           },
           "pcap-dir-name": ""
@@ -79,7 +79,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "223.97.165.2",
+            "destination": "10.0.3.2",
             "transport": "TCP/8001"
           },
           "pcap-dir-name": ""
@@ -141,7 +141,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "112.211.249.2",
+            "destination": "10.7.6.2",
             "transport": "TCP/8002"
           },
           "pcap-dir-name": ""
@@ -203,7 +203,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "4.121.175.2",
+            "destination": "10.3.9.2",
             "transport": "TCP/8003"
           },
           "pcap-dir-name": ""
@@ -265,7 +265,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "170.22.196.2",
+            "destination": "10.5.8.2",
             "transport": "TCP/8004"
           },
           "pcap-dir-name": ""
@@ -327,7 +327,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "16.45.218.2",
+            "destination": "10.3.2.2",
             "transport": "TCP/8005"
           },
           "pcap-dir-name": ""
@@ -389,7 +389,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "91.39.142.2",
+            "destination": "10.5.4.2",
             "transport": "TCP/8006"
           },
           "pcap-dir-name": ""
@@ -451,7 +451,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "54.199.28.2",
+            "destination": "10.4.4.2",
             "transport": "TCP/8007"
           },
           "pcap-dir-name": ""

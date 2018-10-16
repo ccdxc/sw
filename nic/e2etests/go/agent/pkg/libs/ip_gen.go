@@ -14,11 +14,12 @@ func GenSubnets(count int) (subnets []string) {
 	for len(subnets) != count {
 		size := 4
 		ip := make([]byte, size)
-		for i := 0; i < size; i++ {
-			ip[i] = byte(rand.Intn(256))
+		ip[0] = 10
+		for i := 1; i < size; i++ {
+			ip[i] = byte(rand.Intn(10))
 		}
 		/* Ignore Experimental address to */
-		if net.IP(ip).IsGlobalUnicast() && ip[0] <= 240 {
+		if net.IP(ip).IsGlobalUnicast() && ip[0] <= 240{
 			cidr := fmt.Sprintf("%s/24", net.IP(ip).To4().String())
 			subnets = append(subnets, cidr)
 		}

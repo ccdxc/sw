@@ -16,7 +16,7 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "177.75.132.3",
+              "destination": "10.5.7.3",
               "transport": "UDP/2055"
             }
           ]
@@ -42,7 +42,7 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "223.97.165.3",
+              "destination": "10.0.3.3",
               "transport": "UDP/2055"
             }
           ]
@@ -68,7 +68,7 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "112.211.249.3",
+              "destination": "10.7.6.3",
               "transport": "UDP/2055"
             }
           ]
@@ -94,7 +94,7 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "4.121.175.3",
+              "destination": "10.3.9.3",
               "transport": "UDP/2055"
             }
           ]
@@ -120,7 +120,7 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "170.22.196.3",
+              "destination": "10.5.8.3",
               "transport": "UDP/2055"
             }
           ]
@@ -146,7 +146,7 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "16.45.218.3",
+              "destination": "10.3.2.3",
               "transport": "UDP/2055"
             }
           ]
@@ -172,7 +172,7 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "91.39.142.3",
+              "destination": "10.5.4.3",
               "transport": "UDP/2055"
             }
           ]
@@ -198,7 +198,7 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "54.199.28.3",
+              "destination": "10.4.4.3",
               "transport": "UDP/2055"
             }
           ]

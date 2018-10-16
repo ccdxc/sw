@@ -251,12 +251,12 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 			Name:      "infra-nw",
 		},
 		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "42.42.42.42/24",
-			IPv4Gateway: "42.0.0.1",
+			IPv4Subnet:  "192.168.1.1/24",
+			IPv4Gateway: "192.168.1.1",
 			VlanID:      42,
 		},
 	}
-	networkCache["infra-nw"] = "42.42.42.42/24"
+	networkCache["infra-nw"] = "192.168.1.1/24"
 	networks = append(networks, infraNw)
 
 	// generate networks distributed evenly across

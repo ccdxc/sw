@@ -13,7 +13,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "177.75.132.2"
+      "destination": "10.5.7.2"
     },
     "status": {}
   },
@@ -31,7 +31,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "223.97.165.2"
+      "destination": "10.0.3.2"
     },
     "status": {}
   },
@@ -49,7 +49,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "112.211.249.2"
+      "destination": "10.7.6.2"
     },
     "status": {}
   },
@@ -67,7 +67,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "4.121.175.2"
+      "destination": "10.3.9.2"
     },
     "status": {}
   },
@@ -85,7 +85,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "170.22.196.2"
+      "destination": "10.5.8.2"
     },
     "status": {}
   },
@@ -103,7 +103,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "16.45.218.2"
+      "destination": "10.3.2.2"
     },
     "status": {}
   },
@@ -121,7 +121,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "91.39.142.2"
+      "destination": "10.5.4.2"
     },
     "status": {}
   },
@@ -139,7 +139,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "54.199.28.2"
+      "destination": "10.4.4.2"
     },
     "status": {}
   }

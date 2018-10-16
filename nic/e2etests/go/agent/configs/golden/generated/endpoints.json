@@ -13,8 +13,8 @@
       "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "42.42.42.2/32",
-      "mac-address": "5e:21:75:4b:6e:23",
+      "ipv4-address": "192.168.1.2/32",
+      "mac-address": "52:87:28:10:0c:be",
       "node-uuid": "GWUUID",
       "useg-vlan": 1
     },
@@ -34,8 +34,8 @@
       "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "42.42.42.3/32",
-      "mac-address": "62:c3:42:eb:2b:cf",
+      "ipv4-address": "192.168.1.3/32",
+      "mac-address": "06:5f:88:2d:cd:da",
       "node-uuid": "GWUUID",
       "useg-vlan": 2
     },
@@ -55,8 +55,8 @@
       "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "42.42.42.4/32",
-      "mac-address": "22:aa:f1:60:85:32",
+      "ipv4-address": "192.168.1.4/32",
+      "mac-address": "76:a1:00:da:07:b6",
       "node-uuid": "GWUUID",
       "useg-vlan": 3
     },
@@ -76,8 +76,8 @@
       "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "42.42.42.5/32",
-      "mac-address": "06:46:bf:e8:a6:ce",
+      "ipv4-address": "192.168.1.5/32",
+      "mac-address": "12:a2:96:e7:71:70",
       "node-uuid": "GWUUID",
       "useg-vlan": 4
     },
@@ -97,8 +97,8 @@
       "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "42.42.42.6/32",
-      "mac-address": "5a:2c:40:80:46:2b",
+      "ipv4-address": "192.168.1.6/32",
+      "mac-address": "3a:b2:74:5b:5a:c2",
       "node-uuid": "GWUUID",
       "useg-vlan": 5
     },
@@ -118,8 +118,8 @@
       "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "42.42.42.7/32",
-      "mac-address": "4a:32:5d:88:0e:82",
+      "ipv4-address": "192.168.1.7/32",
+      "mac-address": "1a:05:3f:27:5e:70",
       "node-uuid": "GWUUID",
       "useg-vlan": 6
     },
@@ -139,8 +139,8 @@
       "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "42.42.42.8/32",
-      "mac-address": "6a:d4:83:82:97:de",
+      "ipv4-address": "192.168.1.8/32",
+      "mac-address": "2e:05:2b:8e:82:26",
       "node-uuid": "GWUUID",
       "useg-vlan": 7
     },
@@ -160,8 +160,8 @@
       "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "42.42.42.9/32",
-      "mac-address": "46:94:20:6c:f9:36",
+      "ipv4-address": "192.168.1.9/32",
+      "mac-address": "5e:61:10:8e:65:17",
       "node-uuid": "GWUUID",
       "useg-vlan": 8
     },
@@ -181,8 +181,8 @@
       "network-name": "scale-nw-0",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "177.75.132.2/32",
-      "mac-address": "46:46:a6:4d:ed:e3",
+      "ipv4-address": "10.5.7.2/32",
+      "mac-address": "72:41:44:f3:fd:47",
       "node-uuid": "GWUUID",
       "useg-vlan": 1
     },
@@ -202,8 +202,8 @@
       "network-name": "scale-nw-1",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "223.97.165.2/32",
-      "mac-address": "66:fc:b4:a7:4f:8b",
+      "ipv4-address": "10.0.3.2/32",
+      "mac-address": "7e:a8:3f:02:16:c1",
       "node-uuid": "GWUUID",
       "useg-vlan": 2
     },
@@ -223,8 +223,8 @@
       "network-name": "scale-nw-2",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "112.211.249.2/32",
-      "mac-address": "16:ed:75:1a:fa:ba",
+      "ipv4-address": "10.7.6.2/32",
+      "mac-address": "0a:ff:27:ed:6f:6b",
       "node-uuid": "GWUUID",
       "useg-vlan": 3
     },
@@ -244,8 +244,8 @@
       "network-name": "scale-nw-3",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "4.121.175.2/32",
-      "mac-address": "16:9a:c3:b0:b8:86",
+      "ipv4-address": "10.3.9.2/32",
+      "mac-address": "7e:9a:fd:ca:c0:ba",
       "node-uuid": "GWUUID",
       "useg-vlan": 4
     },
@@ -265,8 +265,8 @@
       "network-name": "scale-nw-4",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "170.22.196.2/32",
-      "mac-address": "7a:19:12:b5:b3:d2",
+      "ipv4-address": "10.5.8.2/32",
+      "mac-address": "76:e7:19:36:b1:92",
       "node-uuid": "GWUUID",
       "useg-vlan": 5
     },
@@ -286,8 +286,8 @@
       "network-name": "scale-nw-5",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "16.45.218.2/32",
-      "mac-address": "66:8d:44:bf:3a:53",
+      "ipv4-address": "10.3.2.2/32",
+      "mac-address": "6e:8d:9e:c7:fd:4d",
       "node-uuid": "GWUUID",
       "useg-vlan": 6
     },
@@ -307,8 +307,8 @@
       "network-name": "scale-nw-6",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "91.39.142.2/32",
-      "mac-address": "46:33:75:60:32:9d",
+      "ipv4-address": "10.5.4.2/32",
+      "mac-address": "12:66:fd:1c:66:73",
       "node-uuid": "GWUUID",
       "useg-vlan": 7
     },
@@ -328,8 +328,8 @@
       "network-name": "scale-nw-7",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "54.199.28.2/32",
-      "mac-address": "1e:f0:1c:cc:c8:14",
+      "ipv4-address": "10.4.4.2/32",
+      "mac-address": "52:49:89:1b:1e:ec",
       "node-uuid": "GWUUID",
       "useg-vlan": 8
     },
@@ -349,8 +349,8 @@
       "network-name": "scale-nw-0",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "177.75.132.3/32",
-      "mac-address": "3a:02:9d:92:0e:9e",
+      "ipv4-address": "10.5.7.3/32",
+      "mac-address": "5e:21:75:4b:6e:23",
       "node-uuid": "GWUUID",
       "useg-vlan": 9
     },
@@ -370,8 +370,8 @@
       "network-name": "scale-nw-1",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "223.97.165.3/32",
-      "mac-address": "26:7b:39:69:b1:bc",
+      "ipv4-address": "10.0.3.3/32",
+      "mac-address": "62:c3:42:eb:2b:cf",
       "node-uuid": "GWUUID",
       "useg-vlan": 10
     },
@@ -391,8 +391,8 @@
       "network-name": "scale-nw-2",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "112.211.249.3/32",
-      "mac-address": "06:01:6e:0a:ef:e7",
+      "ipv4-address": "10.7.6.3/32",
+      "mac-address": "22:aa:f1:60:85:32",
       "node-uuid": "GWUUID",
       "useg-vlan": 11
     },
@@ -412,8 +412,8 @@
       "network-name": "scale-nw-3",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "4.121.175.3/32",
-      "mac-address": "22:24:e4:5f:eb:4d",
+      "ipv4-address": "10.3.9.3/32",
+      "mac-address": "06:46:bf:e8:a6:ce",
       "node-uuid": "GWUUID",
       "useg-vlan": 12
     },
@@ -433,8 +433,8 @@
       "network-name": "scale-nw-4",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "170.22.196.3/32",
-      "mac-address": "76:f5:91:08:21:ac",
+      "ipv4-address": "10.5.8.3/32",
+      "mac-address": "5a:2c:40:80:46:2b",
       "node-uuid": "GWUUID",
       "useg-vlan": 13
     },
@@ -454,8 +454,8 @@
       "network-name": "scale-nw-5",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "16.45.218.3/32",
-      "mac-address": "56:aa:b8:a2:2a:29",
+      "ipv4-address": "10.3.2.3/32",
+      "mac-address": "4a:32:5d:88:0e:82",
       "node-uuid": "GWUUID",
       "useg-vlan": 14
     },
@@ -475,8 +475,8 @@
       "network-name": "scale-nw-6",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "91.39.142.3/32",
-      "mac-address": "16:73:33:b3:cd:61",
+      "ipv4-address": "10.5.4.3/32",
+      "mac-address": "6a:d4:83:82:97:de",
       "node-uuid": "GWUUID",
       "useg-vlan": 15
     },
@@ -496,8 +496,8 @@
       "network-name": "scale-nw-7",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "54.199.28.3/32",
-      "mac-address": "5e:c0:98:a0:27:2c",
+      "ipv4-address": "10.4.4.3/32",
+      "mac-address": "46:94:20:6c:f9:36",
       "node-uuid": "GWUUID",
       "useg-vlan": 16
     },
@@ -515,8 +515,8 @@
     },
     "spec": {
       "network-name": "scale-nw-0",
-      "ipv4-address": "177.75.132.4/32",
-      "mac-address": "06:c3:32:b7:e6:da",
+      "ipv4-address": "10.5.7.4/32",
+      "mac-address": "46:46:a6:4d:ed:e3",
       "useg-vlan": 17
     },
     "status": {}
@@ -533,8 +533,8 @@
     },
     "spec": {
       "network-name": "scale-nw-1",
-      "ipv4-address": "223.97.165.4/32",
-      "mac-address": "26:2c:4e:87:8f:66",
+      "ipv4-address": "10.0.3.4/32",
+      "mac-address": "66:fc:b4:a7:4f:8b",
       "useg-vlan": 18
     },
     "status": {}
@@ -551,8 +551,8 @@
     },
     "spec": {
       "network-name": "scale-nw-2",
-      "ipv4-address": "112.211.249.4/32",
-      "mac-address": "26:17:60:a8:9c:e0",
+      "ipv4-address": "10.7.6.4/32",
+      "mac-address": "16:ed:75:1a:fa:ba",
       "useg-vlan": 19
     },
     "status": {}
@@ -569,8 +569,8 @@
     },
     "spec": {
       "network-name": "scale-nw-3",
-      "ipv4-address": "4.121.175.4/32",
-      "mac-address": "4a:f4:3f:30:48:17",
+      "ipv4-address": "10.3.9.4/32",
+      "mac-address": "16:9a:c3:b0:b8:86",
       "useg-vlan": 20
     },
     "status": {}
@@ -587,8 +587,8 @@
     },
     "spec": {
       "network-name": "scale-nw-4",
-      "ipv4-address": "170.22.196.4/32",
-      "mac-address": "72:ed:48:1c:e1:23",
+      "ipv4-address": "10.5.8.4/32",
+      "mac-address": "7a:19:12:b5:b3:d2",
       "useg-vlan": 21
     },
     "status": {}
@@ -605,8 +605,8 @@
     },
     "spec": {
       "network-name": "scale-nw-5",
-      "ipv4-address": "16.45.218.4/32",
-      "mac-address": "6e:f2:76:5f:68:9d",
+      "ipv4-address": "10.3.2.4/32",
+      "mac-address": "66:8d:44:bf:3a:53",
       "useg-vlan": 22
     },
     "status": {}
@@ -623,8 +623,8 @@
     },
     "spec": {
       "network-name": "scale-nw-6",
-      "ipv4-address": "91.39.142.4/32",
-      "mac-address": "22:5d:0e:de:64:bc",
+      "ipv4-address": "10.5.4.4/32",
+      "mac-address": "46:33:75:60:32:9d",
       "useg-vlan": 23
     },
     "status": {}
@@ -641,8 +641,8 @@
     },
     "spec": {
       "network-name": "scale-nw-7",
-      "ipv4-address": "54.199.28.4/32",
-      "mac-address": "5a:6c:c2:d3:2a:4b",
+      "ipv4-address": "10.4.4.4/32",
+      "mac-address": "1e:f0:1c:cc:c8:14",
       "useg-vlan": 24
     },
     "status": {}
@@ -659,8 +659,8 @@
     },
     "spec": {
       "network-name": "scale-nw-0",
-      "ipv4-address": "177.75.132.5/32",
-      "mac-address": "3a:13:5a:76:42:23",
+      "ipv4-address": "10.5.7.5/32",
+      "mac-address": "3a:02:9d:92:0e:9e",
       "useg-vlan": 25
     },
     "status": {}
@@ -677,8 +677,8 @@
     },
     "spec": {
       "network-name": "scale-nw-1",
-      "ipv4-address": "223.97.165.5/32",
-      "mac-address": "72:f6:60:f7:2d:e5",
+      "ipv4-address": "10.0.3.5/32",
+      "mac-address": "26:7b:39:69:b1:bc",
       "useg-vlan": 26
     },
     "status": {}
@@ -695,8 +695,8 @@
     },
     "spec": {
       "network-name": "scale-nw-2",
-      "ipv4-address": "112.211.249.5/32",
-      "mac-address": "52:a4:dc:a0:29:5e",
+      "ipv4-address": "10.7.6.5/32",
+      "mac-address": "06:01:6e:0a:ef:e7",
       "useg-vlan": 27
     },
     "status": {}
@@ -713,8 +713,8 @@
     },
     "spec": {
       "network-name": "scale-nw-3",
-      "ipv4-address": "4.121.175.5/32",
-      "mac-address": "46:3b:13:70:d5:a0",
+      "ipv4-address": "10.3.9.5/32",
+      "mac-address": "22:24:e4:5f:eb:4d",
       "useg-vlan": 28
     },
     "status": {}
@@ -731,8 +731,8 @@
     },
     "spec": {
       "network-name": "scale-nw-4",
-      "ipv4-address": "170.22.196.5/32",
-      "mac-address": "3a:64:4a:f5:f5:71",
+      "ipv4-address": "10.5.8.5/32",
+      "mac-address": "76:f5:91:08:21:ac",
       "useg-vlan": 29
     },
     "status": {}
@@ -749,8 +749,8 @@
     },
     "spec": {
       "network-name": "scale-nw-5",
-      "ipv4-address": "16.45.218.5/32",
-      "mac-address": "0e:9b:42:d8:3f:51",
+      "ipv4-address": "10.3.2.5/32",
+      "mac-address": "56:aa:b8:a2:2a:29",
       "useg-vlan": 30
     },
     "status": {}
@@ -767,8 +767,8 @@
     },
     "spec": {
       "network-name": "scale-nw-6",
-      "ipv4-address": "91.39.142.5/32",
-      "mac-address": "3e:83:2a:9f:ba:e1",
+      "ipv4-address": "10.5.4.5/32",
+      "mac-address": "16:73:33:b3:cd:61",
       "useg-vlan": 31
     },
     "status": {}
@@ -785,8 +785,8 @@
     },
     "spec": {
       "network-name": "scale-nw-7",
-      "ipv4-address": "54.199.28.5/32",
-      "mac-address": "6e:e8:1f:66:b3:72",
+      "ipv4-address": "10.4.4.5/32",
+      "mac-address": "5e:c0:98:a0:27:2c",
       "useg-vlan": 32
     },
     "status": {}
