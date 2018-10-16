@@ -57,7 +57,7 @@ cpu_tx_initial_action_done:
     nop
 
 cpu_tx_abort:
-    phvwri  p.p4_intr_global_drop, 1
-    nop.e
+    tbladd  d.{u.cpu_tx_initial_action_d.asq_pi_ci_eq_drops},  1
+    phvwri.e  p.p4_intr_global_drop, 1
     nop
 

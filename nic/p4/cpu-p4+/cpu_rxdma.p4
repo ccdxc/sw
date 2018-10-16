@@ -49,7 +49,8 @@ header_type cpu_rxdma_initial_action_t {
         CAPRI_QSTATE_HEADER_COMMON
         flags                       : 8;
         debug_dol                   : 8;
-        pad                         : 424;
+        ring_full_drop              : 64;
+        pad                         : 360;
     }
 }
 
