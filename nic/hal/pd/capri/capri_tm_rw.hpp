@@ -35,6 +35,8 @@
 #define HAL_TM_SCHEDULER_RATE_REFRESH_INTERVAL_US   4000 // 4000us
 #define HAL_TM_CLOCK_SPEED_MHZ                      833 // 833MHz
 
+#define HAL_TM_MAX_INTERPIPE_HDR_SZ HAL_TM_CELL_SIZE
+
 // There are 32 queues at both P4-ig and P4-eg. The idea is to 
 // maintain the same queue when pkt goes through the pipeline in P4-ig and
 // P4-eg. However, hardware imposes few restrictions on the queue usage:
@@ -247,16 +249,19 @@ void
 capri_tm_dump_debug_regs(void);
 void
 capri_tm_dump_config_regs(void);
-void
-capri_tm_dump_all_regs(void);
 
-typedef struct tm_iq_stats_s {
+typedef struct tm_iq_oflow_fifo_stats_s {
     uint64_t good_pkts_in;
     uint64_t good_pkts_out;
     uint64_t errored_pkts_in;
-    uint32_t oflow_fifo_depth;
-    uint32_t max_oflow_fifo_depth;
-    uint32_t buffer_occupancy;
+    uint32_t fifo_depth;
+    uint32_t max_fifo_depth;
+} tm_iq_oflow_fifo_stats_t;
+
+typedef struct tm_iq_stats_s {
+    tm_iq_oflow_fifo_stats_t oflow;
+    uint32_t                 buffer_occupancy;
+    uint32_t                 peak_occupancy;
 } __PACK__ tm_iq_stats_t;
 
 hal_ret_t

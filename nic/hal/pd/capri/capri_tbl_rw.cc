@@ -1769,7 +1769,6 @@ asic_csr_list_get (string path, int level)
 
 extern void capri_tm_dump_debug_regs(void);
 extern void capri_tm_dump_config_regs(void);
-extern void capri_tm_dump_all_regs(void);
 
 std::string
 hal::pd::asic_csr_dump (char *csr_str)
@@ -1781,8 +1780,6 @@ hal::pd::asic_csr_dump (char *csr_str)
         capri_tm_dump_debug_regs();
     } else if (!strcmp(csr_str, "pbc_config")) {
         capri_tm_dump_config_regs();
-    } else if (!strcmp(csr_str, "pbc_all")) {
-        capri_tm_dump_all_regs();
     } else if (!strcmp(csr_str, "mpu_debug")) {
         capri_debug_hbm_read();
     } else if (!strcmp(csr_str, "mpu_reset")) {

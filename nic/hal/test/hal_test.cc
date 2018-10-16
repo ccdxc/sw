@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <google/protobuf/util/json_util.h>
 
 
 using grpc::Channel;
@@ -2509,6 +2510,32 @@ public:
         }
     }
 
+    void qos_class_get(uint32_t qos_group) {
+        QosClassGetRequestMsg  get_req_msg;
+        QosClassGetResponseMsg get_rsp_msg;
+        ClientContext          get_context;
+        Status                 status;
+
+        get_req_msg.add_request()->mutable_key_or_handle()->set_qos_group(static_cast<kh::QosGroup>(qos_group));
+        status = qos_stub_->QosClassGet(&get_context, get_req_msg, &get_rsp_msg);
+        if (!status.ok() || (get_rsp_msg.response_size() != 1) || 
+            (get_rsp_msg.response(0).api_status() != types::API_STATUS_OK)) {
+            std::cout << "QosClass Get Failed" << std::endl;
+            return;
+        }
+
+        std::cout << "QosClass Get Succeeded " << std::endl;
+
+        auto get_rsp = get_rsp_msg.response(0);
+        std::string buf;
+        google::protobuf::util::JsonPrintOptions options;
+
+        options.add_whitespace = true;
+        options.preserve_proto_field_names = true;
+        google::protobuf::util::MessageToJsonString(get_rsp, &buf, options);
+        std::cout << buf << std::endl;
+    }
+
 private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
@@ -3112,6 +3139,8 @@ main (int argc, char** argv)
     uint32_t strict = 0;
     uint32_t rate_or_dwrr = 0;
 
+    bool qos_class_get = false;
+
     sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK);
 
     if (argc > 1) {
@@ -3167,6 +3196,8 @@ main (int argc, char** argv)
             dscp = atoi(argv[4]);
             strict = atoi(argv[5]);
             rate_or_dwrr = atoi(argv[6]);
+        } else if (!strcmp(argv[1], "qos_class_get")) {
+            qos_class_get = true;
         } else if (!strcmp(argv[1], "proxy")) {
             proxy_create = true;
         } else if (!strcmp(argv[1], "tcpcb_get")) {
@@ -3454,6 +3485,9 @@ main (int argc, char** argv)
         }
     } else if (qos_class_create) {
         hclient.qos_class_create(qos_group, pcp, dscp, strict, rate_or_dwrr);
+        return 0;
+    } else if (qos_class_get) {
+        hclient.qos_class_get(qos_group);
         return 0;
     } else if (config == false) {
         std::cout << "Usage: <pgm> config" << std::endl;

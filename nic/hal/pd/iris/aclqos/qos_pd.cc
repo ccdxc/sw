@@ -988,6 +988,9 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
                                 iqs, HAL_ARRAY_SIZE(iqs),
                                 oqs, HAL_ARRAY_SIZE(oqs));
 
+    // Update the stats now
+    pd_qos_class_periodic_stats_update(NULL);
+
     for (unsigned i = 0; i < HAL_ARRAY_SIZE(iqs); i++) {
         if (iqs[i].valid) {
             ret = capri_tm_get_iq_stats(iqs[i].port, iqs[i].iq, &iq_stats);
@@ -1004,12 +1007,13 @@ qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
             qos_class_pd_port_to_packet_buffer_port(iqs[i].port,
                                                     input_stats->mutable_input_queue()->mutable_packet_buffer_port());
             input_stats->mutable_input_queue()->set_input_queue_idx(iqs[i].iq);
-            input_stats->set_good_pkts_in(iq_stats.good_pkts_in);
-            input_stats->set_good_pkts_out(iq_stats.good_pkts_out);
-            input_stats->set_errored_pkts_in(iq_stats.errored_pkts_in);
-            input_stats->set_oflow_fifo_depth(iq_stats.oflow_fifo_depth);
-            input_stats->set_max_oflow_fifo_depth(iq_stats.max_oflow_fifo_depth);
+            input_stats->mutable_oflow_fifo_stats()->set_good_pkts_in(iq_stats.oflow.good_pkts_in);
+            input_stats->mutable_oflow_fifo_stats()->set_good_pkts_out(iq_stats.oflow.good_pkts_out);
+            input_stats->mutable_oflow_fifo_stats()->set_errored_pkts_in(iq_stats.oflow.errored_pkts_in);
+            input_stats->mutable_oflow_fifo_stats()->set_fifo_depth(iq_stats.oflow.fifo_depth);
+            input_stats->mutable_oflow_fifo_stats()->set_max_fifo_depth(iq_stats.oflow.max_fifo_depth);
             input_stats->set_buffer_occupancy(iq_stats.buffer_occupancy);
+            input_stats->set_peak_occupancy(iq_stats.peak_occupancy);
         }
     }
 
