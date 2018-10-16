@@ -76,7 +76,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	t.Parallel()
 	var tbMsg iota.TestBedMsg
 
-	tbMsg.IpAddress = []string{"10.8.102.174", "10.8.102.179", "10.8.102.180", "10.8.102.176", "10.8.102.185", "10.8.102.183"}
+	tbMsg.IpAddress = []string{"10.8.103.1", "10.8.103.3", "10.8.103.2", "10.8.103.4", "10.8.103.0", "10.8.102.255"}
 	//tbMsg.IpAddress = []string{"10.8.102.91"}
 	tbMsg.SwitchPortId = 1
 	tbMsg.User = "vm"
@@ -102,7 +102,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_VENICE,
 			Image:     "venice.tgz",
 			Name:      "venice-node-1",
-			IpAddress: "10.8.102.174",
+			IpAddress: "10.8.103.3",
 			NodeInfo: &iota.Node_VeniceConfig{
 				VeniceConfig: &iota.VeniceConfig{
 					ControlIntf: "eth1",
@@ -128,7 +128,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_VENICE,
 			Image:     "venice.tgz",
 			Name:      "venice-node-2",
-			IpAddress: "10.8.102.179",
+			IpAddress: "10.8.103.1",
 			NodeInfo: &iota.Node_VeniceConfig{
 				VeniceConfig: &iota.VeniceConfig{
 					ControlIntf: "eth1",
@@ -154,7 +154,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_VENICE,
 			Image:     "venice.tgz",
 			Name:      "venice-node-3",
-			IpAddress: "10.8.102.180",
+			IpAddress: "10.8.103.2",
 			NodeInfo: &iota.Node_VeniceConfig{
 				VeniceConfig: &iota.VeniceConfig{
 					ControlIntf: "eth1",
@@ -180,7 +180,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
 			Image:     "naples-release-v1.tgz",
 			Name:      "naples-node-1",
-			IpAddress: "10.8.102.176",
+			IpAddress: "10.8.103.4",
 			NodeInfo: &iota.Node_NaplesConfig{
 				NaplesConfig: &iota.NaplesConfig{
 					ControlIntf: "eth1",
@@ -193,7 +193,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
 			Image:     "naples-release-v1.tgz",
 			Name:      "naples-node-2",
-			IpAddress: "10.8.102.185",
+			IpAddress: "10.8.103.0",
 			NodeInfo: &iota.Node_NaplesConfig{
 				NaplesConfig: &iota.NaplesConfig{
 					ControlIntf: "eth1",
@@ -207,7 +207,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
 			Name:      "naples-node-3",
 			Image:     "naples-release-v1.tgz",
-			IpAddress: "10.8.102.183",
+			IpAddress: "10.8.102.255",
 			NodeInfo: &iota.Node_NaplesConfig{
 				NaplesConfig: &iota.NaplesConfig{
 					ControlIntf: "eth1",
@@ -244,7 +244,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 }`
 
 	clusterMsg := &iota.MakeClusterMsg{
-		Endpoint: "10.8.102.174:9001/api/v1/cluster",
+		Endpoint: "10.8.103.3:9001/api/v1/cluster",
 		Config:   clusterObj,
 	}
 

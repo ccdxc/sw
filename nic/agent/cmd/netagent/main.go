@@ -76,6 +76,8 @@ func main() {
 		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
 	}
 
+	naplesUUID := fmt.Sprintf("uuid-%s", macAddr)
+
 	var dp types.NetDatapathAPI
 	// ToDo Remove mock hal datapath prior to FCS
 	if *datapath == "hal" {
@@ -99,7 +101,7 @@ func main() {
 		resolverClient = resolver.New(&resolver.Config{Name: "naples-netagent", Servers: strings.Split(*resolverURLs, ",")})
 		//
 		opt := tsdb.Options{
-			ClientName:     "naples-netagent-" + macAddr.String(),
+			ClientName:     "naples-netagent-" + naplesUUID,
 			ResolverClient: resolverClient,
 		}
 
@@ -112,7 +114,7 @@ func main() {
 	}
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, resolverClient, agMode)
+	ag, err := netagent.NewAgent(dp, *agentDbPath, naplesUUID, *npmURL, resolverClient, agMode)
 	if err != nil {
 		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 	}
@@ -157,14 +159,14 @@ func main() {
 		ag.RestServer = restServer
 	} else {
 
-		tsa, err := troubleshooting.NewTsAgent(tsdp, macAddr.String(), *tpmURL, resolverClient, agMode, ag.NetworkAgent)
+		tsa, err := troubleshooting.NewTsAgent(tsdp, naplesUUID, *tpmURL, resolverClient, agMode, ag.NetworkAgent)
 		if err != nil {
 			log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 		}
 		log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
 
 		// telemetry policy agent
-		tpa, err := tpa.NewPolicyAgent(macAddr.String(), *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent)
+		tpa, err := tpa.NewPolicyAgent(naplesUUID, *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent)
 		if err != nil {
 			log.Fatalf("Error creating telemetry policy agent, Err: %v", err)
 		}
