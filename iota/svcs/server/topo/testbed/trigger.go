@@ -14,7 +14,7 @@ func (n *TestNode) Trigger(index int) error {
 	log.Infof("TOPO SVC | DEBUG | Trigger Agent . Received Response Msg: %v", resp)
 
 	if err != nil {
-		log.Errorf("Adding workload on node %v failed. Err: %v", n.Node.Name, err)
+		log.Errorf("Running trigger on node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
 

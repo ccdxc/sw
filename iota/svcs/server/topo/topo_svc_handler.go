@@ -301,20 +301,20 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 
 func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 
-	for idx, cmd := range req.GetCommands() {
-		for _, n := range ts.Nodes {
+	for cidx, cmd := range req.GetCommands() {
+		for nidx, n := range ts.Nodes {
 			if cmd.GetNodeName() == n.Node.Name {
 				triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
 					TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
-				ts.Nodes[idx].TriggerInfo = append(ts.Nodes[idx].TriggerInfo, triggerMsg)
-				if err := ts.Nodes[idx].Trigger(0); err != nil {
-					req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+				ts.Nodes[nidx].TriggerInfo = append(ts.Nodes[nidx].TriggerInfo, triggerMsg)
+				if err := ts.Nodes[nidx].Trigger(0); err != nil {
+					req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}
 					return req, err
 				}
 				/* Only one command sent anyway */
-				req.Commands[idx] = ts.Nodes[idx].TriggerResp[0].GetCommands()[0]
-				ts.Nodes[idx].TriggerInfo = nil
-				ts.Nodes[idx].TriggerResp = nil
+				req.Commands[cidx] = ts.Nodes[nidx].TriggerResp[0].GetCommands()[0]
+				ts.Nodes[nidx].TriggerInfo = nil
+				ts.Nodes[nidx].TriggerResp = nil
 				break
 			}
 		}
