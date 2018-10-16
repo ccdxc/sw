@@ -304,16 +304,18 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 	for idx, cmd := range req.GetCommands() {
 		for _, n := range ts.Nodes {
 			if cmd.GetNodeName() == n.Node.Name {
-				triggerMsg := &iota.TriggerMsg{Commands: req.GetCommands(),
+				triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
 					TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
 				ts.Nodes[idx].TriggerInfo = append(ts.Nodes[idx].TriggerInfo, triggerMsg)
 				if err := ts.Nodes[idx].Trigger(0); err != nil {
 					req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 					return req, err
 				}
-				req.Commands = ts.Nodes[idx].TriggerResp[0].GetCommands()
+				/* Only one command sent anyway */
+				req.Commands[idx] = ts.Nodes[idx].TriggerResp[0].GetCommands()[0]
 				ts.Nodes[idx].TriggerInfo = nil
 				ts.Nodes[idx].TriggerResp = nil
+				break
 			}
 		}
 	}
