@@ -264,10 +264,11 @@ message ClusterHealthMsg {
 
 message NodeHealth {
     enum HealthCode {
-        HEALTH_OK      = 0;
-        NAPLES_DOWN    = 1;
-        NODE_DOWN      = 2;
-        APP_DOWN       = 3;
+        HEALTH_OK       = 0;
+        NAPLES_DOWN     = 1;
+        NODE_DOWN       = 2;
+        APP_DOWN        = 3;
+        NOT_PROVISIONED = 4;
     }
     // Name of the node
     string  node_name        = 1;

@@ -19,9 +19,10 @@ import (
 
 // TopologyService implements topology service API
 type TopologyService struct {
-	SSHConfig   *ssh.ClientConfig
-	TestBedInfo *iota.TestBedMsg //server
-	Nodes       []*testbed.TestNode
+	SSHConfig        *ssh.ClientConfig
+	TestBedInfo      *iota.TestBedMsg //server
+	Nodes            []*testbed.TestNode
+	ProvisionedNodes map[string]*testbed.TestNode
 }
 
 // NewTopologyServiceHandler Topo service handle
@@ -99,6 +100,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 		}
 		return pool.Wait()
 	}
+	ts.ProvisionedNodes = make(map[string]*testbed.TestNode)
 	err = initTestBed(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Init Test Bed Call Failed. %v", err)
@@ -127,7 +129,8 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	}
 
 	// Prep Topo
-	for idx, n := range req.Nodes {
+	newNodes := []*testbed.TestNode{}
+	for _, n := range req.Nodes {
 		svcName := n.Name
 		agentURL := fmt.Sprintf("%s:%d", n.IpAddress, common.IotaAgentPort)
 		c, err := common.CreateNewGRPCClient(svcName, agentURL)
@@ -137,17 +140,23 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 			return nil, err
 		}
 
-		ts.Nodes[idx] = &testbed.TestNode{
+		if _, ok := ts.ProvisionedNodes[n.Name]; ok {
+			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v. Err: %v", n.Name, err)
+			return nil, err
+		}
+
+		ts.ProvisionedNodes[n.Name] = &testbed.TestNode{
 			Node:        n,
 			AgentClient: iota.NewIotaAgentApiClient(c.Client),
 		}
+		newNodes = append(newNodes, ts.ProvisionedNodes[n.Name])
 	}
 
 	// Add nodes
 	addNodes := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
 
-		for _, node := range ts.Nodes {
+		for _, node := range newNodes {
 			node := node
 			pool.Go(func() error {
 				return node.AddNode()
@@ -163,7 +172,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 		return req, err
 	}
 
-	for idx, node := range ts.Nodes {
+	for idx, node := range newNodes {
 		req.Nodes[idx] = node.Node
 	}
 
@@ -200,20 +209,23 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 
 	log.Infof("TOPO SVC | DEBUG | STATE | %v", ts.Nodes)
 
+	for _, w := range req.Workloads {
+		if _, ok := ts.ProvisionedNodes[w.NodeName]; !ok {
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("AddWorkloads found to unprovisioned node : %v", w.NodeName)
+			return req, nil
+		}
+
+	}
 	// Add workloads
 	addWorkloads := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
 		for _, w := range req.Workloads {
 			w := w
-			for _, node := range ts.Nodes {
-				node := node
-				//for range node.Workloads {
-				if w.NodeName == node.Node.Name {
-					pool.Go(func() error {
-						return node.AddWorkload(w)
-					})
-				}
-			}
+			node, _ := ts.ProvisionedNodes[w.NodeName]
+			pool.Go(func() error {
+				return node.AddWorkload(w)
+			})
 		}
 		return pool.Wait()
 	}
@@ -238,22 +250,29 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 
 func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 
-	for idx, cmd := range req.GetCommands() {
-		for _, n := range ts.Nodes {
-			if cmd.GetNodeName() == n.Node.Name {
-				cidx := len(ts.Nodes[idx].TriggerInfo)
-				triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
-					TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
-				ts.Nodes[idx].TriggerInfo[cidx] = triggerMsg
+	triggerNodes := []*testbed.TestNode{}
+	for _, cmd := range req.GetCommands() {
+		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
+		triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
+			TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
+		node.TriggerInfo = append(node.TriggerInfo, triggerMsg)
+		node.TriggerResp = append(node.TriggerResp, triggerMsg)
+		added := false
+		for _, triggerNode := range triggerNodes {
+			if triggerNode.Node.Name == node.Node.Name {
+				added = true
+				break
 			}
-
+		}
+		if !added {
+			triggerNodes = append(triggerNodes, node)
 		}
 	}
 	// Triggers
 	triggers := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
 
-		for _, node := range ts.Nodes {
+		for _, node := range triggerNodes {
 			node := node
 			pool.Go(func() error {
 				for idx := range node.TriggerInfo {
@@ -285,15 +304,12 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 	triggerResp := &iota.TriggerMsg{TriggerMode: req.GetTriggerMode(),
 		TriggerOp: req.GetTriggerOp()}
 	/* Dequeing the commands in same order as it was queued before. */
-	for idx, cmd := range req.GetCommands() {
-		for _, n := range ts.Nodes {
-			if cmd.GetNodeName() == n.Node.Name {
-				cmdResp := ts.Nodes[idx].TriggerInfo[0]
-				ts.Nodes[idx].TriggerInfo = ts.Nodes[idx].TriggerInfo[1:]
-				triggerResp.Commands = append(triggerResp.Commands, cmdResp.GetCommands()[0])
-			}
+	for _, cmd := range req.GetCommands() {
+		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
+		cmdResp := node.TriggerInfo[0]
+		node.TriggerInfo = node.TriggerInfo[1:]
+		triggerResp.Commands = append(triggerResp.Commands, cmdResp.GetCommands()[0])
 
-		}
 	}
 
 	return triggerResp, nil
@@ -302,22 +318,19 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 
 	for cidx, cmd := range req.GetCommands() {
-		for nidx, n := range ts.Nodes {
-			if cmd.GetNodeName() == n.Node.Name {
-				triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
-					TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
-				ts.Nodes[nidx].TriggerInfo = append(ts.Nodes[nidx].TriggerInfo, triggerMsg)
-				if err := ts.Nodes[nidx].Trigger(0); err != nil {
-					req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}
-					return req, err
-				}
-				/* Only one command sent anyway */
-				req.Commands[cidx] = ts.Nodes[nidx].TriggerResp[0].GetCommands()[0]
-				ts.Nodes[nidx].TriggerInfo = nil
-				ts.Nodes[nidx].TriggerResp = nil
-				break
-			}
+		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
+		triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
+			TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
+		node.TriggerInfo = append(node.TriggerInfo, triggerMsg)
+		node.TriggerResp = append(node.TriggerResp, triggerMsg)
+		if err := node.Trigger(0); err != nil {
+			req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}
+			return req, err
 		}
+		/* Only one command sent anyway */
+		req.Commands[cidx] = node.TriggerResp[0].GetCommands()[0]
+		node.TriggerInfo = nil
+		node.TriggerResp = nil
 	}
 
 	return req, nil
@@ -334,6 +347,15 @@ func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*
 		return req, nil
 	}
 
+	for _, cmd := range req.GetCommands() {
+		if _, ok := ts.ProvisionedNodes[cmd.NodeName]; !ok {
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Trigger command found to unprovisioned node : %v", cmd.NodeName)
+			return req, nil
+		}
+
+	}
+
 	if req.GetTriggerMode() == iota.TriggerMode_TRIGGER_PARALLEL {
 		return ts.runParallelTrigger(ctx, req)
 	}
@@ -343,7 +365,19 @@ func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*
 
 // CheckClusterHealth checks the e2e cluster health
 func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.NodeMsg) (*iota.ClusterHealthMsg, error) {
+
 	resp := &iota.ClusterHealthMsg{}
+	for _, reqNode := range req.Nodes {
+		if node, ok := ts.ProvisionedNodes[reqNode.Name]; ok {
+			nodeHealth := &iota.NodeHealth{NodeName: reqNode.Name}
+			nodeResp, err := node.AgentClient.CheckHealth(ctx, nodeHealth)
+			if err == nil {
+				resp.Health = append(resp.Health, nodeResp)
+			}
+		} else {
+			resp.Health = append(resp.Health, &iota.NodeHealth{NodeName: reqNode.Name, HealthCode: iota.NodeHealth_NOT_PROVISIONED})
+		}
+	}
 
 	return resp, nil
 }
