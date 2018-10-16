@@ -256,7 +256,7 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		for _, node := range ts.Nodes {
 			node := node
 			pool.Go(func() error {
-				for idx, _ := range node.TriggerInfo {
+				for idx := range node.TriggerInfo {
 					if err := node.Trigger(idx); err != nil {
 						return err
 					}

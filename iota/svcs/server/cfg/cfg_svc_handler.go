@@ -10,7 +10,9 @@ import (
 )
 
 // ConfigService implements config service API
-type ConfigService struct{}
+type ConfigService struct {
+	CfgState *iota.InitConfigMsg
+}
 
 // NewConfigServiceHandler returns an instance of config service
 func NewConfigServiceHandler() *ConfigService {
@@ -23,7 +25,7 @@ func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMs
 	log.Infof("CFG SVC | DEBUG | MakeCluster. Received Request Msg: %v", req)
 
 	resp, err := common.HTTPPost(req.Endpoint, req.Config)
-	fmt.Println("BALERION: ", resp)
+	log.Infof("CFG SVC | DEBUG | MakeCluster. Received REST Response Msg: %v", resp)
 
 	if err != nil {
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
@@ -36,9 +38,21 @@ func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMs
 //InitCfgService initiates a config management service
 func (c *ConfigService) InitCfgService(ctx context.Context, req *iota.InitConfigMsg) (*iota.InitConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | InitCfgService. Received Request Msg: %v", req)
-
-	resp := &iota.InitConfigMsg{}
-	return resp, nil
+	if len(req.Vlans) == 0 {
+		log.Errorf("CFG SVC | InitCfgService call failed. | Missing allocated VLANs")
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		req.ApiResponse.ErrorMsg = "CFG SVC | InitCfgService call failed. | Missing allocated VLANs"
+		return req, nil
+	}
+	if req.EntryPointType != iota.EntrypointType_VENICE_REST && req.EntryPointType != iota.EntrypointType_NAPLES_REST {
+		log.Errorf("CFG SVC | InitCfgService call failed. | Bad entrypoint type. %v", req.EntryPointType)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("CFG SVC | InitCfgService call failed. | Bad entrypoint type. %v", req.EntryPointType)
+		return req, nil
+	}
+	c.CfgState = req
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 // GenerateConfigs generates base configs
