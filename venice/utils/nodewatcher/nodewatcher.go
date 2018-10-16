@@ -36,6 +36,7 @@ type nodeMetrics struct {
 	CPUUsedPercent   api.Gauge
 	DiskFree         api.Gauge
 	DiskUsed         api.Gauge
+	DiskUsedPercent  api.Gauge
 	DiskTotal        api.Gauge
 	InterfaceName    api.String
 	InterfaceRxBytes api.Gauge
@@ -149,6 +150,9 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 			w.metricObj.DiskFree.Set(math.Floor(float64(diskFree>>20)), t)
 			w.metricObj.DiskUsed.Set(math.Ceil(float64(diskUsed>>20)), t)
 			w.metricObj.DiskTotal.Set(math.Floor(float64(diskTotal>>20)), t)
+			if diskTotal > 0 {
+				w.metricObj.DiskUsedPercent.Set(math.Ceil(float64(diskUsed*10000)/float64(diskTotal))/100, t)
+			}
 
 			// network
 			stat, err := net.IOCountersWithContext(ctx, true)
