@@ -30,9 +30,9 @@ func (a ByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 // (2) Values can be one or more depending on the operator. Equals, NotEquals
 //     require one Value. In, NotIn require one or more Values.
 // (3) The key is invalid due to its length, or sequence
-//     of characters. See validateFieldKey for more details.
+//     of characters. See ValidateFieldKey for more details.
 func NewRequirement(key string, op Operator, vals []string) (*Requirement, error) {
-	if err := validateFieldKey(key); err != nil {
+	if err := ValidateFieldKey(key); err != nil {
 		return nil, err
 	}
 	switch op {
@@ -96,7 +96,8 @@ func (r *Requirement) MatchesObj(obj runtime.Object) bool {
 		}
 		return true
 	case Operator_lt, Operator_lte, Operator_gt, Operator_gte:
-		keyType, err := ref.GetScalarFieldType(obj.GetObjectKind(), r.Key)
+		schemaType := runtime.GetDefaultScheme().Kind2SchemaType(obj.GetObjectKind())
+		keyType, err := ref.GetScalarFieldType(schemaType, r.Key)
 		if err != nil || keyType == "TYPE_STRING" || keyType == "TYPE_BOOL" {
 			return false
 		}
@@ -144,7 +145,8 @@ func (r *Requirement) MatchesObjWithObservedValue(obj runtime.Object) (bool, str
 		return true, ""
 
 	case Operator_lt, Operator_lte, Operator_gt, Operator_gte:
-		keyType, err := ref.GetScalarFieldType(obj.GetObjectKind(), r.Key)
+		schemaType := runtime.GetDefaultScheme().Kind2SchemaType(obj.GetObjectKind())
+		keyType, err := ref.GetScalarFieldType(schemaType, r.Key)
 		if err != nil || keyType == "TYPE_STRING" || keyType == "TYPE_BOOL" {
 			return false, ""
 		}
@@ -290,7 +292,7 @@ func parse(sel string) ([]*Requirement, error) {
 		return nil, fmt.Errorf("Maximum supported field selector length: %v, found: %v", maxSelectorLength, len(sel))
 	}
 	// Validate the selector using regex.
-	if err := validateSelector(sel); err != nil {
+	if err := ValidateSelector(sel); err != nil {
 		return nil, err
 	}
 	// Selector is now a comma separated list of <key op val(s)*> tuples.

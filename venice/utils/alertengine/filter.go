@@ -15,8 +15,10 @@ func Match(reqs []*fields.Requirement, obj runtime.Object) (bool, []*monitoring.
 		Requirements: reqs,
 	}
 
+	schemaType := runtime.GetDefaultScheme().Kind2SchemaType(obj.GetObjectKind())
+
 	// ensures all the fields are valid and their values are intact with the field type
-	if err := fs.ValidateRequirements(obj.GetObjectKind()); err != nil {
+	if err := fs.ValidateRequirements(schemaType); err != nil {
 		log.Errorf("failed to validate the requirements, err: %v", err)
 		return false, nil
 	}

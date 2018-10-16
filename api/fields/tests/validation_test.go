@@ -1,4 +1,4 @@
-package fields
+package tests
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+
+	"github.com/pensando/sw/api/fields"
 )
 
 func TestFieldKeyValidation(t *testing.T) {
@@ -54,12 +56,12 @@ func TestFieldKeyValidation(t *testing.T) {
 		"-x.ab",        // cant being in -
 	}
 	for ii := range goodKeys {
-		if err := validateFieldKey(goodKeys[ii]); err != nil {
+		if err := fields.ValidateFieldKey(goodKeys[ii]); err != nil {
 			t.Fatalf("%v", err)
 		}
 	}
 	for ii := range badKeys {
-		if err := validateFieldKey(badKeys[ii]); err == nil {
+		if err := fields.ValidateFieldKey(badKeys[ii]); err == nil {
 			t.Fatalf("Validation success, should have failed: %v", badKeys[ii])
 		}
 	}
@@ -106,12 +108,12 @@ func TestFieldOpValidation(t *testing.T) {
 		"==<=",
 	}
 	for ii := range goodOps {
-		if err := validateFieldOp(goodOps[ii]); err != nil {
+		if err := fields.ValidateFieldOp(goodOps[ii]); err != nil {
 			t.Fatalf("%v", err)
 		}
 	}
 	for ii := range badOps {
-		if err := validateFieldOp(badOps[ii]); err == nil {
+		if err := fields.ValidateFieldOp(badOps[ii]); err == nil {
 			t.Fatalf("Validation success, should have failed: %v", badOps[ii])
 		}
 	}
@@ -149,12 +151,12 @@ func TestFieldValsValidation(t *testing.T) {
 		"(a,,b)",
 	}
 	for ii := range goodVals {
-		if err := validateFieldVals(goodVals[ii]); err != nil {
+		if err := fields.ValidateFieldVals(goodVals[ii]); err != nil {
 			t.Fatalf("%v", err)
 		}
 	}
 	for ii := range badVals {
-		if err := validateFieldVals(badVals[ii]); err == nil {
+		if err := fields.ValidateFieldVals(badVals[ii]); err == nil {
 			t.Fatalf("Validation success, should have failed: %v", badVals[ii])
 		}
 	}
@@ -212,12 +214,12 @@ func TestSelectorValidation(t *testing.T) {
 		fmt.Sprintf("xx>  =%v", timeNow.String()),
 	}
 	for ii := range goodSels {
-		if err := validateSelector(goodSels[ii]); err != nil {
+		if err := fields.ValidateSelector(goodSels[ii]); err != nil {
 			t.Fatalf("%v", err)
 		}
 	}
 	for ii := range badSels {
-		if err := validateSelector(badSels[ii]); err == nil {
+		if err := fields.ValidateSelector(badSels[ii]); err == nil {
 			t.Fatalf("Validation success, should have failed: %v", badSels[ii])
 		}
 	}

@@ -1001,7 +1001,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		},
 		{ // search events
 			search.SearchRequest{
-				QueryString: "kind:events.Event",
+				QueryString: "kind:Event",
 				From:        from,
 				MaxResults:  maxResults * 2,
 			},
@@ -1011,7 +1011,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]int64{
 				"default": {
 					"Monitoring": {
-						"events.Event": eventCount,
+						"Event": eventCount,
 					},
 				},
 			},

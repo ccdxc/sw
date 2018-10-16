@@ -193,7 +193,7 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 
 	// create event object
 	event := &evtsapi.Event{
-		TypeMeta:   api.TypeMeta{Kind: "events.Event"},
+		TypeMeta:   api.TypeMeta{Kind: "Event"},
 		ObjectMeta: meta,
 		EventAttributes: evtsapi.EventAttributes{
 			Type:     eventType,

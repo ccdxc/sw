@@ -52,7 +52,8 @@ var (
 	fieldKeyErrMsg = "valid field must be a . separated string of alphabets, indexed using [*] or [key] for maps, and must start and end with an alphabet"
 )
 
-func validateFieldKey(k string) error {
+// ValidateFieldKey validate fieldKey
+func ValidateFieldKey(k string) error {
 	if !validFieldKeyRE.MatchString(k) {
 		return fmt.Errorf("%v is not valid, %v", k, fieldKeyErrMsg)
 	}
@@ -67,7 +68,8 @@ var (
 	fieldOpErrMsg  = "op must be one of {=, !=, in, notin, <, <=, >, >=}"
 )
 
-func validateFieldOp(op string) error {
+// ValidateFieldOp validate fieldOp
+func ValidateFieldOp(op string) error {
 	if !validFieldOpRE.MatchString(op) {
 		return fmt.Errorf("%v is not valid, %v", op, fieldOpErrMsg)
 	}
@@ -93,7 +95,8 @@ var (
 	fieldValsErrMsg  = "valid values must be a single alphanumeric value or a comma separated set of alphanumeric values"
 )
 
-func validateFieldVals(vals string) error {
+// ValidateFieldVals validates FieldVals
+func ValidateFieldVals(vals string) error {
 	if !validFieldValsRE.MatchString(vals) {
 		return fmt.Errorf("%v is not valid, %v", vals, fieldValsErrMsg)
 	}
@@ -116,7 +119,8 @@ var (
 	selErrMsg  = "valid selector must be a comma separated set of <key,op,values> tuples, key is a string of alphabets, with indices for maps, op must be one of {=,!=,in,notin,<=,<,>=,>}, values must be a single alphanumeric string or a comma separated set of alphanumeric strings in parentheses"
 )
 
-func validateSelector(sel string) error {
+// ValidateSelector validates Selector
+func ValidateSelector(sel string) error {
 	if !validSelRE.MatchString(sel) {
 		return fmt.Errorf("%v is not valid, %v", sel, selErrMsg)
 	}

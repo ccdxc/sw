@@ -19,7 +19,7 @@ func TestFilter(t *testing.T) {
 	ts, _ := types.TimestampProto(nw)
 	evt := &evtsapi.Event{
 		TypeMeta: api.TypeMeta{
-			Kind: "events.Event",
+			Kind: "Event",
 		},
 		ObjectMeta: api.ObjectMeta{
 			CreationTime: api.Timestamp{
@@ -94,11 +94,11 @@ func TestFilter(t *testing.T) {
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "kind", Operator: "equals", Values: []string{"events.Event"}},
+				&fields.Requirement{Key: "kind", Operator: "equals", Values: []string{"Event"}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Kind", Operator: "equals", Values: []string{"events.Event"}}, ObservedValue: "events.Event"},
+				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Kind", Operator: "equals", Values: []string{"Event"}}, ObservedValue: "Event"},
 			},
 		},
 		{

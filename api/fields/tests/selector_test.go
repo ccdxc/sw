@@ -1,4 +1,4 @@
-package fields_test
+package tests
 
 import (
 	"fmt"
@@ -129,7 +129,7 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.QuorumNodes",
 						Operator: "equals",
 						Values:   []string{"192.168.30.11"},
@@ -143,12 +143,12 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.QuorumNodes",
 						Operator: "notIn",
 						Values:   []string{"192.168.30.11", "192.168.30.12"},
 					},
-					&Requirement{
+					{
 						Key:      "Spec.VirtualIP",
 						Operator: "notEquals",
 						Values:   []string{"192.168.30.11"},
@@ -162,7 +162,7 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Editions[*].Reviews[abc].Review",
 						Operator: "in",
 						Values:   []string{"excellent", "good"},
@@ -176,7 +176,7 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Rules.Apps",
 						Operator: "in",
 						Values:   []string{"mongo", "redis"},
@@ -190,7 +190,7 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.TLSClientPolicy.CertificatesSelector[test]",
 						Operator: "equals",
 						Values:   []string{"good"},
@@ -204,12 +204,12 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "lt",
 						Values:   []string{"60"},
 					},
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "gt",
 						Values:   []string{"50"},
@@ -222,12 +222,12 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "lt",
 						Values:   []string{"60"},
 					},
-					&Requirement{
+					{
 						Key:      "Spec.Type",
 						Operator: "equals",
 						Values:   []string{"Round Robin"},
@@ -241,7 +241,7 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "equals",
 						Values:   []string{ti.Format(time.RFC3339Nano)},
@@ -255,17 +255,17 @@ func TestParseWithValidation(t *testing.T) {
 			expSuccess: true,
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.State",
 						Operator: "equals",
 						Values:   []string{"OPEN"},
 					},
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "gte",
 						Values:   []string{ti.Format(time.RFC3339Nano)},
 					},
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "lt",
 						Values:   []string{ti.Add(10 * time.Second).Format(time.RFC3339Nano)},
@@ -341,21 +341,21 @@ func TestMatchesObj(t *testing.T) {
 	u := &User{
 		Spec: UserSpec{
 			Groups: []*UserGroup{
-				&UserGroup{},
+				{},
 			},
 			Perms: map[string]RolePerms{
-				"test": RolePerms{
+				"test": {
 					Perms: []string{"test"},
 				},
-				"foo": RolePerms{
+				"foo": {
 					Perms: []string{"bar"},
 				},
 			},
 			PermsIdx: map[int8]RolePerms{
-				0: RolePerms{
+				0: {
 					Perms: []string{"test"},
 				},
-				1: RolePerms{
+				1: {
 					Perms: []string{"bar"},
 				},
 			},
@@ -368,7 +368,7 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Name",
 						Operator: "equals",
 						Values:   []string{""},
@@ -380,7 +380,7 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Name",
 						Operator: "equals",
 						Values:   []string{"foo"},
@@ -392,7 +392,7 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Perms[*].Perms",
 						Operator: "in",
 						Values:   []string{"foo", "bar", "test"},
@@ -404,7 +404,7 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Perms[*].Perms",
 						Operator: "in",
 						Values:   []string{"bar"},
@@ -416,7 +416,7 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Perms[*].Perms",
 						Operator: "in",
 						Values:   []string{"blah"},
@@ -428,7 +428,7 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Perms[*].Perms",
 						Operator: "notIn",
 						Values:   []string{"blah"},
@@ -440,7 +440,7 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.PermsIdx[0].Perms",
 						Operator: "equals",
 						Values:   []string{"test"},
@@ -452,7 +452,7 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.PermsIdx[0].Perms",
 						Operator: "notEquals",
 						Values:   []string{"foo"},
@@ -464,12 +464,12 @@ func TestMatchesObj(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Groups.Group",
 						Operator: "equals",
 						Values:   []string{"foo"},
 					},
-					&Requirement{
+					{
 						Key:      "Spec.Perms[*].Perms",
 						Operator: "equals",
 						Values:   []string{"test"},
@@ -490,7 +490,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 	// test relational operators
 	l := &network.LbPolicy{
 		TypeMeta: api.TypeMeta{
-			Kind: "network.LbPolicy", // TODO: GetSchema() failes when just kind "LbPolicy" is passed. It expectes the API group as well. how to get the kind with api group?
+			Kind: "LbPolicy",
 		},
 		Spec: network.LbPolicySpec{
 			Type: "Round Robin",
@@ -508,12 +508,12 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.Type",
 						Operator: "equals",
 						Values:   []string{"Round Robin"},
 					},
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.Interval",
 						Operator: "lt",
 						Values:   []string{"121"},
@@ -525,12 +525,12 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "gte",
 						Values:   []string{"60"},
 					},
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "lt",
 						Values:   []string{"120"},
@@ -542,7 +542,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "gt",
 						Values:   []string{"50"},
@@ -554,17 +554,17 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "gt",
 						Values:   []string{"50"},
 					},
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.Interval",
 						Operator: "gt",
 						Values:   []string{"50"},
 					},
-					&Requirement{
+					{
 						Key:      "Spec.Type",
 						Operator: "equals",
 						Values:   []string{"Round Robin"},
@@ -576,7 +576,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "gt",
 						Values:   []string{"adfaf"},
@@ -588,7 +588,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Spec.HealthCheck.MaxTimeouts",
 						Operator: "gt",
 						Values:   []string{time.Now().String()},
@@ -610,7 +610,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 	ti, _ := types.TimestampProto(tn)
 	a := &monitoring.Alert{
 		TypeMeta: api.TypeMeta{
-			Kind: "monitoring.Alert",
+			Kind: "Alert",
 		},
 		Status: monitoring.AlertStatus{
 			Resolved: &monitoring.AuditInfo{
@@ -627,7 +627,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "equals",
 						Values:   []string{ti.String()},
@@ -639,7 +639,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "lt",
 						Values:   []string{time.Now().Format(time.RFC3339Nano)},
@@ -651,7 +651,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "gte",
 						Values:   []string{tn.Format(time.RFC3339Nano)},
@@ -663,12 +663,12 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "gte",
 						Values:   []string{tn.Format(time.RFC3339Nano)},
 					},
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "lt",
 						Values:   []string{time.Now().Format(time.RFC3339Nano)},
@@ -680,7 +680,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "gte",
 						Values:   []string{"invalid"},
@@ -692,7 +692,7 @@ func TestMatchesOnNonStringKeys(t *testing.T) {
 		{
 			selector: Selector{
 				Requirements: []*Requirement{
-					&Requirement{
+					{
 						Key:      "Status.Resolved.Time",
 						Operator: "gte",
 						Values:   []string{"1234"},
