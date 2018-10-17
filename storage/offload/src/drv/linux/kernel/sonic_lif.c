@@ -881,7 +881,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	lif->res.pc_res[free_res_id]->core_id = core_id;
 	lif->res.core_to_res_map[core_id] = free_res_id;
 	spin_unlock(&lif->res.lock);
-	OSAL_LOG_DEBUG("assign per core res_id %d for core_id %d\n",
+	OSAL_LOG_DEBUG("assign per core res_id %lu for core_id %d\n",
 		       free_res_id, core_id);
 	return 0;
 }
