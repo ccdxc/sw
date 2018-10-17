@@ -267,6 +267,7 @@ def run_hal(args):
     os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
     os.environ["SNORT_DAQ_PATH"] = snort_dir + "/x86_64/lib/"
     os.environ["COVFILE"] = os.path.realpath(bullseye_hal_cov_file)
+    os.environ["DISABLE_AGING"] = "1"
 
     #hal_dir = nic_dir + "/../bazel-bin/nic/hal"
     os.chdir(nic_dir)

@@ -375,7 +375,7 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func sessionShowHeader(cmd *cobra.Command, args []string) {
-	hdrLine := strings.Repeat("-", 120)
+	hdrLine := strings.Repeat("-", 130)
 	fmt.Printf("Legend:\nHandle: Session Handle\n")
 	fmt.Printf("Role: Direction/Instance\n")
 	fmt.Printf("      Direction: U (Uplink), H (Host)\n      Instance: P (Primary), S (Secondary)\n")
@@ -385,11 +385,12 @@ func sessionShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("DMAC|DIP[:dport]: Destination MAC Address | Destination IP Address and Port Number\n")
 	fmt.Printf("P|E: L4 Protocol | Ethernet Type\n")
 	fmt.Printf("TCP State: State for TCP flows\tAge: Age in mins and secs\n")
+	fmt.Printf("Time To Age: Inactivity time remaining for flow to age in seconds (IDF- No aging indefinite time)\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-6s%-8s%-8s%-10s%-24s%-24s%-6s%-16s%-6s\n",
+	fmt.Printf("%-8s%-6s%-8s%-8s%-10s%-24s%-24s%-6s%-16s%-6s%-6s\n",
 		"Handle", "Role", "KeyType", "L2SegID", "VrfID",
 		"SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "P|E", "TCP State",
-		"Age")
+		"Age", "Time To Age")
 	fmt.Println(hdrLine)
 }
 
@@ -568,12 +569,23 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus,
 
 	vrfStr := strconv.Itoa(int(srcID)) + "/" + strconv.Itoa(int(dstID))
 
-	fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-16s%-6s\n",
-		status.GetSessionHandle(),
-		flowStr, keyType, id,
-		vrfStr,
-		src, dst, ipproto,
-		tcpState, ageStr)
+	timeToAge := flowInfo.GetTimeToAge()
+
+	if timeToAge == 0xFFFFFFFF {
+		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-16s%-6s%-10s\n",
+			status.GetSessionHandle(),
+			flowStr, keyType, id,
+			vrfStr,
+			src, dst, ipproto,
+			tcpState, ageStr, "IDF")
+	} else {
+		fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-16s%-6s%-10d\n",
+			status.GetSessionHandle(),
+			flowStr, keyType, id,
+			vrfStr,
+			src, dst, ipproto,
+			tcpState, ageStr, timeToAge)
+	}
 
 	natType := flowInfo.GetNatType()
 	snat := false

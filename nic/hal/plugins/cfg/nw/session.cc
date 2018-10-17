@@ -58,15 +58,16 @@ session_stats_t  g_session_stats = {};
 #define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT       (15 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT    (15 * TIME_MSECS_PER_SEC)
 #define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT         (2 * TIME_MSECS_PER_SEC)
-#define HAL_SESSION_AGE_SCAN_INTVL                 (5 * TIME_MSECS_PER_SEC)
+#define HAL_SESSION_AGE_SCAN_INTVL                 (250)
 #define HAL_FTE_STATS_TIMER_INTVL                  (10 * TIME_MSECS_PER_SEC)
 #define HAL_FTE_STATS_TIMER_INTVL_SECS             (10)
-#define HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL       4
+#define HAL_SESSIONS_TO_SCAN_PER_INTVL             (500)
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
 #define HAL_MAX_SESSION_PER_ENQ                     5
 #define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads())
 #define HAL_MAX_ERRORS                              255
+#define HAL_MAX_INACTIVTY_TIMEOUT                   0xFFFFFFFF
 
 void *
 session_get_handle_key_func (void *entry)
@@ -470,6 +471,64 @@ del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
         ep_del_session(dep, session);
 }
 
+//------------------------------------------------------------------------------
+// Get session idle timeout based on the flow key
+// Use a default timeout in case security profile is not found
+//------------------------------------------------------------------------------
+static uint64_t
+session_aging_timeout (session_t *session,
+                       flow_t *iflow, flow_t *rflow)
+{
+    uint64_t            timeout = SESSION_SW_DEFAULT_TIMEOUT;
+    vrf_t              *vrf = NULL;
+    nwsec_profile_t    *nwsec_prof = NULL;
+
+    vrf = vrf_lookup_by_handle(session->vrf_handle);
+    if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
+    } else {
+        // Get the default security profile
+        nwsec_prof = find_nwsec_profile_by_handle(
+                        g_hal_state->oper_db()->default_security_profile_hdl());
+    }
+
+    if (nwsec_prof != NULL) {
+        switch (iflow->config.key.proto) {
+            case IPPROTO_TCP:
+                if (iflow->pgm_attrs.drop) {
+                    timeout = nwsec_prof->tcp_drop_timeout;
+                } else {
+                    timeout = nwsec_prof->tcp_timeout;
+                }
+                break;
+
+            case IPPROTO_UDP:
+                if (iflow->pgm_attrs.drop) {
+                    timeout = nwsec_prof->udp_drop_timeout;
+                } else {
+                    timeout = nwsec_prof->udp_timeout;
+                }
+                break;
+
+            case IPPROTO_ICMP:
+                if (iflow->pgm_attrs.drop) {
+                    timeout = nwsec_prof->icmp_drop_timeout;
+                } else {
+                    timeout = nwsec_prof->icmp_timeout;
+                }
+                break;
+
+            default:
+                if (iflow->pgm_attrs.drop) {
+                    timeout = nwsec_prof->drop_timeout;
+                 } else {
+                    timeout = nwsec_prof->session_idle_timeout;
+                 }
+        }
+    }
+
+    return ((uint64_t)(timeout * TIME_NSECS_PER_SEC));
+}
 
 static void
 flow_tcp_to_flow_tcp_spec(flow_t *flow, FlowKeyTcpUdpInfo *tcp_udp)
@@ -632,6 +691,7 @@ session_state_to_session_get_response (session_t *session,
     uint32_t        age;
     timespec_t      ctime;
     uint64_t        ctime_ns, create_ns;
+    uint64_t        session_timeout=0, time_elapsed=0, time_remaining=0;
 
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &ctime);
@@ -642,6 +702,19 @@ session_state_to_session_get_response (session_t *session,
     age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
+
+    // Flow remaining inactivity timeout
+    session_timeout = session_aging_timeout(session, session->iflow, session->rflow);
+    if (!session_timeout) {
+        response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_time_to_age(HAL_MAX_INACTIVTY_TIMEOUT);
+    } else {
+        time_elapsed = (ctime_ns-session_state->iflow_state.last_pkt_ts);
+        time_remaining = (session_timeout > time_elapsed)?\
+                         ((session_timeout-time_elapsed)/TIME_NSECS_PER_SEC):0;
+        response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+            mutable_flow_info()->set_time_to_age(time_remaining);
+    }
 
     // TCP state
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
@@ -661,6 +734,17 @@ session_state_to_session_get_response (session_t *session,
         age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
         response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
+        // Flow remaining inactivity timeout
+        if (!session_timeout) {
+            response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_time_to_age(HAL_MAX_INACTIVTY_TIMEOUT);
+        } else {
+            time_elapsed = (ctime_ns-session_state->rflow_state.last_pkt_ts);
+            time_remaining = (session_timeout > time_elapsed)?
+                              ((session_timeout-time_elapsed)/TIME_NSECS_PER_SEC):0;
+            response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+                 mutable_flow_info()->set_time_to_age(time_remaining);
+        }
 
         // TCP state
         response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
@@ -1344,65 +1428,6 @@ session_delete(const session_args_t *args, session_t *session)
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// Get session idle timeout based on the flow key
-// Use a default timeout in case security profile is not found
-//------------------------------------------------------------------------------
-static uint64_t
-session_aging_timeout (session_t *session,
-                       flow_t *iflow, flow_state_t *iflow_state,
-                       flow_t *rflow, flow_state_t *rflow_state)
-{
-    uint64_t            timeout = SESSION_SW_DEFAULT_TIMEOUT;
-    vrf_t              *vrf = NULL;
-    nwsec_profile_t    *nwsec_prof = NULL;
-
-    vrf = vrf_lookup_by_handle(session->vrf_handle);
-    if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
-        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
-    } else {
-        // Get the default security profile
-        nwsec_prof = find_nwsec_profile_by_handle(
-                        g_hal_state->oper_db()->default_security_profile_hdl());
-    }
-
-    if (nwsec_prof != NULL) {
-        switch (iflow->config.key.proto) {
-            case IPPROTO_TCP:
-                if (iflow->pgm_attrs.drop) {
-                    timeout = nwsec_prof->tcp_drop_timeout;
-                } else {
-                    timeout = nwsec_prof->tcp_timeout;
-                }
-                break;
-
-            case IPPROTO_UDP:
-                if (iflow->pgm_attrs.drop) {
-                    timeout = nwsec_prof->udp_drop_timeout;
-                } else {
-                    timeout = nwsec_prof->udp_timeout;
-                }
-                break;
-
-            case IPPROTO_ICMP:
-                if (iflow->pgm_attrs.drop) {
-                    timeout = nwsec_prof->icmp_drop_timeout;
-                } else {
-                    timeout = nwsec_prof->icmp_timeout;
-                }
-                break;
-            default:
-                if (iflow->pgm_attrs.drop) {
-                    timeout = nwsec_prof->drop_timeout;
-                 } else {
-                    timeout = nwsec_prof->session_idle_timeout;
-                 }
-        }
-    }
-
-    return ((uint64_t)(timeout * TIME_NSECS_PER_SEC));
-}
-
 #define SESSION_AGED_RET(ENTRY)                                     \
     ENTRY(SESSION_AGED_NONE,   0,  "SESSION_AGED_NONE")             \
     ENTRY(SESSION_AGED_IFLOW,  1,  "SESSION_AGED_IFLOW")            \
@@ -1534,7 +1559,7 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
     tcp_hdr->rst = (setrst)?1:0;
     tcp_hdr->syn = 0;
     tcp_hdr->fin = 0;
-    tcp_hdr->window = 0;
+    tcp_hdr->window = state.tcp_win_sz;
     tcp_hdr->check = 0;    // let P4 datapath compute checksum
     tcp_hdr->urg_ptr = 0;
 
@@ -1545,10 +1570,8 @@ static session_aged_ret_t
 hal_has_session_aged (session_t *session, uint64_t ctime_ns,
                      session_state_t *session_state_p)
 {
-    pd::pd_conv_hw_clock_to_sw_clock_args_t    clock_args;
     flow_t                                    *iflow, *rflow = NULL;
     session_state_t                            session_state;
-    uint64_t                                   last_pkt_ts;
     uint64_t                                   session_timeout;
     pd::pd_session_get_args_t                  args;
     SessionSpec                                spec;
@@ -1591,35 +1614,22 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
 
     // check if iflow has expired now
     // If there is no timeout configured then we do not age the session
-    session_timeout = session_aging_timeout(session, iflow,
-                              &session_state.iflow_state,
-                              rflow, rflow ? &session_state.rflow_state : NULL);
+    session_timeout = session_aging_timeout(session, iflow, rflow);
     if (!session_timeout) {
         return retval;
     }
 
     // Check initiator flow
-    // Convert hw clock to sw clock resolving any deltas
-    // P4 has 32 bits so shift it make it 48 bits
-    clock_args.hw_tick = (session_state.iflow_state.last_pkt_ts << 16);
-    clock_args.sw_ns = &(last_pkt_ts);
-    pd_func_args.pd_conv_hw_clock_to_sw_clock = &clock_args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, &pd_func_args);
-    HAL_TRACE_DEBUG("Hw tick: {}", (session_state.iflow_state.last_pkt_ts<<16));
-    HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
-                    last_pkt_ts, ctime_ns, session_timeout);
-    if ((ctime_ns - last_pkt_ts) >= session_timeout) {
+    //HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
+    //                session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
+    if ((ctime_ns - session_state.iflow_state.last_pkt_ts) >= session_timeout) {
         // session hasn't aged yet, move on
         retval = SESSION_AGED_IFLOW;
     }
 
     if (session->rflow) {
         //check responder flow
-        clock_args.hw_tick = (session_state.rflow_state.last_pkt_ts << 16);
-        clock_args.sw_ns = &last_pkt_ts;
-        pd_func_args.pd_conv_hw_clock_to_sw_clock = &clock_args;
-        pd::hal_pd_call(pd::PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, &pd_func_args);
-        if ((ctime_ns - last_pkt_ts) >= session_timeout) {
+        if ((ctime_ns - session_state.rflow_state.last_pkt_ts) >= session_timeout) {
             // responder flow seems to be active still
             if (retval == SESSION_AGED_IFLOW)
                 retval = SESSION_AGED_BOTH;
@@ -1647,10 +1657,12 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
 
     session = hal::find_session_by_handle(ctx->session_handle);
     if (session == NULL) {
+        HAL_TRACE_DEBUG("Cant find session with handle: {} -- bailing", ctx->session_handle);
         // Cant find session -- bail out
         goto cleanup;
     }
 
+    session->tcp_cxntrack_timer = NULL;
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
@@ -1679,9 +1691,13 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
         // Session aging is stopped as we saw some packet
         goto cleanup;
     } else {
+        ctx->aged_flow = ret;
         fte::fte_softq_enqueue(session->fte_id, /* queue it on the right FTE thread */
                                build_and_send_tcp_pkt, (void *)ctx);
+        HAL_TRACE_DEBUG("Enqueued tcp tickle send");
     }
+
+    return;
 
 cleanup:
     HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT, ctx);
@@ -1699,6 +1715,7 @@ build_and_send_tcp_pkt (void *data)
 
     session = hal::find_session_by_handle(ctxt->session_handle);
     if (session == NULL) {
+        HAL_TRACE_ERR("Cant find session for handle: {}", ctxt->session_handle);
         // Cant find session -- bail out
         goto cleanup;
     }
@@ -1708,6 +1725,7 @@ build_and_send_tcp_pkt (void *data)
     cpu_header.src_lif = hal::SERVICE_LIF_CPU;
     cpu_header.l2_offset = 0;
 
+    HAL_TRACE_DEBUG("Session {} Num tickles: {}", session->hal_handle, ctxt->num_tickles);
     if (ctxt->num_tickles <= MAX_TCP_TICKLES) {
         // Send tickles to one or both flows
         if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
@@ -1731,8 +1749,9 @@ build_and_send_tcp_pkt (void *data)
                                               SESSION_DEFAULT_TCP_TICKLE_TIMEOUT,
                                               (void *)ctxt,
                                               tcp_tickle_timeout_cb, false);
+        return;
     } else {
-        // Send TCP RST to the flow that hasnt aged
+        // Send TCP RST to the flow if there is no response
         if (ctxt->aged_flow == SESSION_AGED_RFLOW) {
             build_tcp_packet(session->iflow, session->vrf_handle,
                               ctxt->session_state.iflow_state, &cpu_header, pkt, true);
@@ -1789,6 +1808,7 @@ typedef tcptkle_timer_ctx_t **timer_ctx_list;
 typedef hal_handle_t        *timer_handle_list;
 
 struct session_age_cb_args_t {
+    uint32_t          *num_sessions;               
     uint64_t           ctime_ns;
     uint8_t           *num_ctx;
     uint8_t           *num_del_sess;
@@ -1808,6 +1828,8 @@ session_age_cb (void *entry, void *ctxt)
     tcptkle_timer_ctx_t    *tklectx = NULL;
     session_aged_ret_t      retval = SESSION_AGED_NONE;
 
+    (*args->num_sessions)++;
+ 
     // Check if its a TCP flow with connection tracking enabled.
     // And connection tracking timer is not NULL. This means the session
     // is one of connection establishment or connection close phase. Disable
@@ -1895,16 +1917,18 @@ session_age_cb (void *entry, void *ctxt)
 static void
 session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    uint32_t              i, bucket = *((uint32_t *)(&ctxt));
+    uint32_t              bucket = *((uint32_t *)(&ctxt));
     timespec_t            ctime;
     hal_ret_t             ret = HAL_RET_OK;
     uint8_t               fte_id = 0;
+    uint32_t              num_sessions = 0, bucket_no = 0;
 
     session_age_cb_args_t args;
 
     // We dont have any sessions yet - bail
     if (!g_hal_state->session_hal_handle_ht()->num_entries())
         return;
+    args.num_sessions = &num_sessions;
 
     args.num_ctx = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS,
                                    (sizeof(uint8_t)*HAL_MAX_DATA_THREAD));
@@ -1942,11 +1966,14 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     sdk::timestamp_to_nsecs(&ctime, &args.ctime_ns);
 
     //HAL_TRACE_DEBUG("timer id {}, bucket: {}", timer_id,  bucket);
-    for (i = 0; i < HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL; i++) {
+    while (num_sessions < HAL_SESSIONS_TO_SCAN_PER_INTVL &&
+           bucket_no < g_hal_state->session_hal_handle_ht()->num_buckets()) {
         g_hal_state->session_hal_handle_ht()->walk_bucket_safe(bucket,
                                                      session_age_cb, &args);
+        bucket_no++;
         bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
     }
+    //HAL_TRACE_DEBUG("Num sessions: {}", num_sessions); 
 
     //Check if there are pending requests that need to be queued to FTE threads
     for (fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
@@ -2002,6 +2029,7 @@ session_init (hal_cfg_t *hal_cfg)
 
     // Disable aging when FTE is disabled
     if (getenv("DISABLE_AGING")) {
+        HAL_TRACE_DEBUG("Aging is disabled");
         return HAL_RET_OK;
     }
     t_session_timer =
@@ -2242,7 +2270,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
                        session->hal_handle);
     }
 
-    HAL_TRACE_DEBUG("IFlow State: {}", state.iflow_state.state);
+    //HAL_TRACE_DEBUG("Session {} IFlow State: {}", session_handle, state.iflow_state.state);
 
     if (session->iflow)
         session->iflow->state = state.iflow_state.state;

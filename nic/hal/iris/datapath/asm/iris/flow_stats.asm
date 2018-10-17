@@ -18,7 +18,7 @@ flow_stats:
   seq         c1, k.capri_intrinsic_drop, TRUE
   bcf         [c1], flow_stats_dropped
 #ifndef CAPRI_IGNORE_TIMESTAMP
-  tblwr       d.flow_stats_d.last_seen_timestamp, r6
+  tblwr       d.flow_stats_d.last_seen_timestamp, r4[47:16]
 #else
   tblwr       d.flow_stats_d.last_seen_timestamp, r0
 #endif

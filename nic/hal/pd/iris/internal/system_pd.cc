@@ -516,10 +516,12 @@ pd_conv_hw_clock_to_sw_clock (pd_func_args_t *pd_func_args)
     pd_conv_hw_clock_to_sw_clock_args_t *args = pd_func_args->pd_conv_hw_clock_to_sw_clock;
 
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
-        HAL_TRACE_DEBUG("hw tick: {} sw_ns: {}", HW_CLOCK_TICK_TO_NS(args->hw_tick),
-                         (HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta()));
+        //HAL_TRACE_DEBUG("hw tick: {} sw_ns: {}", HW_CLOCK_TICK_TO_NS(args->hw_tick),
+        //                 (HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta()));
         *args->sw_ns = HW_CLOCK_TICK_TO_NS(args->hw_tick)  + g_hal_state_pd->clock_delta();
     } else {
+        //HAL_TRACE_DEBUG("hw tick: {} sw_ns: {}", HW_CLOCK_TICK_TO_NS(args->hw_tick),
+        //                 (HW_CLOCK_TICK_TO_NS(args->hw_tick) - g_hal_state_pd->clock_delta()));
         *args->sw_ns = HW_CLOCK_TICK_TO_NS(args->hw_tick) - g_hal_state_pd->clock_delta();
     }
 
@@ -535,8 +537,12 @@ pd_conv_sw_clock_to_hw_clock (pd_func_args_t *pd_func_args)
     pd_conv_sw_clock_to_hw_clock_args_t *args = pd_func_args->pd_conv_sw_clock_to_hw_clock;
 
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
+        //HAL_TRACE_DEBUG("sw ns: {} hw tick: {}", args->sw_ns,
+        //                 NS_TO_HW_CLOCK_TICK((args->sw_ns - g_hal_state_pd->clock_delta())));
         *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns - g_hal_state_pd->clock_delta()));
     } else {
+        //HAL_TRACE_DEBUG("sw ns: {} hw tick: {}", args->sw_ns,
+        //                NS_TO_HW_CLOCK_TICK((args->sw_ns + g_hal_state_pd->clock_delta())));
         *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns + g_hal_state_pd->clock_delta()));
     }
 
@@ -574,12 +580,12 @@ pd_clock_detail_get (pd_func_args_t *pd_func_args)
 static void
 clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    uint64_t              hw_ns = 0, sw_ns = 0, delta_ns = 0;
+    uint64_t              hw_tick = 0, hw_ns = 0, sw_ns = 0, delta_ns = 0;
     timespec_t            sw_ts;
 
     // Read hw time
-    capri_tm_get_clock_tick(&hw_ns);
-    hw_ns = HW_CLOCK_TICK_TO_NS(hw_ns);
+    capri_tm_get_clock_tick(&hw_tick);
+    hw_ns = HW_CLOCK_TICK_TO_NS(hw_tick);
 
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &sw_ts);
@@ -610,7 +616,7 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
         g_hal_state_pd->set_clock_delta_op(HAL_CLOCK_DELTA_OP_ADD);
     }
 
-    HAL_TRACE_DEBUG("Delta ns: {}", delta_ns);
+    HAL_TRACE_DEBUG("hw tick: {} Hw ns: {} sw ns: {} Delta ns: {}", hw_tick, hw_ns, sw_ns, delta_ns);
     HAL_TRACE_DEBUG("Clock delta op: {}", g_hal_state_pd->clock_delta_op());
     g_hal_state_pd->set_clock_delta(delta_ns);
 

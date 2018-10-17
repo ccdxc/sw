@@ -812,6 +812,7 @@ typedef struct pd_session_create_args_s {
     session_t          *session;
     session_state_t    *session_state;
     SessionResponse    *rsp;
+    uint64_t            clock;
 } __PACK__ pd_session_create_args_t;
 
 static inline void
@@ -822,6 +823,7 @@ pd_session_create_args_init (pd_session_create_args_t *args)
     args->session_state = NULL;
     args->rsp = NULL;
     args->update_iflow = false;
+    args->clock = 0;
 
     return;
 }
@@ -855,6 +857,7 @@ typedef struct pd_session_update_args_s {
     session_t          *session;
     session_state_t    *session_state;
     SessionResponse    *rsp;
+    uint64_t            clock;
 } __PACK__ pd_session_update_args_t;
 
 static inline void
@@ -866,6 +869,7 @@ pd_session_update_args_init (pd_session_update_args_t *args)
     args->rsp = NULL;
     args->update_iflow = false;
     args->iflow_hash = 0;
+    args->clock = 0;
 
     return;
 }
