@@ -349,8 +349,8 @@ serdes_global_init_hw(uint32_t     jtag_id,
     aapl->jtag_idcode[0]       = jtag_id;
     aapl->sbus_rings           = num_sbus_rings;
     aapl->chips                = num_chips;
-    // aapl->debug                = 8;
-    // aapl->verbose              = 1;
+    aapl->debug                = 8;
+    aapl->verbose              = 1;
 
     if (aacs_connect == true) {
         aapl->aacs  = aacs_connect;

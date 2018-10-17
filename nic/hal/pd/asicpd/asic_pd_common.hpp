@@ -61,6 +61,11 @@ typedef struct pd_hbm_bw_get_args_s {
     asic_hbm_bw_t *hbm_bw;
 } __PACK__ pd_hbm_bw_get_args_t;
 
+typedef struct pd_llc_get_args_s {
+    uint32_t mask;
+    uint32_t data[16];
+} pd_llc_get_args_t;
+
 int asicpd_table_entry_write(uint32_t tableid, uint32_t index,
                              uint8_t  *hwentry, uint16_t hwentry_bit_len, 
                              uint8_t  *hwentry_mask);
@@ -111,6 +116,12 @@ hal_ret_t asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
 
 hal_ret_t
 asic_pd_hbm_bw_get(pd_hbm_bw_get_args_t *hbm_bw_args);
+
+hal_ret_t
+asic_pd_llc_setup (pd_llc_get_args_t *llc_args);
+
+hal_ret_t
+asic_pd_llc_get (pd_llc_get_args_t *llc_args);
 
 }    // namespace pd
 }    // namespace hal

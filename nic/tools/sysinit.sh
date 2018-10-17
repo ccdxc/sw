@@ -40,27 +40,11 @@ if [[ "$FWD_MODE" != "classic" ]]; then
 
     $NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
     [[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
-
-    # workaround for serdes init in smart-nic mode
-    export LD_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/conf/sdk:$NIC_DIR/../platform/lib:$NIC_DIR/conf/linkmgr:$NIC_DIR/conf/sdk/external:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
-    $NIC_DIR/bin/port_client -o 26 -w 9000
-    sleep 1
-    /nic/bin/aapl serdes-init -server 0.0.0.0 -port 9000 -addr 34-41 -divider 165 -width-mode 40
-    /nic/bin/aapl serdes -server localhost -port 9000 -addr 34-41 -pre 2 -post 6
-    /nic/bin/aapl serdes -server 0.0.0.0 -port 9000 -addr 34-41 -interrupt 0xd 0x800f
-    /nic/bin/aapl serdes -server 0.0.0.0 -port 9000 -addr 34-41 -interrupt 0xe 0x9e00
-    sleep 5
-    /nic/bin/aapl serdes -server 0.0.0.0 -port 9000 -addr 34-41 -tx-data core
-    /nic/bin/aapl serdes -server 0.0.0.0 -port 9000 -addr 34-41 -rx-input 0
-
-    $NIC_DIR/tools/port_op.sh --update --port 1 --enable 0
-    $NIC_DIR/tools/port_op.sh --update --port 5 --enable 0
-    $NIC_DIR/tools/port_op.sh --update --port 1 --enable 1
-    $NIC_DIR/tools/port_op.sh --update --port 5 --enable 1
 else
     # create 100G ports in classic mode
     $NIC_DIR/tools/port_op.sh --create --port 1 --speed 100 --enable 1
     $NIC_DIR/tools/port_op.sh --create --port 5 --speed 100 --enable 1
+    $NIC_DIR/tools/port_op.sh --create --port 9 --speed 1 --type mgmt --enable 1
 fi
 
 sleep 5

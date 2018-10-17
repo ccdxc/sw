@@ -188,7 +188,7 @@ is_linkmgr_ctrl_thread()
 
     // TODO assert once the thread store is fixed
     if (curr_thread == NULL) {
-        return true;
+        return false;
     }
 
     // if curr_thread/ctrl_thread is NULL, then init has failed or not invoked
@@ -431,11 +431,13 @@ linkmgr_event_loop (void* ctxt)
 }
 
 static sdk_ret_t
-thread_init (void)
+thread_init (linkmgr_cfg_t *cfg)
 {
-    int    thread_prio = 0, thread_id = 0;
+    int thread_prio  = 0;
+    int thread_id    = 0;
+    int sched_policy = SCHED_OTHER;
 
-    thread_prio = sched_get_priority_max(SCHED_OTHER);
+    thread_prio = sched_get_priority_max(sched_policy);
     if (thread_prio < 0) {
         return SDK_RET_ERR;
     }
@@ -460,9 +462,29 @@ thread_init (void)
                                   sdk::lib::THREAD_ROLE_CONTROL,
                                   0x0 /* use all control cores */,
                                   linkmgr_event_loop,
-                                  thread_prio -1,
-                                  SCHED_OTHER,
+                                  thread_prio,
+                                  sched_policy,
                                   true);
+
+    // TODO
+    // Since Linkmgr's current_thread doesn't have access to HAL's CFG thread,
+    // init the CFG thread as a work around for now.
+    // This thread wont be started, but the thread structure is used only to
+    // get the current_thread's ID during config push.
+    if (cfg->process_mode == false) {
+        // init the config thread
+        thread_id = LINKMGR_THREAD_ID_CFG;
+        g_linkmgr_threads[thread_id] =
+            sdk::lib::thread::factory(std::string("linkmgr-cfg").c_str(),
+                                      thread_id,
+                                      sdk::lib::THREAD_ROLE_CONTROL,
+                                      0x0 /* use all control cores */,
+                                      linkmgr_event_loop /* TODO NULL? */,
+                                      thread_prio,
+                                      sched_policy,
+                                      true);
+        }
+
     return SDK_RET_OK;
 }
 
@@ -484,7 +506,7 @@ linkmgr_init (linkmgr_cfg_t *cfg)
 
     linkmgr_workq_init();
 
-    if ((ret = thread_init()) != SDK_RET_OK) {
+    if ((ret = thread_init(cfg)) != SDK_RET_OK) {
         SDK_TRACE_ERR("linkmgr thread init failed");
         return ret;
     }

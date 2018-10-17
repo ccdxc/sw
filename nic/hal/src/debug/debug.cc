@@ -784,7 +784,7 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
     hbm_bw_args.sleep_interval = req->sleep_interval();
 
     hbm_bw_args.hbm_bw =
-        (hal::pd::asic_hbm_bw_t*)HAL_MALLOC(HAL_MEM_ALLOC_DEBUG_CLI,
+        (hal::pd::asic_hbm_bw_t*)HAL_CALLOC(HAL_MEM_ALLOC_DEBUG_CLI,
                                     hbm_bw_args.num_samples
                                     * hal::pd::ASIC_BLOCK_MAX
                                     * sizeof(hal::pd::asic_hbm_bw_t));
@@ -806,6 +806,24 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
     }
 
     return ret;
+}
+
+hal_ret_t
+llc_setup(void *rsp)
+{
+    pd::pd_llc_get_args_t llc_args;
+    memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
+
+    return pd::asic_pd_llc_setup(&llc_args);
+}
+
+hal_ret_t
+llc_get(void *rsp)
+{
+    pd::pd_llc_get_args_t llc_args;
+    memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
+
+    return pd::asic_pd_llc_get(&llc_args);
 }
 
 }    // namespace hal

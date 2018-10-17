@@ -671,5 +671,17 @@ asic_pd_hbm_bw_get (pd_hbm_bw_get_args_t *hbm_bw_args)
                         hbm_bw_args->hbm_bw);
 }
 
+hal_ret_t
+asic_pd_llc_setup (pd_llc_get_args_t *llc_args)
+{
+    return capri_nx_setup_llc_counters(llc_args->mask);
+}
+
+hal_ret_t
+asic_pd_llc_get (pd_llc_get_args_t *llc_args)
+{
+    return capri_nx_get_llc_counters(llc_args->data);
+}
+
 }    // namespace pd
 }    // namespace hal

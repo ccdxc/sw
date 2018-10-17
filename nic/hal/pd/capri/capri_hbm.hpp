@@ -27,6 +27,9 @@ void reset_hbm_regions(void);
 int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 
+#define RBM_BRIDGE_(x)  (CAP_ADDR_BASE_MS_RBM_OFFSET + NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_BRIDGE_##x##_BYTE_ADDRESS)
+#define RBM_AGENT_(x)   (CAP_ADDR_BASE_MS_RBM_OFFSET + NS_SOC_IP_MEMORYMAP_RBM_M_NOC_REGISTERS_AGENT_##x##_BYTE_ADDRESS)
+
 #define JP4_SEMAPHORE       "semaphore"
 #define JP4_REPL            "mcast_repl"
 #define JP4_IPFIX           "ipfix"
@@ -207,6 +210,12 @@ typedef struct capri_small_page_s {
 hal_ret_t
 capri_hbm_bw (uint32_t samples, uint32_t u_sleep,
               bool ms_pcie, hal::pd::asic_hbm_bw_t *hbm_bw_arr);
+
+hal_ret_t
+capri_nx_get_llc_counters (uint32_t *rd_data);
+
+hal_ret_t
+capri_nx_setup_llc_counters (uint32_t mask);
 
 extern hal_ret_t
 capri_hbm_cache_init(capri_cfg_t *cfg);

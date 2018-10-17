@@ -75,6 +75,10 @@ hal_ret_t thread_get (ThreadResponseMsg *rsp);
 // HBM BW
 hal_ret_t hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp);
 
+// LLC counters
+hal_ret_t llc_setup(void *rsp);
+hal_ret_t llc_get(void *rsp);
+
 // FTE span APIs
 hal_ret_t fte_span_create(FteSpanRequest& req,
                           FteSpanResponse *rsp);

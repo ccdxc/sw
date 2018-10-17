@@ -29,6 +29,27 @@ using sdk::platform::capri;
 
 capri g_capri;
 
+static inline hal_ret_t
+cap_nx_block_write(uint32_t chip, uint64_t addr, int size,
+                   uint32_t *data_in , bool no_zero_time,
+                   uint32_t flags)
+{
+    return hal::pd::asic_reg_write(addr, data_in, 1,
+                                   hal::pd::ASIC_WRITE_MODE_BLOCKING);
+}
+
+static inline uint32_t
+cap_nx_block_read(uint32_t chip, uint64_t addr, int size,
+                  bool no_zero_time, uint32_t flags)
+{
+    uint32_t data = 0x0;
+    if(hal::pd::asic_reg_read(addr, &data, 1, false /*read_thru*/) !=
+                            HAL_RET_OK) {
+        HAL_TRACE_ERR("NX read failed. addr: {}", addr);
+    }
+    return data;
+}
+
 hal_ret_t
 capri_hbm_parse (capri_cfg_t *cfg)
 {
@@ -579,6 +600,119 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         prev_wr_cnt = wr_cnt;
         prev_ts     = cur_ts;
     }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_nx_get_llc_counters (uint32_t *rd_data)
+{
+    for (int i = 0; i < 16; ++i) {
+        switch (i) {
+            case 0:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC0_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 1:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC1_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 2:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC2_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 3:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC3_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 4:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC4_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 5:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC5_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 6:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC6_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 7:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC7_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 8:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC8_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 9:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC9_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 10:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC10_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 11:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC11_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 12:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC12_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 13:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC13_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 14:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC14_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+            case 15:
+                rd_data[i] = cap_nx_block_read(0,
+                            RBM_AGENT_(CCC15_LLC_EVENT_COUNTER), 1, false, 1);
+                break;
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_nx_setup_llc_counters (uint32_t mask)
+{
+    /*
+       e9[9] - Retry access
+       e8[8] - Retry needed
+       e7[7] - Eviction
+       e6[6] - Cache maint op
+       e5[5] - Partial write
+       e4[4] - Cache miss
+       e3[3] - Cache hit
+       e2[2] - Scratchpad access
+       e1[1] - Cache write
+       e0[0] - Cache read
+    */
+
+    uint32_t *data = &mask;
+
+    cap_nx_block_write(0, RBM_AGENT_(CCC0_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC1_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC10_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC11_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC12_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC13_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC14_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC15_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC2_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC3_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC4_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC5_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC6_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC7_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC8_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0, RBM_AGENT_(CCC9_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
 
     return HAL_RET_OK;
 }

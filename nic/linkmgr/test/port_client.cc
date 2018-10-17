@@ -260,7 +260,7 @@ public:
         spec->mutable_key_or_handle()->set_port_id(port_info->port_id);
         spec->set_port_speed(port_info->speed);
         spec->set_num_lanes(port_info->num_lanes);
-        spec->set_port_type(::port::PORT_TYPE_ETH);
+        spec->set_port_type(port_info->port_type);
         spec->set_admin_state(port_info->admin_state);
         spec->set_fec_type(port_info->fec_type);
         spec->set_mac_id(port_info->mac_id);
@@ -608,6 +608,9 @@ parse_port_speed(int speed)
 
         case 10:
             return port::PORT_SPEED_10G;
+
+        case 1:
+            return port::PORT_SPEED_1G;
 
         default:
             return port::PORT_SPEED_NONE;
