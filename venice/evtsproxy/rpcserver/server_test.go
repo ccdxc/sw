@@ -226,22 +226,17 @@ func TestEventsProxyRPCServerShutdown(t *testing.T) {
 
 	rpcServer, rpcClient, _, _ := setup(t, eventsStorePath, testDedupInterval, testSendInterval)
 
-	c := make(chan struct{}, 1)
-	defer close(c)
-
 	var wg sync.WaitGroup
 	wg.Add(1)
 
 	go func() {
 		defer wg.Done()
 		log.Info("waiting for the shutdown signal")
-		c <- struct{}{}
 		<-rpcServer.Done()
 		log.Infof("server stopped, exiting")
 
 	}()
 
-	<-c
 	rpcClient.ClientConn.Close()
 	rpcServer.Stop()
 

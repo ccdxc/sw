@@ -284,6 +284,7 @@ func (srv *RPCServer) Stop() error {
 func (srv *RPCServer) run() {
 	// start service requests
 	go func() {
+		defer close(srv.DoneCh)
 		srv.Lock()
 		grpcServer := srv.GrpcServer
 		listener := srv.listener
