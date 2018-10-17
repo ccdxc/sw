@@ -81,6 +81,7 @@ func TestMain(m *testing.M) {
 func TestTopologyService_InitTestBed(t *testing.T) {
 	t.Parallel()
 	var tbMsg iota.TestBedMsg
+	var naplesUUID []string
 
 	tbMsg.IpAddress = []string{"10.8.103.1", "10.8.103.3", "10.8.103.2", "10.8.103.4", "10.8.103.0", "10.8.102.255"}
 	//tbMsg.IpAddress = []string{"10.8.102.91"}
@@ -232,7 +233,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	nodeMsg.Nodes = nodes
 	nodeMsg.NodeOp = iota.Op_ADD
 
-	_, err = topoClient.AddNodes(context.Background(), &nodeMsg)
+	addNodeResp, err := topoClient.AddNodes(context.Background(), &nodeMsg)
 	if err != nil {
 		t.Errorf("AddNodes call failed. Err: %v", err)
 		//t.FailNow()
@@ -321,6 +322,25 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	}
 
 	log.Infof("Received Token: %s", authResp.AuthToken)
+
+	for _, n := range addNodeResp.Nodes {
+		if n.Type == iota.PersonalityType_PERSONALITY_NAPLES {
+			uuid := fmt.Sprintf("uuid-%s", n.NodeUuid)
+			naplesUUID = append(naplesUUID, uuid)
+		}
+	}
+
+	genCfgMsg := iota.GenerateConfigMsg{
+		NaplesUuids: naplesUUID,
+		ApiResponse: &iota.IotaAPIResponse{},
+	}
+
+	configs, err := cfgClient.GenerateConfigs(context.Background(), &genCfgMsg)
+	log.Infof("Received Config Generation Response: %v", configs)
+	if err != nil {
+		t.Errorf("GenerateConfigs call failed. Err: %v", err)
+		t.FailNow()
+	}
 
 }
 

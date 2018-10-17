@@ -64,8 +64,8 @@ message InitConfigMsg{
 
 }
 message GenerateConfigMsg {
-    IotaAPIResponse api_response    = 1;
-    // Define config generation knobs here
+    repeated string naples_uuids    = 1;
+    IotaAPIResponse api_response    = 2;
 }
 
 message ConfigMsg {

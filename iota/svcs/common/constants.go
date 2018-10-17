@@ -32,6 +32,12 @@ const (
 
 	//MakeClusterTimeout waits for 5 minutes for the cluster to be up
 	MakeClusterTimeout = time.Duration(time.Minute * 5)
+
+	//WorkloadsPerNode captures the number of endpoints per node.
+	WorkloadsPerNode = 4
+
+	// IOTARandomSeed captures the fixed seed that IOTA uses to generate IP Address and MAC Addresses
+	IOTARandomSeed = 42
 )
 
 // incrementing constants. List all constants whose value you don't care here
