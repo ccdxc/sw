@@ -1336,10 +1336,12 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	if (!ctx->fallback) {
 		/* try to allocate dbid for user ctx */
 		if (ionic_xxx_kdbid) {
-			rc = dev->dbid; /* XXX kernel dbid in user space */
+			/* XXX kernel dbid in user space */
+			ctx->dbid = dev->dbid;
 			db_phys = dev->xxx_dbpage_phys;
+			rc = 0;
 		} else {
-			rc = ionic_api_get_dbid(dev->lif, &db_phys);
+			rc = ionic_api_get_dbid(dev->lif, &ctx->dbid, &db_phys);
 		}
 		if (rc < 0) {
 			/* maybe allow fallback to kernel space */
@@ -1348,7 +1350,6 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 				goto err_dbid;
 			rc = -1;
 		}
-		ctx->dbid = rc;
 	}
 	if (ctx->fallback)
 		dev_dbg(&dev->ibdev.dev, "fallback kernel space\n");
@@ -6562,8 +6563,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->lif = lif;
 	dev->lif_id = lif_id;
 
-	ionic_api_get_dbpages(lif, &dev->dbid, &dev->dbpage,
-			      &dev->xxx_dbpage_phys, &dev->intr_ctrl);
+	ionic_api_kernel_dbpage(lif, &dev->intr_ctrl,
+				&dev->dbid, &dev->dbpage,
+				&dev->xxx_dbpage_phys);
 
 	dev->rdma_version = version;
 	dev->rdma_compat = compat;

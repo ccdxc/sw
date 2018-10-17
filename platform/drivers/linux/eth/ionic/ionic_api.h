@@ -11,7 +11,7 @@
  *
  * Any interface changes to this interface must also change the version.
  */
-#define IONIC_API_VERSION "1"
+#define IONIC_API_VERSION "2"
 
 struct dentry;
 struct lif;
@@ -124,33 +124,35 @@ int ionic_api_get_cmb(struct lif *lif, u32 *pgid, phys_addr_t *pgaddr, int order
  */
 void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order);
 
-/** ionic_api_get_dbpages - Get doorbell page information for kernel space.
+/** ionic_api_kernel_dbpage - Get mapped dorbell page for use in kernel space.
  * @lif:		Handle to lif.
+ * @intr_ctrl:		Interrupt control registers.
  * @dbid:		Doorbell id for use in kernel space.
  * @dbpage:		One ioremapped doorbell page for use in kernel space.
  * @xxx_dbpage_phys:	Phys address of doorbell page (to be removed).
- * @intr_ctrl:		Interrupt control registers.
  *
- * The doorbell id and dbpage are special.  Most doorbell ids and pages are for
- * use by user space.  The id and page returned here refer to the one reserved
- * for use in kernel space.
+ * This also provides mapped interrupt control registers.
+ *
+ * The id and page returned here refer to the doorbell page reserved for use in
+ * kernel space for this lif.  For user space, use ionic_api_get_dbid to
+ * allocate a doorbell id for exclusive use by a process.
  */
-void ionic_api_get_dbpages(struct lif *lif, u32 *dbid,
-			   u64 __iomem **dbpage,
-			   phys_addr_t *xxx_dbpage_phys,
-			   u32 __iomem **intr_ctrl);
+void ionic_api_kernel_dbpage(struct lif *lif, u32 __iomem **intr_ctrl,
+			     u32 *dbid, u64 __iomem **dbpage,
+			     phys_addr_t *xxx_dbpage_phys);
 
 /** ionic_api_get_dbid - Reserve a doorbell id.
  * @lif:		Handle to lif.
+ * @dbid:		Doorbell id.
  * @addr:		Phys address of doorbell page.
  *
- * Reserve an doorbell id.  This corresponds with exactly one doorbell page at
+ * Reserve a doorbell id.  This corresponds with exactly one doorbell page at
  * an offset from the doorbell page base address, that can be mapped into a
  * user space process.
  *
- * Return: doorbell id or negative error status.
+ * Return: zero on success or negative error status.
  */
-int ionic_api_get_dbid(struct lif *lif, phys_addr_t *addr);
+int ionic_api_get_dbid(struct lif *lif, u32 *dbid, phys_addr_t *addr);
 
 /** ionic_api_put_dbid - Release a doorbell id.
  * @lif:		Handle to lif.

@@ -126,44 +126,46 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_cmb);
 
-void ionic_api_get_dbpages(struct lif *lif, u32 *dbid,
-			   u64 __iomem **dbpage,
-			   phys_addr_t *xxx_dbpage_phys,
-			   u32 __iomem **intr_ctrl)
+void ionic_api_kernel_dbpage(struct lif *lif, u32 __iomem **intr_ctrl,
+			     u32 *dbid, u64 __iomem **dbpage,
+			     phys_addr_t *xxx_dbpage_phys)
 {
 	int dbpage_num;
 
+	*intr_ctrl = (void __iomem *)lif->ionic->idev.intr_ctrl;
+
 	*dbid = lif->kern_pid;
 	*dbpage = (void __iomem *)lif->kern_dbpage;
-	*intr_ctrl = (void __iomem *)lif->ionic->idev.intr_ctrl;
 
 	/* XXX remove when rdma drops xxx_kdbid workaround */
 	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, 0);
 	*xxx_dbpage_phys = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_dbpages);
+EXPORT_SYMBOL_GPL(ionic_api_kernel_dbpage);
 
-int ionic_api_get_dbid(struct lif *lif, phys_addr_t *addr)
+int ionic_api_get_dbid(struct lif *lif, u32 *dbid, phys_addr_t *addr)
 {
-	int dbid, dbpage_num;
+	int id, dbpage_num;
 
 	mutex_lock(&lif->dbid_inuse_lock);
 
-	dbid = find_first_zero_bit(lif->dbid_inuse, lif->dbid_count);
+	id = find_first_zero_bit(lif->dbid_inuse, lif->dbid_count);
 
-	if (dbid == lif->dbid_count) {
+	if (id == lif->dbid_count) {
 		mutex_unlock(&lif->dbid_inuse_lock);
 		return -ENOMEM;
 	}
 
-	set_bit(dbid, lif->dbid_inuse);
+	set_bit(id, lif->dbid_inuse);
 
 	mutex_unlock(&lif->dbid_inuse_lock);
 
-	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, dbid);
+	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, id);
+
+	*dbid = id;
 	*addr = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
 
-	return dbid;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_dbid);
 
