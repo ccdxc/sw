@@ -34,7 +34,8 @@ class VerifStep:
         return types.status.SUCCESS
         
 class TestcaseData:
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
         return
 
 class Testcase:
@@ -45,7 +46,7 @@ class Testcase:
         self.__resolve()
 
         self.__timer = timeprofiler.TimeProfiler()
-        self.__data = TestcaseData()
+        self.__data = TestcaseData(spec.args)
         return
 
     def __resolve_testcase(self):
@@ -74,8 +75,9 @@ class Testcase:
         return result
 
     def PrintResultSummary(self):
+        result = "Pass" if self.status == types.status.SUCCESS else "Fail"
         print(types.FORMAT_TESTCASE_SUMMARY %\
-              (self.__spec.name, "Pass", self.__timer.TotalTime()))
+              (self.__spec.name, result, self.__timer.TotalTime()))
         for v in self.__verifs:
             v.PrintResultSummary()
 
@@ -83,6 +85,6 @@ class Testcase:
         Logger.info("Starting Testcase: %s" % self.__spec.name)
         self.__status = types.result.PASS
         self.__timer.Start()
-        self.__execute()
+        self.status = self.__execute()
         self.__timer.Stop()
         return types.status.SUCCESS

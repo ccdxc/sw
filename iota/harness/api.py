@@ -133,7 +133,6 @@ def GetNaplesHostnames():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesHostnames()
 
 def PrintCommandResults(cmd):
-    Logger.info("Command Results on workload: %s" % cmd.workload_name)
     Logger.header('COMMAND')
     Logger.info("%s" % cmd.command)
     Logger.header('STDOUT')

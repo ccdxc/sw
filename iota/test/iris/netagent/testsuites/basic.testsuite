@@ -44,8 +44,18 @@ common:
 #   <all-others>: Opaque to infra, passed to testcase module as native attributes
 #                 of the 'tc'(testcase) object.
 testcases:
-    -   name    : Ping_FullMesh
-        testcase: testcases.networking.ping_fullmesh
+    -   name    : Ping_Local_Workloads
+        testcase: testcases.networking.ping
+        args    :
+            type: local_only
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : Ping_Remote_Workloads
+        testcase: testcases.networking.ping
+        args    :
+            type: remote_only
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw

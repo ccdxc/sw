@@ -1,6 +1,6 @@
 meta:
-    name: 3Naples_3Venice
-    description: 3 Naples + 3 Venice Topology
+    name: 3Naples
+    description: 3 Naples Topology
 
 nodes:
     - node: node1
@@ -14,15 +14,3 @@ nodes:
     - node: node3
       name: naples3
       role: PERSONALITY_NAPLES
-
-    - node: node4
-      name: venice1
-      role: PERSONALITY_VENICE
-
-    - node: node5
-      name: venice2
-      role: PERSONALITY_VENICE
-
-    - node: node6
-      name: venice3
-      role: PERSONALITY_VENICE

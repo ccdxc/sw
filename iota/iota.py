@@ -45,5 +45,5 @@ def Main():
 if __name__ == '__main__':
     status = Main()
     overall_timer.Stop()
-    print("Overall Runtime: " + overall_timer.TotalTime())
+    print("\n\nOverall Runtime: " + overall_timer.TotalTime())
     sys.exit(status)
