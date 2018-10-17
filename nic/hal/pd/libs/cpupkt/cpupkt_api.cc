@@ -21,63 +21,35 @@ hal_ret_t cpupkt_descr_free(cpupkt_hw_id_t descr_addr);
 /****************************************************************
  * Helper functions
  ***************************************************************/
-
-static inline bool
-cpupkt_hbm_write(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
-{
-    hal_ret_t rv = hal::pd::asic_mem_write(addr, data, size_in_bytes);
-    return rv == HAL_RET_OK ? true : false;
-}
-
-static inline bool
-cpupkt_hbm_read(uint64_t addr, uint8_t* data, uint32_t size_in_bytes)
-{
-    hal_ret_t rv = hal::pd::asic_mem_read(addr, data, size_in_bytes, true);
-    return rv == HAL_RET_OK ? true : false;
-}
-
-static inline bool
-cpupkt_reg_read(uint64_t addr, uint32_t* data)
-{
-    hal_ret_t rv = hal::pd::asic_reg_read(addr, data);
-    return rv == HAL_RET_OK ? true : false;
-}
-
-static inline bool
-cpupkt_reg_write(uint64_t addr, uint32_t* data)
-{
-    hal_ret_t rv = hal::pd::asic_reg_write(addr, data);
-    return rv == HAL_RET_OK ? true : false;
-}
-
 static inline cpupkt_ctxt_t*
-cpupkt_ctxt_alloc(void)
+cpupkt_ctxt_alloc (void)
 {
     return (cpupkt_ctxt_t *)g_hal_state_pd->cpupkt_slab()->alloc();
 }
 
 static inline cpupkt_qinst_info_t*
-cpupkt_ctxt_qinst_info_alloc(void)
+cpupkt_ctxt_qinst_info_alloc (void)
 {
-    return (cpupkt_qinst_info_t*) g_hal_state_pd->cpupkt_qinst_info_slab()->alloc();
+    return (cpupkt_qinst_info_t*)g_hal_state_pd->cpupkt_qinst_info_slab()->alloc();
 }
 
 static inline void
-cpupkt_ctxt_qinst_info_free(cpupkt_qinst_info_t* qinst_info) {
+cpupkt_ctxt_qinst_info_free (cpupkt_qinst_info_t* qinst_info)
+{
     hal::pd::delay_delete_to_slab(HAL_SLAB_CPUPKT_QINST_INFO_PD, qinst_info);
 }
 
-bool is_cpu_send_comp_queue(types::WRingType type)
+bool is_cpu_send_comp_queue (types::WRingType type)
 {
     return(type == types::WRING_TYPE_ASCQ);
 }
 
-bool is_cpu_rx_queue(types::WRingType type)
+bool is_cpu_rx_queue (types::WRingType type)
 {
     return (type == types::WRING_TYPE_ARQRX || type == types::WRING_TYPE_ARQTX || is_cpu_send_comp_queue(type));
 }
 
-bool is_cpu_tx_queue(types::WRingType type)
+bool is_cpu_tx_queue (types::WRingType type)
 {
     return ((type == types::WRING_TYPE_ASQ) || (type == types::WRING_TYPE_ASESQ) ||
             (type == types::WRING_TYPE_APP_REDIR_RAWC) ||
@@ -85,7 +57,7 @@ bool is_cpu_tx_queue(types::WRingType type)
 }
 
 void
-cpupkt_update_slot_addr(cpupkt_qinst_info_t* qinst_info)
+cpupkt_update_slot_addr (cpupkt_qinst_info_t* qinst_info)
 {
     if (!qinst_info || !qinst_info->queue_info || !qinst_info->queue_info->wring_meta) {
         HAL_TRACE_ERR("Invalid queue info");
@@ -109,7 +81,8 @@ cpupkt_update_slot_addr(cpupkt_qinst_info_t* qinst_info)
 }
 
 hal_ret_t
-pd_cpupkt_get_slot_addr(types::WRingType type, uint32_t wring_id, uint32_t index, cpupkt_hw_id_t *slot_addr)
+pd_cpupkt_get_slot_addr (types::WRingType type, uint32_t wring_id,
+                         uint32_t index, cpupkt_hw_id_t *slot_addr )
 {
     hal_ret_t      ret = HAL_RET_OK;
     cpupkt_hw_id_t base_addr = 0;
@@ -129,11 +102,8 @@ pd_cpupkt_get_slot_addr(types::WRingType type, uint32_t wring_id, uint32_t index
     return HAL_RET_OK;
 }
 
-/** Called when recived on ASCQ - from poll_receive
- */
 hal_ret_t
-pd_cpupkt_free_tx_descr(cpupkt_hw_id_t descr_addr,
-                        pd_descr_aol_t *descr)
+pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
 {
     hal_ret_t         ret = HAL_RET_OK;
     cpupkt_hw_id_t    slot_addr = 0;
@@ -156,7 +126,8 @@ pd_cpupkt_free_tx_descr(cpupkt_hw_id_t descr_addr,
     value = htonll(descr->a0);
     HAL_TRACE_DEBUG("cpu-id: {} update cpupr: slot: {:#x} ci: {} page: {:#x}, value: {:#x}",
                     tg_cpu_id, slot_addr, cpu_tx_page_cindex, descr->a0, value);
-    if(!cpupkt_hbm_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t))) {
+    if (asic_mem_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t),
+                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program page to slot");
         return HAL_RET_HW_FAIL;
     }
@@ -174,7 +145,8 @@ pd_cpupkt_free_tx_descr(cpupkt_hw_id_t descr_addr,
     value = htonll(descr_addr);
     HAL_TRACE_DEBUG("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
         tg_cpu_id, slot_addr, cpu_tx_descr_cindex, descr_addr, value);
-    if(!cpupkt_hbm_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t))) {
+    if (asic_mem_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t),
+                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program descr to slot");
         return HAL_RET_HW_FAIL;
     }
@@ -182,8 +154,9 @@ pd_cpupkt_free_tx_descr(cpupkt_hw_id_t descr_addr,
 
     return HAL_RET_OK;
 }
+
 hal_ret_t
-cpupkt_rx_upd_sem_index(cpupkt_qinst_info_t& qinst_info, bool init_pindex)
+cpupkt_rx_upd_sem_index (cpupkt_qinst_info_t& qinst_info, bool init_pindex)
 {
     cpupkt_hw_id_t pi_sem_addr = 0;
     cpupkt_hw_id_t ci_sem_addr = 0;
@@ -206,21 +179,22 @@ cpupkt_rx_upd_sem_index(cpupkt_qinst_info_t& qinst_info, bool init_pindex)
                     qinst_info.queue_info->type, ci_sem_addr,
                     qinst_info.pc_index);
 
-    if(!cpupkt_reg_write(ci_sem_addr, &qinst_info.pc_index)) {
+    if (asic_reg_write(ci_sem_addr, &qinst_info.pc_index,
+                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         qinst_info.ctr.rx_sem_wr_err++;
         HAL_TRACE_ERR("Failed to program CI semaphore");
         return HAL_RET_HW_FAIL;
     }
-    if(init_pindex) {
+    if (init_pindex) {
         pi_sem_addr = ci_sem_addr - 4;
         uint32_t value = 0;
         HAL_TRACE_DEBUG("updating PI: type: {}, addr {:#x}, pi: {}",
                         qinst_info.queue_info->type, pi_sem_addr,
                         value);
-
-        if(!cpupkt_reg_write(pi_sem_addr, &value)) {
-        HAL_TRACE_ERR("Failed to program PI semaphore");
-        return HAL_RET_HW_FAIL;
+        if (asic_reg_write(pi_sem_addr, &value,
+                           ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to program PI semaphore");
+            return HAL_RET_HW_FAIL;
         }
     }
     return HAL_RET_OK;
@@ -231,7 +205,7 @@ cpupkt_rx_upd_sem_index(cpupkt_qinst_info_t& qinst_info, bool init_pindex)
  ***************************************************************/
 
 hal_ret_t
-pd_cpupkt_ctxt_alloc_init(pd_func_args_t *pd_func_args)
+pd_cpupkt_ctxt_alloc_init (pd_func_args_t *pd_func_args)
 {
     pd_cpupkt_ctxt_alloc_init_args_t *args = pd_func_args->pd_cpupkt_ctxt_alloc_init;
     args->ctxt = cpupkt_ctxt_init(cpupkt_ctxt_alloc());
@@ -239,7 +213,8 @@ pd_cpupkt_ctxt_alloc_init(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, int qinst_index, types::WRingType type, uint32_t queue_id)
+cpupkt_register_qinst (cpupkt_queue_info_t* ctxt_qinfo, int qinst_index,
+                       types::WRingType type, uint32_t queue_id)
 {
     HAL_TRACE_DEBUG("creating qinst for type: {}, id: {}", type, queue_id);
     hal_ret_t           ret = HAL_RET_OK;
@@ -297,7 +272,7 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, int qinst_index, types::W
 }
 
 hal_ret_t
-pd_cpupkt_register_tx_queue(pd_func_args_t *pd_func_args)
+pd_cpupkt_register_tx_queue (pd_func_args_t *pd_func_args)
 {
     pd_cpupkt_register_tx_queue_args_t *args = pd_func_args->pd_cpupkt_register_tx_queue;
     cpupkt_ctxt_t* ctxt = args->ctxt;
@@ -330,7 +305,7 @@ pd_cpupkt_register_tx_queue(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_cpupkt_register_rx_queue(pd_func_args_t *pd_func_args)
+pd_cpupkt_register_rx_queue (pd_func_args_t *pd_func_args)
 {
     pd_cpupkt_register_rx_queue_args_t *args = pd_func_args->pd_cpupkt_register_rx_queue;
     cpupkt_ctxt_t* ctxt = args->ctxt;
@@ -382,7 +357,7 @@ pd_cpupkt_register_rx_queue(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_cpupkt_unregister_tx_queue(pd_func_args_t *pd_func_args)
+pd_cpupkt_unregister_tx_queue (pd_func_args_t *pd_func_args)
 {
     pd_cpupkt_unregister_tx_queue_args_t *args = pd_func_args->pd_cpupkt_unregister_tx_queue;
     cpupkt_ctxt_t* ctxt = args->ctxt;
@@ -412,7 +387,7 @@ pd_cpupkt_unregister_tx_queue(pd_func_args_t *pd_func_args)
  ***************************************************************/
 
 static inline void
-cpupkt_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
+cpupkt_inc_queue_index (cpupkt_qinst_info_t& qinst_info)
 {
     qinst_info.pc_index++;
     cpupkt_update_slot_addr(&qinst_info);
@@ -421,13 +396,13 @@ cpupkt_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
 }
 
 static inline hal_ret_t
-cpupkt_free_and_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
+cpupkt_free_and_inc_queue_index (cpupkt_qinst_info_t& qinst_info)
 {
     // Set the slot back to 0
     uint64_t value = 0;
-    if(!cpupkt_hbm_write(qinst_info.pc_index_addr,
-                         (uint8_t *)&value,
-                         sizeof(uint64_t))) {
+    if (asic_mem_write(qinst_info.pc_index_addr, (uint8_t *)&value,
+                       sizeof(uint64_t),
+                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to reset pc_index_addr");
         return HAL_RET_HW_FAIL;
     }
@@ -439,9 +414,11 @@ cpupkt_free_and_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
 }
 
 bool
-is_valid_slot_value(cpupkt_qinst_info_t* qinst_info, uint64_t slot_value, uint64_t* descr_addr)
+is_valid_slot_value (cpupkt_qinst_info_t* qinst_info, uint64_t slot_value,
+                     uint64_t* descr_addr)
 {
-    if((slot_value > 0) && ((slot_value & CPU_PKT_VALID_BIT_MASK) == qinst_info->valid_bit_value)) {
+    if ((slot_value > 0) &&
+        ((slot_value & CPU_PKT_VALID_BIT_MASK) == qinst_info->valid_bit_value)) {
         *descr_addr = (qinst_info->valid_bit_value == 0) ? slot_value : (slot_value & ~(uint64_t)CPU_PKT_VALID_BIT_MASK);
         //HAL_TRACE_DEBUG("descr_addr: {:#x}", *descr_addr);
         return true;
@@ -450,12 +427,11 @@ is_valid_slot_value(cpupkt_qinst_info_t* qinst_info, uint64_t slot_value, uint64
     return false;
 }
 
-
 hal_ret_t
-cpupkt_descr_to_headers(pd_descr_aol_t& descr,
-                        p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
-                        uint8_t** data,
-                        size_t* data_len)
+cpupkt_descr_to_headers (pd_descr_aol_t& descr,
+                         p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
+                         uint8_t** data,
+                         size_t* data_len)
 {
     if(!flow_miss_hdr || !data || !data_len) {
         return HAL_RET_INVALID_ARG;
@@ -491,14 +467,15 @@ cpupkt_descr_to_headers(pd_descr_aol_t& descr,
 
     uint64_t pktaddr = descr.a0 + descr.o0;
 
-    if(!cpupkt_hbm_read(pktaddr, buffer, descr.l0)) {
+    if (asic_mem_read(pktaddr, buffer, descr.l0, true) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read hbm page");
         free(buffer);
         return HAL_RET_HW_FAIL;
     }
-    if(descr.l1) {
+    if (descr.l1) {
         uint64_t pktaddr = descr.a1 + descr.o1;
-        if (!cpupkt_hbm_read(pktaddr, buffer + descr.l0, descr.l1)) {
+        if (asic_mem_read(pktaddr, buffer + descr.l0,
+                          descr.l1, true) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to read hbm page 1");
             free(buffer);
             return HAL_RET_HW_FAIL;
@@ -531,32 +508,36 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
     for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
         value = 0;
         qinst_info = ctxt->rx.queue[i].qinst_info[0];
-        if(!cpupkt_hbm_read(qinst_info->pc_index_addr,
+        if (asic_mem_read(qinst_info->pc_index_addr,
                             (uint8_t *)&value,
-                            sizeof(uint64_t))) {
+                            sizeof(uint64_t), true) != HAL_RET_OK) {
             qinst_info->ctr.rx_slot_value_read_err++;
             HAL_TRACE_ERR("Failed to read the slot value from the hw");
             return HAL_RET_HW_FAIL;
         }
         value = ntohll(value);
-        if(!is_valid_slot_value(qinst_info, value, &descr_addr)) {
+        if (!is_valid_slot_value(qinst_info, value, &descr_addr)) {
             continue;
         }
         qinst_info->ctr.recv_pkts++;
 
-        HAL_TRACE_DEBUG("Received valid data: queue: {}, qid: {} pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
-                        ctxt->rx.queue[i].type, qinst_info->queue_id, qinst_info->pc_index, qinst_info->pc_index_addr, value, descr_addr);
+        HAL_TRACE_DEBUG("Rcvd valid data: queue: {}, qid: {} pc_index: {}, "
+                        "addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
+                        ctxt->rx.queue[i].type, qinst_info->queue_id,
+                        qinst_info->pc_index, qinst_info->pc_index_addr,
+                        value, descr_addr);
         // get the descriptor
         pd_descr_aol_t  descr = {0};
-        if(!cpupkt_hbm_read(descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
+        if (asic_mem_read(descr_addr, (uint8_t *)&descr,
+                          sizeof(pd_descr_aol_t), true) != HAL_RET_OK) {
             qinst_info->ctr.rx_descr_read_err++;
             HAL_TRACE_ERR("Failed to read the descr from hw");
             return HAL_RET_HW_FAIL;
         }
 
-        if(is_cpu_send_comp_queue(ctxt->rx.queue[i].type)) {
+        if (is_cpu_send_comp_queue(ctxt->rx.queue[i].type)) {
             ret = pd_cpupkt_free_tx_descr(descr_addr, &descr);
-            if(ret != HAL_RET_OK) {
+            if (ret != HAL_RET_OK) {
                 qinst_info->ctr.tx_descr_free_err++;
                 HAL_TRACE_ERR("Failed to free tx descr: {}", ret);
             }
@@ -585,7 +566,7 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_cpupkt_free(pd_func_args_t *pd_func_args)
+pd_cpupkt_free (pd_func_args_t *pd_func_args)
 {
     pd_cpupkt_free_args_t *args = pd_func_args->pd_cpupkt_free;
     p4_to_p4plus_cpu_pkt_t* flow_miss_hdr = args->flow_miss_hdr;
@@ -594,7 +575,7 @@ pd_cpupkt_free(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
+cpupkt_descr_free (cpupkt_hw_id_t descr_addr)
 {
     hal_ret_t       ret = HAL_RET_OK;
     wring_hw_id_t   gc_slot_addr=0;
@@ -609,14 +590,14 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
     uint64_t value = htonll(descr_addr);
     HAL_TRACE_DEBUG("Programming GC queue: {:#x}, descr: {:#x}, gc_pindex: {}, value: {:#x}",
                         gc_slot_addr, descr_addr, gc_pindex, value);
-    if(!cpupkt_hbm_write(gc_slot_addr, (uint8_t*)&value,
-                         sizeof(cpupkt_hw_id_t))) {
+    if (asic_mem_write(gc_slot_addr, (uint8_t *)&value,
+                       sizeof(cpupkt_hw_id_t),
+                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program gc queue");
         return HAL_RET_HW_FAIL;
     }
 
     // ring doorbell
-    // Ring doorbell
     pd_cpupkt_program_send_ring_doorbell_args_t d_args = {0};
     d_args.dest_lif = SERVICE_LIF_GC;
     d_args.qtype = CAPRI_HBM_GC_RNMDR_QTYPE;
@@ -641,7 +622,7 @@ cpupkt_descr_free(cpupkt_hw_id_t descr_addr)
  ***************************************************************/
 
 hal_ret_t
-pd_cpupkt_descr_alloc(pd_func_args_t *pd_func_args)
+pd_cpupkt_descr_alloc (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_cpupkt_descr_alloc_args_t *args = pd_func_args->pd_cpupkt_descr_alloc;
@@ -667,7 +648,8 @@ pd_cpupkt_descr_alloc(pd_func_args_t *pd_func_args)
         return ret;
     }
 
-    if(!cpupkt_hbm_read(slot_addr, (uint8_t *)descr_addr, sizeof(cpupkt_hw_id_t))) {
+    if (asic_mem_read(slot_addr, (uint8_t *)descr_addr,
+                      sizeof(cpupkt_hw_id_t), true) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read descr addr from CPUDR PI: {}, slot: {:#x}",
                       cpu_tx_descr_pindex, slot_addr);
         return HAL_RET_HW_FAIL;
@@ -681,7 +663,7 @@ pd_cpupkt_descr_alloc(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_cpupkt_page_alloc(pd_func_args_t *pd_func_args)
+pd_cpupkt_page_alloc (pd_func_args_t *pd_func_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_cpupkt_page_alloc_args_t *args = pd_func_args->pd_cpupkt_page_alloc;
@@ -707,7 +689,8 @@ pd_cpupkt_page_alloc(pd_func_args_t *pd_func_args)
         return ret;
     }
 
-    if(!cpupkt_hbm_read(slot_addr, (uint8_t *)page_addr, sizeof(cpupkt_hw_id_t))) {
+    if (asic_mem_read(slot_addr, (uint8_t *)page_addr,
+                      sizeof(cpupkt_hw_id_t), true) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read page address from CPUPR PI: {} slot: {:#x}",
                       cpu_tx_page_pindex, slot_addr);
         return HAL_RET_HW_FAIL;
@@ -720,7 +703,8 @@ pd_cpupkt_page_alloc(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-cpupkt_program_descr(uint32_t qid, cpupkt_hw_id_t page_addr, size_t len, cpupkt_hw_id_t* descr_addr)
+cpupkt_program_descr (uint32_t qid, cpupkt_hw_id_t page_addr, size_t len,
+                      cpupkt_hw_id_t* descr_addr)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_descr_aol_t  descr = {0};
@@ -741,7 +725,9 @@ cpupkt_program_descr(uint32_t qid, cpupkt_hw_id_t page_addr, size_t len, cpupkt_
     descr.l0 = len;
 
     HAL_TRACE_DEBUG("programming descr: descr_addr: {:#x}", *descr_addr);
-    if(!cpupkt_hbm_write(*descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
+    if (asic_mem_write(*descr_addr, (uint8_t *)&descr,
+                       sizeof(pd_descr_aol_t),
+                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to program descr");
         ret = HAL_RET_HW_FAIL;
         goto cleanup;
@@ -755,9 +741,10 @@ cleanup:
 }
 
 hal_ret_t
-cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id, cpupkt_hw_id_t descr_addr)
+cpupkt_program_send_queue (cpupkt_ctxt_t* ctxt, types::WRingType type,
+                           uint32_t queue_id, cpupkt_hw_id_t descr_addr)
 {
-    if(!ctxt) {
+    if (!ctxt) {
         return HAL_RET_INVALID_ARG;
     }
     cpupkt_qinst_info_t* qinst_info = ctxt->tx.queue[type].qinst_info[queue_id];
@@ -766,8 +753,11 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t q
         return HAL_RET_QUEUE_NOT_FOUND;
     }
     HAL_TRACE_DEBUG("Programming send queue: addr: {:#x} value: {:#x}",
-                        qinst_info->pc_index_addr, descr_addr);
-    if(!cpupkt_hbm_write(qinst_info->pc_index_addr, (uint8_t*) &descr_addr, sizeof(cpupkt_hw_id_t))) {
+                    qinst_info->pc_index_addr, descr_addr);
+    if (asic_mem_write(qinst_info->pc_index_addr,
+                       (uint8_t *)&descr_addr,
+                       sizeof(cpupkt_hw_id_t),
+                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program send queue");
         return HAL_RET_HW_FAIL;
     }
@@ -776,7 +766,7 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t q
 }
 
 hal_ret_t
-pd_cpupkt_program_send_ring_doorbell(pd_func_args_t *pd_func_args)
+pd_cpupkt_program_send_ring_doorbell (pd_func_args_t *pd_func_args)
 {
     pd_cpupkt_program_send_ring_doorbell_args_t *args = pd_func_args->pd_cpupkt_program_send_ring_doorbell;
     uint64_t            addr = 0;
@@ -801,7 +791,7 @@ pd_cpupkt_program_send_ring_doorbell(pd_func_args_t *pd_func_args)
 
     HAL_TRACE_DEBUG("ringing Doorbell with addr: {:#x} data: {:#x}",
                     addr, data);
-    hal::pd::asic_ring_doorbell(addr, data, false);
+    asic_ring_doorbell(addr, data, ASIC_WRITE_MODE_WRITE_THRU);
     return HAL_RET_OK;
 }
 
@@ -820,7 +810,7 @@ pd_swizzle_header (uint8_t *hdr, uint32_t hdr_len)
 }
 
 hal_ret_t
-pd_cpupkt_get_global(pd_func_args_t *pd_func_args)
+pd_cpupkt_get_global (pd_func_args_t *pd_func_args)
 {
     pd_cpupkt_get_global_args_t *args = pd_func_args->pd_cpupkt_get_global;
     args->gc_pindex = gc_pindex;
@@ -832,7 +822,7 @@ pd_cpupkt_get_global(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_cpupkt_send(pd_func_args_t *pd_func_args)
+pd_cpupkt_send (pd_func_args_t *pd_func_args)
 {
     hal_ret_t               ret = HAL_RET_OK;
     pd_cpupkt_send_args_t  *s_args = pd_func_args->pd_cpupkt_send;
@@ -887,7 +877,8 @@ pd_cpupkt_send(pd_func_args_t *pd_func_args)
         total_len += write_len;
         HAL_TRACE_DEBUG("Copying CPU header of len: {} to addr: {:#x}, l2offset: {:#x}",
                         write_len, write_addr, cpu_header->l2_offset);
-        if(!cpupkt_hbm_write(write_addr, (uint8_t *)cpu_header, write_len)) {
+        if (asic_mem_write(write_addr, (uint8_t *)cpu_header, write_len,
+                           ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
             qinst_info.ctr.tx_page_copy_err++;
             HAL_TRACE_ERR("Failed to copy packet to the page");
             ret = HAL_RET_HW_FAIL;
@@ -901,7 +892,8 @@ pd_cpupkt_send(pd_func_args_t *pd_func_args)
         total_len += write_len;
         HAL_TRACE_DEBUG("Copying P4Plus to P4 header of len: {} to addr: {:#x}",
                         write_len, write_addr);
-        if(!cpupkt_hbm_write(write_addr, (uint8_t *)p4_header, write_len)) {
+        if (asic_mem_write(write_addr, (uint8_t *)p4_header, write_len,
+                           ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to copy packet to the page");
             ret = HAL_RET_HW_FAIL;
             goto cleanup;
@@ -913,7 +905,8 @@ pd_cpupkt_send(pd_func_args_t *pd_func_args)
     write_len = data_len;
     total_len += write_len;
     HAL_TRACE_DEBUG("copying data of len: {} to page at addr: {:#x}", write_len, write_addr);
-    if(!cpupkt_hbm_write(write_addr, data, write_len)) {
+    if (asic_mem_write(write_addr, data, write_len,
+                       ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to copy packet to the page");
         ret = HAL_RET_HW_FAIL;
         goto cleanup;
@@ -951,7 +944,9 @@ pd_cpupkt_send(pd_func_args_t *pd_func_args)
     cpupkt_inc_queue_index(*(ctxt->tx.queue[type].qinst_info[queue_id]));
     qinst_info.ctr.send_pkts++;
     return HAL_RET_OK;
+
 cleanup:
+
     // FIXME
     return ret;
 }

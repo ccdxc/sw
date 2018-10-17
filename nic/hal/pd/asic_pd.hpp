@@ -30,17 +30,28 @@ typedef struct pd_asic_init_args_s {
 } __PACK__ pd_asic_init_args_t;
 
 //------------------------------------------------------------------------------
+// different modes of writing to ASIC
+// 1. non-blocking - adds write operation to asicrw thread's work queue &
+//                   returns
+// 2. blocking     - adds write operation to asicrw thread's work queue & blocks
+//                   until the operation is done by asicrw thread
+// 3. write-thru   - non-blocking version that bypasses asicrw thread completely
+//                   and writes in the caller thread's context
+//------------------------------------------------------------------------------
+typedef enum asic_write_mode_e {
+    ASIC_WRITE_MODE_NON_BLOCKING = 0,
+    ASIC_WRITE_MODE_BLOCKING     = 1,
+    ASIC_WRITE_MODE_WRITE_THRU   = 2,
+} asic_write_mode_t;
+
+//------------------------------------------------------------------------------
 // public API for register read operations
-// NOTE: this is always a blocking call and this API runs in the calling
-//       thread's context
 //------------------------------------------------------------------------------
 hal_ret_t asic_reg_read(uint64_t addr, uint32_t *data, uint32_t num_words = 1,
                         bool read_thru=false);
 
 //------------------------------------------------------------------------------
 // public API for memory read operations
-// NOTE: this is always a blocking call and this API runs in the calling
-//       thread's context
 //------------------------------------------------------------------------------
 hal_ret_t asic_mem_read(uint64_t addr, uint8_t *data, uint32_t len,
                         bool read_thru=false);
@@ -50,20 +61,20 @@ hal_ret_t asic_mem_read(uint64_t addr, uint8_t *data, uint32_t len,
 // write given data at specified address in the memory
 //------------------------------------------------------------------------------
 hal_ret_t asic_reg_write(uint64_t addr, uint32_t *data, uint32_t num_words = 1,
-                         bool blocking=true);
+                         asic_write_mode_t mode = ASIC_WRITE_MODE_BLOCKING);
 
 //------------------------------------------------------------------------------
 // public API for memory write operations
 // write given data at specified address in the memory
 //------------------------------------------------------------------------------
-hal_ret_t asic_mem_write(uint64_t addr, uint8_t *data,
-                         uint32_t len, bool blocking=true);
+hal_ret_t asic_mem_write(uint64_t addr, uint8_t *data, uint32_t len,
+                         asic_write_mode_t mode = ASIC_WRITE_MODE_BLOCKING);
 
 //------------------------------------------------------------------------------
 // public API for ringing doorbells.
 //------------------------------------------------------------------------------
 hal_ret_t asic_ring_doorbell(uint64_t addr, uint64_t data,
-                             bool blocking=true);
+                             asic_write_mode_t mode = ASIC_WRITE_MODE_BLOCKING);
 
 //------------------------------------------------------------------------------
 // public API for saving cpu packet.

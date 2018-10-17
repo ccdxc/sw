@@ -13,7 +13,7 @@ typedef struct addr_data_ {
 } addr_data_t;
 
 hal_ret_t
-capri_load_config(char *config_dir)
+capri_load_config (char *config_dir)
 {
     hal_ret_t          ret = HAL_RET_OK;
     DIR                *dirp;
@@ -43,7 +43,8 @@ capri_load_config(char *config_dir)
         while ((readsz = read(fd, buff, sizeof(buff))) > 0) {
             nelems = readsz / sizeof(addr_data_t);
             for (int i = 0; i < nelems; i++) {
-                hal::pd::asic_reg_write(buff[i].addr, &buff[i].data);
+                asic_reg_write(buff[i].addr, &buff[i].data,
+                               hal::pd::ASIC_WRITE_MODE_BLOCKING);
             }
         }
     }
@@ -54,7 +55,7 @@ capri_load_config(char *config_dir)
 }
 
 hal_ret_t
-capri_verify_config(char *config_dir)
+capri_verify_config (char *config_dir)
 {
     hal_ret_t          ret = HAL_RET_OK;
     DIR                *dirp;
@@ -85,7 +86,7 @@ capri_verify_config(char *config_dir)
         while ((readsz = read(fd, buff, sizeof(buff))) > 0) {
             nelems = readsz / sizeof(addr_data_t);
             for (int i = 0; i < nelems; i++) {
-                hal::pd::asic_reg_read(buff[i].addr, &data);
+                hal::pd::asic_reg_read(buff[i].addr, &data, 1, true);
                 if (data != buff[i].data) {
                     HAL_TRACE_DEBUG("Reg config does not match addr {:#x} "
                                     "data {:#x} expected {:#x}",

@@ -124,8 +124,8 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
     }
 
     if (g_asic_rw_workq[curr_tid].nentries >= HAL_ASIC_RW_Q_SIZE) {
-        HAL_TRACE_ERR("ASIC rwq for thread {}, tid {} full, read failed",
-                      curr_thread->name(), curr_tid);
+        HAL_TRACE_ERR("asic read operation failed, tid {}, addr {:#x}, "
+                      "data {:#x}, len {}", curr_tid, addr, data, len)
         return HAL_RET_HW_PROG_ERR;
     }
     pindx = g_asic_rw_workq[curr_tid].pindx;
@@ -167,9 +167,11 @@ asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words,
     hal_ret_t    rc = HAL_RET_OK;
 
     if (is_asic_rw_thread() || (read_thru == true)) {
+        // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_reg_read(addr, data, num_words);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
     } else {
+        // go thru asicrw thread
         rc = asic_do_read(HAL_ASIC_RW_OPERATION_REG_READ,
                           addr, (uint8_t *)data, num_words);
     }
@@ -191,9 +193,11 @@ asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
     hal_ret_t   rc = HAL_RET_OK;
 
     if (is_asic_rw_thread() || (read_thru == true)) {
+        // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_mem_read(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
     } else {
+        // go thru asicrw thread
         rc = asic_do_read(HAL_ASIC_RW_OPERATION_MEM_READ, addr, data, len);
     }
 
@@ -210,17 +214,17 @@ asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
 //------------------------------------------------------------------------------
 static hal_ret_t
 asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
-               uint32_t len, bool blocking)
+               uint32_t len, asic_write_mode_t mode)
 {
     hal_ret_t          ret;
     uint16_t           pindx;
-    sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
+    sdk::lib::thread   *curr_thread = hal::hal_get_current_thread();
     uint32_t           curr_tid = curr_thread->thread_id();
     asic_rw_entry_t    *rw_entry;
 
     if (g_asic_rw_workq[curr_tid].nentries >= HAL_ASIC_RW_Q_SIZE) {
-        HAL_TRACE_ERR("ASIC rwq for thread {}, tid {} full, write failed",
-                      curr_thread->name(), curr_tid);
+        HAL_TRACE_ERR("asic write operation failed, tid {}, addr {:#x}, "
+                      "data {:#x}, len {}", curr_tid, addr, data, len)
         return HAL_RET_HW_PROG_ERR;
     }
     pindx = g_asic_rw_workq[curr_tid].pindx;
@@ -235,7 +239,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
 
     g_asic_rw_workq[curr_tid].nentries++;
 
-    if (blocking) {
+    if (mode == ASIC_WRITE_MODE_BLOCKING) {
         while (rw_entry->done.load() == false) {
             if (curr_thread->can_yield()) {
                 pthread_yield();
@@ -257,23 +261,27 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
     return ret;
 }
 
-
 //------------------------------------------------------------------------------
 // public API for register write operations
 // NOTE: this API runs in the calling thread's context and supports both
 // blocking and non-blocking writes
 //------------------------------------------------------------------------------
 hal_ret_t
-asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words, bool blocking)
+asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words,
+                asic_write_mode_t mode)
 {
-    hal_ret_t rc = HAL_RET_OK;
+    hal_ret_t    rc = HAL_RET_OK;
 
-    if (is_asic_rw_thread() == false) {
-        rc = asic_do_write(HAL_ASIC_RW_OPERATION_REG_WRITE,
-                           addr, (uint8_t *)data, num_words, blocking);
-    } else {
+    //HAL_TRACE_DEBUG("addr : {}, data : {:#x}, len : {}, mode : {}",
+                    //addr, data, num_words, mode);
+    if ((is_asic_rw_thread() == true) || (mode == ASIC_WRITE_MODE_WRITE_THRU)) {
+        // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_reg_write(addr, data, num_words);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    } else {
+        // go thru asicrw thread
+        rc = asic_do_write(HAL_ASIC_RW_OPERATION_REG_WRITE,
+                           addr, (uint8_t *)data, num_words, mode);
     }
     if (rc != HAL_RET_OK) {
         HAL_TRACE_ERR("Error writing addr:{} data:{}", addr, *data);
@@ -285,22 +293,24 @@ asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words, bool blocking
 
 //------------------------------------------------------------------------------
 // public API for memory write operations
-// NOTE: this API runs in the calling thread's context and supports both
-// blocking and non-blocking writes
 //------------------------------------------------------------------------------
 hal_ret_t
-asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len, bool blocking)
+asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len,
+                asic_write_mode_t mode)
 {
-    hal_ret_t rc = HAL_RET_OK;
+    hal_ret_t    rc = HAL_RET_OK;
 
-    if (is_asic_rw_thread() == false) {
-        rc = asic_do_write(HAL_ASIC_RW_OPERATION_MEM_WRITE,
-                           addr, data, len, blocking);
-    } else {
+    //HAL_TRACE_DEBUG("addr : {:#x}, data : {}, len : {}, mode : {}",
+                    //addr, data, len, mode);
+    if ((is_asic_rw_thread() == true) || (mode == ASIC_WRITE_MODE_WRITE_THRU)) {
+        // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_mem_write(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    } else {
+        // go thru asicrw thread
+        rc = asic_do_write(HAL_ASIC_RW_OPERATION_MEM_WRITE,
+                           addr, data, len, mode);
     }
-
     if (rc != HAL_RET_OK) {
         HAL_TRACE_ERR("Error writing mem addr:{} data:{}", addr, data);
         HAL_ASSERT(0);
@@ -313,18 +323,20 @@ asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len, bool blocking)
 // public API for ringing doorbell
 //------------------------------------------------------------------------------
 hal_ret_t
-asic_ring_doorbell (uint64_t addr, uint64_t data, bool blocking)
+asic_ring_doorbell (uint64_t addr, uint64_t data, asic_write_mode_t mode)
 {
-    hal_ret_t rc = HAL_RET_OK;
+    hal_ret_t    rc = HAL_RET_OK;
 
-    if (is_asic_rw_thread() == false) {
-        rc = asic_do_write(HAL_ASIC_RW_OPERATION_RING_DOORBELL,
-                           addr, (uint8_t *)&data, sizeof(data), blocking);
-    } else {
+    //HAL_TRACE_DEBUG("addr : {:#x}, data : {}, mode : {}", addr, data, mode);
+    if ((is_asic_rw_thread() == true) || (mode == ASIC_WRITE_MODE_WRITE_THRU)) {
+        // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_ring_doorbell(addr, data);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
+    } else {
+        // go thru asicrw thread
+        rc = asic_do_write(HAL_ASIC_RW_OPERATION_RING_DOORBELL,
+                           addr, (uint8_t *)&data, sizeof(data), mode);
     }
-
     if (rc != HAL_RET_OK) {
         HAL_TRACE_ERR("Error ringing doorbell addr:{} data:{}", addr, data);
         HAL_ASSERT(0);

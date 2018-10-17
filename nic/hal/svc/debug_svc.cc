@@ -214,7 +214,10 @@ DebugServiceImpl::MemoryRawUpdate(ServerContext *context,
         debug::MemoryRawUpdateRequest req = req_msg->request(i);
         debug::MemoryRawUpdateResponse *rsp = rsp_msg->add_response();
 
-        ret = hal::pd::asic_mem_write(req.address(), (uint8_t*)req.actiondata().c_str(), req.len(), true);
+        ret = hal::pd::asic_mem_write(req.address(),
+                                      (uint8_t *)req.actiondata().c_str(),
+                                      req.len(),
+                                      hal::pd::ASIC_WRITE_MODE_BLOCKING);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("Raw write request (Addr:0x{:x}, Len:{}) failed",
                     req.address(), req.len());

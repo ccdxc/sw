@@ -109,7 +109,8 @@ capri_hbm_read_mem (uint64_t addr, uint8_t *buf, uint32_t size)
 int32_t
 capri_hbm_write_mem (uint64_t addr, const uint8_t *buf, uint32_t size)
 {
-    hal_ret_t rc = hal::pd::asic_mem_write(addr, (uint8_t *)buf, size, true);
+    hal_ret_t rc = hal::pd::asic_mem_write(addr, (uint8_t *)buf, size,
+                                           hal::pd::ASIC_WRITE_MODE_BLOCKING);
     return (rc == HAL_RET_OK) ? 0 : -EIO;
 }
 
