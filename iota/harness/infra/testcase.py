@@ -46,7 +46,7 @@ class Testcase:
         self.__resolve()
 
         self.__timer = timeprofiler.TimeProfiler()
-        self.__data = TestcaseData(spec.args)
+        self.__data = TestcaseData(getattr(spec, 'args', None))
         return
 
     def __resolve_testcase(self):
