@@ -2,6 +2,7 @@ package topo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 
@@ -209,26 +210,55 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 
 	log.Infof("TOPO SVC | DEBUG | STATE | %v", ts.Nodes)
 
+	workloadNodes := []*testbed.TestNode{}
 	for _, w := range req.Workloads {
-		if _, ok := ts.ProvisionedNodes[w.NodeName]; !ok {
+
+		node, ok := ts.ProvisionedNodes[w.NodeName]
+		if !ok {
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("AddWorkloads found to unprovisioned node : %v", w.NodeName)
 			return req, nil
 		}
-
+		node.WorkloadInfo.Workloads = append(node.WorkloadInfo.Workloads, w)
+		added := false
+		for _, workloadNode := range workloadNodes {
+			if workloadNode.Node.Name == node.Node.Name {
+				added = true
+				break
+			}
+		}
+		if !added {
+			workloadNodes = append(workloadNodes, node)
+		}
 	}
+
 	// Add workloads
 	addWorkloads := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
-		for _, w := range req.Workloads {
-			w := w
-			node, _ := ts.ProvisionedNodes[w.NodeName]
+		for _, node := range workloadNodes {
+			node := node
 			pool.Go(func() error {
-				return node.AddWorkload(w)
+				for _, w := range node.WorkloadInfo.Workloads {
+					if err := node.AddWorkload(w); err != nil {
+						return err
+					}
+				}
+				return nil
+
 			})
+
 		}
 		return pool.Wait()
 	}
+
+	resetAddWorkloads := func() {
+		for _, node := range workloadNodes {
+			node.WorkloadInfo.Workloads = nil
+			node.WorkloadResp.Workloads = nil
+		}
+	}
+
+	defer resetAddWorkloads()
 	err := addWorkloads(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
@@ -271,7 +301,6 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 	// Triggers
 	triggers := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
-
 		for _, node := range triggerNodes {
 			node := node
 			pool.Go(func() error {
@@ -288,7 +317,7 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 	}
 
 	resetTriggers := func() {
-		for _, node := range ts.Nodes {
+		for _, node := range triggerNodes {
 			node.TriggerInfo = nil
 			node.TriggerResp = nil
 		}
@@ -380,4 +409,32 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 	}
 
 	return resp, nil
+}
+
+// WorkloadCopy does copy of items to/from workload.
+func (ts *TopologyService) WorkloadCopy(ctx context.Context, req *iota.WorkloadCopyMsg) (*iota.WorkloadCopyMsg, error) {
+
+	_, ok := ts.ProvisionedNodes[req.NodeName]
+	if !ok {
+		errMsg := fmt.Sprintf("Node %s  not provisioned", req.NodeName)
+		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
+			ErrorMsg: errMsg}
+		return nil, errors.New(errMsg)
+	}
+
+	if req.Direction == iota.WorkloadCopyDirection_DIR_IN {
+		/*if err := node.InitNode(ts, constants.DstIotaAgentDir, artifacts); err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Failed to copy agent binary: %v, to TestNode: %v, at IPAddress: %v", constants.IotaAgentBinaryPath, n.Node.Name, n.Node.IpAddress)
+			return err
+		}*/
+	} else if req.Direction == iota.WorkloadCopyDirection_DIR_OUT {
+
+	} else {
+		errMsg := fmt.Sprintf("No direction specified for workload copy")
+		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
+			ErrorMsg: errMsg}
+		return nil, errors.New(errMsg)
+	}
+
+	return nil, nil
 }

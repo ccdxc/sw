@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -20,6 +21,7 @@ const (
 	naplesCfgDir          = "/naples/nic/conf"
 	hntapCfgFile          = "hntap-cfg.json"
 	naplesDataDir         = Common.DstIotaAgentDir + "/naples"
+	arpTimeout            = 3000 //3 seconds
 )
 
 var (
@@ -133,6 +135,12 @@ func (naples *naplesNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, e
 				in.GetNaplesConfig().ControlIntf)
 			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 		}
+	}
+
+	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.retrans_time_ms=" + strconv.Itoa(arpTimeout)}
+	if retCode, _, _ := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+		naples.logger.Error("Sysctl set failed : " + in.GetName())
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, nil
 	}
 
 	if err := naples.bringUpNaples(in.GetName(),

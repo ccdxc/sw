@@ -150,6 +150,7 @@ public:
     int sock;
     int if_index;
     std::map<mac_address_t, mac_config_t*> mac_configs;
+    std::map<uint32_t, bool> vlan_configs;
     HntapPassThroughSwitch *parent;
 
     HntapPassThroughIntfSwitch(std::string intfname);
@@ -229,12 +230,14 @@ public:
 
     bool isAllowedMac(mac_addr_t macAddr, uint32_t port, uint32_t uplink_vlan);
     bool isAllowedMac(mac_addr_t macAddr);
+    bool isAllowedVlan(uint32_t vlan_id);
     void addMacConfig(mac_address_t macAddr, uint32_t port, uint32_t uplink_vlan) {
         mac_config_t *cfg = new mac_config_t();
         cfg->port = port;
         cfg->mac = macAddr;
         cfg->uplink_vlan = uplink_vlan;
         this->mac_configs[cfg->mac] = cfg;
+        this->vlan_configs[uplink_vlan] = true;
     }
 
     virtual void* ReceiverThread(void *arg);

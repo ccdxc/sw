@@ -175,6 +175,18 @@ bool HntapPassThroughIntfSwitch::isAllowedMac(mac_addr_t macAddr) {
     return false;
 }
 
+bool HntapPassThroughIntfSwitch::isAllowedVlan(uint32_t vlan_id) {
+    std::map<uint32_t, bool>::iterator it;
+
+    it = vlan_configs.find(vlan_id);
+
+    if (it != vlan_configs.end()) {
+        return true;
+    }
+
+    return false;
+}
+
 static bool
 is_broadcast(mac_addr_t mac_addr) {
 
@@ -278,8 +290,8 @@ void* HntapPassThroughIntfSwitch::ReceiverThread(void *arg) {
         * It could be possible as we are in promiscuous mode.
         * Allow only broadcast and allowed macs only.
         */
-       if (!this->isAllowedMac(smacAddr)  &&
-                   (is_broadcast(dmacAddr)  ||
+       if (!this->isAllowedMac(smacAddr)  && this->isAllowedVlan(vlan_id)  &&
+                   (is_broadcast(dmacAddr) ||
                        this->isAllowedMac(dmacAddr, this->uplink_dev->port, vlan_id))) {
 
            final_buf = buf;
