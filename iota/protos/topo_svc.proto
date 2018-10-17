@@ -281,32 +281,67 @@ message TestBedMsg {
     // API Response
     IotaAPIResponse api_response        = 1;
 
-    // Switch port id for the current test bed
-    uint32 switch_port_id               = 2;
-
     // NAPLES tarball to copy on the remote nodes
-    string naples_image                 = 3;
+    string naples_image                 = 2;
 
     // Venice tarball to copy on the remote nodes
-    string venice_image                 = 4;
+    string venice_image                 = 3;
 
     // Driver sources to copy on the remote nodes
-    string driver_sources               = 6;
+    string driver_sources               = 4;
 
     // Allocated vlans based off of the port id
-    repeated uint32 allocated_vlans     = 7;
+    repeated uint32 allocated_vlans     = 5;
 
     // List of node IP addresses
-    repeated string ip_address          = 8;
+    repeated TestBedNode nodes          = 6;
 
-    // Control Interface to use
-    string control_intf                 = 9;
+    // Node username
+    string username                     = 7;
+    
+    // Node password
+    string password                     = 8;
 
-    // Username for logging into the nodes
-    string user                         = 10;
+    // Testbed ID
+    uint32 testbed_id                   = 9;
+}
 
-    // Password for logging into the nodes
-    string passwd                       = 11;
+enum TestBedNodeType {
+    TESTBED_NODE_TYPE_NONE  = 0;
+    TESTBED_NODE_TYPE_SIM   = 1;
+    TESTBED_NODE_TYPE_HW    = 2;
+}
+
+message TestBedNode {
+    TestBedNodeType type            = 1;
+    // Node Management IP Address
+    string ip_address               = 2;
+    // Node CIMC IP Address
+    string cimc_ip_address          = 3;
+    // Node CIMC username
+    string cimc_username            = 4;
+    // Node CIMC password
+    string cimc_password            = 5;
+    // NIC Management IP Address
+    string nic_ip_address           = 6;
+    // NIC Console ip address
+    string nic_console_ip_address   = 7;
+    // NIC Console port
+    string nic_console_port         = 8;
+    // NIC Console username
+    string nic_console_username     = 9;
+    // NIC Console password
+    string nic_console_password     = 10;
+    // NIC username
+    string nic_username             = 11;
+    // NIC password
+    string nic_password             = 12;
+    // Initialization script - used for HW
+    string init_script              = 13;
+    // Control interface for this node.
+    string control_intf             = 14;
+    // Switch ports for this node.
+    repeated uint32 switch_port_ids = 15;
 }
 
 // WorkloadCopyDirection defines direction whether to copy in or copy out

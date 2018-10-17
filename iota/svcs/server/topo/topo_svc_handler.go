@@ -40,49 +40,49 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	ts.TestBedInfo = req
 
 	// Preflight checks
-	if len(req.IpAddress) == 0 {
-		log.Errorf("TOPO SVC | InitTestBed | No IP Addresses present. Err: %v", ts.TestBedInfo.SwitchPortId, err)
+	if len(req.Nodes) == 0 {
+		log.Errorf("TOPO SVC | InitTestBed | No Nodes present. Err: %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-		req.ApiResponse.ErrorMsg = fmt.Sprintf("request message doesn't have any ip addresses")
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("request message doesn't have any nodes.")
 		return req, nil
 	}
 
-	if len(req.User) == 0 || len(req.Passwd) == 0 {
+	if len(req.Username) == 0 || len(req.Password) == 0 {
 		log.Errorf("TOPO SVC | InitTestBed | User creds to access the vms are missing.")
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 		req.ApiResponse.ErrorMsg = "user creds are missing to access the VMs"
 		return req, nil
 	}
 
-	if len(req.ControlIntf) == 0 {
-		log.Errorf("")
-	}
+	//if len(req.ControlIntf) == 0 {
+	//	log.Errorf("")
+	//}
 
 	// Allocate VLANs for the test bed
-	if vlans, err = testbed.AllocateVLANS(ts.TestBedInfo.SwitchPortId); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | Could not allocate VLANS from the switchport id: %d, Err: %v", ts.TestBedInfo.SwitchPortId, err)
-		req.ApiResponse.ErrorMsg = fmt.Sprintf("could not allocate VLANS from the switchport id: %d. Err: %v", ts.TestBedInfo.SwitchPortId, err)
+	if vlans, err = testbed.AllocateVLANS(ts.TestBedInfo.TestbedId); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Could not allocate VLANS from the switchport id: %d, Err: %v", ts.TestBedInfo.TestbedId, err)
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("could not allocate VLANS from the switchport id: %d. Err: %v", ts.TestBedInfo.TestbedId, err)
 		return req, nil
 	}
 	ts.TestBedInfo.AllocatedVlans = vlans
 
-	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.User, ts.TestBedInfo.Passwd)
+	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
 
 	// Run init
 	initTestBed := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
 
-		for idx, ipAddress := range req.IpAddress {
+		for idx, node := range req.Nodes {
 			nodeName := fmt.Sprintf("iota-node-%d", idx)
-			ipAddr := net.ParseIP(ipAddress)
+			ipAddr := net.ParseIP(node.IpAddress)
 			if len(ipAddr) == 0 {
-				log.Errorf("TOPO SVC | InitTestBed | Invalid IP Address format. %v", ipAddress)
-				return fmt.Errorf("invalid ip address format. %v", ipAddress)
+				log.Errorf("TOPO SVC | InitTestBed | Invalid IP Address format. %v", node.IpAddress)
+				return fmt.Errorf("invalid ip address format. %v", node.IpAddress)
 			}
 
 			n := testbed.TestNode{
 				Node: &iota.Node{
-					IpAddress: ipAddress,
+					IpAddress: node.IpAddress,
 					Name:      nodeName,
 				},
 			}

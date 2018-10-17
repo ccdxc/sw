@@ -35,18 +35,20 @@ class _Testbed:
         msg = topo_pb2.TestBedMsg()
         if not ts:
             return msg
-        msg.switch_port_id = int(self.tbspec.DataNetworks.DataSwitch.Port)
         if not GlobalOptions.rerun:
             msg.naples_image = ts.GetImages().naples
             msg.venice_image = ts.GetImages().venice
             msg.driver_sources = ts.GetImages().drivers
 
         # TBD: Get it from warmd.json
-        msg.user = self.tbspec.Provision.Username
-        msg.passwd = self.tbspec.Provision.Password
+        msg.username = self.tbspec.Provision.Username
+        msg.password = self.tbspec.Provision.Password
+        msg.testbed_id = int(self.tbspec.DataNetworks.DataSwitch.Port)
 
         for node_ip in self.__node_ips:
-            msg.ip_address.append(node_ip)
+            node_msg = msg.nodes.add()
+            node_msg.type = topo_pb2.TESTBED_NODE_TYPE_SIM
+            node_msg.ip_address = node_ip
         return msg
 
     def __cleanup_testbed(self):
