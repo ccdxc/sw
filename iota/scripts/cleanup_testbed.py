@@ -31,7 +31,9 @@ cleanup_commands = [
     "rm -rf /tmp/iota*",
     "docker ps",
     "docker rmi -f \$(docker images -aq)",
-    "rm -rf /var/run/naples"
+    "rm -rf /var/run/naples",
+    "sudo iptables -F",
+    "sudo systemctl restart docker",
 ]
 
 rerun_post_cleanup_commands = [

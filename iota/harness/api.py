@@ -37,6 +37,8 @@ def Init():
 
 def __rpc(req, rpcfn):
     utils.LogMessageContents("Request", req, Logger.debug)
+    req.api_response.api_status = types_pb2.API_STATUS_NONE
+    req.api_response.error_msg = ""
     resp = rpcfn(req)
     if resp.api_response.api_status != types_pb2.API_STATUS_OK:
         Logger.error("Error: ",
