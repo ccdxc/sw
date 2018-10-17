@@ -82,6 +82,8 @@ func HTTPPost(url, token string, req interface{}, resp interface{}) ([]*http.Coo
 		request.Header.Set("Authorization", bearer)
 	}
 
+	log.Info("Common | HTTP POST | Posting %v to %v", string(jsonStr), url)
+	log.Infof("HTTP HEADERS: %v", request.Header)
 	res, err := client.Do(request)
 	if err != nil {
 		log.Errorf("Error during http POST. Err: %v", err)

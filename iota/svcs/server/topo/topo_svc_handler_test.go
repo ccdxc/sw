@@ -325,8 +325,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 
 	for _, n := range addNodeResp.Nodes {
 		if n.Type == iota.PersonalityType_PERSONALITY_NAPLES {
-			uuid := fmt.Sprintf("uuid-%s", n.NodeUuid)
-			naplesUUID = append(naplesUUID, uuid)
+			naplesUUID = append(naplesUUID, n.NodeUuid)
 		}
 	}
 
@@ -339,6 +338,13 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	log.Infof("Received Config Generation Response: %v", configs)
 	if err != nil {
 		t.Errorf("GenerateConfigs call failed. Err: %v", err)
+		t.FailNow()
+	}
+
+	pushCfgResp, err := cfgClient.PushConfig(context.Background(), configs)
+	log.Infof("Received Config Push Response: %v. Err: %v", pushCfgResp, err)
+	if err != nil {
+		t.Errorf("PushConfig call failed. Err: %v", err)
 		t.FailNow()
 	}
 

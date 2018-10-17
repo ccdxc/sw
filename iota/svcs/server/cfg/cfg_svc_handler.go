@@ -130,35 +130,13 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 	// TODO fix this for Agent configs
 	var response string
 	veniceAPIGw := c.CfgState.Endpoints[0]
-	//tenantURL := fmt.Sprintf("%s/configs/cluster/v1/tenants", veniceAPIGw)
+	tenantURL := fmt.Sprintf("%s/configs/cluster/v1/tenants", veniceAPIGw)
 	authPolicyURL := fmt.Sprintf("%s/configs/auth/v1/authn-policy", veniceAPIGw)
 	userURL := fmt.Sprintf("%s/configs/auth/v1/tenant/default/users", veniceAPIGw)
 	roleBindingURL := fmt.Sprintf("%s/configs/auth/v1/tenant/default/role-bindings", veniceAPIGw)
 	loginURL := fmt.Sprintf("%s/v1/login/", veniceAPIGw)
 
 	log.Infof("CFG SVC | DEBUG | ConfigureAuth. Received Request Msg: %v", req)
-
-	//tenant := cluster.Tenant{
-	//	TypeMeta: api.TypeMeta{
-	//		Kind:       "Tenant",
-	//		APIVersion: "v1",
-	//	},
-	//	ObjectMeta: api.ObjectMeta{
-	//		Name:   "default",
-	//		Tenant: "default",
-	//	},
-	//	Spec: cluster.TenantSpec{
-	//	//
-	//	},
-	//}
-	//
-	//fmt.Println("BALERION: ", tenantURL)
-	//
-	//err := common.HTTPPost(tenantURL, &tenant, response)
-	//log.Infof("CFG SVC | INFO | Creating Tenant | Received Response Msg: %v", response)
-	//if err != nil {
-	//	log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create a tenant. Received Response Msg: %v. Err: %v", response, err)
-	//}
 
 	authPolicy := auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{
@@ -241,12 +219,54 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 	if err != nil {
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to login as admin user. Received Response Msg: %v. Err: %v", response, err)
 	}
+
+	tenant := cluster.Tenant{
+		TypeMeta: api.TypeMeta{
+			Kind: "Tenant",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "default",
+			Tenant: "default",
+		},
+		Spec: cluster.TenantSpec{},
+	}
+
+	fmt.Println("BALERION: ", tenantURL)
+
+	_, err = common.HTTPPost(tenantURL, c.AuthToken, &tenant, response)
+	log.Infof("CFG SVC | INFO | Creating Tenant | Received Response Msg: %v", response)
+	if err != nil {
+		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create a tenant. Received Response Msg: %v. Err: %v", response, err)
+	}
+
 	return req, nil
 }
 
-// PushConfig pushes the config
+// PushConfig pushes the config. Todo implement custom unmarshallers on a per object basis
 func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*iota.ConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | PushConfig. Received Request Msg: %v", req)
+	workloadURL := fmt.Sprintf("%s/configs/workload/v1/workloads", c.CfgState.Endpoints[0])
+	for _, cfg := range req.Configs {
+		var workload workload.Workload
+		var response string
+		err := json.Unmarshal([]byte(cfg.Config), &workload)
+		if err != nil {
+			log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a cluster object. Err: %v", cfg.Config, err)
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+			return req, nil
+		}
+
+		//http://10.8.103.3:9000/configs/workload/v1/configs/workload/v1/workloads
+		_, err = common.HTTPPost(workloadURL, c.AuthToken, &workload, response)
+		if err != nil {
+			log.Errorf("CFG SVC | DEBUG | PushConfig. Failed to POST %v to: %v. AuthToken: %v Err: %v", workload, workloadURL, c.AuthToken, err)
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+			return req, nil
+		}
+
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+		return req, nil
+	}
 
 	resp := &iota.ConfigMsg{}
 	return resp, nil
@@ -303,6 +323,8 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 					},
 				},
 			}
+			b, _ := json.Marshal(w)
+			fmt.Println("BALERION: ", string(b))
 			workloads = append(workloads, &w)
 		}
 	}
