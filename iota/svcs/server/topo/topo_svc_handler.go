@@ -107,6 +107,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 		log.Errorf("TOPO SVC | InitTestBed | Init Test Bed Call Failed. %v", err)
 		return nil, err
 	}
+	ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return ts.TestBedInfo, err
 }
 

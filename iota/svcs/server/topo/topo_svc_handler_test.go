@@ -2,10 +2,16 @@ package topo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/log"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 
 	"github.com/pensando/sw/iota/svcs/server/cfg"
 
@@ -81,6 +87,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	tbMsg.SwitchPortId = 1
 	tbMsg.User = "vm"
 	tbMsg.Passwd = "vm"
+	tbMsg.ApiResponse = &iota.IotaAPIResponse{}
 
 	//tbMsg.NaplesImage = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/obj/images/naples-release-v1.tgz", os.Getenv("GOPATH"))
 	//tbMsg.VeniceImage = fmt.Sprintf("%s/src/github.com/pensando/sw/bin/venice.tgz", os.Getenv("GOPATH"))
@@ -96,7 +103,11 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.FailNow()
 	}
 
-	nodeMsg := iota.NodeMsg{}
+	vlans := resp.AllocatedVlans
+
+	nodeMsg := iota.NodeMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+	}
 	nodes := []*iota.Node{
 		{
 			Type:      iota.PersonalityType_PERSONALITY_VENICE,
@@ -227,25 +238,28 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		//t.FailNow()
 	}
 
-	clusterObj := `{
-  "kind": "Cluster",
-  "api-version": "v1",
-  "meta": {
-    "name": "e2eCluster"
-  },
-  "spec": {
-    "quorum-nodes": [
-      "venice-node-1",
-      "venice-node-2",
-      "venice-node-3"
-    ],
-    "auto-admit-nics": true
-  }
-}`
+	quorumNodes := []string{"venice-node-1", "venice-node-2", "venice-node-3"}
+	clusterObj := &cluster.Cluster{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Cluster",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "e2eCluster",
+		},
+		Spec: cluster.ClusterSpec{
+			QuorumNodes:   quorumNodes,
+			AutoAdmitNICs: true,
+		},
+	}
+
+	b, _ := json.Marshal(clusterObj)
 
 	clusterMsg := &iota.MakeClusterMsg{
-		Endpoint: "10.8.103.3:9001/api/v1/cluster",
-		Config:   clusterObj,
+		Endpoint:       "10.8.103.1:9001/api/v1/cluster",
+		HealthEndpoint: "10.8.103.1:9000/configs/cluster/v1/tenants",
+		Config:         string(b),
+		ApiResponse:    &iota.IotaAPIResponse{},
 	}
 
 	_, err = cfgClient.MakeCluster(context.Background(), clusterMsg)
@@ -274,8 +288,9 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	}
 
 	wrkloadMsg := iota.WorkloadMsg{
-		WorkloadOp: iota.Op_ADD,
-		Workloads:  workloads,
+		WorkloadOp:  iota.Op_ADD,
+		Workloads:   workloads,
+		ApiResponse: &iota.IotaAPIResponse{},
 	}
 
 	_, err = topoClient.AddWorkloads(context.Background(), &wrkloadMsg)
@@ -283,6 +298,30 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.Errorf("AddWorkloads call failed. Err: %v", err)
 		t.FailNow()
 	}
+
+	var initCfgMsg iota.InitConfigMsg
+	initCfgMsg.EntryPointType = iota.EntrypointType_VENICE_REST
+	initCfgMsg.Endpoints = []string{"10.8.103.1:9000"}
+	initCfgMsg.Vlans = vlans
+	initCfgMsg.ApiResponse = &iota.IotaAPIResponse{}
+
+	_, err = cfgClient.InitCfgService(context.Background(), &initCfgMsg)
+	if err != nil {
+		t.Errorf("InitCfgService call failed. Err: %v", err)
+		t.FailNow()
+	}
+
+	authMsg := iota.AuthMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+	}
+	authResp, err := cfgClient.ConfigureAuth(context.Background(), &authMsg)
+	if err != nil {
+		t.Errorf("ConfigureAuth call failed. Err: %v", err)
+		t.FailNow()
+	}
+
+	log.Infof("Received Token: %s", authResp.AuthToken)
+
 }
 
 /*

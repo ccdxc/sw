@@ -40,8 +40,9 @@ message AuthMsg {
 
 message MakeClusterMsg {
     string endpoint                     = 1;
-    string config                       = 2;
-    IotaAPIResponse api_response        = 3;
+    string health_endpoint              = 2;
+    string config                       = 3;
+    IotaAPIResponse api_response        = 4;
 }
 
 enum EntrypointType {

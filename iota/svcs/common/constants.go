@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 // global constants
@@ -28,6 +29,9 @@ const (
 
 	// DstIotaWorkloadsDir has all workload related data for each workload
 	DstIotaWorkloadsDir = DstIotaAgentDir + "/workloads"
+
+	//MakeClusterTimeout waits for 5 minutes for the cluster to be up
+	MakeClusterTimeout = time.Duration(time.Minute * 5)
 )
 
 // incrementing constants. List all constants whose value you don't care here
