@@ -17,9 +17,6 @@ struct buffer_list_iter {
 	uint64_t cur_addr;
 };
 
-void write_bit_fields(void *ptr, unsigned int start_bit_offset,
-		      unsigned int size_in_bits, uint64_t value);
-
 struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
                       const struct pnso_buffer_list *buf_list);
