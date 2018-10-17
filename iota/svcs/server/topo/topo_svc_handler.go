@@ -114,9 +114,9 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 // CleanUpTestBed cleans up a testbed
 func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | CleanUpTestBed. Received Request Msg: %v", req)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 
-	resp := iota.TestBedMsg{}
-	return &resp, nil
+	return req, nil
 }
 
 // AddNodes adds nodes to the topology
@@ -178,7 +178,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 		req.Nodes[idx] = node.Node
 	}
 
-	//req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }
 
@@ -186,16 +186,16 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 func (ts *TopologyService) DeleteNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | DeleteNodes. Received Request Msg: %v", req)
 
-	resp := &iota.NodeMsg{}
-	return resp, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 // GetNodes returns the current topology information
 func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | GetNodes. Received Request Msg: %v", req)
 
-	resp := &iota.NodeMsg{}
-	return resp, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 // AddWorkloads adds a workload on a given node
@@ -266,6 +266,7 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		return nil, err
 	}
 
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	// TODO return fully formed resp here
 	return req, nil
 }
@@ -274,9 +275,8 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | DeleteWorkloads. Received Request Msg: %v", req)
 
-	resp := &iota.WorkloadMsg{}
-
-	return resp, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
@@ -341,6 +341,7 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		triggerResp.Commands = append(triggerResp.Commands, cmdResp.GetCommands()[0])
 
 	}
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 
 	return triggerResp, nil
 }
@@ -362,7 +363,7 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 		node.TriggerInfo = nil
 		node.TriggerResp = nil
 	}
-
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }
 
@@ -409,6 +410,7 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 		}
 	}
 
+	resp.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return resp, nil
 }
 
@@ -437,5 +439,6 @@ func (ts *TopologyService) WorkloadCopy(ctx context.Context, req *iota.WorkloadC
 		return nil, errors.New(errMsg)
 	}
 
-	return nil, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }

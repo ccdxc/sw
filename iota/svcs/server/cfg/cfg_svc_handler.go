@@ -239,6 +239,8 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create a tenant. Received Response Msg: %v. Err: %v", response, err)
 	}
 
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+
 	return req, nil
 }
 
@@ -268,15 +270,19 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 		return req, nil
 	}
 
-	resp := &iota.ConfigMsg{}
-	return resp, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 // QueryConfig queries the configs
 func (c *ConfigService) QueryConfig(ctx context.Context, req *iota.ConfigQueryMsg) (*iota.ConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | QueryConfig. Received Request Msg: %v", req)
 
-	resp := &iota.ConfigMsg{}
+	resp := &iota.ConfigMsg{
+		ApiResponse: &iota.IotaAPIResponse{
+			ApiStatus: iota.APIResponseType_API_STATUS_OK,
+		},
+	}
 	return resp, nil
 }
 
