@@ -32,8 +32,8 @@ cleanup_commands = [
     "docker ps",
     "docker rmi -f \$(docker images -aq)",
     "rm -rf /var/run/naples",
-    "sudo iptables -F",
-    "sudo systemctl restart docker",
+    "iptables -F",
+    "systemctl restart docker",
 ]
 
 rerun_post_cleanup_commands = [
