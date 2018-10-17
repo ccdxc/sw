@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -273,7 +274,10 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
 	t2.HandleFunc("/api/{*}", unknownAction)
 
-	router.Methods("DELETE").Subrouter().HandleFunc(CoresURL+"{*}", httputils.MakeHTTPHandler(n.NaplesCoreDeleteHandler))
+	t3 := router.Methods("GET").Subrouter()
+	t3.HandleFunc(CmdEXECUrl, httputils.MakeHTTPHandler(NaplesCmdExecHandler))
+
+	router.Methods("DELETE").Subrouter().HandleFunc(CoresURL+"{*}", httputils.MakeHTTPHandler(NaplesCoreDeleteHandler))
 
 	router.PathPrefix(MonitoringURL + "logs/").Handler(http.StripPrefix(MonitoringURL+"logs/", http.FileServer(http.Dir(globals.LogDir))))
 	router.PathPrefix(MonitoringURL + "events/").Handler(http.StripPrefix(MonitoringURL+"events/", http.FileServer(http.Dir(globals.EventsDir))))
@@ -329,6 +333,11 @@ func (n *NMD) StopRestServer(shutdown bool) error {
 // GetNMDUrl returns the REST URL
 func (n *NMD) GetNMDUrl() string {
 	return "http://" + n.GetListenURL() + ConfigURL
+}
+
+// GetNMDCmdExecURL returns the REST URL
+func (n *NMD) GetNMDCmdExecURL() string {
+	return "http://" + n.GetListenURL() + CmdEXECUrl
 }
 
 func (n *NMD) initTLSProvider() error {
@@ -401,7 +410,7 @@ func (n *NMD) RegisterROCtrlClient(rollout RolloutCtrlAPI) error {
 }
 
 // NaplesCoreDeleteHandler is the REST handler for Naples delete core file operation
-func (n *NMD) NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
+func NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
 	resp := NaplesConfigResp{}
 	file := globals.CoresDir + strings.TrimPrefix(r.URL.Path, CoresURL)
 	err := os.Remove(file)
@@ -410,4 +419,38 @@ func (n *NMD) NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
 		return resp, err
 	}
 	return resp, nil
+}
+
+//NaplesCmdExecHandler is the REST handler to execute any binary on naples and return the output
+func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
+	req := nmd.NaplesCmdExecute{}
+	resp := NaplesConfigResp{}
+	content, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Errorf("Failed to read request: %v", err)
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+
+	if err = json.Unmarshal(content, &req); err != nil {
+		log.Errorf("Unmarshal err %s", content)
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+
+	log.Infof("Naples Cmd Execute Request: %+v", req)
+	parts := strings.Fields(req.Opts)
+	cmd := exec.Command(req.Executable, parts...)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+	slurp, _ := ioutil.ReadAll(stdout)
+	if err := cmd.Wait(); err != nil {
+		log.Fatal(err)
+	}
+	return string(slurp), nil
 }

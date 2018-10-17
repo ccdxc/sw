@@ -71,3 +71,14 @@ message NaplesStatus {
     cluster.SmartNICSpec.SmartNICPhase Phase = 1 [(gogoproto.nullable) = true,
                                              (gogoproto.jsontag) = "phase,omitempty"];
 }
+
+// NaplesCmdExecute contains information on what command to execute
+message NaplesCmdExecute {
+    // Executable to run on naples side
+    string Executable               = 1 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "executable,omitempty"];
+
+    // Flags for the executable to run on naples side
+    string Opts                     = 2 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "opts,omitempty"];
+}

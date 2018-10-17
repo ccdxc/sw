@@ -31,6 +31,7 @@ SEE ALSO
 
 * `penctl core <penctl_core.rst>`_ 	 - Cores on Naples
 * `penctl events <penctl_events.rst>`_ 	 - Show events from Naples
+* `penctl execute <penctl_execute.rst>`_ 	 - Execute Binary
 * `penctl logs <penctl_logs.rst>`_ 	 - Show logs from Naples
 * `penctl metrics <penctl_metrics.rst>`_ 	 - Show metrics from Naples
 * `penctl mode <penctl_mode.rst>`_ 	 - Set Naples to Managed mode

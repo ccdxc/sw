@@ -23,6 +23,8 @@ const (
 	MonitoringURL = "/monitoring/v1/naples/"
 	// CoresURL in URL to fetch cores from nic in classic mode
 	CoresURL = "/cores/v1/naples/"
+	// CmdEXECUrl in URL to fetch output from running executables on Naples in classic mode
+	CmdEXECUrl = "/cmd/v1/naples/"
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped

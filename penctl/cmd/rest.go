@@ -101,6 +101,56 @@ func restGet(port string, url string) ([]byte, error) {
 	return bodyBytes, nil
 }
 
+func restGetWithBody(v interface{}, port string, url string) ([]byte, error) {
+	payloadBytes, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	body := bytes.NewReader(payloadBytes)
+	url = "http://" + naplesIP + ":" + port + "/" + url
+	if verbose {
+		fmt.Println("URL: ", url)
+	}
+	getReq, err := http.NewRequest("GET", url, body)
+	if err != nil {
+		return nil, err
+	}
+	getReq.Header.Set("Content-Type", "application/json")
+
+	getResp, err := http.DefaultClient.Do(getReq)
+	if err != nil {
+		fmt.Println("Unable to get response from Naples.")
+		if verbose {
+			fmt.Println("Err: ", err.Error())
+		}
+		return nil, err
+	}
+	defer getResp.Body.Close()
+	if verbose {
+		fmt.Println("Status: ", getResp.Status)
+		fmt.Println("Header: ", getResp.Header)
+	}
+	bodyBytes, _ := ioutil.ReadAll(getResp.Body)
+
+	if jsonFormat || yamlFormat {
+		var prettyJSON bytes.Buffer
+		error := json.Indent(&prettyJSON, bodyBytes, "", "\t")
+		if error != nil {
+			return nil, err
+		}
+		b, err := yaml.JSONToYAML(bodyBytes)
+		if err != nil {
+			return nil, err
+		}
+		if jsonFormat {
+			fmt.Println(string(prettyJSON.Bytes()))
+		} else if yamlFormat {
+			fmt.Println(string(b))
+		}
+	}
+	return bodyBytes, nil
+}
+
 func restGetResp(port string, url string) (*http.Response, error) {
 	if verbose {
 		fmt.Println("Doing GET request to naples")

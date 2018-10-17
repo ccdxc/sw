@@ -3,11 +3,15 @@
 package state
 
 import (
+	"bytes"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"sync"
 	"testing"
@@ -915,4 +919,52 @@ func TestNaplesRollout(t *testing.T) {
 	err = nm.DeleteSmartNICRollout(&sro)
 	Assert(t, (err == nil), "DeleteSmartNICRollout Failed")
 
+}
+
+func TestNaplesCmdExec(t *testing.T) {
+
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
+	// create nmd
+	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/bin/ls",
+		Opts:       "-al /",
+	}
+
+	f1 := func() (bool, interface{}) {
+		payloadBytes, err := json.Marshal(v)
+		if err != nil {
+			log.Errorf("Failed to marshal data, err:%+v", err)
+			return false, nil
+		}
+		body := bytes.NewReader(payloadBytes)
+		getReq, err := http.NewRequest("GET", nm.GetNMDCmdExecURL(), body)
+		if err != nil {
+			log.Errorf("Failed to create new request, err:%+v", err)
+			return false, nil
+		}
+		getReq.Header.Set("Content-Type", "application/json")
+
+		getResp, err := http.DefaultClient.Do(getReq)
+		if err != nil {
+			log.Errorf("Failed to get response, err:%+v", err)
+			return false, nil
+		}
+		defer getResp.Body.Close()
+		_, err = ioutil.ReadAll(getResp.Body)
+		if err != nil {
+			log.Errorf("Failed to read body bytes, err:%+v", err)
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to post exec cmd")
+
+	// stop NMD, don't clean up DB file
+	stopNMD(t, nm, false)
 }
