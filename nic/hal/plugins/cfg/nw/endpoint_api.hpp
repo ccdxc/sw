@@ -47,6 +47,7 @@ if_t *ep_get_if(ep_t *pi_ep);
 vrf_t *ep_get_vrf(ep_t *pi_ep);
 bool is_ep_remote(const ep_t* ep);
 bool is_ep_management(const ep_t* ep);
+nwsec_profile_t *ep_get_pi_nwsec(ep_t *pi_ep);
 
 // Adding sessions to EPs
 hal_ret_t ep_add_session (ep_t *ep, session_t *session);

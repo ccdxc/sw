@@ -715,6 +715,19 @@ pd_ep_create_args_init (pd_ep_create_args_t *args)
     return;
 }
 
+typedef struct pd_ep_ipsg_change_args_s {
+    ep_t            *ep;
+    bool            pgm;
+} __PACK__ pd_ep_ipsg_change_args_t;
+
+static inline void
+pd_ep_ipsg_change_args_init (pd_ep_ipsg_change_args_t *args)
+{
+    args->ep = NULL;
+    args->pgm = false;
+    return;
+}
+
 typedef struct pd_ep_delete_args_s {
     vrf_t        *vrf;
     l2seg_t         *l2seg;
@@ -3155,7 +3168,8 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_FTE_SPAN_MAKE_CLONE,      278, "PD_FUNC_ID_FTE_SPAN_MAKE_CLONE")\
     ENTRY(PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID,  279, "PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID")\
     ENTRY(PD_FUNC_ID_CLOCK_DETAIL_GET,         280, "PD_FUNC_ID_CLOCK_DETAIL_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      281, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_EP_IPSG_CHANGE,           281, "PD_FUNC_ID_EP_IPSG_CHANGE")\
+    ENTRY(PD_FUNC_ID_MAX,                      282, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3239,6 +3253,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_ep_make_clone);
         PD_UNION_ARGS_FIELD(pd_ep_get);
         PD_UNION_ARGS_FIELD(pd_ep_restore);
+        PD_UNION_ARGS_FIELD(pd_ep_ipsg_change);
 
         // session calls
         PD_UNION_ARGS_FIELD(pd_session_create);
@@ -3647,6 +3662,7 @@ PD_FUNCP_TYPEDEF(pd_ep_mem_free);
 PD_FUNCP_TYPEDEF(pd_ep_make_clone);
 PD_FUNCP_TYPEDEF(pd_ep_get);
 PD_FUNCP_TYPEDEF(pd_ep_restore);
+PD_FUNCP_TYPEDEF(pd_ep_ipsg_change);
 
 // session calls
 PD_FUNCP_TYPEDEF(pd_session_create);

@@ -10,6 +10,7 @@
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 
 namespace hal {
 
@@ -919,6 +920,8 @@ nwsec_handle_ipsg_change (nwsec_profile_t *nwsec, nwsec_profile_t *nwsec_clone)
             HAL_TRACE_ERR("unable to process nwsec_clone "
                           "update by vrf{}", ten->vrf_id);
         }
+        // Walk each ep belonging to vrf
+        g_hal_state->ep_l2_ht()->walk(ep_handle_ipsg_change_cb, ten);
     }
 
     return ret;

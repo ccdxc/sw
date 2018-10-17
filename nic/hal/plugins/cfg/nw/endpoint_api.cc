@@ -132,4 +132,21 @@ is_ep_management (const ep_t* ep)
     return false;
 }
 
+//----------------------------------------------------------------------------
+// Returns nwsec for the endpoint
+//----------------------------------------------------------------------------
+nwsec_profile_t *
+ep_get_pi_nwsec (ep_t *pi_ep)
+{
+    vrf_t              *pi_vrf;
+    nwsec_profile_t    *pi_nwsec;
+
+    pi_vrf = vrf_lookup_by_handle(pi_ep->vrf_handle);
+    HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
+    
+    pi_nwsec = find_nwsec_profile_by_handle(pi_vrf->nwsec_profile_handle);
+
+    return pi_nwsec;
+}
+
 }    // namespace hal

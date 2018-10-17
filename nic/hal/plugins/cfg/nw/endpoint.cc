@@ -2371,6 +2371,39 @@ ep_get_ht_cb (void *ht_entry, void *ctxt)
     return false;
 }
 
+bool
+ep_handle_ipsg_change_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t        *entry       = (hal_handle_id_ht_entry_t *)ht_entry;
+    vrf_t                           *vrf         = (vrf_t *)ctxt;
+    ep_t                            *ep          = NULL;
+    nwsec_profile_t                 *nwsec       = NULL;
+    pd::pd_func_args_t              pd_func_args = {0};
+    pd::pd_ep_ipsg_change_args_t    pd_ep_args   = {0};
+    hal_ret_t                       ret          = HAL_RET_OK;
+
+    ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
+    if (ep->vrf_handle != vrf->hal_handle) {
+        return false;
+    }
+    
+    nwsec = ep_get_pi_nwsec(ep);
+    if (!nwsec) {
+        return false;
+    }
+
+    // PD Call to program or deprogram ipsg entries
+    pd::pd_ep_ipsg_change_args_init(&pd_ep_args);
+    pd_ep_args.ep = ep;
+    pd_ep_args.pgm = (1 - nwsec->ipsg_en); // We do 1 - () because nwsec has not yet been updated
+    pd_func_args.pd_ep_ipsg_change = &pd_ep_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_IPSG_CHANGE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program/deprogram ep ipsg entries, err : {}", ret);
+    }
+    
+    return false;
+}   
 
 //------------------------------------------------------------------------------
 // process a endpoint get request

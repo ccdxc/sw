@@ -27,7 +27,7 @@ hal_ret_t ep_pd_depgm_registered_mac(pd_ep_t *pd_ep);
 hal_ret_t
 pd_ep_create (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t            ret = HAL_RET_OK;;
+    hal_ret_t            ret = HAL_RET_OK;
     pd_ep_create_args_t *args = pd_func_args->pd_ep_create;
     pd_ep_t             *pd_ep;
     mac_addr_t           *mac;
@@ -106,8 +106,13 @@ pd_ep_if_update (pd_func_args_t *pd_func_args)
     hal_ret_t               ret = HAL_RET_OK;
     pd_ep_if_update_args_t  *if_upd_args = pd_func_args->pd_ep_if_update;
     pd_ep_t                 *ep_pd = (pd_ep_t *)if_upd_args->ep->pd;;
+    ep_t                    *ep = (ep_t *)ep_pd->pi_ep;
+    nwsec_profile_t         *nwsec_profile;
 
-    if (if_upd_args->lif_change) {
+    nwsec_profile = ep_get_pi_nwsec(ep);
+    if (if_upd_args->lif_change &&
+        nwsec_profile &&
+        nwsec_profile->ipsg_en) {
         ret = ep_pd_pgm_ipsg_tbl(ep_pd,
                                  false,
                                  if_upd_args,
@@ -327,6 +332,8 @@ hal_ret_t
 pd_ep_upd_iplist_change (pd_ep_update_args_t *pd_ep_upd_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    ep_t            *ep = pd_ep_upd_args->ep;
+    nwsec_profile_t *nwsec_profile;
 
     HAL_TRACE_DEBUG("ip-list change: ");
 
@@ -334,29 +341,32 @@ pd_ep_upd_iplist_change (pd_ep_update_args_t *pd_ep_upd_args)
     ret = ep_pd_alloc_pd_ip_entries(pd_ep_upd_args->add_iplist);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(" failed to alloced pd ip entries "
-                "for new ip. ret:{}", ret);
+                      "for new ip. ret:{}", ret);
         goto end;
     }
 
     // Program IPSG entries for new IPs
-    ret = ep_pd_pgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
-                                        pd_ep_upd_args->add_iplist,
-                                        false,
-                                        NULL,
-                                        TABLE_OPER_INSERT);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR(" failed to pgm IPSG"
-                "for new ip. ret:{}", ret);
-        goto end;
-    }
+    nwsec_profile = ep_get_pi_nwsec(ep);
+    if (nwsec_profile && nwsec_profile->ipsg_en) {
+        ret = ep_pd_pgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
+                                            pd_ep_upd_args->add_iplist,
+                                            false,
+                                            NULL,
+                                            TABLE_OPER_INSERT);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(" failed to pgm IPSG"
+                          "for new ip. ret:{}", ret);
+            goto end;
+        }
 
-    // Deprogram IPSG entries for deleted IPs
-    ret = ep_pd_depgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
-                                        pd_ep_upd_args->del_iplist);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR(" failed to depgm IPSG"
-                "for deleted ip. ret:{}", ret);
-        goto end;
+        // Deprogram IPSG entries for deleted IPs
+        ret = ep_pd_depgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
+                                              pd_ep_upd_args->del_iplist);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(" failed to depgm IPSG"
+                          "for deleted ip. ret:{}", ret);
+            goto end;
+        }
     }
 
     // free up delete IPs PD state
@@ -543,12 +553,16 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
 {
     hal_ret_t            ret = HAL_RET_OK;
     ep_t                 *pi_ep = (ep_t *)pd_ep->pi_ep;
+    nwsec_profile_t      *nwsec_profile;
 
     // Program IPSG Table
-    ret = ep_pd_pgm_ipsg_tbl(pd_ep,
-                             is_upgrade,
-                             NULL,
-                             TABLE_OPER_INSERT);
+    nwsec_profile = ep_get_pi_nwsec(pi_ep);
+    if (nwsec_profile && nwsec_profile->ipsg_en) {
+        ret = ep_pd_pgm_ipsg_tbl(pd_ep,
+                                 is_upgrade,
+                                 NULL,
+                                 TABLE_OPER_INSERT);
+    }
 
     // Classic mode or if its behind MNIC or management NIC:
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
@@ -686,6 +700,24 @@ end:
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// Deprogram IPSG table for every IP entry
+// ----------------------------------------------------------------------------
+hal_ret_t
+ep_pd_depgm_ipsg_tbl (pd_ep_t *pd_ep)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    ep_t                *pi_ep = (ep_t *)pd_ep->pi_ep;
+
+    ret = ep_pd_depgm_ipsg_tbl_ip_entries(pi_ep, &(pi_ep->ip_list_head));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to deprogram IPSG entries, ret:{}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
 
 // ----------------------------------------------------------------------------
 // Program IPSG table for IP entry
@@ -807,6 +839,26 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep,
     }
 
 end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// EP Pgm/Depgm IPSG entries
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_ipsg_change (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd_ep_ipsg_change_args_t    *args = pd_func_args->pd_ep_ipsg_change;
+    ep_t                        *pi_ep = args->ep;
+    pd_ep_t                     *pd_ep = (pd_ep_t *)pi_ep->pd;
+
+    if (args->pgm) {
+        ret = ep_pd_pgm_ipsg_tbl(pd_ep, false, NULL, TABLE_OPER_INSERT);
+    } else {
+        ret = ep_pd_depgm_ipsg_tbl(pd_ep);
+    }
+
     return ret;
 }
 

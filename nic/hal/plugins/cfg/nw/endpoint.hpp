@@ -222,6 +222,8 @@ ep_t* find_ep_by_v6_key_in_l2segment(const ip_addr_t *ip_addr,
 hal_ret_t find_ep(EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status);
 if_t *ep_get_pinned_uplink(ep_t *ep);
 
+bool ep_handle_ipsg_change_cb(void *ht_entry, void *ctxt);
+
 // Debug APIs
 void ep_print_ips(ep_t *ep);
 const char *ep_l2_key_to_str(ep_t *ep);
