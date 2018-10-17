@@ -1,5 +1,6 @@
 #!/bin/bash
 export GOPATH="/import"
+export E2E_CONFIG="test/e2e/cluster/tb_config_ci.json"
 cd $GOPATH/src/github.com/pensando/sw
 make $1
 if [ $? -ne 0 ]; then
