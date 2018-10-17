@@ -26,6 +26,7 @@
 #include "sonic_bus.h"
 #include "sonic_lif.h"
 #include "sonic_debugfs.h"
+#include "osal_logger.h"
 
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Pensando");
@@ -37,6 +38,14 @@ unsigned int devcmd_timeout = 30;
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 #endif
+
+unsigned int core_count = 1;
+module_param(core_count, uint, 0444);
+MODULE_PARM_DESC(core_count, "max number of cores to use for sonic driver (default=1)");
+
+static unsigned int loglevel = OSAL_LOG_LEVEL_WARNING;
+module_param(loglevel, uint, 0444);
+MODULE_PARM_DESC(loglevel, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5=NOTICE,6=INFO,7=DBG");
 
 int body(void);
 
@@ -382,6 +391,12 @@ int sonic_reset(struct sonic *sonic)
 static int __init sonic_init_module(void)
 {
 	int err;
+
+	osal_log_init(loglevel);
+	if (core_count <= 0)
+		core_count = 1;
+	else if (core_count > SONIC_MAX_CORES)
+		core_count = SONIC_MAX_CORES;
 
 	sonic_struct_size_checks();
 	sonic_debugfs_create();

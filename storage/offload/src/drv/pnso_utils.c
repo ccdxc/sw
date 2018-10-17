@@ -68,6 +68,7 @@ pc_res_mpool_get(const struct per_core_resource *pc_res,
 		 enum mem_pool_type type)
 {
 	if (pc_res && ((type != MPOOL_TYPE_NONE) && (type < MPOOL_TYPE_MAX))) {
+		OSAL_ASSERT(pc_res->core_id == osal_get_coreid());
 		return pc_res->mpools[type];
 	}
 

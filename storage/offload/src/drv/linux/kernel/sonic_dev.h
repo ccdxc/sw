@@ -21,6 +21,7 @@
 
 #define static_assert(...)
 #include <linux/spinlock.h>
+#include "osal_sys.h"
 #include "accel_ring.h"
 #include "storage_seq_common.h"
 #include "accel_dev_if.h"
@@ -291,7 +292,7 @@ struct seq_queue {
 #define MAX_PER_QUEUE_SQ_ENTRIES 512
 #define MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES 32
 #define MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES 32
-#define MAX_NUM_CORES 64
+#define SONIC_MAX_CORES (16 < OSAL_MAX_CORES ? 16 : OSAL_MAX_CORES)
 
 struct per_core_resource {
 	bool initialized;
@@ -312,10 +313,10 @@ struct per_core_resource {
 };
 
 struct res {
-	struct per_core_resource *pc_res[MAX_NUM_CORES];
-	int core_to_res_map[MAX_NUM_CORES];
+	struct per_core_resource *pc_res[SONIC_MAX_CORES];
+	int core_to_res_map[OSAL_MAX_CORES];
 	spinlock_t lock;
-	DECLARE_BITMAP(pc_res_bmp, MAX_NUM_CORES);
+	DECLARE_BITMAP(pc_res_bmp, OSAL_MAX_CORES);
 };
 
 #define INTR_INDEX_NOT_ASSIGNED		(-1)

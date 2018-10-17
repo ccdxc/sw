@@ -21,9 +21,8 @@
 extern "C" {
 #endif
 
-#ifndef __KERNEL__
 enum osal_log_level {
-	OSAL_LOG_LEVEL_EMERGENCY = LOG_EMERG,	/* from syslog.h */
+	OSAL_LOG_LEVEL_EMERGENCY,
 	OSAL_LOG_LEVEL_ALERT,
 	OSAL_LOG_LEVEL_CRITICAL,
 	OSAL_LOG_LEVEL_ERROR,
@@ -32,11 +31,7 @@ enum osal_log_level {
 	OSAL_LOG_LEVEL_INFO,
 	OSAL_LOG_LEVEL_DEBUG,
 };
-#else
-enum osal_log_level {
-	OSAL_LOG_LEVEL_NONE = -1,	/* levels handled in macros */
-};
-#endif
+
 extern enum osal_log_level g_osal_log_level;
 
 #ifndef __KERNEL__
@@ -67,32 +62,34 @@ extern enum osal_log_level g_osal_log_level;
 	USPACE_LOG(stdout, OSAL_LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 #define OSAL_LOG printf
 #else
-#define KSPACE_LOG(...) printk(__VA_ARGS__)
+#define KSPACE_LOG(level, ...)					\
+	if ((enum osal_log_level) level <= g_osal_log_level)		\
+		printk(__VA_ARGS__)
 
 #define OSAL_LOG_EMERG(fmt, ...)					\
-	KSPACE_LOG(KERN_EMERG "%30s:%d:> " fmt, __func__, __LINE__,	\
-			##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_EMERGENCY, KERN_EMERG "%30s:%d:> " fmt, \
+			__func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_ALERT(fmt, ...)					\
-	KSPACE_LOG(KERN_ALERT "%30s:%d:> " fmt, __func__, __LINE__,	\
-			##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_ALERT, KERN_ALERT "%30s:%d:> " fmt, \
+			__func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_CRITICAL(fmt, ...)					\
-	KSPACE_LOG(KERN_CRIT "%30s:%d:> " fmt, __func__, __LINE__,	\
-			##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_CRITICAL, KERN_CRIT "%30s:%d:> " fmt, \
+			__func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_ERROR(fmt, ...)					\
-	KSPACE_LOG(KERN_ERR "%30s:%d:> " fmt, __func__, __LINE__,		\
-			##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_ERROR, KERN_ERR "%30s:%d:> " fmt, \
+			__func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_WARN(fmt, ...)						\
-	KSPACE_LOG(KERN_WARNING "%30s:%d:> " fmt, __func__, __LINE__,	\
-			##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_WARNING, KERN_WARNING "%30s:%d:> " fmt, \
+			__func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_NOTICE(fmt, ...)					\
-	KSPACE_LOG(KERN_NOTICE "%30s:%d:> " fmt, __func__, __LINE__,	\
-			##__VA_ARGS__)
-#define OSAL_LOG_INFO(fmt, ...)						\
-	KSPACE_LOG(KERN_INFO "%30s:%d:> " fmt, __func__, __LINE__,	\
-			##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_NOTICE, KERN_NOTICE "%30s:%d:> " fmt, \
+			__func__, __LINE__, ##__VA_ARGS__)
+#define OSAL_LOG_INFO(fmt, ...)					\
+	KSPACE_LOG(OSAL_LOG_LEVEL_INFO, KERN_INFO "%30s:%d:> " fmt, \
+			__func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_DEBUG(fmt, ...)					\
-	KSPACE_LOG(KERN_DEBUG "%30s:%d:> " fmt, __func__, __LINE__,	\
-			##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_DEBUG, KERN_DEBUG "%30s:%d:> " fmt, \
+			__func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG printk
 #endif
 

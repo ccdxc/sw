@@ -107,7 +107,7 @@ struct test_crypto_key {
 #define TEST_MAX_FILE_PREFIX_LEN 32
 #define TEST_MAX_FULL_PATH_LEN (TEST_MAX_PATH_LEN+(2*TEST_MAX_FILE_PREFIX_LEN))
 
-#define TEST_MAX_CORE_COUNT 16
+#define TEST_MAX_CORE_COUNT 32
 #define TEST_MAX_BATCH_COUNT_PER_CORE 3
 #define TEST_MAX_BATCH_COUNT_TOTAL (TEST_MAX_BATCH_COUNT_PER_CORE * TEST_MAX_CORE_COUNT)
 //#define TEST_MAX_BATCH_MASK ((1 << TEST_MAX_BATCH_COUNT_PER_CORE) - 1)
@@ -243,6 +243,7 @@ enum {
 struct test_testcase {
 	struct test_node node;
 	char name[TEST_MAX_NAME_LEN];
+	bool turbo;
 	uint32_t repeat;
 	uint16_t batch_depth;
 	uint16_t sync_mode;

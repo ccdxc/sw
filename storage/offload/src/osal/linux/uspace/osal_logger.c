@@ -19,7 +19,7 @@
 #define MAX_LOG_TIME_STR 128
 #define MAX_LOG_FNAME_STR 256
 
-enum osal_log_level g_osal_log_level = OSAL_LOG_LEVEL_ERROR;
+enum osal_log_level g_osal_log_level = OSAL_LOG_LEVEL_WARNING;
 bool g_osal_log_enabled;
 static pid_t prog_id;
 

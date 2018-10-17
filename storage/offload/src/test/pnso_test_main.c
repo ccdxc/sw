@@ -11,6 +11,7 @@
 #include "osal_stdtypes.h"
 #include "osal_mem.h"
 #include "osal_errno.h"
+#include "osal_sys.h"
 #include "pnso_test.h"
 
 void status_output_func(const char *status, void *opaque)
@@ -215,6 +216,12 @@ int main(int argc, char *argv[])
 	pnso_run_unit_tests(cfg);
 
 	err = pnso_test_run_all(cfg);
+
+	/* debugging only, enable to stall process exit */
+#if 0
+	while (!pnso_test_is_shutdown())
+		osal_yield();
+#endif
 
 done:
 	pnso_test_desc_free(cfg);

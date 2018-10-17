@@ -85,11 +85,19 @@ static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
 	}
 }
 
+struct input_buffer_context {
+	bool initialized;
+	uint32_t svc_chain_idx;
+	uint32_t alloc_sz;
+	uint32_t len;
+	uint8_t *buf;
+};
+
 struct request_context {
 	struct batch_context *batch_ctx;
 	const struct test_svc_chain *svc_chain;
 
-	uint8_t *input_buffer;
+	struct input_buffer_context input;
 
 	bool is_sgl_pa; /* physical addr or not */
 
@@ -127,6 +135,8 @@ struct testcase_aggregate_stats {
 	uint64_t max_latency;
 	uint64_t in_bytes_per_sec;
 	uint64_t out_bytes_per_sec;
+	uint64_t max_in_bytes_per_sec;
+	uint64_t max_out_bytes_per_sec;
 	uint64_t svcs_per_sec;
 	uint64_t reqs_per_sec;
 	uint64_t batches_per_sec;

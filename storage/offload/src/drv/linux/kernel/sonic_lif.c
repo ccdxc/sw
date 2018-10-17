@@ -320,7 +320,7 @@ void sonic_per_core_resources_free(struct lif *lif)
 	struct device *dev = lif->sonic->dev;
 	int i;
 
-	for (i = 0; i < MAX_NUM_CORES; i++) {
+	for (i = 0; i < SONIC_MAX_CORES; i++) {
 		if (lif->res.pc_res[i]) {
 			devm_kfree(dev, lif->res.pc_res[i]);
 			lif->res.pc_res[i] = NULL;
@@ -721,7 +721,7 @@ static int sonic_lif_per_core_resources_init(struct lif *lif)
 	dev_info(lif->sonic->dev, "Init per-core-resources, %u seq_queues_per_lif, %u num_per_core_resources.\n",
 		 lif->sonic->ident->dev.seq_queues_per_lif, lif->sonic->num_per_core_resources);
 
-	for (i = 0; i < MAX_NUM_CORES; i++) {
+	for (i = 0; i < OSAL_MAX_CORES; i++) {
 		lif->res.core_to_res_map[i] = -1;
 	}
 
@@ -843,9 +843,9 @@ int sonic_lifs_size(struct sonic *sonic)
 	int err;
 	identity_t *ident = sonic->ident;
 	unsigned int nintrs, dev_nintrs = ident->dev.num_intrs;
-	//TODO: Figure out a way to size this - making it max for now
-	sonic->num_per_core_resources = MAX_NUM_CORES;
-	nintrs = MAX_NUM_CORES;
+
+	sonic->num_per_core_resources = core_count; /* module param */
+	nintrs = core_count;
 	if (nintrs > dev_nintrs)
 		return -ENOSPC;
 
@@ -861,7 +861,6 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	int err = -ENOSPC;
 	unsigned long free_res_id = -1;
 
-	//TODO: Replace MAX_NUM_CORES with varaible from sonic
 	spin_lock(&lif->res.lock);
 	if (lif->res.core_to_res_map[core_id] >= 0) {
 		/* another thread already did this */
@@ -892,7 +891,8 @@ struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 	int pc_res_idx = -1;
 	int core_id;
 
-	core_id = osal_get_coreid() % MAX_NUM_CORES;
+	core_id = osal_get_coreid();
+	OSAL_ASSERT(core_id >= 0 && core_id < OSAL_MAX_CORES);
 	pc_res_idx = lif->res.core_to_res_map[core_id];
 	if (pc_res_idx < 0) {
 		err = assign_per_core_res_id(lif, core_id);

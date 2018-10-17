@@ -23,10 +23,29 @@ static long batch = -1;
 module_param(batch, long, 0444);
 MODULE_PARM_DESC(batch, "default batch count");
 
+static long rate = -1;
+module_param(rate, long, 0444);
+MODULE_PARM_DESC(rate, "throughput rate limit in bytes/sec");
+
+static long cpu_mask = -1;
+module_param(cpu_mask, long, 0444);
+MODULE_PARM_DESC(cpu_mask, "cpu mask");
+
+static long feat_mask = 0xffffffff;
+module_param(feat_mask, long, 0444);
+MODULE_PARM_DESC(feat_mask, "feature bitmask");
+
+static int ctl_core_id = -1;
+module_param(ctl_core_id, int, 0444);
+MODULE_PARM_DESC(ctl_core_id, "cpu core on which to run control thread");
+
 static char *mode = NULL;
 module_param(mode, charp, 0444);
 MODULE_PARM_DESC(mode, "mode is sync, async, or poll");
 
+static unsigned int loglevel = OSAL_LOG_LEVEL_WARNING;
+module_param(loglevel, uint, 0444);
+MODULE_PARM_DESC(loglevel, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5=NOTICE,6=INFO,7=DBG");
 
 static osal_thread_t g_main_thread;
 
@@ -35,7 +54,7 @@ pnso_test_mod_init(void)
 {
 	int rv;
 
-	rv = osal_log_init(OSAL_LOG_LEVEL_NONE);
+	rv = osal_log_init(loglevel);
 
 	return rv;
 }
@@ -56,21 +75,24 @@ status_output_func(const char *status, void *opaque)
 	OSAL_LOG(status);
 }
 
-static const unsigned char default_global_yaml[] =
-"global_params:\n"
-"  per_core_qdepth: 32\n"
-"  block_size: 4096\n"
-"  cpu_mask: 1\n"
-"  #limit_rate: 1000000\n"
-"  #status_interval: 5\n"
+static const unsigned char default_alias_yaml[] =
+"alias: 'default_cpu_mask=1'\n"
 "alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'\n"
 "alias: 'iv1=000102030405060708090a0b0c0d0e0f'\n"
 "alias: 'default_repeat=1'\n"
 "alias: 'default_batch=1'\n"
 "alias: 'default_mode=sync'\n"
+"alias: 'default_turbo=1'\n"
+"alias: 'default_rate=0'\n"
 "\n";
 
-static const unsigned char default_test_input[] =
+static const unsigned char default_global_yaml[] = 
+"global_params:\n"
+"  per_core_qdepth: 32\n"
+"  block_size: 4096\n"
+"  cpu_mask: '$default_cpu_mask'\n"
+"  limit_rate: '$default_rate'\n"
+"  #status_interval: 5\n"
 "cp_hdr_format:\n"
 "  idx: 1\n"
 "  cp_hdr_field:\n"
@@ -105,7 +127,7 @@ static const unsigned char default_test_input[] =
 "        pattern: a\n"
 "        #random_seed: 123\n"
 "        #random_len: 64\n"
-"        len: 4096\n"
+"        len: 8192\n"
 "      ops:\n"
 "        - compress:\n"
 "            flags: 'zero_pad,insert_header'\n"
@@ -125,7 +147,7 @@ static const unsigned char default_test_input[] =
 "      idx: 3\n"
 "      input:\n"
 "        pattern: a\n"
-"        len: 4096\n"
+"        len: 8192\n"
 "      ops:\n"
 "        - hash:\n"
 "            algo_type: 'sha2_256'\n"
@@ -135,7 +157,7 @@ static const unsigned char default_test_input[] =
 "      idx: 4\n"
 "      input:\n"
 "        pattern: a\n"
-"        len: 4096\n"
+"        len: 8192\n"
 "      ops:\n"
 "        - chksum:\n"
 "            algo_type: 'crc32c'\n"
@@ -145,7 +167,7 @@ static const unsigned char default_test_input[] =
 "      idx: 5\n"
 "      input:\n"
 "        pattern: a\n"
-"        len: 4096\n"
+"        len: 8192\n"
 "      ops:\n"
 "        - compress:\n"
 "            flags: 'zero_pad,insert_header'\n"
@@ -174,86 +196,13 @@ static const unsigned char default_test_input[] =
 "        - decrypt:\n"
 "            key_idx: 1\n"
 "            iv_data: '$iv1'\n"
-"            output_file: 'decrypted.bin'\n"
+"            output_file: 'decrypted.bin'\n";
+
+static const unsigned char *default_feature_yaml_list[PNSO_SVC_TYPE_MAX] = {
+	[PNSO_SVC_TYPE_NONE] = NULL,
+
+	[PNSO_SVC_TYPE_ENCRYPT] =
 "tests:\n"
-"  - test:\n"
-"      idx: 1\n"
-"      svc_chains: 1\n"
-"      name: 'Compress sanity'\n"
-"      #repeat: 0\n"
-"      repeat: '$default_repeat'\n"
-"      batch_depth: '$default_batch'\n"
-"      mode: '$default_mode'\n"
-"      validations:\n"
-"        - retcode_compare:\n"
-"            idx: 1\n"
-"            retcode: 0\n"
-"            svc_retcodes: 0\n"
-"  - test:\n"
-"      idx: 2\n"
-"      svc_chains: 2\n"
-"      name: 'Decompress sanity'\n"
-"      #repeat: 0\n"
-"      repeat: '$default_repeat'\n"
-"      batch_depth: '$default_batch'\n"
-"      mode: '$default_mode'\n"
-"      validations:\n"
-"        - retcode_compare:\n"
-"            idx: 1\n"
-"            retcode: 0\n"
-"            svc_retcodes: 0\n"
-"        - size_compare:\n"
-"            idx: 2\n"
-"            file1: 'decompressed.bin'\n"
-"            val: 4096\n"
-"        - data_compare:\n"
-"            idx: 3\n"
-"            file1: 'decompressed.bin'\n"
-"            pattern: a\n"
-"            len: 4096\n"
-"  - test:\n"
-"      idx: 3\n"
-"      svc_chains: 3\n"
-"      name: 'Hash sanity'\n"
-"      #repeat: 0\n"
-"      repeat: '$default_repeat'\n"
-"      batch_depth: '$default_batch'\n"
-"      mode: '$default_mode'\n"
-"      validations:\n"
-"        - retcode_compare:\n"
-"            idx: 1\n"
-"            retcode: 0\n"
-"            svc_retcodes: 0\n"
-"  - test:\n"
-"      idx: 4\n"
-"      svc_chains: 4\n"
-"      name: 'Checksum sanity'\n"
-"      #repeat: 0\n"
-"      repeat: '$default_repeat'\n"
-"      batch_depth: '$default_batch'\n"
-"      mode: '$default_mode'\n"
-"      validations:\n"
-"        - retcode_compare:\n"
-"            idx: 1\n"
-"            retcode: 0\n"
-"            svc_retcodes: 0\n"
-"  - test:\n"
-"      idx: 5\n"
-"      svc_chains: 5\n"
-"      name: 'Compress+hash sanity'\n"
-"      repeat: 0\n"
-"      #repeat: '$default_repeat'\n"
-"      batch_depth: '$default_batch'\n"
-"      mode: '$default_mode'\n"
-"      validations:\n"
-"        - retcode_compare:\n"
-"            idx: 1\n"
-"            retcode: 0\n"
-"            svc_retcodes: 0,0\n"
-"        - data_compare:\n"
-"            idx: 2\n"
-"            file1: 'compressed1.bin'\n"
-"            file2: 'compressed_chain1.bin'\n"
 "  - test:\n"
 "      idx: 6\n"
 "      svc_chains: 6\n"
@@ -262,6 +211,7 @@ static const unsigned char default_test_input[] =
 "      repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
 "      mode: '$default_mode'\n"
+"      turbo: '$default_turbo'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -270,7 +220,10 @@ static const unsigned char default_test_input[] =
 "        - size_compare:\n"
 "            idx: 2\n"
 "            file1: 'encrypted.bin'\n"
-"            val: 4096\n"
+"            val: 4096\n",
+
+	[PNSO_SVC_TYPE_DECRYPT] =
+"tests:\n"
 "  - test:\n"
 "      idx: 7\n"
 "      svc_chains: 7\n"
@@ -279,6 +232,7 @@ static const unsigned char default_test_input[] =
 "      repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
 "      mode: '$default_mode'\n"
+"      turbo: '$default_turbo'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -288,8 +242,108 @@ static const unsigned char default_test_input[] =
 "            idx: 2\n"
 "            file1: 'decrypted.bin'\n"
 "            pattern: a\n"
-"            len: 4096\n"
-"\n";
+"            len: 4096\n",
+
+	[PNSO_SVC_TYPE_COMPRESS] =
+"tests:\n"
+"  - test:\n"
+"      idx: 1\n"
+"      svc_chains: 1\n"
+"      name: 'Compress sanity'\n"
+"      #repeat: 0\n"
+"      repeat: '$default_repeat'\n"
+"      batch_depth: '$default_batch'\n"
+"      mode: '$default_mode'\n"
+"      turbo: '$default_turbo'\n"
+"      validations:\n"
+"        - retcode_compare:\n"
+"            idx: 1\n"
+"            retcode: 0\n"
+"            svc_retcodes: 0\n",
+
+	[PNSO_SVC_TYPE_DECOMPRESS] =
+"tests:\n"
+"  - test:\n"
+"      idx: 2\n"
+"      svc_chains: 2\n"
+"      name: 'Decompress sanity'\n"
+"      #repeat: 0\n"
+"      repeat: '$default_repeat'\n"
+"      batch_depth: '$default_batch'\n"
+"      mode: '$default_mode'\n"
+"      turbo: '$default_turbo'\n"
+"      validations:\n"
+"        - retcode_compare:\n"
+"            idx: 1\n"
+"            retcode: 0\n"
+"            svc_retcodes: 0\n"
+"        - size_compare:\n"
+"            idx: 2\n"
+"            file1: 'decompressed.bin'\n"
+"            val: 8192\n"
+"        - data_compare:\n"
+"            idx: 3\n"
+"            file1: 'decompressed.bin'\n"
+"            pattern: a\n"
+"            len: 8192\n",
+
+	[PNSO_SVC_TYPE_HASH] =
+"tests:\n"
+"  - test:\n"
+"      idx: 3\n"
+"      svc_chains: 3\n"
+"      name: 'Hash sanity'\n"
+"      #repeat: 0\n"
+"      repeat: '$default_repeat'\n"
+"      batch_depth: '$default_batch'\n"
+"      mode: '$default_mode'\n"
+"      turbo: '$default_turbo'\n"
+"      validations:\n"
+"        - retcode_compare:\n"
+"            idx: 1\n"
+"            retcode: 0\n"
+"            svc_retcodes: 0\n",
+
+	[PNSO_SVC_TYPE_CHKSUM] =
+"tests:\n"
+"  - test:\n"
+"      idx: 4\n"
+"      svc_chains: 4\n"
+"      name: 'Checksum sanity'\n"
+"      #repeat: 0\n"
+"      repeat: '$default_repeat'\n"
+"      batch_depth: '$default_batch'\n"
+"      mode: '$default_mode'\n"
+"      turbo: '$default_turbo'\n"
+"      validations:\n"
+"        - retcode_compare:\n"
+"            idx: 1\n"
+"            retcode: 0\n"
+"            svc_retcodes: 0\n",
+
+	[PNSO_SVC_TYPE_DECOMPACT] = NULL
+};
+
+
+static const unsigned char default_cp_hash_yaml[] =
+"  - test:\n"
+"      idx: 5\n"
+"      svc_chains: 5\n"
+"      name: 'Compress+hash sanity'\n"
+"      repeat: 0\n"
+"      #repeat: '$default_repeat'\n"
+"      batch_depth: '$default_batch'\n"
+"      mode: '$default_mode'\n"
+"      turbo: '$default_turbo'\n"
+"      validations:\n"
+"        - retcode_compare:\n"
+"            idx: 1\n"
+"            retcode: 0\n"
+"            svc_retcodes: 0,0\n"
+"        - data_compare:\n"
+"            idx: 2\n"
+"            file1: 'compressed1.bin'\n"
+"            file2: 'compressed_chain1.bin'\n";
 
 #define MAX_ALIAS_STR_LEN 128
 /* Return length of generated alias string */
@@ -315,6 +369,7 @@ body(void *not_used)
 {
 	struct test_desc *cfg = NULL;
 	pnso_error_t err = 0;
+	uint32_t i;
 
 	pnso_test_init_fns(pnso_submit_request, status_output_func,
 			   osal_alloc, osal_free, osal_realloc);
@@ -326,10 +381,10 @@ body(void *not_used)
 		goto done;
 	}
 
-	err = pnso_test_parse_buf(default_global_yaml,
-		strlen((const char*)default_global_yaml), cfg);
+	err = pnso_test_parse_buf(default_alias_yaml,
+		strlen((const char*)default_alias_yaml), cfg);
 	if (err) {
-		PNSO_LOG_ERROR("Failed to parse default global yaml input data\n");
+		PNSO_LOG_ERROR("Failed to parse default alias yaml input data\n");
 		goto done;
 	}
 
@@ -341,7 +396,7 @@ body(void *not_used)
 			goto done;
 		}
 	}
-	if (repeat >= 0 || batch >= 0 || mode != NULL) {
+	if (repeat >= 0 || batch >= 0 || cpu_mask >= 0 || rate >= 0 || mode != NULL) {
 		uint32_t len = 0;
 		char alias_str[MAX_ALIAS_STR_LEN+1] = "";
 
@@ -367,6 +422,28 @@ body(void *not_used)
 				goto done;
 			}
 		}
+		if (rate >= 0) {
+			len = generate_alias_yaml(alias_str, "default_rate",
+						  rate, NULL);
+			PNSO_LOG_WARN("module param rate: %s\n", alias_str);
+			err = pnso_test_parse_buf(alias_str, len, cfg);
+			if (err) {
+				PNSO_LOG_ERROR("Failed to parse default rate string '%s'\n",
+					       alias_str);
+				goto done;
+			}
+		}
+		if (cpu_mask >= 0) {
+			len = generate_alias_yaml(alias_str, "default_cpu_mask",
+						  cpu_mask, NULL);
+			PNSO_LOG_WARN("module param cpu_mask: %s\n", alias_str);
+			err = pnso_test_parse_buf(alias_str, len, cfg);
+			if (err) {
+				PNSO_LOG_ERROR("Failed to parse default cpu_mask string '%s'\n",
+					       alias_str);
+				goto done;
+			}
+		}
 		if (mode) {
 			len = generate_alias_yaml(alias_str, "default_mode",
 						  0, mode);
@@ -380,12 +457,37 @@ body(void *not_used)
 		}
 	}
 
-	err = pnso_test_parse_buf(default_test_input,
-		strlen((const char*)default_test_input), cfg);
+	err = pnso_test_parse_buf(default_global_yaml,
+		strlen((const char*)default_global_yaml), cfg);
 	if (err) {
-		PNSO_LOG_ERROR("Failed to parse default test yaml input data\n");
+		PNSO_LOG_ERROR("Failed to parse default global yaml input data\n");
 		goto done;
 	}
+
+	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
+		if (default_feature_yaml_list[i] && (feat_mask & (1 << i))) {
+			err = pnso_test_parse_buf(default_feature_yaml_list[i],
+				strlen((const char*)default_feature_yaml_list[i]),
+				cfg);
+			if (err) {
+				PNSO_LOG_ERROR("Failed to parse yaml testcase for svc %u\n",
+					       i);
+				goto done;
+			}
+		}
+	}
+	if ((feat_mask & (1<<PNSO_SVC_TYPE_COMPRESS)) &&
+	    (feat_mask & (1<<PNSO_SVC_TYPE_HASH))) {
+		/* compress + hash chain */
+		err = pnso_test_parse_buf(default_cp_hash_yaml,
+			strlen(default_cp_hash_yaml),
+			cfg);
+		if (err) {
+			PNSO_LOG_ERROR("Failed to parse yaml testcase for cp+hash\n");
+			goto done;
+		}
+	}
+
 //	test_dump_desc(cfg);
 	pnso_run_unit_tests(cfg);
 
@@ -404,8 +506,17 @@ body_start(void)
 	int err;
 
 	err = osal_thread_create(&g_main_thread, body, NULL);
+	if (!err && ctl_core_id >= 0) {
+		PNSO_LOG_INFO("Binding pencake ctl thread to core %d\n",
+			      ctl_core_id);
+		err = osal_thread_bind(&g_main_thread, ctl_core_id);
+	}
 	if (!err)
 		err = osal_thread_start(&g_main_thread);
+
+	if (err)
+		PNSO_LOG_ERROR("Failed to start pencake ctl thread, err %d\n",
+			       err);
 
 	return err;
 }

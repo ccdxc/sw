@@ -46,6 +46,15 @@ void pnso_test_set_shutdown_complete(void)
 	osal_atomic_set(&g_shutdown_complete, 1);
 }
 
+bool pnso_test_is_shutdown(void)
+{
+	if (osal_atomic_read(&g_shutdown_complete))
+		return true;
+	if (osal_atomic_read(&g_shutdown))
+		return true;
+	return false;
+}
+
 static struct test_file_table g_output_file_tbl;
 
 /* Forward references */
@@ -194,13 +203,14 @@ static const uint8_t *get_normalized_pattern(const char *pat,
 pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 			       const char *pat, uint32_t pat_len)
 {
+	const uint8_t *pat_data;
 	uint8_t hex_pat[TEST_MAX_PATTERN_LEN];
 
 	if (pat_len > TEST_MAX_PATTERN_LEN)
 		pat_len = TEST_MAX_PATTERN_LEN;
-	pat = (const char *) get_normalized_pattern(pat, hex_pat, &pat_len);
+	pat_data = get_normalized_pattern(pat, hex_pat, &pat_len);
 
-	test_fill_buflist(buflist, pat, pat_len);
+	test_fill_buflist(buflist, pat_data, pat_len);
 
 	return PNSO_OK;
 }
@@ -694,6 +704,7 @@ static void request_ctx_p2v(struct request_context *req_ctx)
 				req_ctx->svc_res.svc[i].u.dst.sgl);
 		}
 	}
+
 	req_ctx->is_sgl_pa = false;
 }
 
@@ -737,6 +748,7 @@ static void output_results(struct request_context *req_ctx,
 	pnso_error_t err;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
+	const struct test_testcase *testcase = test_ctx->testcase;
 	uint32_t blk_sz = batch_ctx->desc->init_params.block_size;
 	char output_path[TEST_MAX_FULL_PATH_LEN] = "";
 
@@ -770,9 +782,11 @@ static void output_results(struct request_context *req_ctx,
 					buflist.b.len = svc_status->u.hash.num_tags *
 							tag_size;
 					file_size = buflist.b.len;
-					checksum = compute_checksum(NULL,
+					if (!testcase->turbo) {
+						checksum = compute_checksum(NULL,
 							(uint8_t *) buflist.b.buf,
 							file_size);
+					}
 					err = update_file_node(
 						test_ctx->output_file_tbl,
 						output_path, checksum,
@@ -782,16 +796,20 @@ static void output_results(struct request_context *req_ctx,
 				}
 			} else if (svc_status->u.dst.sgl) {
 				file_size = svc_status->u.dst.data_len;
-				checksum = compute_checksum(svc_status->u.dst.sgl,
-							    NULL, file_size);
+				if (!testcase->turbo) {
+					checksum = compute_checksum(svc_status->u.dst.sgl,
+								    NULL, file_size);
+				}
 				if (svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS &&
 				    (svc->svc.u.cp_desc.flags & PNSO_CP_DFLAG_ZERO_PAD)) {
 					/* Round up */
 					padded_size = ((file_size + blk_sz - 1) /
 						       blk_sz) * blk_sz;
-					padded_checksum = compute_checksum(
-						svc_status->u.dst.sgl,
-						NULL, padded_size);
+					if (!testcase->turbo) {
+						padded_checksum = compute_checksum(
+							svc_status->u.dst.sgl,
+							NULL, padded_size);
+					}
 				}
 				err = update_file_node(
 					test_ctx->output_file_tbl,
@@ -886,11 +904,8 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 	return rc;
 }
 
-static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
-					   const struct test_testcase *testcase,
-					   const struct test_svc_chain *svc_chain,
-					   uint32_t batch_iter,
-					   uint32_t batch_count)
+static pnso_error_t init_input_context(struct request_context *req_ctx,
+				       const struct test_svc_chain *svc_chain)
 {
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	pnso_error_t err = PNSO_OK;
@@ -898,8 +913,15 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 	uint32_t min_block, max_block, block_count;
 	uint32_t i;
 	uint8_t *buf;
-	struct test_node *node;
 	char input_path[TEST_MAX_FULL_PATH_LEN] = "";
+
+	/* don't re-initialize in turbo mode */
+	if (req_ctx->input.initialized &&
+	    req_ctx->input.svc_chain_idx == svc_chain->node.idx &&
+	    batch_ctx->test_ctx->testcase->turbo)
+		return PNSO_OK;
+
+	req_ctx->input.initialized = false;
 
 	/* construct input filename */
 	if (svc_chain->input.pathname[0]) {
@@ -910,7 +932,7 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		}
 	}
 
-	/* setup source buffers */
+	/* get or infer input_len */
 	input_len = svc_chain->input.len;
 	if (!input_len) {
 		/* Try to infer the length, for user convenience */
@@ -933,12 +955,23 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 			input_len = batch_ctx->desc->init_params.block_size;
 		}
 	}
-	req_ctx->input_buffer = TEST_ALLOC_ALIGNED(FILE_NODE_BLOCK_SZ, input_len);
-	if (!req_ctx->input_buffer) {
-		PNSO_LOG_TRACE("Failed to alloc %u bytes for input_buffer\n",
-			       input_len);
-		return ENOMEM;
+
+	/* allocate buffer */
+	if (input_len > req_ctx->input.alloc_sz) {
+		if (req_ctx->input.buf)
+			TEST_FREE(req_ctx->input.buf);
+		req_ctx->input.buf = TEST_ALLOC_ALIGNED(FILE_NODE_BLOCK_SZ, input_len);
+		if (!req_ctx->input.buf) {
+			PNSO_LOG_DEBUG("Failed to alloc %u bytes for input_buffer\n",
+				       input_len);
+			req_ctx->input.alloc_sz = 0;
+			return ENOMEM;
+		}
+		req_ctx->input.alloc_sz = input_len;
 	}
+	req_ctx->input.len = input_len;
+
+	/* setup input sgl */
 	min_block = svc_chain->input.min_block_size;
 	max_block = svc_chain->input.max_block_size;
 	block_count = svc_chain->input.block_count;
@@ -963,7 +996,7 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		return EINVAL;
 	}
 	remain_len = input_len;
-	buf = req_ctx->input_buffer;
+	buf = req_ctx->input.buf;
 	for (i = 0; i < block_count && remain_len; i++) {
 		/* Prefer min_block size, if we have enough blocks for it */
 		buf_len = remain_len;
@@ -988,6 +1021,30 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 	if (err != PNSO_OK) {
 		return err;
 	}
+
+	req_ctx->input.svc_chain_idx = svc_chain->node.idx;
+	req_ctx->input.initialized = true;
+
+	return PNSO_OK;
+}
+
+static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
+					   const struct test_testcase *testcase,
+					   const struct test_svc_chain *svc_chain,
+					   uint32_t batch_iter,
+					   uint32_t batch_count)
+{
+	pnso_error_t err = PNSO_OK;
+	struct batch_context *batch_ctx = req_ctx->batch_ctx;
+	struct test_node *node;
+	uint32_t input_len;
+	uint32_t i;
+
+	/* setup source buffers */
+	err = init_input_context(req_ctx, svc_chain);
+	if (err)
+		return err;
+	input_len = req_ctx->input.len;
 
 	/* setup request */
 	req_ctx->svc_req.sgl = &req_ctx->src_buflist;
@@ -1107,6 +1164,8 @@ static const char *testcase_stats_names[TESTCASE_STATS_COUNT] = {
 	"max_latency",
 	"in_bytes_per_sec",
 	"out_bytes_per_sec",
+	"max_in_bytes_per_sec",
+	"max_out_bytes_per_sec",
 	"svcs_per_sec",
 	"reqs_per_sec",
 	"batches_per_sec",
@@ -1180,6 +1239,7 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 {
 	uint32_t i;
 	uint64_t ns;
+	uint64_t tmp;
 
 	ts1->elapsed_time = elapsed_time;
 	ts1->agg_stats.total_latency += ts2->agg_stats.total_latency;
@@ -1211,6 +1271,17 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 	} else {
 		ns = elapsed_time;
 	}
+
+	/* Calculate maximum burst speed */
+	tmp = calculate_bytes_per_sec(ts2->io_stats[0].bytes,
+				      ts2->agg_stats.total_latency);
+	if (tmp > ts1->agg_stats.max_in_bytes_per_sec)
+		ts1->agg_stats.max_in_bytes_per_sec = tmp;
+	tmp = calculate_bytes_per_sec(ts2->io_stats[1].bytes,
+				      ts2->agg_stats.total_latency);
+	if (tmp > ts1->agg_stats.max_out_bytes_per_sec)
+		ts1->agg_stats.max_out_bytes_per_sec = tmp;
+
 	ts1->agg_stats.in_bytes_per_sec = calculate_bytes_per_sec(
 		       ts1->io_stats[0].bytes, ns);
 	ts1->agg_stats.out_bytes_per_sec = calculate_bytes_per_sec(
@@ -1426,7 +1497,9 @@ static pnso_error_t run_req_validation(struct request_context *req_ctx)
 
 	testcase = req_ctx->batch_ctx->test_ctx->testcase;
 
-	output_results(req_ctx, req_ctx->svc_chain);
+	if (!testcase->turbo || req_ctx->batch_ctx->batch_id == 0) {
+		output_results(req_ctx, req_ctx->svc_chain);
+	}
 
 	FOR_EACH_NODE(testcase->validations) {
 		struct test_validation *validation =
@@ -1463,6 +1536,9 @@ static pnso_error_t run_batch_validation(struct batch_context *batch_ctx)
 		struct test_validation *validation =
 				(struct test_validation *) node;
 		if (validation->type != VALIDATION_RETCODE_COMPARE) {
+			if (testcase->turbo &&
+			    validation->type == VALIDATION_DATA_COMPARE)
+				continue;
 			run_data_validation(batch_ctx, testcase, validation);
 		}
 	}
@@ -1478,23 +1554,28 @@ static void reset_req_context(struct request_context *ctx)
 		return;
 	}
 
-	if (ctx->input_buffer) {
-		TEST_FREE(ctx->input_buffer);
-		ctx->input_buffer = NULL;
+#if 0
+	if (ctx->input.buf) {
+		TEST_FREE(ctx->input.buf);
+		ctx->input.alloc_sz = 0;
+		ctx->input.buf = NULL;
+		ctx->input.initialized = false;
 	}
+#endif
 
+	/* clear output buffers */
+	OSAL_ASSERT(!ctx->is_sgl_pa);
 	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
 		if (ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_HASH ||
 		    ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_CHKSUM) {
 			if (ctx->svc_res.svc[i].u.hash.tags) {
 				TEST_FREE(ctx->svc_res.svc[i].u.hash.tags);
 			}
-		} else {
+		} else if (ctx->svc_res.svc[i].svc_type != PNSO_SVC_TYPE_NONE &&
+			   ctx->svc_res.svc[i].svc_type <= PNSO_SVC_TYPE_MAX) {
 			test_free_buffer_list(ctx->svc_res.svc[i].u.dst.sgl);
 		}
 	}
-
-	memset(ctx, 0, sizeof(*ctx));
 }
 
 static void init_req_context(struct request_context *req_ctx,
@@ -1504,6 +1585,11 @@ static void init_req_context(struct request_context *req_ctx,
 	reset_req_context(req_ctx);
 	req_ctx->batch_ctx = batch_ctx;
 	req_ctx->svc_chain = svc_chain;
+	memset(&req_ctx->svc_req, 0, sizeof(req_ctx->svc_req));
+	memset(req_ctx->req_svcs, 0, sizeof(req_ctx->req_svcs));
+	memset(&req_ctx->svc_res, 0, sizeof(req_ctx->svc_res));
+	memset(req_ctx->res_statuses, 0, sizeof(req_ctx->res_statuses));
+	req_ctx->res_rc = 0;
 	copy_vars(batch_ctx->vars, req_ctx->vars);
 	req_ctx->vars[TEST_VAR_CHAIN] = svc_chain->node.idx;
 }
@@ -1602,6 +1688,10 @@ static void free_req_context(struct request_context *ctx)
 {
 	reset_req_context(ctx);
 
+	if (ctx->input.buf) {
+		TEST_FREE(ctx->input.buf);
+	}
+
 	if (ctx) {
 		TEST_FREE(ctx);
 	}
@@ -1664,10 +1754,12 @@ error:
 }
 
 static void init_batch_context(struct batch_context *ctx,
-			       struct worker_context *work_ctx)
+			       struct worker_context *work_ctx,
+			       uint32_t batch_id)
 {
 	osal_atomic_set(&ctx->cb_count, 0);
 	ctx->worker_id = work_ctx->worker_id;
+	ctx->batch_id = batch_id;
 	ctx->poll_fn = NULL;
 	ctx->poll_ctx = NULL;
 	ctx->start_time = osal_get_clock_nsec();
@@ -1698,8 +1790,8 @@ static int worker_loop(void *param)
 			}
 #endif
 			run_testcase_batch(batch_ctx);
+			osal_yield();
 		}
-		osal_yield();
 	}
 
 	return 0;
@@ -1848,6 +1940,8 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 		test_ctx->worker_ctxs[worker_count++] = worker_ctx;
 		test_ctx->worker_count = worker_count;
 	}
+	PNSO_LOG_WARN("Allocated %u worker contexts for testcase %u\n",
+		      worker_count, testcase->node.idx);
 
 	return test_ctx;
 
@@ -1986,16 +2080,18 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			/* submit new batch request */
 			batch_ctx = worker_queue_dequeue(ctx->batch_ctx_freelist);
 			if (batch_ctx) {
-				PNSO_LOG_DEBUG("DEBUG: begin batch submission, batch_count %llu\n",
-					(unsigned long long) batch_submit_count+1);
+				PNSO_LOG_DEBUG("DEBUG: begin batch submission, worker %u, batch_count %llu\n",
+					       worker_id, (unsigned long long) batch_submit_count+1);
 				ctx->vars[TEST_VAR_ITER]++;
-				init_batch_context(batch_ctx, worker_ctx);
+				init_batch_context(batch_ctx, worker_ctx, batch_submit_count);
 
 				if (worker_queue_enqueue(worker_ctx->submit_q, batch_ctx)) {
 					batch_submit_count++;
 					req_submit_count += testcase->batch_depth;
 					last_active_ts = osal_get_clock_nsec();
 				} else {
+					PNSO_LOG_DEBUG("DEBUG: fail batch submission, worker %u, batch_count %llu\n",
+						worker_id, (unsigned long long) batch_submit_count+1);
 					fail_count++;
 					worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
 				}
@@ -2033,10 +2129,10 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		}
 
 		/* Iterate workers on each loop */
-		if (++worker_id >= ctx->worker_count)
+		if (++worker_id >= ctx->worker_count) {
 			worker_id = 0;
-
-		osal_yield();
+			osal_yield();
+		}
 	}
 	PNSO_LOG_DEBUG("DEBUG: exiting testcase while loop\n");
 

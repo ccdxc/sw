@@ -10,10 +10,16 @@
 
 #include "pnso_api.h"
 
+enum osal_log_level g_osal_log_level = OSAL_LOG_LEVEL_WARNING;
+
 pnso_error_t
 osal_log_init(const enum osal_log_level level)
 {
-	/* a dummy stub */
+	if ((level < OSAL_LOG_LEVEL_EMERGENCY) ||
+			(level > OSAL_LOG_LEVEL_DEBUG))
+		return -EINVAL;
+
+	g_osal_log_level = level;
 	return PNSO_OK;
 }
 

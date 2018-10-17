@@ -12,7 +12,7 @@
 #include "osal_errno.h"
 #include "osal_thread.h"
 
-#define MAX_NUM_THREADS 128
+#define MAX_NUM_THREADS OSAL_MAX_CORES
 static osal_atomic_int_t num_threads;
 static pthread_t thread_map[MAX_NUM_THREADS];
 static _Thread_local int core_id = -1;

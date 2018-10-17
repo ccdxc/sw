@@ -30,6 +30,7 @@
 #define DRV_VERSION		"0.1"
 
 extern unsigned int devcmd_timeout;
+extern unsigned int core_count;
 
 struct sonic {
 	struct pci_dev *pdev;

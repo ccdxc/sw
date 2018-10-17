@@ -873,6 +873,7 @@ FUNC_SET_STRING(test_set_input_pattern, ((struct test_svc_chain *)parent)->input
 FUNC_SET_STRING(test_set_output_file, ((struct test_svc *)parent)->output_path, TEST_MAX_PATH_LEN)
 
 FUNC_SET_INT(test_set_testcase_repeat, ((struct test_testcase *)parent)->repeat, 0, UINT_MAX)
+FUNC_SET_INT(test_set_testcase_turbo, ((struct test_testcase *)parent)->turbo, 0, 1)
 FUNC_SET_INT(test_set_testcase_batch_depth, ((struct test_testcase *)parent)->batch_depth, 1, TEST_MAX_BATCH_DEPTH)
 FUNC_SET_PARAM(test_set_testcase_sync_mode, ((struct test_testcase *)parent)->sync_mode,
 	       g_sync_mode_map, 0, 0, SYNC_MODE_MAX-1)
@@ -1732,6 +1733,7 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ "test",          "idx",             NULL, test_set_idx, NULL },
 	{ "test",          "name",            NULL, test_set_testcase_name, NULL },
 	{ "test",          "mode",            NULL, test_set_testcase_sync_mode, NULL },
+	{ "test",          "turbo",           NULL, test_set_testcase_turbo, NULL },
 	{ "test",          "repeat",          NULL, test_set_testcase_repeat, NULL },
 	{ "test",          "batch_depth",     NULL, test_set_testcase_batch_depth, NULL },
 	{ "test",          "svc_chains",      NULL, test_set_testcase_svc_chains, NULL },

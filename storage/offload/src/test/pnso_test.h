@@ -43,6 +43,7 @@ void pnso_test_init_fns(pnso_submit_req_fn_t submit,
 			pnso_realloc_fn_t realloc);
 void pnso_test_shutdown(void);
 void pnso_test_set_shutdown_complete(void);
+bool pnso_test_is_shutdown(void);
 struct test_desc *pnso_test_desc_alloc(void);
 void pnso_test_desc_free(struct test_desc *desc);
 pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc);
