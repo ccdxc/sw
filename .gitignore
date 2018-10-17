@@ -35,6 +35,7 @@ bazel-*
 *.tar.gz
 .project
 .cproject
+.cached_modules
 
 # HAL packaging
 fake_root_target

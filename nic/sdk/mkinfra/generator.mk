@@ -257,7 +257,12 @@ define FILTER_TARGETS_BY_PIPELINE
     endif
 endef
 
+CACHED_MODULES := ${TOPDIR}/.cached_modules
+ifneq ($(wildcard ${CACHED_MODULES}),)
+MODULES := $(file < ${CACHED_MODULES})
+else
 MODULES := $(shell find ${TOPDIR}/ -name 'module*.mk')
+endif
 MODULE_PATHS = $(strip $(call CANPATH,${MODULES}))
 $(foreach modpath,${MODULE_PATHS}, \
     $(eval $(call INCLUDE_MODULEMK,${modpath})))
