@@ -235,8 +235,8 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_ctl_s.value[filter_idx].read();
-        // set Valid + CacheEnable + Invalidate&Fill + Invalidate+Send
-        pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xf);
+        // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so dont enable this Invalidate&Fill) + Invalidate+Send
+        pics_csr.picc.filter_addr_ctl_s.value[filter_idx].value(0xd);
         pics_csr.picc.filter_addr_ctl_s.value[filter_idx].write();
     }
 
@@ -251,8 +251,8 @@ capri_hbm_cache_program_region (capri_hbm_region_t *reg,
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].write();
 
         pics_csr.picc.filter_addr_ctl_m.value[filter_idx].read();
-        // set Valid + CacheEnable + Invalidate&Fill + Invalidate+Send
-        pics_csr.picc.filter_addr_ctl_m.value[filter_idx].value(0xf);
+        // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so dont enable this Invalidate&Fill) + Invalidate+Send
+        pics_csr.picc.filter_addr_ctl_m.value[filter_idx].value(0xd);
         pics_csr.picc.filter_addr_ctl_m.value[filter_idx].write();
     }
 
@@ -275,8 +275,8 @@ capri_hbm_cache_program_db (capri_hbm_region_t *reg,
     wa_csr.filter_addr_hi.data[filter_idx].write();
 
     wa_csr.filter_addr_ctl.value[filter_idx].read();
-    // set Valid + CacheEnable + Invalidate&Fill + Invalidate+Send
-    wa_csr.filter_addr_ctl.value[filter_idx].value(0xf);
+    // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so dont enable this Invalidate&Fill) + Invalidate+Send
+    wa_csr.filter_addr_ctl.value[filter_idx].value(0xd);
     wa_csr.filter_addr_ctl.value[filter_idx].write();
 
     return HAL_RET_OK;
@@ -298,8 +298,8 @@ capri_hbm_cache_program_pcie (capri_hbm_region_t *reg,
     pxb_csr.filter_addr_hi.data[filter_idx].write();
 
     pxb_csr.filter_addr_ctl.value[filter_idx].read();
-    // set Valid + CacheEnable + Invalidate&Fill + Invalidate+Send
-    pxb_csr.filter_addr_ctl.value[filter_idx].value(0xf);
+    // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so dont enable this Invalidate&Fill) + Invalidate+Send
+    pxb_csr.filter_addr_ctl.value[filter_idx].value(0xd);
     pxb_csr.filter_addr_ctl.value[filter_idx].write();
 
     return HAL_RET_OK;
