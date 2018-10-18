@@ -89,11 +89,10 @@ create_qp:
 
     phvwr       p.rqcb0.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0]
     phvwrpair   p.rqcb0.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb0.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
-    phvwr       p.rqcb0.serv_type, k.rdma_aq_feedback_qp_rq_type_state
+    phvwr       p.rqcb0.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0]
 
     //RQCB1
 
-    phvwr       p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state
     phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RTS 
     phvwrpair   p.rqcb1.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb1.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0] 
     phvwrpair   p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0], p.rqcb1.pd, K_PD
