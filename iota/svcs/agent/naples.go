@@ -22,6 +22,7 @@ const (
 	hntapCfgFile          = "hntap-cfg.json"
 	naplesDataDir         = Common.DstIotaAgentDir + "/naples"
 	arpTimeout            = 3000 //3 seconds
+	arpAgeTimeout         = 3000 //3000 seconds
 )
 
 var (
@@ -125,6 +126,20 @@ func (naples *naplesSimNode) bringUpNaples(name string, image string, ctrlIntf s
 	return nil
 }
 
+func (naples *naplesSimNode) setArpTimeouts() error {
+	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.retrans_time_ms=" + strconv.Itoa(arpTimeout)}
+	if retCode, _, _ := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+		return errors.New("ARP retrans timeout set failed")
+	}
+
+	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_stale_time=" + strconv.Itoa(arpAgeTimeout)}
+	if retCode, _, _ := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+		return errors.New("ARP entry age timeout set failed")
+	}
+
+	return nil
+}
+
 func (naples *naplesSimNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, err error) {
 
 	naples.iotaNode.name = in.GetName()
@@ -142,8 +157,7 @@ func (naples *naplesSimNode) init(in *iota.Node, withQemu bool) (resp *iota.Node
 		}
 	}
 
-	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.retrans_time_ms=" + strconv.Itoa(arpTimeout)}
-	if retCode, _, _ := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+	if err := naples.setArpTimeouts(); err != nil {
 		naples.logger.Error("Sysctl set failed : " + in.GetName())
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, nil
 	}
