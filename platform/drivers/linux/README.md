@@ -1,5 +1,50 @@
 # IONIC Linux Device Drivers
 
+## Linux drivers source package for lab servers.
+
+Note: ~haps/rdma-for-haps.tar.xz is deprecated.  It will only be updated for
+the short term.  Please move to the following procedure.
+
+To generate a drivers source package from your workspace:
+```sh
+platform/tools/drivers-linux.sh
+```
+
+Copy, unpack, build the package, and load drivers on the lab server:
+```sh
+scp platform/gen/drivers-linux.tar.xz root@lab-server:
+ssh root@lab-server
+rm -r drivers-linux	#purge old version
+tar xaf drivers-linux.tar.xz
+./setup_apt.sh		#first time, for build dependencies
+./build.sh
+. env.sh
+insmod drivers/eth/ionic/ionic.ko
+insmod drivers/rdma/drv/ionic/ionic_rdma.ko
+```
+
+In case of issues while testing, please collect debug materials.  If debug
+materials will be collected for more than one issue, please specify a uniqe
+dest dir for each collection.
+```sh
+./collect.sh [dest dir]
+```
+
+See also: instructions at the top of drivers-linux.sh, and in scripts in the
+package itself.
+
+## Linux drivers packages for distribution.
+
+Proposal: Generate the source package, as above.  It will include a script, or
+scripts, to build distribution packages.  Unpack on an appropriate build server
+to build the distribution packages.
+
+The build server needs to be capable of building packages for the target
+distribution.  Probably, it will be the same as the target distribution.  For
+example, RHEL7 to produce RHEL7 packages, Ubuntu 18.04 for Ubuntu 18.04, etc.
+Due to differences in packaging systems, there might be a different script to
+produce .deb vs .rpm packages.
+
 ## Build and Install (Kernel and Drivers)
 
 Here at the top, instructions for installing the Linux kernel and drivers on an
