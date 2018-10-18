@@ -58,6 +58,7 @@ header_type cpu_txdma_initial_action_t {
         ascq_base               : 64;
         ascq_sem_inf_addr       : 64;
         asq_pi_ci_eq_drops      : 64;
+        asq_total_pkts          : 64;
     }
 }
 
@@ -207,7 +208,8 @@ metadata dma_cmd_phv2mem_t dma_cmd_ascq;
  * Stage 0 table 0 action
  */
 action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-                             pi_0, ci_0, asq_base, ascq_base, ascq_sem_inf_addr, asq_pi_ci_eq_drops) {
+                             pi_0, ci_0, asq_base, ascq_base, ascq_sem_inf_addr, 
+                             asq_pi_ci_eq_drops, asq_total_pkts) {
     // k + i for stage 0
 
     // from intrinsic
@@ -235,6 +237,7 @@ action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, 
     modify_field(cpu_txdma_initial_d.ascq_base, ascq_base);
     modify_field(cpu_txdma_initial_d.ascq_sem_inf_addr, ascq_sem_inf_addr);
     modify_field(cpu_txdma_initial_d.asq_pi_ci_eq_drops, asq_pi_ci_eq_drops);
+    modify_field(cpu_txdma_initial_d.asq_total_pkts, asq_total_pkts);
 }
 
 // Stage 1 table 0

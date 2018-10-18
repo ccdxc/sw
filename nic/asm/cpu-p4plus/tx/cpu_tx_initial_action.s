@@ -25,6 +25,7 @@ cpu_tx_stage0_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add     r6, r0, r0
 #endif
+    tbladd  d.{u.cpu_tx_initial_action_d.asq_total_pkts},  1
     phvwr   p.quiesce_pkt_trlr_timestamp, r6.wx
     
     phvwr   p.common_phv_ascq_base, d.{u.cpu_tx_initial_action_d.ascq_base}.dx
