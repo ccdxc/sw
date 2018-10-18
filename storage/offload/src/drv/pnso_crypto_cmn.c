@@ -20,21 +20,17 @@ crypto_pprint_aol(uint64_t aol_pa)
 	const struct crypto_aol *aol;
 
 	aol = (const struct crypto_aol *) sonic_phy_to_virt(aol_pa);
+
+	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x%llx", "", (uint64_t) aol, aol_pa);
 	while (aol) {
-		OSAL_LOG_DEBUG("%30s: 0x%llx", "ca_addr_0", aol->ca_addr_0);
-		OSAL_LOG_DEBUG("%30s: %d", "ca_off_0", aol->ca_off_0);
-		OSAL_LOG_DEBUG("%30s: %d", "ca_len_0", aol->ca_len_0);
+		OSAL_LOG_DEBUG("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
+				"",
+				aol->ca_addr_0, aol->ca_off_0, aol->ca_len_0,
+				aol->ca_addr_1, aol->ca_off_1, aol->ca_len_1,
+				aol->ca_addr_2, aol->ca_off_2, aol->ca_len_2);
+		OSAL_LOG_DEBUG("%30s: 0x%llx/0x%llx", "",
+				aol->ca_next, aol->ca_rsvd);
 
-		OSAL_LOG_DEBUG("%30s: 0x%llx", "ca_addr_1", aol->ca_addr_1);
-		OSAL_LOG_DEBUG("%30s: %d", "ca_off_1", aol->ca_off_1);
-		OSAL_LOG_DEBUG("%30s: %d", "ca_len_1", aol->ca_len_1);
-
-		OSAL_LOG_DEBUG("%30s: 0x%llx", "ca_addr_2", aol->ca_addr_2);
-		OSAL_LOG_DEBUG("%30s: %d", "ca_off_2", aol->ca_off_2);
-		OSAL_LOG_DEBUG("%30s: %d", "ca_len_2", aol->ca_len_2);
-
-		OSAL_LOG_DEBUG("%30s: 0x%llx", "ca_next", aol->ca_next);
-		OSAL_LOG_DEBUG("%30s: 0x%llx", "ca_rsvd", aol->ca_rsvd);
 		aol = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) : NULL;
 	}
 }

@@ -11,18 +11,13 @@
 #include "pnso_crypto.h"
 #include "sonic_api_int.h"
 
-/*
- * TODO-crypto:
- *	- revisit ... only skeletons are added
- *
- */
 #define PNSO_NUM_OBJECTS		8
 #define PNSO_NUM_OBJECTS_IN_OBJECT	16
 
 static void
 deinit_mpools(struct per_core_resource *pc_res)
 {
-	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
+	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC]);

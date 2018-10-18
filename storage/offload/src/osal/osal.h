@@ -12,6 +12,7 @@
 #include "osal_logger.h"
 #include "osal_atomic.h"
 #include "osal_mem.h"
+#include "osal_rmem.h"
 #include "osal_thread.h"
 #include "osal_setup.h"
 #include "osal_sys.h"

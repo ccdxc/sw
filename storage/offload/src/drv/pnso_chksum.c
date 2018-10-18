@@ -10,106 +10,11 @@
 
 #include "pnso_mpool.h"
 #include "pnso_pbuf.h"
+#include "pnso_svc.h"
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_seq.h"
-
-#ifdef NDEBUG
-#define CPDC_PPRINT_STATUS_DESC(d)
-#define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
-#else
-#define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
-#define CPDC_VALIDATE_SETUP_INPUT(i, p)	validate_setup_input(i, p)
-#endif
-
-static inline bool
-is_chksum_algo_type_valid(uint16_t algo_type)
-{
-	switch (algo_type) {
-	case PNSO_CHKSUM_TYPE_MCRC64:
-	case PNSO_CHKSUM_TYPE_CRC32C:
-	case PNSO_CHKSUM_TYPE_ADLER32:
-	case PNSO_CHKSUM_TYPE_MADLER32:
-		return true;
-	default:
-		return false;
-	}
-
-	return false;
-}
-
-static inline bool
-is_chksum_flags_valid(uint16_t flags)
-{
-	/* no contracdicting flags to reject the desc, so skip any checks */
-	return true;
-}
-
-static inline bool
-is_dflag_per_block_enabled(uint16_t flags)
-{
-	return (flags & PNSO_CHKSUM_DFLAG_PER_BLOCK) ? true : false;
-}
-
-static bool
-is_chksum_desc_valid(const struct pnso_checksum_desc *desc)
-{
-	pnso_error_t err = EINVAL;
-
-	if (!is_chksum_algo_type_valid(desc->algo_type)) {
-		OSAL_LOG_ERROR("invalid chksum algo type specified! algo_type: %hu err: %d",
-				desc->algo_type, err);
-		return false;
-	}
-
-	if (!is_chksum_flags_valid(desc->flags)) {
-		OSAL_LOG_ERROR("invalid chksum flags specified! flags: %hu err: %d",
-				desc->flags, err);
-		return false;
-	}
-
-	OSAL_LOG_INFO("chksum desc is valid algo_type: %hu flags: %hu",
-			desc->algo_type, desc->flags);
-
-	return true;
-}
-
-static pnso_error_t __attribute__((unused))
-validate_setup_input(const struct service_info *svc_info,
-		const struct service_params *svc_params)
-{
-	pnso_error_t err = EINVAL;
-	size_t len;
-
-	if (!svc_info || !svc_params) {
-		OSAL_LOG_ERROR("invalid input specified! svc_info: %p svc_params: %p err: %d",
-				svc_info, svc_params, err);
-		return err;
-	}
-
-	if (!svc_params->sp_src_blist || !svc_params->sp_dst_blist) {
-		OSAL_LOG_ERROR("invalid src/dst buffers specified! sp_src_blist: %p sp_dst_blist: %p err: %d",
-				svc_params->sp_src_blist, svc_params->sp_dst_blist,
-				err);
-		return err;
-	}
-
-	len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-	if (len == 0 || len > MAX_CPDC_SRC_BUF_LEN) {
-		OSAL_LOG_ERROR("invalid src buf len specified! len: %zu err: %d",
-				len, err);
-		return err;
-	}
-
-	if (!svc_params->u.sp_chksum_desc) {
-		OSAL_LOG_ERROR("invalid desc specified! desc: 0x%llx err: %d",
-				(uint64_t) svc_params->u.sp_chksum_desc, err);
-		return err;
-	}
-
-	return PNSO_OK;
-}
 
 static void
 fill_chksum_desc(uint32_t algo_type, uint32_t buf_len,
@@ -166,19 +71,10 @@ chksum_setup(struct service_info *svc_info,
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	err = CPDC_VALIDATE_SETUP_INPUT(svc_info, svc_params);
-	if (err)
-		goto out;
-
 	pnso_chksum_desc =
 		(struct pnso_checksum_desc *) svc_params->u.sp_chksum_desc;
-	if (!is_chksum_desc_valid(pnso_chksum_desc)) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid chksum desc specified! err: %d", err);
-		goto out;
-	}
 	flags = pnso_chksum_desc->flags;
-	per_block = is_dflag_per_block_enabled(flags);
+	per_block = svc_is_chksum_per_block_enabled(flags);
 
 	pc_res = svc_info->si_pc_res;
 	chksum_desc = cpdc_get_desc(pc_res, per_block);
@@ -445,7 +341,7 @@ chksum_read_status(const struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
-	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
+	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
 	err = per_block ? chksum_read_status_per_block(svc_info) :
 		chksum_read_status_buffer(svc_info);
 
@@ -588,7 +484,7 @@ chksum_write_result(struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
-	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
+	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
 	err = per_block ? chksum_write_result_per_block(svc_info) :
 		chksum_write_result_buffer(svc_info);
 
@@ -614,7 +510,7 @@ chksum_teardown(const struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 
-	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
+	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
 	OSAL_LOG_DEBUG("chksum_desc: %p flags: %d", svc_info->si_desc,
 			svc_info->si_desc_flags);
 
