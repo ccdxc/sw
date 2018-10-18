@@ -368,5 +368,51 @@ var GetIntfsMatchingPrefix = func(prefix string) []string {
 	return ret
 }
 
+// GetIntfsMatchingDevicePrefix get intfs matching device prefix
+func GetIntfsMatchingDevicePrefix(devicePrefix string) ([]string, error) {
+	hostIntfs := []string{}
+
+	pciIntfMap := make(map[string]string)
+	cmd := []string{"systool", "-c", "net"}
+
+	_, stdout, err := Run(cmd, 0, false, false, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, stdout)
+	}
+
+	lines := strings.Split(stdout, "\n")
+	for idx, line := range lines {
+		if strings.Contains(line, "Class Device") {
+			if (idx+1) < len(lines) && strings.Contains(lines[idx+1], "Device") {
+				pci := strings.Replace(lines[idx+1], " ", "", -1)
+				pci = strings.Split(pci, "=")[1]
+				intfName := strings.Replace(line, " ", "", -1)
+				intfName = strings.Split(intfName, "=")[1]
+				pciIntfMap[pci] = intfName
+			}
+		}
+	}
+
+	cmd = []string{"lspci", "|", "grep", "Ethernet"}
+	_, stdout, err = Run(cmd, 0, false, true, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, stdout)
+	}
+
+	for _, line := range strings.Split(stdout, "\n") {
+		if strings.Contains(line, devicePrefix) {
+			pci := strings.Split(line, " ")[0]
+			for pciAddr, intf := range pciIntfMap {
+				if strings.Contains(pciAddr, pci) {
+					hostIntfs = append(hostIntfs, intf)
+				}
+			}
+
+		}
+	}
+
+	return hostIntfs, nil
+}
+
 //RestHelper is a wrapper for rest
 var RestHelper = restHelper

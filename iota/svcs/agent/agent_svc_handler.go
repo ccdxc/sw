@@ -147,15 +147,15 @@ var iotaNodes = map[iota.PersonalityType]func() IotaNode{
 }
 
 func newNaples() IotaNode {
-	return &naplesNode{iotaNode: iotaNode{name: "naples"}}
+	return &naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples"}}}
 }
 
 func newMellanox() IotaNode {
-	return &naplesNode{iotaNode: iotaNode{name: "mellanox"}}
+	return &mellanoxNode{dataNode: dataNode{iotaNode: iotaNode{name: "mellanox"}}}
 }
 
 func newNaplesSim() IotaNode {
-	return &naplesSimNode{iotaNode: iotaNode{name: "naples-sim"}}
+	return &naplesSimNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-sim"}}}
 }
 
 func newVenice() IotaNode {
@@ -163,7 +163,7 @@ func newVenice() IotaNode {
 }
 
 func newNaplesQemu() IotaNode {
-	return &naplesQemuNode{naplesSimNode: naplesSimNode{iotaNode: iotaNode{name: "naples_qemu"}}}
+	return &naplesQemuNode{naplesSimNode: naplesSimNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-qemu"}}}}
 }
 
 func newIotaNode(nodeType iota.PersonalityType) IotaNode {

@@ -97,15 +97,17 @@ message Node {
     // Node specific configs
     oneof node_info {
         // naples
-        NaplesConfig    naples_config  = 5;
+        NaplesConfig    naples_config   = 5;
 
-        VeniceConfig    venice_config  = 6;
+        VeniceConfig    venice_config   = 6;
+
+        MellanoxConfig  mellanox_config = 7;
     }
 
     // NodeStatus captures the details of the node action
-    IotaAPIResponse     node_status    = 7;
+    IotaAPIResponse     node_status     = 8;
 
-    string              node_uuid      = 8;
+    string              node_uuid       = 9;
 }
 
 
@@ -126,6 +128,13 @@ message NaplesConfig {
     // host intfs , returned as part of add node
     repeated string host_intfs   = 5;
 }
+
+message MellanoxConfig {
+
+    // host intfs , returned as part of add node
+    repeated string host_intfs   = 5;
+}
+
 
 message VenicePeer {
 

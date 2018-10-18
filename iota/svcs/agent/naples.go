@@ -25,6 +25,7 @@ const (
 	arpAgeTimeout           = 3000 //3000 seconds
 	naplesSimHostIntfPrefix = "lif"
 	naplesPciDevicePrefix   = "Device"
+	mellanoxPciDevicePrefix = "Mellanox Technologies"
 )
 
 var (
@@ -33,21 +34,31 @@ var (
 	hntapProcessName = "nic_infra_hntap"
 )
 
-type naplesNode struct {
+type dataNode struct {
 	iotaNode
-	name string
+	worloadMap map[string]workload
+}
+
+type naplesHwNode struct {
+	dataNode
 }
 
 type naplesSimNode struct {
-	iotaNode
-	simName         string
+	dataNode
 	container       *Utils.Container
-	worloadMap      map[string]workload
 	passThroughMode bool
 }
 
 type naplesQemuNode struct {
 	naplesSimNode
+}
+
+type mellanoxNode struct {
+	dataNode
+}
+
+func (dnode *dataNode) configureWorkloadInHntap(in *iota.Workload) error {
+	return nil
 }
 
 func (naples *naplesSimNode) bringUpNaples(name string, image string, ctrlIntf string,
@@ -123,7 +134,6 @@ func (naples *naplesSimNode) bringUpNaples(name string, image string, ctrlIntf s
 		return errors.Wrap(err, "Naples healthy timeout exceeded")
 	}
 
-	naples.simName = name
 	naples.passThroughMode = passThroughMode
 	return nil
 }
@@ -142,10 +152,14 @@ func (naples *naplesSimNode) setArpTimeouts() error {
 	return nil
 }
 
+func (dnode *dataNode) init() {
+	dnode.worloadMap = make(map[string]workload)
+}
+
 func (naples *naplesSimNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, err error) {
 
 	naples.iotaNode.name = in.GetName()
-	naples.worloadMap = make(map[string]workload)
+	naples.dataNode.init()
 	naples.logger.Println("Bring up request received for : " + in.GetName())
 
 	nodeuuid := ""
@@ -175,6 +189,9 @@ func (naples *naplesSimNode) init(in *iota.Node, withQemu bool) (resp *iota.Node
 	}
 	naples.logger.Println("Naples bring up succesfull")
 
+	if in.GetNaplesConfig() == nil {
+		in.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{}}
+	}
 	in.GetNaplesConfig().HostIntfs = Utils.GetIntfsMatchingPrefix(naplesSimHostIntfPrefix)
 
 	naples.logger.Println("Naples sim host interfaces : ", in.GetNaplesConfig().HostIntfs)
@@ -273,30 +290,33 @@ func (naples *naplesSimNode) configureWorkloadInHntap(in *iota.Workload) error {
 }
 
 // AddWorkload brings up a workload type on a given node
-func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
+func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 
-	naples.logger.Printf("Adding workload : %s", in.GetWorkloadName())
-	if _, ok := naples.worloadMap[in.GetWorkloadName()]; ok {
-		naples.logger.Println("Trying to add workload which already exists")
+	dnode.logger.Printf("Adding workload : %s", in.GetWorkloadName())
+	if _, ok := dnode.worloadMap[in.GetWorkloadName()]; ok {
+		msg := "Trying to add workload which already exists"
+		dnode.logger.Println(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}
 		return resp, nil
 	}
 
 	wload := newWorkload()
-	naples.logger.Printf("Added workload : %s", in.GetWorkloadName())
+	dnode.logger.Printf("Added workload : %s", in.GetWorkloadName())
 	if err := wload.BringUp(in.GetWorkloadName(), workloadImage); err != nil {
-		naples.logger.Errorf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
+		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
+		dnode.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
 		return resp, nil
 	}
-	naples.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
+	dnode.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
 
 	if in.GetEncapVlan() != 0 {
 		if err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpAddress(), int(in.GetEncapVlan())); err != nil {
-			naples.logger.Errorf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
+			msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
+			dnode.logger.Error(msg)
 			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
 			wload.TearDown()
-			return resp, nil
+			return resp, errors.New(msg)
 		}
 	}
 
@@ -305,11 +325,26 @@ func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, err
 		wload.MoveInterface(in.GetInterface())
 	}
 
-	naples.logger.Printf("Attaching interface to workload : %s done", in.GetWorkloadName())
+	dnode.logger.Printf("Attaching interface to workload : %s done", in.GetWorkloadName())
+	dnode.worloadMap[in.GetWorkloadName()] = wload
+	resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
+	return resp, nil
+}
+
+// AddWorkload brings up a workload type on a given node
+func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
+
+	resp, err := naples.dataNode.AddWorkload(in)
+	if err != nil || resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+		return resp, nil
+	}
+
+	wload, _ := naples.worloadMap[in.GetWorkloadName()]
 
 	if err := naples.configureWorkloadInHntap(in); err != nil {
 		naples.logger.Errorf("Error in configuring workload to hntap", err.Error())
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		delete(naples.worloadMap, in.GetWorkloadName())
 		wload.TearDown()
 		return resp, nil
 
@@ -318,7 +353,8 @@ func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, err
 	if err := wload.SendArpProbe(strings.Split(in.GetIpAddress(), "/")[0], in.GetInterface(),
 		int(in.GetEncapVlan())); err != nil {
 		naples.logger.Errorf("Error in sending arp probe", err.Error())
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		delete(naples.worloadMap, in.GetWorkloadName())
 		wload.TearDown()
 		return resp, nil
 	}
@@ -326,41 +362,41 @@ func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, err
 	naples.worloadMap[in.GetWorkloadName()] = wload
 
 	/* Notify Hntap of the workload */
-	resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
+	resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
 	return resp, nil
 }
 
 // DeleteWorkload deletes a given workload
-func (naples *naplesSimNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, error) {
-	naples.logger.Printf("Deleteing workload : %s", in.GetWorkloadName())
-	if _, ok := naples.worloadMap[in.GetWorkloadName()]; !ok {
-		naples.logger.Println("Trying to delete workload which does not exist")
+func (dnode *dataNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, error) {
+	dnode.logger.Printf("Deleteing workload : %s", in.GetWorkloadName())
+	if _, ok := dnode.worloadMap[in.GetWorkloadName()]; !ok {
+		dnode.logger.Println("Trying to delete workload which does not exist")
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}
 		return resp, nil
 	}
 
-	naples.worloadMap[in.GetWorkloadName()].TearDown()
-	delete(naples.worloadMap, in.GetWorkloadName())
-	naples.logger.Printf("Deleted workload : %s", in.GetWorkloadName())
+	dnode.worloadMap[in.GetWorkloadName()].TearDown()
+	delete(dnode.worloadMap, in.GetWorkloadName())
+	dnode.logger.Printf("Deleted workload : %s", in.GetWorkloadName())
 	resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
 	return resp, nil
 }
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
-func (naples *naplesSimNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
-	naples.logger.Println("Trigger message received.")
+func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+	dnode.logger.Println("Trigger message received.")
 
 	validate := func() error {
 		switch in.TriggerOp {
 		case iota.TriggerOp_EXEC_CMDS:
 		case iota.TriggerOp_TERMINATE_ALL_CMDS:
-			naples.logger.Errorf("Terminate all commands trigger not supported yet")
+			dnode.logger.Errorf("Terminate all commands trigger not supported yet")
 			return errors.New("Not supported")
 		}
 
 		for _, cmd := range in.Commands {
-			if _, ok := naples.worloadMap[cmd.GetWorkloadName()]; !ok {
-				naples.logger.Errorf("Workload %s does not exist on node %s", cmd.GetWorkloadName(), naples.NodeName())
+			if _, ok := dnode.worloadMap[cmd.GetWorkloadName()]; !ok {
+				dnode.logger.Errorf("Workload %s does not exist on node %s", cmd.GetWorkloadName(), dnode.NodeName())
 				return errors.New("Invalid request")
 			}
 		}
@@ -373,14 +409,14 @@ func (naples *naplesSimNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, err
 
 	for _, cmd := range in.Commands {
 		var err error
-		cmd.ExitCode, cmd.Stdout, cmd.Stderr, err = naples.worloadMap[cmd.GetWorkloadName()].RunCommand(strings.Split(cmd.GetCommand(), " "), 0, false, true)
-		naples.logger.Println("Command error :", err)
-		naples.logger.Println("Command exit code :", cmd.ExitCode)
-		naples.logger.Println("Command stdout :", cmd.Stdout)
-		naples.logger.Println("Command stderr:", cmd.Stderr)
+		cmd.ExitCode, cmd.Stdout, cmd.Stderr, err = dnode.worloadMap[cmd.GetWorkloadName()].RunCommand(strings.Split(cmd.GetCommand(), " "), 0, false, true)
+		dnode.logger.Println("Command error :", err)
+		dnode.logger.Println("Command exit code :", cmd.ExitCode)
+		dnode.logger.Println("Command stdout :", cmd.Stdout)
+		dnode.logger.Println("Command stderr:", cmd.Stderr)
 	}
 
-	naples.logger.Println("Completed running trigger.")
+	dnode.logger.Println("Completed running trigger.")
 	in.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 	return in, nil
 }
@@ -405,11 +441,8 @@ func (naples *naplesSimNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth,
 		return &iota.NodeHealth{NodeName: in.GetNodeName(), HealthCode: iota.NodeHealth_NAPLES_DOWN}, nil
 	}
 
-	for wlName, wl := range naples.worloadMap {
-		if !wl.IsWorkloadHealthy() {
-			naples.logger.Printf("Workload :%s down", wlName)
-			return &iota.NodeHealth{NodeName: in.GetNodeName(), HealthCode: iota.NodeHealth_APP_DOWN}, nil
-		}
+	if err := naples.WorkloadsHealthy(); err != nil {
+		return &iota.NodeHealth{NodeName: in.GetNodeName(), HealthCode: iota.NodeHealth_APP_DOWN}, nil
 	}
 
 	if !naples.allNaplesProcessRunning() {
@@ -435,7 +468,7 @@ func (naples *naplesSimNode) Destroy(in *iota.Node) (*iota.Node, error) {
 
 //NodeType return node type
 func (naples *naplesSimNode) NodeType() iota.PersonalityType {
-	return iota.PersonalityType_PERSONALITY_NAPLES
+	return iota.PersonalityType_PERSONALITY_NAPLES_SIM
 }
 
 //Init initalize node type
@@ -472,55 +505,16 @@ func (naples *naplesQemuNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth
 	return naples.naplesSimNode.CheckHealth(in)
 }
 
-func (naples *naplesNode) getHostIntfs() ([]string, error) {
-	hostIntfs := []string{}
-
-	pciIntfMap := make(map[string]string)
-	cmd := []string{"systool", "-c", "net"}
-
-	_, stdout, err := Utils.Run(cmd, 0, false, false, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, stdout)
-	}
-
-	lines := strings.Split(stdout, "\n")
-	for idx, line := range lines {
-		if strings.Contains(line, "Class Device") {
-			if (idx+1) < len(lines) && strings.Contains(lines[idx+1], "Device") {
-				pci := strings.Replace(lines[idx+1], " ", "", -1)
-				pci = strings.Split(pci, "=")[1]
-				intfName := strings.Replace(line, " ", "", -1)
-				intfName = strings.Split(intfName, "=")[1]
-				pciIntfMap[pci] = intfName
-			}
-		}
-	}
-
-	cmd = []string{"lspci", "|", "grep", "Ethernet"}
-	_, stdout, err = Utils.Run(cmd, 0, false, true, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, stdout)
-	}
-
-	for _, line := range strings.Split(stdout, "\n") {
-		if strings.Contains(line, naplesPciDevicePrefix) {
-			pci := strings.Split(line, " ")[0]
-			for pciAddr, intf := range pciIntfMap {
-				if strings.Contains(pciAddr, pci) {
-					hostIntfs = append(hostIntfs, intf)
-				}
-			}
-
-		}
-	}
-
-	return hostIntfs, nil
-}
-
 //Init initalize node type
-func (naples *naplesNode) Init(in *iota.Node) (resp *iota.Node, err error) {
+func (naples *naplesHwNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 
-	in.GetNaplesConfig().HostIntfs, _ = naples.getHostIntfs()
+	naples.init()
+	naples.iotaNode.name = in.GetName()
+	if in.GetNaplesConfig() == nil {
+		in.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{}}
+	}
+
+	in.GetNaplesConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(naplesPciDevicePrefix)
 
 	naples.logger.Printf("Naples host interfaces : ", in.GetNaplesConfig().HostIntfs)
 	for _, intf := range in.GetNaplesConfig().HostIntfs {
@@ -536,31 +530,72 @@ func (naples *naplesNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 }
 
 //NodeType return node type
+func (naplesHwNode) NodeType() iota.PersonalityType {
+	return iota.PersonalityType_PERSONALITY_NAPLES
+}
+
+//NodeType return node type
 func (naples *naplesQemuNode) NodeType() iota.PersonalityType {
 	return iota.PersonalityType_PERSONALITY_NAPLES_SIM_WITH_QEMU
 }
 
-// AddWorkload brings up a workload type on a given node
-func (naples *naplesNode) AddWorkload(*iota.Workload) (*iota.Workload, error) {
-	return nil, nil
-}
+//Init initalize node type
+func (mlx *mellanoxNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 
-// DeleteWorkload deletes a given workload
-func (naples *naplesNode) DeleteWorkload(*iota.Workload) (*iota.Workload, error) {
-	return nil, nil
-}
+	mlx.init()
+	mlx.iotaNode.name = in.GetName()
 
-// Trigger invokes the workload's trigger. It could be ping, start client/server etc..
-func (naples *naplesNode) Trigger(*iota.TriggerMsg) (*iota.TriggerMsg, error) {
-	return nil, nil
-}
+	if in.GetMellanoxConfig() == nil {
+		in.NodeInfo = &iota.Node_MellanoxConfig{MellanoxConfig: &iota.MellanoxConfig{}}
+	}
 
-// CheckHealth returns the node health
-func (naples *naplesNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error) {
-	return nil, nil
+	in.GetMellanoxConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(mellanoxPciDevicePrefix)
+
+	mlx.logger.Printf("Mellanox host interfaces : ", in.GetMellanoxConfig().HostIntfs)
+	for _, intf := range in.GetMellanoxConfig().HostIntfs {
+		cmd := []string{"ifconfig", intf, "up"}
+		_, stdout, err := Utils.Run(cmd, 0, false, true, nil)
+		if err != nil {
+			mlx.logger.Errorf("Failed to bring interface %s up err : %s", intf, stdout)
+		}
+	}
+
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
+		NodeInfo: &iota.Node_MellanoxConfig{MellanoxConfig: in.GetMellanoxConfig()}}, nil
 }
 
 //NodeType return node type
-func (naples *naplesNode) NodeType() iota.PersonalityType {
-	return iota.PersonalityType_PERSONALITY_NAPLES
+func (mellanoxNode) NodeType() iota.PersonalityType {
+	return iota.PersonalityType_PERSONALITY_MELLANOX
+}
+
+//Init initalize node type
+func (dnode *dataNode) Init(in *iota.Node) (resp *iota.Node, err error) {
+	return nil, nil
+}
+
+// WorkloadsHealthy checks workloads healthy
+func (dnode *dataNode) WorkloadsHealthy() error {
+	for wlName, wl := range dnode.worloadMap {
+		if !wl.IsWorkloadHealthy() {
+			dnode.logger.Printf("Workload :%s down", wlName)
+			return errors.Errorf("Workload %s down", wlName)
+		}
+	}
+	return nil
+}
+
+// CheckHealth returns the node health
+func (dnode *dataNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error) {
+	if err := dnode.WorkloadsHealthy(); err != nil {
+		return &iota.NodeHealth{NodeName: in.GetNodeName(), HealthCode: iota.NodeHealth_APP_DOWN}, nil
+	}
+
+	dnode.logger.Println("Node healthy")
+	return &iota.NodeHealth{NodeName: in.GetNodeName(), HealthCode: iota.NodeHealth_HEALTH_OK}, nil
+}
+
+//NodeType return node type
+func (dnode *dataNode) NodeType() iota.PersonalityType {
+	return iota.PersonalityType_PERSONALITY_NONE
 }
