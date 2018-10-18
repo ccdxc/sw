@@ -8,9 +8,10 @@ topdir = os.path.abspath(topdir)
 sys.path.insert(0, topdir)
 
 cmdargs = argparse.ArgumentParser(description='IOTA Harness')
-cmdargs.add_argument('--rerun', dest='rerun',
-                    action='store_true',
-                    help='Re-run mode, Skips copy and few init steps.')
+cmdargs.add_argument('--rerun', dest='rerun', action='store_true',
+                     help='Re-run mode, Skips copy and few init steps.')
+cmdargs.add_argument('--testbed-json', dest='testbed_json', default="/warmd.json",
+                     help='Testbed JSON file')
 GlobalOptions = cmdargs.parse_args()
 
 SSHCMD = "sshpass -p vm ssh -o StrictHostKeyChecking=no vm@"
@@ -51,7 +52,7 @@ def run_commands(cmdlist):
     return
 
 import iota.harness.infra.utils.parser as parser
-tbspec = parser.JsonParse("/warmd.json")
+tbspec = parser.JsonParse(GlobalOptions.testbed_json)
 for k,v in tbspec.Instances.__dict__.items():
     print("Cleaning up %s" % v)
     if GlobalOptions.rerun:

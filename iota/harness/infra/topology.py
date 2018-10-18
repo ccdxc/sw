@@ -35,6 +35,13 @@ class Node(object):
     def Role(self):
         return self.__role
 
+    def IsNaplesSim(self):
+        return self.__role == topo_pb2.PERSONALITY_NAPLES_SIM
+    def IsNaplesHw(self):
+        return self.__role == topo_pb2.PERSONALITY_NAPLES
+    def IsNaples(self):
+        return self.IsNaplesSim() or self.IsNaplesHw()
+
     def UUID(self):
         return self.__uuid
 
@@ -129,14 +136,14 @@ class Topology(object):
     def GetNaplesMgmtIpAddresses(self):
         ips = []
         for n in self.__nodes.values():
-            if n.Role() == topo_pb2.PERSONALITY_NAPLES:
+            if n.IsNaples():
                 ips.append(n.MgmtIpAddress())
         return ips
 
     def GetNaplesUuidMap(self):
         uuid_map = {}
         for n in self.__nodes.values():
-            if n.Role() == topo_pb2.PERSONALITY_NAPLES:
+            if n.IsNaples():
                 uuid_map[n.Name()] = n.UUID()
         return uuid_map
 
@@ -150,6 +157,6 @@ class Topology(object):
     def GetNaplesHostnames(self):
         ips = []
         for n in self.__nodes.values():
-            if n.Role() == topo_pb2.PERSONALITY_NAPLES:
+            if n.IsNaples():
                 ips.append(n.Name())
         return ips

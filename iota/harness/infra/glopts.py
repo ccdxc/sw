@@ -13,7 +13,7 @@ parser.add_argument('--verbose', dest='verbose',
                     action='store_true', help='Enable Verbose Mode')
 parser.add_argument('--dryrun', dest='dryrun', action='store_true',
                     help='Dry-Run mode. (No communication with HAL & Model)')
-parser.add_argument('--testsuite', dest='testsuite', default=None,
+parser.add_argument('--testsuite', dest='testsuite', default='sim',
                     help='Run single Testsuite.')
 parser.add_argument('--coverage', dest='coverage',
                     action='store_true', help='Collect code coverage data.')
