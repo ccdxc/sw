@@ -197,6 +197,7 @@ func (naples *naplesSimNode) init(in *iota.Node, withQemu bool) (resp *iota.Node
 	naples.logger.Println("Naples sim host interfaces : ", in.GetNaplesConfig().HostIntfs)
 
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: nodeuuid,
+		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
 		NodeInfo: &iota.Node_NaplesConfig{NaplesConfig: in.GetNaplesConfig()}}, nil
 }
 
@@ -526,6 +527,7 @@ func (naples *naplesHwNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	}
 
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
+		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
 		NodeInfo: &iota.Node_NaplesConfig{NaplesConfig: in.GetNaplesConfig()}}, nil
 }
 
@@ -561,6 +563,7 @@ func (mlx *mellanoxNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	}
 
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
+		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
 		NodeInfo: &iota.Node_MellanoxConfig{MellanoxConfig: in.GetMellanoxConfig()}}, nil
 }
 
