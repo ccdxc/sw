@@ -96,7 +96,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 
 			pool.Go(func() error {
 				n := n
-				return n.InitNode(ts.SSHConfig, copyArtifacts)
+				return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, copyArtifacts)
 			})
 		}
 		return pool.Wait()
@@ -417,7 +417,7 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 // WorkloadCopy does copy of items to/from workload.
 func (ts *TopologyService) WorkloadCopy(ctx context.Context, req *iota.WorkloadCopyMsg) (*iota.WorkloadCopyMsg, error) {
 
-	_, ok := ts.ProvisionedNodes[req.NodeName]
+	node, ok := ts.ProvisionedNodes[req.NodeName]
 	if !ok {
 		errMsg := fmt.Sprintf("Node %s  not provisioned", req.NodeName)
 		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
@@ -426,10 +426,12 @@ func (ts *TopologyService) WorkloadCopy(ctx context.Context, req *iota.WorkloadC
 	}
 
 	if req.Direction == iota.WorkloadCopyDirection_DIR_IN {
-		/*if err := node.InitNode(ts, constants.DstIotaAgentDir, artifacts); err != nil {
-			log.Errorf("TOPO SVC | InitTestBed | Failed to copy agent binary: %v, to TestNode: %v, at IPAddress: %v", constants.IotaAgentBinaryPath, n.Node.Name, n.Node.IpAddress)
-			return err
-		}*/
+
+		dstDir := common.DstIotaWorkloadsDir + "/" + req.GetWorkload() + "/"
+		if err := node.CopyTo(ts.SSHConfig, dstDir, req.GetFiles()); err != nil {
+			log.Errorf("TOPO SVC | WorkloadCopy | Failed to copy files to workload:  %v on node : %v",
+				req.GetWorkload(), node.Node.Name)
+		}
 	} else if req.Direction == iota.WorkloadCopyDirection_DIR_OUT {
 
 	} else {

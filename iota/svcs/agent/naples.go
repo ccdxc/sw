@@ -32,6 +32,11 @@ var (
 
 type naplesNode struct {
 	iotaNode
+	name string
+}
+
+type naplesSimNode struct {
+	iotaNode
 	simName         string
 	container       *Utils.Container
 	worloadMap      map[string]workload
@@ -39,10 +44,10 @@ type naplesNode struct {
 }
 
 type naplesQemuNode struct {
-	naplesNode
+	naplesSimNode
 }
 
-func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf string,
+func (naples *naplesSimNode) bringUpNaples(name string, image string, ctrlIntf string,
 	ctrlIP string, dataIntfs []string, dataIPs []string, naplesIPs []string,
 	veniceIPs []string, withQemu bool, passThroughMode bool) error {
 
@@ -120,7 +125,7 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 	return nil
 }
 
-func (naples *naplesNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, err error) {
+func (naples *naplesSimNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, err error) {
 
 	naples.iotaNode.name = in.GetName()
 	naples.worloadMap = make(map[string]workload)
@@ -158,11 +163,11 @@ func (naples *naplesNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, e
 }
 
 //Init initalize node type
-func (naples *naplesNode) Init(in *iota.Node) (resp *iota.Node, err error) {
+func (naples *naplesSimNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	return naples.init(in, false)
 }
 
-func (naples *naplesNode) configureWorkloadInHntap(in *iota.Workload) error {
+func (naples *naplesSimNode) configureWorkloadInHntap(in *iota.Workload) error {
 
 	if !naples.passThroughMode {
 		/* no configuraiton if not in pass through mode */
@@ -247,7 +252,7 @@ func (naples *naplesNode) configureWorkloadInHntap(in *iota.Workload) error {
 }
 
 // AddWorkload brings up a workload type on a given node
-func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
+func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 
 	naples.logger.Printf("Adding workload : %s", in.GetWorkloadName())
 	if _, ok := naples.worloadMap[in.GetWorkloadName()]; ok {
@@ -305,7 +310,7 @@ func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error)
 }
 
 // DeleteWorkload deletes a given workload
-func (naples *naplesNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, error) {
+func (naples *naplesSimNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, error) {
 	naples.logger.Printf("Deleteing workload : %s", in.GetWorkloadName())
 	if _, ok := naples.worloadMap[in.GetWorkloadName()]; !ok {
 		naples.logger.Println("Trying to delete workload which does not exist")
@@ -321,7 +326,7 @@ func (naples *naplesNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, err
 }
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
-func (naples *naplesNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+func (naples *naplesSimNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	naples.logger.Println("Trigger message received.")
 
 	validate := func() error {
@@ -359,7 +364,7 @@ func (naples *naplesNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error)
 	return in, nil
 }
 
-func (naples *naplesNode) allNaplesProcessRunning() bool {
+func (naples *naplesSimNode) allNaplesProcessRunning() bool {
 	for _, process := range naplesProcessess {
 		if !naples.container.CheckProcessRunning(process) {
 			naples.logger.Printf("Process : %s is not running", process)
@@ -372,7 +377,7 @@ func (naples *naplesNode) allNaplesProcessRunning() bool {
 }
 
 // CheckHealth returns the node health
-func (naples *naplesNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error) {
+func (naples *naplesSimNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error) {
 	naples.logger.Println("Checking node health")
 	if naples.container == nil || !naples.container.IsHealthy() {
 		naples.logger.Printf("Naples  :%s is down or unhealthy", naples.name)
@@ -394,7 +399,7 @@ func (naples *naplesNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, er
 	return &iota.NodeHealth{NodeName: in.GetNodeName(), HealthCode: iota.NodeHealth_HEALTH_OK}, nil
 }
 
-func (naples *naplesNode) Destroy(in *iota.Node) (*iota.Node, error) {
+func (naples *naplesSimNode) Destroy(in *iota.Node) (*iota.Node, error) {
 	naples.iotaNode.Destroy(in)
 
 	if naples.container != nil {
@@ -408,7 +413,7 @@ func (naples *naplesNode) Destroy(in *iota.Node) (*iota.Node, error) {
 }
 
 //NodeType return node type
-func (naples *naplesNode) NodeType() iota.PersonalityType {
+func (naples *naplesSimNode) NodeType() iota.PersonalityType {
 	return iota.PersonalityType_PERSONALITY_NAPLES
 }
 
@@ -418,7 +423,7 @@ func (naples *naplesQemuNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 }
 
 func (naples *naplesQemuNode) Destroy(in *iota.Node) (*iota.Node, error) {
-	naples.naplesNode.Destroy(in)
+	naples.naplesSimNode.Destroy(in)
 	killCmd := []string{"pkill", "-9", "-f", "qemu-run"}
 	Utils.Run(killCmd, 0, false, false, nil)
 	killCmd = []string{"pkill", "-9", "-f", "qemu-system"}
@@ -443,10 +448,40 @@ func (naples *naplesQemuNode) Trigger(*iota.TriggerMsg) (*iota.TriggerMsg, error
 
 // CheckHealth returns the node health
 func (naples *naplesQemuNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error) {
-	return naples.naplesNode.CheckHealth(in)
+	return naples.naplesSimNode.CheckHealth(in)
+}
+
+//Init initalize node type
+func (naples *naplesNode) Init(in *iota.Node) (resp *iota.Node, err error) {
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: ""}, nil
 }
 
 //NodeType return node type
 func (naples *naplesQemuNode) NodeType() iota.PersonalityType {
-	return iota.PersonalityType_PERSONALITY_NAPLES_WITH_QEMU
+	return iota.PersonalityType_PERSONALITY_NAPLES_SIM_WITH_QEMU
+}
+
+// AddWorkload brings up a workload type on a given node
+func (naples *naplesNode) AddWorkload(*iota.Workload) (*iota.Workload, error) {
+	return nil, nil
+}
+
+// DeleteWorkload deletes a given workload
+func (naples *naplesNode) DeleteWorkload(*iota.Workload) (*iota.Workload, error) {
+	return nil, nil
+}
+
+// Trigger invokes the workload's trigger. It could be ping, start client/server etc..
+func (naples *naplesNode) Trigger(*iota.TriggerMsg) (*iota.TriggerMsg, error) {
+	return nil, nil
+}
+
+// CheckHealth returns the node health
+func (naples *naplesNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error) {
+	return nil, nil
+}
+
+//NodeType return node type
+func (naples *naplesNode) NodeType() iota.PersonalityType {
+	return iota.PersonalityType_PERSONALITY_NAPLES
 }

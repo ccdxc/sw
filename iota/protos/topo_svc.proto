@@ -42,6 +42,9 @@ service TopologyApi {
 
     // CheckClusterHealth returns the cluster health
     rpc CheckClusterHealth(NodeMsg) returns  (ClusterHealthMsg) {};
+
+    // WorkloadCopy copies files in/out from workload
+    rpc WorkloadCopy(WorkloadCopyMsg) returns  (WorkloadCopyMsg) {};
 }
 
 // Op defines topology operation

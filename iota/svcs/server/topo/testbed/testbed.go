@@ -12,10 +12,10 @@ import (
 )
 
 // InitNode initializes an iota test node. It copies over IOTA Agent binary and starts it on the remote node
-func (n *TestNode) InitNode(c *ssh.ClientConfig, artifacts []string) error {
+func (n *TestNode) InitNode(c *ssh.ClientConfig, dstDir string, artifacts []string) error {
 	log.Infof("TOPO SVC | InitTestBed | Running init for TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
 	// Copy Agent Binary to the remote node
-	if err := n.CopyTo(c, artifacts); err != nil {
+	if err := n.CopyTo(c, dstDir, artifacts); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Failed to copy agent binary: %v, to TestNode: %v, at IPAddress: %v", constants.IotaAgentBinaryPath, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
@@ -31,11 +31,11 @@ func (n *TestNode) InitNode(c *ssh.ClientConfig, artifacts []string) error {
 }
 
 // CopyTo copies a file to the node
-func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, files []string) error {
+func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) error {
 	copier := copier.NewCopier(cfg)
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
-	if err := copier.Copy(addr, constants.DstIotaAgentDir, files); err != nil {
+	if err := copier.Copy(addr, dstDir, files); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | CopyTo node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 		return fmt.Errorf("CopyTo node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 	}
