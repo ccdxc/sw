@@ -123,6 +123,8 @@ message NaplesConfig {
     // Venice IPs to use, if specified agent will come up im managed mode.
     repeated string venice_ips   = 4;
 
+    // host intfs , returned as part of add node
+    repeated string host_intfs   = 5;
 }
 
 message VenicePeer {
@@ -304,7 +306,7 @@ message TestBedMsg {
 
     // Node username
     string username                     = 7;
-    
+
     // Node password
     string password                     = 8;
 

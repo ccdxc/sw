@@ -356,5 +356,17 @@ func GetIntfMacAddress(intfName string) (string, error) {
 	return "", errors.New("Interface not found")
 }
 
+//GetIntfsMatchingPrefix get interface with prefix name
+var GetIntfsMatchingPrefix = func(prefix string) []string {
+	ret := []string{}
+	intfs, _ := net.Interfaces()
+	for _, intf := range intfs {
+		if strings.Contains(intf.Name, prefix) {
+			ret = append(ret, intf.Name)
+		}
+	}
+	return ret
+}
+
 //RestHelper is a wrapper for rest
 var RestHelper = restHelper

@@ -16,13 +16,15 @@ import (
 )
 
 const (
-	naplesSimName         = "naples-sim"
-	naplesVMBringUpScript = "naples_vm_bringup.py"
-	naplesCfgDir          = "/naples/nic/conf"
-	hntapCfgFile          = "hntap-cfg.json"
-	naplesDataDir         = Common.DstIotaAgentDir + "/naples"
-	arpTimeout            = 3000 //3 seconds
-	arpAgeTimeout         = 3000 //3000 seconds
+	naplesSimName           = "naples-sim"
+	naplesVMBringUpScript   = "naples_vm_bringup.py"
+	naplesCfgDir            = "/naples/nic/conf"
+	hntapCfgFile            = "hntap-cfg.json"
+	naplesDataDir           = Common.DstIotaAgentDir + "/naples"
+	arpTimeout              = 3000 //3 seconds
+	arpAgeTimeout           = 3000 //3000 seconds
+	naplesSimHostIntfPrefix = "lif"
+	naplesPciDevicePrefix   = "Device"
 )
 
 var (
@@ -173,7 +175,12 @@ func (naples *naplesSimNode) init(in *iota.Node, withQemu bool) (resp *iota.Node
 	}
 	naples.logger.Println("Naples bring up succesfull")
 
-	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: nodeuuid}, nil
+	in.GetNaplesConfig().HostIntfs = Utils.GetIntfsMatchingPrefix(naplesSimHostIntfPrefix)
+
+	naples.logger.Println("Naples sim host interfaces : ", in.GetNaplesConfig().HostIntfs)
+
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: nodeuuid,
+		NodeInfo: &iota.Node_NaplesConfig{NaplesConfig: in.GetNaplesConfig()}}, nil
 }
 
 //Init initalize node type
@@ -465,9 +472,67 @@ func (naples *naplesQemuNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth
 	return naples.naplesSimNode.CheckHealth(in)
 }
 
+func (naples *naplesNode) getHostIntfs() ([]string, error) {
+	hostIntfs := []string{}
+
+	pciIntfMap := make(map[string]string)
+	cmd := []string{"systool", "-c", "net"}
+
+	_, stdout, err := Utils.Run(cmd, 0, false, false, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, stdout)
+	}
+
+	lines := strings.Split(stdout, "\n")
+	for idx, line := range lines {
+		if strings.Contains(line, "Class Device") {
+			if (idx+1) < len(lines) && strings.Contains(lines[idx+1], "Device") {
+				pci := strings.Replace(lines[idx+1], " ", "", -1)
+				pci = strings.Split(pci, "=")[1]
+				intfName := strings.Replace(line, " ", "", -1)
+				intfName = strings.Split(intfName, "=")[1]
+				pciIntfMap[pci] = intfName
+			}
+		}
+	}
+
+	cmd = []string{"lspci", "|", "grep", "Ethernet"}
+	_, stdout, err = Utils.Run(cmd, 0, false, true, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, stdout)
+	}
+
+	for _, line := range strings.Split(stdout, "\n") {
+		if strings.Contains(line, naplesPciDevicePrefix) {
+			pci := strings.Split(line, " ")[0]
+			for pciAddr, intf := range pciIntfMap {
+				if strings.Contains(pciAddr, pci) {
+					hostIntfs = append(hostIntfs, intf)
+				}
+			}
+
+		}
+	}
+
+	return hostIntfs, nil
+}
+
 //Init initalize node type
 func (naples *naplesNode) Init(in *iota.Node) (resp *iota.Node, err error) {
-	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: ""}, nil
+
+	in.GetNaplesConfig().HostIntfs, _ = naples.getHostIntfs()
+
+	naples.logger.Printf("Naples host interfaces : ", in.GetNaplesConfig().HostIntfs)
+	for _, intf := range in.GetNaplesConfig().HostIntfs {
+		cmd := []string{"ifconfig", intf, "up"}
+		_, stdout, err := Utils.Run(cmd, 0, false, true, nil)
+		if err != nil {
+			naples.logger.Errorf("Failed to bring interface %s up err : %s", intf, stdout)
+		}
+	}
+
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
+		NodeInfo: &iota.Node_NaplesConfig{NaplesConfig: in.GetNaplesConfig()}}, nil
 }
 
 //NodeType return node type
