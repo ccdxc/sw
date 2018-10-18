@@ -192,3 +192,5 @@
 #define tx_table_s1_t0_action11	tx_table_dummy_action
 
 #define tx_table_s2_t0_action12	tx_table_dummy_action
+
+#define tx_table_s5_t2_action5	tx_table_dummy_action

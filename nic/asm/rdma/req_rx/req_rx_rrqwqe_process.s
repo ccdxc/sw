@@ -275,11 +275,6 @@ atomic:
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r1
     phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 
-    //SQCB0_ADDR_GET(r1)
-    //add            r6, r1, RRQ_C_INDEX_OFFSET
-    //memwr.hx       r6, K_RRQ_CINDEX
-
-    //SQCB1_ADDR_GET(r1)
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
 end:

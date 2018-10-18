@@ -31,14 +31,13 @@
 #define SQ_TIMER_C_INDEX             d.{ring2.cindex}.hx
 #define CNP_P_INDEX                  d.{ring3.pindex}.hx
 #define CNP_C_INDEX                  d.{ring3.cindex}.hx
-#define RRQ_P_INDEX                  d.{ring4.pindex}
-#define RRQ_C_INDEX                  d.{ring4.cindex}
-#define SQCB0_RRQ_P_INDEX            d.{rrq_pindex}.hx
+#define RRQ_P_INDEX                  d.{rrq_pindex}
+#define RRQ_C_INDEX                  d.{rrq_cindex}
 
 #define SPEC_SQ_C_INDEX              d.spec_sq_cindex
 
-#define RRQ_P_INDEX_OFFSET           FIELD_OFFSET(sqcb1_t, ring4.pindex)
-#define RRQ_C_INDEX_OFFSET           FIELD_OFFSET(sqcb1_t, ring4.cindex)
+#define RRQ_P_INDEX_OFFSET           FIELD_OFFSET(sqcb1_t, rrq_pindex)
+#define RRQ_C_INDEX_OFFSET           FIELD_OFFSET(sqcb1_t, rrq_cindex)
 #define SQCB2_LSN_RX_OFFSET          FIELD_OFFSET(sqcb2_t, lsn_rx)
 #define SQCB2_REXMIT_PSN_OFFSET      FIELD_OFFSET(sqcb2_t, rexmit_psn)
 #define SQCB2_MSN_CREDITS_BYTES      4
@@ -50,9 +49,6 @@
 
 #define SIZEOF_TOKEN_ID_BITS  8
 
-#define SQCB0_NEED_CREDITS_FLAG 0x20
-#define SQCB0_CB1_BUSY_FLAG 0x80
-
 #define SQCB_SQ_PINDEX_OFFSET        FIELD_OFFSET(sqcb0_t, ring0.pindex)
 #define SQCB_SQ_CINDEX_OFFSET        FIELD_OFFSET(sqcb0_t, ring0.cindex)
 #define SQCB_SPEC_SQ_CINDEX_OFFSET   FIELD_OFFSET(sqcb0_t, spec_sq_cindex)
@@ -60,9 +56,7 @@
 #define SQCB_CURR_WQE_PTR_OFFSET     FIELD_OFFSET(sqcb0_t, curr_wqe_ptr)
 #define SQCB_CURRENT_SGE_OFFSET      FIELD_OFFSET(sqcb0_t, current_sge_offset)
 
-//#define SQCB0_IN_PROGRESS_BIT_OFFSET         6
-#define SQCB0_NEED_CREDITS_BIT_OFFSET        6
-#define SQCB0_FRPMR_IN_PROGRESS              5
+#define SQCB0_FRPMR_IN_PROGRESS_BIT_OFFSET   4
 #define SQCB0_FLUSH_RQ_BIT_OFFSET            3
 
 struct sqcb0_t {
@@ -72,7 +66,7 @@ struct sqcb0_t {
     struct capri_intrinsic_ring_t ring2;
     struct capri_intrinsic_ring_t ring3;
     sqd_cindex                    : 16; // RO S0, WO S5
-    rsvd                          : 16;
+    rsvd1                         : 16;
 
     union {
         pt_base_addr              : 32; // RO
@@ -112,30 +106,30 @@ struct sqcb0_t {
     sq_drained                    : 1; // RW S5, RW S0
     rsvd_state_flags              : 7;
 
-    priv_oper_enable              : 1;  // RO
-    in_progress                   : 1;  // WO S5, RO S0
-    bktrack_in_progress           : 1;  // RW S5, RW S0
-    rsvd_flag                     : 1;
-    color                         : 1;  // WO S5, R0 S0
-    fence                         : 1;  // WO S5, RO S0
-    li_fence                      : 1;  // WO S5, RO S0
-    busy                          : 1;
-
     union {
+        state_flags               : 8;
         struct {
-            cb1_busy                : 1;  // WO S5, R0 S0
-            need_credits            : 1;  // WO S5, RO S0
-            frpmr_in_progress       : 1;  // RW S0
-            rsvd_cb1_flags          : 5;
+            priv_oper_enable      : 1;  // RO
+            in_progress           : 1;  // WO S5, RO S0
+            bktrack_in_progress   : 1;  // RW S5, RW S0
+            frpmr_in_progress     : 1;  // RW S0
+            color                 : 1;  // WO S5, R0 S0
+            fence                 : 1;  // WO S5, RO S0
+            li_fence              : 1;  // WO S5, RO S0
+            busy                  : 1;
         };
-        cb1_byte                  : 8;
     };
+
+    rsvd2                         : 8;
+
 };
 
 struct sqcb1_t {
     pc                             : 8;
     cq_id                          : 24; // RO S0
-    struct capri_intrinsic_ring_t  ring4; // RRQ Ring
+    rrq_pindex                     : 8;
+    rrq_cindex                     : 8;
+    rsvd1                          : 16;
 
     rrq_base_addr                  : 32; // RO S0
     log_rrq_size                   : 8;  // RO S0
@@ -148,7 +142,7 @@ struct sqcb1_t {
 
     tx_psn                         : 24; // R0 S0 (WO S5 TXDMA)
     ssn                            : 24; // R0 S0 (WO S5 TXDMA)
-    rsvd1                          : 24; // R0 S0 (WO S5 TXDMA)
+    rsvd2                          : 24;
 
     header_template_addr           : 32; // RO SO // DCQCN ???
     header_template_size           : 8;  // RO SO
@@ -161,7 +155,7 @@ struct sqcb1_t {
     msn                            : 24; // RW S0
 
     credits                        : 5;  // RW S0 
-    rsvd2                          : 3;
+    rsvd3                          : 3;
 
     max_tx_psn                     : 24; // RW S0
     max_ssn                        : 24; // RW S0
@@ -174,12 +168,12 @@ struct sqcb1_t {
     sqcb1_priv_oper_enable         : 1;  // RO
     sq_drained                     : 1;  // RW S5
     sqd_async_notify_enable        : 1;  // RO S5
-    rsvd3                          : 1;
+    rsvd4                          : 1;
 
     bktrack_in_progress            : 8; // RW S3 (W0 S5 TXDMA)
     pd                             : 32; // RO
     rrq_spec_cindex                : 16;
-    pad                            : 16;
+    rsvd5                          : 16;
 };
 
 struct sqcb2_t {
@@ -221,8 +215,9 @@ struct sqcb2_t {
     };
 
     sq_cindex                      : 16; // RW S5
-    rrq_pindex                     : 16; // RW S5
-    rrq_cindex                     : 16; // RO S1 (WO RXDMA)
+    rrq_pindex                     : 8;  // RW S5
+    rrq_cindex                     : 8;  // RO S1, S5 (WO RXDMA)
+    rsvd1                          : 16;
     fence                          : 1;  // WO S5, RO S1
     li_fence                       : 1;  // WO S5, RO S1
     fence_done                     : 1;  // RW S1, WO S5

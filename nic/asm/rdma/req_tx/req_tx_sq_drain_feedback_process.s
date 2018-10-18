@@ -3,7 +3,7 @@
 #include "nic/p4/common/defines.h"
 
 struct req_tx_phv_t p;
-struct req_tx_s5_t3_k k;
+struct req_tx_s5_t2_k k;
 struct sqcb2_t d;
 
 #define TO_S7_STATS_P         to_s7_stats_info

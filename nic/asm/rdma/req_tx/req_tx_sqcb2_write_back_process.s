@@ -4,19 +4,24 @@
 #include "nic/p4/common/defines.h"
 
 struct req_tx_phv_t p;
-struct req_tx_s5_t3_k k;
+struct req_tx_s5_t2_k k;
 struct sqcb2_t d;
 
-#define IN_P t3_s2s_sqcb_write_back_info_rd
-#define IN_RD_P t3_s2s_sqcb_write_back_info_rd
-#define IN_SEND_WR_P t3_s2s_sqcb_write_back_info_send_wr
-#define IN_TO_S_P to_s5_sqcb_wb_info
+#define IN_P t2_s2s_sqcb_write_back_info_rd
+#define IN_RD_P t2_s2s_sqcb_write_back_info_rd
+#define IN_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
+#define IN_TO_S_P to_s5_sqcb_wb_add_hdr_info
 
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
+#define K_TO_S5_DATA k.{to_stage_5_to_stage_data_sbit0_ebit63...to_stage_5_to_stage_data_sbit112_ebit127}
+#define K_WQE_ADDR CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
+
+#define TO_S6_P to_s6_sqcb_wb_add_hdr_info
 
 %%
 
     .param  req_tx_stats_process
+    .param  req_tx_write_back_process
 
 .align
 req_tx_sqcb2_write_back_process:
@@ -32,6 +37,10 @@ req_tx_sqcb2_write_back_process:
     seq            c1, K_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
     nop
+
+    phvwr          p.common.to_stage_6_to_stage_data, K_TO_S5_DATA
+    SQCB0_ADDR_GET(r1)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r1)
 
     bbeq           CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1 // Branch Delay Slot
@@ -88,15 +97,16 @@ li_fence:
     nop
 
 fence:
-    tblwr           d.fence, 1
+    tblwr.e         d.fence, 1
     tblwr           d.fence_done, 0
-    //fall-through
-poll_fail:
-rate_enforce_fail:
+
 spec_fail:
     phvwr   p.common.p4_intr_global_drop, 1
     //fall-through
 exit:
+    CAPRI_SET_TABLE_2_VALID(0)
+rate_enforce_fail:
+poll_fail:
     nop.e
     nop
 

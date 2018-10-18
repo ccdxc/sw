@@ -16,7 +16,7 @@ struct req_tx_s4_t2_k k;
 #define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
-#define SQCB_WRITE_BACK_INFO_RD t3_s2s_sqcb_write_back_info_rd
+#define SQCB_WRITE_BACK_INFO_RD t2_s2s_sqcb_write_back_info_rd
 
 #define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
 #define K_PKT_LEN     CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
@@ -120,19 +120,15 @@ skip_dcqcn_doorbell:
 
 load_write_back:
     // DCQCN rate-enforcement passed. Load stage 5 for write-back/add_headers.
-    SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
-
     SQCB2_ADDR_GET(r2)  
     bbeq          CAPRI_KEY_FIELD(IN_P, non_packet_wqe), 1, skip_add_headers
     // Same k info as write_back is passed to add_headers as well
-    phvwr          p.common.common_t3_s2s_s2s_data, K_S2S_DATA //BD-slot
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
     nop.e
     nop
 
 skip_add_headers:
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, r2)
     nop.e
     nop
 
@@ -154,15 +150,12 @@ drop_phv:
     // DCQCN rate-enforcement failed. Drop PHV. Loading writeback to adjust spec_cindex
     phvwr CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
 
-    SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r2)
-
     SQCB2_ADDR_GET(r2)
     phvwr       p.common.common_t3_s2s_s2s_data, K_S2S_DATA
     phvwr       CAPRI_PHV_FIELD(SQCB_WRITE_BACK_INFO_RD, rate_enforce_failed), 1
     phvwr       CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, rate_enforce_failed), 1
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 

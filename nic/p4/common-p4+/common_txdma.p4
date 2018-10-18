@@ -695,6 +695,7 @@ table tx_table_s5_t2 {
         tx_table_s5_t2_action2;
         tx_table_s5_t2_action3;
         tx_table_s5_t2_action4;
+        tx_table_s5_t2_action5;
     }
 }
 

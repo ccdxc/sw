@@ -20,11 +20,12 @@ struct req_tx_s2_t0_k k;
 #define IN_P t0_s2s_sqcb_to_wqe_info
 #define IN_TO_S_P to_s2_sqwqe_info
 
-#define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
-#define TO_S4_FRPMR_LKEY_P    to_s4_frpmr_sqlkey_info
-#define TO_S5_SQCB_WB_P       to_s5_sqcb_wb_info
-#define TO_S5_FRPMR_WB_P      to_s5_frpmr_sqcb_wb_info
-#define TO_S7_STATS_P         to_s7_stats_info
+#define TO_S4_DCQCN_BIND_MW_P   to_s4_dcqcn_bind_mw_info
+#define TO_S4_FRPMR_LKEY_P      to_s4_frpmr_sqlkey_info
+#define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
+#define TO_S6_FRPMR_WB_P        to_s6_frpmr_sqcb_wb_info
+#define TO_S6_SQCB_WB_ADD_HDR_P to_s6_sqcb_wb_add_hdr_info
+#define TO_S7_STATS_P           to_s7_stats_info
 
 
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
@@ -56,7 +57,7 @@ req_tx_sqwqe_process:
 skip_color_check:
     bbeq           CAPRI_KEY_FIELD(IN_P, fence_done), 1, skip_fence_check
     add            r1, r0, d.base.op_type  //BD-slot
-    phvwr          CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, fence), d.base.fence 
+    phvwr          CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, fence), d.base.fence
 
 skip_fence_check:
     // Populate wrid in phv to post error-completion for wqes or completion for non-packet-wqes.
@@ -377,12 +378,13 @@ frpmr:
 
     phvwr          CAPRI_PHV_FIELD(TO_S4_FRPMR_LKEY_P, len), d.frpmr.len
 
-    // Send DMA info to stage5.
-    phvwr          CAPRI_PHV_FIELD(TO_S5_FRPMR_WB_P, frpmr_dma_src_addr), d.frpmr.dma_src_address
+    // Send DMA info to stage6.
+    phvwrpair      CAPRI_PHV_FIELD(TO_S6_FRPMR_WB_P, wqe_addr), k.common_te0_phv_table_addr, \
+                   CAPRI_PHV_FIELD(TO_S6_FRPMR_WB_P, frpmr_dma_src_addr), d.frpmr.dma_src_address
 
 load_frpmr_sqlkey:
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)
-    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)
 
 frpmr_second_pass:
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, npg), 1, \

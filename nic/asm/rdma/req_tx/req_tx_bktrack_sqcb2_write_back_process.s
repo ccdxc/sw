@@ -49,23 +49,21 @@ req_tx_bktrack_sqcb2_write_back_process:
      memwr.h        r2, d.ssn[15:0]
      // Also, empty rrq ring, which will then get posted
      // with retransmit requests
-     add            r2, FIELD_OFFSET(sqcb1_t, ring4), r1
-     memwr.w        r2, 0        
+     add            r2, FIELD_OFFSET(sqcb1_t, rrq_pindex), r1
+     memwr.h        r2, 0
 
      // Clear rrq_spec_cindex
      add            r2, FIELD_OFFSET(sqcb1_t, rrq_spec_cindex), r1
-     memwr.h        r2, 0          
+     memwr.h        r2, 0
 
-
-     SQCB2_ADDR_GET(r1)            
-     add            r2, FIELD_OFFSET(sqcb2_t, rrq_pindex), r1
-     memwr.w        r2, 0        
+     tblwr            d.rrq_pindex, 0
+     tblwr            d.rrq_cindex, 0
  
      SQCB0_ADDR_GET(r1)
-     add            r2, FIELD_OFFSET(sqcb0_t, cb1_byte), r1
+     //add            r2, FIELD_OFFSET(sqcb0_t, cb1_byte), r1
      tblwr          d.need_credits, 0
      tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
-     memwr.b        r2, r1
+     //memwr.b        r2, r1
 
      CAPRI_SET_TABLE_1_VALID(0)
 

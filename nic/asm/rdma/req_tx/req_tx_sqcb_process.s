@@ -24,7 +24,7 @@ struct req_tx_s0_t0_k k;
 #define TO_S3_SQSGE_P           to_s3_sqsge_info
 #define TO_S4_DCQCN_BIND_MW_P   to_s4_dcqcn_bind_mw_info
 #define TO_S1_DCQCN_BIND_MW_P   to_s1_dcqcn_bind_mw_info
-#define TO_S5_SQCB_WB_P         to_s5_sqcb_wb_info
+#define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
 
 #define TO_S1_BT_P to_s1_bt_info
 #define TO_S2_BT_P to_s2_bt_info
@@ -84,29 +84,25 @@ process_req_tx:
 
     .brcase        SQ_RING_ID
 
-        crestore [c2,c1], d.{busy...cb1_busy}, 0x3
-        bcf            [c1 | c2], exit
+        bbeq           d.busy, 1, exit
         nop // Branch Delay Slot
   
         bbeq           d.poll_in_progress, 1, exit
-        nop // Branch Delay Slot
+        //nop // Branch Delay Slot
         
-        bbeq           d.congestion_mgmt_enable, 0, process_send
+        //bbeq           d.congestion_mgmt_enable, 0, process_send
 
         phvwrpair CAPRI_PHV_FIELD(TO_S3_SQSGE_P, header_template_addr), d.header_template_addr, \
                   CAPRI_PHV_FIELD(TO_S3_SQSGE_P, congestion_mgmt_enable), d.congestion_mgmt_enable //BD-Slot
 
         bbeq           d.dcqcn_rl_failure, 0, process_send
-        phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), 1  // Branch Delay Slot
+        phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, congestion_mgmt_enable), d.congestion_mgmt_enable  // Branch Delay Slot
         // Reset spec-cindex to cindex and resend packet on dcqcn-rl-failure.
         tblwr          SPEC_SQ_C_INDEX, SQ_C_INDEX
         tblwr          d.dcqcn_rl_failure, 0
 
 process_send:
         bbeq           d.frpmr_in_progress, 1, frpmr
-        nop // Branch Delay Slot
-
-        bbeq           d.need_credits, 1, exit
                               
         // if (sqcb0_p->fence) goto fence
         seq            c3, d.fence, 1 // Branch Delay Slot
@@ -152,8 +148,8 @@ poll_for_work:
         phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX 
  
-        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), r2, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
+        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), r2, \
+                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
 
         phvwr     CAPRI_PHV_FIELD(TO_S3_SQSGE_P, priv_oper_enable), d.priv_oper_enable
                   
@@ -204,7 +200,7 @@ pt_process:
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
 
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
-        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
+        phvwr     CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
 
         phvwr     CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd        
 
@@ -215,11 +211,10 @@ pt_process:
 
 in_progress:
         // do not speculate for in_progress processing
-        bcf            [c1 | c2], exit
         add            r1, r0, SQ_C_INDEX // Branch Delay Slot
         // Assert busy for multi-packet message as each packet has to continue
         // from where the previous packet has left off 
-        tblwr          d.{busy...cb1_busy}, 0x3
+        tblwr          d.busy, 1
         
         // load wqe using sqcb_p->wqe_addr
         
@@ -250,8 +245,8 @@ in_progress:
         phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r1
         
-        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), d.curr_wqe_ptr, \
-                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), r1
+        phvwrpair CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
+                  CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), r1
 
         mincr.e        r1, d.log_num_wqes, 1
         tblwr          SPEC_SQ_C_INDEX, r1
@@ -282,8 +277,7 @@ end1:
     #    nop
 
     .brcase        SQ_BKTRACK_RING_ID
-        crestore       [c2,c1], d.{busy...cb1_busy}, 0x3
-        bcf            [c1 | c2], exit
+        bbeq           d.busy, 1, exit
 
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
@@ -299,8 +293,8 @@ end1:
         bcf            [c1 & c2] , exit
         sslt           c1, r0, d.in_progress, d.bktrack_in_progress // Branch Delay Slot
 
-        // take both the busy flags
-        tblwr          d.{busy...cb1_busy}, 0x3
+        // take the busy flag
+        tblwr          d.busy, 1
         tblwr          d.bktrack_in_progress, 1
         
         bcf            [c1], sq_bktrack1
@@ -440,8 +434,8 @@ fence:
     phvwrpair   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                 CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
     phvwr       CAPRI_PHV_FIELD(TO_S1_FENCE_P, wqe_addr), d.curr_wqe_ptr
-    phvwrpair   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), d.curr_wqe_ptr, \
-                CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX                
+    phvwrpair   CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), d.curr_wqe_ptr, \
+                CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
 
     // Set up s2s info.
     CAPRI_RESET_TABLE_0_ARG()
@@ -473,7 +467,7 @@ frpmr:
     tblwr      d.frpmr_in_progress, 0
 
     phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
-    phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, spec_cindex), SPEC_SQ_C_INDEX
+    phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
 
     // Below flags are required to increment cindex and load sqcb2_write_back in stage-5.
     phvwrpair  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, last_pkt), 1 , CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
@@ -491,8 +485,7 @@ invalid_bktrack:
     // fall through to unlock and exit
 
 unlock_and_exit:
-    tblwr          d.{busy...cb1_busy}, 0
-    nop.e
+    tblwr.e        d.busy, 0
     nop
 
 exit:

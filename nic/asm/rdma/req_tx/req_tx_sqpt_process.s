@@ -12,7 +12,7 @@ struct req_tx_s1_t0_k k;
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit4, remaining_payload_bytes_sbit13_ebit15)
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, read_req_adjust_sbit0_ebit5, read_req_adjust_sbit30_ebit31)
 
-#define TO_S5_SQCB_WB_P to_s5_sqcb_wb_info
+#define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
 %%
     .param    req_tx_sqwqe_process
 
@@ -41,7 +41,7 @@ req_tx_sqpt_process:
               CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES
     //CAPRI_SET_FIELD2(SQCB_TO_WQE_P, pd, CAPRI_KEY_FIELD(IN_P, pd))
     
-    phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, wqe_addr), r1
+    phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, wqe_addr), r1
 
     // populate t0 PC and table address
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqwqe_process, r1)

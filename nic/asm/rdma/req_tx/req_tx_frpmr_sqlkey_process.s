@@ -88,7 +88,7 @@ frpmr:
 
 load_frpmr_wb:
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_frpmr_write_back_process, r2)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_write_back_process, r2)
 
 error_completion:
     // Set completion status to Memory-Management-Operation-Error

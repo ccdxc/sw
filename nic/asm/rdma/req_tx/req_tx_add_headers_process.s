@@ -12,31 +12,34 @@
     #c7 - incr_rrq_pindex
 
 struct req_tx_phv_t p;
-struct req_tx_s5_t3_k k;
+struct req_tx_s5_t2_k k;
 struct sqcb2_t d;
 
-#define IN_P t3_s2s_sqcb_write_back_info_rd
-#define IN_RD_P t3_s2s_sqcb_write_back_info_rd
-#define IN_SEND_WR_P t3_s2s_sqcb_write_back_info_send_wr
-#define IN_TO_S_P to_s5_sqcb_wb_info
+#define IN_P t2_s2s_sqcb_write_back_info_rd
+#define IN_RD_P t2_s2s_sqcb_write_back_info_rd
+#define IN_SEND_WR_P t2_s2s_sqcb_write_back_info_send_wr
+#define IN_TO_S_P to_s5_sqcb_wb_add_hdr_info
 
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_OP_TYPE     CAPRI_KEY_FIELD(IN_P, op_type)
-#define K_INV_KEY     CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_inv_key_or_ah_handle_sbit0_ebit7, op_send_wr_inv_key_or_ah_handle_sbit8_ebit31)
+#define K_INV_KEY     CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_inv_key_or_ah_handle_sbit0_ebit7, op_send_wr_inv_key_or_ah_handle_sbit24_ebit31)
 #define K_AH_HANDLE   K_INV_KEY
 #define K_AH_SIZE     CAPRI_KEY_FIELD(IN_TO_S_P, ah_size)
 #define K_IMM_DATA    CAPRI_KEY_FIELD(IN_SEND_WR_P, op_send_wr_imm_data)
 #define K_RD_READ_LEN CAPRI_KEY_FIELD(IN_RD_P, op_rd_read_len)
 #define K_RD_LOG_PMTU CAPRI_KEY_FIELD(IN_RD_P, op_rd_log_pmtu)
 #define K_WQE_ADDR    CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
+#define K_TO_S5_DATA k.{to_stage_5_to_stage_data_sbit0_ebit63...to_stage_5_to_stage_data_sbit112_ebit127}
 
 #define ADD_HDR_T t3_s2s_add_hdr_info
+#define SQCB_WRITE_BACK_T t2_s2s_sqcb_write_back_info
 
 #define RDMA_PKT_MIDDLE      0
 #define RDMA_PKT_LAST        1
 #define RDMA_PKT_FIRST       2
 #define RDMA_PKT_ONLY        3
 %%
+    .param    req_tx_write_back_process
     .param    req_tx_add_headers_2_process
     .param    req_tx_sqwqe_fetch_wrid_process
 
@@ -45,10 +48,18 @@ req_tx_add_headers_process:
     // if speculative cindex matches cindex, then this wqe is being
     // processed in the right order and state update is allowed. Otherwise
     // discard and continue with speculation until speculative cindex
-    // matches current cindex. Similarly, drop if dcqcn rate enforcement
-    // doesn't allow this packet
+    // matches current cindex. If sepculative cindex doesn't match cindex, then
+    // revert speculative cindex to cindex , which would allow next speculation
+    // to continue from yet to be processed wqe.
+
+    // Similarly, drop if dcqcn rate enforcement doesn't allow this packet
     seq            c1, K_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
+
+    phvwr          p.common.to_stage_6_to_stage_data, K_TO_S5_DATA
+    SQCB0_ADDR_GET(r1)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_write_back_process, r1)
+
     // initialize  cf to 0
     crestore       [c7-c1], r0, 0xfe // Branch Delay Slot
 
@@ -61,24 +72,16 @@ req_tx_add_headers_process:
     bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_exit
     nop
 
-    bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
-    nop // Branch Delay Slot
-
-    tblwr          d.fence, 0
-    tblwr          d.fence_done, 1
-
-    // sqcb2 maintains copy of sq_cindex to enable speculation check. Increment
-    //the copy on completion of wqe and write it into sqcb2
-    tblmincri.c1    d.sq_cindex, d.log_sq_size, 1 
+    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
 
     // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
-    // To start with, num_addr is 1 (bth)
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, bth, bth, 1) // Branch Delay Slot
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS) // Branch Delay Slot
+
     cmov           r2, c2, K_OP_TYPE, d.curr_op_type
     .brbegin
     br             r2[2:0]    
-    tblwr.c2       d.curr_op_type, K_OP_TYPE // Branch Delay Slot
+    // To start with, num_addr is 1 (bth)
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, bth, bth, 1)
 
     .brcase OP_TYPE_SEND
         .csbegin
@@ -234,7 +237,7 @@ req_tx_add_headers_process:
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
         phvwr          CAPRI_PHV_FIELD(phv_global_common, _read_req),  1
-        b              op_type_end
+        b              rrq_full_chk
         add            r2, RDMA_PKT_OPC_RDMA_READ_REQ, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
 
     .brcase OP_TYPE_WRITE
@@ -354,7 +357,7 @@ req_tx_add_headers_process:
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
         phvwr          CAPRI_PHV_FIELD(phv_global_common, _atomic_cswap),  1
-        b              op_type_end
+        b              rrq_full_chk
         add            r2, RDMA_PKT_OPC_CMP_SWAP, d.service, RDMA_OPC_SERV_TYPE_SHIFT
    
     .brcase OP_TYPE_FETCH_N_ADD
@@ -377,13 +380,29 @@ req_tx_add_headers_process:
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
         phvwr          CAPRI_PHV_FIELD(phv_global_common, _atomic_fna),  1
-        b              op_type_end
+        b              rrq_full_chk
         add            r2, RDMA_PKT_OPC_FETCH_ADD, d.service, RDMA_OPC_SERV_TYPE_SHIFT
     .brend
 
+rrq_full_chk:
+    add            r1, d.rrq_pindex, 1
+    mincr          r1, d.log_rrq_size, 0
+    seq            c3, r1, d.rrq_cindex
+    bcf            [c3], rrq_full
+    phvwr.c3       CAPRI_PHV_FIELD(SQCB_WRITE_BACK_T, rate_enforce_failed), 1 // Branch Delay Slot
+
 op_type_end:
+    tblwr.c2       d.curr_op_type, K_OP_TYPE // Branch Delay Slot
+
+    tblwr          d.fence, 0
+    tblwr          d.fence_done, 1
+
+    // sqcb2 maintains copy of sq_cindex to enable speculation check. Increment
+    //the copy on completion of wqe and write it into sqcb2
+    tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
+
     // phv_p->bth.pkey = 0xffff
-    phvwr          BTH_PKEY, 0xffff  
+    phvwr          BTH_PKEY, 0xffff
 
     // store wqe_start_psn for backtrack from middle of multi-packet msg
     tblwr.c2       d.wqe_start_psn, d.tx_psn
@@ -445,9 +464,8 @@ inc_psn:
 
 rrq_p_index_chk:
     // do we need to increment rrq_pindex ?
-    bcf             [!c7], cb1_byte_update
-    // cb1_byte is by default set to FALSE
-    add             r5, r0, r0 // BD Slot
+    bcf             [!c7], local_ack_timer
+    SQCB0_ADDR_GET(r2)
 
     // incr_rrq_p_index
     tblmincri       d.rrq_pindex, d.log_rrq_size, 1
@@ -458,12 +476,7 @@ rrq_p_index_chk:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQ_PINDEX)
     DMA_HBM_PHV2MEM_SETUP(r6, rrq_p_index, rrq_p_index, r3)
 
-cb1_byte_update:
-    SQCB0_ADDR_GET(r2)
-    // on top of it, set need_credits flag is conditionally
-    add.c5         r5, r5, SQCB0_NEED_CREDITS_FLAG
-    add            r3, r2, FIELD_OFFSET(sqcb0_t, cb1_byte)
-    memwr.b        r3, r5
+local_ack_timer:
 
     tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
 
@@ -521,16 +534,25 @@ load_hdr_template:
     nop
 
 fence:
-    tblwr           d.fence, 1
+    tblwr.e         d.fence, 1
     tblwr           d.fence_done, 0
-    //fall-through
-poll_fail:
-rate_enforce_fail:
+
 spec_fail:
-    phvwr   p.common.p4_intr_global_drop, 1
-    //fall-through
+    phvwr.e   p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_2_VALID(0)
+
+rrq_full:
+#ifndef HAPS
+    // For Model, to avoid infinite loop, disable scheduler for this QP and upon
+    // receiving response for the outstanding request, scheduler will be
+    // re-enabled in the test to process the next read request.
+    // In case of hardware, txdma will be scheduled continousuly for this QP
+    // until rrq has room for the next request to be sent out
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r1, r2)
+#endif
+rate_enforce_fail:
+poll_fail:
 exit:
-    CAPRI_SET_TABLE_3_VALID(0)
     nop.e
     nop
 
@@ -542,7 +564,6 @@ error_disable_exit:
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
 
     // DMA commands for generating error-completion to RxDMA
-    CAPRI_SET_TABLE_3_VALID(0)
     phvwr          p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK
     add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
     phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0

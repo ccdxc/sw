@@ -3,11 +3,11 @@
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_s5_t2_k k;
+struct req_tx_s6_t2_k k;
 struct sqcb0_t d;
 
 #define IN_P t2_s2s_sqcb_write_back_info
-#define IN_TO_S_P to_s5_sqcb_wb_info
+#define IN_TO_S_P to_s6_sqcb_wb_add_hdr_info
 
 #define K_SPEC_CINDEX        CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_NUM_SGES           CAPRI_KEY_RANGE(IN_P, num_sges_sbit0_ebit2, num_sges_sbit3_ebit7)
@@ -20,15 +20,8 @@ struct sqcb0_t d;
 .align
 req_tx_write_back_process:
 
-    // if speculative cindex matches cindex, then this wqe is being
-    // processed in the right order and state update is allowed. Otherwise
-    // discard and continue with speculation until speculative cindex
-    // matches current cindex. If sepculative cindex doesn't match cindex, then
-    // revert speculative cindex to cindex , which would allow next speculation
-    // to continue from yet to be processed wqe
-    seq           c1, K_SPEC_CINDEX, SQ_C_INDEX 
-    bcf           [!c1], spec_fail
-    nop           // Branch Delay Slot    
+    // Speculation is validated in add_headers/sqcb2_write_back, so
+    // no need to validate here again.
 
     bbeq          CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, rate_enforce_fail
     nop           // Branch Delay Slot
@@ -116,12 +109,12 @@ poll_fail:
     CAPRI_SET_TABLE_2_VALID(0)
 
 rate_enforce_fail:
-    bbeq        d.dcqcn_rl_failure, 1, spec_fail
+    bbeq        d.dcqcn_rl_failure, 1, drop_phv
     nop // BD-slot
     tblwr       d.dcqcn_rl_failure, 1
     // fall-through
 
-spec_fail:
+drop_phv:
     phvwr.e      p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_2_VALID(0)
 
@@ -140,7 +133,7 @@ error_disable_exit:
      *  TODO: Incrementing cindex to satisfy model. Ideally, on error disabling we should just exit and be
      *  in the same state which caused the error.
      */
-    tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
+    tblmincri      SQ_C_INDEX, d.log_num_wqes, 1
     CAPRI_SET_TABLE_2_VALID(0)
     nop.e
     nop

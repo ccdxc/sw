@@ -72,7 +72,7 @@ req_rx_sqcb1_write_back_process:
      * Since completion entry will always be posted after this point, doing it here doesn't hurt.
      */
     add            r6, FIELD_OFFSET(sqcb2_t, rrq_cindex), r5
-    memwr.h        r6, RRQ_C_INDEX
+    memwr.b        r6, RRQ_C_INDEX
 
 post_cq:
     bbne           K_POST_CQ, 1, check_bktrack

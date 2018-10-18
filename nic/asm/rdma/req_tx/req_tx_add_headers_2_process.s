@@ -7,11 +7,11 @@ struct req_tx_phv_t p;
 struct req_tx_s6_t3_k k;
 
 #define IN_P            t3_s2s_add_hdr_info
-#define IN_TO_S_P       to_s6_add_hdr2_info
+#define IN_TO_S_P       to_s6_sqcb_wb_add_hdr_info
 
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_P, header_template_addr_sbit0_ebit2, header_template_addr_sbit27_ebit31)
 #define K_HEADER_TEMPLATE_SIZE CAPRI_KEY_RANGE(IN_P, header_template_size_sbit0_ebit2, header_template_size_sbit3_ebit7)
-#define K_PACKET_LEN_BITS_0_1 CAPRI_KEY_FIELD(IN_TO_S_P, packet_len_sbit8_ebit13)[1:0]
+#define K_PACKET_LEN_BITS_0_1 CAPRI_KEY_FIELD(IN_TO_S_P, packet_len_sbit6_ebit13)[1:0]
 %%
 
     .param  req_tx_stats_process

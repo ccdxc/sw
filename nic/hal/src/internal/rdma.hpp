@@ -935,16 +935,13 @@ typedef enum rdma_qp_state_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t  rsvd_cb1_flags: 5;
-    uint8_t  frpmr_in_progress: 1;
-    uint8_t  need_credits: 1;
-    uint8_t  cb1_busy: 1;
+    uint8_t rsvd2: 8;
 
     uint16_t busy: 1;        //tx
     uint16_t li_fence:1;
     uint16_t fence:1;
     uint16_t color: 1;
-    uint16_t rsvd_flag: 1;
+    uint16_t frpmr_in_progress: 1;
     uint16_t bktrack_in_progress:1;
     uint8_t  in_progress: 1;
     uint16_t priv_oper_enable: 1; //tx
@@ -982,7 +979,7 @@ typedef struct sqcb0_s {
         uint32_t pt_base_addr;          //common
         uint32_t hbm_sq_base_addr;
     };
-    uint32_t rsvd:16;
+    uint32_t rsvd1:16;
     uint32_t sqd_cindex:16;
     qpcb_ring_t           rings[MAX_SQ_DOORBELL_RINGS];
     // intrinsic
@@ -990,14 +987,13 @@ typedef struct sqcb0_s {
 } PACKED sqcb0_t;
 
 typedef struct sqcb1_s {
-
-    uint8_t pad[2];
+    uint16_t rsvd5;
     
     uint16_t spec_cindex;
     uint32_t pd;
 
     uint8_t bktrack_in_progress;
-    uint32_t rsvd3: 1;
+    uint32_t rsvd4: 1;
     uint32_t sqd_async_notify_enable: 1;
     uint32_t sq_drained: 1;
     uint32_t sqcb1_priv_oper_enable: 1;
@@ -1010,7 +1006,7 @@ typedef struct sqcb1_s {
     uint32_t max_ssn:24;
     uint32_t max_tx_psn:24;
 
-    uint32_t rsvd2: 3;
+    uint32_t rsvd3: 3;
     uint32_t credits:5;
 
     uint32_t msn:24;
@@ -1023,7 +1019,7 @@ typedef struct sqcb1_s {
     uint8_t header_template_size;
     uint32_t header_template_addr;
 
-    uint32_t rsvd1:24;
+    uint32_t rsvd2:24;
     uint32_t ssn:24;
     uint32_t tx_psn:24;      //tx
 
@@ -1036,9 +1032,11 @@ typedef struct sqcb1_s {
     uint8_t  log_rrq_size;
     uint32_t rrq_base_addr;  //common
     // RRQ RING for rxdma
-    qpcb_ring_t           ring5;
+    uint16_t rsvd1: 16;
+    uint8_t  rrq_cindex: 8;
+    uint8_t  rrq_pindex: 8;
     uint32_t cq_id:24;       //rx
-    uint8_t   pc;
+    uint8_t  pc;
 } PACKED sqcb1_t;
 
 typedef struct sqcb2_s {
@@ -1053,8 +1051,9 @@ typedef struct sqcb2_s {
     uint8_t  fence_done:1;
     uint8_t  li_fence:1;
     uint8_t  fence:1;
-    uint16_t rrq_cindex;
-    uint16_t rrq_pindex;
+    uint16_t  rsvd1;
+    uint8_t  rrq_cindex;
+    uint8_t  rrq_pindex;
     uint16_t sq_cindex;
 
     union {
