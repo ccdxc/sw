@@ -1,0 +1,37 @@
+{
+  "Instances": {
+    "lab-capri2": "192.168.78.233",
+    "lab-capri5": "192.168.78.181"
+  },
+  "PvtNetworks": [
+    {
+      "Name": "control",
+      "VlanID": 679
+    }
+  ],
+  "DataNetworks": {
+    "DataSwitch": {
+      "Name": "n3k-switch",
+      "IP": "192.168.78.253",
+      "Port": 20,
+      "EsxHost": "10.8.4.20",
+      "Username": "admin",
+      "Password": "N0isystem$"
+    },
+    "Networks": [
+      {
+        "Name": "data-1",
+        "VlanID": 4095
+      },
+      {
+        "Name": "data-2",
+        "VlanID": 4095
+      }
+    ]
+  },
+  "Provision": {
+    "Username": "vm",
+    "Password": "vm",
+    "PrivateKeyFile": ""
+  }
+}

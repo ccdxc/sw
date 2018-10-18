@@ -5,12 +5,12 @@ meta:
 nodes:
     - node: node1
       name: naples1
-      role: PERSONALITY_NAPLES
+      role: PERSONALITY_NAPLES_SIM
 
     - node: node2
       name: naples2
-      role: PERSONALITY_NAPLES
+      role: PERSONALITY_NAPLES_SIM
 
     - node: node3
       name: naples3
-      role: PERSONALITY_NAPLES
+      role: PERSONALITY_NAPLES_SIM

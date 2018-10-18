@@ -13,6 +13,8 @@ import iota.harness.infra.topology as topology
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
 
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+
 class TestSuite:
     def __init__(self, spec):
         self.__spec = spec
@@ -106,8 +108,15 @@ class TestSuite:
             tc.PrintResultSummary()
         return types.status.SUCCESS
 
+    def Name(self):
+        return self.__spec.meta.name
+
     def Main(self):
-        Logger.info("Running Testsuite: %s" % self.__spec.meta.name)
+        if GlobalOptions.testsuite and GlobalOptions.testsuite != self.Name():
+            Logger.info("Skipping Testsuite: %s because of command-line filters." % self.Name())
+            return types.status.SUCCESS
+
+        Logger.info("Running Testsuite: %s" % self.Name())
         
         # Initialize Testbed for this testsuite
         store.GetTestbed().InitForTestsuite(self)

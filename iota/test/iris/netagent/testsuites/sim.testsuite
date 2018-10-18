@@ -1,6 +1,6 @@
 meta:
-    name        : sample
-    description : Sample Test Suite
+    name        : sim
+    description : Simulation Test Suite
 
 packages:
     - iota.test.iris.netagent

@@ -1,0 +1,12 @@
+meta:
+    name: 1Naples_1Mellanox
+    description: 3 Naples Topology
+
+nodes:
+    - node: node1
+      name: naples1
+      role: PERSONALITY_NAPLES
+
+    - node: node2
+      name: mellanox1
+      role: PERSONALITY_MELLANOX

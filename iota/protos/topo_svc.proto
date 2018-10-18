@@ -68,10 +68,13 @@ message NodeMsg {
 }
 
 enum PersonalityType {
-    PERSONALITY_NONE                = 0;
-    PERSONALITY_NAPLES              = 1;
-    PERSONALITY_VENICE              = 2;
-    PERSONALITY_NAPLES_WITH_QEMU    = 3;
+    PERSONALITY_NONE                    = 0;
+    PERSONALITY_NAPLES_SIM              = 1;
+    PERSONALITY_VENICE                  = 2;
+    PERSONALITY_NAPLES_SIM_WITH_QEMU    = 3;
+    // Naples Hardware
+    PERSONALITY_NAPLES                  = 4;
+    PERSONALITY_MELLANOX                = 5;
 }
 
 // Node captures personality details of an E2E node
