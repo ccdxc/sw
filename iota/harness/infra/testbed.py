@@ -54,10 +54,8 @@ class _Testbed:
     def __cleanup_testbed(self):
         msg = self.__prepare_TestBedMsg(self.prev_ts)
         resp = api.CleanupTestbed(msg)
-        if resp.api_response.api_status != types_pb2.API_STATUS_OK:
-            Logger.error("Failed to initialize testbed: ",
-                         types_pb2.APIResponseType.Name(resp.api_response.api_status))
-            Logger.error("               error message: ", resp.api_response.error_msg)
+        if resp is None:
+            Logger.error("Failed to cleanup testbed: ")
             return types.status.FAILURE
         self.data_vlans = None
         return types.status.SUCCESS
@@ -65,10 +63,8 @@ class _Testbed:
     def __init_testbed(self):
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         resp = api.InitTestbed(msg)
-        if resp.api_response.api_status != types_pb2.API_STATUS_OK:
-            Logger.error("Failed to initialize testbed: ",
-                         types_pb2.APIResponseType.Name(resp.api_response.api_status))
-            Logger.error("               error message: ", resp.api_response.error_msg)
+        if resp is None:
+            Logger.error("Failed to initialize testbed: ")
             return types.status.FAILURE
         self.data_vlans = resp.allocated_vlans
         return types.status.SUCCESS
@@ -76,9 +72,9 @@ class _Testbed:
     def InitForTestsuite(self, ts):
         self.prev_ts = self.curr_ts
         self.curr_ts = ts
-        status = self.__cleanup_testbed()
-        if status != types.status.SUCCESS:
-            return status
+        #status = self.__cleanup_testbed()
+        #if status != types.status.SUCCESS:
+        #    return status
 
         status = self.__init_testbed()
         return status

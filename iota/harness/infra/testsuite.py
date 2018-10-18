@@ -119,9 +119,13 @@ class TestSuite:
         Logger.info("Running Testsuite: %s" % self.Name())
         
         # Initialize Testbed for this testsuite
-        store.GetTestbed().InitForTestsuite(self)
+        status = store.GetTestbed().InitForTestsuite(self)
+        if status != types.status.SUCCESS:
+            return status
 
-        self.__setup()
+        status = self.__setup()
+        if status != types.status.SUCCESS:
+            return status
 
         self.result = self.__execute_testcases()
 
