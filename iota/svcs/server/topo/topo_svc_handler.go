@@ -175,7 +175,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	}
 
 	for idx, node := range newNodes {
-		req.Nodes[idx] = node.Node
+		req.Nodes[idx] = node.RespNode
 	}
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
