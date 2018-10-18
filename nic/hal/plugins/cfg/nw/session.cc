@@ -774,7 +774,7 @@ session_state_to_session_get_response (session_t *session,
            mutable_conn_track_info());
     }
 
-    if (session->rflow->assoc_flow) {
+    if (session->rflow && session->rflow->assoc_flow) {
         HAL_TRACE_DEBUG("valid rflow aug session");
         // aug iflow age
         create_ns = session_state->rflow_aug_state.create_ts;
