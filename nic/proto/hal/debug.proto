@@ -42,6 +42,8 @@ service Debug {
   rpc FteSpanUpdate (FteSpanRequestMsg) returns (FteSpanResponseMsg) {}
 
   rpc HbmBwGet (HbmBwGetRequestMsg) returns (HbmBwGetResponseMsg) {}
+  rpc LlcSetup (LlcSetupRequestMsg) returns (LlcSetupResponseMsg) {}
+  rpc LlcGet   (types.Empty)   returns (LlcGetResponseMsg)   {}
 }
 
 
@@ -498,4 +500,44 @@ message HbmBwGetResponse {
 
 message HbmBwGetResponseMsg {
   repeated HbmBwGetResponse    response = 1;
+}
+
+enum LlcCounterType {
+  LLC_COUNTER_CACHE_NONE        = 0;
+  LLC_COUNTER_CACHE_READ        = 1;
+  LLC_COUNTER_CACHE_WRITE       = 2;
+  LLC_COUNTER_SCRATCHPAD_ACCESS = 3;
+  LLC_COUNTER_CACHE_HIT         = 4;
+  LLC_COUNTER_CACHE_MISS        = 5;
+  LLC_COUNTER_PARTIAL_WRITE     = 6;
+  LLC_COUNTER_CACHE_MAINT_OP    = 7;
+  LLC_COUNTER_EVICTION          = 8;
+  LLC_COUNTER_RETRY_NEEDED      = 9;
+  LLC_COUNTER_RETRY_ACCESS      = 10;
+}
+
+message LlcSetupRequest {
+  LlcCounterType        type    = 1;
+}
+
+message LlcSetupRequestMsg {
+  repeated LlcSetupRequest     request = 1;
+}
+
+message LlcSetupResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+message LlcSetupResponseMsg {
+  repeated LlcSetupResponse    response = 1;
+}
+
+message LlcGetResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  LlcCounterType  type        = 2;
+  repeated uint32 count       = 3;
+}
+
+message LlcGetResponseMsg {
+  repeated LlcGetResponse     response = 1;
 }

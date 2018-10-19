@@ -28,6 +28,12 @@ using debug::HbmBwGetRequest;
 using debug::HbmBwGetRequestMsg;
 using debug::HbmBwGetResponse;
 using debug::HbmBwGetResponseMsg;
+using debug::LlcSetupRequest;
+using debug::LlcSetupRequestMsg;
+using debug::LlcSetupResponse;
+using debug::LlcSetupResponseMsg;
+using debug::LlcGetResponse;
+using debug::LlcGetResponseMsg;
 
 namespace hal {
 
@@ -76,8 +82,8 @@ hal_ret_t thread_get (ThreadResponseMsg *rsp);
 hal_ret_t hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp);
 
 // LLC counters
-hal_ret_t llc_setup(void *rsp);
-hal_ret_t llc_get(void *rsp);
+hal_ret_t llc_setup(const LlcSetupRequest *req, LlcSetupResponse *rsp);
+hal_ret_t llc_get(LlcGetResponse *rsp);
 
 // FTE span APIs
 hal_ret_t fte_span_create(FteSpanRequest& req,

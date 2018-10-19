@@ -812,21 +812,46 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
 }
 
 hal_ret_t
-llc_setup(void *rsp)
+llc_setup(const LlcSetupRequest *req, LlcSetupResponse *rsp)
 {
+    hal_ret_t ret = HAL_RET_OK;
     pd::pd_llc_get_args_t llc_args;
-    memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
 
-    return pd::asic_pd_llc_setup(&llc_args);
+    memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
+    if (req->type()) {
+        llc_args.mask = (1 << (req->type() - 1)); // Req Type starts at 1 so we need to subtract 1
+    }
+
+    ret = pd::asic_pd_llc_setup(&llc_args);
+    if (ret == HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_OK);
+    } else {
+        rsp->set_api_status(types::API_STATUS_ERR);
+    }
+
+    return ret;
 }
 
 hal_ret_t
-llc_get(void *rsp)
+llc_get(LlcGetResponse *rsp)
 {
+    hal_ret_t ret = HAL_RET_OK;
     pd::pd_llc_get_args_t llc_args;
+
     memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
 
-    return pd::asic_pd_llc_get(&llc_args);
+    ret = pd::asic_pd_llc_get(&llc_args);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_ERR);
+        return ret;
+    }
+
+    for (int i = 0; i < 16; i ++) {
+        rsp->add_count(llc_args.data[i]);
+    }
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return ret;
 }
 
 }    // namespace hal

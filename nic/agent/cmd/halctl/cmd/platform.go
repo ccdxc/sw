@@ -27,6 +27,13 @@ var platShowCmd = &cobra.Command{
 	Long:  "show platform information",
 }
 
+var hbmLlcStatsShowCmd = &cobra.Command{
+	Use:   "llc-stats",
+	Short: "show hbm llc-stats",
+	Long:  "show hbm llc-stats",
+	Run:   llcStatsShowCmdHandler,
+}
+
 var platHbmShowCmd = &cobra.Command{
 	Use:   "hbm",
 	Short: "show hbm information",
@@ -34,7 +41,7 @@ var platHbmShowCmd = &cobra.Command{
 }
 
 var platHbmBwShowCmd = &cobra.Command{
-	Use:   "bw",
+	Use:   "bandwidth",
 	Short: "show hbm bandwidth information",
 	Long:  "show hbm bandwidth information",
 	Run:   platHbmBwShowCmdHandler,
@@ -44,9 +51,63 @@ func init() {
 	showCmd.AddCommand(platShowCmd)
 	platShowCmd.AddCommand(platHbmShowCmd)
 	platHbmShowCmd.AddCommand(platHbmBwShowCmd)
+	platHbmShowCmd.AddCommand(hbmLlcStatsShowCmd)
 
 	platHbmBwShowCmd.Flags().Uint32Var(&numSamples, "num-samples", 1, "Specify number of samples")
 	platHbmBwShowCmd.Flags().Uint32Var(&sleepInterval, "sleep-interval", 1, "Specify sleep interval in ns")
+}
+
+func llcStatsShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	var empty *halproto.Empty
+
+	// HAL call
+	respMsg, err := client.LlcGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Llc disable failed. %v\n", err)
+		return
+	}
+
+	llcGetPrintHeader()
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+		}
+		llcGetPrintOneResp(resp)
+	}
+}
+
+func llcGetPrintHeader() {
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 40)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-20s%-10s\n", "Channel", "Type", "Count")
+	fmt.Println(hdrLine)
+}
+
+func llcGetPrintOneResp(resp *halproto.LlcGetResponse) {
+	stats := resp.GetCount()
+	str := strings.ToLower(strings.Replace(resp.GetType().String(), "LLC_COUNTER_", "", -1))
+	str = strings.Replace(str, "_", "-", -1)
+	for i := 0; i < 16; i++ {
+		fmt.Printf("%-10d%-20s%-10d\n",
+			i, str, stats[i])
+	}
 }
 
 func platHbmBwShowCmdHandler(cmd *cobra.Command, args []string) {

@@ -420,3 +420,33 @@ DebugServiceImpl::HbmBwGet(ServerContext *context,
 
     return Status::OK;
 }
+
+Status
+DebugServiceImpl::LlcSetup(ServerContext *context,
+                           const LlcSetupRequestMsg *req,
+                           LlcSetupResponseMsg *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd LLC Setup Request");
+
+    LlcSetupRequest request = req->request(0);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::llc_setup(&request, rsp->add_response());
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::LlcGet(ServerContext *context,
+                         const Empty *req,
+                         LlcGetResponseMsg *rsp)
+{
+    LlcGetResponse    *response;
+
+    HAL_TRACE_DEBUG("Received Llc Get Request");
+
+    response = rsp->add_response();
+    hal::llc_get(response);
+    return Status::OK;
+}

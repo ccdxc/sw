@@ -493,6 +493,42 @@ func (mr *MockDebugClientMockRecorder) HbmBwGet(ctx, in interface{}, opts ...int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmBwGet", reflect.TypeOf((*MockDebugClient)(nil).HbmBwGet), varargs...)
 }
 
+// LlcSetup mocks base method
+func (m *MockDebugClient) LlcSetup(ctx context.Context, in *LlcSetupRequestMsg, opts ...grpc.CallOption) (*LlcSetupResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "LlcSetup", varargs...)
+	ret0, _ := ret[0].(*LlcSetupResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LlcSetup indicates an expected call of LlcSetup
+func (mr *MockDebugClientMockRecorder) LlcSetup(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LlcSetup", reflect.TypeOf((*MockDebugClient)(nil).LlcSetup), varargs...)
+}
+
+// LlcGet mocks base method
+func (m *MockDebugClient) LlcGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*LlcGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "LlcGet", varargs...)
+	ret0, _ := ret[0].(*LlcGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LlcGet indicates an expected call of LlcGet
+func (mr *MockDebugClientMockRecorder) LlcGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LlcGet", reflect.TypeOf((*MockDebugClient)(nil).LlcGet), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -761,4 +797,30 @@ func (m *MockDebugServer) HbmBwGet(arg0 context.Context, arg1 *HbmBwGetRequestMs
 // HbmBwGet indicates an expected call of HbmBwGet
 func (mr *MockDebugServerMockRecorder) HbmBwGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmBwGet", reflect.TypeOf((*MockDebugServer)(nil).HbmBwGet), arg0, arg1)
+}
+
+// LlcSetup mocks base method
+func (m *MockDebugServer) LlcSetup(arg0 context.Context, arg1 *LlcSetupRequestMsg) (*LlcSetupResponseMsg, error) {
+	ret := m.ctrl.Call(m, "LlcSetup", arg0, arg1)
+	ret0, _ := ret[0].(*LlcSetupResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LlcSetup indicates an expected call of LlcSetup
+func (mr *MockDebugServerMockRecorder) LlcSetup(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LlcSetup", reflect.TypeOf((*MockDebugServer)(nil).LlcSetup), arg0, arg1)
+}
+
+// LlcGet mocks base method
+func (m *MockDebugServer) LlcGet(arg0 context.Context, arg1 *Empty) (*LlcGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "LlcGet", arg0, arg1)
+	ret0, _ := ret[0].(*LlcGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LlcGet indicates an expected call of LlcGet
+func (mr *MockDebugServerMockRecorder) LlcGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LlcGet", reflect.TypeOf((*MockDebugServer)(nil).LlcGet), arg0, arg1)
 }

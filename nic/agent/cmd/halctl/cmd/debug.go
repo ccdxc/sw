@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -61,10 +62,31 @@ var secProfDebugCmd = &cobra.Command{
 	Run:   fwSecProfDebugCmdHandler,
 }
 
+var platDebugCmd = &cobra.Command{
+	Use:   "platform",
+	Short: "set platform options",
+	Long:  "set platform options",
+}
+
+var platHbmDebugCmd = &cobra.Command{
+	Use:   "hbm",
+	Short: "set platform hbm options",
+	Long:  "set platform hbm options",
+}
+var platLlcDebugCmd = &cobra.Command{
+	Use:   "llc-setup",
+	Short: "debug platform hbm llc-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
+	Long:  "debug platform hbm llc-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
+	Run:   llcSetupCmdHandler,
+}
+
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
 	debugCmd.AddCommand(fwDebugCmd)
+	debugCmd.AddCommand(platDebugCmd)
+	platDebugCmd.AddCommand(platHbmDebugCmd)
+	platHbmDebugCmd.AddCommand(platLlcDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
@@ -227,6 +249,81 @@ func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
 		if cmd != nil {
 			fmt.Println("Flushing logs succeeded")
 		}
+	}
+}
+
+func llcSetupCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var llcType halproto.LlcCounterType
+
+	if len(args) > 0 {
+		if strings.Compare(args[0], "cache-read") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_CACHE_READ
+		} else if strings.Compare(args[0], "cache-write") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_CACHE_WRITE
+		} else if strings.Compare(args[0], "scratchpad-access") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_SCRATCHPAD_ACCESS
+		} else if strings.Compare(args[0], "cache-hit") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_CACHE_HIT
+		} else if strings.Compare(args[0], "cache-miss") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_CACHE_MISS
+		} else if strings.Compare(args[0], "partial-write") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_PARTIAL_WRITE
+		} else if strings.Compare(args[0], "cache-maint-op") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_CACHE_MAINT_OP
+		} else if strings.Compare(args[0], "eviction") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_EVICTION
+		} else if strings.Compare(args[0], "retry-needed") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_RETRY_NEEDED
+		} else if strings.Compare(args[0], "retry-access") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_RETRY_ACCESS
+		} else if strings.Compare(args[0], "disable") == 0 {
+			llcType = halproto.LlcCounterType_LLC_COUNTER_CACHE_NONE
+		} else {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	} else {
+		fmt.Printf("Command needs an argument. Refer to help string.\n")
+		return
+	}
+
+	req := &halproto.LlcSetupRequest{
+		Type: llcType,
+	}
+	reqMsg := &halproto.LlcSetupRequestMsg{
+		Request: []*halproto.LlcSetupRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.LlcSetup(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Llc setup failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+		} else {
+			str := strings.ToLower(strings.Replace(llcType.String(), "LLC_COUNTER_", "", -1))
+			str = strings.Replace(str, "_", "-", -1)
+			if strings.Compare(str, "cache-none") == 0 {
+				fmt.Printf("LLC tracking disabled\n")
+			} else {
+				fmt.Printf("LLC set to track %s\n", str)
+			}
+		}
+		return
 	}
 }
 

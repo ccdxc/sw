@@ -56,6 +56,12 @@ using debug::HbmBwGetRequest;
 using debug::HbmBwGetRequestMsg;
 using debug::HbmBwGetResponse;
 using debug::HbmBwGetResponseMsg;
+using debug::LlcSetupRequest;
+using debug::LlcSetupRequestMsg;
+using debug::LlcSetupResponse;
+using debug::LlcSetupResponseMsg;
+using debug::LlcGetResponse;
+using debug::LlcGetResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -113,6 +119,12 @@ public:
     Status HbmBwGet(ServerContext *context,
                     const HbmBwGetRequestMsg *req,
                     HbmBwGetResponseMsg *rsp);
+    Status LlcSetup(ServerContext *context,
+                    const LlcSetupRequestMsg *req,
+                    LlcSetupResponseMsg *rsp);
+    Status LlcGet(ServerContext *context,
+                  const Empty *req,
+                  LlcGetResponseMsg *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__
