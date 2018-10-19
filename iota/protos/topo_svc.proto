@@ -190,7 +190,7 @@ message Workload {
 
     // IPAddress of the workload. Represent this as a CIDR block. 10.0.0.1/16 will be
     // interpreted as 10.0.0.1 is the IP of the workload container and it belongs to a /16 subnet.
-    string ip_address                       = 4;
+    string ip_prefix                        = 4;
 
     // MAC Address of the workload
     string mac_address                      = 5;

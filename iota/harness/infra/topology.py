@@ -25,6 +25,7 @@ class Node(object):
         self.__control_intf = "eth1"
 
         self.__data_intfs = [ "eth2", "eth3" ]
+        self.__host_intfs = []
         Logger.info("- New Node: %s: %s (%s)" % (spec.name, self.__ip_address, spec.role))
         return
 

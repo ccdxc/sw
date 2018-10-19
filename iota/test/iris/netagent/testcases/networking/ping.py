@@ -1,26 +1,13 @@
 #! /usr/bin/python3
-import time
-
 import iota.harness.api as api
-import iota.protos.pygen.cfg_svc_pb2 as cfg_svc_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.protos.pygen.types_pb2 as types_pb2
 
 def Setup(tc):
-    tc.workloads = api.GetWorkloads()
+    if tc.args.type == 'local_only':
+        tc.workload_pairs = api.GetLocalWorkloadPairs()
+    else:
+        tc.workload_pairs = api.GetRemoteWorkloadPairs()
     return api.types.status.SUCCESS
-
-def __get_workload_ip_from_prefix(prefix):
-    return prefix.split('/')[0]
-
-def __is_workload_pair_valid(tc, w1, w2):
-    if id(w1) == id(w2):
-        return False
-    if tc.args.type == 'local_only' and w1.node_name != w2.node_name:
-        return False
-    if tc.args.type == 'remote_only' and w1.node_name == w2.node_name:
-        return False
-    return True
 
 def Trigger(tc):
     req = topo_svc_pb2.TriggerMsg()
@@ -28,22 +15,21 @@ def Trigger(tc):
     req.trigger_mode = topo_svc_pb2.TRIGGER_SERIAL
     tc.cmd_cookies = []
 
-    for w1 in tc.workloads:
-        for w2 in tc.workloads:
-            if not __is_workload_pair_valid(tc, w1, w2): continue
-            w1_ip_address = __get_workload_ip_from_prefix(w1.ip_address)
-            w2_ip_address = __get_workload_ip_from_prefix(w2.ip_address)
-            cmd_cookie = "%s(%s) --> %s(%s)" %\
-                         (w1.workload_name, w1_ip_address, w2.workload_name, w2_ip_address)
-            api.Logger.info("Starting Ping test from %s" % (cmd_cookie))
-            tc.cmd_cookies.append(cmd_cookie)
+    for pair in tc.workload_pairs:
+        w1 = pair[0]
+        w2 = pair[1]
 
-            cmd = req.commands.add()
-            cmd.mode = topo_svc_pb2.COMMAND_FOREGROUND
-            cmd.workload_name = w1.workload_name
-            #cmd.command = "ping -c 10 -w 100 -W 10 -i 2 %s" % w2_ip_address
-            cmd.command = "ping -c 10 %s" % w2_ip_address
-            cmd.node_name = w1.node_name
+        cmd_cookie = "%s(%s) --> %s(%s)" %\
+                     (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
+        api.Logger.info("Starting Ping test from %s" % (cmd_cookie))
+        tc.cmd_cookies.append(cmd_cookie)
+
+        cmd = req.commands.add()
+        cmd.mode = topo_svc_pb2.COMMAND_FOREGROUND
+        cmd.workload_name = w1.workload_name
+        cmd.node_name = w1.node_name
+        #cmd.command = "ping -c 10 -w 100 -W 10 -i 2 %s" % w2_ip_address
+        cmd.command = "ping -c 10 %s" % w2.ip_address
     
     tc.resp = api.Trigger(req)
     return api.types.status.SUCCESS

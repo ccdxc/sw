@@ -99,7 +99,7 @@ def __add_workloads():
         ep_msg = req.workloads.add()
         ep_msg.workload_name = ep.meta.name 
         ep_msg.node_name = getattr(ep.spec, "node-uuid", None)
-        ep_msg.ip_address = __prepare_ip_address_str_for_endpoint(ep)
+        ep_msg.ip_prefix = __prepare_ip_address_str_for_endpoint(ep)
         ep_msg.mac_address = getattr(ep.spec, 'mac-address')
         host_if = __alloc_host_if(ep_msg.node_name)
         ep_msg.interface = host_if

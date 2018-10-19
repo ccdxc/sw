@@ -100,7 +100,7 @@ def __add_workloads():
         ep_msg.workload_name = ep.meta.name 
         ep_msg.node_name = getattr(ep.spec, "node-uuid", None)
         ep_msg.encap_vlan = getattr(ep.spec, 'useg-vlan')
-        ep_msg.ip_address = __prepare_ip_address_str_for_endpoint(ep)
+        ep_msg.ip_prefix = __prepare_ip_address_str_for_endpoint(ep)
         ep_msg.mac_address = getattr(ep.spec, 'mac-address')
         lif_uplink = __alloc_lif(ep_msg.node_name)
         ep_msg.interface = lif_uplink[0]

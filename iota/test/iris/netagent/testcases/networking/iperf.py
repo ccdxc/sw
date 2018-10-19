@@ -25,48 +25,42 @@ def __is_workload_pair_valid(tc, w1, w2):
 def Trigger(tc):
     req = topo_svc_pb2.TriggerMsg()
     req.trigger_op = topo_svc_pb2.EXEC_CMDS
-    req.trigger_mode = topo_svc_pb2.TRIGGER_PARALLEL
-    tc.cmd_cookies = []
+    req.trigger_mode = topo_svc_pb2.TRIGGER_SERIAL
 
-    for w1 in tc.workloads:
-        for w2 in tc.workloads:
-            if not __is_workload_pair_valid(tc, w1, w2): continue
-            w1_ip_address = __get_workload_ip_from_prefix(w1.ip_address)
-            w2_ip_address = __get_workload_ip_from_prefix(w2.ip_address)
-            cmd_cookie = "Server: %s(%s) <--> Client: %s(%s)" %\
-                         (w1.workload_name, w1_ip_address, w2.workload_name, w2_ip_address)
-            api.Logger.info("Starting Iperf test from %s" % (cmd_cookie))
-            tc.cmd_cookies.append(cmd_cookie)
+    pairs = api.GetRemoteWorkloadPairs()
+    w1 = pairs[0][0]
+    w2 = pairs[0][1]
 
-            cmd = req.commands.add()
-            cmd.mode = topo_svc_pb2.COMMAND_FOREGROUND
-            cmd.workload_name = w1.workload_name
-            cmd.node_name = w1.node_name
-            cmd.command = "iperf -s -t 30"
-            
-            cmd = req.commands.add()
-            cmd.mode = topo_svc_pb2.COMMAND_FOREGROUND
-            cmd.workload_name = w2.workload_name
-            cmd.node_name = w2.node_name
-            cmd.command = "iperf -c %s" % w1_ip_address
+    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
+                   (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
+    api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
+    
+    cmd = req.commands.add()
+    cmd.mode = topo_svc_pb2.COMMAND_BACKGROUND
+    cmd.workload_name = w1.workload_name
+    cmd.node_name = w1.node_name
+    cmd.command = "iperf -s -t 30"
+    
+    cmd = req.commands.add()
+    cmd.mode = topo_svc_pb2.COMMAND_FOREGROUND
+    cmd.workload_name = w2.workload_name
+    cmd.node_name = w2.node_name
+    cmd.command = "iperf -c %s" % w1.ip_address
    
-            tc.resp = api.Trigger(req)
-            return api.types.status.SUCCESS
+    tc.resp = api.Trigger(req)
+    return api.types.status.SUCCESS
 
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
-    cookie_idx = 0
-    assert(len(tc.cmd_cookies) == len(tc.resp.commands))
-
+    
+    api.Logger.info("Iperf Results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
-        api.Logger.info("Iperf Results for %s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             result = api.types.status.FAILURE
-        cookie_idx += 1
     return result
 
 def Teardown(tc):

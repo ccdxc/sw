@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import grpc
-import copy
+import pdb
 
 from iota.harness.infra.utils.logger import Logger as Logger
 
@@ -18,7 +18,6 @@ from iota.harness.infra.glopts import GlobalOptions
 gl_iota_svc_channel = None
 gl_topo_svc_stub = None
 gl_cfg_svc_stub = None
-gl_workloads = {}
 
 def Init():
     server = 'localhost:' + str(GlobalOptions.svcport)
@@ -64,27 +63,25 @@ def AddNodes(req):
     return __rpc(req, gl_topo_svc_stub.AddNodes)
 
 def AddWorkloads(req):
-    global gl_workloads
-    for wl in req.workloads:
-        wl_copy = copy.deepcopy(wl)
-        gl_workloads[wl.workload_name] = wl_copy
-
+    store.AddWorkloads(req)
     global gl_topo_svc_stub
     Logger.debug("Add Workloads:")
     return __rpc(req, gl_topo_svc_stub.AddWorkloads)
 
 def DeleteWorkloads(req):
-    global gl_workloads
-    for wl in req.workloads:
-        del gl_workloads[wl.workload_name]
-
+    store.DeleteWorkloads(req)
     global gl_topo_svc_stub
     Logger.debug("Delete Workloads:")
     return __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
 
 def GetWorkloads():
-    global gl_workloads
-    return gl_workloads.values()
+    return store.GetWorkloads()
+
+def GetLocalWorkloadPairs():
+    return store.GetLocalWorkloadPairs()
+
+def GetRemoteWorkloadPairs():
+    return store.GetRemoteWorkloadPairs()
 
 def Trigger(req):
     global gl_topo_svc_stub
@@ -146,6 +143,7 @@ def GetNaplesHostInterfaces(name):
 def GetWorkloadNodeHostInterfaces(name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadNodeHostInterfaces(name)
 
+<<<<<<< HEAD
 def PrintCommandResults(cmd):
     Logger.header('COMMAND')
     Logger.info("%s (Exit Code = %d)" % (cmd.command, cmd.exit_code))
@@ -155,3 +153,16 @@ def PrintCommandResults(cmd):
     Logger.header('STDERR')
     for line in cmd.stderr.split('\n'):
         Logger.info(line)
+=======
+
+def PrintCommandResults(cmd):
+    Logger.header('COMMAND')
+    Logger.info("%s (Exit Code = %d)" % (cmd.command, cmd.exit_code))
+    def PrintOutputLines(name, output):
+        lines = output.split('\n')
+        if len(lines): Logger.header(name)
+        for line in lines: 
+            Logger.info(line)
+    PrintOutputLines('STDOUT', cmd.stdout)
+    PrintOutputLines('STDERR', cmd.stderr)
+>>>>>>> Hardware sanity fixes.
