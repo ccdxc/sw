@@ -88,7 +88,8 @@ pprint_seq_info(const struct sequencer_info *seq_info)
 
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_ring_id", seq_info->sqi_ring_id);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_qtype", seq_info->sqi_qtype);
-	OSAL_LOG_DEBUG("%30s: %d", "sqi_status_qtype", seq_info->sqi_status_qtype);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_status_qtype",
+			seq_info->sqi_status_qtype);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_index", seq_info->sqi_index);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
@@ -863,7 +864,8 @@ hw_cleanup_cpdc_chain(const struct service_info *svc_info)
 	const struct cpdc_chain_params *cpdc_chain = &svc_info->si_cpdc_chain;
 
 	if (cpdc_chain->ccp_seq_spec.sqs_seq_status_q)
-		sonic_put_seq_statusq(cpdc_chain->ccp_seq_spec.sqs_seq_status_q);
+		sonic_put_seq_statusq(
+				cpdc_chain->ccp_seq_spec.sqs_seq_status_q);
 }
 
 static pnso_error_t
@@ -886,9 +888,8 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 
 	err = sonic_get_seq_statusq(lif, seq_info->sqi_status_qtype,
 				    &seq_spec->sqs_seq_status_q);
-	if (err) {
+	if (err)
 		return err;
-	}
 
 	seq_info->sqi_status_desc =
 		(uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q,
@@ -898,23 +899,27 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 		return EPERM;
 	}
 	desc->cd_db_addr = sonic_get_lif_local_dbaddr();
-	desc->cd_db_data = sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, statusq_index);
+	desc->cd_db_data =
+		sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, statusq_index);
 
 	OSAL_LOG_DEBUG("ring_id: %u index: %u desc: 0x"PRIx64,
 		       seq_info->sqi_ring_id, statusq_index, (uint64_t)desc);
 	fill_crypto_seq_status_desc(&svc_info->si_crypto_chain,
 				    seq_info->sqi_status_desc);
 	PPRINT_SEQUENCER_INFO(seq_info);
+
 	return PNSO_OK;
 }
 
 static void
 hw_cleanup_crypto_chain(const struct service_info *svc_info)
 {
-	const struct crypto_chain_params *crypto_chain = &svc_info->si_crypto_chain;
+	const struct crypto_chain_params *crypto_chain =
+		&svc_info->si_crypto_chain;
 
 	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q)
-		sonic_put_seq_statusq(crypto_chain->ccp_seq_spec.sqs_seq_status_q);
+		sonic_put_seq_statusq(
+				crypto_chain->ccp_seq_spec.sqs_seq_status_q);
 }
 
 const struct sequencer_ops hw_seq_ops = {

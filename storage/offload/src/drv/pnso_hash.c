@@ -99,7 +99,8 @@ hash_setup(struct service_info *svc_info,
 
 	if (per_block) {
 		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
-				svc_info->si_block_size, svc_info->si_src_blist.len,
+				svc_info->si_block_size,
+				svc_info->si_src_blist.len,
 				svc_params->sp_src_blist, sgl,
 				hash_desc, status_desc, fill_hash_desc);
 	} else {
@@ -110,8 +111,10 @@ hash_setup(struct service_info *svc_info,
 			goto out_status_desc;
 		}
 
-		fill_hash_desc(pnso_hash_desc->algo_type, svc_info->si_src_blist.len, false,
-				svc_info->si_src_sgl.sgl, hash_desc, status_desc);
+		fill_hash_desc(pnso_hash_desc->algo_type,
+				svc_info->si_src_blist.len, false,
+				svc_info->si_src_sgl.sgl,
+				hash_desc, status_desc);
 		num_tags = 1;
 	}
 
@@ -373,19 +376,12 @@ hash_read_status(const struct service_info *svc_info)
 	pnso_error_t err = EINVAL;
 	bool per_block;
 
-	OSAL_LOG_DEBUG("enter ...");
-
 	OSAL_ASSERT(svc_info);
 
 	per_block = svc_is_dflag_pblock_enabled(svc_info->si_desc_flags);
 	err = per_block ? hash_read_status_per_block(svc_info) :
 		hash_read_status_buffer(svc_info);
 
-	if (!err) {
-		OSAL_LOG_DEBUG("exit!");
-	} else {
-		OSAL_LOG_ERROR("exit! err: %d", err);
-	}
 	return err;
 }
 
@@ -526,11 +522,11 @@ hash_write_result(struct service_info *svc_info)
 	err = per_block ? hash_write_result_per_block(svc_info) :
 		hash_write_result_buffer(svc_info);
 
-	if (!err) {
+	if (!err)
 		OSAL_LOG_DEBUG("exit!");
-	} else {
+	else
 		OSAL_LOG_ERROR("exit! err: %d", err);
-	}
+
 	return err;
 }
 

@@ -58,7 +58,7 @@ is_pool_valid(struct mem_pool *mpool)
 	return (mpool->mp_magic & MPOOL_MAGIC_VALID) ? true : false;
 }
 
-static void inline __attribute__ ((unused))
+static inline void __attribute__ ((unused))
 validate_object(struct mem_pool *mpool, void *object)
 {
 	uint32_t pool_size, obj_size;
@@ -150,7 +150,8 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 	OSAL_ASSERT(is_power_of_2(mpool->mp_config.mpc_page_size));
 	if ((mpool->mp_config.mpc_align_size != PNSO_MEM_ALIGN_NONE) &&
 	    (!is_power_of_2(mpool->mp_config.mpc_align_size) ||
-	     (mpool->mp_config.mpc_align_size > mpool->mp_config.mpc_page_size))) {
+	     (mpool->mp_config.mpc_align_size >
+	      mpool->mp_config.mpc_page_size))) {
 		OSAL_LOG_ERROR("rmem invalid align_size %u in relation to page_size %u",
 			       mpool->mp_config.mpc_align_size,
 			       mpool->mp_config.mpc_page_size);
@@ -168,7 +169,8 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		curr_rmem = osal_rmem_alloc(mpool->mp_config.mpc_page_size);
 		if (!osal_rmem_addr_valid(curr_rmem)) {
 			OSAL_LOG_ERROR("pool %s failed after %u allocs remaining size %u",
-				       mpool_get_type_str(mpool->mp_config.mpc_type),
+				       mpool_get_type_str(
+					       mpool->mp_config.mpc_type),
 				       mpool->mp_config.mpc_num_allocs,
 				       total_size);
 			goto error;
@@ -179,10 +181,13 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 			first_rmem = curr_rmem;
 
 		if (osal_rmem_addr_valid(prev_rmem) &&
-		    ((curr_rmem - mpool->mp_config.mpc_page_size) != prev_rmem)) {
-			OSAL_LOG_ERROR("unexpected non-contiguous alloc curr_rmem 0x" PRIx64
-				       " prev_rmem 0x" PRIx64, curr_rmem, prev_rmem);
-			osal_rmem_free(curr_rmem, mpool->mp_config.mpc_page_size);
+				((curr_rmem - mpool->mp_config.mpc_page_size) !=
+				 prev_rmem)) {
+			OSAL_LOG_ERROR("unexpected non-contiguous alloc curr_rmem 0x" PRIx64 " prev_rmem 0x" PRIx64,
+					curr_rmem, prev_rmem);
+
+			osal_rmem_free(curr_rmem,
+					mpool->mp_config.mpc_page_size);
 			goto error;
 		}
 		mpool->mp_config.mpc_num_allocs++;
@@ -217,8 +222,8 @@ mpool_destroy_rmem_objects(struct mem_pool *mpool)
 }
 
 pnso_error_t
-mpool_create(enum mem_pool_type mpool_type,
-		uint32_t num_objects, uint32_t num_vec_elems, uint32_t object_size,
+mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
+		uint32_t num_vec_elems, uint32_t object_size,
 		uint32_t align_size, struct mem_pool **out_mpool)
 {
 	pnso_error_t err = EINVAL;
@@ -275,9 +280,11 @@ mpool_create(enum mem_pool_type mpool_type,
 	/* compute pad and total pool size */
 	mpool->mp_config.mpc_object_size = object_size;
 	mpool->mp_config.mpc_vec_elem_size = object_size * num_vec_elems;
-	mpool->mp_config.mpc_pad_size = mpool_get_pad_size(mpool->mp_config.mpc_vec_elem_size, align_size);
-	mpool->mp_config.mpc_pool_size =
-		((mpool->mp_config.mpc_vec_elem_size + mpool->mp_config.mpc_pad_size) * num_objects);
+	mpool->mp_config.mpc_pad_size =
+		mpool_get_pad_size(mpool->mp_config.mpc_vec_elem_size,
+				align_size);
+	mpool->mp_config.mpc_pool_size = ((mpool->mp_config.mpc_vec_elem_size +
+				mpool->mp_config.mpc_pad_size) * num_objects);
 
 	mpool->mp_objects = mpool_type_is_rmem(mpool_type) ?
 			    mpool_create_rmem_objects(mpool) :
@@ -305,9 +312,13 @@ mpool_create(enum mem_pool_type mpool_type,
 		OSAL_LOG_DEBUG("%30s[%d]: 0x"PRIx64" 0x"PRIx64" 0x"PRIx64" %u %u %u",
 			       "mpool->mp_dstack.mps_objects", i,
 			       (uint64_t) &objects[i], (uint64_t) objects[i],
-			       (uint64_t) mpool_get_object_phy_addr(mpool_type, objects[i]),
-			       mpool->mp_config.mpc_vec_elem_size, mpool->mp_config.mpc_pad_size, align_size);
-		obj += (mpool->mp_config.mpc_vec_elem_size + mpool->mp_config.mpc_pad_size);
+			       (uint64_t) mpool_get_object_phy_addr(mpool_type,
+				       objects[i]),
+			       mpool->mp_config.mpc_vec_elem_size,
+			       mpool->mp_config.mpc_pad_size, align_size);
+
+		obj += (mpool->mp_config.mpc_vec_elem_size +
+				mpool->mp_config.mpc_pad_size);
 	}
 	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
 

@@ -312,19 +312,12 @@ chksum_read_status(const struct service_info *svc_info)
 	pnso_error_t err = EINVAL;
 	bool per_block;
 
-	OSAL_LOG_DEBUG("enter ...");
-
 	OSAL_ASSERT(svc_info);
 
 	per_block = svc_is_chksum_per_block_enabled(svc_info->si_desc_flags);
 	err = per_block ? chksum_read_status_per_block(svc_info) :
 		chksum_read_status_buffer(svc_info);
 
-	if (!err) {
-		OSAL_LOG_DEBUG("exit!");
-	} else {
-		OSAL_LOG_ERROR("exit! err: %d", err);
-	}
 	return err;
 }
 

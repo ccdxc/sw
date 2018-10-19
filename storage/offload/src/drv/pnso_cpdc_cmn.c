@@ -46,6 +46,7 @@ pnso_error_t
 cpdc_poll(const struct service_info *svc_info)
 {
 	pnso_error_t err;
+
 	volatile struct cpdc_status_desc *status_desc;
 	uint64_t elapsed_ts, start_ts;
 
@@ -469,9 +470,9 @@ cpdc_update_service_info_sgl(struct service_info *svc_info)
 	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_src_blist,
 			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
 			&svc_info->si_src_sgl);
-	if (err) {
+	if (err)
 		OSAL_LOG_ERROR("cannot obtain src sgl from pool! err: %d", err);
-	}
+
 	return err;
 }
 

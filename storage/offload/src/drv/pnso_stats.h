@@ -14,10 +14,10 @@ extern "C" {
 
 /*
  * TODO-stats:
- * 	- replace ktime with osal equivalent
- * 	- reivew/add service/batch level stats, failure stat counting
- * 	- add 'get/per-core aggregate' stats api
- * 	- track emitting stats at module unload
+ *	- replace ktime with osal equivalent
+ *	- reivew/add service/batch level stats, failure stat counting
+ *	- add 'get/per-core aggregate' stats api
+ *	- track emitting stats at module unload
  *
  */
 struct pnso_api_stats {

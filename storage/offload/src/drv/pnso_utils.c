@@ -117,8 +117,9 @@ pc_res_sgl_put(const struct per_core_resource *pcr,
 
 	case MPOOL_TYPE_CPDC_SGL:
 		while (sgl) {
-			sgl_next = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) :
-					  NULL;
+			sgl_next = sgl->cs_next ?
+				sonic_phy_to_virt(sgl->cs_next) :
+				NULL;
 			pc_res_mpool_object_put(pcr, svc_sgl->mpool_type, sgl);
 			sgl = sgl_next;
 		}
@@ -155,8 +156,9 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 
 	total_len = 0;
 	svc_sgl->mpool_type = vec_type;
-	svc_sgl->sgl = pc_res_mpool_object_get_with_num_vec_elems(pcr, vec_type,
-								  &num_vec_elems);
+	svc_sgl->sgl =
+		pc_res_mpool_object_get_with_num_vec_elems(pcr, vec_type,
+				&num_vec_elems);
 	if (!svc_sgl->sgl) {
 		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s",
 			       mpool_get_type_str(vec_type));
@@ -170,13 +172,15 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 	while (iter && (cur_count < num_vec_elems)) {
 		memset(sgl_vec, 0, sizeof(*sgl_vec));
 		iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&sgl_vec->cs_addr_0, &sgl_vec->cs_len_0);
+				&sgl_vec->cs_addr_0, &sgl_vec->cs_len_0);
 		if (iter)
 			iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&sgl_vec->cs_addr_1, &sgl_vec->cs_len_1);
+					&sgl_vec->cs_addr_1,
+					&sgl_vec->cs_len_1);
 		if (iter)
 			iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&sgl_vec->cs_addr_2, &sgl_vec->cs_len_2);
+					&sgl_vec->cs_addr_2,
+					&sgl_vec->cs_len_2);
 		/*
 		 * See comments in crypto_aol_packed_get() regarding dropping
 		 * AOL when ca_len_0 == 0. The same logic applies here.
@@ -271,11 +275,14 @@ buffer_list_iter_init(struct buffer_list_iter *iter,
 		iter->cur_count = buf_list->count;
 		iter->cur_list = &buf_list->buffers[0];
 		iter->cur_len = iter->cur_list->len;
-		iter->cur_addr = iter->blist_type == SERVICE_BUF_LIST_TYPE_HOST ?
-				 sonic_hostpa_to_devpa(iter->cur_list->buf) :
-				 iter->cur_list->buf;
+		iter->cur_addr =
+			iter->blist_type == SERVICE_BUF_LIST_TYPE_HOST ?
+			sonic_hostpa_to_devpa(iter->cur_list->buf) :
+			iter->cur_list->buf;
+
 		return iter;
 	}
+
 	return NULL;
 }
 
@@ -285,11 +292,14 @@ buffer_list_iter_next(struct buffer_list_iter *iter)
 	if (iter->cur_list && --iter->cur_count) {
 		iter->cur_list++;
 		iter->cur_len = iter->cur_list->len;
-		iter->cur_addr = iter->blist_type == SERVICE_BUF_LIST_TYPE_HOST ?
-				 sonic_hostpa_to_devpa(iter->cur_list->buf) :
-				 iter->cur_list->buf;
+		iter->cur_addr =
+			iter->blist_type == SERVICE_BUF_LIST_TYPE_HOST ?
+			sonic_hostpa_to_devpa(iter->cur_list->buf) :
+			iter->cur_list->buf;
+
 		return iter;
 	}
+
 	return NULL;
 }
 
@@ -310,15 +320,16 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			continue;
 		}
 
-		if (len) {
+		if (len)
 			break;
-		}
+
 		len = iter->cur_len > max_len ? max_len : iter->cur_len;
 		*ret_addr = iter->cur_addr;
 		*ret_len = len;
 		iter->cur_addr += len;
 		iter->cur_len -= len;
 	}
+
 	return iter;
 }
 
@@ -364,8 +375,8 @@ svc_interm_buf_list_get(struct service_info *svc_info)
 
 		iblist->buf_type = MPOOL_TYPE_RMEM_INTERM_BUF;
 		size_left = req_size;
-		while (size_left  &&
-		       (iblist->blist.count < INTERM_BUF_MAX_NUM_NOMINAL_BUFS)) {
+		while (size_left  && (iblist->blist.count <
+					INTERM_BUF_MAX_NUM_NOMINAL_BUFS)) {
 
 			ibuf = pc_res_mpool_object_get_with_size(
 				svc_info->si_pcr, iblist->buf_type, &buf_size);
@@ -404,8 +415,12 @@ svc_interm_buf_list_put(struct service_info *svc_info)
 
 	while (iblist->blist.count) {
 		OSAL_ASSERT(iblist_buf->buf);
-		ibuf = mpool_get_object_alloc_addr(iblist->buf_type, iblist_buf->buf);
-		pc_res_mpool_object_put(svc_info->si_pcr, iblist->buf_type, ibuf);
+
+		ibuf = mpool_get_object_alloc_addr(iblist->buf_type,
+				iblist_buf->buf);
+
+		pc_res_mpool_object_put(svc_info->si_pcr,
+				iblist->buf_type, ibuf);
 		iblist_buf++;
 		iblist->blist.count--;
 	}
@@ -415,12 +430,12 @@ struct mem_pool *
 pc_res_mpool_get(const struct per_core_resource *pcr,
 		 enum mem_pool_type type)
 {
-	if (pcr && mpool_type_is_valid(type)) {
+	if (pcr && mpool_type_is_valid(type))
 		return pcr->mpools[type];
-	}
 
 	OSAL_LOG_ERROR("invalid pcr 0x"PRIx64" or mpool type %s",
 		       (uint64_t)pcr, mpool_get_type_str(type));
+
 	return NULL;
 }
 
@@ -434,11 +449,11 @@ pc_res_mpool_object_get(const struct per_core_resource *pcr,
 	mpool = pc_res_mpool_get(pcr, type);
 	if (mpool) {
 		obj = mpool_get_object(mpool);
-		if (!obj) {
+		if (!obj)
 			OSAL_LOG_ERROR("cannot obtain pcr object from pool %s",
 					mpool_get_type_str(type));
-		}
 	}
+
 	return obj;
 }
 
@@ -455,11 +470,11 @@ pc_res_mpool_object_get_with_size(const struct per_core_resource *pcr,
 	if (mpool) {
 		*ret_size = mpool_get_object_size(mpool);
 		obj = mpool_get_object(mpool);
-		if (!obj) {
+		if (!obj)
 			OSAL_LOG_ERROR("cannot obtain pcr object from pool %s",
 					mpool_get_type_str(type));
-		}
 	}
+
 	return obj;
 }
 
@@ -476,11 +491,11 @@ pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pcr,
 	if (mpool) {
 		*ret_num_vec_elems = mpool_get_object_num_vec_elems(mpool);
 		obj = mpool_get_object(mpool);
-		if (!obj) {
+		if (!obj)
 			OSAL_LOG_ERROR("cannot obtain pcr object from pool %s",
 					mpool_get_type_str(type));
-		}
 	}
+
 	return obj;
 }
 
@@ -505,10 +520,12 @@ pprint_chain_sgl_pdma(uint64_t sgl_pa)
 
 	if (sgl_pa) {
 		sgl = (const struct chain_sgl_pdma *) sonic_phy_to_virt(sgl_pa);
-		OSAL_LOG_DEBUG("%30s: 0x"PRIx64" ==> 0x"PRIx64, "", (uint64_t)sgl, sgl_pa);
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 " ==> 0x" PRIx64,
+				"", (uint64_t)sgl, sgl_pa);
+
 		tuple = sgl->tuple;
-		OSAL_LOG_DEBUG("%30s: 0x"PRIx64"/%d 0x"PRIx64"/%d 0x"PRIx64"/%d 0x"
-				PRIx64"/%d", "",
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/%d 0x" PRIx64 "/%d 0x" PRIx64 "/%d 0x" PRIx64 "/%d",
+				"",
 				tuple[0].addr, tuple[0].len,
 				tuple[1].addr, tuple[1].len,
 				tuple[2].addr, tuple[2].len,

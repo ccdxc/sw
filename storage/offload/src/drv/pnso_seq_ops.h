@@ -27,7 +27,8 @@ struct sequencer_ops {
 			struct cpdc_desc *cp_desc,
 			struct cpdc_status_desc *status_desc);
 
-	pnso_error_t (*setup_hash_chain_params)(struct cpdc_chain_params *chain_params,
+	pnso_error_t (*setup_hash_chain_params)(
+			struct cpdc_chain_params *chain_params,
 			struct service_info *svc_info,
 			struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
 			uint32_t num_hash_blks);

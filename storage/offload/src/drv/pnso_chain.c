@@ -400,31 +400,36 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_ops = encrypt_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS0;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_ENC_SQ;
-		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CRYPTO_STATUS;
+		svc_info->si_seq_info.sqi_status_qtype =
+			SONIC_QTYPE_CRYPTO_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECRYPT:
 		svc_info->si_ops = decrypt_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS1;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_DEC_SQ;
-		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CRYPTO_STATUS;
+		svc_info->si_seq_info.sqi_status_qtype =
+			SONIC_QTYPE_CRYPTO_STATUS;
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 		svc_info->si_ops = cp_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
-		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
+		svc_info->si_seq_info.sqi_status_qtype =
+			SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		svc_info->si_ops = dc_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
-		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
+		svc_info->si_seq_info.sqi_status_qtype =
+			SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_HASH:
 		svc_info->si_ops = hash_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP_HOT;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
-		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
+		svc_info->si_seq_info.sqi_status_qtype =
+			SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
@@ -432,7 +437,8 @@ init_service_info(enum pnso_service_type svc_type,
 		/* TODO-chain: rolling back to previous PR setting DCq failed */
 		// svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
-		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
+		svc_info->si_seq_info.sqi_status_qtype =
+			SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
@@ -447,10 +453,14 @@ init_service_info(enum pnso_service_type svc_type,
 
 	svc_info->si_src_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
 	svc_info->si_src_blist.blist = svc_params->sp_src_blist;
-	svc_info->si_src_blist.len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+	svc_info->si_src_blist.len =
+		pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+
 	svc_info->si_dst_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
 	svc_info->si_dst_blist.blist = svc_params->sp_dst_blist;
-	svc_info->si_dst_blist.len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
+	svc_info->si_dst_blist.len =
+		pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
+
 	return PNSO_OK;
 }
 
@@ -670,6 +680,7 @@ chn_execute_chain(struct service_chain *chain)
 	struct chain_entry *sc_entry;
 	struct chain_entry *ce_first, *ce_last;
 	struct service_ops *svc_ops;
+
 	PAS_DECL_HW_PERF();
 
 	OSAL_LOG_DEBUG("enter ...");

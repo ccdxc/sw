@@ -67,8 +67,8 @@ enum crypto_algo_cmd_lo {
 };
 
 /**
- * struct crypto_cmd - describes the operations to be performed in encryption and
- * decryption accelerator.
+ * struct crypto_cmd - describes the operations to be performed in encryption
+ * and decryption accelerator.
  * @cc_enable_crc: set to 1 to enable CRC block.
  * @cc_bypass_aes: set to 1 to bypass encryption/decryption.
  * @cc_rsvd_1: specifies a 'reserved' field for internal or future use.
@@ -155,8 +155,8 @@ struct crypto_status_desc {
 } __attribute__((__packed__));
 
 /**
- * crypto_init_accelerator() - creates and/or initializes internal data structures
- * that are necessary to encryption and decryption accelerator.
+ * crypto_init_accelerator() - creates and/or initializes internal data
+ * structures that are necessary to encryption and decryption accelerator.
  * @init_params:	[in]	specifies the initialization parameters for
  *				this accelerator.
  * @pcr:		[in]	specifies the per core container-structure to
@@ -178,8 +178,8 @@ pnso_error_t crypto_init_accelerator(struct pc_res_init_params *pc_init,
 		struct per_core_resource *pcr);
 
 /**
- * crypto_deinit_accelerator() - conducts cleanup task specific to encryption and
- * decryption accelerator.
+ * crypto_deinit_accelerator() - conducts cleanup task specific to encryption
+ * and decryption accelerator.
  * @pcr:	[in/out]	specifies the per core container-structure from
  *				which the accelerators' internal data structures
  *				need to be released.

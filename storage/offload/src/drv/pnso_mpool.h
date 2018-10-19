@@ -131,8 +131,9 @@ struct mem_pool {
  *
  */
 pnso_error_t mpool_create(enum mem_pool_type mpool_type,
-		uint32_t num_objects, uint32_t num_vec_elems, uint32_t object_size,
-		uint32_t align_size, struct mem_pool **out_mpool);
+		uint32_t num_objects, uint32_t num_vec_elems,
+		uint32_t object_size, uint32_t align_size,
+		struct mem_pool **out_mpool);
 
 /**
  * mpool_destroy() - destroys the specified type of pool.

@@ -289,8 +289,6 @@ deinit_batch(struct batch_info *batch_info)
 
 	put_mpool_batch_object(MPOOL_TYPE_BATCH_INFO, batch_info);
 	pcr->batch_info = NULL;
-
-	return;
 }
 
 void
@@ -311,7 +309,6 @@ bat_destroy_batch(void)
 
 out:
 	OSAL_LOG_DEBUG("exit!");
-	return;
 }
 
 static pnso_error_t

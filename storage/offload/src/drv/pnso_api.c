@@ -64,35 +64,32 @@ lookup_hdr_format(uint32_t hdr_fmt_idx, bool alloc)
 	struct cp_header_format *fmt;
 	struct cp_header_format *vacant_fmt = NULL;
 
-	if (!hdr_fmt_idx) {
+	if (!hdr_fmt_idx)
 		return NULL;
-	}
 
 	/* First try to find entry at the given index */
 	if (hdr_fmt_idx <= PNSO_MAX_CP_HEADER_FORMATS) {
 		fmt = &g_cp_hdr_formats[hdr_fmt_idx - 1];
-		if (fmt->fmt_idx == hdr_fmt_idx) {
+		if (fmt->fmt_idx == hdr_fmt_idx)
 			return fmt;
-		}
-		if (fmt->fmt_idx == 0) {
+
+		if (fmt->fmt_idx == 0)
 			vacant_fmt = fmt;
-		}
 	}
 
 	/* Second, search all entries */
 	for (i = 0; i < PNSO_MAX_CP_HEADER_FORMATS; i++) {
 		fmt = &g_cp_hdr_formats[i];
-		if (fmt->fmt_idx == hdr_fmt_idx) {
+		if (fmt->fmt_idx == hdr_fmt_idx)
 			return fmt;
-		}
-		if (fmt->fmt_idx == 0 && !vacant_fmt) {
+
+		if (fmt->fmt_idx == 0 && !vacant_fmt)
 			vacant_fmt = fmt;
-		}
 	}
 
-	if (alloc) {
+	if (alloc)
 		return vacant_fmt;
-	}
+
 	return NULL;
 }
 
@@ -145,9 +142,8 @@ pnso_register_compression_header_format(
 
 	if (total_hdr_len && !format->static_hdr) {
 		format->static_hdr = osal_alloc(total_hdr_len);
-		if (!format->static_hdr) {
+		if (!format->static_hdr)
 			return ENOMEM;
-		}
 	}
 	format->total_hdr_sz = total_hdr_len;
 
