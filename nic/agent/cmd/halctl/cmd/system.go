@@ -897,6 +897,7 @@ func fteTxRxStatsShow(stats *halproto.Stats) {
 			fmt.Printf("%s%-15d\n", "Tx Send Err                      : ", ctr.GetTxSendErr())
 			fmt.Printf("%s%-15d\n", "Poll count                       : ", ctr.GetPollCount())
 			fmt.Printf("%s%-15d\n", "Rx Descr out of bound err        : ", ctr.GetRxDescrAddrOob())
+			fmt.Printf("%s%-15d\n", "Tx Doorbell Err                  : ", ctr.GetTxDoorbellErr())
 
 			fmt.Printf("\n")
 		}

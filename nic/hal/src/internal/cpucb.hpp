@@ -36,6 +36,8 @@ typedef struct cpucb_s {
     uint8_t               cfg_flags;               // Configuration flags
     hal_handle_t          hal_handle;              // HAL allocated handle
     uint32_t              debug_dol;               // Debug via dol
+    uint64_t              descr_addr_oob_count;
+    uint64_t              total_tx_pkts;
     // PD state
     void                  *pd;                     // all PD specific state
 

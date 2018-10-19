@@ -18,6 +18,8 @@ thread_local int      tg_cpu_id = -1;
 
 hal_ret_t cpupkt_descr_free(cpupkt_hw_id_t descr_addr);
 
+#define CPU_PINDEX_MAX 65536
+
 /****************************************************************
  * Helper functions
  ***************************************************************/
@@ -790,8 +792,8 @@ pd_cpupkt_program_send_ring_doorbell (pd_func_args_t *pd_func_args)
     data += (ring_number << DB_RING_SHFT);
     data += (args->pidx);
 
-    HAL_TRACE_DEBUG("ringing Doorbell with addr: {:#x} data: {:#x}",
-                    addr, data);
+    HAL_TRACE_DEBUG("ringing Doorbell with addr: {:#x} data: {:#x} lif: {} qtype: {} qid: {} ring: {} pidx: {}",
+                    addr, data, dest_lif, qtype, qid, ring_number, args->pidx);
     asic_ring_doorbell(addr, data, ASIC_WRITE_MODE_WRITE_THRU);
     return HAL_RET_OK;
 }
@@ -935,7 +937,8 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
     d_args.qtype = qtype;
     d_args.qid = qid;
     d_args.ring_number = ring_number;
-    d_args.flags = DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_SET;
+    d_args.flags = DB_IDX_UPD_PIDX_SET | DB_SCHED_UPD_SET;
+    d_args.pidx = (qinst_info.ctr.send_pkts + 1) % CPU_PINDEX_MAX; 
     pd_func_args1.pd_cpupkt_program_send_ring_doorbell = &d_args;
     ret = pd_cpupkt_program_send_ring_doorbell(&pd_func_args1);
     if(ret != HAL_RET_OK) {

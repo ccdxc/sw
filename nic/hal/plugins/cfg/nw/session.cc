@@ -2441,7 +2441,7 @@ system_fte_txrx_stats_get(SystemResponse *rsp)
             ctr->set_tx_send_err(fte_qinfo.inst.ctr.tx_send_err);
             ctr->set_rx_descr_addr_oob(fte_qinfo.inst.ctr.rx_descr_addr_oob);
             ctr->set_poll_count(fte_qinfo.inst.ctr.poll_count);
-
+            ctr->set_tx_doorbell_err(fte_qinfo.inst.ctr.tx_db_err);
         }
     }
     return HAL_RET_OK;

@@ -233,7 +233,9 @@ cpucb_get (CpuCbGetRequest& req, CpuCbGetResponseMsg *resp)
 
     // fill operational state of this CPU CB
     rsp->mutable_status()->set_cpucb_handle(cpucb->hal_handle);
-
+    rsp->mutable_spec()->set_descr_addr_oob_count(cpucb->descr_addr_oob_count);
+    rsp->mutable_spec()->set_total_tx_pkts(cpucb->total_tx_pkts);
+  
     // fill stats of this CPU CB
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

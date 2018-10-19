@@ -327,6 +327,7 @@ message QCtr {
   uint32        tx_send_err              = 12;
   uint32        rx_descr_addr_oob        = 13;
   uint64        poll_count               = 14;
+  uint32        tx_doorbell_err          = 15;
 }
 
 message QGlobalInfo {
