@@ -47,6 +47,7 @@ NAPLES_PORT_MAPS = {
 NAPLES_ENV = {"SMART_NIC_MODE" : "1"}
 QEMU_ENV   = {"WITH_QEMU": "1"}
 VENICE_IPS = {"VENICE_IPS" : ""}
+NMD_HOSTNAME = {"NMD_HOSTNAME" : ""}
 
 # Move it out to a configu
 _APP_IMAGES = [
@@ -352,6 +353,9 @@ def __bringup_naples_container(args):
     if args.venice_ips:
         VENICE_IPS = {"VENICE_IPS" : args.venice_ips}
         NAPLES_ENV.update(VENICE_IPS)
+    if args.nmd_hostname:
+        NMD_HOSTNAME = {"NMD_HOSTNAME" : args.nmd_hostname}
+        NAPLES_ENV.update(NMD_HOSTNAME)
 
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
                                                name=NAPLES_SIM_NAME,
@@ -445,6 +449,8 @@ def main():
                         help="Tunnel Port prefix to use")
     parser.add_argument('--hntap-mode', dest='hntap_mode', default="tunnel",
                         choices=["tunnel", "passthrough"], help='Hntap Mode to run in naples sim')
+    parser.add_argument('--nmd-hostname', dest='nmd_hostname', default=None,
+                        help="Nmd hostname")
     args = parser.parse_args()
 
     if args.data_ips:

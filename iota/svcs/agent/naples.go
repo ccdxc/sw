@@ -107,6 +107,9 @@ func (naples *naplesSimNode) bringUpNaples(name string, image string, ctrlIntf s
 		cmd = append(cmd, "--qemu")
 	}
 
+	cmd = append(cmd, "--nmd-hostname")
+	cmd = append(cmd, name)
+
 	cmd = append(cmd, "--hntap-mode")
 	if passThroughMode {
 		cmd = append(cmd, "passthrough")

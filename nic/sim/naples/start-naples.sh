@@ -27,6 +27,13 @@ else
     echo "Running naples-sim with Qemu"
 fi
 
+if [ -z "$NMD_HOSTNAME" ]; then
+    NMD_HOSTNAME=""
+    echo "Nmd Hostname not set"
+else
+    echo "Nmd Hostname set $NMD_HOSTNAME"
+fi
+
 if [ -z "$VENICE_IPS" ]; then
     echo "Venice IPs are not specified for agent."
 else
@@ -186,7 +193,7 @@ echo "Starting netagent ..."
 "$NIC_DIR"/bin/netagent -hostif eth1 -logtofile $LOG_DIR/agent.log -resolver-urls "$CMD_URL":"$CMD_RESOLVER_PORT" $NPM_URL $MANAGED_MODE -datapath hal -disabletsa &
 
 echo "Starting nmd ..."
-"$NIC_DIR"/bin/nmd  -cmdregistration "$CMD_URL":"$CMD_GRPC_UNAUTH_PORT" -cmdupdates "$CMD_URL":"$CMD_RESOLVER_PORT" -cmdcerts "$CMD_URL":"$CMD_RESOLVER_PORT" -hostif eth1 --log-to-file $LOG_DIR/nmd.log -resolver "$CMD_URL":"$CMD_RESOLVER_PORT" -mode managed &
+"$NIC_DIR"/bin/nmd  -cmdregistration "$CMD_URL":"$CMD_GRPC_UNAUTH_PORT" -cmdupdates "$CMD_URL":"$CMD_RESOLVER_PORT" -cmdcerts "$CMD_URL":"$CMD_RESOLVER_PORT" -hostif eth1 --log-to-file $LOG_DIR/nmd.log -resolver "$CMD_URL":"$CMD_RESOLVER_PORT" -mode managed -hostname $NMD_HOSTNAME &
 echo "NAPLES services/processes up and running ..."
 
 # keep the container running
