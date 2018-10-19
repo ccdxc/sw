@@ -69,7 +69,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   tableLoading: boolean = false;
 
   // Used for processing watch events
-  workloadEventUtility: HttpEventUtility;
+  workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
 
   cols: any[] = [
     { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: false },
@@ -213,7 +213,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   getWorkloads() {
-    this.workloadEventUtility = new HttpEventUtility(WorkloadWorkload);
+    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.workloads = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {

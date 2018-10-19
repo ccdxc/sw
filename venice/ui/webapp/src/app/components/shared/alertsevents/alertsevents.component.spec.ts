@@ -145,25 +145,27 @@ describe('AlertseventsComponent', () => {
 
       // Checking that the table entry is there
       tableBody = eventsContainer.query(By.css('.mat-tab-body-active .ui-table-scrollable-body-table tbody'));
-      expect(tableBody.children.length).toBe(1);
-      const caseMap = {
-        'severity': (field, rowData, rowIndex) => {
-          expect(field.children.length).toBe(2);
-          if (rowData.severity === 'INFO') {
-            expect(field.children[0].nativeElement.textContent).toContain('notifications');
-          } else {
-            expect(field.children[0].nativeElement.textContent).toContain('error');
+      fixture.whenStable().then(() => {
+        expect(tableBody.children.length).toBe(1);
+        const caseMap = {
+          'severity': (field, rowData, rowIndex) => {
+            expect(field.children.length).toBe(2);
+            if (rowData.severity === 'INFO') {
+              expect(field.children[0].nativeElement.textContent).toContain('notifications');
+            } else {
+              expect(field.children[0].nativeElement.textContent).toContain('error');
+            }
+            expect(field.children[1].nativeElement.textContent)
+              .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
+                'severity column did not match');
+          },
+          'source': (field, rowData, rowIndex) => {
+            expect(field.nativeElement.textContent).toContain(
+              rowData.source['node-name'] + '  :  ' + rowData.source.component, 'source column did not match');
           }
-          expect(field.children[1].nativeElement.textContent)
-            .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
-              'severity column did not match');
-        },
-        'source': (field, rowData, rowIndex) => {
-          expect(field.nativeElement.textContent).toContain(
-            rowData.source['node-name'] + '  :  ' + rowData.source.component, 'source column did not match');
-        }
-      };
-      TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
+        };
+        TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
+      })
     });
 
   }));

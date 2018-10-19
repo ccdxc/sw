@@ -27,8 +27,8 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   };
   cluster: ClusterCluster;
   // Used for processing the stream events
-  clusterEventUtility: HttpEventUtility;
-  nodeEventUtility: HttpEventUtility;
+  clusterEventUtility: HttpEventUtility<ClusterCluster>;
+  nodeEventUtility: HttpEventUtility<ClusterNode>;
 
   clusterArray: ReadonlyArray<ClusterCluster> = [];
   nodes: ReadonlyArray<ClusterNode> = [];
@@ -58,7 +58,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   getCluster() {
-    this.clusterEventUtility = new HttpEventUtility(ClusterCluster, true);
+    this.clusterEventUtility = new HttpEventUtility<ClusterCluster>(ClusterCluster, true);
     this.clusterArray = this.clusterEventUtility.array as ReadonlyArray<ClusterCluster>;
     const subscription = this._clusterService.WatchCluster().subscribe(
       response => {
@@ -81,7 +81,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   getNodes() {
-    this.nodeEventUtility = new HttpEventUtility(ClusterNode);
+    this.nodeEventUtility = new HttpEventUtility<ClusterNode>(ClusterNode);
     this.nodes = this.nodeEventUtility.array;
     const subscription = this._clusterService.WatchNode().subscribe(
       response => {

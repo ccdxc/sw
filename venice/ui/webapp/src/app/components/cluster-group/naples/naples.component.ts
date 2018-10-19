@@ -19,7 +19,7 @@ export class NaplesComponent implements OnInit, OnDestroy {
 
   naples: ReadonlyArray<ClusterSmartNIC> = [];
   // Used for processing the stream events
-  naplesEventUtility: HttpEventUtility;
+  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
 
   cols: any[] = [
     { field: 'meta.name', header: 'Name', class: 'naples-column-date', sortable: false },
@@ -53,7 +53,7 @@ export class NaplesComponent implements OnInit, OnDestroy {
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility(ClusterSmartNIC);
+    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
     const subscription = this.clusterService.WatchSmartNIC().subscribe(
       response => {

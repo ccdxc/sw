@@ -19,10 +19,10 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   objectPolicies: ReadonlyArray<IMonitoringAlertPolicy> = [];
   destinations: ReadonlyArray<IMonitoringAlertDestination> = [];
 
-  eventPoliciesEventUtility: HttpEventUtility;
-  metricPoliciesEventUtility: HttpEventUtility;
-  objectPoliciesEventUtility: HttpEventUtility;
-  destinationsEventUtility: HttpEventUtility;
+  eventPoliciesEventUtility: HttpEventUtility<MonitoringAlertPolicy>;
+  metricPoliciesEventUtility: HttpEventUtility<any>;
+  objectPoliciesEventUtility: HttpEventUtility<any>;
+  destinationsEventUtility: HttpEventUtility<MonitoringAlertDestination>;
 
   subscriptions: Subscription[] = [];
 
@@ -54,17 +54,17 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   }
 
   getAlertPolicies() {
-    this.eventPoliciesEventUtility = new HttpEventUtility(MonitoringAlertPolicy, false,
+    this.eventPoliciesEventUtility = new HttpEventUtility<MonitoringAlertPolicy>(MonitoringAlertPolicy, false,
       (policy) => {
         return policy.spec.resource === 'Event';
       }
     );
-    this.metricPoliciesEventUtility = new HttpEventUtility(null, false,
+    this.metricPoliciesEventUtility = new HttpEventUtility<any>(null, false,
       (policy) => {
         return policy.spec.resource === 'EndpointMetrics';
       }
     );
-    this.objectPoliciesEventUtility = new HttpEventUtility(null, false,
+    this.objectPoliciesEventUtility = new HttpEventUtility<any>(null, false,
       (policy) => {
         return policy.spec.resource !== 'EndpointMetrics' &&
           policy.spec.resource !== 'Event';
@@ -93,7 +93,7 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   }
 
   getDestinations() {
-    this.destinationsEventUtility = new HttpEventUtility(MonitoringAlertDestination);
+    this.destinationsEventUtility = new HttpEventUtility<MonitoringAlertDestination>(MonitoringAlertDestination);
     this.destinations = this.destinationsEventUtility.array;
     const subscription = this._monitoringService.WatchAlertDestination().subscribe(
       (response) => {

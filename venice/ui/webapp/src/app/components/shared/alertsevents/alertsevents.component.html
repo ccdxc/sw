@@ -28,17 +28,21 @@
                 <!-- <input matInput [formControl]="eventSearchFormControl" placeholder="Leader, Service, ... " maxlength="256" autocomplete="off"> -->
               <!-- </mat-form-field> -->
             <!-- </div> -->
-            <!-- <div class="global-button global-alert-neutral alertsevents-main-menu-number " 
-                  (click)="onEventNumberClick($event, 'total')">All</div>
+            <div class="global-button global-alert-neutral alertsevents-main-menu-number " 
+                  (click)="onEventNumberClick($event, null)"
+                  *ngIf="currentEventSeverityFilter != null">All</div>
             <div class="global-button global-alert-critical alertsevents-main-menu-number " 
                   (click)="onEventNumberClick($event, 'CRITICAL')"
-                  *ngIf="eventNumbers.CRITICAL>0">{{ eventNumbers.CRITICAL }}</div>
+                  *ngIf="eventNumbers.CRITICAL>0 && eventNumbers.CRITICAL !== events.length"
+                  >{{ eventNumbers.CRITICAL }}</div>
             <div class="global-button global-alert-warning alertsevents-main-menu-number " 
                   (click)="onEventNumberClick($event, 'WARNING')"
-                  *ngIf="eventNumbers.WARNING>0">{{ eventNumbers.WARNING }}</div>
+                  *ngIf="eventNumbers.WARNING>0 && eventNumbers.WARNING !== events.length"
+                  >{{ eventNumbers.WARNING }}</div>
             <div class="global-button global-alert-info alertsevents-main-menu-number " 
                   (click)="onEventNumberClick($event, 'INFO')" 
-                  *ngIf="eventNumbers.INFO>0">{{ eventNumbers.INFO }}</div> -->
+                  *ngIf="eventNumbers.INFO>0 && eventNumbers.INFO !== events.length"
+                  >{{ eventNumbers.INFO }}</div>
           </app-tableheader>
         </ng-template>
       <!-- Table Header -->
@@ -85,23 +89,42 @@
     <div fxFlex class="alertsevents-events-table">
       <app-lazyrender [data]="filteredAlerts" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
         <p-table #eventTable class="global-primeng-table-lazyload" [columns]="alertCols" 
+                  [rowTrackBy]='alertTrackBy'
                   dataKey="meta.name" [responsive]="true" 
-                  [loading]="alertLoading" [resizableColumns]="true">
+                  [loading]="alertsLoading" [resizableColumns]="true">
           <!-- Table Caption -->
           <ng-template pTemplate="caption">
             <app-tableheader title="Alerts" [count]="filteredAlerts.length" [total]="alerts.length" [icon]="alertsIcon" width="250px">
               <div fxFlex></div>
+              <!-- Checkboxes for Open, Ack, Resolved states -->
+              <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+                <ng-container *ngFor="let state of possibleFilterStates">
+                  <p-checkbox name="stateFilter"
+                        styleClass="alertsevents-checkbox" 
+                        labelStyleClass="alertsevents-checkbox-label" 
+                        [value]="state"
+                        [label]="state"
+                        [disabled]="selectedStateFilters.length === 1 && selectedStateFilters[0] === state"
+                        [(ngModel)]="selectedStateFilters"
+                        (onChange)="filterAlerts()"
+                        ></p-checkbox>
+                </ng-container>
+              </div>
               <div class="global-button global-alert-neutral alertsevents-main-menu-number " 
-                    (click)="onAlertNumberClick('total')">All</div>
+                    (click)="onAlertNumberClick(null)"
+                    *ngIf="currentAlertSeverityFilter != null">All</div>
               <div class="global-button global-alert-critical alertsevents-main-menu-number " 
                     (click)="onAlertNumberClick('CRITICAL')"
-                    *ngIf="alertNumbers.CRITICAL>0">{{ alertNumbers.CRITICAL }}</div>
+                    *ngIf="alertNumbers.CRITICAL>0 && alertNumbers.CRITICAL !== alerts.length"
+                    >{{ alertNumbers.CRITICAL }}</div>
               <div class="global-button global-alert-warning alertsevents-main-menu-number " 
                     (click)="onAlertNumberClick('WARNING')"
-                    *ngIf="alertNumbers.WARNING>0">{{ alertNumbers.WARNING }}</div>
+                    *ngIf="alertNumbers.WARNING>0 && alertNumbers.WARNING !== alerts.length"
+                    >{{ alertNumbers.WARNING }}</div>
               <div class="global-button global-alert-info alertsevents-main-menu-number " 
                     (click)="onAlertNumberClick('INFO')" 
-                    *ngIf="alertNumbers.INFO>0">{{ alertNumbers.INFO }}</div>
+                    *ngIf="alertNumbers.INFO>0 && alertNumbers.INFO !== alerts.length"
+                    >{{ alertNumbers.INFO }}</div>
             </app-tableheader>
           </ng-template>
         <!-- Table Header -->

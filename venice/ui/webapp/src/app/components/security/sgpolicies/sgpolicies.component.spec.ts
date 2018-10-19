@@ -104,7 +104,7 @@ describe('SgpoliciesComponent', () => {
       }
     });
     fixture.detectChanges();
-    testingUtility.verifyTable([policy1, policy2], component.cols, tableElem, {});
+    testingUtility.verifyTable([policy2, policy1], component.cols, tableElem, {});
 
     sgPolicyObserver.next({
       body: {

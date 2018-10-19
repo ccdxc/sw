@@ -239,7 +239,7 @@ describe('WorkloadComponent', () => {
         });
       }
     };
-    TestingUtility.verifyTable([workload1, workload2, workload3], component.cols, tableBody, caseMap);
+    TestingUtility.verifyTable([workload3, workload2, workload1], component.cols, tableBody, caseMap);
   });
 
 });

@@ -13,16 +13,16 @@ class MockConstructor {
 }
 
 describe('HttpEventUtility', () => {
-  const serviceUtility = new HttpEventUtility();
-  const serviceUtilityFilter = new HttpEventUtility(null, false,
+  const serviceUtility = new HttpEventUtility<any>();
+  const serviceUtilityFilter = new HttpEventUtility<any>(null, false,
     (object) => {
       return object.filter === 'include';
     }
   );
-  const serviceUtilityConstructor = new HttpEventUtility(MockConstructor,
+  const serviceUtilityConstructor = new HttpEventUtility<MockConstructor>(MockConstructor,
   );
 
-  const serviceUtilitySingleton = new HttpEventUtility(null, true);
+  const serviceUtilitySingleton = new HttpEventUtility<any>(null, true);
 
   const createEvents = {
     result: {
@@ -52,6 +52,15 @@ describe('HttpEventUtility', () => {
             meta: {
               name: 'obj3',
               'mod-time': '3'
+            }
+          }
+        },
+        {
+          Type: 'Created',
+          Object: {
+            meta: {
+              name: 'obj4',
+              'mod-time': '4'
             }
           }
         },
@@ -123,7 +132,7 @@ describe('HttpEventUtility', () => {
           Type: 'Created',
           Object: {
             meta: {
-              name: 'obj4',
+              name: 'obj5',
               'mod-time': '8'
             },
             filter: 'include'
@@ -136,22 +145,25 @@ describe('HttpEventUtility', () => {
   it('Should process events to the same array', () => {
     const data = serviceUtility.array;
     serviceUtility.processEvents(createEvents);
-    expect(data.length).toBe(3);
-    expect(data[0].meta.name).toEqual('obj1');
-    expect(data[1].meta.name).toEqual('obj2');
-    expect(data[2].meta.name).toEqual('obj3');
+    expect(data.length).toBe(4);
+    expect(data[0].meta.name).toEqual('obj4');
+    expect(data[1].meta.name).toEqual('obj3');
+    expect(data[2].meta.name).toEqual('obj2');
+    expect(data[3].meta.name).toEqual('obj1');
 
     serviceUtility.processEvents(deleteEvent);
-    expect(data.length).toBe(2);
-    expect(data[0].meta.name).toEqual('obj1');
+    expect(data.length).toBe(3);
+    expect(data[0].meta.name).toEqual('obj4');
     expect(data[1].meta.name).toEqual('obj3');
+    expect(data[2].meta.name).toEqual('obj1');
 
     serviceUtility.processEvents(putAndCreateEvents);
-    expect(data.length).toBe(3);
-    expect(data[0].meta.name).toEqual('obj1');
+    expect(data.length).toBe(4);
+    expect(data[0].meta.name).toEqual('obj5');
     expect(data[1].meta.name).toEqual('obj3');
-    expect(data[1].meta['mod-time']).toEqual('6');
     expect(data[2].meta.name).toEqual('obj4');
+    expect(data[3].meta.name).toEqual('obj1');
+    expect(data[1].meta['mod-time']).toEqual('6');
   });
 
   it('Should filter events', () => {
@@ -166,29 +178,32 @@ describe('HttpEventUtility', () => {
 
     serviceUtilityFilter.processEvents(putAndCreateEvents);
     expect(data.length).toBe(2);
-    expect(data[0].meta.name).toEqual('obj1');
-    expect(data[1].meta.name).toEqual('obj4');
+    expect(data[0].meta.name).toEqual('obj5');
+    expect(data[1].meta.name).toEqual('obj1');
   });
 
   it('Should use constructor on all items', () => {
     const data = serviceUtilityConstructor.array;
     serviceUtilityConstructor.processEvents(createEvents);
-    expect(data.length).toBe(3);
-    expect(data[0].data.meta.name).toEqual('obj1');
-    expect(data[1].data.meta.name).toEqual('obj2');
-    expect(data[2].data.meta.name).toEqual('obj3');
+    expect(data.length).toBe(4);
+    expect(data[0].data.meta.name).toEqual('obj4');
+    expect(data[1].data.meta.name).toEqual('obj3');
+    expect(data[2].data.meta.name).toEqual('obj2');
+    expect(data[3].data.meta.name).toEqual('obj1');
 
     serviceUtilityConstructor.processEvents(deleteEvent);
-    expect(data.length).toBe(2);
-    expect(data[0].data.meta.name).toEqual('obj1');
+    expect(data.length).toBe(3);
+    expect(data[0].data.meta.name).toEqual('obj4');
     expect(data[1].data.meta.name).toEqual('obj3');
+    expect(data[2].data.meta.name).toEqual('obj1');
 
     serviceUtilityConstructor.processEvents(putAndCreateEvents);
-    expect(data.length).toBe(3);
-    expect(data[0].data.meta.name).toEqual('obj1');
+    expect(data.length).toBe(4);
+    expect(data[0].data.meta.name).toEqual('obj5');
     expect(data[1].data.meta.name).toEqual('obj3');
-    expect(data[1].data.meta['mod-time']).toEqual('6');
     expect(data[2].data.meta.name).toEqual('obj4');
+    expect(data[1].data.meta['mod-time']).toEqual('6');
+    expect(data[3].data.meta.name).toEqual('obj1');
   });
 
   it('should handle updates if service is singleton', () => {

@@ -12,12 +12,14 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { EventsEvent_severity, EventsEvent_severity_uihint, IApiListWatchOptions, IEventsEvent } from '@sdk/v1/models/generated/events';
-import { IApiStatus, MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity } from '@sdk/v1/models/generated/monitoring';
+import { IApiStatus, MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchQuery_kinds, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { Table } from 'primeng/table';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import { Subscription } from 'rxjs/Subscription';
+import { ApiListWatchOptions } from '@sdk/v1/models/generated/workload';
+// import { MatCheckboxChange } from '@angular/material';
 
 /**
  * Renders two tabs that displays an alerts table and an events table.
@@ -100,7 +102,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   alertsLoading = false;
 
   // Used for processing watch stream events
-  alertsEventUtility: HttpEventUtility;
+  alertsEventUtility: HttpEventUtility<MonitoringAlert>;
 
   // Holds all alerts
   alerts: ReadonlyArray<MonitoringAlert> = [];
@@ -126,6 +128,12 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
 
   // The current alert severity filter, set to null if it is on All.
   currentAlertSeverityFilter;
+
+  // Alert State filters
+  selectedStateFilters = [MonitoringAlertSpec_state_uihint.OPEN];
+  possibleFilterStates = Object.values(MonitoringAlertSpec_state_uihint);;
+
+  alertTrackBy = HttpEventUtility.trackBy;
 
   constructor(protected _controllerService: ControllerService,
     protected _alerttableService: AlerttableService,
@@ -167,6 +175,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     }
   }
 
+
   getEvents() {
     const subscription = this.eventsService.pollEvents(this.pollingServiceKey, this.eventsPostBody).subscribe(
       (data) => {
@@ -185,19 +194,14 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         data.forEach(event => {
           this.eventNumbers[event.severity] += 1;
         });
-        if (this.currentEventSeverityFilter == null) {
-          this.filteredEvents = data;
-        } else {
-          this.filteredEvents =
-            data.filter(item => item.severity === this.currentEventSeverityFilter);
-        }
+        this.filterEvents();
       }
     );
     this.subscriptions.push(subscription);
   }
 
   getAlerts() {
-    this.alertsEventUtility = new HttpEventUtility(MonitoringAlert);
+    this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
     this.alerts = this.alertsEventUtility.array;
     const subscription = this.monitoringService.WatchAlert().subscribe(
       response => {
@@ -210,12 +214,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         this.alerts.forEach(alert => {
           this.alertNumbers[alert.status.severity] += 1;
         });
-        if (this.currentAlertSeverityFilter == null) {
-          this.filteredAlerts = this.alerts;
-        } else {
-          this.filteredAlerts =
-            this.alerts.filter(item => item.status.severity === this.currentAlertSeverityFilter);
-        }
+        this.filterAlerts();
       },
       error => {
         // TODO: Error handling
@@ -245,14 +244,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    * It will filter events displayed in table
    */
   onEventNumberClick(event, severityType: string) {
-    if (severityType === 'total') {
-      this.currentEventSeverityFilter = null;
-      // remove severity filter if it exists
-    } else {
-      this.currentEventSeverityFilter = severityType;
-      this.filteredEvents =
-        this.events.filter(item => item.severity === this.currentEventSeverityFilter);
-    }
+    this.currentEventSeverityFilter = severityType;
+    this.filterEvents();
     // Disabling search to reduce scope for august release
     // Adding <any> to prevent typescript compilation from failing due to unreachable code
     if (<any>false) {
@@ -266,14 +259,44 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    * It will filter events displayed in table
    */
   onAlertNumberClick(severityType: string) {
-    if (severityType === 'total') {
-      this.currentAlertSeverityFilter = null;
-      // remove severity filter if it exists
-    } else {
-      this.currentAlertSeverityFilter = severityType;
-      this.filteredAlerts =
-        this.alerts.filter(item => item.status.severity === this.currentAlertSeverityFilter);
-    }
+    this.currentAlertSeverityFilter = severityType;
+    this.filterAlerts();
+  }
+
+  filterEvents() {
+    this.eventsLoading = true;
+    // We put the filtering into a set timeoute so that it gets pushed to the end of
+    // the micro task queue.
+    // Otherwise, the table rendering of the items happens before the user's action on the checkbox
+    // becomes visible. This allows the checkbox animation to happen immediately, and then we render
+    // the new table.
+    setTimeout(() => {
+      if (this.currentEventSeverityFilter == null) {
+        this.filteredEvents = this.events;
+      } else {
+        this.filteredEvents =
+          this.events.filter(item => item.severity === this.currentEventSeverityFilter);
+      }
+      this.eventsLoading = false;
+    }, 0);
+  }
+
+  filterAlerts() {
+    // We put the filtering into a set timeout so that it gets pushed to the end of
+    // the micro task queue.
+    // Otherwise, the table rendering of the items happens before the user's action on the checkbox
+    // becomes visible. This allows the checkbox animation to happen immediately, and then we render
+    // the new table.
+    setTimeout(() => {
+      this.filteredAlerts = this.alerts.filter((item) => {
+        // Checking severity filter
+        if (this.currentAlertSeverityFilter != null && item.status.severity !== this.currentAlertSeverityFilter) {
+          return false;
+        }
+        // checking state filter
+        return this.selectedStateFilters.includes(MonitoringAlertSpec_state_uihint[item.spec.state]);
+      });
+    }, 0);
   }
 
   /**

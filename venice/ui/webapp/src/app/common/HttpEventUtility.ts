@@ -1,27 +1,34 @@
-import { Utility } from '@app/common/Utility';
 
-
-/**
- * Create a new object for every watch endpoint in use.
- * Only checks by object name for uniqueness
- */
 enum EventTypes {
   create = 'Created',
   update = 'Updated',
   delete = 'Deleted',
 }
 
-export class HttpEventUtility {
-  private dataArray = [];
+/**
+ * Utility for handling event from watch streams. It can be used for any watch API.
+ * It processes the events and keeps the updated object in a readonly array.
+ * All updates to the array are done in place, so consumers can just maintain a reference to the array
+ * to always have the latest data.
+ * 
+ * ngOnChange will never be triggered for any bindings that use this array. Instead to detect a change
+ * consumers should use an ngDoCheck with the trackBy method in this class. An example of how to do this
+ * is in eventAlertPolicies and alertDestinations. 
+ * 
+ * In order to keep the array in chronological ordering, it
+ * inserts new items into the beginning of the array.
+ */
+export class HttpEventUtility<T> {
+  private dataArray: Array<T> = [];
   // Maps object name to index in data array
   private dataMapping: { [objName: string]: number } = {};
-  private filter: (object: any) => boolean;
+  private filter: (object: T) => boolean;
   private objectConstructor: any;
   private isSingleton: boolean;
 
   /**
    * @param objectConstructor   Constructor that will be called on all
-   *                            incoming data if given
+   *                            the objects before being put in the array
    *
    * @param isSingleton         Whether the events are for a singleton object
    *                            Supports object being renamed if its a singleton
@@ -43,7 +50,7 @@ export class HttpEventUtility {
     return item.meta.name + ' - ' + item.meta['mod-time'];
   }
 
-  public processEvents(eventChunk) {
+  public processEvents(eventChunk): ReadonlyArray<T> {
     if (eventChunk.result == null) {
       console.log('event chunk was blank', eventChunk);
       return;
@@ -63,24 +70,10 @@ export class HttpEventUtility {
       let index;
       switch (event.Type) {
         case EventTypes.create:
-          index = this.dataArray.length;
-          this.dataArray.push(obj);
-          this.dataMapping[objName] = index;
+          this.addItem(obj, objName);
           break;
         case EventTypes.delete:
-          index = this.dataMapping[objName];
-          this.dataArray.splice(index, 1);
-          delete this.dataMapping[objName];
-          // Decrement index of every element after
-          // the one we removed
-          for (const key in this.dataMapping) {
-            if (this.dataMapping.hasOwnProperty(key)) {
-              const value = this.dataMapping[key];
-              if (value > index) {
-                this.dataMapping[key] = value - 1;
-              }
-            }
-          }
+          this.deleteItem(objName);
           break;
         case EventTypes.update:
           if (this.isSingleton && this.dataArray.length > 0) {
@@ -91,7 +84,10 @@ export class HttpEventUtility {
             index = this.dataMapping[objName];
           }
           if (index != null) {
-            this.dataArray[index] = obj;
+            // We move the object to the end to maintain
+            // last modified time ordering.
+            this.deleteItem(objName);
+            this.addItem(obj, objName);
           } else {
             console.log('Update event but object was not found');
           }
@@ -104,11 +100,52 @@ export class HttpEventUtility {
     return this.dataArray;
   }
 
-  public hasItem(objName: string) {
-    return this.dataMapping[objName];
+  /**
+   * 
+   * @param obj Object from the watch stream
+   * @param objName Key to be used for the dataMapping
+   */
+  private addItem(obj: T, objName: string): void {
+    const index = this.dataArray.length;
+    this.dataArray.unshift(obj);
+    this.dataMapping[objName] = this.dataArray.length - 1;
   }
 
-  public get array(): ReadonlyArray<any> {
+  private deleteItem(objName: string): void {
+    const index = this.dataMapping[objName];
+    const spliceIndex = this.getIndex(objName);
+    this.dataArray.splice(spliceIndex, 1);
+    delete this.dataMapping[objName];
+    // Decrement index of every element before
+    // the one we removed in the array.
+    // since we flip indexes in getIndexes, we
+    // can just use indexes from dataMapping and
+    // remove any with a greater index.
+    for (const key in this.dataMapping) {
+      if (this.dataMapping.hasOwnProperty(key)) {
+        const value = this.dataMapping[key];
+        if (value > index) {
+          this.dataMapping[key] = value - 1;
+        }
+      }
+    }
+  }
+
+  /**
+   * Since we insert new elements in the front of the array,
+   * the mapping from objName to index is inverted, with the last
+   * element in the array having an index of 0.
+   */
+  private getIndex(objName: string): number {
+    const index = this.dataMapping[objName];
+    return this.dataArray.length - 1 - index;
+  }
+
+  public hasItem(objName: string): boolean {
+    return this.dataMapping[objName] != null;
+  }
+
+  public get array(): ReadonlyArray<T> {
     return this.dataArray;
   }
 

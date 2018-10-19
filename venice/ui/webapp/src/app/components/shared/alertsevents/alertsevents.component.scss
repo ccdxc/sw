@@ -146,4 +146,23 @@ app-shared-alertsevents {
   margin: auto 10px;
 }
 
+.alertsevents-checkbox {
+  outline: none;
+
+  .ui-chkbox-box {
+    outline: none;
+    box-shadow: none;
+
+    &.ui-state-active  {
+      border: 1px solid #86a8d7 !important;
+      background: #86a8d7 !important;
+      color: #FFFFFF;
+    }
+  }
+}
+
+.alertsevents-checkbox-label {
+  margin-bottom: 0px;
+}
+
 /*----- alert table -----*/

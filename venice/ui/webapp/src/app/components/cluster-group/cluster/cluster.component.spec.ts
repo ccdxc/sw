@@ -129,8 +129,8 @@ describe('ClusterComponent', () => {
     for (let i = 0; i < 5; i++) {
       const cols = rows[i].querySelectorAll('td');
       expect(cols.length).toBe(3);
-      expect(cols[0].textContent).toContain('node' + (i + 1));
-      if (i < 3) {
+      expect(cols[0].textContent).toContain('node' + (5 - i));
+      if (i >= 2) {
         expect(cols[1].textContent).toContain('yes');
       } else {
         expect(cols[1].textContent).toBe('');

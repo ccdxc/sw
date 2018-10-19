@@ -110,7 +110,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
 
   // Holds all policy objects
   sgPolicies: ReadonlyArray<SecuritySGPolicy>;
-  sgPoliciesEventUtility: HttpEventUtility;
+  sgPoliciesEventUtility: HttpEventUtility<SecuritySGPolicy>;
 
   // Holds all the policy rules of the currently selected policy
   sgPolicyRules: ReadonlyArray<SecuritySGRuleWrapper[]>;
@@ -404,7 +404,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         }
       }
     );
-    this.sgPoliciesEventUtility = new HttpEventUtility(SecuritySGPolicy);
+    this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
     // const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId}).subscribe(
     const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'ObjectMeta.Name=' + this.selectedPolicyId }).subscribe(

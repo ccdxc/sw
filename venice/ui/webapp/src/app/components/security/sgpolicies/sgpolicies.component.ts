@@ -33,7 +33,7 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
 
   // Holds all policy objects
   sgPolicies: ReadonlyArray<SecuritySGPolicy> = [];
-  sgPoliciesEventUtility: HttpEventUtility;
+  sgPoliciesEventUtility: HttpEventUtility<SecuritySGPolicy>;
 
   // holds a subset (possibly all) of this.sgPolicies
   // This are the sgPolicies that will be displayed
@@ -83,7 +83,7 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
   }
 
   getSGPolicies() {
-    this.sgPoliciesEventUtility = new HttpEventUtility(SecuritySGPolicy);
+    this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
     const subscription = this.securityService.WatchSGPolicy().subscribe(
       response => {
