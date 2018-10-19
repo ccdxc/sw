@@ -2,7 +2,6 @@ package common
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -51,7 +50,7 @@ func MakeHTTPHandler(handlerFunc RestAPIFunc) http.HandlerFunc {
 }
 
 // HTTPPost performs http POST operation
-func HTTPPost(url, token string, req interface{}, resp interface{}) ([]*http.Cookie, error) {
+func HTTPPost(url, token string, req interface{}) ([]*http.Cookie, string, error) {
 	// Prepend URL
 	url = fmt.Sprintf("http://%s", url)
 
@@ -60,20 +59,13 @@ func HTTPPost(url, token string, req interface{}, resp interface{}) ([]*http.Coo
 	jsonStr, err := json.Marshal(req)
 	if err != nil {
 		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return nil, err
+		return nil, "", err
 	}
-	//
-	//// Perform HTTP POST operation
-	//res, err := http.Post(url, "application/json", strings.NewReader(string(jsonStr)))
-	//if err != nil {
-	//	log.Errorf("Error during http POST. Err: %v", err)
-	//	return nil, err
-	//}
 
 	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(string(jsonStr)))
 	if err != nil {
 		log.Errorf("Error during http POST. Err: %v", err)
-		return nil, err
+		return nil, "", err
 	}
 	request.Header.Set("Content-Type", "application/json")
 
@@ -87,75 +79,28 @@ func HTTPPost(url, token string, req interface{}, resp interface{}) ([]*http.Coo
 	res, err := client.Do(request)
 	if err != nil {
 		log.Errorf("Error during http POST. Err: %v", err)
-		return nil, err
-	}
-
-	// Check the response code
-	if res.StatusCode == http.StatusInternalServerError {
-		eBody, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, errors.New("HTTP StatusInternalServerError" + err.Error())
-		}
-		res.Body.Close()
-		return nil, errors.New(string(eBody))
-	}
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return res.Cookies(), fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return nil, "", err
 	}
 
 	// Read the entire response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return res.Cookies(), err
+		return res.Cookies(), "", err
 	}
 	defer res.Body.Close()
 
-	if resp == nil {
-		return res.Cookies(), nil
+	response := string(body)
+
+	if res.StatusCode != http.StatusOK {
+		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return res.Cookies(), response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
 	}
-
-	resp = string(body)
-	// Convert response json to struct
-	//err = json.Unmarshal(body, resp)
-	//if err != nil {
-	//	log.Errorf("Error during json unmarshall. Err: %v", err)
-	//	return err
-	//}
-
-	return res.Cookies(), nil
-}
-
-// HTTPGetRaw gets the raw data from an http request, i.e. it basically execute curl
-func HTTPGetRaw(url string) ([]byte, error) {
-	r, err := http.Get(url)
-	if err != nil {
-		return []byte{}, err
-	}
-	defer r.Body.Close()
-
-	log.Debugf("HTTP Get: %s", url)
-	if r.StatusCode != 200 {
-		return []byte{}, errors.New(r.Status)
-	}
-
-	response, err := ioutil.ReadAll(r.Body)
-
-	return response, err
+	return res.Cookies(), response, nil
 }
 
 // HTTPGet fetches json object from an http get request
-func HTTPGet(url, token string, req interface{}, resp interface{}) error {
-	// Prepend URL
-	//url = fmt.Sprintf("http://%s", url)
-	//response, err := HTTPGetRaw(url)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//return json.Unmarshal(response, jdata)
+func HTTPGet(url, token string, req interface{}) (string, error) {
 
 	url = fmt.Sprintf("http://%s", url)
 
@@ -164,20 +109,13 @@ func HTTPGet(url, token string, req interface{}, resp interface{}) error {
 	jsonStr, err := json.Marshal(req)
 	if err != nil {
 		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return err
+		return "", err
 	}
-	//
-	//// Perform HTTP POST operation
-	//res, err := http.Post(url, "application/json", strings.NewReader(string(jsonStr)))
-	//if err != nil {
-	//	log.Errorf("Error during http POST. Err: %v", err)
-	//	return nil, err
-	//}
 
 	request, err := http.NewRequest(http.MethodGet, url, strings.NewReader(string(jsonStr)))
 	if err != nil {
 		log.Errorf("Error during http POST. Err: %v", err)
-		return err
+		return "", err
 	}
 	request.Header.Set("Content-Type", "application/json")
 
@@ -189,43 +127,28 @@ func HTTPGet(url, token string, req interface{}, resp interface{}) error {
 	res, err := client.Do(request)
 	if err != nil {
 		log.Errorf("Error during http POST. Err: %v", err)
-		return err
-	}
-
-	if res.StatusCode == http.StatusInternalServerError {
-		eBody, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return errors.New("HTTP StatusInternalServerError" + err.Error())
-		}
-		res.Body.Close()
-		return errors.New(string(eBody))
-	}
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return "", err
 	}
 
 	// Read the entire response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return err
+		return "", err
 	}
 	defer res.Body.Close()
 
-	if resp == nil {
-		return nil
+	response := string(body)
+
+	if res.StatusCode != http.StatusOK {
+		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
 	}
-
-	resp = string(body)
-
-	return nil
-
+	return response, nil
 }
 
 // HTTPPut provides wrapper for http PUT operations.
-func HTTPPut(url, token string, req interface{}, resp interface{}) error {
+func HTTPPut(url, token string, req interface{}) (string, error) {
 	// Prepend URL
 	url = fmt.Sprintf("http://%s", url)
 
@@ -234,7 +157,7 @@ func HTTPPut(url, token string, req interface{}, resp interface{}) error {
 	jsonStr, err := json.Marshal(req)
 	if err != nil {
 		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return err
+		return "", err
 	}
 
 	request, err := http.NewRequest(http.MethodPut, url, strings.NewReader(string(jsonStr)))
@@ -252,48 +175,28 @@ func HTTPPut(url, token string, req interface{}, resp interface{}) error {
 
 	if err != nil {
 		log.Errorf("Error during http PUT. Err: %v", err)
-		return err
-	}
-
-	// Check the response code
-	if res.StatusCode == http.StatusInternalServerError {
-		eBody, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return errors.New("HTTP StatusInternalServerError" + err.Error())
-		}
-		res.Body.Close()
-		return errors.New(string(eBody))
-	}
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return errors.New("HTTP Error response")
-	}
-
-	if resp == nil {
-		return nil
+		return "", err
 	}
 
 	// Read the entire response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return err
+		return "", err
 	}
 	defer res.Body.Close()
 
-	// Convert response json to struct
-	err = json.Unmarshal(body, resp)
-	if err != nil {
-		log.Errorf("Error during json unmarshall. Err: %v", err)
-		return err
-	}
+	response := string(body)
 
-	return nil
+	if res.StatusCode != http.StatusOK {
+		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+	}
+	return response, nil
 }
 
 // HTTPDelete provides wrapper for http DELETE operations.
-func HTTPDelete(url, token string, req interface{}, resp interface{}) error {
+func HTTPDelete(url, token string, req interface{}, resp interface{}) (string, error) {
 	// Prepend URL
 	url = fmt.Sprintf("http://%s", url)
 
@@ -305,7 +208,7 @@ func HTTPDelete(url, token string, req interface{}, resp interface{}) error {
 		jsonStr, err = json.Marshal(req)
 		if err != nil {
 			log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-			return err
+			return "", err
 		}
 	}
 
@@ -323,72 +226,25 @@ func HTTPDelete(url, token string, req interface{}, resp interface{}) error {
 
 	if err != nil {
 		log.Errorf("Error during http DELETE. Err: %v", err)
-		return err
-	}
-
-	// Check the response code
-	if res.StatusCode == http.StatusInternalServerError {
-		eBody, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return errors.New("HTTP StatusInternalServerError" + err.Error())
-		}
-		res.Body.Close()
-		return errors.New(string(eBody))
-	}
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return errors.New("HTTP Error response")
+		return "", err
 	}
 
 	// Read the entire response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return err
+		return "", err
 	}
 	defer res.Body.Close()
 
-	if resp == nil {
-		return nil
-	}
+	response := string(body)
 
-	// Convert response json to struct
-	err = json.Unmarshal(body, resp)
-	if err != nil {
-		log.Errorf("Error during json unmarshall. Err: %v", err)
-		return err
+	if res.StatusCode != http.StatusOK {
+		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
 	}
-
-	return nil
+	return response, nil
 }
-
-//func encodeHTTPRequest(req *http.Request, request interface{}) error {
-//	var buf bytes.Buffer
-//	err := json.NewEncoder(&buf).Encode(request)
-//	if err != nil {
-//		return err
-//	}
-//	req.Body = ioutil.NopCloser(&buf)
-//	return nil
-//}
-
-//// CreateHTTPRequest creates a http request
-//func CreateHTTPRequest(instance string, in interface{}, method, path string) (*http.Request, error) {
-//	target, err := url.Parse(instance)
-//	if err != nil {
-//		return nil, fmt.Errorf("invalid instance %s", instance)
-//	}
-//	target.Path = path
-//	req, err := http.NewRequest(method, target.String(), nil)
-//	if err != nil {
-//		return nil, fmt.Errorf("could not create request (%s)", err)
-//	}
-//	if err = encodeHTTPRequest(req, in); err != nil {
-//		return nil, fmt.Errorf("could not encode request (%s)", err)
-//	}
-//	return req, nil
-//}
 
 //WaitForSvcUp performs a get on the URL and waits till the service is up
 //func WaitForSvcUp(url string, timeout time.Duration, code int) (err error) {

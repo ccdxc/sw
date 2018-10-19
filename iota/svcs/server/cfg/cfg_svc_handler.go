@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/api/generated/workload"
@@ -22,6 +23,7 @@ type ConfigService struct {
 	AuthToken  string
 	NaplesUUID []string
 	Workloads  []*workload.Workload
+	Hosts      []*cluster.Host
 }
 
 // NewConfigServiceHandler returns an instance of config service
@@ -34,7 +36,6 @@ func NewConfigServiceHandler() *ConfigService {
 func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMsg) (*iota.MakeClusterMsg, error) {
 	log.Infof("CFG SVC | DEBUG | MakeCluster. Received Request Msg: %v", req)
 	var clusterObj cluster.Cluster
-	var response string
 
 	err := json.Unmarshal([]byte(req.Config), &clusterObj)
 	if err != nil {
@@ -43,7 +44,7 @@ func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMs
 
 	log.Infof("CFG SVC | DEBUG | MakeCluster. Received cluster obj, %v", clusterObj)
 
-	_, err = common.HTTPPost(req.Endpoint, "", &clusterObj, response)
+	_, response, err := common.HTTPPost(req.Endpoint, "", &clusterObj)
 	log.Infof("CFG SVC | DEBUG | MakeCluster. Received REST Response Msg: %v", response)
 
 	if err != nil {
@@ -128,7 +129,6 @@ func (c *ConfigService) GenerateConfigs(ctx context.Context, req *iota.GenerateC
 // ConfigureAuth configures auth and returns a super admin JWT Token
 func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*iota.AuthMsg, error) {
 	// TODO fix this for Agent configs
-	var response string
 	veniceAPIGw := c.CfgState.Endpoints[0]
 	tenantURL := fmt.Sprintf("%s/configs/cluster/v1/tenants", veniceAPIGw)
 	authPolicyURL := fmt.Sprintf("%s/configs/auth/v1/authn-policy", veniceAPIGw)
@@ -137,6 +137,27 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 	loginURL := fmt.Sprintf("%s/v1/login/", veniceAPIGw)
 
 	log.Infof("CFG SVC | DEBUG | ConfigureAuth. Received Request Msg: %v", req)
+	tenant := cluster.Tenant{
+		TypeMeta: api.TypeMeta{
+			Kind: "Tenant",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "default",
+			Tenant: "default",
+		},
+		Spec: cluster.TenantSpec{},
+	}
+
+	fmt.Println("BALERION: ", tenantURL)
+
+	_, response, err := common.HTTPPost(tenantURL, c.AuthToken, &tenant)
+	log.Infof("CFG SVC | INFO | Creating Tenant | Received Response Msg: %v", response)
+	if err != nil {
+		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create a tenant. Received Response Msg: %v. Err: %v", response, err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("CFG SVC | ERROR | ConfigureAuth call failed to create a tenant. Received Response Msg: %v. Err: %v", response, err)
+		return req, nil
+	}
 
 	authPolicy := auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{
@@ -156,10 +177,13 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 	}
 
-	_, err := common.HTTPPost(authPolicyURL, "", &authPolicy, response)
+	_, response, err = common.HTTPPost(authPolicyURL, "", &authPolicy)
 	log.Infof("CFG SVC | INFO | Creating Authentication Policy | Received Response Msg: %v", response)
 	if err != nil {
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create authentication policy. Received Response Msg: %v. Err: %v", response, err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("CFG SVC | ERROR | ConfigureAuth call failed to create authentication policy. Received Response Msg: %v. Err: %v", response, err)
+		return req, nil
 	}
 
 	adminUser := auth.User{
@@ -178,10 +202,13 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 	}
 
-	_, err = common.HTTPPost(userURL, "", &adminUser, response)
+	_, response, err = common.HTTPPost(userURL, "", &adminUser)
 	log.Infof("CFG SVC | INFO | Creating Admin User | Received Response Msg: %v", response)
 	if err != nil {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("CFG SVC | ERROR | ConfigureAuth call failed to create admin user policy. Received Response Msg: %v. Err: %v", response, err)
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create admin user policy. Received Response Msg: %v. Err: %v", response, err)
+		return req, nil
 	}
 
 	adminRole := auth.RoleBinding{
@@ -198,10 +225,13 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 	}
 
-	_, err = common.HTTPPost(roleBindingURL, "", &adminRole, response)
+	_, response, err = common.HTTPPost(roleBindingURL, "", &adminRole)
 	log.Infof("CFG SVC | INFO | Assigning Admin role | Received Response Msg: %v", response)
 	if err != nil {
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to assign admin role. Received Response Msg: %v. Err: %v", response, err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("CFG SVC | ERROR | ConfigureAuth call failed to assign admin role. Received Response Msg: %v. Err: %v", response, err)
+		return req, nil
 	}
 
 	login := auth.PasswordCredential{
@@ -210,7 +240,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		Tenant:   "default",
 	}
 
-	cookies, err := common.HTTPPost(loginURL, "", &login, response)
+	cookies, response, err := common.HTTPPost(loginURL, "", &login)
 	log.Infof("CFG SVC | INFO | Logging in as admin | Received Response Msg: %v", response)
 	log.Infof("CFG SVC | INFO | Logging in as admin | Received Cookies. %v", cookies)
 
@@ -218,25 +248,9 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 	req.AuthToken = c.AuthToken
 	if err != nil {
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to login as admin user. Received Response Msg: %v. Err: %v", response, err)
-	}
-
-	tenant := cluster.Tenant{
-		TypeMeta: api.TypeMeta{
-			Kind: "Tenant",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name:   "default",
-			Tenant: "default",
-		},
-		Spec: cluster.TenantSpec{},
-	}
-
-	fmt.Println("BALERION: ", tenantURL)
-
-	_, err = common.HTTPPost(tenantURL, c.AuthToken, &tenant, response)
-	log.Infof("CFG SVC | INFO | Creating Tenant | Received Response Msg: %v", response)
-	if err != nil {
-		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create a tenant. Received Response Msg: %v. Err: %v", response, err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("CFG SVC | ERROR | ConfigureAuth call failed to login as admin user. Received Response Msg: %v. Err: %v", response, err)
+		return req, nil
 	}
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
@@ -248,26 +262,53 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*iota.ConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | PushConfig. Received Request Msg: %v", req)
 	workloadURL := fmt.Sprintf("%s/configs/workload/v1/workloads", c.CfgState.Endpoints[0])
+	hostURL := fmt.Sprintf("%s/configs/cluster/v1/hosts", c.CfgState.Endpoints[0])
 	for _, cfg := range req.Configs {
-		var workload workload.Workload
-		var response string
-		err := json.Unmarshal([]byte(cfg.Config), &workload)
-		if err != nil {
-			log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a cluster object. Err: %v", cfg.Config, err)
-			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		var object interface{}
+		jsonBytes := []byte(cfg.Config)
+		json.Unmarshal(jsonBytes, &object)
+
+		m := object.(map[string]interface{})
+		switch strings.ToLower(m["kind"].(string)) {
+		case "host":
+			var hostObj cluster.Host
+			err := json.Unmarshal(jsonBytes, &hostObj)
+			if err != nil {
+				log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a host object. Err: %v", cfg.Config, err)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+				return req, nil
+			}
+
+			_, response, err := common.HTTPPost(hostURL, c.AuthToken, hostObj)
+			if err != nil {
+				log.Errorf("CFG SVC | DEBUG | Failed to create host object. %v. URL: %v. Response: %v. Err: %v", hostObj, hostURL, response, err)
+				log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+				req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create host object. %v. URL: %v. Response: %v. Err: %v", hostObj, hostURL, response, err)
+				return req, nil
+			}
+		case "workload":
+			var workloadObj workload.Workload
+			err := json.Unmarshal(jsonBytes, &workloadObj)
+			if err != nil {
+				log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+				return req, nil
+			}
+
+			_, response, err := common.HTTPPost(workloadURL, c.AuthToken, workloadObj)
+			if err != nil {
+				log.Errorf("CFG SVC | DEBUG | Failed to create host object. %v. URL: %v. Response: %v. Err: %v", workloadObj, hostURL, response, err)
+				log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+				req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create workload object. %v. URL: %v. Response: %v. Err: %v", workloadObj, hostURL, response, err)
+				return req, nil
+			}
+		default:
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Invalid Object Type: %v", m["kind"])
 			return req, nil
 		}
-
-		//http://10.8.103.3:9000/configs/workload/v1/configs/workload/v1/workloads
-		_, err = common.HTTPPost(workloadURL, c.AuthToken, &workload, response)
-		if err != nil {
-			log.Errorf("CFG SVC | DEBUG | PushConfig. Failed to POST %v to: %v. AuthToken: %v Err: %v", workload, workloadURL, c.AuthToken, err)
-			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-			return req, nil
-		}
-
-		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-		return req, nil
 	}
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
@@ -290,6 +331,7 @@ func (c *ConfigService) QueryConfig(ctx context.Context, req *iota.ConfigQueryMs
 func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 	var iotaCfgObjects []*iota.ConfigObject
 	var workloads []*workload.Workload
+	var hosts []*cluster.Host
 	var macAddresses []string
 	vlan1 := c.CfgState.Vlans[0]
 	vlan2 := c.CfgState.Vlans[1]
@@ -300,7 +342,25 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 		return nil, err
 	}
 
-	for _, u := range c.NaplesUUID {
+	// Create Host Objects
+	for idx, n := range c.NaplesUUID {
+		host := cluster.Host{
+			TypeMeta: api.TypeMeta{Kind: "Host"},
+			ObjectMeta: api.ObjectMeta{
+				Name: fmt.Sprintf("pen-naples-%d", idx),
+			},
+			Spec: cluster.HostSpec{
+				Interfaces: map[string]cluster.HostIntfSpec{
+					n: {
+						MacAddrs: []string{n},
+					},
+				},
+			},
+		}
+		hosts = append(hosts, &host)
+	}
+
+	for idx, u := range c.NaplesUUID {
 		uSegVlanIdx := uint32(100)
 		for i := 0; i < common.WorkloadsPerNode; i++ {
 			var mac string
@@ -312,7 +372,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 			} else {
 				vlan = vlan2
 			}
-			name = fmt.Sprintf("wrkld_%s_%d_%d", u, vlan, uSegVlanIdx)
+			name = fmt.Sprintf("wrkld_%d_vlan_%d_useg_%d_%s", i, vlan, uSegVlanIdx, u)
 			w := workload.Workload{
 				TypeMeta: api.TypeMeta{Kind: "Workload"},
 				ObjectMeta: api.ObjectMeta{
@@ -320,7 +380,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 					Name:   name,
 				},
 				Spec: workload.WorkloadSpec{
-					HostName: u,
+					HostName: fmt.Sprintf("pen-naples-%d", idx),
 					Interfaces: map[string]workload.WorkloadIntfSpec{
 						mac: {
 							MicroSegVlan: uSegVlanIdx,
@@ -329,17 +389,29 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 					},
 				},
 			}
-			b, _ := json.Marshal(w)
-			fmt.Println("BALERION: ", string(b))
 			workloads = append(workloads, &w)
+			uSegVlanIdx++
 		}
 	}
 
 	c.Workloads = workloads
+	c.Hosts = hosts
 
 	b, _ := json.MarshalIndent(c.Workloads, "", "   ")
 	log.Infof("CFG SVC | Gen Workloads: %v", string(b))
 
+	// Append Hosts
+	for _, h := range hosts {
+		b, _ := json.Marshal(h)
+		cfg := iota.ConfigObject{
+			Method: iota.CfgMethodType_CFG_METHOD_CREATE,
+			Config: string(b),
+		}
+		iotaCfgObjects = append(iotaCfgObjects, &cfg)
+
+	}
+
+	// Append Workloads
 	for _, w := range workloads {
 		b, _ := json.Marshal(w)
 		cfg := iota.ConfigObject{

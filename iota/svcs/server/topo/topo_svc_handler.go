@@ -54,10 +54,6 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 		return req, nil
 	}
 
-	//if len(req.ControlIntf) == 0 {
-	//	log.Errorf("")
-	//}
-
 	// Allocate VLANs for the test bed
 	if vlans, err = testbed.AllocateVLANS(ts.TestBedInfo.TestbedId); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Could not allocate VLANS from the switchport id: %d, Err: %v", ts.TestBedInfo.TestbedId, err)
