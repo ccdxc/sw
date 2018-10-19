@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/api/generated/security"
+
 	"github.com/pensando/sw/api/generated/workload"
 
 	"github.com/pensando/sw/api"
@@ -24,6 +26,7 @@ type ConfigService struct {
 	NaplesUUID []string
 	Workloads  []*workload.Workload
 	Hosts      []*cluster.Host
+	SGPolicies []*security.SGPolicy
 }
 
 // NewConfigServiceHandler returns an instance of config service
@@ -263,6 +266,7 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 	log.Infof("CFG SVC | DEBUG | PushConfig. Received Request Msg: %v", req)
 	workloadURL := fmt.Sprintf("%s/configs/workload/v1/workloads", c.CfgState.Endpoints[0])
 	hostURL := fmt.Sprintf("%s/configs/cluster/v1/hosts", c.CfgState.Endpoints[0])
+	sgPolicyURL := fmt.Sprintf("%s/configs/security/v1/sgpolicies", c.CfgState.Endpoints[0])
 	for _, cfg := range req.Configs {
 		var object interface{}
 		jsonBytes := []byte(cfg.Config)
@@ -304,6 +308,23 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 				req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create workload object. %v. URL: %v. Response: %v. Err: %v", workloadObj, hostURL, response, err)
 				return req, nil
 			}
+		case "sgpolicy":
+			var sgPolicyObj security.SGPolicy
+			err := json.Unmarshal(jsonBytes, &sgPolicyObj)
+			if err != nil {
+				log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+				return req, nil
+			}
+
+			_, response, err := common.HTTPPost(sgPolicyURL, c.AuthToken, sgPolicyObj)
+			if err != nil {
+				log.Errorf("CFG SVC | DEBUG | Failed to create sg policy object. %v. URL: %v. Response: %v. Err: %v", sgPolicyObj, hostURL, response, err)
+				log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+				req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create sg policy object. %v. URL: %v. Response: %v. Err: %v", sgPolicyObj, hostURL, response, err)
+				return req, nil
+			}
 		default:
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Invalid Object Type: %v", m["kind"])
@@ -331,6 +352,7 @@ func (c *ConfigService) QueryConfig(ctx context.Context, req *iota.ConfigQueryMs
 func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 	var iotaCfgObjects []*iota.ConfigObject
 	var workloads []*workload.Workload
+	var sgPolicies []*security.SGPolicy
 	var hosts []*cluster.Host
 	var macAddresses []string
 	vlan1 := c.CfgState.Vlans[0]
@@ -394,8 +416,33 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 		}
 	}
 
+	// ToDO add more SG Policies here.
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "all-allow-policy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []*security.SGRule{
+				{
+					Action:          "PERMIT",
+					FromIPAddresses: []string{"any"},
+					ToIPAddresses:   []string{"any"},
+				},
+			},
+		},
+	}
+
+	k, _ := json.Marshal(&sgp)
+	fmt.Println("RHAEGON: ", string(k))
+	sgPolicies = append(sgPolicies, &sgp)
+
 	c.Workloads = workloads
 	c.Hosts = hosts
+	c.SGPolicies = sgPolicies
 
 	b, _ := json.MarshalIndent(c.Workloads, "", "   ")
 	log.Infof("CFG SVC | Gen Workloads: %v", string(b))
@@ -421,5 +468,16 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 		iotaCfgObjects = append(iotaCfgObjects, &cfg)
 
 	}
+
+	// Append SGPolicies
+	for _, s := range sgPolicies {
+		b, _ := json.Marshal(s)
+		cfg := iota.ConfigObject{
+			Method: iota.CfgMethodType_CFG_METHOD_CREATE,
+			Config: string(b),
+		}
+		iotaCfgObjects = append(iotaCfgObjects, &cfg)
+	}
+
 	return iotaCfgObjects, nil
 }
