@@ -23,6 +23,10 @@ static long batch = -1;
 module_param(batch, long, 0444);
 MODULE_PARM_DESC(batch, "default batch count");
 
+static int status_interval = -1;
+module_param(status_interval, int, 0444);
+MODULE_PARM_DESC(status_interval, "status polling interval in seconds (default none)");
+
 static long rate = -1;
 module_param(rate, long, 0444);
 MODULE_PARM_DESC(rate, "throughput rate limit in bytes/sec");
@@ -84,6 +88,7 @@ static const unsigned char default_alias_yaml[] =
 "alias: 'default_mode=sync'\n"
 "alias: 'default_turbo=1'\n"
 "alias: 'default_rate=0'\n"
+"alias: 'default_status_interval=0'\n"
 "\n";
 
 static const unsigned char default_global_yaml[] = 
@@ -92,7 +97,7 @@ static const unsigned char default_global_yaml[] =
 "  block_size: 4096\n"
 "  cpu_mask: '$default_cpu_mask'\n"
 "  limit_rate: '$default_rate'\n"
-"  #status_interval: 5\n"
+"  status_interval: '$default_status_interval'\n"
 "cp_hdr_format:\n"
 "  idx: 1\n"
 "  cp_hdr_field:\n"
@@ -396,7 +401,8 @@ body(void *not_used)
 			goto done;
 		}
 	}
-	if (repeat >= 0 || batch >= 0 || cpu_mask >= 0 || rate >= 0 || mode != NULL) {
+	if (repeat >= 0 || batch >= 0 || cpu_mask >= 0 || rate >= 0 ||
+	    status_interval >= 0 || mode != NULL) {
 		uint32_t len = 0;
 		char alias_str[MAX_ALIAS_STR_LEN+1] = "";
 
@@ -429,6 +435,17 @@ body(void *not_used)
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default rate string '%s'\n",
+					       alias_str);
+				goto done;
+			}
+		}
+		if (status_interval >= 0) {
+			len = generate_alias_yaml(alias_str, "default_status_interval",
+						  status_interval, NULL);
+			PNSO_LOG_WARN("module param status_interval: %s\n", alias_str);
+			err = pnso_test_parse_buf(alias_str, len, cfg);
+			if (err) {
+				PNSO_LOG_ERROR("Failed to parse default status_interval string '%s'\n",
 					       alias_str);
 				goto done;
 			}

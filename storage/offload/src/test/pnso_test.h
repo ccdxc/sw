@@ -95,6 +95,7 @@ void pnso_test_free(void *ptr);
 #define PNSO_LOG_INFO  OSAL_LOG
 #define PNSO_LOG_DEBUG OSAL_LOG_DEBUG
 #define PNSO_LOG_TRACE(...)
+#define PNSO_LOG       OSAL_LOG
 
 #ifdef __cplusplus
 }  /* extern "C" */

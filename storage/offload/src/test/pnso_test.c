@@ -2124,6 +2124,19 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 						testcase_stats_names,
 						TESTCASE_STATS_COUNT, false);
 					next_status_time += desc->status_interval;
+
+					PNSO_LOG("PenCAKE Testcase %u %s: status %d, elapsed_time %llums, "
+						 "req_submit_count %llu, max_idle_time_ns %llu, "
+						 "batch_submit_count %llu, batch_completion_count %llu, "
+						 "rate_limit_loops %llu\n",
+						 testcase->node.idx, testcase->name, err,
+						 (unsigned long long) (elapsed_time /
+								       OSAL_NSEC_PER_MSEC),
+						 (unsigned long long) req_submit_count,
+						 (unsigned long long) max_idle_time,
+						 (unsigned long long) batch_submit_count,
+						 (unsigned long long) batch_completion_count,
+						 (unsigned long long) rate_limit_loop_count);
 				}
 			}
 		}
@@ -2144,18 +2157,18 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 				TESTCASE_STATS_COUNT,
 				true);
 
-	PNSO_LOG_INFO("Testcase %u %s: status %d, elapsed_time %llums, "
-		       "req_submit_count %llu, max_idle_time_ns %llu, "
-		       "batch_submit_count %llu, batch_completion_count %llu, "
-		       "rate_limit_loops %llu\n",
-		       testcase->node.idx, testcase->name, err,
-		       (unsigned long long) (elapsed_time /
-					     OSAL_NSEC_PER_MSEC),
-		       (unsigned long long) req_submit_count,
-		       (unsigned long long) max_idle_time,
-		       (unsigned long long) batch_submit_count,
-		       (unsigned long long) batch_completion_count,
-		       (unsigned long long) rate_limit_loop_count);
+	PNSO_LOG("PenCAKE Testcase %u %s: status %d, elapsed_time %llums, "
+		 "req_submit_count %llu, max_idle_time_ns %llu, "
+		 "batch_submit_count %llu, batch_completion_count %llu, "
+		 "rate_limit_loops %llu\n",
+		 testcase->node.idx, testcase->name, err,
+		 (unsigned long long) (elapsed_time /
+				       OSAL_NSEC_PER_MSEC),
+		 (unsigned long long) req_submit_count,
+		 (unsigned long long) max_idle_time,
+		 (unsigned long long) batch_submit_count,
+		 (unsigned long long) batch_completion_count,
+		 (unsigned long long) rate_limit_loop_count);
 
 	PNSO_LOG_DEBUG("DEBUG: pnso_test_run_testcase freeing test context\n");
 	free_testcase_context(ctx);
