@@ -531,6 +531,30 @@ func (naples *naplesHwNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 		NodeInfo: &iota.Node_NaplesConfig{NaplesConfig: in.GetNaplesConfig()}}, nil
 }
 
+// AddWorkload brings up a workload type on a given node
+func (naples *naplesHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
+
+	resp, err := naples.dataNode.AddWorkload(in)
+	if err != nil || resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+		return resp, nil
+	}
+
+	wload, _ := naples.worloadMap[in.GetWorkloadName()]
+
+	if err := wload.SendArpProbe(strings.Split(in.GetIpAddress(), "/")[0], in.GetInterface(),
+		int(in.GetEncapVlan())); err != nil {
+		naples.logger.Errorf("Error in sending arp probe", err.Error())
+		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		delete(naples.worloadMap, in.GetWorkloadName())
+		wload.TearDown()
+		return resp, nil
+	}
+
+	/* Notify Hntap of the workload */
+	resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
+	return resp, nil
+}
+
 //NodeType return node type
 func (naplesHwNode) NodeType() iota.PersonalityType {
 	return iota.PersonalityType_PERSONALITY_NAPLES
