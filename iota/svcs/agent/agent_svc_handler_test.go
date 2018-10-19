@@ -230,7 +230,7 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 	workload.EncapVlan = 500
 	workload.PinnedPort = 1
 	workload.UplinkVlan = 100
-	workload.IpAddress = "1.1.1.1/24"
+	workload.IpPrefix = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	workloadDir = "/tmp"
 	workloadResp, err := agentClient.AddWorkload(context.Background(), &workload)
@@ -295,7 +295,7 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 	workload.EncapVlan = 500
 	workload.PinnedPort = 1
 	workload.UplinkVlan = 100
-	workload.IpAddress = "1.1.1.1/24"
+	workload.IpPrefix = "1.1.1.1/24"
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
@@ -412,7 +412,7 @@ func TestAgentService_Mellanox_Workload_Add_Delete(t *testing.T) {
 	workload.EncapVlan = 500
 	workload.PinnedPort = 1
 	workload.UplinkVlan = 100
-	workload.IpAddress = "1.1.1.1/24"
+	workload.IpPrefix = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	workloadDir = "/tmp"
 	workloadResp, err := agentClient.AddWorkload(context.Background(), &workload)

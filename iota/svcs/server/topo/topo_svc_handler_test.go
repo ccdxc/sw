@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/pensando/sw/api/generated/workload"
 
 	"github.com/pensando/sw/venice/utils/log"
 
@@ -81,7 +84,8 @@ func TestMain(m *testing.M) {
 func TestTopologyService_InitTestBed(t *testing.T) {
 	t.Parallel()
 	var tbMsg iota.TestBedMsg
-	var naplesUUID []string
+	var macAddr []string
+	var naplesHosts []*iota.NaplesHost
 	initNodes := []*iota.TestBedNode{
 		{
 			Type:      iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
@@ -296,8 +300,6 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.FailNow()
 	}
 
-
-
 	var initCfgMsg iota.InitConfigMsg
 	initCfgMsg.EntryPointType = iota.EntrypointType_VENICE_REST
 	initCfgMsg.Endpoints = []string{"10.8.103.28:9000"}
@@ -324,12 +326,16 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 
 	for _, n := range addNodeResp.Nodes {
 		if n.Type == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
-			naplesUUID = append(naplesUUID, n.NodeUuid)
+			nh := iota.NaplesHost{
+				Uuid: n.NodeUuid,
+				Name: n.Name,
+			}
+			naplesHosts = append(naplesHosts, &nh)
 		}
 	}
 
 	genCfgMsg := iota.GenerateConfigMsg{
-		NaplesUuids: naplesUUID,
+		Hosts:       naplesHosts,
 		ApiResponse: &iota.IotaAPIResponse{},
 	}
 
@@ -347,40 +353,61 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.FailNow()
 	}
 
+	for _, cfg := range pushCfgResp.Configs {
+		var object interface{}
+		jsonBytes := []byte(cfg.Config)
+		json.Unmarshal(jsonBytes, &object)
 
-	workloads := []*iota.Workload{
-		{
-			WorkloadName: "ping-app-1",
-			NodeName:     "naples-node-1",
-			EncapVlan:    100,
-			IpPrefix:    "177.75.132.4/24",
-			MacAddress:   "",
-			Interface:    "lif100",
-			UplinkVlan: 1,
-		},
-		{
-			WorkloadName: "ping-app-2",
-			NodeName:     "naples-node-2",
-			EncapVlan:    100,
-			IpPrefix:    "177.75.132.5/24",
-			MacAddress:   "",
-			Interface:    "lif100",
-			UplinkVlan: 1,
-		},
+		m := object.(map[string]interface{})
+		switch strings.ToLower(m["kind"].(string)) {
+		case "workload":
+			var workloadObj workload.Workload
+			err := json.Unmarshal(jsonBytes, &workloadObj)
+			if err != nil {
+				log.Errorf("HARNESS | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
+			}
+			spec := workloadObj.Spec.Interfaces
+			// Get the first mac
+			for k := range spec {
+				macAddr = append(macAddr, k)
+				break
+			}
+		}
+
+		workloads := []*iota.Workload{
+			{
+				WorkloadName: "ping-app-1",
+				NodeName:     "naples-node-1",
+				EncapVlan:    100,
+				IpPrefix:     "177.75.132.4/24",
+				MacAddress:   macAddr[0],
+				Interface:    "lif100",
+				UplinkVlan:   1,
+			},
+			{
+				WorkloadName: "ping-app-2",
+				NodeName:     "naples-node-2",
+				EncapVlan:    100,
+				IpPrefix:     "177.75.132.5/24",
+				MacAddress:   macAddr[1],
+				Interface:    "lif100",
+				UplinkVlan:   1,
+			},
+		}
+
+		wrkloadMsg := iota.WorkloadMsg{
+			WorkloadOp:  iota.Op_ADD,
+			Workloads:   workloads,
+			ApiResponse: &iota.IotaAPIResponse{},
+		}
+
+		_, err = topoClient.AddWorkloads(context.Background(), &wrkloadMsg)
+		if err != nil {
+			t.Errorf("AddWorkloads call failed. Err: %v", err)
+			t.FailNow()
+		}
+
 	}
-
-	wrkloadMsg := iota.WorkloadMsg{
-		WorkloadOp:  iota.Op_ADD,
-		Workloads:   workloads,
-		ApiResponse: &iota.IotaAPIResponse{},
-	}
-
-	_, err = topoClient.AddWorkloads(context.Background(), &wrkloadMsg)
-	if err != nil {
-		t.Errorf("AddWorkloads call failed. Err: %v", err)
-		t.FailNow()
-	}
-
 }
 
 /*

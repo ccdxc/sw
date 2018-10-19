@@ -21,12 +21,12 @@ import (
 
 // ConfigService implements config service API
 type ConfigService struct {
-	CfgState   *iota.InitConfigMsg
-	AuthToken  string
-	NaplesHosts     []*iota.NaplesHost
-	Workloads  []*workload.Workload
-	Hosts      []*cluster.Host
-	SGPolicies []*security.SGPolicy
+	CfgState    *iota.InitConfigMsg
+	AuthToken   string
+	NaplesHosts []*iota.NaplesHost
+	Workloads   []*workload.Workload
+	Hosts       []*cluster.Host
+	SGPolicies  []*security.SGPolicy
 }
 
 // NewConfigServiceHandler returns an instance of config service
@@ -283,13 +283,14 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 				return req, nil
 			}
 
+			// ToDO Add Error checking and returns back. This is a hack to avoid 409s due to CMD auto creating host objects.
 			_, response, err := common.HTTPPost(hostURL, c.AuthToken, hostObj)
 			if err != nil {
 				log.Errorf("CFG SVC | DEBUG | Failed to create host object. %v. URL: %v. Response: %v. Err: %v", hostObj, hostURL, response, err)
 				log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)
-				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 				req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create host object. %v. URL: %v. Response: %v. Err: %v", hostObj, hostURL, response, err)
-				return req, nil
+				//return req, nil
 			}
 		case "workload":
 			var workloadObj workload.Workload
@@ -365,15 +366,15 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 	}
 
 	// Create Host Objects
-	for idx, n := range c.NaplesHosts {
+	for _, n := range c.NaplesHosts {
 		host := cluster.Host{
 			TypeMeta: api.TypeMeta{Kind: "Host"},
 			ObjectMeta: api.ObjectMeta{
-				Name: fmt.Sprintf("pen-naples-%d", idx),
+				Name: n.Name,
 			},
 			Spec: cluster.HostSpec{
 				Interfaces: map[string]cluster.HostIntfSpec{
-					n.Name: {
+					n.Uuid: {
 						MacAddrs: []string{n.Uuid},
 					},
 				},
@@ -382,7 +383,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 		hosts = append(hosts, &host)
 	}
 
-	for idx, n := range c.NaplesHosts {
+	for _, n := range c.NaplesHosts {
 		uSegVlanIdx := uint32(100)
 		for i := 0; i < common.WorkloadsPerNode; i++ {
 			var mac string
@@ -394,7 +395,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 			} else {
 				vlan = vlan2
 			}
-			name = fmt.Sprintf("%s_wrkld_%d", n.Name,i )
+			name = fmt.Sprintf("%s_wrkld_%d", n.Name, i)
 			w := workload.Workload{
 				TypeMeta: api.TypeMeta{Kind: "Workload"},
 				ObjectMeta: api.ObjectMeta{
@@ -402,7 +403,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 					Name:   name,
 				},
 				Spec: workload.WorkloadSpec{
-					HostName: fmt.Sprintf("pen-naples-%d", idx),
+					HostName: n.Name,
 					Interfaces: map[string]workload.WorkloadIntfSpec{
 						mac: {
 							MicroSegVlan: uSegVlanIdx,
