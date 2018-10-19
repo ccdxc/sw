@@ -21,7 +21,7 @@ import { By } from '@angular/platform-browser';
 
 class MockAuthService extends AuthService {
   public GetAuthenticationPolicy(): any {
-    const items = {
+     const items = {
       spec: {
         authenticators: {
           'authenticator-order': [AuthAuthenticators_authenticator_order.LOCAL, AuthAuthenticators_authenticator_order.LDAP],
@@ -67,7 +67,8 @@ class MockAuthService extends AuthService {
         }
       }
     };
-    return Observable.of(items);
+    const response = {body: items};
+   return Observable.of(response);
   }
 }
 
@@ -108,54 +109,61 @@ describe('AuthpolicyComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should fetch data and change ranks', async(() => {
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+ it('should fetch data and change ranks', async(() => {
     // TODO: Add RADIUS data
     const authService = fixture.debugElement.injector.get(AuthService);
     const spy = spyOn(authService, 'GetAuthenticationPolicy').and.callThrough();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
-    let arrow_container = fixture.debugElement.queryAll(By.css('.authpolicy-arrow-up'));
-
-    // moving second item up a rank
-    arrow_container[1].children[0].nativeElement.click();
-    fixture.detectChanges();
     fixture.whenRenderingDone().then(() => {
-    // Items should be switched now
-    let groups = fixture.debugElement.queryAll(By.css('.authpolicy-group'));
-    let ldap = groups[0].query(By.css('.ldap-title'));
-    expect(ldap).toBeTruthy();
-    let local = groups[1].query(By.css('.local-group-title'));
-    expect(local).toBeTruthy();
-    let radius = groups[2].query(By.css('.radius-title'));
-    expect(radius).toBeTruthy();
-    // checking that the data is the same
-    const toggle = groups[0].queryAll(By.css('.mat-checked'));
-    expect(toggle.length).toBe(1);
-    const values = groups[0].queryAll(By.css('.ldap-input'));
-    expect(values[0].nativeElement.innerText).toContain('binddn');
-    expect(values[1].nativeElement.innerText).toContain('bindpass');
-    expect(values[2].nativeElement.innerText).toContain('basedn');
-    expect(values[3].nativeElement.innerText).toContain('user-obj');
-    expect(values[4].nativeElement.innerText).toContain('group-obj-class');
-    expect(values[5].nativeElement.innerText).toContain('user');
-    expect(values[6].nativeElement.innerText).toContain('group');
-    expect(values[7].nativeElement.innerText).toContain('tenant');
-    expect(values[8].nativeElement.innerText).toContain('fullname');
-    expect(values[9].nativeElement.innerText).toContain('email');
+      let arrow_container = fixture.debugElement.queryAll(By.css('.authpolicy-arrow-up'));
 
-    // moving it back down
-    arrow_container = fixture.debugElement.queryAll(By.css('.authpolicy-arrow-down'));
-    arrow_container[0].children[0].nativeElement.click();
-    fixture.detectChanges();
+      // moving second item up a rank
+      arrow_container[1].children[0].nativeElement.click();
+      fixture.detectChanges();
+      fixture.whenRenderingDone().then(() => {
+        // Items should be switched now
+        let groups = fixture.debugElement.queryAll(By.css('.authpolicy-group'));
+        let ldap = groups[0].query(By.css('.ldap-title'));
+        expect(ldap).toBeTruthy();
+        let local = groups[1].query(By.css('.local-group-title'));
+        expect(local).toBeTruthy();
+        let radius = groups[2].query(By.css('.radius-title'));
+        expect(radius).toBeTruthy();
+        // checking that the data is the same
+        const toggle = groups[0].queryAll(By.css('.mat-checked'));
+        expect(toggle.length).toBe(1);
+        const values = groups[0].queryAll(By.css('.ldap-input'));
+        expect(values[0].nativeElement.innerText).toContain('binddn');
+        expect(values[1].nativeElement.innerText).toContain('bindpass');
+        expect(values[2].nativeElement.innerText).toContain('basedn');
+        expect(values[3].nativeElement.innerText).toContain('user-obj');
+        expect(values[4].nativeElement.innerText).toContain('group-obj-class');
+        expect(values[5].nativeElement.innerText).toContain('user');
+        expect(values[6].nativeElement.innerText).toContain('group');
+        expect(values[7].nativeElement.innerText).toContain('tenant');
+        expect(values[8].nativeElement.innerText).toContain('fullname');
+        expect(values[9].nativeElement.innerText).toContain('email');
 
-    // Items should be switched now
-    groups = fixture.debugElement.queryAll(By.css('.authpolicy-group'));
-    local = groups[0].query(By.css('.local-group-title'));
-    expect(local).toBeTruthy();
-    ldap = groups[1].query(By.css('.ldap-title'));
-    expect(ldap).toBeTruthy();
-    radius = groups[2].query(By.css('.radius-title'));
-    expect(radius).toBeTruthy();
+        // moving it back down
+        arrow_container = fixture.debugElement.queryAll(By.css('.authpolicy-arrow-down'));
+        arrow_container[0].children[0].nativeElement.click();
+        fixture.detectChanges();
+
+        // Items should be switched now
+        groups = fixture.debugElement.queryAll(By.css('.authpolicy-group'));
+        local = groups[0].query(By.css('.local-group-title'));
+        expect(local).toBeTruthy();
+        ldap = groups[1].query(By.css('.ldap-title'));
+        expect(ldap).toBeTruthy();
+        radius = groups[2].query(By.css('.radius-title'));
+        expect(radius).toBeTruthy();
+      });
     });
   }));
+
 });

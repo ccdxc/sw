@@ -50,6 +50,12 @@ $vertical-gutter: 5px;
   margin: 0px 2*$horizontal-gutter;
 }
 
+.ldap-bind-connection-button {
+  margin-left:5px;
+  padding: 3px 10px;
+  line-height: 25px;
+}
+
 .ldap-test-connection-button {
   margin: 4*$vertical-gutter 2*$horizontal-gutter;
   padding: 4px 10px;
@@ -65,6 +71,7 @@ $vertical-gutter: 5px;
 .ldap-servergroup {
   margin: 0px 50px;
   border-top: solid 1px #dddddd;
+  margin-bottom: 5px;
 }
 
 .ldap-and {

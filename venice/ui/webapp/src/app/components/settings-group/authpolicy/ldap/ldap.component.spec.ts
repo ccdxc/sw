@@ -5,6 +5,7 @@ import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { AuthLdap } from '@sdk/v1/models/generated/auth';
 
 describe('LdapComponent', () => {
   let component: LdapComponent;
@@ -74,13 +75,13 @@ describe('LdapComponent', () => {
   });
 
   it('handle data conflict while in edit mode', () => {
-    //TODO
+    // TODO
   });
 
   it('should add an empty server if there is none provided', () => {
-    component.LDAPData = {
+    component.LDAPData = new AuthLdap({
       enabled: true
-    };
+    });
     fixture.detectChanges();
 
     // click edit which is only on hover
@@ -96,7 +97,7 @@ describe('LdapComponent', () => {
   });
 
   it('edit mode', () => {
-    component.LDAPData = {
+    component.LDAPData = new AuthLdap({
       enabled: true,
       'base-dn': 'basedn',
       'bind-dn': 'binddn',
@@ -130,7 +131,7 @@ describe('LdapComponent', () => {
           }
         }
       ]
-    };
+    });
     component.currentRank = 1;
     fixture.detectChanges();
 
@@ -245,7 +246,7 @@ describe('LdapComponent', () => {
   });
 
   it('should display toggle and values based on input', () => {
-    component.LDAPData = {
+    component.LDAPData = new AuthLdap({
       enabled: true,
       'base-dn': 'basedn',
       'bind-dn': 'binddn',
@@ -279,7 +280,7 @@ describe('LdapComponent', () => {
           }
         }
       ]
-    };
+    });
     fixture.detectChanges();
     let toggle = fixture.debugElement.queryAll(By.css('.mat-checked'));
     expect(toggle.length).toBe(1);
@@ -311,7 +312,7 @@ describe('LdapComponent', () => {
     expect(servers.children[3].children[1].nativeElement.innerText).toContain('10.1.1.11:8000');
 
     // test new incoming data updates the view
-    component.LDAPData = {
+    component.LDAPData = new AuthLdap({
       enabled: false,
       'base-dn': 'basedn-change',
       'bind-dn': 'binddn',
@@ -345,7 +346,7 @@ describe('LdapComponent', () => {
           }
         }
       ]
-    };
+    });
     component.ngOnChanges(null);
     fixture.detectChanges();
     toggle = fixture.debugElement.queryAll(By.css('.mat-checked'));
@@ -381,7 +382,7 @@ describe('LdapComponent', () => {
 
   it('should display arrows and rank', () => {
     // if LDAPData is blank, it goes to create form which has no rank
-    component.LDAPData = { enabled: true };
+    component.LDAPData = new AuthLdap({ enabled: true });
     fixture.detectChanges();
     const spy = spyOn(component.changeAuthRank, 'emit');
     // Current rank isn't set, shouldn't show anything

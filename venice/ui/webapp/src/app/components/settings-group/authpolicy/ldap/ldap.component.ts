@@ -1,10 +1,20 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, ViewChild, ViewChildren, SimpleChanges, OnChanges } from '@angular/core';
 import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
-import { IAuthLdap, AuthLdap, AuthLdapServer } from '@sdk/v1/models/generated/auth';
+import { AuthLdap, AuthLdapServer } from '@sdk/v1/models/generated/auth';
 import { FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material';
 
+import { LDAPCheckResponse , LDAPCheckType, CheckResponseError } from '@app/components/settings-group/authpolicy/.';
+import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
+import { Utility } from '@app/common/Utility';
+/**
+ * LdapComponent (child) is a child component of AuthPolicy.component (parent)
+ * parent passes in "LDAPData" to child, child has a "LDAPObject" to reflect "LDAPData".
+ *
+ * When user wants to save LDAP, test BIND or test LDAP server connection, LdapComponent emits event to parent and let parent handles the REST calls.
+ *
+ */
 @Component({
   selector: 'app-ldap',
   templateUrl: './ldap.component.html',
@@ -24,11 +34,19 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
 
   verifyCertToggleFormArray: FormArray;
 
-  @Input() LDAPData: IAuthLdap;
-
+  @Input() LDAPData: AuthLdap;
+  @Input() ldapBindCheckResponse: LDAPCheckResponse = null;
+  @Input() ldapConnCheckResponse: LDAPCheckResponse = null;
+  @Output() invokeCheckLDAPServerConnect: EventEmitter<any> = new EventEmitter();
+  @Output() invokeCheckLDAPBindConnect: EventEmitter<any> = new EventEmitter();
+  @Output() invokeSaveLDAP: EventEmitter<any> = new EventEmitter();
 
   constructor() {
     super();
+  }
+
+  getClassName(): string {
+    return this.constructor.name;
   }
 
   ngOnInit() {
@@ -42,6 +60,12 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   updateLDAPObject() {
     this.LDAPObject.setValues(this.LDAPData);
     this.LDAPObject.setFormGroupValues();
+  }
+
+  updateLDAPData() {
+    if (this.LDAPObject) {
+      this.LDAPData.setValues(this.LDAPObject.getValues());
+    }
   }
 
   toggleEdit() {
@@ -119,6 +143,8 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   saveLDAP() {
+    this.updateLDAPData();
+    this.invokeSaveLDAP.emit(false); // emit event to parent to update LDAP
     // POST DATA
     this.LDAPEditMode = false;
     // Reset the LDAPObject with the passed in data
@@ -126,8 +152,68 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   createLDAP() {
+    this.invokeSaveLDAP.emit(true);  // emit event to parent to create LDAP
     this.LDAPData = new AuthLdap();
     this.inCreateMode = true;
     this.LDAPEditMode = true;
+  }
+
+  onCheckLdapConnection($event) {
+    this.updateLDAPData();
+    this.ldapConnCheckResponse = null;
+    this.invokeCheckLDAPServerConnect.emit(this.LDAPData);
+  }
+
+  onCheckLDAPBindConnect ($event) {
+    this.updateLDAPData();
+    this.ldapBindCheckResponse = null;
+    this.invokeCheckLDAPBindConnect.emit(this.LDAPData);
+  }
+
+   /**
+   * This api serves API
+   */
+  hasBindConfigError(checkResponse: LDAPCheckResponse): boolean {
+    const bindCheckResponseError = this.hasConfigErrorHelper(this.ldapBindCheckResponse);
+    return (bindCheckResponseError.errors.length > 0);
+  }
+
+  hasConnConfigError(checkResponse: LDAPCheckResponse): boolean {
+    const connCheckResponseError = this.hasConfigErrorHelper(this.ldapConnCheckResponse);
+    return (connCheckResponseError.errors.length > 0);
+  }
+
+  /**
+   * Helper function.
+   */
+  hasConfigErrorHelper(checkResponse: LDAPCheckResponse): CheckResponseError {
+    return AuthPolicyUtil.processLDAPCheckResponse(checkResponse);  // invoke index.ts function
+  }
+
+  onBindErrorMessageClick($event) {
+    const msgs = this.getErrorMessages(this.ldapBindCheckResponse);
+    alert(JSON.stringify(Object.values(msgs)));
+  }
+
+  onConnErrorMessageClick($event) {
+    const msgs = this.getErrorMessages(this.ldapConnCheckResponse);
+    alert(JSON.stringify(Object.values(msgs)));
+  }
+
+  getErrorMessages(checkResponse: LDAPCheckResponse): any {
+    const connCheckResponseError = this.hasConfigErrorHelper(checkResponse);
+    const _ = Utility.getLodash();
+    const msgs = _.mapValues(connCheckResponseError.errors, 'message');
+    return msgs;
+  }
+
+  getConnConfigErrorTooltip(): string {
+    const msgs = this.getErrorMessages(this.ldapConnCheckResponse);
+    return Object.values(msgs).join('\n');
+  }
+
+  getBindConfigErrorTooltip(): string {
+    const msgs = this.getErrorMessages(this.ldapBindCheckResponse);
+    return Object.values(msgs).join('\n');
   }
 }

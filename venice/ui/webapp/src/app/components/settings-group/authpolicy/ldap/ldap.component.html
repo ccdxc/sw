@@ -67,16 +67,16 @@
     </div>
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
       <mat-icon fxFlex="nogrow" *ngIf="!LDAPEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
-        arrow_downward
+          arrow_downward
       </mat-icon>
     </div>
   </div>
   <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
-  <div *ngIf="LDAPEditMode" fxFlex="nogrow" fxLayout="row">
-    <div *ngIf="LDAPEditMode" fxFlex="nogrow">
+  <div *ngIf="LDAPEditMode" fxFlex="nogrow" fxLayout="row">    
+    <div  fxFlex="nogrow">
       <div (click)="saveLDAP()" class="global-button-primary authpolicy-save">SAVE</div>
     </div>
-    <div *ngIf="LDAPEditMode" fxFlex="nogrow">
+    <div fxFlex="nogrow">
       <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
     </div>
   </div>
@@ -107,6 +107,10 @@
           <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
               <input fxFlex="nogrow" formControlName="bind-dn" class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
+              <div fxFlex="nogrow" class="global-button-primary ldap-bind-connection-button" (click)="onCheckLDAPBindConnect($event)">Test Bind</div>
+              <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"  title="{{getBindConfigErrorTooltip()}}">
+                  error
+              </mat-icon>
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
                 <input fxFlex="nogrow" formControlName="bind-password" class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
@@ -308,13 +312,7 @@
             <div fxFlex fxLayout="column">
               <div fxFlex="30px" fxLayout="row" class="ldap-value">
                 <input fxFlex="nogrow" class="ldap-input" formControlName="url" spellcheck="false" type="text"  pInputText  placeholder="">
-              </div>
-              <!-- <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input-object-class" spellcheck="false" type="text"  pInputText  placeholder="">
-              </div> -->
-              <!-- <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle">
-                Use TLS
-              </div> -->
+              </div>           
             </div>
           </div>
         </div>
@@ -351,16 +349,12 @@
           <textarea fxFlex formControlName="trusted-certs" placeholder="Trusted Certificates..." class="ldap-server-certs" pInputTextarea></textarea>
         </ng-container>
     </div>
-    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
-      <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button">TEST CONNECTION</div>
-    </div>
-
-      <!-- <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start end" class="ldap-fieldtitle ldap-and">
-          <span fxFlex="nogrow">+ AND</span>
-          <mat-icon fxFlex="nogrow" [style.color]="'#767676'">delete</mat-icon>
-      </div> -->
-
-
-    <!-- </div> -->
+ 
   </div>
+  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
+      <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick($event)"  title="{{getConnConfigErrorTooltip()}}">
+          error
+      </mat-icon>
+    <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button"  (click)="onCheckLdapConnection($event)">Test Connections</div>
+  </div> 
 </ng-template>

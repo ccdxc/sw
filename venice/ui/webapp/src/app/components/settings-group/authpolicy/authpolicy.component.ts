@@ -5,7 +5,18 @@ import { AuthAuthenticationPolicy, ApiStatus, AuthLdap, IAuthAuthenticationPolic
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { FormControl } from '@angular/forms';
+import { Observable } from 'rxjs/Observable';
 
+import { LDAPCheckResponse , LDAPCheckType } from '@app/components/settings-group/authpolicy/.';
+import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
+
+/**
+ * AuthpolicyComponent allow user to manage authentication policy.
+ * When Venice is setup, there must be day-0 opertion to create auth-policy so that user can login at first place.
+ * Thus, the component manage update/test operations.
+ *
+ * This component internally contain  local, ldap, radius sub components.  It handles REST call on behalf of sub-component. For example, it manages LDAP component's test-server calls.
+ */
 @Component({
   selector: 'app-authpolicy',
   templateUrl: './authpolicy.component.html',
@@ -19,99 +30,43 @@ export class AuthpolicyComponent implements OnInit {
   authOrder = ['LOCAL', 'LDAP', 'RADIUS'];
   authPolicy: AuthAuthenticationPolicy = new AuthAuthenticationPolicy({ spec: { authenticators: { 'authenticator-order': ['LOCAL', 'LDAP'] } } });
 
+  // these variables will pass to LDAPComponent
+  _ldapConnCheckResponse: LDAPCheckResponse = null;
+  _ldapBindCheckResponse: LDAPCheckResponse = null;
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService) { }
 
   ngOnInit() {
-    const data: IAuthAuthenticationPolicy = {
-      spec: {
-        authenticators: {
-          'authenticator-order': [AuthAuthenticators_authenticator_order.LOCAL, AuthAuthenticators_authenticator_order.LDAP, AuthAuthenticators_authenticator_order.RADIUS],
-          ldap: {
-            enabled: true,
-            'base-dn': 'basedn',
-            'bind-dn': 'binddn',
-            'bind-password': 'bindpass',
-            'attribute-mapping': {
-              'email': 'email',
-              'fullname': 'fullname',
-              'user': 'user',
-              'user-object-class': 'user-obj',
-              'group-object-class': 'group-obj-class',
-              'group': 'group',
-              'tenant': 'tenant'
-            },
-            servers: [
-              {
-                'url': '10.1.1.10:8000',
-                'tls-options': {
-                  'server-name': 'server1',
-                  'skip-server-cert-verification': false,
-                  'start-tls': true,
-                  'trusted-certs': 'example cert'
-                }
-              },
-              {
-                'url': '10.1.1.11:8000',
-                'tls-options': {
-                  'server-name': 'server1',
-                  'skip-server-cert-verification': true,
-                  'start-tls': false,
-                  'trusted-certs': 'example cert'
-                }
-              }
-            ]
-          },
-          local: {
-            enabled: true
-          },
-          radius: {
-            enabled: true,
-            'nas-id': 'testid',
-            servers: [
-              {
-                'url': '10.1.1.11:8000',
-              },
-              {
-                'url': '10.1.1.11:8001',
-              },
-              {
-                'url': '10.1.1.11:8002',
-              }
-            ]
-          }
-
-        }
-      }
-    };
-    this.authPolicy = new AuthAuthenticationPolicy(data);
-
-
     // Setting the toolbar
     this._controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [{ label: 'Settings', url: '' }, { label: 'Auth Policy', url: '' }]
     });
-    this.refresh();
-    console.log(this.authPolicy);
+    // Retrieve auth-policy
+    this.getAuthenticationPolicy();
   }
 
-  refresh() {
+
+  getAuthenticationPolicy() {
     this._authService.GetAuthenticationPolicy().subscribe(
       response => {
-        const body = response.body as AuthAuthenticationPolicy;
-        console.log(body);
+        const body = response.body;
+        this.authPolicy = new AuthAuthenticationPolicy(body);
       },
       error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.log('Auth service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.log('Auth service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
+        this.handRESTCallError(error, 'Auth service', 'GetAuthenticationPolicy');
       }
     );
+  }
+
+  handRESTCallError(error: any, serviceName: string, methodName: string) {
+    // TODO: Error handling
+    if (error.body instanceof Error) {
+      alert(serviceName + ' ' + methodName + ' returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+    } else {
+      alert(serviceName + ' ' + methodName + '  returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+    }
   }
 
   swapRanks(newRank, oldRank) {
@@ -123,5 +78,82 @@ export class AuthpolicyComponent implements OnInit {
     copy[newRank] = copy[oldRank];
     copy[oldRank] = temp;
     this.authPolicy.spec.authenticators['authenticator-order'] = copy;
+  }
+
+  getClassName(): string {
+    return this.constructor.name;
+  }
+
+  onCheckLDAPServerConnect(ldap: AuthLdap) {
+    this._authService.LdapConnectionCheck(this.authPolicy).subscribe(
+      response => {
+        const respAuthPolicy: AuthAuthenticationPolicy = response.body as AuthAuthenticationPolicy;
+        const  ldapCheckResponse = this.makeLDAPCheckResponse(LDAPCheckType.CONNECTION, ldap, respAuthPolicy  );
+        const connCheckResponseError = AuthPolicyUtil.processLDAPCheckResponse(ldapCheckResponse);
+        if (connCheckResponseError.errors.length > 0) {
+          this._ldapConnCheckResponse = ldapCheckResponse;
+        } else {
+          this.handleLDAPServerCheckSuccess(LDAPCheckType.CONNECTION);
+        }
+      },
+      error => {
+        this.handRESTCallError(error, 'Auth service', 'LdapConnectionCheck');
+      }
+    );
+  }
+
+  handleLDAPServerCheckSuccess(type: LDAPCheckType) {
+    alert('LDAP ' + type + ' pass' ); // TODO: use toaster later.
+  }
+
+  onCheckLDAPBindConnect(ldap: AuthLdap) {
+    this._authService.LdapBindCheck(this.authPolicy).subscribe(
+      response => {
+        const respAuthPolicy: AuthAuthenticationPolicy = response.body as AuthAuthenticationPolicy;
+        const ldapCheckResponse = this.makeLDAPCheckResponse(LDAPCheckType.BIND, ldap, respAuthPolicy  );
+        const ldapBindCheckResponseError = AuthPolicyUtil.processLDAPCheckResponse(ldapCheckResponse);
+        if (ldapBindCheckResponseError.errors.length > 0) {
+          this._ldapBindCheckResponse = ldapCheckResponse;
+        } else {
+          this.handleLDAPServerCheckSuccess(LDAPCheckType.BIND);
+        }
+      },
+      error => {
+        this.handRESTCallError(error, 'Auth service', 'LdapBindCheck');
+      }
+    );
+  }
+
+  makeLDAPCheckResponse(type: LDAPCheckType, checkedLdap: AuthLdap, responseAuthPolicy: AuthAuthenticationPolicy ): LDAPCheckResponse {
+    const  ldapCheckResponse = {} as LDAPCheckResponse;
+    ldapCheckResponse.type = type;
+    ldapCheckResponse.authpolicy = responseAuthPolicy;
+    return ldapCheckResponse;
+  }
+
+  /**
+   * This API serves html template
+   * @param isNewLDAP
+   *
+   * Even through we passes in "isNewLDAP" parameter, (isNewLDAP is for creating auth-policy), it is not likely isNewLDAP will be true.
+   * If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
+   */
+  onInvokeSaveLDAP(isNewLDAP: boolean) {
+    this.saveAuthenticationPolicy();
+  }
+
+  saveAuthenticationPolicy() {
+    let handler: Observable<{ body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number }>;
+    // If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
+    handler = this._authService.UpdateAuthenticationPolicy(this.authPolicy);
+    handler.subscribe(
+      (response) => {
+        const status = response.statusCode;
+        const body = response.body;
+        this.authPolicy = new AuthAuthenticationPolicy(body);
+      },
+      error => {
+        this.handRESTCallError(error, 'Auth service', 'saveAuthenticationPolicy');
+      });
   }
 }
