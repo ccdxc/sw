@@ -1,4 +1,4 @@
-FROM registry.test.pensando.io:5000/pens-base:v0.2
+FROM registry.test.pensando.io:5000/pens-base:v0.3
 COPY venice-sim.tar /venice-sim.tar
 COPY copyout /copyout
 ENTRYPOINT ["/copyout"]

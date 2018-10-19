@@ -130,8 +130,8 @@ var typesMapAlerts = map[string]*api.Struct{
 			"self-link":                api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":                   api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"total-notifications-sent": api.CLIInfo{Path: "Status.totalNotificationsSent", Skip: false, Insert: "", Help: ""},
-			"uuid":    api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
-			"version": api.CLIInfo{Path: "Spec.SNMPTrapServers[].Version", Skip: false, Insert: "", Help: ""},
+			"uuid":                     api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"version":                  api.CLIInfo{Path: "Spec.SNMPTrapServers[].Version", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"monitoring.AlertDestinationSpec": &api.Struct{

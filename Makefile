@@ -51,10 +51,10 @@ SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
-BUILD_CONTAINER ?= pens-bld:v0.12
+BUILD_CONTAINER ?= pens-bld:v0.13
 UI_BUILD_CONTAINER ?= pens-ui-bld:v0.17
 DIND_CONTAINER ?= pens-dind:v0.3
-E2E_CONTAINER ?= pens-e2e:v0.3
+E2E_CONTAINER ?= pens-e2e:v0.4
 TARGETS ?= ws-tools gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
@@ -151,7 +151,7 @@ install:
 	@cp -p ${PWD}/bin/cbin/tmagent tools/docker-files/netagent/tmagent
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
-	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm --no-cache -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
+	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
 	@tools/scripts/createImage.py
 	@# the above script populates venice.json which needs to be 'installed' on the venice. Hence creation of installer is done at the end
 	@# For now the installer is a docker container.
@@ -186,13 +186,14 @@ clean:
 	@rm -fr bin/* venice/ui/webapp/node_modules  venice/ui/web-app-framework/node_modules  venice/ui/venice-sdk/node_modules venice/ui/webapp/dist
 
 helper-containers:
-	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
-	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.2 .
+	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.3 .
+	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.3 .
+	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.2 .
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/${BUILD_CONTAINER} .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/${DIND_CONTAINER}  .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/${E2E_CONTAINER} .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.6 .
-	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.1 .
+	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.2 .
 
 ui-container-helper:
 	cat venice/ui/venice-sdk/npm-shrinkwrap.json | jq 'del(.dependencies."@pensando/swagger-ts-generator")' > tools/docker-files/ui-container/venice-sdk/npm-shrinkwrap.json

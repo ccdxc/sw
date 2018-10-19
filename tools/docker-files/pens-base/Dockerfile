@@ -11,7 +11,7 @@ RUN curl -LO https://github.com/nasuku/systemd-docker/releases/download/v0.3.0/s
 RUN strip   systemd-docker.linux.x86-64
 RUN chmod 755 systemd-docker.linux.x86-64
 
-FROM alpine:3.6
+FROM alpine:3.8
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 COPY --from=0 /target/usr/bin/kubelet /target/usr/bin/kubelet
 COPY --from=0 systemd-docker.linux.x86-64 /target/usr/bin/systemd-docker

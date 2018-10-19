@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM alpine:3.8
 RUN apk update
 RUN apk add chrony
 COPY reload-chrony-sources.sh /usr/bin

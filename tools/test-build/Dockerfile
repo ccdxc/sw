@@ -1,4 +1,4 @@
-FROM "golang:1.10.0"
+FROM "golang:1.11.1"
 
 # enable jessie-backports
 RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list
@@ -9,11 +9,11 @@ RUN apt-get update && apt-get install rsync libpcap-dev -y && \
   apt-get install -y libltdl-dev softhsm2 unzip
 
 # install protoc
-RUN curl -LO https://github.com/google/protobuf/releases/download/v3.4.0/protoc-3.4.0-linux-x86_64.zip && \
-  unzip protoc-3.4.0-linux-x86_64.zip -d tmp && \
+RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip && \
+  unzip protoc-3.6.1-linux-x86_64.zip -d tmp && \
   mv tmp/bin/protoc /usr/local/bin && \
   mv tmp/include/google /usr/local/include/ && \
-  rm -rf protoc-3.4.0-linux-x86_64.zip tmp 
+  rm -rf protoc-3.6.1-linux-x86_64.zip tmp 
 
 # install docker
 RUN curl -sSL https://get.docker.com | CHANNEL=stable bash

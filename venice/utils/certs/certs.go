@@ -335,7 +335,7 @@ func SelfSign(hostname string, privatekey crypto.PrivateKey, opts ...Option) (*x
 	}
 
 	template := &x509.Certificate{
-		IsCA: true,
+		IsCA:                  true,
 		BasicConstraintsValid: true,
 		SubjectKeyId:          []byte{1, 2, 3},
 		SerialNumber:          big.NewInt(1234),
@@ -429,7 +429,7 @@ func SignCSRwithCA(csr *x509.CertificateRequest, caCert *x509.Certificate, priva
 	publickey := csr.PublicKey
 
 	template := &x509.Certificate{
-		IsCA: false,
+		IsCA:                  false,
 		BasicConstraintsValid: true,
 		Subject:               csr.Subject,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},

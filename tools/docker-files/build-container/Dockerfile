@@ -1,4 +1,4 @@
-FROM golang:1.10.0-alpine3.7
+FROM golang:1.11.1-alpine3.8
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 RUN apk update
 RUN apk add curl bash git make build-base linux-headers gcc libpcap-dev libtool protobuf-dev

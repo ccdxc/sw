@@ -1,11 +1,11 @@
-FROM alpine:3.6
+FROM alpine:3.8
 RUN apk update
 RUN apk add curl
 RUN curl -fL --retry 3 --keepalive-time 2  -o /tmp/kubernetes-server-linux-amd64.tar.gz  https://storage.googleapis.com/kubernetes-release/release/v1.7.14/kubernetes-server-linux-amd64.tar.gz
 RUN tar xvf /tmp/kubernetes-server-linux-amd64.tar.gz  kubernetes/server/bin/kubectl
 RUN chmod 755 kubernetes/server/bin/kubectl
 
-FROM golang:1.10.0-alpine3.7
+FROM golang:1.11.1-alpine3.8
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 RUN apk update
 RUN apk add curl bash git make build-base linux-headers gcc libpcap-dev libtool openssh docker

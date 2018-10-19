@@ -320,8 +320,8 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 
 	req := grpc.RegisterNICRequest{
 		AdmissionRequest: &grpc.NICAdmissionRequest{
-			Nic:  *nic,
-			Cert: platformCert,
+			Nic:                    *nic,
+			Cert:                   platformCert,
 			ClusterCertSignRequest: csr.Raw,
 		},
 	}
