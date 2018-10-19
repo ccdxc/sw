@@ -76,7 +76,7 @@ void cap_mx_set_cfg_mac_tdm(int chip_id, int inst_id, int slot0, int slot1, int 
    mx_csr.cfg_mac_tdm.show();
 }
 
-void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value) { 
+void cap_mx_stats_reset(int chip_id, int inst_id, int ch, int value) {
     int rdata;
     int wdata;
     int mask = ((1 << ch) ^ 0xf) & 0xf;
@@ -85,6 +85,14 @@ void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value) {
     rdata = cap_mx_apb_read(chip_id, inst_id, 0x300);
     wdata = (rdata & mask) | ((value << ch) & 0xf);
     cap_mx_apb_write(chip_id, inst_id, 0x300, wdata);
+}
+
+void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value) { 
+    int rdata;
+    int wdata;
+    int mask = ((1 << ch) ^ 0xf) & 0xf;
+
+    cap_mx_stats_reset(chip_id, inst_id, ch, value);
 
     // umac software reset: {ch3, ch2, ch1, ch0}
     rdata = cap_mx_apb_read(chip_id, inst_id, 0x5);
@@ -625,7 +633,7 @@ void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report,
       mx_csr.dhs_mac_stats.entry[addr].read();
       cpp_int rdata = mx_csr.dhs_mac_stats.entry[addr].value();
       if (stats_data != NULL) {
-          stats_data[i] = mx_csr.dhs_mac_stats.entry[addr].value().convert_to<int>();
+          stats_data[i] = mx_csr.dhs_mac_stats.entry[addr].value().convert_to<uint64_t>();
       }
       string counter_name = stats[i*2+1];
       PLOG_MSG( "MX" << inst_id << " Channel" << ch << ": " << counter_name.append(50-counter_name.length(),' ') << " : " << rdata << "\n" );

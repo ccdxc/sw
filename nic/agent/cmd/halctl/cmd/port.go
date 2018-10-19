@@ -22,6 +22,13 @@ var (
 	portNum uint32
 )
 
+var portClearStatsCmd = &cobra.Command{
+	Use:   "port stats",
+	Short: "clear port stats",
+	Long:  "clear port stats",
+	Run:   portClearStatsCmdHandler,
+}
+
 var portShowCmd = &cobra.Command{
 	Use:   "port",
 	Short: "show port details",
@@ -57,6 +64,9 @@ func init() {
 	portShowCmd.AddCommand(portStatsShowCmd)
 
 	portShowCmd.PersistentFlags().Uint32Var(&portNum, "port", 1, "Specify port number")
+
+	clearCmd.AddCommand(portClearStatsCmd)
+	portClearStatsCmd.Flags().Uint32Var(&portNum, "port", 1, "Speficy port number")
 }
 
 func handlePortDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -270,4 +280,96 @@ func portShowStatsOneResp(resp *halproto.PortGetResponse) {
 			s.GetCount())
 	}
 	fmt.Println(hdrLine)
+}
+
+func handlePortClearStatsCmd(cmd *cobra.Command, ofile *os.File) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewPortClient(c.ClientConn)
+
+	var req *halproto.PortGetRequest
+
+	if cmd != nil && cmd.Flags().Changed("port") {
+		// Get port info for specified port
+		req = &halproto.PortGetRequest{
+			KeyOrHandle: &halproto.PortKeyHandle{
+				KeyOrHandle: &halproto.PortKeyHandle_PortId{
+					PortId: portNum,
+				},
+			},
+		}
+	} else {
+		// Get all Ports
+		req = &halproto.PortGetRequest{}
+	}
+
+	portGetReqMsg := &halproto.PortGetRequestMsg{
+		Request: []*halproto.PortGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.PortGet(context.Background(), portGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+
+		var portSpec *halproto.PortSpec
+
+		portSpec = &halproto.PortSpec{
+			KeyOrHandle: &halproto.PortKeyHandle{
+				KeyOrHandle: &halproto.PortKeyHandle_PortId{
+					PortId: resp.GetSpec().GetKeyOrHandle().GetPortId(),
+				},
+			},
+
+			PortType:      halproto.PortType_PORT_TYPE_NONE,
+			AdminState:    resp.GetSpec().GetAdminState(),
+			PortSpeed:     resp.GetSpec().GetPortSpeed(),
+			NumLanes:      0,
+			FecType:       resp.GetSpec().GetFecType(),
+			AutoNegEnable: resp.GetSpec().GetAutoNegEnable(),
+			DebounceTime:  resp.GetSpec().GetDebounceTime(),
+			Mtu:           resp.GetSpec().GetMtu(),
+			MacStatsReset: true,
+		}
+
+		portUpdateReqMsg := &halproto.PortRequestMsg{
+			Request: []*halproto.PortSpec{portSpec},
+		}
+
+		// HAL call
+		updateRespMsg, err := client.PortUpdate(context.Background(), portUpdateReqMsg)
+		if err != nil {
+			fmt.Printf("Update Port failed. %v\n", err)
+			continue
+		}
+
+		for _, updateResp := range updateRespMsg.Response {
+			if updateResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("HAL Returned non OK status. %v\n", updateResp.ApiStatus)
+				continue
+			}
+		}
+	}
+}
+
+func portClearStatsCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 1 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+	handlePortClearStatsCmd(cmd, nil)
 }

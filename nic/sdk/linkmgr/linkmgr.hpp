@@ -41,6 +41,7 @@ typedef struct port_args_s {
     port_oper_status_t    oper_status;                // oper status of the port
     port_fec_type_t       fec_type;                   // FEC type
     bool                  auto_neg_enable;            // Enable AutoNeg
+    bool                  mac_stats_reset;            // mac stats reset
     uint32_t              mac_id;                     // mac id associated with the port
     uint32_t              mac_ch;                     // mac channel associated with port
     uint32_t              num_lanes;                  // number of lanes for the port

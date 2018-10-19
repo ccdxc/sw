@@ -14,8 +14,8 @@ using sdk::types::port_speed_t;
 namespace sdk {
 namespace linkmgr {
 
-bool mx_init[MAX_MAC];
-bool bx_init[MAX_MAC];
+uint8_t mx_init[MAX_MAC];
+uint8_t bx_init[MAX_MAC];
 
 //---------------------------------------------------------------------------
 // HAPS platform methods
@@ -498,13 +498,16 @@ mac_cfg_hw (mac_info_t *mac_info)
     mx[inst_id].speed      [start_lane] = mx_api_speed;
     mx[inst_id].port_enable[start_lane] = 1;
 
-    if (mac_global_init(inst_id) != 1 || mac_info->force_global_init == true) {
+    if (mac_global_init(inst_id) == 0 || mac_info->force_global_init == true) {
         cap_mx_load_from_cfg_glbl1(chip_id, inst_id, &ch_enable_vec);
 
         cap_mx_set_tx_padding(chip_id, inst_id, mac_info->tx_pad_enable);
-
-        mx_init[inst_id] = 1;
     }
+
+    mx_init[inst_id] = mx_init[inst_id] | mac_ch_en;
+
+    SDK_TRACE_DEBUG("mac_inst: %d, mac_ch: %d, mx_init: 0x%x",
+                    inst_id, start_lane, mx_init[inst_id]);
 
     for (uint32_t ch = start_lane; ch < start_lane + num_lanes; ch++) {
         cap_mx_cfg_ch(chip_id, inst_id, ch);
@@ -570,9 +573,15 @@ mac_soft_reset_hw (uint32_t port_num, uint32_t speed,
 }
 
 static int
-mac_stats_reset_hw (uint32_t port_num, uint32_t speed,
-                         uint32_t num_lanes, bool reset)
+mac_stats_reset_hw (uint32_t mac_inst, uint32_t mac_ch, bool reset)
 {
+    int chip_id = 0;
+
+    if (reset == true) {
+        cap_mx_stats_reset(chip_id, mac_inst, mac_ch, 1);
+    } else {
+        cap_mx_stats_reset(chip_id, mac_inst, mac_ch, 0);
+    }
     return 0;
 }
 
@@ -628,6 +637,17 @@ mac_stats_get_hw (uint32_t mac_inst, uint32_t mac_ch,
                   uint64_t *stats_data)
 {
     cap_mx_mac_stat(0 /*chip_id*/, mac_inst, mac_ch, 0, stats_data);
+    return 0;
+}
+
+// clear channel bit
+static int
+mac_deinit_hw (uint32_t mac_inst, uint32_t mac_ch)
+{
+    uint32_t mask = 1 << mac_ch;
+    mx_init[mac_inst] = mx_init[mac_inst] & ~mask;
+    SDK_TRACE_DEBUG("mac_inst: %d, mac_ch: %d, mx_init: 0x%x",
+                    mac_inst, mac_ch, mx_init[mac_inst]);
     return 0;
 }
 
@@ -691,7 +711,7 @@ mac_mgmt_cfg_hw (mac_info_t *mac_info)
     bx[inst_id].speed      [start_lane] = bx_api_speed;
     bx[inst_id].port_enable[start_lane] = 1;
 
-    if (bx_init[inst_id] != 1) {
+    if (bx_init[inst_id] == 0) {
         // global mode
         cap_bx_set_glbl_mode(chip_id, inst_id, bx[inst_id].glbl_mode);
 
@@ -713,7 +733,9 @@ mac_mgmt_cfg_hw (mac_info_t *mac_info)
         // channel enable
         cap_bx_set_ch_enable(chip_id, inst_id, mac_ch_en);
 
-        bx_init[inst_id] = 1;
+        bx_init[inst_id] |= mac_ch_en;
+        SDK_TRACE_DEBUG("mac_inst: %d, mac_ch: %d, bx_init: 0x%x",
+                        inst_id, start_lane, bx_init[inst_id]);
     }
 
     return 0;
@@ -794,6 +816,16 @@ mac_mgmt_stats_get_hw (uint32_t mac_inst, uint32_t mac_ch,
     return 0;
 }
 
+static int
+mac_mgmt_deinit_hw (uint32_t mac_inst, uint32_t mac_ch)
+{
+    uint32_t mask = 1 << mac_ch;
+    bx_init[mac_inst] = bx_init[mac_inst] & ~mask;
+    SDK_TRACE_DEBUG("mac_inst: %d, mac_ch: %d, bx_init: 0x%x",
+                    mac_inst, mac_ch, bx_init[mac_inst]);
+    return 0;
+}
+
 //----------------------------------------------------------------------------
 // Mock methods
 //----------------------------------------------------------------------------
@@ -850,8 +882,7 @@ mac_soft_reset_default (uint32_t port_num, uint32_t speed,
 }
 
 static int
-mac_stats_reset_default (uint32_t port_num, uint32_t speed,
-                         uint32_t num_lanes, bool reset)
+mac_stats_reset_default (uint32_t mac_inst, uint32_t mac_ch, bool reset)
 {
     return 0;
 }
@@ -894,6 +925,12 @@ mac_stats_get_default (uint32_t mac_inst, uint32_t mac_ch,
     return 0;
 }
 
+static int
+mac_deinit_default (uint32_t mac_inst, uint32_t mac_ch)
+{
+    return 0;
+}
+
 sdk_ret_t
 port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
@@ -911,6 +948,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn->mac_sync_get    = &mac_sync_get_default;
     mac_fn->mac_flush_set   = &mac_flush_set_default;
     mac_fn->mac_stats_get   = &mac_stats_get_default;
+    mac_fn->mac_deinit      = &mac_deinit_default;
 
     mac_mgmt_fn->mac_cfg         = &mac_cfg_default;
     mac_mgmt_fn->mac_enable      = &mac_enable_default;
@@ -922,6 +960,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_mgmt_fn->mac_sync_get    = &mac_sync_get_default;
     mac_mgmt_fn->mac_flush_set   = &mac_flush_set_default;
     mac_mgmt_fn->mac_stats_get   = &mac_stats_get_default;
+    mac_mgmt_fn->mac_deinit      = &mac_deinit_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
@@ -941,6 +980,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_sync_get    = &mac_sync_get_mock;
         mac_fn->mac_flush_set   = &mac_flush_set_hw;
         mac_fn->mac_stats_get   = &mac_stats_get_hw;
+        mac_fn->mac_deinit      = &mac_deinit_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
@@ -949,6 +989,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_sync_get    = &mac_sync_get_mock;
         mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
         mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;
+        mac_mgmt_fn->mac_deinit      = &mac_mgmt_deinit_hw;
         break;
 
     case platform_type_t::PLATFORM_TYPE_ZEBU:
@@ -963,6 +1004,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_sync_get    = &mac_sync_get_hw;
         mac_fn->mac_flush_set   = &mac_flush_set_hw;
         mac_fn->mac_stats_get   = &mac_stats_get_hw;
+        mac_fn->mac_deinit      = &mac_deinit_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
@@ -971,6 +1013,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_sync_get    = &mac_mgmt_sync_get_hw;
         mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
         mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;
+        mac_mgmt_fn->mac_deinit      = &mac_mgmt_deinit_hw;
         break;
 
     default:

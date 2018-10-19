@@ -68,5 +68,6 @@ int  cap_pp_sbus_read (int chip_id, int rcvr_addr, int data_addr);
 int  cap_pp_sbus_reset(int chip_id, int rcvr_addr);
 int  cap_mx_serdes_lpbk_get (int chip_id, int inst_id, int ch);
 void cap_mx_serdes_lpbk_set (int chip_id, int inst_id, int ch, int value);
+void cap_mx_stats_reset(int chip_id, int inst_id, int ch, int value);
 
 #endif // __SDK_LINKMGR_CAP_MX_API_H__

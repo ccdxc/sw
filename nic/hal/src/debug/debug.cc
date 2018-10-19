@@ -791,6 +791,7 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
 
     ret = pd::asic_pd_hbm_bw_get(&hbm_bw_args);
     if (ret != HAL_RET_OK) {
+        HAL_FREE(HAL_MEM_ALLOC_DEBUG_CLI, hbm_bw_args.hbm_bw);
         return ret;
     }
 
@@ -804,6 +805,8 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
         response->set_clk_diff(hbm_bw->clk_diff);
         response->set_type(debug::CapriBlock(hbm_bw->type));
     }
+
+    HAL_FREE(HAL_MEM_ALLOC_DEBUG_CLI, hbm_bw_args.hbm_bw);
 
     return ret;
 }

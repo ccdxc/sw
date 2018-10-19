@@ -272,6 +272,7 @@ populate_port_update_args (PortSpec& spec, port_args_t *args)
     args->mtu             = spec.mtu();
     args->auto_neg_enable = spec.auto_neg_enable();
     args->debounce_time   = spec.debounce_time();
+    args->mac_stats_reset = spec.mac_stats_reset();
 
     args->admin_state =
         linkmgr::port_admin_st_spec_to_sdk_port_admin_st(spec.admin_state());

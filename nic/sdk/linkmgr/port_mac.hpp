@@ -29,8 +29,7 @@ typedef struct mac_fn_s_ {
                        uint32_t num_lanes, bool enable);
     int (*mac_soft_reset)  (uint32_t port_num, uint32_t speed,
                             uint32_t num_lanes, bool reset);
-    int (*mac_stats_reset) (uint32_t port_num, uint32_t speed,
-                            uint32_t num_lanes, bool reset);
+    int (*mac_stats_reset)  (uint32_t mac_inst, uint32_t mac_ch, bool reset);
     int (*mac_intr_clear)  (uint32_t port_num, uint32_t speed,
                             uint32_t num_lanes);
     int (*mac_intr_enable) (uint32_t port_num, uint32_t speed,
@@ -40,34 +39,13 @@ typedef struct mac_fn_s_ {
     int  (*mac_flush_set)  (uint32_t port_num, bool enable);
     int  (*mac_stats_get)  (uint32_t mac_inst, uint32_t mac_ch,
                             uint64_t *stats_data);
+    int  (*mac_deinit)     (uint32_t mac_inst, uint32_t mac_ch);
 } mac_fn_t;
 
 extern mac_fn_t mac_fns;
 extern mac_fn_t mac_mgmt_fns;
 
 sdk_ret_t port_mac_fn_init(linkmgr_cfg_t *cfg);
-
-// MAC CFG
-int mac_cfg(uint32_t port_num, uint32_t speed, uint32_t num_lanes);
-
-// mac enable or disable
-int mac_enable(uint32_t port_num, uint32_t speed,
-               uint32_t num_lanes, bool enable);
-
-// mac software reset
-int mac_soft_reset(uint32_t port_num, uint32_t speed,
-                   uint32_t num_lanes, bool reset);
-
-// mac stats reset
-int mac_stats_reset(uint32_t port_num, uint32_t speed,
-                    uint32_t num_lanes, bool reset);
-
-// mac interrupt enable or disable
-int mac_intr_enable(uint32_t port_num, uint32_t speed,
-                    uint32_t num_lanes, bool enable);
-
-// mac interrupt clear
-int mac_intr_clear(uint32_t port_num, uint32_t speed, uint32_t num_lanes);
 
 }    // namespace linkmgr
 }    // namespace sdk

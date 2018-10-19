@@ -131,6 +131,7 @@ public:
     bool bringup_timer_expired(void);
 
     sdk_ret_t port_flush_set(bool);
+    sdk_ret_t port_deinit (void);
 
     // ----------------------------------------------------
     // mac methods

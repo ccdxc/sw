@@ -756,6 +756,13 @@ port_update (void *pd_p, port_args_t *args)
         configured = true;
     }
 
+    // TODO need check?
+    if (args->mac_stats_reset == true) {
+        SDK_TRACE_DEBUG("Resetting MAC stats");
+        port_p->port_mac_stats_reset(args->mac_stats_reset);
+        port_p->port_mac_stats_reset(false);
+    }
+
     // Disable the port if any config has changed
     if (configured == true) {
         ret = port::port_disable(port_p);
@@ -796,6 +803,9 @@ port_delete (void *pd_p)
     port         *port_p = (port *)pd_p;
 
     SDK_TRACE_DEBUG("port delete");
+
+    port_p->port_deinit();
+
     ret = port::port_disable(port_p);
     g_linkmgr_state->port_slab()->free(port_p);
 

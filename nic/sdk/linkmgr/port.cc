@@ -148,13 +148,7 @@ port::port_mac_soft_reset(bool reset)
 sdk_ret_t
 port::port_mac_stats_reset(bool reset)
 {
-    uint32_t mac_port_num = port_mac_port_num_calc();
-
-    mac_fns()->mac_stats_reset(
-                    mac_port_num,
-                    static_cast<uint32_t>(this->port_speed_),
-                    this->num_lanes_,
-                    reset);
+    mac_fns()->mac_stats_reset(this->mac_id_, this->mac_ch_, reset);
 
     return SDK_RET_OK;
 }
@@ -801,6 +795,13 @@ sdk_ret_t
 port::port_mac_stats_get (uint64_t *stats_data)
 {
     mac_fns()->mac_stats_get(this->mac_id_, this->mac_ch_, stats_data);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+port::port_deinit (void)
+{
+    mac_fns()->mac_deinit (this->mac_id_, this->mac_ch_);
     return SDK_RET_OK;
 }
 
