@@ -9,13 +9,13 @@
 static inline uint64_t
 sonic_rmem_addr_invalid_def(void)
 {
-        return SONIC_RMEM_ADDR_INVALID;
+	return SONIC_RMEM_ADDR_INVALID;
 }
 
 static inline bool
 sonic_rmem_addr_valid(uint64_t addr)
 {
-        return addr != SONIC_RMEM_ADDR_INVALID;
+	return addr != SONIC_RMEM_ADDR_INVALID;
 }
 
 uint32_t sonic_rmem_total_pages_get(void);

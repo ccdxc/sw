@@ -98,8 +98,9 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 	idev->phy_hbm_pages = bar->bus_addr;
 	idev->hbm_npages = bar->len / PAGE_SIZE;
 	idev->hbm_nallocs = 0;
-	idev->hbm_inuse = kzalloc(BITS_TO_LONGS(idev->hbm_npages) * sizeof(long),
-				  GFP_KERNEL);
+	idev->hbm_inuse =
+		kzalloc(BITS_TO_LONGS(idev->hbm_npages) * sizeof(long),
+				GFP_KERNEL);
 	if (!idev->hbm_inuse) {
 		idev->hbm_iomem_vaddr = NULL;
 		idev->phy_hbm_pages = 0;
@@ -333,9 +334,9 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 	ring_size = ilog2(num_descs);
 	if (ring_size < 1 || ring_size > 16)
 		return -EINVAL;
-	if (!q->info) {
+
+	if (!q->info)
 		return -EINVAL;
-	}
 
 	q->lif = lif;
 	q->idev = idev;

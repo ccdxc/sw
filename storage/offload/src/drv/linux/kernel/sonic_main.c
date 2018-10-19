@@ -66,10 +66,12 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 	} cmds[] = {
 		{ CMD_OPCODE_SEQ_QUEUE_INIT, "CMD_OPCODE_SEQ_QUEUE_INIT" },
 		{ CMD_OPCODE_SEQ_QUEUE_ENABLE, "CMD_OPCODE_SEQ_QUEUE_ENABLE" },
-		{ CMD_OPCODE_SEQ_QUEUE_DISABLE, "CMD_OPCODE_SEQ_QUEUE_DISABLE" },
+		{ CMD_OPCODE_SEQ_QUEUE_DISABLE,
+			"CMD_OPCODE_SEQ_QUEUE_DISABLE" },
 		{ CMD_OPCODE_HANG_NOTIFY, "CMD_OPCODE_HANG_NOTIFY" },
 		{ CMD_OPCODE_SEQ_QUEUE_DUMP, "CMD_OPCODE_SEQ_QUEUE_DUMP" },
-		{ CMD_OPCODE_CRYPTO_KEY_UPDATE, "CMD_OPCODE_CRYPTO_KEY_UPDATE" },
+		{ CMD_OPCODE_CRYPTO_KEY_UPDATE,
+			"CMD_OPCODE_CRYPTO_KEY_UPDATE" },
 		{ 0, 0 }, /* keep last */
 	};
 	struct cmds *cmd = cmds;
@@ -138,7 +140,8 @@ static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_wait)
 #ifdef HAPS
 		if (done)
 			printk(KERN_ERR "DEVCMD done took %ld secs (%ld jiffies)\n",
-			       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
+			       (jiffies + max_wait - time)/HZ,
+			       jiffies + max_wait - time);
 #endif
 		if (done)
 			return 0;
@@ -340,7 +343,7 @@ int sonic_identify(struct sonic *sonic)
 #ifndef __FreeBSD__
 	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL | GFP_DMA);
 #else
-	/* 
+	/*
 	 * KPI doesn't support GFP_DMA and we don't need for our hardware,
 	 * should be removed in Linux also.
 	 */
@@ -367,8 +370,9 @@ int sonic_identify(struct sonic *sonic)
 	strncpy(ident->drv.os_dist_str, "FreeBSD",
 		sizeof(ident->drv.os_dist_str) - 1);
 	ident->drv.kernel_ver = __FreeBSD_version;
-	snprintf(ident->drv.kernel_ver_str, sizeof(ident->drv.kernel_ver_str) - 1,
-		"%d", __FreeBSD_version);
+	snprintf(ident->drv.kernel_ver_str,
+			sizeof(ident->drv.kernel_ver_str) - 1,
+			"%d", __FreeBSD_version);
 #endif
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
 		sizeof(ident->drv.driver_ver_str) - 1);
@@ -434,7 +438,7 @@ static int __init sonic_init_module(void)
 	err = sonic_bus_register_driver();
 	if (err)
 		return err;
-	
+
 #ifdef ENABLE_PNSO_SONIC_TEST
 	return body();
 #else
@@ -555,14 +559,16 @@ int sonic_crypto_key_index_update(const void *key1,
 	switch (key_size) {
 
 	case CMD_CRYPTO_KEY_SIZE_AES128:
-		ctx0.cmd.crypto_key_update.key_type = CMD_CRYPTO_KEY_TYPE_AES128;
+		ctx0.cmd.crypto_key_update.key_type =
+			CMD_CRYPTO_KEY_TYPE_AES128;
 		break;
 
 	case CMD_CRYPTO_KEY_SIZE_AES256:
-		ctx0.cmd.crypto_key_update.key_type = CMD_CRYPTO_KEY_TYPE_AES256;
+		ctx0.cmd.crypto_key_update.key_type =
+			CMD_CRYPTO_KEY_TYPE_AES256;
 		break;
 
-        default:
+	default:
 		dev_err(lif->sonic->dev, "invalid key_size %u\n",
 			ctx0.cmd.crypto_key_update.key_size);
 		return EINVAL;
@@ -571,12 +577,12 @@ int sonic_crypto_key_index_update(const void *key1,
 	memcpy(ctx0.cmd.crypto_key_update.key_data, key1, key_size);
 	err = sonic_adminq_post_wait(lif, &ctx0);
 	if (!err) {
-                ctx1.cmd.crypto_key_update.key_type =
+		ctx1.cmd.crypto_key_update.key_type =
 			  ctx0.cmd.crypto_key_update.key_type;
-                ctx1.cmd.crypto_key_update.key_part = CMD_CRYPTO_KEY_PART1;
-                ctx1.cmd.crypto_key_update.trigger_update = true;
-                memcpy(ctx1.cmd.crypto_key_update.key_data, key2, key_size);
-                err = sonic_adminq_post_wait(lif, &ctx1);
+		ctx1.cmd.crypto_key_update.key_part = CMD_CRYPTO_KEY_PART1;
+		ctx1.cmd.crypto_key_update.trigger_update = true;
+		memcpy(ctx1.cmd.crypto_key_update.key_data, key2, key_size);
+		err = sonic_adminq_post_wait(lif, &ctx1);
 	}
 	return err;
 }

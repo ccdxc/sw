@@ -139,8 +139,11 @@ void sonic_intr_free(struct lif *lif, struct intr *intr);
 
 int sonic_lif_cpdc_seq_qs_init(struct per_core_resource *res);
 int sonic_lif_crypto_seq_qs_init(struct per_core_resource *res);
-int sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res, uint16_t opcode);
-int sonic_lif_crypto_seq_qs_control(struct per_core_resource *res, uint16_t opcode);
+
+int sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res,
+		uint16_t opcode);
+int sonic_lif_crypto_seq_qs_control(struct per_core_resource *res,
+		uint16_t opcode);
 
 int sonic_get_per_core_seq_sq(struct per_core_resource *res,
 		enum sonic_queue_type qtype,
@@ -154,13 +157,15 @@ void sonic_put_seq_statusq(struct queue *q);
 
 struct lif *sonic_get_lif(void);
 struct sonic_dev *sonic_get_idev(void);
+
 uint32_t sonic_get_num_per_core_res(struct lif *lif);
-struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif, uint32_t res_id);
+struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif,
+		uint32_t res_id);
 struct per_core_resource *sonic_get_per_core_res(struct lif *lif);
 
 static inline uint32_t
 sonic_get_seq_sq_num_descs(struct lif *lif,
-                           enum sonic_queue_type sonic_qtype)
+			   enum sonic_queue_type sonic_qtype)
 {
 	struct queue	*q;
 	struct per_core_resource *pc_res;

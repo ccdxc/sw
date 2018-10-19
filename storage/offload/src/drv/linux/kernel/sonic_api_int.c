@@ -30,6 +30,7 @@ static inline uint64_t
 sonic_rmem_base_pa(void)
 {
 	identity_t *ident = sonic_get_identity();
+
 	return ident->dev.cm_base_pa;
 }
 
@@ -37,6 +38,7 @@ static inline void __iomem *
 sonic_rmem_base_iomem(void)
 {
 	struct sonic_dev *idev = sonic_get_idev();
+
 	OSAL_ASSERT(idev->hbm_iomem_vaddr);
 	return idev->hbm_iomem_vaddr;
 }
@@ -58,7 +60,7 @@ sonic_rmem_page_order(size_t size)
 {
 	/*
 	 * bitmap_find_free_region() order indicates region size in power of 2.
-         * So round up size to the nearest power of 2 if necessary.
+	 * So round up size to the nearest power of 2 if necessary.
 	 */
 	if (!is_power_of_2(size))
 		size = roundup_to_pow_2(size);
@@ -70,6 +72,7 @@ static inline uint64_t
 sonic_rmem_pgid_to_pgaddr(uint32_t pgid)
 {
 	uint64_t offset = sonic_rmem_pgid_to_offset(pgid);
+
 	OSAL_ASSERT((sonic_rmem_base_pa() & (offset + PAGE_SIZE - 1)) == 0);
 	return sonic_rmem_base_pa() + offset;
 }
@@ -78,6 +81,7 @@ static inline void __iomem *
 sonic_rmem_pgid_to_iomem(uint32_t pgid)
 {
 	uint64_t offset = sonic_rmem_pgid_to_offset(pgid);
+
 	OSAL_ASSERT(((uint64_t)sonic_rmem_base_iomem() &
 		(offset + PAGE_SIZE - 1)) == 0);
 	return sonic_rmem_base_iomem() + offset;
@@ -108,8 +112,8 @@ static uint64_t sonic_api_get_rmem(int order)
 					      idev->hbm_npages, order);
 		if (ret < 0) {
 			spin_unlock(&idev->hbm_inuse_lock);
-			OSAL_LOG_ERROR("rmem bitmap_find_free_region "
-				       "failed ret: %d", ret);
+			OSAL_LOG_ERROR("rmem bitmap_find_free_region failed ret: %d",
+				       ret);
 			return SONIC_RMEM_ADDR_INVALID;
 		}
 		idev->hbm_nallocs += 1 << order;
@@ -135,7 +139,7 @@ static void sonic_api_put_rmem(uint32_t pgid, int order)
 	OSAL_ASSERT(pgid < idev->hbm_npages);
 	spin_lock(&idev->hbm_inuse_lock);
 	bitmap_release_region(idev->hbm_inuse, pgid, order);
-        idev->hbm_nallocs -= 1 << order;
+	idev->hbm_nallocs -= 1 << order;
 	spin_unlock(&idev->hbm_inuse_lock);
 }
 
@@ -205,6 +209,7 @@ uint16_t
 sonic_get_lif_id(void)
 {
 	identity_t *ident = sonic_get_identity();
+
 	return ident->dev.lif_tbl[0].hw_lif_id;
 }
 
@@ -212,6 +217,7 @@ uint64_t
 sonic_get_lif_local_dbaddr(void)
 {
 	identity_t *ident = sonic_get_identity();
+
 	return ident->dev.lif_tbl[0].hw_lif_local_dbaddr;
 }
 
@@ -227,6 +233,7 @@ uint32_t
 sonic_get_crypto_key_idx(uint32_t user_key_idx)
 {
 	identity_t *ident = sonic_get_identity();
+
 	return ident->dev.lif_tbl[0].hw_key_idx_base + user_key_idx;
 }
 
