@@ -410,7 +410,8 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 
 	for _, cmd := range in.Commands {
 		var err error
-		cmd.ExitCode, cmd.Stdout, cmd.Stderr, err = dnode.worloadMap[cmd.GetWorkloadName()].RunCommand(strings.Split(cmd.GetCommand(), " "), 0, false, true)
+		cmd.ExitCode, cmd.Stdout, cmd.Stderr, err = dnode.worloadMap[cmd.GetWorkloadName()].RunCommand(strings.Split(cmd.GetCommand(), " "), 0,
+			cmd.GetMode() == iota.CommandMode_COMMAND_BACKGROUND, true)
 		dnode.logger.Println("Command error :", err)
 		dnode.logger.Println("Command exit code :", cmd.ExitCode)
 		dnode.logger.Println("Command stdout :", cmd.Stdout)

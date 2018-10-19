@@ -336,12 +336,12 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 	/* Dequeing the commands in same order as it was queued before. */
 	for _, cmd := range req.GetCommands() {
 		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
-		cmdResp := node.TriggerInfo[0]
+		cmdResp := node.TriggerResp[0].GetCommands()[0]
+		triggerResp.Commands = append(triggerResp.Commands, cmdResp)
 		node.TriggerInfo = node.TriggerInfo[1:]
-		triggerResp.Commands = append(triggerResp.Commands, cmdResp.GetCommands()[0])
-
+		node.TriggerResp = node.TriggerResp[1:]
 	}
-	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	triggerResp.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 
 	return triggerResp, nil
 }
