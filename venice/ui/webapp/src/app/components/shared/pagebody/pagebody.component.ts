@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, OnChanges, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 
 /**
  * Component for styling the content holder for each page.
@@ -14,7 +14,7 @@ export class PagebodyComponent implements OnInit, OnDestroy {
   _iconStyles: any;
 
 
-  @Input() title: String;
+  @Input() header: String;
   @Input() icon: any;
   @Input() options: any;
 

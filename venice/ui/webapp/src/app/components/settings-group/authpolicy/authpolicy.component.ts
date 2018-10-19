@@ -1,14 +1,16 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { ControllerService } from '@app/services/controller.service';
-import { AuthService } from '@app/services/generated/auth.service';
-import { AuthAuthenticationPolicy, ApiStatus, AuthLdap, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, IApiStatus } from '@sdk/v1/models/generated/auth';
+import { FormControl } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
-import { FormControl } from '@angular/forms';
+import { BaseComponent } from '@app/components/base/base.component';
+import { LDAPCheckResponse, LDAPCheckType } from '@app/components/settings-group/authpolicy/.';
+import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
+import { ControllerService } from '@app/services/controller.service';
+import { AuthService } from '@app/services/generated/auth.service';
+import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
+import { MessageService } from 'primeng/primeng';
 import { Observable } from 'rxjs/Observable';
 
-import { LDAPCheckResponse , LDAPCheckType } from '@app/components/settings-group/authpolicy/.';
-import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
 
 /**
  * AuthpolicyComponent allow user to manage authentication policy.
@@ -24,7 +26,7 @@ import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPo
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class AuthpolicyComponent implements OnInit {
+export class AuthpolicyComponent extends BaseComponent implements OnInit {
   secretFormControl: FormControl = new FormControl('', []);
   enableUpdateSecretButton: boolean = false;
   authOrder = ['LOCAL', 'LDAP', 'RADIUS'];
@@ -35,7 +37,11 @@ export class AuthpolicyComponent implements OnInit {
   _ldapBindCheckResponse: LDAPCheckResponse = null;
 
   constructor(protected _controllerService: ControllerService,
-    protected _authService: AuthService) { }
+    protected _authService: AuthService,
+    protected messageService: MessageService
+  ) {
+    super(_controllerService, messageService);
+  }
 
   ngOnInit() {
     // Setting the toolbar
@@ -54,19 +60,8 @@ export class AuthpolicyComponent implements OnInit {
         const body = response.body;
         this.authPolicy = new AuthAuthenticationPolicy(body);
       },
-      error => {
-        this.handRESTCallError(error, 'Auth service', 'GetAuthenticationPolicy');
-      }
+      this.restErrorHandler('Failed to get Authentication Policy')
     );
-  }
-
-  handRESTCallError(error: any, serviceName: string, methodName: string) {
-    // TODO: Error handling
-    if (error.body instanceof Error) {
-      alert(serviceName + ' ' + methodName + ' returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-    } else {
-      alert(serviceName + ' ' + methodName + '  returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-    }
   }
 
   swapRanks(newRank, oldRank) {
@@ -88,7 +83,7 @@ export class AuthpolicyComponent implements OnInit {
     this._authService.LdapConnectionCheck(this.authPolicy).subscribe(
       response => {
         const respAuthPolicy: AuthAuthenticationPolicy = response.body as AuthAuthenticationPolicy;
-        const  ldapCheckResponse = this.makeLDAPCheckResponse(LDAPCheckType.CONNECTION, ldap, respAuthPolicy  );
+        const ldapCheckResponse = this.makeLDAPCheckResponse(LDAPCheckType.CONNECTION, ldap, respAuthPolicy);
         const connCheckResponseError = AuthPolicyUtil.processLDAPCheckResponse(ldapCheckResponse);
         if (connCheckResponseError.errors.length > 0) {
           this._ldapConnCheckResponse = ldapCheckResponse;
@@ -96,21 +91,19 @@ export class AuthpolicyComponent implements OnInit {
           this.handleLDAPServerCheckSuccess(LDAPCheckType.CONNECTION);
         }
       },
-      error => {
-        this.handRESTCallError(error, 'Auth service', 'LdapConnectionCheck');
-      }
+      this.restErrorHandler('Failed to check LDAP server configuration')
     );
   }
 
   handleLDAPServerCheckSuccess(type: LDAPCheckType) {
-    alert('LDAP ' + type + ' pass' ); // TODO: use toaster later.
+    alert('LDAP ' + type + ' pass'); // TODO: use toaster later.
   }
 
   onCheckLDAPBindConnect(ldap: AuthLdap) {
     this._authService.LdapBindCheck(this.authPolicy).subscribe(
       response => {
         const respAuthPolicy: AuthAuthenticationPolicy = response.body as AuthAuthenticationPolicy;
-        const ldapCheckResponse = this.makeLDAPCheckResponse(LDAPCheckType.BIND, ldap, respAuthPolicy  );
+        const ldapCheckResponse = this.makeLDAPCheckResponse(LDAPCheckType.BIND, ldap, respAuthPolicy);
         const ldapBindCheckResponseError = AuthPolicyUtil.processLDAPCheckResponse(ldapCheckResponse);
         if (ldapBindCheckResponseError.errors.length > 0) {
           this._ldapBindCheckResponse = ldapCheckResponse;
@@ -118,14 +111,12 @@ export class AuthpolicyComponent implements OnInit {
           this.handleLDAPServerCheckSuccess(LDAPCheckType.BIND);
         }
       },
-      error => {
-        this.handRESTCallError(error, 'Auth service', 'LdapBindCheck');
-      }
+      this.restErrorHandler('Failed to check LDAP server configuration')
     );
   }
 
-  makeLDAPCheckResponse(type: LDAPCheckType, checkedLdap: AuthLdap, responseAuthPolicy: AuthAuthenticationPolicy ): LDAPCheckResponse {
-    const  ldapCheckResponse = {} as LDAPCheckResponse;
+  makeLDAPCheckResponse(type: LDAPCheckType, checkedLdap: AuthLdap, responseAuthPolicy: AuthAuthenticationPolicy): LDAPCheckResponse {
+    const ldapCheckResponse = {} as LDAPCheckResponse;
     ldapCheckResponse.type = type;
     ldapCheckResponse.authpolicy = responseAuthPolicy;
     return ldapCheckResponse;
@@ -148,12 +139,12 @@ export class AuthpolicyComponent implements OnInit {
     handler = this._authService.UpdateAuthenticationPolicy(this.authPolicy);
     handler.subscribe(
       (response) => {
+        this.invokeSuccessToaster('Update Successful', 'Updated Authentication policy');
         const status = response.statusCode;
         const body = response.body;
         this.authPolicy = new AuthAuthenticationPolicy(body);
       },
-      error => {
-        this.handRESTCallError(error, 'Auth service', 'saveAuthenticationPolicy');
-      });
+      this.restErrorHandler('Update Failed')
+    )
   }
 }

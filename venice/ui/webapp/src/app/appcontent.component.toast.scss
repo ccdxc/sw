@@ -1,0 +1,79 @@
+@import 'global-mixins';
+
+.ui-toast-top-right {
+  top: 75px !important;
+}
+
+.ui-toast {
+  width: 410px;
+  .ui-toast-message {
+    background: white;
+    border: solid 1px #cec5bd;
+  }
+
+  .ui-toast-message-content {
+    // padding will be set by template
+    padding: 0px;
+  }
+
+  .ui-toast-message-success {
+    box-shadow: 0 3px 3px 0 #77a746;
+  }
+
+  .ui-toast-message-info {
+    box-shadow: 0 3px 3px 0 #97b8df;
+  }
+
+  .ui-toast-message-warn {
+    box-shadow: 0 3px 3px 0 #fcb710;
+  }
+
+  .ui-toast-message-error {
+    box-shadow: 0 3px 3px 0 #e57553;
+  }
+  
+  // Hiding the default close icon
+  // We will creat our own
+  .ui-toast-close-icon {
+    display: none;
+  }
+
+  .ui-toast-summary {
+    @include primary-font(16px, currentcolor, 600);
+  }
+
+  .ui-toast-detail {
+    @include primary-font(14px);
+  }
+
+}
+
+.app-ptoast-template {
+  margin: 10px 15px;
+}
+
+.app-ptoast-icon {
+  margin-right: 10px;
+}
+
+.app-ptoast-success {
+  color: #77a746;
+}
+
+.app-ptoast-info {
+  color: #97b8df;
+}
+
+.app-ptoast-warn {
+  color: #fcb710;
+}
+
+.app-ptoast-error {
+  color: #e57553;
+}
+
+.app-ptoast-close {
+  color: #676763;
+  cursor: pointer;
+  margin-left: 15px;
+}

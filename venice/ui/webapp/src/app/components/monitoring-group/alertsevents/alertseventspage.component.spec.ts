@@ -23,6 +23,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { EventsService } from '@app/services/events.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { MessageService } from 'primeng/primeng';
 
 
 @Component({
@@ -58,7 +59,8 @@ describe('AlertseventspageComponent', () => {
         UIConfigsService,
         EventsService,
         SearchService,
-        MonitoringService
+        MonitoringService,
+        MessageService
       ]
     })
       .compileComponents();

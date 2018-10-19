@@ -27,6 +27,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   template: ''
@@ -63,7 +64,8 @@ describe('ClusterComponent', () => {
         EventsService,
         UIConfigsService,
         SearchService,
-        MonitoringService
+        MonitoringService,
+        MessageService
       ]
     })
       .compileComponents();

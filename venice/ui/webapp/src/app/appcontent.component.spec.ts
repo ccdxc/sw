@@ -44,6 +44,8 @@ import { SearchService } from '@app/services/generated/search.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SharedModule } from '@app/components/shared/shared.module';
+import { ToasterComponent, ToasterItemComponent } from '@app/widgets/toaster/toaster.component';
+import { MessageService } from 'primeng/primeng';
 
 
 describe('AppcontentComponent', () => {
@@ -55,7 +57,9 @@ describe('AppcontentComponent', () => {
         SearchComponent,
         SearchboxComponent,
         SearchsuggestionsComponent,
-        GuidesearchComponent
+        GuidesearchComponent,
+        ToasterComponent,
+        ToasterItemComponent
       ],
       imports: [
         // Other modules...
@@ -81,7 +85,8 @@ describe('AppcontentComponent', () => {
         Store,
         SearchService,
         OverlayContainer,
-        UIConfigsService
+        UIConfigsService,
+        MessageService
       ],
     });
 

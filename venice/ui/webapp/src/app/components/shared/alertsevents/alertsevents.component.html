@@ -161,9 +161,24 @@
            </td>
            <td class="global-column-action">
               <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-                  <mat-icon *ngIf="rowData.spec.state !== 'RESOLVED'" title="Resolve Alert" class="global-table-action-icon" (click)="resolveAlert(rowData)">done</mat-icon>
-                  <mat-icon *ngIf="rowData.spec.state !== 'ACKNOWLEDGED'" title="Acknowledge Alert" class="global-table-action-icon alertsevents-acknowledge-icon" (click)="acknowledgeAlert(rowData)">archive</mat-icon>
-                  <mat-icon *ngIf="rowData.spec.state !== 'OPEN'" title="Mark Alert as Open" class="global-table-action-icon alertsevents-open-icon" (click)="openAlert(rowData)">priority_high</mat-icon>
+                  <mat-icon *ngIf="rowData.spec.state !== 'RESOLVED'" 
+                            matTooltip="Resolve Alert" 
+                            class="global-table-action-icon" 
+                            (click)="resolveAlert(rowData)">
+                    done
+                  </mat-icon>
+                  <mat-icon *ngIf="rowData.spec.state !== 'ACKNOWLEDGED'" 
+                            matTooltip="Acknowledge Alert" 
+                            class="global-table-action-icon alertsevents-acknowledge-icon" 
+                            (click)="acknowledgeAlert(rowData)">
+                    archive
+                  </mat-icon>
+                  <mat-icon *ngIf="rowData.spec.state !== 'OPEN'" 
+                            matTooltip="Mark Alert as Open" 
+                            class="global-table-action-icon alertsevents-open-icon" 
+                            (click)="openAlert(rowData)">
+                    priority_high
+                  </mat-icon>
               </div>
             </td>
           </tr>

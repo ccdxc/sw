@@ -5,6 +5,7 @@ import { DashboardWidgetData, PinnedDashboardWidgetData } from '@app/models/fron
 import { BaseComponent } from '@components/base/base.component';
 
 import { ControllerService } from '../../services/controller.service';
+import { MessageService } from 'primeng/primeng';
 
 /**
  * This is Dashboard Component for VeniceUI
@@ -54,8 +55,9 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   @ViewChildren('pinnedGridster') pinnedGridster: QueryList<any>;
 
   constructor(protected _controllerService: ControllerService,
+    protected messageService: MessageService
   ) {
-    super(_controllerService);
+    super(_controllerService, messageService);
   }
 
   /**

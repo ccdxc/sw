@@ -163,6 +163,35 @@
                 <mat-sidenav-content>
                     <app-toolbar #breadcrumbToolbar></app-toolbar>
                     <div class="app-shell-router-outter-div">
+                        <app-toaster>
+                            <ng-template let-message let-onClose="onClose" pTemplate="message">
+                                <div fxLayout="row" [class]="'app-ptoast-' + message.severity + ' app-ptoast-template'">
+                                    <mat-icon *ngIf="message.severity === 'success'" fxFlex="none" 
+                                            class="app-ptoast-icon">
+                                        check_circle
+                                    </mat-icon>
+                                    <mat-icon *ngIf="message.severity === 'info'" fxFlex="none" 
+                                            class="app-ptoast-icon">
+                                        info 
+                                    </mat-icon>
+                                    <mat-icon *ngIf="message.severity === 'warn'" fxFlex="none" 
+                                            class="app-ptoast-icon">
+                                        warning 
+                                    </mat-icon>
+                                    <mat-icon *ngIf="message.severity === 'error'" fxFlex="none" 
+                                            class="app-ptoast-icon">
+                                        error 
+                                    </mat-icon>
+                                    <div fxFlex FxLayout="column">
+                                        <div fxFlex="none" class="ui-toast-summary">{{message.summary}}</div>
+                                        <div fxFlex="none" class="ui-toast-detail">{{message.detail}}</div>
+                                    </div>
+                                    <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
+                                        <mat-icon fxFlex="none" class="app-ptoast-close" (click)="onClose($event)" >close</mat-icon>
+                                    </div>
+                                </div>
+                            </ng-template>
+                        </app-toaster>
                         <router-outlet></router-outlet>
                     </div>
 

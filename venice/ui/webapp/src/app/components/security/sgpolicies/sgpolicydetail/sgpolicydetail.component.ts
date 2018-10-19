@@ -16,6 +16,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
 import { IApiStatus, ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
+import { MessageService } from 'primeng/primeng';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -138,9 +139,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     protected securityService: SecurityService,
     protected searchService: SearchService,
     private _route: ActivatedRoute,
-    private uiconfigsService: UIConfigsService
+    private uiconfigsService: UIConfigsService,
+    protected messageService: MessageService
   ) {
-    super(_controllerService);
+    super(_controllerService, messageService);
   }
 
 
@@ -347,9 +349,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         }
         this.loading = false;
       },
-      (error) => {
-        console.error('policy search query failed', error);
-      }
+      this.restErrorHandler('Policy search failed')
     );
 
   }
@@ -395,13 +395,6 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         // Putting focus onto the overlay to prevent user
         // being able to interact with the page underneath
         this.disableFormControls();
-
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
       }
     );
     this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
@@ -439,14 +432,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           this.sgPolicyRules = [];
         }
       },
-      error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get SG Policy')
     );
     this.subscriptions.push(subscription);
   }

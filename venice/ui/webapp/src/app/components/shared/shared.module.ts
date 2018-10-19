@@ -61,6 +61,6 @@ import { WidgetsModule } from 'web-app-framework';
     AlertseventsComponent,
     WhitespaceTrimDirective,
     FieldselectorComponent
-  ]
+  ],
 })
 export class SharedModule { }

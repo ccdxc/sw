@@ -8,10 +8,9 @@ import { ControllerService } from '@app/services/controller.service';
   templateUrl: './monitoring-group.component.html',
   styleUrls: ['./monitoring-group.component.scss']
 })
-export class MonitoringGroupComponent extends BaseComponent implements OnInit, OnDestroy {
+export class MonitoringGroupComponent implements OnInit, OnDestroy {
 
   constructor(protected _controllerService: ControllerService) {
-    super(_controllerService);
   }
 
   ngOnInit() {

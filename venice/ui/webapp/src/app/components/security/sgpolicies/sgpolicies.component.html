@@ -1,4 +1,4 @@
-<app-pagebody [icon]="bodyIcon" title="Security Group Policies">
+<app-pagebody [icon]="bodyIcon" header="Security Group Policies">
   <div fxFlex class="sgpolicies-table">
     <app-lazyrender [data]="filteredSGPolicies" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
       <p-table #sgpoliciesTable class="global-primeng-table-lazyload" [columns]="cols" 

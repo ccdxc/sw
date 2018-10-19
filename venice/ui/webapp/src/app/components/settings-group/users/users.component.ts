@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 
-import { SelectItem } from 'primeng/primeng';
+import { SelectItem, MessageService } from 'primeng/primeng';
 import { ErrorStateMatcher } from '@angular/material';
 
 import { BaseComponent } from '@app/components/base/base.component';
@@ -62,9 +62,11 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
   errorChecker = new ErrorStateMatcher();
 
-  constructor(protected _controllerService: ControllerService, protected _authService: AuthService
+  constructor(protected _controllerService: ControllerService,
+    protected _authService: AuthService,
+    protected messageService: MessageService
   ) {
-    super(_controllerService);
+    super(_controllerService, messageService);
   }
 
   ngOnInit() {
@@ -138,21 +140,14 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   getUsers() {
     this._authService.ListUser().subscribe(
       (data) => {
-        const status = data.statusCode;
-        if (status === 200) {
-          const authUserList: AuthUserList = new AuthUserList(<IAuthUserList>data.body);
-          if (authUserList.Items.length > 0) {
-            this.authusers.length = 0;
-            this.authusers = authUserList.Items;
-            this.setDataReadyMap('users', true);
-          }
-        } else {
-          console.error(this.getClassName() + '_authService.ListUser()' + data);
+        const authUserList: AuthUserList = new AuthUserList(<IAuthUserList>data.body);
+        if (authUserList.Items.length > 0) {
+          this.authusers.length = 0;
+          this.authusers = authUserList.Items;
+          this.setDataReadyMap('users', true);
         }
       },
-      (error) => {
-        this._handleRESTCallError(error);
-      }
+      this.restErrorHandler('Failed to get Users')
     );
   }
 
@@ -171,40 +166,22 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           console.error(this.getClassName() + '_authService.ListRole()' + data);
         }
       },
-      (error) => {
-        this._handleRESTCallError(error);
-      }
+      this.restErrorHandler('Failed to get Roles')
     );
   }
 
   getRolebindings() {
     this._authService.ListRoleBinding().subscribe(
       (data) => {
-        const status = data.statusCode;
-        if (status === 200) {
-          const authRoleBindings: AuthRoleBindingList = new AuthRoleBindingList(<IAuthRoleBindingList>data.body);
-          if (authRoleBindings.Items.length > 0) {
-            this.authRoleBindings.length = 0;
-            this.authRoleBindings = authRoleBindings.Items;
-            this.setDataReadyMap('rolebindings', true);
-          }
-        } else {
-          console.error(this.getClassName() + '_authService.ListRoleBinding()' + data);
+        const authRoleBindings: AuthRoleBindingList = new AuthRoleBindingList(<IAuthRoleBindingList>data.body);
+        if (authRoleBindings.Items.length > 0) {
+          this.authRoleBindings.length = 0;
+          this.authRoleBindings = authRoleBindings.Items;
+          this.setDataReadyMap('rolebindings', true);
         }
       },
-      (error) => {
-        this._handleRESTCallError(error);
-      }
+      this.restErrorHandler('Failed to get Role Bindings')
     );
-  }
-
-  _handleRESTCallError(error: any) {
-    // TODO: Error handling
-    if (error.body instanceof Error) {
-      console.log('Auth service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-    } else {
-      console.log('Auth service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-    }
   }
 
   /**
@@ -271,17 +248,10 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     if (r === true) {
       this._authService.DeleteUser(user.meta.name).subscribe(
         (data) => {
-          const status = data.statusCode;
-          if (status === 200) {
-            // refresh users list
-            this.getUsers();
-          } else {
-            console.error(this.getClassName() + '_authService.ListUser()' + data);
-          }
+          // refresh users list
+          this.getUsers();
         },
-        (error) => {
-          this._handleRESTCallError(error);
-        }
+        this.restErrorHandler('Delete User Failed')
       );
     } else {
       return;

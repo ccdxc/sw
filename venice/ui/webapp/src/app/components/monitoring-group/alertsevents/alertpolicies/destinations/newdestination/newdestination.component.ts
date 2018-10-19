@@ -7,8 +7,9 @@ import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination, MonitoringAuthConfig, MonitoringPrivacyConfig, MonitoringSNMPTrapServer, MonitoringSyslogExport } from '@sdk/v1/models/generated/monitoring';
-import { SelectItem } from 'primeng/primeng';
+import { SelectItem, MessageService } from 'primeng/primeng';
 import { Observable } from 'rxjs/Observable';
+import { BaseComponent } from '@app/components/base/base.component';
 
 // Creating manually, this will come from venice-sdk once Ranjith's proto changes go in
 enum CredentialMethod {
@@ -25,7 +26,7 @@ enum CredentialMethod {
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class NewdestinationComponent implements OnInit, AfterViewInit {
+export class NewdestinationComponent extends BaseComponent implements OnInit, AfterViewInit {
   enableSnmpTrap: boolean = false;
 
   newDestination: MonitoringAlertDestination;
@@ -52,8 +53,11 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
   errorChecker = new ErrorStateMatcher();
 
   constructor(protected _controllerService: ControllerService,
-    protected _monitoringService: MonitoringService
-  ) { }
+    protected _monitoringService: MonitoringService,
+    protected messageService: MessageService
+  ) {
+    super(_controllerService, messageService);
+  }
 
 
   ngOnInit() {
@@ -143,18 +147,23 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
     } else {
       handler = this._monitoringService.AddAlertDestination(this.newDestination);
     }
-    handler.subscribe((response) => {
-      const status = response.statusCode;
-      if (status === 200) {
-        if (!this.isInline) {
-          // Need to reset the toolbar that we changed
-          this.setPreviousToolbar();
+    handler.subscribe(
+      (response) => {
+        if (this.isInline) {
+          this.invokeSuccessToaster('Update Successful', 'Updated destination ' + this.newDestination.meta.name);
+        } else {
+          this.invokeSuccessToaster('Creation Successful', 'Created destination ' + this.newDestination.meta.name);
         }
-        this.formClose.emit();
-      } else {
-        console.error(response.body);
+        this.cancelDestination();
+      },
+      (error) => {
+        if (this.isInline) {
+          this.invokeRESTErrorToaster('Update Failed', error);
+        } else {
+          this.invokeRESTErrorToaster('Creation Failed', error);
+        }
       }
-    });
+    );
   }
 
   cancelDestination() {

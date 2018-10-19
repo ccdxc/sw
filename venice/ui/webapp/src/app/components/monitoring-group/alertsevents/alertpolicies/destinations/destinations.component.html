@@ -3,7 +3,7 @@
     <div fxFlex class="destinations-tablecontainer">
       <ng-container *ngTemplateOutlet="Header"></ng-container>
       <ng-container *ngTemplateOutlet="Table"></ng-container>
-      <div *ngIf="creatingMode || editingMode" class="destinations-overlay"></div>
+      <div *ngIf="creatingMode || showEditingForm" class="destinations-overlay"></div>
     </div>
 </div>
 
@@ -43,8 +43,8 @@
           </td>
            <td class="global-column-action">
               <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-              <mat-icon title="Edit destination" class="global-table-action-icon" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
-              <mat-icon title="Delete destination" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+              <mat-icon matTooltip="Edit destination" class="global-table-action-icon" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
+              <mat-icon matTooltip="Delete destination" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
               </div>
            </td>
          </tr>
@@ -52,7 +52,7 @@
        <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
          <tr class="destinations-rowexpand-tr">
               <td [attr.colspan]="columns.length + 1">
-                <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="editingMode" class="destinations-rowexpand">
+                <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="showEditingForm" class="destinations-rowexpand">
                   <app-newdestination [destinationData]="rowData"  [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-newdestination>
                 </div>
               </td>

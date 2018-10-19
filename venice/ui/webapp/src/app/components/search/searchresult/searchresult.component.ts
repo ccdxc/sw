@@ -8,6 +8,7 @@ import { SearchResultPayload } from '@app/components/search';
 
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
+import { MessageService } from 'primeng/primeng';
 
 /**
  * SearchResult is a component hosted in VenicUI app main page.
@@ -36,8 +37,9 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
 
   private _started = false;
 
-  constructor(protected _controllerService: ControllerService) {
-    super(_controllerService);
+  constructor(protected _controllerService: ControllerService,
+    protected messageService: MessageService) {
+    super(_controllerService, messageService);
   }
 
   getClassName(): string {

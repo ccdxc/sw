@@ -4,7 +4,7 @@ import { Validators } from '@angular/forms';
 import { UsersComponent } from '../users.component';
 import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
-import { SelectItem } from 'primeng/primeng';
+import { SelectItem, MessageService } from 'primeng/primeng';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { AuthRoleBinding, AuthUser } from '@sdk/v1/models/generated/auth';
@@ -32,8 +32,10 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   protected rolebindingUpdateMap = {};
 
   constructor(protected _controllerService: ControllerService,
-    protected _authService: AuthService) {
-    super(_controllerService, _authService);
+    protected _authService: AuthService,
+    protected messageService: MessageService
+  ) {
+    super(_controllerService, _authService, messageService);
   }
 
   ngOnInit() {

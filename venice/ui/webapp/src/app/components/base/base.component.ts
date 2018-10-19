@@ -3,8 +3,9 @@ import { ControllerService } from '../../services/controller.service';
 import { Eventtypes } from '../../enum/eventtypes.enum';
 import { Utility } from '../../common/Utility';
 import { CommonComponent } from '../../common.component';
-import { SortEvent } from 'primeng/components/common/api';
+import { SortEvent, MessageService } from 'primeng/components/common/api';
 import { FormsModule, FormGroup, FormArray, Validators, FormGroupDirective } from '@angular/forms';
+import { environment } from '@env/environment';
 
 // declare var google: any;
 
@@ -20,7 +21,8 @@ export class BaseComponent extends CommonComponent implements OnInit {
   // protected static googleLoaded: any;
   private _interval: any;
 
-  constructor(protected _controllerService: ControllerService) {
+  constructor(protected _controllerService: ControllerService,
+    protected messageService: MessageService) {
     super();
   }
 
@@ -34,6 +36,31 @@ export class BaseComponent extends CommonComponent implements OnInit {
   getClassName(): string {
     return this.constructor.name;
   }
+
+  invokeSuccessToaster(summary, detail) {
+    this.messageService.add({
+      severity: 'success',
+      summary: summary,
+      detail: detail
+    });
+  }
+
+  invokeRESTErrorToaster(summary, error) {
+    const errorMsg = error.body != null ? error.body.message : '';
+    this.messageService.add({
+      severity: 'error',
+      summary: summary,
+      detail: errorMsg
+    });
+  }
+
+  restErrorHandler(summary) {
+    return (error) => {
+      this.invokeRESTErrorToaster(summary, error);
+    };
+  }
+
+
 
   /**
    * Following code is for using google charts
@@ -90,18 +117,6 @@ export class BaseComponent extends CommonComponent implements OnInit {
     return new Date(obj);
   }
 
-  protected _publishAJAXStart() {
-    this.errorMessage = '';
-    Utility.getInstance().publishAJAXStart({ 'ajax': 'start', 'name': 'cv-AJAX' });
-  }
-
-  protected _publishAJAXEnd() {
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.autosaveMessage.message = '';
-    Utility.getInstance().publishAJAXEnd({ 'ajax': 'end', 'name': 'cv-AJAX' });
-  }
-
   /**
    * This API detects whether an object is empty  -- {}
    */
@@ -136,24 +151,6 @@ export class BaseComponent extends CommonComponent implements OnInit {
       } else {
         this.trimJSON(parentObj[prop]);
       }
-    }
-  }
-
-  /**
-   * This API serves html template. It allows user to click off error message.
-   */
-  onErrorMessageClick() {
-    if (this.errorMessage) {
-      this.errorMessage = null;
-    }
-  }
-
-  showHideSuccessMessage(message: string, milliSeconds: number = 1500) {
-    this.successMessage = message;
-    if (this.successMessage) {
-      setTimeout(() => {
-        this.successMessage = null;
-      }, milliSeconds);
     }
   }
 

@@ -8,8 +8,9 @@ import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec, FieldsRequirement } from '@sdk/v1/models/generated/monitoring';
-import { SelectItem } from 'primeng/primeng';
+import { SelectItem, MessageService } from 'primeng/primeng';
 import { Observable } from 'rxjs/Observable';
+import { BaseComponent } from '@app/components/base/base.component';
 
 @Component({
   selector: 'app-neweventalertpolicy',
@@ -18,7 +19,7 @@ import { Observable } from 'rxjs/Observable';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None,
 })
-export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
+export class NeweventalertpolicyComponent extends BaseComponent implements OnInit, AfterViewInit {
   @ViewChild('fieldSelector') fieldSelector: FieldselectorComponent;
   newPolicy: MonitoringAlertPolicy;
 
@@ -38,8 +39,11 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
   destinationsControl: FormControl;
 
   constructor(protected _controllerService: ControllerService,
-    protected _monitoringService: MonitoringService
-  ) { }
+    protected _monitoringService: MonitoringService,
+    protected messageService: MessageService
+  ) {
+    super(_controllerService, messageService);
+  }
 
   ngOnInit() {
     if (this.policyData != null) {
@@ -149,14 +153,18 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
 
     handler.subscribe(
       (response) => {
+        if (this.isInline) {
+          this.invokeSuccessToaster('Update Successful', 'Updated policy ' + this.newPolicy.meta.name);
+        } else {
+          this.invokeSuccessToaster('Creation Successful', 'Created policy ' + this.newPolicy.meta.name);
+        }
         this.cancelPolicy();
       },
       (error) => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        if (this.isInline) {
+          this.invokeRESTErrorToaster('Update Failed', error);
         } else {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+          this.invokeRESTErrorToaster('Creation Failed', error);
         }
       }
     );

@@ -14,6 +14,7 @@ import { Table } from 'primeng/table';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import { Subscription } from 'rxjs/Subscription';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   selector: 'app-sgpolicies',
@@ -64,9 +65,10 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
-    protected securityService: SecurityService
+    protected securityService: SecurityService,
+    protected messageService: MessageService
   ) {
-    super(_controllerService);
+    super(_controllerService, messageService);
   }
 
   ngOnInit() {
@@ -93,14 +95,7 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
         // set all the policies to be the filtered set
         this.filteredSGPolicies = this.sgPolicies as any;
       },
-      error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get SG Policies')
     );
     this.subscriptions.push(subscription);
   }

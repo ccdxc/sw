@@ -18,6 +18,7 @@ import { AuthService } from '@app/services/generated/auth.service';
 
 import { NewuserComponent } from './newuser/newuser.component';
 import { UsersComponent } from './users.component';
+import { MessageService } from 'primeng/primeng';
 
 describe('UsersComponent', () => {
   let component: UsersComponent;
@@ -25,7 +26,7 @@ describe('UsersComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ UsersComponent , NewuserComponent],
+      declarations: [UsersComponent, NewuserComponent],
       imports: [
         FormsModule,
         ReactiveFormsModule,
@@ -43,10 +44,11 @@ describe('UsersComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         MonitoringService,
-        AuthService
+        AuthService,
+        MessageService
       ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

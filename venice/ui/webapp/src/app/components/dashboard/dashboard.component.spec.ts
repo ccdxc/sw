@@ -23,6 +23,7 @@ import { PolicyhealthComponent } from './widgets/policyhealth/policyhealth.compo
 import { DsbdworkloadComponent } from './widgets/dsbdworkload/dsbdworkload.component';
 
 import { MatIconRegistry } from '@angular/material';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   template: ''
@@ -59,7 +60,8 @@ describe('DashboardComponent', () => {
         ControllerService,
         MatIconRegistry,
         LogService,
-        LogPublishersService
+        LogPublishersService,
+        MessageService
       ]
     })
       .compileComponents();

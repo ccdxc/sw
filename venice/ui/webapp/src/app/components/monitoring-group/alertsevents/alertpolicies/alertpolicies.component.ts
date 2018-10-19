@@ -6,6 +6,7 @@ import { BaseComponent } from '@app/components/base/base.component';
 import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus, MonitoringAlertPolicy, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Subscription } from 'rxjs/Subscription';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   selector: 'app-alertpolicies',
@@ -28,8 +29,9 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
 
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
+    protected messageService: MessageService
   ) {
-    super(_controllerService);
+    super(_controllerService, messageService);
   }
 
   ngOnInit() {
@@ -80,14 +82,7 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
         this.metricPoliciesEventUtility.processEvents(body);
         this.objectPoliciesEventUtility.processEvents(body);
       },
-      (error) => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get Alert Policies')
     );
     this.subscriptions.push(subscription);
   }
@@ -100,14 +95,7 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
         const body: any = response.body;
         this.destinationsEventUtility.processEvents(body);
       },
-      (error) => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.log('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.log('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get Alert Destinations')
     );
     this.subscriptions.push(subscription);
   }

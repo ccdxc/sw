@@ -18,6 +18,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Observable } from 'rxjs/Observable';
 import { AuthAuthenticators_authenticator_order } from '@sdk/v1/models/generated/auth';
 import { By } from '@angular/platform-browser';
+import { MessageService } from 'primeng/primeng';
 
 class MockAuthService extends AuthService {
   public GetAuthenticationPolicy(): any {
@@ -97,6 +98,7 @@ describe('AuthpolicyComponent', () => {
         ControllerService,
         LogService,
         LogPublishersService,
+        MessageService,
         { provide: AuthService, useClass: MockAuthService },
         MatIconRegistry,
       ]

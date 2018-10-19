@@ -9,11 +9,10 @@ import { ControllerService } from '@app/services/controller.service';
   templateUrl: './networkcore.component.html',
   styleUrls: ['./networkcore.component.scss']
 })
-export class NetworkcoreComponent extends BaseComponent implements OnInit, OnDestroy {
+export class NetworkcoreComponent implements OnInit, OnDestroy {
 
   constructor(protected _controllerService: ControllerService,
   ) {
-    super(_controllerService);
   }
 
   ngOnInit() {

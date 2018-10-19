@@ -20,6 +20,7 @@ import { EventalertpolicyComponent } from './eventalertpolicies.component';
 import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/eventalertpolicies/neweventalertpolicy/neweventalertpolicy.component';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { WidgetsModule } from 'web-app-framework';
+import { MessageService } from 'primeng/primeng';
 
 
 describe('EventalertpolicyComponent', () => {
@@ -45,7 +46,8 @@ describe('EventalertpolicyComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
-        MonitoringService
+        MonitoringService,
+        MessageService
       ]
     })
       .compileComponents();

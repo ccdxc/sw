@@ -1,10 +1,10 @@
 <div class="pagebody-container" fxLayout="column">
-    <div *ngIf="title" fxFlex="nogrow" fxLayout="row" class="pagebody-header">
+    <div *ngIf="header" fxFlex="nogrow" fxLayout="row" class="pagebody-header">
         <div fxFlex="48px" class="pagebody-iconcontainer">
             <div [ngStyle]="_iconStyles" class="pagebody-icon"></div>
         </div>
         <div fxFlex class="pagebody-headercontent">
-            {{title}}
+            {{header}}
         </div>
         <div fxFlex class="pagebody-optionsicon" >
             <ng-content select="[pagebody-options]"></ng-content>

@@ -9,10 +9,9 @@ import { ControllerService } from '@app/services/controller.service';
   styleUrls: ['./cluster-group.component.scss']
 })
 
-export class ClusterGroupComponent extends BaseComponent implements OnInit, OnDestroy {
+export class ClusterGroupComponent implements OnInit, OnDestroy {
 
   constructor(protected _controllerService: ControllerService) {
-    super(_controllerService);
   }
 
   ngOnInit() {

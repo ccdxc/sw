@@ -7,6 +7,8 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { ControllerService } from '@app/services/controller.service';
 import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { MessageService } from 'primeng/primeng';
+import { BaseComponent } from '@app/components/base/base.component';
 
 @Component({
   selector: 'app-naples',
@@ -14,7 +16,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
   templateUrl: './naples.component.html',
   styleUrls: ['./naples.component.scss']
 })
-export class NaplesComponent implements OnInit, OnDestroy {
+export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy {
   @ViewChild('naplesTable') naplesTurboTable: Table;
 
   naples: ReadonlyArray<ClusterSmartNIC> = [];
@@ -41,7 +43,10 @@ export class NaplesComponent implements OnInit, OnDestroy {
 
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
-  ) { }
+    protected messageService: MessageService
+  ) {
+    super(controllerService, messageService);
+  }
 
   ngOnInit() {
     this.getNaples();
@@ -60,14 +65,7 @@ export class NaplesComponent implements OnInit, OnDestroy {
         const body: any = response.body;
         this.naplesEventUtility.processEvents(body);
       },
-      error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get NAPLES info')
     );
   }
 

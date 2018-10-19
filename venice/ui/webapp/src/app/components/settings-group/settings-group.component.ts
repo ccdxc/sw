@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
 
@@ -9,10 +8,9 @@ import { ControllerService } from '@app/services/controller.service';
   styleUrls: ['./settings-group.component.scss']
 })
 
-export class SettingsGroupComponent extends BaseComponent implements OnInit, OnDestroy {
+export class SettingsGroupComponent implements OnInit, OnDestroy {
 
   constructor(protected _controllerService: ControllerService) {
-    super(_controllerService);
   }
 
   ngOnInit() {

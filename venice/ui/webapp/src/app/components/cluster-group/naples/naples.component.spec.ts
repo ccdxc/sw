@@ -17,6 +17,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   template: ''
@@ -81,6 +82,7 @@ describe('NaplesComponent', () => {
         LogPublishersService,
         ClusterService,
         MatIconRegistry,
+        MessageService
       ]
     })
       .compileComponents();

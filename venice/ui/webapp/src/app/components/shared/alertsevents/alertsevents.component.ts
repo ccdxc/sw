@@ -18,8 +18,7 @@ import { Table } from 'primeng/table';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import { Subscription } from 'rxjs/Subscription';
-import { ApiListWatchOptions } from '@sdk/v1/models/generated/workload';
-// import { MatCheckboxChange } from '@angular/material';
+import { MessageService } from 'primeng/primeng';
 
 /**
  * Renders two tabs that displays an alerts table and an events table.
@@ -140,9 +139,10 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     protected uiconfigsService: UIConfigsService,
     protected searchService: SearchService,
     protected eventsService: EventsService,
-    protected monitoringService: MonitoringService
+    protected monitoringService: MonitoringService,
+    protected messageService: MessageService
   ) {
-    super(_controllerService);
+    super(_controllerService, messageService);
   }
 
   ngOnInit() {
@@ -216,14 +216,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         });
         this.filterAlerts();
       },
-      error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get Alerts')
     );
     this.subscriptions.push(subscription);
   }
@@ -368,38 +361,37 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    * @param alert Alert to resolve
    */
   resolveAlert(alert: MonitoringAlert) {
-    this.updateAlertState(alert, MonitoringAlertSpec_state.RESOLVED);
+    const summary = 'Alert Resolved';
+    const msg = 'Marked alert as resolved';
+    this.updateAlertState(alert, MonitoringAlertSpec_state.RESOLVED, summary, msg);
   }
 
   acknowledgeAlert(alert) {
-    this.updateAlertState(alert, MonitoringAlertSpec_state.ACKNOWLEDGED);
+    const summary = 'Alert Acknowledged';
+    const msg = 'Marked alert as acknowledged';
+    this.updateAlertState(alert, MonitoringAlertSpec_state.ACKNOWLEDGED, summary, msg);
   }
 
   openAlert(alert) {
-    this.updateAlertState(alert, MonitoringAlertSpec_state.OPEN);
+    const summary = 'Alert Opened';
+    const msg = 'Marked alert as open';
+    this.updateAlertState(alert, MonitoringAlertSpec_state.OPEN, summary, msg);
   }
 
   /**
    * Submits an HTTP request to update the state of the alert
    * @param alert Alert to resolve
    */
-  updateAlertState(alert: MonitoringAlert, newState: MonitoringAlertSpec_state) {
+  updateAlertState(alert: MonitoringAlert, newState: MonitoringAlertSpec_state, summary: string, msg: string) {
     // Create copy so that when we modify it doesn't
     // change the view
     const payload = new MonitoringAlert(alert);
     payload.spec.state = newState;
     const subscription = this.monitoringService.UpdateAlert(payload.meta.name, payload).subscribe(
       response => {
-        // TODO: Notification of successful action
+        this.invokeSuccessToaster(summary, msg);
       },
-      error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler(summary + ' Failed')
     );
     this.subscriptions.push(subscription);
   }

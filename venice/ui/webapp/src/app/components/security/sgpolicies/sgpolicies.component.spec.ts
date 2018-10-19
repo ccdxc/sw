@@ -17,6 +17,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';
+import { MessageService } from 'primeng/primeng';
 
 describe('SgpoliciesComponent', () => {
   let component: SgpoliciesComponent;
@@ -43,7 +44,8 @@ describe('SgpoliciesComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         SecurityService,
-        UIConfigsService
+        UIConfigsService,
+        MessageService
       ]
     })
       .compileComponents();

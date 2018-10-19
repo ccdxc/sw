@@ -2,6 +2,7 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   selector: 'app-alertsevents',
@@ -13,8 +14,9 @@ export class AlertseventspageComponent extends BaseComponent implements OnInit {
   hideAlertpolicies: boolean = this.uiconfigsService.isObjectDisabled('AlertPolicies');
 
   constructor(protected _controllerService: ControllerService,
-              protected uiconfigsService: UIConfigsService) {
-    super(_controllerService);
+    protected uiconfigsService: UIConfigsService,
+    protected messageService: MessageService) {
+    super(_controllerService, messageService);
   }
 
   ngOnInit() {

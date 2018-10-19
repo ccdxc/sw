@@ -25,6 +25,7 @@ import { MetricpolicyComponent } from './metricpolicy/metricpolicy.component';
 import { ObjectpolicyComponent } from './objectpolicy/objectpolicy.component';
 import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/eventalertpolicies/neweventalertpolicy/neweventalertpolicy.component';
 import { NewdestinationComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/destinations/newdestination/newdestination.component';
+import { MessageService } from 'primeng/primeng';
 
 
 describe('AlertpoliciesComponent', () => {
@@ -58,6 +59,7 @@ describe('AlertpoliciesComponent', () => {
         LogPublishersService,
         MonitoringService,
         MatIconRegistry,
+        MessageService
       ]
     })
       .compileComponents();

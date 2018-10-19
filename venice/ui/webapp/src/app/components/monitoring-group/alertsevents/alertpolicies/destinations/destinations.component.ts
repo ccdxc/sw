@@ -5,9 +5,11 @@ import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { IMonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
+import { IMonitoringAlertDestination, IApiStatus } from '@sdk/v1/models/generated/monitoring';
 import { Table } from 'primeng/table';
 import { TabcontentComponent } from 'web-app-framework';
+import { MessageService } from 'primeng/primeng';
+import { BaseComponent } from '@app/components/base/base.component';
 
 
 @Component({
@@ -19,11 +21,12 @@ import { TabcontentComponent } from 'web-app-framework';
 })
 export class DestinationpolicyComponent extends TabcontentComponent implements OnInit, OnChanges, OnDestroy, DoCheck {
   @ViewChild('destinationsTable') destinationsTurboTable: Table;
+  subscriptions = [];
 
   headerIcon: Icon = {
     margin: {
       top: '0px',
-      left: '0px'
+      left: '10px'
     },
     matIcon: 'send'
   };
@@ -45,7 +48,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   ];
 
   creatingMode: boolean = false;
-  editingMode: boolean = false;
+  showEditingForm: boolean = false;
 
   // If we receive new data, but the display is frozen (user editing),
   // this should be set to true so that when user exits editing, we can update the display
@@ -60,7 +63,8 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   constructor(protected _controllerService: ControllerService,
     protected _iterableDiffers: IterableDiffers,
     private cdr: ChangeDetectorRef,
-    protected _monitoringService: MonitoringService) {
+    protected _monitoringService: MonitoringService,
+    protected messageService: MessageService) {
     super();
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
@@ -91,7 +95,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
 
   createNewDestination() {
     // If a row is expanded, we shouldnt be able to open a create new policy form
-    if (!this.editingMode) {
+    if (!this.isInEditMode()) {
       this.creatingMode = true;
       this.editMode.emit(true);
     }
@@ -128,7 +132,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   ngDoCheck() {
     const changes = this.arrayDiffers.diff(this.destinationData);
     if (changes) {
-      if (this.editingMode) {
+      if (this.isInEditMode()) {
         this.hasNewData = true;
       } else {
         this.setRowData();
@@ -144,6 +148,9 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   }
 
   ngOnDestroy() {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    });
   }
 
   displayColumn(alerteventpolicies, col): any {
@@ -167,20 +174,25 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
     if (this.creatingMode) {
       return;
     }
-    if (!this.editingMode) {
+    if (!this.isInEditMode()) {
       this.destinationsTurboTable.toggleRow(destinationpolicy, event);
       this.expandedRowData = destinationpolicy;
       this.editMode.emit(true);
-      this.editingMode = true;
+      this.showEditingForm = true;
       this.shouldEnableButtons = false;
     } else {
-      this.editingMode = false;
+      this.showEditingForm = false;
       this.editMode.emit(false);
       this.shouldEnableButtons = true;
       // We don't untoggle the row here, it will happen when rowExpandAnimationComplete
       // is called.
     }
   }
+
+  isInEditMode() {
+    return this.expandedRowData != null;
+  }
+
 
   /**
    * Called when a row expand animation finishes
@@ -194,7 +206,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
    * @param  $event Angular animation end event
    */
   rowExpandAnimationComplete($event) {
-    if (!this.editingMode) {
+    if (!this.showEditingForm) {
       // we are exiting the row expand
       this.destinationsTurboTable.toggleRow(this.expandedRowData, event);
       this.expandedRowData = null;
@@ -208,7 +220,20 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   }
 
   onDeleteRecord(event, destination: IMonitoringAlertDestination) {
-    this._monitoringService.DeleteAlertDestination(destination.meta.name);
+    // Should not be able to delete any record while we are editing
+    if (this.isInEditMode()) {
+      return;
+    }
+    const sub = this._monitoringService.DeleteAlertDestination(destination.meta.name).subscribe(
+      (response) => {
+        this.messageService.add({ severity: 'success', summary: 'Delete Successful', detail: 'Deleted destination' + destination.meta.name });
+      },
+      (error) => {
+        const errorMsg = error.body != null ? error.body.message : '';
+        this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: errorMsg });
+      }
+    );
+    this.subscriptions.push(sub);
   }
 
 }

@@ -3,22 +3,22 @@ import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation
 import { MatDialog } from '@angular/material';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
 import { logout } from '@app/core';
+import { AlerttableService } from '@app/services/alerttable.service';
 import { LogService } from '@app/services/logging/log.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
+import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
 import { map } from 'rxjs/operators/map';
 import { takeUntil } from 'rxjs/operators/takeUntil';
 import { Subject } from 'rxjs/Subject';
-
 import { CommonComponent } from './common.component';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings-group';
 import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
-import { AlerttableService } from '@app/services/alerttable.service';
-import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
+
 
 /**
  * This is the entry point component of Pensando-Venice Web-Application
@@ -26,7 +26,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 @Component({
   selector: 'app-content',
   templateUrl: './appcontent.component.html',
-  styleUrls: ['./appcontent.component.scss', './appcontent.component.sidenav.scss'],
+  styleUrls: ['./appcontent.component.scss', './appcontent.component.sidenav.scss', './appcontent.component.toast.scss'],
   encapsulation: ViewEncapsulation.None,
   providers: []
 })

@@ -6,9 +6,10 @@ import { Table } from 'primeng/table';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { TabcontentComponent } from 'web-app-framework';
-import { MonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicySpec_severity_uihint } from '@sdk/v1/models/generated/monitoring';
+import { MonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicySpec_severity_uihint, IApiStatus } from '@sdk/v1/models/generated/monitoring';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
+import { MessageService } from 'primeng/primeng';
 
 
 @Component({
@@ -20,11 +21,12 @@ import { EventsEvent } from '@sdk/v1/models/generated/events';
 })
 export class EventalertpolicyComponent extends TabcontentComponent implements OnInit, OnChanges, OnDestroy, DoCheck {
   @ViewChild('eventAlertPoliciesTable') eventAlertPoliciesTable: Table;
+  subscriptions = [];
 
   headerIcon: Icon = {
     margin: {
       top: '0px',
-      left: '0px',
+      left: '10px',
     },
     matIcon: 'notifications'
   };
@@ -64,7 +66,8 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   constructor(protected _controllerService: ControllerService,
     protected _iterableDiffers: IterableDiffers,
     private cdr: ChangeDetectorRef,
-    protected _monitoringService: MonitoringService) {
+    protected _monitoringService: MonitoringService,
+    protected messageService: MessageService) {
     super();
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
@@ -155,10 +158,12 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   }
 
   ngOnDestroy() {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    });
   }
 
   formatRequirements(data: MonitoringAlertPolicy) {
-    // TODO: Use ui_hints from the swagger as the display values
     const value = data.spec.requirements;
     if (value == null) {
       return '';
@@ -201,14 +206,12 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
       if (req.values != null) {
         let values = [];
         const enumInfo = Utility.getNestedPropInfo(new EventsEvent(), req.key).enum;
-        if (enumInfo != null) {
-          values = req.values.map((item) => {
-            if (enumInfo[item] != null) {
-              return enumInfo[item];
-            }
-            return item;
-          });
-        }
+        values = req.values.map((item) => {
+          if (enumInfo != null && [item] != null) {
+            return enumInfo[item];
+          }
+          return item;
+        });
         ret += values.join(' or ');
       }
       retArr.push(ret);
@@ -286,7 +289,21 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     if (this.isInEditMode()) {
       return;
     }
-    this._monitoringService.DeleteAlertPolicy(eventalertpolicy.meta.name);
+    const sub = this._monitoringService.DeleteAlertPolicy(eventalertpolicy.meta.name).subscribe(
+      (response) => {
+        this.messageService.add({ severity: 'success', summary: 'Delete Successful', detail: 'Deleted policy' + eventalertpolicy.meta.name });
+      },
+      (error) => {
+        if (error.body instanceof Error) {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+        }
+        const errorMsg = error.body != null ? error.body.message : '';
+        this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: errorMsg });
+      }
+    );
+    this.subscriptions.push(sub);
   }
 
 }

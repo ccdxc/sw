@@ -33,6 +33,7 @@ import { Eventsv1Service } from '@sdk/v1/services/generated/eventsv1.service';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { MessageService } from 'primeng/primeng';
 
 
 @Component({
@@ -101,7 +102,8 @@ describe('AlertseventsComponent', () => {
         AlerttableService,
         SearchService,
         UIConfigsService,
-        MonitoringService
+        MonitoringService,
+        MessageService
       ]
     })
       .compileComponents();

@@ -1,6 +1,6 @@
 <div fxFlex fxLayout="row" fxLayoutAlign="center start" class="newdestination-container">
   <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1700px' : '1600px'" fxLayoutAlign="start start" class="newdestination-content"
+  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start start" class="newdestination-content"
     [formGroup]="newDestination.$formGroup">
 
     <div fxFlex fxLayout="column">
@@ -36,7 +36,7 @@
     <ng-container formArrayName="spec">
       <ng-container formArrayName="syslog-servers">
         <div fxFlex="nogrow" fxLayout="row">
-          <div fxFlex="nogrow" fxLayout="column">
+          <div fxFlex fxLayout="column">
             <div fxFlex="nogrow" class="newdestination-syslog" fxLayout="column" [@slideInOut] *ngFor="let syslog of newDestination.$formGroup.get(['spec','syslog-servers']).controls; let index = index; let first = first"
               [formGroupName]="index">
               <div fxFlex="20px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
@@ -230,7 +230,6 @@
               <div fxFlex="40px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
             </div>
           </div>
-          <div fxFlex></div> <!-- For making the border line stop-->
         </div>
       </ng-container>
     </ng-container>

@@ -64,6 +64,9 @@ import { RouteGuard } from '@app/services/routeguard.service';
 import { AppcontentComponent } from '@app/appcontent.component';
 import { SecurityService } from '@app/services/generated/security.service';
 import { EventsService } from '@app/services/events.service';
+import { MessageService } from 'primeng/primeng';
+import { ToasterComponent, ToasterItemComponent } from './widgets/toaster/toaster.component';
+import { MAT_TOOLTIP_DEFAULT_OPTIONS } from '@angular/material';
 
 
 /**
@@ -87,7 +90,9 @@ import { EventsService } from '@app/services/events.service';
     SearchboxComponent,
     SearchsuggestionsComponent,
     SearchresultComponent,
-    GuidesearchComponent
+    GuidesearchComponent,
+    ToasterItemComponent,
+    ToasterComponent,
   ],
   entryComponents: [
     BaseComponent,
@@ -152,6 +157,7 @@ import { EventsService } from '@app/services/events.service';
     UIConfigsService,
     UIConfigsResolver,
     EventsService,
+    MessageService,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },

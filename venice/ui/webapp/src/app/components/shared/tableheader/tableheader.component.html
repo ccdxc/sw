@@ -1,8 +1,8 @@
 <div fxLayout="row" fxLayoutAlign="start center" class="tableheader-container">
   <div fxFlex="noshrink" [style.width]="width" class="tableheader-title-container" fxLayout="row" fxLayoutAlign="start center">
-      <mat-icon fxFlex="50px" *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon" class="tableheader-icon">
+      <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon" class="tableheader-icon">
       </mat-icon>
-      <mat-icon fxFlex="50px" *ngIf="icon.matIcon" class="tableheader-icon tableheader-icon-byname">
+      <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.matIcon" class="tableheader-icon tableheader-icon-byname">
           {{icon.matIcon}}
       </mat-icon>
     <div *ngIf="count == null || count === total" fxFlex="nogrow" class="tableheader-title" >

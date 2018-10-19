@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
 
@@ -10,11 +9,10 @@ import { ControllerService } from '@app/services/controller.service';
   templateUrl: './security.component.html',
   styleUrls: ['./security.component.scss']
 })
-export class SecurityComponent extends BaseComponent implements OnInit, OnDestroy {
+export class SecurityComponent implements OnInit, OnDestroy {
 
   constructor(protected _controllerService: ControllerService,
   ) {
-    super(_controllerService);
   }
 
   ngOnInit() {

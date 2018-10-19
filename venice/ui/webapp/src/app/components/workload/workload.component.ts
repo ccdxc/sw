@@ -12,6 +12,7 @@ import { IApiStatus, WorkloadWorkload } from '@sdk/v1/models/generated/workload'
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs/Subscription';
 import { BaseComponent } from '../base/base.component';
+import { MessageService } from 'primeng/primeng';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -95,8 +96,9 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected dialog: MatDialog,
+    protected messageService: MessageService
   ) {
-    super(_controllerService);
+    super(_controllerService, messageService);
   }
 
   ngOnInit() {
@@ -220,14 +222,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
         const body: any = response.body;
         this.workloadEventUtility.processEvents(body);
       },
-      error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get workloads')
     );
     this.subscriptions.push(subscription);
   }

@@ -7,6 +7,7 @@ import { IApiStatus, ClusterCluster, ClusterNode } from '@sdk/v1/models/generate
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs/Subscription';
 import { BaseComponent } from '@app/components/base/base.component';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   selector: 'app-cluster',
@@ -43,8 +44,9 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   constructor(
     private _clusterService: ClusterService,
     protected _controllerService: ControllerService,
+    protected messageService: MessageService
   ) {
-    super(_controllerService);
+    super(_controllerService, messageService);
   }
 
   ngOnInit() {
@@ -68,14 +70,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
           this.cluster = this.clusterArray[0];
         }
       },
-      error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get Cluster info')
     );
     this.subscriptions.push(subscription);
   }
@@ -88,14 +83,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
         const body: any = response.body;
         this.nodeEventUtility.processEvents(body);
       },
-      error => {
-        // TODO: Error handling
-        if (error.body instanceof Error) {
-          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
-        }
-      }
+      this.restErrorHandler('Failed to get Node info')
     );
     this.subscriptions.push(subscription);
   }

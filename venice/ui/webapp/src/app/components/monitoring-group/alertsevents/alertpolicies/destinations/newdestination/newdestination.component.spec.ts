@@ -13,6 +13,7 @@ import { MatIconRegistry } from '@angular/material';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
+import { MessageService } from 'primeng/primeng';
 
 describe('NewdestinationComponent', () => {
   let component: NewdestinationComponent;
@@ -36,7 +37,8 @@ describe('NewdestinationComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
-        MonitoringService
+        MonitoringService,
+        MessageService
       ]
     })
       .compileComponents();

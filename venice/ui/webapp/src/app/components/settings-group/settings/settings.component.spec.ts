@@ -12,6 +12,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { SettingsComponent } from './settings.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MessageService } from 'primeng/primeng';
 
 @Component({
   template: ''
@@ -40,7 +41,8 @@ describe('SettingsComponent', () => {
           ControllerService,
           LogService,
           LogPublishersService,
-          MatIconRegistry
+          MatIconRegistry,
+          MessageService
         ],
         declarations: [SettingsComponent, DummyComponent]
       }).compileComponents();
