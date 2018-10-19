@@ -61,7 +61,7 @@ bubble_to_next_stage:
 
     // Invoke sq_drain feedback in the same stage & table as add_headers_process so
     // that latest ssn/tx_psn can be fetched from SQCB2
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 exit:

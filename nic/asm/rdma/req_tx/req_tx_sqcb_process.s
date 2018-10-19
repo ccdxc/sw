@@ -351,7 +351,7 @@ sq_bktrack1:
         // If SQ is already being bktracked then just restart the timer
         // and drop phv.
         bbeq           d.bktrack_in_progress, 1, restart_timer
-        CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_timer_expiry_process, r0)
+        CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_timer_expiry_process, r0)
         nop.e
         nop
 
@@ -589,7 +589,7 @@ process_sq_drain:
 
 drain_feedback:
     tblwr          d.sq_drained, 1
-    CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sq_drain_feedback_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sq_drain_feedback_process, r0)
 
 drop:
 #if !(defined (HAPS) || defined (HW))

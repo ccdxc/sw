@@ -127,12 +127,12 @@ restart_timer:
 err_completion:
     // TODO post err completion
     phvwr.e        p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_3_VALID(0)
+    CAPRI_SET_TABLE_2_VALID(0)
     
 spurious_expiry:
     tblwr          d.timer_on, 0
     phvwr.e        p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_3_VALID(0)
+    CAPRI_SET_TABLE_2_VALID(0)
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_4   
@@ -142,7 +142,7 @@ bubble_to_next_stage:
     // Invoke timer_expiry in the same stage & table as add_headers_process so
     // that timer_on field can be updated in a locked manner between these 
     // programs
-    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 exit:
