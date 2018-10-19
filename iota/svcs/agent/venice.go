@@ -91,7 +91,8 @@ func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
 
 	venice.logger.Println("Venice bring script up successful.")
 
-	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
+	return &iota.Node{Name: in.Name, IpAddress: in.IpAddress, NodeUuid: "", Type: in.GetType(),
+		NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }
 
 // AddWorkload brings up a workload type on a given node
