@@ -14,7 +14,6 @@ import iota.harness.infra.testcase as testcase
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
 
-
 class Node(object):
     def __init__(self, spec):
         self.__spec = spec
@@ -41,9 +40,18 @@ class Node(object):
         return self.__role == topo_pb2.PERSONALITY_NAPLES
     def IsNaples(self):
         return self.IsNaplesSim() or self.IsNaplesHw()
+    def IsMellanox(self):
+        return self.__role == topo_pb2.PERSONALITY_MELLANOX
+    def IsWorkloadNode(self):
+        return self.IsNaplesSim() or self.IsNaplesHw() or self.IsMellanox()
 
     def UUID(self):
+        if self.IsMellanox():
+            return self.Name()
         return self.__uuid
+
+    def HostInterfaces(self):
+        return self.__host_intfs
 
     def ControlIpAddress(self):
         return self.__control_ip
@@ -69,7 +77,8 @@ class Node(object):
         else:
             msg.naples_config.control_intf = self.__control_intf
             msg.naples_config.control_ip = str(self.__control_ip)
-            msg.image = os.path.basename(testsuite.GetImages().naples)
+            if not self.IsNaplesHw() and not self.IsMellanox():
+                msg.image = os.path.basename(testsuite.GetImages().naples)
             for data_intf in self.__data_intfs:
                 msg.naples_config.data_intfs.append(data_intf)
             #for n in topology.Nodes():
@@ -81,6 +90,11 @@ class Node(object):
     def ProcessResponse(self, resp):
         self.__uuid = resp.node_uuid
         Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
+        if self.IsMellanox():
+            self.__host_intfs = resp.mellanox_config.host_intfs
+        elif self.IsNaples():
+            self.__host_intfs = resp.naples_config.host_intfs
+        Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
         return
 
 class Topology(object):
@@ -88,9 +102,14 @@ class Topology(object):
         self.__nodes = {}
 
         assert(spec)
+        Logger.info("Parsing Topology: %s" % spec)
+        self.__dirname = os.path.dirname(spec)
         self.__spec = parser.YmlParse(spec)
         self.__parse_nodes()
         return
+
+    def GetDirectory(self):
+        return self.__dirname
 
     def __parse_nodes(self):
         for node_spec in self.__spec.nodes:
@@ -143,8 +162,7 @@ class Topology(object):
     def GetNaplesUuidMap(self):
         uuid_map = {}
         for n in self.__nodes.values():
-            if n.IsNaples():
-                uuid_map[n.Name()] = n.UUID()
+            uuid_map[n.Name()] = n.UUID()
         return uuid_map
 
     def GetVeniceHostnames(self):
@@ -160,3 +178,16 @@ class Topology(object):
             if n.IsNaples():
                 ips.append(n.Name())
         return ips
+
+    def GetNaplesHostInterfaces(self, name):
+        return self.__nodes[name].HostInterfaces()
+
+    def GetWorkloadNodeHostnames(self):
+        ips = []
+        for n in self.__nodes.values():
+            if n.IsWorkloadNode():
+                ips.append(n.Name())
+        return ips
+
+    def GetWorkloadNodeHostInterfaces(self, name):
+        return self.__nodes[name].HostInterfaces()

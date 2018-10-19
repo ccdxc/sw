@@ -1,6 +1,6 @@
 meta:
     name: 1Naples_1Mellanox
-    description: 3 Naples Topology
+    description: 1Naples + 1Mellanox Topology
 
 nodes:
     - node: node1

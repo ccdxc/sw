@@ -40,12 +40,12 @@ def __rpc(req, rpcfn):
     req.api_response.api_status = types_pb2.API_STATUS_NONE
     req.api_response.error_msg = ""
     resp = rpcfn(req)
+    utils.LogMessageContents("Response", resp, Logger.debug)
     if resp.api_response.api_status != types_pb2.API_STATUS_OK:
         Logger.error("Error: ",
                      types_pb2.APIResponseType.Name(resp.api_response.api_status),
                      resp.api_response.error_msg)
         return None
-    utils.LogMessageContents("Response", resp, Logger.debug)
     return resp
 
 def CleanupTestbed(req):
@@ -134,9 +134,21 @@ def GetVeniceHostnames():
 def GetNaplesHostnames():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesHostnames()
 
+def GetWorkloadNodeHostnames():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadNodeHostnames()
+
+def GetTopologyDirectory():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetDirectory()
+
+def GetNaplesHostInterfaces(name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesHostInterfaces(name)
+
+def GetWorkloadNodeHostInterfaces(name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadNodeHostInterfaces(name)
+
 def PrintCommandResults(cmd):
     Logger.header('COMMAND')
-    Logger.info("%s" % cmd.command)
+    Logger.info("%s (Exit Code = %d)" % (cmd.command, cmd.exit_code))
     Logger.header('STDOUT')
     for line in cmd.stdout.split('\n'):
         Logger.info(line)

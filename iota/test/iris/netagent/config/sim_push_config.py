@@ -4,7 +4,7 @@ import pdb
 import os
 import ipaddress
 import time
-
+'''
 if __name__ == '__main__':
     topdir = os.path.dirname(sys.argv[0]) + '../../../../../'
     topdir = os.path.abspath(topdir)
@@ -12,6 +12,7 @@ if __name__ == '__main__':
     sys.path.insert(0, topdir)
     fullpath = os.path.join(topdir, 'iota/protos/pygen')
     sys.path.append(fullpath)
+'''
 
 import iota.harness.api as api
 import iota.test.iris.netagent.config.api as agent_api
@@ -19,40 +20,40 @@ import iota.test.iris.netagent.config.api as agent_api
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
-CONFIGS_DIR = "test/iris/netagent/config/jsons/1ten_2seg_4eps"
+gl_ep_json_obj = None
+gl_nw_json_obj = None
+gl_sg_json_obj = None
 
-ENDPOINTS_JSON = "%s/endpoints.json" % CONFIGS_DIR
-NETWORKS_JSON = "%s/networks.json" % CONFIGS_DIR
-SGPOLICY_JSON = "%s/sgpolicy.json" % CONFIGS_DIR
-
-ep_json_obj = None
-nw_json_obj = None
-sg_json_obj = None
+def __read_one_json(filename):
+    json_file_path = "%s/%s" % (api.GetTopologyDirectory(), filename)
+    api.Logger.info("Reading config JSON file: %s" % json_file_path)
+    
+    return api.parser.JsonParse(json_file_path)
 
 def __read_jsons():
-    global ep_json_obj
-    ep_json_obj = api.parser.JsonParse(ENDPOINTS_JSON)
+    global gl_ep_json_obj
+    gl_ep_json_obj = __read_one_json('endpoints.json')
     agent_uuid_map = api.GetNaplesNodeUuidMap()
-    for obj in ep_json_obj.endpoints:
+    for obj in gl_ep_json_obj.endpoints:
         node_name = getattr(obj.spec, "node-uuid", None)
         assert(node_name)
         setattr(obj.spec, "node-uuid", "uuid-%s" % agent_uuid_map[node_name])
     
-    global nw_json_obj
-    nw_json_obj = api.parser.JsonParse(NETWORKS_JSON)
+    global gl_nw_json_obj
+    gl_nw_json_obj = __read_one_json('networks.json')
 
-    global sg_json_obj
-    sg_json_obj = api.parser.JsonParse(SGPOLICY_JSON)
+    global gl_sg_json_obj
+    gl_sg_json_obj = __read_one_json('sgpolicy.json')
     return
 
 def __config():
-    agent_api.ConfigureNetworks(nw_json_obj.networks)
-    agent_api.ConfigureEndpoints(ep_json_obj.endpoints)
-    agent_api.ConfigureSecurityGroupPolicies(sg_json_obj.sgpolices)
+    agent_api.ConfigureNetworks(gl_nw_json_obj.networks)
+    agent_api.ConfigureEndpoints(gl_ep_json_obj.endpoints)
+    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolices)
     return api.types.status.SUCCESS
 
 def __find_network(nw_name):
-    for nw in nw_json_obj.networks:
+    for nw in gl_nw_json_obj.networks:
         if nw.meta.name == nw_name:
             return nw
     return None
@@ -91,7 +92,7 @@ def __alloc_lif(node_name):
     return lif_uplink
 
 def __add_workloads():
-    ep_objs = api.parser.JsonParse(ENDPOINTS_JSON)
+    ep_objs = __read_one_json('endpoints.json')
     for ep in ep_objs.endpoints:
         req = topo_svc.WorkloadMsg()
         req.workload_op = topo_svc.ADD

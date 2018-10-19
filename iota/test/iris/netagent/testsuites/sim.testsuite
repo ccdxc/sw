@@ -18,14 +18,14 @@ images:
 #   This is a MANDATORY section with atleast 'topology'
 setup:
     # 'topology' is a MANDATORY parameter.
-    topology: test/iris/netagent/topologies/3Naples.topology
+    topology: test/iris/netagent/topologies/3Naples/3Naples.topology
     
     # 'config' is an OPTIONAL section.
     #   This section can be used to generate/push config 
     #   before the testcases start.
     #   Each step will be invoked in the order below.
     config  : 
-        - step : config.push_static_config
+        - step : config.sim_push_config
 
 # Section: 'common'
 # List of common actions to be invoked during test phase.

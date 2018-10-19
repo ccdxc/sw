@@ -36,9 +36,10 @@ class _Testbed:
         if not ts:
             return msg
         if not GlobalOptions.rerun:
-            msg.naples_image = ts.GetImages().naples
-            msg.venice_image = ts.GetImages().venice
-            msg.driver_sources = ts.GetImages().drivers
+            images = ts.GetImages()
+            msg.naples_image = getattr(images, 'naples', "")
+            msg.venice_image = getattr(images, 'venice', "")
+            msg.driver_sources = getattr(images, 'drivers', "")
 
         # TBD: Get it from warmd.json
         msg.username = self.tbspec.Provision.Username

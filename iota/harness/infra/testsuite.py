@@ -19,10 +19,17 @@ class TestSuite:
     def __init__(self, spec):
         self.__spec = spec
         self.__tcs = []
-        
+
+        if GlobalOptions.testsuite and GlobalOptions.testsuite != self.Name():
+            Logger.info("Skipping Testsuite: %s because of command-line filters." % self.Name())
+            self.__valid = False
+            return
+
+        Logger.info("Starting Testsuite: %s" % self.Name())
         self.__resolve_testcases()
         self.__resolve_teardown()
         self.__parse_setup()
+        self.__valid = True
         return
 
     def GetImages(self):
@@ -112,12 +119,9 @@ class TestSuite:
         return self.__spec.meta.name
 
     def Main(self):
-        if GlobalOptions.testsuite and GlobalOptions.testsuite != self.Name():
-            Logger.info("Skipping Testsuite: %s because of command-line filters." % self.Name())
-            return types.status.SUCCESS
+        if not self.__valid:
+           return types.status.SUCCESS
 
-        Logger.info("Running Testsuite: %s" % self.Name())
-        
         # Initialize Testbed for this testsuite
         status = store.GetTestbed().InitForTestsuite(self)
         if status != types.status.SUCCESS:
