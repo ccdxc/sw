@@ -68,6 +68,7 @@ func NewRevProxyRouter(listenURL string) (*Server, error) {
 	revProxyRouter := Server{
 		listenURL: listenURL,
 	}
+	log.Infof("listenURL: %s", listenURL)
 	revProxyRouter.httpServer = &http.Server{Addr: listenURL}
 
 	http.HandleFunc("/", handleRequestAndRedirect)

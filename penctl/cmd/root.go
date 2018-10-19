@@ -37,6 +37,8 @@ var verbose bool
 var yamlFormat bool
 var jsonFormat bool
 var tabularFormat bool
+var mockMode bool
+var intf string
 
 func init() {
 	// Fill logger config params
@@ -54,6 +56,10 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml json")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", false, "display in json format")
 	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", true, "display in tabular format")
+	rootCmd.PersistentFlags().BoolVarP(&mockMode, "debug", "d", false, "run penctl in mock mode")
+	rootCmd.PersistentFlags().StringVarP(&intf, "interface", "e", "", "ethernet device of naples")
+
+	rootCmd.PersistentFlags().MarkHidden("debug")
 
 	rootCmd.GenBashCompletionFile("penctl.sh")
 }

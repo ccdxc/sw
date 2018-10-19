@@ -24,10 +24,11 @@ penctl ssh [flags]
 ### Options inherited from parent commands
 
 ```
-  -j, --json      display in json format
-  -t, --tabular   display in tabular format (default true)
-  -v, --verbose   verbose output
-  -y, --yaml      display in yaml json
+  -e, --interface string   ethernet device of naples
+  -j, --json               display in json format
+  -t, --tabular            display in tabular format (default true)
+  -v, --verbose            verbose output
+  -y, --yaml               display in yaml json
 ```
 
 ### SEE ALSO
