@@ -63,9 +63,15 @@ message InitConfigMsg{
     repeated string endpoint_status     = 5;
 
 }
+
+message NaplesHost {
+    string name = 1;
+    string uuid = 2;
+}
+
 message GenerateConfigMsg {
-    repeated string naples_uuids    = 1;
-    IotaAPIResponse api_response    = 2;
+    repeated NaplesHost hosts           = 1;
+    IotaAPIResponse     api_response    = 2;
 }
 
 message ConfigMsg {
