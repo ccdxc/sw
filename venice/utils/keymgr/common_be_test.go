@@ -56,10 +56,10 @@ func testObjectStoreSerialAccess(t *testing.T, keyMgr *KeyMgr, prefix string) {
 	err = keyMgr.DestroyObject(keyID, ObjectTypeKeyPair)
 	Assert(t, err != nil, "Destroying non-existing keypair did not fail as expected")
 	// create and update
-	_, err = keyMgr.UpdateKeyPair(keyID, ECDSA256)
+	_, _ = keyMgr.UpdateKeyPair(keyID, ECDSA256)
 	newKey, err := keyMgr.UpdateKeyPair(keyID, RSA1024)
 	AssertOk(t, err, "Error updating KeyPair object")
-	newKey2, err := keyMgr.GetObject(keyID, ObjectTypeKeyPair)
+	newKey2, _ := keyMgr.GetObject(keyID, ObjectTypeKeyPair)
 	Assert(t, reflect.DeepEqual(newKey, newKey2), fmt.Sprintf("Looked-up object does not match stored one. Have: %+v, Want: %+v", newKey2, newKey))
 	defer keyMgr.DestroyObject(keyID, ObjectTypeKeyPair)
 

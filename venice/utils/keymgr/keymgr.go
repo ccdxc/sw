@@ -192,7 +192,7 @@ func (km *KeyMgr) UpdateObject(obj Object) error {
 		return err
 	}
 	if oldObj != nil {
-		err = km.destroyObject(oldObj.ID(), obj.Type())
+		_ = km.destroyObject(oldObj.ID(), obj.Type())
 	}
 	return km.storeObject(obj)
 }

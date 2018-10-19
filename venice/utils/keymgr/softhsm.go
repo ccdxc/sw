@@ -55,10 +55,10 @@ func findPkcs11Lib() string {
 // CreateSoftHSMSandbox creates an instance of SoftHSM with config and tokens stored in a temporary directory
 // Setup the environment variable so that the config is found when the library is loaded
 func CreateSoftHSMSandbox() error {
-	dir, err := ioutil.TempDir("", "softhsm-")
+	dir, _ := ioutil.TempDir("", "softhsm-")
 	tokensDirName := path.Join(dir, "tokens")
 	configFilePath := path.Join(dir, configFileName)
-	err = os.MkdirAll(tokensDirName, 0700)
+	err := os.MkdirAll(tokensDirName, 0700)
 	if err != nil {
 		return fmt.Errorf("Error creating tmp directory %s", dir)
 	}

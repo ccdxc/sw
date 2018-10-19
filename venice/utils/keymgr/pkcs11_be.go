@@ -612,11 +612,11 @@ func (be *Pkcs11Backend) readCertificate(ID string) (*x509.Certificate, error) {
 func (be *Pkcs11Backend) getKeyPairHandles(ID string) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error) {
 	privateKeyHandle, err := be.findObject(ID, pkcs11.CKO_PRIVATE_KEY)
 	if err != nil {
-		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error retrieving private key handle, ID:", ID)
+		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error retrieving private key handle, ID: %v", ID)
 	}
 	publicKeyHandle, err := be.findObject(ID, pkcs11.CKO_PUBLIC_KEY)
 	if err != nil {
-		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error retrieving public key handle, ID:", ID)
+		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error retrieving public key handle, ID: %v", ID)
 	}
 	return publicKeyHandle, privateKeyHandle, err
 }
@@ -643,10 +643,10 @@ func (be *Pkcs11Backend) readKeyPair(ID string) (crypto.Signer, error) {
 	case uint64(pkcs11.CKK_EC):
 		publicKey, err = be.readEcdsaPublicKey(publicKeyHandle)
 	default:
-		return nil, errors.Wrapf(err, "Unsupported key type, ID: CKA_KEY_TYPE: %v", ID, keyType)
+		return nil, errors.Wrapf(err, "Unsupported key type, ID: %v CKA_KEY_TYPE: %v", ID, keyType)
 	}
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error retrieving key pair, ID: %v, key type: %v, Backend: %+v", ID, be)
+		return nil, errors.Wrapf(err, "Error retrieving key pair, ID: %v, key type: %v, Backend: %+v", ID, keyType, be)
 	}
 	signer := &pkcs11Signer{
 		backend:          be,

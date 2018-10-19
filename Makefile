@@ -90,7 +90,7 @@ gen:
 # Doing the go list here avoids an additional global go list
 goimports-src: gopkgsinstall
 	$(info +++ goimports sources)
-	$(eval GO_FILES=`gopkgs -short -f '{{.Dir}}/*.go' | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}`)
+	$(eval GO_FILES=`${GOPATH}/bin/gopkgs -short -f '{{.Dir}}/*.go' | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}`)
 ifdef JOB_ID
 	@echo "Running in CI; checking goimports and fmt"
 	@$(eval IMPRT := $(shell ${GOIMPORTS_CMD} ${GO_FILES}))

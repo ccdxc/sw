@@ -30,7 +30,7 @@ func TestECDSARawSignatureParsing(t *testing.T) {
 		Assert(t, ecdsaSig != nil, "Parsed ECDSA Signature was nil")
 
 		// Odd length raw signature
-		ecdsaSig, err = parseEcdsaRawSignature(rawSig[1:])
+		_, err = parseEcdsaRawSignature(rawSig[1:])
 		Assert(t, err != nil, "parsing raw signature with odd length should fail")
 	}
 
