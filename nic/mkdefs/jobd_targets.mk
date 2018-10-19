@@ -203,7 +203,7 @@ jobd/dol/e2e/v6tlsproxy: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/e2e/eplearn
 jobd/dol/e2e/eplearn: ${JOBD_PREREQS}
-	${NICDIR}/run.py --topo e2e_eplearn --feature e2e_learn --e2e-mode dol-auto --cfgjson conf/dol.conf
+	${NICDIR}/run.py --topo e2e_eplearn --feature e2e_learn --e2e-mode dol-auto --enable-aging --cfgjson conf/dol.conf
 
 .PHONY: jobd/dol/e2e/alg
 jobd/dol/e2e/alg: ${JOBD_PREREQS}

@@ -86,10 +86,16 @@ session:
         trigger:
             commands:
                 - command:
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    cmd         : ifconfig
+                    args        :
+                        - arg   : ref://testcase/config/src_endpoints/0/intf              
+                        - arg   : "0.0.0.0"
+                - command:
                     endpoint    : ref://testcase/config/dst_endpoints/0
                     cmd         : sleep
                     args        :
-                        - arg   : "120"     
+                        - arg   : "140"     
                 - command:
                     endpoint    : ref://testcase/config/dst_endpoints/0
                     cmd         : pkill 

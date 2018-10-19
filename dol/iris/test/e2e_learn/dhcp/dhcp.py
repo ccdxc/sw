@@ -35,12 +35,16 @@ def TestCaseStepVerify(tc, step):
         logger.info("Verify for EP MAc address %s" %  ep.macaddr.get())
         if len(ep.ipaddrs) and any(ip_in_dhcp_range(ip.get()) for ip in ep.ipaddrs):
             logger.error("Endpoint has been configured with DHCP IP address range %s %s" % (ep.ipaddrs[0].get(), ep.macaddr.get()))
+            import time
+            time.sleep(1000)
             return False 
     if (step.step_id in [1,2]):
         ep = tc.config.dst_endpoints[0]
         ep.Get()
         if not len(ep.ipaddrs) and all(not ip_in_dhcp_range(ip.get()) for ip in ep.ipaddrs):
             logger.error("Endpoint has not been configured with IP address")
+            import time
+            time.sleep(1000)
             return False
         logger.info("Endpoint has been configured with IP address : %s" % (ep.ipaddrs[0].get()))
         

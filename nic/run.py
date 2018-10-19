@@ -267,7 +267,8 @@ def run_hal(args):
     os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
     os.environ["SNORT_DAQ_PATH"] = snort_dir + "/x86_64/lib/"
     os.environ["COVFILE"] = os.path.realpath(bullseye_hal_cov_file)
-    os.environ["DISABLE_AGING"] = "1"
+    if not args.enable_aging:
+        os.environ["DISABLE_AGING"] = "1"
 
     #hal_dir = nic_dir + "/../bazel-bin/nic/hal"
     os.chdir(nic_dir)
@@ -1036,6 +1037,8 @@ def main():
                         help='Run storage and network tests combined')
     parser.add_argument("-n", "--nocleanup", action="store_true",
                         help="Skip cleanup during shut down")
+    parser.add_argument("--enable-aging", dest='enable_aging', action="store_true",
+                        help="Enable aging in HAL")
 
     args = parser.parse_args()
 
