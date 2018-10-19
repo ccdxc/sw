@@ -143,18 +143,6 @@ def GetNaplesHostInterfaces(name):
 def GetWorkloadNodeHostInterfaces(name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadNodeHostInterfaces(name)
 
-<<<<<<< HEAD
-def PrintCommandResults(cmd):
-    Logger.header('COMMAND')
-    Logger.info("%s (Exit Code = %d)" % (cmd.command, cmd.exit_code))
-    Logger.header('STDOUT')
-    for line in cmd.stdout.split('\n'):
-        Logger.info(line)
-    Logger.header('STDERR')
-    for line in cmd.stderr.split('\n'):
-        Logger.info(line)
-=======
-
 def PrintCommandResults(cmd):
     Logger.header('COMMAND')
     Logger.info("%s (Exit Code = %d)" % (cmd.command, cmd.exit_code))
@@ -165,4 +153,3 @@ def PrintCommandResults(cmd):
             Logger.info(line)
     PrintOutputLines('STDOUT', cmd.stdout)
     PrintOutputLines('STDERR', cmd.stderr)
->>>>>>> Hardware sanity fixes.
