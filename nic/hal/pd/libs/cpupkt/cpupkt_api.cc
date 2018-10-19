@@ -179,7 +179,7 @@ cpupkt_rx_upd_sem_index (cpupkt_qinst_info_t& qinst_info, bool init_pindex)
                     qinst_info.queue_info->type, ci_sem_addr,
                     qinst_info.pc_index);
 
-    if (asic_reg_write(ci_sem_addr, &qinst_info.pc_index,
+    if (asic_reg_write(ci_sem_addr, &qinst_info.pc_index, 1,
                        ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
         qinst_info.ctr.rx_sem_wr_err++;
         HAL_TRACE_ERR("Failed to program CI semaphore");
@@ -191,7 +191,7 @@ cpupkt_rx_upd_sem_index (cpupkt_qinst_info_t& qinst_info, bool init_pindex)
         HAL_TRACE_DEBUG("updating PI: type: {}, addr {:#x}, pi: {}",
                         qinst_info.queue_info->type, pi_sem_addr,
                         value);
-        if (asic_reg_write(pi_sem_addr, &value,
+        if (asic_reg_write(pi_sem_addr, &value, 1,
                            ASIC_WRITE_MODE_WRITE_THRU) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to program PI semaphore");
             return HAL_RET_HW_FAIL;
@@ -508,6 +508,7 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
     for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
         value = 0;
         qinst_info = ctxt->rx.queue[i].qinst_info[0];
+        qinst_info->ctr.poll_count++;
         if (asic_mem_read(qinst_info->pc_index_addr,
                             (uint8_t *)&value,
                             sizeof(uint64_t), true) != HAL_RET_OK) {

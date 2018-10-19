@@ -2439,6 +2439,8 @@ system_fte_txrx_stats_get(SystemResponse *rsp)
             ctr->set_tx_page_copy_err(fte_qinfo.inst.ctr.tx_page_copy_err);
             ctr->set_tx_descr_pgm_err(fte_qinfo.inst.ctr.tx_descr_pgm_err);
             ctr->set_tx_send_err(fte_qinfo.inst.ctr.tx_send_err);
+            ctr->set_rx_descr_addr_oob(fte_qinfo.inst.ctr.rx_descr_addr_oob);
+            ctr->set_poll_count(fte_qinfo.inst.ctr.poll_count);
 
         }
     }

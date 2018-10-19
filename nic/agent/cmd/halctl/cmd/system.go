@@ -332,8 +332,8 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if fteTxRx {
-		fmt.Println("\nFTE TxRx Stats: Disabled")
-		//fteTxRxStatsShow(resp.GetStats())
+		//fmt.Println("\nFTE TxRx Stats: Disabled")
+		fteTxRxStatsShow(resp.GetStats())
 	}
 
 	if pb {
@@ -883,18 +883,20 @@ func fteTxRxStatsShow(stats *halproto.Stats) {
 		for _, qinfo := range fteinfo.Qinfo {
 			fmt.Printf("%s%-15s\n", "Queue Type    : ", halproto.WRingType_name[int32(qinfo.GetQueueType())])
 			ctr := qinfo.GetCtr()
-			fmt.Printf("%s%-15d%s%d\n", "send pkts               : ", ctr.GetSendPkts(), "queue id         : ", qinfo.GetQueueId())
-			fmt.Printf("%s%-15d%s%#x\n", "recv pkts               : ", ctr.GetRecvPkts(), "base addr        : ", qinfo.GetBaseAddr())
-			fmt.Printf("%s%-15d%s%#x\n", "Rx Sem Write Err        : ", ctr.GetRxSemWrErr(), "p/c index        : ", qinfo.GetPcIndex())
-			fmt.Printf("%s%-15d%s%#x\n", "Rx Slot Value Read Err  : ", ctr.GetRxSlotValueReadErr(), "p/c index_addr   : ", qinfo.GetPcIndexAddr())
-			fmt.Printf("%s%-15d%s%#x\n", "Rx Descr Read Err       : ", ctr.GetRxDescrReadErr(), "exp valid bit val: ", qinfo.GetValidBitValue())
-			fmt.Printf("%s%-15d\n", "Rx Descr To Hdr Err     : ", ctr.GetRxDescrToHdrErr())
-			fmt.Printf("%s%-15d\n", "Rx Descr Free_err       : ", ctr.GetRxDescrFreeErr())
-			fmt.Printf("%s%-15d\n", "Tx Descr Free_err       : ", ctr.GetTxDescrFreeErr())
-			fmt.Printf("%s%-15d\n", "Tx Page Alloc_err       : ", ctr.GetTxPageAllocErr())
-			fmt.Printf("%s%-15d\n", "Tx Page Copy Err        : ", ctr.GetTxPageCopyErr())
-			fmt.Printf("%s%-15d\n", "Tx Descr Pgm Err        : ", ctr.GetTxDescrPgmErr())
-			fmt.Printf("%s%-15d\n", "Tx Send Err             : ", ctr.GetTxSendErr())
+			fmt.Printf("%s%-15d%s%d\n", "send pkts                    : ", ctr.GetSendPkts(), "queue id         : ", qinfo.GetQueueId())
+			fmt.Printf("%s%-15d%s%#x\n", "recv pkts                   : ", ctr.GetRecvPkts(), "base addr        : ", qinfo.GetBaseAddr())
+			fmt.Printf("%s%-15d%s%#x\n", "Rx Sem Write Err            : ", ctr.GetRxSemWrErr(), "p/c index        : ", qinfo.GetPcIndex())
+			fmt.Printf("%s%-15d%s%#x\n", "Rx Slot Value Read Err      : ", ctr.GetRxSlotValueReadErr(), "p/c index_addr   : ", qinfo.GetPcIndexAddr())
+			fmt.Printf("%s%-15d%s%#x\n", "Rx Descr Read Err           : ", ctr.GetRxDescrReadErr(), "exp valid bit val: ", qinfo.GetValidBitValue())
+			fmt.Printf("%s%-15d\n", "Rx Descr To Hdr Err              : ", ctr.GetRxDescrToHdrErr())
+			fmt.Printf("%s%-15d\n", "Rx Descr Free_err                : ", ctr.GetRxDescrFreeErr())
+			fmt.Printf("%s%-15d\n", "Tx Descr Free_err                : ", ctr.GetTxDescrFreeErr())
+			fmt.Printf("%s%-15d\n", "Tx Page Alloc_err                : ", ctr.GetTxPageAllocErr())
+			fmt.Printf("%s%-15d\n", "Tx Page Copy Err                 : ", ctr.GetTxPageCopyErr())
+			fmt.Printf("%s%-15d\n", "Tx Descr Pgm Err                 : ", ctr.GetTxDescrPgmErr())
+			fmt.Printf("%s%-15d\n", "Tx Send Err                      : ", ctr.GetTxSendErr())
+			fmt.Printf("%s%-15d\n", "Poll count                       : ", ctr.GetPollCount())
+			fmt.Printf("%s%-15d\n", "Rx Descr out of bound err        : ", ctr.GetRxDescrAddrOob())
 
 			fmt.Printf("\n")
 		}

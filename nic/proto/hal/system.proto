@@ -325,6 +325,8 @@ message QCtr {
   uint32        tx_page_copy_err         = 10;
   uint32        tx_descr_pgm_err         = 11;
   uint32        tx_send_err              = 12;
+  uint32        rx_descr_addr_oob        = 13;
+  uint64        poll_count               = 14;
 }
 
 message QGlobalInfo {

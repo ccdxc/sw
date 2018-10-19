@@ -166,7 +166,7 @@ asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words,
 {
     hal_ret_t    rc = HAL_RET_OK;
 
-    if (is_asic_rw_thread() || (read_thru == true)) {
+    if (read_thru == true || is_asic_rw_thread()) {
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_reg_read(addr, data, num_words);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
@@ -192,7 +192,7 @@ asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
 {
     hal_ret_t   rc = HAL_RET_OK;
 
-    if (is_asic_rw_thread() || (read_thru == true)) {
+    if ((read_thru == true) || is_asic_rw_thread()) {
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_mem_read(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
@@ -274,7 +274,7 @@ asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words,
 
     //HAL_TRACE_DEBUG("addr : {}, data : {:#x}, len : {}, mode : {}",
                     //addr, data, num_words, mode);
-    if ((is_asic_rw_thread() == true) || (mode == ASIC_WRITE_MODE_WRITE_THRU)) {
+    if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (is_asic_rw_thread() == true)) {
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_reg_write(addr, data, num_words);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
@@ -302,7 +302,8 @@ asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len,
 
     //HAL_TRACE_DEBUG("addr : {:#x}, data : {}, len : {}, mode : {}",
                     //addr, data, len, mode);
-    if ((is_asic_rw_thread() == true) || (mode == ASIC_WRITE_MODE_WRITE_THRU)) {
+    if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (is_asic_rw_thread() == true)) {
+
         // bypass asicrw thread
         pal_ret_t prc = sdk::lib::pal_mem_write(addr, data, len);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;

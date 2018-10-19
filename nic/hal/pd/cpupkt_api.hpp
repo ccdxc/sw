@@ -64,6 +64,8 @@ typedef struct cpupkt_qinst_ctr_s {
     uint32_t        tx_descr_pgm_err;
     uint32_t        tx_send_err;
     uint32_t        tx_db_err;
+    uint32_t        rx_descr_addr_oob;
+     uint64_t       poll_count;
 } __PACK__ cpupkt_qinst_ctr_t;
 
 typedef struct cpupkt_qinst_info_s {
