@@ -388,7 +388,7 @@ func GetIntfsMatchingDevicePrefix(devicePrefix string) ([]string, error) {
 				pci = strings.Split(pci, "=")[1]
 				intfName := strings.Replace(line, " ", "", -1)
 				intfName = strings.Split(intfName, "=")[1]
-				pciIntfMap[pci] = intfName
+				pciIntfMap[pci] = intfName[1 : len(intfName)-1]
 			}
 		}
 	}
