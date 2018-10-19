@@ -210,13 +210,10 @@ uint8_t __parse_cn_common_hdr(const uint8_t *pkt, uint32_t offset,
     return offset;
 }
 
-static p_cont_elem_t ctxt_elem[MAX_CONTEXT];
-static p_result_t    rslt[MAX_CONTEXT];
-
 uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt, uint32_t dlen, 
                         msrpc_bind_hdr_t *hdr, rpc_info_t *rpc_info) {
     static uint32_t BIND_HDR_SZ = (sizeof(msrpc_bind_hdr_t) - 
-                                   sizeof(hdr->context_list.cont_elem));
+                                   sizeof(p_cont_elem_t));
     uint32_t offset = 0;
     uint8_t ele = 0, xferele = 0;
 
@@ -230,14 +227,17 @@ uint32_t __parse_msrpc_bind_hdr(const uint8_t *pkt, uint32_t dlen,
     hdr->max_xmit_frag = __pack_uint16(pkt, &offset, data_rep);
     hdr->max_recv_frag = __pack_uint16(pkt, &offset, data_rep);
     hdr->assoc_group_id = __pack_uint32(pkt, &offset, data_rep);
-    HAL_TRACE_DEBUG("Offset: {} num ctxt elem: {}", offset, pkt[offset]);
     hdr->context_list.num_elm = pkt[offset++];
+    if (hdr->context_list.num_elm > MAX_CONTEXT) {
+        incr_parse_error(rpc_info);
+        HAL_TRACE_ERR("Num context {} is bigger than {}",
+                       hdr->context_list.num_elm, MAX_CONTEXT);
+    }
     hdr->context_list.rsvd = pkt[offset++];
     hdr->context_list.rsvd2 = __pack_uint16(pkt, &offset, data_rep);
-    hdr->context_list.cont_elem = ctxt_elem;
-    memset(ctxt_elem, 0, sizeof(ctxt_elem));
 
-    while (ele < hdr->context_list.num_elm) {
+    while (ele < hdr->context_list.num_elm &&
+           hdr->context_list.num_elm <= MAX_CONTEXT) {
        xferele = 0;
        if ((dlen-offset) < sizeof(p_cont_elem_t)) {
            incr_parse_error(rpc_info);
@@ -288,11 +288,16 @@ uint32_t __parse_msrpc_bind_ack_hdr(const uint8_t *pkt, uint32_t dlen,
          WORD_BYTES - hdr->sec_addr.len%WORD_BYTES)):hdr->sec_addr.len;
     offset += 2; // Padding
     hdr->rlist.num_rslts = pkt[offset++];
+    if (hdr->rlist.num_rslts > MAX_CONTEXT) {
+        incr_parse_error(rpc_info);
+        HAL_TRACE_ERR("Num context {} is bigger than {}", 
+                       hdr->rlist.num_rslts, MAX_CONTEXT);
+    }
     hdr->rlist.rsvd = pkt[offset++];
     hdr->rlist.rsvd2 = __pack_uint16(pkt, &offset, data_rep);
-    hdr->rlist.rslts = rslt;
 
-    while (ele < hdr->rlist.num_rslts) {
+    while (ele < hdr->rlist.num_rslts && 
+           hdr->rlist.num_rslts <= MAX_CONTEXT) {
         if ((dlen-offset) < sizeof(p_result_t)) {
             incr_parse_error(rpc_info);
             HAL_TRACE_ERR("Packet Len {} is smaller than bind rslt size {}",
@@ -693,9 +698,12 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
         case PDU_NONE:
             if (rpc_hdr.ptype == PDU_BIND ||
                 rpc_hdr.ptype == PDU_ALTER_CTXT) {
-                msrpc_bind_hdr_t bind_hdr;
-                uint8_t ctxt_id = 0;
+                msrpc_bind_hdr_t bind_hdr = {};
+                uint8_t          ctxt_id = 0;
+                p_cont_elem_t    ctxt_elem[MAX_CONTEXT];
 
+                bzero(&ctxt_elem[0], sizeof(p_cont_elem_t)*MAX_CONTEXT);
+                bind_hdr.context_list.cont_elem = &ctxt_elem[0];
                 pgm_offset = __parse_msrpc_bind_hdr(&pkt[pgm_offset], 
                                         (pkt_len-pgm_offset), &bind_hdr, rpc_info);
                 if (!pgm_offset) {
@@ -722,8 +730,11 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
         case PDU_ALTER_CTXT:
             if (rpc_hdr.ptype == PDU_BIND_ACK ||
                 rpc_hdr.ptype == PDU_ALTER_CTXT_ACK) {
-                msrpc_bind_ack_hdr_t bind_ack;
- 
+                msrpc_bind_ack_hdr_t bind_ack = {};
+                p_result_t           rslt[MAX_CONTEXT];
+
+                bzero(&rslt[0], sizeof(p_result_t)*MAX_CONTEXT); 
+                bind_ack.rlist.rslts = &rslt[0];
                 pgm_offset = __parse_msrpc_bind_ack_hdr(&pkt[pgm_offset], 
                                              (pkt_len-pgm_offset), &bind_ack, rpc_info);
                 if (!pgm_offset) {
@@ -981,6 +992,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 ret = ctx.update_flow(flowupd);
 
                 if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+                    HAL_TRACE_DEBUG("Setting up buff for Iflow");
                     // Setup TCP buffer for IFLOW
                     l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
                                               htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
@@ -1001,7 +1013,8 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
         uint8_t *pkt = ctx.pkt(); 
         rpc_info = (rpc_info_t *)l4_sess->info;
 
-        if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
+        if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) ==
+                     (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
             HAL_TRACE_DEBUG("Setting up buffer for rflow");
             // Set up TCP buffer for RFLOW
             l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(

@@ -48,5 +48,7 @@ TEST_F(tftp_test, tftp_e2e)
 
     pthread_join(mThreadID2, NULL);
     pthread_cancel(mThreadID1);
-    pthread_cancel(mThreadID3);    
+    pthread_cancel(mThreadID3);
+    pthread_join(mThreadID1, NULL);
+    pthread_join(mThreadID3, NULL);
 }

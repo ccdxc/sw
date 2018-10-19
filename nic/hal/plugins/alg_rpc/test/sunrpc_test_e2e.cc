@@ -53,6 +53,8 @@ TEST_F(rpc_test, sunrpc_e2e)
     pthread_join(mThreadID2, NULL);
     pthread_cancel(mThreadID1);
     pthread_cancel(mThreadID3);
+    pthread_join(mThreadID1, NULL);
+    pthread_join(mThreadID3, NULL);
     std::system("pkill rpcbind && pkill python2 -c");
     fte_base_test::CleanUpE2ETestCase();
 }

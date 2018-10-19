@@ -62,6 +62,8 @@ TEST_F(ftp_test, ftp_e2e_active)
     pthread_join(mThreadID2, NULL);
     pthread_cancel(mThreadID1);
     pthread_cancel(mThreadID3);
+    pthread_join(mThreadID1, NULL);
+    pthread_join(mThreadID3, NULL);
     std::system("rm ftp_file.txt");
 }
 
@@ -76,6 +78,8 @@ TEST_F(ftp_test, ftp_e2e_passive)
     pthread_join(mThreadID2, NULL);
     pthread_cancel(mThreadID1);
     pthread_cancel(mThreadID3);
+    pthread_join(mThreadID1, NULL);
+    pthread_join(mThreadID3, NULL);
     fte_base_test::CleanUpE2ETestCase();
     std::system("rm ftp_file.txt");
 }

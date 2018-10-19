@@ -683,7 +683,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                     HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
                     return HAL_RET_ERR;
                 }
-                rpc_info->skip_sfw = TRUE;
+                rpc_info->skip_sfw = true;
             } else {
                 flowupd.type = fte::FLOWUPD_MCAST_COPY;
                 flowupd.mcast_info.mcast_en = 1;
@@ -693,6 +693,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
 
                 HAL_TRACE_DEBUG("TCP flags: {}", ctx.cpu_rxhdr()->tcp_flags);
                 if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+                    HAL_TRACE_DEBUG("Setting up buffer for Iflow");
                     // Setup TCP buffer for IFLOW
                     l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
                                                htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,

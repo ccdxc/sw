@@ -87,7 +87,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
 
     // If it starts before current sequence number, slice it
     if (compare_seq_numbers(seq, cur_seq_) < 0) {
-        //HAL_TRACE_DEBUG("Payload starts before current -- slicing seq: {} cur_seq_: {}", seq, cur_seq_);
+        HAL_TRACE_DEBUG("Payload starts before current -- slicing seq: {} cur_seq_: {}", seq, cur_seq_);
         uint32_t diff = cur_seq_ - seq;
         seq = cur_seq_;
         payload += diff;

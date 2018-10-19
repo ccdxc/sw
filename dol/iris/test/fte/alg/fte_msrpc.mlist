@@ -36,6 +36,7 @@ modules:
     - module:
         name     : MSRPC_CN_UNFRAGMENTED
         tracker  : True
+        enable   : False
         args     :
             connspec: ref://trackerstore/connections/id=DEFAULT
         selectors:
