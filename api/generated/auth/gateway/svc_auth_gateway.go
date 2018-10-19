@@ -697,6 +697,10 @@ func (e *sAuthV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoUpdateUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoWatchUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["LdapBindCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["LdapConnectionCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }

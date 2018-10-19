@@ -216,7 +216,7 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 }
 
 func (a *authHooks) registerRemovePasswordHook(svc apigw.APIGatewayService) error {
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		if err != nil {
@@ -228,7 +228,7 @@ func (a *authHooks) registerRemovePasswordHook(svc apigw.APIGatewayService) erro
 }
 
 func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		if err != nil {
@@ -240,7 +240,7 @@ func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
 }
 
 func (a *authHooks) registerRemoveSecretHook(svc apigw.APIGatewayService) error {
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.GetOper}
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.GetOper, apiserver.WatchOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("AuthenticationPolicy", oper)
 		if err != nil {

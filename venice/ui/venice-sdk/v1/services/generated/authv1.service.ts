@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IAuthAuthenticationPolicy,IApiStatus,AuthAuthenticationPolicy,IAuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,IAuthRole,AuthRole,IAuthUserList,IAuthUser,AuthUser } from '../../models/generated/auth';
+import { IAuthAuthenticationPolicy,IApiStatus,AuthAuthenticationPolicy,IAuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,IAuthRole,AuthRole,IAuthUserList,IAuthUser,AuthUser,IAuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
 
 @Injectable()
 export class Authv1Service extends AbstractService {
@@ -258,6 +258,51 @@ export class Authv1Service extends AbstractService {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
     return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch AuthenticationPolicy objects */
+  public WatchAuthenticationPolicy(queryParam: any = null):Observable<{body: IAuthAutoMsgAuthenticationPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/authn-policy';
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchAuthenticationPolicy') as Observable<{body: IAuthAutoMsgAuthenticationPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch RoleBinding objects */
+  public WatchRoleBinding_1(queryParam: any = null):Observable<{body: IAuthAutoMsgRoleBindingWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/role-bindings';
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchRoleBinding_1') as Observable<{body: IAuthAutoMsgRoleBindingWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch Role objects */
+  public WatchRole_1(queryParam: any = null):Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/roles';
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchRole_1') as Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch RoleBinding objects */
+  public WatchRoleBinding(queryParam: any = null):Observable<{body: IAuthAutoMsgRoleBindingWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/tenant/{O.Tenant}/role-bindings';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchRoleBinding') as Observable<{body: IAuthAutoMsgRoleBindingWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch Role objects */
+  public WatchRole(queryParam: any = null):Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/tenant/{O.Tenant}/roles';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchRole') as Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch User objects */
+  public WatchUser(queryParam: any = null):Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/tenant/{O.Tenant}/users';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchUser') as Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch User objects */
+  public WatchUser_1(queryParam: any = null):Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/users';
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchUser_1') as Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
 }

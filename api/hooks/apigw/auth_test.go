@@ -440,7 +440,7 @@ func TestRemovePasswordHookRegistration(t *testing.T) {
 	err := r.registerRemovePasswordHook(svc)
 	AssertOk(t, err, "removePassword hook registration failed")
 
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
@@ -461,7 +461,7 @@ func TestAddRolesHookRegistration(t *testing.T) {
 	err := r.registerAddRolesHook(svc)
 	AssertOk(t, err, "addRoles hook registration failed")
 
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
@@ -482,7 +482,7 @@ func TestRemoveSecretHookRegistration(t *testing.T) {
 	err := r.registerRemoveSecretHook(svc)
 	AssertOk(t, err, "removeSecret hook registration failed")
 
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.GetOper}
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.GetOper, apiserver.WatchOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("AuthenticationPolicy", oper)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))

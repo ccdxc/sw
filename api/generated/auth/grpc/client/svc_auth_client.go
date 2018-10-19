@@ -545,7 +545,7 @@ func (a *restObjAuthV1User) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -739,7 +739,7 @@ func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) 
 	case apiserver.ListOper:
 		return false
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -931,7 +931,7 @@ func (a *restObjAuthV1Role) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
@@ -1110,7 +1110,7 @@ func (a *restObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}
