@@ -18,6 +18,7 @@ nic/build/aarch64/iris/bin/linkmgr                                  /nic/bin/
 nic/build/aarch64/iris/bin/port_client                              /nic/bin/
 nic/build/aarch64/iris/bin/netagent                                 /nic/bin/
 nic/build/aarch64/iris/bin/heimdall                                 /nic/bin/
+nic/build/aarch64/iris/bin/nmd                                      /nic/bin/
 # hal objects CLI
 nic/build/aarch64/iris/bin/halctl                                   /nic/bin/
 nic/build/aarch64/iris/bin/hal_test                                 /nic/bin/
