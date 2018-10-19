@@ -33,7 +33,7 @@ clean:
 	@rm -fR $(COMP_SYM_FILES)
 
 %.bin: %.s
-	$(CAPAS_BIN) -t $(CAPAS_COV) $(INC_DIR) $< -o $(OBJ_DIR)/$@ > $(SYM_DIR)/$(patsubst %.bin,%.sym,$(shell basename $(OBJ_DIR)/$@))
+	$(CAPAS_BIN) -t $(CAPAS_COV) $(INC_DIR) $(AS_DEFINES) $< -o $(OBJ_DIR)/$@ > $(SYM_DIR)/$(patsubst %.bin,%.sym,$(shell basename $(OBJ_DIR)/$@))
 
 TEST_FILES := \
     $(SRC_DIR)/ctl/req_rx_sqcb_process.ctl

@@ -1227,4 +1227,9 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
         CAPRI_SETUP_TIMER_DATA(__data, _qtype, _qid, _ring, _delta_time); \
         memwr.dx        __addr, __data;
 
+#define CAPRI_START_FAST_TIMER(__addr, __data, _lif, _qtype, _qid, _ring, _delta_time) \
+        CAPRI_SETUP_TIMER_ADDR(__addr, CAPRI_MEM_FAST_TIMER_START, _lif); \
+        CAPRI_SETUP_TIMER_DATA(__data, _qtype, _qid, _ring, _delta_time); \
+        memwr.dx        __addr, __data;
+
 #endif //__CAPRI_H

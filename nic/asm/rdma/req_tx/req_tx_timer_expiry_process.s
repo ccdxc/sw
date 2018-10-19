@@ -39,7 +39,7 @@ rnr_timeout:
     // Ignore expiry event if retransmit time has not reached
     // TODO comment out this check for now as in model cur_timestamp
     // is not populated in r4
-#ifdef HAPS
+#if defined (HAPS) || defined (HW)
     blt            r1, r2, restart_timer
 #endif
  
@@ -68,7 +68,7 @@ local_ack_timeout:
     // Ignore expiry event if retransmit time has not reached
     // TODO comment out this check for now as in model cur_timestamp
     // is not populated in r4
-#ifdef HAPS
+#if defined (HAPS) || defined (HW)
     blt            r1, r2, restart_timer
 #endif
 

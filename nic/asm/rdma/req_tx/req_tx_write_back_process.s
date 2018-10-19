@@ -129,11 +129,14 @@ error_disable_exit:
     mincr          r1, d.log_num_wqes, -1
     tblwr          d.sqd_cindex, r1
 
+#if !(defined (HAPS) || defined (HW))
     /*
      *  TODO: Incrementing cindex to satisfy model. Ideally, on error disabling we should just exit and be
      *  in the same state which caused the error.
      */
     tblmincri      SQ_C_INDEX, d.log_num_wqes, 1
+#endif
+
     CAPRI_SET_TABLE_2_VALID(0)
     nop.e
     nop

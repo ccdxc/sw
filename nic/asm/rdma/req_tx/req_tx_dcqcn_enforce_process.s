@@ -9,7 +9,11 @@ struct req_tx_s4_t2_k k;
 // r4 is pre-loaded with cur timestamp. Use r4 for CUR_TIMESTAMP.
 // NOTE: Non-RTL - feeding timestamp from dcqcn_cb since model doesn't have timestamps.
 
+#if defined (HAPS) || defined (HW)
+#define CUR_TIMESTAMP r4
+#else
 #define CUR_TIMESTAMP d.cur_timestamp
+#endif
 
 #define IN_P t2_s2s_sqcb_write_back_info
 
@@ -116,7 +120,7 @@ rate_enforce:
 skip_dcqcn_doorbell:            
     // Increment sq_cindex after successful rate-enforcement/speculative-check.
     seq             c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1  
-    tblmincri.c1    d.sq_cindex, 12, 1  // TODO: Hardcoding log_sq_size to 12 for now. This has to come from HAL.
+    tblmincri.c1    d.sq_cindex, d.log_sq_size, 1  
 
 load_write_back:
     // DCQCN rate-enforcement passed. Load stage 5 for write-back/add_headers.
@@ -157,6 +161,7 @@ drop_phv:
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_add_headers_process, r2)
 
+#if !(defined (HAPS) || defined (HW))
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 
      * Below code is for testing on model only since there are no timestamps on model.
@@ -165,5 +170,7 @@ drop_phv:
     add         r1, CUR_TIMESTAMP, 100000
     tblwr       d.cur_timestamp, r1
     tblmincri   d.num_sched_drop, 8, 1 // Increment num_sched_drop by 1
+#endif
+
     nop.e
     nop

@@ -592,7 +592,7 @@ drain_feedback:
     CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sq_drain_feedback_process, r0)
 
 drop:
-#ifndef HAPS
+#if !(defined (HAPS) || defined (HW))
     // Disable schceduler bit for SQ in model run to prevent model from
     // getting into infinite loop.
 

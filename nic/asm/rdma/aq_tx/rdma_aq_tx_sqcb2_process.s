@@ -47,7 +47,9 @@ tx_psn:
     nop
 
     tblwr       d.tx_psn, K_TX_PSN
-    tblwr       d.exp_rsp_psn, K_TX_PSN
+    sub         r3, d.rexmit_psn, 1
+    tblwr       d.exp_rsp_psn, r3
+    tblwr       d.rexmit_psn, K_TX_PSN
         
 done:
     CAPRI_SET_TABLE_3_VALID(0)                  

@@ -60,11 +60,12 @@ req_tx_bktrack_sqcb2_write_back_process:
      tblwr            d.rrq_cindex, 0
  
      SQCB0_ADDR_GET(r1)
-     //add            r2, FIELD_OFFSET(sqcb0_t, cb1_byte), r1
      tblwr          d.need_credits, 0
      tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
-     //memwr.b        r2, r1
 
+     // Update exp_rsp_psn to be one less than rexmit_psn
+     sub            r3, d.rexmit_psn, 1
+     tblwr          d.exp_rsp_psn, r3
      CAPRI_SET_TABLE_1_VALID(0)
 
      nop.e

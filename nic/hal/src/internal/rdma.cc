@@ -1592,6 +1592,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             sqcb_p->sqcb1.tx_psn = sqcb_p->sqcb2.tx_psn;
             sqcb_p->sqcb1.max_tx_psn = sqcb_p->sqcb2.tx_psn;
             sqcb_p->sqcb1.rexmit_psn = spec.tx_psn();
+            sqcb_p->sqcb2.rexmit_psn = sqcb_p->sqcb1.rexmit_psn;
             HAL_TRACE_DEBUG("{}: Update: Setting tx_psn to: {}", __FUNCTION__,
                             spec.tx_psn());
             break;
@@ -1654,6 +1655,27 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 
             HAL_TRACE_DEBUG("{}: Update: Setting rqcb/sqcb header_template_size to {}, {}",
                             __FUNCTION__, rqcb_p->rqcb1.header_template_size, sqcb_p->sqcb1.header_template_size);
+
+            dcqcn_cb_t dcqcn_cb;
+            memset(&dcqcn_cb, 0, sizeof(dcqcn_cb_t));
+
+            dcqcn_cb.log_sq_size = sqcb_p->sqcb0.log_num_wqes;
+            // Init DCQCN params for HAPS here for now. TODO:This will be made configurable using penctl
+            dcqcn_cb.rate_enforced = 4000;
+            dcqcn_cb.token_bucket_size = 32768;
+            dcqcn_cb.target_rate = 4000;
+            dcqcn_cb.alpha_value = 65535;
+            dcqcn_cb.g_val  = 65535;
+            dcqcn_cb.byte_counter_thr = 4194304;
+            HAL_TRACE_DEBUG("{}: Update: Setting DCQCN-cb log_num_wqes to {}",__FUNCTION__,dcqcn_cb.log_sq_size);
+            memrev((uint8_t*)&dcqcn_cb, sizeof(dcqcn_cb_t));
+
+            args.addr = (uint64_t)header_template_addr + sizeof(ah_entry_t);
+            args.buf = (uint8_t *)&dcqcn_cb;
+            args.size =  sizeof(dcqcn_cb_t);
+            pd_func_args.pd_capri_hbm_write_mem = &args;
+            pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
+
         break;
 
         default:

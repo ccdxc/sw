@@ -198,7 +198,8 @@ capri_txs_scheduler_init (uint32_t admin_cos)
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
     }
     txs_csr.cfw_scheduler_glb.sram_hw_init(1);
-    txs_csr.cfw_scheduler_glb.enable_set_byp(1);
+    // Disabling scheduler bypass setting for QoS functionality to work.
+   // txs_csr.cfw_scheduler_glb.enable_set_byp(1);
 
     txs_csr.cfw_scheduler_static.write();
     txs_csr.cfw_scheduler_glb.write();

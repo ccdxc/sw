@@ -136,7 +136,13 @@ cnp_recv_process:
     sub     r4, ALPHA_MAX, r3
     mul     r3, r4, d.rate_enforced
     srl     r4, r3, LOG_ALPHA_MAX
-    tblwr   d.rate_enforced, r4
+
+    // If rate_enforced becomes 0 after cut, set it to min rate of 1 Mbps with target rate of 2 Mbps
+    seq      c1, r4, 0
+    cmov     r4, c1, 1, r4
+    tblwr    d.rate_enforced, r4 
+    tblwr.c1 d.target_rate, 2
+
 
     // Update alpha value.                         
     // int_alpha =  (((g_max - int_g) * int_alpha) >> log_g_max) + int_g
