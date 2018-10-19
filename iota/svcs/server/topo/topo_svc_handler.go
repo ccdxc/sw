@@ -341,7 +341,7 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		node.TriggerInfo = node.TriggerInfo[1:]
 		node.TriggerResp = node.TriggerResp[1:]
 	}
-	triggerResp.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	triggerResp.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 
 	return triggerResp, nil
 }
