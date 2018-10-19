@@ -562,15 +562,7 @@ finit:
 static int
 test_init(void)
 {
-	int rv;
-
-#ifndef __KERNEL__
-	rv = osal_log_init(OSAL_LOG_LEVEL_DEBUG);
-#else
-	rv = osal_log_init(OSAL_LOG_LEVEL_NONE);
-#endif
-
-	return rv;
+	return osal_log_init(OSAL_LOG_LEVEL_DEBUG);
 }
 
 static int

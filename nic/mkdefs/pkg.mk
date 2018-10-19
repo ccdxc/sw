@@ -37,6 +37,9 @@ package-haps-dbg: package-clean ${PKG_PREREQS}
 	${MAKE} -j1 BUILD_ARCHES=aarch64 -C ${TOPDIR}/platform
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target haps-dbg
 
+package-storage-offload:
+	${TOPDIR}/storage/offload/tools/drivers-linux.sh	 
+
 release: ${PKG_PREREQS}
     ifneq ($(ARCH),aarch64)
 	    ${NICDIR}/tools/release.sh
