@@ -296,36 +296,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.FailNow()
 	}
 
-	workloads := []*iota.Workload{
-		{
-			WorkloadName: "ping-app-1",
-			NodeName:     "naples-node-1",
-			EncapVlan:    6,
-			IpAddress:    "177.75.132.4",
-			MacAddress:   "06:c3:32:b7:e6:da",
-			Interface:    "lif100",
-		},
-		{
-			WorkloadName: "ping-app-2",
-			NodeName:     "naples-node-2",
-			EncapVlan:    6,
-			IpAddress:    "170.22.196.4",
-			MacAddress:   "72:ed:48:1c:e1:23",
-			Interface:    "lif100",
-		},
-	}
 
-	wrkloadMsg := iota.WorkloadMsg{
-		WorkloadOp:  iota.Op_ADD,
-		Workloads:   workloads,
-		ApiResponse: &iota.IotaAPIResponse{},
-	}
-
-	_, err = topoClient.AddWorkloads(context.Background(), &wrkloadMsg)
-	if err != nil {
-		t.Errorf("AddWorkloads call failed. Err: %v", err)
-		t.FailNow()
-	}
 
 	var initCfgMsg iota.InitConfigMsg
 	initCfgMsg.EntryPointType = iota.EntrypointType_VENICE_REST
@@ -373,6 +344,40 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	log.Infof("Received Config Push Response: %v. Err: %v", pushCfgResp, err)
 	if err != nil {
 		t.Errorf("PushConfig call failed. Err: %v", err)
+		t.FailNow()
+	}
+
+
+	workloads := []*iota.Workload{
+		{
+			WorkloadName: "ping-app-1",
+			NodeName:     "naples-node-1",
+			EncapVlan:    100,
+			IpPrefix:    "177.75.132.4/24",
+			MacAddress:   "",
+			Interface:    "lif100",
+			UplinkVlan: 1,
+		},
+		{
+			WorkloadName: "ping-app-2",
+			NodeName:     "naples-node-2",
+			EncapVlan:    100,
+			IpPrefix:    "177.75.132.5/24",
+			MacAddress:   "",
+			Interface:    "lif100",
+			UplinkVlan: 1,
+		},
+	}
+
+	wrkloadMsg := iota.WorkloadMsg{
+		WorkloadOp:  iota.Op_ADD,
+		Workloads:   workloads,
+		ApiResponse: &iota.IotaAPIResponse{},
+	}
+
+	_, err = topoClient.AddWorkloads(context.Background(), &wrkloadMsg)
+	if err != nil {
+		t.Errorf("AddWorkloads call failed. Err: %v", err)
 		t.FailNow()
 	}
 

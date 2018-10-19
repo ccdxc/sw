@@ -23,7 +23,7 @@ import (
 type ConfigService struct {
 	CfgState   *iota.InitConfigMsg
 	AuthToken  string
-	NaplesUUID []string
+	NaplesHosts     []*iota.NaplesHost
 	Workloads  []*workload.Workload
 	Hosts      []*cluster.Host
 	SGPolicies []*security.SGPolicy
@@ -103,7 +103,7 @@ func (c *ConfigService) InitCfgService(ctx context.Context, req *iota.InitConfig
 func (c *ConfigService) GenerateConfigs(ctx context.Context, req *iota.GenerateConfigMsg) (*iota.ConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | GenerateConfigs. Received Request Msg: %v", req)
 
-	c.NaplesUUID = req.NaplesUuids
+	c.NaplesHosts = req.Hosts
 
 	genConfigs, err := c.generateConfigs()
 	if err != nil {
@@ -358,14 +358,14 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 	vlan1 := c.CfgState.Vlans[0]
 	vlan2 := c.CfgState.Vlans[1]
 
-	totalWorkloads := common.WorkloadsPerNode * len(c.NaplesUUID)
+	totalWorkloads := common.WorkloadsPerNode * len(c.NaplesHosts)
 	macAddresses, err := common.GenMACAddresses(totalWorkloads)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create Host Objects
-	for idx, n := range c.NaplesUUID {
+	for idx, n := range c.NaplesHosts {
 		host := cluster.Host{
 			TypeMeta: api.TypeMeta{Kind: "Host"},
 			ObjectMeta: api.ObjectMeta{
@@ -373,8 +373,8 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 			},
 			Spec: cluster.HostSpec{
 				Interfaces: map[string]cluster.HostIntfSpec{
-					n: {
-						MacAddrs: []string{n},
+					n.Name: {
+						MacAddrs: []string{n.Uuid},
 					},
 				},
 			},
@@ -382,7 +382,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 		hosts = append(hosts, &host)
 	}
 
-	for idx, u := range c.NaplesUUID {
+	for idx, n := range c.NaplesHosts {
 		uSegVlanIdx := uint32(100)
 		for i := 0; i < common.WorkloadsPerNode; i++ {
 			var mac string
@@ -394,7 +394,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 			} else {
 				vlan = vlan2
 			}
-			name = fmt.Sprintf("wrkld_%d_vlan_%d_useg_%d_%s", i, vlan, uSegVlanIdx, u)
+			name = fmt.Sprintf("%s_wrkld_%d", n.Name,i )
 			w := workload.Workload{
 				TypeMeta: api.TypeMeta{Kind: "Workload"},
 				ObjectMeta: api.ObjectMeta{
