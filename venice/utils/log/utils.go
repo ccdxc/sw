@@ -18,6 +18,8 @@ import (
 	kitlevel "github.com/go-kit/kit/log/level"
 	"github.com/go-stack/stack"
 	"gopkg.in/natefinch/lumberjack.v2"
+
+	"github.com/pensando/sw/venice/utils/log/jsonlogger"
 )
 
 func stackTrace() kitlog.Valuer {
@@ -73,7 +75,7 @@ func newLogger(config *Config) *kitLogger {
 	case LogFmt:
 		l = kitlog.NewLogfmtLogger(wr)
 	case JSONFmt:
-		l = kitlog.NewJSONLogger(wr)
+		l = jsonlogger.NewJSONLogger(wr)
 	default:
 		// By default, choose log-fmt
 		l = kitlog.NewLogfmtLogger(wr)
