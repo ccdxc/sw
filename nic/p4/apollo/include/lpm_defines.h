@@ -2,19 +2,22 @@
 #define LPM_S1_KEYS_PER_TABLE    (15)
 #define LPM_S2_KEYS_PER_TABLE    (7)
 
-#define LPM_S0_TABLE_SIZE        (LPM_KEY_SIZE*LPM_S0_KEYS_PER_TABLE)
+#define LPM_S0_TABLE_SIZE        ((LPM_KEY_SIZE*LPM_S0_KEYS_PER_TABLE)+\
+                                  LPM_S0_ENTRY_PAD)
 #define LPM_S0_STAGE_SIZE        (LPM_S0_TABLE_SIZE)
 
 #define LPM_S1_ADDR_OFFSET       (LPM_S0_STAGE_SIZE)
 #define LPM_S1_TABLES_PER_STAGE  (LPM_S0_KEYS_PER_TABLE+1)
-#define LPM_S1_TABLE_SIZE        (LPM_KEY_SIZE*LPM_S1_KEYS_PER_TABLE)
+#define LPM_S1_TABLE_SIZE        ((LPM_KEY_SIZE*LPM_S1_KEYS_PER_TABLE)+\
+                                  LPM_S1_ENTRY_PAD)
 #define LPM_S1_STAGE_SIZE        (LPM_S1_TABLE_SIZE*LPM_S1_TABLES_PER_STAGE)
 
 #define LPM_S2_ADDR_OFFSET       (LPM_S1_ADDR_OFFSET+LPM_S1_STAGE_SIZE)
 #define LPM_S2_TABLES_PER_STAGE  (LPM_S1_TABLES_PER_STAGE*\
                                  (LPM_S1_KEYS_PER_TABLE+1))
 #define LPM_S2_TABLE_SIZE        ((LPM_KEY_SIZE*LPM_S2_KEYS_PER_TABLE)+\
-                                 (LPM_DATA_SIZE*(LPM_S2_KEYS_PER_TABLE+1)))
+                                  (LPM_DATA_SIZE*(LPM_S2_KEYS_PER_TABLE+1))+\
+                                  LPM_S2_ENTRY_PAD)
 #define LPM_S2_STAGE_SIZE        (LPM_S2_TABLE_SIZE*LPM_S2_TABLES_PER_STAGE)
 #define LPM_S2_BLOCK_SIZE        (LPM_S2_TABLE_SIZE*(LPM_S1_KEYS_PER_TABLE+1))
 

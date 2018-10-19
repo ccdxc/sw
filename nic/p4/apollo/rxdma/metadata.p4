@@ -3,25 +3,25 @@
 
 header_type slacl_metadata_t {
     fields {
-        pad0                    : 6;
-        sport_table_addr        : 34;
-        pad1                    : 6;
-        ipv4_table_addr         : 34;
-        pad2                    : 6;
-        proto_dport_table_addr  : 34;
-        pad3                    : 6;
-        p1_table_addr           : 34;
-        pad4                    : 6;
-        p2_table_addr           : 34;
-        pad5                    : 1;
-        sport_class_id          : 7;
-        proto_dport_class_id    : 8;
-        pad6                    : 4;
-        ip_class_id             : 10;
-        p1_class_id             : 10;
-        ipv4_lpm_s2_offset      : 16;
-        pad7                    : 72;
-        ip                      : 128;
+        pad0                        : 6;
+        sport_table_addr            : 34;
+        pad1                        : 6;
+        ipv4_table_addr             : 34;
+        pad2                        : 6;
+        proto_dport_table_addr      : 34;
+        pad3                        : 6;
+        p1_table_addr               : 34;
+        pad4                        : 6;
+        p2_table_addr               : 34;
+        proto_dport_class_id        : 8;
+        ipv4_lpm_s2_offset          : 16;
+        proto_dport_lpm_s2_offset   : 16;
+        proto_dport                 : 24;
+        sport_class_id              : 7;
+        ip_sport_class_id           : 17;
+        p1_class_id                 : 10;
+        pad7                        : 30;
+        ip                          : 128;
     }
 }
 
@@ -32,11 +32,15 @@ header_type scratch_metadata_t {
         rule_id         : 10;
         class_id10      : 10;
         class_id16      : 16;
+        class_id8       : 8;
         qid             : 24;
         dma_size        : 16;
         slacl_result    : 2;
+        pad2            : 2;
+        data510         : 510;
         data512         : 512;
         ipv4_addr       : 32;
+        proto_dport     : 24;
     }
 }
 

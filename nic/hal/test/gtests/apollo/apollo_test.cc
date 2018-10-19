@@ -17,13 +17,20 @@
 #include "nic/hal/pd/capri/capri_qstate.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/p4/apollo/include/defines.h"
-#include "nic/p4/apollo/include/table_sizes.h"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
+#include "nic/p4/apollo/include/defines.h"
+#include "nic/p4/apollo/include/table_sizes.h"
+#include "nic/p4/apollo/include/slacl_defines.h"
+#include "nic/utils/pack_bytes/pack_bytes.hpp"
+
+#define ROUTE_LPM_MEM_SIZE  (64 + (16*64) + (16*16*64))
+#define SLACL_LPM_MEM_SIZE  \
+    (SLACL_SPORT_TABLE_SIZE + SLACL_IPV4_TABLE_SIZE + \
+     SLACL_PROTO_DPORT_TABLE_SIZE)
 
 hal_ret_t capri_default_config_init(capri_cfg_t *cfg);
 using boost::property_tree::ptree;
@@ -175,6 +182,11 @@ uint32_t g_gw_slot_id = 200;
 uint32_t g_gw_dip = 0x0C0C0101;
 uint64_t g_gw_dmac = 0x001234567890;
 
+uint16_t g_slacl_ip_class_id = 0x355;
+uint16_t g_slacl_sport_class_id = 0x59;
+uint16_t g_slacl_proto_dport_class_id = 0xAA;
+uint16_t g_slacl_p1_class_id = 0x2BB;
+
 class sort_mpu_programs_compare {
   public:
     bool operator() (std::string p1, std::string p2) {
@@ -233,13 +245,25 @@ init_service_lif() {
                  sizeof(lif_qstate));
 
     txdma_qstate_t txdma_qstate = { 0 };
-    txdma_qstate.rxdma_cindex_addr = qstate.hbm_address + offsetof(lif_qstate_t, sw_cindex);
+    txdma_qstate.rxdma_cindex_addr =
+        qstate.hbm_address + offsetof(lif_qstate_t, sw_cindex);
     txdma_qstate.ring_base = get_start_offset(JPKTBUFFER);
     txdma_qstate.ring_size = log2(get_size_kb(JPKTBUFFER) / 10);
     txdma_qstate.total_rings = 1;
-    write_qstate(qstate.hbm_address + sizeof(lif_qstate_t), 
-                 (uint8_t *)&txdma_qstate,
-                 sizeof(txdma_qstate));
+    write_qstate(qstate.hbm_address + sizeof(lif_qstate_t),
+                 (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
+}
+
+static uint8_t *
+memrev(uint8_t *block, size_t elnum) {
+    uint8_t *s, *t, tmp;
+
+    for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
+        tmp = *s;
+        *s = *t;
+        *t = tmp;
+    }
+    return block;
 }
 
 static uint32_t
@@ -265,8 +289,7 @@ entry_write(uint32_t tbl_id, uint32_t index, void *key, void *mask,
         uint32_t hwdata_len = 0;
         uint8_t  *hwkey = NULL;
         uint8_t  *hwmask = NULL;
-        p4pd_hwentry_query(tbl_id, &hwkey_len, &hwmask_len,
-                           &hwdata_len);
+        p4pd_hwentry_query(tbl_id, &hwkey_len, &hwmask_len, &hwdata_len);
         hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
         hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
         hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
@@ -489,7 +512,7 @@ flow_init(void) {
 }
 
 static void
-nexthop_tx_init (void) {
+nexthop_tx_init(void) {
     nexthop_tx_actiondata data;
     nexthop_tx_nexthop_info_t *nexthop_info =
         &data.nexthop_tx_action_u.nexthop_tx_nexthop_info;
@@ -508,7 +531,7 @@ nexthop_tx_init (void) {
 }
 
 static void
-tep_tx_init (void) {
+tep_tx_init(void) {
     tep_tx_actiondata data;
     tep_tx_tep_tx_t *tep_info =
         &data.tep_tx_action_u.tep_tx_tep_tx;
@@ -526,7 +549,7 @@ tep_tx_init (void) {
 }
 
 static void
-rewrite_init (void) {
+rewrite_init(void) {
 
     uint64_t mytep_ip = 0x64656667; // 100.101.102.103
     uint64_t mytep_mac = 0x00AABBCCDDEE;
@@ -542,25 +565,85 @@ rewrite_init (void) {
 }
 
 static void
-lpm_mem_init (void) {
-#define ROUTE_LPM_MEM_SIZE  (12 * 1024)
-    uint64_t data = 0xFFFFFFFFFFFFFFFF;
-    uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
+trie_mem_init(void) {
+    uint64_t data = -1;
 
+    uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
     for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i += sizeof(data)) {
-        capri_hbm_write_mem(lpm_hbm_addr+i, (uint8_t*)&data, sizeof(data));
+        hal::pd::asic_mem_write(lpm_hbm_addr+i, (uint8_t*)&data, sizeof(data));
+    }
+
+    uint64_t slacl_hbm_addr = get_start_offset(JSLACLBASE);
+    for (uint32_t i = 0; i < SLACL_LPM_MEM_SIZE; i += sizeof(data)) {
+        hal::pd::asic_mem_write(slacl_hbm_addr+i, (uint8_t*)&data, sizeof(data));
     }
 }
 
 static void
-route_lpm_init (void) {
-    uint64_t data = 0xFFFFFFFFFFFFFFFF;
-    uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
+route_init (void) {
+    uint64_t data;
+    uint64_t lpm_base_addr = get_start_offset(JLPMBASE);
+    uint16_t offset = 64 + (16 * 64);
 
-    data  = 0xFFFF;
+    data = 0xFFFF;
     data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
     data |= ((uint64_t)htons(g_nexthop_index)) << 48;
-    capri_hbm_write_mem(lpm_hbm_addr+1020, (uint8_t*)&data, sizeof(data));
+    hal::pd::asic_mem_write(lpm_base_addr+offset, (uint8_t*)&data, sizeof(data));
+}
+
+static void
+slacl_init (void) {
+    uint64_t data;
+    uint8_t c_data[64];
+    uint16_t start_bit;
+    uint64_t slacl_base_addr = get_start_offset(JSLACLBASE);
+
+    uint64_t slacl_ip_addr =
+        slacl_base_addr + SLACL_IPV4_TABLE_OFFSET + (64 + (16 * 64));
+    uint64_t slacl_sport_addr =
+        slacl_base_addr + SLACL_SPORT_TABLE_OFFSET + (64);
+    uint64_t slacl_proto_dport_addr =
+        slacl_base_addr + SLACL_PROTO_DPORT_TABLE_OFFSET + (64 + (16 * 64));
+    uint64_t slacl_p1_addr =
+        slacl_base_addr + SLACL_P1_TABLE_OFFSET +
+        (((g_slacl_ip_class_id | (g_slacl_sport_class_id << 10)) / 51) * 64);
+    uint64_t slacl_p2_addr =
+        slacl_base_addr + SLACL_P2_TABLE_OFFSET + (g_slacl_p1_class_id << 8);
+
+    data = 0xFFFF;
+    data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
+    data |= ((uint64_t)htons(g_slacl_ip_class_id)) << 48;
+    hal::pd::asic_mem_write(slacl_ip_addr, (uint8_t*)&data, sizeof(data));
+
+    data = -1;
+    data &= ~((uint64_t)0xFFFF);
+    data |= ((uint64_t)htons(g_slacl_sport_class_id));
+    hal::pd::asic_mem_write(slacl_sport_addr, (uint8_t*)&data, sizeof(data));
+
+    data = -1;
+    data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
+    data |= ((uint64_t)htons(g_slacl_proto_dport_class_id)) << 40;
+    hal::pd::asic_mem_write(slacl_proto_dport_addr, (uint8_t*)&data, sizeof(data));
+
+    data = -1;
+    data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
+    data |= ((uint64_t)htons(g_slacl_proto_dport_class_id)) << 40;
+    hal::pd::asic_mem_write(slacl_proto_dport_addr, (uint8_t*)&data, sizeof(data));
+
+    start_bit =
+        (((g_slacl_ip_class_id | (g_slacl_sport_class_id << 10)) % 51) * 10);
+    hal::pd::asic_mem_read(slacl_p1_addr, c_data, 64);
+    memrev(c_data, 64);
+    hal::utils::pack_bytes_pack(c_data, start_bit, 10, g_slacl_p1_class_id);
+    memrev(c_data, 64);
+    hal::pd::asic_mem_write(slacl_p1_addr, c_data, 64);
+
+    start_bit = (g_slacl_proto_dport_class_id << 1);
+    hal::pd::asic_mem_read(slacl_p2_addr, c_data, 64);
+    memrev(c_data, 64);
+    hal::utils::pack_bytes_pack(c_data, start_bit, 2, 1);
+    memrev(c_data, 64);
+    hal::pd::asic_mem_write(slacl_p2_addr, c_data, 64);
 }
 
 class apollo_test : public ::testing::Test {
@@ -609,14 +692,14 @@ TEST_F(apollo_test, test1) {
     hal::hal_sdk_init();
     hal::utils::trace_init("hal", 0, true, "hal.log", hal::utils::trace_debug);
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     printf("Loading Capri config\n");
     ret = capri_load_config((char *)"build/x86_64/apollo/pgm_bin/apollo_p4");
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = capri_load_config((char *)"build/x86_64/apollo/pgm_bin/apollo_rxdma");
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = capri_load_config((char *)"build/x86_64/apollo/pgm_bin/apollo_txdma");
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     cfg.pgm_name = "apollo";
@@ -625,27 +708,27 @@ TEST_F(apollo_test, test1) {
     cfg.p4plus_cache = true;
     printf("Parsing HBM config\n");
     ret = capri_hbm_parse(&cfg);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
     ret = p4pd_init(&p4pd_cfg);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
     printf("Loading Programs\n");
     asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
     ret = capri_load_mpu_programs("apollo_p4",
                                   (char *)"build/x86_64/apollo/bin/p4asm",
                                   asm_base_addr, NULL, 0, sort_mpu_programs);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     asm_base_addr = (uint64_t)get_start_offset((char *)JRXDMA_PRGM);
     ret = capri_load_mpu_programs("apollo_rxdma",
                                   (char *)"build/x86_64/apollo/bin/p4pasm_rxdma",
                                   asm_base_addr, NULL, 0, NULL);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     asm_base_addr = (uint64_t)get_start_offset((char *)JTXDMA_PRGM);
     ret = capri_load_mpu_programs("apollo_txdma",
                                   (char *)"build/x86_64/apollo/bin/p4pasm_txdma",
                                   asm_base_addr, NULL, 0, NULL);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
     std::ifstream json_cfg(hal_conf_file);
     ptree pt;
@@ -654,27 +737,27 @@ TEST_F(apollo_test, test1) {
     hal::hal_cfg_t hal_cfg = { 0 };
     hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_SIM;
     ret = capri_table_rw_init(&hal_cfg);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = capri_hbm_cache_init(&cfg);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = capri_hbm_cache_regions_init();
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = capri_tm_asic_init();
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = p4pluspd_rxdma_init(&p4pd_rxdma_cfg);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = hal::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = hal::pd::asicpd_program_table_mpu_pc();
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = hal::pd::asicpd_deparser_init();
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
     catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
     ASSERT_TRUE(catalog != NULL);
@@ -687,12 +770,12 @@ TEST_F(apollo_test, test1) {
         }
         ret = capri_default_config_init(&cfg);
     }
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
     ret = capri_tm_init(catalog);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
-    lpm_mem_init ();
+    trie_mem_init();
 
     config_done();
 
@@ -703,7 +786,8 @@ TEST_F(apollo_test, test1) {
     mappings_init();
     flow_init();
     rewrite_init();
-    route_lpm_init();
+    route_init();
+    slacl_init();
 
     uint32_t port = 0;
     uint32_t cos = 0;

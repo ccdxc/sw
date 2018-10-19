@@ -50,11 +50,11 @@
         },
         {
             "name": "slacl",
-            "size_kb": 524288
+            "size_kb": 264
         },
         {
             "name": "lpm",
-            "size_kb": 12
+            "size_kb": 18
         },
         {
             "name": "udp_flow_overflow0",

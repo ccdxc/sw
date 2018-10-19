@@ -25,6 +25,7 @@ action ingress_to_rxdma() {
         add_header(p4i_apollo_i2e);
         remove_header(service_header);
 
+        modify_field(p4_to_rxdma_header.direction, control_metadata.direction);
         modify_field(p4_to_txdma_header.payload_len,
                      capri_p4_intrinsic.packet_len + APOLLO_I2E_HDR_SZ);
         modify_field(predicate_header.direction, control_metadata.direction);

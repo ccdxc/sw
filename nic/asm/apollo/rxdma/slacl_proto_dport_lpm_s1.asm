@@ -2,17 +2,25 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
 
-struct phv_                       p;
-struct slacl_proto_dport_lpm_s1_k k;
+struct phv_                         p;
+struct slacl_proto_dport_lpm_s1_k   k;
+struct slacl_proto_dport_lpm_s1_d   d;
 
-%%
+#define prog_name           slacl_proto_dport_lpm_s1
+#define keys(a)             d.slacl_proto_dport_lpm_s1_d.key ## a
+#define key                 k.slacl_metadata_proto_dport
+#define next_addr           p.slacl_metadata_proto_dport_table_addr
+#define s2_offset           k.slacl_metadata_proto_dport_lpm_s2_offset
+#define curr_addr           k.{slacl_metadata_proto_dport_table_addr_sbit0_ebit1,\
+                               slacl_metadata_proto_dport_table_addr_sbit2_ebit33}
 
-slacl_proto_dport_lpm_s1:
-    add     r1, k.{slacl_metadata_proto_dport_table_addr_sbit0_ebit1, \
-                   slacl_metadata_proto_dport_table_addr_sbit2_ebit33}, 1, 6
-    phvwr   p.slacl_metadata_proto_dport_table_addr, r1
-    nop.e
-    nop
+#define LPM_KEY_SIZE        3
+#define LPM_DATA_SIZE       2
+#define LPM_S0_ENTRY_PAD    19
+#define LPM_S1_ENTRY_PAD    19
+#define LPM_S2_ENTRY_PAD    27
+
+#include "../include/lpm1.h"
 
 /*****************************************************************************/
 /* error function                                                            */
