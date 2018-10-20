@@ -641,6 +641,7 @@ chn_create_chain(struct request_params *req_params)
 		}
 	}
 
+
 	/* init services in the chain  */
 	for (i = 0; i < chain->sc_num_services; i++) {
 		centry = (struct chain_entry *)

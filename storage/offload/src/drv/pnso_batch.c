@@ -385,7 +385,6 @@ bat_poller(void *pnso_poll_ctx)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
-
 	if (!pnso_poll_ctx) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid poll context! err: %d", err);
