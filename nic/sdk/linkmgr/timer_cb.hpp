@@ -17,5 +17,9 @@ link_bring_up_timer_cb(void *timer, uint32_t timer_id, void *ctxt);
 sdk_ret_t
 link_debounce_timer_cb(void *timer, uint32_t timer_id, void *ctxt);
 
+// invoked on xcvr timer expiration
+sdk_ret_t
+xcvr_poll_timer_cb(void *timer, uint32_t timer_id, void *ctxt);
+
 }    // namespace linkmgr
 }    // namespace sdk

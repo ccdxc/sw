@@ -1,0 +1,129 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
+#include "include/sdk/thread.hpp"
+#include "include/sdk/periodic.hpp"
+#include "platform/drivers/xcvr.hpp"
+#include "platform/drivers/xcvr_qsfp.hpp"
+#include "platform/drivers/xcvr_sfp.hpp"
+
+namespace sdk {
+namespace platform {
+
+xcvr_t g_xcvr[XCVR_MAX_PORTS];
+
+static bool
+xcvr_state_change (int port) {
+    // Detect xcvr and set state
+    if (1) {
+        if (xcvr_state(port) == XCVR_REMOVED) {
+            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port, xcvr_state(port), XCVR_INSERTED);
+            xcvr_set_state(port, XCVR_INSERTED);
+            return true;
+        }
+    } else {
+        if (xcvr_state(port) != XCVR_REMOVED) {
+            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port, xcvr_state(port), XCVR_REMOVED);
+            xcvr_set_state(port, XCVR_REMOVED);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Send notification for xcvr_state
+static sdk_ret_t
+xcvr_send_notification (int port) {
+    return SDK_RET_OK;
+}
+
+static uint8_t *
+xcvr_sprom_read (int port, bool cached) {
+    if ((xcvr_state(port) == XCVR_SPROM_READ) && cached) {
+        return xcvr_cache(port);
+    }
+
+    // Identify if qsfp or sfp by reading first 128 bytes
+    qsfp_read_page(0xA0, 0, 128, port, xcvr_cache(port));
+
+    if (is_xcvr_qsfp(xcvr_cache(port))) {
+        xcvr_set_type(port, XCVR_TYPE_QSFP);
+    } else {
+        xcvr_set_type(port, XCVR_TYPE_SFP);
+        sfp_read_page(0xA0, 0, 256, port, xcvr_cache(port));
+    }
+
+    return xcvr_cache(port);
+}
+
+static sdk_ret_t
+xcvr_sprom_parse (uint8_t *data) {
+    return SDK_RET_OK;
+}
+
+void
+xcvr_poll_timer (void)
+{
+    bool state_change = false;
+    uint8_t  *data = NULL;
+
+    for (int port = 0; port < XCVR_MAX_PORTS; port ++) {
+        // Detect xcvr and state change
+        state_change = xcvr_state_change(port);
+
+        // If xcvr state change send notification
+        if (state_change) {
+            xcvr_send_notification(port);
+        }
+
+        switch (xcvr_state(port)) {
+        case XCVR_INSERTED:
+            if (!state_change) {
+                // This should not really happen.
+                // When xcvr is inserted we proceed to
+                // sprom read and the state will not
+                // remain as XCVR_INSERTED.
+                // Continue to next port
+                break; 
+            }
+            // Set state as SPROM_PENDING
+            xcvr_set_state(port, XCVR_SPROM_PENDING);
+            // fall-through
+        case XCVR_SPROM_PENDING:
+            // Read sprom
+            data = xcvr_sprom_read(port, false);
+            if (data == NULL) {
+                xcvr_send_notification(port);
+                if (!xcvr_sprom_read_count_inc(port)) {
+                    // Reached max read attempts
+                    xcvr_set_state(port, XCVR_SPROM_READ_ERR);
+                    SDK_TRACE_DEBUG("Xcvr port %d sprom read failed after 10 retries", port);
+                } else {
+                    SDK_TRACE_DEBUG("Xcvr port %d sprom read error", port);
+                }
+                break;
+            }
+
+            // Parse sprom
+            xcvr_sprom_parse(data);
+
+            // Send sprom_read notification
+            xcvr_set_state(port, XCVR_SPROM_READ);
+            SDK_TRACE_DEBUG("Xcvr port %d sprom read successful", port);
+            xcvr_send_notification(port);
+            break;
+        case XCVR_REMOVED:
+            xcvr_reset(port);
+            break;
+        case XCVR_SPROM_READ:
+        case XCVR_SPROM_READ_ERR:
+            break;
+        }
+    }
+
+    return;
+}
+
+} // namespace platform
+
+} // namespace sdk

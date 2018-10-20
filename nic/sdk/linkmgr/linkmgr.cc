@@ -2,6 +2,7 @@
 
 #include "include/sdk/thread.hpp"
 #include "include/sdk/periodic.hpp"
+#include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "linkmgr.hpp"
 #include "linkmgr_state.hpp"
 #include "linkmgr_internal.hpp"
@@ -19,6 +20,9 @@ linkmgr_cfg_t g_linkmgr_cfg;
 
 // sdk-linkmgr threads
 sdk::lib::thread *g_linkmgr_threads[LINKMGR_THREAD_ID_MAX];
+
+// xcvr poll timer handle
+void *xcvr_poll_timer_handle;
 
 // link down poll list
 void *port_link_poll_timer_handle;
@@ -328,6 +332,21 @@ port_debounce_timer (linkmgr_entry_data_t *data)
 }
 
 sdk_ret_t
+xcvr_poll_timer_wrapper(linkmgr_entry_data_t *data)
+{
+    sdk::platform::xcvr_poll_timer();
+
+    // Reschedule the xcvr timer
+    xcvr_poll_timer_handle =
+        sdk::lib::timer_schedule(
+            0, XCVR_POLL_TIME, NULL,
+            (sdk::lib::twheel_cb_t)xcvr_poll_timer_cb,
+            false);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 port_link_poll_timer(linkmgr_entry_data_t *data)
 {
     if (port_link_poll_enabled() == true) {
@@ -401,6 +420,10 @@ linkmgr_event_loop (void* ctxt)
 
             case LINKMGR_OPERATION_PORT_LINK_POLL_TIMER:
                 port_link_poll_timer(&rw_entry->data);
+                break;
+
+            case LINKMGR_OPERATION_XCVR_POLL_TIMER:
+                xcvr_poll_timer_wrapper(&rw_entry->data);
                 break;
 
             default:
@@ -498,6 +521,18 @@ linkmgr_workq_init(void)
 }
 
 sdk_ret_t
+xcvr_poll_init (void)
+{
+    xcvr_poll_timer_handle =
+        sdk::lib::timer_schedule(
+            0, XCVR_POLL_TIME, NULL,
+            (sdk::lib::twheel_cb_t)xcvr_poll_timer_cb,
+            false);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 linkmgr_init (linkmgr_cfg_t *cfg)
 {
     sdk_ret_t    ret = SDK_RET_OK;
@@ -519,6 +554,9 @@ linkmgr_init (linkmgr_cfg_t *cfg)
 
     // initialize the port mac and serdes functions
     port::port_init(cfg);
+
+    // initialize xcvr polling
+    xcvr_poll_init();
 
     return SDK_RET_OK;
 }

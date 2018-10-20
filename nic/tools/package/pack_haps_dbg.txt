@@ -68,6 +68,7 @@ nic/build/aarch64/iris/lib/libtwheel.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libutils.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libzmq.so.3                               /nic/lib/
 nic/build/aarch64/iris/lib/libhaltestutils.so                        /nic/lib/
+nic/build/aarch64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 
 nic/build/aarch64/iris/bin/halctl                     /nic/bin/
 nic/build/aarch64/iris/bin/hal_scale_test             /nic/bin/

@@ -66,6 +66,7 @@ nic/build/x86_64/iris/lib/libtrace.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libtwheel.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libutils.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libzmq.so.3                               /nic/lib/
+nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 
 nic/gen/x86_64/lib/libhalproto.so                                /nic/lib/
 nic/hal/third-party/lkl/export/x86_64/bin/liblkl.so              /nic/lib/

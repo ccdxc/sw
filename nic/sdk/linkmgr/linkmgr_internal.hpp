@@ -11,6 +11,7 @@ namespace sdk {
 namespace linkmgr {
 
 #define MAX_PORT_LINKUP_RETRIES 20
+#define XCVR_POLL_TIME          1000 // 1000 ms = 1 s
 
 extern linkmgr_cfg_t g_linkmgr_cfg;
 

@@ -68,6 +68,7 @@ nic/build/aarch64/iris/lib/libtwheel.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libutils.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libzmq.so.3                               /nic/lib/
 nic/build/aarch64/iris/lib/libhalproto.so                            /nic/lib/
+nic/build/aarch64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 
 nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so                 /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so      /nic/lib/
