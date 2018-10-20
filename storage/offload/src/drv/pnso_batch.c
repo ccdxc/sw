@@ -211,6 +211,63 @@ get_batch_mpool_type(enum pnso_service_type svc_type)
 	return mpool_type;
 }
 
+/* TODO-batch: Revisit ... this one gave best perf compared to other ones */
+static pnso_error_t
+poll_all_chains(struct batch_info *batch_info)
+{
+	pnso_error_t err = EINVAL;
+	struct batch_page *batch_page;
+	struct batch_page_entry *page_entry;
+	int16_t i;
+
+	bool first_flag = false, last_flag  = false;
+	ktime_t first_req_done, last_req_done;
+	uint64_t time_us;
+
+	first_req_done = last_req_done = 0;
+
+	i = (batch_info->bi_num_entries % 2) ?
+		batch_info->bi_num_entries/2 :
+		(batch_info->bi_num_entries/2) - 1;
+
+	batch_page = GET_PAGE(batch_info, i);
+	page_entry = GET_PAGE_ENTRY(batch_page, i);
+	while (1) {
+		err = chn_poll_all_services(page_entry->bpe_chain);
+		if (err) {
+			first_flag = true;
+			continue;
+		}
+
+		first_req_done = ktime_get();
+		break;
+	}
+
+	i = batch_info->bi_num_entries-1;
+	batch_page = GET_PAGE(batch_info, i);
+	page_entry = GET_PAGE_ENTRY(batch_page, i);
+	while (1) {
+		err = chn_poll_all_services(page_entry->bpe_chain);
+		if (err) {
+			last_flag = true;
+			continue;
+		}
+
+		last_req_done = ktime_get();
+		break;
+	}
+
+	OSAL_LOG_NOTICE("num_entries: %d, first_flag: %d last_flag: %d",
+				batch_info->bi_num_entries,
+				first_flag, last_flag);
+
+	time_us = ktime_us_delta(last_req_done, first_req_done);
+	OSAL_LOG_NOTICE("PERF elapsed: " PRIu64 "us", time_us);
+
+	return err;
+}
+
+
 static struct batch_info *
 init_batch_info(struct pnso_service_request *req)
 {
@@ -341,6 +398,42 @@ out:
 	return err;
 }
 
+pnso_error_t
+bat_poller(void *pnso_poll_ctx)
+{
+	pnso_error_t err;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
+	struct batch_info *batch_info = (struct batch_info *) pnso_poll_ctx;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	if (!pnso_poll_ctx) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("invalid poll context! err: %d", err);
+		OSAL_ASSERT(0);
+		return err;
+	}
+	PPRINT_BATCH_INFO(batch_info);
+	OSAL_ASSERT(pcr == batch_info->bi_pcr);
+
+	err = poll_all_chains(batch_info);
+	if (err)
+		OSAL_LOG_ERROR("poll failed! batch_info: 0x" PRIx64 "err: %d",
+				(uint64_t) batch_info, err);
+
+	if (batch_info->bi_req_cb) {
+		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
+				(uint64_t) batch_info->bi_req_cb_ctx, err);
+
+		batch_info->bi_req_cb(batch_info->bi_req_cb_ctx, NULL);
+	}
+
+	deinit_batch(batch_info);
+
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+}
+
 static pnso_error_t
 build_batch(struct batch_info *batch_info, struct request_params *req_params)
 {
@@ -352,10 +445,19 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	batch_info->bi_req_cb = req_params->rp_cb;
-	batch_info->bi_req_cb_ctx = req_params->rp_cb_ctx;
-	batch_info->bi_req_poll_fn = req_params->rp_poll_fn;
-	batch_info->bi_req_poll_ctx = req_params->rp_poll_ctx;
+	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) ||
+			(req_params->rp_flags & REQUEST_RFLAG_MODE_POLL)) {
+		batch_info->bi_req_cb = req_params->rp_cb;
+		batch_info->bi_req_cb_ctx = req_params->rp_cb_ctx;
+
+		/* for bottom-half polling */
+		*batch_info->bi_req_poll_fn = bat_poller;
+		batch_info->bi_req_poll_ctx = (void *) batch_info;
+
+		/* for caller to poll */
+		*req_params->rp_poll_fn = bat_poller;
+		req_params->rp_poll_ctx = (void *) batch_info;
+	}
 	PPRINT_BATCH_INFO(batch_info);
 
 	req_params->rp_batch_info = batch_info;
@@ -460,62 +562,6 @@ out_batch:
 	deinit_batch(batch_info);
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
-	return err;
-}
-
-/* TODO-batch: Revisit ... this one gave best perf compared to other ones */
-static pnso_error_t
-poll_all_chains(struct batch_info *batch_info)
-{
-	pnso_error_t err = EINVAL;
-	struct batch_page *batch_page;
-	struct batch_page_entry *page_entry;
-	int16_t i;
-
-	bool first_flag = false, last_flag  = false;
-	ktime_t first_req_done, last_req_done;
-	uint64_t time_us;
-
-	first_req_done = last_req_done = 0;
-
-	i = (batch_info->bi_num_entries % 2) ?
-		batch_info->bi_num_entries/2 :
-		(batch_info->bi_num_entries/2) - 1;
-
-	batch_page = GET_PAGE(batch_info, i);
-	page_entry = GET_PAGE_ENTRY(batch_page, i);
-	while (1) {
-		err = chn_poll_all_services(page_entry->bpe_chain);
-		if (err) {
-			first_flag = true;
-			continue;
-		}
-
-		first_req_done = ktime_get();
-		break;
-	}
-
-	i = batch_info->bi_num_entries-1;
-	batch_page = GET_PAGE(batch_info, i);
-	page_entry = GET_PAGE_ENTRY(batch_page, i);
-	while (1) {
-		err = chn_poll_all_services(page_entry->bpe_chain);
-		if (err) {
-			last_flag = true;
-			continue;
-		}
-
-		last_req_done = ktime_get();
-		break;
-	}
-
-	OSAL_LOG_NOTICE("num_entries: %d, first_flag: %d last_flag: %d",
-				batch_info->bi_num_entries,
-				first_flag, last_flag);
-
-	time_us = ktime_us_delta(last_req_done, first_req_done);
-	OSAL_LOG_NOTICE("PERF elapsed: " PRIu64 "us", time_us);
-
 	return err;
 }
 
