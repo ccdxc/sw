@@ -65,9 +65,9 @@
                 "native_l2seg" : 1
             },
             "rdma" : {
-                "sq_count" : 512,
-                "rq_count" : 512,
-                "cq_count" : 256,
+                "sq_count" : 131072,
+                "rq_count" : 131072,
+                "cq_count" : 131072,
                 "eq_count" : 512,
                 "adminq_count" : 1,
                 "pid_count" : 32,
@@ -94,9 +94,9 @@
                 "native_l2seg" : 1
             },
             "rdma" : {
-                "sq_count" : 512,
-                "rq_count" : 512,
-                "cq_count" : 256,
+                "sq_count" : 131072,
+                "rq_count" : 131072,
+                "cq_count" : 131072,
                 "eq_count" : 512,
                 "adminq_count" : 1,
                 "pid_count" : 32,

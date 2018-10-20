@@ -786,6 +786,14 @@ HalClient::LifCreate(uint64_t lif_id,
         lif_qstate_map_ent->set_size(qinfo.size);
         lif_qstate_map_ent->set_entries(qinfo.entries);
         lif_qstate_map_ent->set_purpose(qinfo.purpose);
+
+        // skip RDMA SQ/RQ/CQ as a temporary hack
+        if ((qinfo.type_num == 3) || 
+            (qinfo.type_num == 4) ||
+            (qinfo.type_num == 5)) {
+            continue;
+        }
+
         for (uint32_t qid = 0; qid < (uint32_t)pow(2, qinfo.entries); qid++) {
             qstate_req = spec->add_lif_qstate();
             qstate_req->set_lif_handle(0);
