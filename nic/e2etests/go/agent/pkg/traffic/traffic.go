@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -74,6 +75,8 @@ func newEpFromAgentConfig(ep *netproto.Endpoint, nw *netproto.Network, intf stri
 	addVlanCmd := []string{"ip", "link", "add", "link", intf, "name", vlanIntf,
 		"type", "vlan", "id", strconv.Itoa(vlan)}
 	Common.Run(addVlanCmd, 0, false)
+	cmd := []string{"ifconfig", intf, "hw", "ether", ep.Spec.GetMacAddress()}
+	Common.Run(cmd, 0, false)
 
 	infraEp.Interface.Name = vlanIntf
 	infraEp.Interface.MacAddress = ep.Spec.GetMacAddress()
@@ -108,10 +111,12 @@ func sendGarp(srcEp *Infra.Endpoint, dstEp *Infra.Endpoint) error {
 		return err
 	}
 
+	time.Sleep(1 * time.Second)
 	cmd = []string {"arping", "-c", "1", "-U", dstEp.GetIP()}
 	if _, err := dstEp.AppEngine.RunCommand(cmd, 0, false); err != nil {
 		return err
 	}
+	time.Sleep(2 * time.Second)
 	
 	return nil
 }
@@ -296,14 +301,10 @@ func readHostConfigFile(configFile string) (map[string]string, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error reading station device file")
 	}
-
 	hostIfMap := map[string]string{}
 	for _, device := range sDevices {
-		intfName := getIntfMatchingMac(device.MacAddr)
-		if intfName == "" {
-			return nil, errors.Errorf("Could not find interface for device %s", device.MacAddr)
-		}
-		hostIfMap[fmt.Sprintf("lif%d", device.LifID)] = intfName
+		intf := fmt.Sprintf("lif%d", device.LifID)
+		hostIfMap[intf] = intf
 	}
 
 	return hostIfMap, nil

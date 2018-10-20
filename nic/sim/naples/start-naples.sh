@@ -13,6 +13,7 @@ export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_
 export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
 unset MODEL_ZMQ_TYPE_TCP
 export ZMQ_SOC_DIR=$NIC_DIR
+export DISABLE_AGING=1
 
 if [ -z "$WITH_QEMU" ]; then
     WITH_QEMU=0

@@ -11,7 +11,7 @@ objects:
   name: scale-nw
   count: 8
   rest-endpoint: "/api/networks/"
-  spec-file: "generated/networks.json"
+  spec-file: "generated/networks_sim.json"
 - kind: Endpoint
   name: scale-ep
   count: 32

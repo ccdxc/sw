@@ -1,1 +1,16 @@
 bazel-cache/
+nic/
+storage/
+venice/
+vendor/
+mbt/
+test/
+tools/
+fake_root_target/
+api/
+dol/
+penctl/
+scripts/
+docs/
+compilers/
+asset-build/

@@ -1,5 +1,5 @@
 name: sanity
-ep-pairs: 8
+ep-pairs: 2
 enabled: True
 traffic-type: Uplink-Uplink
 

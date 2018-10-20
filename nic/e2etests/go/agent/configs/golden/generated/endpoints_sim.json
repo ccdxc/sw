@@ -536,7 +536,7 @@
     "spec": {
       "network-name": "scale-nw-1",
       "interface-type": "lif",
-      "interface": "lif101",
+      "interface": "lif100",
       "ipv4-address": "223.97.165.4/32",
       "mac-address": "26:2c:4e:87:8f:66",
       "useg-vlan": 18
@@ -576,7 +576,7 @@
     "spec": {
       "network-name": "scale-nw-3",
       "interface-type": "lif",
-      "interface": "lif101",
+      "interface": "lif100",
       "ipv4-address": "4.121.175.4/32",
       "mac-address": "4a:f4:3f:30:48:17",
       "useg-vlan": 20
@@ -616,7 +616,7 @@
     "spec": {
       "network-name": "scale-nw-5",
       "interface-type": "lif",
-      "interface": "lif101",
+      "interface": "lif100",
       "ipv4-address": "16.45.218.4/32",
       "mac-address": "6e:f2:76:5f:68:9d",
       "useg-vlan": 22
@@ -656,7 +656,7 @@
     "spec": {
       "network-name": "scale-nw-7",
       "interface-type": "lif",
-      "interface": "lif101",
+      "interface": "lif100",
       "ipv4-address": "54.199.28.4/32",
       "mac-address": "5a:6c:c2:d3:2a:4b",
       "useg-vlan": 24
@@ -676,7 +676,7 @@
     "spec": {
       "network-name": "scale-nw-0",
       "interface-type": "lif",
-      "interface": "lif100",
+      "interface": "lif101",
       "ipv4-address": "177.75.132.5/32",
       "mac-address": "3a:13:5a:76:42:23",
       "useg-vlan": 25
@@ -716,7 +716,7 @@
     "spec": {
       "network-name": "scale-nw-2",
       "interface-type": "lif",
-      "interface": "lif100",
+      "interface": "lif101",
       "ipv4-address": "112.211.249.5/32",
       "mac-address": "52:a4:dc:a0:29:5e",
       "useg-vlan": 27
@@ -756,7 +756,7 @@
     "spec": {
       "network-name": "scale-nw-4",
       "interface-type": "lif",
-      "interface": "lif100",
+      "interface": "lif101",
       "ipv4-address": "170.22.196.5/32",
       "mac-address": "3a:64:4a:f5:f5:71",
       "useg-vlan": 29
@@ -796,7 +796,7 @@
     "spec": {
       "network-name": "scale-nw-6",
       "interface-type": "lif",
-      "interface": "lif100",
+      "interface": "lif101",
       "ipv4-address": "91.39.142.5/32",
       "mac-address": "3e:83:2a:9f:ba:e1",
       "useg-vlan": 31

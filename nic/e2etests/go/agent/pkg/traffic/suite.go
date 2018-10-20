@@ -42,7 +42,7 @@ type suite struct {
 }
 
 func EpsReachable(ep *netproto.Endpoint, otherEp *netproto.Endpoint) bool {
-	if ep.GetName() != otherEp.GetName() && ep.GetNamespace() == otherEp.GetNamespace() && ep.Spec.GetNetworkName() == otherEp.Spec.GetNetworkName() && (ep.Spec.InterfaceType == "lif" || (ep.Spec.InterfaceType == "uplink" && otherEp.Spec.InterfaceType == "uplink" && ep.Spec.Interface != otherEp.Spec.Interface)) {
+	if ep.GetName() != otherEp.GetName() && ep.GetNamespace() == otherEp.GetNamespace() && ep.Spec.GetNetworkName() != otherEp.Spec.GetNetworkName() && (ep.Spec.Interface != otherEp.Spec.Interface) {
 		return true
 	}
 	return false
