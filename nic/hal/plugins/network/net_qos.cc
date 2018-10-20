@@ -41,7 +41,7 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
         rx_qos_class = lif_get_rx_qos_class(dlif);
     } else if (sif && (sif->if_type == intf::IF_TYPE_ENIC)) {
         hal::lif_t *slif = if_get_lif(sif);
-        tx_qos_class = lif_get_tx_qos_class(slif);
+        if (slif) tx_qos_class = lif_get_tx_qos_class(slif);
     }
 
     if (proxy_enabled) {

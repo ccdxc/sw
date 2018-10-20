@@ -73,7 +73,7 @@
 
 
 #define IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START CAPRI_PHV_START_OFFSET(barco_req_input_list_address) 
-#define IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END   CAPRI_PHV_END_OFFSET(barco_req_doorbell_data)
+#define IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END   CAPRI_PHV_END_OFFSET(barco_req_secondary_key_index)
 
  
 #define IPSEC_PHV_TXDMA1_DB_DATA_START CAPRI_PHV_START_OFFSET(db_data_pid) 

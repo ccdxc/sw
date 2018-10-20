@@ -39,6 +39,7 @@ header_type barco_request_t {
         sector_num                          : 32;
         doorbell_address                    : 64;
         doorbell_data                       : 64;
+        secondary_key_index                 : 32;
     }
 }
 

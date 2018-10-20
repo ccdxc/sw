@@ -132,8 +132,8 @@ metadata ipsec_table3_s2s t3_s2s;
 metadata ipsec_int_header_t ipsec_int_header;
 @pragma dont_trim
 metadata barco_dbell_t barco_dbell; 
-//@pragma dont_trim
-//metadata doorbell_data_pad_t db_pad;
+@pragma dont_trim
+metadata doorbell_data_pad_t db_pad;
  
 @pragma dont_trim
 metadata barco_request_t barco_req;

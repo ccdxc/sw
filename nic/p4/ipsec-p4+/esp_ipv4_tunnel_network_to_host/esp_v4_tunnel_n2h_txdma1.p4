@@ -82,7 +82,7 @@ header_type ipsec_to_stage3_t {
 
 header_type doorbell_data_pad_t {
     fields {
-        db_data_pad : 48;
+        db_data_pad : 96;
     }
 }
 
@@ -135,8 +135,8 @@ metadata doorbell_data_t db_data;
 metadata barco_request_t barco_req;
 @pragma dont_trim
 metadata barco_dbell_t barco_dbell;
-//@pragma dont_trim
-//metadata doorbell_data_pad_t db_data_pad;
+@pragma dont_trim
+metadata doorbell_data_pad_t db_data_pad;
 
 
 @pragma dont_trim

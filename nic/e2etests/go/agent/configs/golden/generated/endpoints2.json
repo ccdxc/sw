@@ -182,7 +182,7 @@
       "interface-type": "uplink",
       "interface": "uplink128",
       "ipv4-address": "10.5.7.4/32",
-      "mac-address": "06:c3:32:b7:e6:da",
+      "mac-address": "46:46:a6:4d:ed:e3",
       "node-uuid": "GWUUID",
       "useg-vlan": 1
     },
@@ -224,7 +224,7 @@
       "interface-type": "uplink",
       "interface": "uplink128",
       "ipv4-address": "10.7.6.4/32",
-      "mac-address": "26:17:60:a8:9c:e0",
+      "mac-address": "16:ed:75:1a:fa:ba",
       "node-uuid": "GWUUID",
       "useg-vlan": 3
     },
@@ -265,7 +265,7 @@
       "network-name": "scale-nw-4",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "10.5.8.232",
+      "ipv4-address": "10.5.8.2/32",
       "mac-address": "7a:19:12:b5:b3:d2",
       "node-uuid": "GWUUID",
       "useg-vlan": 5
@@ -350,7 +350,7 @@
       "interface-type": "uplink",
       "interface": "uplink129",
       "ipv4-address": "10.5.7.5/32",
-      "mac-address": "3a:13:5a:76:42:23",
+      "mac-address": "3a:02:9d:92:0e:9e",
       "node-uuid": "GWUUID",
       "useg-vlan": 9
     },
@@ -392,7 +392,7 @@
       "interface-type": "uplink",
       "interface": "uplink129",
       "ipv4-address": "10.7.6.5/32",
-      "mac-address": "52:a4:dc:a0:29:5e",
+      "mac-address": "06:01:6e:0a:ef:e7",
       "node-uuid": "GWUUID",
       "useg-vlan": 11
     },
@@ -516,7 +516,7 @@
     "spec": {
       "network-name": "scale-nw-0",
       "ipv4-address": "10.5.7.2/32",
-      "mac-address": "46:46:a6:4d:ed:e3",
+      "mac-address": "72:41:44:f3:fd:47",
       "useg-vlan": 17
     },
     "status": {}
@@ -552,7 +552,7 @@
     "spec": {
       "network-name": "scale-nw-2",
       "ipv4-address": "10.7.6.2/32",
-      "mac-address": "16:ed:75:1a:fa:ba",
+      "mac-address": "0a:ff:27:ed:6f:6b",
       "useg-vlan": 19
     },
     "status": {}
@@ -660,7 +660,7 @@
     "spec": {
       "network-name": "scale-nw-0",
       "ipv4-address": "10.5.7.3/32",
-      "mac-address": "3a:02:9d:92:0e:9e",
+      "mac-address": "5e:21:75:4b:6e:23",
       "useg-vlan": 25
     },
     "status": {}
@@ -696,7 +696,7 @@
     "spec": {
       "network-name": "scale-nw-2",
       "ipv4-address": "10.7.6.3/32",
-      "mac-address": "06:01:6e:0a:ef:e7",
+      "mac-address": "22:aa:f1:60:85:32",
       "useg-vlan": 27
     },
     "status": {}
