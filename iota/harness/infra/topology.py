@@ -44,7 +44,7 @@ class Node(object):
     def IsMellanox(self):
         return self.__role == topo_pb2.PERSONALITY_MELLANOX
     def IsWorkloadNode(self):
-        return self.IsNaplesSim() or self.IsNaplesHw() or self.IsMellanox()
+        return self.IsNaples() or self.IsMellanox()
 
     def UUID(self):
         if self.IsMellanox():
@@ -82,9 +82,9 @@ class Node(object):
                 msg.image = os.path.basename(testsuite.GetImages().naples)
             for data_intf in self.__data_intfs:
                 msg.naples_config.data_intfs.append(data_intf)
-            #for n in topology.Nodes():
-            #    if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
-            #    msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
+            for n in topology.Nodes():
+                if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
+                msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
 
         return types.status.SUCCESS
 
@@ -163,7 +163,8 @@ class Topology(object):
     def GetNaplesUuidMap(self):
         uuid_map = {}
         for n in self.__nodes.values():
-            uuid_map[n.Name()] = n.UUID()
+            if n.IsWorkloadNode():
+                uuid_map[n.Name()] = n.UUID()
         return uuid_map
 
     def GetVeniceHostnames(self):

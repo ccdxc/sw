@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import pdb
-
+from google.protobuf import text_format
 class Dict2Enum(object):
     def __init__(self, entries):
         self.str_enums = entries
@@ -26,7 +26,7 @@ def List2Enum(entries):
 
 def LogMessageContents(hdrstr, msg, logfn):
     logfn("%s %s:" % (msg.__class__.__name__, hdrstr))
-    msgstr = str(msg).split('\n')
+    msgstr = text_format.MessageToString(msg).split('\n')
     for s in msgstr:
         if s != '': logfn("- %s: " % s)
     return

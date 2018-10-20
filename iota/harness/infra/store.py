@@ -2,6 +2,8 @@
 import pdb
 import copy
 
+import iota.harness.infra.types as types
+
 __gl_testbed = None
 __gl_workloads = {}
 
@@ -52,6 +54,7 @@ def GetLocalWorkloadPairs():
     for w1 in GetWorkloads():
         for w2 in GetWorkloads():
             if id(w1) == id(w2): continue
+            if w1.uplink_vlan != w2.uplink_vlan: continue
             if w1.node_name == w2.node_name:
                 pairs.append((w1, w2))
     return pairs
@@ -61,6 +64,24 @@ def GetRemoteWorkloadPairs():
     for w1 in GetWorkloads():
         for w2 in GetWorkloads():
             if id(w1) == id(w2): continue
+            if w1.uplink_vlan != w2.uplink_vlan: continue
             if w1.node_name != w2.node_name:
                 pairs.append((w1, w2))
     return pairs
+
+def SetVeniceConfigs(json_objs):
+    global __gl_venice_configs
+    __gl_venice_configs = json_objs
+    return types.status.SUCCESS
+
+def GetVeniceConfigs():
+    global __gl_venice_configs
+    return __gl_venice_configs
+
+def SetVeniceAuthToken(auth_token):
+    global __gl_venice_auth_token
+    __gl_venice_auth_token = auth_token
+    return types.status.SUCCESS
+    
+def GetVeniceAuthToken():
+    return __gl_venice_auth_token

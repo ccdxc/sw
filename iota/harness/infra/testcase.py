@@ -68,11 +68,28 @@ class Testcase:
         return types.status.SUCCESS
 
     def __execute(self):
-        loader.RunCallback(self.__tc, 'Setup', False, self.__data)
-        loader.RunCallback(self.__tc, 'Trigger', True, self.__data)
-        result = loader.RunCallback(self.__tc, 'Verify', True, self.__data)
-        loader.RunCallback(self.__tc, 'Teardown', False, self.__data)
-        return result
+        final_result = types.status.SUCCESS
+
+        setup_result = loader.RunCallback(self.__tc, 'Setup', False, self.__data)
+        if setup_result != types.status.SUCCESS:
+            Logger.error("Setup callback failed, Cannot continue, switching to Teardown")
+            loader.RunCallback(self.__tc, 'Teardown', False, self.__data)
+            return setup_result
+
+        trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, self.__data)
+        if trigger_result != types.status.SUCCESS:
+            final_result = trigger_result
+
+        verify_result = loader.RunCallback(self.__tc, 'Verify', True, self.__data)
+        if verify_result != types.status.SUCCESS:
+            final_result = verify_result
+
+        teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, self.__data)
+        if teardown_result != types.status.SUCCESS:
+            Logger.error("Teardown callback failed.")
+            final_result = teardown_result
+
+        return final_result
 
     def PrintResultSummary(self):
         result = "Pass" if self.status == types.status.SUCCESS else "Fail"

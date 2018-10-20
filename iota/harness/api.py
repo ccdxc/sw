@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import grpc
 import pdb
-
 from iota.harness.infra.utils.logger import Logger as Logger
 
 import iota.protos.pygen.types_pb2 as types_pb2
@@ -108,6 +107,11 @@ def GenerateConfigs(req):
     Logger.debug("Generate Configs:")
     return __rpc(req, gl_cfg_svc_stub.GenerateConfigs)
 
+def ConfigureAuth(req):
+    global gl_cfg_svc_stub
+    Logger.debug("Configure Auth:")
+    return __rpc(req, gl_cfg_svc_stub.ConfigureAuth)
+
 def MakeCluster(req):
     global gl_cfg_svc_stub
     Logger.debug("Make Cluster:")
@@ -153,3 +157,17 @@ def PrintCommandResults(cmd):
             Logger.info(line)
     PrintOutputLines('STDOUT', cmd.stdout)
     PrintOutputLines('STDERR', cmd.stderr)
+
+def SetVeniceConfigs(json_objs):
+    store.SetVeniceConfigs(json_objs)
+    return types.status.SUCCESS
+
+def GetVeniceConfigs():
+    return store.GetVeniceConfigs()
+
+def SetVeniceAuthToken(auth_token):
+    store.SetVeniceAuthToken(auth_token)
+    return types.status.SUCCESS
+    
+def GetVeniceAuthToken():
+    return store.GetVeniceAuthToken()

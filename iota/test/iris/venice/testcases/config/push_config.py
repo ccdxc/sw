@@ -17,14 +17,19 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    generated_configs = api.GetVeniceConfigs()
+    
     req = cfg_svc_pb2.ConfigMsg()
-    for cfg_object in tc.cfg_objects:
-        cfg_object.method = cfg_svc_pb2.CFG_METHOD_CREATE
-        req.configs.append(cfg_object)
+    req.AuthToken = api.GetVeniceAuthToken()
+    for cfg_object in generated_configs:
+        push_cfg_object = req.configs.add()
+        push_cfg_object.method = cfg_object.method
+        push_cfg_object.Config = cfg_object.Config
 
     resp = api.PushConfig(req)
     if resp == None:
         return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
 
 def Verify(tc):

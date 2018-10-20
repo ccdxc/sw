@@ -85,7 +85,9 @@ class TestSuite:
 
     def __setup_config(self):
         for s in self.__spec.setup.config:
-            loader.RunCallback(s.step, 'Main', True, None)
+            status = loader.RunCallback(s.step, 'Main', True, None)
+            if status != types.status.SUCCESS:
+                return status
         return types.status.SUCCESS
 
     def __setup(self):
