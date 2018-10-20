@@ -35,4 +35,8 @@ clean:
 	rm -rf $(TOPDIR)/protos/pygen
 	rm -rf $(TOPDIR)/protos/gogen
 
+images:
+	$(MAKE) -C workload-images deps-release
+	echo "Please do a docker push manually."
+
 all: iota

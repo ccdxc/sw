@@ -9,3 +9,12 @@
 1. All individual services are enumerated in iota/svcs
 2. Helper scripts go in scripts/
 3. Common protos go in protos/
+
+
+## Building and using new workload images
+1. Update box.rb in workload-images to add packages to iota workload image
+2. Update the image tag in the Makefile under workload-images
+3. Do make images from iota to create a new image
+4. Do docker push of the newly created image (check docker images)
+5. Modify svcs/common/constant.go to update the image tag
+6. Create a PR and merge

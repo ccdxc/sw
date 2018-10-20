@@ -9,10 +9,6 @@ import (
 	Common "github.com/pensando/sw/iota/svcs/common"
 )
 
-const (
-	workloadImage = "registry.test.pensando.io:5000/pensando/nic/e2e:2.0"
-)
-
 var (
 	workloadDir = Common.DstIotaWorkloadsDir
 )

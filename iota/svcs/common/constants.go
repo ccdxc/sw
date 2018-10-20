@@ -38,6 +38,9 @@ const (
 
 	// IOTARandomSeed captures the fixed seed that IOTA uses to generate IP Address and MAC Addresses
 	IOTARandomSeed = 42
+
+	// IotaWorkloadImage is the docker image that will be used for workloads
+	IotaWorkloadImage = "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
 )
 
 // incrementing constants. List all constants whose value you don't care here

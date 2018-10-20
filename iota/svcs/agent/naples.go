@@ -306,7 +306,7 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 
 	wload := newWorkload()
 	dnode.logger.Printf("Added workload : %s", in.GetWorkloadName())
-	if err := wload.BringUp(in.GetWorkloadName(), workloadImage); err != nil {
+	if err := wload.BringUp(in.GetWorkloadName(), Common.IotaWorkloadImage); err != nil {
 		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
 		dnode.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
