@@ -1,7 +1,6 @@
 # common arm libs
 nic/conf                                                            /nic/conf/
 nic/build/aarch64/iris/bin/hal                                       /nic/bin/
-nic/build/aarch64/iris/bin/linkmgr                                   /nic/bin/
 # linkmgr debug CLIs
 nic/build/aarch64/iris/bin/port_client                               /nic/bin
 

@@ -1,6 +1,5 @@
 nic/conf                                                            /nic/conf/
 nic/build/x86_64/iris/bin/hal                                       /nic/bin/
-nic/build/x86_64/iris/bin/linkmgr                                   /nic/bin/
 # linkmgr debug CLIs
 nic/build/x86_64/iris/bin/port_client                               /nic/bin
 
