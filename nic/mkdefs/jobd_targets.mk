@@ -233,6 +233,7 @@ jobd/make/nic:
 
 .PHONY: jobd/agent
 jobd/agent: ${JOBD_PREREQS}
+	${MAKE} -C ${GOPATH}/src/github.com/pensando/sw ws-tools
 	${MAKE} -C ${GOPATH}/src/github.com/pensando/sw checks
 	${MAKE} release
 	go install github.com/pensando/sw/nic/agent/cmd/netagent
