@@ -15,6 +15,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_seq.h"
+#include "pnso_utils.h"
 
 static inline bool
 is_dflag_zero_pad_enabled(uint16_t flags)
@@ -93,7 +94,6 @@ compress_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pc_res;
 	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
-	size_t src_buf_len;
 	uint16_t flags, threshold_len;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -102,8 +102,6 @@ compress_setup(struct service_info *svc_info,
 		svc_params->u.sp_cp_desc;
 	flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
-
-	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 
 	pc_res = svc_info->si_pc_res;
 	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
@@ -124,15 +122,15 @@ compress_setup(struct service_info *svc_info,
 		goto out_cp_desc;
 	}
 
-	err = cpdc_update_service_info_sgls(svc_info, svc_params);
+	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain cp src/dst sgl from pool! err: %d",
 				err);
 		goto out_status_desc;
 	}
 
-	fill_cp_desc(cp_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
-			status_desc, src_buf_len, threshold_len);
+	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl, svc_info->si_dst_sgl.sgl,
+			status_desc, svc_info->si_src_blist.len, threshold_len);
 	clear_insert_header(flags, cp_desc);
 	pad_buffer_with_zeroes(flags, svc_params->sp_src_blist);
 
@@ -207,7 +205,8 @@ compress_chain(struct chain_entry *centry)
 
 	if (centry->ce_next) {
 		next_svc_info = &centry->ce_next->ce_svc_info;
-		err = next_svc_info->si_ops.chain(centry->ce_next);
+		err = next_svc_info->si_ops.sub_chain_from_cpdc(next_svc_info,
+								&svc_info->si_cpdc_chain);
 		if (err) {
 			OSAL_LOG_ERROR("failed to chain next service after cp! err: %d",
 					err);
@@ -216,7 +215,6 @@ compress_chain(struct chain_entry *centry)
 		OSAL_LOG_INFO("chaining of services after cp done!");
 	}
 
-	/* TODO-chain: revisit to chain other services (ex: encrypt) */
 	svc_info->si_seq_info.sqi_desc = seq_setup_cpdc_chain_desc(centry,
 			svc_info, cp_desc, sizeof(*cp_desc));
 	if (!svc_info->si_seq_info.sqi_desc) {
@@ -236,6 +234,26 @@ done:
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
+}
+
+static pnso_error_t
+compress_sub_chain_from_cpdc(struct service_info *svc_info,
+			     struct cpdc_chain_params *cpdc_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
+compress_sub_chain_from_crypto(struct service_info *svc_info,
+			       struct crypto_chain_params *crypto_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
@@ -309,7 +327,7 @@ compress_read_status(const struct service_info *svc_info)
 
 	if (cp_desc->u.cd_bits.cc_enabled &&
 			cp_desc->u.cd_bits.cc_insert_header) {
-		dst_sgl = svc_info->si_dst_sgl;
+		dst_sgl = svc_info->si_dst_sgl.sgl;
 		cp_hdr_pa = sonic_devpa_to_hostpa(dst_sgl->cs_addr_0);
 		cp_hdr = (struct pnso_compression_header *)
 			sonic_phy_to_virt(cp_hdr_pa);
@@ -410,7 +428,7 @@ out:
 }
 
 static void
-compress_teardown(const struct service_info *svc_info)
+compress_teardown(struct service_info *svc_info)
 {
 	pnso_error_t err;
 	struct cpdc_desc *cp_desc;
@@ -421,9 +439,10 @@ compress_teardown(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
+	CPDC_PPRINT_DESC(svc_info->si_desc);
 
-	cpdc_release_sgl(svc_info->si_dst_sgl);
-	cpdc_release_sgl(svc_info->si_src_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
 
 	pc_res = svc_info->si_pc_res;
 	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
@@ -444,12 +463,16 @@ compress_teardown(const struct service_info *svc_info)
 		OSAL_ASSERT(0);
 	}
 
+	seq_cleanup_cpdc_chain(svc_info);
+
 	OSAL_LOG_DEBUG("exit!");
 }
 
 struct service_ops cp_ops = {
 	.setup = compress_setup,
 	.chain = compress_chain,
+	.sub_chain_from_cpdc = compress_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = compress_sub_chain_from_crypto,
 	.schedule = compress_schedule,
 	.poll = compress_poll,
 	.read_status = compress_read_status,

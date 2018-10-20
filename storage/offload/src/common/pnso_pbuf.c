@@ -298,19 +298,12 @@ done:
 size_t
 pbuf_get_buffer_list_len(const struct pnso_buffer_list *buf_list)
 {
-	struct pnso_flat_buffer *buf;
 	size_t num_bytes = 0;
 	uint32_t i;
 
-	if (!buf_list)
-		return num_bytes;
-
-	for (i = 0; i < buf_list->count; i++) {
-		buf = (struct pnso_flat_buffer *) &buf_list->buffers[i];
-		OSAL_ASSERT(buf);
-
-		num_bytes += buf->len;
-	}
+	if (buf_list)
+		for (i = 0; i < buf_list->count; i++)
+			num_bytes += buf_list->buffers[i].len;
 
 	return num_bytes;
 }

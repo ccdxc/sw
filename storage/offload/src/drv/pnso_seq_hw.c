@@ -32,7 +32,7 @@
 #define PPRINT_SEQUENCER_DESC(d)
 #define PPRINT_SEQUENCER_INFO(sqi)
 #define PPRINT_CPDC_CHAIN_PARAMS(cp)
-#define PPRINT_XTS_CHAIN_PARAMS(cp)
+#define PPRINT_CRYPTO_CHAIN_PARAMS(cp)
 #else
 #define PPRINT_SEQUENCER_DESC(d)	pprint_seq_desc(d)
 #define PPRINT_SEQUENCER_INFO(sqi)					\
@@ -45,10 +45,10 @@
 		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 		pprint_cpdc_chain_params(cp);				\
 	} while (0)
-#define PPRINT_XTS_CHAIN_PARAMS(cp)					\
+#define PPRINT_CRYPTO_CHAIN_PARAMS(cp)					\
 	do {								\
 		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
-		pprint_xts_chain_params(cp);				\
+		pprint_crypto_chain_params(cp);				\
 	} while (0)
 #endif
 
@@ -85,6 +85,7 @@ pprint_seq_info(const struct sequencer_info *seq_info)
 
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_ring_id", seq_info->sqi_ring_id);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_qtype", seq_info->sqi_qtype);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_status_qtype", seq_info->sqi_status_qtype);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_index", seq_info->sqi_index);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
@@ -110,9 +111,9 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 	spec = &chain_params->ccp_seq_spec;
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_q",
-			spec->sqs_seq_q);
+			(uint64_t)spec->sqs_seq_q);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_status_q",
-			spec->sqs_seq_status_q);
+			(uint64_t)spec->sqs_seq_status_q);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_q",
 			spec->sqs_seq_next_q);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_status_q",
@@ -184,8 +185,8 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 			cmd->ccpc_next_doorbell_en);
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_intr_en",
 			cmd->ccpc_intr_en);
-	OSAL_LOG_DEBUG("%30s: %d", "ccpc_next_db_action_barco_push",
-			cmd->ccpc_next_db_action_barco_push);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_next_db_action_ring_push",
+			cmd->ccpc_next_db_action_ring_push);
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_stop_chain_on_error",
 			cmd->ccpc_stop_chain_on_error);
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_chain_alt_desc_on_error",
@@ -207,24 +208,24 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 }
 
 static void __attribute__((unused))
-pprint_xts_chain_params(const struct xts_chain_params *chain_params)
+pprint_crypto_chain_params(const struct crypto_chain_params *chain_params)
 {
 	const struct sequencer_spec *spec;
 	const struct ring_spec *ring_spec;
-	const struct xts_chain_params_command *cmd;
+	const struct crypto_chain_params_command *cmd;
 
 	if (!chain_params)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "xts_chain_params",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "crypto_chain_params",
 			(uint64_t) chain_params);
 
-	spec = &chain_params->xcp_seq_spec;
+	spec = &chain_params->ccp_seq_spec;
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_q",
-			spec->sqs_seq_q);
+			(uint64_t)spec->sqs_seq_q);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_status_q",
-			spec->sqs_seq_status_q);
+			(uint64_t)spec->sqs_seq_status_q);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_q",
 			spec->sqs_seq_next_q);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_status_q",
@@ -236,7 +237,7 @@ pprint_xts_chain_params(const struct xts_chain_params *chain_params)
 	OSAL_LOG_DEBUG("%30s: %d", "sqs_ret_seq_status_index",
 			spec->sqs_ret_seq_status_index);
 
-	ring_spec = &chain_params->xcp_ring_spec;
+	ring_spec = &chain_params->ccp_ring_spec;
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_ring_addr",
 			ring_spec->rs_ring_addr);
@@ -255,52 +256,56 @@ pprint_xts_chain_params(const struct xts_chain_params *chain_params)
 	OSAL_LOG_DEBUG("%30s: %d", "rs_num_descs",
 			ring_spec->rs_num_descs);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_status_addr_0",
-			chain_params->xcp_status_addr_0);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_status_addr_1",
-			chain_params->xcp_status_addr_1);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_decr_buf_addr",
-			chain_params->xcp_decr_buf_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_comp_sgl_src_addr",
-			chain_params->xcp_comp_sgl_src_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_sgl_pdma_dst_addr",
-			chain_params->xcp_sgl_pdma_dst_addr);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_status_addr_0",
+			chain_params->ccp_status_addr_0);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_status_addr_1",
+			chain_params->ccp_status_addr_1);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_crypto_buf_addr",
+			chain_params->ccp_crypto_buf_addr);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_comp_sgl_src_addr",
+			chain_params->ccp_comp_sgl_src_addr);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_sgl_pdma_dst_addr",
+			chain_params->ccp_sgl_pdma_dst_addr);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_intr_addr",
-			chain_params->xcp_intr_addr);
-	OSAL_LOG_DEBUG("%30s: %d", "xcp_intr_data",
-			chain_params->xcp_intr_data);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_intr_addr",
+			chain_params->ccp_intr_addr);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_intr_data",
+			chain_params->ccp_intr_data);
 
-	OSAL_LOG_DEBUG("%30s: %d", "xcp_status_offset_0",
-			chain_params->xcp_status_offset_0);
-	OSAL_LOG_DEBUG("%30s: %d", "xcp_blk_boundary_shift",
-			chain_params->xcp_blk_boundary_shift);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_offset_0",
+			chain_params->ccp_status_offset_0);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_len",
+			chain_params->ccp_status_len);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_blk_boundary_shift",
+			chain_params->ccp_blk_boundary_shift);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_data_len",
+			chain_params->ccp_data_len);
 
-	cmd = &chain_params->xcp_cmd;
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_status_dma_en",
-			cmd->xcpc_status_dma_en);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_next_doorbell_en",
-			cmd->xcpc_next_doorbell_en);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_intr_en",
-			cmd->xcpc_intr_en);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_next_db_action_barco_push",
-			cmd->xcpc_next_db_action_barco_push);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_stop_chain_on_error",
-			cmd->xcpc_stop_chain_on_error);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_comp_len_update_en",
-			cmd->xcpc_comp_len_update_en);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_comp_sgl_src_en",
-			cmd->xcpc_comp_sgl_src_en);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_comp_sgl_src_vec_en",
-			cmd->xcpc_comp_sgl_src_vec_en);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_sgl_sparse_format_en",
-			cmd->xcpc_sgl_sparse_format_en);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_sgl_pdma_en",
-			cmd->xcpc_sgl_pdma_en);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_sgl_pdma_len_from_desc",
-			cmd->xcpc_sgl_pdma_len_from_desc);
-	OSAL_LOG_DEBUG("%30s: %d", "xcpc_desc_vec_push_en",
-			cmd->xcpc_desc_vec_push_en);
+	cmd = &chain_params->ccp_cmd;
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_status_dma_en",
+			cmd->ccpc_status_dma_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_next_doorbell_en",
+			cmd->ccpc_next_doorbell_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_intr_en",
+			cmd->ccpc_intr_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_next_db_action_ring_push",
+			cmd->ccpc_next_db_action_ring_push);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_stop_chain_on_error",
+			cmd->ccpc_stop_chain_on_error);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_comp_len_update_en",
+			cmd->ccpc_comp_len_update_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_comp_sgl_src_en",
+			cmd->ccpc_comp_sgl_src_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_comp_sgl_src_vec_en",
+			cmd->ccpc_comp_sgl_src_vec_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_sparse_format_en",
+			cmd->ccpc_sgl_sparse_format_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_pdma_en",
+			cmd->ccpc_sgl_pdma_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_pdma_len_from_desc",
+			cmd->ccpc_sgl_pdma_len_from_desc);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_desc_vec_push_en",
+			cmd->ccpc_desc_vec_push_en);
 }
 
 static void
@@ -382,7 +387,7 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 
 	memset(seq_status_desc, 0, SONIC_SEQ_STATUS_Q_DESC_SIZE);
 	// desc bytes 0-63
-	if (cmd->ccpc_next_db_action_barco_push) {
+	if (cmd->ccpc_next_db_action_ring_push) {
 		write_bit_fields(seq_status_desc, 0, 64,
 				ring_spec->rs_ring_addr);
 		write_bit_fields(seq_status_desc, 64, 64,
@@ -425,7 +430,7 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	write_bit_fields(seq_status_desc, 467, 1,
 			cmd->ccpc_intr_en);
 	write_bit_fields(seq_status_desc, 468, 1,
-			cmd->ccpc_next_db_action_barco_push);
+			cmd->ccpc_next_db_action_ring_push);
 
 	// desc bytes 64-127
 	write_bit_fields(seq_status_desc, 512 + 0, 64, 0);
@@ -469,21 +474,21 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 			cmd->ccpc_chain_alt_desc_on_error);
 }
 
-static void __attribute__((unused))
-fill_xts_seq_status(struct xts_chain_params *chain_params,
+static void
+fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 		uint8_t *seq_status_desc)
 {
 	struct next_db_spec *next_db_spec;
 	struct ring_spec *ring_spec;
-	struct xts_chain_params_command *cmd;
+	struct crypto_chain_params_command *cmd;
 
-	ring_spec = &chain_params->xcp_ring_spec;
-	next_db_spec = &chain_params->xcp_next_db_spec;
-	cmd = &chain_params->xcp_cmd;
+	ring_spec = &chain_params->ccp_ring_spec;
+	next_db_spec = &chain_params->ccp_next_db_spec;
+	cmd = &chain_params->ccp_cmd;
 
 	memset(seq_status_desc, 0, SONIC_SEQ_STATUS_Q_DESC_SIZE);
 	// desc bytes 0-63
-	if (cmd->xcpc_next_db_action_barco_push) {
+	if (cmd->ccpc_next_db_action_ring_push) {
 		write_bit_fields(seq_status_desc, 0, 64,
 				ring_spec->rs_ring_addr);
 		write_bit_fields(seq_status_desc, 64, 64,
@@ -508,53 +513,53 @@ fill_xts_seq_status(struct xts_chain_params *chain_params,
 	}
 
 	write_bit_fields(seq_status_desc, 218, 64,
-			chain_params->xcp_status_addr_0);
+			chain_params->ccp_status_addr_0);
 	write_bit_fields(seq_status_desc, 282, 64,
-			chain_params->xcp_status_addr_1);
+			chain_params->ccp_status_addr_1);
 	write_bit_fields(seq_status_desc, 346, 64,
-			chain_params->xcp_intr_addr);
+			chain_params->ccp_intr_addr);
 	write_bit_fields(seq_status_desc, 410, 32,
-			chain_params->xcp_intr_data);
+			chain_params->ccp_intr_data);
 	write_bit_fields(seq_status_desc, 442, 16,
-			chain_params->xcp_status_len);
+			chain_params->ccp_status_len);
 	write_bit_fields(seq_status_desc, 458, 7,
-			chain_params->xcp_status_offset_0);
+			chain_params->ccp_status_offset_0);
 	write_bit_fields(seq_status_desc, 465, 1,
-			cmd->xcpc_status_dma_en);
+			cmd->ccpc_status_dma_en);
 	write_bit_fields(seq_status_desc, 466, 1,
-			cmd->xcpc_next_doorbell_en);
+			cmd->ccpc_next_doorbell_en);
 	write_bit_fields(seq_status_desc, 467, 1,
-			cmd->xcpc_intr_en);
+			cmd->ccpc_intr_en);
 	write_bit_fields(seq_status_desc, 468, 1,
-			cmd->xcpc_next_db_action_barco_push);
+			cmd->ccpc_next_db_action_ring_push);
 
 	// desc bytes 64-127
 	write_bit_fields(seq_status_desc, 512 + 0, 64,
-			chain_params->xcp_comp_sgl_src_addr);
+			chain_params->ccp_comp_sgl_src_addr);
 	write_bit_fields(seq_status_desc, 512 + 64, 64,
-			chain_params->xcp_sgl_pdma_dst_addr);
+			chain_params->ccp_sgl_pdma_dst_addr);
 	write_bit_fields(seq_status_desc, 512 + 128, 64,
-			chain_params->xcp_decr_buf_addr);
+			chain_params->ccp_crypto_buf_addr);
 	write_bit_fields(seq_status_desc, 512 + 192, 16,
-			chain_params->xcp_data_len);
+			chain_params->ccp_data_len);
 	write_bit_fields(seq_status_desc, 512 + 208, 5,
-			chain_params->xcp_blk_boundary_shift);
+			chain_params->ccp_blk_boundary_shift);
 	write_bit_fields(seq_status_desc, 512 + 213, 1,
-			cmd->xcpc_stop_chain_on_error);
+			cmd->ccpc_stop_chain_on_error);
 	write_bit_fields(seq_status_desc, 512 + 214, 1,
-			cmd->xcpc_comp_len_update_en);
+			cmd->ccpc_comp_len_update_en);
 	write_bit_fields(seq_status_desc, 512 + 215, 1,
-			cmd->xcpc_comp_sgl_src_en);
+			cmd->ccpc_comp_sgl_src_en);
 	write_bit_fields(seq_status_desc, 512 + 216, 1,
-			cmd->xcpc_comp_sgl_src_vec_en);
+			cmd->ccpc_comp_sgl_src_vec_en);
 	write_bit_fields(seq_status_desc, 512 + 217, 1,
-			cmd->xcpc_sgl_sparse_format_en);
+			cmd->ccpc_sgl_sparse_format_en);
 	write_bit_fields(seq_status_desc, 512 + 218, 1,
-			cmd->xcpc_sgl_pdma_en);
+			cmd->ccpc_sgl_pdma_en);
 	write_bit_fields(seq_status_desc, 512 + 219, 1,
-			cmd->xcpc_sgl_pdma_len_from_desc);
+			cmd->ccpc_sgl_pdma_len_from_desc);
 	write_bit_fields(seq_status_desc, 512 + 220, 1,
-			cmd->xcpc_desc_vec_push_en);
+			cmd->ccpc_desc_vec_push_en);
 }
 
 static void *
@@ -673,7 +678,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	OSAL_LOG_DEBUG("enter ...");
 
 	svc_chain = centry->ce_chain_head;
-	chain_params = &svc_chain->sc_chain_params;
+	chain_params = &svc_info->si_cpdc_chain;
 	seq_spec = &chain_params->ccp_seq_spec;
 
 	seq_info = &svc_info->si_seq_info;
@@ -717,8 +722,8 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	seq_info->sqi_index = index;
 	seq_info->sqi_status_desc = seq_status_desc;
 
-	seq_spec->sqs_seq_q = (uint64_t) q;
-	seq_spec->sqs_seq_status_q = (uint64_t) status_q;
+	seq_spec->sqs_seq_q = q;
+	seq_spec->sqs_seq_status_q = status_q;
 	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for comp+hash */
 
 	cp_desc->cd_db_addr = sonic_get_lif_local_dbaddr();
@@ -726,7 +731,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	cp_desc->u.cd_bits.cc_db_on = 1;
 
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
-	chain_params->ccp_cmd.ccpc_next_db_action_barco_push = 1;
+	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 1;
 	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 
@@ -737,6 +742,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
+	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
 	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx status_desc: 0x%llx",
 			ring_id, index, (uint64_t) cp_desc,
@@ -754,7 +760,7 @@ out:
 }
 
 static pnso_error_t
-hw_setup_hash_chain_params(struct chain_entry *centry,
+hw_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 		struct service_info *svc_info,
 		struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
 		uint32_t num_hash_blks)
@@ -763,15 +769,11 @@ hw_setup_hash_chain_params(struct chain_entry *centry,
 	struct accel_ring *ring;
 	uint32_t ring_id;
 
-	struct service_chain *svc_chain;
-	struct cpdc_chain_params *chain_params;
 	struct sequencer_info *seq_info;
 	struct ring_spec *ring_spec;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	svc_chain = centry->ce_chain_head;
-	chain_params = &svc_chain->sc_chain_params;
 	ring_spec = &chain_params->ccp_ring_spec;
 
 	seq_info = &svc_info->si_seq_info;
@@ -826,7 +828,7 @@ hw_setup_cpdc_chain_desc(struct chain_entry *centry,
 	OSAL_LOG_DEBUG("enter ...");
 
 	svc_chain = centry->ce_chain_head;
-	chain_params = &svc_chain->sc_chain_params;
+	chain_params = &svc_info->si_cpdc_chain;
 	seq_info = &svc_info->si_seq_info;
 	PPRINT_SEQUENCER_INFO(seq_info);
 
@@ -850,10 +852,79 @@ out:
 	return NULL;
 }
 
+static void
+hw_cleanup_cpdc_chain(const struct service_info *svc_info)
+{
+	const struct cpdc_chain_params *cpdc_chain = &svc_info->si_cpdc_chain;
+
+	if (cpdc_chain->ccp_seq_spec.sqs_seq_status_q)
+		sonic_put_seq_statusq(cpdc_chain->ccp_seq_spec.sqs_seq_status_q);
+}
+
+static void *
+hw_setup_crypto_chain(struct service_info *svc_info,
+		      struct crypto_desc *desc)
+{
+	struct sequencer_info *seq_info;
+	struct sequencer_spec *seq_spec;
+	struct lif *lif;
+	void *seq_desc;
+	uint32_t statusq_index;
+	pnso_error_t err;
+
+	seq_spec = &svc_info->si_crypto_chain.ccp_seq_spec;
+	seq_info = &svc_info->si_seq_info;
+	lif = sonic_get_lif();
+	if (!lif) {
+		OSAL_ASSERT(lif);
+		return NULL;
+	}
+
+	err = sonic_get_seq_statusq(lif, seq_info->sqi_status_qtype,
+	                            &seq_spec->sqs_seq_status_q);
+	if (err) {
+		OSAL_ASSERT(!err);
+		return NULL;
+	}
+
+	seq_info->sqi_status_desc = 
+                (uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q, 
+	                                         &statusq_index);
+	if (!seq_info->sqi_status_desc) {
+		OSAL_LOG_ERROR("failed to obtain crypto sequencer statusq desc");
+		OSAL_ASSERT(seq_info->sqi_status_desc);
+		return NULL;
+	}
+	desc->cd_db_addr = sonic_get_lif_local_dbaddr();
+	desc->cd_db_data = sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, statusq_index);
+
+	OSAL_LOG_INFO("ring_id: %u index: %u desc: 0x%llx",
+		      seq_info->sqi_ring_id, statusq_index, (uint64_t)desc);
+	fill_crypto_seq_status_desc(&svc_info->si_crypto_chain,
+                                    seq_info->sqi_status_desc);
+	PPRINT_CRYPTO_CHAIN_PARAMS(&svc_info->si_crypto_chain);
+
+	seq_desc = hw_setup_desc(svc_info, desc, sizeof(*desc));
+	PPRINT_SEQUENCER_INFO(seq_info);
+	return seq_desc;
+}
+
+static void
+hw_cleanup_crypto_chain(const struct service_info *svc_info)
+{
+	const struct crypto_chain_params *crypto_chain = &svc_info->si_crypto_chain;
+
+	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q)
+		sonic_put_seq_statusq(crypto_chain->ccp_seq_spec.sqs_seq_status_q);
+}
+
 const struct sequencer_ops hw_seq_ops = {
 	.setup_desc = hw_setup_desc,
 	.ring_db = hw_ring_db,
 	.setup_cp_chain_params = hw_setup_cp_chain_params,
 	.setup_hash_chain_params = hw_setup_hash_chain_params,
 	.setup_cpdc_chain_desc = hw_setup_cpdc_chain_desc,
+	.cleanup_cpdc_chain = hw_cleanup_cpdc_chain,
+	.setup_crypto_chain = hw_setup_crypto_chain,
+	.cleanup_crypto_chain = hw_cleanup_crypto_chain,
 };

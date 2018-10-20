@@ -14,23 +14,11 @@
 #include "sonic_dev.h"
 
 #include "pnso_api.h"
+#include "pnso_init.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * struct cpdc_init_params - used to initialize CPDC accelerator.
- * @cip_version: to be populated in 'struct psno_compression_header'
- * @cip_qdepth: maximum parallel requests
- * @cip_block_size: specifies the size of a block in bytes.
- *
- */
-struct cpdc_init_params {
-	uint16_t cip_version;
-	uint16_t cip_qdepth;
-	uint32_t cip_block_size;
-};
 
 /**
  * struct cpdc_sgl - represents scatter-gather list (sgl) of buffers for
@@ -53,6 +41,8 @@ struct cpdc_init_params {
  * @cs_rsvd_3: specifies a 'reserved' field for future use.
  *
  */
+#define CPDC_SGL_TUPLE_LEN_MAX	65536
+
 struct cpdc_sgl {
 	uint64_t cs_addr_0;	/* 1st buffer */
 	uint32_t cs_len_0;
@@ -191,7 +181,7 @@ struct cpdc_status_desc {
 /**
  * cpdc_init_accelerator() - creates and/or initializes internal data structures
  * that are necessary to CPDC accelerator.
- * @init_params:	[in]		specifies the initialization parameters
+ * @pc_init:		[in]		specifies the initialization parameters
  *					for this accelerator.
  * @pc_res:		[in/out]	specifies the per core container-
  *					structure to cache the accelerators'
@@ -208,7 +198,7 @@ struct cpdc_status_desc {
  *	-EPERM	- if accelerator is already initialized
  *
  */
-pnso_error_t cpdc_init_accelerator(const struct cpdc_init_params *init_params,
+pnso_error_t cpdc_init_accelerator(struct pc_res_init_params *pc_init,
 		struct per_core_resource *pc_res);
 
 /**

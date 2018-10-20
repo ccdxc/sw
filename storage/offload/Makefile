@@ -53,6 +53,7 @@ $(SONIC)-y = src/drv/pnso_mpool.o
 $(SONIC)-y += src/drv/pnso_api.o
 $(SONIC)-y += src/common/pnso_svc.o
 $(SONIC)-y += src/drv/pnso_req.o
+$(SONIC)-y += src/drv/pnso_init.o
 $(SONIC)-y += src/drv/pnso_chain.o
 $(SONIC)-y += src/drv/pnso_cp.o
 $(SONIC)-y += src/drv/pnso_dc.o

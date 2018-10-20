@@ -15,6 +15,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_seq.h"
+#include "pnso_utils.h"
 
 static inline void
 clear_dc_header_present(uint16_t flags, struct cpdc_desc *desc)
@@ -61,7 +62,6 @@ decompress_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pc_res;
 	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
-	size_t src_buf_len, dst_buf_len;
 	uint16_t flags;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -69,10 +69,6 @@ decompress_setup(struct service_info *svc_info,
 	pnso_dc_desc = (struct pnso_decompression_desc *)
 		svc_params->u.sp_dc_desc;
 	flags = pnso_dc_desc->flags;
-
-	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-
-	dst_buf_len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
 
 	pc_res = svc_info->si_pc_res;
 	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
@@ -93,15 +89,15 @@ decompress_setup(struct service_info *svc_info,
 		goto out_dc_desc;
 	}
 
-	err = cpdc_update_service_info_sgls(svc_info, svc_params);
+	err = cpdc_update_service_info_sgls(svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dc src/dst sgl from pool! err: %d",
 				err);
 		goto out_status_desc;
 	}
 
-	fill_dc_desc(dc_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
-			status_desc, src_buf_len, dst_buf_len);
+	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl, svc_info->si_dst_sgl.sgl,
+			status_desc, svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
 	clear_dc_header_present(flags, dc_desc);
 
 	svc_info->si_type = PNSO_SVC_TYPE_DECOMPRESS;
@@ -161,6 +157,35 @@ decompress_chain(struct chain_entry *centry)
 out:
 	OSAL_LOG_DEBUG("exit!");
 	return err;
+}
+
+static pnso_error_t
+decompress_sub_chain_from_cpdc(struct service_info *svc_info,
+			       struct cpdc_chain_params *cpdc_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
+decompress_sub_chain_from_crypto(struct service_info *svc_info,
+			         struct crypto_chain_params *crypto_chain)
+{
+	struct cpdc_desc *dc_desc;
+
+	if (crypto_chain->ccp_cmd.ccpc_comp_sgl_src_en) {
+		dc_desc = svc_info->si_desc;
+		dc_desc->cd_src = crypto_chain->ccp_comp_sgl_src_addr;
+		dc_desc->u.cd_bits.cc_src_is_list = true;
+		CPDC_PPRINT_DESC(dc_desc);
+	}
+	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
+	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring_id,
+				   &crypto_chain->ccp_ring_spec,
+				   svc_info->si_desc, 1);
 }
 
 static pnso_error_t
@@ -282,7 +307,7 @@ out:
 }
 
 static void
-decompress_teardown(const struct service_info *svc_info)
+decompress_teardown(struct service_info *svc_info)
 {
 	pnso_error_t err;
 	struct cpdc_desc *dc_desc;
@@ -293,9 +318,10 @@ decompress_teardown(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
+	CPDC_PPRINT_DESC(svc_info->si_desc);
 
-	cpdc_release_sgl(svc_info->si_dst_sgl);
-	cpdc_release_sgl(svc_info->si_src_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);
+	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
 
 	pc_res = svc_info->si_pc_res;
 	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
@@ -322,6 +348,8 @@ decompress_teardown(const struct service_info *svc_info)
 struct service_ops dc_ops = {
 	.setup = decompress_setup,
 	.chain = decompress_chain,
+	.sub_chain_from_cpdc = decompress_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = decompress_sub_chain_from_crypto,
 	.schedule = decompress_schedule,
 	.poll = decompress_poll,
 	.read_status = decompress_read_status,

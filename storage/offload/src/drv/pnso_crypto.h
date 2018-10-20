@@ -17,16 +17,7 @@
 #include "sonic_dev.h"
 
 #include "pnso_api.h"
-
-/**
- * struct crypto_init_params - used to initialize accelerator.
- * @xip_qdepth: maximum parallel requests
- *
- */
-struct crypto_init_params {
-	uint16_t Xip_queue_depth;
-	/* TODO-crypto: more might be added here */
-};
+#include "pnso_init.h"
 
 /**
  * struct crypto_aol - represents set of address-offset-length (aol) of data
@@ -183,7 +174,7 @@ struct crypto_status_desc {
  *	-EPERM	- if accelerator is already initialized
  *
  */
-pnso_error_t crypto_init_accelerator(const struct crypto_init_params *init_params,
+pnso_error_t crypto_init_accelerator(struct pc_res_init_params *pc_init,
 		struct per_core_resource *pc_res);
 
 /**

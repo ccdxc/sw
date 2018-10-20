@@ -218,6 +218,7 @@ struct sonic_dev {
 	void __iomem *hbm_iomem_vaddr;
 	dma_addr_t phy_hbm_pages;
 	uint32_t hbm_npages;
+	uint32_t hbm_nallocs;
 #ifdef HAPS
 	union identity __iomem *ident;
 #endif
@@ -264,6 +265,7 @@ struct queue {
 	void *nop_desc;
 	unsigned int pid;
 	unsigned int qid;
+	unsigned int qpos;
 	unsigned int qtype;
 	storage_seq_qgroup_t qgroup;
 };

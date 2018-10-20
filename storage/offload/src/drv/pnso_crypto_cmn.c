@@ -88,23 +88,26 @@ crypto_pprint_desc(const struct crypto_desc *desc)
 	crypto_pprint_aol(desc->cd_out_aol);
 }
 
-struct crypto_aol *
+pnso_error_t
 crypto_aol_packed_get(const struct per_core_resource *pc_res,
-		      const struct pnso_buffer_list *buf_list,
-		      uint32_t *ret_total_len)
+		      const struct service_buf_list *svc_blist,
+		      struct service_crypto_aol *svc_aol)
 {
 	struct buffer_list_iter buffer_list_iter;
 	struct buffer_list_iter *iter;
-	struct crypto_aol *aol_head = NULL;
 	struct crypto_aol *aol_prev = NULL;
 	struct crypto_aol *aol;
+	uint32_t total_len;
 
-	iter = buffer_list_iter_init(&buffer_list_iter, buf_list);
-	*ret_total_len = 0;
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+	svc_aol->mpool_type = MPOOL_TYPE_CRYPTO_AOL;
+	svc_aol->aol = NULL;
+	total_len = 0;
 	while (iter) {
-		aol = pc_res_mpool_object_get(pc_res, MPOOL_TYPE_CRYPTO_AOL);
+		aol = pc_res_mpool_object_get(pc_res, svc_aol->mpool_type);
 		if (!aol) {
-			OSAL_LOG_ERROR("cannot obtain crypto aol from pool!");
+			OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool, "
+				       "current_len %u", total_len);
 			goto out;
 		}
 		memset(aol, 0, sizeof(*aol));
@@ -119,34 +122,93 @@ crypto_aol_packed_get(const struct per_core_resource *pc_res,
 			iter = buffer_list_iter_addr_len_get(iter,
 					CRYPTO_AOL_TUPLE_LEN_MAX,
 					&aol->ca_addr_2, &aol->ca_len_2);
-		*ret_total_len += aol->ca_len_0 + aol->ca_len_1 + aol->ca_len_2;
+		total_len += aol->ca_len_0 + aol->ca_len_1 + aol->ca_len_2;
 
-		if (!aol_head)
-			aol_head = aol;
+		if (!svc_aol->aol)
+			svc_aol->aol = aol;
 		else
 			aol_prev->ca_next = sonic_virt_to_phy(aol);
 		aol_prev = aol;
 	}
 
-	return aol_head;
+	return PNSO_OK;
 out:
-	crypto_aol_put(pc_res, aol_head);
-	return NULL;
+	crypto_aol_put(pc_res, svc_aol);
+	return ENOMEM;
+}
+
+pnso_error_t
+crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
+			  uint32_t block_size,
+			  const struct service_buf_list *svc_blist,
+			  struct service_crypto_aol *svc_aol)
+{
+	struct buffer_list_iter buffer_list_iter;
+	struct buffer_list_iter *iter;
+	struct crypto_aol *aol_vec;
+	uint32_t vec_count;
+	uint32_t cur_count;
+	uint32_t total_len;
+
+	OSAL_ASSERT(is_power_of_2(block_size));
+	svc_aol->mpool_type = MPOOL_TYPE_CRYPTO_AOL_VECTOR;
+	svc_aol->aol = pc_res_mpool_object_get_with_count(pc_res,
+				svc_aol->mpool_type, &vec_count);
+	if (!svc_aol->aol) {
+		OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool");
+		goto out;
+	}
+
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+	aol_vec = svc_aol->aol;
+	total_len = 0;
+	cur_count = 0;
+	while (iter && (cur_count < vec_count)) {
+		memset(aol_vec, 0, sizeof(*aol_vec));
+		iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&aol_vec->ca_addr_0, &aol_vec->ca_len_0);
+		total_len += aol_vec->ca_len_0;
+
+		/*
+		 * For padding purposes, every element of a sparse AOL
+		 * must be a full block size.
+		 */
+		if (aol_vec->ca_len_0 != block_size) {
+			OSAL_LOG_ERROR("Sparse AOL fails to make full block_size %u",
+					block_size);
+			goto out;
+                }
+		aol_vec++;
+		cur_count++;
+	}
+
+	if (iter) {
+		OSAL_LOG_ERROR("buffer_list total length exceeds AOL vector, "
+			       "current_len %u", total_len);
+		goto out;
+        }
+
+	return PNSO_OK;
+out:
+	crypto_aol_put(pc_res, svc_aol);
+	return ENOMEM;
 }
 
 void
 crypto_aol_put(const struct per_core_resource *pc_res,
-	       struct crypto_aol *aol)
+	       struct service_crypto_aol *svc_aol)
 {
 	struct crypto_aol *aol_next;
+	struct crypto_aol *aol;
 
+	aol = svc_aol->aol;
 	while (aol) {
 		aol_next = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) :
 					  NULL;
-		pc_res_mpool_object_put(pc_res, MPOOL_TYPE_CRYPTO_AOL,
-					(void *)aol);
+		pc_res_mpool_object_put(pc_res, svc_aol->mpool_type, (void *)aol);
 		aol = aol_next;
 	}
+	svc_aol->aol = NULL;
 }
 
 pnso_error_t

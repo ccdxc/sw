@@ -15,6 +15,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_seq.h"
+#include "pnso_utils.h"
 
 static void
 fill_chksum_desc(uint32_t algo_type, uint32_t buf_len,
@@ -64,7 +65,6 @@ chksum_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl;
 	struct per_core_resource *pc_res;
-	size_t src_blist_len;
 	bool per_block;
 	uint16_t flags;
 	uint32_t num_tags;
@@ -101,24 +101,23 @@ chksum_setup(struct service_info *svc_info,
 		goto out_sgl_desc;
 	}
 
-	src_blist_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 	if (per_block) {
 		num_tags =
 			cpdc_fill_per_block_desc(pnso_chksum_desc->algo_type,
-					svc_info->si_block_size, src_blist_len,
+					svc_info->si_block_size, svc_info->si_src_blist.len,
 					svc_params->sp_src_blist, sgl,
 					chksum_desc, status_desc,
 					fill_chksum_desc);
 	} else {
-		err = cpdc_update_service_info_sgl(svc_info, svc_params);
+		err = cpdc_update_service_info_sgl(svc_info);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain chksum src sgl from pool! err: %d",
 					err);
 			goto out_status_desc;
 		}
 
-		fill_chksum_desc(pnso_chksum_desc->algo_type, src_blist_len,
-				false, svc_info->si_src_sgl,
+		fill_chksum_desc(pnso_chksum_desc->algo_type, svc_info->si_src_blist.len,
+				false, svc_info->si_src_sgl.sgl,
 				chksum_desc, status_desc);
 		num_tags = 1;
 	}
@@ -194,6 +193,26 @@ chksum_chain(struct chain_entry *centry)
 out:
 	OSAL_LOG_DEBUG("exit!");
 	return err;
+}
+
+static pnso_error_t
+chksum_sub_chain_from_cpdc(struct service_info *svc_info,
+			   struct cpdc_chain_params *cpdc_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
+chksum_sub_chain_from_crypto(struct service_info *svc_info,
+			     struct crypto_chain_params *crypto_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
@@ -497,7 +516,7 @@ chksum_write_result(struct service_info *svc_info)
 }
 
 static void
-chksum_teardown(const struct service_info *svc_info)
+chksum_teardown(struct service_info *svc_info)
 {
 	pnso_error_t err;
 	struct cpdc_desc *chksum_desc;
@@ -515,8 +534,8 @@ chksum_teardown(const struct service_info *svc_info)
 			svc_info->si_desc_flags);
 
 	if (!per_block) {
-		cpdc_release_sgl(svc_info->si_dst_sgl);
-		cpdc_release_sgl(svc_info->si_src_sgl);
+		pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);
+		pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
 	}
 
 	pc_res = svc_info->si_pc_res;
@@ -550,6 +569,8 @@ chksum_teardown(const struct service_info *svc_info)
 struct service_ops chksum_ops = {
 	.setup = chksum_setup,
 	.chain = chksum_chain,
+	.sub_chain_from_cpdc = chksum_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = chksum_sub_chain_from_crypto,
 	.schedule = chksum_schedule,
 	.poll = chksum_poll,
 	.read_status = chksum_read_status,

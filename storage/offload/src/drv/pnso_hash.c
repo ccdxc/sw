@@ -15,6 +15,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_seq.h"
+#include "pnso_utils.h"
 
 static inline bool
 svc_is_dflag_pblock_enabled(uint16_t flags)
@@ -64,7 +65,6 @@ hash_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl;
 	struct per_core_resource *pc_res;
-	size_t src_blist_len;
 	bool per_block;
 	uint16_t flags;
 	uint32_t num_tags;
@@ -101,22 +101,21 @@ hash_setup(struct service_info *svc_info,
 		goto out_sgl_desc;
 	}
 
-	src_blist_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 	if (per_block) {
 		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
-				svc_info->si_block_size, src_blist_len,
+				svc_info->si_block_size, svc_info->si_src_blist.len,
 				svc_params->sp_src_blist, sgl,
 				hash_desc, status_desc, fill_hash_desc);
 	} else {
-		err = cpdc_update_service_info_sgl(svc_info, svc_params);
+		err = cpdc_update_service_info_sgl(svc_info);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain hash src sgl from pool! err: %d",
 					err);
 			goto out_status_desc;
 		}
 
-		fill_hash_desc(pnso_hash_desc->algo_type, src_blist_len, false,
-				svc_info->si_src_sgl, hash_desc, status_desc);
+		fill_hash_desc(pnso_hash_desc->algo_type, svc_info->si_src_blist.len, false,
+				svc_info->si_src_sgl.sgl, hash_desc, status_desc);
 		num_tags = 1;
 	}
 
@@ -177,7 +176,6 @@ hash_chain(struct chain_entry *centry)
 {
 	pnso_error_t err;
 	struct service_info *svc_info;
-	struct cpdc_desc *hash_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -190,8 +188,29 @@ hash_chain(struct chain_entry *centry)
 		goto done;
 	}
 
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	err = EOPNOTSUPP;
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+done:
+	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+}
+
+static pnso_error_t
+hash_sub_chain_from_cpdc(struct service_info *svc_info,
+			 struct cpdc_chain_params *cpdc_chain)
+{
+	pnso_error_t err;
+	struct cpdc_desc *hash_desc;
+
+	OSAL_LOG_DEBUG("enter ...");
+
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = seq_setup_hash_chain_params(centry, svc_info, hash_desc,
+	err = seq_setup_hash_chain_params(cpdc_chain, svc_info, hash_desc,
 			svc_info->si_p4_sgl, svc_info->si_num_tags);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup hash in chain! err: %d", err);
@@ -199,7 +218,6 @@ hash_chain(struct chain_entry *centry)
 	}
 	CPDC_PPRINT_DESC(hash_desc);
 
-done:
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return err;
@@ -207,6 +225,16 @@ done:
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
+}
+
+static pnso_error_t
+hash_sub_chain_from_crypto(struct service_info *svc_info,
+			   struct crypto_chain_params *crypto_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
@@ -550,7 +578,7 @@ hash_write_result(struct service_info *svc_info)
 }
 
 static void
-hash_teardown(const struct service_info *svc_info)
+hash_teardown(struct service_info *svc_info)
 {
 	pnso_error_t err;
 	struct cpdc_desc *hash_desc;
@@ -568,8 +596,8 @@ hash_teardown(const struct service_info *svc_info)
 			svc_info->si_desc_flags);
 
 	if (!per_block) {
-		cpdc_release_sgl(svc_info->si_dst_sgl);
-		cpdc_release_sgl(svc_info->si_src_sgl);
+		pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);
+		pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
 	}
 
 	pc_res = svc_info->si_pc_res;
@@ -603,6 +631,8 @@ hash_teardown(const struct service_info *svc_info)
 struct service_ops hash_ops = {
 	.setup = hash_setup,
 	.chain = hash_chain,
+	.sub_chain_from_cpdc = hash_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = hash_sub_chain_from_crypto,
 	.schedule = hash_schedule,
 	.poll = hash_poll,
 	.read_status = hash_read_status,

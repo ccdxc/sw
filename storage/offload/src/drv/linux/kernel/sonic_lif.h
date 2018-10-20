@@ -146,11 +146,24 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type qtype,
 
 int sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type qtype,
 		struct queue **q);
-int sonic_put_seq_statusq(struct lif *lif, enum sonic_queue_type qtype,
-		struct queue *q);
+void sonic_put_seq_statusq(struct queue *q);
 
 struct lif *sonic_get_lif(void);
 struct sonic_dev *sonic_get_idev(void);
+uint32_t sonic_get_num_per_core_res(struct lif *lif);
+struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif, uint32_t res_id);
 struct per_core_resource *sonic_get_per_core_res(struct lif *lif);
+
+static inline uint32_t
+sonic_get_seq_sq_num_descs(struct lif *lif,
+                           enum sonic_queue_type sonic_qtype)
+{
+	struct queue	*q;
+
+	if (!sonic_get_seq_sq(lif, sonic_qtype, &q))
+		return q->num_descs;
+
+	return 0;
+}
 
 #endif /* _SONIC_LIF_H_ */

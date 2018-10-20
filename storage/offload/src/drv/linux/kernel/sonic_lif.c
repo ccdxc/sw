@@ -32,8 +32,7 @@
 #include "osal_mem.h"
 #include "osal_assert.h"
 
-#include "pnso_cpdc.h"
-#include "pnso_crypto.h"
+#include "pnso_init.h"
 
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
@@ -387,12 +386,10 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 {
 	int i;
 
+	pnso_deinit();
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
 		sonic_cpdc_qs_deinit(lif->res.pc_res[i]);
-		cpdc_deinit_accelerator(lif->res.pc_res[i]);
-
 		sonic_crypto_qs_deinit(lif->res.pc_res[i]);
-		crypto_deinit_accelerator(lif->res.pc_res[i]);
 	}
 }
 
@@ -465,7 +462,7 @@ static int sonic_lif_adminq_init(struct lif *lif)
 	return sonic_debugfs_add_qcq(lif, qcq);
 }
 
-static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
+static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q, unsigned int qpos,
 			     int qgroup, uint32_t num_descs, uint16_t desc_size)
 {
 	int err;
@@ -485,6 +482,7 @@ static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
 		return err;
 	}
 	q->pc_res = res;
+	q->qpos = qpos;
 	q->qtype = STORAGE_SEQ_QTYPE_SQ;
 	q->qgroup = qgroup;
 	sonic_q_map(q, q->base, q->base_pa);
@@ -550,7 +548,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_CP, &desc_count);
 	if (err)
 		goto done;
-	err = sonic_cpdc_q_init(res, &res->cp_seq_q, STORAGE_SEQ_QGROUP_CPDC,
+	err = sonic_cpdc_q_init(res, &res->cp_seq_q, 0, STORAGE_SEQ_QGROUP_CPDC,
 				desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
 		dev_err(dev, "sonic_cpdc_q_init failed for CP, err=%d\n", err);
@@ -561,7 +559,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_DC, &desc_count);
 	if (err)
 		goto done;
-	err = sonic_cpdc_q_init(res, &res->dc_seq_q, STORAGE_SEQ_QGROUP_CPDC,
+	err = sonic_cpdc_q_init(res, &res->dc_seq_q, 0, STORAGE_SEQ_QGROUP_CPDC,
 				desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
 		dev_err(dev, "sonic_cpdc_q_init failed for DC, err=%d\n", err);
@@ -570,7 +568,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 
 	/* Status queues init */
 	for (i = 0; i < status_q_count; i++) {
-		err = sonic_cpdc_q_init(res, &res->cpdc_seq_status_qs[i],
+		err = sonic_cpdc_q_init(res, &res->cpdc_seq_status_qs[i], i,
 					STORAGE_SEQ_QGROUP_CPDC_STATUS,
 					MAX_PER_QUEUE_STATUS_ENTRIES,
 					SONIC_SEQ_STATUS_Q_DESC_SIZE);
@@ -585,7 +583,7 @@ done:
 }
 
 static int sonic_crypto_q_init(struct per_core_resource *res,
-			       struct queue *q, int qgroup,
+			       struct queue *q, unsigned int qpos, int qgroup,
 			       uint32_t num_descs, uint16_t desc_size)
 {
 	int err;
@@ -604,6 +602,7 @@ static int sonic_crypto_q_init(struct per_core_resource *res,
 		return err;
 	}
 	q->pc_res = res;
+	q->qpos = qpos;
 	q->qtype = STORAGE_SEQ_QTYPE_SQ;
 	q->qgroup = qgroup;
 	sonic_q_map(q, q->base, q->base_pa);
@@ -632,7 +631,7 @@ static int sonic_crypto_qs_init(struct per_core_resource *res,
 	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_XTS0, &desc_count);
 	if (err)
 		goto done;
-	err = sonic_crypto_q_init(res, &res->crypto_enc_seq_q,
+	err = sonic_crypto_q_init(res, &res->crypto_enc_seq_q, 0,
 				  STORAGE_SEQ_QGROUP_CRYPTO,
 				  desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err)
@@ -642,7 +641,7 @@ static int sonic_crypto_qs_init(struct per_core_resource *res,
 	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_XTS1, &desc_count);
 	if (err)
 		goto done;
-	err = sonic_crypto_q_init(res, &res->crypto_dec_seq_q,
+	err = sonic_crypto_q_init(res, &res->crypto_dec_seq_q, 0,
 				  STORAGE_SEQ_QGROUP_CRYPTO,
 				  desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err)
@@ -650,7 +649,7 @@ static int sonic_crypto_qs_init(struct per_core_resource *res,
 
 	/* Status queues init */
 	for (i = 0; i < status_q_count; i++) {
-		err = sonic_crypto_q_init(res, &res->crypto_seq_status_qs[i],
+		err = sonic_crypto_q_init(res, &res->crypto_seq_status_qs[i], i,
 					  STORAGE_SEQ_QGROUP_CRYPTO_STATUS,
 					  MAX_PER_QUEUE_STATUS_ENTRIES,
 					  SONIC_SEQ_STATUS_Q_DESC_SIZE);
@@ -667,8 +666,6 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 					    int seq_q_count)
 {
 	int err;
-	struct cpdc_init_params cpdc_init_params;
-	struct crypto_init_params crypto_init_params;
 
 	/* Initialize local driver structures */
 	res->lif = lif;
@@ -696,14 +693,6 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 		goto done;
 
 	err = sonic_lif_crypto_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
-	if (err)
-		goto done;
-
-	err = cpdc_init_accelerator(&cpdc_init_params, res);
-	if (err)
-		goto done;
-
-	err = crypto_init_accelerator(&crypto_init_params, res);
 	if (err)
 		goto done;
 
@@ -872,7 +861,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	free_res_id = find_first_zero_bit(lif->res.pc_res_bmp, lif->sonic->num_per_core_resources);
 	if (free_res_id == lif->sonic->num_per_core_resources) {
 		spin_unlock(&lif->res.lock);
-		OSAL_LOG_ERROR("Per core resource exhausted\n");
+		OSAL_LOG_ERROR("Per core resource exhausted for core_id %d\n", core_id);
 		return err;
 	}
 	set_bit(free_res_id, lif->res.pc_res_bmp);
@@ -906,6 +895,17 @@ struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 	}
 
 	return lif->res.pc_res[pc_res_idx];
+}
+
+uint32_t sonic_get_num_per_core_res(struct lif *lif)
+{
+	return lif->sonic->num_per_core_resources;
+}
+
+struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif, uint32_t res_id)
+{
+	return res_id < lif->sonic->num_per_core_resources ?
+	       lif->res.pc_res[res_id] : NULL;
 }
 
 int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
@@ -986,7 +986,35 @@ sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		break;
 	}
 
+	OSAL_ASSERT((*q)->qpos == free_qid);
 	return 0;
+}
+
+void
+sonic_put_seq_statusq(struct queue *q)
+{
+	struct per_core_resource *pc_res;
+	unsigned long *bmp;
+	int max = 0;
+
+	if (q) {
+		pc_res = q->pc_res;
+		switch (q->qtype) {
+		case SONIC_QTYPE_CPDC_STATUS:
+			bmp = pc_res->cpdc_seq_status_qs_bmp;
+			max = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
+			break;
+		case SONIC_QTYPE_CRYPTO_STATUS:
+			bmp = pc_res->crypto_seq_status_qs_bmp;
+			max = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
+			break;
+		default:
+			return;
+			break;
+		}
+
+		clear_bit(q->qpos, bmp);
+	}
 }
 
 struct lif *sonic_get_lif(void)
