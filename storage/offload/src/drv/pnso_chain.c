@@ -791,6 +791,11 @@ chn_execute_chain(struct service_chain *chain)
 		goto out;
 	}
 
+	if (chain->sc_req_cb) {
+		OSAL_LOG_DEBUG("in poll mode ... invoking caller's cb");
+		goto out;
+	}
+
 	/* wait for 'last' service completion */
 	err = ce_last->ce_svc_info.si_ops.poll(&ce_last->ce_svc_info);
 	PAS_END_HW_PERF(pcr);
