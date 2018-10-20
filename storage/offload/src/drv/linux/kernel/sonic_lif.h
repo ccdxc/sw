@@ -151,7 +151,7 @@ void sonic_put_seq_statusq(struct queue *q);
 struct lif *sonic_get_lif(void);
 struct sonic_dev *sonic_get_idev(void);
 uint32_t sonic_get_num_per_core_res(struct lif *lif);
-struct per_core_resource *sonic_core_id_get_per_core_res(struct lif *lif, int core_id);
+struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif, uint32_t res_id);
 struct per_core_resource *sonic_get_per_core_res(struct lif *lif);
 
 static inline uint32_t

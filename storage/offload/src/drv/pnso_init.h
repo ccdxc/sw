@@ -36,10 +36,6 @@ struct pc_res_init_params {
 	uint32_t max_seq_sq_descs;
 };
 
-
 void pnso_deinit(void);
-pnso_error_t pnso_pc_res_init(struct pc_res_init_params *pc_init,
-			      struct per_core_resource *pc_res);
-void pnso_pc_res_deinit(struct per_core_resource *pc_res);
 
 #endif /* __PNSO_INIT_H__ */

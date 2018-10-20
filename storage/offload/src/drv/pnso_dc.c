@@ -70,10 +70,6 @@ decompress_setup(struct service_info *svc_info,
 		svc_params->u.sp_dc_desc;
 	flags = pnso_dc_desc->flags;
 
-	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-
-	dst_buf_len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
-
 	pc_res = svc_info->si_pc_res;
 	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 	dc_desc = (struct cpdc_desc *) mpool_get_object(cpdc_mpool);

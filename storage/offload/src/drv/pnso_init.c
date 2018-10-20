@@ -21,7 +21,13 @@
 #include "pnso_chain_params.h"
 
 static uint32_t
-pc_res_max_seq_sq_descs_get(struct lif *lif);
+seq_sq_descs_total_get(struct lif *lif);
+
+static pnso_error_t
+pc_res_init(struct pc_res_init_params *pc_init,
+	    struct per_core_resource *pc_res);
+static void
+pc_res_deinit(struct per_core_resource *pc_res);
 
 static pnso_error_t
 pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
@@ -45,8 +51,8 @@ pnso_init(struct pnso_init_params *pnso_init)
 	memset(&pc_init, 0, sizeof(pc_init));
 	pc_init.pnso_init = *pnso_init;
 	pc_init.rmem_page_size = sonic_rmem_page_size_get();
-	pc_init.max_seq_sq_descs = min((uint32_t)pnso_init->per_core_qdepth,
-				       pc_res_max_seq_sq_descs_get(lif));
+	pc_init.max_seq_sq_descs = max((uint32_t)pnso_init->per_core_qdepth,
+				       seq_sq_descs_total_get(lif));
 	/*
 	 * We use 2 passes to initialize per-core resources:
 	 * Pass 1: allocate accelerator desc resources including any
@@ -57,8 +63,8 @@ pnso_init(struct pnso_init_params *pnso_init)
 	OSAL_ASSERT(num_pc_res);
 
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
-		pc_res = sonic_core_id_get_per_core_res(lif, i);
-		err = pnso_pc_res_init(&pc_init, pc_res);
+		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
+		err = pc_res_init(&pc_init, pc_res);
 	}
 
 	/*
@@ -82,9 +88,12 @@ pnso_init(struct pnso_init_params *pnso_init)
 	 *         intermediate buffers.
 	 */
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
-		pc_res = sonic_core_id_get_per_core_res(lif, i);
+		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
 		err = pc_res_interm_buf_init(&pc_init, pc_res, pc_num_bufs);
 	}
+
+	if (err != PNSO_OK)
+		pnso_deinit();
 
 	return err;
 }
@@ -100,14 +109,14 @@ pnso_deinit(void)
 
 	num_pc_res = sonic_get_num_per_core_res(lif);
 	for (i = 0; i < num_pc_res; i++) {
-		pc_res = sonic_core_id_get_per_core_res(lif, i);
-		pnso_pc_res_deinit(pc_res);
+		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
+		pc_res_deinit(pc_res);
 	}
 }
 
-pnso_error_t
-pnso_pc_res_init(struct pc_res_init_params *pc_init,
-		 struct per_core_resource *pc_res)
+static pnso_error_t
+pc_res_init(struct pc_res_init_params *pc_init,
+	    struct per_core_resource *pc_res)
 {
 	pnso_error_t err;
 
@@ -123,8 +132,8 @@ pnso_pc_res_init(struct pc_res_init_params *pc_init,
 	return err;
 }
 
-void
-pnso_pc_res_deinit(struct per_core_resource *pc_res)
+static void
+pc_res_deinit(struct per_core_resource *pc_res)
 {
 	cpdc_deinit_accelerator(pc_res);
 	crypto_deinit_accelerator(pc_res);
@@ -172,7 +181,7 @@ pc_res_interm_buf_deinit(struct per_core_resource *pc_res)
 }
 
 
-static enum sonic_queue_type seq_seq_types_tbl[] = {
+static enum sonic_queue_type seq_sq_tbl[] = {
 	SONIC_QTYPE_CP_SQ,
 	SONIC_QTYPE_DC_SQ,
 	SONIC_QTYPE_CRYPTO_ENC_SQ,
@@ -180,15 +189,15 @@ static enum sonic_queue_type seq_seq_types_tbl[] = {
 };
 
 static uint32_t
-pc_res_max_seq_sq_descs_get(struct lif *lif)
+seq_sq_descs_total_get(struct lif *lif)
 {
-	uint32_t	max_descs = 0;
+	uint32_t	total_descs = 0;
 	int		i;
 
-	for (i = 0; i < ARRAY_SIZE(seq_seq_types_tbl); i++) {
-		max_descs = max(max_descs,
-			sonic_get_seq_sq_num_descs(lif, seq_seq_types_tbl[i]));
+	for (i = 0; i < ARRAY_SIZE(seq_sq_tbl); i++) {
+		total_descs +=
+			sonic_get_seq_sq_num_descs(lif, seq_sq_tbl[i]);
 	}
 
-	return max_descs;
+	return total_descs;
 }

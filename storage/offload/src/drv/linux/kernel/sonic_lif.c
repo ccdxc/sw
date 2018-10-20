@@ -861,7 +861,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	free_res_id = find_first_zero_bit(lif->res.pc_res_bmp, lif->sonic->num_per_core_resources);
 	if (free_res_id == lif->sonic->num_per_core_resources) {
 		spin_unlock(&lif->res.lock);
-		OSAL_LOG_ERROR("Per core resource exhausted\n");
+		OSAL_LOG_ERROR("Per core resource exhausted for core_id %d\n", core_id);
 		return err;
 	}
 	set_bit(free_res_id, lif->res.pc_res_bmp);
@@ -874,16 +874,14 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	return 0;
 }
 
-uint32_t sonic_get_num_per_core_res(struct lif *lif)
+struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 {
-	return lif->sonic->num_per_core_resources;
-}
+	int err = -ENOSPC;
+	int pc_res_idx = -1;
+	int core_id;
 
-struct per_core_resource *sonic_core_id_get_per_core_res(struct lif *lif, int core_id)
-{
-	int err;
-	int pc_res_idx;
-
+	core_id = osal_get_coreid();
+	OSAL_ASSERT(core_id >= 0 && core_id < OSAL_MAX_CORES);
 	pc_res_idx = lif->res.core_to_res_map[core_id];
 	if (pc_res_idx < 0) {
 		err = assign_per_core_res_id(lif, core_id);
@@ -899,12 +897,15 @@ struct per_core_resource *sonic_core_id_get_per_core_res(struct lif *lif, int co
 	return lif->res.pc_res[pc_res_idx];
 }
 
-struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
+uint32_t sonic_get_num_per_core_res(struct lif *lif)
 {
-	int core_id = osal_get_coreid();
+	return lif->sonic->num_per_core_resources;
+}
 
-	OSAL_ASSERT(core_id >= 0 && core_id < OSAL_MAX_CORES);
-	return sonic_core_id_get_per_core_res(lif, core_id);
+struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif, uint32_t res_id)
+{
+	return res_id < lif->sonic->num_per_core_resources ?
+	       lif->res.pc_res[res_id] : NULL;
 }
 
 int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,

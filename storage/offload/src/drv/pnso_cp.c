@@ -57,73 +57,6 @@ pad_buffer_with_zeroes(uint16_t flags, struct pnso_buffer_list *buf_list)
 	}
 }
 
-<<<<<<< HEAD
-=======
-static bool
-is_compression_desc_valid(const struct pnso_compression_desc *desc)
-{
-	pnso_error_t err = EINVAL;
-
-	if (!is_cp_algo_type_valid(desc->algo_type)) {
-		OSAL_LOG_ERROR("invalid cp algo type specified! algo_type: %hu err: %d",
-				desc->algo_type, err);
-		return false;
-	}
-
-	if (!is_cp_threshold_len_valid(desc->threshold_len)) {
-		OSAL_LOG_ERROR("invalid cp threshold len specified! threshold_len: %hu err: %d",
-				desc->threshold_len, err);
-		return false;
-	}
-
-	if (!is_cp_flags_valid(desc->flags)) {
-		OSAL_LOG_ERROR("invalid cp flags specified! flags: %hu err: %d",
-				desc->flags, err);
-		return false;
-	}
-
-	OSAL_LOG_INFO("compression desc is valid algo_type: %hu threshold_len: %hu flags: %hu",
-			desc->algo_type, desc->threshold_len, desc->flags);
-
-	return true;
-}
-
-static pnso_error_t __attribute__((unused))
-validate_setup_input(const struct service_info *svc_info,
-		const struct service_params *svc_params)
-{
-	pnso_error_t err = EINVAL;
-
-	if (!svc_info || !svc_params) {
-		OSAL_LOG_ERROR("invalid input specified! svc_info: %p svc_params: %p err: %d",
-				svc_info, svc_params, err);
-		return err;
-	}
-
-	if (!svc_params->sp_src_blist || !svc_params->sp_dst_blist) {
-		OSAL_LOG_ERROR("invalid src/dst buffers specified! sp_src_blist: %p sp_dst_blist: %p err: %d",
-				svc_params->sp_src_blist,
-				svc_params->sp_dst_blist, err);
-		return err;
-	}
-
-	if (svc_info->si_src_blist.len == 0 || 
-	    svc_info->si_src_blist.len > MAX_CPDC_SRC_BUF_LEN) {
-		OSAL_LOG_ERROR("invalid src buf len specified! len: %u err: %d",
-				svc_info->si_src_blist.len, err);
-		return err;
-	}
-
-	if (!svc_params->u.sp_cp_desc) {
-		OSAL_LOG_ERROR("invalid desc specified! sp_desc: %p err: %d",
-				svc_params->u.sp_cp_desc, err);
-		return err;
-	}
-
-	return PNSO_OK;
-}
-
->>>>>>> Optimize intermediate buffer implementation for the sweet spot of 8K size,
 static void
 fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 		struct cpdc_sgl *dst_sgl, struct cpdc_status_desc *status_desc,
@@ -169,17 +102,6 @@ compress_setup(struct service_info *svc_info,
 		svc_params->u.sp_cp_desc;
 	flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
-
-<<<<<<< HEAD
-	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-=======
-	if (svc_info->si_src_blist.len == 0 || 
-	    svc_info->si_src_blist.len > MAX_CPDC_SRC_BUF_LEN) {
-		OSAL_LOG_ERROR("invalid src buf len specified! src_buf_len: %u err: %d",
-				svc_info->si_src_blist.len, err);
-		goto out;
-	}
->>>>>>> Optimize intermediate buffer implementation for the sweet spot of 8K size,
 
 	pc_res = svc_info->si_pc_res;
 	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];

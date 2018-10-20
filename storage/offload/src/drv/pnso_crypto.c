@@ -82,7 +82,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	}
-	return PNSO_OK;
+	return err;
 }
 
 pnso_error_t
