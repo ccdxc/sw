@@ -14,6 +14,7 @@ extern pal_info_t   gl_pal_info;
 typedef void (*hw_init_fn_t)(char *application_name);
 typedef void (*reg_read_fn_t)(uint64_t addr, uint32_t *data, uint32_t nw);
 typedef void (*reg_write_fn_t)(uint64_t addr, uint32_t *data, uint32_t nw);
+typedef void (*reg_write64_fn_t)(const u_int64_t pa, const u_int64_t val);
 typedef int (*mem_read_fn_t)(uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags);
 typedef int (*mem_write_fn_t)(uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags);
 typedef bool (*ring_doorbell_fn_t)(uint64_t addr, uint64_t data);
@@ -22,14 +23,15 @@ typedef void *(*mem_ptov_fn_t)(const uint64_t pa);
 typedef int (*memset_fn_t)(const uint64_t pa, uint8_t c, const size_t sz, uint32_t flags);
 
 typedef struct pal_hw_vectors_s {
-    hw_init_fn_t	    hw_init;
+    hw_init_fn_t            hw_init;
     reg_read_fn_t           reg_read;
     reg_write_fn_t          reg_write;
+    reg_write64_fn_t        reg_write64;
     mem_read_fn_t           mem_read;
     mem_write_fn_t          mem_write;
     mem_vtop_fn_t           mem_vtop;
     mem_ptov_fn_t           mem_ptov;
-    memset_fn_t		    mem_set;
+    memset_fn_t             mem_set;
 } pal_hw_vectors_t;
 
 static pal_hw_vectors_t   gl_hw_vecs;
@@ -45,6 +47,9 @@ pal_init_hw_vectors (void)
 
     gl_hw_vecs.reg_write = (reg_write_fn_t)dlsym(gl_lib_handle, "pal_reg_wr32w");
     SDK_ASSERT(gl_hw_vecs.reg_write);
+
+    gl_hw_vecs.reg_write64 = (reg_write64_fn_t)dlsym(gl_lib_handle, "pal_reg_wr64");
+    SDK_ASSERT(gl_hw_vecs.reg_write64);
 
     gl_hw_vecs.mem_read = (mem_read_fn_t)dlsym(gl_lib_handle, "pal_mem_rd");
     SDK_ASSERT(gl_hw_vecs.mem_read);
@@ -114,7 +119,7 @@ pal_hw_ring_doorbell (uint64_t addr, uint64_t data)
 {
     uint64_t pa_doorbell = addr + 0x8000000;
 
-    (*gl_hw_vecs.reg_write)(pa_doorbell, (uint32_t*) &data, 2);
+    (*gl_hw_vecs.reg_write64)(pa_doorbell, data);
     return PAL_RET_OK;
 }
 
@@ -126,7 +131,7 @@ pal_hw_memset (uint64_t pa, uint8_t c, uint32_t sz, uint32_t flags)
     size_written = (*gl_hw_vecs.mem_set)(pa, c, sz, flags);
 
     if (size_written != sz) {
-	return PAL_RET_NOK;
+        return PAL_RET_NOK;
     }
     
     return PAL_RET_OK;
