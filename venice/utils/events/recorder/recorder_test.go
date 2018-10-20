@@ -121,7 +121,7 @@ func TestEventsRecorder(t *testing.T) {
 
 				// create test NIC object
 				testNIC := policygen.CreateSmartNIC("00-14-22-01-23-45",
-					cluster.SmartNICSpec_ADMITTED.String(),
+					cluster.SmartNICStatus_ADMITTED.String(),
 					"esx-1",
 					&cluster.SmartNICCondition{
 						Type:   cluster.SmartNICCondition_HEALTHY.String(),

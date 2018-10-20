@@ -119,6 +119,13 @@ func IntRange(i interface{}, args []string) bool {
 	return true
 }
 
+// CIDR checks if the string is an valid CIDR notiation (IPV4 & IPV6)
+//   see tests for valid formats
+func CIDR(i interface{}) bool {
+	in := i.(string)
+	return govldtr.IsCIDR(in)
+}
+
 // IPAddr Checks the input is an IP address in dot notation (V4 or V6)
 //   see tests for valid formats
 func IPAddr(i interface{}) bool {

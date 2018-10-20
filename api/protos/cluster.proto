@@ -1,0 +1,409 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package cluster;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// --------------------------------- CLUSTER ---------------------------------------------
+//
+// Cluster represents a full cluster venice and workload nodes
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o NetOps-admin
+//              - initial cluster creation
+//      Modify:
+//          o NetOps-admin
+//              - update spec attributes
+//          o CMD
+//              - update status attributes
+//      Delete:
+//          o NetOps-admin
+//              - TBD
+//
+message Cluster {
+
+    option (venice.objectPrefix) = {Singleton: "cluster"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the cluster.
+    ClusterSpec Spec     = 3 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the cluster.
+    ClusterStatus Status = 4 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// ClusterSpec contains the configuration of the cluster.
+message ClusterSpec {
+
+    // QuorumNodes contains the list of hostnames for nodes configured to be quorum
+    // nodes in the cluster.
+    repeated string QuorumNodes = 1 [(gogoproto.jsontag) = "quorum-nodes,omitempty"];
+
+    // VirtualIP is the IP address for managing the cluster. It will be hosted by
+    // the winner of election between quorum nodes.
+    string VirtualIP            = 2 [(gogoproto.jsontag) = "virtual-ip,omitempty"];
+
+    // NTPServers contains the list of NTP servers for the cluster.
+    repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntp-servers,omitempty"];
+
+    // AutoAdmitNICs when enabled auto-admits NICs that are validated
+    // into Venice Cluster. When it is disabled, NICs validated by CMD are
+    // set to Pending state and it requires Manual approval to be admitted
+    // into the cluster.
+    bool AutoAdmitNICs          = 4 [(gogoproto.jsontag) = "auto-admit-nics,omitempty"];
+}
+
+// ClusterStatus contains the current state of the Cluster.
+message ClusterStatus {
+    // Leader contains the node name of the cluster leader.
+    string Leader                           = 1 [(gogoproto.jsontag) = "leader,omitempty"];
+    // LastLeaderTransitionTime is when the leadership changed last time
+    api.Timestamp LastLeaderTransitionTime  = 2 [(gogoproto.jsontag) = "last-leader-transition-time,omitempty"];
+    // Human friendly build version
+    string BuildVersion                     = 3 [(gogoproto.jsontag) = "build-version,omitempty"];
+    // Representation of ommit in version control system - e.g: hash in git
+    string VCSCommit                        = 4 [(gogoproto.jsontag) = "vcs-commit,omitempty"];
+    // Date and Time at which the source code was built
+    string BuildDate                        = 5 [(gogoproto.jsontag) = "build-date,omitempty"];
+    // AuthBootstrapped when set to true indicates that auth has been bootstrapped in cluster
+    bool AuthBootstrapped                   = 6 [(gogoproto.jsontag) = "auth-bootstrapped,omitempty"];
+}
+
+// ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster
+message ClusterAuthBootstrapRequest {
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+    option (venice.objectPrefix) = {Singleton: "cluster"};
+}
+
+//---------------------------------- NODE -------------------------------------------
+//
+// Node is representation of a single Venice node in the system.
+//
+message Node {
+
+    option (venice.objectPrefix) = {Collection: "nodes"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the node.
+    NodeSpec Spec       = 3 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the node.
+    NodeStatus Status   = 4 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// NodeSpec contains the configuration of the node.
+message NodeSpec {
+}
+
+// NodeStatus contains the current state of the node.
+message NodeStatus {
+
+    // Various phases in lifecycle of a Node
+    enum NodePhase {
+        // ui-hint: Unknown
+        UNKNOWN    = 0; // Unknown status
+        // ui-hint: Pending
+        PENDING    = 1; // Node is waiting to join the venice cluster
+        // ui-hint: Joined
+        JOINED     = 2; // Node is part of the venice cluster
+        // ui-hint: Failed
+        FAILED     = 3; // Node failed to join the venice cluster
+    }
+
+    // Current lifecycle phase of the node.
+    string Phase                        = 1 [(venice.check) = "StrEnum(NodeStatus.NodePhase)",
+                                            (gogoproto.jsontag) = "phase,omitempty"];
+
+
+    // Quorum node or not.
+    bool Quorum                         = 2 [(gogoproto.jsontag) = "quorum,omitempty"];
+
+    // List of current node conditions
+    repeated NodeCondition Conditions   = 3 [(gogoproto.nullable) = false,
+                                            (gogoproto.jsontag) = "conditions,omitempty"];
+}
+
+// NodeCondition describes the state of a Node at a certain point.
+message NodeCondition {
+
+    // These are valid conditions of a Node
+    enum ConditionType {
+        // ui-hint: Leader
+        LEADER  = 0; // Node is the elected leader in Venice cluster
+    }
+
+    // Type indicates a certain node condition
+    string Type                 = 1 [(venice.check) = "StrEnum(NodeCondition.ConditionType)",
+                                    (gogoproto.jsontag) = "type,omitempty"];
+
+    // Condition Status
+    string Status               = 2 [(venice.check) = "StrEnum(ConditionStatus)",
+                                    (gogoproto.jsontag) = "status,omitempty"];
+
+    // The last time the condition transitioned
+    string LastTransitionTime   = 3 [(gogoproto.jsontag) = "last-transition-time,omitempty"];
+
+    // The reason for the condition's last transition
+    string Reason               = 4 [(gogoproto.jsontag) = "reason,omitempty"];
+
+    // A detailed message indicating details about the transition.
+    string Message              = 5 [(gogoproto.jsontag) = "message,omitempty"];
+}
+
+// These are valid condition statuses.
+enum ConditionStatus {
+    // ui-hint: Unknown
+    UNKNOWN   = 0; // Condition is unknown
+    // ui-hint: True
+    TRUE      = 1; // Condition is met
+    // ui-hint: False
+    FALSE     = 2; // Condition is not met
+}
+
+// Venice Node system information
+message NodeInfo {
+
+    // OS details
+    OsInfo OsInfo           = 1 [(gogoproto.jsontag) = "os-info,omitempty"];
+
+    // Docker (container runtime) details
+    DockerInfo DockerInfo   = 2 [(gogoproto.jsontag) = "docker-info,omitempty"];
+
+    // CPU details
+    CPUInfo CpuInfo         = 3 [(gogoproto.jsontag) = "cpu-info,omitempty"];
+
+    // RAM/Memory details
+    MemInfo MemoryInfo      = 4 [(gogoproto.jsontag) = "memory-info,omitempty"];
+
+    // Storage details
+    StorageInfo StorageInfo = 5 [(gogoproto.jsontag) = "storage-info,omitempty"];
+
+    // Network details
+    NetworkInfo NetworkInfo = 6 [(gogoproto.jsontag) = "network-info,omitempty"];
+}
+
+// OS information
+message OsInfo {
+
+    // OS Name
+    // Eg: GNU/Linux
+    string Name             = 1 [(gogoproto.jsontag) = "type,omitempty"];
+
+    // Kernel release
+    // Eg: 3.10.0-514.10.2.el7.x86_64
+    string KernelRelease    = 2 [(gogoproto.jsontag) = "kernel-relase,omitempty"];
+
+    // Kernel version
+    // Eg: #1 SMP Fri Mar 3 00:04:05 UTC 2017
+    string Version          = 3 [(gogoproto.jsontag) = "kernel-version,omitempty"];
+
+    // Processor Info
+    // Eg: x86_64
+    string Processor        = 4 [(gogoproto.jsontag) = "processor,omitempty"];
+
+    // TODO: Add more details such as "Uptime", "Last-reload-reason"
+}
+
+// Docker information
+message DockerInfo {
+
+    // Docker version
+    string DockerVersion    = 1 [(gogoproto.jsontag) = "docker-version,omitempty"];
+}
+
+// CPU information
+message CPUInfo {
+
+    // CPU speed per core, eg: 2099998101
+    string Speed        = 1 [(gogoproto.jsontag) = "speed,omitempty"];
+
+    // Number of CPU sockets, eg: 2, 4
+    int32 NumSockets    = 2 [(gogoproto.jsontag) = "num-sockets,omitempty"];
+
+    // Number of physical CPU cores per socket, eg: 36
+    int32 NumCores      = 3 [(gogoproto.jsontag) = "num-cores,omitempty"];
+
+    // Number of threads per core, eg: 2
+    int32 NumThreads    = 4 [(gogoproto.jsontag) = "num-threads,omitempty"];
+}
+
+// Memory/RAM information
+message MemInfo {
+
+    // Type of Memory
+    enum MemType {
+        UNKNOWN = 0; // Unknown type
+        HBM     = 1; // High Bandwidth Memory (usedvin Naples-1)
+        DDR     = 2; // DDR SDRAM (used in Naples-2)
+    }
+    
+    // Type
+    string Type     = 1 [(venice.check) = "StrEnum(MemInfo.MemType)",
+                        (gogoproto.jsontag) = "type,omitempty"];
+
+    // Memory size in bytes, eg: 274760318976
+    string Size     = 2 [(gogoproto.jsontag) = "size,omitempty"];
+}
+
+// Storage information
+message StorageInfo {
+
+    // List of storage devices
+    repeated StorageDeviceInfo Devices = 1 [(gogoproto.nullable) = false,
+                                            (gogoproto.jsontag) = "devices,omitempty"];
+}
+
+// Storage device information
+message StorageDeviceInfo {
+
+    // Serial Number
+    string SerialNumber = 1 [(gogoproto.jsontag) = "serial-num,omitempty"];
+
+    // Storage Type (TBD for Naples)
+    // Eg: SATA, SCSI, NVMe  or HDD, SSD, NVMe
+    string Type         = 2 [(gogoproto.jsontag) = "type,omitempty"];
+
+    // Vendor info
+    string Vendor       = 3 [(gogoproto.jsontag) = "vendor,omitempty"];
+
+    // Capacity in bytes
+    string Capacity     = 4 [(gogoproto.jsontag) = "capacity,omitempty"];
+}
+
+// Network information
+message NetworkInfo {
+
+    // List of interfaces or ports
+    repeated InterfaceInfo Interfaces = 1 [(gogoproto.nullable) = false,
+                                          (gogoproto.jsontag) = "interfaces,omitempty"];
+}
+
+// Interface information
+message InterfaceInfo {
+
+    // Name, eg: vmnic0, eth0
+    string Name             = 1 [(gogoproto.jsontag) = "name,omitempty"];
+
+    // Type
+    string Type             = 2 [(gogoproto.jsontag) = "type,omitempty"];
+
+    // Vendor info
+    string Vendor           = 3 [(gogoproto.jsontag) = "vendor,omitempty"];
+
+    // Link Speed in Bits per second
+    string LinkSpeed        = 4 [(gogoproto.jsontag) = "link-speed,omitempty"];
+
+    // MAC address
+    string MacAddr          = 5 [(gogoproto.jsontag) = "mac-addr,omitempty"];
+
+    // List of Ip addresses
+    repeated string IpAddrs = 6 [(gogoproto.jsontag) = "ip-addrs,omitempty"];
+}
+
+//---------------------------------- HOST ------------------------------------
+//
+// Host represents a Baremetal or Hypervisor server.
+//
+message Host {
+
+    option (venice.objectPrefix) = {Collection: "hosts"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the host.
+    HostSpec Spec       = 3 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the host.
+    HostStatus Status   = 4 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// HostSpec contains the configuration of the Host.
+message HostSpec {
+
+    // Spec of all interfaces in the Host identified by Primary MAC
+    map<string, HostIntfSpec> Interfaces    = 1 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "interfaces,omitempty"];
+}
+
+// HostStatus contains the current state of the Host.
+message HostStatus {
+
+    // Type of Host
+    enum HostType {
+        UNKNOWN     = 0; // Unknown type
+        BAREMETAL   = 1; // Baremetal server
+        HYPERVISOR  = 2; // Hypervisor (virtualized) server
+    }
+
+    // Type of the host
+    string Type                             = 1 [(venice.check) = "StrEnum(HostStatus.HostType)",
+                                                (gogoproto.jsontag) = "type,omitempty"];
+
+    // Operating system info - name of OS with version, eg: "Linux 3.10.0.xyz"
+    string OperatingSystem                  = 2 [(gogoproto.jsontag) = "operating-system,omitempty"];
+
+    // Orchestrator is the name of associated Compute controller
+    // (like VCenter) managing this host.
+    string Orchestrator                     = 3 [(gogoproto.jsontag) = "orchestrator,omitempty"];
+
+    // Status of all interfaces in the Host identified by Primary MAC
+    map<string, HostIntfStatus> Interfaces  = 4 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "interfaces,omitempty"];
+
+    // SmartNICs contains a list of admitted SmartNICs that are on this host
+    repeated string SmartNICs               = 5 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "smartnics,omitempty"];
+}
+
+// Spec of a Host interface
+message HostIntfSpec {
+
+    // List of all MAC addresses configured and discovered on a Host Interface
+    repeated string MacAddrs = 1 [(gogoproto.jsontag) = "mac-addrs,omitempty"];
+}
+
+// Status of a Host interface
+message HostIntfStatus {
+
+    // List of all IP addresses configured on a Host Interface
+    repeated string IpAddrs = 1 [(gogoproto.jsontag) = "ip-addrs,omitempty"];
+}

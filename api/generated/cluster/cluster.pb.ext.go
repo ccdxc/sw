@@ -2,7 +2,7 @@
 
 /*
 Package cluster is a auto generated package.
-Input file: cmd.proto
+Input file: cluster.proto
 */
 package cluster
 
@@ -26,7 +26,7 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
-var validatorMapCmd = make(map[string]map[string][]func(string, interface{}) error)
+var validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
@@ -66,14 +66,25 @@ func (m *Node) MakeURI(cat, ver, prefix string) string {
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/nodes/", in.Name)
 }
 
-// MakeKey generates a KV store key for the object
-func (m *SmartNIC) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "smartnics/", m.Name)
+// Clone clones the object into into or creates one of into is nil
+func (m *CPUInfo) Clone(into interface{}) (interface{}, error) {
+	var out *CPUInfo
+	var ok bool
+	if into == nil {
+		out = &CPUInfo{}
+	} else {
+		out, ok = into.(*CPUInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
 }
 
-func (m *SmartNIC) MakeURI(cat, ver, prefix string) string {
-	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/smartnics/", in.Name)
+// Default sets up the defaults for the object
+func (m *CPUInfo) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -159,6 +170,27 @@ func (m *ClusterStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *ClusterStatus) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *DockerInfo) Clone(into interface{}) (interface{}, error) {
+	var out *DockerInfo
+	var ok bool
+	if into == nil {
+		out = &DockerInfo{}
+	} else {
+		out, ok = into.(*DockerInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *DockerInfo) Defaults(ver string) bool {
 	return false
 }
 
@@ -278,6 +310,75 @@ func (m *HostStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *InterfaceInfo) Clone(into interface{}) (interface{}, error) {
+	var out *InterfaceInfo
+	var ok bool
+	if into == nil {
+		out = &InterfaceInfo{}
+	} else {
+		out, ok = into.(*InterfaceInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *InterfaceInfo) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *MemInfo) Clone(into interface{}) (interface{}, error) {
+	var out *MemInfo
+	var ok bool
+	if into == nil {
+		out = &MemInfo{}
+	} else {
+		out, ok = into.(*MemInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MemInfo) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Type = "UNKNOWN"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *NetworkInfo) Clone(into interface{}) (interface{}, error) {
+	var out *NetworkInfo
+	var ok bool
+	if into == nil {
+		out = &NetworkInfo{}
+	} else {
+		out, ok = into.(*NetworkInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *NetworkInfo) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *Node) Clone(into interface{}) (interface{}, error) {
 	var out *Node
 	var ok bool
@@ -331,6 +432,31 @@ func (m *NodeCondition) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *NodeInfo) Clone(into interface{}) (interface{}, error) {
+	var out *NodeInfo
+	var ok bool
+	if into == nil {
+		out = &NodeInfo{}
+	} else {
+		out, ok = into.(*NodeInfo)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *NodeInfo) Defaults(ver string) bool {
+	var ret bool
+	if m.MemoryInfo != nil {
+		ret = m.MemoryInfo.Defaults(ver) || ret
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *NodeSpec) Clone(into interface{}) (interface{}, error) {
 	var out *NodeSpec
 	var ok bool
@@ -371,10 +497,8 @@ func (m *NodeStatus) Clone(into interface{}) (interface{}, error) {
 func (m *NodeStatus) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Conditions {
-		if m.Conditions[k] != nil {
-			i := m.Conditions[k]
-			ret = i.Defaults(ver) || ret
-		}
+		i := m.Conditions[k]
+		ret = i.Defaults(ver) || ret
 	}
 	ret = true
 	switch ver {
@@ -385,13 +509,13 @@ func (m *NodeStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *PortCondition) Clone(into interface{}) (interface{}, error) {
-	var out *PortCondition
+func (m *OsInfo) Clone(into interface{}) (interface{}, error) {
+	var out *OsInfo
 	var ok bool
 	if into == nil {
-		out = &PortCondition{}
+		out = &OsInfo{}
 	} else {
-		out, ok = into.(*PortCondition)
+		out, ok = into.(*OsInfo)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -401,46 +525,18 @@ func (m *PortCondition) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *PortCondition) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Status = "UNKNOWN"
-		m.Type = "PORT_UP"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *PortSpec) Clone(into interface{}) (interface{}, error) {
-	var out *PortSpec
-	var ok bool
-	if into == nil {
-		out = &PortSpec{}
-	} else {
-		out, ok = into.(*PortSpec)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *PortSpec) Defaults(ver string) bool {
+func (m *OsInfo) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *PortStatus) Clone(into interface{}) (interface{}, error) {
-	var out *PortStatus
+func (m *StorageDeviceInfo) Clone(into interface{}) (interface{}, error) {
+	var out *StorageDeviceInfo
 	var ok bool
 	if into == nil {
-		out = &PortStatus{}
+		out = &StorageDeviceInfo{}
 	} else {
-		out, ok = into.(*PortStatus)
+		out, ok = into.(*StorageDeviceInfo)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -450,25 +546,18 @@ func (m *PortStatus) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *PortStatus) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Conditions {
-		if m.Conditions[k] != nil {
-			i := m.Conditions[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
-	return ret
+func (m *StorageDeviceInfo) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNIC
+func (m *StorageInfo) Clone(into interface{}) (interface{}, error) {
+	var out *StorageInfo
 	var ok bool
 	if into == nil {
-		out = &SmartNIC{}
+		out = &StorageInfo{}
 	} else {
-		out, ok = into.(*SmartNIC)
+		out, ok = into.(*StorageInfo)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -478,105 +567,16 @@ func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *SmartNIC) Defaults(ver string) bool {
-	m.Kind = "SmartNIC"
-	m.Tenant, m.Namespace = "", ""
-	var ret bool
-	ret = m.Spec.Defaults(ver) || ret
-	ret = m.Status.Defaults(ver) || ret
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNICCondition) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICCondition
-	var ok bool
-	if into == nil {
-		out = &SmartNICCondition{}
-	} else {
-		out, ok = into.(*SmartNICCondition)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICCondition) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Status = "UNKNOWN"
-		m.Type = "HEALTHY"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNICSpec) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICSpec
-	var ok bool
-	if into == nil {
-		out = &SmartNICSpec{}
-	} else {
-		out, ok = into.(*SmartNICSpec)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICSpec) Defaults(ver string) bool {
-	var ret bool
-	ret = true
-	switch ver {
-	default:
-		m.Phase = "UNKNOWN"
-	}
-	return ret
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *SmartNICStatus) Clone(into interface{}) (interface{}, error) {
-	var out *SmartNICStatus
-	var ok bool
-	if into == nil {
-		out = &SmartNICStatus{}
-	} else {
-		out, ok = into.(*SmartNICStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *SmartNICStatus) Defaults(ver string) bool {
-	var ret bool
-	for k := range m.Conditions {
-		if m.Conditions[k] != nil {
-			i := m.Conditions[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
-	for k := range m.Ports {
-		if m.Ports[k] != nil {
-			i := m.Ports[k]
-			ret = i.Defaults(ver) || ret
-		}
-	}
-	return ret
+func (m *StorageInfo) Defaults(ver string) bool {
+	return false
 }
 
 // Validators
+
+func (m *CPUInfo) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
 
 func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -604,6 +604,11 @@ func (m *ClusterSpec) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *DockerInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -651,19 +656,47 @@ func (m *HostSpec) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapCmd["HostStatus"][ver]; ok {
+	if vs, ok := validatorMapCluster["HostStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapCmd["HostStatus"]["all"]; ok {
+	} else if vs, ok := validatorMapCluster["HostStatus"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
 	}
+	return ret
+}
+
+func (m *InterfaceInfo) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *MemInfo) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if vs, ok := validatorMapCluster["MemInfo"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapCluster["MemInfo"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *NetworkInfo) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	return ret
 }
 
@@ -695,17 +728,32 @@ func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *NodeCondition) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapCmd["NodeCondition"][ver]; ok {
+	if vs, ok := validatorMapCluster["NodeCondition"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapCmd["NodeCondition"]["all"]; ok {
+	} else if vs, ok := validatorMapCluster["NodeCondition"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
+		}
+	}
+	return ret
+}
+
+func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.MemoryInfo != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "MemoryInfo"
+		if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
 	return ret
@@ -728,31 +776,13 @@ func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
-	if vs, ok := validatorMapCmd["NodeStatus"][ver]; ok {
+	if vs, ok := validatorMapCluster["NodeStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapCmd["NodeStatus"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *PortCondition) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if vs, ok := validatorMapCmd["PortCondition"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapCmd["PortCondition"]["all"]; ok {
+	} else if vs, ok := validatorMapCluster["NodeStatus"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -762,119 +792,18 @@ func (m *PortCondition) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *PortSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *OsInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *PortStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StorageDeviceInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	for k, v := range m.Conditions {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	return ret
 }
 
-func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StorageInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	{
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
-	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for SmartNIC"))
-	}
-
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "Spec"
-	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
-	}
-	if !ignoreStatus {
-
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	return ret
-}
-
-func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if vs, ok := validatorMapCmd["SmartNICCondition"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapCmd["SmartNICCondition"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *SmartNICSpec) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	if vs, ok := validatorMapCmd["SmartNICSpec"][ver]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	} else if vs, ok := validatorMapCmd["SmartNICSpec"]["all"]; ok {
-		for _, v := range vs {
-			if err := v(path, m); err != nil {
-				ret = append(ret, err)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	for k, v := range m.Conditions {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	for k, v := range m.Ports {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sPorts[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
 	return ret
 }
 
@@ -887,13 +816,12 @@ func init() {
 		&ClusterAuthBootstrapRequest{},
 		&Host{},
 		&Node{},
-		&SmartNIC{},
 	)
 
-	validatorMapCmd = make(map[string]map[string][]func(string, interface{}) error)
+	validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
 
-	validatorMapCmd["HostStatus"] = make(map[string][]func(string, interface{}) error)
-	validatorMapCmd["HostStatus"]["all"] = append(validatorMapCmd["HostStatus"]["all"], func(path string, i interface{}) error {
+	validatorMapCluster["HostStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCluster["HostStatus"]["all"] = append(validatorMapCluster["HostStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*HostStatus)
 
 		if _, ok := HostStatus_HostType_value[m.Type]; !ok {
@@ -902,8 +830,18 @@ func init() {
 		return nil
 	})
 
-	validatorMapCmd["NodeCondition"] = make(map[string][]func(string, interface{}) error)
-	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(path string, i interface{}) error {
+	validatorMapCluster["MemInfo"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCluster["MemInfo"]["all"] = append(validatorMapCluster["MemInfo"]["all"], func(path string, i interface{}) error {
+		m := i.(*MemInfo)
+
+		if _, ok := MemInfo_MemType_value[m.Type]; !ok {
+			return errors.New("MemInfo.Type did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapCluster["NodeCondition"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCluster["NodeCondition"]["all"] = append(validatorMapCluster["NodeCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
@@ -912,7 +850,7 @@ func init() {
 		return nil
 	})
 
-	validatorMapCmd["NodeCondition"]["all"] = append(validatorMapCmd["NodeCondition"]["all"], func(path string, i interface{}) error {
+	validatorMapCluster["NodeCondition"]["all"] = append(validatorMapCluster["NodeCondition"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeCondition)
 
 		if _, ok := NodeCondition_ConditionType_value[m.Type]; !ok {
@@ -921,60 +859,12 @@ func init() {
 		return nil
 	})
 
-	validatorMapCmd["NodeStatus"] = make(map[string][]func(string, interface{}) error)
-	validatorMapCmd["NodeStatus"]["all"] = append(validatorMapCmd["NodeStatus"]["all"], func(path string, i interface{}) error {
+	validatorMapCluster["NodeStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapCluster["NodeStatus"]["all"] = append(validatorMapCluster["NodeStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*NodeStatus)
 
 		if _, ok := NodeStatus_NodePhase_value[m.Phase]; !ok {
 			return errors.New("NodeStatus.Phase did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapCmd["PortCondition"] = make(map[string][]func(string, interface{}) error)
-	validatorMapCmd["PortCondition"]["all"] = append(validatorMapCmd["PortCondition"]["all"], func(path string, i interface{}) error {
-		m := i.(*PortCondition)
-
-		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return errors.New("PortCondition.Status did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapCmd["PortCondition"]["all"] = append(validatorMapCmd["PortCondition"]["all"], func(path string, i interface{}) error {
-		m := i.(*PortCondition)
-
-		if _, ok := PortCondition_ConditionType_value[m.Type]; !ok {
-			return errors.New("PortCondition.Type did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapCmd["SmartNICCondition"] = make(map[string][]func(string, interface{}) error)
-	validatorMapCmd["SmartNICCondition"]["all"] = append(validatorMapCmd["SmartNICCondition"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICCondition)
-
-		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return errors.New("SmartNICCondition.Status did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapCmd["SmartNICCondition"]["all"] = append(validatorMapCmd["SmartNICCondition"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICCondition)
-
-		if _, ok := SmartNICCondition_ConditionType_value[m.Type]; !ok {
-			return errors.New("SmartNICCondition.Type did not match allowed strings")
-		}
-		return nil
-	})
-
-	validatorMapCmd["SmartNICSpec"] = make(map[string][]func(string, interface{}) error)
-	validatorMapCmd["SmartNICSpec"]["all"] = append(validatorMapCmd["SmartNICSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*SmartNICSpec)
-
-		if _, ok := SmartNICSpec_SmartNICPhase_value[m.Phase]; !ok {
-			return errors.New("SmartNICSpec.Phase did not match allowed strings")
 		}
 		return nil
 	})

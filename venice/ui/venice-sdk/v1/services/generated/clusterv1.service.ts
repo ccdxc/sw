@@ -114,12 +114,6 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'ListSmartNIC') as Observable<{body: IClusterSmartNICList | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Create SmartNIC object */
-  public AddSmartNIC(body: ClusterSmartNIC):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddSmartNIC') as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** Get SmartNIC object */
   public GetSmartNIC(O_Name, queryParam: any = null):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics/{O.Name}';

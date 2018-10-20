@@ -9,22 +9,21 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterPortCondition, IClusterPortCondition } from './cluster-port-condition.model';
 
-export interface IClusterPortStatus {
-    'mac-addrs'?: Array<string>;
-    'link-speed'?: string;
+export interface IClusterPFStatus {
+    'primary-mac'?: string;
     'conditions'?: Array<IClusterPortCondition>;
 }
 
 
-export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
-    'mac-addrs': Array<string> = null;
-    'link-speed': string = null;
+export class ClusterPFStatus extends BaseModel implements IClusterPFStatus {
+    /** should be a valid MAC address
+     */
+    'primary-mac': string = null;
     'conditions': Array<ClusterPortCondition> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'mac-addrs': {
-            type: 'Array<string>'
-        },
-        'link-speed': {
+        'primary-mac': {
+            description:  'should be a valid MAC address ',
+            hint:  'aa:BB:cc:DD:00:00, aabb.ccdd.0000, aa-BB-cc-DD-00-00',
             type: 'string'
         },
         'conditions': {
@@ -33,16 +32,16 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterPortStatus.propInfo[propName];
+        return ClusterPFStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterPortStatus.propInfo[prop] != null &&
-                        ClusterPortStatus.propInfo[prop].default != null &&
-                        ClusterPortStatus.propInfo[prop].default != '');
+        return (ClusterPFStatus.propInfo[prop] != null &&
+                        ClusterPFStatus.propInfo[prop].default != null &&
+                        ClusterPFStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -51,7 +50,6 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
     */
     constructor(values?: any) {
         super();
-        this['mac-addrs'] = new Array<string>();
         this['conditions'] = new Array<ClusterPortCondition>();
         this.setValues(values);
     }
@@ -61,13 +59,10 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'mac-addrs', values['mac-addrs']);
-        }
-        if (values && values['link-speed'] != null) {
-            this['link-speed'] = values['link-speed'];
-        } else if (ClusterPortStatus.hasDefaultValue('link-speed')) {
-            this['link-speed'] = ClusterPortStatus.propInfo['link-speed'].default;
+        if (values && values['primary-mac'] != null) {
+            this['primary-mac'] = values['primary-mac'];
+        } else if (ClusterPFStatus.hasDefaultValue('primary-mac')) {
+            this['primary-mac'] = ClusterPFStatus.propInfo['primary-mac'].default;
         }
         if (values) {
             this.fillModelArray<ClusterPortCondition>(this, 'conditions', values['conditions'], ClusterPortCondition);
@@ -80,12 +75,9 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'mac-addrs': new FormArray([]),
-                'link-speed': new FormControl(this['link-speed']),
+                'primary-mac': new FormControl(this['primary-mac']),
                 'conditions': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('mac-addrs', this['mac-addrs']);
             // generate FormArray control elements
             this.fillFormArray<ClusterPortCondition>('conditions', this['conditions'], ClusterPortCondition);
         }
@@ -94,8 +86,7 @@ export class ClusterPortStatus extends BaseModel implements IClusterPortStatus {
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'mac-addrs', this['mac-addrs']);
-            this._formGroup.controls['link-speed'].setValue(this['link-speed']);
+            this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
             this.fillModelArray<ClusterPortCondition>(this, 'conditions', this['conditions'], ClusterPortCondition);
         }
     }

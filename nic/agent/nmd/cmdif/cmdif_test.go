@@ -181,7 +181,7 @@ func (srv *mockRPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterN
 	// send admission response
 	resp := &grpc.RegisterNICResponse{
 		AdmissionResponse: &grpc.NICAdmissionResponse{
-			Phase: cmd.SmartNICSpec_ADMITTED.String(),
+			Phase: cmd.SmartNICStatus_ADMITTED.String(),
 		},
 	}
 	stream.Send(resp)
@@ -272,7 +272,7 @@ func TestCmdClient(t *testing.T) {
 
 	// verify update rpc call
 	nic.Status = cmd.SmartNICStatus{
-		Conditions: []*cmd.SmartNICCondition{
+		Conditions: []cmd.SmartNICCondition{
 			{
 				Type:   cmd.SmartNICCondition_HEALTHY.String(),
 				Status: cmd.ConditionStatus_TRUE.String(),

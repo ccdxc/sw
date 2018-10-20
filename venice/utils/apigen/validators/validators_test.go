@@ -57,6 +57,25 @@ func TestIntRange(t *testing.T) {
 	}
 }
 
+func TestCIDR(t *testing.T) {
+	cases := []struct {
+		s   string
+		exp bool
+	}{
+		{s: "10.1.1.1/16", exp: true},
+		{s: "10.1.1.1", exp: false},
+		{s: "2001:db8::/32", exp: true},
+		{s: "2001:0db8:85a3:0000:0000:8a2e:0370:7334/64", exp: true},
+		{s: "193.138.3.20/60", exp: false},
+		{s: "500.323.2.23/43", exp: false},
+		{s: "", exp: false},
+	}
+	for _, c := range cases {
+		if CIDR(c.s) != c.exp {
+			t.Errorf("Expected [%v] got [%v] for [%s]", c.exp, CIDR(c.s), c.s)
+		}
+	}
+}
 func TestIpAddr(t *testing.T) {
 	cases := []struct {
 		s   string

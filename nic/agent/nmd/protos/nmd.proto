@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/protos/cmd.proto";
+import "github.com/pensando/sw/api/protos/smartnic.proto";
 
 
 // Naples config object
@@ -34,42 +34,41 @@ message Naples {
 }
 
 // Operational mode of a Naples
-enum NaplesMode {
-    CLASSIC_MODE     = 0; // Unmanaged mode
-    MANAGED_MODE     = 1; // Managed mode
+enum MgmtMode {
+    HOST     = 0; // Host managed mode
+    NETWORK  = 1; // Network managed mode
 }
 
 // NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
 message NaplesSpec {
 
+
+    // PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC
+    string PrimaryMAC               = 1 [(gogoproto.jsontag) = "primary-mac,omitempty"];
+
+    // Hostname is used as a user friendly identifier in logs/events
+    string Hostname                 = 2 [(gogoproto.jsontag) = "hostname,omitempty"];
+
+    // IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
+    cluster.IPConfig IPConfig               = 3 [(gogoproto.jsontag) = "ip-config,omitempty"];
+
     // Operational mode of the NIC
-    NaplesMode Mode                 = 1 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "mode"];
+    MgmtMode Mode                   = 4 [(gogoproto.jsontag) = "mode"];
 
-    // List of IP/hostname:Port address of Venice quorum nodes in comma separated format
-    // For eg: IP1:port1,IP2:port2,IP3:port3
-    repeated string ClusterAddress  = 2 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "clusterAddress,omitempty"];
+    // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
+    // implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
+    // management port to a vlan on data ports.
+    uint32 MgmtVlan                 = 5 [(gogoproto.jsontag) = "vlan,omitempty"];   
 
-    // PrimaryMac of the NIC adapter
-    string PrimaryMac               = 3 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "primaryMac,omitempty"];
-
-    // Name of the Host
-    string HostName                 = 4 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "hostName,omitempty"];
-
-    // Management IP address of the naples node
-    string MgmtIp                   = 5 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "mgmtIp,omitempty"];
+    // Controllers contains the list of controller IPs or Hostnames
+    repeated string Controllers   = 6 [(gogoproto.jsontag) = "controllers,omitempty"];
 }
 
 // NaplesStatus contains current status of a Naples I/O subsystem
 message NaplesStatus {
 
     // Current phase of the NIC adapter in the system
-    cluster.SmartNICSpec.SmartNICPhase Phase = 1 [(gogoproto.nullable) = true,
-                                             (gogoproto.jsontag) = "phase,omitempty"];
+    cluster.SmartNICStatus.Phase Phase = 1 [(gogoproto.jsontag) = "phase,omitempty"];
 }
 
 // NaplesCmdExecute contains information on what command to execute

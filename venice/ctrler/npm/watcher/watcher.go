@@ -873,16 +873,9 @@ func (w *Watcher) CreateHost(name, macAddr string) error {
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Spec: cluster.SmartNICSpec{
-			Phase: "ADMITTED",
-			Ports: []cluster.PortSpec{
-				{
-					MacAddress: macAddr,
-				},
-			},
-		},
 		Status: cluster.SmartNICStatus{
-			PrimaryMacAddress: macAddr,
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     macAddr,
 		},
 	}
 

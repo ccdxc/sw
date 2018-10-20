@@ -5,6 +5,7 @@ package smartnic
 import (
 	"crypto/x509"
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -201,25 +202,20 @@ func (s *RPCServer) GetCluster() (*cluster.Cluster, error) {
 	return clusterObjs[0], nil
 }
 
-// CreateHost creates the Host object based on object meta
-func (s *RPCServer) CreateHost(ometa api.ObjectMeta) (*cluster.Host, error) {
+// ListHosts fetches all Host objects
+func (s *RPCServer) ListHosts() ([]*cluster.Host, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
 	}
 
-	host := &cluster.Host{}
-	host.Defaults("v1")
-	host.TypeMeta = api.TypeMeta{Kind: "Host"}
-	host.ObjectMeta = ometa
-
-	hostObj, err := cl.Host().Create(context.Background(), host)
-	if err != nil || hostObj == nil {
-		log.Errorf("Host create failed, host: %+v error: %+v", host, err)
-		return nil, perror.NewNotFound("Host", ometa.Name)
+	opts := api.ListWatchOptions{}
+	hostObjList, err := cl.Host().List(context.Background(), &opts)
+	if err != nil {
+		return nil, err
 	}
 
-	return hostObj, nil
+	return hostObjList, nil
 }
 
 // GetHost fetches the Host object based on object meta
@@ -237,48 +233,61 @@ func (s *RPCServer) GetHost(om api.ObjectMeta) (*cluster.Host, error) {
 	return hostObj, nil
 }
 
-// UpdateHost updates the list of Nics in spec of Host object
-// Host object is created if it does not exist.
-func (s *RPCServer) UpdateHost(nic *cluster.SmartNIC) (*cluster.Host, error) {
+// CreateHost creates the Host object based on object meta
+func (s *RPCServer) CreateHost(host *cluster.Host) (*cluster.Host, error) {
 	cl := s.ClientGetter.APIClient()
 	if cl == nil {
 		return nil, errAPIServerDown
 	}
 
-	// Check if object exists
-	var hostObj *cluster.Host
-	ometa := api.ObjectMeta{
-		Name: nic.Spec.HostName,
-	}
-	refObj, err := s.GetHost(ometa)
-	if err != nil || refObj == nil {
+	host.Defaults("v1")
+	host.TypeMeta = api.TypeMeta{Kind: "Host"}
 
-		// Create Host object
-		host := &cluster.Host{}
-		host.Defaults("v1")
-		host.Kind = "Host"
-		host.Name = nic.Spec.HostName
-		host.Spec.Interfaces = map[string]cluster.HostIntfSpec{
-			nic.Name: cluster.HostIntfSpec{
-				MacAddrs: []string{nic.Name},
-			},
-		}
-
-		hostObj, err = cl.Host().Create(context.Background(), host)
-	} else {
-
-		// Update the Nics list in Host Spec
-		if refObj.Spec.Interfaces == nil {
-			refObj.Spec.Interfaces = make(map[string]cluster.HostIntfSpec)
-		}
-		refObj.Spec.Interfaces[nic.Name] = cluster.HostIntfSpec{
-			MacAddrs: []string{nic.Name},
-		}
-		log.Debugf("Updating Host: %+v", refObj)
-		hostObj, err = cl.Host().Update(context.Background(), refObj)
+	hostObj, err := cl.Host().Create(context.Background(), host)
+	if err != nil || hostObj == nil {
+		log.Errorf("Host create failed, host: %+v error: %+v", host, err)
+		return nil, perror.NewNotFound("Host", host.Name)
 	}
 
-	return hostObj, err
+	return hostObj, nil
+}
+
+// UpdateHost updates the list of Nics in spec of Host object
+func (s *RPCServer) UpdateHost(nic *cluster.SmartNIC, add bool) (*cluster.Host, error) {
+	cl := s.ClientGetter.APIClient()
+	if cl == nil {
+		return nil, errAPIServerDown
+	}
+
+	listObj, err := s.ListHosts()
+	if err != nil {
+		return nil, err
+	}
+
+	for ii := range listObj {
+		host := listObj[ii]
+		for k := range host.Spec.Interfaces {
+			if k == nic.Name {
+				if add {
+					log.Debugf("Adding %v to Host: %v", nic.Name, host.Name)
+					host.Status.SmartNICs = append(host.Status.SmartNICs, nic.Name)
+				} else {
+					log.Debugf("Deleting %v from Host: %v", nic.Name, host.Name)
+					for ii := range host.Status.SmartNICs {
+						if host.Status.SmartNICs[ii] == nic.Name {
+							host.Status.SmartNICs = append(host.Status.SmartNICs[:ii], host.Status.SmartNICs[ii+1:]...)
+						}
+					}
+				}
+				host, err = cl.Host().Update(context.Background(), host)
+				return host, err
+			}
+		}
+	}
+
+	log.Debugf("Did not find Host for %v", nic.Name)
+	// TODO: If the Host object is added later, it's status should be updated
+	return nil, nil
 }
 
 // DeleteHost deletes the Host object based on object meta name
@@ -329,8 +338,8 @@ func (s *RPCServer) UpdateSmartNIC(obj *cluster.SmartNIC) (*cluster.SmartNIC, er
 	} else {
 
 		// Update the object with CAS semantics, the phase and status conditions
-		if obj.Spec.Phase != "" {
-			refObj.Spec.Phase = obj.Spec.Phase
+		if obj.Status.AdmissionPhase != "" {
+			refObj.Status.AdmissionPhase = obj.Status.AdmissionPhase
 		}
 		refObj.Status.Conditions = obj.Status.Conditions
 		nicObj, err = cl.SmartNIC().Update(context.Background(), refObj)
@@ -347,10 +356,16 @@ func (s *RPCServer) DeleteSmartNIC(om api.ObjectMeta) error {
 		return errAPIServerDown
 	}
 
-	_, err := cl.SmartNIC().Delete(context.Background(), &om)
+	nic, err := cl.SmartNIC().Delete(context.Background(), &om)
 	if err != nil {
 		log.Errorf("Error deleting smartNIC object name:%s err: %v", om.Name, err)
 		return err
+	}
+
+	// Update the Host
+	_, err = s.UpdateHost(nic, false)
+	if err != nil {
+		return errors.Wrapf(err, "Error updating Host object, mac: %s", nic.ObjectMeta.Name)
 	}
 
 	return nil
@@ -372,21 +387,21 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		// Canned responses in case of error
 		authErrResp := &grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase:  cluster.SmartNICSpec_REJECTED.String(),
+				Phase:  cluster.SmartNICStatus_REJECTED.String(),
 				Reason: string("Authentication error"),
 			},
 		}
 
 		intErrResp := &grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase:  cluster.SmartNICSpec_UNKNOWN.String(),
+				Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
 				Reason: string("Internal error"),
 			},
 		}
 
 		protoErrResp := &grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase:  cluster.SmartNICSpec_UNKNOWN.String(),
+				Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
 				Reason: string("Internal error"),
 			},
 		}
@@ -479,18 +494,18 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		var phase string
 		if clusterObj.Spec.AutoAdmitNICs == true {
 			// Admit NIC if autoAdmission is enabled
-			phase = cluster.SmartNICSpec_ADMITTED.String()
+			phase = cluster.SmartNICStatus_ADMITTED.String()
 		} else {
 			// Set the NIC to pendingState for Manual Approval
-			phase = cluster.SmartNICSpec_PENDING.String()
+			phase = cluster.SmartNICStatus_PENDING.String()
 		}
 
 		log.Infof("Validated NIC: %s, phase: %s", name, phase)
 
 		// Create SmartNIC object, if the status is either admitted or pending.
-		if phase == cluster.SmartNICSpec_ADMITTED.String() || phase == cluster.SmartNICSpec_PENDING.String() {
+		if phase == cluster.SmartNICStatus_ADMITTED.String() || phase == cluster.SmartNICStatus_PENDING.String() {
 			nic := req.GetNic()
-			nic.Spec.Phase = phase
+			nic.Status.AdmissionPhase = phase
 			nic.ObjectMeta.SelfLink = nic.MakeKey("cluster")
 
 			_, err = s.UpdateSmartNIC(&nic)
@@ -500,11 +515,10 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 				return intErrResp, errors.Wrapf(err, "Error updating smartNIC object")
 			}
 
-			// Create or Update the Host
-			_, err = s.UpdateHost(&nic)
+			// Update the Host
+			_, err = s.UpdateHost(&nic, true)
 			if err != nil {
-				return intErrResp, errors.Wrapf(err, "Error creating or updating Host object, host: %s mac: %s",
-					nic.Spec.HostName, nic.ObjectMeta.Name)
+				return intErrResp, errors.Wrapf(err, "Error creating or updating Host object, mac: %s", nic.ObjectMeta.Name)
 			}
 		}
 
@@ -514,7 +528,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			},
 		}
 
-		if phase == cluster.SmartNICSpec_ADMITTED.String() {
+		if phase == cluster.SmartNICStatus_ADMITTED.String() {
 			okResp.AdmissionResponse.ClusterCert = &certapi.CertificateSignResp{
 				Certificate: &certapi.Certificate{
 					Certificate: clusterCert.Raw,
@@ -747,7 +761,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 
 	// Add Nic to the RetryDB
 	s.UpdateNicInRetryDB(nic)
-	log.Infof("Initiating nic registration for Naples, MAC: %s IP:%+v", nic.Name, nic.Spec.MgmtIp)
+	log.Infof("Initiating nic registration for Naples, MAC: %s IP:%+v", nic.Name, nic.Spec.IPConfig.IPAddress)
 
 	for {
 		select {
@@ -765,15 +779,16 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 				ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 				TypeMeta:   api.TypeMeta{Kind: "Naples"},
 				Spec: nmd.NaplesSpec{
-					Mode:           nmd.NaplesMode_MANAGED_MODE,
-					PrimaryMac:     nicObj.Name,
-					ClusterAddress: []string{env.UnauthRPCServer.GetListenURL()},
-					HostName:       nicObj.Spec.HostName,
-					MgmtIp:         nicObj.Spec.MgmtIp,
+					Mode:        nmd.MgmtMode_NETWORK,
+					PrimaryMAC:  nicObj.Name,
+					Controllers: []string{env.UnauthRPCServer.GetListenURL()},
+					Hostname:    nicObj.Spec.Hostname,
+					IPConfig:    nicObj.Spec.IPConfig,
 				},
 			}
 
-			nmdURL := fmt.Sprintf("http://%s:%s%s", nicObj.Spec.MgmtIp, s.RestPort, nmdstate.ConfigURL)
+			ip, _, _ := net.ParseCIDR(nicObj.Spec.IPConfig.IPAddress)
+			nmdURL := fmt.Sprintf("http://%s:%s%s", ip, s.RestPort, nmdstate.ConfigURL)
 			log.Infof("Posting Naples config: %+v to Naples-Ip: %s", naplesCfg, nmdURL)
 
 			err = netutils.HTTPPost(nmdURL, &naplesCfg, &resp)
@@ -793,13 +808,13 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 				TypeMeta:   nicObj.TypeMeta,
 				ObjectMeta: nicObj.ObjectMeta,
 				Status: cluster.SmartNICStatus{
-					Conditions: []*cluster.SmartNICCondition{
+					Conditions: []cluster.SmartNICCondition{
 						{
 							Type:               cluster.SmartNICCondition_UNREACHABLE.String(),
 							Status:             cluster.ConditionStatus_TRUE.String(),
 							LastTransitionTime: time.Now().Format(time.RFC3339),
 							Reason:             fmt.Sprintf("Failed to post naples config after several attempts, response: %+v", resp),
-							Message:            fmt.Sprintf("Naples REST endpoint: %s:%s is not reachable", nic.Spec.MgmtIp, s.RestPort),
+							Message:            fmt.Sprintf("Naples REST endpoint: %s:%s is not reachable", nic.Spec.IPConfig.IPAddress, s.RestPort),
 						},
 					},
 				},

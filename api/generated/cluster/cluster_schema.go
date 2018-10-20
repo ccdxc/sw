@@ -2,7 +2,7 @@
 
 /*
 Package clusterApiServer is a auto generated package.
-Input file: cmd.proto
+Input file: cluster.proto
 */
 package cluster
 
@@ -13,8 +13,20 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-var typesMapCmd = map[string]*api.Struct{
+var typesMapCluster = map[string]*api.Struct{
 
+	"cluster.CPUInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CPUInfo{}) },
+		Fields: map[string]api.Field{
+			"Speed": api.Field{Name: "Speed", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "speed", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"NumSockets": api.Field{Name: "NumSockets", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "num-sockets", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"NumCores": api.Field{Name: "NumCores", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "num-cores", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"NumThreads": api.Field{Name: "NumThreads", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "num-threads", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+		},
+	},
 	"cluster.Cluster": &api.Struct{
 		Kind: "Cluster", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Cluster{}) },
 		Fields: map[string]api.Field{
@@ -85,6 +97,12 @@ var typesMapCmd = map[string]*api.Struct{
 			"AuthBootstrapped": api.Field{Name: "AuthBootstrapped", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-bootstrapped", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
+	"cluster.DockerInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(DockerInfo{}) },
+		Fields: map[string]api.Field{
+			"DockerVersion": api.Field{Name: "DockerVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "docker-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 	"cluster.Host": &api.Struct{
 		Kind: "Host", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Host{}) },
 		Fields: map[string]api.Field{
@@ -108,6 +126,7 @@ var typesMapCmd = map[string]*api.Struct{
 			"mac-addrs":        api.CLIInfo{Path: "Spec.Interfaces[].MacAddrs", Skip: false, Insert: "", Help: ""},
 			"operating-system": api.CLIInfo{Path: "Status.OperatingSystem", Skip: false, Insert: "", Help: ""},
 			"orchestrator":     api.CLIInfo{Path: "Status.Orchestrator", Skip: false, Insert: "", Help: ""},
+			"smartnics":        api.CLIInfo{Path: "Status.SmartNICs", Skip: false, Insert: "", Help: ""},
 			"type":             api.CLIInfo{Path: "Status.Type", Skip: false, Insert: "", Help: ""},
 		},
 	},
@@ -146,6 +165,8 @@ var typesMapCmd = map[string]*api.Struct{
 			"Orchestrator": api.Field{Name: "Orchestrator", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "orchestrator", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "cluster.HostIntfStatus"},
+
+			"SmartNICs": api.Field{Name: "SmartNICs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartnics", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.HostStatus.InterfacesEntry": &api.Struct{
@@ -153,6 +174,36 @@ var typesMapCmd = map[string]*api.Struct{
 			"key": api.Field{Name: "key", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"value": api.Field{Name: "value", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.HostIntfStatus"},
+		},
+	},
+	"cluster.InterfaceInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(InterfaceInfo{}) },
+		Fields: map[string]api.Field{
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Vendor": api.Field{Name: "Vendor", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vendor", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"LinkSpeed": api.Field{Name: "LinkSpeed", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "link-speed", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MacAddr": api.Field{Name: "MacAddr", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addr", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addrs", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"cluster.MemInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MemInfo{}) },
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Size": api.Field{Name: "Size", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "size", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"cluster.NetworkInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInfo{}) },
+		Fields: map[string]api.Field{
+			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.InterfaceInfo"},
 		},
 	},
 	"cluster.Node": &api.Struct{
@@ -197,6 +248,22 @@ var typesMapCmd = map[string]*api.Struct{
 			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"cluster.NodeInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeInfo{}) },
+		Fields: map[string]api.Field{
+			"OsInfo": api.Field{Name: "OsInfo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "os-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.OsInfo"},
+
+			"DockerInfo": api.Field{Name: "DockerInfo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "docker-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.DockerInfo"},
+
+			"CpuInfo": api.Field{Name: "CpuInfo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cpu-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.CPUInfo"},
+
+			"MemoryInfo": api.Field{Name: "MemoryInfo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "memory-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.MemInfo"},
+
+			"StorageInfo": api.Field{Name: "StorageInfo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "storage-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.StorageInfo"},
+
+			"NetworkInfo": api.Field{Name: "NetworkInfo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "network-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.NetworkInfo"},
+		},
+	},
 	"cluster.NodeSpec": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeSpec{}) },
 		Fields: map[string]api.Field{},
@@ -208,114 +275,42 @@ var typesMapCmd = map[string]*api.Struct{
 
 			"Quorum": api.Field{Name: "Quorum", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "quorum", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
-			"Conditions": api.Field{Name: "Conditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.NodeCondition"},
+			"Conditions": api.Field{Name: "Conditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.NodeCondition"},
 		},
 	},
-	"cluster.PortCondition": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortCondition{}) },
+	"cluster.OsInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(OsInfo{}) },
 		Fields: map[string]api.Field{
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"KernelRelease": api.Field{Name: "KernelRelease", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kernel-relase", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kernel-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Processor": api.Field{Name: "Processor", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "processor", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"cluster.StorageDeviceInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StorageDeviceInfo{}) },
+		Fields: map[string]api.Field{
+			"SerialNumber": api.Field{Name: "SerialNumber", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "serial-num", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Vendor": api.Field{Name: "Vendor", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vendor", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LastTransitionTime": api.Field{Name: "LastTransitionTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-transition-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Capacity": api.Field{Name: "Capacity", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "capacity", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
-	"cluster.PortSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortSpec{}) },
+	"cluster.StorageInfo": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StorageInfo{}) },
 		Fields: map[string]api.Field{
-			"MacAddress": api.Field{Name: "MacAddress", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"cluster.PortStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortStatus{}) },
-		Fields: map[string]api.Field{
-			"MacAddrs": api.Field{Name: "MacAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addrs", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"LinkSpeed": api.Field{Name: "LinkSpeed", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "link-speed", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Conditions": api.Field{Name: "Conditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.PortCondition"},
-		},
-	},
-	"cluster.SmartNIC": &api.Struct{
-		Kind: "SmartNIC", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNIC{}) },
-		Fields: map[string]api.Field{
-			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
-
-			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
-
-			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNICSpec"},
-
-			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNICStatus"},
-		},
-
-		CLITags: map[string]api.CLIInfo{
-			"api-version":          api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"host-name":            api.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: ""},
-			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"last-transition-time": api.CLIInfo{Path: "Status.Ports[].Conditions[].LastTransitionTime", Skip: false, Insert: "", Help: ""},
-			"link-speed":           api.CLIInfo{Path: "Status.Ports[].LinkSpeed", Skip: false, Insert: "", Help: ""},
-			"mac-address":          api.CLIInfo{Path: "Spec.Ports[].MacAddress", Skip: false, Insert: "", Help: ""},
-			"mac-addrs":            api.CLIInfo{Path: "Status.Ports[].MacAddrs", Skip: false, Insert: "", Help: ""},
-			"message":              api.CLIInfo{Path: "Status.Ports[].Conditions[].Message", Skip: false, Insert: "", Help: ""},
-			"mgmt-ip":              api.CLIInfo{Path: "Spec.MgmtIp", Skip: false, Insert: "", Help: ""},
-			"phase":                api.CLIInfo{Path: "Spec.Phase", Skip: false, Insert: "", Help: ""},
-			"primary-mac-address":  api.CLIInfo{Path: "Status.PrimaryMacAddress", Skip: false, Insert: "", Help: ""},
-			"reason":               api.CLIInfo{Path: "Status.Ports[].Conditions[].Reason", Skip: false, Insert: "", Help: ""},
-			"serial-num":           api.CLIInfo{Path: "Status.SerialNum", Skip: false, Insert: "", Help: ""},
-			"status":               api.CLIInfo{Path: "Status.Ports[].Conditions[].Status", Skip: false, Insert: "", Help: ""},
-			"type":                 api.CLIInfo{Path: "Status.Ports[].Conditions[].Type", Skip: false, Insert: "", Help: ""},
-		},
-	},
-	"cluster.SmartNICCondition": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICCondition{}) },
-		Fields: map[string]api.Field{
-			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"LastTransitionTime": api.Field{Name: "LastTransitionTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-transition-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Reason": api.Field{Name: "Reason", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reason", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"cluster.SmartNICSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICSpec{}) },
-		Fields: map[string]api.Field{
-			"Phase": api.Field{Name: "Phase", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "phase", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"MgmtIp": api.Field{Name: "MgmtIp", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mgmt-ip", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"HostName": api.Field{Name: "HostName", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host-name", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.PortSpec"},
-		},
-	},
-	"cluster.SmartNICStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICStatus{}) },
-		Fields: map[string]api.Field{
-			"Conditions": api.Field{Name: "Conditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNICCondition"},
-
-			"SerialNum": api.Field{Name: "SerialNum", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "serial-num", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"PrimaryMacAddress": api.Field{Name: "PrimaryMacAddress", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "primary-mac-address", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.PortStatus"},
+			"Devices": api.Field{Name: "Devices", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "devices", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.StorageDeviceInfo"},
 		},
 	},
 }
 
 func init() {
 	schema := runtime.GetDefaultScheme()
-	schema.AddSchema(typesMapCmd)
+	schema.AddSchema(typesMapCluster)
 }

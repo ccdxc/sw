@@ -194,7 +194,7 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		restURL,
 		"", // no local certs endpoint
 		"", // no remote certs endpoint
-		"classic",
+		"host",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
 		r,
@@ -251,17 +251,17 @@ func TestNICConfig(t *testing.T) {
 
 					nm := ag.GetNMD()
 
-					// Validate default classic mode
+					// Validate default host mode
 					f1 := func() (bool, interface{}) {
 
 						cfg := nm.GetNaplesConfig()
-						if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+						if cfg.Spec.Mode == proto.MgmtMode_HOST && nm.GetListenURL() != "" &&
 							nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 							return true, nil
 						}
 						return false, nil
 					}
-					AssertEventually(t, f1, "Failed to verify mode is in Classic")
+					AssertEventually(t, f1, "Failed to verify mode is in Host")
 
 					// Create SmartNIC object in Venice
 					nic := cmd.SmartNIC{
@@ -270,9 +270,14 @@ func TestNICConfig(t *testing.T) {
 							Name: hostID,
 						},
 						Spec: cmd.SmartNICSpec{
-							MgmtIp:   "localhost",
-							Phase:    "UNKNOWN",
-							HostName: hostID,
+							IPConfig: &cmd.IPConfig{
+								IPAddress: "0.0.0.0/0",
+							},
+							Hostname: hostID,
+							MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+						},
+						Status: cmd.SmartNICStatus{
+							AdmissionPhase: "UNKNOWN",
 						},
 					}
 
@@ -287,7 +292,7 @@ func TestNICConfig(t *testing.T) {
 						// validate the mode is managed
 						cfg := nm.GetNaplesConfig()
 						log.Infof("NaplesConfig: %v", cfg)
-						if cfg.Spec.Mode != proto.NaplesMode_MANAGED_MODE {
+						if cfg.Spec.Mode != proto.MgmtMode_NETWORK {
 							log.Errorf("Failed to switch to managed mode")
 							return false, nil
 						}
@@ -300,7 +305,7 @@ func TestNICConfig(t *testing.T) {
 						}
 
 						// Verify NIC is admitted
-						if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+						if nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
 							log.Errorf("NIC is not admitted")
 							return false, nil
 						}
@@ -327,31 +332,15 @@ func TestNICConfig(t *testing.T) {
 							Name: hostID,
 						}
 						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
-						if err != nil || nicObj == nil || nicObj.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+						if err != nil || nicObj == nil || nicObj.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
 							log.Errorf("Failed to validate phase of SmartNIC object, mac:%s, phase: %s err: %v",
-								hostID, nicObj.Spec.Phase, err)
+								hostID, nicObj.Status.AdmissionPhase, err)
 							return false, nil
 						}
 
 						return true, nil
 					}
 					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
-
-					// Validate Workload Node object is created
-					f6 := func() (bool, interface{}) {
-
-						meta := api.ObjectMeta{
-							Name: hostID,
-						}
-						hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), &meta)
-						if err != nil || hostObj == nil {
-							log.Errorf("Failed to GET Host object, mac:%s, %v", hostID, err)
-							return false, nil
-						}
-
-						return true, nil
-					}
-					AssertEventually(t, f6, "Failed to verify creation of required Host object", string("10ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
 						tcName, hostID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())

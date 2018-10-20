@@ -193,6 +193,25 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
 		hostName := fmt.Sprintf("host%d", i)
 
+		// create a host object
+		host := &pencluster.Host{
+			ObjectMeta: api.ObjectMeta{
+				Name: hostName,
+			},
+			Spec: pencluster.HostSpec{
+				Interfaces: map[string]pencluster.HostIntfSpec{
+					hostID: pencluster.HostIntfSpec{},
+				},
+			},
+			Status: pencluster.HostStatus{
+				Type: pencluster.HostStatus_BAREMETAL.String(),
+			},
+		}
+		_, err := it.apisrvClient.ClusterV1().Host().Create(context.Background(), host)
+		if err != nil {
+			log.Fatalf("Error creating Host object %v, err: %v", host, err)
+		}
+
 		// create a platform agent
 		pa, err := platform.NewNaplesPlatformAgent()
 		if err != nil {
@@ -211,8 +230,8 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 		}
 
 		// create the new NMD
-		nmd, err := nmd.NewAgent(pa, uc, dbPath, hostName, hostID, smartNICServerURL,
-			"", restURL, "", "", "managed", globals.NicRegIntvl*time.Second,
+		nmd, err := nmd.NewAgent(pa, uc, dbPath, hostID, hostID, smartNICServerURL,
+			"", restURL, "", "", "network", globals.NicRegIntvl*time.Second,
 			globals.NicUpdIntvl*time.Second, resolverClient, nil)
 		if err != nil {
 			c.Fatalf("Error creating NMD. Err: %v", err)
@@ -226,11 +245,11 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 		AssertEventually(c, func() (bool, interface{}) {
 			nm := it.nmds[i].GetNMD()
 
-			// validate the mode is managed
+			// validate the mode is network
 			cfg := nm.GetNaplesConfig()
 			log.Infof("NaplesConfig: %v", cfg)
-			if cfg.Spec.Mode != nmdproto.NaplesMode_MANAGED_MODE {
-				log.Errorf("Failed to switch to managed mode")
+			if cfg.Spec.Mode != nmdproto.MgmtMode_NETWORK {
+				log.Errorf("Failed to switch to network mode")
 				return false, nil
 			}
 
@@ -242,7 +261,7 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 			}
 
 			// Verify NIC is admitted
-			if nic.Spec.Phase != pencluster.SmartNICSpec_ADMITTED.String() {
+			if nic.Status.AdmissionPhase != pencluster.SmartNICStatus_ADMITTED.String() {
 				log.Errorf("NIC is not admitted")
 				return false, nil
 			}
@@ -259,7 +278,7 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 				return false, nil
 			}
 			return true, nil
-		}, "Failed to verify mode is in Managed Mode", string("10ms"), string("60s"))
+		}, "Failed to verify mode is in Network Mode", string("10ms"), string("60s"))
 	}
 }
 

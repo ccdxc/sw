@@ -31,6 +31,7 @@ var _ = Describe("SmartNIC tests", func() {
 			Eventually(func() bool {
 				snics, err = snIf.List(context.Background(), &api.ListWatchOptions{})
 				if len(snics) != ts.tu.NumNaplesHosts {
+					By(fmt.Sprintf("Expected %v, Found %v, nics: %+v", ts.tu.NumNaplesHosts, len(snics), snics))
 					return false
 				}
 				By(fmt.Sprintf("ts:%s SmartNIC creation validated for [%d] nics", time.Now().String(), len(snics)))
@@ -42,7 +43,7 @@ var _ = Describe("SmartNIC tests", func() {
 
 				numAdmittedNICs := 0
 				for _, snic := range snics {
-					if snic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+					if snic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
 						return false
 					}
 					numAdmittedNICs++
@@ -85,7 +86,7 @@ var _ = Describe("SmartNIC tests", func() {
 						if cond.Type == cmd.SmartNICCondition_HEALTHY.String() &&
 							cond.Status == cmd.ConditionStatus_TRUE.String() {
 							numHealthySmartNICs++
-							health[snic.Name] = cond
+							health[snic.Name] = &cond
 							By(fmt.Sprintf("SmartNIC [%s] is healthy", snic.Name))
 						}
 					}

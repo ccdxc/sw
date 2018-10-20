@@ -26,9 +26,9 @@ func TestMemDb(t *testing.T) {
 	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil))
 	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert2", nil, nil, nil))
 
-	mDb.AddObject(policygen.CreateSmartNIC("00-14-22-01-23-45", cluster.SmartNICSpec_ADMITTED.String(), "esx-1",
+	mDb.AddObject(policygen.CreateSmartNIC("00-14-22-01-23-45", cluster.SmartNICStatus_ADMITTED.String(), "esx-1",
 		&cluster.SmartNICCondition{Type: cluster.SmartNICCondition_HEALTHY.String(), Status: cluster.ConditionStatus_FALSE.String()}))
-	mDb.AddObject(policygen.CreateSmartNIC("00-14-22-01-23-34", cluster.SmartNICSpec_ADMITTED.String(), "esx-2",
+	mDb.AddObject(policygen.CreateSmartNIC("00-14-22-01-23-34", cluster.SmartNICStatus_ADMITTED.String(), "esx-2",
 		&cluster.SmartNICCondition{Type: cluster.SmartNICCondition_HEALTHY.String(), Status: cluster.ConditionStatus_FALSE.String()}))
 
 	objs := mDb.ListObjects("AlertPolicy")

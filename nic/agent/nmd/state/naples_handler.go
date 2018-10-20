@@ -56,11 +56,11 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		// Handle the new mode
 		switch cfg.Spec.Mode {
 
-		case nmd.NaplesMode_CLASSIC_MODE:
+		case nmd.MgmtMode_HOST:
 			n.StopManagedMode()
 			n.StartClassicMode()
 
-		case nmd.NaplesMode_MANAGED_MODE:
+		case nmd.MgmtMode_NETWORK:
 
 			// TODO : We need to stop rest server only
 			// after NIC registration succeeds. (either
@@ -91,7 +91,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 // StartManagedMode starts the tasks required for managed mode
 func (n *NMD) StartManagedMode() error {
 	// Set Registration in progress flag
-	log.Infof("NIC in managed mode, mac: %v", n.config.Spec.PrimaryMac)
+	log.Infof("NIC in managed mode, mac: %v", n.config.Spec.PrimaryMAC)
 	n.setRegStatus(true)
 
 	err := n.initTLSProvider()
@@ -115,7 +115,8 @@ func (n *NMD) StartManagedMode() error {
 		case <-time.After(n.nicRegInterval):
 
 			// For the NIC in Naples Config, start the registration
-			mac := n.config.Spec.PrimaryMac
+			mac := n.config.Spec.PrimaryMAC
+			name := mac
 
 			nicObj, _ := n.GetSmartNIC()
 
@@ -123,34 +124,36 @@ func (n *NMD) StartManagedMode() error {
 
 				// Update smartNIC object
 				nicObj.TypeMeta.Kind = "SmartNIC"
-				nicObj.ObjectMeta.Name = mac
-				nicObj.Spec.Phase = cmd.SmartNICSpec_REGISTERING.String()
-				nicObj.Spec.MgmtIp = n.config.Spec.MgmtIp
-				nicObj.Spec.HostName = n.config.Spec.HostName
-
+				nicObj.ObjectMeta.Name = name
+				nicObj.Spec.IPConfig = n.config.Spec.IPConfig
+				nicObj.Spec.Hostname = n.config.Spec.Hostname
+				nicObj.Spec.MgmtMode = cmd.SmartNICSpec_NETWORK.String()
+				nicObj.Spec.MgmtVlan = n.config.Spec.MgmtVlan
+				nicObj.Spec.Controllers = n.config.Spec.Controllers
+				nicObj.Status.PrimaryMAC = mac
+				nicObj.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
 			} else {
 
 				// Construct new smartNIC object
 				nicObj = &cmd.SmartNIC{
 					TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 					ObjectMeta: api.ObjectMeta{
-						Name: mac,
+						Name: name,
 					},
 					Spec: cmd.SmartNICSpec{
-						Phase:  cmd.SmartNICSpec_REGISTERING.String(),
-						MgmtIp: n.config.Spec.MgmtIp,
-						// TODO: get mgmt ip from platform
-						HostName: n.config.Spec.HostName,
+						Hostname:    n.config.Spec.Hostname,
+						IPConfig:    n.config.Spec.IPConfig,
+						MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
+						MgmtVlan:    n.config.Spec.MgmtVlan,
+						Controllers: n.config.Spec.Controllers,
 					},
 					// TODO: get these from platform
 					Status: cmd.SmartNICStatus{
-						SerialNum:         "0x0123456789ABCDEFghijk",
-						PrimaryMacAddress: mac,
+						AdmissionPhase: cmd.SmartNICStatus_REGISTERING.String(),
+						SerialNum:      "0x0123456789ABCDEFghijk",
+						PrimaryMAC:     mac,
 					},
 				}
-			}
-			if nicObj.Spec.MgmtIp == "" {
-				nicObj.Spec.MgmtIp = "0.0.0.0"
 			}
 
 			// Send NIC register request to CMD
@@ -159,7 +162,7 @@ func (n *NMD) StartManagedMode() error {
 
 			// Cache it in nicDB
 			if msg.AdmissionResponse != nil {
-				nicObj.Spec.Phase = msg.AdmissionResponse.Phase
+				nicObj.Status.AdmissionPhase = msg.AdmissionResponse.Phase
 			}
 			n.SetSmartNIC(nicObj)
 
@@ -187,14 +190,14 @@ func (n *NMD) StartManagedMode() error {
 				log.Infof("Received register response: %+v", resp)
 				switch resp.Phase {
 
-				case cmd.SmartNICSpec_REJECTED.String():
+				case cmd.SmartNICStatus_REJECTED.String():
 
 					// Rule #2 - abort retry, clear registration status flag
 					log.Errorf("Invalid NIC, Admission rejected, mac: %s reason: %s", mac, resp.Reason)
 					n.setRegStatus(false)
 					return err
 
-				case cmd.SmartNICSpec_PENDING.String():
+				case cmd.SmartNICStatus_PENDING.String():
 
 					// Rule #3 - needs slower exponential retry
 					// Cap the retry interval at 30mins
@@ -207,7 +210,7 @@ func (n *NMD) StartManagedMode() error {
 					log.Infof("NIC waiting for manual approval of admission into cluster, mac: %s reason: %s",
 						mac, resp.Reason)
 
-				case cmd.SmartNICSpec_ADMITTED.String():
+				case cmd.SmartNICStatus_ADMITTED.String():
 
 					// Rule #4 - registration is success, clear registration status
 					// and move on to next stage
@@ -246,7 +249,7 @@ func (n *NMD) StartManagedMode() error {
 
 					return nil
 
-				case cmd.SmartNICSpec_UNKNOWN.String():
+				case cmd.SmartNICStatus_UNKNOWN.String():
 
 					// Not an expected response
 					log.Fatalf("Unknown response, nic: %+v phase: %v", nicObj, resp)
@@ -272,17 +275,18 @@ func (n *NMD) SendNICUpdates() error {
 
 		// NIC update timer callback
 		case <-time.After(n.nicUpdInterval):
-
 			nicObj := n.nic
 
 			// Skip until NIC is admitted
-			if nicObj.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+			if nicObj.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
+				log.Infof("Skipping health update, phase %v", nicObj.Status.AdmissionPhase)
 				continue
 			}
 
 			// TODO : Get status from platform and fill nic Status
 			nicObj.Status = cmd.SmartNICStatus{
-				Conditions: []*cmd.SmartNICCondition{
+				AdmissionPhase: cmd.SmartNICStatus_ADMITTED.String(),
+				Conditions: []cmd.SmartNICCondition{
 					{
 						Type:               cmd.SmartNICCondition_HEALTHY.String(),
 						Status:             cmd.ConditionStatus_TRUE.String(),
@@ -332,7 +336,7 @@ func (n *NMD) StopManagedMode() error {
 func (n *NMD) StartClassicMode() error {
 
 	// Start RestServer
-	log.Infof("NIC in classic mode, mac: %v", n.config.Spec.PrimaryMac)
+	log.Infof("NIC in classic mode, mac: %v", n.config.Spec.PrimaryMAC)
 
 	return n.StartRestServer()
 }

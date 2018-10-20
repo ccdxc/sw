@@ -1163,12 +1163,24 @@ var CreateServiceFlags = []cli.Flag{
 // CreateSmartNICFlags specifies flagsfor smartNIC create operation
 var CreateSmartNICFlags = []cli.Flag{
 
-	cli.StringFlag{
-		Name: "host-name",
+	cli.BoolFlag{
+		Name: "admit",
 	},
 
 	cli.StringSliceFlag{
-		Name: "mac-address",
+		Name: "controller-ips",
+	},
+
+	cli.StringFlag{
+		Name: "default-gw",
+	},
+
+	cli.StringSliceFlag{
+		Name: "dns-servers",
+	},
+
+	cli.StringFlag{
+		Name: "hostname",
 	},
 
 	cli.StringFlag{
@@ -1176,7 +1188,11 @@ var CreateSmartNICFlags = []cli.Flag{
 	},
 
 	cli.StringFlag{
-		Name: "phase",
+		Name: "mgmt-mode",
+	},
+
+	cli.UintFlag{
+		Name: "mgmt-vlan",
 	},
 }
 

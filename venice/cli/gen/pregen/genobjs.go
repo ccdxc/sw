@@ -88,6 +88,34 @@ func GetSubObj(kind string) interface{} {
 		var v cluster.ConditionStatus
 		return &v
 
+	case "OsInfo":
+		var v cluster.OsInfo
+		return &v
+
+	case "DockerInfo":
+		var v cluster.DockerInfo
+		return &v
+
+	case "CPUInfo":
+		var v cluster.CPUInfo
+		return &v
+
+	case "MemInfo":
+		var v cluster.MemInfo
+		return &v
+
+	case "StorageInfo":
+		var v cluster.StorageInfo
+		return &v
+
+	case "StorageDeviceInfo":
+		var v cluster.StorageDeviceInfo
+		return &v
+
+	case "NetworkInfo":
+		var v cluster.NetworkInfo
+		return &v
+
 	case "Selector":
 		var v labels.Selector
 		return &v
@@ -104,16 +132,28 @@ func GetSubObj(kind string) interface{} {
 		var v network.TLSClientPolicySpec
 		return &v
 
-	case "PortSpec":
-		var v cluster.PortSpec
-		return &v
-
-	case "PortStatus":
-		var v cluster.PortStatus
-		return &v
-
 	case "SmartNICCondition":
 		var v cluster.SmartNICCondition
+		return &v
+
+	case "SmartNICInfo":
+		var v cluster.SmartNICInfo
+		return &v
+
+	case "UplinkStatus":
+		var v cluster.UplinkStatus
+		return &v
+
+	case "PFStatus":
+		var v cluster.PFStatus
+		return &v
+
+	case "IPConfig":
+		var v cluster.IPConfig
+		return &v
+
+	case "BiosInfo":
+		var v cluster.BiosInfo
 		return &v
 
 	case "UserAuditLog":

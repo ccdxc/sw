@@ -771,6 +771,16 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.smartnics",
+            "description": "SmartNICs contains a list of admitted SmartNICs that are on this host.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -1557,67 +1567,6 @@
         "tags": [
           "cluster/v1"
         ]
-      },
-      "post": {
-        "summary": "Create SmartNIC object",
-        "operationId": "AddSmartNIC",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/clusterSmartNIC"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clusterSmartNIC"
-            }
-          }
-        ],
-        "tags": [
-          "cluster/v1"
-        ]
       }
     },
     "/configs/cluster/v1/smartnics/{O.Name}": {
@@ -1748,22 +1697,72 @@
             "type": "string"
           },
           {
-            "name": "spec.phase",
-            "description": "Current phase of the SmartNIC.\nWhen auto-admission is enabled, Phase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, Phase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet.",
+            "name": "spec.admit",
+            "description": "Admit allows a SmartNIC to join the cluster.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "spec.hostname",
+            "description": "Hostname is used as a user friendly identifier in logs/events.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "spec.mgmt-ip",
-            "description": "Management IP address of the naples node.",
+            "name": "ip-config.ip-address",
+            "description": "IPAddress contains the Management IP address of the SmartNIC in CIDR format.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "spec.host-name",
-            "description": "Host name.",
+            "name": "ip-config.default-gw",
+            "description": "DefaultGW contains the default gateway's IP address.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.dns-servers",
+            "description": "DNSServers contains a list of DNS Servers that can be used on SmartNIC.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "spec.mgmt-mode",
+            "description": "MgmtMode defines the management mode of the SmartNIC.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.mgmt-vlan",
+            "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nimplies OOB 1G mgmt port is used for management. A non 0 vlan switches the\nmanagement port to a vlan on data ports.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.controllers",
+            "description": "Controllers contains the list of remote controllers IP addresses or hostnames.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.admission-phase",
+            "description": "Current admission phase of the SmartNIC.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1776,8 +1775,133 @@
             "type": "string"
           },
           {
-            "name": "status.primary-mac-address",
-            "description": "Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC.",
+            "name": "status.primary-mac",
+            "description": "PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.ip-address",
+            "description": "IPAddress contains the Management IP address of the SmartNIC in CIDR format.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.default-gw",
+            "description": "DefaultGW contains the default gateway's IP address.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.dns-servers",
+            "description": "DNSServers contains a list of DNS Servers that can be used on SmartNIC.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bios-info.vendor",
+            "description": "Vendor name.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bios-info.version",
+            "description": "BIOS version.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bios-info.fw-major-ver",
+            "description": "Firmware major release info.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "bios-info.fw-minor-ver",
+            "description": "Firmware minor release info.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os-info.type",
+            "description": "OS Name\nEg: GNU/Linux.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os-info.kernel-relase",
+            "description": "Kernel release\nEg: 3.10.0-514.10.2.el7.x86_64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os-info.kernel-version",
+            "description": "Kernel version\nEg: #1 SMP Fri Mar 3 00:04:05 UTC 2017.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os-info.processor",
+            "description": "Processor Info\nEg: x86_64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cpu-info.speed",
+            "description": "CPU speed per core, eg: 2099998101.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cpu-info.num-sockets",
+            "description": "Number of CPU sockets, eg: 2, 4.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "cpu-info.num-cores",
+            "description": "Number of physical CPU cores per socket, eg: 36.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "cpu-info.num-threads",
+            "description": "Number of threads per core, eg: 2.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "memory-info.type",
+            "description": "Type.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "memory-info.size",
+            "description": "Memory size in bytes, eg: 274760318976.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3560,6 +3684,53 @@
         }
       }
     },
+    "clusterBiosInfo": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "type": "string",
+          "title": "Vendor name"
+        },
+        "version": {
+          "type": "string",
+          "title": "BIOS version"
+        },
+        "fw-major-ver": {
+          "type": "string",
+          "title": "Firmware major release info"
+        },
+        "fw-minor-ver": {
+          "type": "string",
+          "title": "Firmware minor release info"
+        }
+      },
+      "title": "BIOS information"
+    },
+    "clusterCPUInfo": {
+      "type": "object",
+      "properties": {
+        "speed": {
+          "type": "string",
+          "title": "CPU speed per core, eg: 2099998101"
+        },
+        "num-sockets": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of CPU sockets, eg: 2, 4"
+        },
+        "num-cores": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of physical CPU cores per socket, eg: 36"
+        },
+        "num-threads": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of threads per core, eg: 2"
+        }
+      },
+      "title": "CPU information"
+    },
     "clusterCluster": {
       "type": "object",
       "properties": {
@@ -3794,9 +3965,57 @@
             "$ref": "#/definitions/clusterHostIntfStatus"
           },
           "title": "Status of all interfaces in the Host identified by Primary MAC"
+        },
+        "smartnics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "SmartNICs contains a list of admitted SmartNICs that are on this host"
         }
       },
       "description": "HostStatus contains the current state of the Host."
+    },
+    "clusterIPConfig": {
+      "type": "object",
+      "properties": {
+        "ip-address": {
+          "type": "string",
+          "title": "IPAddress contains the Management IP address of the SmartNIC in CIDR format"
+        },
+        "default-gw": {
+          "type": "string",
+          "title": "DefaultGW contains the default gateway's IP address"
+        },
+        "dns-servers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "DNSServers contains a list of DNS Servers that can be used on SmartNIC"
+        }
+      },
+      "title": "IPConfig defines the static IP configuration for a SmartNIC"
+    },
+    "clusterMemInfo": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "HBM",
+            "DDR"
+          ],
+          "default": "UNKNOWN",
+          "title": "Type"
+        },
+        "size": {
+          "type": "string",
+          "title": "Memory size in bytes, eg: 274760318976"
+        }
+      },
+      "title": "Memory/RAM information"
     },
     "clusterNode": {
       "type": "object",
@@ -3927,6 +4146,47 @@
       },
       "description": "NodeStatus contains the current state of the node."
     },
+    "clusterOsInfo": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "title": "OS Name\nEg: GNU/Linux"
+        },
+        "kernel-relase": {
+          "type": "string",
+          "title": "Kernel release\nEg: 3.10.0-514.10.2.el7.x86_64"
+        },
+        "kernel-version": {
+          "type": "string",
+          "title": "Kernel version\nEg: #1 SMP Fri Mar 3 00:04:05 UTC 2017"
+        },
+        "processor": {
+          "type": "string",
+          "title": "Processor Info\nEg: x86_64"
+        }
+      },
+      "title": "OS information"
+    },
+    "clusterPFStatus": {
+      "type": "object",
+      "properties": {
+        "primary-mac": {
+          "type": "string",
+          "example": "aa:BB:cc:DD:00:00, aabb.ccdd.0000, aa-BB-cc-DD-00-00",
+          "description": "should be a valid MAC address\n",
+          "title": "Primary Mac address (TBD)"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterPortCondition"
+          },
+          "title": "List of current PF conditions"
+        }
+      },
+      "title": "PF (Physical function) Status"
+    },
     "clusterPortCondition": {
       "type": "object",
       "properties": {
@@ -3970,40 +4230,6 @@
         }
       },
       "description": "PortCondition describes the state of a Port at a certain point."
-    },
-    "clusterPortSpec": {
-      "type": "object",
-      "properties": {
-        "mac-address": {
-          "type": "string",
-          "title": "Primary Mac address of the Port, which is key identifier of the port"
-        }
-      },
-      "title": "PortSpec contains configuration of a port in SmartNIC"
-    },
-    "clusterPortStatus": {
-      "type": "object",
-      "properties": {
-        "mac-addrs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "List of all Mac addresses of the Port"
-        },
-        "link-speed": {
-          "type": "string",
-          "title": "LinkSpeed of the Port"
-        },
-        "conditions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterPortCondition"
-          },
-          "title": "List of current Port conditions"
-        }
-      },
-      "title": "PortStatus contains current status of a Port"
     },
     "clusterSmartNIC": {
       "type": "object",
@@ -4076,6 +4302,32 @@
       },
       "description": "SmartNICCondition describes the state of a SmartNIC at a certain point."
     },
+    "clusterSmartNICInfo": {
+      "type": "object",
+      "properties": {
+        "bios-info": {
+          "$ref": "#/definitions/clusterBiosInfo",
+          "title": "BIOS details"
+        },
+        "os-info": {
+          "$ref": "#/definitions/clusterOsInfo",
+          "title": "OS details"
+        },
+        "cpu-info": {
+          "$ref": "#/definitions/clusterCPUInfo",
+          "title": "CPU details"
+        },
+        "memory-info": {
+          "$ref": "#/definitions/clusterMemInfo",
+          "title": "RAM/Memory details"
+        },
+        "storage-info": {
+          "$ref": "#/definitions/clusterStorageInfo",
+          "title": "Storage details"
+        }
+      },
+      "title": "Naples I/O (SmartNIC) subsystem information"
+    },
     "clusterSmartNICList": {
       "type": "object",
       "properties": {
@@ -4101,7 +4353,52 @@
     "clusterSmartNICSpec": {
       "type": "object",
       "properties": {
-        "phase": {
+        "admit": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Admit allows a SmartNIC to join the cluster"
+        },
+        "hostname": {
+          "type": "string",
+          "title": "Hostname is used as a user friendly identifier in logs/events"
+        },
+        "ip-config": {
+          "$ref": "#/definitions/clusterIPConfig",
+          "title": "IPConfig defines the static IP configuration. If not specified, DHCP will be attempted"
+        },
+        "mgmt-mode": {
+          "type": "string",
+          "enum": [
+            "HOST",
+            "NETWORK"
+          ],
+          "default": "HOST",
+          "x-ui-hints": {
+            "HOST": "Host",
+            "NETWORK": "Network"
+          },
+          "title": "MgmtMode defines the management mode of the SmartNIC"
+        },
+        "mgmt-vlan": {
+          "type": "integer",
+          "format": "int64",
+          "maximum": 4095,
+          "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nimplies OOB 1G mgmt port is used for management. A non 0 vlan switches the\nmanagement port to a vlan on data ports."
+        },
+        "controllers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Controllers contains the list of remote controllers IP addresses or hostnames"
+        }
+      },
+      "title": "SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)"
+    },
+    "clusterSmartNICStatus": {
+      "type": "object",
+      "properties": {
+        "admission-phase": {
           "type": "string",
           "enum": [
             "UNKNOWN",
@@ -4118,29 +4415,8 @@
             "REJECTED": "Rejected",
             "UNKNOWN": "Unknown"
           },
-          "description": "Current phase of the SmartNIC.\nWhen auto-admission is enabled, Phase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, Phase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
+          "description": "Current admission phase of the SmartNIC.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
         },
-        "mgmt-ip": {
-          "type": "string",
-          "title": "Management IP address of the naples node"
-        },
-        "host-name": {
-          "type": "string",
-          "title": "Host name"
-        },
-        "ports": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterPortSpec"
-          },
-          "title": "Ports holds a list of Port Specs"
-        }
-      },
-      "title": "SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)"
-    },
-    "clusterSmartNICStatus": {
-      "type": "object",
-      "properties": {
         "conditions": {
           "type": "array",
           "items": {
@@ -4152,19 +4428,69 @@
           "type": "string",
           "title": "Serial number"
         },
-        "primary-mac-address": {
+        "primary-mac": {
           "type": "string",
-          "title": "Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC"
+          "title": "PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC"
         },
-        "ports": {
+        "ip-config": {
+          "$ref": "#/definitions/clusterIPConfig",
+          "title": "IPConfig is the ip address related configuration obtained from DHCP"
+        },
+        "system-info": {
+          "$ref": "#/definitions/clusterSmartNICInfo",
+          "title": "Naples I/O system info"
+        },
+        "uplinks": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/clusterPortStatus"
+            "$ref": "#/definitions/clusterUplinkStatus"
           },
-          "title": "Ports holds a list of PortStatus"
+          "title": "Uplink status"
+        },
+        "pfs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterPFStatus"
+          },
+          "title": "PFs status"
         }
       },
       "title": "SmartNICStatus contains current status of a SmartNIC"
+    },
+    "clusterStorageDeviceInfo": {
+      "type": "object",
+      "properties": {
+        "serial-num": {
+          "type": "string",
+          "title": "Serial Number"
+        },
+        "type": {
+          "type": "string",
+          "title": "Storage Type (TBD for Naples)\nEg: SATA, SCSI, NVMe  or HDD, SSD, NVMe"
+        },
+        "vendor": {
+          "type": "string",
+          "title": "Vendor info"
+        },
+        "capacity": {
+          "type": "string",
+          "title": "Capacity in bytes"
+        }
+      },
+      "title": "Storage device information"
+    },
+    "clusterStorageInfo": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterStorageDeviceInfo"
+          },
+          "title": "List of storage devices"
+        }
+      },
+      "title": "Storage information"
     },
     "clusterTenant": {
       "type": "object",
@@ -4224,6 +4550,29 @@
     "clusterTenantStatus": {
       "type": "object",
       "title": "status part of tenant object"
+    },
+    "clusterUplinkStatus": {
+      "type": "object",
+      "properties": {
+        "primary-mac": {
+          "type": "string",
+          "example": "aa:BB:cc:DD:00:00, aabb.ccdd.0000, aa-BB-cc-DD-00-00",
+          "description": "should be a valid MAC address\n",
+          "title": "Primary Mac address (TBD)"
+        },
+        "link-speed": {
+          "type": "string",
+          "title": "LinkSpeed of the Port"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterPortCondition"
+          },
+          "title": "List of current Uplink conditions"
+        }
+      },
+      "title": "Uplink Status"
     },
     "googleprotobufAny": {
       "type": "object",

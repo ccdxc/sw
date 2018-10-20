@@ -629,6 +629,76 @@ func writeConditionStatusObj(obj cluster.ConditionStatus, specKvs map[string]ref
 	return &newConditionStatus
 }
 
+func writeOsInfoObj(obj cluster.OsInfo, specKvs map[string]ref.FInfo) *cluster.OsInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newOsInfo := new.(cluster.OsInfo)
+
+	return &newOsInfo
+}
+
+func writeDockerInfoObj(obj cluster.DockerInfo, specKvs map[string]ref.FInfo) *cluster.DockerInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newDockerInfo := new.(cluster.DockerInfo)
+
+	return &newDockerInfo
+}
+
+func writeCPUInfoObj(obj cluster.CPUInfo, specKvs map[string]ref.FInfo) *cluster.CPUInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newCPUInfo := new.(cluster.CPUInfo)
+
+	return &newCPUInfo
+}
+
+func writeMemInfoObj(obj cluster.MemInfo, specKvs map[string]ref.FInfo) *cluster.MemInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newMemInfo := new.(cluster.MemInfo)
+
+	return &newMemInfo
+}
+
+func writeStorageInfoObj(obj cluster.StorageInfo, specKvs map[string]ref.FInfo) *cluster.StorageInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newStorageInfo := new.(cluster.StorageInfo)
+
+	return &newStorageInfo
+}
+
+func writeStorageDeviceInfoObj(obj cluster.StorageDeviceInfo, specKvs map[string]ref.FInfo) *cluster.StorageDeviceInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newStorageDeviceInfo := new.(cluster.StorageDeviceInfo)
+
+	return &newStorageDeviceInfo
+}
+
+func writeNetworkInfoObj(obj cluster.NetworkInfo, specKvs map[string]ref.FInfo) *cluster.NetworkInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newNetworkInfo := new.(cluster.NetworkInfo)
+
+	return &newNetworkInfo
+}
+
 func writeSelectorObj(obj labels.Selector, specKvs map[string]ref.FInfo) *labels.Selector {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
@@ -669,26 +739,6 @@ func writeTLSClientPolicySpecObj(obj network.TLSClientPolicySpec, specKvs map[st
 	return &newTLSClientPolicySpec
 }
 
-func writePortSpecObj(obj cluster.PortSpec, specKvs map[string]ref.FInfo) *cluster.PortSpec {
-
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newPortSpec := new.(cluster.PortSpec)
-
-	return &newPortSpec
-}
-
-func writePortStatusObj(obj cluster.PortStatus, specKvs map[string]ref.FInfo) *cluster.PortStatus {
-
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newPortStatus := new.(cluster.PortStatus)
-
-	return &newPortStatus
-}
-
 func writeSmartNICConditionObj(obj cluster.SmartNICCondition, specKvs map[string]ref.FInfo) *cluster.SmartNICCondition {
 
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
@@ -697,6 +747,56 @@ func writeSmartNICConditionObj(obj cluster.SmartNICCondition, specKvs map[string
 	newSmartNICCondition := new.(cluster.SmartNICCondition)
 
 	return &newSmartNICCondition
+}
+
+func writeSmartNICInfoObj(obj cluster.SmartNICInfo, specKvs map[string]ref.FInfo) *cluster.SmartNICInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newSmartNICInfo := new.(cluster.SmartNICInfo)
+
+	return &newSmartNICInfo
+}
+
+func writeUplinkStatusObj(obj cluster.UplinkStatus, specKvs map[string]ref.FInfo) *cluster.UplinkStatus {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newUplinkStatus := new.(cluster.UplinkStatus)
+
+	return &newUplinkStatus
+}
+
+func writePFStatusObj(obj cluster.PFStatus, specKvs map[string]ref.FInfo) *cluster.PFStatus {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newPFStatus := new.(cluster.PFStatus)
+
+	return &newPFStatus
+}
+
+func writeIPConfigObj(obj cluster.IPConfig, specKvs map[string]ref.FInfo) *cluster.IPConfig {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newIPConfig := new.(cluster.IPConfig)
+
+	return &newIPConfig
+}
+
+func writeBiosInfoObj(obj cluster.BiosInfo, specKvs map[string]ref.FInfo) *cluster.BiosInfo {
+
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true, CustomParsers: api.CustomParsers}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newBiosInfo := new.(cluster.BiosInfo)
+
+	return &newBiosInfo
 }
 
 func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *api.UserAuditLog {

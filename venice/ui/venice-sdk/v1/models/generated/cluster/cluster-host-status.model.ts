@@ -14,6 +14,7 @@ export interface IClusterHostStatus {
     'operating-system'?: string;
     'orchestrator'?: string;
     'interfaces'?: object;
+    'smartnics'?: Array<string>;
 }
 
 
@@ -24,6 +25,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     (like VCenter) managing this host. */
     'orchestrator': string = null;
     'interfaces': object = null;
+    'smartnics': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: ClusterHostStatus_type,
@@ -39,6 +41,9 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
         },
         'interfaces': {
             type: 'object'
+        },
+        'smartnics': {
+            type: 'Array<string>'
         },
     }
 
@@ -61,6 +66,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     */
     constructor(values?: any) {
         super();
+        this['smartnics'] = new Array<string>();
         this.setValues(values);
     }
 
@@ -89,6 +95,9 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
         } else if (ClusterHostStatus.hasDefaultValue('interfaces')) {
             this['interfaces'] = ClusterHostStatus.propInfo['interfaces'].default;
         }
+        if (values) {
+            this.fillModelArray<string>(this, 'smartnics', values['smartnics']);
+        }
     }
 
 
@@ -101,7 +110,10 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
                 'operating-system': new FormControl(this['operating-system']),
                 'orchestrator': new FormControl(this['orchestrator']),
                 'interfaces': new FormControl(this['interfaces']),
+                'smartnics': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<string>('smartnics', this['smartnics']);
         }
         return this._formGroup;
     }
@@ -112,6 +124,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
             this._formGroup.controls['operating-system'].setValue(this['operating-system']);
             this._formGroup.controls['orchestrator'].setValue(this['orchestrator']);
             this._formGroup.controls['interfaces'].setValue(this['interfaces']);
+            this.fillModelArray<string>(this, 'smartnics', this['smartnics']);
         }
     }
 }

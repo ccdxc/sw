@@ -2,7 +2,7 @@
 
 /*
 Package clusterGwService is a auto generated package.
-Input file: cmd.proto
+Input file: smartnic.proto
 */
 package clusterGwService
 

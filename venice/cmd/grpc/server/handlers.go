@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/sw/venice/cmd/rolloutclient"
-
 	context "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
@@ -21,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
+	"github.com/pensando/sw/venice/cmd/rolloutclient"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"

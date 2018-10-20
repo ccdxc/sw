@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 )
@@ -35,29 +36,29 @@ var modeManagedShowCmd = &cobra.Command{
 
 type clusterAddresses []string
 
-var clusters []string
+var controllers []string
 var mode string
 var priMac string
-var hostName string
+var hostname string
 var mgmtIP string
+var defaultGW string
+var dnsServers []string
 
 func init() {
 	rootCmd.AddCommand(modeManagedCmd)
 	modeManagedCmd.AddCommand(modeManagedShowCmd)
 
-	modeManagedCmd.Flags().StringSliceVarP(&clusters, "cluster-ip", "c", make([]string, 0), "List of cluster IP addresses (Required)")
-	modeManagedCmd.Flags().StringVarP(&mode, "mode", "m", "managed", "unmanaged vs managed mode")
-	modeManagedCmd.Flags().StringVarP(&priMac, "primary-mac", "p", "", "Primary mac (Required)")
-	modeManagedCmd.Flags().StringVarP(&hostName, "host-name", "n", "", "Host name (Required)")
-	modeManagedCmd.Flags().StringVarP(&mgmtIP, "management-ip", "i", "", "Management IP (Required)")
-	modeManagedCmd.MarkFlagRequired("cluster-ip")
-	modeManagedCmd.MarkFlagRequired("primary-mac")
-	modeManagedCmd.MarkFlagRequired("host-name")
-	modeManagedCmd.MarkFlagRequired("management-ip")
+	modeManagedCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or hostnames")
+	modeManagedCmd.Flags().StringVarP(&mode, "mode", "m", "network", "host or network managed")
+	modeManagedCmd.Flags().StringVarP(&priMac, "primary-mac", "p", "", "Primary mac")
+	modeManagedCmd.Flags().StringVarP(&hostname, "hostname", "n", "", "Host name")
+	modeManagedCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "i", "", "Management IP in CIDR format")
+	modeManagedCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
+	modeManagedCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
 }
 
 func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
-	for _, cluster := range clusters {
+	for _, cluster := range controllers {
 		ep := strings.Split(cluster, ":")
 		if vldtor.HostAddr(ep[0]) != true {
 			str := "Not valid hostaddr: " + ep[0]
@@ -68,14 +69,14 @@ func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
 			return errors.New(str)
 		}
 	}
-	if strings.Compare(mode, "managed") != 0 && strings.Compare(mode, "unmanaged") != 0 {
+	if strings.Compare(mode, "network") != 0 && strings.Compare(mode, "host") != 0 {
 		str := "Not valid mode: " + mode
 		return errors.New(str)
 	}
-	if !vldtor.IPAddr(mgmtIP) {
-		return errors.New("Not valid management-ip")
+	if !vldtor.CIDR(mgmtIP) {
+		return errors.New("Not valid mgmt-ip")
 	}
-	if !vldtor.HostAddr(hostName) {
+	if !vldtor.HostAddr(hostname) {
 		return errors.New("Not valid host name")
 	}
 	if !vldtor.MacAddr(priMac) {
@@ -85,21 +86,25 @@ func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
 }
 
 func modeManagedCmdHandler(cmd *cobra.Command, args []string) {
-	var modeVal nmd.NaplesMode
+	var modeVal nmd.MgmtMode
 	if mode == "managed" {
-		modeVal = nmd.NaplesMode_MANAGED_MODE
+		modeVal = nmd.MgmtMode_NETWORK
 	} else {
-		modeVal = nmd.NaplesMode_CLASSIC_MODE
+		modeVal = nmd.MgmtMode_HOST
 	}
 	naplesCfg := &nmd.Naples{
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		Spec: nmd.NaplesSpec{
-			Mode:           modeVal,
-			PrimaryMac:     priMac,
-			HostName:       hostName,
-			ClusterAddress: clusters,
-			MgmtIp:         mgmtIP,
+			Mode:        modeVal,
+			Hostname:    hostname,
+			Controllers: controllers,
+			IPConfig: &cluster.IPConfig{
+				IPAddress:  mgmtIP,
+				DefaultGW:  defaultGW,
+				DNSServers: dnsServers,
+			},
+			PrimaryMAC: priMac,
 		},
 	}
 
@@ -128,7 +133,7 @@ func modeManagedShowCmdHandler(cmd *cobra.Command, args []string) {
 	naplesCfg := nmd.Naples{}
 	json.Unmarshal(resp, &naplesCfg)
 	if tabularFormat {
-		fmt.Println("Mode:", nmd.NaplesMode_name[int32(naplesCfg.Spec.Mode)])
+		fmt.Println("Mode:", nmd.MgmtMode_name[int32(naplesCfg.Spec.Mode)])
 	}
 	if verbose && tabularFormat {
 		fmt.Printf("%+v\n", naplesCfg)

@@ -7,31 +7,32 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ClusterStorageDeviceInfo, IClusterStorageDeviceInfo } from './cluster-storage-device-info.model';
 
-export interface IClusterPortSpec {
-    'mac-address'?: string;
+export interface IClusterStorageInfo {
+    'devices'?: Array<IClusterStorageDeviceInfo>;
 }
 
 
-export class ClusterPortSpec extends BaseModel implements IClusterPortSpec {
-    'mac-address': string = null;
+export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo {
+    'devices': Array<ClusterStorageDeviceInfo> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'mac-address': {
-            type: 'string'
+        'devices': {
+            type: 'object'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ClusterPortSpec.propInfo[propName];
+        return ClusterStorageInfo.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ClusterPortSpec.propInfo[prop] != null &&
-                        ClusterPortSpec.propInfo[prop].default != null &&
-                        ClusterPortSpec.propInfo[prop].default != '');
+        return (ClusterStorageInfo.propInfo[prop] != null &&
+                        ClusterStorageInfo.propInfo[prop].default != null &&
+                        ClusterStorageInfo.propInfo[prop].default != '');
     }
 
     /**
@@ -40,6 +41,7 @@ export class ClusterPortSpec extends BaseModel implements IClusterPortSpec {
     */
     constructor(values?: any) {
         super();
+        this['devices'] = new Array<ClusterStorageDeviceInfo>();
         this.setValues(values);
     }
 
@@ -48,10 +50,8 @@ export class ClusterPortSpec extends BaseModel implements IClusterPortSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['mac-address'] != null) {
-            this['mac-address'] = values['mac-address'];
-        } else if (ClusterPortSpec.hasDefaultValue('mac-address')) {
-            this['mac-address'] = ClusterPortSpec.propInfo['mac-address'].default;
+        if (values) {
+            this.fillModelArray<ClusterStorageDeviceInfo>(this, 'devices', values['devices'], ClusterStorageDeviceInfo);
         }
     }
 
@@ -61,15 +61,17 @@ export class ClusterPortSpec extends BaseModel implements IClusterPortSpec {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'mac-address': new FormControl(this['mac-address']),
+                'devices': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<ClusterStorageDeviceInfo>('devices', this['devices'], ClusterStorageDeviceInfo);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['mac-address'].setValue(this['mac-address']);
+            this.fillModelArray<ClusterStorageDeviceInfo>(this, 'devices', this['devices'], ClusterStorageDeviceInfo);
         }
     }
 }

@@ -2,7 +2,7 @@
 alerts.proto monitoring true
 app.proto security true
 auth.proto auth true
-cmd.proto cluster true
+cluster.proto cluster true
 endpoint.proto workload true
 eventpolicy.proto monitoring true
 events.proto events true
@@ -18,6 +18,7 @@ search.proto search true
 securitygroup.proto security true
 service.proto network true
 sgpolicy.proto security true
+smartnic.proto cluster true
 staging.proto staging true
 svc_auth.proto auth true
 svc_cluster.proto cluster true

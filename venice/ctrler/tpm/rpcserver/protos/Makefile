@@ -10,6 +10,7 @@ default: ${DEST} ${NICFILES}
         -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
         --gofast_out=plugins=grpc:. $<
 	sed -i.bak_ 's/api\/protos/api\/generated\/monitoring/g' $@
 	sed -i.bak_ '/import _ "."/d' $@
@@ -22,6 +23,7 @@ ${NICDIR}/%_api.go ${NICDIR}/%_api_test.go: %.proto
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
 	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/tpa/ctrlerif/restapi/templates/rest.yml,log_dir=${NICDIR}/tmp,logtostderr=false,v=7:${NICDIR} *.proto
 	goimports -local "github.com/pensando/sw" -w ${NICDIR}/$*_api.go ${NICDIR}/$*_api_test.go
 

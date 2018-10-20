@@ -89,7 +89,7 @@ func isErrorResponse(r *grpc.RegisterNICResponse) bool {
 		return false
 	}
 	phase := r.AdmissionResponse.Phase
-	return phase == cmd.SmartNICSpec_REJECTED.String() || phase == cmd.SmartNICSpec_UNKNOWN.String()
+	return phase == cmd.SmartNICStatus_REJECTED.String() || phase == cmd.SmartNICStatus_UNKNOWN.String()
 }
 
 // runRPCServer creates a smartNIC server for SmartNIC service.
@@ -195,7 +195,7 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		restURL,
 		"", // no local certs endpoint
 		"", // no remote certs endpoint
-		"classic",
+		"host",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
 		r,
@@ -276,12 +276,15 @@ func doPhase1Exchange(t *testing.T, stream grpc.SmartNICRegistration_RegisterNIC
 		TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: ometa,
 		Spec: cmd.SmartNICSpec{
-			Phase:    cmd.SmartNICSpec_REGISTERING.String(),
-			HostName: hostName,
-			MgmtIp:   "0.0.0.0",
+			Hostname: hostName,
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "0.0.0.0/0",
+			},
+			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
 		},
 		Status: cmd.SmartNICStatus{
-			SerialNum: "TestNIC",
+			AdmissionPhase: "UNKNOWN",
+			SerialNum:      "TestNIC",
 		},
 	}
 
@@ -360,75 +363,79 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			"4444.4444.0001",
 			true,
 			true,
-			cmd.SmartNICSpec_ADMITTED.String(),
+			cmd.SmartNICStatus_ADMITTED.String(),
 			cmd.SmartNICCondition{
 				Type:               cmd.SmartNICCondition_HEALTHY.String(),
 				Status:             cmd.ConditionStatus_TRUE.String(),
 				LastTransitionTime: time.Now().Format(time.RFC3339),
 			},
 			"",
-			"esx-001",
+			"esx-1",
 		},
 		{
 			"TestAutoAdmitInvalidNIC",
 			"4444.4444.0002",
 			true,
 			false,
-			cmd.SmartNICSpec_REJECTED.String(),
+			cmd.SmartNICStatus_REJECTED.String(),
 			cmd.SmartNICCondition{},
 			"",
-			"esx-002",
+			"esx-2",
 		},
 		{
 			"TestManualValidNIC",
 			"4444.4444.0003",
 			false,
 			true,
-			cmd.SmartNICSpec_PENDING.String(),
+			cmd.SmartNICStatus_PENDING.String(),
 			cmd.SmartNICCondition{
 				Type:               cmd.SmartNICCondition_HEALTHY.String(),
 				Status:             cmd.ConditionStatus_FALSE.String(),
 				LastTransitionTime: time.Now().Format(time.RFC3339),
 			},
 			"",
-			"esx-003",
+			"esx-3",
 		},
 		{
 			"TestManualValidApprovedNIC",
 			"4444.4444.0004",
 			false,
 			true,
-			cmd.SmartNICSpec_PENDING.String(),
+			cmd.SmartNICStatus_PENDING.String(),
 			cmd.SmartNICCondition{
 				Type:               cmd.SmartNICCondition_HEALTHY.String(),
 				Status:             cmd.ConditionStatus_TRUE.String(),
 				LastTransitionTime: time.Now().Format(time.RFC3339),
 			},
 			"4444.4444.0004",
-			"esx-004",
+			"esx-4",
 		},
 		{
 			"TestManualInvalidNIC",
 			"4444.4444.0005",
 			false,
 			false,
-			cmd.SmartNICSpec_REJECTED.String(),
+			cmd.SmartNICStatus_REJECTED.String(),
 			cmd.SmartNICCondition{},
 			"",
-			"esx-005",
+			"esx-5",
 		},
 	}
 
 	// Pre-create some Hosts to simulate the case of prior
 	// Host creation by Orchestrator (VC-hub)
-	hosts := []string{
-		"esx-003",
-	}
-	for _, hostName := range hosts {
-		ometa := api.ObjectMeta{
-			Name: hostName,
+	for ii, _ := range testCases {
+		host := &cmd.Host{
+			ObjectMeta: api.ObjectMeta{
+				Name: testCases[ii].hostName,
+			},
+			Spec: cmd.HostSpec{
+				Interfaces: map[string]cmd.HostIntfSpec{
+					testCases[ii].mac: cmd.HostIntfSpec{},
+				},
+			},
 		}
-		_, err := tInfo.smartNICServer.CreateHost(ometa)
+		_, err := tInfo.smartNICServer.CreateHost(host)
 		AssertOk(t, err, "Error creating Host object")
 	}
 
@@ -460,7 +467,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			stream, err := smartNICRegistrationRPCClient.RegisterNIC(context.Background())
 			AssertOk(t, err, "Error creating stream")
 
-			expectChallenge := tc.expected == cmd.SmartNICSpec_ADMITTED.String() || tc.expected == cmd.SmartNICSpec_PENDING.String()
+			expectChallenge := tc.expected == cmd.SmartNICStatus_ADMITTED.String() || tc.expected == cmd.SmartNICStatus_PENDING.String()
 			admReq, challengeResp, errResp := doPhase1Exchange(t, stream, tc.mac, tc.hostName, tc.validCert, expectChallenge)
 			nic := admReq.Nic
 			ometa := nic.ObjectMeta
@@ -489,25 +496,8 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			// verify smartNIC is created
 			verifySmartNICObj(t, tc.mac, true)
 
-			// verify Host object is created
-			f2 := func() (bool, interface{}) {
-				ometa := api.ObjectMeta{Name: tc.hostName}
-				hostObj, err := tInfo.smartNICServer.GetHost(ometa)
-				if err != nil {
-					t.Errorf("Error getting Host object for host:%s", tc.hostName)
-					return false, nil
-				}
-				if hostObj.ObjectMeta.Name != tc.hostName {
-					t.Errorf("Got incorrect Host object, expected: %s obtained: %s",
-						hostObj.ObjectMeta.Name, tc.hostName)
-					return false, nil
-				}
-				return true, nil
-			}
-			AssertEventually(t, f2, fmt.Sprintf("Failed to verify presence of Host object"))
-
 			// verify watch api is invoked
-			f3 := func() (bool, interface{}) {
+			f2 := func() (bool, interface{}) {
 				stream, err := smartNICUpdatesRPCClient.WatchNICs(context.Background(), &ometa)
 				if err != nil {
 					t.Errorf("Error watching smartNIC, mac: %s, err: %v", tc.mac, err)
@@ -525,24 +515,22 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 
 				return true, nil
 			}
-			AssertEventually(t, f3, fmt.Sprintf("Failed to verify watch for smartNIC event"))
+			AssertEventually(t, f2, fmt.Sprintf("Failed to verify watch for smartNIC event"))
 
 			// Verify UpdateNIC RPC
-			f4 := func() (bool, interface{}) {
+			f3 := func() (bool, interface{}) {
 				var phase string
 				if nic.ObjectMeta.Name == tc.approvedNIC {
-					phase = cmd.SmartNICSpec_ADMITTED.String()
+					phase = cmd.SmartNICStatus_ADMITTED.String()
 				}
 				ometa = api.ObjectMeta{Name: tc.mac}
 				nic = cmd.SmartNIC{
 					TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 					ObjectMeta: ometa,
-					Spec: cmd.SmartNICSpec{
-						Phase: phase,
-					},
 					Status: cmd.SmartNICStatus{
-						Conditions: []*cmd.SmartNICCondition{
-							&tc.condition,
+						AdmissionPhase: phase,
+						Conditions: []cmd.SmartNICCondition{
+							tc.condition,
 						},
 					},
 				}
@@ -563,18 +551,18 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				}
 
 				if nic.ObjectMeta.Name == tc.approvedNIC {
-					if resp.Nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
-						t.Logf("Testcase: %s \nPhase expected:\n%+v\nobtained:\n%+v", tc.name, cmd.SmartNICSpec_ADMITTED.String(), resp.Nic.Spec.Phase)
+					if resp.Nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
+						t.Logf("Testcase: %s \nPhase expected:\n%+v\nobtained:\n%+v", tc.name, cmd.SmartNICStatus_ADMITTED.String(), resp.Nic.Status.AdmissionPhase)
 						return false, nil
 					}
 				}
 
 				return true, nil
 			}
-			AssertEventually(t, f4, fmt.Sprintf("Failed to verify update for smartNIC"))
+			AssertEventually(t, f3, fmt.Sprintf("Failed to verify update for smartNIC"))
 
 			// Verify NIC health status goes to UNKNOWN after deadtimeInterval
-			f5 := func() (bool, interface{}) {
+			f4 := func() (bool, interface{}) {
 
 				nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
 				if err != nil {
@@ -594,31 +582,30 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 
 				return true, nil
 			}
-			AssertEventually(t, f5, fmt.Sprintf("Failed to verify NIC health status going to UNKNOWN"))
+			AssertEventually(t, f4, fmt.Sprintf("Failed to verify NIC health status going to UNKNOWN"))
 
 			// Verify Host object has its status updated with list of registered NICs
-			f6 := func() (bool, interface{}) {
+			f5 := func() (bool, interface{}) {
 				ometa = api.ObjectMeta{Name: tc.hostName}
 				hostObj, err := tInfo.smartNICServer.GetHost(ometa)
 				if err != nil {
 					t.Errorf("Error getting Host object for host:%s", tc.hostName)
 					return false, nil
 				}
-				intfs := hostObj.Spec.Interfaces
-				t.Logf("\n++++++ Host mac list, host: %+v \nIntfs: %+v\n", hostObj, intfs)
+				t.Logf("\n++++++ Host NIC list, host: %+v \n", hostObj)
 
-				for mac, _ := range intfs {
-					if mac == tc.mac {
+				for ii := range hostObj.Status.SmartNICs {
+					if hostObj.Status.SmartNICs[ii] == tc.mac {
 						return true, nil
 					}
 
 				}
 				return false, nil
 			}
-			AssertEventually(t, f6, fmt.Sprintf("Failed to verify that Host object is updated with registered nic"))
+			AssertEventually(t, f5, fmt.Sprintf("Failed to verify that Host object is updated with registered nic"))
 
 			// Verify Deletion of SmartNIC object
-			f7 := func() (bool, interface{}) {
+			f6 := func() (bool, interface{}) {
 				ometa = api.ObjectMeta{Name: tc.mac}
 				err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 				if err != nil {
@@ -626,14 +613,14 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				}
 				return true, nil
 			}
-			AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
+			AssertEventually(t, f6, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
 
 			if err != nil {
 				t.Fatalf("Error deleteing SmartNIC object mac:%s err: %v", tc.mac, err)
 			}
 
 			// Verify Deletion of Host object
-			f8 := func() (bool, interface{}) {
+			f7 := func() (bool, interface{}) {
 				ometa = api.ObjectMeta{Name: tc.hostName}
 				err = tInfo.smartNICServer.DeleteHost(ometa)
 				if err != nil {
@@ -641,7 +628,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				}
 				return true, nil
 			}
-			AssertEventually(t, f8, fmt.Sprintf("Failed to verify deletion of Host object"))
+			AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of Host object"))
 		})
 	}
 }
@@ -653,15 +640,28 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	hostName := "esx-001"
-	baseMac := "4444.4444.0001"
+	baseMac := "44.44.44.44.00."
 
 	// set server-side timeout to a small value to speed-up tests
 	srvTimeout := 300
 	SetNICRegTimeout(time.Duration(srvTimeout) * time.Millisecond)
 
 	for i := 0; i < 50; i++ {
-		nicName := fmt.Sprintf("%s-%d", baseMac, i)
+		nicName := fmt.Sprintf("%s%02d", baseMac, i)
+		// Create Host
+		host := &cmd.Host{
+			ObjectMeta: api.ObjectMeta{
+				Name: fmt.Sprintf("esxt-%d", i),
+			},
+			Spec: cmd.HostSpec{
+				Interfaces: map[string]cmd.HostIntfSpec{
+					nicName: cmd.HostIntfSpec{},
+				},
+			},
+		}
+
+		_, err := tInfo.smartNICServer.CreateHost(host)
+		AssertOk(t, err, "Error creating Host object")
 
 		// create API client
 		smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
@@ -679,7 +679,7 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 			sleepTime = time.Duration(srvTimeout+sleepTimeDelta) * time.Millisecond
 		}
 
-		_, challengeResp, errResp := doPhase1Exchange(t, stream, nicName, hostName, true, true)
+		_, challengeResp, errResp := doPhase1Exchange(t, stream, nicName, host.Name, true, true)
 		Assert(t, errResp == nil, fmt.Sprintf("Server returned unexpected error: %+v", err))
 
 		time.Sleep(sleepTime)
@@ -699,7 +699,8 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 			continue
 		}
 
-		Assert(t, admResp.AdmissionResponse.Phase == cmd.SmartNICSpec_ADMITTED.String(), fmt.Sprintf("unexpected phase: %v", admResp.AdmissionResponse.Phase))
+		Assert(t, err == nil, fmt.Sprintf("Unexpected error with challenge response, %v", err))
+		Assert(t, admResp.AdmissionResponse.Phase == cmd.SmartNICStatus_ADMITTED.String(), fmt.Sprintf("unexpected phase: %v", admResp.AdmissionResponse.Phase))
 
 		// verify smartNIC is created
 		verifySmartNICObj(t, nicName, true)
@@ -712,7 +713,7 @@ func TestRegisterSmartNICProtocolErrors(t *testing.T) {
 	testSetup()
 	defer testTeardown()
 
-	hostName := "esx-001"
+	hostName := "4444.4444.0001"
 	nicName := "4444.4444.0001"
 
 	// cluster certificate key and csr
@@ -727,12 +728,15 @@ func TestRegisterSmartNICProtocolErrors(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: ometa,
 		Spec: cmd.SmartNICSpec{
-			Phase:    cmd.SmartNICSpec_REGISTERING.String(),
-			HostName: hostName,
-			MgmtIp:   "0.0.0.0",
+			Hostname: hostName,
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "0.0.0.0/0",
+			},
+			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
 		},
 		Status: cmd.SmartNICStatus{
-			SerialNum: "TestNIC",
+			AdmissionPhase: cmd.SmartNICStatus_REGISTERING.String(),
+			SerialNum:      "TestNIC",
 		},
 	}
 
@@ -824,8 +828,13 @@ func TestUpdateSmartNIC(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{Name: "2222.2222.2222"},
 		Spec: cmd.SmartNICSpec{
-			Phase:  "UNKNOWN",
-			MgmtIp: "10.1.1.1",
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "10.1.1.1/24",
+			},
+			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+		},
+		Status: cmd.SmartNICStatus{
+			AdmissionPhase: "UNKNOWN",
 		},
 	}
 	nicObj, err := tInfo.smartNICServer.UpdateSmartNIC(&nic)
@@ -836,7 +845,7 @@ func TestUpdateSmartNIC(t *testing.T) {
 		TypeMeta:   nicObj.TypeMeta,
 		ObjectMeta: nicObj.ObjectMeta,
 		Status: cmd.SmartNICStatus{
-			Conditions: []*cmd.SmartNICCondition{
+			Conditions: []cmd.SmartNICCondition{
 				{
 					Type:   cmd.SmartNICCondition_HEALTHY.String(),
 					Status: cmd.ConditionStatus_FALSE.String(),
@@ -878,6 +887,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	hostID := getHostID(1)
 	dbPath := getDBPath(1)
 	restURL := getRESTUrl(1)
+	testMac := "44.44.44.44.44.01"
 
 	// Cleanup any prior DB files
 	os.Remove(dbPath)
@@ -889,28 +899,47 @@ func TestSmartNICConfigByUser(t *testing.T) {
 
 	nm := ag.GetNMD()
 
-	// Validate default classic mode
+	// Validate default host mode
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+		if cfg.Spec.Mode == proto.MgmtMode_HOST && nm.GetListenURL() != "" &&
 			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
 		return false, nil
 	}
-	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+	AssertEventually(t, f1, "Failed to verify mode is in host")
+
+	// Create Host in Venice
+	host := &cmd.Host{
+		ObjectMeta: api.ObjectMeta{
+			Name: "esxc",
+		},
+		Spec: cmd.HostSpec{
+			Interfaces: map[string]cmd.HostIntfSpec{
+				testMac: cmd.HostIntfSpec{},
+			},
+		},
+	}
+	_, err = tInfo.smartNICServer.CreateHost(host)
+	AssertOk(t, err, "Error creating Host object")
 
 	// Create SmartNIC object in Venice
 	nic := cmd.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Name: hostID,
+			Name: testMac,
 		},
 		Spec: cmd.SmartNICSpec{
-			MgmtIp:   "localhost",
-			Phase:    "UNKNOWN",
-			HostName: hostID,
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "127.0.0.1/32",
+			},
+			Hostname: hostID,
+			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+		},
+		Status: cmd.SmartNICStatus{
+			AdmissionPhase: "UNKNOWN",
 		},
 	}
 
@@ -925,7 +954,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 		// validate the mode is managed
 		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
-		if cfg.Spec.Mode != proto.NaplesMode_MANAGED_MODE {
+		if cfg.Spec.Mode != proto.MgmtMode_NETWORK {
 			log.Errorf("Failed to switch to managed mode")
 			return false, nil
 		}
@@ -938,7 +967,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 		}
 
 		// Verify NIC is admitted
-		if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
 			log.Errorf("NIC is not admitted")
 			return false, nil
 		}
@@ -962,12 +991,12 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	f5 := func() (bool, interface{}) {
 
 		meta := api.ObjectMeta{
-			Name: hostID,
+			Name: testMac,
 		}
 		nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
-		if err != nil || nicObj == nil || nicObj.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+		if err != nil || nicObj == nil || nicObj.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
 			log.Errorf("Failed to validate phase of SmartNIC object, mac:%s, phase: %s err: %v",
-				hostID, nicObj.Spec.Phase, err)
+				testMac, nicObj.Status.AdmissionPhase, err)
 			return false, nil
 		}
 
@@ -975,25 +1004,30 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	}
 	AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
 
-	// Validate Host object is created
+	// Validate Host object is updated
 	f6 := func() (bool, interface{}) {
 
 		meta := api.ObjectMeta{
-			Name: hostID,
+			Name: "esxc",
 		}
 		hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), &meta)
 		if err != nil || hostObj == nil {
-			log.Errorf("Failed to GET Host object, mac:%s, %v", hostID, err)
+			log.Errorf("Failed to GET Host object :%s, %v", meta.Name, err)
 			return false, nil
 		}
 
-		return true, nil
+		for ii := range hostObj.Status.SmartNICs {
+			if hostObj.Status.SmartNICs[ii] == testMac {
+				return true, nil
+			}
+		}
+		return false, nil
 	}
-	AssertEventually(t, f6, "Failed to verify creation of required Host object", string("10ms"), string("30s"))
+	AssertEventually(t, f6, "Failed to verify update of required Host object", string("10ms"), string("30s"))
 
 	// Verify Deletion of SmartNIC object
 	f7 := func() (bool, interface{}) {
-		ometa := api.ObjectMeta{Name: hostID}
+		ometa := api.ObjectMeta{Name: testMac}
 		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 		if err != nil {
 			return false, nil
@@ -1002,12 +1036,20 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	}
 	AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
 
-	// Verify Deletion of Host object
+	// Verify update of Host object
 	f8 := func() (bool, interface{}) {
-		ometa := api.ObjectMeta{Name: hostID}
-		err = tInfo.smartNICServer.DeleteHost(ometa)
-		if err != nil {
+		meta := api.ObjectMeta{
+			Name: "esxc",
+		}
+		hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), &meta)
+		if err != nil || hostObj == nil {
+			log.Errorf("Failed to GET Host object, mac:%s, %v", hostID, err)
 			return false, nil
+		}
+		for ii := range hostObj.Status.SmartNICs {
+			if hostObj.Status.SmartNICs[ii] == testMac {
+				return false, nil
+			}
 		}
 		return true, nil
 	}
@@ -1034,17 +1076,20 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 
 	nm := ag.GetNMD()
 
-	// Validate default classic mode
+	// Validate default host mode
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+		if cfg.Spec.Mode == proto.MgmtMode_HOST && nm.GetListenURL() != "" &&
 			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
 		return false, nil
 	}
-	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+	AssertEventually(t, f1, "Failed to verify mode is in host")
+
+	// Delete the SmartNIC object if it exists
+	_, err = tInfo.apiClient.ClusterV1().SmartNIC().Delete(context.Background(), &api.ObjectMeta{Name: hostID})
 
 	// Create SmartNIC object in Venice
 	nic := cmd.SmartNIC{
@@ -1053,15 +1098,20 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 			Name: hostID,
 		},
 		Spec: cmd.SmartNICSpec{
-			MgmtIp:   "remotehost", // unreachable hostname for testing error case
-			Phase:    "UNKNOWN",
-			HostName: hostID,
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "remotehost", // unreachable hostname for testing error case
+			},
+			Hostname: hostID,
+			MgmtMode: cmd.SmartNICSpec_NETWORK.String(),
+		},
+		Status: cmd.SmartNICStatus{
+			AdmissionPhase: "UNKNOWN",
 		},
 	}
 
 	_, err = tInfo.apiClient.ClusterV1().SmartNIC().Create(context.Background(), &nic)
 	if err != nil {
-		t.Errorf("Failed to created smartnic: %+v, err: %v", nic, err)
+		t.Fatalf("Failed to create smartnic: %+v, err: %v", nic, err)
 	}
 
 	// Verify SmartNIC object has UNREACHABLE condition

@@ -1,10 +1,14 @@
 package cluster
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -13,8 +17,11 @@ import (
 
 	"testing"
 
+	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/restclient"
+	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 )
@@ -72,6 +79,42 @@ var _ = BeforeSuite(func() {
 			rclient := restclient.NewNetagentClient(agURL)
 			Expect(rclient).ShouldNot(Equal(nil))
 			ts.netagentClients = append(ts.netagentClients, rclient)
+
+			var naples nmd.Naples
+			nmdURL := "http://" + agIP.String() + ":" + globals.RevProxyPort + "/api/v1/naples/"
+			By(fmt.Sprintf("Getting Naples object from %v", nmdURL))
+
+			resp, err := http.Get(nmdURL)
+			Expect(err).ShouldNot(HaveOccurred())
+			data, err := ioutil.ReadAll(resp.Body)
+			Expect(err).ShouldNot(HaveOccurred())
+			err = json.Unmarshal(data, &naples)
+			Expect(err).ShouldNot(HaveOccurred())
+			resp.Body.Close()
+
+			By(fmt.Sprintf("Creating host obj naples%d-host", idx+1))
+			// Create a Host object
+			host := &cluster.Host{
+				ObjectMeta: api.ObjectMeta{
+					Name: fmt.Sprintf("naples%d-host", idx+1),
+				},
+				Spec: cluster.HostSpec{
+					Interfaces: map[string]cluster.HostIntfSpec{
+						naples.Spec.PrimaryMAC: cluster.HostIntfSpec{},
+					},
+				},
+			}
+			_, err = ts.restSvc.ClusterV1().Host().Create(ts.tu.NewLoggedInContext(context.Background()), host)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// Switch to managed mode
+			naples.Spec.Mode = nmd.MgmtMode_NETWORK
+			By(fmt.Sprintf("Switching Naples %+v to managed mode", naples))
+			out, err := json.Marshal(&naples)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, err = http.Post(nmdURL, "application/json", bytes.NewReader(out))
+			Expect(err).ShouldNot(HaveOccurred())
+
 			agIP[3]++
 		}
 	}

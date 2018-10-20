@@ -1,0 +1,281 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package cluster;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "cluster.proto";
+
+//------------------------------------ SMART NIC  -------------------------------------------
+//
+// SmartNIC represents the Naples I/O subsystem
+//
+// Entity responsible & scenarios involved in managing this object:
+//
+//      Create:
+//          o CMD
+//              - created as part of NIC registration, Admittance
+//      Modify:
+//          o CMD
+//              - update spec attributes
+//              - update status attributes
+//      Delete:
+//          o CMD
+//              - aging out stale or rejected NICs (TBD)
+//          o NetOps, SecOps
+//              - Decomission a NIC (TBD)
+//
+message SmartNIC {
+
+    option (venice.objectPrefix) = {Collection: "smartnics"};
+
+    api.TypeMeta T          = 1 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = ",inline"];
+
+    //Object name is Serial-Number of the SmartNIC
+    api.ObjectMeta O        = 2 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "meta,omitempty"];
+
+    // SmartNICSpec contains the configuration of the network adapter.
+    SmartNICSpec Spec       = 3 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "spec,omitempty"];
+
+    // SmartNICStatus contains the current state of the network adapter.
+    SmartNICStatus Status   = 4 [(gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
+message SmartNICSpec {
+
+    // Admit allows a SmartNIC to join the cluster
+    bool Admit                      = 1 [(gogoproto.jsontag) = "admit,omitempty"];
+
+    // Hostname is used as a user friendly identifier in logs/events
+    string Hostname                 = 2 [(gogoproto.jsontag) = "hostname,omitempty"];
+
+    // IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
+    IPConfig IPConfig               = 3 [(gogoproto.jsontag) = "ip-config,omitempty"];
+
+    // MgmtModes defines the valid management modes
+    enum MgmtModes {
+        // ui-hint: Host
+        HOST    = 0; // Host manages SmartNIC
+        // ui-hint: Network
+        NETWORK = 1; // Network controller manages SmartNIC
+    }
+
+    // MgmtMode defines the management mode of the SmartNIC
+    string MgmtMode                 = 4 [(venice.check) = "StrEnum(SmartNICSpec.MgmtModes)",
+                                        (gogoproto.jsontag) = "mgmt-mode,omitempty"];
+
+    // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
+    // implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
+    // management port to a vlan on data ports.
+    uint32 MgmtVlan                 = 5 [(venice.check) = "IntRange(0,4095)",
+                                        (gogoproto.jsontag) = "mgmt-vlan,omitempty"];   
+
+    // Controllers contains the list of remote controllers IP addresses or hostnames
+    repeated string Controllers  = 6 [(gogoproto.jsontag) = "controllers,omitempty"];
+}
+
+// IPConfig defines the static IP configuration for a SmartNIC
+message IPConfig {
+    // IPAddress contains the Management IP address of the SmartNIC in CIDR format
+    string IPAddress            = 1 [(gogoproto.jsontag) = "ip-address,omitempty"];
+
+    // DefaultGW contains the default gateway's IP address
+    string DefaultGW            = 2 [(gogoproto.jsontag) = "default-gw,omitempty"];
+
+    // DNSServers contains a list of DNS Servers that can be used on SmartNIC
+    repeated string DNSServers  = 3 [(gogoproto.jsontag) = "dns-servers,omitempty"];
+}
+
+// SmartNICStatus contains current status of a SmartNIC
+message SmartNICStatus {
+
+    // Various phases in lifecycle of a SmartNIC
+    enum Phase {
+        // ui-hint: Unknown
+        UNKNOWN      = 0; // Unknown status, initial state.
+        // ui-hint: Registering
+        REGISTERING  = 1; // NIC registration is in progress, set when Naples initiated registration
+        // ui-hint: Rejected
+        REJECTED     = 2; // NIC is rejected, due to invalid cert
+        // ui-hint: Pending
+        PENDING      = 3; // NIC is validated but waiting for manual approval
+        // ui-hint: Admitted
+        ADMITTED     = 4; // NIC is validated and admitted
+    }
+    
+    // Current admission phase of the SmartNIC.
+    // When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED
+    // by CMD for validated NICs.
+    // When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING
+    // by CMD for validated NICs since it requires manual approval.
+    // To admit the NIC as a part of manual admission, user is expected to
+    // set Spec.Admit to true for the NICs that are in NIC_PENDING
+    // state. Note : Whitelist mode is not supported yet.
+    string AdmissionPhase                   = 1 [(venice.check) = "StrEnum(SmartNICStatus.Phase)",
+                                                (gogoproto.jsontag) = "admission-phase,omitempty"];
+    
+    // List of current NIC conditions
+    repeated SmartNICCondition Conditions   = 2 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "conditions,omitempty"];
+
+    // Serial number
+    string SerialNum                        = 3 [(gogoproto.jsontag) = "serial-num,omitempty"];
+
+    // PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC
+    string PrimaryMAC                       = 4 [(gogoproto.jsontag) = "primary-mac,omitempty"];
+
+    // IPConfig is the ip address related configuration obtained from DHCP
+    IPConfig IPConfig                       = 5 [(gogoproto.jsontag) = "ip-config,omitempty"];
+
+    // Naples I/O system info
+    SmartNICInfo SystemInfo                 = 6 [(gogoproto.jsontag) = "system-info,omitempty"];
+
+    // Uplink status
+    repeated UplinkStatus Uplinks           = 7 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "uplinks,omitempty"];
+
+    // PFs status
+    repeated PFStatus PFs                   = 8 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "pfs,omitempty"];
+}
+
+// SmartNICCondition describes the state of a SmartNIC at a certain point.
+message SmartNICCondition {
+
+    // These are valid conditions of a SmartNIC
+    enum ConditionType {
+        // ui-hint: Healthy
+        HEALTHY     = 0; // NIC is healthy
+        // ui-hint: Not Reachable
+        UNREACHABLE = 1; // NIC is not reachable from Venice cluster
+    }
+
+    // Type indicates a certain NIC condition
+    string Type                     = 1 [(venice.check) = "StrEnum(SmartNICCondition.ConditionType)",
+                                        (gogoproto.jsontag) = "type,omitempty"];
+
+    // Condition Status
+    string Status                   = 2 [(venice.check) = "StrEnum(ConditionStatus)",
+                                        (gogoproto.jsontag) = "status,omitempty"];
+
+    // The last time the condition transitioned
+    string LastTransitionTime       = 3 [(gogoproto.jsontag) = "last-transition-time,omitempty"];
+
+    // The reason for the condition's last transition
+    string Reason                   = 4 [(gogoproto.jsontag) = "reason,omitempty"];
+
+    // A detailed message indicating details about the transition.
+    string Message                  = 5 [(gogoproto.jsontag) = "message,omitempty"];
+}
+
+// Uplink Status
+message UplinkStatus {
+
+    // Primary Mac address (TBD)
+    string PrimaryMac                   = 1 [(venice.check) = "MacAddr()",
+                                            (gogoproto.jsontag) = "primary-mac,omitempty"];
+
+    // LinkSpeed of the Port
+    string LinkSpeed                    = 2 [(gogoproto.jsontag) = "link-speed,omitempty"];
+
+    // List of current Uplink conditions
+    repeated PortCondition Conditions   = 3 [(gogoproto.nullable) = false,
+                                            (gogoproto.jsontag) = "conditions,omitempty"];
+}
+
+// PortCondition describes the state of a Port at a certain point.
+message PortCondition {
+
+    // These are valid conditions of a Port
+    enum ConditionType {
+        // ui-hint: Up
+        PORT_UP     = 0; // Port is Up
+    }
+
+    // Type indicates a certain Port condition
+    string Type                 = 1 [(venice.check) = "StrEnum(PortCondition.ConditionType)",
+                                    (gogoproto.jsontag) = "type,omitempty"];
+
+    // Condition Status
+    string Status               = 2 [(venice.check) = "StrEnum(ConditionStatus)",
+                                    (gogoproto.jsontag) = "status,omitempty"];
+
+    // The last time the condition transitioned
+    string LastTransitionTime   = 3 [(gogoproto.jsontag) = "last-transition-time,omitempty"];
+
+    // The reason for the condition's last transition
+    string Reason               = 4 [(gogoproto.jsontag) = "reason,omitempty"];
+
+    // A detailed message indicating details about the transition.
+    string Message              = 5 [(gogoproto.jsontag) = "message,omitempty"];
+}
+
+// PF (Physical function) Status
+message PFStatus {
+
+    // Primary Mac address (TBD)
+    string PrimaryMac                   = 1 [(venice.check) = "MacAddr()",
+                                            (gogoproto.jsontag) = "primary-mac,omitempty"];
+
+    // List of current PF conditions
+    repeated PortCondition Conditions   = 2 [(gogoproto.nullable) = false,
+                                            (gogoproto.jsontag) = "conditions,omitempty"];
+}
+
+// MAC address Range
+message MacRange {
+    string Start    = 1 [(venice.check) = "MacAddr()",
+                        (gogoproto.jsontag) = "mac-start,omitempty"];
+    string End      = 2 [(venice.check) = "MacAddr()",
+                        (gogoproto.jsontag) = "mac-end,omitempty"];
+}
+
+// Naples I/O (SmartNIC) subsystem information
+message SmartNICInfo {
+
+    // BIOS details
+    BiosInfo BiosInfo       = 1 [(gogoproto.jsontag) = "bios-info,omitempty"];
+
+    // OS details
+    OsInfo OsInfo           = 2 [(gogoproto.jsontag) = "os-info,omitempty"];
+
+    // CPU details
+    CPUInfo CpuInfo         = 3 [(gogoproto.jsontag) = "cpu-info,omitempty"];
+
+    // RAM/Memory details
+    MemInfo MemoryInfo      = 4 [(gogoproto.jsontag) = "memory-info,omitempty"];
+
+    // Storage details
+    StorageInfo StorageInfo = 5 [(gogoproto.jsontag) = "storage-info,omitempty"];
+
+    // TODO : Add Board Info specifics
+    // (version, other peripherals, PCIe version, #lanes, 
+    // Maximum HBM memory - not the one just available to the OS)
+}
+
+// BIOS information
+message BiosInfo {
+
+    // Vendor name
+    string Vendor           = 1 [(gogoproto.jsontag) = "vendor,omitempty"];
+
+    // BIOS version
+    string Version          = 2 [(gogoproto.jsontag) = "version,omitempty"];
+
+    // Firmware major release info
+    string FwMajorVersion   = 3 [(gogoproto.jsontag) = "fw-major-ver,omitempty"];
+
+    // Firmware minor release info
+    string FwMinorVersion   = 4 [(gogoproto.jsontag) = "fw-minor-ver,omitempty"];
+}

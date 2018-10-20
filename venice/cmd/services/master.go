@@ -472,7 +472,7 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 		// Initiate NIC registration only in cases where Phase is unknown or empty
 		// For Naples initiated case, the phase will be set to REGISTERING initially
-		if nic.Spec.Phase == cmd.SmartNICSpec_UNKNOWN.String() || nic.Spec.Phase == "" {
+		if nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "" {
 			go env.NICService.InitiateNICRegistration(nic)
 		}
 
@@ -487,7 +487,7 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 		// Initiate NIC registration only in cases where Phase is unknown or empty
 		// For Naples initiated case, the phase will be set to REGISTERING initially
-		if nic.Spec.Phase == cmd.SmartNICSpec_UNKNOWN.String() || nic.Spec.Phase == "" {
+		if nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "" {
 			go env.NICService.InitiateNICRegistration(nic)
 		}
 

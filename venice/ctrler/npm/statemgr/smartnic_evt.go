@@ -119,16 +119,8 @@ func (sm *Statemgr) FindSmartNICByMacAddr(macAddr string) (*SmartNICState, error
 			return nil, err
 		}
 
-		// FIXME: match on smart nic name also since NMD seem to set the name
-		if snic.Name == macAddr {
+		if snic.Status.PrimaryMAC == macAddr {
 			return snic, nil
-		}
-
-		// match on port mac addresses
-		for _, port := range snic.Spec.Ports {
-			if port.MacAddress == macAddr {
-				return snic, nil
-			}
 		}
 	}
 

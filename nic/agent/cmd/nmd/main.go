@@ -6,6 +6,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net"
 	"path/filepath"
 	"strings"
 	"time"
@@ -31,6 +32,7 @@ func main() {
 	// command line flags
 	var (
 		hostIf             = flag.String("hostif", "ntrunk0", "Host facing interface")
+		primaryMAC         = flag.String("primary-mac", "", "Primary MAC address")
 		nmdDbPath          = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
 		cmdRegistrationURL = flag.String("cmdregistration", ":"+globals.CMDSmartNICRegistrationAPIPort, "NIC Registration API server URL(s)")
 		cmdUpdatesURL      = flag.String("cmdupdates", ":"+globals.CMDSmartNICUpdatesPort, "NIC Updates server URL(s)")
@@ -38,7 +40,7 @@ func main() {
 		regInterval        = flag.Int64("reginterval", globals.NicRegIntvl, "NIC registration interval in seconds")
 		updInterval        = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
 		res                = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
-		mode               = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
+		mode               = flag.String("mode", "host", "Naples mode, \"host\" or \"network\" ")
 		hostName           = flag.String("hostname", "", "Hostname of Naples Host")
 		debugflag          = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag    = flag.Bool("logtostdout", false, "enable logging to stdout")
@@ -81,6 +83,15 @@ func main() {
 	macAddr, err := netutils.GetIntfMac(*hostIf)
 	if err != nil {
 		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
+	}
+
+	if *primaryMAC != "" {
+		var mac net.HardwareAddr
+		mac, err = net.ParseMAC(*primaryMAC)
+		if err != nil {
+			log.Fatalf("Invalid MAC %v", *primaryMAC)
+		}
+		macAddr = mac
 	}
 
 	// init resolver client

@@ -1,7 +1,7 @@
 
 true auth auth.proto svc_auth.proto 
 true bookstore example.proto 
-true cluster cmd.proto svc_cluster.proto tenant.proto 
+true cluster cluster.proto smartnic.proto svc_cluster.proto tenant.proto 
 true events events.proto svc_events.proto 
 true metrics_query metrics_query.proto svc_metrics_query.proto 
 true monitoring alerts.proto eventpolicy.proto export.proto mirror.proto svc_monitoring.proto telemetry.proto troubleshooting.proto 

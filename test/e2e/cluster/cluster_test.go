@@ -53,24 +53,6 @@ var _ = Describe("cluster tests", func() {
 		})
 	})
 
-	Context("Naples Host Object validation ", func() {
-		var (
-			hosts []*cmd.Host
-			err   error
-		)
-		BeforeEach(func() {
-			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
-			hostIf := cmdClient.Host()
-			hosts, err = hostIf.List(ts.tu.NewLoggedInContext(context.Background()), &api.ListWatchOptions{})
-		})
-		It("Node fields should be ok", func() {
-			Expect(err).ShouldNot(HaveOccurred())
-			numNaplesHosts := len(hosts)
-			Expect(numNaplesHosts).Should(Equal(ts.tu.NumNaplesHosts))
-		})
-	})
-
 	Context("Object validation ", func() {
 		var (
 			obj api.ObjectMeta

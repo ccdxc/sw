@@ -39,12 +39,12 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 	var err error
 
 	// Set mode and mac
-	var naplesMode nmd.NaplesMode
+	var naplesMode nmd.MgmtMode
 	switch mode {
-	case "classic":
-		naplesMode = nmd.NaplesMode_CLASSIC_MODE
-	case "managed":
-		naplesMode = nmd.NaplesMode_MANAGED_MODE
+	case "host":
+		naplesMode = nmd.MgmtMode_HOST
+	case "network":
+		naplesMode = nmd.MgmtMode_NETWORK
 	default:
 		log.Errorf("Invalid mode, mode:%s", mode)
 		return nil, errors.New("Invalid mode")
@@ -72,8 +72,8 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 		},
 		Spec: nmd.NaplesSpec{
 			Mode:       naplesMode,
-			PrimaryMac: macAddr,
-			HostName:   nodeUUID,
+			PrimaryMAC: macAddr,
+			Hostname:   nodeUUID,
 		},
 	}
 
@@ -131,7 +131,7 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 	}
 
 	// Start the control loop based on configured Mode
-	if nm.config.Spec.Mode == nmd.NaplesMode_CLASSIC_MODE {
+	if nm.config.Spec.Mode == nmd.MgmtMode_HOST {
 
 		// Start in Classic Mode
 		err = nm.StartClassicMode()
@@ -184,7 +184,7 @@ func (n *NMD) GetAgentID() string {
 
 // GetPrimaryMAC returns primaryMac of NMD
 func (n *NMD) GetPrimaryMAC() string {
-	return n.config.Spec.PrimaryMac
+	return n.config.Spec.PrimaryMAC
 }
 
 // NaplesConfigHandler is the REST handler for Naples Config POST operation
@@ -232,7 +232,7 @@ func (n *NMD) Stop() error {
 
 	n.StopClassicMode(true)
 
-	if n.GetConfigMode() == nmd.NaplesMode_MANAGED_MODE {
+	if n.GetConfigMode() == nmd.MgmtMode_NETWORK {
 
 		// Cleanup Managed mode tasks, if any
 		n.StopManagedMode()

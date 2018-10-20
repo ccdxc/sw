@@ -7,45 +7,50 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { ClusterSmartNICSpec_phase,  ClusterSmartNICSpec_phase_uihint  } from './enums';
-import { ClusterPortSpec, IClusterPortSpec } from './cluster-port-spec.model';
+import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
+import { ClusterSmartNICSpec_mgmt_mode,  ClusterSmartNICSpec_mgmt_mode_uihint  } from './enums';
 
 export interface IClusterSmartNICSpec {
-    'phase'?: ClusterSmartNICSpec_phase;
-    'mgmt-ip'?: string;
-    'host-name'?: string;
-    'ports'?: Array<IClusterPortSpec>;
+    'admit'?: boolean;
+    'hostname'?: string;
+    'ip-config'?: IClusterIPConfig;
+    'mgmt-mode'?: ClusterSmartNICSpec_mgmt_mode;
+    'mgmt-vlan'?: number;
+    'controller-ips'?: Array<string>;
 }
 
 
 export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSpec {
-    /** Current phase of the SmartNIC.
-    When auto-admission is enabled, Phase will be set to NIC_ADMITTED
-    by CMD for validated NICs.
-    When auto-admission is not enabled, Phase will be set to NIC_PENDING
-    by CMD for validated NICs since it requires manual approval.
-    To admit the NIC as a part of manual admission, user is expected to
-    set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
-    state. Note : Whitelist mode is not supported yet. */
-    'phase': ClusterSmartNICSpec_phase = null;
-    'mgmt-ip': string = null;
-    'host-name': string = null;
-    'ports': Array<ClusterPortSpec> = null;
+    'admit': boolean = null;
+    'hostname': string = null;
+    'ip-config': ClusterIPConfig = null;
+    'mgmt-mode': ClusterSmartNICSpec_mgmt_mode = null;
+    /** MgmtVlan defines the vlan to be used in network managed mode. The default of 0
+    implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
+    management port to a vlan on data ports. */
+    'mgmt-vlan': number = null;
+    'controller-ips': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'phase': {
-            enum: ClusterSmartNICSpec_phase_uihint,
-            default: 'UNKNOWN',
-            description:  'Current phase of the SmartNIC. When auto-admission is enabled, Phase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, Phase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.',
+        'admit': {
+            type: 'boolean'
+        },
+        'hostname': {
             type: 'string'
         },
-        'mgmt-ip': {
-            type: 'string'
-        },
-        'host-name': {
-            type: 'string'
-        },
-        'ports': {
+        'ip-config': {
             type: 'object'
+        },
+        'mgmt-mode': {
+            enum: ClusterSmartNICSpec_mgmt_mode_uihint,
+            default: 'HOST',
+            type: 'string'
+        },
+        'mgmt-vlan': {
+            description:  'MgmtVlan defines the vlan to be used in network managed mode. The default of 0 implies OOB 1G mgmt port is used for management. A non 0 vlan switches the management port to a vlan on data ports.',
+            type: 'number'
+        },
+        'controller-ips': {
+            type: 'Array<string>'
         },
     }
 
@@ -68,7 +73,8 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     */
     constructor(values?: any) {
         super();
-        this['ports'] = new Array<ClusterPortSpec>();
+        this['ip-config'] = new ClusterIPConfig();
+        this['controller-ips'] = new Array<string>();
         this.setValues(values);
     }
 
@@ -77,23 +83,31 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['phase'] != null) {
-            this['phase'] = values['phase'];
-        } else if (ClusterSmartNICSpec.hasDefaultValue('phase')) {
-            this['phase'] = <ClusterSmartNICSpec_phase>  ClusterSmartNICSpec.propInfo['phase'].default;
+        if (values && values['admit'] != null) {
+            this['admit'] = values['admit'];
+        } else if (ClusterSmartNICSpec.hasDefaultValue('admit')) {
+            this['admit'] = ClusterSmartNICSpec.propInfo['admit'].default;
         }
-        if (values && values['mgmt-ip'] != null) {
-            this['mgmt-ip'] = values['mgmt-ip'];
-        } else if (ClusterSmartNICSpec.hasDefaultValue('mgmt-ip')) {
-            this['mgmt-ip'] = ClusterSmartNICSpec.propInfo['mgmt-ip'].default;
-        }
-        if (values && values['host-name'] != null) {
-            this['host-name'] = values['host-name'];
-        } else if (ClusterSmartNICSpec.hasDefaultValue('host-name')) {
-            this['host-name'] = ClusterSmartNICSpec.propInfo['host-name'].default;
+        if (values && values['hostname'] != null) {
+            this['hostname'] = values['hostname'];
+        } else if (ClusterSmartNICSpec.hasDefaultValue('hostname')) {
+            this['hostname'] = ClusterSmartNICSpec.propInfo['hostname'].default;
         }
         if (values) {
-            this.fillModelArray<ClusterPortSpec>(this, 'ports', values['ports'], ClusterPortSpec);
+            this['ip-config'].setValues(values['ip-config']);
+        }
+        if (values && values['mgmt-mode'] != null) {
+            this['mgmt-mode'] = values['mgmt-mode'];
+        } else if (ClusterSmartNICSpec.hasDefaultValue('mgmt-mode')) {
+            this['mgmt-mode'] = <ClusterSmartNICSpec_mgmt_mode>  ClusterSmartNICSpec.propInfo['mgmt-mode'].default;
+        }
+        if (values && values['mgmt-vlan'] != null) {
+            this['mgmt-vlan'] = values['mgmt-vlan'];
+        } else if (ClusterSmartNICSpec.hasDefaultValue('mgmt-vlan')) {
+            this['mgmt-vlan'] = ClusterSmartNICSpec.propInfo['mgmt-vlan'].default;
+        }
+        if (values) {
+            this.fillModelArray<string>(this, 'controller-ips', values['controller-ips']);
         }
     }
 
@@ -103,23 +117,27 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'phase': new FormControl(this['phase'], [enumValidator(ClusterSmartNICSpec_phase), ]),
-                'mgmt-ip': new FormControl(this['mgmt-ip']),
-                'host-name': new FormControl(this['host-name']),
-                'ports': new FormArray([]),
+                'admit': new FormControl(this['admit']),
+                'hostname': new FormControl(this['hostname']),
+                'ip-config': this['ip-config'].$formGroup,
+                'mgmt-mode': new FormControl(this['mgmt-mode'], [enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
+                'mgmt-vlan': new FormControl(this['mgmt-vlan'], [maxValueValidator(4095), ]),
+                'controller-ips': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterPortSpec>('ports', this['ports'], ClusterPortSpec);
+            this.fillFormArray<string>('controller-ips', this['controller-ips']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['phase'].setValue(this['phase']);
-            this._formGroup.controls['mgmt-ip'].setValue(this['mgmt-ip']);
-            this._formGroup.controls['host-name'].setValue(this['host-name']);
-            this.fillModelArray<ClusterPortSpec>(this, 'ports', this['ports'], ClusterPortSpec);
+            this._formGroup.controls['admit'].setValue(this['admit']);
+            this._formGroup.controls['hostname'].setValue(this['hostname']);
+            this['ip-config'].setFormGroupValues();
+            this._formGroup.controls['mgmt-mode'].setValue(this['mgmt-mode']);
+            this._formGroup.controls['mgmt-vlan'].setValue(this['mgmt-vlan']);
+            this.fillModelArray<string>(this, 'controller-ips', this['controller-ips']);
         }
     }
 }

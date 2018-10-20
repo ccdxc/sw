@@ -254,11 +254,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoAddSmartNIC = srv.AddMethod("AutoAddSmartNIC",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoAddSmartNIC")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(cluster.SmartNIC)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/smartnics/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddTenant = srv.AddMethod("AutoAddTenant",

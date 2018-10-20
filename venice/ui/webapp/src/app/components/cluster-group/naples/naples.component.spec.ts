@@ -38,10 +38,14 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:30:08.534909931Z'
     },
     'spec': {
-      'phase': 'ADMITTED',
-      'mgmt-ip': '0.0.0.0',
-      'host-name': 'naples1-host'
+      'ip-config': {
+        'cidr': '0.0.0.0/0'
+      },
+      'hostname': 'naples1-host'
     },
+    'status': {
+      'admission-phase': 'ADMITTED',
+    }
   };
 
   const naples2 = {
@@ -54,10 +58,14 @@ describe('NaplesComponent', () => {
       'creation-time': '2018-08-23T17:20:08.534909931Z'
     },
     'spec': {
-      'phase': 'ADMITTED',
-      'mgmt-ip': '0.0.0.10',
-      'host-name': 'naples2-host'
+      'ip-config': {
+        cidr: '0.0.0.10'
+      },
+      'hostname': 'naples2-host'
     },
+    'status': {
+      'admission-phase': 'ADMITTED',
+    }
   };
 
   beforeEach(async(() => {

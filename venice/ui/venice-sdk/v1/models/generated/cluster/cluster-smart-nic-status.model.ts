@@ -7,33 +7,68 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ClusterSmartNICStatus_admission_phase,  ClusterSmartNICStatus_admission_phase_uihint  } from './enums';
 import { ClusterSmartNICCondition, IClusterSmartNICCondition } from './cluster-smart-nic-condition.model';
-import { ClusterPortStatus, IClusterPortStatus } from './cluster-port-status.model';
+import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
+import { ClusterSmartNICInfo, IClusterSmartNICInfo } from './cluster-smart-nic-info.model';
+import { ClusterUplinkStatus, IClusterUplinkStatus } from './cluster-uplink-status.model';
+import { ClusterPFStatus, IClusterPFStatus } from './cluster-pf-status.model';
 
 export interface IClusterSmartNICStatus {
+    'admission-phase'?: ClusterSmartNICStatus_admission_phase;
     'conditions'?: Array<IClusterSmartNICCondition>;
     'serial-num'?: string;
-    'primary-mac-address'?: string;
-    'ports'?: Array<IClusterPortStatus>;
+    'primary-mac'?: string;
+    'ip-config'?: IClusterIPConfig;
+    'system-info'?: IClusterSmartNICInfo;
+    'uplinks'?: Array<IClusterUplinkStatus>;
+    'pfs'?: Array<IClusterPFStatus>;
 }
 
 
 export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNICStatus {
+    /** Current admission phase of the SmartNIC.
+    When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED
+    by CMD for validated NICs.
+    When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING
+    by CMD for validated NICs since it requires manual approval.
+    To admit the NIC as a part of manual admission, user is expected to
+    set Spec.Admit to true for the NICs that are in NIC_PENDING
+    state. Note : Whitelist mode is not supported yet. */
+    'admission-phase': ClusterSmartNICStatus_admission_phase = null;
     'conditions': Array<ClusterSmartNICCondition> = null;
     'serial-num': string = null;
-    'primary-mac-address': string = null;
-    'ports': Array<ClusterPortStatus> = null;
+    'primary-mac': string = null;
+    'ip-config': ClusterIPConfig = null;
+    'system-info': ClusterSmartNICInfo = null;
+    'uplinks': Array<ClusterUplinkStatus> = null;
+    'pfs': Array<ClusterPFStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'admission-phase': {
+            enum: ClusterSmartNICStatus_admission_phase_uihint,
+            default: 'UNKNOWN',
+            description:  'Current admission phase of the SmartNIC. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.',
+            type: 'string'
+        },
         'conditions': {
             type: 'object'
         },
         'serial-num': {
             type: 'string'
         },
-        'primary-mac-address': {
+        'primary-mac': {
             type: 'string'
         },
-        'ports': {
+        'ip-config': {
+            type: 'object'
+        },
+        'system-info': {
+            type: 'object'
+        },
+        'uplinks': {
+            type: 'object'
+        },
+        'pfs': {
             type: 'object'
         },
     }
@@ -58,7 +93,10 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     constructor(values?: any) {
         super();
         this['conditions'] = new Array<ClusterSmartNICCondition>();
-        this['ports'] = new Array<ClusterPortStatus>();
+        this['ip-config'] = new ClusterIPConfig();
+        this['system-info'] = new ClusterSmartNICInfo();
+        this['uplinks'] = new Array<ClusterUplinkStatus>();
+        this['pfs'] = new Array<ClusterPFStatus>();
         this.setValues(values);
     }
 
@@ -67,6 +105,11 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
+        if (values && values['admission-phase'] != null) {
+            this['admission-phase'] = values['admission-phase'];
+        } else if (ClusterSmartNICStatus.hasDefaultValue('admission-phase')) {
+            this['admission-phase'] = <ClusterSmartNICStatus_admission_phase>  ClusterSmartNICStatus.propInfo['admission-phase'].default;
+        }
         if (values) {
             this.fillModelArray<ClusterSmartNICCondition>(this, 'conditions', values['conditions'], ClusterSmartNICCondition);
         }
@@ -75,13 +118,22 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         } else if (ClusterSmartNICStatus.hasDefaultValue('serial-num')) {
             this['serial-num'] = ClusterSmartNICStatus.propInfo['serial-num'].default;
         }
-        if (values && values['primary-mac-address'] != null) {
-            this['primary-mac-address'] = values['primary-mac-address'];
-        } else if (ClusterSmartNICStatus.hasDefaultValue('primary-mac-address')) {
-            this['primary-mac-address'] = ClusterSmartNICStatus.propInfo['primary-mac-address'].default;
+        if (values && values['primary-mac'] != null) {
+            this['primary-mac'] = values['primary-mac'];
+        } else if (ClusterSmartNICStatus.hasDefaultValue('primary-mac')) {
+            this['primary-mac'] = ClusterSmartNICStatus.propInfo['primary-mac'].default;
         }
         if (values) {
-            this.fillModelArray<ClusterPortStatus>(this, 'ports', values['ports'], ClusterPortStatus);
+            this['ip-config'].setValues(values['ip-config']);
+        }
+        if (values) {
+            this['system-info'].setValues(values['system-info']);
+        }
+        if (values) {
+            this.fillModelArray<ClusterUplinkStatus>(this, 'uplinks', values['uplinks'], ClusterUplinkStatus);
+        }
+        if (values) {
+            this.fillModelArray<ClusterPFStatus>(this, 'pfs', values['pfs'], ClusterPFStatus);
         }
     }
 
@@ -91,25 +143,35 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'admission-phase': new FormControl(this['admission-phase'], [enumValidator(ClusterSmartNICStatus_admission_phase), ]),
                 'conditions': new FormArray([]),
                 'serial-num': new FormControl(this['serial-num']),
-                'primary-mac-address': new FormControl(this['primary-mac-address']),
-                'ports': new FormArray([]),
+                'primary-mac': new FormControl(this['primary-mac']),
+                'ip-config': this['ip-config'].$formGroup,
+                'system-info': this['system-info'].$formGroup,
+                'uplinks': new FormArray([]),
+                'pfs': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterSmartNICCondition>('conditions', this['conditions'], ClusterSmartNICCondition);
             // generate FormArray control elements
-            this.fillFormArray<ClusterPortStatus>('ports', this['ports'], ClusterPortStatus);
+            this.fillFormArray<ClusterUplinkStatus>('uplinks', this['uplinks'], ClusterUplinkStatus);
+            // generate FormArray control elements
+            this.fillFormArray<ClusterPFStatus>('pfs', this['pfs'], ClusterPFStatus);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
+            this._formGroup.controls['admission-phase'].setValue(this['admission-phase']);
             this.fillModelArray<ClusterSmartNICCondition>(this, 'conditions', this['conditions'], ClusterSmartNICCondition);
             this._formGroup.controls['serial-num'].setValue(this['serial-num']);
-            this._formGroup.controls['primary-mac-address'].setValue(this['primary-mac-address']);
-            this.fillModelArray<ClusterPortStatus>(this, 'ports', this['ports'], ClusterPortStatus);
+            this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
+            this['ip-config'].setFormGroupValues();
+            this['system-info'].setFormGroupValues();
+            this.fillModelArray<ClusterUplinkStatus>(this, 'uplinks', this['uplinks'], ClusterUplinkStatus);
+            this.fillModelArray<ClusterPFStatus>(this, 'pfs', this['pfs'], ClusterPFStatus);
         }
     }
 }

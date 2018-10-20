@@ -2134,11 +2134,6 @@ func makeURIClusterV1AutoAddNodeCreateOper(in *Node) string {
 }
 
 //
-func makeURIClusterV1AutoAddSmartNICCreateOper(in *SmartNIC) string {
-	return fmt.Sprint("/configs/cluster/v1", "/smartnics")
-}
-
-//
 func makeURIClusterV1AutoAddTenantCreateOper(in *Tenant) string {
 	return fmt.Sprint("/configs/cluster/v1", "/tenants")
 }
@@ -2561,23 +2556,7 @@ func (r *EndpointsClusterV1RestClient) AutoWatchHost(ctx context.Context, stream
 
 // AutoAddSmartNIC CRUD method for SmartNIC
 func (r *EndpointsClusterV1RestClient) AutoAddSmartNIC(ctx context.Context, in *SmartNIC) (*SmartNIC, error) {
-	path := makeURIClusterV1AutoAddSmartNICCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	ret, err := decodeHTTPrespClusterV1AutoAddSmartNIC(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*SmartNIC), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateSmartNIC CRUD method for SmartNIC

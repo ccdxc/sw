@@ -143,8 +143,8 @@ func TestSmartNICCreate(t *testing.T) {
 	snic.Kind = "smartnic"
 
 	snic.Name = "naples1"
-	snic.Status.PrimaryMacAddress = "0029.ef38.8a01"
-	snic.Spec.HostName = "vm221"
+	snic.Status.PrimaryMAC = "0029.ef38.8a01"
+	snic.Spec.Hostname = "vm221"
 	addSnic(t, snic)
 
 	/*
@@ -159,13 +159,13 @@ func TestSmartNICCreate(t *testing.T) {
 	*/
 
 	snic.Name = "naples2"
-	snic.Status.PrimaryMacAddress = "0029.ef38.8a02"
-	snic.Spec.HostName = "vm222"
+	snic.Status.PrimaryMAC = "0029.ef38.8a02"
+	snic.Spec.Hostname = "vm222"
 	addSnic(t, snic)
 
 	snic.Name = "naples3"
-	snic.Status.PrimaryMacAddress = "0029.ef38.8a03"
-	snic.Spec.HostName = "vm223"
+	snic.Status.PrimaryMAC = "0029.ef38.8a03"
+	snic.Spec.Hostname = "vm223"
 	addSnic(t, snic)
 
 }

@@ -73,7 +73,7 @@ var (
 	numNaples   = flag.Int("num-naples", 100, fmt.Sprintf("Number of Naples instances [%d..%d]", minAgents, maxAgents))
 	cmdURL      = flag.String("cmd-url", smartNICServerURL, "CMD URL")
 	resolverURL = flag.String("resolver-url", resolverURLs, "Resolver URLs")
-	mode        = flag.String("mode", "classic", "Naples mode, classic or managed")
+	mode        = flag.String("mode", "host", "Naples mode, host or network")
 	rpcTrace    = flag.Bool("rpc-trace", false, "Enable gRPC tracing")
 
 	// create events recorder
@@ -107,8 +107,24 @@ func (t testInfo) APIClient() pencluster.ClusterV1Interface {
 	return t.apiClient.ClusterV1()
 }
 
-func getHostID(index int) string {
+func getSmartNICMAC(index int) string {
 	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
+}
+
+func getHost(index int) *pencluster.Host {
+	return &pencluster.Host{
+		ObjectMeta: api.ObjectMeta{
+			Name: fmt.Sprintf("e2e-host-%02d", index),
+		},
+		Spec: pencluster.HostSpec{
+			Interfaces: map[string]pencluster.HostIntfSpec{
+				getSmartNICMAC(index): pencluster.HostIntfSpec{},
+			},
+		},
+		Status: pencluster.HostStatus{
+			Type: pencluster.HostStatus_BAREMETAL.String(),
+		},
+	}
 }
 
 func getRESTUrl(index int) string {
@@ -174,7 +190,7 @@ func createRPCServer(m *testing.M) *rpckit.RPCServer {
 }
 
 // Create NMD and Agent
-func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmdInfo, error) {
+func createNMD(t *testing.T, dbPath, priMac, restURL string) (*nmdInfo, error) {
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
@@ -198,8 +214,8 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmdInfo, error) {
 	ag, err := nmd.NewAgent(pa,
 		uc,
 		dbPath,
-		hostID,
-		hostID,
+		priMac,
+		priMac,
 		*cmdURL,
 		"",
 		restURL,
@@ -247,34 +263,39 @@ func TestCreateNMDs(t *testing.T) {
 			for j := 0; j < batchSize && i <= *numNaples; i, j = i+1, j+1 {
 
 				tcName := fmt.Sprintf("TestNMD-%d", i)
-				hostID := getHostID(i)
+				host := getHost(i)
+				priMac := getSmartNICMAC(i)
 				dbPath := getDBPath(i)
 				restURL := getRESTUrl(i)
+
+				// Create Host
+				_, err := tInfo.apiClient.ClusterV1().Host().Create(context.Background(), host)
+				AssertOk(t, err, fmt.Sprintf("Error creating host: %v", host.Name))
 
 				// Sub-Test for a single NMD agent
 				t.Run(tcName, func(t *testing.T) {
 
 					// Execute Agent/NMD creation and registration tests in parallel
 					t.Parallel()
-					log.Infof("#### Started TC: %s HostID: %s DB: %s GoRoutines: %d CGoCalls: %d",
-						tcName, hostID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
+					log.Infof("#### Started TC: %s primary MAC: %s DB: %s GoRoutines: %d CGoCalls: %d",
+						tcName, priMac, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
 
 					// Cleanup any prior DB files
 					os.Remove(dbPath)
 
 					// create Agent and NMD
-					nmdInst, err := createNMD(t, dbPath, hostID, restURL)
+					nmdInst, err := createNMD(t, dbPath, priMac, restURL)
 					defer stopNMD(t, nmdInst)
 					Assert(t, (err == nil && nmdInst.agent != nil), "Failed to create agent", err)
 
 					nm := nmdInst.agent.GetNMD()
 
-					if *mode == "classic" {
-						// Validate default classic mode
+					if *mode == "host" {
+						// Validate default host mode
 						f1 := func() (bool, interface{}) {
 
 							cfg := nm.GetNaplesConfig()
-							if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+							if cfg.Spec.Mode == proto.MgmtMode_HOST && nm.GetListenURL() != "" &&
 								nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 								return true, nil
 							}
@@ -293,7 +314,7 @@ func TestCreateNMDs(t *testing.T) {
 								return false, nil
 							}
 
-							if naplesCfg.Spec.Mode != proto.NaplesMode_CLASSIC_MODE {
+							if naplesCfg.Spec.Mode != proto.MgmtMode_HOST {
 								return false, nil
 							}
 							return true, nil
@@ -305,10 +326,10 @@ func TestCreateNMDs(t *testing.T) {
 							ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 							TypeMeta:   api.TypeMeta{Kind: "Naples"},
 							Spec: proto.NaplesSpec{
-								Mode:           proto.NaplesMode_MANAGED_MODE,
-								PrimaryMac:     hostID,
-								ClusterAddress: []string{*cmdURL},
-								HostName:       hostID,
+								Mode:        proto.MgmtMode_NETWORK,
+								Controllers: []string{*cmdURL},
+								Hostname:    priMac,
+								PrimaryMAC:  priMac,
 							},
 						}
 
@@ -334,7 +355,7 @@ func TestCreateNMDs(t *testing.T) {
 						// validate the mode is managed
 						cfg := nm.GetNaplesConfig()
 						log.Infof("NaplesConfig: %v", cfg)
-						if cfg.Spec.Mode != proto.NaplesMode_MANAGED_MODE {
+						if cfg.Spec.Mode != proto.MgmtMode_NETWORK {
 							log.Errorf("Failed to switch to managed mode")
 							return false, nil
 						}
@@ -342,12 +363,12 @@ func TestCreateNMDs(t *testing.T) {
 						// Fetch smartnic object
 						nic, err := nm.GetSmartNIC()
 						if nic == nil || err != nil {
-							log.Errorf("NIC not found in nicDB, mac:%s", hostID)
+							log.Errorf("NIC not found in nicDB, mac:%s", priMac)
 							return false, nil
 						}
 
 						// Verify NIC is admitted
-						if nic.Spec.Phase != pencluster.SmartNICSpec_ADMITTED.String() {
+						if nic.Status.AdmissionPhase != pencluster.SmartNICStatus_ADMITTED.String() {
 							log.Errorf("NIC is not admitted")
 							return false, nil
 						}
@@ -371,11 +392,11 @@ func TestCreateNMDs(t *testing.T) {
 					f5 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
-							Name: hostID,
+							Name: priMac,
 						}
 						nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 						if err != nil || nicObj == nil {
-							log.Errorf("Failed to GET SmartNIC object, mac:%s, %v", hostID, err)
+							log.Errorf("Failed to GET SmartNIC object, mac:%s, %v", priMac, err)
 							return false, nil
 						}
 
@@ -387,20 +408,24 @@ func TestCreateNMDs(t *testing.T) {
 					f6 := func() (bool, interface{}) {
 
 						meta := api.ObjectMeta{
-							Name: hostID,
+							Name: host.Name,
 						}
 						hostObj, err := tInfo.apiClient.ClusterV1().Host().Get(context.Background(), &meta)
 						if err != nil || hostObj == nil {
-							log.Errorf("Failed to GET Host object, mac:%s, %v", hostID, err)
+							log.Errorf("Failed to GET Host object:%s, %v", host.Name, err)
 							return false, nil
 						}
-
-						return true, nil
+						for ii := range hostObj.Status.SmartNICs {
+							if hostObj.Status.SmartNICs[ii] == priMac {
+								return true, nil
+							}
+						}
+						return false, nil
 					}
 					AssertEventually(t, f6, "Failed to verify creation of required Host object", string("10ms"), string("30s"))
 
 					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
-						tcName, hostID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
+						tcName, priMac, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
 
 				})
 			}
@@ -590,8 +615,8 @@ func TestMain(m *testing.M) {
 		os.Exit(-1)
 	}
 
-	if *mode != "classic" && *mode != "managed" {
-		log.Errorf("Invalid mode, supported mode is classic or managed")
+	if *mode != "host" && *mode != "network" {
+		log.Errorf("Invalid mode, supported mode is host or network")
 		os.Exit(-1)
 	}
 

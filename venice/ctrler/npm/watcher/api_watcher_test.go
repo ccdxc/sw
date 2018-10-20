@@ -403,12 +403,11 @@ func TestAPIServerRestarts(t *testing.T) {
 			Namespace: "",
 		},
 		Spec: cluster.SmartNICSpec{
-			Phase: "ADMITTED",
-			Ports: []cluster.PortSpec{
-				{
-					MacAddress: "00:01:02:03:04:05",
-				},
-			},
+			MgmtMode: cluster.SmartNICSpec_NETWORK.String(),
+		},
+		Status: cluster.SmartNICStatus{
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     "00:01:02:03:04:05",
 		},
 	}
 
@@ -646,12 +645,12 @@ func TestWorkloadWatcher(t *testing.T) {
 			Namespace: "",
 		},
 		Spec: cluster.SmartNICSpec{
-			Phase: "ADMITTED",
-			Ports: []cluster.PortSpec{
-				{
-					MacAddress: "00:01:02:03:04:05",
-				},
-			},
+			Hostname: "testSmartNIC",
+			MgmtMode: cluster.SmartNICSpec_NETWORK.String(),
+		},
+		Status: cluster.SmartNICStatus{
+			AdmissionPhase: cluster.SmartNICStatus_ADMITTED.String(),
+			PrimaryMAC:     "00:01:02:03:04:05",
 		},
 	}
 

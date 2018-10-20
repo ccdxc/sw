@@ -95,13 +95,16 @@ func createNIC(mac, phase, host string, condition *cluster.SmartNICCondition) *c
 			},
 		},
 		Spec: cluster.SmartNICSpec{
-			Phase:    phase,
-			HostName: host,
-			MgmtIp:   "0.0.0.0",
+			Hostname: host,
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "0.0.0.0/0",
+			},
+			MgmtMode: cluster.SmartNICSpec_NETWORK.String(),
 		},
 		Status: cluster.SmartNICStatus{
-			Conditions: []*cluster.SmartNICCondition{
-				condition,
+			AdmissionPhase: phase,
+			Conditions: []cluster.SmartNICCondition{
+				*condition,
 			},
 		},
 	}
@@ -234,10 +237,10 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 	for i = 0; i < objCount; i++ {
 
 		// Create SmartNIC object
-		phase := cluster.SmartNICSpec_ADMITTED.String()
+		phase := cluster.SmartNICStatus_ADMITTED.String()
 		condition := &healthy
 		if i%2 == 0 {
-			phase = cluster.SmartNICSpec_PENDING.String()
+			phase = cluster.SmartNICStatus_PENDING.String()
 			condition = &unhealthy
 		}
 		mac := fmt.Sprintf("44.44.44.00.%02x.%02x", i/256, i%256)

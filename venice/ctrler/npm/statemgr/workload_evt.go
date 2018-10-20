@@ -78,8 +78,8 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 					log.Errorf("Error finding smart nic for mac add %v", snicMac)
 					return err
 				}
-				if snic.Status.PrimaryMacAddress != "" {
-					nodeUUID = "uuid-" + snic.Status.PrimaryMacAddress
+				if snic.Status.PrimaryMAC != "" {
+					nodeUUID = "uuid-" + snic.Status.PrimaryMAC
 				} else {
 					nodeUUID = "uuid-" + snic.Name
 				}

@@ -821,15 +821,9 @@ func TestWorkloadCreateDelete(t *testing.T) {
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Spec: cluster.SmartNICSpec{
-			Ports: []cluster.PortSpec{
-				{
-					MacAddress: "00:01:02:03:04:05",
-				},
-			},
-		},
+		Spec: cluster.SmartNICSpec{},
 		Status: cluster.SmartNICStatus{
-			PrimaryMacAddress: "00:01:02:03:04:05",
+			PrimaryMAC: "00:01:02:03:04:05",
 		},
 	}
 
@@ -958,12 +952,8 @@ func TestSmartNicCreateDelete(t *testing.T) {
 			Namespace: "",
 			Tenant:    "default",
 		},
-		Spec: cluster.SmartNICSpec{
-			Ports: []cluster.PortSpec{
-				{
-					MacAddress: "00:01:02:03:04:05",
-				},
-			},
+		Status: cluster.SmartNICStatus{
+			PrimaryMAC: "00:01:02:03:04:05",
 		},
 	}
 
@@ -974,12 +964,10 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	// verify we can find the endpoint associated with the smartNic
 	foundSmartNIC, err := stateMgr.FindSmartNIC("default", "testSmartNIC")
 	AssertOk(t, err, "Could not find the smartNic")
-	Assert(t, (len(foundSmartNIC.Spec.Ports) == 1), "smartNic params did not match")
-	Assert(t, (foundSmartNIC.Spec.Ports[0].MacAddress == "00:01:02:03:04:05"), "smartNic params did not match")
+	Assert(t, (foundSmartNIC.Status.PrimaryMAC == "00:01:02:03:04:05"), "smartNic params did not match")
 
 	foundSmartNIC, err = stateMgr.FindSmartNICByMacAddr("00:01:02:03:04:05")
 	AssertOk(t, err, "Could not find the smartNic")
-	Assert(t, (len(foundSmartNIC.Spec.Ports) == 1), "smartNic params did not match")
 
 	// delete the smartNic
 	err = stateMgr.smartNicReactor.DeleteSmartNIC(snic)

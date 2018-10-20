@@ -12,6 +12,12 @@ export enum ClusterHostStatus_type {
     'HYPERVISOR' = "HYPERVISOR",
 }
 
+export enum ClusterMemInfo_type {
+    'UNKNOWN' = "UNKNOWN",
+    'HBM' = "HBM",
+    'DDR' = "DDR",
+}
+
 export enum ClusterNodeCondition_type {
     'LEADER' = "LEADER",
 }
@@ -50,7 +56,12 @@ export enum ClusterSmartNICCondition_status {
     'FALSE' = "FALSE",
 }
 
-export enum ClusterSmartNICSpec_phase {
+export enum ClusterSmartNICSpec_mgmt_mode {
+    'HOST' = "HOST",
+    'NETWORK' = "NETWORK",
+}
+
+export enum ClusterSmartNICStatus_admission_phase {
     'UNKNOWN' = "UNKNOWN",
     'REGISTERING' = "REGISTERING",
     'REJECTED' = "REJECTED",
@@ -97,7 +108,12 @@ export enum ClusterSmartNICCondition_status_uihint {
     'UNKNOWN' = "Unknown",
 }
 
-export enum ClusterSmartNICSpec_phase_uihint {
+export enum ClusterSmartNICSpec_mgmt_mode_uihint {
+    'HOST' = "Host",
+    'NETWORK' = "Network",
+}
+
+export enum ClusterSmartNICStatus_admission_phase_uihint {
     'ADMITTED' = "Admitted",
     'PENDING' = "Pending",
     'REGISTERING' = "Registering",
@@ -137,6 +153,7 @@ export class AllEnums {
     }
 
     ClusterHostStatus_type = ClusterHostStatus_type;
+    ClusterMemInfo_type = ClusterMemInfo_type;
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;
     ClusterNodeStatus_phase = ClusterNodeStatus_phase;
@@ -144,7 +161,8 @@ export class AllEnums {
     ClusterPortCondition_status = ClusterPortCondition_status;
     ClusterSmartNICCondition_type = ClusterSmartNICCondition_type;
     ClusterSmartNICCondition_status = ClusterSmartNICCondition_status;
-    ClusterSmartNICSpec_phase = ClusterSmartNICSpec_phase;
+    ClusterSmartNICSpec_mgmt_mode = ClusterSmartNICSpec_mgmt_mode;
+    ClusterSmartNICStatus_admission_phase = ClusterSmartNICStatus_admission_phase;
 
     ClusterNodeCondition_type_uihint = ClusterNodeCondition_type_uihint;
     ClusterNodeCondition_status_uihint = ClusterNodeCondition_status_uihint;
@@ -153,5 +171,6 @@ export class AllEnums {
     ClusterPortCondition_status_uihint = ClusterPortCondition_status_uihint;
     ClusterSmartNICCondition_type_uihint = ClusterSmartNICCondition_type_uihint;
     ClusterSmartNICCondition_status_uihint = ClusterSmartNICCondition_status_uihint;
-    ClusterSmartNICSpec_phase_uihint = ClusterSmartNICSpec_phase_uihint;
+    ClusterSmartNICSpec_mgmt_mode_uihint = ClusterSmartNICSpec_mgmt_mode_uihint;
+    ClusterSmartNICStatus_admission_phase_uihint = ClusterSmartNICStatus_admission_phase_uihint;
 }

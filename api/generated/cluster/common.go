@@ -2,7 +2,7 @@
 
 /*
 Package cluster is a auto generated package.
-Input file: cmd.proto
+Input file: cluster.proto
 */
 package cluster
 

@@ -1135,7 +1135,7 @@ func (a *restObjClusterV1SmartNIC) Watch(ctx context.Context, options *api.ListW
 func (a *restObjClusterV1SmartNIC) Allowed(oper apiserver.APIOperType) bool {
 	switch oper {
 	case apiserver.CreateOper:
-		return true
+		return false
 	case apiserver.UpdateOper:
 		return true
 	case apiserver.GetOper:

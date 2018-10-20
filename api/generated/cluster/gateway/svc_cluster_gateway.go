@@ -795,7 +795,6 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AuthBootstrapComplete"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["AutoDeleteHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)

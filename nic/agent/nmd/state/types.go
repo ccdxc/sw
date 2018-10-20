@@ -108,7 +108,7 @@ func (n *NMD) setRestServerStatus(value bool) {
 }
 
 // GetConfigMode returns the configured Naples Mode
-func (n *NMD) GetConfigMode() nmd.NaplesMode {
+func (n *NMD) GetConfigMode() nmd.MgmtMode {
 	n.Lock()
 	defer n.Unlock()
 	return n.config.Spec.Mode

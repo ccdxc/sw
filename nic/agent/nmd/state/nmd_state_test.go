@@ -128,7 +128,7 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 		}
 		resp := grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase: cmd.SmartNICSpec_ADMITTED.String(),
+				Phase: cmd.SmartNICStatus_ADMITTED.String(),
 				ClusterCert: &certapi.CertificateSignResp{
 					Certificate: &certapi.Certificate{
 						Certificate: cert.Raw,
@@ -156,14 +156,14 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 	if nic.Name == nicKey2 {
 		return grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase: cmd.SmartNICSpec_PENDING.String(),
+				Phase: cmd.SmartNICStatus_PENDING.String(),
 			},
 		}, nil
 	}
 
 	return grpc.RegisterNICResponse{
 		AdmissionResponse: &grpc.NICAdmissionResponse{
-			Phase:  cmd.SmartNICSpec_REJECTED.String(),
+			Phase:  cmd.SmartNICStatus_REJECTED.String(),
 			Reason: string("Invalid Cert"),
 		},
 	}, nil
@@ -297,7 +297,7 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, "", "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, "", "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, false)
 
@@ -318,7 +318,7 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 
 	// update smartNIC
 	nic.Status = cmd.SmartNICStatus{
-		Conditions: []*cmd.SmartNICCondition{
+		Conditions: []cmd.SmartNICCondition{
 			{
 				Type:   cmd.SmartNICCondition_HEALTHY.String(),
 				Status: cmd.ConditionStatus_TRUE.String(),
@@ -344,7 +344,7 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -359,11 +359,11 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	// create smartNIC
 	resp, err := nm.RegisterSmartNICReq(&nic)
 	AssertOk(t, err, "Error registering nic")
-	Assert(t, resp.AdmissionResponse.Phase == cmd.SmartNICSpec_ADMITTED.String(), "NIC is not admitted", nic)
+	Assert(t, resp.AdmissionResponse.Phase == cmd.SmartNICStatus_ADMITTED.String(), "NIC is not admitted", nic)
 
 	// update smartNIC
 	nic.Status = cmd.SmartNICStatus{
-		Conditions: []*cmd.SmartNICCondition{
+		Conditions: []cmd.SmartNICCondition{
 			{
 				Type:   cmd.SmartNICCondition_HEALTHY.String(),
 				Status: cmd.ConditionStatus_TRUE.String(),
@@ -376,26 +376,26 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 		nic.ObjectMeta.Name == "2222.2222.2222", "NIC status did not match", n)
 }
 
-func TestNaplesDefaultClassicMode(t *testing.T) {
+func TestNaplesDefaultHostMode(t *testing.T) {
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode == nmd.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+		if cfg.Spec.Mode == nmd.MgmtMode_HOST && nm.GetListenURL() != "" &&
 			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
 		return false, nil
 	}
-	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+	AssertEventually(t, f1, "Failed to verify mode is in host")
 
 	var naplesCfg nmd.Naples
 
@@ -406,7 +406,7 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 			return false, nil
 		}
 
-		if naplesCfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE {
+		if naplesCfg.Spec.Mode != nmd.MgmtMode_HOST {
 			return false, nil
 		}
 		return true, nil
@@ -418,54 +418,54 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 	Assert(t, err != nil, "Starting redundant REST server should have failed")
 }
 
-func TestNaplesRestartClassicMode(t *testing.T) {
+func TestNaplesRestartHostMode(t *testing.T) {
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+		if cfg.Spec.Mode != nmd.MgmtMode_HOST && nm.GetListenURL() != "" &&
 			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
 		return true, nil
 	}
-	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+	AssertEventually(t, f1, "Failed to verify mode is in host")
 
 	// stop NMD, don't clean up DB
 	stopNMD(t, nm, false)
 
 	// start/create NMD again, simulating restart
-	nm, _, _, _, _ = createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ = createNMD(t, emDBPath, "host", nicKey1)
 	defer stopNMD(t, nm, true)
 
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
-	AssertEventually(t, f1, "Failed to verify Classic mode, after Restart")
+	AssertEventually(t, f1, "Failed to verify host mode, after Restart")
 }
 
-func TestNaplesManagedMode(t *testing.T) {
+func TestNaplesNetworkMode(t *testing.T) {
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
-	// Start NMD in managed mode
-	nm, _, _, _, _ := createNMD(t, emDBPath, "managed", nicKey1)
+	// Start NMD in network mode
+	nm, _, _, _, _ := createNMD(t, emDBPath, "network", nicKey1)
 	defer stopNMD(t, nm, true)
-	Assert(t, (nm != nil), "Failed to start NMD in managed mode", nm)
+	Assert(t, (nm != nil), "Failed to start NMD in network mode", nm)
 
 	f1 := func() (bool, interface{}) {
 
 		// Verify mode
 		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
-		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			log.Errorf("Mode is not managed")
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+			log.Errorf("Mode is not network")
 			return false, nil
 		}
 
@@ -477,7 +477,7 @@ func TestNaplesManagedMode(t *testing.T) {
 		}
 
 		// Verify NIC admission
-		if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
 			log.Errorf("NIC is not admitted")
 			return false, nil
 		}
@@ -496,41 +496,46 @@ func TestNaplesManagedMode(t *testing.T) {
 
 		return true, nil
 	}
-	AssertEventually(t, f1, "Failed to verify Managed Mode", string("10ms"), string("30s"))
+	AssertEventually(t, f1, "Failed to verify network Mode", string("10ms"), string("30s"))
 }
 
 // TestNaplesModeTransitions tests the mode transition
-// Classic -> Managed -> Classic
+// host -> network -> host
 func TestNaplesModeTransitions(t *testing.T) {
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
+		if cfg.Spec.Mode != nmd.MgmtMode_HOST && nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
 		return true, nil
 	}
-	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+	AssertEventually(t, f1, "Failed to verify mode is in host")
 
-	// Switch to Managed mode
+	// Switch to network mode
 	naplesCfg := &nmd.Naples{
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:           nmd.NaplesMode_MANAGED_MODE,
-			PrimaryMac:     nicKey1,
-			ClusterAddress: []string{"192.168.30.10:9002"},
-			HostName:       "esx-001",
-			MgmtIp:         "10.10.10.10",
+			Mode:        nmd.MgmtMode_NETWORK,
+			Controllers: []string{"192.168.30.10"},
+			Hostname:    nicKey1,
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "10.10.10.10/24",
+			},
+			PrimaryMAC: nicKey1,
+		},
+		Status: nmd.NaplesStatus{
+			Phase: cmd.SmartNICStatus_ADMITTED,
 		},
 	}
 
@@ -553,8 +558,8 @@ func TestNaplesModeTransitions(t *testing.T) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
-		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			log.Errorf("Failed to switch to managed mode")
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+			log.Errorf("Failed to switch to network mode")
 			return false, nil
 		}
 
@@ -564,7 +569,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 			return false, nil
 		}
 
-		if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
 			log.Errorf("NIC is not admitted")
 			return false, nil
 		}
@@ -581,37 +586,37 @@ func TestNaplesModeTransitions(t *testing.T) {
 
 		return true, nil
 	}
-	AssertEventually(t, f3, "Failed to verify mode is in Managed Mode", string("10ms"), string("30s"))
+	AssertEventually(t, f3, "Failed to verify mode is in network Mode", string("10ms"), string("30s"))
 
-	// Switch to classic mode
-	naplesCfg.Spec.Mode = nmd.NaplesMode_CLASSIC_MODE
+	// Switch to host mode
+	naplesCfg.Spec.Mode = nmd.MgmtMode_HOST
 	AssertEventually(t, f2, "Failed to post the naples config")
 
-	// Verify it is in classic mode
-	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+	// Verify it is in host mode
+	AssertEventually(t, f1, "Failed to verify mode is in host")
 }
 
-func TestNaplesManagedModeManualApproval(t *testing.T) {
+func TestNaplesNetworkModeManualApproval(t *testing.T) {
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey2)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey2)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
 	var err error
 	var resp NaplesConfigResp
 
-	// Switch to Managed mode
+	// Switch to network mode
 	naplesCfg := &nmd.Naples{
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:       nmd.NaplesMode_MANAGED_MODE,
-			PrimaryMac: nicKey2,
-			HostName:   "esx-001",
+			Mode:       nmd.MgmtMode_NETWORK,
+			PrimaryMAC: nicKey2,
+			Hostname:   nicKey2,
 		},
 	}
 
@@ -628,8 +633,8 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 	f2 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			log.Errorf("Failed to switch to managed mode")
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+			log.Errorf("Failed to switch to network mode")
 			return false, nil
 		}
 
@@ -639,8 +644,8 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 			return false, nil
 		}
 
-		if nic.Spec.Phase != cmd.SmartNICSpec_PENDING.String() {
-			log.Errorf("NIC is not admitted")
+		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_PENDING.String() {
+			log.Errorf("NIC is not admitted, expected %v, found %v", cmd.SmartNICStatus_PENDING.String(), nic.Status.AdmissionPhase)
 			return false, nil
 		}
 
@@ -656,30 +661,30 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 
 		return true, nil
 	}
-	AssertEventually(t, f2, "Failed to verify PendingNIC in Managed Mode", string("10ms"), string("30s"))
+	AssertEventually(t, f2, "Failed to verify PendingNIC in network Mode", string("10ms"), string("30s"))
 }
 
-func TestNaplesManagedModeInvalidNIC(t *testing.T) {
+func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey3)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey3)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
 	var err error
 	var resp NaplesConfigResp
 
-	// Switch to Managed mode
+	// Switch to network mode
 	naplesCfg := &nmd.Naples{
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:       nmd.NaplesMode_MANAGED_MODE,
-			PrimaryMac: nicKey3,
-			HostName:   "esx-001",
+			Mode:       nmd.MgmtMode_NETWORK,
+			PrimaryMAC: nicKey3,
+			Hostname:   nicKey3,
 		},
 	}
 
@@ -696,8 +701,8 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
-		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			log.Errorf("Failed to switch to managed mode")
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+			log.Errorf("Failed to switch to network mode")
 			return false, nil
 		}
 
@@ -707,7 +712,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 			return false, nil
 		}
 
-		if nic.Spec.Phase != cmd.SmartNICSpec_REJECTED.String() {
+		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_REJECTED.String() {
 			log.Errorf("NIC is not rejected")
 			return false, nil
 		}
@@ -729,29 +734,29 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 
 		return true, nil
 	}
-	AssertEventually(t, f2, "Failed to verify mode RejectedNIC in Managed Mode", string("10ms"), string("30s"))
+	AssertEventually(t, f2, "Failed to verify mode RejectedNIC in network Mode", string("10ms"), string("30s"))
 }
 
-func TestNaplesRestartManagedMode(t *testing.T) {
+func TestNaplesRestartNetworkMode(t *testing.T) {
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	var err error
 	var resp NaplesConfigResp
 
-	// Switch to Managed mode
+	// Switch to network mode
 	naplesCfg := &nmd.Naples{
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:       nmd.NaplesMode_MANAGED_MODE,
-			PrimaryMac: nicKey1,
-			HostName:   "esx-001",
+			Mode:       nmd.MgmtMode_NETWORK,
+			PrimaryMAC: nicKey1,
+			Hostname:   nicKey1,
 		},
 	}
 
@@ -769,22 +774,22 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
-		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			log.Errorf("Failed to switch to managed mode")
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+			log.Errorf("Failed to switch to network mode")
 			return false, nil
 		}
 		return true, nil
 	}
-	AssertEventually(t, f2, "Failed to verify Managed Mode", string("10ms"), string("30s"))
+	AssertEventually(t, f2, "Failed to verify network Mode", string("10ms"), string("30s"))
 
 	// stop NMD, don't clean up DB file
 	stopNMD(t, nm, false)
 
 	// create NMD again, simulating restart
-	nm, _, _, _, _ = createNMD(t, emDBPath, "classic", "")
+	nm, _, _, _, _ = createNMD(t, emDBPath, "host", "")
 	defer stopNMD(t, nm, true)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
-	AssertEventually(t, f2, "Failed to verify Managed Mode after Restart", string("10ms"), string("30s"))
+	AssertEventually(t, f2, "Failed to verify network Mode after Restart", string("10ms"), string("30s"))
 }
 
 // Test invalid mode
@@ -804,7 +809,7 @@ func TestNaplesRollout(t *testing.T) {
 
 	// create nmd
 	t.Log("Create nmd")
-	nm, _, _, upgAg, roCtrl := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, upgAg, roCtrl := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	Assert(t, (upgAg != nil), "Failed to create nmd", nm)
 	Assert(t, (roCtrl != nil), "Failed to create nmd", nm)
@@ -927,7 +932,7 @@ func TestNaplesCmdExec(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	v := &nmd.NaplesCmdExecute{
