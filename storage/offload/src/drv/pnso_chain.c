@@ -249,6 +249,47 @@ chn_poll_all_services(struct service_chain *chain)
 	return err;
 }
 
+pnso_error_t
+chn_poller(void *pnso_poll_ctx)
+{
+	pnso_error_t err;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
+	struct service_chain *chain = (struct service_chain *) pnso_poll_ctx;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	if (!pnso_poll_ctx) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("invalid poll context! err: %d", err);
+		OSAL_ASSERT(0);
+		return err;
+	}
+	PPRINT_CHAIN(chain);
+	OSAL_ASSERT(pcr == chain->sc_pcr);
+
+	err = chn_poll_all_services(chain);
+	if (err)
+		OSAL_LOG_ERROR("poll failed! chain: 0x" PRIx64 "err: %d",
+				(uint64_t) chain, err);
+
+	chn_read_write_result(chain);
+
+	chn_update_overall_result(chain);
+
+	if (chain->sc_req_cb) {
+		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "res: 0x" PRIx64 "err: %d",
+				(uint64_t) chain->sc_req_cb_ctx,
+				(uint64_t) chain->sc_res, err);
+
+		chain->sc_req_cb(chain->sc_req_cb_ctx, chain->sc_res);
+	}
+
+	chn_destroy_chain(chain);
+
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+}
+
 void
 chn_read_write_result(struct service_chain *chain)
 {
@@ -559,12 +600,27 @@ chn_create_chain(struct request_params *req_params)
 
 	chain->sc_pcr = pcr;
 
-	chain->sc_req_cb = req_params->rp_cb;
-	chain->sc_req_cb_ctx = req_params->rp_cb_ctx;
-#if 1
-	chain->sc_req_poll_fn = req_params->rp_poll_fn;
-	chain->sc_req_poll_ctx = req_params->rp_poll_ctx;
-#endif
+	if (req_params->rp_flags & REQUEST_RFLAG_MODE_SYNC)
+		chain->sc_flags |= CHAIN_CFLAG_MODE_SYNC;
+	else if (req_params->rp_flags & REQUEST_RFLAG_MODE_POLL)
+		chain->sc_flags |= CHAIN_CFLAG_MODE_POLL;
+	else if (req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC)
+		chain->sc_flags |= CHAIN_CFLAG_MODE_ASYNC;
+
+	if (((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) ||
+			(chain->sc_flags & CHAIN_CFLAG_MODE_POLL)) &&
+			(req_params->rp_flags & REQUEST_RFLAG_TYPE_CHAIN)) {
+		chain->sc_req_cb = req_params->rp_cb;
+		chain->sc_req_cb_ctx = req_params->rp_cb_ctx;
+
+		/* for bottom-half polling */
+		*chain->sc_req_poll_fn = chn_poller;
+		chain->sc_req_poll_ctx = (void *) chain;
+
+		/* for caller polling */
+		*req_params->rp_poll_fn = chn_poller;
+		req_params->rp_poll_ctx = (void *) chain;
+	}
 
 	/* init services in the chain  */
 	for (i = 0; i < chain->sc_num_services; i++) {
@@ -581,6 +637,13 @@ chn_create_chain(struct request_params *req_params)
 		centry->ce_chain_head = chain;
 		centry->ce_next = NULL;
 		svc_info = &centry->ce_svc_info;
+
+		if (req_params->rp_flags & REQUEST_RFLAG_MODE_SYNC)
+			svc_info->si_flags |= CHAIN_SFLAG_MODE_SYNC;
+		else if (req_params->rp_flags & REQUEST_RFLAG_MODE_POLL)
+			svc_info->si_flags |= CHAIN_SFLAG_MODE_POLL;
+		else if (req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC)
+			svc_info->si_flags |= CHAIN_SFLAG_MODE_ASYNC;
 
 		if (i == 0) {
 			svc_info->si_flags = (chain->sc_num_services == 1) ?
@@ -706,6 +769,11 @@ chn_execute_chain(struct service_chain *chain)
 		goto out;
 	}
 	PAS_START_HW_PERF();
+
+	if (chain->sc_req_cb) {
+		OSAL_LOG_DEBUG("in poll mode ... invoking caller's cb");
+		goto out;
+	}
 
 	/* wait for 'last' service completion */
 	sc_entry = ce_last;

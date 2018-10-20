@@ -72,10 +72,16 @@ extern "C" {
 #define CHAIN_SFLAG_FIRST_SERVICE	(1 << 1)
 #define CHAIN_SFLAG_LAST_SERVICE	(1 << 2)
 #define CHAIN_SFLAG_IN_BATCH		(1 << 3)
+#define CHAIN_SFLAG_MODE_SYNC		(1 << 4)
+#define CHAIN_SFLAG_MODE_POLL		(1 << 5)
+#define CHAIN_SFLAG_MODE_ASYNC		(1 << 6)
 
 /* chain flags */
-#define CHAIN_CFLAG_IN_BATCH		(1 << 0)
-#define CHAIN_CFLAG_POLLED		(1 << 1)
+#define CHAIN_CFLAG_MODE_SYNC		(1 << 0)
+#define CHAIN_CFLAG_MODE_POLL		(1 << 1)
+#define CHAIN_CFLAG_MODE_ASYNC		(1 << 2)
+#define CHAIN_CFLAG_IN_BATCH		(1 << 3)
+#define CHAIN_CFLAG_POLLED		(1 << 4)
 
 #ifdef NDEBUG
 #define PPRINT_CHAIN(c)
