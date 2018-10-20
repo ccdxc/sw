@@ -84,7 +84,9 @@ func TestMain(m *testing.M) {
 func TestTopologyService_InitTestBed(t *testing.T) {
 	t.Parallel()
 	var tbMsg iota.TestBedMsg
-	var macAddr []string
+
+	//var macAddr []string
+	//var usegVlan, externalVlan []uint32
 	var naplesHosts []*iota.NaplesHost
 	initNodes := []*iota.TestBedNode{
 		{
@@ -322,7 +324,6 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	}
 
 	log.Infof("Received Token: %s", authResp.AuthToken)
-	fmt.Println("ANCALAGON: ", addNodeResp.Nodes)
 
 	for _, n := range addNodeResp.Nodes {
 		if n.Type == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
@@ -353,61 +354,84 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.FailNow()
 	}
 
+	matchingVLAN := vlans[0]
+	var wrkldMac1, wrkldMac2, wrkldNodeName1, wrkldNodeName2 string
+	var usegVlan1, usegVlan2, externalVlan1, externalVlan2 uint32
+
+	wrkldNodeName1 = naplesHosts[0].Name
+	wrkldNodeName2 = naplesHosts[1].Name
+
 	for _, cfg := range pushCfgResp.Configs {
 		var object interface{}
 		jsonBytes := []byte(cfg.Config)
 		json.Unmarshal(jsonBytes, &object)
 
 		m := object.(map[string]interface{})
+		fmt.Println("RHAEGON: ", m)
 		switch strings.ToLower(m["kind"].(string)) {
+
 		case "workload":
 			var workloadObj workload.Workload
 			err := json.Unmarshal(jsonBytes, &workloadObj)
 			if err != nil {
-				log.Errorf("HARNESS | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
+				log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
 			}
 			spec := workloadObj.Spec.Interfaces
-			// Get the first mac
-			for k := range spec {
-				macAddr = append(macAddr, k)
-				break
+			for k, v := range spec {
+				if matchingVLAN == v.ExternalVlan {
+					if workloadObj.Spec.HostName == wrkldNodeName1 {
+						wrkldMac1 = k
+						usegVlan1 = v.MicroSegVlan
+						externalVlan1 = v.ExternalVlan
+
+					}
+					if workloadObj.Spec.HostName == wrkldNodeName2 {
+						wrkldMac2 = k
+						usegVlan2 = v.MicroSegVlan
+						externalVlan2 = v.ExternalVlan
+
+					}
+
+				}
 			}
 		}
-
-		workloads := []*iota.Workload{
-			{
-				WorkloadName: "ping-app-1",
-				NodeName:     "naples-node-1",
-				EncapVlan:    100,
-				IpPrefix:     "177.75.132.4/24",
-				MacAddress:   macAddr[0],
-				Interface:    "lif100",
-				UplinkVlan:   1,
-			},
-			{
-				WorkloadName: "ping-app-2",
-				NodeName:     "naples-node-2",
-				EncapVlan:    100,
-				IpPrefix:     "177.75.132.5/24",
-				MacAddress:   macAddr[1],
-				Interface:    "lif100",
-				UplinkVlan:   1,
-			},
-		}
-
-		wrkloadMsg := iota.WorkloadMsg{
-			WorkloadOp:  iota.Op_ADD,
-			Workloads:   workloads,
-			ApiResponse: &iota.IotaAPIResponse{},
-		}
-
-		_, err = topoClient.AddWorkloads(context.Background(), &wrkloadMsg)
-		if err != nil {
-			t.Errorf("AddWorkloads call failed. Err: %v", err)
-			t.FailNow()
-		}
-
 	}
+
+	workloads := []*iota.Workload{
+		{
+			WorkloadName: "ping-app-1",
+			NodeName:     "naples-node-1",
+			EncapVlan:    usegVlan1,
+			IpPrefix:     "177.75.132.4/24",
+			MacAddress:   wrkldMac1,
+			Interface:    "lif100",
+			UplinkVlan:   externalVlan1,
+			PinnedPort:   1,
+		},
+		{
+			WorkloadName: "ping-app-2",
+			NodeName:     "naples-node-2",
+			EncapVlan:    usegVlan2,
+			IpPrefix:     "177.75.132.5/24",
+			MacAddress:   wrkldMac2,
+			Interface:    "lif100",
+			UplinkVlan:   externalVlan2,
+			PinnedPort:   1,
+		},
+	}
+
+	wrkloadMsg := iota.WorkloadMsg{
+		WorkloadOp:  iota.Op_ADD,
+		Workloads:   workloads,
+		ApiResponse: &iota.IotaAPIResponse{},
+	}
+
+	_, err = topoClient.AddWorkloads(context.Background(), &wrkloadMsg)
+	if err != nil {
+		t.Errorf("AddWorkloads call failed. Err: %v", err)
+		t.FailNow()
+	}
+
 }
 
 /*
