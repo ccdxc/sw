@@ -235,6 +235,8 @@ cpucb_get (CpuCbGetRequest& req, CpuCbGetResponseMsg *resp)
     rsp->mutable_status()->set_cpucb_handle(cpucb->hal_handle);
     rsp->mutable_spec()->set_descr_addr_oob_count(cpucb->descr_addr_oob_count);
     rsp->mutable_spec()->set_total_tx_pkts(cpucb->total_tx_pkts);
+    rsp->mutable_spec()->set_total_rx_pkts(cpucb->total_rx_pkts);
+    rsp->mutable_spec()->set_rx_qfull_drop_errors(cpucb->rx_qfull_drop_errors);
   
     // fill stats of this CPU CB
     rsp->set_api_status(types::API_STATUS_OK);

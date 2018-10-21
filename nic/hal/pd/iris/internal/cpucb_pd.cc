@@ -126,6 +126,8 @@ p4pd_get_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd)
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for CPU CB");
         return HAL_RET_HW_FAIL;
     }
+    cpucb_pd->cpucb->total_rx_pkts = ntohll(data.u.cpu_rxdma_initial_action_d.rx_processed);
+    cpucb_pd->cpucb->rx_qfull_drop_errors = ntohll(data.u.cpu_rxdma_initial_action_d.rx_ring_full_drop);
     return HAL_RET_OK;
 }
 

@@ -38,6 +38,8 @@ typedef struct cpucb_s {
     uint32_t              debug_dol;               // Debug via dol
     uint64_t              descr_addr_oob_count;
     uint64_t              total_tx_pkts;
+    uint64_t              total_rx_pkts;
+    uint64_t              rx_qfull_drop_errors;
     // PD state
     void                  *pd;                     // all PD specific state
 
