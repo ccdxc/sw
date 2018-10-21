@@ -26,6 +26,7 @@ const (
 	naplesSimHostIntfPrefix = "lif"
 	naplesPciDevicePrefix   = "Device"
 	mellanoxPciDevicePrefix = "Mellanox Technologies"
+	bareMetalWorkloadName   = "bareMetalWorkload"
 )
 
 var (
@@ -293,19 +294,7 @@ func (naples *naplesSimNode) configureWorkloadInHntap(in *iota.Workload) error {
 	return nil
 }
 
-// AddWorkload brings up a workload type on a given node
-func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
-
-	dnode.logger.Printf("Adding workload : %s", in.GetWorkloadName())
-	if _, ok := dnode.worloadMap[in.GetWorkloadName()]; ok {
-		msg := "Trying to add workload which already exists"
-		dnode.logger.Println(msg)
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}
-		return resp, nil
-	}
-
-	wload := newWorkload()
-	dnode.logger.Printf("Added workload : %s", in.GetWorkloadName())
+func (dnode *dataNode) setupWorkload(wload workload, in *iota.Workload) (*iota.Workload, error) {
 	if err := wload.BringUp(in.GetWorkloadName(), Common.IotaWorkloadImage); err != nil {
 		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
 		dnode.logger.Error(msg)
@@ -319,7 +308,6 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 			msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
 			dnode.logger.Error(msg)
 			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
-			wload.TearDown()
 			return resp, errors.New(msg)
 		}
 	}
@@ -329,9 +317,42 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 		wload.MoveInterface(in.GetInterface())
 	}
 
-	dnode.logger.Printf("Attaching interface to workload : %s done", in.GetWorkloadName())
-	dnode.worloadMap[in.GetWorkloadName()] = wload
 	resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
+	return resp, nil
+}
+
+// AddWorkload brings up a workload type on a given node
+func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
+
+	var wload workload
+	if in.WorkloadName != "" {
+		dnode.logger.Printf("Adding workload : %s", in.GetWorkloadName())
+		if _, ok := dnode.worloadMap[in.GetWorkloadName()]; ok {
+			msg := "Trying to add workload which already exists"
+			dnode.logger.Println(msg)
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}
+			return resp, nil
+		}
+		wload = newWorkload()
+	} else {
+		var ok bool
+		if wload, ok = dnode.worloadMap[bareMetalWorkloadName]; !ok {
+			dnode.logger.Printf("Adding bare metal workload : %s", bareMetalWorkloadName)
+			wload = newBareMetalWorkload()
+		}
+		in.WorkloadName = bareMetalWorkloadName
+	}
+
+	dnode.logger.Printf("Setting up workload : %s", in.GetWorkloadName())
+	resp, err := dnode.setupWorkload(wload, in)
+
+	if err != nil || resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+		wload.TearDown()
+		return resp, nil
+	}
+
+	dnode.worloadMap[in.GetWorkloadName()] = wload
+	dnode.logger.Printf("Added workload : %s", in.GetWorkloadName())
 	return resp, nil
 }
 
@@ -343,8 +364,8 @@ func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, err
 		return resp, nil
 	}
 
-	wload, _ := naples.worloadMap[in.GetWorkloadName()]
-
+	wload, _ := naples.dataNode.worloadMap[in.GetWorkloadName()]
+	/* Notify Hntap of the workload */
 	if err := naples.configureWorkloadInHntap(in); err != nil {
 		naples.logger.Errorf("Error in configuring workload to hntap", err.Error())
 		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
@@ -363,16 +384,18 @@ func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, err
 		return resp, nil
 	}
 
-	naples.worloadMap[in.GetWorkloadName()] = wload
-
-	/* Notify Hntap of the workload */
 	resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
 	return resp, nil
 }
 
 // DeleteWorkload deletes a given workload
 func (dnode *dataNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, error) {
-	dnode.logger.Printf("Deleteing workload : %s", in.GetWorkloadName())
+	dnode.logger.Printf("Deleting workload : %s", in.GetWorkloadName())
+
+	if in.GetWorkloadName() == "" {
+		in.WorkloadName = bareMetalWorkloadName
+	}
+
 	if _, ok := dnode.worloadMap[in.GetWorkloadName()]; !ok {
 		dnode.logger.Println("Trying to delete workload which does not exist")
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}
@@ -544,17 +567,15 @@ func (naples *naplesHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, erro
 	}
 
 	wload, _ := naples.worloadMap[in.GetWorkloadName()]
-
 	if err := wload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(),
 		int(in.GetEncapVlan())); err != nil {
 		naples.logger.Errorf("Error in sending arp probe", err.Error())
-		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
 		delete(naples.worloadMap, in.GetWorkloadName())
 		wload.TearDown()
 		return resp, nil
 	}
 
-	/* Notify Hntap of the workload */
 	resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
 	return resp, nil
 }

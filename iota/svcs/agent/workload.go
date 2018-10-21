@@ -23,6 +23,9 @@ type workload interface {
 	TearDown()
 }
 
+type bareMetalWorkload struct {
+}
+
 type containerWorkload struct {
 	containerHandle *Utils.Container
 }
@@ -56,7 +59,7 @@ func (app *containerWorkload) MoveInterface(name string) error {
 
 }
 
-var runArpCmd = func(app *containerWorkload, ip string, intf string) error {
+var runArpCmd = func(app workload, ip string, intf string) error {
 	arpCmd := []string{"arping", "-c", "5", "-U", ip, "-I", intf}
 	if retCode, stdout, _, _ := app.RunCommand(arpCmd, 0, false, false); retCode != 0 {
 		return errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, stdout)
@@ -123,9 +126,89 @@ func (app *containerWorkload) IsWorkloadHealthy() bool {
 }
 
 func (app *containerWorkload) TearDown() {
-	app.containerHandle.Stop()
+	if app.containerHandle != nil {
+		app.containerHandle.Stop()
+	}
+}
+
+func (app *bareMetalWorkload) BringUp(name string, image string) error {
+	return nil
+}
+
+func (app *bareMetalWorkload) AddVlanInterface(parentIntf string, parentMacAddress string, vlan int) (string, error) {
+	return "", nil
+}
+
+func (app *bareMetalWorkload) MoveInterface(name string) error {
+
+	return nil
+
+}
+
+func (app *bareMetalWorkload) SendArpProbe(ip string, intf string, vlan int) error {
+
+	if ip == "" {
+		return nil
+	}
+
+	if vlan != 0 {
+		intf = vlanIntf(intf, vlan)
+	}
+
+	return runArpCmd(app, ip, intf)
+
+}
+
+func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipaddress string, vlan int) error {
+
+	ifconfigCmd := []string{"ifconfig", name, "up"}
+	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
+		return errors.Errorf("Could not bring up parent interface %s : %s", name, stdout)
+	}
+	intfToAttach := name
+
+	if vlan != 0 {
+		vlanintf := vlanIntf(name, vlan)
+		addVlanCmd := []string{"ip", "link", "add", "link", name, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+		if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
+			return errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", name, vlan, stdout)
+		}
+		intfToAttach = vlanintf
+	}
+
+	if macAddress != "" {
+		setMacAddrCmd := []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
+		if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
+			return errors.Wrap(err, stdout)
+		}
+	}
+
+	if ipaddress != "" {
+		cmd := []string{"ifconfig", intfToAttach, ipaddress}
+		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return errors.Wrap(err, stdout)
+		}
+	}
+
+	return nil
+}
+
+func (app *bareMetalWorkload) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int32, string, string, error) {
+	retCode, stdout, err := Utils.Run(cmd, (int)(timeout), background, shell, nil)
+	return (int32)(retCode), stdout, "", err
+}
+
+func (app *bareMetalWorkload) IsWorkloadHealthy() bool {
+	return true
+}
+
+func (app *bareMetalWorkload) TearDown() {
 }
 
 func newWorkload() workload {
 	return &containerWorkload{}
+}
+
+func newBareMetalWorkload() workload {
+	return &bareMetalWorkload{}
 }

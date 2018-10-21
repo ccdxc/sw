@@ -467,8 +467,138 @@ func TestAgentService_Mellanox_Workload_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete node faild!")
 }
 
+func TestAgentService_Naples_Hw_Workload_Add_Delete(t *testing.T) {
+	var workload iota.Workload
+
+	workload.WorkloadName = "test-workload"
+	workload.NodeName = "naples"
+	workload.Interface = "test"
+	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
+	workload.EncapVlan = 500
+	workload.PinnedPort = 1
+	workload.UplinkVlan = 100
+	workload.IpPrefix = "1.1.1.1/24"
+	hntapCfgTempFile = "test/hntap-cfg.json"
+	workloadDir = "/tmp"
+	workloadResp, err := agentClient.AddWorkload(context.Background(), &workload)
+	if err != nil {
+		t.Errorf("Add Workload call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Add workload success!")
+
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
+	resp, err := agentClient.AddNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
+
+	workloadResp, err = agentClient.AddWorkload(context.Background(), &workload)
+	if err != nil {
+		t.Errorf("Add Workload call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
+
+	//Try to add again.
+	workloadResp, _ = agentClient.AddWorkload(context.Background(), &workload)
+
+	fmt.Println(workloadResp)
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
+
+	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
+	if err != nil {
+		t.Errorf("Add Workload call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete workload failed!")
+
+	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
+	if err != nil {
+		t.Errorf("Add Workload call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Delete workload success!")
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
+	nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Delete Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete node faild!")
+}
+
+func TestAgentService_Naples_Hw_baremetal_Workload_Add_Delete(t *testing.T) {
+	var workload iota.Workload
+
+	workload.WorkloadName = ""
+	workload.NodeName = "naples"
+	workload.Interface = "test"
+	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
+	workload.EncapVlan = 500
+	workload.PinnedPort = 1
+	workload.UplinkVlan = 100
+	workload.IpPrefix = "1.1.1.1/24"
+	hntapCfgTempFile = "test/hntap-cfg.json"
+	workloadDir = "/tmp"
+	workloadResp, err := agentClient.AddWorkload(context.Background(), &workload)
+	if err != nil {
+		t.Errorf("Add Workload call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Add workload success!")
+
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
+	resp, err := agentClient.AddNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
+
+	workloadResp, err = agentClient.AddWorkload(context.Background(), &workload)
+	if err != nil {
+		t.Errorf("Add Workload call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
+
+	//Try to add again.
+	workloadResp, _ = agentClient.AddWorkload(context.Background(), &workload)
+
+	fmt.Println(workloadResp)
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
+
+	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
+	if err != nil {
+		t.Errorf("Add Workload call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete workload failed!")
+
+	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
+	if err != nil {
+		t.Errorf("Add Workload call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Delete workload success!")
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
+	nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Delete Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete node faild!")
+}
+
 func init() {
-	runArpCmd = func(app *containerWorkload, ip string, intf string) error {
+	runArpCmd = func(app workload, ip string, intf string) error {
 		return nil
 	}
 }
