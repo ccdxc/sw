@@ -142,6 +142,7 @@ nic/tools/port_init_100g.sh                                         /nic/tools/
 nic/tools/port_op.sh                                                /nic/tools/
 nic/tools/check_link.sh                                             /nic/tools/
 nic/tools/check_stats.sh                                            /nic/tools/
+nic/tools/speed_change.sh                                           /nic/tools/
 
 nic/tools/start-hal-haps.sh                                         /nic/tools/
 nic/tools/sysinit.sh                                                /nic/tools/
