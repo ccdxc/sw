@@ -5,21 +5,21 @@ image:
   work_dir: "/go/src/github.com/pensando/sw/test/ci_targets/e2e"
 rebase: true
 
-warmd:
-  target: [ "go", "run", "e2e.go" ]
-  repo_dir: "/import/src/github.com/pensando"
-  create:
-    image: build-30
-    count: 1
-    resources:
-      cpus: 16
-      memory: 32
-
-  provision:
-    username: vm
-    password: vm
-    # additional vars to pass to ansible.
-    vars:
+#warmd:
+#  target: [ "go", "run", "e2e.go" ]
+#  repo_dir: "/import/src/github.com/pensando"
+#  create:
+#    image: build-30
+#    count: 1
+#    resources:
+#      cpus: 16
+#      memory: 32
+#
+#  provision:
+#    username: vm
+#    password: vm
+#    # additional vars to pass to ansible.
+#    vars:
 
 logfiles:
   - /go/src/github.com/pensando/sw/test/ci_targets/e2e/clusterlogs.tgz
