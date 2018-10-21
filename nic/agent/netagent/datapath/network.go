@@ -14,6 +14,11 @@ import (
 // CreateNetwork creates network in datapath if spec has IPv4Subnet
 // creates the l2segment and adds the l2segment on all the uplinks in datapath.
 func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var nwKey halproto.NetworkKeyHandle
 	var nwKeyOrHandle []*halproto.NetworkKeyHandle
 	var macAddr uint64
@@ -218,6 +223,11 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 
 // UpdateNetwork updates a network in datapath
 func (hd *Datapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
@@ -254,6 +264,11 @@ func (hd *Datapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) 
 // It will remove the l2seg from all the uplinks, delete the l2seg and if the spec has IPv4Subnet it will delete the
 // network in the datapath.
 func (hd *Datapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	// build vrf key
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{

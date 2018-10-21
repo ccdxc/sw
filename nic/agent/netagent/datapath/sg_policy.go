@@ -10,6 +10,11 @@ import (
 
 // CreateSGPolicy creates a security group policy in the datapath
 func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*netproto.SecurityGroup) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var fwRules []*halproto.SecurityRule
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -73,6 +78,11 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 
 // UpdateSGPolicy updates a security group policy in the datapath
 func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var fwRules []*halproto.SecurityRule
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -136,6 +146,11 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 
 // DeleteSGPolicy deletes a security group policy in the datapath
 func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: vrfID,

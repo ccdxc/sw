@@ -12,6 +12,11 @@ import (
 
 // CreateRoute creates a Route in the datapath
 func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -138,6 +143,11 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 
 // UpdateRoute updates a Route in the datapath
 func (hd *Datapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -264,6 +274,11 @@ func (hd *Datapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 
 // DeleteRoute deletes a Route in the datapath
 func (hd *Datapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,

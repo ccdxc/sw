@@ -11,6 +11,11 @@ import (
 
 // CreateVrf creates a vrf
 func (hd *Datapath) CreateVrf(vrfID uint64, vrfType string) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var vrf halproto.VrfType
 	if strings.ToLower(vrfType) == "infra" {
 		vrf = halproto.VrfType_VRF_TYPE_INFRA
@@ -55,6 +60,11 @@ func (hd *Datapath) CreateVrf(vrfID uint64, vrfType string) error {
 
 // DeleteVrf deletes a vrf
 func (hd *Datapath) DeleteVrf(vrfID uint64) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 
 	vrfDelReq := halproto.VrfDeleteRequest{
 		KeyOrHandle: &halproto.VrfKeyHandle{
@@ -91,6 +101,11 @@ func (hd *Datapath) DeleteVrf(vrfID uint64) error {
 
 // UpdateVrf deletes a tenant
 func (hd *Datapath) UpdateVrf(vrfID uint64) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfSpec := halproto.VrfSpec{}
 	vrfReqMsg := halproto.VrfRequestMsg{
 		Request: []*halproto.VrfSpec{&vrfSpec},

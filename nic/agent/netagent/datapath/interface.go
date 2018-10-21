@@ -30,9 +30,9 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 			log.Errorf("Error creating lif. Err: %v", err)
 			return err
 		}
-		hd.Lock()
+		//hd.Lock()
 		hd.DB.LifDB[objectKey(&ns.ObjectMeta)] = lifReqMsg
-		hd.Unlock()
+		//hd.Unlock()
 		return nil
 
 	case "UPLINK_ETH", "UPLINK_MGMT":
@@ -108,9 +108,9 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 		}
 	}
 
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.InterfaceDB[objectKey(&ns.ObjectMeta)] = ifReqMsg
-	hd.Unlock()
+	//hd.Unlock()
 	return nil
 }
 
@@ -136,10 +136,10 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Names
 			return err
 		}
 		// save the lif delete message
-		hd.Lock()
+		//hd.Lock()
 		hd.DB.LifDelDB[objectKey(&intf.ObjectMeta)] = lifDelReqMsg
 		delete(hd.DB.LifDB, objectKey(&intf.ObjectMeta))
-		hd.Unlock()
+		//hd.Unlock()
 
 		return nil
 	case "ENIC":
@@ -168,10 +168,10 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Names
 		return err
 	}
 	// save the lif delete message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.InterfaceDelDB[objectKey(&intf.ObjectMeta)] = ifDelReqMsg
 	delete(hd.DB.LifDB, objectKey(&intf.ObjectMeta))
-	hd.Unlock()
+	//hd.Unlock()
 	return nil
 
 }
@@ -197,9 +197,9 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 			log.Errorf("Error creating lif. Err: %v", err)
 			return err
 		}
-		hd.Lock()
+		//hd.Lock()
 		hd.DB.LifDB[objectKey(&ns.ObjectMeta)] = lifReqMsg
-		hd.Unlock()
+		//hd.Unlock()
 		return nil
 
 	case "UPLINK":
@@ -235,9 +235,9 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 		log.Errorf("Error updating interface. Err: %v", err)
 		return err
 	}
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.InterfaceDB[objectKey(&ns.ObjectMeta)] = ifReqMsg
-	hd.Unlock()
+	//hd.Unlock()
 	return nil
 }
 

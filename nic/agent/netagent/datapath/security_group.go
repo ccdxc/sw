@@ -10,6 +10,11 @@ import (
 
 // CreateSecurityGroup creates a security group
 func (hd *Datapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
 		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
@@ -30,15 +35,20 @@ func (hd *Datapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// save the sg message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.SgDB[objectKey(&sg.ObjectMeta)] = &sgmsg
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil
 }
 
 // UpdateSecurityGroup updates a security group
 func (hd *Datapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
 		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
@@ -59,15 +69,20 @@ func (hd *Datapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// save the sg message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.SgDB[objectKey(&sg.ObjectMeta)] = &sgmsg
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil
 }
 
 // DeleteSecurityGroup deletes a security group
 func (hd *Datapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	// build security group message
 	sgdel := halproto.SecurityGroupDeleteRequest{
 		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
@@ -88,9 +103,9 @@ func (hd *Datapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// delete the sg message
-	hd.Lock()
+	//hd.Lock()
 	delete(hd.DB.SgDB, objectKey(&sg.ObjectMeta))
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil
 }

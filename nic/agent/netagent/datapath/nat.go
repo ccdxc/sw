@@ -16,6 +16,11 @@ import (
 
 // CreateNatPool creates a NAT Pool in the datapath
 func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -104,6 +109,11 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 
 // UpdateNatPool updates a NAT Pool in the datapath
 func (hd *Datapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -192,6 +202,11 @@ func (hd *Datapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 
 // DeleteNatPool deletes a NAT Pool in the datapath
 func (hd *Datapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -244,6 +259,11 @@ func (hd *Datapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 
 // CreateNatPolicy creates a NAT Policy in the datapath
 func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*types.NatPoolRef, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -318,6 +338,11 @@ func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 
 // UpdateNatPolicy updates a NAT Policy in the datapath
 func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[string]*types.NatPoolRef, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -391,6 +416,11 @@ func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 
 // DeleteNatPolicy deletes a NAT Policy in the datapath
 func (hd *Datapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -443,6 +473,11 @@ func (hd *Datapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespa
 
 // CreateNatBinding creates a NAT Binding in the datapath
 func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPool, natPoolVrfID uint64, ns *netproto.Namespace) (*netproto.NatBinding, error) {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,
@@ -527,6 +562,11 @@ func (hd *Datapath) UpdateNatBinding(np *netproto.NatBinding, ns *netproto.Names
 
 // DeleteNatBinding deletes a NAT Binding in the datapath
 func (hd *Datapath) DeleteNatBinding(nb *netproto.NatBinding, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	vrfKey := &halproto.VrfKeyHandle{
 		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: ns.Status.NamespaceID,

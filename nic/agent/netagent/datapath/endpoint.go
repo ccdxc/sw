@@ -18,6 +18,11 @@ import (
 
 // CreateLocalEndpoint creates a local endpoint in the datapath
 func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*types.IntfInfo, error) {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var halIPAddresses []*halproto.IPAddress
 	var lifHandle *halproto.LifKeyHandle
 
@@ -180,15 +185,20 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	}
 
 	// save the endpoint message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil, nil
 }
 
 // UpdateLocalEndpoint updates the endpoint
 func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var halIPAddresses []*halproto.IPAddress
 	// convert mac address
 	if len(ep.Spec.IPv4Address) > 0 {
@@ -269,15 +279,20 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		return err
 	}
 	// save the endpoint message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil
 }
 
 // DeleteLocalEndpoint deletes an endpoint
 func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, enicID uint64) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
@@ -365,10 +380,10 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	}
 
 	// save the endpoint delete message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.EndpointDelDB[objectKey(&ep.ObjectMeta)] = epDelReq
 	delete(hd.DB.EndpointDB, objectKey(&ep.ObjectMeta))
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil
 }
@@ -377,6 +392,11 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 // CreateRemoteEndpoint creates remote endpoint
 func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var halIPAddresses []*halproto.IPAddress
 
 	// convert mac address
@@ -477,15 +497,20 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	}
 
 	// save the endpoint message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil
 }
 
 // UpdateRemoteEndpoint updates an existing endpoint
 func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var halIPAddresses []*halproto.IPAddress
 	// convert mac address
 	if len(ep.Spec.IPv4Address) > 0 {
@@ -565,15 +590,20 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	}
 
 	// save the endpoint message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil
 }
 
 // DeleteRemoteEndpoint deletes remote endpoint
 func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network) error {
+	// This will ensure that only one datapath config will be active at a time. This is a temporary restriction
+	// to ensure that HAL will use a single config thread , this will be removed prior to FCS to allow parallel configs to go through.
+	// TODO Remove Global Locking
+	hd.Lock()
+	defer hd.Unlock()
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
@@ -627,10 +657,10 @@ func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	}
 
 	// save the endpoint delete message
-	hd.Lock()
+	//hd.Lock()
 	hd.DB.EndpointDelDB[objectKey(&ep.ObjectMeta)] = epDelReq
 	delete(hd.DB.EndpointDB, objectKey(&ep.ObjectMeta))
-	hd.Unlock()
+	//hd.Unlock()
 
 	return nil
 }

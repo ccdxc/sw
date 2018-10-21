@@ -1,9 +1,8 @@
 package datapath
 
 import (
-	"sync"
-
 	"github.com/golang/mock/gomock"
+	"sync"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/rpckit"
