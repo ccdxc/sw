@@ -12,6 +12,7 @@ struct cpu_rx_write_arqrx_d d;
         
 %%
     .param ARQRX_BASE
+    .param cpu_rx_ring_full_drop_error
     .align
 cpu_rx_write_arq_start:
     CAPRI_CLEAR_TABLE0_VALID
@@ -85,12 +86,16 @@ cpu_write_arqrx_done:
     nop
         
 cpu_rx_arq_full_error:
-    CAPRI_CLEAR_TABLE0_VALID
     CAPRI_CLEAR_TABLE1_VALID
     CAPRI_CLEAR_TABLE2_VALID
     CAPRI_CLEAR_TABLE3_VALID
     phvwri  p.p4_intr_global_drop, 1
-    //illegal
+    add    r3, r0, k.common_phv_qstate_addr
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
+                         cpu_rx_ring_full_drop_error,
+                         r3,
+                         TABLE_SIZE_64_BITS)
+
     nop.e
     nop
         

@@ -26,6 +26,7 @@ SRC_FILES := \
     $(SRC_DIR)/cpu_page_alloc.s \
     $(SRC_DIR)/cpu_hash_calc_id.s \
     $(SRC_DIR)/cpu_write_arq.s \
+    $(SRC_DIR)/cpu_rx_ring_full_drop_error.s \
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

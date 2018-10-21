@@ -24,6 +24,7 @@ cpu_rx_read_shared_stage0_start:
     phvwr   p.t0_s2s_payload_len, k.{cpu_app_header_packet_len_sbit0_ebit5...cpu_app_header_packet_len_sbit6_ebit13}
     phvwr   p.common_phv_debug_dol, d.u.cpu_rxdma_initial_action_d.debug_dol
     phvwr   p.common_phv_flags, d.u.cpu_rxdma_initial_action_d.flags
+    phvwr   p.common_phv_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
 cpu_rx_hash_key:
 
@@ -43,5 +44,6 @@ table_read_DESC_SEMAPHORE:
                          cpu_rx_read_desc_pindex_start,
                          r3,
                          TABLE_SIZE_64_BITS)
+    tbladd d.u.cpu_rxdma_initial_action_d.rx_processed, 1
     nop.e
     nop
