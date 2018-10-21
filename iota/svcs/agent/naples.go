@@ -422,10 +422,15 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		}
 
 		for _, cmd := range in.Commands {
-			if _, ok := dnode.worloadMap[cmd.GetWorkloadName()]; !ok {
+			wloadName := cmd.GetWorkloadName()
+			if cmd.GetWorkloadName() == "" {
+				wloadName = bareMetalWorkloadName
+			}
+			if _, ok := dnode.worloadMap[wloadName]; !ok {
 				dnode.logger.Errorf("Workload %s does not exist on node %s", cmd.GetWorkloadName(), dnode.NodeName())
 				return errors.New("Invalid request")
 			}
+			cmd.WorkloadName = wloadName
 		}
 		return nil
 	}
