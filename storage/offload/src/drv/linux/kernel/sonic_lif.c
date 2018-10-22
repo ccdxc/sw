@@ -1173,16 +1173,6 @@ static int sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
 	return err;
 }
 
-static int sonic_lif_seq_q_enable(struct queue *q, uint16_t opcode)
-{
-	return sonic_lif_seq_q_control(q, CMD_OPCODE_SEQ_QUEUE_ENABLE);
-}
-
-static int sonic_lif_seq_q_disable(struct queue *q, uint16_t opcode)
-{
-	return sonic_lif_seq_q_control(q, CMD_OPCODE_SEQ_QUEUE_DISABLE);
-}
-
 int sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res, uint16_t opcode)
 {
 	unsigned int i = 0;
