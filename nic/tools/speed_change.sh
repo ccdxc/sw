@@ -4,6 +4,14 @@ NIC_DIR=/nic
 
 # speed change to 10G
 # /nic/tools/speed_change.sh <1|5> 10
+# e.g. change ports 1-4 to 10G
+# /nic/tools/speed_change.sh 1 10
+# e.g. change ports 5-8 to 10G
+# /nic/tools/speed_change.sh 5 10
+# e.g. change port 1 to 100G
+# /nic/tools/speed_change.sh 1 100
+# e.g. change port 5 to 100G
+# /nic/tools/speed_change.sh 5 100
 
 if [[ "$#" != "2" ]]; then
     echo "Usage: $0 <port> <new_speed>"
