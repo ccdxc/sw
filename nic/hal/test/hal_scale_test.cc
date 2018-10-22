@@ -693,7 +693,8 @@ delete_l2segments (uint64_t   l2seg_id_start,
 // CLI
 static int
 setup_sim_config (hal_client& hclient, uint64_t vrf_id, uint64_t l2seg_id,
-                  uint64_t sg_id, uint64_t if_id, uint64_t nw_id)
+                  uint64_t sg_id, uint64_t if_id, uint64_t nw_id,
+                  uint32_t sip, uint32_t dip)
 {
     uint64_t     vrf_handle, l2seg_handle, sg_handle;
     uint64_t     nw1_handle, nw2_handle, uplink_if_handle;
@@ -761,8 +762,8 @@ setup_sim_config (hal_client& hclient, uint64_t vrf_id, uint64_t l2seg_id,
             dst_ip[i] = distribution(generator);
         }
     } else {
-        src_ip[0] = 0x0a0a0102;
-        dst_ip[0] = 0x0a0a0202;
+        src_ip[0] = sip ? sip : 0x0a0a0102;
+        dst_ip[0] = dip ? dip : 0x0a0a0202;
 
         for (int i = 1; i < 14; i++) {
             src_ip[i] = src_ip[i-1] + 1;
@@ -909,7 +910,7 @@ setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
     uint32_t     session_count = 0, batch_count = 0;
     bool         send = false;
 
-    std::cout << "sip : " << sip << ", dip : " << dip
+    std::cout << "sip : " << sip << ", dip : " << dip << std::endl
               << "sport_lo : " << sport_lo << ", sport_hi : " << sport_hi
               << ", dport : " << dport << std::endl;
 
@@ -946,21 +947,28 @@ setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
     return 0;
 }
 
-//------------------------------------------------------------------------------
-// Supported arguments
-// --m seq | random or --mode seq | random: Source and Destination IP addresses 
-//                                          of session are sequential | random
-//                                          (default they are chosen at random)
-// --n xx or --num-sessions xx: Specify number of sessions to be created
-// --b xx or --batch-size xx: Specify batch size (Needs to be the last argument always)
-//------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------
+// Supported arguments:
+// --target(-t) sim | hw : Specify target (default is hw)
+// --mode(-m) seq | random : Specify mode of selecting src and dest IP addresses (default is random)
+// --num-sessions(-n) <num> : Specify number of sessions to create (default is 10)
+// --batch-size(-b) <size> : Specify number of session creates in one grpc message (default is 1)
+// --no-cleanup(-c) : No cleanup of created objects
+// --duplicate-sessions(-e) : Create duplicate sessions
+// --sip(-s) <ip> : Specify source IP address
+// --dip(-d) <ip> : Specify destination IP address
+// --sport-low(-l) <port> : Specify low source port
+// --sport-high(-h) <port> : Specify high source port
+// --dport(-p) <port> : Specify destination port
+// Sample: ./hal_scale_test  --target sim  --num-sessions 100  --batch-size 10  --no-cleanup
+//----------------------------------------------------------------------------------------------------
 int
 main (int argc, char** argv)
 {
     uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 2, nw_id = 1;
     std::string  svc_endpoint = hal_svc_endpoint_;
     int          oc;
-    uint32_t     target, sip = 0, dip = 0;
+    uint32_t     target = HW, sip = 0, dip = 0;
     uint16_t     sport_lo = 0, sport_hi = 0, dport = 0;
 
     struct option longopts[] = {
@@ -970,16 +978,17 @@ main (int argc, char** argv)
        { "target",              required_argument,  NULL, 't' },
        { "no-cleanup",          no_argument,        NULL, 'c' },
        { "duplicate-sessions",  no_argument,        NULL, 'e' },
-       { "sip",                 no_argument,        NULL, 's' },
-       { "dip",                 no_argument,        NULL, 'd' },
-       { "sport-low",           no_argument,        NULL, 'l' },
-       { "sport-high",          no_argument,        NULL, 'h' },
-       { "dport",               no_argument,        NULL, 'p' },
+       { "sip",                 required_argument,  NULL, 's' },
+       { "dip",                 required_argument,  NULL, 'd' },
+       { "sport-low",           required_argument,  NULL, 'l' },
+       { "sport-high",          required_argument,  NULL, 'h' },
+       { "dport",               required_argument,  NULL, 'p' },
+       { "help",                no_argument,        NULL, 'x' },
        { 0,                     0,                  0,     0  }
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":cem:n:b:s:d:l:h:p:t:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":cxem:n:b:s:d:l:h:p:t:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'm':
             if (!strcmp(optarg, "seq")) {
@@ -1002,10 +1011,28 @@ main (int argc, char** argv)
             g_dup_session = true;
             break;
         case 's':
-            sip = atoi(optarg);
+            {
+                int ret = 0;
+                int ip[4];
+                ret = sscanf(optarg, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+                if (ret != 4) {
+                    std::cout << "Invalid IP argument\n";
+                    return 0;
+                }
+                sip = (ip[0] << 24) + (ip[1] << 16) + (ip[2] << 8) + ip[3];
+            }
             break;
         case 'd':
-            dip = atoi(optarg);
+            {
+                int ret = 0;
+                int ip[4];
+                ret = sscanf(optarg, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+                if (ret != 4) {
+                    std::cout << "Invalid IP argument\n";
+                    return 0;
+                }
+                dip = (ip[0] << 24) + (ip[1] << 16) + (ip[2] << 8) + ip[3];
+            }
             break;
         case 'l':
             sport_lo = atoi(optarg);
@@ -1019,9 +1046,28 @@ main (int argc, char** argv)
         case 't':
             if (!strcmp(optarg, "sim")) {
                 target = SIM;
-            } else {
+            } else if (!strcmp(optarg, "hw")){
                 target = HW;
+            } else {
+                std::cout << "Invalid Argument" << std::endl;
+                return 0;
             }
+            break;
+        case 'x':
+            std::cout << "hal_scale_test Usage:\n"
+                          "--target(-t) sim | hw : Specify target (default is hw)\n"
+                          "--mode(-m) seq | random : Specify mode of selecting src and dest IP addresses (default is random)\n"
+                          "--num-sessions(-n) <num> : Specify number of sessions to create (default is 10)\n"
+                          "--batch-size(-b) <size> : Specify number of session creates in one grpc message (default is 1)\n"
+                          "--no-cleanup(-c) : No cleanup of created objects\n"
+                          "--duplicate-sessions(-e) : Create duplicate sessions\n"
+                          "--sip(-s) <ip> : Specify source IP address\n"
+                          "--dip(-d) <ip> : Specify destination IP address\n"
+                          "--sport-low(-l) <port> : Specify low source port\n"
+                          "--sport-high(-h) <port> : Specify high source port\n"
+                          "--dport(-p) <port> : Specify destination port\n"
+                          "Sample: ./hal_scale_test --target sim --num-sessions 100 --batch-size 10 --no-cleanup\n";
+            return 0;
             break;
         case ':':
             break;
@@ -1041,7 +1087,7 @@ main (int argc, char** argv)
               << "batch size is " << g_batch_size << std::endl;
 
     if (target == SIM) {
-        setup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id);
+        setup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id, sip, dip);
     } else {
         // heimdall would have pushed the config already, just setup sessions
         vrf_id = 4;    // TODO: fix this to match heimdall !!
