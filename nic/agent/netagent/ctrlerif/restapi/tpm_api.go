@@ -18,7 +18,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
-	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	tpmprotos "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 )
 
 // addFlowExportPolicyAPIRoutes adds FlowExportPolicy
