@@ -203,9 +203,11 @@ init_service_params(const struct pnso_service_request *svc_req,
 		break;
 	case PNSO_SVC_TYPE_HASH:
 		svc_params->u.sp_hash_desc = &pnso_svc->u.hash_desc;
+		svc_params->sp_dst_blist = NULL;
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_params->u.sp_chksum_desc = &pnso_svc->u.chksum_desc;
+		svc_params->sp_dst_blist = NULL;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
