@@ -625,8 +625,10 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 			cpu_to_be16(svc_info->si_seq_info.sqi_batch_size);
 	}
 
-	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 "  desc_size: %lu",
-			ring_id, index, (uint64_t) src_desc, desc_size);
+	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 "  desc_size: %lu batch_mode: %d batch_size: %d",
+			ring_id, index, (uint64_t) src_desc, desc_size,
+			svc_info->si_seq_info.sqi_batch_mode,
+			svc_info->si_seq_info.sqi_batch_size);
 	PPRINT_SEQUENCER_DESC(seq_desc);
 
 	OSAL_LOG_DEBUG("exit!");

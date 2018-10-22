@@ -136,9 +136,9 @@ struct sequencer_info {
 };
 
 struct service_batch_info {
-	uint8_t sbi_mode;
-	uint16_t sbi_num_entries;
-	uint16_t sbi_index;
+	uint16_t sbi_num_entries;	/* totol # of requests */
+	uint16_t sbi_bulk_desc_idx;	/* index within batch info descs */
+	uint16_t sbi_desc_idx;	/* index within bulk desc */
 	union {
 		struct cpdc_desc *sbi_cpdc_desc;
 		struct crypto_desc *sbi_crypto_desc;
@@ -302,7 +302,7 @@ pnso_error_t chn_build_batch_chain(struct batch_info *batch_info,
 		void *pnso_poll_fn, void **pnso_poll_ctx);
 
 struct service_chain *chn_get_first_service_chain(
-		struct batch_info *batch_info);
+		struct batch_info *batch_info, uint32_t idx);
 
 struct service_chain *chn_get_last_service_chain(
 		struct batch_info *batch_info);

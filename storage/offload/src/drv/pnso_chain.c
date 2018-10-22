@@ -88,12 +88,12 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_sgl_pdma",
 			(uint64_t) svc_info->si_sgl_pdma);
 
-	OSAL_LOG_DEBUG("%30s: %d", "sbi_mode",
-			svc_info->si_batch_info.sbi_mode);
 	OSAL_LOG_DEBUG("%30s: %d", "sbi_num_entries",
 			svc_info->si_batch_info.sbi_num_entries);
-	OSAL_LOG_DEBUG("%30s: %d", "sbi_index",
-			svc_info->si_batch_info.sbi_index);
+	OSAL_LOG_DEBUG("%30s: %d", "sbi_bulk_desc_idx",
+			svc_info->si_batch_info.sbi_bulk_desc_idx);
+	OSAL_LOG_DEBUG("%30s: %d", "sbi_desc_idx",
+			svc_info->si_batch_info.sbi_desc_idx);
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_pc_res",
 			(uint64_t) svc_info->si_pc_res);
@@ -174,13 +174,13 @@ pprint_chain(const struct service_chain *chain)
 }
 
 struct service_chain *
-chn_get_first_service_chain(struct batch_info *batch_info)
+chn_get_first_service_chain(struct batch_info *batch_info, uint32_t idx)
 {
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
 
-	batch_page = GET_PAGE(batch_info, 0);
-	page_entry = GET_PAGE_ENTRY(batch_page, 0);
+	batch_page = GET_PAGE(batch_info, idx);
+	page_entry = GET_PAGE_ENTRY(batch_page, idx);
 	return page_entry->bpe_chain;
 }
 
@@ -282,6 +282,7 @@ init_service_batch_params(struct batch_info *batch_info,
 		struct service_info *svc_info)
 {
 	struct service_batch_info *svc_batch_info = &svc_info->si_batch_info;
+	uint16_t bulk_desc_idx, desc_idx;
 
 	if (!(svc_info->si_flags & CHAIN_SFLAG_IN_BATCH))
 		return;
@@ -290,29 +291,37 @@ init_service_batch_params(struct batch_info *batch_info,
 			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)))
 		return;
 
-	OSAL_LOG_DEBUG("initalize batch params ... ");
+	bulk_desc_idx = batch_request_idx / MAX_PAGE_ENTRIES;
+	desc_idx = batch_request_idx % MAX_PAGE_ENTRIES;
 
-	svc_batch_info->sbi_mode = 1;
 	svc_batch_info->sbi_num_entries = batch_num_entries;
-	svc_batch_info->sbi_index = batch_request_idx;
+	svc_batch_info->sbi_bulk_desc_idx = bulk_desc_idx;
+	svc_batch_info->sbi_desc_idx = desc_idx;
 
 	switch (batch_info->bi_svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-		svc_batch_info->u.sbi_crypto_desc =
-			batch_info->u.bi_crypto_desc;
+		svc_batch_info->u.sbi_crypto_desc = (struct crypto_desc *)
+			batch_info->bi_bulk_desc[bulk_desc_idx];
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 	case PNSO_SVC_TYPE_DECOMPRESS:
 	case PNSO_SVC_TYPE_HASH:
 	case PNSO_SVC_TYPE_CHKSUM:
-		svc_batch_info->u.sbi_cpdc_desc = batch_info->u.bi_cpdc_desc;
+		svc_batch_info->u.sbi_cpdc_desc = (struct cpdc_desc *)
+			batch_info->bi_bulk_desc[bulk_desc_idx];
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
 	default:
 		OSAL_ASSERT(0);
 	}
+
+	OSAL_LOG_DEBUG("initalize batch params ... batch_num_entries: %d batch_request_idx: %d bulk_desc_idx: %d, desc_idx: %d",
+			batch_num_entries, batch_request_idx,
+			bulk_desc_idx, desc_idx);
+	OSAL_LOG_DEBUG("initalize batch params ... bulk_desc: 0x%llx",
+			(uint64_t) batch_info->bi_bulk_desc[bulk_desc_idx]);
 }
 
 static pnso_error_t

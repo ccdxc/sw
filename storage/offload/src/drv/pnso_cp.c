@@ -301,6 +301,7 @@ compress_poll(const struct service_info *svc_info)
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
+	OSAL_LOG_DEBUG("polling status_desc: 0x%llx", (uint64_t) status_desc);
 
 #if 0
 	while (status_desc->csd_valid == 0)
@@ -336,10 +337,10 @@ compress_read_status(const struct service_info *svc_info)
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
-	OSAL_LOG_DEBUG("sbi_mode: %d sbi_num_entries: %d sbi_index: %d",
-			svc_info->si_batch_info.sbi_mode,
+	OSAL_LOG_DEBUG("sbi_num_entries: %d sbi_bulk_desc_idx: %d sbi_desc_idx: %d",
 			svc_info->si_batch_info.sbi_num_entries,
-			svc_info->si_batch_info.sbi_index);
+			svc_info->si_batch_info.sbi_bulk_desc_idx,
+			svc_info->si_batch_info.sbi_desc_idx);
 
 	err = cpdc_common_read_status(cp_desc, status_desc);
 	if (err)

@@ -10,10 +10,14 @@
 extern "C" {
 #endif
 
+#include "pnso_req.h"
+#include "pnso_mpool.h"
+
 #define MAX_PAGE_ENTRIES_SHIFT_BITS	(4)	/* 16 entries per page */
 #define MAX_PAGE_ENTRIES		(1 << MAX_PAGE_ENTRIES_SHIFT_BITS)
 #define MAX_NUM_PAGES			(32)	/* 512 entries per batch */
 #define MAX_NUM_BATCH_ENTRIES		(MAX_NUM_PAGES * MAX_PAGE_ENTRIES)
+#define MAX_NUM_DESCS			MAX_NUM_PAGES
 
 #define GET_NUM_PAGES_ACTIVE(n)	\
 	((n + MAX_PAGE_ENTRIES - 1) / MAX_PAGE_ENTRIES)
@@ -31,13 +35,9 @@ struct batch_page {
 };
 
 struct batch_info {
-	uint8_t bi_svc_type;		/* type of 1st service in chain */
-	uint8_t bi_mpool_type;		/* type of pool type */
-	union {
-		struct cpdc_desc *bi_cpdc_desc;
-		struct crypto_desc *bi_crypto_desc;
-	} u;
-
+	uint16_t bi_svc_type;		/* to ensure homogeneous request */
+	enum mem_pool_type bi_mpool_type;	/* bulk desc */
+	bool bi_chain_exists;		/* at least one request chained */
 	struct per_core_resource *bi_pcr;
 
 	completion_cb_t	bi_req_cb;	/* caller supplied call-back */
@@ -45,7 +45,8 @@ struct batch_info {
 	pnso_poll_fn_t *bi_req_poll_fn;	/* poller to run in caller's thread */
 	void *bi_req_poll_ctx;		/* request context for poller */
 
-	uint32_t bi_num_entries;
+	uint32_t bi_num_entries;	/* total # of requests */
+	void *bi_bulk_desc[MAX_NUM_DESCS];	/* cpdc/crypto desc */
 	struct batch_page *bi_pages[MAX_NUM_PAGES];
 };
 
