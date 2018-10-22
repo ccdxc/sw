@@ -37,6 +37,7 @@ PACKAGES = %w[
   dhcp
   dhclient
   net-tools
+  iperf
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -46,5 +47,5 @@ run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
 
 run "mkdir -p /iota/tools/raw"
 
-copy "raw.tar.gz", "/iota/tools/raw/"
+#copy "raw.tar.gz", "/iota/tools/raw/"
 

@@ -29,7 +29,7 @@ class Workload:
         self.interface = msg.interface
         self.interface_type = msg.interface_type
         self.pinned_port = msg.pinned_port
-        self.uplink_vlan = msg.pinned_port
+        self.uplink_vlan = msg.uplink_vlan
         return
 
 def AddWorkloads(req):

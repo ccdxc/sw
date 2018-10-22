@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import glob
 
+from iota.harness.infra.utils.logger import Logger as Logger
 import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.testsuite as testsuite
 import iota.harness.infra.testbed as testbed
@@ -19,16 +20,17 @@ class YmlObject(object):
 
 def __discover_testsuites():
     suites = []
-    if GlobalOptions.mode is None:
+    if GlobalOptions.cfgmode is None:
         expr = GlobalOptions.topdir +\
                '/iota/test/%s/**/*.testsuite' %\
                (GlobalOptions.pipeline)
     else:
         expr = GlobalOptions.topdir +\
                '/iota/test/%s/%s/**/*.testsuite' %\
-               (GlobalOptions.pipeline, GlobalOptions.mode)
+               (GlobalOptions.pipeline, GlobalOptions.cfgmode)
 
     for filename in glob.iglob(expr, recursive = True):
+        Logger.info("Reading testsuite: %s" % filename)
         data = parser.YmlParse(filename)
         suites.append(data)
     return suites

@@ -1,40 +1,39 @@
 default: all
 TOPDIR                          := $(GOPATH)/src/github.com/pensando/sw/iota
-export IOTA_CMD_DIR		:= ${TOPDIR}/svcs/cmd
+export IOTA_CMD_DIR             := ${TOPDIR}/svcs/cmd
 export IOTA_AGENT_DIR           := ${IOTA_CMD_DIR}/iota-agent
-export IOTA_SERVER_DIR		:= ${IOTA_CMD_DIR}/iota-server
+export IOTA_SERVER_DIR          := ${IOTA_CMD_DIR}/iota-server
+export IOTA_BIN_DIR             := ${TOPDIR}/bin
+export IOTA_SERVER_BIN_DIR      := ${IOTA_BIN_DIR}/server
+export IOTA_AGENT_BIN_DIR       := ${IOTA_BIN_DIR}/agent
+export IOTA_AGENT_TEST_BIN_DIR  := ${IOTA_BIN_DIR}/agent/test
+SRCS := $(shell find ./ -name *.go)
 
-export IOTA_BIN_DIR		:= ${TOPDIR}/bin
-export IOTA_SERVER_BIN_DIR	:= ${IOTA_BIN_DIR}/server
-export IOTA_AGENT_BIN_DIR	:= ${IOTA_BIN_DIR}/agent
-export IOTA_AGENT_TEST_BIN_DIR := ${IOTA_BIN_DIR}/agent/test
-
-iota-server:iota-proto
+bin/server/iota_server: ${SRCS}
 	mkdir -p $(IOTA_SERVER_BIN_DIR)
 	go build -ldflags="-s -w" -o $(IOTA_SERVER_BIN_DIR)/iota_server github.com/pensando/sw/iota/svcs/cmd/iota-server
 
 iota-proto:
-	mkdir -p $(TOPDIR)/protos/pygen
-	mkdir -p $(TOPDIR)/protos/gogen
 	make  -C $(TOPDIR)/protos
 
-iota-agent:iota-proto
+bin/agent/iota_agent: ${SRCS}
 	mkdir -p $(IOTA_AGENT_BIN_DIR)
 	mkdir -p $(IOTA_AGENT_TEST_BIN_DIR)
 	go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_DIR)/iota_agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
 	go build -ldflags="-s -w" -o $(IOTA_AGENT_TEST_BIN_DIR)/iota-agent-test github.com/pensando/sw/iota/svcs/agent/test
 
-iota: iota-proto iota-agent iota-server
+iota: iota-proto bin/server/iota_server bin/agent/iota_agent
 
 .PHONY: test
 test:
 	cd ${TOPDIR}
 	go test -v ./...
-clean:
-	rm -rf ${IOTA_BIN_DIR}
-	rm -rf $(TOPDIR)/protos/pygen
-	rm -rf $(TOPDIR)/protos/gogen
 
+clean:
+	make -C $(TOPDIR)/protos clean
+	rm -rf ${IOTA_BIN_DIR}
+
+.PHONY: images
 images:
 	$(MAKE) -C workload-images deps-release
 	echo "Please do a docker push manually."

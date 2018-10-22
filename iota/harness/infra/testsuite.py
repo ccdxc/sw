@@ -25,6 +25,11 @@ class TestSuite:
             self.__valid = False
             return
 
+        if GlobalOptions.mode != self.Mode():
+            Logger.info("Skipping Testsuite: %s because of mode: %s" % (self.Name(), self.Mode()))
+            self.__valid = False
+            return
+
         Logger.info("Starting Testsuite: %s" % self.Name())
         self.__resolve_testcases()
         self.__resolve_teardown()
@@ -119,6 +124,9 @@ class TestSuite:
 
     def Name(self):
         return self.__spec.meta.name
+    
+    def Mode(self):
+        return self.__spec.meta.mode
 
     def Main(self):
         if not self.__valid:

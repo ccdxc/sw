@@ -1,29 +1,19 @@
 meta:
     name        : sim
     description : Simulation Test Suite
+    mode        : simulation
 
 packages:
     - iota.test.iris.venice
 
-# Section: 'images'
-#   List of images to used by this testsuite.
-#   This is a MANDATORY section with atleast 1 image entry.
 images:
     naples: /sw/nic/obj/images/naples-release-v1.tgz
     venice: /sw/bin/venice.tgz
     drivers: /sw/platform/drivers.tgz
 
-# Section: 'setup'
-#   List of actions to be taken during the setup phase.
-#   This is a MANDATORY section with atleast 'topology'
 setup:
-    # 'topology' is a MANDATORY parameter.
     topology: test/iris/venice/topologies/3Naples_3Venice.topology
     
-    # 'config' is an OPTIONAL section.
-    #   This section can be used to generate/push config 
-    #   before the testcases start.
-    #   Each step will be invoked in the order below.
     config  : 
         # Invokes: iota/test/iris/bringup/make_venice_cluster.py
         - step : bringup.make_venice_cluster
@@ -31,30 +21,19 @@ setup:
         - step : bringup.generate_base_config
           spec : test/iris/venice/baseconfig/sample_baseconfig.spec
 
-# Section: 'common'
-# List of common actions to be invoked during test phase.
-#   'verifs' species the list of steps to be appended to each
-#   testcase's verification steps.
 common:
     verifs:
         -   step    : verif.utils.verify_cores
         -   step    : verif.utils.verify_topology_health
 
-# Section: 'testcases'
-# List of testcases. Following are the well-known attributes of this section.
-#   'name'      : Name of the testcases (MANDATORY)
-#   'testcase'  : Testcase module. (MANDATORY)
-#   'verifs'    : Verification steps (OPTIONAL)
-#   <all-others>: Opaque to infra, passed to testcase module as native attributes
-#                 of the 'tc'(testcase) object.
 testcases:
     -   name    : PushConfig
         testcase: testcases.config.push_config
         verifs  :
-            -   step    : verif.config.verify_config_venice    # Verify at Venice Level
-            -   step    : verif.config.verify_config_agent     # Verify at Agent Level
-            -   step    : verif.config.verify_config_hal       # Verify at HAL level (using halctl)
-            -   step    : verif.config.verify_config_hw        # Verify at HW level (Correlate config)
+            #-   step    : verif.config.verify_config_venice    # Verify at Venice Level
+            #-   step    : verif.config.verify_config_agent     # Verify at Agent Level
+            #-   step    : verif.config.verify_config_hal       # Verify at HAL level (using halctl)
+            #-   step    : verif.config.verify_config_hw        # Verify at HW level (Correlate config)
 
     -   name    : CreateWorkloads
         testcase: testcases.config.create_workloads
@@ -63,27 +42,24 @@ testcases:
     -   name    : Ping_FullMesh
         testcase: testcases.networking.ping
         verifs  :
-            -   step    : verif.operstate.verify_stats_venice
-            -   step    : verif.operstate.verify_stats_agent
-            -   step    : verif.operstate.verify_stats_hw
+            #-   step    : verif.operstate.verify_stats_venice
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : Firewall_Permit
-        testcase: testcases.security.firewall_permit
-        verifs  :
-            -   step    : verif.operstate.verify_stats_venice
-            -   step    : verif.operstate.verify_stats_agent
-            -   step    : verif.operstate.verify_stats_hw
+#    -   name    : Firewall_Permit
+#        testcase: testcases.security.firewall_permit
+#        verifs  :
+#            -   step    : verif.operstate.verify_stats_venice
+#            -   step    : verif.operstate.verify_stats_agent
+#            -   step    : verif.operstate.verify_stats_hw
 
-    -   name    : Firewall_Deny
-        testcase: testcases.security.firewall_deny
-        verifs  :
-            -   step    : verif.operstate.verify_stats_venice
-            -   step    : verif.operstate.verify_stats_agent
-            -   step    : verif.operstate.verify_stats_hw
-            -   step    : verif.operstate.verify_syslogs
+#    -   name    : Firewall_Deny
+#        testcase: testcases.security.firewall_deny
+#        verifs  :
+#            -   step    : verif.operstate.verify_stats_venice
+#            -   step    : verif.operstate.verify_stats_agent
+#            -   step    : verif.operstate.verify_stats_hw
+#            -   step    : verif.operstate.verify_syslogs
 
-# Section 'teardown'
-# List of cleanup/collect actions
-# This section is 'OPTIONAL'
 teardown:
     - step      : verif.utils.collect_logs_and_cores

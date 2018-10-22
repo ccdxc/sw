@@ -12,7 +12,7 @@ sys.path.insert(0, topdir)
 cmdargs = argparse.ArgumentParser(description='IOTA Harness')
 cmdargs.add_argument('--rerun', dest='rerun', action='store_true',
                      help='Re-run mode, Skips copy and few init steps.')
-cmdargs.add_argument('--testbed-json', dest='testbed_json', default="/warmd.json",
+cmdargs.add_argument('--testbed', dest='testbed_json', default="/warmd.json",
                      help='Testbed JSON file')
 GlobalOptions = cmdargs.parse_args()
 
@@ -46,19 +46,24 @@ rerun_post_cleanup_commands = [
     "chgrp -R vm /tmp/iota",
 ]
 
-def run_commands(cmdlist):
+def run_commands(cmdlist, node_ip):
     for cmd in cmdlist:
-        fullcmd = "%s%s \"sudo %s\"" % (SSHCMD, v, cmd)
+        fullcmd = "%s%s \"sudo %s\"" % (SSHCMD, node_ip, cmd)
         print("  %s" % fullcmd)
         os.system(fullcmd)
     return
 
+def cleanup_node(node_ip):
+    print("Cleaning up %s" % node_ip)
+    if GlobalOptions.rerun:
+        run_commands(rerun_pre_cleanup_commands, node_ip)
+    run_commands(cleanup_commands, node_ip)
+    if GlobalOptions.rerun:
+        run_commands(rerun_post_cleanup_commands, node_ip)
+    return
+
 import iota.harness.infra.utils.parser as parser
+from multiprocessing.dummy import Pool as ThreadPool 
 tbspec = parser.JsonParse(GlobalOptions.testbed_json)
-for k,v in tbspec.Instances.__dict__.items():
-    print("Cleaning up %s" % v)
-    if GlobalOptions.rerun:
-        run_commands(rerun_pre_cleanup_commands)
-    run_commands(cleanup_commands)
-    if GlobalOptions.rerun:
-        run_commands(rerun_post_cleanup_commands)
+pool = ThreadPool(len(tbspec.Instances.__dict__.values())) 
+results = pool.map(cleanup_node, tbspec.Instances.__dict__.values())

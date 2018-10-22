@@ -13,19 +13,22 @@ parser.add_argument('--verbose', dest='verbose',
                     action='store_true', help='Enable Verbose Mode')
 parser.add_argument('--dryrun', dest='dryrun', action='store_true',
                     help='Dry-Run mode. (No communication with HAL & Model)')
-parser.add_argument('--testsuite', dest='testsuite', default='sim',
+parser.add_argument('--testsuite', dest='testsuite', default=None,
                     help='Run single Testsuite.')
 parser.add_argument('--coverage', dest='coverage',
                     action='store_true', help='Collect code coverage data.')
 parser.add_argument('--svcport', dest='svcport', default=60000,
                     help='IOTA Service Port.')
-parser.add_argument('--testbed-json', dest='testbed_json', default="/warmd.json",
+parser.add_argument('--testbed', dest='testbed_json', default="/warmd.json",
                     help='Testbed JSON file')
 parser.add_argument('--no-keep-going', dest='no_keep_going',
                     action='store_true', help='Stop on first error.')
-parser.add_argument('--mode', dest='mode', default='venice',
+parser.add_argument('--cfgmode', dest='cfgmode', default='venice',
                     choices=["venice", "netagent"],
                     help='Test mode - Venice / Agent level tests.')
+parser.add_argument('--mode', dest='mode', default='hardware',
+                    choices=["hardware", "simulation", "mixed"],
+                    help='Testbed Mode: Hardware / Simulation / Mixed.')
 parser.add_argument('--pipeline', dest='pipeline', default="iris",
                     help='Filter tests by Pipeline')
 parser.add_argument('--rerun', dest='rerun',
