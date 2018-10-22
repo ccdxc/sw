@@ -44,7 +44,7 @@ const char __attribute__ ((unused)) *mem_pool_types[] = {
 };
 
 const char *
-mem_pool_get_type_str(enum mem_pool_type mpool_type)
+mpool_get_type_str(enum mem_pool_type mpool_type)
 {
 	if (mpool_type_is_valid(mpool_type))
 		return mem_pool_types[mpool_type];
@@ -113,7 +113,7 @@ mpool_create_mem_objects(struct mem_pool *mpool)
 			return p;
 		}
 		OSAL_LOG_ERROR("failed to allocate mem objects for pool %s",
-			       mem_pool_get_type_str(mpool->mp_config.mpc_type));
+			       mpool_get_type_str(mpool->mp_config.mpc_type));
 	}
 
 	return NULL;
@@ -167,8 +167,9 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		curr_rmem = osal_rmem_alloc(mpool->mp_config.mpc_page_size);
 		if (!osal_rmem_addr_valid(curr_rmem)) {
 			OSAL_LOG_ERROR("pool %s failed after %u allocs remaining size %u",
-				       mem_pool_get_type_str(mpool->mp_config.mpc_type),
-				       mpool->mp_config.mpc_num_allocs, total_size);
+				       mpool_get_type_str(mpool->mp_config.mpc_type),
+				       mpool->mp_config.mpc_num_allocs,
+				       total_size);
 			goto error;
 		}
 
@@ -259,7 +260,8 @@ mpool_create(enum mem_pool_type mpool_type,
 	if (!mpool) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("failed to allocate memory for pool! mpool_type: %s num_objects: %d err: %d",
-			       mem_pool_get_type_str(mpool_type), num_objects, err);
+			       mpool_get_type_str(mpool_type),
+			       num_objects, err);
 		goto out;
 	}
 	memset(mpool, 0, sizeof(*mpool));
@@ -310,14 +312,16 @@ mpool_create(enum mem_pool_type mpool_type,
 
 	*out_mpool = mpool;
 	OSAL_LOG_INFO("pool allocated. mpool_type: %s num_objects: %d vec_elem_size: %d align_size: %d pad_size: %d mpool: 0x" PRIx64,
-		      mem_pool_get_type_str(mpool_type), num_objects, mpool->mp_config.mpc_vec_elem_size,
-		      align_size, mpool->mp_config.mpc_pad_size, (uint64_t) mpool);
+		      mpool_get_type_str(mpool_type), num_objects,
+		      mpool->mp_config.mpc_vec_elem_size, align_size,
+		      mpool->mp_config.mpc_pad_size, (uint64_t) mpool);
 
 	err = PNSO_OK;
 	return err;
 out:
 	OSAL_LOG_ERROR("failed to allocate pool!  mpool_type: %s num_objects: %d vec_elem_size: %d align_size: %d",
-			mem_pool_get_type_str(mpool_type), num_objects, mpool->mp_config.mpc_vec_elem_size, align_size);
+			mpool_get_type_str(mpool_type), num_objects,
+			mpool->mp_config.mpc_vec_elem_size, align_size);
 	if (mpool)
 		mpool_destroy(&mpool);
 	return err;
@@ -334,7 +338,7 @@ mpool_destroy(struct mem_pool **mpoolp)
 	mpool = *mpoolp;
 
 	OSAL_LOG_INFO("pool deallocated. mpc_type: %s mpc_num_objects: %d mpool: 0x" PRIx64,
-		      mem_pool_get_type_str(mpool->mp_config.mpc_type),
+		      mpool_get_type_str(mpool->mp_config.mpc_type),
 		      mpool->mp_config.mpc_num_objects, (uint64_t) mpool);
 
 	/* TODO-mpool: for graceful exit, ensure stack top is back to full */
@@ -409,7 +413,7 @@ mpool_pprint(const struct mem_pool *mpool)
 
 	OSAL_LOG_DEBUG("%-30s: %u:%s", "mpool->mp_config.mpc_type",
 			mpool->mp_config.mpc_type,
-			mem_pool_get_type_str(mpool->mp_config.mpc_type));
+			mpool_get_type_str(mpool->mp_config.mpc_type));
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_objects",
 			mpool->mp_config.mpc_num_objects);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_vec_elems",

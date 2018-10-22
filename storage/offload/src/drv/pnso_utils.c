@@ -149,7 +149,7 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
 								  &num_vec_elems);
 	if (!svc_sgl->sgl) {
 		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s",
-			       mem_pool_get_type_str(vec_type));
+			       mpool_get_type_str(vec_type));
 		err = ENOMEM;
 		goto out;
 	}
@@ -418,7 +418,7 @@ pc_res_mpool_get(const struct per_core_resource *pc_res,
 	}
 
 	OSAL_LOG_ERROR("invalid pc_res 0x"PRIx64" or mpool type %s",
-		       (uint64_t)pc_res, mem_pool_get_type_str(type));
+		       (uint64_t)pc_res, mpool_get_type_str(type));
 	return NULL;
 }
 
@@ -434,7 +434,7 @@ pc_res_mpool_object_get(const struct per_core_resource *pc_res,
 		obj = mpool_get_object(mpool);
 		if (!obj) {
 			OSAL_LOG_ERROR("cannot obtain pc_res object from pool %s",
-					mem_pool_get_type_str(type));
+					mpool_get_type_str(type));
 		}
 	}
 	return obj;
@@ -455,7 +455,7 @@ pc_res_mpool_object_get_with_size(const struct per_core_resource *pc_res,
 		obj = mpool_get_object(mpool);
 		if (!obj) {
 			OSAL_LOG_ERROR("cannot obtain pc_res object from pool %s",
-					mem_pool_get_type_str(type));
+					mpool_get_type_str(type));
 		}
 	}
 	return obj;
@@ -476,7 +476,7 @@ pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pc_re
 		obj = mpool_get_object(mpool);
 		if (!obj) {
 			OSAL_LOG_ERROR("cannot obtain pc_res object from pool %s",
-					mem_pool_get_type_str(type));
+					mpool_get_type_str(type));
 		}
 	}
 	return obj;
@@ -493,7 +493,7 @@ pc_res_mpool_object_put(const struct per_core_resource *pc_res,
 		mpool = pc_res_mpool_get(pc_res, type);
 		if (mpool && mpool_put_object(mpool, obj)) {
 			OSAL_LOG_ERROR("cannot return pc_res object to pool %s",
-					mem_pool_get_type_str(type));
+					mpool_get_type_str(type));
 		}
 	}
 }

@@ -198,7 +198,7 @@ void mpool_pprint(const struct mem_pool *mpool);
 #define MPOOL_PPRINT(mpool) mpool_pprint(mpool)
 #endif
 
-const char *mem_pool_get_type_str(enum mem_pool_type mpool_type);
+const char *mpool_get_type_str(enum mem_pool_type mpool_type);
 
 static inline bool
 mpool_type_is_valid(enum mem_pool_type mpool_type)
