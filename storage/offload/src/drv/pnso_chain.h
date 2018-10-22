@@ -296,16 +296,6 @@ void chn_execute_chain(struct service_chain *chain);
  */
 void chn_destroy_chain(struct service_chain *chain);
 
-/**
- * chn_build_batch_chain() -
- * @batch_info:
- * @page_entry:
- * @batch_index:
- * ...
- *
- * Return Value:
- *
- */
 pnso_error_t chn_build_batch_chain(struct batch_info *batch_info,
 		struct batch_page_entry *page_entry,
 		uint16_t batch_index, const completion_cb_t cb, void *cb_ctx,
