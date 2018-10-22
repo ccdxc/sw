@@ -27,8 +27,8 @@ ${OutDir}/%_api.go ${OutDir}/%_api_test.go ${OutDir}/restclient/%_client.go : %.
 	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
 	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
-	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/templates/rest.yml,log_dir=${OutDir}/tmp,logtostderr=false,v=7:${OutDir} ${SRC1}
-	cd ${OutDir} && goimports -local "github.com/pensando/sw" -l -w *.go
+	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/templates/rest.yml,log_dir=${OutDir}/tmp,logtostderr=false,v=7:${OutDir} $^
+	cd ${OutDir} && goimports -local "github.com/pensando/sw" -l -w $*_api.go $*_api_test.go restclient/$*_client.go
 
 # Generating documentation for interface.proto is ignnored, Currently we don't intened to expose enic and uplink creates directly to the user
 ${OutDir}/docs/swagger/%.swagger.json : %.proto
