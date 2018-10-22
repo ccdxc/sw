@@ -86,14 +86,14 @@ init_mpools(struct pc_res_init_params *pc_init,
 		goto out;
 
 	mpool_type = MPOOL_TYPE_BATCH_PAGE;
-	err = mpool_create(mpool_type, num_objects,
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct batch_page), PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_BATCH_INFO;
-	err = mpool_create(mpool_type, num_objects,
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct batch_info), PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
