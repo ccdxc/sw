@@ -11,6 +11,8 @@ import (
 	"github.com/pensando/sw/nic/agent/ipc"
 	ipcproto "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
+	delphi "github.com/pensando/sw/nic/delphi/gosdk"
+	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -19,6 +21,23 @@ import (
 )
 
 var fwTable ntsdb.Table
+
+type service struct {
+	name         string
+	sysmgrClient *sysmgr.Client
+}
+
+var srv = &service{
+	name: "tmagent",
+}
+
+func (s *service) OnMountComplete() {
+	log.Printf("OnMountComplete() done for %s\n", s.name)
+	s.sysmgrClient.InitDone()
+}
+func (s *service) Name() string {
+	return s.name
+}
 
 func main() {
 
@@ -86,6 +105,13 @@ func main() {
 	if err != nil {
 		log.Errorf("Error creating the rest API server. Err: %v", err)
 	}
+
+	delphiClient, err := delphi.NewClient(srv)
+	if err != nil {
+		log.Fatalf("delphi NewClient failed")
+	}
+	srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
+	delphiClient.Dial()
 
 	// wait forever
 	select {}
