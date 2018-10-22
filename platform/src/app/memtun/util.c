@@ -61,7 +61,7 @@ open_mem(const char *path, off_t offset, size_t size, void **memp)
     void *mem;
     int fd;
 
-    fd = open(path, O_RDWR, 0);
+    fd = open(path, O_RDWR | O_SYNC, 0);
     if (fd < 0) {
         perror(path);
         return -1;
