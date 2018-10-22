@@ -33,7 +33,6 @@ using vrf::VrfGetResponseMsg;
 using vrf::VrfDeleteRequestMsg;
 using vrf::VrfDeleteRequest;
 using vrf::VrfDeleteResponseMsg;
-
 using l2segment::L2Segment;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentRequestMsg;
@@ -43,13 +42,11 @@ using l2segment::L2SegmentDeleteRequest;
 using l2segment::L2SegmentDeleteRequestMsg;
 using l2segment::L2SegmentDeleteResponseMsg;
 using kh::L2SegmentKeyHandle;
-
 using nw::Network;
 using nw::NetworkSpec;
 using nw::NetworkRequestMsg;
 using nw::NetworkResponseMsg;
 using kh::NetworkKeyHandle;
-
 using endpoint::Endpoint;
 using endpoint::EndpointSpec;
 using endpoint::EndpointRequestMsg;
@@ -58,13 +55,11 @@ using endpoint::EndpointResponseMsg;
 using endpoint::EndpointDeleteRequest;
 using endpoint::EndpointDeleteRequestMsg;
 using endpoint::EndpointDeleteResponseMsg;
-
 using nwsec::NwSecurity;
 using nwsec::SecurityGroupSpec;
 using nwsec::SecurityGroupRequestMsg;
 using nwsec::SecurityGroupResponseMsg;
 using kh::SecurityGroupKeyHandle;
-
 using session::Session;
 using session::SessionSpec;
 using session::SessionRequestMsg;
@@ -74,7 +69,6 @@ using session::FlowKey;
 using session::FlowInfo;
 using session::ConnTrackInfo;
 using session::FlowData;
-
 using intf::Interface;
 using intf::InterfaceSpec;
 using intf::InterfaceRequestMsg;
@@ -84,122 +78,33 @@ using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentRequestMsg;
 using intf::InterfaceL2SegmentResponseMsg;
 using intf::InterfaceL2SegmentResponse;
-using intf::LifSpec;
-using intf::LifGetRequestMsg;
-using intf::LifGetResponseMsg;
-using intf::LifRequestMsg;
-using intf::LifResponseMsg;
-using intf::LifQStateMapEntry;
-using intf::QStateSetReq;
-
-using port::Port;
-using port::PortSpec;
-using port::PortRequestMsg;
-using port::PortResponse;
-using port::PortResponseMsg;
-using port::PortGetRequest;
-using port::PortGetRequestMsg;
-using port::PortGetResponse;
-using port::PortGetResponseMsg;
-using port::PortDeleteRequest;
-using port::PortDeleteRequestMsg;
-using port::PortDeleteResponseMsg;
-using port::PortDeleteResponse;
-
-using sys::System;
-using sys::SystemResponse;
-using sys::Stats;
-using sys::DropStats;
-using sys::DropStatsEntry;
-using sys::TableStats;
-using sys::TableStatsEntry;
 using types::Empty;
-
-using debug::Debug;
-using debug::SlabGetRequest;
-using debug::SlabGetRequestMsg;
-using debug::SlabGetResponse;
-using debug::SlabGetResponseMsg;
-using debug::SlabSpec;
-using debug::SlabStats;
-
 using types::EncapInfo;
 using types::IPAddress;
-
-using event::Event;
-using event::EventRequest;
-using event::EventResponse;
 
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
 
-port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
-port::PortType       port_type        = port::PORT_TYPE_NONE;
-port::PortAdminState port_admin_state = port::PORT_ADMIN_STATE_NONE;
-port::PortSpeed      port_speed       = port::PORT_SPEED_NONE;
+bool         g_no_cleanup = false;
+bool         g_random = true;
+bool         g_dup_session = false;
+uint64_t     g_num_l2segments = 10;
+uint64_t     g_encap_value = 100;
+uint64_t     g_num_uplinks = 8;
+uint32_t     g_num_sessions = 10;
+uint32_t     g_batch_size = 1;
+
+enum {
+    SIM = 0,
+    HW  = 1,
+};
 
 class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) : vrf_stub_(Vrf::NewStub(channel)),
-    l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
-    event_stub_(Event::NewStub(channel)), system_stub_(System::NewStub(channel)),
-    debug_stub_(Debug::NewStub(channel)), intf_stub_(Interface::NewStub(channel)),
+    l2seg_stub_(L2Segment::NewStub(channel)), intf_stub_(Interface::NewStub(channel)),
     sg_stub_(NwSecurity::NewStub(channel)), nw_stub_(Network::NewStub(channel)),
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)) {}
-
-    int mpu_trace_enable(int stage_id,
-                         int mpu,
-                         bool enable,
-                         char *pipeline_type)
-    {
-        ClientContext              context;
-        Status                     status;
-        debug::MpuTraceRequestMsg  req_msg;
-        debug::MpuTraceResponseMsg rsp_msg;
-
-        debug::MpuTraceRequest *req = req_msg.add_request();
-
-        if (!strcmp(pipeline_type, "p4_ingress")) {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_INGRESS);
-        } else if (!strcmp(pipeline_type, "p4_egress")) {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4_EGRESS);
-        } else if (!strcmp(pipeline_type, "p4p_rxdma")) {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_RXDMA);
-        } else if (!strcmp(pipeline_type, "p4p_txdma")) {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_P4P_TXDMA);
-        } else {
-            req->set_pipeline_type(debug::MPU_TRACE_PIPELINE_NONE);
-        }
-
-        if (stage_id != -1) {
-            req->set_stage_id(stage_id);
-        }
-
-        if (mpu != -1) {
-            req->set_mpu(mpu);
-        }
-
-        req->mutable_spec()->set_wrap(1);
-        req->mutable_spec()->set_table_key(true);
-        req->mutable_spec()->set_instructions(false);
-        req->mutable_spec()->set_enable(enable);
-
-        status = debug_stub_->MpuTraceUpdate(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            std::cout << "MPU trace "
-                      << (enable ? "enable" : "disable")
-                      << " succeeded"
-                      << std::endl;
-            return 0;
-        }
-
-        std::cout << "MPU trace "
-                  << (enable ? "enable" : "disable")
-                  << " failed"
-                  << std::endl;
-
-        return -1;
-    }
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -226,273 +131,6 @@ public:
         }
 
         return true;
-    }
-
-    int port_create(uint32_t vrf_id, uint32_t port_id) {
-        PortSpec            *spec;
-        PortRequestMsg      req_msg;
-        PortResponseMsg     rsp_msg;
-        ClientContext       context;
-        Status               status;
-
-        spec = req_msg.add_request();
-        spec->mutable_key_or_handle()->set_port_id(port_id);
-        spec->set_port_speed(::port::PORT_SPEED_25G);
-        spec->set_num_lanes(1);
-        spec->set_port_type(::port::PORT_TYPE_ETH);
-        spec->set_admin_state(::port::PORT_ADMIN_STATE_UP);
-
-        status = port_stub_->PortCreate(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            if (port_handle_api_status(
-                    rsp_msg.response(0).api_status(), port_id) == true) {
-                std::cout << "Port create succeeded for port "
-                          << port_id
-                          << std::endl;
-            } else {
-                return -1;
-            }
-
-            return 0;
-        }
-
-        std::cout << "Port create failed for port "
-                  << port_id
-                  << " , error = " << rsp_msg.response(0).api_status()
-                  << std::endl;
-        return -1;
-    }
-
-    int port_update(uint32_t vrf_id,
-                    uint32_t port_id,
-                    ::port::PortSpeed speed,
-                    ::port::PortAdminState admin_state) {
-        PortSpec            *spec;
-        PortRequestMsg      req_msg;
-        PortResponseMsg     rsp_msg;
-        ClientContext       context;
-        Status               status;
-
-        spec = req_msg.add_request();
-        spec->mutable_key_or_handle()->set_port_id(port_id);
-        spec->set_port_speed(speed);
-        spec->set_admin_state(admin_state);
-
-        status = port_stub_->PortUpdate(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            if (port_handle_api_status(
-                    rsp_msg.response(0).api_status(), port_id) == true) {
-                std::cout << "Port update succeeded for port "
-                          << port_id
-                          << std::endl;
-            } else {
-                return -1;
-            }
-
-            return 0;
-        }
-
-        std::cout << "Port update failed for port "
-                  << port_id
-                  << " , error = "
-                  << rsp_msg.response(0).api_status()
-                  << std::endl;
-        return -1;
-    }
-
-    int port_get(uint32_t vrf_id, uint32_t port_id, bool compare=false) {
-        PortGetRequest      *req;
-        PortGetRequestMsg   req_msg;
-        PortGetResponseMsg  rsp_msg;
-        ClientContext       context;
-        Status              status;
-
-        req = req_msg.add_request();
-        req->mutable_key_or_handle()->set_port_id(port_id);
-
-        // port get
-        status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            if (port_handle_api_status(
-                    rsp_msg.response(0).api_status(), port_id) == true) {
-                std::cout << "Port Get succeeded for port "
-                          << port_id << std::endl
-                          << " Port oper status: "
-                          << rsp_msg.response(0).status().oper_status() << std::endl
-                          << " Port type: "
-                          << rsp_msg.response(0).spec().port_type() << std::endl
-                          << " Admin state: "
-                          << rsp_msg.response(0).spec().admin_state() << std::endl
-                          << " Port speed: "
-                          << rsp_msg.response(0).spec().port_speed() << std::endl
-                          << " MAC ID: "
-                          << rsp_msg.response(0).spec().mac_id() << std::endl
-                          << " MAC channel: "
-                          << rsp_msg.response(0).spec().mac_ch() << std::endl
-                          << " Num lanes: "
-                          << rsp_msg.response(0).spec().num_lanes() << std::endl;
-            } else {
-                return -1;
-            }
-
-            if (compare == true) {
-                if (port_oper_status != port::PORT_OPER_STATUS_NONE) {
-                    assert(rsp_msg.response(0).status().oper_status()
-                                                == port_oper_status);
-                }
-                if (port_type != port::PORT_TYPE_NONE) {
-                    assert(rsp_msg.response(0).spec().port_type() == port_type);
-                }
-                if (port_admin_state != port::PORT_ADMIN_STATE_NONE) {
-                    assert(rsp_msg.response(0).spec().admin_state() == port_admin_state);
-                }
-                if (port_speed != port::PORT_SPEED_NONE) {
-                    assert(rsp_msg.response(0).spec().port_speed() == port_speed);
-                }
-            }
-
-            return 0;
-        }
-
-        std::cout << "Port Get failed for port "
-                  << port_id
-                  << " , error = "
-                  << rsp_msg.response(0).api_status()
-                  << std::endl;
-        return -1;
-    }
-
-    int port_delete(uint32_t vrf_id, uint32_t port_id) {
-        PortDeleteRequest      *req;
-        PortDeleteRequestMsg   req_msg;
-        PortDeleteResponseMsg     rsp_msg;
-        ClientContext          context;
-        Status                 status;
-
-        req = req_msg.add_request();
-        req->mutable_key_or_handle()->set_port_id(port_id);
-
-        // port get
-        status = port_stub_->PortDelete(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            if (port_handle_api_status(
-                    rsp_msg.response(0).api_status(), port_id) == true) {
-                std::cout << "Port Delete succeeded for port "
-                          << port_id << std::endl;
-            } else {
-                return -1;
-            }
-
-            return 0;
-        }
-
-        std::cout << "Port Delete failed for port"
-                  << port_id
-                  << " , error = "
-                  << rsp_msg.response(0).api_status()
-                  << std::endl;
-        return -1;
-    }
-
-    int slab_get() {
-        ClientContext           context;
-        SlabGetRequest          *req;
-        SlabGetRequestMsg       req_msg;
-        SlabGetResponse         rsp;
-        SlabGetResponseMsg      rsp_msg;
-        SlabSpec                spec;
-        SlabStats               stats;
-        Status                  status;
-        int                     rsp_count, i;
-
-        req = req_msg.add_request();
-        req->set_id(5);
-
-        std::cout << "Slab Get\n\n";
-        status = debug_stub_->SlabGet(&context, req_msg, &rsp_msg);
-
-        if (status.ok()) {
-            rsp_count = rsp_msg.response_size();
-            for (i = 0; i < rsp_count; i ++) {
-                rsp = rsp_msg.response(i);
-                if ((rsp.api_status() != types::API_STATUS_OK) || !rsp.has_spec() || !rsp.has_stats()) {
-                    continue;
-                }
-                spec = rsp.spec();
-                std::cout << "Slab Name" << spec.name() << "\n";
-
-                stats = rsp.stats();
-                std::cout << "Num elements in use: " << stats.num_elements_in_use() << "\n";
-                std::cout << "Num allocs: " << stats.num_allocs() << "\n";
-                std::cout << "Num frees: " << stats.num_frees() << "\n";
-                std::cout << "Num alloc errors: " << stats.num_alloc_errors() << "\n";
-                std::cout << "Num blocks: " << stats.num_blocks() << "\n\n";
-            }
-        }
-
-        return 0;
-    }
-
-    int system_get() {
-        ClientContext       context;
-        Empty               request;
-        SystemResponse      response;
-        Status              status;
-        Stats               stats;
-        DropStats           drop_stats;
-        DropStatsEntry      drop_entry;
-        TableStats          table_stats;
-        TableStatsEntry     table_entry;
-        int                 count;
-
-        std::cout << "System Get\n";
-        status = system_stub_->SystemGet(&context, request, &response);
-        if (status.ok() && (response.api_status() == types::API_STATUS_OK)) {
-            // Get Statistics
-            Stats stats = response.stats();
-
-            // First print drop stats
-
-            // Get DropStats
-            DropStats drop_stats = stats.drop_stats();
-
-            // Get count of DropEntries
-            count = drop_stats.drop_entries_size();
-
-            std::cout << "\nDrop Statistics:\n";
-
-            for (int i = 0; i < count; i ++) {
-                DropStatsEntry drop_entry = drop_stats.drop_entries(i);
-                std::cout << "Stats " << i
-                << ": " << drop_entry.drop_count() << "\n";
-            }
-
-            // Print table stats
-
-            // Get TableStats
-            TableStats table_stats = stats.table_stats();
-
-            // Get count of TableStats
-            count = table_stats.table_stats_size();
-
-            std::cout << "\nTable Statistics:\n";
-
-            for (int i = 0; i < count; i ++) {
-                TableStatsEntry table_entry = table_stats.table_stats(i);
-                std::cout << "Table type: " << table_entry.table_type() << "\n"
-                    << "Table name: " << table_entry.table_name() << "\n"
-                    << "Table size: " << table_entry.table_size() << "\n"
-                    << "Overflow size: " << table_entry.overflow_table_size() << "\n"
-                    << "Entries in use: " << table_entry.entries_in_use() << "\n"
-                    << "Overflow entries in use: " << table_entry.overflow_entries_in_use() << "\n"
-                    << "Num inserts: " << table_entry.num_inserts() << "\n"
-                    << "Num insert errors: " << table_entry.num_insert_errors() << "\n"
-                    << "Num deletes: " << table_entry.num_deletes() << "\n"
-                    << "Num delete errors: " << table_entry.num_delete_errors() << "\n\n";
-            }
-        }
-
-        return 0;
     }
 
     uint64_t vrf_create(uint64_t vrf_id) {
@@ -541,96 +179,6 @@ public:
         std::cout << "SG create failed, error = "
                   << rsp_msg.response(0).api_status()
                   << std::endl;
-        return 0;
-    }
-
-    void lif_get_all() {
-        LifGetRequestMsg    req_msg;
-        LifGetResponseMsg   rsp_msg;
-        ClientContext       context;
-        Status              status;
-        uint32_t            num_rsp;
-
-        req_msg.add_request();
-        status = intf_stub_->LifGet(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            num_rsp = rsp_msg.response_size();
-            std::cout << "Num of Rsps: " << num_rsp << std::endl;
-            for (uint32_t i = 0; i < num_rsp; i ++) { 
-                std::cout << "Lif ID = "
-                          << rsp_msg.response(i).spec().key_or_handle().lif_id()
-                          << std::endl;
-            }
-        } else {
-            std::cout << "Lif Get Failed" << std::endl;
-        }
-    }
-
-    uint64_t lif_create(uint32_t lif_id, uint32_t type_num) {
-        LifSpec              *spec;
-        LifRequestMsg        req_msg;
-        LifResponseMsg       rsp_msg;
-        LifQStateMapEntry    *lif_qstate_map;
-        QStateSetReq         *lif_qstate;
-        ClientContext        context;
-        Status               status;
-        uint32_t             entries = 1;
-        uint32_t             size = 64;
-
-        spec = req_msg.add_request();
-        spec->mutable_key_or_handle()->set_lif_id(lif_id);
-        spec->set_admin_status(::intf::IF_STATUS_UP);
-        spec->mutable_packet_filter()->set_receive_broadcast(true);
-        lif_qstate_map = spec->add_lif_qstate_map();
-        lif_qstate_map->set_type_num(type_num);
-        lif_qstate_map->set_size(log2(size));
-        lif_qstate_map->set_entries(log2(entries));
-        lif_qstate_map->set_purpose(::intf::LIF_QUEUE_PURPOSE_TX);
-        lif_qstate = spec->add_lif_qstate();
-        lif_qstate->set_lif_handle(0);
-        lif_qstate->set_type_num(type_num);
-        lif_qstate->set_qid(0);
-        /*
-        lif_qstate->mutable_label()->set_handle("p4plus");
-        req_spec.queue_state = bytes(EthTxQstate(host=1, total=1, enable=1));
-        req_spec.label.prog_name = "txdma_stage0.bin";
-        req_spec.label.label = "eth_tx_stage0"
-        */
-        status = intf_stub_->LifCreate(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
-            std::cout << "Lif create succeeded, handle = "
-                      << rsp_msg.response(0).status().lif_handle()
-                      << std::endl;
-            return rsp_msg.response(0).status().lif_handle();
-        }
-        std::cout << "Lif create failed, error = "
-                  << rsp_msg.response(0).api_status() << std::endl;
-        return 0;
-    }
-
-    uint64_t cpu_if_create(uint32_t lif_id) {
-        InterfaceSpec           *spec;
-        InterfaceRequestMsg     req_msg;
-        InterfaceResponseMsg    rsp_msg;
-        ClientContext           context;
-        Status                  status;
-
-        spec = req_msg.add_request();
-        spec->mutable_key_or_handle()->set_interface_id(lif_id);
-        spec->set_type(::intf::IfType::IF_TYPE_CPU);
-        spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
-        spec->mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
-        status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
-            std::cout << "CPU if create succeeded, handle = "
-                      << rsp_msg.response(0).status().if_handle()
-                      << std::endl;
-            return rsp_msg.response(0).status().if_handle();
-        }
-        std::cout << "CPU if create failed, error = "
-                  << rsp_msg.response(0).api_status() << std::endl;
         return 0;
     }
 
@@ -1061,51 +609,9 @@ public:
         return;
     }
 
-    void event_test(void) {
-        ClientContext context;
-        std::shared_ptr<grpc::ClientReaderWriter<EventRequest, EventResponse> > stream(
-            event_stub_->EventListen(&context));
-
-        std::thread writer([stream]() {
-            std::vector<EventRequest>    events(6);
-
-            events[0].set_event_id(event::EVENT_ID_PORT);
-            events[0].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            events[1].set_event_id(event::EVENT_ID_ENDPOINT);
-            events[1].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            events[2].set_event_id(event::EVENT_ID_ENDPOINT);
-            events[2].set_event_operation(event::EVENT_OP_SUBSCRIBE);
-            events[3].set_event_id(event::EVENT_ID_PORT);
-            events[3].set_event_operation(event::EVENT_OP_SUBSCRIBE);
-            events[4].set_event_id(event::EVENT_ID_PORT);
-            events[4].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            events[5].set_event_id(event::EVENT_ID_ENDPOINT);
-            events[5].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            for (const EventRequest& event : events) {
-                std::cout << "Subscribing to event " << event.event_id() << std::endl;
-                stream->Write(event);
-            }
-            stream->WritesDone();
-        });
-
-        EventResponse event_response;
-        while (stream->Read(&event_response)) {
-            std::cout << "Got event " << event_response.event_id() << std::endl;
-        }
-        writer.join();
-        Status status = stream->Finish();
-        if (!status.ok()) {
-            std::cout << "Event test failed" << std::endl;
-        }
-    }
-
 private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
-    std::unique_ptr<Port::Stub> port_stub_;
-    std::unique_ptr<Event::Stub> event_stub_;
-    std::unique_ptr<System::Stub> system_stub_;
-    std::unique_ptr<Debug::Stub> debug_stub_;
     std::unique_ptr<Interface::Stub> intf_stub_;
     std::unique_ptr<NwSecurity::Stub> sg_stub_;
     std::unique_ptr<Network::Stub> nw_stub_;
@@ -1113,224 +619,16 @@ private:
     std::unique_ptr<Session::Stub> session_stub_;
 };
 
-int port_enable(hal_client *hclient, int vrf_id, int port)
-{
-    std::cout <<  "*********** Port "
-              << port
-              << " enable and get"
-              << " **********"
-              << std::endl;
-
-    hclient->port_update(
-                     vrf_id, port,
-                     ::port::PORT_SPEED_NONE, ::port::PORT_ADMIN_STATE_UP);
-
-    hclient->port_get(vrf_id, port);
-
-    return 0;
-}
-
-int ports_enable(hal_client *hclient, int vrf_id)
-{
-    int port = 0;
-
-    for (port = 1; port <= 8; ++port) {
-        port_enable (hclient, vrf_id, port);
-    }
-
-    return 0;
-}
-
-int port_get(hal_client *hclient, int vrf_id, int port)
-{
-    std::cout <<  "*********** Port "
-              << port
-              << " get"
-              << " **********"
-              << std::endl;
-
-    hclient->port_get(vrf_id, port);
-
-    return 0;
-}
-
-int ports_get(hal_client *hclient, int vrf_id)
-{
-    int port = 0;
-
-    for (port = 1; port <= 8; ++port) {
-        port_get (hclient, vrf_id, port);
-    }
-
-    return 0;
-}
-
-int port_test(hal_client *hclient, int vrf_id)
-{
-    int port = 1;
-    int ret  = 0;
-
-    // port 1: create and get
-    std::cout <<  "*********** Port "
-              << port
-              << " create, enable and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_create(vrf_id, port);
-    assert(ret == -1);
-
-    ret = hclient->port_get(vrf_id, port);
-    assert(ret != -1);
-
-    // port 1: update speed and get
-    std::cout <<  "*********** Port "
-              << port
-              << " update speed and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_update(vrf_id, port,
-                     ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
-    assert(ret != -1);
-
-    port_speed = ::port::PORT_SPEED_10G;
-    ret = hclient->port_get(vrf_id, port, true);
-    assert(ret != -1);
-    port_speed = ::port::PORT_SPEED_NONE;
-
-    // port 1: delete
-    std::cout <<  "*********** Port "
-              << port
-              << " delete"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_delete(vrf_id, port);
-    assert(ret != -1);
-
-    port = 2;
-
-    // port 2: create and get
-    std::cout <<  "*********** Port "
-              << port
-              << " create, enable and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_create(vrf_id, port);
-    assert(ret == -1);
-
-    ret = hclient->port_get(vrf_id, port);
-    assert(ret != -1);
-
-    // port 2: update speed and get
-    std::cout <<  "*********** Port "
-              << port
-              << " update speed and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_update(vrf_id, port,
-                     ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
-    assert(ret != -1);
-
-    port_speed = ::port::PORT_SPEED_10G;
-    ret = hclient->port_get(vrf_id, port, true);
-    assert(ret != -1);
-    port_speed = ::port::PORT_SPEED_NONE;
-
-    port = 1;
-
-    // port 1: create and get
-    std::cout <<  "*********** Port "
-              << port
-              << " create, enable and get"
-              << " **********"
-              << std::endl;
-
-    ret = hclient->port_create(vrf_id, port);
-    assert(ret != -1);
-
-    ret = hclient->port_get(vrf_id, port);
-    assert(ret != -1);
-
-    // port 1: update speed and get
-    std::cout <<  "*********** Port "
-              << port
-              << " update speed and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_update(vrf_id, port,
-                     ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
-    assert(ret != -1);
-
-    port_speed = ::port::PORT_SPEED_10G;
-    ret = hclient->port_get(vrf_id, port, true);
-    assert(ret != -1);
-    port_speed = ::port::PORT_SPEED_NONE;
-
-    // port 1: delete and get
-    std::cout <<  "*********** Port "
-              << port
-              << " delete and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_delete(vrf_id, port);
-    assert(ret != -1);
-
-    ret = hclient->port_get(vrf_id, port);
-    assert(ret == -1);
-
-    port = 2;
-
-    // port 2: disable and get
-    std::cout <<  "*********** Port "
-              << port
-              << " disable and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_update(vrf_id, port,
-                     ::port::PORT_SPEED_NONE, ::port::PORT_ADMIN_STATE_DOWN);
-    assert(ret != -1);
-
-    port_admin_state = port::PORT_ADMIN_STATE_DOWN;
-    ret = hclient->port_get(vrf_id, port);
-    assert(ret != -1);
-    port_admin_state = port::PORT_ADMIN_STATE_NONE;
-
-    // port 2: create and get
-    std::cout <<  "*********** Port "
-              << port
-              << " create, enable and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_create(vrf_id, port);
-    assert(ret == -1);
-
-    ret = hclient->port_get(vrf_id, port);
-    assert(ret != -1);
-
-    // port 2: delete and get
-    std::cout <<  "*********** Port "
-              << port
-              << " delete and get"
-              << " **********"
-              << std::endl;
-    ret = hclient->port_delete(vrf_id, port);
-    assert(ret != -1);
-
-    ret = hclient->port_get(vrf_id, port);
-    assert(ret == -1);
-
-    return 0;
-}
-
 static int
-create_l2segments(uint64_t   l2seg_id_start,
-                  uint64_t   encap_start,
-                  uint64_t   if_id_start,
-                  uint64_t   num_l2segments,
-                  uint64_t   nw_handle,
-                  uint64_t   vrf_id,
-                  uint64_t   num_uplinks,
-                  hal_client &hclient,
-                  uint64_t   *l2seg_handle_out)
+create_l2segments (uint64_t   l2seg_id_start,
+                   uint64_t   encap_start,
+                   uint64_t   if_id_start,
+                   uint64_t   num_l2segments,
+                   uint64_t   nw_handle,
+                   uint64_t   vrf_id,
+                   uint64_t   num_uplinks,
+                   hal_client &hclient,
+                   uint64_t   *l2seg_handle_out)
 {
     EncapInfo  l2seg_encap;
     uint64_t   l2seg_handle = 0;
@@ -1368,12 +666,12 @@ create_l2segments(uint64_t   l2seg_id_start,
 }
 
 static int
-delete_l2segments(uint64_t   l2seg_id_start,
-                  uint64_t   if_id_start,
-                  uint64_t   num_l2segments,
-                  uint64_t   vrf_id,
-                  uint64_t   num_uplinks,
-                  hal_client &hclient)
+delete_l2segments (uint64_t   l2seg_id_start,
+                   uint64_t   if_id_start,
+                   uint64_t   num_l2segments,
+                   uint64_t   vrf_id,
+                   uint64_t   num_uplinks,
+                   hal_client &hclient)
 {
     for (uint64_t l2seg_id = l2seg_id_start;
                   l2seg_id < l2seg_id_start + num_l2segments;
@@ -1389,93 +687,22 @@ delete_l2segments(uint64_t   l2seg_id_start,
 
     return 0;
 }
-//------------------------------------------------------------------------------
-// Supported arguments
-// --m seq | random or --mode seq | random: Source and Destination IP addresses 
-//                                          of session are sequential | random
-//                                          (default they are chosen at random)
-// --n xx or --num-sessions xx: Specify number of sessions to be created
-// --b xx or --batch-size xx: Specify batch size (Needs to be the last argument always)
-//------------------------------------------------------------------------------
-int
-main (int argc, char** argv)
+
+// setup all the config for "sim" mode
+// TODO: make use of sip, dip, sport_lo, sport_hi, dport etc. provided in the
+// CLI
+static int
+setup_sim_config (hal_client& hclient, uint64_t vrf_id, uint64_t l2seg_id,
+                  uint64_t sg_id, uint64_t if_id, uint64_t nw_id)
 {
     uint64_t     vrf_handle, l2seg_handle, sg_handle;
     uint64_t     nw1_handle, nw2_handle, uplink_if_handle;
-    uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 2, nw_id = 1;
     uint32_t     src_ip[15], dst_ip[15];
     EncapInfo    l2seg_encap;
-    bool         system_get = false, random = true, send = false;
-    bool         no_delete = false;
-    std::string  svc_endpoint = hal_svc_endpoint_;
-    uint32_t     num_sessions = 10, batch_size = 1;
+    uint32_t     session_count = 0, batch_count = 0;
+    bool         send = false;
     timespec_t   start_ts, end_ts;
     uint64_t     start_ns, end_ns;
-    uint64_t     num_l2segments = 10;
-    uint64_t     encap_value    = 100;
-    uint64_t     num_uplinks    = 8;
-    uint32_t     session_count = 0, batch_count = 0;
-    int          oc;
-    bool         dup_session = false;
-
-    struct option longopts[] = {
-       { "system-get",          no_argument,        NULL, 's' },
-       { "duplicate-sessions",  no_argument,        NULL, 'u' },
-       { "mode",                required_argument,  NULL, 'm' },
-       { "num-sessions",        required_argument,  NULL, 'n' },
-       { "batch-size",          required_argument,  NULL, 'b' },
-       { "no-delete",           no_argument,        NULL, 'd' },
-       { 0,                     0,                  0,    0 }
-    };
-
-    // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":sum:n:b:d", longopts, NULL)) != -1) {
-        switch (oc) {
-        case 's':
-            system_get = true;
-            break;
-        case 'm':
-            if (!strcmp(optarg, "seq")) {
-                random = false;
-            } else if (!strcmp(optarg, "random")) {
-                random = true;
-            }
-            break;
-        case 'n':
-            num_sessions = atoi(optarg);
-            break;
-        case 'u':
-            std::cout << "setting dup session to true" << std::endl;
-            dup_session = true;
-            break;
-        case 'b':
-            batch_size = atoi(optarg);
-            break;
-        case 'd':
-            no_delete = true;
-            break;
-        case ':':
-            break;
-        case '?':
-        default:
-            std::cout << "Invalid Argument" << std::endl;
-            exit(0);
-            break;
-        }
-    }
-
-    hal_client hclient(grpc::CreateChannel(svc_endpoint,
-                grpc::InsecureChannelCredentials()));
-
-    // do a system GET, if needed
-    if (system_get == true) {
-        hclient.system_get();
-        return 0;
-    }
-
-    std::cout << "Mode is " << (random ? "random" : "sequential") << std::endl
-              << "Number of Sessions to be created is " << num_sessions << std::endl
-              << "Batch size is " << batch_size << std::endl;
 
     // create the vrf
     vrf_handle = hclient.vrf_create(vrf_id);
@@ -1495,32 +722,31 @@ main (int argc, char** argv)
     assert(nw2_handle != 0);
 
     // create uplinks with this L2 seg as native L2 seg
-    uplink_if_handle = hclient.uplinks_create(if_id, num_uplinks, l2seg_id);
+    uplink_if_handle = hclient.uplinks_create(if_id, g_num_uplinks, l2seg_id);
     assert(uplink_if_handle != 0);
 
-    create_l2segments(l2seg_id, encap_value, if_id, num_l2segments,
-            nw1_handle, vrf_id, num_uplinks, hclient,
-            &l2seg_handle);
+    create_l2segments(l2seg_id, g_encap_value, if_id, g_num_l2segments,
+                      nw1_handle, vrf_id, g_num_uplinks, hclient,
+                      &l2seg_handle);
 
-    uint64_t dest_encap_value = encap_value + num_l2segments;
-    uint64_t dest_l2seg_id    = l2seg_id    + num_l2segments;
-    uint64_t dest_if_id       = if_id       + 1;
+    uint64_t dest_encap_value = g_encap_value + g_num_l2segments;
+    uint64_t dest_l2seg_id = l2seg_id + g_num_l2segments;
+    uint64_t dest_if_id = if_id + 1;
 
     l2seg_encap.set_encap_type(::types::ENCAP_TYPE_DOT1Q);
     l2seg_encap.set_encap_value(dest_encap_value);
     l2seg_handle =
-        hclient.l2segment_create(vrf_id,
-                dest_l2seg_id,
-                nw2_handle,
-                ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
-                ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
-                l2seg_encap);
+        hclient.l2segment_create(vrf_id, dest_l2seg_id,
+                                 nw2_handle,
+                                 ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
+                                 ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
+                                 l2seg_encap);
     assert(l2seg_handle != 0);
 
-    // bringup this L2seg on all uplinks
-    hclient.add_l2seg_on_uplinks(if_id, num_uplinks, dest_l2seg_id);
+    // bringup this l2seg on all uplinks
+    hclient.add_l2seg_on_uplinks(if_id, g_num_uplinks, dest_l2seg_id);
 
-    if (random) {
+    if (g_random) {
         // create random remote endpoints
         std::random_device rd;
 
@@ -1578,7 +804,7 @@ main (int argc, char** argv)
     SessionRequestMsg req_msg;
     clock_gettime(CLOCK_MONOTONIC, &start_ts);
     sdk::timestamp_to_nsecs(&start_ts, &start_ns);
-    if (dup_session) {
+    if (g_dup_session) {
         for (int i = 0; i < 2; i ++) {
             send = true;
             hclient.session_create(req_msg, session_count, vrf_id,
@@ -1594,7 +820,7 @@ main (int argc, char** argv)
                 for (int i = 0; i < 14; i ++) {        // src EPs
                     for (int j = 0; j < 14; j ++) {    // dst EPs
                         batch_count++;
-                        if (batch_count == batch_size) {
+                        if (batch_count == g_batch_size) {
                             send = true;
                             batch_count = 0;
                         }
@@ -1605,7 +831,7 @@ main (int argc, char** argv)
                                                src_port, dst_port,
                                                ::session::FlowAction::FLOW_ACTION_ALLOW,
                                                send);
-                        if (session_count == num_sessions) {
+                        if (session_count == g_num_sessions) {
                             goto done;
                         }
                     }
@@ -1620,15 +846,20 @@ done:
     sdk::timestamp_to_nsecs(&end_ts, &end_ns);
     float time = (float(end_ns - start_ns)) /1000000000;
 
-    std::cout << "Time to create " << num_sessions << " sessions is "
+    std::cout << "Time to create " << g_num_sessions << " sessions is "
               << time << " secs" << std::endl;
-    std::cout << "Session/sec is " << num_sessions/time << std::endl;
+    std::cout << "Session/sec is " << g_num_sessions/time << std::endl;
 
-    if (no_delete) {
-        return 0;
-    }
+    return 0;
+}
 
-    // Delete EPs
+// cleanup all the config in "sim" mode
+static int
+cleanup_sim_config (hal_client& hclient, uint64_t vrf_id, uint64_t l2seg_id,
+                    uint64_t sg_id, uint64_t if_id, uint64_t nw_id)
+{
+    uint64_t dest_l2seg_id = l2seg_id + g_num_l2segments;
+
     hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0102);
     hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0103);
     hclient.ep_delete(vrf_id, l2seg_id, 0x020a0a0104);
@@ -1659,10 +890,170 @@ done:
     hclient.ep_delete(vrf_id, dest_l2seg_id, 0x020a0a020f);
 
     // Delete L2 segments
-    hclient.delete_l2seg_on_uplinks(if_id, num_uplinks, dest_l2seg_id);
+    hclient.delete_l2seg_on_uplinks(if_id, g_num_uplinks, dest_l2seg_id);
     hclient.l2segment_delete(vrf_id, dest_l2seg_id);
-    delete_l2segments(l2seg_id, if_id, num_l2segments,
-                      vrf_id, num_uplinks, hclient);
+    delete_l2segments(l2seg_id, if_id, g_num_l2segments,
+                      vrf_id, g_num_uplinks, hclient);
+
+    return 0;
+}
+
+static int
+setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
+                 uint32_t dip, uint16_t sport_lo, uint16_t sport_hi,
+                 uint16_t dport)
+{
+    SessionRequestMsg req_msg;
+    timespec_t   start_ts, end_ts;
+    uint64_t     start_ns, end_ns;
+    uint32_t     session_count = 0, batch_count = 0;
+    bool         send = false;
+
+    std::cout << "sip : " << sip << ", dip : " << dip
+              << "sport_lo : " << sport_lo << ", sport_hi : " << sport_hi
+              << ", dport : " << dport << std::endl;
+
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
+    sdk::timestamp_to_nsecs(&start_ts, &start_ns);
+    for (int src_port = sport_lo; src_port < sport_hi; src_port ++) {
+        for (int dst_port = dport; dst_port <= dport; dst_port ++) {
+            batch_count++;
+            if (batch_count == g_batch_size) {
+                send = true;
+                batch_count = 0;
+            }
+            session_count++;
+            //std::cout <<"Creating session id: " << session_count << ", sip : "
+                      //<< sip << ", dip : " << dip << ", sport:" << src_port
+                      //<< ", dport :" << dst_port << std::endl;
+            hclient.session_create(req_msg, session_count, vrf_id,
+                                   sip, dip,
+                                   ::types::IPProtocol::IPPROTO_UDP,
+                                   src_port, dst_port,
+                                   ::session::FlowAction::FLOW_ACTION_ALLOW,
+                                   send);
+        }
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+    sdk::timestamp_to_nsecs(&end_ts, &end_ns);
+    float time = (float(end_ns - start_ns)) /1000000000;
+
+    std::cout << "Time to create " << g_num_sessions << " sessions is "
+              << time << " secs" << std::endl;
+    std::cout << "Session/sec is " << g_num_sessions/time << std::endl;
+
+    return 0;
+}
+
+//------------------------------------------------------------------------------
+// Supported arguments
+// --m seq | random or --mode seq | random: Source and Destination IP addresses 
+//                                          of session are sequential | random
+//                                          (default they are chosen at random)
+// --n xx or --num-sessions xx: Specify number of sessions to be created
+// --b xx or --batch-size xx: Specify batch size (Needs to be the last argument always)
+//------------------------------------------------------------------------------
+int
+main (int argc, char** argv)
+{
+    uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 2, nw_id = 1;
+    std::string  svc_endpoint = hal_svc_endpoint_;
+    int          oc;
+    uint32_t     target, sip = 0, dip = 0;
+    uint16_t     sport_lo = 0, sport_hi = 0, dport = 0;
+
+    struct option longopts[] = {
+       { "mode",                required_argument,  NULL, 'm' },
+       { "num-sessions",        required_argument,  NULL, 'n' },
+       { "batch-size",          required_argument,  NULL, 'b' },
+       { "target",              required_argument,  NULL, 't' },
+       { "no-cleanup",          no_argument,        NULL, 'c' },
+       { "duplicate-sessions",  no_argument,        NULL, 'e' },
+       { "sip",                 no_argument,        NULL, 's' },
+       { "dip",                 no_argument,        NULL, 'd' },
+       { "sport-low",           no_argument,        NULL, 'l' },
+       { "sport-high",          no_argument,        NULL, 'h' },
+       { "dport",               no_argument,        NULL, 'p' },
+       { 0,                     0,                  0,     0  }
+    };
+
+    // parse CLI options
+    while ((oc = getopt_long(argc, argv, ":cem:n:b:s:d:l:h:p:t:", longopts, NULL)) != -1) {
+        switch (oc) {
+        case 'm':
+            if (!strcmp(optarg, "seq")) {
+                g_random = false;
+            } else if (!strcmp(optarg, "random")) {
+                g_random = true;
+            }
+            break;
+        case 'n':
+            g_num_sessions = atoi(optarg);
+            break;
+        case 'b':
+            g_batch_size = atoi(optarg);
+            break;
+        case 'c':
+            g_no_cleanup = true;
+            break;
+        case 'e':
+            std::cout << "setting dup session to true" << std::endl;
+            g_dup_session = true;
+            break;
+        case 's':
+            sip = atoi(optarg);
+            break;
+        case 'd':
+            dip = atoi(optarg);
+            break;
+        case 'l':
+            sport_lo = atoi(optarg);
+            break;
+        case 'h':
+            sport_hi = atoi(optarg);
+            break;
+        case 'p':
+            dport = atoi(optarg);
+            break;
+        case 't':
+            if (!strcmp(optarg, "sim")) {
+                target = SIM;
+            } else {
+                target = HW;
+            }
+            break;
+        case ':':
+            break;
+        case '?':
+        default:
+            std::cout << "Invalid Argument" << std::endl;
+            exit(0);
+            break;
+        }
+    }
+
+    hal_client hclient(grpc::CreateChannel(svc_endpoint,
+                                           grpc::InsecureChannelCredentials()));
+
+    std::cout << "mode is " << (g_random ? "random" : "sequential") << std::endl
+              << "number of Sessions to be created is " << g_num_sessions << std::endl
+              << "batch size is " << g_batch_size << std::endl;
+
+    if (target == SIM) {
+        setup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id);
+    } else {
+        // heimdall would have pushed the config already, just setup sessions
+        vrf_id = 4;    // TODO: fix this to match heimdall !!
+        setup_hw_config(hclient, vrf_id, sip, dip, sport_lo, sport_hi, dport);
+    }
+
+    if (g_no_cleanup) {
+        return 0;
+    } else if (target == SIM) {
+        cleanup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id);
+                           
+    }
  
     return 0;
 }
