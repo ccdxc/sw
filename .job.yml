@@ -16,7 +16,7 @@ references:
   - venice/ui
 #Disabling as failing on top
 #  - test/suites/e2esanities
-  - test/ci_targets/e2e
+#  - test/ci_targets/e2e
 #  - test/ci_targets/e2etelemetry
   - storage/offload
 dependencies:
