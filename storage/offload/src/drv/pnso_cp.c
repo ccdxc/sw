@@ -93,7 +93,6 @@ compress_setup(struct service_info *svc_info,
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pc_res;
-	size_t src_buf_len;
 	uint16_t flags, threshold_len;
 
 	OSAL_LOG_DEBUG("enter ...");

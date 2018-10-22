@@ -96,7 +96,7 @@ decompress_setup(struct service_info *svc_info,
 	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 	dst_buf_len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
 
-	fill_dc_desc(dc_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
+	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl, svc_info->si_dst_sgl.sgl,
 			status_desc, src_buf_len, dst_buf_len);
 	clear_dc_header_present(flags, dc_desc);
 
@@ -111,7 +111,8 @@ decompress_setup(struct service_info *svc_info,
 				dc_desc, sizeof(*dc_desc));
 		if (!svc_info->si_seq_info.sqi_desc) {
 			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+					err);
 			goto out_status_desc;
 		}
 	}
