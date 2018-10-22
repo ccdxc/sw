@@ -26,7 +26,7 @@ ring_spec_info_fill(uint32_t ring_id,
 		spec->rs_ring_size = (uint8_t) ilog2(ring->ring_size);
 		spec->rs_desc_addr = sonic_virt_to_phy(desc);
 		spec->rs_num_descs = num_descs;
-        	return PNSO_OK;
+		return PNSO_OK;
 	}
 
 	return EINVAL;
@@ -56,8 +56,8 @@ pc_res_sgl_packed_get(const struct per_core_resource *pc_res,
 	while (iter) {
 		sgl = pc_res_mpool_object_get(pc_res, mpool_type);
 		if (!sgl) {
-			OSAL_LOG_ERROR("cannot obtain sgl_vec from pool, "
-				       "current_len %u", total_len);
+			OSAL_LOG_ERROR("cannot obtain sgl_vec from pool, current_len %u",
+				       total_len);
 			err = ENOMEM;
 			goto out;
 		}
@@ -141,10 +141,10 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
 	svc_sgl->mpool_type = vec_type;
 	svc_sgl->sgl = pc_res_mpool_object_get_with_num_vec_elems(pc_res, vec_type,
 								  &num_vec_elems);
-	if (!svc_sgl->sgl ) {
+	if (!svc_sgl->sgl) {
 		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s",
-                               mem_pool_get_type_str(vec_type));
-                err = ENOMEM;
+			       mem_pool_get_type_str(vec_type));
+		err = ENOMEM;
 		goto out;
 	}
 
@@ -178,11 +178,11 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
 	}
 
 	if (iter) {
-		OSAL_LOG_ERROR("buffer_list total length exceeds SGL vector, "
-			       "current_len %u", total_len);
+		OSAL_LOG_ERROR("buffer_list total length exceeds SGL vector, current_len %u",
+			       total_len);
 		err = EINVAL;
 		goto out;
-        }
+	}
 
 	/*
 	 * Caller must have ensured that svc_blist had non-zero length to begin with.
@@ -225,15 +225,15 @@ pc_res_sgl_pdma_packed_get(const struct per_core_resource *pc_res,
 		memset(sgl_pdma, 0, sizeof(*sgl_pdma));
 		iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
 		for (i = 0; iter && (i < ARRAY_SIZE(sgl_pdma->tuple)); i++) {
-			iter = buffer_list_iter_addr_len_get(iter, 
+			iter = buffer_list_iter_addr_len_get(iter,
 				SGL_PDMA_TUPLE_MAX_LEN, &sgl_pdma->tuple[i].addr,
 				&sgl_pdma->tuple[i].len);
 			total_len += sgl_pdma->tuple[i].len;
 		}
 
 		if (iter) {
-			OSAL_LOG_ERROR("buffer_list exceeds all SGL PDMA tuples, "
-				       "current_len %u", total_len);
+			OSAL_LOG_ERROR("buffer_list exceeds all SGL PDMA tuples, current_len %u",
+				       total_len);
 			goto out;
 		}
 	}
@@ -253,7 +253,7 @@ pc_res_sgl_pdma_put(const struct per_core_resource *pc_res,
 
 struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
-                      const struct service_buf_list *svc_blist)
+		      const struct service_buf_list *svc_blist)
 {
 	const struct pnso_buffer_list *buf_list = svc_blist->blist;
 
@@ -265,7 +265,7 @@ buffer_list_iter_init(struct buffer_list_iter *iter,
 		iter->cur_len = iter->cur_list->len;
 		iter->cur_addr = iter->blist_type == SERVICE_BUF_LIST_TYPE_HOST ?
 				 sonic_hostpa_to_devpa(iter->cur_list->buf) :
-			         iter->cur_list->buf;
+				 iter->cur_list->buf;
 		return iter;
 	}
 	return NULL;
@@ -279,7 +279,7 @@ buffer_list_iter_next(struct buffer_list_iter *iter)
 		iter->cur_len = iter->cur_list->len;
 		iter->cur_addr = iter->blist_type == SERVICE_BUF_LIST_TYPE_HOST ?
 				 sonic_hostpa_to_devpa(iter->cur_list->buf) :
-			         iter->cur_list->buf;
+				 iter->cur_list->buf;
 		return iter;
 	}
 	return NULL;
@@ -326,7 +326,7 @@ svc_interm_buf_list_get(struct service_info *svc_info)
 
 	/*
 	 * Produce output to intermediate buffers if there is a chain subordinate.
- 	 * Noe that when such buffers are involved, a PDMA could be needed to
+	 * Noe that when such buffers are involved, a PDMA could be needed to
 	 * transfer the output data to the application's destination buffers.
 	 * PDMA has the following requirements:
 	 * 1) The source data must come from one single contiguous buffer, and
@@ -342,11 +342,11 @@ svc_interm_buf_list_get(struct service_info *svc_info)
 	 * application does not supply any destination buffers, then no PDMA
 	 * will be needed. Second, if application destination buffers are
 	 * present and they are longer than 8K, intermediate buffers will not
-	 * be used and HW will be set up to output directly to the app's buffers. 
+	 * be used and HW will be set up to output directly to the app's buffers.
 	 */
 	OSAL_ASSERT(chn_service_has_sub_chain(svc_info));
 	iblist = &svc_info->si_iblist;
-        iblist->blist.count = 0;
+	iblist->blist.count = 0;
 	iblist_buf = &iblist->blist.buffers[0];
 
 	req_size = svc_info->si_dst_blist.len ?
@@ -375,7 +375,7 @@ svc_interm_buf_list_get(struct service_info *svc_info)
 
 		/*
 		 * Switch si_dst_blist to using intermediate buffers
-	         */
+		 */
 		svc_info->si_dst_blist.type = SERVICE_BUF_LIST_TYPE_RMEM;
 		svc_info->si_dst_blist.len = req_size;
 		svc_info->si_dst_blist.blist = &iblist->blist;
@@ -398,9 +398,9 @@ svc_interm_buf_list_put(struct service_info *svc_info)
 		OSAL_ASSERT(iblist_buf->buf);
 		ibuf = mpool_get_object_alloc_addr(iblist->buf_type, iblist_buf->buf);
 		pc_res_mpool_object_put(svc_info->si_pc_res, iblist->buf_type, ibuf);
-                iblist_buf++;
-                iblist->blist.count--;
-        }
+		iblist_buf++;
+		iblist->blist.count--;
+	}
 }
 
 struct mem_pool *
@@ -437,7 +437,7 @@ pc_res_mpool_object_get(const struct per_core_resource *pc_res,
 void *
 pc_res_mpool_object_get_with_size(const struct per_core_resource *pc_res,
 				  enum mem_pool_type type,
-                                  uint32_t *ret_size)
+				  uint32_t *ret_size)
 {
 	struct mem_pool *mpool;
 	void *obj = NULL;
@@ -502,8 +502,8 @@ pprint_chain_sgl_pdma(uint64_t sgl_pa)
 		sgl = (const struct chain_sgl_pdma *) sonic_phy_to_virt(sgl_pa);
 		OSAL_LOG_DEBUG("%30s: 0x"PRIx64" ==> 0x"PRIx64, "", (uint64_t)sgl, sgl_pa);
 		tuple = sgl->tuple;
-		OSAL_LOG_DEBUG("%30s: 0x"PRIx64"/%d 0x"PRIx64"/%d 0x"PRIx64"/%d "
-				"0x"PRIx64"/%d", "",
+		OSAL_LOG_DEBUG("%30s: 0x"PRIx64"/%d 0x"PRIx64"/%d 0x"PRIx64"/%d 0x"
+				PRIx64"/%d", "",
 				tuple[0].addr, tuple[0].len,
 				tuple[1].addr, tuple[1].len,
 				tuple[2].addr, tuple[2].len,

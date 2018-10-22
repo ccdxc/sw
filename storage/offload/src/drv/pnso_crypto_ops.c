@@ -82,12 +82,12 @@ crypto_desc_fill(struct service_info *svc_info,
 	 * Intermediate status is never directy "polled" so no need to clear it.
 	 */
 	memset(crypto_desc, 0, sizeof(*crypto_desc));
-        memset(status_desc, 0, sizeof(*status_desc));
+	memset(status_desc, 0, sizeof(*status_desc));
 	if (svc_info->si_istatus_desc)
-		crypto_desc->cd_status_addr = 
+		crypto_desc->cd_status_addr =
 		    mpool_get_object_phy_addr(MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 					      svc_info->si_istatus_desc);
-        else
+	else
 		crypto_desc->cd_status_addr = sonic_virt_to_phy(status_desc);
 
 	crypto_desc->cd_in_aol = sonic_virt_to_phy(svc_info->si_src_aol.aol);
@@ -103,7 +103,7 @@ crypto_desc_fill(struct service_info *svc_info,
 			    crypto_algo_cmd_lo_tbl[pnso_crypto_desc->algo_type];
 	crypto_desc->cd_cmd.cc_token_4 =
 			    crypto_algo_cmd_hi_tbl[pnso_crypto_desc->algo_type];
-	crypto_desc->cd_key_desc_idx = 
+	crypto_desc->cd_key_desc_idx =
 		     sonic_get_crypto_key_idx(pnso_crypto_desc->key_desc_idx);
 
 	crypto_desc->cd_iv_addr = sonic_hostpa_to_devpa(pnso_crypto_desc->iv_addr);
@@ -140,23 +140,23 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 		}
 
 		if (chn_service_has_interm_blist(svc_info) &&
-                    svc_params->sp_dst_blist) {
+		    svc_params->sp_dst_blist) {
 
 			orig_dst_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
 			orig_dst_blist.len = svc_info->si_dst_blist.len;
 			orig_dst_blist.blist = svc_params->sp_dst_blist;
 			svc_info->si_sgl_pdma =
-		    	        pc_res_sgl_pdma_packed_get(pc_res, &orig_dst_blist);
+				pc_res_sgl_pdma_packed_get(pc_res, &orig_dst_blist);
 			if (!svc_info->si_sgl_pdma) {
 				OSAL_LOG_ERROR("failed to obtain chain SGL for PDMA");
 				return ENOMEM;
 			}
 		}
-        }
+	}
 
 	/*
 	 * Validate a destination buffer list exists (it could come from app or
-         * intermediate pool as evaluated above and elsewhere).
+	 * intermediate pool as evaluated above and elsewhere).
 	 */
 	OSAL_LOG_DEBUG("src_total_len %u dst_total_len %u",
 		       svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
@@ -280,14 +280,14 @@ crypto_chain(struct chain_entry *centry)
 	if (chn_service_has_sub_chain(svc_info)) {
 		if (svc_info->si_sgl_pdma) {
 			OSAL_ASSERT(chn_service_has_interm_blist(svc_info));
-                        iblist = &svc_info->si_iblist;
+			iblist = &svc_info->si_iblist;
 			crypto_chain->ccp_crypto_buf_addr = iblist->blist.buffers[0].buf;
 			crypto_chain->ccp_data_len = iblist->blist.buffers[0].len;
 			crypto_chain->ccp_sgl_pdma_dst_addr =
 				sonic_virt_to_phy(svc_info->si_sgl_pdma);
 			crypto_chain->ccp_cmd.ccpc_sgl_pdma_en = true;
 			crypto_chain->ccp_cmd.ccpc_sgl_pdma_len_from_desc = true;
-                	SGL_PDMA_PPRINT(crypto_chain->ccp_sgl_pdma_dst_addr);
+			SGL_PDMA_PPRINT(crypto_chain->ccp_sgl_pdma_dst_addr);
 		}
 		crypto_chain->ccp_status_addr_0 =
 		  mpool_get_object_phy_addr(MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
@@ -299,7 +299,7 @@ crypto_chain(struct chain_entry *centry)
 		crypto_chain->ccp_cmd.ccpc_stop_chain_on_error = true;
 
 		if (svc_info->si_type == PNSO_SVC_TYPE_DECRYPT) {
-			err = pc_res_sgl_vec_packed_get(svc_info->si_pc_res, 
+			err = pc_res_sgl_vec_packed_get(svc_info->si_pc_res,
 				    &svc_info->si_dst_blist, svc_info->si_block_size,
 				    MPOOL_TYPE_CRYPTO_SGL_VECTOR, &svc_info->si_src_sgl);
 			if (err) {
@@ -426,7 +426,7 @@ crypto_teardown(struct service_info *svc_info)
 	 * by sequencer.
 	 */
 	CRYPTO_PPRINT_DESC(svc_info->si_desc);
-        SGL_PDMA_PPRINT(svc_info->si_crypto_chain.ccp_sgl_pdma_dst_addr);
+	SGL_PDMA_PPRINT(svc_info->si_crypto_chain.ccp_sgl_pdma_dst_addr);
 
 	crypto_aol_put(pc_res, &svc_info->si_src_aol);
 	crypto_aol_put(pc_res, &svc_info->si_dst_aol);

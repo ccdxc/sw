@@ -107,8 +107,8 @@ crypto_aol_packed_get(const struct per_core_resource *pc_res,
 	while (iter) {
 		aol = pc_res_mpool_object_get(pc_res, svc_aol->mpool_type);
 		if (!aol) {
-			OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool, "
-				       "current_len %u", total_len);
+			OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool, current_len %u",
+				       total_len);
 			goto out;
 		}
 		memset(aol, 0, sizeof(*aol));
@@ -127,11 +127,11 @@ crypto_aol_packed_get(const struct per_core_resource *pc_res,
 		 * Crypto requires ca_addr_0 to be populated for the entire AOL
 		 * to be valid. If it contains zero, then not only that we've
 		 * reached the end of the buffer list, we must exclude this AOL.
-		 * This could happen if the app's buffer list contains some 
+		 * This could happen if the app's buffer list contains some
 		 * zero length at the end of the list. For example:
 		 * count=4, buf0/len0>0, buf1/len1>0, buf2/len2>0, buf3/len3=0.
-                 * Note that list iterator would automatically have trimmed any
-                 * intervening zero-length buffers in the list.
+		 * Note that list iterator would automatically have trimmed any
+		 * intervening zero-length buffers in the list.
 		 */
 		if (!aol->ca_len_0) {
 			pc_res_mpool_object_put(pc_res, svc_aol->mpool_type, aol);
@@ -196,11 +196,11 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
 		 * Crypto requires ca_addr_0 to be populated for the entire AOL
 		 * to be valid. If it contains zero, then not only that we've
 		 * reached the end of the buffer list, we must exclude this AOL.
-		 * This could happen if the app's buffer list contains some 
+		 * This could happen if the app's buffer list contains some
 		 * zero length at the end of the list. For example:
 		 * count=4, buf0/len0>0, buf1/len1>0, buf2/len2>0, buf3/len3=0.
-                 * Note that list iterator would automatically have trimmed any
-                 * intervening zero-length buffers in the list.
+		 * Note that list iterator would automatically have trimmed any
+		 * intervening zero-length buffers in the list.
 		 */
 		if (!aol_vec->ca_len_0)
 			break;
@@ -214,9 +214,9 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
 		if (aol_vec->ca_len_0 != block_size) {
 			OSAL_LOG_ERROR("Sparse AOL fails to make full block_size %u",
 					block_size);
-                        err = EINVAL;
+			err = EINVAL;
 			goto out;
-                }
+		}
 
 		if (aol_prev)
 			aol_prev->ca_next = sonic_virt_to_phy(aol_vec);
@@ -226,8 +226,8 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
 	}
 
 	if (iter) {
-		OSAL_LOG_ERROR("buffer_list total length exceeds AOL vector, "
-			       "current_len %u", total_len);
+		OSAL_LOG_ERROR("buffer_list total length exceeds AOL vector, current_len %u",
+			       total_len);
 		err = EINVAL;
 		goto out;
 	}
@@ -266,7 +266,7 @@ crypto_aol_put(const struct per_core_resource *pc_res,
 pnso_error_t
 crypto_desc_status_convert(uint64_t status)
 {
-        pnso_error_t err = PNSO_OK;
+	pnso_error_t err = PNSO_OK;
 
 	if (status & CRYPTO_LEN_NOT_MULTI_SECTORS)
 		err = PNSO_ERR_CRYPTO_LEN_NOT_MULTI_SECTORS;

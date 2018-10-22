@@ -80,7 +80,7 @@ mpool_create_mem_objects(struct mem_pool *mpool)
 	mpool->mp_config.mpc_num_allocs = 0;
 	mpool->mp_config.mpc_page_size = 0;
 	if (mpool->mp_config.mpc_pool_size) {
-		p = mpool->mp_config.mpc_align_size != PNSO_MEM_ALIGN_NONE ? 
+		p = mpool->mp_config.mpc_align_size != PNSO_MEM_ALIGN_NONE ?
 		    osal_aligned_alloc(mpool->mp_config.mpc_align_size,
 				       mpool->mp_config.mpc_pool_size) :
 		    osal_alloc(mpool->mp_config.mpc_pool_size);
@@ -113,22 +113,22 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 	uint32_t total_size;
 
 	mpool->mp_config.mpc_num_allocs = 0;
-        total_size = mpool->mp_config.mpc_pool_size;
+	total_size = mpool->mp_config.mpc_pool_size;
 	if (total_size == 0)
 		return NULL;
-        
+
 	/*
 	 * rmem alignment is always page_size so ensure it can
 	 * subsume align_size.
 	 */
 	mpool->mp_config.mpc_page_size = osal_rmem_page_size_get();
 	OSAL_ASSERT(is_power_of_2(mpool->mp_config.mpc_page_size));
-	if ((mpool->mp_config.mpc_align_size != PNSO_MEM_ALIGN_NONE) && 
-	    (!is_power_of_2(mpool->mp_config.mpc_align_size) || 
+	if ((mpool->mp_config.mpc_align_size != PNSO_MEM_ALIGN_NONE) &&
+	    (!is_power_of_2(mpool->mp_config.mpc_align_size) ||
 	     (mpool->mp_config.mpc_align_size > mpool->mp_config.mpc_page_size))) {
-		OSAL_LOG_ERROR("rmem invalid align_size %u in relation to "
-			       "page_size %u", mpool->mp_config.mpc_align_size,
-                               mpool->mp_config.mpc_page_size);
+		OSAL_LOG_ERROR("rmem invalid align_size %u in relation to page_size %u",
+			       mpool->mp_config.mpc_align_size,
+			       mpool->mp_config.mpc_page_size);
 		return NULL;
 	}
 
@@ -152,8 +152,8 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		if (!osal_rmem_addr_valid(first_rmem))
 			first_rmem = curr_rmem;
 
-		if (osal_rmem_addr_valid(prev_rmem) && 
-                    ((curr_rmem - mpool->mp_config.mpc_page_size) != prev_rmem)) {
+		if (osal_rmem_addr_valid(prev_rmem) &&
+		    ((curr_rmem - mpool->mp_config.mpc_page_size) != prev_rmem)) {
 			OSAL_LOG_ERROR("unexpected non-contiguous alloc curr_rmem 0x" PRIx64
 				       " prev_rmem 0x" PRIx64, curr_rmem, prev_rmem);
 			osal_rmem_free(curr_rmem, mpool->mp_config.mpc_page_size);
@@ -161,7 +161,7 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		}
 		mpool->mp_config.mpc_num_allocs++;
 		prev_rmem = curr_rmem;
-                total_size = total_size > mpool->mp_config.mpc_page_size ?
+		total_size = total_size > mpool->mp_config.mpc_page_size ?
 			     total_size - mpool->mp_config.mpc_page_size : 0;
 	}
 
@@ -249,8 +249,8 @@ mpool_create(enum mem_pool_type mpool_type,
 	mpool->mp_config.mpc_object_size = object_size;
 	mpool->mp_config.mpc_vec_elem_size = object_size * num_vec_elems;
 	mpool->mp_config.mpc_pad_size = mpool_get_pad_size(mpool->mp_config.mpc_vec_elem_size, align_size);
-	mpool->mp_config.mpc_pool_size = 
-                ((mpool->mp_config.mpc_vec_elem_size + mpool->mp_config.mpc_pad_size) * num_objects);
+	mpool->mp_config.mpc_pool_size =
+		((mpool->mp_config.mpc_vec_elem_size + mpool->mp_config.mpc_pad_size) * num_objects);
 
 	mpool->mp_objects = mpool_type_is_rmem(mpool_type) ?
 			    mpool_create_rmem_objects(mpool) :

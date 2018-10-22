@@ -22,7 +22,7 @@ is_power_of_2(unsigned long n)
 }
 #endif
 
-struct pnso_flat_buffer * __attribute__((unused))
+struct pnso_flat_buffer *__attribute__((unused))
 pbuf_alloc_flat_buffer(uint32_t len)
 {
 	struct pnso_flat_buffer *flat_buf;
@@ -51,7 +51,7 @@ out:
 	return NULL;
 }
 
-struct pnso_flat_buffer * __attribute__((unused))
+struct pnso_flat_buffer *__attribute__((unused))
 pbuf_aligned_alloc_flat_buffer(uint32_t align_size, uint32_t len)
 {
 	struct pnso_flat_buffer *flat_buf;
@@ -97,7 +97,7 @@ pbuf_free_flat_buffer(struct pnso_flat_buffer *flat_buf)
 	/* done, and let caller be responsible to free the container */
 }
 
-struct pnso_buffer_list * __attribute__((unused))
+struct pnso_buffer_list *__attribute__((unused))
 pbuf_alloc_buffer_list(uint32_t count, uint32_t len)
 {
 	struct pnso_buffer_list *buf_list;
@@ -139,7 +139,7 @@ out:
 	return NULL;
 }
 
-struct pnso_buffer_list * __attribute__((unused))
+struct pnso_buffer_list *__attribute__((unused))
 pbuf_aligned_alloc_buffer_list(uint32_t count, uint32_t align_size,
 		uint32_t len)
 {
@@ -197,7 +197,7 @@ pbuf_free_buffer_list(struct pnso_buffer_list *buf_list)
 	osal_free(buf_list);
 }
 
-struct pnso_buffer_list * __attribute__((unused))
+struct pnso_buffer_list *__attribute__((unused))
 pbuf_clone_buffer_list(const struct pnso_buffer_list *src_buf_list)
 {
 	struct pnso_buffer_list *buf_list;
@@ -261,8 +261,8 @@ pbuf_copy_buffer_list(const struct pnso_buffer_list *src_buf_list,
 			if (copy_len > (dst_buf->len - dst_buf_offset))
 				copy_len = dst_buf->len - dst_buf_offset;
 			if (copy_len) {
-				memcpy((uint8_t*)dst_buf->buf+dst_buf_offset,
-				       (uint8_t*)src_buf->buf+src_buf_offset,
+				memcpy((uint8_t *)dst_buf->buf+dst_buf_offset,
+				       (uint8_t *)src_buf->buf+src_buf_offset,
 				       copy_len);
 				ret += copy_len;
 				src_buf_offset += copy_len;

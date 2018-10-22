@@ -205,7 +205,7 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 	 * Intermediate buffers are allocated as vectors of contiguous buffers,
 	 * each vector handles the max request buffer size.
 	 */
-        num_buf_vecs = pc_num_bufs / INTERM_BUF_NOMINAL_NUM_BUFS;
+	num_buf_vecs = pc_num_bufs / INTERM_BUF_NOMINAL_NUM_BUFS;
 	if (!num_buf_vecs) {
 		OSAL_LOG_ERROR("failure: zero num_buf_vecs");
 		return ENOMEM;

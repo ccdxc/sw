@@ -30,7 +30,7 @@ decompact_sub_chain_from_cpdc(struct service_info *svc_info,
 
 static pnso_error_t
 decompact_sub_chain_from_crypto(struct service_info *svc_info,
-			        struct crypto_chain_params *crypto_chain)
+				struct crypto_chain_params *crypto_chain)
 {
 	return EOPNOTSUPP;
 }

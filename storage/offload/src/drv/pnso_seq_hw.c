@@ -883,14 +883,14 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 	}
 
 	err = sonic_get_seq_statusq(lif, seq_info->sqi_status_qtype,
-	                            &seq_spec->sqs_seq_status_q);
+				    &seq_spec->sqs_seq_status_q);
 	if (err) {
 		return err;
 	}
 
-	seq_info->sqi_status_desc = 
-                (uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q, 
-	                                         &statusq_index);
+	seq_info->sqi_status_desc =
+		(uint8_t *)sonic_q_consume_entry(seq_spec->sqs_seq_status_q,
+						 &statusq_index);
 	if (!seq_info->sqi_status_desc) {
 		OSAL_LOG_ERROR("failed to obtain crypto sequencer statusq desc");
 		return EPERM;
@@ -901,7 +901,7 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 	OSAL_LOG_DEBUG("ring_id: %u index: %u desc: 0x"PRIx64,
 		       seq_info->sqi_ring_id, statusq_index, (uint64_t)desc);
 	fill_crypto_seq_status_desc(&svc_info->si_crypto_chain,
-                                    seq_info->sqi_status_desc);
+				    seq_info->sqi_status_desc);
 	PPRINT_SEQUENCER_INFO(seq_info);
 	return PNSO_OK;
 }
