@@ -307,10 +307,14 @@ TEST_F(indexer_test, test10) {
     rs  = ind1->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 127);
+    EXPECT_EQ(ind1->num_indices_allocated(), 1);
+    EXPECT_EQ(ind1->num_indices_allocated(), ind1->compute_num_indices_allocated());
 
     // Allocate indexer to verify OOB
     rs = ind1->alloc_withid(130);
     EXPECT_EQ(rs, indexer::INDEX_OOB);
+    EXPECT_EQ(ind1->num_indices_allocated(), 1);
+    EXPECT_EQ(ind1->num_indices_allocated(), ind1->compute_num_indices_allocated());
 
     // Allocate indexer from end
     rs  = ind1->alloc(&i, FALSE);
@@ -320,6 +324,8 @@ TEST_F(indexer_test, test10) {
     // Free index
     rs = ind1->free(127);
     EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(ind1->num_indices_allocated(), 1);
+    EXPECT_EQ(ind1->num_indices_allocated(), ind1->compute_num_indices_allocated());
 
     // Allocate index from end
     rs  = ind1->alloc(&i, FALSE);
@@ -330,6 +336,8 @@ TEST_F(indexer_test, test10) {
     rs  = ind1->alloc(&i);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 0);
+    EXPECT_EQ(ind1->num_indices_allocated(), 3);
+    EXPECT_EQ(ind1->num_indices_allocated(), ind1->compute_num_indices_allocated());
     
     // Free index
     rs = ind1->free(125);
@@ -380,6 +388,12 @@ TEST_F(indexer_test, test10) {
     rs  = ind2->alloc(&i, FALSE);
     EXPECT_EQ(rs, indexer::SUCCESS);
     EXPECT_EQ(i, (uint32_t) 96);
+
+    // Allocate index block
+    rs = ind2->alloc_block(&i, 50);
+    EXPECT_EQ(rs, indexer::SUCCESS);
+    EXPECT_EQ(ind2->num_indices_allocated(), 54);
+    EXPECT_EQ(ind2->num_indices_allocated(), ind2->compute_num_indices_allocated());  
 }
 
 int main(int argc, char **argv) {

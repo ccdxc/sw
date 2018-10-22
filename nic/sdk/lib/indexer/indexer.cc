@@ -79,6 +79,8 @@ indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
     if (skip_zero_) {
         alloc_withid(0, 1);
     }
+
+    usage_ = 0;
 }
 
 //---------------------------------------------------------------------------
@@ -153,6 +155,7 @@ indexer::alloc(uint32_t *index, bool lowest, uint32_t block_size)
     // set the new index and return it
     bits_[id] |= (1ULL << off);
     *index = free_idx;
+    usage_++;
 
 end:
 
@@ -219,6 +222,7 @@ indexer::alloc_block(uint32_t *index, uint32_t block_size)
         word = idx >> WORD_SIZE_SHIFT;
         offs = idx  & WORD_SIZE_MASK;
         bits_[word] |= (1ULL << offs);
+        usage_++;
     }
 
 end:
@@ -258,6 +262,7 @@ indexer::alloc_withid(uint32_t index, uint32_t block_size)
         }
         // set the index
         bits_[word] |= ((uint64_t)(1ULL << pos));
+        usage_++;
     } else {
         rs = INDEX_OOB;
         goto end;
@@ -299,6 +304,8 @@ indexer::free(uint32_t index)
             goto end;
         }
         bits_[word] &= ((uint64_t) ~(1ULL << pos));
+        if (usage_)
+            usage_--;
     } else {
         rs = INDEX_OOB;
     }
@@ -347,8 +354,8 @@ end:
 //---------------------------------------------------------------------------
 // return number of indices allocate so far
 //---------------------------------------------------------------------------
-uint32_t
-indexer::num_indices_allocated(void)
+uint64_t
+indexer::compute_num_indices_allocated(void)
 {
 	uint32_t	usage = 0;
 
@@ -359,7 +366,18 @@ indexer::num_indices_allocated(void)
 		}
 	}
 
+        SDK_TRACE_DEBUG("Usage internal : %d Usage computed: %d", usage_, usage);
+        SDK_ASSERT(usage_ == usage);
 	return usage;
+}
+
+//---------------------------------------------------------------------------
+// return number of indices allocate so far
+//---------------------------------------------------------------------------
+uint64_t
+indexer::num_indices_allocated(void)
+{
+    return usage_;
 }
 
 }    // namespace lib

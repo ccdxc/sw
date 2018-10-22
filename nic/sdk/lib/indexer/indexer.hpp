@@ -37,6 +37,7 @@ private:
     bool            thread_safe_;       // enable/disable thread safety
     sdk_spinlock_t  slock_;             // lock for thread safety
     uint64_t        debruijn64_ = 0x022FDD63CC95386D;
+    uint64_t        usage_;
 
     // convert debruijn idx to standard idx
     const unsigned int index64_[64] =
@@ -70,7 +71,8 @@ public:
     indexer::status free(uint32_t index);
     bool is_index_allocated(uint32_t index);
     uint32_t get_size(void) const { return size_; }
-	uint32_t num_indices_allocated(void);
+    uint64_t num_indices_allocated(void);
+    uint64_t compute_num_indices_allocated(void);
 };
 
 }    // namespace lib
