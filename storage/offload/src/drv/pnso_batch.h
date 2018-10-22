@@ -38,7 +38,7 @@ struct batch_info {
 		struct crypto_desc *bi_crypto_desc;
 	} u;
 
-	struct per_core_resource *bi_pc_res;	/* TODO-batch: why?! */
+	struct per_core_resource *bi_pcr;
 
 	completion_cb_t	bi_req_cb;	/* caller supplied call-back */
 	void *bi_req_cb_ctx;		/* caller supplied cb context */

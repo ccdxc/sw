@@ -53,8 +53,8 @@ pprint_batch_info(struct batch_info *batch_info)
 	OSAL_LOG_INFO("%30s: %d", "bi_svc_type", batch_info->bi_svc_type);
 	OSAL_LOG_INFO("%30s: 0x%llx", "bi_xxxx_desc",
 			(uint64_t) batch_info->u.bi_cpdc_desc);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bi_pc_res",
-			(uint64_t) batch_info->bi_pc_res);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bi_pcr",
+			(uint64_t) batch_info->bi_pcr);
 	OSAL_LOG_INFO("%30s: %d", "bi_num_entries", batch_info->bi_num_entries);
 
 	for (i = 0; i < batch_info->bi_num_entries;  i++) {
@@ -79,34 +79,11 @@ pprint_batch_info(struct batch_info *batch_info)
 			(uint64_t) batch_info->bi_req_poll_ctx);
 }
 
-static struct per_core_resource *
-get_per_core_resource(void)
-{
-	struct lif *lif;
-	struct per_core_resource *pc_res;
-
-	lif = sonic_get_lif();
-	if (!lif) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	pc_res = sonic_get_per_core_res(lif);
-	if (!pc_res) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	return pc_res;
-out:
-	return NULL;
-}
-
 static void *
 get_mpool_batch_object(enum mem_pool_type pool_type)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct mem_pool *batch_page_mpool, *batch_info_mpool;
 	void *p = NULL;
 
@@ -115,14 +92,8 @@ get_mpool_batch_object(enum mem_pool_type pool_type)
 	OSAL_ASSERT((pool_type == MPOOL_TYPE_BATCH_PAGE) ||
 			(pool_type == MPOOL_TYPE_BATCH_INFO));
 
-	pc_res = get_per_core_resource();
-	if (!pc_res) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	batch_page_mpool = pc_res->mpools[MPOOL_TYPE_BATCH_PAGE];
-	batch_info_mpool = pc_res->mpools[MPOOL_TYPE_BATCH_INFO];
+	batch_page_mpool = pcr->mpools[MPOOL_TYPE_BATCH_PAGE];
+	batch_info_mpool = pcr->mpools[MPOOL_TYPE_BATCH_INFO];
 	if (!batch_page_mpool || !batch_info_mpool) {
 		OSAL_ASSERT(0);
 		goto out;
@@ -151,7 +122,7 @@ static pnso_error_t
 put_mpool_batch_object(enum mem_pool_type pool_type, void *p)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct mem_pool *batch_page_mpool, *batch_info_mpool;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -159,14 +130,8 @@ put_mpool_batch_object(enum mem_pool_type pool_type, void *p)
 	OSAL_ASSERT((pool_type == MPOOL_TYPE_BATCH_PAGE) ||
 			(pool_type == MPOOL_TYPE_BATCH_INFO));
 
-	pc_res = get_per_core_resource();
-	if (!pc_res) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	batch_page_mpool = pc_res->mpools[MPOOL_TYPE_BATCH_PAGE];
-	batch_info_mpool = pc_res->mpools[MPOOL_TYPE_BATCH_INFO];
+	batch_page_mpool = pcr->mpools[MPOOL_TYPE_BATCH_PAGE];
+	batch_info_mpool = pcr->mpools[MPOOL_TYPE_BATCH_INFO];
 	if (!batch_page_mpool || !batch_info_mpool) {
 		OSAL_ASSERT(0);
 		goto out;
@@ -195,14 +160,14 @@ static void
 get_bulk_batch_desc(struct batch_info *batch_info)
 {
 	struct mem_pool *mpool;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr;
 
-	pc_res = batch_info->bi_pc_res;
+	pcr = batch_info->bi_pcr;
 	switch (batch_info->bi_svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-		// mpool = pc_res->mpools[batch_info->bi_mpool_type];
-		mpool = pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR];
+		// mpool = pcr->mpools[batch_info->bi_mpool_type];
+		mpool = pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR];
 		batch_info->u.bi_crypto_desc =
 			crypto_get_batch_bulk_desc(mpool);
 
@@ -214,8 +179,8 @@ get_bulk_batch_desc(struct batch_info *batch_info)
 	case PNSO_SVC_TYPE_DECOMPRESS:
 	case PNSO_SVC_TYPE_HASH:
 	case PNSO_SVC_TYPE_CHKSUM:
-		// mpool = pc_res->mpools[batch_info->bi_mpool_type];
-		mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR];
+		// mpool = pcr->mpools[batch_info->bi_mpool_type];
+		mpool = pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR];
 		batch_info->u.bi_cpdc_desc =
 			cpdc_get_batch_bulk_desc(mpool);
 
@@ -233,16 +198,16 @@ static void
 put_bulk_batch_desc(struct batch_info *batch_info)
 {
 	struct mem_pool *mpool;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr;
 
 	switch (batch_info->bi_svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-		pc_res = batch_info->bi_pc_res;
+		pcr = batch_info->bi_pcr;
 #if 1
-		mpool = pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR];
+		mpool = pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR];
 #else
-		mpool = pc_res->mpools[batch_info->bi_mpool_type];
+		mpool = pcr->mpools[batch_info->bi_mpool_type];
 #endif
 		crypto_put_batch_bulk_desc(mpool, batch_info->u.bi_crypto_desc);
 
@@ -254,11 +219,11 @@ put_bulk_batch_desc(struct batch_info *batch_info)
 	case PNSO_SVC_TYPE_DECOMPRESS:
 	case PNSO_SVC_TYPE_HASH:
 	case PNSO_SVC_TYPE_CHKSUM:
-		pc_res = batch_info->bi_pc_res;
+		pcr = batch_info->bi_pcr;
 #if 1
-		mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR];
+		mpool = pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR];
 #else
-		mpool = pc_res->mpools[batch_info->bi_mpool_type];
+		mpool = pcr->mpools[batch_info->bi_mpool_type];
 #endif
 		cpdc_put_batch_bulk_desc(mpool, batch_info->u.bi_cpdc_desc);
 
@@ -275,12 +240,8 @@ put_bulk_batch_desc(struct batch_info *batch_info)
 static struct batch_info *
 init_batch_info(struct pnso_service_request *req)
 {
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_info *batch_info = NULL;
-
-	pc_res = get_per_core_resource();
-	if (!pc_res)
-		goto out;
 
 	batch_info = (struct batch_info *)
 		get_mpool_batch_object(MPOOL_TYPE_BATCH_INFO);
@@ -290,10 +251,10 @@ init_batch_info(struct pnso_service_request *req)
 	memset(batch_info, 0, sizeof(struct batch_info));
 	batch_info->bi_svc_type = req->svc[0].svc_type;
 	// batch_info->bi_mpool_type = TODO
-	batch_info->bi_pc_res = pc_res;
+	batch_info->bi_pcr = pcr;
 	get_bulk_batch_desc(batch_info);
 
-	pc_res->batch_info = batch_info;
+	pcr->batch_info = batch_info;
 out:
 	return batch_info;
 }
@@ -301,17 +262,11 @@ out:
 static void
 destroy_batch_chain(struct batch_info *batch_info)
 {
-	struct per_core_resource *pc_res;
-
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
 	uint32_t idx, num_entries;
 
 	OSAL_LOG_DEBUG("enter ...");
-
-	pc_res = get_per_core_resource();
-	if (!pc_res) 
-		OSAL_ASSERT(0);
 
 	PPRINT_BATCH_INFO(batch_info);
 	num_entries = batch_info->bi_num_entries;
@@ -333,15 +288,10 @@ destroy_batch_chain(struct batch_info *batch_info)
 static void
 deinit_batch(struct batch_info *batch_info)
 {
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_page *batch_page;
 	uint32_t idx, num_pages;
 
-	pc_res = get_per_core_resource();
-	if (!pc_res) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
 	OSAL_LOG_DEBUG("release pages/batch batch_info: 0x%llx",
 			(uint64_t) batch_info);
 
@@ -358,30 +308,23 @@ deinit_batch(struct batch_info *batch_info)
 	}
 
 	put_mpool_batch_object(MPOOL_TYPE_BATCH_INFO, batch_info);
-	pc_res->batch_info = NULL;
+	pcr->batch_info = NULL;
 
-out:
 	return;
 }
 
 void
 bat_destroy_batch(void)
 {
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_info *batch_info;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	pc_res = get_per_core_resource();
-	if (!pc_res) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	batch_info = pc_res->batch_info;
+	batch_info = pcr->batch_info;
 	if (!batch_info) {
-		OSAL_LOG_DEBUG("batch not found! pc_res: 0x%llx",
-				(uint64_t) pc_res);
+		OSAL_LOG_DEBUG("batch not found! pcr: 0x%llx",
+				(uint64_t) pcr);
 		goto out;
 	}
 	deinit_batch(batch_info);
@@ -424,19 +367,11 @@ build_batch(struct batch_info *batch_info,
 		void *pnso_poll_fn, void **pnso_poll_ctx)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pc_res;
-
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
 	uint32_t idx, num_entries;
 
 	OSAL_LOG_DEBUG("enter ...");
-
-	pc_res = get_per_core_resource();
-	if (!pc_res) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
 
 	PPRINT_BATCH_INFO(batch_info);
 	num_entries = batch_info->bi_num_entries;
@@ -472,20 +407,14 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_info *batch_info;
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	pc_res = get_per_core_resource();
-	if (!pc_res) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	batch_info = pc_res->batch_info;
+	batch_info = pcr->batch_info;
 	if (!batch_info) {
 		batch_info = init_batch_info(svc_req);
 		if (!batch_info) {
@@ -627,18 +556,12 @@ bat_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		void **pnso_poll_ctx)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_info *batch_info;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	pc_res = get_per_core_resource();
-	if (!pc_res) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	batch_info = pc_res->batch_info;
+	batch_info = pcr->batch_info;
 	if (!batch_info) {
 		OSAL_LOG_DEBUG("invalid thread/request! err: %d", err);
 		goto out;

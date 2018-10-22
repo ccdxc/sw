@@ -823,7 +823,7 @@ chn_build_batch_chain(struct batch_info *batch_info,
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	pc_res = batch_info->bi_pc_res;
+	pc_res = batch_info->bi_pcr;
 	if (!pc_res) {
 		OSAL_ASSERT(0);
 		goto out;
