@@ -137,7 +137,45 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
-		epStatusShowOneResp(resp)
+
+		uplinkIf := resp.GetStatus().GetEnicPinnedUplinkIfKeyHandle()
+		var uplink uint64
+		if uplinkIf != nil {
+			uplink = uplinkIf.GetIfHandle()
+		} else {
+			uplink = 0
+		}
+		// Retrieve uplink interface from handle
+		if uplink != 0 {
+			ifReq := &halproto.InterfaceGetRequest{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
+						IfHandle: uplink,
+					},
+				},
+			}
+			ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+				Request: []*halproto.InterfaceGetRequest{ifReq},
+			}
+
+			// HAL call
+			hClient := halproto.NewInterfaceClient(c.ClientConn)
+			hRespMsg, err := hClient.InterfaceGet(context.Background(), ifGetReqMsg)
+			if err != nil {
+				fmt.Printf("Getting if failed. %v\n", err)
+				return
+			}
+
+			for _, hResp := range hRespMsg.Response {
+				if hResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+					fmt.Printf("HAL Returned non OK status. %v\n", hResp.ApiStatus)
+					continue
+				}
+				uplink = hResp.GetSpec().GetKeyOrHandle().GetInterfaceId()
+			}
+		}
+
+		epStatusShowOneResp(uplink, resp)
 	}
 }
 
@@ -197,10 +235,10 @@ func epDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func epShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
-	fmt.Printf("Handle   : Endpoint's Handle                       L2SegID : Endpoint's L2seg ID\n")
-	fmt.Printf("Mac      : Endpoint's Mac                          IfId    : Interface on which EP was learnt\n")
-	fmt.Printf("IsLocal  : Endpoint's location                     Vlan    : Endpoint's Vlan\n")
-	fmt.Printf("#IPs     : Endpoint's IPs                          IPs     : Endpoint's IPs\n")
+	fmt.Printf("Handle       : Endpoint's Handle                       L2SegID : Endpoint's L2seg ID\n")
+	fmt.Printf("Mac          : Endpoint's Mac                          IfId    : Interface on which EP was learnt\n")
+	fmt.Printf("IsLocal      : Endpoint's location                     Vlan    : Endpoint's Vlan\n")
+	fmt.Printf("#IPs         : Endpoint's IPs                          IPs     : Endpoint's IPs\n")
 	hdrLine := strings.Repeat("-", 120)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-12s%-12s%-24s%-10s%-10s%-5s%-10s%-20s\n",
@@ -219,7 +257,9 @@ func epShowOneResp(resp *halproto.EndpointGetResponse) {
 			ipStr += utils.IPAddrToStr(epAddr[i].GetIpAddress())
 		}
 	}
+
 	macStr := utils.MactoStr(resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetMacAddress())
+
 	fmt.Printf("%-12d%-12d%-24s%-10d%-10t%-5d%-10d%-20s\n",
 		resp.GetStatus().GetEndpointHandle(),
 		resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId(),
@@ -233,16 +273,17 @@ func epShowOneResp(resp *halproto.EndpointGetResponse) {
 
 func epStatusShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
-	fmt.Printf("Handle    : Endpoint's Handle                L2SegID     : Endpoint's L2seg ID\n")
-	fmt.Printf("MacTblIdx : Registered MAC table Index       RwTblIdx    : Rewrite table Index\n")
-	hdrLine := strings.Repeat("-", 100)
+	fmt.Printf("Handle       : Endpoint's Handle                L2SegID     : Endpoint's L2seg ID\n")
+	fmt.Printf("MacTblIdx    : Registered MAC table Index       RwTblIdx    : Rewrite table Index\n")
+	fmt.Printf("EnicUplinkID : Enic Uplink If ID\n")
+	hdrLine := strings.Repeat("-", 85)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-12s%-12s%-12s%-36s\n",
-		"Handle", "L2SegID", "MacTblIdx", "RwTblIdx")
+	fmt.Printf("%-12s%-13s%-12s%-12s%-36s\n",
+		"Handle", "EnicUplinkID", "L2SegID", "MacTblIdx", "RwTblIdx")
 	fmt.Println(hdrLine)
 }
 
-func epStatusShowOneResp(resp *halproto.EndpointGetResponse) {
+func epStatusShowOneResp(uplink uint64, resp *halproto.EndpointGetResponse) {
 	epd := resp.GetStatus().GetEpdStatus()
 
 	rwTblStr := ""
@@ -270,8 +311,9 @@ func epStatusShowOneResp(resp *halproto.EndpointGetResponse) {
 		regMacTblStr = fmt.Sprintf("%d", regMacTblIdx)
 	}
 
-	fmt.Printf("%-12d%-12d%-12s%-36s\n",
+	fmt.Printf("%-12d%-13d%-12d%-12s%-36s\n",
 		resp.GetStatus().GetEndpointHandle(),
+		uplink,
 		resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId(),
 		regMacTblStr,
 		rwTblStr)

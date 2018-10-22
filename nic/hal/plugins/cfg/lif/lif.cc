@@ -1728,7 +1728,10 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
 
     spec->set_vlan_strip_en(lif->vlan_strip_en);
     spec->set_vlan_insert_en(lif->vlan_insert_en);
-    spec->mutable_pinned_uplink_if_key_handle()->set_if_handle(lif->pinned_uplink);
+    if (lif->pinned_uplink != HAL_HANDLE_INVALID) {
+        if_t *hal_if = find_if_by_handle(lif->pinned_uplink);
+        spec->mutable_pinned_uplink_if_key_handle()->set_interface_id(hal_if->if_id);
+    }
     qos_policer_to_spec(&lif->qos_info.rx_policer, spec->mutable_rx_policer());
     qos_policer_to_spec(&lif->qos_info.tx_policer, spec->mutable_tx_policer());
     spec->mutable_rss()->set_type(lif->rss.type);

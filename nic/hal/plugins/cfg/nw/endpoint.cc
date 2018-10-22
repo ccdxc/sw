@@ -2300,16 +2300,21 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     pd::pd_ep_get_args_t               args = {0};
     hal_ret_t                          ret = HAL_RET_OK;
     pd::pd_func_args_t                 pd_func_args = {0};
+    if_t                               *uplink_if;
 
     auto vrf       = vrf_lookup_by_handle(ep->vrf_handle);
     auto interface = find_if_by_handle(ep->if_handle);
-
     response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf ? vrf->vrf_id : HAL_HANDLE_INVALID);
     response->mutable_spec()->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(ep->l2_key.l2_segid);
     response->mutable_spec()->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
-    response->mutable_spec()->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(interface->if_id);
-    response->mutable_spec()->mutable_endpoint_attrs()->set_useg_vlan(ep->useg_vlan);
 
+    response->mutable_spec()->mutable_endpoint_attrs()->set_useg_vlan(ep->useg_vlan);
+    response->mutable_spec()->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(interface->if_id);
+
+    ret = if_enicif_get_pinned_if (interface, &uplink_if);
+    if (ret == HAL_RET_OK) {
+        response->mutable_status()->mutable_enic_pinned_uplink_if_key_handle()->set_if_handle(uplink_if->hal_handle);
+    }
     response->mutable_status()->set_endpoint_handle(ep->hal_handle);
     response->mutable_status()->set_learn_source_config(ep->ep_flags & EP_FLAGS_LEARN_SRC_CFG);
     response->mutable_status()->set_is_endpoint_local(ep->ep_flags & EP_FLAGS_LOCAL);

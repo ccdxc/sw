@@ -41,11 +41,11 @@ enum EndpointVMotionState {
 }
 
 message EndpointAttributes {
-    kh.InterfaceKeyHandle       interface_key_handle = 1 [(gogoproto.moretags) = "venice:ref"];
-    uint32                      useg_vlan            = 2;    // microseg vlan assigned to this EP
-    repeated types.IPAddress    ip_address           = 3;    // IP address(es) of endpoint
-    repeated kh.SecurityGroupKeyHandle sg_key_handle = 4 [(gogoproto.moretags) = "venice:ref"];
-    EndpointVMotionState        vmotion_state        = 5;    // Vmotion state
+    kh.InterfaceKeyHandle       interface_key_handle             = 1 [(gogoproto.moretags) = "venice:ref"];
+    uint32                      useg_vlan                        = 2;    // microseg vlan assigned to this EP
+    repeated types.IPAddress    ip_address                       = 3;    // IP address(es) of endpoint
+    repeated kh.SecurityGroupKeyHandle sg_key_handle             = 4 [(gogoproto.moretags) = "venice:ref"];
+    EndpointVMotionState        vmotion_state                    = 5;    // Vmotion state
 }
 
 
@@ -83,13 +83,14 @@ message EndpointStatusCpd {
 // EndpointStatus has the current status of an endpoint
 // TODO: capturing aging information, if any
 message EndpointStatus {
-  fixed64                         endpoint_handle     = 1;    // id of endpoint returned by HAL
-  repeated EndpointIpAddress      ip_address          = 2;    // IP addresses learnt, if any
-  bool                            is_endpoint_local   = 3;    // TRUE if endpoint is local
-  bool							  learn_source_config = 4;    // TRUE if ep entry was created by config.
+  fixed64                         endpoint_handle                  = 1;    // id of endpoint returned by HAL
+  kh.InterfaceKeyHandle           enic_pinned_uplink_if_key_handle = 2 [(gogoproto.moretags) = "venice:ref"]; // uplink this enic is pinned to
+  repeated EndpointIpAddress      ip_address                       = 3;    // IP addresses learnt, if any
+  bool                            is_endpoint_local                = 4;    // TRUE if endpoint is local
+  bool							  learn_source_config              = 5;    // TRUE if ep entry was created by config.
   oneof ep_pd_status {
-      EndpointStatusEpd  epd_status                   = 5;    // Endpoint oper state for enterprise pipeline
-      EndpointStatusCpd  cpd_status                   = 6;    // Endpoint oper state for cloud pipeline
+      EndpointStatusEpd  epd_status                                = 6;    // Endpoint oper state for enterprise pipeline
+      EndpointStatusCpd  cpd_status                                = 7;    // Endpoint oper state for cloud pipeline
   }
 }
 
