@@ -65,7 +65,7 @@ chksum_setup(struct service_info *svc_info,
 	struct cpdc_desc *chksum_desc;
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr;
 	bool per_block;
 	uint16_t flags;
 	uint32_t num_tags;
@@ -85,8 +85,8 @@ chksum_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	pc_res = svc_info->si_pc_res;
-	sgl = cpdc_get_sgl(pc_res, per_block);
+	pcr = svc_info->si_pcr;
+	sgl = cpdc_get_sgl(pcr, per_block);
 	if (!sgl) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain chksum sgl from pool! err: %d",
@@ -94,7 +94,7 @@ chksum_setup(struct service_info *svc_info,
 		goto out_chksum_desc;
 	}
 
-	status_desc = cpdc_get_status_desc(pc_res, per_block);
+	status_desc = cpdc_get_status_desc(pcr, per_block);
 	if (!status_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain chksum status desc from pool! err: %d",
@@ -164,14 +164,14 @@ chksum_setup(struct service_info *svc_info,
 	return err;
 
 out_status_desc:
-	err = cpdc_put_status_desc(pc_res, per_block, status_desc);
+	err = cpdc_put_status_desc(pcr, per_block, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
 		OSAL_ASSERT(0);
 	}
 out_sgl_desc:
-	err = cpdc_put_sgl(pc_res, per_block, sgl);
+	err = cpdc_put_sgl(pcr, per_block, sgl);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return chksum sgl to pool! err: %d",
 				err);
@@ -524,7 +524,7 @@ chksum_teardown(struct service_info *svc_info)
 	struct cpdc_desc *chksum_desc;
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl *sgl;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr;
 	bool per_block;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -536,13 +536,13 @@ chksum_teardown(struct service_info *svc_info)
 			svc_info->si_desc_flags);
 
 	if (!per_block) {
-		pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);
-		pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
+		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
+		pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 	}
 
-	pc_res = svc_info->si_pc_res;
+	pcr = svc_info->si_pcr;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	err = cpdc_put_status_desc(pc_res, per_block, status_desc);
+	err = cpdc_put_status_desc(pcr, per_block, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
@@ -550,7 +550,7 @@ chksum_teardown(struct service_info *svc_info)
 	}
 
 	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
-	err = cpdc_put_sgl(pc_res, per_block, sgl);
+	err = cpdc_put_sgl(pcr, per_block, sgl);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash sgl to pool! err: %d",
 				err);

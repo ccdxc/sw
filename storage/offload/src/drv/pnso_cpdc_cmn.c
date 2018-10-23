@@ -318,12 +318,12 @@ get_next_sgl(struct cpdc_sgl *sgl, uint32_t object_size)
 }
 
 struct cpdc_desc *
-cpdc_get_desc(struct per_core_resource *pc_res, bool per_block)
+cpdc_get_desc(struct per_core_resource *pcr, bool per_block)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR] :
-		pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CPDC_DESC];
 
 	return (struct cpdc_desc *) mpool_get_object(mpool);
 }
@@ -355,7 +355,7 @@ cpdc_get_desc_ex(struct service_info *svc_info, bool per_block)
 		in_batch = true;
 
 	desc =  in_batch ? cpdc_get_batch_desc(svc_info) :
-		cpdc_get_desc(svc_info->si_pc_res, per_block);
+		cpdc_get_desc(svc_info->si_pcr, per_block);
 
 	OSAL_ASSERT(desc);
 	return desc;
@@ -377,13 +377,13 @@ cpdc_get_batch_bulk_desc(struct mem_pool *mpool)
 }
 
 pnso_error_t
-cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
+cpdc_put_desc(struct per_core_resource *pcr, bool per_block,
 		struct cpdc_desc *desc)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR] :
-		pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CPDC_DESC];
 
 	return mpool_put_object(mpool, desc);
 }
@@ -418,7 +418,7 @@ cpdc_put_desc_ex(const struct service_info *svc_info, bool per_block,
 		in_batch = true;
 
 	err =  in_batch ? cpdc_put_batch_desc(svc_info, desc) :
-		cpdc_put_desc(svc_info->si_pc_res, per_block, desc);
+		cpdc_put_desc(svc_info->si_pcr, per_block, desc);
 
 	return err;
 }
@@ -431,47 +431,47 @@ cpdc_put_batch_bulk_desc(struct mem_pool *mpool, struct cpdc_desc *desc)
 }
 
 struct cpdc_status_desc *
-cpdc_get_status_desc(struct per_core_resource *pc_res, bool per_block)
+cpdc_get_status_desc(struct per_core_resource *pcr, bool per_block)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
-		pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 
 	return (struct cpdc_status_desc *) mpool_get_object(mpool);
 }
 
 pnso_error_t
-cpdc_put_status_desc(struct per_core_resource *pc_res, bool per_block,
+cpdc_put_status_desc(struct per_core_resource *pcr, bool per_block,
 		struct cpdc_status_desc *desc)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
-		pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 
 	return mpool_put_object(mpool, desc);
 }
 
 struct cpdc_sgl *
-cpdc_get_sgl(struct per_core_resource *pc_res, bool per_block)
+cpdc_get_sgl(struct per_core_resource *pcr, bool per_block)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR] :
-		pc_res->mpools[MPOOL_TYPE_CPDC_SGL];
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CPDC_SGL];
 
 	return (struct cpdc_sgl *) mpool_get_object(mpool);
 }
 
 pnso_error_t
-cpdc_put_sgl(struct per_core_resource *pc_res, bool per_block,
+cpdc_put_sgl(struct per_core_resource *pcr, bool per_block,
 		struct cpdc_sgl *sgl)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR] :
-		pc_res->mpools[MPOOL_TYPE_CPDC_SGL];
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CPDC_SGL];
 
 	return mpool_put_object(mpool, sgl);
 }
@@ -481,7 +481,7 @@ cpdc_update_service_info_sgl(struct service_info *svc_info)
 {
 	pnso_error_t err;
 
-	err = pc_res_sgl_packed_get(svc_info->si_pc_res, &svc_info->si_src_blist,
+	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_src_blist,
 			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
 			&svc_info->si_src_sgl);
 	if (err) {
@@ -560,7 +560,7 @@ cpdc_update_service_info_sgls(struct service_info *svc_info)
 {
 	pnso_error_t err;
 
-	err = pc_res_sgl_packed_get(svc_info->si_pc_res, &svc_info->si_src_blist,
+	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_src_blist,
 			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
 			&svc_info->si_src_sgl);
 	if (err) {
@@ -568,7 +568,7 @@ cpdc_update_service_info_sgls(struct service_info *svc_info)
 		goto out;
 	}
 
-	err = pc_res_sgl_packed_get(svc_info->si_pc_res, &svc_info->si_dst_blist,
+	err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_dst_blist,
 			CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
 			&svc_info->si_dst_sgl);
 	if (err) {
@@ -579,7 +579,7 @@ cpdc_update_service_info_sgls(struct service_info *svc_info)
 	return err;
 
 out_sgl:
-	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
+	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 out:
 	return err;
 }

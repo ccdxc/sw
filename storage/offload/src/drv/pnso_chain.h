@@ -229,7 +229,7 @@ struct service_info {
 	struct sequencer_info si_seq_info;
 	struct service_batch_info si_batch_info;
 
-	struct per_core_resource *si_pc_res;	/* to access lif/pool/etc. */
+	struct per_core_resource *si_pcr;	/* to access lif/pool/etc. */
 	struct chain_entry *si_centry;	/* back pointer to chain entry */
 
 	struct service_ops si_ops;
@@ -254,7 +254,7 @@ struct service_chain {
 	struct chain_entry *sc_entry;	/* list of services */
 	struct pnso_service_result *sc_res;	/* caller supplied result */
 
-	struct per_core_resource *sc_pc_res;	/* to access pool/etc. */
+	struct per_core_resource *sc_pcr;	/* to access pool/etc. */
 	struct service_deps sc_svc_deps;	/* to share dependent params */
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */

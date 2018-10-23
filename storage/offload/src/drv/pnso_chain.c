@@ -89,8 +89,8 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: %d", "sbi_desc_idx",
 			svc_info->si_batch_info.sbi_desc_idx);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_pc_res",
-			(uint64_t) svc_info->si_pc_res);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_pcr",
+			(uint64_t) svc_info->si_pcr);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_centry",
 			(uint64_t) svc_info->si_centry);
 
@@ -469,7 +469,7 @@ void
 chn_destroy_chain(struct service_chain *chain)
 {
 	pnso_error_t err;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr;
 	struct mem_pool *svc_chain_mpool;
 	struct mem_pool *svc_chain_entry_mpool;
 	struct chain_entry *sc_entry;
@@ -484,13 +484,13 @@ chn_destroy_chain(struct service_chain *chain)
 	OSAL_LOG_DEBUG("chain: 0x%llx num_services: %d ", (uint64_t)chain,
 			chain->sc_num_services);
 
-	pc_res = chain->sc_pc_res;
-	OSAL_ASSERT(pc_res);
+	pcr = chain->sc_pcr;
+	OSAL_ASSERT(pcr);
 
-	svc_chain_mpool = pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN];
+	svc_chain_mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN];
 	OSAL_ASSERT(svc_chain_mpool);
 
-	svc_chain_entry_mpool = pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
+	svc_chain_entry_mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
 	OSAL_ASSERT(svc_chain_entry_mpool);
 
 	i = 0;
@@ -527,7 +527,7 @@ struct service_chain *
 chn_create_chain(struct request_params *req_params)
 {
 	pnso_error_t err = EINVAL;
-	struct per_core_resource *pc_res = putil_get_per_core_resource();
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct mem_pool *svc_chain_mpool;
 	struct mem_pool *svc_chain_entry_mpool;
 	struct pnso_service_request *req;
@@ -542,13 +542,13 @@ chn_create_chain(struct request_params *req_params)
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	svc_chain_mpool = pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN];
+	svc_chain_mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN];
 	if (!svc_chain_mpool) {
 		OSAL_ASSERT(0);
 		goto out;
 	}
 
-	svc_chain_entry_mpool = pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
+	svc_chain_entry_mpool = pcr->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY];
 	if (!svc_chain_entry_mpool) {
 		OSAL_ASSERT(0);
 		goto out;
@@ -570,7 +570,7 @@ chn_create_chain(struct request_params *req_params)
 	chain->sc_entry = NULL;
 	chain->sc_res = res;
 
-	chain->sc_pc_res = pc_res;
+	chain->sc_pcr = pcr;
 
 	chain->sc_req_cb = req_params->rp_cb;
 	chain->sc_req_cb_ctx = req_params->rp_cb_ctx;
@@ -621,7 +621,7 @@ chn_create_chain(struct request_params *req_params)
 		init_service_info(req->svc[i].svc_type, &res->svc[i],
 				  &svc_params, svc_info);
 
-		svc_info->si_pc_res = chain->sc_pc_res;
+		svc_info->si_pcr = chain->sc_pcr;
 		svc_info->si_centry = centry;
 
 		setup_service_param_buffers(&req->svc[i], &svc_params,

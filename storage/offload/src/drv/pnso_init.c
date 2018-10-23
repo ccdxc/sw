@@ -31,22 +31,22 @@ seq_sq_descs_total_get(struct lif *lif);
 
 static pnso_error_t
 pc_res_init(struct pc_res_init_params *pc_init,
-	    struct per_core_resource *pc_res);
+	    struct per_core_resource *pcr);
 static void
-pc_res_deinit(struct per_core_resource *pc_res);
+pc_res_deinit(struct per_core_resource *pcr);
 
 static pnso_error_t
 pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
-		       struct per_core_resource *pc_res,
+		       struct per_core_resource *pcr,
 		       uint32_t pc_num_bufs);
 static void
-pc_res_interm_buf_deinit(struct per_core_resource *pc_res);
+pc_res_interm_buf_deinit(struct per_core_resource *pcr);
 
 pnso_error_t
 pnso_init(struct pnso_init_params *pnso_init)
 {
 	struct lif			*lif = sonic_get_lif();
-	struct per_core_resource	*pc_res;
+	struct per_core_resource	*pcr;
 	struct pc_res_init_params	pc_init;
 	uint32_t			num_pc_res;
 	uint32_t			avail_bufs;
@@ -93,8 +93,8 @@ pnso_init(struct pnso_init_params *pnso_init)
 	}
 
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
-		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
-		err = pc_res_init(&pc_init, pc_res);
+		pcr = sonic_get_per_core_res_by_res_id(lif, i);
+		err = pc_res_init(&pc_init, pcr);
 	}
 
 	/*
@@ -123,8 +123,8 @@ pnso_init(struct pnso_init_params *pnso_init)
 	 *         intermediate buffers.
 	 */
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
-		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
-		err = pc_res_interm_buf_init(&pc_init, pc_res, pc_num_bufs);
+		pcr = sonic_get_per_core_res_by_res_id(lif, i);
+		err = pc_res_interm_buf_init(&pc_init, pcr, pc_num_bufs);
 	}
 
 out:
@@ -141,7 +141,7 @@ void
 pnso_deinit(void)
 {
 	struct lif			*lif = sonic_get_lif();
-	struct per_core_resource	*pc_res;
+	struct per_core_resource	*pcr;
 	uint32_t			num_pc_res;
 	uint32_t			i;
 
@@ -150,8 +150,8 @@ pnso_deinit(void)
 
 	num_pc_res = sonic_get_num_per_core_res(lif);
 	for (i = 0; i < num_pc_res; i++) {
-		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
-		pc_res_deinit(pc_res);
+		pcr = sonic_get_per_core_res_by_res_id(lif, i);
+		pc_res_deinit(pcr);
 	}
 
 	if (osal_rmem_addr_valid(pad_buffer))
@@ -162,7 +162,7 @@ pnso_deinit(void)
 
 static pnso_error_t
 pc_res_init(struct pc_res_init_params *pc_init,
-	    struct per_core_resource *pc_res)
+	    struct per_core_resource *pcr)
 {
 	pnso_error_t err;
 
@@ -178,24 +178,24 @@ pc_res_init(struct pc_res_init_params *pc_init,
 		return ENOMEM;
 	}
 
-	err = cpdc_init_accelerator(pc_init, pc_res);
+	err = cpdc_init_accelerator(pc_init, pcr);
 	if (err == PNSO_OK)
-		err = crypto_init_accelerator(pc_init, pc_res);
+		err = crypto_init_accelerator(pc_init, pcr);
 
 	return err;
 }
 
 static void
-pc_res_deinit(struct per_core_resource *pc_res)
+pc_res_deinit(struct per_core_resource *pcr)
 {
-	cpdc_deinit_accelerator(pc_res);
-	crypto_deinit_accelerator(pc_res);
-	pc_res_interm_buf_deinit(pc_res);
+	cpdc_deinit_accelerator(pcr);
+	crypto_deinit_accelerator(pcr);
+	pc_res_interm_buf_deinit(pcr);
 }
 
 static pnso_error_t
 pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
-		       struct per_core_resource *pc_res,
+		       struct per_core_resource *pcr,
 		       uint32_t pc_num_bufs)
 {
 	uint32_t	num_buf_vecs;
@@ -214,27 +214,27 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 	err = mpool_create(MPOOL_TYPE_RMEM_INTERM_BUF, num_buf_vecs,
 			   INTERM_BUF_NOMINAL_NUM_BUFS,
 			   pc_init->pnso_init.block_size, PNSO_MEM_ALIGN_NONE,
-			   &pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
+			   &pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
 	if (!err)
 		err = mpool_create(MPOOL_TYPE_CHAIN_SGL_PDMA,
 			   pc_init->max_seq_sq_descs,
 			   MPOOL_VEC_ELEM_SINGLE,
 			   sizeof(struct chain_sgl_pdma),
 			   sizeof(struct chain_sgl_pdma),
-			   &pc_res->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
+			   &pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 	if (!err) {
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
+		MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
+		MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 	}
 
 	return err;
 }
 
 static void
-pc_res_interm_buf_deinit(struct per_core_resource *pc_res)
+pc_res_interm_buf_deinit(struct per_core_resource *pcr)
 {
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
+	mpool_destroy(&pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
+	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 }
 
 

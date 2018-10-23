@@ -33,25 +33,25 @@ pnso_error_t ring_spec_info_fill(uint32_t ring_id,
 		    		 void *desc,
 		    		 uint32_t num_descs);
 pnso_error_t
-pc_res_sgl_packed_get(const struct per_core_resource *pc_res,
+pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 		      const struct service_buf_list *svc_blist,
 		      uint32_t block_size,
 		      enum mem_pool_type mpool_type,
 		      struct service_cpdc_sgl *svc_sgl);
-void pc_res_sgl_put(const struct per_core_resource *pc_res,
+void pc_res_sgl_put(const struct per_core_resource *pcr,
 		    struct service_cpdc_sgl *svc_sgl);
 pnso_error_t
-pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
+pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 			  const struct service_buf_list *svc_blist,
 			  uint32_t block_size,
 			  enum mem_pool_type vec_type,
 			  struct service_cpdc_sgl *svc_sgl);
-void pc_res_sgl_vec_put(const struct per_core_resource *pc_res,
+void pc_res_sgl_vec_put(const struct per_core_resource *pcr,
 			struct service_cpdc_sgl *svc_sgl);
 struct chain_sgl_pdma *
-pc_res_sgl_pdma_packed_get(const struct per_core_resource *pc_res,
+pc_res_sgl_pdma_packed_get(const struct per_core_resource *pcr,
                            const struct service_buf_list *svc_blist);
-void pc_res_sgl_pdma_put(const struct per_core_resource *pc_res,
+void pc_res_sgl_pdma_put(const struct per_core_resource *pcr,
                          struct chain_sgl_pdma *sgl_pdma);
 struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
@@ -66,17 +66,17 @@ pnso_error_t svc_interm_buf_list_get(struct service_info *svc_info);
 void svc_interm_buf_list_put(struct service_info *svc_info);
 
 struct mem_pool *
-pc_res_mpool_get(const struct per_core_resource *pc_res,
+pc_res_mpool_get(const struct per_core_resource *pcr,
 		 enum mem_pool_type type);
-void *pc_res_mpool_object_get(const struct per_core_resource *pc_res,
+void *pc_res_mpool_object_get(const struct per_core_resource *pcr,
 			      enum mem_pool_type type);
-void *pc_res_mpool_object_get_with_size(const struct per_core_resource *pc_res,
+void *pc_res_mpool_object_get_with_size(const struct per_core_resource *pcr,
 					enum mem_pool_type type,
 					uint32_t *ret_size);
-void *pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pc_res,
+void *pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pcr,
 						 enum mem_pool_type type,
 						 uint32_t *ret_num_vec_elems);
-void pc_res_mpool_object_put(const struct per_core_resource *pc_res,
+void pc_res_mpool_object_put(const struct per_core_resource *pcr,
 			     enum mem_pool_type type,
 			     void *obj);
 void pprint_chain_sgl_pdma(uint64_t sgl_pa);

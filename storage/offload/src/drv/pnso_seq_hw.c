@@ -343,29 +343,29 @@ static struct queue *
 get_seq_q(const struct service_info *svc_info, bool status_q)
 {
 	struct queue *q = NULL;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr;
 
 	/* TODO-seq: remove using hard-coded 0th status queue */
-	pc_res = svc_info->si_pc_res;
+	pcr = svc_info->si_pcr;
 
 	switch (svc_info->si_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
-		q = status_q ? &pc_res->crypto_seq_status_qs[0] :
-			&pc_res->crypto_enc_seq_q;
+		q = status_q ? &pcr->crypto_seq_status_qs[0] :
+			&pcr->crypto_enc_seq_q;
 		break;
 	case PNSO_SVC_TYPE_DECRYPT:
-		q = status_q ? &pc_res->crypto_seq_status_qs[0] :
-			&pc_res->crypto_dec_seq_q;
+		q = status_q ? &pcr->crypto_seq_status_qs[0] :
+			&pcr->crypto_dec_seq_q;
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 	case PNSO_SVC_TYPE_HASH:
 	case PNSO_SVC_TYPE_CHKSUM:
-		q = status_q ? &pc_res->cpdc_seq_status_qs[0] :
-			&pc_res->cp_seq_q;
+		q = status_q ? &pcr->cpdc_seq_status_qs[0] :
+			&pcr->cp_seq_q;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
-		q = status_q ? &pc_res->cpdc_seq_status_qs[0] :
-			&pc_res->dc_seq_q;
+		q = status_q ? &pcr->cpdc_seq_status_qs[0] :
+			&pcr->dc_seq_q;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	default:

@@ -159,7 +159,7 @@ struct crypto_status_desc {
  * that are necessary to encryption and decryption accelerator.
  * @init_params:	[in]	specifies the initialization parameters for
  *				this accelerator.
- * @pc_res:		[in]	specifies the per core container-structure to
+ * @pcr:		[in]	specifies the per core container-structure to
  *				cache the accelerators' internal data
  *				structures.
  *
@@ -175,12 +175,12 @@ struct crypto_status_desc {
  *
  */
 pnso_error_t crypto_init_accelerator(struct pc_res_init_params *pc_init,
-		struct per_core_resource *pc_res);
+		struct per_core_resource *pcr);
 
 /**
  * crypto_deinit_accelerator() - conducts cleanup task specific to encryption and
  * decryption accelerator.
- * @pc_res:	[in/out]	specifies the per core container-structure from
+ * @pcr:	[in/out]	specifies the per core container-structure from
  *				which the accelerators' internal data structures
  *				need to be released.
  *
@@ -192,7 +192,7 @@ pnso_error_t crypto_init_accelerator(struct pc_res_init_params *pc_init,
  *	None
  *
  */
-void crypto_deinit_accelerator(struct per_core_resource *pc_res);
+void crypto_deinit_accelerator(struct per_core_resource *pcr);
 
 pnso_error_t crypto_key_index_update(const void *key1,
 				     const void *key2,

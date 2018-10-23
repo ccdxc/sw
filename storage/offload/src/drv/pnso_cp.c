@@ -92,7 +92,7 @@ compress_setup(struct service_info *svc_info,
 	struct pnso_compression_desc *pnso_cp_desc;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr;
 	uint16_t flags, threshold_len;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -109,8 +109,8 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	pc_res = svc_info->si_pc_res;
-	status_desc = cpdc_get_status_desc(pc_res, false);
+	pcr = svc_info->si_pcr;
+	status_desc = cpdc_get_status_desc(pcr, false);
 	if (!status_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain cp status desc from pool! err: %d",
@@ -164,7 +164,7 @@ compress_setup(struct service_info *svc_info,
 	return err;
 
 out_status_desc:
-	err = cpdc_put_status_desc(pc_res, false, status_desc);
+	err = cpdc_put_status_desc(pcr, false, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
@@ -433,20 +433,20 @@ compress_teardown(struct service_info *svc_info)
 	pnso_error_t err;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
-	struct per_core_resource *pc_res;
+	struct per_core_resource *pcr;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 	CPDC_PPRINT_DESC(svc_info->si_desc);
 
-	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);
-	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
+	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
+	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);
 
-	pc_res = svc_info->si_pc_res;
+	pcr = svc_info->si_pcr;
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	err = cpdc_put_status_desc(pc_res, false, status_desc);
+	err = cpdc_put_status_desc(pcr, false, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! status_desc: %p err: %d",
 				status_desc, err);

@@ -92,7 +92,7 @@ crypto_pprint_desc(const struct crypto_desc *desc)
 }
 
 pnso_error_t
-crypto_aol_packed_get(const struct per_core_resource *pc_res,
+crypto_aol_packed_get(const struct per_core_resource *pcr,
 		      const struct service_buf_list *svc_blist,
 		      struct service_crypto_aol *svc_aol)
 {
@@ -108,7 +108,7 @@ crypto_aol_packed_get(const struct per_core_resource *pc_res,
 	svc_aol->aol = NULL;
 	total_len = 0;
 	while (iter) {
-		aol = pc_res_mpool_object_get(pc_res, svc_aol->mpool_type);
+		aol = pc_res_mpool_object_get(pcr, svc_aol->mpool_type);
 		if (!aol) {
 			OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool, current_len %u",
 				       total_len);
@@ -137,7 +137,7 @@ crypto_aol_packed_get(const struct per_core_resource *pc_res,
 		 * intervening zero-length buffers in the list.
 		 */
 		if (!aol->ca_len_0) {
-			pc_res_mpool_object_put(pc_res, svc_aol->mpool_type, aol);
+			pc_res_mpool_object_put(pcr, svc_aol->mpool_type, aol);
 			break;
 		}
 
@@ -159,12 +159,12 @@ crypto_aol_packed_get(const struct per_core_resource *pc_res,
 	}
 	return PNSO_OK;
 out:
-	crypto_aol_put(pc_res, svc_aol);
+	crypto_aol_put(pcr, svc_aol);
 	return err;
 }
 
 pnso_error_t
-crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
+crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 			  uint32_t block_size,
 			  const struct service_buf_list *svc_blist,
 			  struct service_crypto_aol *svc_aol)
@@ -180,7 +180,7 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
 
 	OSAL_ASSERT(is_power_of_2(block_size));
 	svc_aol->mpool_type = MPOOL_TYPE_CRYPTO_AOL_VECTOR;
-	svc_aol->aol = pc_res_mpool_object_get_with_num_vec_elems(pc_res,
+	svc_aol->aol = pc_res_mpool_object_get_with_num_vec_elems(pcr,
 				svc_aol->mpool_type, &num_vec_elems);
 	if (!svc_aol->aol) {
 		OSAL_LOG_ERROR("cannot obtain crypto aol_vec from pool");
@@ -245,12 +245,12 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
 	}
 	return PNSO_OK;
 out:
-	crypto_aol_put(pc_res, svc_aol);
+	crypto_aol_put(pcr, svc_aol);
 	return err;
 }
 
 void
-crypto_aol_put(const struct per_core_resource *pc_res,
+crypto_aol_put(const struct per_core_resource *pcr,
 	       struct service_crypto_aol *svc_aol)
 {
 	struct crypto_aol *aol_next;
@@ -260,7 +260,7 @@ crypto_aol_put(const struct per_core_resource *pc_res,
 	while (aol) {
 		aol_next = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) :
 					  NULL;
-		pc_res_mpool_object_put(pc_res, svc_aol->mpool_type, aol);
+		pc_res_mpool_object_put(pcr, svc_aol->mpool_type, aol);
 		aol = aol_next;
 	}
 	svc_aol->aol = NULL;
@@ -313,12 +313,12 @@ crypto_setup_batch_desc(struct service_info *svc_info, struct crypto_desc *desc)
 }
 
 struct crypto_desc *
-crypto_get_desc(struct per_core_resource *pc_res, bool per_block)
+crypto_get_desc(struct per_core_resource *pcr, bool per_block)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR] :
-		pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC];
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CRYPTO_DESC];
 
 	return (struct crypto_desc *) mpool_get_object(mpool);
 }
@@ -350,7 +350,7 @@ crypto_get_desc_ex(struct service_info *svc_info, bool per_block)
 		in_batch = true;
 
 	desc =  in_batch ? crypto_get_batch_desc(svc_info) :
-		crypto_get_desc(svc_info->si_pc_res, per_block);
+		crypto_get_desc(svc_info->si_pcr, per_block);
 
 	OSAL_ASSERT(desc);
 	return desc;
@@ -372,13 +372,13 @@ crypto_get_batch_bulk_desc(struct mem_pool *mpool)
 }
 
 pnso_error_t
-crypto_put_desc(struct per_core_resource *pc_res, bool per_block,
+crypto_put_desc(struct per_core_resource *pcr, bool per_block,
 		struct crypto_desc *desc)
 {
 	struct mem_pool *mpool;
 
-	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR] :
-		pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC];
+	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR] :
+		pcr->mpools[MPOOL_TYPE_CRYPTO_DESC];
 
 	return mpool_put_object(mpool, desc);
 }
@@ -414,7 +414,7 @@ crypto_put_desc_ex(const struct service_info *svc_info, bool per_block,
 		in_batch = true;
 
 	err =  in_batch ? crypto_put_batch_desc(svc_info, desc) :
-		crypto_put_desc(svc_info->si_pc_res, per_block, desc);
+		crypto_put_desc(svc_info->si_pcr, per_block, desc);
 
 	return err;
 }

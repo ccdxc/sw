@@ -183,7 +183,7 @@ struct cpdc_status_desc {
  * that are necessary to CPDC accelerator.
  * @pc_init:		[in]		specifies the initialization parameters
  *					for this accelerator.
- * @pc_res:		[in/out]	specifies the per core container-
+ * @pcr:		[in/out]	specifies the per core container-
  *					structure to cache the accelerators'
  *					internal data structures.
  *
@@ -199,12 +199,12 @@ struct cpdc_status_desc {
  *
  */
 pnso_error_t cpdc_init_accelerator(struct pc_res_init_params *pc_init,
-		struct per_core_resource *pc_res);
+		struct per_core_resource *pcr);
 
 /**
  * cpdc_deinit_accelerator() - conducts cleanup task specific to CPDC
  * accelerator.
- * @pc_res:	[in/out]	specifies the per core container-structure from
+ * @pcr:	[in/out]	specifies the per core container-structure from
  *				which the accelerators' internal data structures
  *				need to be released.
  *
@@ -216,7 +216,7 @@ pnso_error_t cpdc_init_accelerator(struct pc_res_init_params *pc_init,
  *	None
  *
  */
-void cpdc_deinit_accelerator(struct per_core_resource *pc_res);
+void cpdc_deinit_accelerator(struct per_core_resource *pcr);
 
 #ifdef __cplusplus
 }
