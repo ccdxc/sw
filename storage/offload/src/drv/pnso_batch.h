@@ -53,8 +53,7 @@ struct batch_info {
 pnso_error_t bat_add_to_batch(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res);
 
-pnso_error_t bat_flush_batch(completion_cb_t cb, void *cb_ctx,
-		pnso_poll_fn_t *pnso_poll_fn, void **pnso_poll_ctx);
+pnso_error_t bat_flush_batch(struct request_params *req_params);
 
 void bat_destroy_batch(void);
 

@@ -749,6 +749,77 @@ out:
 	return err;
 }
 
+static void
+init_request_params(uint16_t req_flags, struct pnso_service_request *svc_req,
+		struct pnso_service_result *svc_res,
+		completion_cb_t cb, void *cb_ctx,
+		pnso_poll_fn_t *pnso_poll_fn, void **pnso_poll_ctx,
+		struct request_params *req_params)
+{
+	memset(req_params, 0, sizeof(*req_params));
+
+	req_params->rp_flags = req_flags;
+
+	req_params->rp_svc_req = svc_req;
+	req_params->rp_svc_res = svc_res;
+	req_params->rp_cb = cb;
+	req_params->rp_cb_ctx = cb_ctx;
+	req_params->rp_poll_fn = pnso_poll_fn;
+	req_params->rp_poll_ctx = pnso_poll_ctx;
+}
+
+static pnso_error_t
+get_request_mode(completion_cb_t cb, void *cb_ctx,
+		pnso_poll_fn_t *pnso_poll_fn, void **pnso_poll_ctx,
+		uint32_t *req_mode)
+{
+	pnso_error_t err = PNSO_OK;
+
+	if (!cb && !cb_ctx && !pnso_poll_fn && !pnso_poll_ctx)
+		*req_mode = REQUEST_RFLAG_MODE_SYNC;
+	else if (cb && cb_ctx && !pnso_poll_fn && !pnso_poll_ctx)
+		*req_mode = REQUEST_RFLAG_MODE_ASYNC;
+	else if (cb && cb_ctx && pnso_poll_fn && pnso_poll_ctx)
+		*req_mode = REQUEST_RFLAG_MODE_POLL;
+	else {
+		err = EINVAL;
+		OSAL_LOG_DEBUG("invalid sync/async/poll params! cb: 0x%llx cb_ctx: 0x%llx pnso_poll_fn: 0x%llx pnso_poll_ctx: 0x%llx err: %d",
+				(uint64_t) cb, (uint64_t) cb_ctx,
+				(uint64_t) pnso_poll_fn,
+				(uint64_t) pnso_poll_ctx, err);
+	}
+
+	return err;
+}
+
+static void
+submit_chain(struct request_params *req_params)
+{
+	pnso_error_t err;
+	struct service_chain *chain = NULL;
+
+	chain = chn_create_chain(req_params);
+	if (!chain) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("failed to create request/chain! err: %d",
+				err);
+		goto out;
+	}
+
+	err = chn_execute_chain(chain);
+	if (err) {
+		OSAL_LOG_ERROR("failed to complete request/chain! err: %d",
+				err);
+		goto out;
+	}
+
+	/* TODO-poll: bail out depending on req-mode */
+	return;
+out:
+	PPRINT_CHAIN(chain);
+	chn_destroy_chain(chain);
+}
+
 pnso_error_t
 pnso_submit_request(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res,
@@ -756,6 +827,8 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 		pnso_poll_fn_t *pnso_poll_fn, void **pnso_poll_ctx)
 {
 	pnso_error_t err;
+	struct request_params req_params;
+	uint32_t req_flags = 0;
 
 	OSAL_LOG_DEBUG("enter...");
 
@@ -786,23 +859,23 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 		goto out;
 	}
 
-	/* TODO-req:
-	 *      sanitize cb, cb_ctx, etc. here and bail out from this layer
-	 *      before going deeper into other layers
-	 */
-
-	err = chn_build_chain(svc_req, svc_res, cb, cb_ctx,
-			pnso_poll_fn, pnso_poll_ctx);
+	err = get_request_mode(cb, cb_ctx, pnso_poll_fn,
+			pnso_poll_ctx, &req_flags);
 	if (err) {
-		OSAL_LOG_ERROR("failed to submit the request! err: %d", err);
+		OSAL_LOG_ERROR("invalid submit request params! err: %d", err);
 		goto out;
 	}
+
+	req_flags |= REQUEST_RFLAG_TYPE_CHAIN;
+	init_request_params(req_flags, svc_req, svc_res, cb, cb_ctx,
+			pnso_poll_fn, pnso_poll_ctx, &req_params);
+
+	submit_chain(&req_params);
 
 	REQ_PPRINT_RESULT(svc_res);
 
 	OSAL_LOG_DEBUG("exit!");
 	return err;
-
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
@@ -844,12 +917,6 @@ pnso_add_to_batch(struct pnso_service_request *svc_req,
 		goto out;
 	}
 
-	/* TODO-req:
-	 *	sanitize cb, cb_ctx, etc. here and bail out from this layer
-	 *	before going deeper into other layers
-	 *
-	 */
-
 	err = bat_add_to_batch(svc_req, svc_res);
 	if (err)
 		goto out;
@@ -871,10 +938,23 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		void **pnso_poll_ctx)
 {
 	pnso_error_t err = EINVAL;
+	struct request_params req_params;
+	uint32_t req_flags = 0;
 
 	OSAL_LOG_DEBUG("enter...");
 
-	err = bat_flush_batch(cb, cb_ctx, pnso_poll_fn, pnso_poll_ctx);
+	err = get_request_mode(cb, cb_ctx, pnso_poll_fn,
+			pnso_poll_ctx, &req_flags);
+	if (err) {
+		OSAL_LOG_ERROR("invalid flush request params! err: %d", err);
+		goto out;
+	}
+
+	req_flags |= REQUEST_RFLAG_TYPE_BATCH;
+	init_request_params(req_flags, NULL, NULL, cb, cb_ctx,
+			pnso_poll_fn, pnso_poll_ctx, &req_params);
+
+	err = bat_flush_batch(&req_params);
 	if (err) {
 		OSAL_LOG_ERROR("flush request failed! err: %d", err);
 		goto out;

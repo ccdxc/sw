@@ -26,8 +26,6 @@
  *	batch-add process, if the assumption of same request is fed in the
  *	session; secondly, use this type info to determine the pool for
  *	bulk desc.
- *	- avoid deinitializing chain in deinit_batch(), during error cases in
- *	add_to_batch()
  *
  */
 
@@ -127,8 +125,6 @@ put_mpool_batch_object(enum mem_pool_type pool_type, void *p)
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct mem_pool *batch_page_mpool, *batch_info_mpool;
 
-	OSAL_LOG_DEBUG("enter ...");
-
 	OSAL_ASSERT((pool_type == MPOOL_TYPE_BATCH_PAGE) ||
 			(pool_type == MPOOL_TYPE_BATCH_INFO));
 
@@ -149,7 +145,6 @@ put_mpool_batch_object(enum mem_pool_type pool_type, void *p)
 
 	OSAL_LOG_DEBUG("returned batch page/info object to mpool. pool_type: %d",
 			pool_type);
-	OSAL_LOG_DEBUG("exit!");
 	return err;
 
 out:
@@ -291,7 +286,8 @@ deinit_batch(struct batch_info *batch_info)
 	OSAL_LOG_DEBUG("release pages/batch batch_info: 0x%llx",
 			(uint64_t) batch_info);
 
-	destroy_batch_chain(batch_info);
+	if (batch_info->bi_chain_exists)
+		destroy_batch_chain(batch_info);
 
 	num_pages = GET_NUM_PAGES_ACTIVE(batch_info->bi_num_entries);
 	for (idx = 0; idx < num_pages; idx++) {
@@ -299,6 +295,7 @@ deinit_batch(struct batch_info *batch_info)
 
 		batch_page = batch_info->bi_pages[idx];
 		put_mpool_batch_object(MPOOL_TYPE_BATCH_PAGE, batch_page);
+
 		OSAL_LOG_DEBUG("released page 0x%llx idx: %d",
 				(uint64_t) batch_page, idx);
 	}
@@ -319,8 +316,7 @@ bat_destroy_batch(void)
 
 	batch_info = pcr->batch_info;
 	if (!batch_info) {
-		OSAL_LOG_DEBUG("batch not found! pcr: 0x%llx",
-				(uint64_t) pcr);
+		OSAL_LOG_DEBUG("batch not found! pcr: 0x%llx", (uint64_t) pcr);
 		goto out;
 	}
 	deinit_batch(batch_info);
@@ -361,18 +357,23 @@ out:
 }
 
 pnso_error_t
-build_batch(struct batch_info *batch_info,
-		const completion_cb_t cb, void *cb_ctx,
-		void *pnso_poll_fn, void **pnso_poll_ctx)
+build_batch(struct batch_info *batch_info, struct request_params *req_params)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err;
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
+	struct service_chain *chain;
 	uint32_t idx, num_entries;
 
 	OSAL_LOG_DEBUG("enter ...");
 
+	batch_info->bi_req_cb = req_params->rp_cb;
+	batch_info->bi_req_cb_ctx = req_params->rp_cb_ctx;
+	batch_info->bi_req_poll_fn = req_params->rp_poll_fn;
+	batch_info->bi_req_poll_ctx = req_params->rp_poll_ctx;
 	PPRINT_BATCH_INFO(batch_info);
+
+	req_params->rp_batch_info = batch_info;
 	num_entries = batch_info->bi_num_entries;
 	for (idx = 0; idx < num_entries; idx++) {
 		batch_page = GET_PAGE(batch_info, idx);
@@ -381,14 +382,21 @@ build_batch(struct batch_info *batch_info,
 		OSAL_LOG_DEBUG("use pge to batch num_entries: %d idx: %d page: 0x%llx pge: 0x%llx",
 				num_entries, idx, (uint64_t) batch_page, (uint64_t) page_entry);
 
-		err = chn_build_batch_chain(batch_info, page_entry,
-				idx, cb, cb_ctx, pnso_poll_fn, pnso_poll_ctx);
-		if (err) {
-			OSAL_LOG_DEBUG("failed to build batch of chains! err: %d",
-					err);
+		req_params->rp_svc_req = page_entry->bpe_req;
+		req_params->rp_svc_res = page_entry->bpe_res;
+		req_params->rp_batch_index = idx;
+
+		chain = chn_create_chain(req_params);
+		if (!chain) {
+			err = EINVAL;
+			OSAL_LOG_DEBUG("failed to build batch of chains! idx: %d err: %d",
+					idx, err);
 			goto out;
 		}
+		page_entry->bpe_chain = chain;
 	}
+	batch_info->bi_chain_exists = true;
+
 	OSAL_LOG_DEBUG("added all entries batch! num_entries: %d", num_entries);
 	PPRINT_BATCH_INFO(batch_info);
 
@@ -570,17 +578,15 @@ read_write_result_all_chains(struct batch_info *batch_info)
 	struct batch_page_entry *page_entry;
 	int i;
 
+	/* TODO-batch: handle error cases */
 	for (i = 0; i < batch_info->bi_num_entries;  i++) {
 		batch_page = GET_PAGE(batch_info, i);
 		page_entry = GET_PAGE_ENTRY(batch_page, i);
 
-		/* TODO-batch: handle error cases */
 		chn_read_write_result(page_entry->bpe_chain);
 
-		/* update over all status of the chain */
 		chn_update_overall_result(page_entry->bpe_chain);
 
-		/* TODO-batch: handle sync/async */
 		chn_notify_caller(page_entry->bpe_chain);
 	}
 }
@@ -595,18 +601,14 @@ execute_batch(struct batch_info *batch_info)
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	/* get last chain's last service */
-	last_chain = chn_get_last_service_chain(batch_info);
-	last_ce = chn_get_last_centry(last_chain);
-
 	idx = 0;
 	while (true) {
-		/* get first chain's first service */
+		/* get first chain's first service within the mini-batch */
 		first_chain = chn_get_first_service_chain(batch_info, idx);
 		first_ce = chn_get_first_centry(first_chain);
 		OSAL_LOG_DEBUG("ring DB batch idx: %d", idx);
 
-		/* ring DB first chain's first service */
+		/* ring DB first chain's first service within the mini-batch  */
 		err = first_ce->ce_svc_info.si_ops.schedule(
 				&first_ce->ce_svc_info);
 		if (err) {
@@ -620,7 +622,11 @@ execute_batch(struct batch_info *batch_info)
 			break;
 	}
 
-	/* poll on last chain's last service */
+	/* get last chain's last service of the batch */
+	last_chain = chn_get_last_service_chain(batch_info);
+	last_ce = chn_get_last_centry(last_chain);
+
+	/* poll on last chain's last service of the batch */
 	err = last_ce->ce_svc_info.si_ops.poll(&last_ce->ce_svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
@@ -628,7 +634,7 @@ execute_batch(struct batch_info *batch_info)
 		goto out;
 	}
 
-	/* on success, poll in loop on every chain's every service */
+	/* on success, loop n' poll on every chain's - every service(s) */
 	err = poll_all_chains(batch_info);
 	if (err) {
 		OSAL_LOG_ERROR("failed to poll all services err: %d", err);
@@ -636,8 +642,8 @@ execute_batch(struct batch_info *batch_info)
 	}
 
 	/*
-	 * on success, read/write result from first to last chain's first
-	 * to last service
+	 * on success, read/write result from first to last chain's - first
+	 * to last service - of the entire batch
 	 *
 	 */
 	read_write_result_all_chains(batch_info);
@@ -652,8 +658,7 @@ out:
 }
 
 pnso_error_t
-bat_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
-		void **pnso_poll_ctx)
+bat_flush_batch(struct request_params *req_params)
 {
 	pnso_error_t err = EINVAL;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
@@ -667,30 +672,22 @@ bat_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		goto out;
 	}
 
-	batch_info->bi_req_cb = cb;
-	batch_info->bi_req_cb_ctx = cb_ctx;
-	batch_info->bi_req_poll_fn = pnso_poll_fn;
-	batch_info->bi_req_poll_ctx = pnso_poll_ctx;
-
-	err = build_batch(batch_info, cb, cb_ctx,
-			pnso_poll_fn, pnso_poll_ctx);
+	err = build_batch(batch_info, req_params);
 	if (err) {
-		OSAL_LOG_DEBUG("batch-build failed! err: %d", err);
-		goto out_deinit;
+		OSAL_LOG_DEBUG("batch/build failed! err: %d", err);
+		goto out;
 	}
 
 	err = execute_batch(batch_info);
 	if (err) {
-		OSAL_LOG_DEBUG("batch-execute failed! err: %d", err);
-		goto out_deinit;
+		OSAL_LOG_DEBUG("batch/execute failed! err: %d", err);
+		goto out;
 	}
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 
-out_deinit:
-	deinit_batch(batch_info);
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;

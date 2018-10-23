@@ -62,6 +62,7 @@
 extern "C" {
 #endif
 
+#include "pnso_req.h"
 #include "pnso_batch.h"
 #include "pnso_chain_params.h"
 #include "pnso_init.h"
@@ -75,6 +76,17 @@ extern "C" {
 /* chain flags */
 #define CHAIN_CFLAG_IN_BATCH		(1 << 0)
 #define CHAIN_CFLAG_POLLED		(1 << 1)
+
+#ifdef NDEBUG
+#define PPRINT_CHAIN(c)
+#else
+#define PPRINT_CHAIN(c)							\
+	do {								\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		chn_pprint_chain(c);					\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+	} while (0)
+#endif
 
 extern struct service_ops cp_ops;
 extern struct service_ops dc_ops;
@@ -251,55 +263,10 @@ struct service_chain {
 	void *sc_req_poll_ctx;		/* request context for poller */
 };
 
-/**
- * chn_build_chain() - builds a chain structure using the list of user-
- * supplied services' request/result information and caches other input
- * parameters.
- * @svc_req:		[in]	specifies a set of service requests that to be
- *				used to complete the services within the
- *				request.
- * @svc_res:		[in]	specifies a set of service results structures to
- *				report the status of each service within the
- *				request upon its completion.
- * @cb:			[in]	specifies the caller-supplied completion
- *				callback routine.
- * @cb_ctx:		[in]	specifies the caller-supplied context
- *				information.
- * @pnso_poll_fn:	[in]	specifies the polling function, which the caller
- *				will use to poll for completion of the request.
- * @pnso_poll_ctx:	[in]	specifies the context for the polling function.
- *				order.
- *
- * Return Value:
- *	PNSO_OK	- on success
- *	ENOMEM - on failing to allocate memory
- *	EINVAL - on invalid input parameters
- *
- */
-pnso_error_t chn_build_chain(struct pnso_service_request *svc_req,
-		struct pnso_service_result *svc_res,
-		completion_cb_t cb, void *cb_ctx,
-		void *pnso_poll_fn, void *pnso_poll_ctx);
+struct service_chain *chn_create_chain(struct request_params *req_params);
 
-/**
- * chn_execute_chain() - notifies the hardware to process the first service
- * in the chain.
- * @chain:	[in]	specifies the chain structure.
- *
- * Return Value:
- *	PNSO_OK/EINVAL/TODO
- *
- */
 pnso_error_t chn_execute_chain(struct service_chain *chain);
 
-/**
- * chn_destroy_chain() - destroys the chain structure.
- * @chain:	[in]	specifies the chain structure.
- *
- * Return Value:
- *	None
- *
- */
 void chn_destroy_chain(struct service_chain *chain);
 
 pnso_error_t chn_build_batch_chain(struct batch_info *batch_info,
@@ -326,6 +293,8 @@ void chn_update_overall_result(struct service_chain *chain);
 void chn_notify_caller(struct service_chain *chain);
 
 bool chn_is_poll_done(struct service_chain *chain);
+
+void chn_pprint_chain(const struct service_chain *chain);
 
 static inline bool
 chn_service_is_in_chain(const struct service_info *svc_info)
