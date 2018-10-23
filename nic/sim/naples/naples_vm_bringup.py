@@ -46,6 +46,7 @@ NAPLES_PORT_MAPS = {
 
 NAPLES_ENV = {"SMART_NIC_MODE" : "1"}
 QEMU_ENV   = {"WITH_QEMU": "1"}
+NETAGENT_CTRL_INTF   = {"NETAGENT_CTRL_INTF": ""}
 VENICE_IPS = {"VENICE_IPS" : ""}
 NMD_HOSTNAME = {"NMD_HOSTNAME" : ""}
 
@@ -356,6 +357,9 @@ def __bringup_naples_container(args):
     if args.nmd_hostname:
         NMD_HOSTNAME = {"NMD_HOSTNAME" : args.nmd_hostname}
         NAPLES_ENV.update(NMD_HOSTNAME)
+    if args.control_intf:
+        NETAGENT_CTRL_INTF = {"NETAGENT_CTRL_INTF" : args.control_intf}
+        NAPLES_ENV.update(NETAGENT_CTRL_INTF)
 
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
                                                name=NAPLES_SIM_NAME,

@@ -34,6 +34,13 @@ else
     echo "Nmd Hostname set $NMD_HOSTNAME"
 fi
 
+if [ -z "$NETAGENT_CTRL_INTF" ]; then
+    NETAGENT_CTRL_INTF="eth0"
+    echo "Net agent control intf not set, default to eth0"
+else
+    echo "Net agent control intf set to  $NETAGENT_CONTROL_INTF"
+fi
+
 if [ -z "$VENICE_IPS" ]; then
     echo "Venice IPs are not specified for agent."
 else
@@ -190,7 +197,7 @@ else
 fi
 
 echo "Starting netagent ..."
-"$NIC_DIR"/bin/netagent -hostif eth1 -logtofile $LOG_DIR/agent.log -resolver-urls "$CMD_URL":"$CMD_RESOLVER_PORT" $NPM_URL $MANAGED_MODE -datapath hal -disabletsa &
+"$NIC_DIR"/bin/netagent -hostif $NETAGENT_CTRL_INTF -logtofile $LOG_DIR/agent.log -resolver-urls "$CMD_URL":"$CMD_RESOLVER_PORT" $NPM_URL $MANAGED_MODE -datapath hal -disabletsa &
 
 echo "Starting nmd ..."
 "$NIC_DIR"/bin/nmd  -cmdregistration "$CMD_URL":"$CMD_GRPC_UNAUTH_PORT" -cmdupdates "$CMD_URL":"$CMD_RESOLVER_PORT" -cmdcerts "$CMD_URL":"$CMD_RESOLVER_PORT" -hostif eth1 --log-to-file $LOG_DIR/nmd.log -resolver "$CMD_URL":"$CMD_RESOLVER_PORT" -mode network -hostname $NMD_HOSTNAME &
