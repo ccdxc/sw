@@ -1,6 +1,9 @@
 #include <linux/kernel.h>
 #include <linux/types.h>
 #include <linux/netdevice.h>
+#ifdef __FreeBSD__
+#include <linux/io.h>
+#endif
 
 #include "sonic.h"
 #include "sonic_dev.h"

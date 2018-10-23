@@ -19,6 +19,9 @@
 #ifndef _ACCEL_DEV_IF_H_
 #define _ACCEL_DEV_IF_H_
 
+#ifdef __FreeBSD__
+#include <linux/types.h>
+#endif
 /**
  * devcmd HBM handle as defined in nic/conf/iris/hbm_mem.json
  */

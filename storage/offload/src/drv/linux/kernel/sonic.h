@@ -19,6 +19,7 @@
 #ifndef _SONIC_H_
 #define _SONIC_H_
 
+#include "osal.h"
 #include "sonic_dev.h"
 #include "sonic_debugfs.h"
 
@@ -31,6 +32,38 @@
 
 extern unsigned int devcmd_timeout;
 extern unsigned int core_count;
+
+#ifdef __FreeBSD__
+#ifndef print_hex_dump_debug
+#define print_hex_dump_debug(...) 			\
+		print_hex_dump(NULL, __VA_ARGS__);
+#endif
+
+#ifndef napi_struct
+#define napi_struct work_struct
+#endif
+
+#define netif_napi_add(n, napi, poll, wt) do {	\
+	(void)(n);				\
+	(void)(wt);				\
+	INIT_WORK(napi, poll);			\
+} while (0)
+
+#define netif_napi_del(napi) do {	\
+	(void)(napi);			\
+} while (0)
+
+#define napi_enable schedule_work
+#define napi_disable cancel_work_sync
+#define napi_schedule schedule_work
+#define napi_schedule_irqoff schedule_work
+#define napi_complete_done(napi, done) ((void)(napi), (void)(done), 1)
+
+#define NAPI_POLL_WEIGHT 64
+
+#define	COMPLETION_INITIALIZER_ONSTACK(c) \
+        { .done = 0 }
+#endif
 
 struct sonic {
 	struct pci_dev *pdev;
@@ -86,6 +119,7 @@ struct sonic_admin_ctx {
   void *side_data;
   size_t side_data_len;
 };
+
 
 int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx);
 int sonic_adminq_post_wait(struct lif *lif, struct sonic_admin_ctx *ctx);

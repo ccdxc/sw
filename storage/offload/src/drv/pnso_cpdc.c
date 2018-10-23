@@ -37,7 +37,7 @@ alloc_pad_buffer(void)
 	}
 
 	err = PNSO_OK;
-	OSAL_LOG_ERROR("aligned pad buffer allocated and initialized! pad_buffer: 0x%llx",
+	OSAL_LOG_ERROR("aligned pad buffer allocated and initialized! pad_buffer: 0x" PRIx64,
 			pad_buffer);
 out:
 	return err;

@@ -22,6 +22,7 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 
+#include "osal.h"
 #include "sonic_dev.h"
 #include "sonic_api_int.h"
 #include "osal_mem.h"
@@ -344,7 +345,7 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 	q->head = q->tail = q->info;
 	q->pid = pid;
 
-	printk(KERN_ERR "sonic_q_init q: %llx q->head %llx index %d",
+	printk(KERN_ERR "sonic_q_init q: " PRIx64 " q->head " PRIx64 " index %d",
 			(u64) q, (u64) q->head, index);
 
 	snprintf(q->name, sizeof(q->name), "%s%u", base, index);
@@ -372,7 +373,7 @@ void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
 	q->base = base;
 	q->base_pa = base_pa;
 
-	printk(KERN_ERR "sonic_q_map base %llx base_pa %llx",
+	printk(KERN_ERR "sonic_q_map base " PRIx64 " base_pa " PRIx64,
 			(u64) base, (u64) base_pa);
 
 	for (i = 0, cur = q->info; i < q->num_descs; i++, cur++)

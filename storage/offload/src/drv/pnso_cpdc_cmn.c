@@ -3,7 +3,11 @@
  * All rights reserved.
  *
  */
+#ifdef __FreeBSD__
+#include <linux/netdevice.h>
+#else
 #include <netdevice.h>
+#endif
 
 #include "sonic_dev.h"
 #include "sonic_lif.h"
@@ -113,14 +117,14 @@ pprint_sgl(uint64_t sgl_pa)
 	if (!sgl)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x%llx", "", (uint64_t) sgl, sgl_pa);
+	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x" PRIx64, "", (uint64_t) sgl, sgl_pa);
 	while (sgl) {
 		OSAL_LOG_DEBUG("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
 				"",
 				sgl->cs_addr_0, sgl->cs_len_0, sgl->cs_rsvd_0,
 				sgl->cs_addr_1, sgl->cs_len_1, sgl->cs_rsvd_1,
 				sgl->cs_addr_2, sgl->cs_len_2, sgl->cs_rsvd_2);
-		OSAL_LOG_DEBUG("%30s: 0x%llx/0x%llx", "",
+		OSAL_LOG_DEBUG("%30s: 0x%llx/0x" PRIx64, "",
 				sgl->cs_next, sgl->cs_rsvd_3);
 
 		sgl = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) : NULL;
@@ -161,10 +165,10 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cpdc_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cpdc_desc", (uint64_t) desc);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_src", desc->cd_src);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_dst", desc->cd_dst);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_src", desc->cd_src);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_dst", desc->cd_dst);
 
 	OSAL_LOG_DEBUG("%30s:", "=== cpdc_cmd");
 	pprint_cpdc_cmd(&desc->u.cd_bits);
@@ -173,21 +177,21 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	OSAL_LOG_DEBUG("%30s: %d", "cd_extended_len", desc->cd_extended_len);
 	OSAL_LOG_DEBUG("%30s: %d", "cd_threshold_len", desc->cd_threshold_len);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_status_addr", desc->cd_status_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_status_addr", desc->cd_status_addr);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_db_addr", desc->cd_db_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_db_data", desc->cd_db_data);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_db_addr", desc->cd_db_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_db_data", desc->cd_db_data);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_otag_addr", desc->cd_otag_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_otag_addr", desc->cd_otag_addr);
 	OSAL_LOG_DEBUG("%30s: %d", "cd_otag_data", desc->cd_otag_data);
 	OSAL_LOG_DEBUG("%30s: %d", "cd_status_data", desc->cd_status_data);
 
 	if (desc->u.cd_bits.cc_src_is_list) {
-		OSAL_LOG_DEBUG("%30s: 0x%llx", "=== src_sgl", desc->cd_src);
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== src_sgl", desc->cd_src);
 		pprint_sgl(desc->cd_src);
 	}
 	if (desc->u.cd_bits.cc_dst_is_list) {
-		OSAL_LOG_DEBUG("%30s: 0x%llx", "=== dst_sgl", desc->cd_dst);
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== dst_sgl", desc->cd_dst);
 		pprint_sgl(desc->cd_dst);
 	}
 }
@@ -198,7 +202,7 @@ cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc)
 	if (!status_desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== status_desc",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== status_desc",
 			(uint64_t) status_desc);
 
 	OSAL_LOG_DEBUG("%30s: %d", "csd_err", status_desc->csd_err);
@@ -208,7 +212,7 @@ cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc)
 			status_desc->csd_output_data_len);
 	OSAL_LOG_DEBUG("%30s: %d", "csd_partial_data",
 			status_desc->csd_partial_data);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "csd_integrity_data",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "csd_integrity_data",
 			status_desc->csd_integrity_data);
 
 	/* TODO-cpdc: print SHA */
@@ -392,7 +396,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 	pb_status_desc = status_desc;
 	pb_sgl = sgl;
 
-	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x%llx desc: 0x%llx status_desc: 0x%llx",
+	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x" PRIx64 " desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			block_cnt, block_size, src_buf_len, flat_buf.buf,
 			(uint64_t) desc, (uint64_t) status_desc);
 
@@ -409,7 +413,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		pb_sgl->cs_addr_0 = sonic_virt_to_phy(buf);
 		pb_sgl->cs_len_0 = len;
 
-		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d desc: 0x%llx status_desc: 0x%llx sgl: 0x%llx",
+		OSAL_LOG_INFO("blk_num: %d buf: 0x" PRIx64 ", len: %d desc: 0x" PRIx64 " status_desc: 0x" PRIx64 " sgl: 0x" PRIx64 "",
 			i, (uint64_t) buf, len, (uint64_t) pb_desc,
 			(uint64_t) pb_status_desc, (uint64_t) pb_sgl);
 

@@ -33,12 +33,12 @@ pprint_crypto_desc(const struct pnso_crypto_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== crypto_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== crypto_desc", (uint64_t) desc);
 
 	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_DEBUG("%30s: %d", "rsvd", desc->rsvd);
 	OSAL_LOG_DEBUG("%30s: %d", "key_desc_idx", desc->key_desc_idx);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "iv_addr", desc->iv_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "iv_addr", desc->iv_addr);
 }
 
 static void __attribute__((unused))
@@ -47,7 +47,7 @@ pprint_cp_desc(const struct pnso_compression_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== cp_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== cp_desc", (uint64_t) desc);
 
 	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_DEBUG("%30s: %d", "flags", desc->flags);
@@ -62,7 +62,7 @@ pprint_dc_desc(const struct pnso_decompression_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== dc_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== dc_desc", (uint64_t) desc);
 
 	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_DEBUG("%30s: %d", "flags", desc->flags);
@@ -76,7 +76,7 @@ pprint_hash_desc(const struct pnso_hash_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== hash_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== hash_desc", (uint64_t) desc);
 
 	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_DEBUG("%30s: %d", "flags", desc->flags);
@@ -88,7 +88,7 @@ pprint_chksum_desc(const struct pnso_checksum_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== chksum_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== chksum_desc", (uint64_t) desc);
 
 	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_DEBUG("%30s: %d", "flags", desc->flags);
@@ -100,7 +100,7 @@ pprint_decompaction_desc(const struct pnso_decompaction_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== decompact_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== decompact_desc", (uint64_t) desc);
 
 	OSAL_LOG_DEBUG("%30s: %llu", "vvbn", (uint64_t) desc->vvbn);
 	OSAL_LOG_DEBUG("%30s: %d", "rsvd_1", desc->rsvd_1);
@@ -116,7 +116,7 @@ req_pprint_request(const struct pnso_service_request *req)
 	if (!req)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== pnso_service_request", (uint64_t) req);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== pnso_service_request", (uint64_t) req);
 
 	OSAL_LOG_DEBUG("%30s: %d", "num_services", req->num_services);
 	for (i = 0; i < req->num_services; i++) {
@@ -189,7 +189,7 @@ req_pprint_result(const struct pnso_service_result *res)
 	if (!res)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== pnso_service_result", (uint64_t) res);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== pnso_service_result", (uint64_t) res);
 
 	OSAL_LOG_DEBUG("%30s: %d", "err", res->err);
 
@@ -416,7 +416,7 @@ validate_req_hash_service(struct pnso_service *svc)
 	}
 
 	if (svc->svc_type != PNSO_SVC_TYPE_HASH) {
-		OSAL_LOG_DEBUG("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+		OSAL_LOG_DEBUG("invalid service type specified! svc: 0x" PRIx64 " svc_type: %d err: %d",
 				(uint64_t) svc, svc->svc_type, err);
 		goto out;
 	}
@@ -645,7 +645,7 @@ static validate_res_service_fn_t validate_res_service_fn[PNSO_SVC_TYPE_MAX] = {
 	[PNSO_SVC_TYPE_DECOMPACT] = validate_res_decompaction_service,
 };
 
-pnso_error_t
+static pnso_error_t
 validate_service_request(struct pnso_service_request *svc_req)
 {
 	pnso_error_t err = EINVAL;
@@ -702,7 +702,7 @@ out:
 	return err;
 }
 
-pnso_error_t
+static pnso_error_t
 validate_service_result(struct pnso_service_result *svc_res)
 {
 	pnso_error_t err = EINVAL;

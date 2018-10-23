@@ -334,6 +334,7 @@ int sonic_identify(struct sonic *sonic)
 	if (dma_mapping_error(dev, ident_pa))
 		return -EIO;
 
+#ifndef __FreeBSD__
 	ident->drv.os_type = OS_TYPE_LINUX;
 	ident->drv.os_dist = 0;
 	strncpy(ident->drv.os_dist_str, utsname()->release,
@@ -341,6 +342,15 @@ int sonic_identify(struct sonic *sonic)
 	ident->drv.kernel_ver = LINUX_VERSION_CODE;
 	strncpy(ident->drv.kernel_ver_str, utsname()->version,
 		sizeof(ident->drv.kernel_ver_str) - 1);
+#else
+	ident->drv.os_type = OS_TYPE_FREEBSD;
+	ident->drv.os_dist = 0;
+	strncpy(ident->drv.os_dist_str, "FreeBSD",
+		sizeof(ident->drv.os_dist_str) - 1);
+	ident->drv.kernel_ver = __FreeBSD_version;
+	snprintf(ident->drv.kernel_ver_str, sizeof(ident->drv.kernel_ver_str) - 1,
+		"%d", __FreeBSD_version);
+#endif
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
 		sizeof(ident->drv.driver_ver_str) - 1);
 

@@ -17,4 +17,12 @@
 #include "osal_setup.h"
 #include "osal_sys.h"
 
+
+#ifdef __FreeBSD__
+#define PRIx64	"%lx"
+#define PRIu64	"%lu"
+#else
+#define PRIx64	"%llx"
+#define PRIu64	"%llu"
+#endif
 #endif	/* __OSAL_H__ */

@@ -149,7 +149,7 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		if (sonic_rmem_addr_valid(prev_rmem) && 
                     ((curr_rmem - mpool->mp_config.mpc_page_size) != prev_rmem)) {
 			OSAL_LOG_ERROR("unexpected non-contiguous alloc curr_rmem 0x%llx "
-				       "prev_rmem 0x%llx", curr_rmem, prev_rmem);
+				       "prev_rmem 0x" PRIx64, curr_rmem, prev_rmem);
 			sonic_rmem_free(curr_rmem, mpool->mp_config.mpc_page_size);
 			goto error;
 		}
@@ -276,7 +276,7 @@ mpool_create(enum mem_pool_type mpool_type,
 	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
 
 	*out_mpool = mpool;
-	OSAL_LOG_INFO("pool allocated. mpool_type: %s num_objects: %d object_size: %d align_size: %d pad_size: %d mpool: 0x%llx",
+	OSAL_LOG_INFO("pool allocated. mpool_type: %s num_objects: %d object_size: %d align_size: %d pad_size: %d mpool: 0x" PRIx64,
 		      mem_pool_get_type_str(mpool_type), num_objects, object_size,
 		      align_size, mpool->mp_config.mpc_pad_size, (uint64_t) mpool);
 
@@ -300,7 +300,7 @@ mpool_destroy(struct mem_pool **mpoolp)
 
 	mpool = *mpoolp;
 
-	OSAL_LOG_INFO("pool deallocated. mpc_type: %s mpc_num_objects: %d mpool: 0x%llx",
+	OSAL_LOG_INFO("pool deallocated. mpc_type: %s mpc_num_objects: %d mpool: 0x" PRIx64,
 		      mem_pool_get_type_str(mpool->mp_config.mpc_type),
 		      mpool->mp_config.mpc_num_objects, (uint64_t) mpool);
 
@@ -371,8 +371,8 @@ mpool_pprint(const struct mem_pool *mpool)
 	if (!mpool)
 		return;
 
-	OSAL_LOG_DEBUG("%-30s: 0x%llx", "mpool", (uint64_t) mpool);
-	// OSAL_LOG_DEBUG("%-30s: %llx", "mpool->mp_magic", mpool->mp_magic);
+	OSAL_LOG_DEBUG("%-30s: 0x" PRIx64, "mpool", (uint64_t) mpool);
+	// OSAL_LOG_DEBUG("%-30s: " PRIx64, "mpool->mp_magic", mpool->mp_magic);
 
 	OSAL_LOG_DEBUG("%-30s: %u:%s", "mpool->mp_config.mpc_type",
 			mpool->mp_config.mpc_type,
@@ -392,19 +392,19 @@ mpool_pprint(const struct mem_pool *mpool)
 	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_page_size",
 			mpool->mp_config.mpc_page_size);
 
-	OSAL_LOG_DEBUG("%-30s: 0x%llx", "mpool->mp_objects",
+	OSAL_LOG_DEBUG("%-30s: 0x" PRIx64, "mpool->mp_objects",
 			(uint64_t) mpool->mp_objects);
 
 	OSAL_LOG_DEBUG("%-30s: %d", "mpool->mp_stack.mps_num_objects",
 			mpool->mp_stack.mps_num_objects);
 	OSAL_LOG_DEBUG("%-30s: %d", "mpool->mp_stack.mps_top",
 			mpool->mp_stack.mps_top);
-	OSAL_LOG_DEBUG("%-30s: 0x%llx", "mpool->mp_stack.mps_objects",
+	OSAL_LOG_DEBUG("%-30s: 0x" PRIx64, "mpool->mp_stack.mps_objects",
 			(uint64_t) mpool->mp_stack.mps_objects);
 
 	objects = mpool->mp_stack.mps_objects;
 	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
-		OSAL_LOG_DEBUG("%30s[%d]: 0x%llx 0x%llx",
+		OSAL_LOG_DEBUG("%30s[%d]: 0x" PRIx64 " 0x" PRIx64 "",
 				"mpool->mp_stack.mps_objects", i,
 				(uint64_t) &objects[i], (uint64_t) objects[i]);
 	}

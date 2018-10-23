@@ -45,7 +45,7 @@ pprint_service_info(const struct service_info *svc_info)
 	if (!svc_info)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== svc_info",  (uint64_t) svc_info);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== svc_info",  (uint64_t) svc_info);
 	OSAL_LOG_DEBUG("%30s: %d", "si_type", svc_info->si_type);
 	OSAL_LOG_DEBUG("%30s: %d", "si_flags", svc_info->si_flags);
 
@@ -53,33 +53,33 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: %d", "si_desc_flagss", svc_info->si_desc_flags);
 	OSAL_LOG_DEBUG("%30s: %d", "si_num_tags", svc_info->si_num_tags);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "si_desc",  (uint64_t) svc_info->si_desc);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "si_status_desc",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_desc",  (uint64_t) svc_info->si_desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_status_desc",
 			(uint64_t) svc_info->si_status_desc);
-	OSAL_LOG_INFO("%30s: 0x%llx", "si_istatus_desc",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "si_istatus_desc",
 			(uint64_t) svc_info->si_istatus_desc);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== si_src_sgl",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_sgl",
 			(uint64_t) svc_info->si_src_sgl.sgl);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== si_dst_sgl",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_sgl",
 			(uint64_t) svc_info->si_dst_sgl.sgl);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== si_src_aol",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_src_aol",
 			(uint64_t) svc_info->si_src_aol.aol);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== si_dst_aol",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_dst_aol",
 			(uint64_t) svc_info->si_dst_aol.aol);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== si_p4_sgl",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_p4_sgl",
 			(uint64_t) svc_info->si_p4_sgl);
 	OSAL_LOG_INFO("%30s: %u", "=== si_iblist count",
 			svc_info->si_iblist.blist.count);
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_src_blist",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_src_blist",
 			(uint64_t) svc_info->si_src_blist.blist);
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_src_blist.len",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_src_blist.len",
 			(uint64_t) svc_info->si_src_blist.len);
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_blist",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_dst_blist",
 			(uint64_t) svc_info->si_dst_blist.blist);
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_blist.len",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_dst_blist.len",
 			(uint64_t) svc_info->si_dst_blist.len);
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_sgl_pdma",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_sgl_pdma",
 			(uint64_t) svc_info->si_sgl_pdma);
 
 	/* TODO-chain: include service status and other members */
@@ -92,10 +92,10 @@ pprint_chain_entry(const struct chain_entry *centry)
 		return;
 
 	/* chain entry */
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "centry", (uint64_t) centry);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "centry->ce_chain_head",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "centry", (uint64_t) centry);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "centry->ce_chain_head",
 			      (uint64_t) centry->ce_chain_head);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "centry->ce_next",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "centry->ce_next",
 			      (uint64_t) centry->ce_next);
 
 	/* basic service info */
@@ -103,7 +103,7 @@ pprint_chain_entry(const struct chain_entry *centry)
 		      centry->ce_svc_info.si_type);
 	OSAL_LOG_DEBUG("%30s: %d", "ce_svc_info->si_flags",
 		      centry->ce_svc_info.si_flags);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ce_svc_info->si_ops",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ce_svc_info->si_ops",
 		      (uint64_t) &centry->ce_svc_info.si_ops);
 }
 

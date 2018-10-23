@@ -791,7 +791,7 @@ int sonic_lifs_init(struct sonic *sonic)
 	return 0;
 }
 
-int sonic_lif_register(struct lif *lif)
+static int sonic_lif_register(struct lif *lif)
 {
 	/* noop for offload device */
 	lif->registered = true;
@@ -1051,7 +1051,7 @@ static int sonic_lif_seq_q_init(struct queue *q)
 
 	dev_info(lif->sonic->dev, "seq_q_init.pid %d\n", ctx.cmd.seq_queue_init.pid);
 	dev_info(lif->sonic->dev, "seq_q_init.index %d\n", ctx.cmd.seq_queue_init.index);
-	dev_info(lif->sonic->dev, "seq_q_init.wring_base 0x%llx\n",
+	dev_info(lif->sonic->dev, "seq_q_init.wring_base 0x" PRIx64 "\n",
 		   ctx.cmd.seq_queue_init.wring_base);
 	dev_info(lif->sonic->dev, "seq_q_init.wring_size %d\n",
 		   ctx.cmd.seq_queue_init.wring_size);
@@ -1072,8 +1072,7 @@ static int sonic_lif_seq_q_init(struct queue *q)
 
 	dev_info(lif->sonic->dev, "seq_q->qid %d\n", q->qid);
 	dev_info(lif->sonic->dev, "seq_q->qtype %d\n", q->qtype);
-	dev_info(lif->sonic->dev, "seq_q->db %llx\n", (u64) q->db);
-
+	dev_info(lif->sonic->dev, "seq_q->db " PRIx64 "\n", (u64) q->db);
 	// err = sonic_debugfs_add_q(lif, q);
 	return err;
 }
@@ -1174,12 +1173,12 @@ static int sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
 	return err;
 }
 
-int sonic_lif_seq_q_enable(struct queue *q, uint16_t opcode)
+static int sonic_lif_seq_q_enable(struct queue *q, uint16_t opcode)
 {
 	return sonic_lif_seq_q_control(q, CMD_OPCODE_SEQ_QUEUE_ENABLE);
 }
 
-int sonic_lif_seq_q_disable(struct queue *q, uint16_t opcode)
+static int sonic_lif_seq_q_disable(struct queue *q, uint16_t opcode)
 {
 	return sonic_lif_seq_q_control(q, CMD_OPCODE_SEQ_QUEUE_DISABLE);
 }

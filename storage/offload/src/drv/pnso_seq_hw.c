@@ -3,9 +3,13 @@
  * All rights reserved.
  *
  */
+#ifdef __FreeBSD__
+#include <linux/netdevice.h>
+#else
 #include <netdevice.h>
 #include <net.h>
 #include <kernel.h>
+#endif
 
 #include "sonic_dev.h"
 #include "sonic_lif.h"
@@ -60,15 +64,15 @@ pprint_seq_desc(const struct sequencer_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "seq_desc", (uint64_t) desc);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "seq_desc_pa",
-			sonic_virt_to_phy((void *) desc));
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "seq_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "seq_desc_pa",
+			osal_virt_to_phy((void *) desc));
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sd_desc_addr", desc->sd_desc_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sd_pndx_addr", desc->sd_pndx_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sd_pndx_shadow_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_desc_addr", desc->sd_desc_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_pndx_addr", desc->sd_pndx_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_pndx_shadow_addr",
 			desc->sd_pndx_shadow_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sd_ring_addr", desc->sd_ring_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sd_ring_addr", desc->sd_ring_addr);
 
 	OSAL_LOG_DEBUG("%30s: %d", "sd_desc_size", desc->sd_desc_size);
 	OSAL_LOG_DEBUG("%30s: %d", "sd_pndx_size", desc->sd_pndx_size);
@@ -89,9 +93,9 @@ pprint_seq_info(const struct sequencer_info *seq_info)
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_index", seq_info->sqi_index);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
 	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqi_sqi_desc",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqi_sqi_desc",
 			(uint64_t) seq_info->sqi_desc);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqi_status_desc",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqi_status_desc",
 			(uint64_t) seq_info->sqi_status_desc);
 }
 
@@ -105,35 +109,35 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 	if (!chain_params)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cpdc_chain_params",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cpdc_chain_params",
 			(uint64_t) chain_params);
 
 	spec = &chain_params->ccp_seq_spec;
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_q",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sequencer_spec", (uint64_t) spec);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_seq_q",
 			(uint64_t)spec->sqs_seq_q);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_status_q",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_seq_status_q",
 			(uint64_t)spec->sqs_seq_status_q);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_q",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_seq_next_q",
 			spec->sqs_seq_next_q);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_status_q",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_seq_next_status_q",
 			spec->sqs_seq_next_status_q);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_ret_doorbell_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_ret_doorbell_addr",
 			spec->sqs_ret_doorbell_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_ret_doorbell_data",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_ret_doorbell_data",
 			spec->sqs_ret_doorbell_data);
 	OSAL_LOG_DEBUG("%30s: %d", "sqs_ret_seq_status_index",
 			spec->sqs_ret_seq_status_index);
 
 	ring_spec = &chain_params->ccp_ring_spec;
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_ring_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ring_spec", (uint64_t) ring_spec);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "rs_ring_addr",
 			ring_spec->rs_ring_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_pndx_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "rs_pndx_addr",
 			ring_spec->rs_pndx_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_pndx_shadow_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "rs_pndx_shadow_addr",
 			ring_spec->rs_pndx_shadow_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_desc_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "rs_desc_addr",
 			ring_spec->rs_desc_addr);
 	OSAL_LOG_DEBUG("%30s: %d", "rs_desc_size",
 			ring_spec->rs_desc_size);
@@ -144,25 +148,25 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 	OSAL_LOG_DEBUG("%30s: %d", "rs_num_descs",
 			ring_spec->rs_num_descs);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_status_addr_0",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_status_addr_0",
 			chain_params->ccp_status_addr_0);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_status_addr_1",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_status_addr_1",
 			chain_params->ccp_status_addr_1);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_comp_buf_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_comp_buf_addr",
 			chain_params->ccp_comp_buf_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_alt_buf_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_alt_buf_addr",
 			chain_params->ccp_alt_buf_addr);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_aol_src_vec_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_aol_src_vec_addr",
 			chain_params->ccp_aol_src_vec_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_aol_dst_vec_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_aol_dst_vec_addr",
 			chain_params->ccp_aol_dst_vec_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_sgl_vec_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_sgl_vec_addr",
 			chain_params->ccp_sgl_vec_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_pad_buf_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_pad_buf_addr",
 			chain_params->ccp_pad_buf_addr);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_intr_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_intr_addr",
 			chain_params->ccp_intr_addr);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_intr_data",
 			chain_params->ccp_intr_data);
@@ -217,35 +221,35 @@ pprint_crypto_chain_params(const struct crypto_chain_params *chain_params)
 	if (!chain_params)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "crypto_chain_params",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "crypto_chain_params",
 			(uint64_t) chain_params);
 
 	spec = &chain_params->ccp_seq_spec;
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_q",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sequencer_spec", (uint64_t) spec);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_seq_q",
 			(uint64_t)spec->sqs_seq_q);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_status_q",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_seq_status_q",
 			(uint64_t)spec->sqs_seq_status_q);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_q",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_seq_next_q",
 			spec->sqs_seq_next_q);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_status_q",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_seq_next_status_q",
 			spec->sqs_seq_next_status_q);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_ret_doorbell_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_ret_doorbell_addr",
 			spec->sqs_ret_doorbell_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_ret_doorbell_data",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "sqs_ret_doorbell_data",
 			spec->sqs_ret_doorbell_data);
 	OSAL_LOG_DEBUG("%30s: %d", "sqs_ret_seq_status_index",
 			spec->sqs_ret_seq_status_index);
 
 	ring_spec = &chain_params->ccp_ring_spec;
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_ring_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ring_spec", (uint64_t) ring_spec);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "rs_ring_addr",
 			ring_spec->rs_ring_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_pndx_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "rs_pndx_addr",
 			ring_spec->rs_pndx_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_pndx_shadow_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "rs_pndx_shadow_addr",
 			ring_spec->rs_pndx_shadow_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_desc_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "rs_desc_addr",
 			ring_spec->rs_desc_addr);
 	OSAL_LOG_DEBUG("%30s: %d", "rs_desc_size",
 			ring_spec->rs_desc_size);
@@ -256,18 +260,18 @@ pprint_crypto_chain_params(const struct crypto_chain_params *chain_params)
 	OSAL_LOG_DEBUG("%30s: %d", "rs_num_descs",
 			ring_spec->rs_num_descs);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_status_addr_0",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_status_addr_0",
 			chain_params->ccp_status_addr_0);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_status_addr_1",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_status_addr_1",
 			chain_params->ccp_status_addr_1);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_crypto_buf_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_crypto_buf_addr",
 			chain_params->ccp_crypto_buf_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_comp_sgl_src_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_comp_sgl_src_addr",
 			chain_params->ccp_comp_sgl_src_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_sgl_pdma_dst_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_sgl_pdma_dst_addr",
 			chain_params->ccp_sgl_pdma_dst_addr);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_intr_addr",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "ccp_intr_addr",
 			chain_params->ccp_intr_addr);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_intr_data",
 			chain_params->ccp_intr_data);
@@ -622,7 +626,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 			cpu_to_be16(svc_info->si_seq_info.sqi_batch_size);
 	}
 
-	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx  desc_size: %lu",
+	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 "  desc_size: %lu",
 			ring_id, index, (uint64_t) src_desc, desc_size);
 	PPRINT_SEQUENCER_DESC(seq_desc);
 
@@ -744,7 +748,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
-	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx status_desc: 0x%llx",
+	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			ring_id, index, (uint64_t) cp_desc,
 			(uint64_t) status_desc);
 

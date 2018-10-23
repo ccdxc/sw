@@ -482,7 +482,7 @@ hash_write_result_per_block(struct service_info *svc_info)
 				PNSO_HASH_TAG_LEN);
 
 		CPDC_PPRINT_STATUS_DESC(st_desc);
-		OSAL_LOG_INFO("tag: %d status_desc: 0x%llx hash: %*phN",
+		OSAL_LOG_INFO("tag: %d status_desc: 0x" PRIx64 " hash: %*phN",
 			i, (uint64_t) status_desc, 64,
 			svc_status->u.hash.tags[i].hash);
 
@@ -542,7 +542,7 @@ hash_write_result_buffer(struct service_info *svc_info)
 			status_desc->csd_sha,
 			PNSO_HASH_TAG_LEN);
 
-	OSAL_LOG_INFO("tag: 0 status_desc: 0x%llx hash: %*phN",
+	OSAL_LOG_INFO("tag: 0 status_desc: 0x" PRIx64 " hash: %*phN",
 			(uint64_t) status_desc, 64,
 			svc_status->u.hash.tags[0].hash);
 

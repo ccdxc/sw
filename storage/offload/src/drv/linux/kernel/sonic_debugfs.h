@@ -19,7 +19,9 @@
 #ifndef _SONIC_DEBUGFS_H_
 #define _SONIC_DEBUGFS_H_
 
+#ifndef __FreeBSD__
 #include <linux/debugfs.h>
+#endif
 
 struct sonic;
 struct qcq;
