@@ -38,7 +38,7 @@ struct sequencer_ops {
 
 	void (*cleanup_cpdc_chain)(const struct service_info *svc_info);
 
-	void *(*setup_crypto_chain)(struct service_info *svc_info,
+	pnso_error_t (*setup_crypto_chain)(struct service_info *svc_info,
 			struct crypto_desc *desc);
 
 	void (*cleanup_crypto_chain)(const struct service_info *svc_info);

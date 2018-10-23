@@ -318,6 +318,11 @@ decompress_teardown(struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
+
+	/*
+	 * Trace the desc/SGLs once more to verify any padding applied
+	 * by sequencer.
+	 */
 	CPDC_PPRINT_DESC(svc_info->si_desc);
 
 	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_dst_sgl);

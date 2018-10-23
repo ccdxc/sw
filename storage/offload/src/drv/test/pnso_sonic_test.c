@@ -91,6 +91,8 @@ struct thread_state {
 	struct req_state reqs[PNSO_TEST_BATCH_DEPTH];
 	osal_thread_t wafl_thread;
 	osal_atomic_int_t test_done;
+	uint32_t num_test_buffers;
+	bool suppress_chain_interm_dst;
 };
 
 static struct thread_state osal_test_threads[PNSO_TEST_THREAD_COUNT];
@@ -100,6 +102,51 @@ int body(void);
 #if 0
 OSAL_LICENSE("Dual BSD/GPL");
 #endif
+
+static int
+set_pseudo_test_done(struct thread_state *tstate)
+{
+	osal_atomic_fetch_add(
+			&tstate->reqs[PNSO_TEST_BATCH_DEPTH-1].req_done, 1);
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+	return 0;
+}
+
+static int  __attribute__((unused))
+set_test_params_num_buffers_2(void *arg)
+{
+	struct thread_state *tstate = (struct thread_state *) arg;
+
+	tstate->num_test_buffers = 2;
+	return set_pseudo_test_done(tstate);
+}
+
+static int  __attribute__((unused))
+set_test_params_num_buffers_dflt(void *arg)
+{
+	struct thread_state *tstate = (struct thread_state *) arg;
+
+	tstate->num_test_buffers = 0;
+	return set_pseudo_test_done(tstate);
+}
+
+static int  __attribute__((unused))
+set_test_params_suppress_chain_interm_dst(void *arg)
+{
+	struct thread_state *tstate = (struct thread_state *) arg;
+
+	tstate->suppress_chain_interm_dst = true;
+	return set_pseudo_test_done(tstate);
+}
+
+static int  __attribute__((unused))
+set_test_params_allow_chain_interm_dst(void *arg)
+{
+	struct thread_state *tstate = (struct thread_state *) arg;
+
+	tstate->suppress_chain_interm_dst = false;
+	return set_pseudo_test_done(tstate);
+}
 
 static void
 comp_cb(void *arg1, struct pnso_service_result *svc_res)
@@ -603,6 +650,7 @@ verify_crypto_result(void)
 			pbuf_convert_buffer_list_p2v(rstate->buflists[0].buflist);
 			pbuf_convert_buffer_list_p2v(rstate->buflists[1].buflist);
 			pbuf_convert_buffer_list_p2v(rstate->buflists[2].buflist);
+			pbuf_convert_buffer_list_p2v(rstate->buflists[3].buflist);
 
 			pbuf_pprint_buffer_list(rstate->buflists[0].buflist);
 			pbuf_pprint_buffer_list(rstate->buflists[2].buflist);
@@ -974,6 +1022,7 @@ exec_decrypt_req(struct thread_state *tstate)
 
 		svc_req->sgl = rstate->buflists[1].buflist;
 		init_buflist(&rstate->buflists[2], 'X');
+		init_buflist(&rstate->buflists[3], 'Y');
 
 		svc_req->num_services = 1;
 		svc_res->num_services = 1;
@@ -998,10 +1047,10 @@ exec_cp_encrypt_req(struct thread_state *tstate)
 	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
 		rstate = &tstate->reqs[batch_id];
 
-		init_buflist_with_count(&rstate->buflists[0], 'A', 2);
-		init_buflist_with_count(&rstate->buflists[1], 'B', 2);
-		init_buflist_with_count(&rstate->buflists[2], 'C', 2);
-                init_buflist_with_count(&rstate->buflists[3], 'D', 2);
+		init_buflist_with_count(&rstate->buflists[0], 'A', tstate->num_test_buffers);
+		init_buflist_with_count(&rstate->buflists[1], 'B', tstate->num_test_buffers);
+		init_buflist_with_count(&rstate->buflists[2], 'C', tstate->num_test_buffers);
+                init_buflist_with_count(&rstate->buflists[3], 'D', tstate->num_test_buffers);
 
 		svc_req = &rstate->req.req;
 		memset(svc_req, 0, sizeof(*svc_req));
@@ -1017,7 +1066,8 @@ exec_cp_encrypt_req(struct thread_state *tstate)
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_COMPRESS);
 		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
+		if (!tstate->suppress_chain_interm_dst)
+			svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
 		svc_req->svc[0].u.cp_desc.threshold_len = 
 			(rstate->buflists[0].buflist->count * PNSO_TEST_BLOCK_SIZE) - 8;
 
@@ -1577,7 +1627,10 @@ static exec_test_fn_t exec_test_fn[] = {
 	// exec_cp_hash_test,
 	// exec_cp_hash_per_block_test,
 	exec_crypto_test,
-	// exec_cp_crypto_dc_test,
+	set_test_params_num_buffers_2,
+	exec_cp_crypto_dc_test,
+	set_test_params_num_buffers_dflt,
+	exec_cp_crypto_dc_test,
 };
 
 static int
@@ -1623,6 +1676,8 @@ body(void)
 	struct thread_state *tstate;
 	struct req_state *rstate;
 	struct pnso_init_params init_params;
+
+	osal_log_init(OSAL_LOG_LEVEL_DEBUG);
 
 	/* Initialize session */
 	memset(&init_params, 0, sizeof(init_params));

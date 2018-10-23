@@ -1,9 +1,9 @@
 #include <linux/kernel.h>
 #include <linux/slab.h>
-#include "sonic_api_int.h"
 #include "osal_assert.h"
 #include "osal_rmem.h"
 #include "osal_logger.h"
+#include "sonic_api_int.h"
 
 /*
  * TODO:
@@ -16,31 +16,19 @@
 /* TODO - rmem functions need to be filled */
 uint64_t osal_rmem_alloc(size_t size) 
 {
-	if(size % PAGE_SIZE != 0)
-	{
-		OSAL_LOG_ERROR("rmem alloc request failed - size not multiple of page size");
-		return 0;
-	}
-	
 	return sonic_rmem_alloc(size);
 }
 
 uint64_t osal_rmem_calloc(size_t size)
 {
-	if(size % PAGE_SIZE != 0)
-	{
-		OSAL_LOG_ERROR("rmem calloc request failed - size not multiple of page size");
-		return 0;
-	}
-	
 	return sonic_rmem_calloc(size);
 }
 
 uint64_t osal_rmem_aligned_alloc(size_t alignment, size_t size)
 {
-	if(size % PAGE_SIZE != 0 || alignment % PAGE_SIZE != 0) 
+	if(!is_power_of_2(alignment) || (alignment > sonic_rmem_page_size_get())) 
 	{
-		OSAL_LOG_ERROR("rmem alloc request failed - size or alignment not multiple of page size");
+		OSAL_LOG_ERROR("rmem alloc request failed - invalid alignment");
 		return 0;
 	}
 	
@@ -49,7 +37,7 @@ uint64_t osal_rmem_aligned_alloc(size_t alignment, size_t size)
 
 uint64_t osal_rmem_aligned_calloc(size_t alignment, size_t size)
 {
-	if(size % PAGE_SIZE != 0 || alignment % PAGE_SIZE != 0) 
+	if(!is_power_of_2(alignment) || (alignment > sonic_rmem_page_size_get())) 
 	{
 		OSAL_LOG_ERROR("rmem calloc request failed - size or alignment not multiple of page size");
 		return 0;
@@ -77,3 +65,29 @@ void osal_rmem_write(uint64_t ptr, const void *src, size_t size)
 {
 	sonic_rmem_write(ptr, src, size);
 }
+
+uint32_t osal_rmem_total_pages_get(void)
+{
+	return sonic_rmem_total_pages_get();
+}
+
+uint32_t osal_rmem_avail_pages_get(void)
+{
+	return sonic_rmem_avail_pages_get();
+}
+
+uint32_t osal_rmem_page_size_get(void)
+{
+	return sonic_rmem_page_size_get();
+}
+
+uint64_t osal_rmem_addr_invalid_def(void)
+{
+	return sonic_rmem_addr_invalid_def();
+}
+
+bool osal_rmem_addr_valid(uint64_t addr)
+{
+	return sonic_rmem_addr_valid(addr);
+}
+

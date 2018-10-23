@@ -60,7 +60,7 @@ seq_cleanup_cpdc_chain(const struct service_info *svc_info)
 	g_sequencer_ops->cleanup_cpdc_chain(svc_info);
 }
 
-void *
+pnso_error_t
 seq_setup_crypto_chain(struct service_info *svc_info,
 			struct crypto_desc *desc)
 {

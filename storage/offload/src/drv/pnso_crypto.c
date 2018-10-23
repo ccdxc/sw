@@ -31,46 +31,43 @@ static pnso_error_t
 init_mpools(struct pc_res_init_params *pc_init,
 	    struct per_core_resource *pc_res)
 {
-	uint32_t object_size;
 	pnso_error_t err;
 
 	err = mpool_create(MPOOL_TYPE_CRYPTO_DESC, pc_init->max_seq_sq_descs,
-				sizeof(struct crypto_desc), PNSO_MEM_ALIGN_DESC,
+				MPOOL_VEC_ELEM_SINGLE, sizeof(struct crypto_desc),
+				PNSO_MEM_ALIGN_DESC,
 				&pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC]);
 	if (!err)
 		err = mpool_create(MPOOL_TYPE_CRYPTO_STATUS_DESC,
 				pc_init->max_seq_sq_descs,
+				MPOOL_VEC_ELEM_SINGLE,
 				sizeof(struct crypto_status_desc),
 				sizeof(struct crypto_status_desc),
 				&pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
 	if (!err)
 		err = mpool_create(MPOOL_TYPE_CRYPTO_AOL,
 				pc_init->max_seq_sq_descs,
+				MPOOL_VEC_ELEM_SINGLE,
 				sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
 				&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
-	if (!err) {
-		object_size = sizeof(struct crypto_aol) *
-			      CRYPTO_NUM_DESCS_PER_AOL_VEC;
-
+	if (!err)
 		err = mpool_create(MPOOL_TYPE_CRYPTO_AOL_VECTOR,
 				pc_init->max_seq_sq_descs,
-				object_size, PNSO_MEM_ALIGN_DESC,
+				CRYPTO_NUM_DESCS_PER_AOL_VEC,
+				sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
 				&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
-	}
 
-	if (!err) {
-		object_size = sizeof(struct cpdc_sgl) *
-			      CRYPTO_NUM_DESCS_PER_SGL_VEC;
-
+	if (!err)
 		err = mpool_create(MPOOL_TYPE_CRYPTO_SGL_VECTOR,
 				pc_init->max_seq_sq_descs,
-				object_size, PNSO_MEM_ALIGN_DESC,
+				CRYPTO_NUM_DESCS_PER_SGL_VEC,
+				sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
 				&pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
-	}
 
 	if (!err)
 		err = mpool_create(MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 				pc_init->max_seq_sq_descs,
+				MPOOL_VEC_ELEM_SINGLE,
 				sizeof(struct crypto_status_desc),
 				sizeof(struct crypto_status_desc),
 				&pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);

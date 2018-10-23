@@ -43,3 +43,30 @@ void osal_rmem_free(uint64_t ptr, size_t size)
 {
 	return free((void*)ptr);
 }
+
+uint32_t osal_rmem_total_pages_get(void)
+{
+	/* arbitrary value for uspace test usage */
+	return 1024;
+}
+
+uint32_t osal_rmem_avail_pages_get(void)
+{
+	/* arbitrary value for uspace test usage */
+	return 512;
+}
+
+uint32_t osal_rmem_page_size_get(void)
+{
+	return 4096;
+}
+
+uint64_t osal_rmem_addr_invalid_def(void)
+{
+	return 0;
+}
+
+bool osal_rmem_addr_valid(uint64_t addr)
+{
+        return addr != osal_rmem_addr_invalid_def();
+}

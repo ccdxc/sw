@@ -15,6 +15,17 @@
 
 static identity_t *sonic_get_identity(void);
 
+static uint32_t
+roundup_to_pow_2(uint32_t val)
+{
+	uint32_t roundup = 1;
+
+	while (roundup < val)
+		roundup <<= 1;
+
+	return roundup;
+}
+
 static inline uint64_t
 sonic_rmem_base_pa(void)
 {
@@ -45,7 +56,14 @@ sonic_rmem_offset_to_pgid(uint64_t offset)
 static inline int
 sonic_rmem_page_order(size_t size)
 {
-	return ((size + PAGE_SIZE - 1) / PAGE_SIZE) - 1;
+	/*
+	 * bitmap_find_free_region() order indicates region size in power of 2.
+         * So round up size to the nearest power of 2 if necessary.
+	 */
+	if (!is_power_of_2(size))
+		size = roundup_to_pow_2(size);
+
+	return (int)ilog2((size + PAGE_SIZE - 1) / PAGE_SIZE);
 }
 
 static inline uint64_t
@@ -141,7 +159,6 @@ uint32_t sonic_rmem_page_size_get(void)
 
 uint64_t sonic_rmem_alloc(size_t size)
 {
-	OSAL_ASSERT(size == PAGE_SIZE);
 	return sonic_api_get_rmem(sonic_rmem_page_order(size));
 }
 
@@ -163,22 +180,19 @@ void sonic_rmem_free(uint64_t pgaddr, size_t size)
 
 void sonic_rmem_set(uint64_t pgaddr, uint8_t val, size_t size)
 {
-	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr) &&
-		    (size <= PAGE_SIZE));
+	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr));
 	memset_io(sonic_rmem_pgaddr_to_iomem(pgaddr), val, size);
 }
 
 void sonic_rmem_read(void *dst, uint64_t pgaddr, size_t size)
 {
-	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr) &&
-		    (size <= PAGE_SIZE));
+	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr));
 	memcpy_fromio(dst, sonic_rmem_pgaddr_to_iomem(pgaddr), size);
 }
 
 void sonic_rmem_write(uint64_t pgaddr, const void *src, size_t size)
 {
-	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr) &&
-		    (size <= PAGE_SIZE));
+	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr));
 	memcpy_toio(sonic_rmem_pgaddr_to_iomem(pgaddr), src, size);
 }
 

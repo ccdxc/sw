@@ -36,6 +36,8 @@ struct pc_res_init_params {
 	uint32_t max_seq_sq_descs;
 };
 
+extern uint64_t pad_buffer;
+
 void pnso_deinit(void);
 
 #endif /* __PNSO_INIT_H__ */
