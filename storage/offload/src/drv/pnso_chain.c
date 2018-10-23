@@ -220,6 +220,12 @@ chn_get_last_centry(struct service_chain *chain)
 	return ce_last;
 }
 
+bool
+chn_is_poll_done(struct service_chain *chain)
+{
+	return (chain->sc_flags & CHAIN_CFLAG_POLLED) ? true : false;
+}
+
 pnso_error_t
 chn_poll_all_services(struct service_chain *chain)
 {
@@ -238,9 +244,13 @@ chn_poll_all_services(struct service_chain *chain)
 			PPRINT_CHAIN(chain);
 			OSAL_LOG_ERROR("failed to poll svc_type: %d err: %d",
 					sc_entry->ce_svc_info.si_type, err);
+			break;
 		}
 		sc_entry = sc_entry->ce_next;
 	}
+
+	if (!err)
+		chain->sc_flags |= CHAIN_CFLAG_POLLED;
 
 	return err;
 }

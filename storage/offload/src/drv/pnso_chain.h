@@ -72,6 +72,10 @@ extern "C" {
 #define CHAIN_SFLAG_LAST_SERVICE	(1 << 2)
 #define CHAIN_SFLAG_IN_BATCH		(1 << 3)
 
+/* chain flags */
+#define CHAIN_CFLAG_IN_BATCH		(1 << 0)
+#define CHAIN_CFLAG_POLLED		(1 << 1)
+
 extern struct service_ops cp_ops;
 extern struct service_ops dc_ops;
 extern struct service_ops hash_ops;
@@ -232,7 +236,9 @@ struct chain_entry {
 
 struct service_chain {
 	uint32_t sc_req_id;		/* unique request id */
-	uint32_t sc_num_services;	/* number of services in the chain */
+	uint16_t sc_num_services;	/* number of services in the chain */
+	uint16_t sc_flags;		/* chain flags (CFLAGS) */
+
 	struct chain_entry *sc_entry;	/* list of services */
 	struct pnso_service_result *sc_res;	/* caller supplied result */
 
@@ -318,6 +324,8 @@ void chn_read_write_result(struct service_chain *chain);
 void chn_update_overall_result(struct service_chain *chain);
 
 void chn_notify_caller(struct service_chain *chain);
+
+bool chn_is_poll_done(struct service_chain *chain);
 
 static inline bool
 chn_service_is_in_chain(const struct service_info *svc_info)

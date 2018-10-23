@@ -454,7 +454,7 @@ out:
 }
 
 static pnso_error_t
-poll_all_chains_ex(struct batch_info *batch_info)
+poll_all_chains(struct batch_info *batch_info)
 {
 	pnso_error_t err = EINVAL;
 	struct batch_page *batch_page;
@@ -473,28 +473,33 @@ poll_all_chains_ex(struct batch_info *batch_info)
 	return err;
 }
 
+#if 0
 static pnso_error_t
 poll_all_chains(struct batch_info *batch_info)
 {
 	pnso_error_t err = EINVAL;
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
-	int32_t idx;
+	uint32_t idx = 0;
 
-	idx = batch_info->bi_num_entries-1;
-	while (idx >= 0) {
-		batch_page = GET_PAGE(batch_info, idx);
-		page_entry = GET_PAGE_ENTRY(batch_page, idx);
+	while (err) {
+		OSAL_LOG_DEBUG("re/attempt polling batch/chain idx: %d", idx);
+		for (; idx < batch_info->bi_num_entries; idx++) {
+			batch_page = GET_PAGE(batch_info, idx);
+			page_entry = GET_PAGE_ENTRY(batch_page, idx);
 
-		err = chn_poll_all_services(page_entry->bpe_chain);
-		if (err)
-			break;
+			if (chn_is_poll_done(page_entry->bpe_chain))
+				continue;
 
-		idx--;
+			err = chn_poll_all_services(page_entry->bpe_chain);
+			if (err)
+				break;
+		}
 	}
 
 	return err;
 }
+#endif
 
 static void
 read_write_result_all_chains(struct batch_info *batch_info)
@@ -524,7 +529,7 @@ execute_batch(struct batch_info *batch_info)
 	pnso_error_t err = EINVAL;
 	struct service_chain *first_chain, *last_chain;
 	struct chain_entry *first_ce, *last_ce;
-	uint32_t idx, i;
+	uint32_t idx;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -541,8 +546,8 @@ execute_batch(struct batch_info *batch_info)
 		/* get first chain's first service */
 		first_chain = chn_get_first_service_chain(batch_info, idx);
 		first_ce = chn_get_first_centry(first_chain);
+		OSAL_LOG_DEBUG("ring DB batch idx: %d", idx);
 
-		OSAL_LOG_DEBUG("ring DB  idx: %d", idx);
 		/* ring DB first chain's first service */
 		err = first_ce->ce_svc_info.si_ops.schedule(
 				&first_ce->ce_svc_info);
@@ -558,13 +563,7 @@ execute_batch(struct batch_info *batch_info)
 	}
 
 	/* poll on last chain's last service */
-	for (i = 0; i < 16; i++) {
-		err = last_ce->ce_svc_info.si_ops.poll(&last_ce->ce_svc_info);
-		if (!err) {
-			OSAL_LOG_DEBUG("--- YOYO last chain done!");
-			break;
-		}
-	}
+	err = last_ce->ce_svc_info.si_ops.poll(&last_ce->ce_svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
 			       last_ce->ce_svc_info.si_type, err);
@@ -622,13 +621,11 @@ bat_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		goto out_deinit;
 	}
 
-#if 1 /* YOYO */
 	err = execute_batch(batch_info);
 	if (err) {
 		OSAL_LOG_DEBUG("batch-execute failed! err: %d", err);
 		goto out_deinit;
 	}
-#endif
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
