@@ -18,17 +18,6 @@
 #include "pnso_crypto_cmn.h"
 #include "pnso_utils.h"
 
-/*
- * NOTE/TODO-batch:
- *	- few assumptions on batching are ... same type of chain-services
- *	are added to batch; 1-entry batch not supported.
- *	- cache 1st service type from 1st request, and use it to reject
- *	batch-add process, if the assumption of same request is fed in the
- *	session; secondly, use this type info to determine the pool for
- *	bulk desc.
- *
- */
-
 #ifdef NDEBUG
 #define PPRINT_BATCH_INFO(bi)
 #else
@@ -418,6 +407,8 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 	struct batch_info *batch_info;
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
+	uint16_t req_svc_type;
+	bool new_batch = false;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -425,10 +416,11 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 	if (!batch_info) {
 		batch_info = init_batch_info(svc_req);
 		if (!batch_info) {
-			OSAL_LOG_DEBUG("failed to init batch info! err: %d",
+			OSAL_LOG_DEBUG("failed to init batch! err: %d",
 					err);
 			goto out;
 		}
+		new_batch = true;
 	}
 
 	if (batch_info->bi_num_entries >= MAX_NUM_BATCH_ENTRIES) {
@@ -441,6 +433,17 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 		err = add_page(batch_info);
 		if (err)
 			goto out_batch;
+	}
+
+	if (!new_batch) {
+		req_svc_type = svc_req->svc[0].svc_type;
+		if (batch_info->bi_svc_type != req_svc_type) {
+			err = EINVAL;
+			OSAL_LOG_DEBUG("batch service type mismatch! batch_svc_type: %d req_svc_type: %d err: %d",
+					batch_info->bi_svc_type,
+					req_svc_type, err);
+			goto out_batch;
+		}
 	}
 
 	batch_page = GET_PAGE(batch_info, batch_info->bi_num_entries);

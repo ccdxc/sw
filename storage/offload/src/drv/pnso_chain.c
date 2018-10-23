@@ -289,11 +289,6 @@ init_service_batch_params(struct batch_info *batch_info,
 	struct service_batch_info *svc_batch_info = &svc_info->si_batch_info;
 	uint16_t bulk_desc_idx, desc_idx;
 
-#if 0
-	if (!(svc_info->si_flags & CHAIN_SFLAG_IN_BATCH))
-		return;
-#endif
-
 	if (!((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)))
 		return;
