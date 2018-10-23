@@ -1,6 +1,5 @@
 action nexthop_info(tep_index, snat_required, encap_type,
-                    dst_slot_id, traffic_class)
-{
+                    dst_slot_id, traffic_class) {
     modify_field(rewrite_metadata.tep_index, tep_index);
     modify_field(nat_metadata.snat_required, snat_required);
     modify_field(rewrite_metadata.encap_type, encap_type);
@@ -21,13 +20,12 @@ table nexthop_tx {
     size : NEXTHOP_TX_TABLE_SIZE;
 }
 
-action tep_tx(dipo, dmac)
-{
-    // Remove headers
+action gre_tep_tx(dipo, dmac) {
+    // remove headers
     remove_header(ethernet_1);
     remove_header(ctag_1);
 
-    // Add the tunnel header
+    // add tunnel headers
     add_header(ethernet_0);
     add_header(ipv4_0);
     add_header(gre_0);
@@ -36,26 +34,30 @@ action tep_tx(dipo, dmac)
         add_header(mpls_src_0);
     }
 
+    // subtract ethernet header size
+    subtract(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len, 14);
+    if (ctag_1.valid == TRUE) {
+        subtract_from_field(scratch_metadata.ip_totallen, 4);
+    }
+    // account for new headers that are added
+    // 4 bytes of GRE header, 4 bytes of mpls header, 20 bytes of IP header
+    add_to_field(scratch_metadata.ip_totallen, 20 + 4 + 4);
+
     modify_field(ethernet_0.dstAddr, dmac);
     // mytep_macsa is a table constant
     modify_field(ethernet_0.srcAddr, scratch_metadata.mytep_macsa);
     modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
+
     modify_field(ipv4_0.version, 4);
     modify_field(ipv4_0.ihl, 5);
-    // Subtract the ethernet header size
-    modify_field(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len - 14);
-    if (ctag_1.valid == TRUE) {
-        subtract_from_field(scratch_metadata.ip_totallen, 4);
-    }
-    // Account for the new headers we are adding
-    // 4 bytes of GRE header, 4 bytes of mpls header, 20 bytes of IP header
-    add_to_field(scratch_metadata.ip_totallen, 20 + 4 + 4);
+    modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
     modify_field(ipv4_0.ttl, 64);
     modify_field(ipv4_0.protocol, IP_PROTO_GRE);
     modify_field(ipv4_0.dstAddr, dipo);
     modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
-    // TODO setup the ip, gre and mpls headers correctly
+
     modify_field(gre_0.proto, ETHERTYPE_MPLS_UNICAST);
+
     modify_field(mpls_dst_0.label, rewrite_metadata.dst_slot_id);
     if (rewrite_metadata.encap_type == VNIC_ENCAP) {
         modify_field(mpls_src_0.label, p4e_apollo_i2e.src_slot_id);
@@ -64,11 +66,58 @@ action tep_tx(dipo, dmac)
     } else {
         modify_field(mpls_dst_0.bos, 1);
     }
+}
 
+action udp_tep_tx(dipo, dmac) {
+    // remove headers
+    remove_header(ethernet_1);
+    remove_header(ctag_1);
+
+    // add tunnel headers
+    add_header(ethernet_0);
+    add_header(ipv4_0);
+    add_header(udp_0);
+    add_header(mpls_dst_0);
+    if (rewrite_metadata.encap_type == VNIC_ENCAP) {
+        add_header(mpls_src_0);
+    }
+
+    // subtract ethernet header size
+    subtract(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len, 14);
+    if (ctag_1.valid == TRUE) {
+        subtract_from_field(scratch_metadata.ip_totallen, 4);
+    }
+    // account for new headers that are added
+    // 8 bytes of UDP header, 4 bytes of mpls header, 20 bytes of IP header
+    add_to_field(scratch_metadata.ip_totallen, 20 + 8 + 4);
+    if (rewrite_metadata.encap_type == VNIC_ENCAP) {
+        add_to_field(scratch_metadata.ip_totallen, 4);
+    }
+
+    modify_field(ethernet_0.dstAddr, dmac);
+    // mytep_macsa is a table constant
+    modify_field(ethernet_0.srcAddr, scratch_metadata.mytep_macsa);
+    modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
+
+    modify_field(ipv4_0.version, 4);
+    modify_field(ipv4_0.ihl, 5);
     modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
+    modify_field(ipv4_0.ttl, 64);
+    modify_field(ipv4_0.protocol, IP_PROTO_GRE);
+    modify_field(ipv4_0.dstAddr, dipo);
+    modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
 
-    // scratch metadata
-    modify_field(scratch_metadata.encap_type, rewrite_metadata.encap_type);
+    modify_field(udp_0.srcPort, p4e_apollo_i2e.entropy_hash);
+    modify_field(udp_0.dstPort, UDP_PORT_MPLS);
+    subtract(udp_0.len, scratch_metadata.ip_totallen, 20);
+
+    modify_field(mpls_dst_0.label, rewrite_metadata.dst_slot_id);
+    if (rewrite_metadata.encap_type == VNIC_ENCAP) {
+        modify_field(mpls_src_0.label, p4e_apollo_i2e.src_slot_id);
+        modify_field(mpls_src_0.bos, 1);
+    } else {
+        modify_field(mpls_dst_0.bos, 1);
+    }
 }
 
 @pragma stage 3
@@ -77,7 +126,8 @@ table tep_tx {
         rewrite_metadata.tep_index  : exact;
     }
     actions {
-        tep_tx;
+        gre_tep_tx;
+        udp_tep_tx;
     }
     size : TEP_TABLE_SIZE;
 }

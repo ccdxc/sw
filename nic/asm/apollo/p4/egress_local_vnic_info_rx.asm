@@ -9,9 +9,8 @@ struct phv_                     p;
 %%
 
 egress_local_vnic_info_rx:
-    .assert(offsetof(p, gre_1_valid) - offsetof(p, ethernet_1_valid) == 4)
-    phvwr       p.{gre_1_valid...ethernet_1_valid}, 0
-    phvwr       p.{mpls_src_valid...mpls_dst_valid}, 0
+    .assert(offsetof(p, vxlan_1_valid) - offsetof(p, ethernet_1_valid) == 8)
+    phvwr       p.{vxlan_1_valid...ethernet_1_valid}, 0
 
     phvwr       p.ethernet_0_dstAddr, d.egress_local_vnic_info_rx_d.overlay_mac
     seq         c1, d.egress_local_vnic_info_rx_d.subnet_id, \

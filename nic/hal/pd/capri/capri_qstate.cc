@@ -93,19 +93,15 @@ int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
 
 #endif
 
-}  // Anonymus namespace
+}  // Anonymous namespace
 
 void push_qstate_to_capri(hal::LIFQState *qstate, int cos) {
 #ifndef HAL_GTEST
   cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
   if (!qstate->params_in.dont_zero_memory) {
-      printf("%s: Zeroing out qstate at: %lx for hw_lif_id: %d\n",
-             __FUNCTION__, qstate->hbm_address, qstate->lif_id);
       clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
   }
-  printf("%s: Writing qstate at: %lx for hw_lif_id: %d\n",
-         __FUNCTION__, qstate->hbm_address, qstate->lif_id);
   auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
   set_qstate_entry(qstate, wa_entry, cos);
   auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];

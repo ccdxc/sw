@@ -9,6 +9,7 @@ struct phv_     p;
 %%
 
 flow_hash:
+    phvwr       p.p4i_apollo_i2e_entropy_hash, r1
     bbne        d.flow_hash_d.entry_valid, TRUE, label_flow_miss
     // Set bit 31 for overflow hash lookup to work
     ori         r2, r0, 0x80000000

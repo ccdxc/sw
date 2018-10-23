@@ -9,6 +9,7 @@ action flow_hash(entry_valid, flow_index, flow_role,
         modify_field(service_header.flow_done, TRUE);
         modify_field(control_metadata.flow_index, flow_index);
         modify_field(control_metadata.flow_role, flow_role);
+        modify_field(p4i_apollo_i2e.entropy_hash, scratch_metadata.flow_hash);
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.flow_hash) and setup lookup in overflow table
