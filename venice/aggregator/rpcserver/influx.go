@@ -39,25 +39,23 @@ func InfluxQuery(qs *metrics_query.QuerySpec) ([]string, error) {
 		is.soffset = qs.Pagination.Offset
 	}
 
-	if qs.Time != nil {
-		if qs.Time.Begin != nil {
-			beg, err := qs.Time.Begin.Time()
-			if err != nil {
-				return nil, err
-			}
-			is.timerange = fmt.Sprintf("time > '%s'", beg.Format(time.RFC3339Nano))
+	if qs.StartTime != nil {
+		beg, err := qs.StartTime.Time()
+		if err != nil {
+			return nil, err
 		}
+		is.timerange = fmt.Sprintf("time > '%s'", beg.Format(time.RFC3339Nano))
+	}
 
-		if qs.Time.End != nil {
-			end, err := qs.Time.End.Time()
-			if err != nil {
-				return nil, err
-			}
-			if is.timerange == "" {
-				is.timerange = fmt.Sprintf("time < '%s'", end.Format(time.RFC3339Nano))
-			} else {
-				is.timerange = fmt.Sprintf("%s and time < '%s'", is.timerange, end.Format(time.RFC3339Nano))
-			}
+	if qs.EndTime != nil {
+		end, err := qs.EndTime.Time()
+		if err != nil {
+			return nil, err
+		}
+		if is.timerange == "" {
+			is.timerange = fmt.Sprintf("time < '%s'", end.Format(time.RFC3339Nano))
+		} else {
+			is.timerange = fmt.Sprintf("%s and time < '%s'", is.timerange, end.Format(time.RFC3339Nano))
 		}
 	}
 

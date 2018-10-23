@@ -26,4 +26,3 @@ export * from './metrics-query-query-response.model';
 export * from './metrics-query-query-result.model';
 export * from './metrics-query-query-spec.model';
 export * from './metrics-query-result-series.model';
-export * from './metrics-query-time-range.model';

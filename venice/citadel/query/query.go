@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/metrics_query"
@@ -51,15 +52,15 @@ func (q *Server) Stop() {
 func (q *Server) validate(qs *metrics_query.QuerySpec) error {
 
 	if qs == nil {
-		return fmt.Errorf("query parameter rquired")
+		return fmt.Errorf("query parameter required")
 	}
 
 	if qs.Kind == "" {
-		return fmt.Errorf("kind rquired")
+		return fmt.Errorf("kind required")
 	}
 
 	if qs.Tenant == "" {
-		return fmt.Errorf("tenant rquired")
+		return fmt.Errorf("tenant required")
 	}
 
 	qs.Function = strings.ToUpper(qs.Function)
@@ -80,7 +81,7 @@ func (q *Server) validate(qs *metrics_query.QuerySpec) error {
 		}
 	}
 
-	if qs.Selector != nil {
+	if qs.Selector != nil && len(qs.Selector.Requirements) > 0 {
 		if _, err := qs.Selector.PrintSQL(); err != nil {
 			return err
 		}
@@ -174,6 +175,7 @@ func (q *Server) Query(c context.Context, qs *metrics_query.QuerySpec) (*metrics
 func buildCitadelQuery(qs *metrics_query.QuerySpec) (string, error) {
 	measurement := qs.Kind
 	fields := "*"
+	var selectors []string
 
 	if len(qs.Fields) > 0 {
 		fields = strings.Join(qs.Fields, ",")
@@ -192,12 +194,32 @@ func buildCitadelQuery(qs *metrics_query.QuerySpec) (string, error) {
 
 	q := fmt.Sprintf("SELECT %s FROM %s", fields, measurement)
 
-	if qs.Selector != nil {
+	if qs.Selector != nil && len(qs.Selector.Requirements) > 0 {
 		sel, err := qs.Selector.PrintSQL()
 		if err != nil {
 			return "", err
 		}
-		q += fmt.Sprintf(" WHERER %s", sel)
+		selectors = append(selectors, sel)
+	}
+
+	if qs.StartTime != nil {
+		t, err := qs.StartTime.Time()
+		if err != nil {
+			return "", err
+		}
+		selectors = append(selectors, fmt.Sprintf("time > '%s'", t.Format(time.RFC3339)))
+	}
+
+	if qs.EndTime != nil {
+		t, err := qs.EndTime.Time()
+		if err != nil {
+			return "", err
+		}
+		selectors = append(selectors, fmt.Sprintf("time < '%s'", t.Format(time.RFC3339)))
+	}
+
+	if len(selectors) > 0 {
+		q += fmt.Sprintf(" WHERE %s", strings.Join(selectors, " AND "))
 	}
 
 	var groupby []string

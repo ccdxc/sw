@@ -220,37 +220,3 @@ func EncodeGrpcRespResultSeries(ctx context.Context, response interface{}) (inte
 func DecodeGrpcRespResultSeries(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
-
-func encodeHTTPTimeRange(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPTimeRange(_ context.Context, r *http.Request) (interface{}, error) {
-	var req TimeRange
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqTimeRange encodes GRPC request
-func EncodeGrpcReqTimeRange(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*TimeRange)
-	return req, nil
-}
-
-// DecodeGrpcReqTimeRange decodes GRPC request
-func DecodeGrpcReqTimeRange(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*TimeRange)
-	return req, nil
-}
-
-// EncodeGrpcRespTimeRange encodes GRC response
-func EncodeGrpcRespTimeRange(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespTimeRange decodes GRPC response
-func DecodeGrpcRespTimeRange(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}

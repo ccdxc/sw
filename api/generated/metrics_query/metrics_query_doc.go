@@ -13,7 +13,6 @@ The following Messages are defined.
   QueryResult
   QuerySpec
   ResultSeries
-  TimeRange
 
 The following Services and Methods are defined.
 

@@ -25,14 +25,6 @@ message ObjectSelector {
     labels.Selector Selector   = 5 [(gogoproto.jsontag) = "selector,omitempty"];
 }
 
-// TimeRange specifies a begin and end timestamp for the series.
-// The timestamp may be specified as an absolute
-// rfc3339_date_time_string or as a relative now() - x
-message TimeRange {
-	api.Timestamp Begin = 1 [(gogoproto.jsontag) = "begin,omitempty"];
-	api.Timestamp End = 2 [(gogoproto.jsontag) = "end,omitempty"];
-}
-
 // TSDBFunctionType specifies an operation to perform on metrics
 enum TsdbFunctionType {
     NONE = 0; // none
@@ -55,22 +47,24 @@ message PaginationSpec {
 //     -  A set of Metric Specs
 //     -  A pagination spec
 message QuerySpec {
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.TypeMeta T            = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     // ObjectSelectot selects one or more objects of the same kind for query
-    ObjectSelector O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    ObjectSelector O          = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
     // Fields select the metric fields to be included in the result
     // Empty will include all fields, must contain at least one non-tag field
-    repeated string Fields = 3 [(gogoproto.jsontag) = "fields,omitempty", (venice.check)="RegExp(name)"];
+    repeated string Fields    = 3 [(gogoproto.jsontag) = "fields,omitempty", (venice.check)="RegExp(name)"];
     // Functions specify an operation function to be applied, example mean()/max()
-    string Function   = 4 [(gogoproto.jsontag) = "function,omitempty", (venice.check) = "StrEnum(TsdbFunctionType)"];
-    // TimeRange specifies the time interval for the query
-    TimeRange Time = 5 [(gogoproto.jsontag) = "time,omitempty"];
+    string Function           = 4 [(gogoproto.jsontag) = "function,omitempty", (venice.check) = "StrEnum(TsdbFunctionType)"];
+    // StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z
+    api.Timestamp StartTime   = 5 [(gogoproto.jsontag) = "start-time,omitempty"];
+    // EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z
+    api.Timestamp EndTime     = 6 [(gogoproto.jsontag) = "end-time,omitempty"];
     // GroupbyTime groups series based on the interval specified
-    string GroupbyTime = 6 [(gogoproto.jsontag) = "group-by-time,omitempty", (venice.check)="Duration()"];
+    string GroupbyTime        = 7 [(gogoproto.jsontag) = "group-by-time,omitempty", (venice.check)="Duration()"];
     // GroupbyField groups series based on the field specified
-    string GroupbyField = 7 [(gogoproto.jsontag) = "group-by-field,omitempty", (venice.check)="RegExp(name)"];
+    string GroupbyField       = 8 [(gogoproto.jsontag) = "group-by-field,omitempty", (venice.check)="RegExp(name)"];
     // PaginatioSpec specifies the number of series to include
-    PaginationSpec Pagination = 8 [(gogoproto.jsontag) = "pagination,omitempty"];
+    PaginationSpec Pagination = 9 [(gogoproto.jsontag) = "pagination,omitempty"];
 }
 
 //

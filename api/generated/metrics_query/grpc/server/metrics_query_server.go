@@ -41,7 +41,6 @@ func (s *smetrics_queryMetrics_queryBackend) regMsgsFunc(l log.Logger, scheme *r
 		"metrics_query.QueryResult":    apisrvpkg.NewMessage("metrics_query.QueryResult"),
 		"metrics_query.QuerySpec":      apisrvpkg.NewMessage("metrics_query.QuerySpec"),
 		"metrics_query.ResultSeries":   apisrvpkg.NewMessage("metrics_query.ResultSeries"),
-		"metrics_query.TimeRange":      apisrvpkg.NewMessage("metrics_query.TimeRange"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

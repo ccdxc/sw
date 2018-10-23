@@ -159,27 +159,6 @@ func (m *ResultSeries) Defaults(ver string) bool {
 	return false
 }
 
-// Clone clones the object into into or creates one of into is nil
-func (m *TimeRange) Clone(into interface{}) (interface{}, error) {
-	var out *TimeRange
-	var ok bool
-	if into == nil {
-		out = &TimeRange{}
-	} else {
-		out, ok = into.(*TimeRange)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *TimeRange) Defaults(ver string) bool {
-	return false
-}
-
 // Validators
 
 func (m *ObjectSelector) Validate(ver, path string, ignoreStatus bool) []error {
@@ -240,11 +219,6 @@ func (m *QuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *ResultSeries) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *TimeRange) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }

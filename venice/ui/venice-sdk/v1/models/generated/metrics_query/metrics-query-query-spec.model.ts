@@ -9,7 +9,6 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 import { Metrics_queryObjectSelector, IMetrics_queryObjectSelector } from './metrics-query-object-selector.model';
 import { Metrics_queryQuerySpec_function,  } from './enums';
-import { Metrics_queryTimeRange, IMetrics_queryTimeRange } from './metrics-query-time-range.model';
 import { Metrics_queryPaginationSpec, IMetrics_queryPaginationSpec } from './metrics-query-pagination-spec.model';
 
 export interface IMetrics_queryQuerySpec {
@@ -18,7 +17,8 @@ export interface IMetrics_queryQuerySpec {
     'meta'?: IMetrics_queryObjectSelector;
     'fields'?: Array<string>;
     'function'?: Metrics_queryQuerySpec_function;
-    'time'?: IMetrics_queryTimeRange;
+    'start-time'?: Date;
+    'end-time'?: Date;
     'group-by-time'?: string;
     'group-by-field'?: string;
     'pagination'?: IMetrics_queryPaginationSpec;
@@ -32,7 +32,8 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
     /** must start and end with alpha numeric and can have alphanumeric, -, _, ., : */
     'fields': Array<string> = null;
     'function': Metrics_queryQuerySpec_function = null;
-    'time': Metrics_queryTimeRange = null;
+    'start-time': Date = null;
+    'end-time': Date = null;
     /** should be a valid time duration
      */
     'group-by-time': string = null;
@@ -58,8 +59,11 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
             default: 'NONE',
             type: 'string'
         },
-        'time': {
-            type: 'object'
+        'start-time': {
+            type: 'Date'
+        },
+        'end-time': {
+            type: 'Date'
         },
         'group-by-time': {
             description:  'should be a valid time duration ',
@@ -96,7 +100,6 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
         super();
         this['meta'] = new Metrics_queryObjectSelector();
         this['fields'] = new Array<string>();
-        this['time'] = new Metrics_queryTimeRange();
         this['pagination'] = new Metrics_queryPaginationSpec();
         this.setValues(values);
     }
@@ -127,8 +130,15 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
         } else if (Metrics_queryQuerySpec.hasDefaultValue('function')) {
             this['function'] = <Metrics_queryQuerySpec_function>  Metrics_queryQuerySpec.propInfo['function'].default;
         }
-        if (values) {
-            this['time'].setValues(values['time']);
+        if (values && values['start-time'] != null) {
+            this['start-time'] = values['start-time'];
+        } else if (Metrics_queryQuerySpec.hasDefaultValue('start-time')) {
+            this['start-time'] = Metrics_queryQuerySpec.propInfo['start-time'].default;
+        }
+        if (values && values['end-time'] != null) {
+            this['end-time'] = values['end-time'];
+        } else if (Metrics_queryQuerySpec.hasDefaultValue('end-time')) {
+            this['end-time'] = Metrics_queryQuerySpec.propInfo['end-time'].default;
         }
         if (values && values['group-by-time'] != null) {
             this['group-by-time'] = values['group-by-time'];
@@ -156,7 +166,8 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
                 'meta': this['meta'].$formGroup,
                 'fields': new FormArray([]),
                 'function': new FormControl(this['function'], [enumValidator(Metrics_queryQuerySpec_function), ]),
-                'time': this['time'].$formGroup,
+                'start-time': new FormControl(this['start-time']),
+                'end-time': new FormControl(this['end-time']),
                 'group-by-time': new FormControl(this['group-by-time']),
                 'group-by-field': new FormControl(this['group-by-field']),
                 'pagination': this['pagination'].$formGroup,
@@ -174,7 +185,8 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
             this['meta'].setFormGroupValues();
             this.fillModelArray<string>(this, 'fields', this['fields']);
             this._formGroup.controls['function'].setValue(this['function']);
-            this['time'].setFormGroupValues();
+            this._formGroup.controls['start-time'].setValue(this['start-time']);
+            this._formGroup.controls['end-time'].setValue(this['end-time']);
             this._formGroup.controls['group-by-time'].setValue(this['group-by-time']);
             this._formGroup.controls['group-by-field'].setValue(this['group-by-field']);
             this['pagination'].setFormGroupValues();

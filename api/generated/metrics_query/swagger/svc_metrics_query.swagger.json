@@ -82,14 +82,16 @@
             "type": "string"
           },
           {
-            "name": "time.begin",
+            "name": "start-time",
+            "description": "StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "time.end",
+            "name": "end-time",
+            "description": "EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -581,9 +583,15 @@
           "default": "NONE",
           "title": "Functions specify an operation function to be applied, example mean()/max()"
         },
-        "time": {
-          "$ref": "#/definitions/metrics_queryTimeRange",
-          "title": "TimeRange specifies the time interval for the query"
+        "start-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z"
+        },
+        "end-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z"
         },
         "group-by-time": {
           "type": "string",
@@ -632,20 +640,6 @@
           "title": "values contain field values received frpm tsdb, it is in the form of [][]interface{}"
         }
       }
-    },
-    "metrics_queryTimeRange": {
-      "type": "object",
-      "properties": {
-        "begin": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "end": {
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "title": "TimeRange specifies a begin and end timestamp for the series.\nThe timestamp may be specified as an absolute\nrfc3339_date_time_string or as a relative now() - x"
     }
   }
 }
