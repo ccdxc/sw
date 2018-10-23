@@ -464,7 +464,7 @@ out:
 	return err;
 }
 
-#if 1	/* TODO-batch: clean-up unsed one -- best perf 512 requests hw: 337 us*/
+/* TODO-batch: Revisit ... this one gave best perf compared to other ones */
 static pnso_error_t
 poll_all_chains(struct batch_info *batch_info)
 {
@@ -510,69 +510,15 @@ poll_all_chains(struct batch_info *batch_info)
 		break;
 	}
 
-	OSAL_LOG_NOTICE("--- num_entries: %d, first_flag: %d last_flag: %d",
+	OSAL_LOG_NOTICE("num_entries: %d, first_flag: %d last_flag: %d",
 				batch_info->bi_num_entries,
 				first_flag, last_flag);
 
 	time_us = ktime_us_delta(last_req_done, first_req_done);
-	OSAL_LOG_NOTICE("PERF hack -- elapsed: %llu us", time_us);
+	OSAL_LOG_NOTICE("PERF elapsed: %llu us", time_us);
 
 	return err;
 }
-#endif
-
-#if 0	/* TODO-batch: clean-up unsed one -- good perf */
-static pnso_error_t
-poll_all_chains(struct batch_info *batch_info)
-{
-	pnso_error_t err = EINVAL;
-	struct batch_page *batch_page;
-	struct batch_page_entry *page_entry;
-	uint32_t idx = 0;
-
-	while (err) {
-		OSAL_LOG_DEBUG("poll batch/chain idx: %d", idx);
-		for (; idx < batch_info->bi_num_entries; idx++) {
-			batch_page = GET_PAGE(batch_info, idx);
-			page_entry = GET_PAGE_ENTRY(batch_page, idx);
-
-			if (chn_is_poll_done(page_entry->bpe_chain))
-				continue;
-
-			err = chn_poll_all_services(page_entry->bpe_chain);
-			if (err)
-				break;
-		}
-	}
-
-	return err;
-}
-#endif
-
-#if 0	/* TODO-batch: clean-up unsed one -- better perf */
-static pnso_error_t
-poll_all_chains(struct batch_info *batch_info)
-{
-	pnso_error_t err = EINVAL;
-	struct batch_page *batch_page;
-	struct batch_page_entry *page_entry;
-	int32_t idx = 0;
-
-	for (idx = batch_info->bi_num_entries - 1; idx > 0; idx--) {
-		OSAL_LOG_DEBUG("poll batch/chain idx: %d", idx);
-		batch_page = GET_PAGE(batch_info, idx);
-		page_entry = GET_PAGE_ENTRY(batch_page, idx);
-
-		while (1) {
-			err = chn_poll_all_services(page_entry->bpe_chain);
-			if (!err)
-				break;
-		}
-	}
-
-	return err;
-}
-#endif
 
 static void
 read_write_result_all_chains(struct batch_info *batch_info)
