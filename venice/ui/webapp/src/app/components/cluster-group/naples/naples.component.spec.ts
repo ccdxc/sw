@@ -39,7 +39,7 @@ describe('NaplesComponent', () => {
     },
     'spec': {
       'ip-config': {
-        'cidr': '0.0.0.0/0'
+        'ip-address': '0.0.0.0/0'
       },
       'hostname': 'naples1-host'
     },
@@ -59,7 +59,7 @@ describe('NaplesComponent', () => {
     },
     'spec': {
       'ip-config': {
-        cidr: '0.0.0.10'
+        'ip-address': '0.0.0.10'
       },
       'hostname': 'naples2-host'
     },

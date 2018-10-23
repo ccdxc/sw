@@ -9,18 +9,18 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IClusterIPConfig {
-    'cidr'?: string;
+    'ip-address'?: string;
     'default-gw'?: string;
     'dns-servers'?: Array<string>;
 }
 
 
 export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
-    'cidr': string = null;
+    'ip-address': string = null;
     'default-gw': string = null;
     'dns-servers': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'cidr': {
+        'ip-address': {
             type: 'string'
         },
         'default-gw': {
@@ -59,10 +59,10 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['cidr'] != null) {
-            this['cidr'] = values['cidr'];
-        } else if (ClusterIPConfig.hasDefaultValue('cidr')) {
-            this['cidr'] = ClusterIPConfig.propInfo['cidr'].default;
+        if (values && values['ip-address'] != null) {
+            this['ip-address'] = values['ip-address'];
+        } else if (ClusterIPConfig.hasDefaultValue('ip-address')) {
+            this['ip-address'] = ClusterIPConfig.propInfo['ip-address'].default;
         }
         if (values && values['default-gw'] != null) {
             this['default-gw'] = values['default-gw'];
@@ -80,7 +80,7 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'cidr': new FormControl(this['cidr']),
+                'ip-address': new FormControl(this['ip-address']),
                 'default-gw': new FormControl(this['default-gw']),
                 'dns-servers': new FormArray([]),
             });
@@ -92,7 +92,7 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['cidr'].setValue(this['cidr']);
+            this._formGroup.controls['ip-address'].setValue(this['ip-address']);
             this._formGroup.controls['default-gw'].setValue(this['default-gw']);
             this.fillModelArray<string>(this, 'dns-servers', this['dns-servers']);
         }

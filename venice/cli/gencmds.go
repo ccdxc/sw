@@ -1168,7 +1168,7 @@ var CreateSmartNICFlags = []cli.Flag{
 	},
 
 	cli.StringSliceFlag{
-		Name: "controller-ips",
+		Name: "controllers",
 	},
 
 	cli.StringFlag{
@@ -1184,7 +1184,7 @@ var CreateSmartNICFlags = []cli.Flag{
 	},
 
 	cli.StringFlag{
-		Name: "mgmt-ip",
+		Name: "ip-address",
 	},
 
 	cli.StringFlag{

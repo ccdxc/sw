@@ -16,7 +16,7 @@ export interface IClusterSmartNICSpec {
     'ip-config'?: IClusterIPConfig;
     'mgmt-mode'?: ClusterSmartNICSpec_mgmt_mode;
     'mgmt-vlan'?: number;
-    'controller-ips'?: Array<string>;
+    'controllers'?: Array<string>;
 }
 
 
@@ -29,7 +29,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
     management port to a vlan on data ports. */
     'mgmt-vlan': number = null;
-    'controller-ips': Array<string> = null;
+    'controllers': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admit': {
             type: 'boolean'
@@ -49,7 +49,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             description:  'MgmtVlan defines the vlan to be used in network managed mode. The default of 0 implies OOB 1G mgmt port is used for management. A non 0 vlan switches the management port to a vlan on data ports.',
             type: 'number'
         },
-        'controller-ips': {
+        'controllers': {
             type: 'Array<string>'
         },
     }
@@ -74,7 +74,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     constructor(values?: any) {
         super();
         this['ip-config'] = new ClusterIPConfig();
-        this['controller-ips'] = new Array<string>();
+        this['controllers'] = new Array<string>();
         this.setValues(values);
     }
 
@@ -107,7 +107,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             this['mgmt-vlan'] = ClusterSmartNICSpec.propInfo['mgmt-vlan'].default;
         }
         if (values) {
-            this.fillModelArray<string>(this, 'controller-ips', values['controller-ips']);
+            this.fillModelArray<string>(this, 'controllers', values['controllers']);
         }
     }
 
@@ -122,10 +122,10 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
                 'ip-config': this['ip-config'].$formGroup,
                 'mgmt-mode': new FormControl(this['mgmt-mode'], [enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
                 'mgmt-vlan': new FormControl(this['mgmt-vlan'], [maxValueValidator(4095), ]),
-                'controller-ips': new FormArray([]),
+                'controllers': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<string>('controller-ips', this['controller-ips']);
+            this.fillFormArray<string>('controllers', this['controllers']);
         }
         return this._formGroup;
     }
@@ -137,7 +137,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             this['ip-config'].setFormGroupValues();
             this._formGroup.controls['mgmt-mode'].setValue(this['mgmt-mode']);
             this._formGroup.controls['mgmt-vlan'].setValue(this['mgmt-vlan']);
-            this.fillModelArray<string>(this, 'controller-ips', this['controller-ips']);
+            this.fillModelArray<string>(this, 'controllers', this['controllers']);
         }
     }
 }
