@@ -76,7 +76,7 @@ tcp_retx_snd_una_update_from_rx:
      */
     seq             c1, k.t0_s2s_state, TCP_RST
     seq.!c1         c1, d.tx_rst_sent, 1
-    sle             c2, k.common_phv_snd_una, d.retx_snd_una
+    scwle           c2, k.common_phv_snd_una, d.retx_snd_una
     bcf             [c2 & !c1], tcp_retx_snd_una_update_from_rx_end_program
 
     /*
@@ -118,7 +118,7 @@ tcp_retx_snd_una_update:
      * Let's atleast increment stats for this case
      */
     sub             r1, k.common_phv_snd_una, d.retx_snd_una
-    slt             c1, r1, k.to_s3_len
+    slt             c1, r1[31:0], k.to_s3_len
     tbladd.c1       d.partial_ack_cnt, 1
 
     tbladd          d.retx_snd_una, k.to_s3_len
@@ -129,7 +129,7 @@ tcp_retx_snd_una_update:
      * if we still have more data to be cleaned up,
      * schedule ourselves again
      */
-    sle             c1, k.common_phv_snd_una, d.retx_snd_una
+    scwle           c1, k.common_phv_snd_una, d.retx_snd_una
     b.c1            free_descriptor
 
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,

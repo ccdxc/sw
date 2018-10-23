@@ -46,8 +46,8 @@ tcp_ack_start:
      */
     // c1 initialized above to 1 if !established, 0 if established
     smeqb           c2, k.to_s3_flag, FLAG_SLOWPATH, FLAG_SLOWPATH
-    slt             c3, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
-    slt             c4, k.s1_s2s_ack_seq, d.snd_una
+    scwlt           c3, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
+    scwlt           c4, k.s1_s2s_ack_seq, d.snd_una
     tblwr           d.num_dup_acks, 0
     setcf           c7, [c1 | c2 | c3 | c4]
     j.c7            tcp_ack_slow
@@ -61,7 +61,7 @@ tcp_update_wl_fast:
 tcp_snd_una_update_fast:
     sub             r1, k.s1_s2s_ack_seq, d.snd_una
 bytes_acked_stats_update_start:
-    CAPRI_STATS_INC(bytes_acked, r1, d.bytes_acked, p.to_s7_bytes_acked)
+    CAPRI_STATS_INC(bytes_acked, r1[31:0], d.bytes_acked, p.to_s7_bytes_acked)
 bytes_acked_stats_update_end:
     tblwr           d.snd_una, k.s1_s2s_ack_seq
 

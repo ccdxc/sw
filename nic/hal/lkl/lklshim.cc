@@ -309,9 +309,6 @@ lklshim_release_client_syn(uint16_t qid)
     lklshim_current_qid = qid;
     HAL_TRACE_DEBUG("lklshim: saving qid for release client syn for qid = {}", qid);
 
-    lklshim_current_qid = qid;
-    HAL_TRACE_DEBUG("lklshim: saving qid for release client syn for qid = {}", qid);
-
     lkl_tcp_v4_rcv(pkt_skb);
 
     return true;
@@ -323,6 +320,8 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
                                     const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr)
 {
     lklshim_flow_t     *flow;
+
+    lklshim_current_qid = -1;
 
     ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
     tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
@@ -465,6 +464,7 @@ lklshim_process_flow_miss_rx_packet (fte::ctx_t &ctx, void *pkt_skb,
     lklshim_flow_t      *flow;
     lklshim_flow_key_t  flow_key;
 
+    lklshim_current_qid = -1;
 
     ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
     ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);

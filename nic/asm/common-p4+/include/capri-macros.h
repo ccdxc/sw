@@ -300,15 +300,12 @@
 
 
 /* Instruction to see the value of _x during execution */
-#ifndef RTL
+#if !(defined (HAPS) || defined (HW))
 #define CAPRI_OPERAND_DEBUG(_x)         add r1, r0, _x
 #else
 #define CAPRI_OPERAND_DEBUG(_x)
 #endif
 
-#undef CAPRI_OPERAND_DEBUG
-#define CAPRI_OPERAND_DEBUG(_x)
-        
 #define RNMDR_TABLE_BASE                hbm_rnmdr_table_base
 #define RNMDR_TABLE_ENTRY_SIZE          8 /* 8B */
 #define RNMDR_TABLE_ENTRY_SIZE_SHFT     3 /* 8B */
@@ -493,13 +490,21 @@
 #define CAPRI_MPU_TABLE_2              2
 #define CAPRI_MPU_TABLE_3              3
 
+#if !(defined (HAPS) || defined (HW))
 #define CAPRI_SET_DEBUG_STAGE0_3(_p, _stage, _table) \
         phvwrmi         _p, ((1 << _table) << (4 * _stage)), \
                             ((1 << _table) << (4 * _stage))
+#else
+#define CAPRI_SET_DEBUG_STAGE0_3(_p, _stage, _table)
+#endif
 
+#if !(defined (HAPS) || defined (HW))
 #define CAPRI_SET_DEBUG_STAGE4_7(_p, _stage, _table) \
         phvwrmi         _p, ((1 << _table) << (4 * (_stage - 4))), \
                             ((1 << _table) << (4 * (_stage - 4)))
+#else
+#define CAPRI_SET_DEBUG_STAGE4_7(_p, _stage, _table)
+#endif
 
 #define CAPRI_DMA_CMD_PHV2MEM_SETUP(_dma_cmd_prefix, __addr, _sfield, _efield)                   \
         phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \

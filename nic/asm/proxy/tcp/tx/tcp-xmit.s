@@ -32,6 +32,9 @@ tcp_xmit_process_start:
     seq.!c_sesq     c_sesq, k.common_phv_pending_asesq, 1
     sne             c_snd_una, k.common_phv_pending_retx_cleanup, 0
 
+    seq             c1, k.t0_s2s_state, TCP_RST
+    bcf             [c1 & !c_snd_una], tcp_tx_end_program_and_drop
+
     seq             c1, k.common_phv_pending_ack_send, 1
     bcf             [c1], tcp_tx_enqueue
 

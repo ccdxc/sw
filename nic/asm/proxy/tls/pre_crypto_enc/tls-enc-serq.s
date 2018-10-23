@@ -34,9 +34,7 @@ tls_enc_pre_crypto_process:
     nop
 
     /* Relay the address to setup the DMA command */
-    add         r1, r0, d.u.read_tls_stg0_d.recq_pi
-    sll         r2, r1, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
-    add         r1, r2, d.{u.read_tls_stg0_d.recq_base}.wx
+    add         r1, d.{u.read_tls_stg0_d.recq_base}.wx, d.u.read_tls_stg0_d.recq_pi, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
 
     tblmincri       d.u.read_tls_stg0_d.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
 

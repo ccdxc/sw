@@ -47,7 +47,7 @@ tcp_rx_process_start:
     sne             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
     seq.!c1         c1, k.s1_s2s_fin_sent, 1
     sne             c2, d.u.tcp_rx_d.rcv_nxt, k.to_s2_seq
-    slt             c3, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
+    scwlt           c3, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
 
     // disable timestamp checking for now
     //setcf           c4, [c0]
@@ -697,8 +697,19 @@ ooo_received:
     phvwr           p.common_phv_ooo_rcv, 1
 
 tcp_rx_rst_handling:
+    /*
+     * TODO : Until TLS code is ready, do not send RST packets to TLS
+     * unless bypass_barco is set
+     */
+    smeqb           c4, k.common_phv_debug_dol, TCP_DDOL_BYPASS_BARCO, TCP_DDOL_BYPASS_BARCO
+    phvwri.!c4      p.p4_intr_global_drop, 1
+    b.!c4           flow_rx_drop
+
     // We need to pass RST flag to other flow
     tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
+
+    // Change state so Tx pipeline cleans up retx queue
+    tblwr           d.u.tcp_rx_d.state, TCP_RST
 
     // check for serq full
     add             r2, d.u.tcp_rx_d.serq_pidx, 1
@@ -712,9 +723,6 @@ tcp_rx_rst_handling:
     phvwri          p.common_phv_write_serq, 1
     phvwr           p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
     tblmincri       d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
-
-    // Change state so Tx pipeline cleans up retx queue
-    tblwr           d.u.tcp_rx_d.state, TCP_RST
 
     b               flow_rx_process_done
     // Tell txdma we have work to do

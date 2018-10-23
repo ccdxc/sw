@@ -310,7 +310,8 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
     } else {
         // Flow local ring. Get the offset based on wring id
         uint32_t wring_size = meta->num_slots * meta->slot_size_in_bytes;
-        *wring_base = addr + meta->ring_type_offset + (wring_id * wring_size);
+        *wring_base = addr + meta->ring_type_offset +
+                (wring_id * wring_size * meta->ring_types_in_region);
     }
 
     return HAL_RET_OK;

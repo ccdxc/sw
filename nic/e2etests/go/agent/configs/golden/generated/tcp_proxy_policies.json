@@ -24,11 +24,107 @@
             "app-configs": [
                 {
                    "protocol": "tcp",
+                   "port": "69"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "70"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "71"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "72"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "73"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "74"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "75"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "76"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "77"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "78"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "79"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "80"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "81"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "82"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "83"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "84"
+                },
+                {
+                   "protocol": "tcp",
                    "port": "85"
                 },
                 {
                    "protocol": "tcp",
+                   "port": "86"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "87"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "88"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "89"
+                },
+                {
+                   "protocol": "tcp",
                    "port": "90"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "91"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "92"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "93"
+                },
+                {
+                   "protocol": "tcp",
+                   "port": "94"
                 }
              ]
           },

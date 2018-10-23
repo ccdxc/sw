@@ -53,12 +53,25 @@ dma_cmd_intrinsic:
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
     // app header
+#ifdef HW
+    phvwr           p.{tcp_app_header_p4plus_app_id...tcp_app_header_flags}, \
+                        ((P4PLUS_APPTYPE_TCPTLS << 12) | \
+                            P4PLUS_TO_P4_FLAGS_LKP_INST | \
+                            P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | \
+                            P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM | \
+                            P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID)
+
+    phvwr           p.tcp_app_header_ip_id_delta, d.ip_id
+    tbladd          d.ip_id, 1
+#else
     phvwr           p.{tcp_app_header_p4plus_app_id...tcp_app_header_flags}, \
                         ((P4PLUS_APPTYPE_TCPTLS << 12) | \
                             P4PLUS_TO_P4_FLAGS_LKP_INST | \
                             P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | \
                             P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM)
 
+    phvwr           p.tcp_app_header_ip_id_delta, d.ip_id
+#endif
     CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport,
                                 p4_intr_global_tm_instance_type,
                                 p4_txdma_intr_qid, tcp_app_header_vlan_tag)
@@ -78,13 +91,14 @@ dma_cmd_tcp_header:
     //phvwr           p.tcp_header_data_ofs, 8		// 32 bytes
     phvwrpair       p.tcp_header_data_ofs, 5, \
                         p.tcp_header_window, k.t0_s2s_snd_wnd
-	phvwr           p.tcp_nop_opt_kind, TCPOPT_NOP
+	phvwr           p.{tcp_nop_opt1_kind...tcp_nop_opt2_kind}, \
+                        (TCPOPT_NOP << 8 | TCPOPT_NOP)
 
     phvwr           p.tx2rx_quick_acks_decr, d.quick_acks_decr
 
     // Disable timestamps for now
     CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_header_urg)
-    //CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_eol_opt_kind)
+    //CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_ts_opts_ts_ecr)
 
 dma_cmd_data:
     seq             c2, k.to_s6_xmit_cursor_addr, r0

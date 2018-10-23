@@ -410,11 +410,11 @@ metadata txdma_phv_pad1_t phv_pad1;
 @pragma dont_trim
 metadata tcp_header_t tcp_header;               // 20 bytes
 @pragma dont_trim
+metadata tcp_header_pad_t tcp_nop_opt1;          // 1 byte
+@pragma dont_trim
+metadata tcp_header_pad_t tcp_nop_opt2;          // 1 byte
+@pragma dont_trim
 metadata tcp_header_ts_option_t tcp_ts_opt;     // 10 bytes
-@pragma dont_trim
-metadata tcp_header_pad_t tcp_nop_opt;          // 1 byte
-@pragma dont_trim
-metadata tcp_header_pad_t tcp_eol_opt;          // 1 byte
 
 header_type txdma_max_options_t {
     fields {

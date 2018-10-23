@@ -21,18 +21,6 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
     .param          tcp_tx_process_read_xmit_start
 
 tcp_tx_read_rx2tx_shared_process:
-    // This table need not be locked since it is read-only.
-    // Moreover it should not be locked to prevent the bypass
-    // cache from being used (bypass cache cannot be used,
-    // since the contents are written from rx pipeline)
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
-                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-
-    add             r7, r7, r0 // debug only
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
-
 	.brbegin
         // priorities are 0 (highest) to 7 (lowest)
         // The rightmost value specifies the priority of r7[0]
@@ -74,12 +62,14 @@ tcp_tx_read_rx2tx_shared_process:
 tcp_tx_launch_sesq:
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
+#ifndef HW
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TBL_SETADDR, TCP_TX_DDOL_FORCE_TBL_SETADDR
     phvwri.c1       p.common_phv_debug_dol_force_tbl_setaddr, 1
+#endif
     add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
 
     /* Check if we have pending del ack timer (fast timer)
@@ -90,6 +80,19 @@ tcp_tx_launch_sesq:
     tblwr           d.old_ack_no, d.rcv_nxt
 
     tblmincri.f     d.{ci_0}.hx, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
 
     phvwri          p.common_phv_pending_sesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
@@ -107,10 +110,12 @@ tcp_tx_launch_sesq:
 
 tcp_tx_launch_sesq_end:
     // DEBUG ONLY code
+#ifndef HW
     add             r1, k.p4_txdma_intr_qstate_addr, TCP_DDOL_TBLADDR_SHIFT_OFFSET
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FORCE_TBL_SETADDR, TCP_TX_DDOL_FORCE_TBL_SETADDR
     tblsetaddr.c1   r1, 2
     tblwr           d.debug_dol_tblsetaddr, TCP_DDOL_TBLADDR_VALUE
+#endif
     // END of DEBUG code
     nop.e
     nop
@@ -132,6 +137,19 @@ tcp_tx_launch_asesq:
     and             r1, d.{ci_4}.hx, (CAPRI_ASESQ_RING_SLOTS - 1)
     add             r3, r3, r1, NIC_SESQ_ENTRY_SIZE_SHIFT
     tbladd.f        d.{ci_4}.hx, 1
+
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
 
@@ -161,14 +179,17 @@ tcp_tx_launch_pending_tx:
     tblwr           d.{ci_7}.hx, d.{pi_7}.hx
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
+#ifndef HW
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
 
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, \
                         TCP_TX_DDOL_DONT_SEND_ACK
     phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
+#endif
 
 pending_tx_snd_una_update:
+
     /*
      * Relay SESQ CI to S3 for updation in the TLS-CB
      */
@@ -189,6 +210,18 @@ pending_tx_clean_asesq:
     phvwri          p.common_phv_pending_asesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
     b pending_tx_clean_sesq_done
 
 pending_tx_clean_sesq:
@@ -201,6 +234,18 @@ pending_tx_clean_sesq:
      */
     add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
     tblmincri.f     d.sesq_retx_ci, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
 
@@ -255,12 +300,27 @@ tcp_tx_send_ack:
     tblwr.c1        d.old_ack_no, d.rcv_nxt
     tblwr.f         d.{ci_1}.hx, d.{pi_1}.hx
 
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
+
     phvwri          p.common_phv_pending_rx2tx, 1
 
 pending_ack_send:
     phvwr           p.common_phv_pending_ack_send, 1
+#ifndef HW
     smeqb           c2, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
     phvwri.c2       p.common_phv_debug_dol_dont_send_ack, 1
+#endif
 
 send_ack_doorbell:
 
@@ -282,12 +342,26 @@ pending_send_ack_end:
  *****************************************************************************/
 tcp_tx_clean_retx:
     tblwr.f         d.{ci_7}.hx, d.{pi_7}.hx
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_BYPASS_BARCO, TCP_TX_DDOL_BYPASS_BARCO
     phvwri.c1       p.common_phv_debug_dol_bypass_barco, 1
     phvwri          p.common_phv_pending_rx2tx, 1
     phvwr           p.common_phv_pending_retx_cleanup, PENDING_RETX_CLEANUP_TRIGGERED_FROM_RX
+#ifndef HW
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+#endif
 
 pending_rx2tx_snd_una_update:
     /*
@@ -370,6 +444,19 @@ tcp_tx_retx_timer_expired:
     seq             c1, d.{ci_3}.hx, d.{pi_3}.hx
     tblwr.f         d.{ci_3}.hx, d.{pi_3}.hx
 
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
+
     /*
      * Ring doorbell to set CI
      */
@@ -403,10 +490,25 @@ tcp_tx_st_expired_end:
  * tcp_tx_fast_retrans
  *****************************************************************************/
 tcp_tx_fast_retrans:
+#ifndef HW
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
+#endif
     phvwr           p.common_phv_pending_fast_retx, 1
     tblwr.f         d.{ci_6}.hx, d.{pi_6}.hx
+
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
 
     /*
      * Ring doorbell to set CI
@@ -456,8 +558,22 @@ tcp_tx_cancel_fast_timer:
 
     // data will be in r3
     CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_DELACK_TIMER, r5)
-    memwr.dx.e      r4, r3
+    memwr.dx        r4, r3
     tbladd          d.{ci_2}.hx, 1
+
+    // This table need not be locked since it is read-only.
+    // Moreover it should not be locked to prevent the bypass
+    // cache from being used (bypass cache cannot be used,
+    // since the contents are written from rx pipeline)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwr           p.t0_s2s_state, d.state
+    nop.e
     nop
     
 

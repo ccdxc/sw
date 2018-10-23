@@ -143,6 +143,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         pending_pad                     : 9                     ;\
 
 #define TCB_TSO_STATE \
+        ip_id                           : 32                    ;\
         source_lif                      : 16                    ;\
         source_port                     : 16                    ;\
         dest_port                       : 16                    ;\
@@ -178,7 +179,7 @@ is_cwnd_limited, flag, ca_state, rto_backoff,\
 pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad
 
 #define TSO_PARAMS                                                        \
-source_lif, source_port, dest_port, header_len,\
+ip_id, source_lif, source_port, dest_port, header_len,\
 bytes_sent,pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt,\
 quick_acks_decr
 
@@ -229,6 +230,7 @@ quick_acks_decr
     modify_field(xmit_d.pending_pad, pending_pad);\
 
 #define GENERATE_TSO_SHARED_D                                                                               \
+    modify_field(tso_d.ip_id, ip_id); \
     modify_field(tso_d.source_lif, source_lif); \
     modify_field(tso_d.source_port, source_port); \
     modify_field(tso_d.dest_port, dest_port); \

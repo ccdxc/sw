@@ -18,7 +18,6 @@
 
     .param      req_tx_sqcb_process_ext
     .param      resp_tx_rqcb_process_ext
-    .param      tcp_tx_read_rx2tx_shared_process_ext
     .param      smbdc_req_tx_sqcb_process_ext
 
 //Keep offset 0 for none to avoid invoking unrelated program when
@@ -74,7 +73,7 @@ rdma_aq_tx_stage0_ext:
 
 .align
 tcp_tx_stage0:
-    j tcp_tx_read_rx2tx_shared_process_ext
+    nop.e
     nop
 
 .align

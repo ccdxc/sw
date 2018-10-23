@@ -59,7 +59,7 @@ tcp_ack_established_slow:
      *  }
      *
      */
-    slt             c1, k.s1_s2s_ack_seq, d.snd_una
+    scwlt           c1, k.s1_s2s_ack_seq, d.snd_una
     sub.c1          r1, d.snd_una, d.max_window
     slt.c1          c2, k.s1_s2s_ack_seq, r1
     phvwr.c2        p.rx2tx_extra_pending_challenge_ack_send, 1
@@ -75,7 +75,7 @@ tcp_ack_established_slow:
      *          goto invalid_ack;
      *
      */
-    slt             c1, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
+    scwlt           c1, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
     bcf             [c1], invalid_ack
     nop
 
@@ -106,7 +106,7 @@ no_rearm_rto:
      *  }
      *
      */
-    slt             c1, d.snd_una, k.s1_s2s_ack_seq
+    scwlt           c1, d.snd_una, k.s1_s2s_ack_seq
     tblor.c1.l      d.flag, FLAG_SND_UNA_ADVANCED
 
     /* ts_recent update must be made after we are sure that the packet
@@ -179,11 +179,11 @@ tcp_ack_update_window:
     sll             r2, k.s1_s2s_window, d.snd_wscale
 tcp_may_update_window:
     /* after(ack, snd_una) */
-    slt             c1, k.s1_s2s_ack_seq, d.snd_una
+    scwlt           c1, k.s1_s2s_ack_seq, d.snd_una
     /* after(ack_seq, snd_wl1) */
-    slt             c2, k.s1_s2s_ack_seq, d.snd_wl1
+    scwlt           c2, k.s1_s2s_ack_seq, d.snd_wl1
     /* ack_seq == snd_wl1 */
-    slt             c3, k.s1_s2s_ack_seq, d.snd_wl1
+    scwlt           c3, k.s1_s2s_ack_seq, d.snd_wl1
     /* nwin > snd_wnd */
     slt             c4, d.snd_wnd, r2
     setcf           c5, [!c3 | !c4]
@@ -238,7 +238,7 @@ tcp_snd_una_update_slow:
     /* Increment bytes acked by the delta between ack_seq and snd_una */
     sub             r3, k.s1_s2s_ack_seq, d.snd_una
 bytes_acked_stats_update_start:
-    CAPRI_STATS_INC(bytes_acked, r1, d.bytes_acked, p.to_s7_bytes_acked)
+    CAPRI_STATS_INC(bytes_acked, r3[31:0], d.bytes_acked, p.to_s7_bytes_acked)
 bytes_acked_stats_update_end:
     /* Update snd_una */
     tblwr           d.snd_una, k.s1_s2s_ack_seq

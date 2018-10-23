@@ -56,7 +56,6 @@ table_read_QUEUE_BRQ:
     /* phvwr       p.barco_desc_command, d.u.tls_bld_brq4_d.barco_command
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)*/
     phvwri       p.barco_desc_command, TLS_WORD_SWAP(CAPRI_BARCO_COMMAND_HMAC_SHA256_GENERATE)
-    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq4_d.barco_command)
 
     // No header for HMAC generate with Barco
     //addi        r1, r0, NTLS_AAD_SIZE

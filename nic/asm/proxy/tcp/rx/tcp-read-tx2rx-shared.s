@@ -31,8 +31,11 @@ tcp_rx_read_shared_stage0_start:
 
     phvwr           p.common_phv_flags, k.tcp_app_header_flags
 
-    /* If we see a pure SYN drop it */
-    and             r2, k.tcp_app_header_flags, TCPHDR_ACK
+    /*
+     * If we see a pure SYN drop it
+     * (Don't drop pure RST)
+     */
+    and             r2, k.tcp_app_header_flags, (TCPHDR_ACK | TCPHDR_RST)
     seq             c1, r2, 0
     phvwri.c1       p.p4_intr_global_drop, 1
     bcf             [c1], flow_terminate
