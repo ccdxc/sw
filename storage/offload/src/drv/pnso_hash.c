@@ -300,10 +300,14 @@ hash_poll(const struct service_info *svc_info)
 	while (status_desc->csd_valid == 0)
 		;
 #else
-	int i;
-	for (i = 0; i < 16; i++)
-		osal_yield();
+	uint64_t i;
+	for (i = 0; i < 100000000; i++) {
+		if (status_desc->csd_valid)
+			break;
+		// osal_yield();
+	}
 #endif
+
 
 	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;

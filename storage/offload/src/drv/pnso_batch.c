@@ -58,12 +58,23 @@ pprint_batch_info(struct batch_info *batch_info)
 	for (i = 0; i < batch_info->bi_num_entries;  i++) {
 		batch_page = GET_PAGE(batch_info, i);
 		page_entry = GET_PAGE_ENTRY(batch_page, i);
-		OSAL_LOG_DEBUG("%2d: page: 0x%llx pge: 0x%llx req: 0x%llx res: 0x%llx chain: 0x%llx",
-			i, (uint64_t) batch_page, (uint64_t) page_entry,
-			(uint64_t) page_entry->bpe_res,
-			(uint64_t) page_entry->bpe_req,
-			(uint64_t) page_entry->bpe_chain);
+		OSAL_LOG_DEBUG("%30s: (%d)", "", i);
+		OSAL_LOG_DEBUG("%30s: 0x%llx/0x%llx", "",
+				(uint64_t) batch_page, (uint64_t) page_entry);
+		OSAL_LOG_DEBUG("%30s: 0x%llx/0x%llx/0x%llx", "",
+				(uint64_t) page_entry->bpe_req,
+				(uint64_t) page_entry->bpe_res,
+				(uint64_t) page_entry->bpe_chain);
 	}
+
+	OSAL_LOG_INFO("%30s: 0x%llx", "bi_req_cb",
+			(uint64_t) batch_info->bi_req_cb);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bi_req_cb_ctx",
+			(uint64_t) batch_info->bi_req_cb_ctx);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bi_req_poll_fn",
+			(uint64_t) batch_info->bi_req_poll_fn);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bi_req_poll_ctx",
+			(uint64_t) batch_info->bi_req_poll_ctx);
 }
 
 static struct per_core_resource *
@@ -291,6 +302,38 @@ out:
 }
 
 static void
+destroy_batch_chain(struct batch_info *batch_info)
+{
+	struct per_core_resource *pc_res;
+
+	struct batch_page *batch_page;
+	struct batch_page_entry *page_entry;
+	uint32_t idx, num_entries;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	pc_res = get_per_core_resource();
+	if (!pc_res) 
+		OSAL_ASSERT(0);
+
+	PPRINT_BATCH_INFO(batch_info);
+	num_entries = batch_info->bi_num_entries;
+	for (idx = 0; idx < num_entries; idx++) {
+		batch_page = GET_PAGE(batch_info, idx);
+		page_entry = GET_PAGE_ENTRY(batch_page, idx);
+
+		OSAL_LOG_DEBUG("destroy chain num_entries: %d idx: %d pge: 0x%llx chain: 0x%llx",
+				num_entries, idx, (uint64_t) page_entry,
+				(uint64_t) page_entry->bpe_chain);
+
+		OSAL_ASSERT(page_entry->bpe_chain);
+		chn_destroy_chain(page_entry->bpe_chain);
+	}
+
+	OSAL_LOG_DEBUG("exit!");
+}
+
+static void
 deinit_batch(struct batch_info *batch_info)
 {
 	struct per_core_resource *pc_res;
@@ -306,6 +349,8 @@ deinit_batch(struct batch_info *batch_info)
 			(uint64_t) batch_info);
 
 	put_bulk_batch_desc(batch_info);
+
+	destroy_batch_chain(batch_info);
 
 	num_pages = GET_NUM_PAGES_ACTIVE(batch_info->bi_num_entries);
 	for (idx = 0; idx < num_pages; idx++) {
@@ -347,8 +392,8 @@ bat_destroy_batch(void)
 out:
 	OSAL_LOG_DEBUG("exit!");
 	return;
-
 }
+
 static pnso_error_t
 add_page(struct batch_info *batch_info)
 {

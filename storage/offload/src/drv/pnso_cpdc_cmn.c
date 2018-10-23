@@ -612,11 +612,15 @@ cpdc_is_service_in_batch(uint8_t flags)
 pnso_error_t
 cpdc_setup_batch_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 {
-	pnso_error_t err = EINVAL;
 	struct service_batch_info *svc_batch_info;
 
 	svc_batch_info = &svc_info->si_batch_info;
 	OSAL_ASSERT(svc_batch_info->sbi_num_entries);
+
+	if (svc_batch_info->sbi_index != 0) {
+		OSAL_LOG_DEBUG("sequencer setup not needed!");
+		return PNSO_OK;
+	}
 
 	/* indicate batch processing only for 1st entry in the batch */
 	if (svc_batch_info->sbi_index == 0) {
@@ -628,11 +632,9 @@ cpdc_setup_batch_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
 			desc, sizeof(*desc));
 	if (!svc_info->si_seq_info.sqi_desc) {
-		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
-		goto out;
+		OSAL_LOG_ERROR("failed to setup sequencer desc!");
+		return EINVAL;
 	}
 
-	err = PNSO_OK;
-out:
-	return err;
+	return PNSO_OK;
 }

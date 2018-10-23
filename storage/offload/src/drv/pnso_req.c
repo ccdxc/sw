@@ -879,6 +879,10 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		goto out;
 	}
 
+	/* TODO-batch: temp hack to free-up batch in sync mode */
+	if (!cb)
+		bat_destroy_batch();
+
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return err;
