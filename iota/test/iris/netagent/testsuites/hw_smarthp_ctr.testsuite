@@ -8,8 +8,8 @@ packages:
 
 images:
     naples: /sw/nic/obj/images/naples-release-v1.tgz
-    venice: /sw/bin/venice.tgz
-    drivers: /sw/platform/drivers.tgz
+#    venice: /sw/bin/venice.tgz
+#    drivers: /sw/platform/drivers.tgz
 
 setup:
     topology: test/iris/netagent/topologies/SmartHP_1Naples_1Mellanox_CTR/1Naples_1Mellanox.topology

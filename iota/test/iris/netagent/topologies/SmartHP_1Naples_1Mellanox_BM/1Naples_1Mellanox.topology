@@ -17,4 +17,3 @@ nodes:
       role: PERSONALITY_MELLANOX
       workloads:
             type    : WORKLOAD_TYPE_BM
-            image   : ubuntu_18_04
