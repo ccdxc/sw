@@ -6,5 +6,5 @@ platform_libs 0.0.10
 storage_libs 0.0.1
 asic_libs 510c0c8
 ncc_tools 510c0c8
-pbc_config 510c0c8
+pbc_config b0edd51
 upgrade 1.0.3
