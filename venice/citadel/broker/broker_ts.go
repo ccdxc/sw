@@ -76,6 +76,65 @@ func (br *Broker) CreateDatabase(ctx context.Context, database string) error {
 	return nil
 }
 
+// deleteDatabaseInReplica deletes the database in replica
+func (br *Broker) deleteDatabaseInReplica(ctx context.Context, database string, repl *meta.Replica) error {
+	var err error
+
+	// retry creation if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return cerr
+		}
+
+		// req message
+		req := tproto.DatabaseReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   repl.ReplicaID,
+			ShardID:     repl.ShardID,
+			Database:    database,
+		}
+
+		// delete database call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		_, err = dnclient.DeleteDatabase(ctx, &req)
+		if err == nil {
+			log.Infof("=>deleted the database on node %s.", repl.NodeUUID)
+			return nil
+		}
+
+		log.Warnf("Error deleting the database on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
+
+		time.Sleep(brokerRetryDelay)
+	}
+
+	return err
+}
+
+// DeleteDatabase drops the database
+func (br *Broker) DeleteDatabase(ctx context.Context, database string) error {
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return errors.New("shard map is empty")
+	}
+
+	// walk all shards
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			err := br.deleteDatabaseInReplica(ctx, database, repl)
+			if err != nil {
+				log.Errorf("Error deleting the database in replica %v. Err: %v", repl, err)
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // WritePoints writes points to data nodes
 func (br *Broker) WritePoints(ctx context.Context, database string, points []models.Point) error {
 	pointsMap := make(map[uint64]models.Points)

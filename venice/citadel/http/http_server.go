@@ -44,6 +44,7 @@ func NewHTTPServer(listenURL string, broker *broker.Broker) (*HTTPServer, error)
 	// tsdb apis
 	r.HandleFunc("/write", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.writeReqHandler))).Methods("POST")
 	r.HandleFunc("/create", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.createdbReqHandler))).Methods("POST")
+	r.HandleFunc("/delete", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deletedbReqHandler))).Methods("POST")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("GET")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("POST")
 
@@ -91,6 +92,20 @@ func (hsrv *HTTPServer) createdbReqHandler(r *http.Request) (interface{}, error)
 	err := hsrv.broker.CreateDatabase(context.Background(), database)
 	if err != nil {
 		log.Errorf("Error creating the database %s. Err: %v", database, err)
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+// deletedbReqHandler deletes a database
+func (hsrv *HTTPServer) deletedbReqHandler(r *http.Request) (interface{}, error) {
+	database := r.URL.Query().Get("db")
+
+	// create db
+	err := hsrv.broker.DeleteDatabase(context.Background(), database)
+	if err != nil {
+		log.Errorf("Error deleting the database %s. Err: %v", database, err)
 		return nil, err
 	}
 

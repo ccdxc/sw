@@ -35,7 +35,7 @@ func main() {
 	var (
 		kvstoreURL      = flag.String("kvstore", "", "KVStore URL where etcd is accessible")
 		nodeURL         = flag.String("url", "", "listen URL where citadel's gRPC server runs")
-		httpURL         = flag.String("http", ":"+globals.CitadelHTTPPort, "HTTP server URL where citadel's REST api is available")
+		httpURL         = flag.String("http", "127.0.0.1:"+globals.CitadelHTTPPort, "HTTP server URL where citadel's REST api is available")
 		queryURL        = flag.String("query-url", ":"+globals.CitadelQueryRPCPort, "HTTP server URL where citadel's metrics query api is available")
 		nodeUUID        = flag.String("uuid", "", "Node UUID (unique identifier for this citadel instance)")
 		dbPath          = flag.String("db", "/tmp/tstore/", "DB path where citadel's data will be stored")

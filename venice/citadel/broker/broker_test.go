@@ -110,6 +110,10 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		log.Infof("Got result: %v", string(restr))
 	}
 
+	// delete the database
+	err = brokers[0].DeleteDatabase(context.Background(), "db0")
+	AssertOk(t, err, "Error deleting database")
+
 	// stop all brokers and data nodes
 	for idx := 0; idx < numNodes; idx++ {
 		err = dnodes[idx].Stop()
@@ -363,6 +367,14 @@ func TestBrokerBenchmark(t *testing.T) {
 		Assert(t, len(results[0].Series[0].Values) == numIterations, "got invalid number of values", len(results[0].Series[0].Values))
 	}
 	log.Warnf("%d iterations at batch size %d executing query took %v ", numIterations, batchSize, time.Since(startTime).String())
+
+	// delete the database
+	err = broker.DeleteDatabase(context.Background(), "db0")
+	AssertOk(t, err, "Error deleting database")
+
+	// delete non-exisiting database
+	err = broker.DeleteDatabase(context.Background(), "db0")
+	AssertOk(t, err, "deleting non-existing database failed")
 
 	// stop all brokers and data nodes
 	for idx := 0; idx < numNodes; idx++ {
