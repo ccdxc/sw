@@ -14,9 +14,9 @@ rm -f /nicmgr.log*
 ulimit -c unlimited
 
 if [[ "$FWD_MODE" != "classic" ]]; then
-    ARGS="-s -c $NICMGR_CONFIG_PATH/eth-smart.json -h $HAL_CONFIG_PATH -p haps"
+    ARGS="-s -c $NICMGR_CONFIG_PATH/eth-smart.json -p haps"
 else
-    ARGS="-c $NICMGR_CONFIG_PATH/device.json -h $HAL_CONFIG_PATH -p haps"
+    ARGS="-c $NICMGR_CONFIG_PATH/device.json -p haps"
 fi
 
 LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH $PLATFORM_DIR/bin/nicmgrd $ARGS > /nicmgr.stdout 2>&1 &
