@@ -17,7 +17,9 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
 	"github.com/pensando/sw/nic/delphi/gosdk"
+	delphi "github.com/pensando/sw/nic/delphi/gosdk"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -26,6 +28,24 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
+
+type service struct {
+	name         string
+	sysmgrClient *sysmgr.Client
+}
+
+var srv = &service{
+	name: "nmd",
+}
+
+func (s *service) OnMountComplete() {
+	log.Printf("OnMountComplete() done for %s\n", s.name)
+	s.sysmgrClient.InitDone()
+}
+
+func (s *service) Name() string {
+	return s.name
+}
 
 // Main function for Naples Management Daemon (NMD)
 func main() {
@@ -152,6 +172,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
+
+	delphiClient, err = delphi.NewClient(srv)
+	if err != nil {
+		log.Fatalf("delphi NewClient failed")
+	}
+	srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
+	delphiClient.Dial()
 
 	log.Infof("%s is running {%+v}", globals.Nmd, nm)
 
