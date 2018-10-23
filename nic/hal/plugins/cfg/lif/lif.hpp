@@ -87,6 +87,7 @@ typedef struct lif_s {
     bool                qstate_init_done;// qstate map init status.
     pkt_filter_t        packet_filters;  // Packet Filter Modes
     lif_rss_info_t      rss;             // rss configuration
+    uint32_t            qcount;
 
     // operational state of interface
     hal_handle_t        hal_handle;      // HAL allocated handle

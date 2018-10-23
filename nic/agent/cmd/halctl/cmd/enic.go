@@ -289,7 +289,7 @@ func enicShowOneResp(resp *halproto.InterfaceGetResponse) {
 			resp.GetSpec().GetIfEnicInfo().GetLifKeyOrHandle().GetLifId())
 	case halproto.IfEnicType_IF_ENIC_TYPE_CLASSIC:
 		fmt.Printf("%-10d%-20s%-10s%-10d",
-			resp.GetSpec().GetIfEnicInfo().GetClassicEnicInfo().GetNativeL2SegmentHandle(),
+			resp.GetSpec().GetIfEnicInfo().GetClassicEnicInfo().GetNativeL2SegmentId(),
 			"-",
 			"-",
 			resp.GetSpec().GetIfEnicInfo().GetLifKeyOrHandle().GetLifId())

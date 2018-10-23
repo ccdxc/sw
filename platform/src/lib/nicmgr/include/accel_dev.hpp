@@ -24,7 +24,7 @@
 
 #define ACCEL_DEV_ADDR_ALIGN(addr, sz)  \
     (((addr) + ((uint64_t)(sz) - 1)) & ~((uint64_t)(sz) - 1))
-    
+
 #define ACCEL_DEV_PAGE_ALIGN(addr)      \
     ACCEL_DEV_ADDR_ALIGN(addr, ACCEL_DEV_PAGE_SIZE)
 
@@ -49,17 +49,17 @@ enum {
     (((addr) >> (pos)) & (mask))
 #define ACCEL_PHYS_ADDR_FIELD_SET(pos, mask, val)       \
     (((uint64_t)((val) & (mask))) << (pos))
-    
+
 #define ACCEL_PHYS_ADDR_HOST_GET(addr)                  \
     ACCEL_PHYS_ADDR_FIELD_GET(addr, ACCEL_PHYS_ADDR_HOST_POS, ACCEL_PHYS_ADDR_HOST_MASK)
 #define ACCEL_PHYS_ADDR_HOST_SET(host)                  \
     ACCEL_PHYS_ADDR_FIELD_SET(ACCEL_PHYS_ADDR_HOST_POS, ACCEL_PHYS_ADDR_HOST_MASK, host)
-    
+
 #define ACCEL_PHYS_ADDR_LIF_GET(addr)                   \
     ACCEL_PHYS_ADDR_FIELD_GET(addr, ACCEL_PHYS_ADDR_LIF_POS, ACCEL_PHYS_ADDR_LIF_MASK)
 #define ACCEL_PHYS_ADDR_LIF_SET(lif)                    \
     ACCEL_PHYS_ADDR_FIELD_SET(ACCEL_PHYS_ADDR_LIF_POS, ACCEL_PHYS_ADDR_LIF_MASK, lif)
-    
+
 /*
  * Local doorbell address formation
  */
@@ -80,6 +80,7 @@ enum {
 typedef struct accel_devspec {
     // RES
     uint64_t lif_id;
+    uint32_t hw_lif_id;
     uint32_t seq_queue_base;
     uint32_t seq_queue_count;
     uint32_t seq_created_count;
@@ -190,7 +191,8 @@ private:
 class Accel_PF : public Device {
 public:
     Accel_PF(HalClient *hal_client, void *dev_spec,
-             const struct lif_info *nicmgr_lif_info);
+             const struct lif_info *nicmgr_lif_info,
+             PdClient *pd_client);
 
     void DevcmdHandler();
     void DevcmdPoll();
@@ -214,6 +216,8 @@ private:
     // PCIe info
     pciehdev_t                  *pdev;
     pciehdevice_resources_t     pci_resources;
+
+    PdClient *pd;
 
     // Oher states
     uint32_t                    crypto_key_idx_base;

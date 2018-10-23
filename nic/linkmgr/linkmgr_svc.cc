@@ -97,7 +97,7 @@ port_num_to_asic_port (uint32_t port_num)
     return port_num - 1;
 }
 
-static void
+void
 populate_port_create_args (PortSpec& spec, port_args_t *args)
 {
     uint32_t asic      = 0;
@@ -134,7 +134,7 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
 //------------------------------------------------------------------------------
 // validate an incoming port create request
 //------------------------------------------------------------------------------
-static bool
+bool
 validate_port_create (PortSpec& spec, PortResponse *response)
 {
     // TODO meta check
@@ -263,7 +263,7 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
     return true;
 }
 
-static void
+void
 populate_port_update_args (PortSpec& spec, port_args_t *args)
 {
     sdk::linkmgr::port_args_init(args);

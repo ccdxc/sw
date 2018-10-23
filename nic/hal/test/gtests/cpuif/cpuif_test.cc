@@ -72,7 +72,7 @@ TEST_F(cpuif_test, test1)
     SecurityProfileResponse     sp_rsp;
     NetworkSpec                 nw_spec;
     NetworkResponse             nw_rsp;
-    InterfaceDeleteRequest      del_req;
+    InterfaceDeleteRequest       del_req;
     InterfaceDeleteResponse     del_rsp;
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;

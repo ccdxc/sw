@@ -6,6 +6,7 @@ SUBDIRS = \
 	cfgspace \
 	misc \
 	nicmgr \
+	hal_api \
 	intrutils \
 	pciehdevices \
 	pciehost \
@@ -14,6 +15,9 @@ SUBDIRS = \
 	pcietlp \
 	pcieport \
 	pal \
+    delphi \
+    sysmgr \
+    upgrade \
 	$(NULL)
 
 TOPDIR = ../..

@@ -5,9 +5,9 @@
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/delphi/sdk/delphi_metrics.hpp"
 #include "argh/argh.h"
-#include "nic/delphi/example/example.delphi.hpp"
-#include "nic/delphi/example/example_stats.delphi.hpp"
-#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
+#include "gen/proto/example.delphi.hpp"
+#include "gen/proto/example_stats.delphi.hpp"
+#include "gen/proto/upgrade.delphi.hpp"
 
 using namespace delphi;
 

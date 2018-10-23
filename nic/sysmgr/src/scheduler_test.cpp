@@ -242,3 +242,8 @@ TEST(Specs, NoCircularDependencies)
         start_ready(sched);
     }
 }
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

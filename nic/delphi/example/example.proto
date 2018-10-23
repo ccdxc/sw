@@ -1,7 +1,7 @@
 syntax = "proto3";
 package example;
 
-import "nic/delphi/proto/delphi/delphi.proto";
+import "delphi.proto";
 
 // Interface id
 message IntfIndex {
@@ -16,7 +16,7 @@ enum IntfState {
 }
 
 // spec part of the object
-message InterfaceSpec {
+message ExampleSpec {
     option (delphi.update_event) = true;
     delphi.ObjectMeta      Meta         = 1;
     IntfIndex              Key          = 2;
@@ -27,7 +27,7 @@ message InterfaceSpec {
 }
 
 // status part of the object
-message InterfaceStatus {
+message ExampleStatus {
     option (delphi.update_event) = false;
     delphi.ObjectMeta      Meta              = 1;
     uint32                 Key               = 2;

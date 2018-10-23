@@ -5,6 +5,7 @@ export PLATFORM_DIR='/platform'
 export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
 export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_LIBRARY_PATH
 export NICMGR_LOG_FILE='/nicmgr.log'
+export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export FWD_MODE="$1"
 
 # Remove logs
@@ -13,9 +14,9 @@ rm -f /nicmgr.log*
 ulimit -c unlimited
 
 if [[ "$FWD_MODE" != "classic" ]]; then
-    ARGS="-s -c $NICMGR_CONFIG_PATH/eth-smart.json"
+    ARGS="-s -c $NICMGR_CONFIG_PATH/eth-smart.json -h $HAL_CONFIG_PATH -p haps"
 else
-    ARGS="-c $NICMGR_CONFIG_PATH/device.json"
+    ARGS="-c $NICMGR_CONFIG_PATH/device.json -h $HAL_CONFIG_PATH -p haps"
 fi
 
 LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH $PLATFORM_DIR/bin/nicmgrd $ARGS > /nicmgr.stdout 2>&1 &

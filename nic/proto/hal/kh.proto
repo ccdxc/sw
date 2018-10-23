@@ -7,9 +7,7 @@ syntax = "proto3";
 package kh;
 option go_package="halproto";
 
-// import public "protos/github/gogo/protobuf/gogoproto/gogo.proto";
 import "types.proto";
-//import public "gogo.proto";
 
 // SecurityProfileKeyHandle is used to operate on a security profile
 // either by its id or HAL allocated handle
@@ -440,4 +438,3 @@ message AppKeyHandle {
         fixed64 app_handle = 2;      // id of app returned by HAL
     }
 }
-

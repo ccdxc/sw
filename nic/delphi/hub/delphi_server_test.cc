@@ -17,7 +17,7 @@ protected:
     DelphiServerPtr    server;
 public:
     virtual void SetUp() {
-        // create delphi server without the messanger
+        // create delphi server without the messenger
         server = make_shared<DelphiServer>();
     }
     virtual void TearDown() {

@@ -28,6 +28,7 @@ public: \
     } \
     virtual void TearDown() { \
         sdk_->Stop(); \
+        srv_shm_->MemUnmap(DELPHI_SHM_NAME); \
         pthread_cancel(ev_thread_id); \
         pthread_join(ev_thread_id, NULL); \
         usleep(1000); \

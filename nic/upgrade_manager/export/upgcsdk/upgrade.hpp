@@ -4,7 +4,7 @@
 #define __UPGRADE_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
+#include "gen/proto/upgrade.delphi.hpp"
 #include "upgrade_handler.hpp"
 #include "upgrade_agent_handler.hpp"
 #include "upgrade_app_resp_hdlr.hpp"

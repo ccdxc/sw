@@ -49,7 +49,7 @@ hal_ret_t capri_barco_crypto_init(void)
     hens.cfg_he_ctl.write();
 
     key_desc_array_base = get_start_offset(key_desc_array);
-    if (key_desc_array_base == CAPRI_INVALID_OFFSET) {
+    if (key_desc_array_base == INVALID_MEM_ADDRESS) {
         /* For non IRIS scenarios, the region may not be defined
          * in that case bail out silently
          */

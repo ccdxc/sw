@@ -1,7 +1,7 @@
 syntax = "proto3";
 package upgrade;
 
-import "nic/delphi/proto/delphi/delphi.proto";
+import "delphi.proto";
 
 enum UpgReqType {
     InvalidCmd       = 0;
@@ -105,7 +105,7 @@ message UpgResp {
 }
 
 message UpgStateReq {
-    option (delphi.update_event) = true; 
+    option (delphi.update_event) = true;
     option (delphi.singleton)    = true;
     delphi.ObjectMeta      Meta              = 1;
     UpgReqStateType        UpgReqState       = 2 [(delphi.event) = true];

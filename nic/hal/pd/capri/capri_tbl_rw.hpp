@@ -49,6 +49,7 @@ typedef struct capri_table_mem_layout_ {
 } capri_table_mem_layout_t;
 
 int capri_table_rw_init(hal::hal_cfg_t *hal_cfg);
+int capri_p4plus_table_rw_init(hal::hal_cfg_t *hal_cfg);
 
 void capri_table_rw_cleanup();
 

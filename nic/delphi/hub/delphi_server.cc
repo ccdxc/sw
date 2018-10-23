@@ -7,7 +7,7 @@
 namespace delphi {
 
 using namespace std;
-using namespace delphi::messanger;
+using namespace delphi::messenger;
 
 
 // Checks if the service has mounted the (kind, key)

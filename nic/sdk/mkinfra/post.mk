@@ -20,6 +20,10 @@ ifeq "${MODULE_SRCS}" ""
     endif
 endif
 
+ifeq "${MODULE_GEN_DIR}" ""
+    MODULE_GEN_DIR := ${BLD_PROTOGEN_DIR}
+endif
+
 ifeq "$(suffix ${MODULE_TARGET})" ".export"
     ifeq "${MODULE_EXPORT_LIBS}" ""
         MODULE_EXPORT_LIBS = $(wildcard ${MODULE_EXPORT_DIR}/lib/*.so*) \

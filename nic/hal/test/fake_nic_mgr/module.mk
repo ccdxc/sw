@@ -4,6 +4,6 @@ MODULE_TARGET   = fake_nic_mgr.bin
 MODULE_PIPELINE = iris gft
 MODULE_SOLIBS   = halproto logger thread
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
-                  ${NIC_COMMON_LDLIBS}
+                  ${NIC_COMMON_LDLIBS} ev
 include ${MKDEFS}/post.mk
 

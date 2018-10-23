@@ -1,0 +1,27 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//nic/delphi/compiler:delphi.bzl", "delphi_compile")
+
+# compile the proto file
+delphi_compile(
+    name = "hal_delphi_gen",
+    srcs = [
+      'types.proto',
+      'kh.proto',
+      'port.proto',
+      'eplearn.proto',
+      'endpoint.proto',
+      'l2segment.proto',
+      'nw.proto',
+      'nwsec.proto',
+      'qos.proto',
+      'vrf.proto',
+      'telemetry.proto',
+      'session.proto',
+      'nic.proto',
+      'nat.proto',
+      'multicast.proto',
+      'ipsec.proto',
+      'gft.proto',
+    ]
+)

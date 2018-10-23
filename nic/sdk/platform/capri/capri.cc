@@ -68,7 +68,7 @@ capri::capri_hbm_parse (const char *hbm_mem_json_file)
         reg->start_offset = offset;
 
         SDK_TRACE_DEBUG("region : %s, size : %dkb, reset : %d, "
-                        "start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
+                        "start : 0x%, end : 0x%",
                         reg->mem_reg_name, reg->size_kb, reg->reset,
                         HBM_OFFSET(reg->start_offset),
                         HBM_OFFSET(reg->start_offset + reg->size_kb * 1024));

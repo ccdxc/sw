@@ -55,6 +55,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->error(args); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -69,6 +70,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->info(args); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -76,6 +78,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->debug(args); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -83,6 +86,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->trace(args); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -91,6 +95,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->critical("[{}:{}] " fmt, __FUNCTION__, __LINE__, args); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -98,6 +103,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->error("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -105,6 +111,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->warn("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -112,6 +119,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->info("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -119,6 +127,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->debug("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -126,6 +135,7 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->trace("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+        utils::logger::logger()->flush(); \
     } \
 } while (0)
 

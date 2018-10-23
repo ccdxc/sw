@@ -5,11 +5,9 @@
 #ifndef __HAL_SYSMGR_HPP__
 #define __HAL_SYSMGR_HPP__
 
-//#include <memory>
 #include <string>
-
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/sysmgr/proto/sysmgr.delphi.hpp"
+#include "gen/proto/sysmgr.delphi.hpp"
 #include "nic/sysmgr/lib/sysmgr_client.hpp"
 
 namespace hal {
@@ -17,13 +15,13 @@ namespace sysmgr {
 
 class sysmgr_client : public delphi::Service {
 public:
-    sysmgr_client(delphi::SdkPtr sdk) : sysmgr(sdk, "hal") {}
-    void OnMountComplete(void) { this->sysmgr.init_done(); }
+    sysmgr_client(delphi::SdkPtr sdk) : sysmgr_(sdk, "hal") {}
+    void OnMountComplete(void) { this->sysmgr_.init_done(); }
     bool SkipHeartbeat(void) { return false; }
-    std::pair<deplhi::error, string> Heartbeat(void);
+    std::pair<delphi::error, std::string> Heartbeat(void);
 
 private:
-    sysmgr::Client    sysmgr;
+    ::sysmgr::Client    sysmgr_;
 };
 
 }    // namespace sysmgr

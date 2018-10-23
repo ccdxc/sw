@@ -2,8 +2,8 @@
 #include <string>
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/delphi/sdk/proto/client.delphi.hpp"
-#include "nic/sysmgr/proto/sysmgr.delphi.hpp"
+#include "gen/proto/client.delphi.hpp"
+#include "gen/proto/sysmgr.delphi.hpp"
 
 
 #include "delphi_messages.hpp"

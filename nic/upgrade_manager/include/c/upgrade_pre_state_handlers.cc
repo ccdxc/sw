@@ -5,7 +5,7 @@
 
 #include "upgrade_pre_state_handlers.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/move_planner/lib/planner.h"
+//#include "nic/move_planner/lib/planner.h"
 #include "nic/upgrade_manager/utils/upgrade_log.hpp"
 
 namespace upgrade {
@@ -39,12 +39,14 @@ bool UpgPreStateHandler::PreLinkUpHandler(UpgCtx &ctx) {
 
 bool UpgPreStateHandler::PreDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     //TODO move to goto PostDataplaneDowntimePhase1
+#if 0
     if (planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
                                "/sw/nic/move_planner/hal_mem_after.json",
                                true) != planner::PLAN_SUCCESS) {
         UPG_LOG_DEBUG("UpgPreStateHandler PreDataplaneDowntimePhase1 Failed.");
         return false;
     }
+#endif
     UPG_LOG_DEBUG("UpgPreStateHandler PreDataplaneDowntimePhase1 returning");
     return true;
 }

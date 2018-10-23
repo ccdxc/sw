@@ -15,6 +15,34 @@ thread_local thread    *t_curr_thread;
 hal_state              *g_hal_state;
 bool                    g_delay_delete = false;
 
+int
+hal_thread_sched_policy (sdk::lib::thread_role_t thread_role)
+{
+    return SCHED_OTHER;
+}
+
+int
+hal_thread_priority (sdk::lib::thread_role_t role)
+{
+    return 0;
+}
+
+sdk::lib::thread *
+hal_get_thread (uint32_t thread_id)
+{
+    return NULL;
+}
+
+sdk::lib::thread *
+hal_thread_create (const char *name, uint32_t thread_id,
+                   sdk::lib::thread_role_t thread_role,
+                   uint64_t cores_mask,
+                   sdk::lib::thread_entry_func_t entry_func,
+                   uint32_t thread_prio, int sched_policy, void *data)
+{
+    return NULL;
+}
+
 slab *
 hal_cfg_db::get_slab(hal_slab_t slab_id)
 {

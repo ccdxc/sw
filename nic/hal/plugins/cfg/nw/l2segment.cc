@@ -444,6 +444,26 @@ l2seg_create_uplink_oiflists(l2seg_t *l2seg, if_t *uplink) {
     return HAL_RET_OK;
 }
 
+
+bool
+l2seg_is_mbr_if (l2seg_t *l2seg, if_id_t if_id)
+{
+    hal_handle_t    *p_hdl_id = NULL;
+    if_t            *hal_if = NULL;
+
+    if (l2seg->mbrif_list) {
+        for (const void *ptr : *l2seg->mbrif_list) {
+            p_hdl_id = (hal_handle_t *)ptr;
+            hal_if = find_if_by_handle(*p_hdl_id);
+            if (hal_if->if_id == if_id) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 //-----------------------------------------------------------------------------
 // Add all oifs to bcast oiflist
 //-----------------------------------------------------------------------------
@@ -498,7 +518,7 @@ l2seg_build_oiflists (l2seg_t *l2seg)
         HAL_TRACE_ERR("Failed to delete OIFlist for l2seg, err : {}", ret);
     }
 
-    if (is_forwarding_mode_smart_nic()) {
+    if (is_forwarding_mode_smart_switch()) {
         // Add oifs to bcast oiflist.
         ret = l2seg_add_oifs(l2seg);
         if (ret != HAL_RET_OK) {
@@ -873,7 +893,7 @@ l2seg_add_to_db_and_refs (l2seg_t *l2seg, hal_handle_t hal_handle,
     }
 
 #if 0
-    if (is_forwarding_mode_smart_nic()) {
+    if (is_forwarding_mode_smart_switch()) {
         ret = l2seg_update_oiflist(l2seg->if_list, l2seg, true);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to add to form bcast oiflist "
@@ -1627,9 +1647,16 @@ l2seg_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 #endif
 
-    // Bcast oiflist update
-    ret = l2seg_update_oiflist(app_ctxt->add_iflist, l2seg_clone, true);
-    ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, false);
+    // In Classic nic, bcast oiflist will not have uplinks.
+    // From host:
+    //  - Honor ingress will send the packet out to uplink
+    // From uplink:
+    //  - Packet should never go out on other uplinks
+    if (is_forwarding_mode_smart_switch()) {
+        // Bcast oiflist update
+        ret = l2seg_update_oiflist(app_ctxt->add_iflist, l2seg_clone, true);
+        ret = l2seg_update_oiflist(app_ctxt->del_iflist, l2seg_clone, false);
+    }
 
     //  - Update Success:
     //      - Destroy Add and Delete lists in app ctxt

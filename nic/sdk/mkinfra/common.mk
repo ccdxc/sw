@@ -1,5 +1,5 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-# 
+#
 # Note:
 # This file is used to define all the flags and options common to
 # all the cpu architectures.
@@ -19,7 +19,7 @@ COMMON_GXX_FLAGS        := -fstack-protector \
                            -MD
 COMMON_GPP_FLAGS        := ${COMMON_GXX_FLAGS} --std=c++11
 COMMON_AR_FLAGS         := rcs
-COMMON_ARLIB_FLAGS      := 
+COMMON_ARLIB_FLAGS      :=
 COMMON_SOLIB_FLAGS      := -shared
 
 COMMON_DEPS             := $(wildcard ${MKINFRA}/*) ${TOP_MAKEFILE}
@@ -51,6 +51,7 @@ NAME_PROT2CC   := "[PROTO2CC]"
 NAME_PROT2PY   := "[PROTO2PY]"
 NAME_PROT2GO   := "[PROTO2GO]"
 NAME_PROT2C    := "[ PROTO2C]"
+NAME_PROT2DELPHI := "[PROTO2DELPHI]"
 NAME_MOCKGEN   := "[MOCKGEN ]"
 NAME_MKTARGET  := "[MKTARGET]"
 NAME_GOIMPORT  := "[GOIMPORT]"
@@ -72,8 +73,3 @@ endif
 ifneq "${GCOV}" ""
     COMMON_CAPAS_OPTS       += -C
 endif
-
-COMMON_CMD_PROTOC_CPP_OPTS  := --cpp_out=${BLD_PROTOGEN_DIR} --grpc_out=${BLD_PROTOGEN_DIR} 
-COMMON_CMD_PROTOC_PY_OPTS   := --python_out=${BLD_PROTOGEN_DIR} --grpc_out=${BLD_PROTOGEN_DIR} 
-COMMON_CMD_PROTOC_C_OPTS    := --c_out=${BLD_PROTOGEN_DIR}
-COMMON_CMD_GOFAST_OPTS      := --gofast_out=plugins=grpc:${BLD_PROTOGEN_DIR}

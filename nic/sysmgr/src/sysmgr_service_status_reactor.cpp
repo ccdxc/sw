@@ -2,7 +2,7 @@
 #include <string>
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/sysmgr/proto/sysmgr.delphi.hpp"
+#include "gen/proto/sysmgr.delphi.hpp"
 
 #include "logger.hpp"
 #include "pipe_t.hpp"

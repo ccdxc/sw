@@ -459,11 +459,11 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
     i++;
 
-    if ((offset = get_start_offset("flow_hash")) != CAPRI_INVALID_OFFSET) {
+    if ((offset = get_start_offset("flow_hash")) != INVALID_MEM_ADDRESS) {
         symbols[i].name = "ipfix.bin";
         symbols[i].params[0].name = P4_FLOW_HASH_BASE;
         symbols[i].params[0].val = offset;
-        if ((offset = get_start_offset("flow_hash_overflow")) != CAPRI_INVALID_OFFSET) {
+        if ((offset = get_start_offset("flow_hash_overflow")) != INVALID_MEM_ADDRESS) {
             symbols[i].num_params = 2;
             symbols[i].params[1].name = P4_FLOW_HASH_OVERFLOW_BASE;
             symbols[i].params[1].val = offset;
@@ -473,7 +473,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
         i++;
     }
 
-    if ((offset = get_start_offset("flow_info")) != CAPRI_INVALID_OFFSET) {
+    if ((offset = get_start_offset("flow_info")) != INVALID_MEM_ADDRESS) {
         symbols[i].name = "ipfix_flow_hash.bin";
         symbols[i].num_params = 1;
         symbols[i].params[0].name = P4_FLOW_INFO_BASE;
@@ -481,7 +481,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
         i++;
     }
 
-    if ((offset = get_start_offset("session_state")) != CAPRI_INVALID_OFFSET) {
+    if ((offset = get_start_offset("session_state")) != INVALID_MEM_ADDRESS) {
         symbols[i].name = "ipfix_flow_info.bin";
         symbols[i].num_params = 1;
         symbols[i].params[0].name = P4_SESSION_STATE_BASE;
@@ -489,7 +489,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
         i++;
     }
 
-    if ((offset = get_start_offset("flow_stats")) != CAPRI_INVALID_OFFSET) {
+    if ((offset = get_start_offset("flow_stats")) != INVALID_MEM_ADDRESS) {
         symbols[i].name = "ipfix_session_state.bin";
         symbols[i].num_params = 2;
         symbols[i].params[0].name = P4_FLOW_STATS_BASE;
@@ -965,7 +965,7 @@ capri_repl_init (capri_cfg_t *cfg)
 {
     capri_hbm_base = get_hbm_base();
     hbm_repl_table_offset = get_hbm_offset(JP4_REPL);
-    if (hbm_repl_table_offset != CAPRI_INVALID_OFFSET) {
+    if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
         capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
         capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
     }

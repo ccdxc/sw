@@ -197,7 +197,7 @@ TEST_F(endpoint_test, test1)
 #endif
 
     // Try deletint if
-    InterfaceDeleteRequest if_del_req;
+    InterfaceDeleteRequest   if_del_req;
     InterfaceDeleteResponse  if_del_rsp;
     if_del_req.mutable_key_or_handle()->set_interface_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

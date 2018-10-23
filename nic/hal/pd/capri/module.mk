@@ -9,5 +9,4 @@ MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_INCS     = ${NIC_CSR_INCS} \
                   ${TOPDIR}/nic/hal/third-party/openssl/include
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
-MODULE_SOLIBS   = sdkcapri
 include ${MKDEFS}/post.mk

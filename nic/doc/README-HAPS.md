@@ -259,3 +259,4 @@ LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH  /platform/bin/capview
   Fields:
     [ 15:0  ] count: 0x0
 
+

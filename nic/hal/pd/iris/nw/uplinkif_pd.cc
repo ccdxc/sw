@@ -67,6 +67,35 @@ pd_uplinkif_update (pd_if_update_args_t *args)
     if (args->native_l2seg_change) {
         curr_nat_l2seg = find_l2seg_by_id(hal_if->native_l2seg);
         new_nat_l2seg = args->native_l2seg;
+
+        if (hal_if->native_l2seg != 0) {
+            // Check if if is present in l2seg mbrifs
+            if (l2seg_is_mbr_if(curr_nat_l2seg, hal_if->if_id)) {
+                // De-pgm inp. props entry
+                ret = l2seg_uplink_depgm_input_properties_tbl(curr_nat_l2seg, hal_if);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to deprogram input properties table. ret:{}",
+                                  ret);
+                    goto end;
+                }
+            }
+        }
+        hal_if_clone->native_l2seg = 0;
+        if (new_nat_l2seg) {
+            // Update clone with new native l2seg
+            hal_if_clone->native_l2seg = new_nat_l2seg->seg_id;
+            if (l2seg_is_mbr_if(new_nat_l2seg, hal_if->if_id)) {
+                // Pgm input props entry. Assume clone with have new native l2seg
+                ret = l2seg_uplink_pgm_input_properties_tbl(new_nat_l2seg, hal_if_clone);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to program input properties table. ret:{}",
+                                  ret);
+                    goto end;
+                }
+            }
+        }
+
+#if 0
         // Current native_l2seg is 0, so skipping deprogramming
         if (hal_if->native_l2seg != 0) {
             // De-pgm input props entry.
@@ -86,6 +115,7 @@ pd_uplinkif_update (pd_if_update_args_t *args)
                           ret);
             goto end;
         }
+#endif
     }
 
 end:

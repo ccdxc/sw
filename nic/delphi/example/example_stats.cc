@@ -6,22 +6,22 @@
 
 namespace example {
 
-InterfaceStatsMgr::InterfaceStatsMgr() {
+ExampleStatsMgr::ExampleStatsMgr() {
     // create interface stats
     srand(time(NULL));
     uint32_t if_key = rand() % 10000;
-    if_stats_ = delphi::objects::InterfaceMetrics::NewInterfaceMetrics(if_key);
+    if_stats_ = delphi::objects::ExampleMetrics::NewExampleMetrics(if_key);
     assert(if_stats_ != NULL);
 
     // create a periodic timer to set stats
-    this->statsTimer.set<InterfaceStatsMgr, &InterfaceStatsMgr::statsTimerHandler>(this);
+    this->statsTimer.set<ExampleStatsMgr, &ExampleStatsMgr::statsTimerHandler>(this);
     this->statsTimer.start(5.0, 5.0);
 
     return;
 }
 
 // PublishStats publishes stats periodically
-error InterfaceStatsMgr::PublishStats() {
+error ExampleStatsMgr::PublishStats() {
     LogDebug("Publishing stats");
 
     // set or increments stats
@@ -36,7 +36,7 @@ error InterfaceStatsMgr::PublishStats() {
 }
 
 // statsTimerHandler handles stats event
-void InterfaceStatsMgr::statsTimerHandler(ev::timer &watcher, int revents) {
+void ExampleStatsMgr::statsTimerHandler(ev::timer &watcher, int revents) {
     this->PublishStats();
 }
 

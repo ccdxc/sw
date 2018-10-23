@@ -50,6 +50,7 @@ if_id_get_key_func (void *entry)
     return hal_if ? (void *)&(hal_if->if_id) : NULL;
 }
 
+
 //------------------------------------------------------------------------------
 // Compute hash function for if id hash table
 //------------------------------------------------------------------------------
@@ -1198,6 +1199,8 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     hal_ret_t       ret = HAL_RET_OK;
     hal_handle_t    lif_handle = HAL_HANDLE_INVALID;
     hal_handle_t    spec_pinned_uplink = HAL_HANDLE_INVALID;
+    l2seg_t         *native_l2seg = NULL;
+    hal_handle_t    native_l2seg_handle = HAL_HANDLE_INVALID;
 
     auto if_enic_info = spec.if_enic_info();
 
@@ -1208,12 +1211,19 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
 
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         auto clsc_enic_info = if_enic_info.mutable_classic_enic_info();
-        // check of native l2seg change
-        if (hal_if->native_l2seg_clsc !=
-                clsc_enic_info->native_l2segment_handle()) {
+        if (clsc_enic_info->native_l2segment_id() != 0) {
+            native_l2seg = find_l2seg_by_id(clsc_enic_info->native_l2segment_id());
+            if (native_l2seg != NULL) {
+                native_l2seg_handle = native_l2seg->hal_handle;
+            }
+        }
 
-            app_ctxt->new_native_l2seg_clsc =
-                clsc_enic_info->native_l2segment_handle();
+        // check of native l2seg change
+        if (hal_if->native_l2seg_clsc != native_l2seg_handle) {
+                // clsc_enic_info->native_l2segment_handle()) {
+
+            app_ctxt->new_native_l2seg_clsc = native_l2seg_handle;
+                // clsc_enic_info->native_l2segment_handle();
 
             HAL_TRACE_DEBUG("updating native_l2seg_hdl {} => {}",
                             hal_if->native_l2seg_clsc,
@@ -1646,7 +1656,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Change Flood replication entry for change of native l2seg
-    if (is_forwarding_mode_smart_nic() && pd_if_args.native_l2seg_change) {
+    if (is_forwarding_mode_smart_switch() && pd_if_args.native_l2seg_change) {
         // Remove and add replication entry
         if (hal_if->native_l2seg != 0) {
             native_l2seg_old = find_l2seg_by_id(hal_if->native_l2seg);
@@ -2626,7 +2636,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     }
 
     // Add the uplink to the broadcast list of the l2seg
-    if (is_forwarding_mode_smart_nic()) {
+    if (is_forwarding_mode_smart_switch()) {
         oif.intf = hal_if;
         oif.l2seg = l2seg;
 
@@ -2686,7 +2696,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     }
 
     // Del the uplink from the broadcast list of the l2seg
-    if (is_forwarding_mode_smart_nic()) {
+    if (is_forwarding_mode_smart_switch()) {
         oif.intf = hal_if;
         oif.l2seg = l2seg;
 
@@ -3164,14 +3174,17 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
     } else if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         auto clsc_enic_info = if_enic_info.mutable_classic_enic_info();
         if (if_enic_info.mutable_classic_enic_info()->
-                native_l2segment_handle() != HAL_HANDLE_INVALID) {
+                native_l2segment_id() != 0) {
             // Processing native l2seg
+            l2seg = find_l2seg_by_id(if_enic_info.mutable_classic_enic_info()->
+                                     native_l2segment_id());
+#if 0
             l2seg = l2seg_lookup_by_handle(if_enic_info.
                     mutable_classic_enic_info()->native_l2segment_handle());
+#endif
             if (l2seg == NULL) {
-                HAL_TRACE_ERR("Failed to find l2seg_handle : {}",
-                              if_enic_info.mutable_classic_enic_info()->
-                              native_l2segment_handle());
+                HAL_TRACE_ERR("Failed to find l2seg_id : {}",
+                              if_enic_info.mutable_classic_enic_info()->native_l2segment_id());
                 ret = HAL_RET_L2SEG_NOT_FOUND;
                 goto end;
             }

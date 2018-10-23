@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for system level objects
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+import "delphi.proto";
+package device;
+
+//------------------------------------------------------------------------------
+// supported forwarding modes
+//------------------------------------------------------------------------------
+enum ForwardingMode {
+  FORWARDING_MODE_NONE       = 0;
+  FORWARDING_MODE_CLASSIC    = 1;    // classic forwarding
+  FORWARDING_MODE_HOSTPIN    = 2;    // smartnic hostpin mode
+  FORWARDING_MODE_SWITCH     = 3;    // smartnic switch mode
+}
+
+//------------------------------------------------------------------------------
+// SystemSpec captures the system level global configuraiton
+// NOTE:
+// fwd_mode is init time configuration and this object must be pushed
+// by delphi and client handler should be invoked before any other
+// config object is
+//------------------------------------------------------------------------------
+message SystemSpec {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta    Meta     = 1;    // common delphi meta
+  ForwardingMode       fwd_mode = 2;    // forwarding mode
+}

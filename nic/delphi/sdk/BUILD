@@ -40,6 +40,7 @@ cc_library(
         "//nic/delphi/messanger",
         "//nic/delphi/shm",
         "//nic/delphi/sdk/proto:client",
+        "//nic/delphi/proto/delphi:delphi_cc_proto",
         "@third_party//:libev_includes",
         "@third_party//:libev",
     ],

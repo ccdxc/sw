@@ -163,7 +163,6 @@ hal_platform_mode_to_sdk_platform_type (hal_platform_mode_t platform_mode)
     return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
 }
 
-#if 0
 //------------------------------------------------------------------------------
 // bring up delphi thread
 //------------------------------------------------------------------------------
@@ -179,13 +178,12 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
                                    HAL_THREAD_ID_DELPHI_CLIENT,
                                    sdk::lib::THREAD_ROLE_CONTROL,
                                    0x0,    // use all control cores
-                                   delphi::delphi_client_start,
+                                   svc::delphi_client_start,
                                    thread_prio, sched_policy,
                                    NULL);
     HAL_ABORT(hal_thread != NULL);
     return HAL_RET_OK;
 }
-#endif
 
 //------------------------------------------------------------------------------
 // init function for HAL
@@ -281,7 +279,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // linkmgr init
     hal_linkmgr_init(hal_cfg);
 
-    //HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
+    HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
 
     // start monitoring HAL heartbeat
     hal::hb::heartbeat_init();

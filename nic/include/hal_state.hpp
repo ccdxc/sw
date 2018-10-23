@@ -672,7 +672,7 @@ is_forwarding_mode_classic_nic (void)
 }
 
 static inline bool
-is_forwarding_mode_smart_nic (void)
+is_forwarding_mode_smart_switch (void)
 {
     return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH;
 }

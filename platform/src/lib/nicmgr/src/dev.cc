@@ -14,6 +14,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "dev.hpp"
+#include "pd_client.hpp"
 #include "eth_dev.hpp"
 #include "accel_dev.hpp"
 #include "logger.hpp"
@@ -69,17 +70,23 @@ invalidate_txdma_cacheline(uint64_t addr)
               ((addr >> 6) << 1));
 }
 
-DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
+DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, string hal_cfg_path, platform_mode_t platform)
 {
     hal = new HalClient(fwd_mode);
+    hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
+    uint8_t     cosA = 1;
+    uint8_t     cosB = 0;
 
     utils::logger::init();
 
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-    //assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
+
+    pd = PdClient::factory(platform, hal_cfg_path);
+    assert(pd);
 
     // Create nicmgr service lif
     struct eth_admin_qstate qstate_req = { 0 };
@@ -106,10 +113,17 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
         },
     };
 
+#if 0
+    // Should skip creation of this lif in HAL as this is non-ethernet..
     lif_handle = hal->LifCreate(1, qinfo, &info, 0, false, 0, 0, 0);
     if (lif_handle == 0) {
         throw runtime_error("Failed to create nicmgr lif!");
     }
+#endif
+
+    info.hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
+    uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+    pd->program_qstate(qinfo, &info, coses);
 
     // Init QState
     uint64_t hbm_base = NICMGR_BASE;
@@ -130,8 +144,11 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
     resp_head = 0;
     resp_tail = 0;
 
+    NIC_LOG_INFO("About to invalidate txdma cacheline at: {}", info.qstate_addr[NICMGR_QTYPE_REQ]);
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_REQ]);
+    NIC_LOG_INFO("Invalidated txdma cacheline at: {}", info.qstate_addr[NICMGR_QTYPE_REQ]);
     READ_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
+    NIC_LOG_INFO("Reading txdma cacheline at: {}", info.qstate_addr[NICMGR_QTYPE_REQ]);
 
     qstate_req.p_index0 = req_head;
     qstate_req.c_index0 = req_tail;
@@ -149,6 +166,8 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
         WRITE_MEM(req_ring_base + (sizeof(struct nicmgr_req_desc) * i),
              (uint8_t *)tmp, sizeof(tmp), 0);
     }
+
+    NIC_LOG_INFO("About to write to nicmgr qtype req");
 
     WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_REQ]);
@@ -174,7 +193,10 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
             (uint8_t *)tmp, sizeof(tmp), 0);
     }
 
+    NIC_LOG_INFO("About to write to nicmgr qtype resp");
     WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
+
+    NIC_LOG_INFO("About to invalidate txdma cache line");
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_RESP]);
 }
 
@@ -190,6 +212,7 @@ DeviceManager::LoadConfig(string path)
     struct accel_devspec *accel_spec;
     uint32_t intr_base = 0, enic_id = 0;
 
+#if 0
     // Discover existing configuration
     hal->VrfProbe();
     hal->L2SegmentProbe();
@@ -197,9 +220,19 @@ DeviceManager::LoadConfig(string path)
     hal->LifProbe();
     hal->EndpointProbe();
     hal->MulticastProbe();
+#endif
 
     // Create Network
     if (spec.get_child_optional("network")) {
+        // Create Uplinks
+        if (spec.get_child_optional("network.uplink")) {
+            for (const auto &node : spec.get_child("network.uplink")) {
+                auto val = node.second;
+                Uplink *up1 = Uplink::Factory(val.get<uint64_t>("id"));
+                uplinks[val.get<uint64_t>("id")] = up1;
+            }
+        }
+#if 0
         // Create VRFs
         if (spec.get_child_optional("network.vrf")) {
             for (const auto &node : spec.get_child("network.vrf")) {
@@ -261,6 +294,7 @@ DeviceManager::LoadConfig(string path)
                 } // foreach uplink
             } // Create uplinks
         }
+#endif
     }
 
     // Create MNICs
@@ -278,7 +312,7 @@ DeviceManager::LoadConfig(string path)
                 NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
                 return -1;
             }
-
+            eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
             eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
             eth_spec->txq_count = val.get<uint64_t>("txq_count");
             eth_spec->eq_count = val.get<uint64_t>("eq_count");
@@ -296,9 +330,14 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->lif_id = LIF_ID_BASE + lif_id;
             }
 
+            eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             if (val.get_optional<string>("network")) {
                 eth_spec->vrf_id = val.get<uint64_t>("network.vrf");
                 eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
+                eth_spec->uplink = uplinks[eth_spec->uplink_id];
+                if (eth_spec->uplink == NULL) {
+                    NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
+                }
                 eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg");
             }
 
@@ -312,6 +351,9 @@ DeviceManager::LoadConfig(string path)
             }
 
             eth_spec->host_dev = false;
+            NIC_LOG_INFO("Adding mnic device with lif_id: {}, hw_lif_id: {}",
+                         eth_spec->lif_id,
+                         eth_spec->hw_lif_id);
             AddDevice(ETH, (void *)eth_spec);
         }
     }
@@ -332,6 +374,7 @@ DeviceManager::LoadConfig(string path)
                 return -1;
             }
 
+            eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
             eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
             eth_spec->txq_count = val.get<uint64_t>("txq_count");
             eth_spec->eq_count = val.get<uint64_t>("eq_count");
@@ -362,8 +405,13 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->lif_id = LIF_ID_BASE + lif_id;
             }
 
+            eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             eth_spec->vrf_id = val.get<uint64_t>("network.vrf", 0);
             eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
+            eth_spec->uplink = uplinks[eth_spec->uplink_id];
+            if (eth_spec->uplink == NULL) {
+                NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
+            }
             eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg", 0);
 
             eth_spec->enic_id = val.get<uint64_t>("network.enic", 0);
@@ -377,13 +425,18 @@ DeviceManager::LoadConfig(string path)
 
             eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
             eth_spec->host_dev = true;
+            NIC_LOG_INFO("Adding eth device with lif_id: {}, hw_lif_id: {}",
+                         eth_spec->lif_id,
+                         eth_spec->hw_lif_id);
             AddDevice(ETH, (void *)eth_spec);
         }
     }
 
     // Create Accelerator devices
     if (spec.get_child_optional("accel_dev")) {
+        NIC_LOG_INFO("Creating accel device");
         for (const auto &node : spec.get_child("accel_dev")) {
+            NIC_LOG_INFO("Creating accel device");
             accel_spec = new struct accel_devspec;
             memset(accel_spec, 0, sizeof(*accel_spec));
 
@@ -397,6 +450,7 @@ DeviceManager::LoadConfig(string path)
                 return -1;
             }
 
+            accel_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             accel_spec->lif_id = STORAGE_SEQ_SW_LIF_ID;
             accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
             accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
@@ -409,6 +463,12 @@ DeviceManager::LoadConfig(string path)
     }
 
     return 0;
+}
+
+Device *
+DeviceManager::GetDevice(uint64_t id)
+{
+    return devices[id];
 }
 
 Device *
@@ -425,11 +485,11 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         NIC_LOG_ERR("Unsupported Device Type DEBUG");
         return NULL;
     case ETH:
-        eth_dev = new Eth(hal, dev_spec);
+        eth_dev = new Eth(hal, hal_common_client, dev_spec, pd);
         devices[eth_dev->info.hw_lif_id] = (Device *)eth_dev;
         return (Device *)eth_dev;
     case ACCEL:
-        accel_dev = new Accel_PF(hal, dev_spec, &info);
+        accel_dev = new Accel_PF(hal, dev_spec, &info, pd);
         devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
         return (Device *)accel_dev;
     case NVME:
@@ -459,6 +519,37 @@ DeviceManager::DevcmdPoll()
 {
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
         it->second->DevcmdPoll();
+    }
+}
+
+void
+DeviceManager::DevLinkDownHandler(uint32_t port_num)
+{
+    Device *dev;
+    Eth *eth_dev;
+
+    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
+        dev = it->second;
+        eth_dev = (Eth*) dev;
+        if (eth_dev && eth_dev->uplink_id == port_num) {
+            eth_dev->DevLinkDownHandler(port_num);
+        }
+    }
+}
+
+
+void
+DeviceManager::DevLinkUpHandler(uint32_t port_num)
+{
+    Device *dev;
+    Eth *eth_dev;
+
+    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
+        dev = it->second;
+        eth_dev = (Eth*) dev;
+        if (eth_dev && eth_dev->uplink_id == port_num) {
+            eth_dev->DevLinkUpHandler(port_num);
+        }
     }
 }
 

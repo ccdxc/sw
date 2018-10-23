@@ -10,7 +10,7 @@ import (
 
 	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/gosdk/messenger"
-	"github.com/pensando/sw/nic/delphi/messanger/proto"
+	delphi_messenger "github.com/pensando/sw/nic/delphi/messenger/proto"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
@@ -29,7 +29,7 @@ type client struct {
 	nextObjID      uint32
 	mclient        messenger.Client
 	service        clientApi.Service
-	mounts         []*delphi_messanger.MountData
+	mounts         []*delphi_messenger.MountData
 	mountListeners []clientApi.MountListener
 	watchers       map[string][]clientApi.BaseReactor
 	subtrees       map[string]subtree
@@ -42,7 +42,7 @@ type client struct {
 func (c *client) MountKind(kind string, mode delphi.MountMode) error {
 
 	// FIXME: error out if already connected
-	c.mounts = append(c.mounts, &delphi_messanger.MountData{
+	c.mounts = append(c.mounts, &delphi_messenger.MountData{
 		Kind: kind,
 		Mode: mode,
 	})
@@ -55,7 +55,7 @@ func (c *client) MountKind(kind string, mode delphi.MountMode) error {
 func (c *client) MountKindKey(kind string, key string, mode delphi.MountMode) error {
 
 	// FIXME: error out if already connected
-	c.mounts = append(c.mounts, &delphi_messanger.MountData{
+	c.mounts = append(c.mounts, &delphi_messenger.MountData{
 		Kind: kind,
 		Key:  key,
 		Mode: mode,
@@ -157,7 +157,7 @@ func (c *client) Close() {
 // sendBatch is responsible for marshaling and sending over to the hub a
 // number of changes
 func (c *client) sendBatch(batch map[string]*change) error {
-	objlist := make([]*delphi_messanger.ObjectData, 0)
+	objlist := make([]*delphi_messenger.ObjectData, 0)
 
 	for _, chg := range batch {
 		data, err := proto.Marshal(chg.obj.GetMessage())
@@ -165,7 +165,7 @@ func (c *client) sendBatch(batch map[string]*change) error {
 			panic(err)
 		}
 		objlist = append(objlist,
-			&delphi_messanger.ObjectData{
+			&delphi_messenger.ObjectData{
 				Meta: chg.obj.GetMeta(),
 				Op:   chg.op,
 				Data: data,
@@ -230,7 +230,7 @@ func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
 
 // This function gets called when there are local or remove changes to the
 // database. It invokes the reactors
-func (c *client) updateSubtrees(objlist []*delphi_messanger.ObjectData, triggerEvents bool) {
+func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerEvents bool) {
 	for _, obj := range objlist {
 		factory := clientApi.Factories[obj.Meta.Kind]
 		baseObj, err := factory(c, obj.Data)
@@ -252,7 +252,7 @@ func (c *client) updateSubtrees(objlist []*delphi_messanger.ObjectData, triggerE
 }
 
 // Implementing the messegner.Handler interface
-func (c *client) HandleMountResp(svcID uint16, status string, objlist []*delphi_messanger.ObjectData) error {
+func (c *client) HandleMountResp(svcID uint16, status string, objlist []*delphi_messenger.ObjectData) error {
 	c.id = svcID
 	c.updateSubtrees(objlist, false)
 	c.service.OnMountComplete()
@@ -263,7 +263,7 @@ func (c *client) HandleMountResp(svcID uint16, status string, objlist []*delphi_
 }
 
 // Implementing the messegner.Handler interface
-func (c *client) HandleNotify(objlist []*delphi_messanger.ObjectData) error {
+func (c *client) HandleNotify(objlist []*delphi_messenger.ObjectData) error {
 	c.updateSubtrees(objlist, true)
 	return nil
 }
@@ -312,7 +312,7 @@ func (c *client) newHandle() uint64 {
 // to have more than one clients at the same time.
 func NewClient(service clientApi.Service) (clientApi.Client, error) {
 	client := &client{
-		mounts:         make([]*delphi_messanger.MountData, 0),
+		mounts:         make([]*delphi_messenger.MountData, 0),
 		service:        service,
 		subtrees:       make(map[string]subtree),
 		watchers:       make(map[string][]clientApi.BaseReactor),

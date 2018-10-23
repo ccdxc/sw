@@ -4,43 +4,43 @@
 #define _DELPHI_EXAMPLE_H_
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/delphi/example/example.delphi.hpp"
+#include "gen/proto/example.delphi.hpp"
 #include "nic/delphi/example/example_stats.hpp"
 
 namespace example {
 
 using namespace std;
 
-// InterfaceMgr is the reactor for the InterfaceSpec object
-class InterfaceMgr : public delphi::objects::InterfaceSpecReactor {
+// ExampleReactor is the reactor for the ExampleSpec object
+class ExampleReactor : public delphi::objects::ExampleSpecReactor {
     delphi::SdkPtr sdk_;
 public:
-    InterfaceMgr(delphi::SdkPtr sk) {
+    ExampleReactor(delphi::SdkPtr sk) {
         this->sdk_ = sk;
     }
 
-    // OnInterfaceSpecCreate gets called when InterfaceSpec object is created
-    virtual delphi::error OnInterfaceSpecCreate(delphi::objects::InterfaceSpecPtr intf);
+    // OnExampleSpecCreate gets called when ExampleSpec object is created
+    virtual delphi::error OnExampleSpecCreate(delphi::objects::ExampleSpecPtr intf);
 
-    // OnInterfaceSpecDelete gets called when InterfaceSpec object is deleted
-    virtual delphi::error OnInterfaceSpecDelete(delphi::objects::InterfaceSpecPtr intf);
+    // OnExampleSpecDelete gets called when ExampleSpec object is deleted
+    virtual delphi::error OnExampleSpecDelete(delphi::objects::ExampleSpecPtr intf);
 
     // OnAdminState gets called when AdminState attribute changes
-    virtual delphi::error OnAdminState(delphi::objects::InterfaceSpecPtr intf);
+    virtual delphi::error OnAdminState(delphi::objects::ExampleSpecPtr intf);
 
     // createIntfStatus creates an interface status object
     delphi::error createIntfStatus(uint32_t ifidx, example::IntfState status);
 
     // findIntfStatus finds the interface status object
-    delphi::objects::InterfaceStatusPtr findIntfStatus(uint32_t ifidx);
+    delphi::objects::ExampleStatusPtr findIntfStatus(uint32_t ifidx);
 };
-typedef std::shared_ptr<InterfaceMgr> InterfaceMgrPtr;
+typedef std::shared_ptr<ExampleReactor> ExampleReactorPtr;
 
 // ExampleService is the service object for this example
 class ExampleService : public delphi::Service, public enable_shared_from_this<ExampleService> {
 private:
-    InterfaceMgrPtr        intf_mgr_;
-    InterfaceStatsMgrPtr   intf_stats_mgr_;
+    ExampleReactorPtr        intf_mgr_;
+    ExampleStatsMgrPtr   intf_stats_mgr_;
     delphi::SdkPtr         sdk_;
     string                 svcName_;
 public:

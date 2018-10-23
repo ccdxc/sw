@@ -205,6 +205,9 @@ cc_library(
     includes = [
             "gen/proto/hal",
             ],
+    deps = [
+        "//nic/delphi/proto/delphi:delphi_cc_proto",
+    ]
 )
 
 cc_library(
@@ -344,5 +347,5 @@ cc_library(
     ],
 )
 
-exports_files(["tools/ncc/tenjin_wrapper.py", 
+exports_files(["tools/ncc/tenjin_wrapper.py",
                "asic/capri/verif/common/csr_gen/pbc.yaml"])

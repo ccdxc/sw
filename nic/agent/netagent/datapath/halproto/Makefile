@@ -15,9 +15,10 @@ hal-proto: clean-proto
 	# Compile proto definitions
 	 LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(TOP_DIR)/hal/third-party/google/x86_64/bin/protoc --proto_path=../../../../../ -I../../../../../nic/proto \
 	-I../../../../../nic/proto/hal \
+	-I../../../../../nic/delphi/proto/delphi \
 	-I$(TOP_DIR)/hal/third-party/google/include \
 	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
-	--gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:. types.proto ${HAL_PROTO_FILES}
+	--gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,plugins=grpc:. types.proto ${HAL_PROTO_FILES}
 
 clean-proto:
 	# Regenerate all .pb.go. This avoids conflicts due to file renames in nic/proto/hal

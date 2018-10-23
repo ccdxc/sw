@@ -1,6 +1,0 @@
--I ../../../gen/proto/hal
--I ../../../sdk/include
--I ../../../sdk
--I ../../../..
--I ../../../hal/third-party/spdlog/include
--std=c++11

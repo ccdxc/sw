@@ -2,7 +2,12 @@
     "regions": [
         {
             "name": "lif2qstate_map",
-            "size_kb": 131072,
+            "size_kb": 98304,
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "nicmgrqstate_map",
+            "size_kb": 32768,
             "cache": "p4plus-all"
         },
         {

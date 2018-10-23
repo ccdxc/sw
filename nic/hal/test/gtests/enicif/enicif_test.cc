@@ -345,7 +345,7 @@ TEST_F(enicif_test, test2)
     l2kh->set_l2segment_handle(l2seg_hdls[1]);
     l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
     l2kh->set_l2segment_handle(l2seg_hdls[2]);
-    enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_hdls[3]);
+    enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_id(203);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec, &enicif_rsp);
     hal::hal_cfg_db_close();
@@ -394,7 +394,7 @@ TEST_F(enicif_test, test2)
     l2kh->set_l2segment_handle(l2seg_hdls[1]);
     l2kh = enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
     l2kh->set_l2segment_handle(l2seg_hdls[2]);
-    enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_hdls[3]);
+    enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_id(203);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec1, &enicif_rsp);
     hal::hal_cfg_db_close();
@@ -756,7 +756,7 @@ TEST_F(enicif_test, test4)
     l2kh->set_l2segment_handle(l2seg_hdls[1]);
     l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
     l2kh->set_l2segment_handle(l2seg_hdls[2]);
-    enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_hdls[3]);
+    enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_id(403);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec, &enicif_rsp);
     hal::hal_cfg_db_close();

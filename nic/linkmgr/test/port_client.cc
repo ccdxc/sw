@@ -73,7 +73,6 @@ typedef struct debug_info_s {
 
 port_info_t  port_info;
 debug_info_t debug_info;
-uint64_t     vrf_id = 1;
 bool         invoke_debug  = false;
 std::string  svc_endpoint_ = "localhost:50054";
 

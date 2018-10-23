@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package sysmgr;
 
-import "nic/delphi/proto/delphi/delphi.proto";
+import "delphi.proto";
 
 message SysmgrShutdownReq {
     option (delphi.update_event) = true;

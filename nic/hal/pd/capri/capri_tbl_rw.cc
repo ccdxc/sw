@@ -227,7 +227,7 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
     HAL_TRACE_DEBUG("===HBM Tbl Name: {}, Stage: {}, StageTblID: {}, "
                     "Addr: {:#x}===",
                     tablename, stage, stage_tableid, start_offset);
-    if (start_offset == CAPRI_INVALID_OFFSET) {
+    if (start_offset == INVALID_MEM_ADDRESS) {
         return;
     }
 
@@ -731,8 +731,45 @@ capri_tcam_memory_init (hal::hal_cfg_t *hal_cfg)
     }
 }
 
+void
+capri_table_rw_cleanup (void)
+{
+    for (int i = P4_GRESS_INGRESS; i <= P4_GRESS_EGRESS; i++) {
+        if (g_shadow_sram_p4[i]) {
+            CAPRI_FREE(g_shadow_sram_p4[i]);
+        }
+        g_shadow_sram_p4[i] = NULL;
+        if (g_shadow_tcam_p4[i]) {
+            CAPRI_FREE(g_shadow_tcam_p4[i]);
+        }
+        g_shadow_tcam_p4[i] = NULL;
+    }
+}
+
+static int
+capri_p4_shadow_init (void)
+{
+    for (int i = P4_GRESS_INGRESS; i <= P4_GRESS_EGRESS; i++) {
+        g_shadow_sram_p4[i] = (capri_sram_shadow_mem_t*)
+                CAPRI_CALLOC(1, sizeof(capri_sram_shadow_mem_t));
+        g_shadow_tcam_p4[i] = (capri_tcam_shadow_mem_t*)
+                CAPRI_CALLOC(1, sizeof(capri_tcam_shadow_mem_t));
+        if (!g_shadow_sram_p4[i] || !g_shadow_tcam_p4[i]) {
+            // TODO: Log error/trace
+            capri_table_rw_cleanup();
+            return CAPRI_FAIL;
+        }
+        // Initialize shadow tcam to match all ones. This makes all entries
+        // to be treated as inactive
+        memset(g_shadow_tcam_p4[i]->mem_x, 0xFF,
+               sizeof(g_shadow_tcam_p4[i]->mem_x));
+    }
+
+    return CAPRI_OK;
+}
+
 static void
-capri_zero_all_srams (hal::hal_cfg_t *hal_cfg)
+capri_p4_zero_srams (hal::hal_cfg_t *hal_cfg)
 {
     cap_pics_csr_t *pics_csr;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -753,6 +790,50 @@ capri_zero_all_srams (hal::hal_cfg_t *hal_cfg)
         pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }
+}
+
+void
+capri_p4plus_table_rw_cleanup (void)
+{
+    if (g_shadow_sram_rxdma) {
+        CAPRI_FREE(g_shadow_sram_rxdma);
+    }
+    if (g_shadow_sram_txdma) {
+        CAPRI_FREE(g_shadow_sram_txdma);
+    }
+    g_shadow_sram_rxdma = NULL;
+    g_shadow_sram_txdma = NULL;
+}
+
+static int
+capri_p4plus_shadow_init (void)
+{
+    g_shadow_sram_rxdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
+                                                                 sizeof(capri_sram_shadow_mem_t));
+    g_shadow_sram_txdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
+                                                                 sizeof(capri_sram_shadow_mem_t));
+
+    if (!g_shadow_sram_rxdma || !g_shadow_sram_txdma) {
+        // TODO: Log error/trace
+        capri_p4plus_table_rw_cleanup();
+        return CAPRI_FAIL;
+    }
+
+    return CAPRI_OK;
+}
+
+static void
+capri_p4plus_zero_srams (hal::hal_cfg_t *hal_cfg)
+{
+    cap_pics_csr_t *pics_csr;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    if (!hal_cfg ||
+        ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
+         (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW))) {
+        return;
+    }
+
     pics_csr = &cap0.rpc.pics;
     for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
         pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
@@ -768,35 +849,23 @@ capri_zero_all_srams (hal::hal_cfg_t *hal_cfg)
 int
 capri_table_rw_init (hal::hal_cfg_t *hal_cfg)
 {
+    int ret;
     // !!!!!!
     // Before making this call, it is expected that
     // in HAL init sequence, p4pd_init() is already called..
     // !!!!!!
     /* 1. Create shadow memory and init to zero */
-    for (int i = P4_GRESS_INGRESS; i <= P4_GRESS_EGRESS; i++) {
-        g_shadow_sram_p4[i] = (capri_sram_shadow_mem_t*)
-            CAPRI_CALLOC(1, sizeof(capri_sram_shadow_mem_t));
-        g_shadow_tcam_p4[i] = (capri_tcam_shadow_mem_t*)
-            CAPRI_CALLOC(1, sizeof(capri_tcam_shadow_mem_t));
-        if (!g_shadow_sram_p4[i] || !g_shadow_tcam_p4[i]) {
-            // TODO: Log error/trace
-            capri_table_rw_cleanup();
-            return CAPRI_FAIL;
-        }
-        // Initialize shadow tcam to match all ones. This makes all entries
-        // to be treated as inactive
-        memset(g_shadow_tcam_p4[i]->mem_x, 0xFF,
-               sizeof(g_shadow_tcam_p4[i]->mem_x));
+
+    ret = capri_p4_shadow_init();
+    if (ret != CAPRI_OK) {
+        return ret;
     }
-    g_shadow_sram_rxdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
-                                sizeof(capri_sram_shadow_mem_t));
-    g_shadow_sram_txdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
-                                sizeof(capri_sram_shadow_mem_t));
-    if (!g_shadow_sram_rxdma || !g_shadow_sram_txdma) {
-        // TODO: Log error/trace
-        capri_table_rw_cleanup();
-        return CAPRI_FAIL;
+
+    ret = capri_p4plus_shadow_init();
+    if (ret != CAPRI_OK) {
+        return ret;
     }
+
     // register hal cpu interface
     auto cpu_if = new cpu_hal_if("cpu", "all");
     cpu::access()->add_if("cpu_if", cpu_if);
@@ -820,33 +889,39 @@ capri_table_rw_init (hal::hal_cfg_t *hal_cfg)
     /* Initialize tcam memories */
     capri_tcam_memory_init(hal_cfg);
 
-    /* Zero all sram memories in P4 and P4+ pipelines */
-    capri_zero_all_srams(hal_cfg);
+    /* Zero all sram memories in P4 pipeline */
+    capri_p4_zero_srams(hal_cfg);
+    capri_p4plus_zero_srams(hal_cfg);
 
     return (CAPRI_OK);
 }
 
-void
-capri_table_rw_cleanup (void)
+int
+capri_p4plus_table_rw_init (hal::hal_cfg_t *hal_cfg)
 {
-    for (int i = P4_GRESS_INGRESS; i <= P4_GRESS_EGRESS; i++) {
-        if (g_shadow_sram_p4[i]) {
-            CAPRI_FREE(g_shadow_sram_p4[i]);
-        }
-        g_shadow_sram_p4[i] = NULL;
-        if (g_shadow_tcam_p4[i]) {
-            CAPRI_FREE(g_shadow_tcam_p4[i]);
-        }
-        g_shadow_tcam_p4[i] = NULL;
-    }
-    if (g_shadow_sram_rxdma) {
-        CAPRI_FREE(g_shadow_sram_rxdma);
-    }
-    if (g_shadow_sram_txdma) {
-        CAPRI_FREE(g_shadow_sram_txdma);
-    }
-    g_shadow_sram_rxdma = NULL;
-    g_shadow_sram_txdma = NULL;
+    // !!!!!!
+    // Before making this call, it is expected that
+    // in HAL init sequence, p4pd_init() is already called..
+    // !!!!!!
+
+    capri_p4plus_shadow_init();
+
+    // register hal cpu interface
+    auto cpu_if = new cpu_hal_if("cpu", "all");
+    cpu::access()->add_if("cpu_if", cpu_if);
+    cpu::access()->set_cur_if_name("cpu_if");
+
+    // Register at top level all MRL classes.
+    cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
+
+    cap0_ptr->init(0);
+    CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
+    register_chip_inst("cap0", 0, 0);
+
+    /* Zero all sram memories in P4+ pipeline */
+    // capri_p4plus_zero_srams(hal_cfg);
+
+    return (CAPRI_OK);
 }
 
 uint8_t

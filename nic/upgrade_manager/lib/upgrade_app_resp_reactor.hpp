@@ -4,7 +4,7 @@
 #define __UPGRADE_APP_RESP_REACT_H__
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
+#include "gen/proto/upgrade.delphi.hpp"
 #include "upgrade_req_react.hpp"
 
 namespace upgrade {

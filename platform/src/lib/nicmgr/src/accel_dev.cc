@@ -19,6 +19,7 @@
 #include "logger.hpp"
 #include "intrutils.h"
 #include "accel_dev.hpp"
+#include "pd_client.hpp"
 #include "hal_client.hpp"
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
@@ -36,7 +37,7 @@
     for (csr = &accel_csr_tbl[0];                           \
          csr < &accel_csr_tbl[ACCEL_RING_ID_MAX];           \
          csr++) func(csr, arg)
-         
+
 static uint32_t log_2(uint32_t x);
 static uint64_t timestamp(void);
 
@@ -144,17 +145,23 @@ accel_ring_id2name_get(uint32_t ring_handle)
 static accel_rgroup_map_t   accel_pf_rgroup_map;
 
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
-                   const struct lif_info *nicmgr_lif_info) :
+                   const struct lif_info *nicmgr_lif_info,
+                   PdClient *pd_client) :
     seq_qid_init_high(0),
     nicmgr_lif_info(nicmgr_lif_info)
 {
-    uint64_t    lif_handle;
+    // uint64_t    lif_handle;
     uint64_t    hbm_addr;
     uint32_t    hbm_size;
     uint32_t    num_keys_max;
+    uint8_t     cosA = 1;
+    uint8_t     cosB = 0;
 
     hal = hal_client;
     spec = (accel_devspec_t *)dev_spec;
+    pd = pd_client;
+
+    NIC_LOG_INFO("In accel constructor");
 
     // Locate HBM region dedicated to crypto keys
     if (hal->AllocHbmAddress(CAPRI_BARCO_KEY_DESC, &hbm_addr, &hbm_size)) {
@@ -235,11 +242,30 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         }
     }
 
-    lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info, 0, false, 0, 0, 0);
+    info.lif_id = spec->lif_id;
+    info.hw_lif_id = nicmgr_lif_info->hw_lif_id;
+    uint64_t rs = hal->LifCreate(spec->lif_id,
+                                 NULL,
+                                 qinfo,
+                                 &info);
+    if (rs != 0) {
+        NIC_LOG_ERR("Failed to create LIF");
+        return;
+    }
+
+     NIC_LOG_INFO("Accel lif created: id:{}, hw_lif_id: {}",
+                  info.lif_id, info.hw_lif_id);
+
+     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+     pd->program_qstate(qinfo, &info, coses);
+#if 0
+    lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info, 0, false, 0, 0, 0,
+                                nicmgr_lif_info->hw_lif_id);
     if (lif_handle == 0) {
         NIC_LOG_ERR("Failed to create LIF");
         return;
     }
+#endif
 
     NIC_LOG_INFO("lif{}: {} sequencer queues created",
            info.hw_lif_id, spec->seq_created_count);
@@ -454,7 +480,7 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     rsp->dev.num_lifs = 1;
     memset(&rsp->dev.lif_tbl[0], 0, sizeof(identify_lif_t));
     rsp->dev.lif_tbl[0].hw_lif_id = info.hw_lif_id;
-    rsp->dev.lif_tbl[0].hw_lif_local_dbaddr = 
+    rsp->dev.lif_tbl[0].hw_lif_local_dbaddr =
              ACCEL_LIF_LOCAL_DBADDR_SET(info.hw_lif_id, STORAGE_SEQ_QTYPE_SQ);
     rsp->dev.lif_tbl[0].hw_host_prefix = ACCEL_PHYS_ADDR_HOST_SET(1) |
                                          ACCEL_PHYS_ADDR_LIF_SET(info.hw_lif_id);
@@ -508,9 +534,9 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     }
 
     // Wait for P4+ to quiesce all sequencer queues
-    static_assert((offsetof(storage_seq_qstate_t, c_ndx) - 
+    static_assert((offsetof(storage_seq_qstate_t, c_ndx) -
                   offsetof(storage_seq_qstate_t, p_ndx)) > 0);
-    static_assert((offsetof(storage_seq_qstate_t, abort) - 
+    static_assert((offsetof(storage_seq_qstate_t, abort) -
                   offsetof(storage_seq_qstate_t, p_ndx)) > 0);
 
     auto seq_queues_quiesce_check = [this, &qid] () -> int
@@ -522,7 +548,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
             qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
             READ_MEM(qstate_addr + offsetof(storage_seq_qstate_t, p_ndx),
                      (uint8_t *)&seq_qstate.p_ndx,
-                     (offsetof(storage_seq_qstate_t, abort) - 
+                     (offsetof(storage_seq_qstate_t, abort) -
                       offsetof(storage_seq_qstate_t, p_ndx) +
                       sizeof(seq_qstate.abort)),
                       0);
@@ -540,7 +566,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     Poller poll(ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US);
     poll(seq_queues_quiesce_check);
 
-    NIC_LOG_INFO("[lif{}: last qid quiesced: {} seq_qid_init_high: {}", 
+    NIC_LOG_INFO("[lif{}: last qid quiesced: {} seq_qid_init_high: {}",
                  info.hw_lif_id, qid, seq_qid_init_high);
 
     // Reset and reenable accelerator rings
@@ -684,7 +710,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     seq_qstate.enable = cmd->enable;
     seq_qstate.abort = 0;
     seq_qstate.wring_base = cmd->wring_base;
-    if (ACCEL_PHYS_ADDR_HOST_GET(cmd->wring_base) && 
+    if (ACCEL_PHYS_ADDR_HOST_GET(cmd->wring_base) &&
         !ACCEL_PHYS_ADDR_LIF_GET(cmd->wring_base)) {
         seq_qstate.wring_base |= ACCEL_PHYS_ADDR_LIF_SET(info.hw_lif_id);
     }
@@ -826,7 +852,7 @@ Accel_PF::_DevcmdCryptoKeyUpdate(void *req, void *req_data,
     }
 
     /*
-     * This devcmd assumes that each time the caller makes a key update, 
+     * This devcmd assumes that each time the caller makes a key update,
      * all the key parts would eventually have been submitted.
      */
     key_accum->num_key_parts = std::min(key_accum->num_key_parts + 1,
@@ -848,7 +874,7 @@ Accel_PF::_DevcmdCryptoKeyUpdate(void *req, void *req_data,
 }
 
 /*
- * Populate accel_ring_tbl with info read from HW 
+ * Populate accel_ring_tbl with info read from HW
  */
 int
 Accel_PF::accel_ring_info_get_all(void)
@@ -920,7 +946,7 @@ Accel_PF::accel_ring_reset_all(void)
     /*
      * Note that model does not have support for ring reset/disablement
      * i.e., cndx would not get cleared as we would expect.
-     * Consequently, pndx should never be overwritten (particularly once 
+     * Consequently, pndx should never be overwritten (particularly once
      * the ring has been active). To avoid any issues, we only
      * write pndx conditionally.
      */
@@ -982,7 +1008,7 @@ Accel_PF::accel_ring_wait_quiesce_all(void)
     if (ret_val == 0) {
         NIC_LOG_INFO("lif{}: max requests pending {}", info.hw_lif_id,
                      max_pendings);
-        timeout_us = max_pendings ? 
+        timeout_us = max_pendings ?
                      (uint64_t)max_pendings * ACCEL_DEV_RING_OP_QUIESCE_TIME_US :
                      ACCEL_DEV_RING_OP_QUIESCE_TIME_US;
         Poller poll(std::min(timeout_us,
@@ -1116,7 +1142,7 @@ Accel_PF::accel_rgroup_rinfo_get(void)
         return ret_val;
     }
     if (num_rings < accel_pf_ring_vec.size()) {
-        NIC_LOG_ERR("lif{}: {} too few num_rings {} expected at least {}", 
+        NIC_LOG_ERR("lif{}: {} too few num_rings {} expected at least {}",
                     info.hw_lif_id, accel_pf_rgroup_name,
                     num_rings, accel_pf_ring_vec.size());
         ret_val = -1;
@@ -1169,7 +1195,7 @@ Accel_PF::accel_rgroup_rindices_get(void)
         return ret_val;
     }
     if (num_rings < accel_pf_ring_vec.size()) {
-        NIC_LOG_ERR("lif{}: {} too few num_rings {} expected at least {}", 
+        NIC_LOG_ERR("lif{}: {} too few num_rings {} expected at least {}",
                     info.hw_lif_id, accel_pf_rgroup_name,
                     num_rings, accel_pf_ring_vec.size());
         ret_val = -1;
@@ -1197,7 +1223,7 @@ Accel_PF::accel_ring_num_pendings_get(const accel_rgroup_ring_t& rgroup_ring)
         /*
          * If ring had disablement capability it would have been disabled
          * so we can consider the ring as empty.
-         */ 
+         */
         if (rgroup_ring.info.sw_enable_capable) {
             num_pendings = 0;
         }

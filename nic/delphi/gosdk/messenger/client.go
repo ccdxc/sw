@@ -7,7 +7,7 @@ import (
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 
-	"github.com/pensando/sw/nic/delphi/messanger/proto"
+	"github.com/pensando/sw/nic/delphi/messenger/proto"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
@@ -20,8 +20,8 @@ const ServerPort = 7001
 // Handler is the interface the messenger clients have to implement
 type Handler interface {
 	HandleMountResp(svcID uint16, status string,
-		objlist []*delphi_messanger.ObjectData) error
-	HandleNotify(objlist []*delphi_messanger.ObjectData) error
+		objlist []*delphi_messenger.ObjectData) error
+	HandleNotify(objlist []*delphi_messenger.ObjectData) error
 	HandleStatusResp() error
 }
 
@@ -29,8 +29,8 @@ type Handler interface {
 type Client interface {
 	Dial() error
 	IsConnected() bool
-	SendMountReq(svcName string, mounts []*delphi_messanger.MountData) error
-	SendChangeReq(objlist []*delphi_messanger.ObjectData) error
+	SendMountReq(svcName string, mounts []*delphi_messenger.MountData) error
+	SendChangeReq(objlist []*delphi_messenger.ObjectData) error
 	Close()
 }
 
@@ -70,9 +70,9 @@ func (c *client) IsConnected() bool {
 	return true
 }
 
-func (c *client) sendMessage(msgType delphi_messanger.MessageType, objlist []*delphi_messanger.ObjectData) error {
+func (c *client) sendMessage(msgType delphi_messenger.MessageType, objlist []*delphi_messenger.ObjectData) error {
 	c.msgid++
-	message := delphi_messanger.Message{
+	message := delphi_messenger.Message{
 		Type:      msgType,
 		MessageId: c.msgid,
 		Objects:   objlist,
@@ -91,9 +91,9 @@ func (c *client) sendMessage(msgType delphi_messanger.MessageType, objlist []*de
 	return nil
 }
 
-func (c *client) SendMountReq(serviceName string, mounts []*delphi_messanger.MountData) error {
+func (c *client) SendMountReq(serviceName string, mounts []*delphi_messenger.MountData) error {
 
-	mountRequest := delphi_messanger.MountReqMsg{
+	mountRequest := delphi_messenger.MountReqMsg{
 		ServiceName: serviceName,
 		ServiceID:   c.svcid,
 		Mounts:      mounts,
@@ -105,8 +105,8 @@ func (c *client) SendMountReq(serviceName string, mounts []*delphi_messanger.Mou
 	}
 
 	_, desc := descriptor.ForMessage(&mountRequest)
-	objects := []*delphi_messanger.ObjectData{
-		&delphi_messanger.ObjectData{
+	objects := []*delphi_messenger.ObjectData{
+		&delphi_messenger.ObjectData{
 			Meta: &delphi.ObjectMeta{
 				Kind: *desc.Name,
 			},
@@ -114,12 +114,12 @@ func (c *client) SendMountReq(serviceName string, mounts []*delphi_messanger.Mou
 		},
 	}
 
-	return c.sendMessage(delphi_messanger.MessageType_MountReq, objects)
+	return c.sendMessage(delphi_messenger.MessageType_MountReq, objects)
 }
 
-func (c *client) SendChangeReq(objlist []*delphi_messanger.ObjectData) error {
+func (c *client) SendChangeReq(objlist []*delphi_messenger.ObjectData) error {
 
-	return c.sendMessage(delphi_messanger.MessageType_ChangeReq, objlist)
+	return c.sendMessage(delphi_messenger.MessageType_ChangeReq, objlist)
 }
 
 func (c *client) Close() {
@@ -127,23 +127,23 @@ func (c *client) Close() {
 }
 
 // HandleMessage is responsible for halding messages received from the receiver
-func (c *client) HandleMessage(message *delphi_messanger.Message) error {
+func (c *client) HandleMessage(message *delphi_messenger.Message) error {
 	switch message.GetType() {
-	case delphi_messanger.MessageType_MountResp:
+	case delphi_messenger.MessageType_MountResp:
 		objects := message.GetObjects()
 		if len(objects) != 1 {
 			panic(len(objects))
 		}
-		var mountResp delphi_messanger.MountRespMsg
+		var mountResp delphi_messenger.MountRespMsg
 		proto.Unmarshal(objects[0].GetData(), &mountResp)
 		c.svcid = mountResp.GetServiceID()
 		c.handler.HandleMountResp(uint16(c.svcid),
 			message.GetStatus(), mountResp.GetObjects())
 
-	case delphi_messanger.MessageType_Notify:
+	case delphi_messenger.MessageType_Notify:
 		c.handler.HandleNotify(message.GetObjects())
 
-	case delphi_messanger.MessageType_StatusResp:
+	case delphi_messenger.MessageType_StatusResp:
 		c.handler.HandleStatusResp()
 
 	default:

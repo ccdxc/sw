@@ -399,6 +399,26 @@ func systemClockShowCmdHandler(cmd *cobra.Command, args []string) {
 	fmt.Printf("%s%-15d\n", "Software Clock (in nanoseconds)    :", spec.GetSoftwareClock())
 }
 
+func leftArrow() uint32 {
+	return 8592
+	//return 11013
+}
+
+func rightArrow() uint32 {
+	return 8594
+	// return 10145
+}
+
+func upArrow() uint32 {
+	return 8595
+	// return 11014
+}
+
+func downArrow() uint32 {
+	return 8593
+	// return 11015
+}
+
 func pbStatsShow(dmaIn uint32, dmaOut uint32,
 	ingIn uint32, ingOut uint32,
 	egrIn uint32, egrOut uint32,
@@ -544,10 +564,10 @@ func printUplinkNum() {
 	fmt.Print(strings.Repeat(" ", 5))
 	fmt.Print(strings.Repeat(" ", 10))
 
-	fmt.Printf("%c 0 %c", 11014, 11015) // Arrows
+	fmt.Printf("%c 0 %c", downArrow(), upArrow()) // Up arrow,  Down arrow
 	for i := 1; i < 9; i++ {
 		fmt.Print(strings.Repeat(" ", 8))
-		fmt.Printf("%c %d %c", 11014, i, 11015) // Arrows
+		fmt.Printf("%c %d %c", downArrow(), i, upArrow()) // Up arrow,  Down arrow
 	}
 	fmt.Println()
 }
@@ -584,7 +604,7 @@ func printBlock(ingIn uint32, ingOut uint32, egrIn uint32, egrOut uint32) {
 
 	fmt.Printf("%5d ", ingIn)
 
-	fmt.Printf("%c ", 10145) // Right arrow
+	fmt.Printf("%c ", rightArrow()) // Right arrow
 
 	// Ingress left bar
 	fmt.Printf("%c", 65372) // Vert. bar
@@ -595,7 +615,7 @@ func printBlock(ingIn uint32, ingOut uint32, egrIn uint32, egrOut uint32) {
 	// Ingress right bar
 	fmt.Printf("%c", 65372) // Vert. bar
 
-	fmt.Printf("%c", 10145) // Right arrow
+	fmt.Printf("%c", rightArrow()) // Right arrow
 
 	fmt.Printf(" %-5d", ingOut)
 
@@ -604,7 +624,7 @@ func printBlock(ingIn uint32, ingOut uint32, egrIn uint32, egrOut uint32) {
 
 	fmt.Printf("%5d ", egrIn)
 
-	fmt.Printf("%c ", 10145) // Right arrow
+	fmt.Printf("%c ", rightArrow()) // Right arrow
 
 	// Egress left bar
 	fmt.Printf("%c", 65372) // Vert. bar
@@ -615,7 +635,7 @@ func printBlock(ingIn uint32, ingOut uint32, egrIn uint32, egrOut uint32) {
 	// Egress right bar
 	fmt.Printf("%c", 65372) // Vert. bar
 
-	fmt.Printf("%c", 10145) // Right arrow
+	fmt.Printf("%c", rightArrow()) // Right arrow
 
 	fmt.Printf(" %-5d", egrOut)
 
@@ -665,11 +685,11 @@ func printPacketBuffer() {
 func printP4InStats(ingIn uint32, egrIn uint32) {
 	fmt.Printf("%c", 65372) // Vert. bar
 	fmt.Print(" G ")
-	fmt.Printf("%c", 65372)              // Vert. bar
-	fmt.Printf(" %c %-5d", 10145, ingIn) // -> arrow
+	fmt.Printf("%c", 65372)                     // Vert. bar
+	fmt.Printf(" %c %-5d", rightArrow(), ingIn) // -> arrow
 	fmt.Print(strings.Repeat(" ", 111))
-	fmt.Printf("%5d %c ", egrIn, 11013) // <- arrow
-	fmt.Printf("%c", 65372)             // Vert. bar
+	fmt.Printf("%5d %c ", egrIn, leftArrow()) // <- arrow
+	fmt.Printf("%c", 65372)                   // Vert. bar
 	fmt.Print(" R ")
 	fmt.Printf("%c\n", 65372) // Vert. bar
 }
@@ -677,11 +697,11 @@ func printP4InStats(ingIn uint32, egrIn uint32) {
 func printP4OutStats(ingOut uint32, egrOut uint32) {
 	fmt.Printf("%c", 65372) // Vert. bar
 	fmt.Print(" P ")
-	fmt.Printf("%c", 65372)               // Vert. bar
-	fmt.Printf(" %c %-5d", 11013, ingOut) // <- arrow
+	fmt.Printf("%c", 65372)                     // Vert. bar
+	fmt.Printf(" %c %-5d", leftArrow(), ingOut) // <- arrow
 	fmt.Print(strings.Repeat(" ", 111))
-	fmt.Printf("%5d %c ", egrOut, 10145) // -> arrow
-	fmt.Printf("%c", 65372)              // Vert. bar
+	fmt.Printf("%5d %c ", egrOut, rightArrow()) // -> arrow
+	fmt.Printf("%c", 65372)                     // Vert. bar
 	fmt.Print(" P ")
 	fmt.Printf("%c\n", 65372) // Vert. bar
 }
@@ -691,9 +711,9 @@ func printDMAStats(dmaIn uint32, dmaOut uint32) {
 	fmt.Print(strings.Repeat(" ", 3))
 	fmt.Printf("%c", 65372) // Vert. bar
 	fmt.Print(strings.Repeat(" ", 25))
-	fmt.Printf("%5d %c", dmaIn, 11015)
+	fmt.Printf("%5d %c", dmaIn, upArrow()) // Down arrow
 	fmt.Print(strings.Repeat(" ", 58))
-	fmt.Printf("%5d %c", dmaOut, 11014)
+	fmt.Printf("%5d %c", dmaOut, downArrow()) // Up arrow
 	fmt.Print(strings.Repeat(" ", 30))
 	fmt.Printf("%c", 65372) // Vert. bar
 	fmt.Print(strings.Repeat(" ", 3))

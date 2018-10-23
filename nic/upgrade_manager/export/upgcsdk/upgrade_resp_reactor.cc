@@ -64,9 +64,9 @@ void UpgRespReact::InvokeAgentHandler(delphi::objects::UpgRespPtr resp) {
 }
 
 delphi::error UpgRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
-    UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespCreate called with status {}", GetRespStr(resp));
+    //UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespCreate called with status {}", GetRespStr(resp));
     if (DeleteUpgReqSpec() == delphi::error::OK()) {
-        UPG_LOG_DEBUG("Upgrade Req Object deleted for next request");
+        //UPG_LOG_DEBUG("Upgrade Req Object deleted for next request");
     }
     InvokeAgentHandler(resp);
     return delphi::error::OK();
@@ -75,9 +75,9 @@ delphi::error UpgRespReact::OnUpgRespCreate(delphi::objects::UpgRespPtr resp) {
 delphi::error UpgRespReact::OnUpgRespVal(delphi::objects::UpgRespPtr
 resp) {
     if (GetRespStr(resp) != "")
-        UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespVal called with status: {}", GetRespStr(resp));
+        //UPG_LOG_DEBUG("UpgRespHdlr::OnUpgRespVal called with status: {}", GetRespStr(resp));
     if (DeleteUpgReqSpec() == delphi::error::OK()) {
-        UPG_LOG_DEBUG("Upgrade Req Object deleted for next request");
+        //UPG_LOG_DEBUG("Upgrade Req Object deleted for next request");
     }
     InvokeAgentHandler(resp);
     return delphi::error::OK();

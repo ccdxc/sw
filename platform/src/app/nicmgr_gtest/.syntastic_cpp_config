@@ -1,0 +1,18 @@
+-I ../../lib/nicmgr/include
+-I ../../../../nic/sdk/third-party/googletest-release-1.8.0/googletest/include
+-I ../../../../nic/build/x86_64/iris/gen/proto
+-I ../../../src/lib/hal_api/include
+-I ../../../src/lib/hal_api/trace
+-I ../../../include/common
+-I ../../../src/lib/misc/include
+-I ../../../src/lib/cfgspace/include
+-I ../../../src/lib/pciehost/include
+-I ../../../src/lib/pciehdevices/include
+-I ../../../src/lib/pciehw/include
+-I ../../../src/lib/pcieport/include
+-I ../../../drivers/linux/eth/ionic
+-I ../../../../nic/include
+-I ../../../../nic/sdk
+-I ../../../../nic/sdk/include
+-I ../../../../nic/hal/third-party/spdlog/include
+-std=c++11

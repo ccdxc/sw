@@ -70,7 +70,7 @@ SYSTEM_LIBRARIES = \
 	-ldl \
 	-l:libcrypto.so.1.0.2k \
 	-lssl \
-	-L$(NIC)/gen/x86_64/lib -lhalproto \
+	-L$(NIC)/gen/x86_64/lib -lhalproto -lev \
 	$(NIC)/hal/third-party/google/x86_64/lib/libprotobuf.so.14 \
 	-lz \
 	$(NULL)

@@ -10,6 +10,9 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "hal_client.hpp"
+#include "hal_common_client.hpp"
+#include "uplink.hpp"
+#include "hal_grpc_client.hpp"
 
 #ifdef __x86_64__
 
@@ -88,6 +91,19 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #define NICMGR_QTYPE_REQ        0
 #define NICMGR_QTYPE_RESP       1
 
+enum {
+    NICMGR_THREAD_ID_MIN           = 0,
+    NICMGR_THREAD_ID_DELPHI_CLIENT = 1,
+    NICMGR_THREAD_ID_MAX           = 2,
+};
+
+enum {
+    NICMGR_TIMER_ID_NONE                     = 0,
+    NICMGR_TIMER_ID_MIN                      = 1,
+    NICMGR_TIMER_ID_HEARTBEAT                = NICMGR_TIMER_ID_MIN,
+    NICMGR_TIMER_ID_MAX                      = 2,
+};
+
 #pragma pack(push, 1)
 struct nicmgr_req_desc {
     uint16_t lif;
@@ -135,12 +151,16 @@ enum DeviceType
  * Eth Device Spec
  */
 struct eth_devspec {
+    // Delphi Object Key
+    uint64_t dev_uuid;
     // FWD
     uint32_t uplink_id;
     uint64_t vrf_id;
     uint64_t lif_id;
+    uint32_t hw_lif_id;
     uint64_t enic_id;
     uint64_t native_l2seg_id;
+    Uplink   *uplink;
     // RES
     uint32_t rxq_count;
     uint32_t txq_count;
@@ -186,6 +206,8 @@ enum DevcmdStatus
 void invalidate_rxdma_cacheline(uint64_t addr);
 void invalidate_txdma_cacheline(uint64_t addr);
 
+class PdClient;
+
 /**
  * Base Class for devices
  */
@@ -203,7 +225,7 @@ public:
  */
 class DeviceManager {
 public:
-    DeviceManager(enum ForwardingMode fwd_mode);
+    DeviceManager(enum ForwardingMode fwd_mode, std::string hal_cfg_path, platform_mode_t platform);
     ~DeviceManager();
     int LoadConfig(std::string path);
     Device *AddDevice(enum DeviceType type, void *dev_spec);
@@ -214,10 +236,16 @@ public:
 #endif
     void DevcmdPoll();
     void AdminQPoll();
+    void DevLinkDownHandler(uint32_t port_num);
+    void DevLinkUpHandler(uint32_t port_num);
+
+    Device *GetDevice(uint64_t id);
 
 private:
     boost::property_tree::ptree spec;
     std::map<uint64_t, Device*> devices; // lif -> device
+    std::map<uint64_t, Uplink*> uplinks; // uplink_id -> Uplink
+
 
     // Service Lif Info
     struct lif_info info;
@@ -225,8 +253,12 @@ private:
 
     // HAL Info
     HalClient *hal;
+    HalCommonClient *hal_common_client;
     uint32_t lif_id;
+    // Bharat TODO: Not needed anymore as its being used for non-eth lif
     uint64_t lif_handle;
+
+    PdClient *pd;
 
     // AdminQ
     uint64_t req_ring_base;

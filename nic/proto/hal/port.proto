@@ -8,6 +8,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "kh.proto";
+import "delphi.proto";
 
 package port;
 option go_package="halproto";
@@ -69,24 +70,30 @@ enum PortFecType {
 
 // PortSpec message is used to do add/mod properties of a port
 message PortSpec {
-  // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle    = 1 [(gogoproto.moretags) = "venice:key"];
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta      Meta        = 1;
 
-  PortType          port_type        = 2 [(gogoproto.moretags) = "venice:immutable"];    // port type
-  PortAdminState    admin_state      = 3;    // admin status of the port
-  PortSpeed         port_speed       = 4;    // speed of the port
-  uint32            mac_id           = 5 [(gogoproto.moretags) = "venice:immutable"];    // mac associated with the port
-  uint32            mac_ch           = 6 [(gogoproto.moretags) = "venice:immutable"];    // mac channel associated with the port
-  uint32            num_lanes        = 7 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
-  PortFecType       fec_type         = 8;   // FEC type
-  bool              auto_neg_enable  = 9;   // Enable AutoNeg
-  uint32            debounce_time    = 10;  // Debounce time in ms
-  uint32            mtu              = 11;  // Port mtu
-  bool              mac_stats_reset  = 12;  // Reset port mac stats. Only during update
+  // key_or_handle is the port number
+  kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
+
+  PortType          port_type        = 3 [(gogoproto.moretags) = "venice:immutable"];    // port type
+  PortAdminState    admin_state      = 4;    // admin status of the port
+  PortSpeed         port_speed       = 5;    // speed of the port
+  uint32            mac_id           = 6 [(gogoproto.moretags) = "venice:immutable"];    // mac associated with the port
+  uint32            mac_ch           = 7 [(gogoproto.moretags) = "venice:immutable"];    // mac channel associated with the port
+  uint32            num_lanes        = 8 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
+  PortFecType       fec_type         = 9;   // FEC type
+  bool              auto_neg_enable  = 10;   // Enable AutoNeg
+  uint32            debounce_time    = 11;   // Debounce time in ms
+  uint32            mtu              = 12;   // port mtu
+  bool              mac_stats_reset  = 13;  // Reset port mac stats. Only during update
 }
 
 message PortStatus {
-    PortOperStatus   oper_status  = 1;    // operational state of port
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta      Meta        = 1;
+    kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
+    PortOperStatus    oper_status      = 3;    // operational state of port
 }
 
 //------------------------------------------------------------------------------

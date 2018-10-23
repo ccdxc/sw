@@ -34,8 +34,10 @@ uint16_t base_mac = 0x0a0a;
 static int poll_enabled;
 static DeviceManager *devmgr;
 static string config_file;
+static string hal_cfg_path = "/nic/conf/";
 enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
-
+platform_mode_t platform = PLATFORM_MODE_NONE;
+extern void nicmgr_do_client_registration(void);
 
 static void
 polling_sighand(int s)
@@ -126,7 +128,7 @@ loop()
         exit(1);
     }
 
-    devmgr = new DeviceManager(fwd_mode);
+    devmgr = new DeviceManager(fwd_mode, hal_cfg_path, platform);
     devmgr->LoadConfig(config_file);
 
     // Register for PCI events
@@ -197,13 +199,31 @@ int main(int argc, char *argv[])
 
     poll_enabled = 1;
 
-    while ((opt = getopt(argc, argv, "c:sp")) != -1) {
+    while ((opt = getopt(argc, argv, "c:sp:h:")) != -1) {
         switch (opt) {
         case 'c':
             config_file = string(optarg);
             break;
         case 's':
             fwd_mode = FWD_MODE_SMART_NIC;
+            break;
+        case 'h':
+            hal_cfg_path = string(optarg);
+            break;
+        case 'p':
+            if (string(optarg) == "sim") {
+                platform = PLATFORM_MODE_SIM;
+            } else if (string(optarg) == "hw") {
+                platform = PLATFORM_MODE_HW;
+            } else if (string(optarg) == "haps") {
+                platform = PLATFORM_MODE_HAPS;
+            } else if (string(optarg) == "rtl") {
+                platform = PLATFORM_MODE_RTL;
+            } else if (string(optarg) == "mock") {
+                platform = PLATFORM_MODE_MOCK;
+            } else  {
+                platform = PLATFORM_MODE_NONE;
+            }
             break;
         default:
             exit(1);
@@ -220,6 +240,7 @@ int main(int argc, char *argv[])
     osigquit = signal(SIGQUIT, polling_sighand);
     osigusr1 = signal(SIGUSR1, sigusr1_handler);
 
+    nicmgr_do_client_registration();
     loop();
 
     signal(SIGINT,  osigint);
@@ -229,3 +250,4 @@ int main(int argc, char *argv[])
 
     return (0);
 }
+

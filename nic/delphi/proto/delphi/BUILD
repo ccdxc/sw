@@ -19,11 +19,12 @@ cc_library(
     name = "delphi_cc_proto",
     srcs = [
         "delphi.pb.cc",
+    ],
+    hdrs = [
         "delphi.pb.h",
     ],
     deps = [
         "//nic/hal/third-party:libprotobuf",
-	"//nic/hal/third-party:google_includes",
+	    "//nic/hal/third-party:google_includes",
     ]
 )
-

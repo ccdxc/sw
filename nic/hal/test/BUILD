@@ -46,6 +46,8 @@ cc_binary(
         "//nic:grpc_includes",
         "//nic:google_includes",
         "//nic:libprotobuf",
+        "//nic/delphi/proto/delphi:delphi_cc_proto",
+        "//nic/proto/hal:hal_delphi_gen",
         "@sdk//obj:sdk_logger",
     ],
     linkopts = [
@@ -67,6 +69,9 @@ cc_binary(
         "//nic:spdlog",
         "@sdk//obj:sdk_thread",
         "//nic:gen_proto_includes",
+        "//nic/delphi/proto/delphi:delphi_cc_proto",
+        "//nic/proto/hal:hal_delphi_gen",
+        "//nic/delphi/sdk",
         "//nic:halproto",
         "//nic:grpc",
         "//nic:grpc_includes",
@@ -81,7 +86,8 @@ cc_binary(
         "-pthread",
         "-lz",
         "-lm",
-        "-ldl"
+        "-ldl",
+        "-rdynamic",
     ],
 )
 
@@ -100,6 +106,8 @@ cc_binary(
         "//nic:grpc_includes",
         "//nic:google_includes",
         "//nic:libprotobuf",
+        "//nic/delphi/proto/delphi:delphi_cc_proto",
+        "//nic/proto/hal:hal_delphi_gen",
         "@sdk//obj:sdk_logger",
     ],
     linkopts = [

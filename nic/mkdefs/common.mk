@@ -18,7 +18,8 @@ export THIRD_PARTY_INCLUDES := \
        ${TOPDIR}/nic/third-party/gflags/include \
        ${TOPDIR}/nic/hal/third-party/grpc/include \
        ${TOPDIR}/nic/hal/third-party/google/include \
-       ${TOPDIR}/nic/hal/third-party/openssl/include
+       ${TOPDIR}/nic/hal/third-party/openssl/include \
+       ${TOPDIR}/nic/third-party/libev/include
 
 export NIC_CSR_DEFINES := -DEXCLUDE_PER_FIELD_CNTRL \
     -DCAPRI_HAL -DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024 -DBOOST_EXCEPTION_DISABLE \
@@ -62,13 +63,13 @@ export NIC_CSR_INCS := ${TOPDIR}/nic/asic/capri/model/cap_top \
 
 export NIC_COMMON_LDLIBS_x86_64     := zmq
 export NIC_COMMON_LDLIBS_aarch64    :=
-export NIC_COMMON_LDLIBS            := pthread z m rt Judy dl ${NIC_COMMON_LDLIBS_${ARCH}}
+export NIC_COMMON_LDLIBS            := pthread z m rt Judy dl ev ${NIC_COMMON_LDLIBS_${ARCH}}
 
 export NIC_COMMON_FLAGS := -pthread -rdynamic
 
 export NIC_SDK_SOLIBS   := print list slab shmmgr mmgr sdkpal \
     ht indexer logger thread utils periodic twheel directmap \
-    hash hbmhash tcam timerfd catalog
+    hash hbmhash tcam timerfd catalog sdkplatformutils 
 
 export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
                                 cfg_plugin_aclqos \
@@ -164,7 +165,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_HAL_PD_SOLIBS} \
                                ${NIC_LINKMGR_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
-                               agent_api
+                               agent_api delphisdk haldelphi halsysmgr
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \

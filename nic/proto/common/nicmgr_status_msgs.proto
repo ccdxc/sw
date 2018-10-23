@@ -1,0 +1,24 @@
+
+syntax = "proto3";
+package nicmgr_status_msgs;
+
+import "delphi.proto";
+
+//Delphi object to be saved upon completion of HostDown by NicMgr
+message EthDeviceHostDownStatusMsg {
+    delphi.ObjectMeta          Meta = 1;
+    uint64                     Key = 2; //uuid from json ??
+    uint32                     port_num = 3;
+    //Add more here - for now - only port_num
+}
+
+//Delphi object to be saved upon completion of HostUp by NicMgr
+message EthDeviceHostUpStatusMsg {
+    delphi.ObjectMeta          Meta = 1;
+    uint64                     Key = 2; //uuid from json ??
+    uint32                     port_num = 3;
+    //Add more here - for now - only port_num
+}
+
+    
+

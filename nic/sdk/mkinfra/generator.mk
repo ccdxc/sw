@@ -31,6 +31,7 @@ ifeq "$${${1}_PIPELINE}" "${PIPELINE}"
     $$(info Pre-Requisites   MODULE_EXPORT_LIBS   = $${${1}_EXPORT_LIBS})
     $$(info Pre-Requisites   MODULE_EXPORT_BINS   = $${${1}_EXPORT_BINS})
     $$(info GCC Excl. Flags  MODULE_EXCLUDE_FLAGS = $${${1}_EXCLUDE_FLAGS})
+    $$(info Gen. Dir         MODULE_GEN_DIR       = $${${1}_GEN_DIR})
     $$(info Derived Information:)
     $$(info --------------------)
     $$(info Module GID           = $${${1}_MODULE_GID})
@@ -77,6 +78,7 @@ define INCLUDE_MODULEMK
     MODULE_CLEAN_DIRS           :=
     MODULE_BIN_DIR              :=
     MODULE_LIBS                 :=
+    MODULE_GEN_DIR              :=
 
     # MODULE_DIR can be used by module.mk to know their current
     # directory.
@@ -112,9 +114,9 @@ define INCLUDE_MODULEMK
     $${TGID}_DEPS           := $${MODULE_DEPS}
     $${TGID}_PREREQS        := $$(join $$(addprefix ${BLD_OUT_DIR}/,$$(subst .,_,$${MODULE_PREREQS})),\
                                        $$(addprefix /,$${MODULE_PREREQS}))
+    $${TGID}_GEN_DIR        := $${MODULE_GEN_DIR}
 
     $${TGID}_EXCLUDE_FLAGS       := $${MODULE_EXCLUDE_FLAGS}
-    $${TGID}_PROTOC_GOFAST_OPTS  := $${MODULE_PROTOC_GOFAST_OPTS}
 
     # Set the common flags based on the target type
     $${TGID}_FLAGS := $${MODULE_FLAGS}
@@ -219,6 +221,9 @@ define PROCESS_MODULEMK_OBJS
             ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_gobj,$$(basename $${${1}_SRCS})))
 #            ${1}_OBJS += $${${1}_BLD_OUT_DIR}/.proto_goobj
         endif
+		ifeq "$$(filter DELPHI,$${${1}_GEN_TYPES})" "DELPHI"
+            ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_delphiobj,$$(basename $${${1}_SRCS})))
+        endif
     else ifeq "$${${1}_RECIPE_TYPE}" "MOCKGEN"
         ${1}_OBJS   += $$(patsubst %.pb.go,%_mock.go,$${${1}_SRCS})
     else ifeq "$${${1}_RECIPE_TYPE}" "GOIMPORTS"
@@ -236,7 +241,7 @@ define PROCESS_MODULEMK_OBJS
     ${1}_GXX_FLAGS   = $$(filter-out $${${1}_EXCLUDE_FLAGS}, ${CMD_GXX_FLAGS})
     ${1}_GPP_FLAGS   = $$(filter-out $${${1}_EXCLUDE_FLAGS}, ${CMD_GPP_FLAGS})
 endef
-  
+
 define PROCESS_MODULEMK_DEPS
     ifeq "$${${1}_RECIPE_TYPE}" "TENJIN"
         ${1}_DEPS   += $${${1}_GENERATOR} $${${1}_TEMPLATE} $${${1}_ARGS} $${${1}_MODULE_MK}

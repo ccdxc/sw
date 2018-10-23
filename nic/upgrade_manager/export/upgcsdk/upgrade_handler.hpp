@@ -18,6 +18,11 @@ typedef enum {
 typedef struct HdlrResp_ {
     HdlrRespCode     resp;
     string           errStr;
+    HdlrResp_() {}
+    HdlrResp_(HdlrRespCode code, string error) {
+        resp = code;
+        errStr = error;
+    }
 } HdlrResp;
 
 class UpgHandler {

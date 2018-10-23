@@ -507,7 +507,7 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
     if (!ctxt) {
         return HAL_RET_INVALID_ARG;
     }
-    //HAL_TRACE_DEBUG("cpupkt:Starting packet poll for queue: {}", ctxt->rx.num_queues);
+    // HAL_TRACE_DEBUG("cpupkt:Starting packet poll for queue: {}", ctxt->rx.num_queues);
     uint64_t value, descr_addr;
     cpupkt_qinst_info_t* qinst_info = NULL;
 
@@ -557,7 +557,7 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
             } else {
                 ret = cpupkt_descr_free(descr_addr);
                 if(ret != HAL_RET_OK) {
-                    qinst_info->ctr.rx_descr_free_err++; 
+                    qinst_info->ctr.rx_descr_free_err++;
                     HAL_TRACE_ERR("Failed to free rx descr");
                 }
             }

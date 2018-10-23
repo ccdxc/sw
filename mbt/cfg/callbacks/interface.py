@@ -166,7 +166,7 @@ def PreUpdateCb(data, req_spec, resp_spec):
         req_spec.request[0].if_uplink_pc_info.native_l2segment_id = 0
     elif req_spec.request[0].type == interface_pb2.IF_TYPE_ENIC:
         req_spec.request[0].if_enic_info.enic_type = interface_pb2.IF_ENIC_TYPE_CLASSIC
-        req_spec.request[0].if_enic_info.classic_enic_info.native_l2segment_handle = 0
+        req_spec.request[0].if_enic_info.classic_enic_info.native_l2segment_id = 0
         # Classic Enic's with the same L2Segments are not allowed.
         # So create a new object.
         l2seg_key = create_and_get_l2seg_key()

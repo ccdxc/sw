@@ -7,7 +7,7 @@
 #include <sys/types.h>
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/delphi/sdk/proto/client.delphi.hpp"
+#include "gen/proto/client.delphi.hpp"
 
 #include "pipe_t.hpp"
 #include "logger.hpp"

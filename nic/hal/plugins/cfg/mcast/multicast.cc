@@ -377,7 +377,7 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
 
         hash_table[index] = pi_if->hal_handle;
 
-        if (!is_forwarding_mode_smart_nic()) {
+        if (!is_forwarding_mode_smart_switch()) {
             if (pi_if->if_type != intf::IF_TYPE_ENIC) {
                 HAL_TRACE_ERR("Only Enics allowed for OIFs when not "
                               "in smart nic mode");
@@ -616,6 +616,7 @@ hal_ret_t multicastentry_create(MulticastEntrySpec& spec,
     l2seg_t                     *l2seg = NULL;
 
     hal_api_trace(" API Begin: mc entry create ");
+    proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_mc_entry_create(spec, rsp);

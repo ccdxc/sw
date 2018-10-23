@@ -6,13 +6,13 @@
 #include <ev++.h>
 
 #include "nic/delphi/utils/utils.hpp"
-#include "nic/delphi/messanger/messanger_server.hpp"
+#include "nic/delphi/messenger/messenger_server.hpp"
 #include "nic/delphi/shm/shm.hpp"
 
 namespace delphi {
 
 using namespace std;
-using namespace delphi::messanger;
+using namespace delphi::messenger;
 
 // an object sync is triggered at sync period
 #define SYNC_PERIOD 0.005
@@ -53,7 +53,7 @@ public:
 typedef std::shared_ptr<MountPoint> MountPointPtr;
 
 // DelphiServer is the server instance
-class DelphiServer : public messanger::ServerHandler, public std::enable_shared_from_this<DelphiServer> {
+class DelphiServer : public messenger::ServerHandler, public std::enable_shared_from_this<DelphiServer> {
 public:
         DelphiServer();                         // constructor
         error Start();                          // start delphi server
@@ -61,7 +61,7 @@ public:
         DbSubtreePtr GetSubtree(string kind);   // get a subtree of objects for a kind
         vector<ServiceInfoPtr> ListService();   // list all registered service
 
-        // required by messanger::ServerHandler
+        // required by messenger::ServerHandler
         error HandleChangeReq(int sockCtx, vector<ObjectData *> req, vector<ObjectData *> *resp);
         error HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsgPtr resp);
         error HandleSocketClosed(int sockCtx);
@@ -81,7 +81,7 @@ private:
     error          requestMount(string kind, string key, string svcName, MountMode mode);
     error          releaseMount(string mountPath, string svcName);
 
-    MessangerServerPtr             msgServer;      // messanger server
+    MessangerServerPtr             msgServer;      // messenger server
     map<string, DbSubtreePtr>      subtrees;       // subtree per object kind
     map<string, ObjectData *>      syncQueue;      // sync queue of pending objects
     ev::timer                      syncTimer;      // sync timer

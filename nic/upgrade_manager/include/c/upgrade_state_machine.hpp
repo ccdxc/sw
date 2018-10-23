@@ -3,7 +3,7 @@
 #ifndef __UPGRADE_STATE_MACHINE_H__
 #define __UPGRADE_STATE_MACHINE_H__
 
-#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
+#include "gen/proto/upgrade.delphi.hpp"
 #include "upgrade_ctx.hpp"
 #include "upgrade_pre_state_handlers.hpp"
 #include "upgrade_post_state_handlers.hpp"

@@ -3,7 +3,7 @@
 #ifndef __UPGRADE_METADATA_H__
 #define __UPGRADE_METADATA_H__
 
-#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
+#include "gen/proto/upgrade.delphi.hpp"
 #include "upgrade_state_machine.hpp"
 
 namespace upgrade {

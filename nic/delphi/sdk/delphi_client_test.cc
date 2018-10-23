@@ -6,7 +6,6 @@
 
 #include "nic/delphi/utils/log.hpp"
 #include "nic/delphi/sdk/delphi_client.hpp"
-#include "nic/delphi/messanger/proto/types.pb.h"
 #include "nic/delphi/sdk/delphi_utest.hpp"
 
 namespace {
@@ -16,7 +15,7 @@ using namespace delphi;
 class TestReactor;
 typedef std::shared_ptr<TestReactor> TestReactorPtr;
 
-class TestObject : public BaseObject, public messanger::TestObject, public enable_shared_from_this<TestObject> {
+class TestObject : public BaseObject, public messenger::TestObject, public enable_shared_from_this<TestObject> {
 private:
 public:
     TestObject(const string &data) {

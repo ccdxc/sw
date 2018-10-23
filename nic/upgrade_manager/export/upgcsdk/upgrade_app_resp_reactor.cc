@@ -12,7 +12,7 @@ namespace upgrade {
 using namespace std;
 
 delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
-    UPG_LOG_DEBUG("UpgAppRespHdlr::OnUpgAppRespCreate called for {}", resp->key());
+    //UPG_LOG_DEBUG("UpgAppRespHdlr::OnUpgAppRespCreate called for {}", resp->key());
     return delphi::error::OK();
 }
 
@@ -146,7 +146,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr
 resp) {
     auto upgType = ctx.upgType;
     if (GetAppRespStr(resp, upgType) != "")
-        UPG_LOG_DEBUG("UpgAppRespHdlr::OnUpgAppRespVal called for {} with status: {}", resp->key(), GetAppRespStr(resp, upgType));
+        //UPG_LOG_DEBUG("UpgAppRespHdlr::OnUpgAppRespVal called for {} with status: {}", resp->key(), GetAppRespStr(resp, upgType));
     InvokeAgentHandler(resp, upgType);
     return delphi::error::OK();
 }

@@ -22,7 +22,16 @@ pd_lif_copy_asicpd_params (asicpd_scheduler_lif_params_t *out, pd_lif_t *lif_pd)
     out->lif_id = lif_get_lif_id((lif_t *)lif_pd->pi_lif),
     out->tx_sched_table_offset = lif_pd->tx_sched_table_offset;
     out->tx_sched_num_table_entries = lif_pd->tx_sched_num_table_entries;
-    out->total_qcount = lif_get_total_qcount(lif_pd->hw_lif_id);
+    if ((g_hal_cfg.platform_mode != HAL_PLATFORM_MODE_HAPS &&
+        g_hal_cfg.platform_mode != HAL_PLATFORM_MODE_HW) ||
+        (lif_pd->hw_lif_id >= SERVICE_LIF_START && lif_pd->hw_lif_id < SERVICE_LIF_END)) {
+        out->total_qcount = lif_get_total_qcount(lif_pd->hw_lif_id);
+    } else {
+        // For hw take it from pi lif
+        out->total_qcount = ((lif_t *)lif_pd->pi_lif)->qcount;
+        HAL_TRACE_DEBUG("lif_hw_id: {} Lif's Qcount: {}",
+                        lif_pd->hw_lif_id, out->total_qcount);
+    }
     out->hw_lif_id = lif_pd->hw_lif_id;
     out->cos_bmp = ((lif_t *)lif_pd->pi_lif)->qos_info.cos_bmp;
     return;
@@ -795,7 +804,7 @@ lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif
     rx_policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER_ACTION);
     HAL_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
 
-    ret = hal_pd_stats_addr_get(P4TBL_ID_RX_POLICER_ACTION, 
+    ret = hal_pd_stats_addr_get(P4TBL_ID_RX_POLICER_ACTION,
                                 pd_lif->hw_lif_id, &stats_addr);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error getting stats address for lif {} hw-id {}, ret {}",
@@ -1098,7 +1107,7 @@ pd_lif_stats_get (pd_func_args_t *pd_func_args)
     LifGetResponse          *rsp = args->rsp;
 
     ret = lif_pd_populate_rx_policer_stats(
-                        rsp->mutable_stats()->mutable_rx_stats()->mutable_policer_stats(), 
+                        rsp->mutable_stats()->mutable_rx_stats()->mutable_policer_stats(),
                         pd_lif);
 
     return ret;

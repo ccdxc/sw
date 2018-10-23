@@ -12,6 +12,8 @@ nic/build/aarch64/iris/gen/p4gen/p4/p4pd/capri_p4_table_map.json    /nic/conf/ir
 nic/build/aarch64/iris/gen/p4gen/common_rxdma_actions/p4pd/capri_p4_table_map.json /nic/conf/iris/capri_p4_rxdma_table_map.json
 nic/build/aarch64/iris/gen/p4gen/common_txdma_actions/p4pd/capri_p4_table_map.json /nic/conf/iris/capri_p4_txdma_table_map.json
 
+nic/build/aarch64/iris/bin/sysmgr                                   /nic/bin/
+nic/build/aarch64/iris/bin/upgrade                                  /nic/bin/
 nic/build/aarch64/iris/bin/hal                                      /nic/bin/
 # linkmgr debug CLIs
 nic/build/aarch64/iris/bin/port_client                              /nic/bin/
@@ -24,6 +26,10 @@ nic/build/aarch64/iris/bin/hal_test                                 /nic/bin/
 nic/build/aarch64/iris/bin/hal_access                               /nic/bin/
 nic/sdk/third-party/avago/aapl-2.6.6/build/aarch64/bin/aapl         /nic/bin/
 
+nic/build/aarch64/iris/lib/libproto.so                              /nic/lib/
+nic/build/aarch64/iris/lib/libcommonproto.so                        /nic/lib/
+nic/build/aarch64/iris/lib/libnicmgrproto.so                        /nic/lib/
+nic/build/aarch64/iris/lib/libhal_mock.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libpacket_parser.so                      /nic/lib/
 nic/build/aarch64/iris/lib/libAAPL.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libagent_api.so                          /nic/lib/
@@ -45,6 +51,9 @@ nic/build/aarch64/iris/lib/libhalproto.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libhal_src.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libhal_svc_gen.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libhal_svc.so                            /nic/lib/
+nic/build/aarch64/iris/lib/libhaldelphi.so                          /nic/lib/
+nic/build/aarch64/iris/lib/libhalsysmgr.so                          /nic/lib/
+nic/build/aarch64/iris/lib/libhalupgrade.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libhash.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libhbmhash.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libheartbeat.so                          /nic/lib/
@@ -76,9 +85,9 @@ nic/build/aarch64/iris/lib/libplugin_sfw*.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libplugin_telemetry.so                   /nic/lib/
 nic/build/aarch64/iris/lib/libprint.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libprotobuf.so.14                        /nic/lib/
-nic/build/aarch64/iris/lib/libsdkcapri.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libsdklinkmgr.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libsdkpal.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libsdkplatformutils.so                   /nic/lib/
 nic/build/aarch64/iris/lib/libshmmgr.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libsknobs.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libslab.so                               /nic/lib/
@@ -100,10 +109,14 @@ nic/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so        /nic/lib/
 nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1               /nic/lib/
 nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1            /nic/lib/
 nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14            /nic/lib/
-nic/third-party/libev/aarch64/lib/libev.so.4.0.0                    /nic/lib/
+nic/third-party/libev/aarch64/lib/libev.so.4                        /nic/lib/
+nic/third-party/libev/aarch64/lib/libev.so                          /nic/lib/
 nic/hal/third-party/sknobs/aarch64/lib/libsknobs.so                 /nic/lib/
 nic/hal/third-party/judy/aarch64/lib/libJudy.so.1                   /nic/lib/
-nic/build/aarch64/iris/lib/libhaltestutils.so                        /nic/lib/
+nic/build/aarch64/iris/lib/libhaltestutils.so                       /nic/lib/
+nic/build/aarch64/iris/lib/libdelphi*.so                            /nic/lib/
+nic/build/aarch64/iris/lib/libsysmgr.so                             /nic/lib/
+nic/build/aarch64/iris/lib/*upgrade*                                /nic/lib/
 
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom                 /nic/conf/fw/
 nic/e2etests/go/agent/configs/golden                                /nic/conf/

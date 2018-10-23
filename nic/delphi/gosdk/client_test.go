@@ -43,9 +43,6 @@ func (s *service) OnInterfaceSpecUpdate(obj *InterfaceSpec) {
 }
 
 func TestClientBasic(t *testing.T) {
-	h := NewHub()
-	h.Start()
-
 	s1 := &service{
 		mountDone:       make(chan struct{}),
 		gotCreateNotify: make(chan struct{}),
@@ -53,10 +50,20 @@ func TestClientBasic(t *testing.T) {
 		gotDeleteNotify: make(chan struct{}),
 		name:            "test1",
 	}
+
 	c1, err := NewClient(s1)
 	if err != nil {
 		t.Errorf("NewClient(): %s", err)
 	}
+	// verify cant connect without the hub
+	err = c1.Dial()
+	if err == nil {
+		t.Errorf("Dial suceeded without the hub")
+	}
+
+	h := NewHub()
+	h.Start()
+
 	err = c1.Dial()
 	if err != nil {
 		t.Errorf("Dial(): %s", err)
@@ -79,6 +86,8 @@ func TestClientBasic(t *testing.T) {
 	}
 	c2, err := NewClient(s2)
 	c2.MountKind("Interface", delphi.MountMode_ReadMode)
+	c2.MountKindKey("Interface", "Intf:20", delphi.MountMode_ReadMode)
+
 	err = c2.Dial()
 	if err != nil {
 		t.Errorf("Dial(): %s", err)

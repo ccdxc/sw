@@ -39,6 +39,10 @@ public:
         delphi::ObjectMeta *meta = this->mutable_meta();
         meta->set_kind(this->GetDescriptor()->name());
     }
+	{{.GetName}}(const {{$pkgName}}::{{.GetName}}& arg) : {{$pkgName}}::{{.GetName}}(arg) {
+        delphi::ObjectMeta *meta = this->mutable_meta();
+        meta->set_kind(this->GetDescriptor()->name());
+    }
     {{.GetName}}(const {{.GetName}}& arg) {
         this->CopyFrom(arg);
     }
@@ -450,7 +454,7 @@ public: \
             reactor_class##var_->On{{.GetName}}Create(*obj); \
         } \
     } \
-private: \
+\
     std::shared_ptr<reactor_class>    reactor_class##var_; \
     delphi::SdkPtr                    sdk_; \
 }; \

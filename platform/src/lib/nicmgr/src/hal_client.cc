@@ -429,7 +429,7 @@ HalClient::EnicCreate(uint64_t enic_id,
     spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
     spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
-    spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_id2handle[native_l2seg_id]);
+    spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_id(native_l2seg_id);
     for (auto it = nonnative_l2seg_ids.cbegin(); it != nonnative_l2seg_ids.cend(); it++) {
         l2seg_kh = spec->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
         l2seg_kh->set_segment_id(*it);
@@ -745,13 +745,38 @@ HalClient::LifGet(uint64_t lif_id, struct lif_info *lif_info)
 
 uint64_t
 HalClient::LifCreate(uint64_t lif_id,
+                     Uplink *uplink,
+                     struct queue_info *queue_info,
+                     struct lif_info *lif_info)
+{
+    hal_lif_info_t  hal_lif_info = {0};
+
+    hal_lif_info.id = lif_id;
+    hal_lif_info.pinned_uplink = uplink;
+    hal_lif_info.hw_lif_id = lif_info->hw_lif_id;
+    memcpy(hal_lif_info.queue_info, queue_info, sizeof(hal_lif_info.queue_info));
+
+    EthLif *eth_lif = EthLif::Factory(&hal_lif_info);
+    lif_info->hw_lif_id = eth_lif->GetLif()->GetHwLifId();
+
+    eth_lif_map[lif_id] = eth_lif;
+
+    NIC_FUNC_INFO("Lif Created with id: {}, hw_lif_id: {}",
+                  lif_id, lif_info->hw_lif_id);
+
+    return 0;
+}
+
+uint64_t
+HalClient::LifCreate(uint64_t lif_id,
                      struct queue_info *queue_info,
                      struct lif_info *lif_info,
                      uint64_t uplink_id,
                      bool enable_rdma,
                      uint32_t max_pt_entries,
                      uint32_t max_keys,
-                     uint32_t max_ahs)
+                     uint32_t max_ahs,
+                     uint32_t hw_lif_id)
 {
     LifSpec              *spec;
     LifResponse          rsp;
@@ -776,6 +801,7 @@ HalClient::LifCreate(uint64_t lif_id,
     spec->set_rdma_max_pt_entries(max_pt_entries);
     spec->set_rdma_max_keys(max_keys);
     spec->set_rdma_max_ahs(max_ahs);
+    spec->set_hw_lif_id(hw_lif_id);
 
     for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
         auto & qinfo = queue_info[i];
@@ -829,6 +855,21 @@ HalClient::LifCreate(uint64_t lif_id,
     return 0;
 }
 
+uint64_t
+HalClient::LifDelete(uint64_t lif_id)
+{
+    EthLif *eth_lif = eth_lif_map[lif_id];
+    if (eth_lif == NULL) {
+        NIC_FUNC_ERR("Unable to find lif: {} to delete", lif_id);
+        return 1;
+    }
+    EthLif::Destroy(eth_lif);
+
+    NIC_FUNC_INFO("Lif Deleted with id: {}", lif_id);
+    return 0;
+}
+
+#if 0
 int
 HalClient::LifDelete(uint64_t lif_id)
 {
@@ -857,7 +898,25 @@ HalClient::LifDelete(uint64_t lif_id)
 
     return -1;
 }
+#endif
 
+int
+HalClient::LifSetVlanOffload(uint64_t lif_id, bool strip, bool insert)
+{
+    EthLif *eth_lif = eth_lif_map[lif_id];
+    if (eth_lif == NULL) {
+        NIC_FUNC_ERR("Unable to find lif: {} to delete", lif_id);
+        return 1;
+    }
+
+    eth_lif->UpdateVlanStripEn(strip);
+    eth_lif->UpdateVlanInsertEn(insert);
+
+    NIC_FUNC_INFO("Lif Update strip: {}, insert: {}", lif_id, strip, insert);
+    return 0;
+}
+
+#if 0
 int
 HalClient::LifSetVlanOffload(uint64_t lif_id, bool strip, bool insert)
 {
@@ -895,7 +954,26 @@ HalClient::LifSetVlanOffload(uint64_t lif_id, bool strip, bool insert)
 
     return -1;
 }
+#endif
 
+int
+HalClient::LifSetFilterMode(uint64_t lif_id, bool bcast, bool all_mc, bool promisc)
+{
+    EthLif *eth_lif = eth_lif_map[lif_id];
+    if (eth_lif == NULL) {
+        NIC_FUNC_ERR("Unable to find lif: {} to delete", lif_id);
+        return 1;
+    }
+
+    eth_lif->UpdateReceiveBroadcast(bcast);
+    eth_lif->UpdateReceiveAllMulticast(all_mc);
+    eth_lif->UpdateReceivePromiscuous(promisc);
+
+    NIC_FUNC_INFO("Lif Update bcast: {}, all_mc: {}, prom: {}",
+                  lif_id, bcast, all_mc, promisc);
+    return 0;
+}
+#if 0
 int
 HalClient::LifSetFilterMode(uint64_t lif_id, bool bcast, bool all_mc, bool promisc)
 {
@@ -938,6 +1016,7 @@ HalClient::LifSetFilterMode(uint64_t lif_id, bool bcast, bool all_mc, bool promi
 
     return -1;
 }
+#endif
 
 int
 HalClient::LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string table)
@@ -1375,7 +1454,7 @@ int HalClient::CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t leng
     ClientContext context;
     RdmaMemRegRequestMsg request;
     RdmaMemRegResponseMsg response;
-    
+
     RdmaMemRegSpec *spec = request.add_request();
     spec->set_hw_lif_id(lif_id);
     spec->set_pd(pd);
@@ -1432,7 +1511,7 @@ int HalClient::CreateCQ(uint32_t lif_id,
     for (int i = 0; i < (int)pt_size; i++) {
         spec->add_cq_va_pages_phy_addr(pt_table[i]);
     }
-    
+
     Status status = rdma_stub_->RdmaCqCreate(&context, request, &response);
     if (status.ok()) {
         auto rsp = response.response(0);
@@ -1835,7 +1914,7 @@ HalClient::RDMACreateCQ(uint64_t lif_id,
     cq_spec->set_eq_id(eq_num);
     cq_spec->add_cq_va_pages_phy_addr(pa);
     cq_spec->set_host_addr(1);
-    
+
     status = rdma_stub_->RdmaCqCreate(&context, cq_request, &cq_response);
     if (status.ok()) {
         RdmaCqResponse rsp = cq_response.response(0);

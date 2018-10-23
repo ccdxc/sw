@@ -52,8 +52,10 @@ program_info::init(const char *program_info_file, shmmgr *mmgr)
                 return false;
             }
             sinfo.addr = std::stol(addr);
-            symbol_map_[symbol] = sinfo;
-            SDK_TRACE_DEBUG("added symbol %s to map", (program + ":" + symbol).c_str());
+            symbol_map_[(program + ":" + symbol)] = sinfo;
+            SDK_TRACE_DEBUG("added symbol %s to map with addr: %lu",
+                            (program + ":" + symbol).c_str(),
+                            sinfo.addr);
         }
     }
 

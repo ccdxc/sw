@@ -4,22 +4,22 @@
 #define _DELPHI_EXAMPLE_STATS_H_
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/delphi/example/example_stats.delphi.hpp"
+#include "gen/proto/example_stats.delphi.hpp"
 
 namespace example {
 using namespace delphi;
 
-class InterfaceStatsMgr {
+class ExampleStatsMgr {
 public:
-    InterfaceStatsMgr();
+    ExampleStatsMgr();
     error PublishStats();
 
 private:
-    delphi::objects::InterfaceMetricsPtr if_stats_;
+    delphi::objects::ExampleMetricsPtr if_stats_;
     ev::timer          statsTimer;
     void statsTimerHandler(ev::timer &watcher, int revents);
 };
-typedef std::shared_ptr<InterfaceStatsMgr> InterfaceStatsMgrPtr;
+typedef std::shared_ptr<ExampleStatsMgr> ExampleStatsMgrPtr;
 
 } // namespace example
 

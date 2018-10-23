@@ -2,6 +2,8 @@
 targets:
   build_x86-64: [ "make", "all", "test" ]
   build_aarch64: [ "make", "BUILD_ARCHES=aarch64", "all", "test" ]
+  ##nicmgr_gtest: [ "sh", "-c", "make && cd /sw/nic && ./run.py --nicmgr_gtest" ]
+  ##nicmgr_classic_gtest: [ "sh", "-c", "make && cd /sw/nic && ./run.py --nicmgr_gtest --classic" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

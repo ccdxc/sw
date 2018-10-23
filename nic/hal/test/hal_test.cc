@@ -962,7 +962,7 @@ public:
 
     uint64_t enic_if_create(uint32_t enic_if_id, uint32_t lif_id,
                             uint64_t pinned_uplink_if_handle,
-                            uint64_t native_l2seg_handle,
+                            uint64_t native_l2seg_id,
                             uint64_t non_native_l2seg_id) {
         InterfaceSpec           *spec;
         InterfaceRequestMsg     req_msg;
@@ -978,7 +978,7 @@ public:
         spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
         spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
         spec->mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(pinned_uplink_if_handle);
-        spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(native_l2seg_handle);
+        spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_id(native_l2seg_id);
         l2seg_kh = spec->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
         l2seg_kh->set_segment_id(non_native_l2seg_id);
         status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
@@ -2518,7 +2518,7 @@ public:
 
         get_req_msg.add_request()->mutable_key_or_handle()->set_qos_group(static_cast<kh::QosGroup>(qos_group));
         status = qos_stub_->QosClassGet(&get_context, get_req_msg, &get_rsp_msg);
-        if (!status.ok() || (get_rsp_msg.response_size() != 1) || 
+        if (!status.ok() || (get_rsp_msg.response_size() != 1) ||
             (get_rsp_msg.response(0).api_status() != types::API_STATUS_OK)) {
             std::cout << "QosClass Get Failed" << std::endl;
             return;
@@ -2773,7 +2773,8 @@ create_l2segments(uint64_t   l2seg_id_start,
                   uint64_t   vrf_id,
                   uint64_t   num_uplinks,
                   hal_client &hclient,
-                  uint64_t   *l2seg_handle_out)
+                  uint64_t   *l2seg_handle_out,
+                  uint64_t   *native_l2seg_id)
 {
     EncapInfo  l2seg_encap;
     uint64_t   l2seg_handle = 0;
@@ -2798,6 +2799,7 @@ create_l2segments(uint64_t   l2seg_id_start,
 
         if (encap_value == 100) {
             *l2seg_handle_out = l2seg_handle;
+            *native_l2seg_id = l2seg_id;
         }
 
         // bringup this L2seg on all uplinks
@@ -3077,7 +3079,7 @@ main (int argc, char** argv)
     uint64_t     vrf_handle = 0, l2seg_handle = 0, native_l2seg_handle = 0, sg_handle = 0;
     uint64_t     nw1_handle = 0, nw2_handle = 0, uplink_if_handle = 0;
     uint64_t     lif_handle = 0, enic_if_handle = 0, sec_prof_handle = 0, sec_policy_handle = 0;
-    uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1;
+    uint64_t     vrf_id = 1, l2seg_id = 1, sg_id = 1, if_id = 1, nw_id = 1, native_l2seg_id = 0;
     uint64_t     lif_id = 100;
     uint64_t     enic_if_id = 200;
     EncapInfo    l2seg_encap;
@@ -3160,15 +3162,15 @@ main (int argc, char** argv)
             ep_create = true;
         } else if (!strcmp(argv[1], "ep_delete_test")) {
             if (argc != 5) {
-                std::cout << "Usage: <pgm> ep_delete_test <uplink_if_handle> <l2seg_handle> <count>"
+                std::cout << "Usage: <pgm> ep_delete_test <uplink_if_handle> <l2seg_id> <count>"
                           << std::endl;
                 return 0;
             }
             uplink_if_handle = atoi(argv[2]);
-            native_l2seg_handle = atoi(argv[3]);
+            native_l2seg_id = atoi(argv[3]);
             count = atoi(argv[5]);
             std::cout << "uplink_if_handle: " << uplink_if_handle
-                      << "native_l2seg_handle: " << native_l2seg_handle
+                      << "native_l2seg_id: " << native_l2seg_id
                       << std::endl;
             ep_delete_test = true;
         } else if (!strcmp(argv[1], "session_delete_test")) {
@@ -3403,7 +3405,7 @@ main (int argc, char** argv)
             // create a ENIC interface
             enic_if_handle = hclient.enic_if_create(enic_if_id, lif_id,
                                                     uplink_if_handle,  // pinned uplink
-                                                    native_l2seg_handle,
+                                                    native_l2seg_id,
                                                     dest_l2seg_id);
             ip_address = 0x0a0a0103;
             hclient.ep_create(vrf_id, l2seg_id, enic_if_id, sg_id,
@@ -3534,7 +3536,7 @@ main (int argc, char** argv)
 
     create_l2segments(l2seg_id, encap_value, if_id, num_l2segments,
                       nw1_handle, vrf_id, num_uplinks, hclient,
-                      &l2seg_handle);
+                      &l2seg_handle, &native_l2seg_id);
 
     native_l2seg_handle = l2seg_handle;
 
@@ -3595,7 +3597,7 @@ main (int argc, char** argv)
     // create a ENIC interface
     enic_if_handle = hclient.enic_if_create(enic_if_id, lif_id,
                                             uplink_if_handle,  // pinned uplink
-                                            native_l2seg_handle,
+                                            native_l2seg_id,
                                             dest_l2seg_id);
     assert(enic_if_handle != 0);
 

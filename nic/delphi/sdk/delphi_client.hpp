@@ -11,12 +11,12 @@
 
 #include "base_object.hpp"
 #include "delphi_service.hpp"
-#include "nic/delphi/messanger/messanger_client.hpp"
+#include "nic/delphi/messenger/messenger_client.hpp"
 
 namespace delphi {
 
 using namespace std;
-using namespace delphi::messanger;
+using namespace delphi::messenger;
 
 // sync interval for syncing to delphi hub
 #define CLIENT_SYNC_PERIOD 0.005
@@ -40,7 +40,7 @@ using namespace delphi::messanger;
 #define CONNECT_TRIES 10
 
 // milliseconds that we will wait before trying to connect again
-#define CONNECT_SLEEP_MS 100
+#define CONNECT_SLEEP_MS 1000
 
 // ObjectMutation keeps of an object that changed(keeps both old and new objects)
 class ObjectMutation {
@@ -65,7 +65,7 @@ public:
 typedef std::shared_ptr<ObjSubtree> ObjSubtreePtr;
 
 // DelphiClient is the delphi database client thats responsible for object sync and event callbacks
-class DelphiClient : public messanger::ClientHandler,  public enable_shared_from_this<DelphiClient> {
+class DelphiClient : public messenger::ClientHandler,  public enable_shared_from_this<DelphiClient> {
 public:
     DelphiClient();                                           // constructor
     error Connect();                                          // Connect to hub
@@ -85,7 +85,7 @@ public:
     ReactorListPtr GetReactorList(string kind);               // get reactors for a kind
     error WatchMountComplete(BaseReactorPtr rctr);            // register a reactor for mount complete callback
 
-    // required by messanger::ClientHandler
+    // required by messenger::ClientHandler
     error HandleNotify(vector<ObjectData *> objlist);
     error HandleMountResp(uint16_t svcID, string status, vector<ObjectData *> objlist);
 
@@ -100,7 +100,7 @@ protected:
     void MountClientStatus();                                    // Mounts the DelphiClientStatus message as ReadWrite for self
 
 private:
-    MessangerClientPtr             mclient;        // messanger
+    MessangerClientPtr             mclient;        // messenger
     bool                           isConnected;    // are we connected to hub?
     bool                           isMountComplete;
     uint16_t                       myServiceID;    // my service id assigned by hub

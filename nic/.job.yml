@@ -3,20 +3,20 @@ targets:
   platform/drivers      : ["make", "jobd/platform/drivers"]
   gtests                : ["make", "jobd/gtests"]
   halctl                : ["make", "jobd/halctl"]
-  
+
   # ====================== ARM Tests ===========================
   arm/build             : ["make", "ARCH=aarch64"]
   arm/build/haps        : ["make", "ARCH=aarch64", "PLATFORM=haps", "package-haps-dbg"]
-  
+
   # ====================== Storage Tests ===========================
   storage               : ["make", "jobd/storage"]
   storage/perf          : ["make", "jobd/storage/perf"]
   storage/nvme          : ["make", "jobd/storage/nvme"]
   #storage/nvme_perf    : ["make", "jobd/storage/nvme_perf"]
-  storage/nicmgr        : ["make", "jobd/storage/nicmgr"]
+  #storage/nicmgr        : ["make", "jobd/storage/nicmgr"]
   #Test running into locking issues - disabling for now
   #storage/combined     : ["make", "jobd/storage/combined"]
-  
+
   # ====================== Config Tests ===========================
   #configtest           : ["make", "jobd/configtest"]
 
@@ -50,7 +50,7 @@ targets:
   dol/app_redir         : ["make", "jobd/dol/app_redir"]
   dol/basetopo          : ["make", "jobd/dol/basetopo"]
   dol/swphv             : ["make", "jobd/dol/swphv"]
-  
+
   # ====================== GFT Tests ===========================
   dol/gft               : ["make", "PIPELINE=gft", "jobd/dol/gft"]
   dol/gft/rdma          : ["make", "PIPELINE=gft", "jobd/dol/gft/rdma"]
@@ -62,18 +62,18 @@ targets:
   mbt/networking        : ["make", "jobd/mbt/networking"]
   mbt/firewall          : ["make", "jobd/mbt/firewall"]
   mbt/alg               : ["make", "jobd/mbt/alg"]
-  
+
   # ====================== Make Infra Tests ===========================
   #make/sdk              : ["make", "jobd/make/sdk"]
   #make/nic              : ["make", "jobd/make/nic"]
-  
+
   codesync              : ["make", "jobd/codesync" ]
-  
+
   # ====================== Apollo2 Tests ===========================
   apollo/gtest         : ["make", "PIPELINE=apollo", "jobd/apollo/gtest"]
 
   # ====================== E2E DOL Tests ===========================
-  dol/e2e/tlsproxy      : ["make", "jobd/dol/e2e/tlsproxy"]
+  #dol/e2e/tlsproxy      : ["make", "jobd/dol/e2e/tlsproxy"]
   dol/e2e/tlsproxy/v6   : ["make", "jobd/dol/e2e/v6tlsproxy"]
   dol/e2e/eplearn       : ["make", "jobd/dol/e2e/eplearn"]
   #dol/e2e/alg           : ["make", "jobd/dol/e2e/alg"]
@@ -82,15 +82,23 @@ targets:
   # ====================== Agent Tests ===========================
   agent                 : ["make", "jobd/agent"]
   e2e/naples-sim        : ["make", "jobd/e2e/naples-sim"]
-  
+
   # ====================== IRIS-C Tests ===========================
   # iris-c gtests
-  filter/gtest          : ["make", "jobd/filter/gtest"]
-  
-  upgmgr:  ["sh", "-c", "cd /sw/nic && bazel build //nic/upgrade_manager/... && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all" ]
-  delphi:  ["sh", "-c", "cd /sw/nic && bazel build //nic/delphi/...  && cd $GOPATH/src/github.com/pensando/sw && go test -v ./nic/delphi/..." ]
-  sysmgr:  ["sh", "-c", "cd /sw/nic && bazel build //nic/delphi/... && bazel build //nic/sysmgr/... && cd /sw/nic/sysmgr/test && ./test.sh" ]
+  #filter/gtest          : ["make", "jobd/filter/gtest"]
+
+  # ====================== Upg Mgr Tests ===========================
+  #upgrade_manager/gtests   : ["make", "jobd/upgrade_manager/gtests"]
+
+  # ====================== Nic Mgr Tests ===========================
+  #nicmgr/gtest          : ["make", "jobd/nicmgr/gtest"]
+  #nicmgr/gtest_classic  : ["make", "jobd/nicmgr/gtest_classic"]
+
   coremgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/sysmgr/coremgr/... && cd /sw/nic/sysmgr/coremgr/test && ./test.sh; ret=$? ; exit $ret" ]
+
+  # upgmgr:  ["sh", "-c", "cd /sw/nic && bazel build //nic/upgrade_manager/... && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all" ]
+  # delphi:  ["sh", "-c", "cd /sw/nic && bazel build //nic/delphi/...  && cd $GOPATH/src/github.com/pensando/sw && go test -v ./nic/delphi/..." ]
+  sysmgr:  ["sh", "-c", "cd /sw/nic/sysmgr/test && ./test.sh" ]
   venice: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make checks && TRACKER_URL=\"tracker.test.pensando.io\" make unit-test-cover; ret=$? ; make sanity_logs ; exit $ret" ]
 
 cache:

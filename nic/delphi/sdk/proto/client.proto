@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package delphi_client;
 
-import "nic/delphi/proto/delphi/delphi.proto";
+import "delphi.proto";
 
 message DelphiClientStatus {
     option (delphi.update_event)          = true;

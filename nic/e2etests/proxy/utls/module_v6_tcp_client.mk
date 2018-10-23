@@ -6,7 +6,7 @@ MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/tcp-client-v6.cc
 MODULE_SOLIBS   = e2e_driver trace print host_mem bm_allocator \
                   logger model_client halproto mtrack
-MODULE_LDLIBS   = zmq pthread z m rt Judy dl \
+MODULE_LDLIBS   = zmq pthread z m rt Judy dl ev \
                   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                   ${NIC_THIRDPARTY_SSL_LDLIBS}
 MODULE_INCS     = ${TOPDIR}/nic/hal/third-party/openssl/include

@@ -1,0 +1,6 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+include ${MKDEFS}/pre.mk
+MODULE_TARGET = libnicmgrheartbeat.so
+MODULE_INCS   = ${MODULE_DIR} \
+                ${TOPDIR}/platform/src/lib/nicmgr/include
+include ${MKDEFS}/post.mk

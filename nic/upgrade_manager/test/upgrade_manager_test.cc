@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 #include "nic/upgrade_manager/lib/upgrade.hpp"
-#include "nic/upgrade_manager/upgrade/upgrade.delphi_utest.hpp"
+#include "gen/proto/upgrade.delphi_utest.hpp"
 
 namespace {
 

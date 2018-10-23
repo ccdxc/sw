@@ -7,7 +7,8 @@
 #include "nic/delphi/utils/log.hpp"
 #include "nic/delphi/hub/delphi_server.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/delphi/sdk/proto/client.delphi.hpp"
+#include "nic/delphi/sdk/delphi_utest.hpp"
+#include "gen/proto/client.delphi.hpp"
 
 namespace {
 using namespace std;
@@ -17,7 +18,7 @@ using namespace delphi;
 class TestReactor;
 typedef std::shared_ptr<TestReactor> TestReactorPtr;
 
-class TestObject : public BaseObject, public messanger::TestObject, public enable_shared_from_this<TestObject> {
+class TestObject : public BaseObject, public messenger::TestObject, public enable_shared_from_this<TestObject> {
 private:
     TestReactorPtr reactor;
 public:
@@ -262,13 +263,16 @@ TEST_F(DelphiHubTest, BasicServerTest) {
             ASSERT_EQ(tobj->testdata1(), "Test Data") << "client has invalid objects";
         }
 
-        ASSERT_EQ(clients[i]->ListKind("DelphiClientStatus").size(), NUM_CLIENTS);
+        ASSERT_EQ(clients[i]->ListKind("DelphiClientStatus").size(), 1);
         db = clients[i]->ListKind("DelphiClientStatus");
         for (vector<BaseObjectPtr>::iterator iter=db.begin(); iter!=db.end(); ++iter) {
             objects::DelphiClientStatusPtr tobj = static_pointer_cast<objects::DelphiClientStatus>(*iter);
             ASSERT_EQ(tobj->pid(), getpid()) << "client pid is invalid";
         }
     }
+
+    // verify hub has all client status
+    ASSERT_EQ_EVENTUALLY(server->GetSubtree("DelphiClientStatus")->objects.size(), NUM_CLIENTS) << "invalid number of client status objects";
 
     // create a new client that mounts the tree
     DelphiClientPtr new_client = make_shared<DelphiClient>();
@@ -284,6 +288,9 @@ TEST_F(DelphiHubTest, BasicServerTest) {
         TestObjectPtr tobj = static_pointer_cast<TestObject>(*iter);
         ASSERT_EQ(tobj->testdata1(), "Test Data") << "client has invalid objects";
     }
+
+    // verify hub has new client status
+    ASSERT_EQ_EVENTUALLY(server->GetSubtree("DelphiClientStatus")->objects.size(), (NUM_CLIENTS + 1)) << "invalid number of client status objects";
 
     // close new client
     new_client->Close();

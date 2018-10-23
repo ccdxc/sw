@@ -97,7 +97,7 @@ TEST_F(uplinkif_test, test2)
     InterfaceSpec               spec;
     InterfaceResponse           rsp;
     InterfaceDeleteRequest      del_req;
-    InterfaceDeleteResponse  del_rsp;
+    InterfaceDeleteResponse     del_rsp;
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;
     mtrack_info_t               *pre_minfo, *post_minfo;
@@ -151,7 +151,7 @@ TEST_F(uplinkif_test, test3)
     InterfaceSpec                   spec;
     InterfaceResponse               rsp;
     InterfaceDeleteRequest          del_req;
-    InterfaceDeleteResponse      del_rsp;
+    InterfaceDeleteResponse         del_rsp;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
 

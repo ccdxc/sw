@@ -7,7 +7,7 @@ MODULE_SOLIBS = linkmgr_src sdklinkmgr linkmgr_libsrc hal_lib \
                 linkmgrcsr capri_csrint \
                 trace logger thread catalog sdkpal halproto mtrack ht \
                 sdklinkmgr timerfd twheel periodic utils slab shmmgr list
-MODULE_LDLIBS = pthread z dl m rt Judy :libprotobuf.so.14 sknobs \
+MODULE_LDLIBS = pthread z dl m rt Judy ev :libprotobuf.so.14 sknobs \
                 grpc++ grpc++_reflection \
                 grpc++_unsecure grpc_unsecure AAPL
 MODULE_FLAGS  = -pthread -rdynamic

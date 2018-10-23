@@ -18,7 +18,7 @@
 #include "pcieport.h"
 #include "eth_common.h"
 #include "sdk/indexer.hpp"
-
+#include "hal_types.hpp"
 
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)
@@ -120,35 +120,47 @@ static_assert((offsetof(struct dev_cmd_regs, comp) % 4) == 0);
 static_assert(sizeof(((struct dev_cmd_regs*)0)->comp) == 16);
 static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0);
 
+#define LIF_STATS_SIZE_LOG  9
+#define LIF_STATS_SIZE      (1<<(LIF_STATS_SIZE_LOG)) // Each lif stats occupies 512 bytes
+
 /**
  * ETH PF Device
  */
 class Eth : public Device {
 public:
-    Eth(HalClient *hal_client, void *dev_spec);
+    Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
+        void *dev_spec, PdClient *pd_client);
     struct lif_info info;
+    hal_lif_info_t lif_info;
+    uint32_t uplink_id;
     struct dev_cmd_regs *devcmd;
     void DevcmdPoll();
     void DevcmdHandler();
-    //void DevObjSave();
+    void DevObjSave();
+    void DevLinkDownHandler(uint32_t port_num);
+    void DevLinkUpHandler(uint32_t port_num);
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
         void *resp, void *resp_data);
 private:
     /* Static members */
     static sdk::lib::indexer *fltr_allocator;
-
     /* Members */
     string name;
     struct eth_devspec *spec;
     // Hardware Info
     static struct queue_info qinfo[NUM_QUEUE_TYPES];
+    // PD Info
+    PdClient *pd;
     // HAL Info
     HalClient *hal;
+    HalCommonClient *hal_common_client;
     uint64_t lif_handle;    // TODO: Support multiple LIFs per ETH device
+    // Coses
+    uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
     // Rss config
     uint16_t rss_type;
-    string rss_key;
-    string rss_indir;
+    uint8_t  rss_key[RSS_HASH_KEY_SIZE]; // 40B
+    uint8_t  rss_indir[RSS_IND_TBL_SIZE]; // 128B
     // PCIe info
     pciehdev_t *pdev;
     pciehdevice_resources_t pci_resources;
@@ -176,7 +188,7 @@ private:
     enum DevcmdStatus _CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
-    
+
     /* RDMA Command handlers */
     enum DevcmdStatus _CmdCreateMR(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdCreateCQ(void *req, void *req_data, void *resp, void *resp_data);
@@ -190,7 +202,6 @@ private:
 
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
-
     friend ostream &operator<<(ostream&, const Eth&);
 };
 

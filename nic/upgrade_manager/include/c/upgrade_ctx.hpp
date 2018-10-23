@@ -3,7 +3,7 @@
 #ifndef __UPGRADE_CTX_H__
 #define __UPGRADE_CTX_H__
 
-#include "nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
+#include "gen/proto/upgrade.delphi.hpp"
 
 namespace upgrade {
 

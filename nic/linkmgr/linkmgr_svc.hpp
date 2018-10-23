@@ -65,4 +65,10 @@ public:
                        PortInfoGetResponseMsg *rsp) override;
 };
 
+using sdk::linkmgr::port_args_t;
+void populate_port_create_args(PortSpec& spec, port_args_t *args);
+bool validate_port_create(PortSpec& spec, PortResponse *response);
+bool validate_port_update(PortSpec& spec, PortResponse*rsp);
+void populate_port_update_args(PortSpec& spec, port_args_t *args);
+
 #endif    // __LINKMGR_SVC_HPP__

@@ -14,6 +14,7 @@ SUBDIRS = \
 	regio \
 	nicmgrd \
 	asicerrord \
+	nicmgr_gtest \
 	$(NULL)
 
 TOPDIR = ../..

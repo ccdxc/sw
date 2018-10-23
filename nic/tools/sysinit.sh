@@ -34,23 +34,29 @@ $NIC_DIR/tools/start-hal-haps.sh "$FWD_MODE" "$PLATFORM"
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - HAL failed to start!" && exit 1
 
 # start netagent
-if [[ "$FWD_MODE" != "classic" ]]; then
-    # Remove logs
-    rm -f agent.log* /tmp/*.db
+# Remove logs
+rm -f agent.log* /tmp/*.db
 
-    $NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
-    [[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
-else
-    # create 100G ports in classic mode
-    $NIC_DIR/tools/port_op.sh --create --port 1 --speed 100 --enable 1
-    $NIC_DIR/tools/port_op.sh --create --port 5 --speed 100 --enable 1
-    $NIC_DIR/tools/port_op.sh --create --port 9 --speed 1 --type mgmt --enable 1
-fi
+$NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
+[[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
 
-sleep 5
+#if [[ "$FWD_MODE" != "classic" ]]; then
+#    # Remove logs
+#    rm -f agent.log* /tmp/*.db
+#
+#    $NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
+#    [[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
+#else
+#    # create 100G ports in classic mode
+#    $NIC_DIR/tools/port_op.sh --create --port 1 --speed 100 --enable 1
+#    $NIC_DIR/tools/port_op.sh --create --port 5 --speed 100 --enable 1
+#    $NIC_DIR/tools/port_op.sh --create --port 9 --speed 1 --type mgmt --enable 1
+#fi
+
+sleep 30
 
 # start nicmgr
-$PLATFORM_DIR/tools/start-nicmgr-haps.sh "$FWD_MODE"
+PAL_TRACE='/pal_nicmgr.log' $PLATFORM_DIR/tools/start-nicmgr-haps.sh "$FWD_MODE"
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - NICMGR failed to start!" && exit 1
 
 # Renice HAL & LINKMGR so other apps & kernel contexts can run

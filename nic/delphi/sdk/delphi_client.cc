@@ -2,12 +2,12 @@
 
 #include <iostream>
 #include "delphi_client.hpp"
-#include "nic/delphi/sdk/proto/client.delphi.hpp"
+#include "gen/proto/client.delphi.hpp"
 
 namespace delphi {
 
 using namespace std;
-using namespace delphi::messanger;
+using namespace delphi::messenger;
 
 // DelphiClient constructor
 DelphiClient::DelphiClient() {
@@ -31,19 +31,14 @@ error DelphiClient::Connect() {
         return error::New("Service not registered");
     }
 
-    // create a messanger client
+    // create a messenger client
     this->mclient = make_shared<MessangerClient>(shared_from_this());
 
-    for (int i = 0; i < CONNECT_TRIES; i++)
-    {
+    // try forever to connect to delphi hub
+    while (1) {
         // connect to server
         error err = mclient->Connect();
         if (err.IsNotOK()) {
-            if (i == CONNECT_TRIES)
-            {
-                LogError("Error({}) connecting to hub. Giving up", err);
-                return err;
-            }
             LogInfo("Error({}) connecting to hub. Will try again", err);
             std::this_thread::sleep_for(std::chrono::milliseconds(CONNECT_SLEEP_MS));
             continue;
@@ -505,7 +500,7 @@ error DelphiClient::Close() {
     this->myServiceID = 0;
     this->isMountComplete = false;
 
-    // close messanger
+    // close messenger
     if (mclient != NULL) {
         mclient->Close();
     }

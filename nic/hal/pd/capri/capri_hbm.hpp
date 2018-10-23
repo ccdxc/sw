@@ -2,10 +2,10 @@
 #define __CAPRI_HBM_HPP__
 
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
-#include "nic/sdk/include/sdk/platform/capri/capri.hpp"
+#include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
 
-using sdk::platform::capri_hbm_region_t;
-using sdk::platform::capri_hbm_cache_pipe_t;
+using sdk::platform::utils::mpartition_region_t;
+using sdk::platform::utils::mpartition_cache_pipe_t;
 using hal::pd::asic_hbm_bw_t;
 
 #define JP4_PRGM                 "p4_program"
@@ -18,7 +18,7 @@ using hal::pd::asic_hbm_bw_t;
 #include "nic/hal/pd/capri/capri.hpp"
 
 hal_ret_t capri_hbm_parse(capri_cfg_t *cfg);
-capri_hbm_region_t *get_hbm_region(char *name);
+mpartition_region_t *get_hbm_region(char *name);
 uint64_t get_hbm_base(void);
 uint64_t get_hbm_offset(const char *reg_name);
 uint64_t get_start_offset(const char *reg_name);
@@ -223,7 +223,7 @@ capri_hbm_cache_init(capri_cfg_t *cfg);
 extern hal_ret_t
 capri_hbm_cache_regions_init();
 
-extern capri_hbm_region_t*
+extern mpartition_region_t*
 get_hbm_region_by_address(uint64_t addr);
 
 #endif    // __CAPRI_HBM_HPP__

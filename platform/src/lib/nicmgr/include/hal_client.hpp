@@ -19,6 +19,9 @@
 #include "accel_rgroup.grpc.pb.h"
 #include "crypto_keys.pb.h"
 #include "crypto_keys.grpc.pb.h"
+#include "uplink.hpp"
+#include "ethlif.hpp"
+
 
 using namespace kh;
 using namespace types;
@@ -48,6 +51,18 @@ enum ForwardingMode
 };
 
 /**
+ * Platform Modes
+ */
+typedef enum platform_mode_s {
+    PLATFORM_MODE_NONE,
+    PLATFORM_MODE_SIM,
+    PLATFORM_MODE_HW,
+    PLATFORM_MODE_HAPS,
+    PLATFORM_MODE_RTL,
+    PLATFORM_MODE_MOCK,
+} platform_mode_t;
+
+/**
  * Queue info structure for LifCreate
  */
 struct queue_info {
@@ -64,6 +79,7 @@ struct queue_info {
  * Lif info structure set by LifCreateF
  */
 struct lif_info {
+  uint64_t lif_id;
   uint64_t hw_lif_id;
   uint64_t qstate_addr[NUM_QUEUE_TYPES];
 };
@@ -175,9 +191,15 @@ public:
                      bool enable_rdma,
                      uint32_t max_pt_entries,
                      uint32_t max_keys,
-                     uint32_t max_ahs);
+                     uint32_t max_ahs,
+                     uint32_t hw_lif_id = 0);
 
-  int LifDelete(uint64_t lif_id);
+  uint64_t LifCreate(uint64_t lif_id,
+                     Uplink *uplink,
+                     struct queue_info *queue_info,
+                     struct lif_info *lif_info);
+
+  uint64_t LifDelete(uint64_t lif_id);
 
   int LifSetVlanOffload(uint64_t lif_id, bool strip, bool insert);
 
@@ -223,7 +245,7 @@ public:
                            uint64_t l2seg_id);
 
   /* RDMA APIs */
-  
+
   int CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t length,
                uint16_t access_flags, uint32_t l_key, uint32_t r_key,
                uint32_t page_size, uint64_t *pt_table, uint32_t pt_size);
@@ -296,7 +318,7 @@ public:
                               void *key,
                               uint32_t key_size);
 
-  /* Filter APIs */
+    /* Filter APIs */
   int FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan);
   int FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan);
 
@@ -314,6 +336,9 @@ public:
   map<uint64_t, uint64_t> vrf_id2handle;        /* vrf_id to vrf_handle */
   map<uint64_t, uint64_t> enic_id2handle;       /* enic_handle to enic_id */
   map<uint64_t, uint64_t> l2seg_id2handle;      /* l2seg_id to l2seg_handle */
+
+  map<uint64_t, EthLif*> eth_lif_map;
+
 
   friend ostream& operator<<(ostream&, const HalClient&);
 
@@ -339,7 +364,7 @@ private:
 #define   IB_QP_DEST_QPN     (1 << 20)
 #define   IB_QP_RQ_PSN       (1 << 12)
 #define   IB_QP_SQ_PSN       (1 << 16)
- 
+
 #define   AC_LOCAL_WRITE       0x1
 #define   AC_REMOTE_WRITE      0x2
 #define   AC_REMOTE_READ       0x4

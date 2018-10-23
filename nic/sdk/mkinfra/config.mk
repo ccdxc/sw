@@ -27,10 +27,8 @@ CMD_PROTOC_C            := ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/proto
 CMD_MOCKGEN             := mockgen
 CMD_GOIMPORTS           := goimports
 
-CMD_PROTOC_CPP_OPTS     := ${COMMON_CMD_PROTOC_CPP_OPTS} --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
-CMD_PROTOC_PY_OPTS      := ${COMMON_CMD_PROTOC_PY_OPTS} --plugin=protoc-gen-grpc=${GRPC_PY_PLUGIN}
-CMD_PROTOC_C_OPTS       := ${COMMON_CMD_PROTOC_C_OPTS}
-CMD_PROTOC_GOFAST_OPTS  := ${COMMON_CMD_GOFAST_OPTS}
+CMD_PROTOC_CPP_OPTS     := --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+CMD_PROTOC_PY_OPTS      := --plugin=protoc-gen-grpc=${GRPC_PY_PLUGIN}
 
 CMD_LINKER_FLAGS        := -pthread -rdynamic -no-canonical-prefixes \
                            -Wl,--gc-sections -Wl,-z,relro,-z,now \

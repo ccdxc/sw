@@ -268,6 +268,7 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
     LIFQStateParams qs_params = { 0 };
     int32_t         ec        = 0;
     uint8_t         hint_cos = 0;
+    uint32_t        qcount = 0;
 
     for (int i = 0; i < spec.lif_qstate_map_size(); i++) {
         const auto &ent = spec.lif_qstate_map(i);
@@ -300,16 +301,36 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
         lif->qinfo[ent.purpose()].type = ent.type_num();
         lif->qinfo[ent.purpose()].size = (uint16_t)pow(2, ent.size());
         lif->qinfo[ent.purpose()].num_queues = (uint16_t)pow(2, ent.entries());
+        qcount += lif->qinfo[ent.purpose()].num_queues;
+
+        HAL_TRACE_DEBUG("type: {}, entries: {}, size: {}, log entries: {}, size: {}",
+                        ent.type_num(),
+                        ent.entries(), ent.size(), lif->qinfo[ent.purpose()].num_queues,
+                        lif->qinfo[ent.purpose()].size);
     }
+
+    HAL_TRACE_DEBUG("Lif lif_id: {}, Qcount: {}",
+                    lif->lif_id, qcount);
+    lif->qcount = qcount;
+
 
     qs_params.dont_zero_memory = dont_zero_qstate_mem;
     // cosB (default cos) will be the hint_cos for the lif.
     hint_cos = (lif->qos_info.coses & 0xf0) >> 4;
-    // make sure that when you are creating with hw_lif_id the lif is alloced
-    // already, otherwise this call may return an error
-    if ((ec = lif_manager()->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
-        HAL_TRACE_ERR("Failed to initialize LIFQState: err_code : {}", ec);
-        return HAL_RET_INVALID_ARG;
+    // Program if
+    // - Its not hw
+    // - Service lif
+    if ((g_hal_cfg.platform_mode != HAL_PLATFORM_MODE_HAPS &&
+        g_hal_cfg.platform_mode != HAL_PLATFORM_MODE_HW) ||
+        (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END)) {
+        // make sure that when you are creating with hw_lif_id the lif is alloced
+        // already, otherwise this call may return an error
+        if ((ec = lif_manager()->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
+            HAL_TRACE_ERR("Failed to initialize LIFQState: err_code : {}", ec);
+            return HAL_RET_INVALID_ARG;
+        }
+    } else {
+        HAL_TRACE_DEBUG("Skipped initing lifqstate");
     }
 
     return HAL_RET_OK;
@@ -780,6 +801,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     }
     cosA = args.cos;
 
+    HAL_TRACE_DEBUG("cosA: {}, cosB: {}", cosA, cosB);
+
     lif->qos_info.cos_bmp =  ((1 << cosA) | (1 << cosB));
     lif->qos_info.coses   =  (cosA & 0x0f) | ((cosB << 4) & 0xf0);
 
@@ -801,6 +824,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     // Take hal_info from proto only if its not passed to this function
     if (!lif_hal_info) {
         if (spec.hw_lif_id() != 0) {
+            HAL_TRACE_DEBUG("Creating lif with hw_lif_id passed as: {}",
+                            spec.hw_lif_id());
             proto_hal_info.with_hw_lif_id = true;
             proto_hal_info.hw_lif_id = spec.hw_lif_id();
             proto_hal_info.dont_zero_qstate_mem = false;    // default is false.

@@ -45,6 +45,9 @@ SYSTEM_LIBRARIES = \
 	$(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib/libprotobuf.so.14 \
 	-lhalproto \
 	-llogger \
+        -ldelphisdk \
+        -lev \
+        -lrt \
 	$(NULL)
 
 SYSTEM_LIBRARIES += \

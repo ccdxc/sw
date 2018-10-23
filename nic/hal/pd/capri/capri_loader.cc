@@ -567,9 +567,9 @@ capri_dump_program_info (const char *filename)
                     if ((symbol != NULL) && (symbol->type == MPUSYM_LABEL) &&
                         symbol->val) {
                         sym.put("name", symbol->name.c_str());
-                        sym.put("addr", program_info[i].base_addr + symbol->val);
+                        sym.put("addr", symbol->val);
 			snprintf(numbuf, sizeof(numbuf), "0x%lx",
-				 program_info[i].base_addr + symbol->val);
+				 symbol->val);
 			sym.put("addr_hex", numbuf);
                         symbols.push_back(std::make_pair("", sym));
                         sym.clear();

@@ -1,5 +1,5 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
-JOBD_PREREQS:= all
+JOBD_PREREQS:= package
 
 .PHONY: ${JOBD_PREREQS}
 jobd/codesync: all
@@ -182,12 +182,11 @@ jobd/storage/nvme_perf: ${JOBD_PREREQS}
 
 .PHONY: jobd/storage/nicmgr
 jobd/storage/nicmgr: ${JOBD_PREREQS}
-	${MAKE} -j1 -C ${TOPDIR}/platform/
 	${NICDIR}/run.py --storage --storage_test nicmgr
 
 .PHONY: jobd/storage/combined
 jobd/storage/combined: ${JOBD_PREREQS}
-	GRPC_TRACE=tcp GRPC_VERBOSITY=debug ${NICDIR}/run.py --storage --storage_test unit --feature rdma --topo rdma --combined --test RDMA_TX_SEND_ONLY --testcase 1 
+	GRPC_TRACE=tcp GRPC_VERBOSITY=debug ${NICDIR}/run.py --storage --storage_test unit --feature rdma --topo rdma --combined --test RDMA_TX_SEND_ONLY --testcase 1
 
 .PHONY: jobd/configtest
 jobd/configtest: ${JOBD_PREREQS}
@@ -255,7 +254,20 @@ jobd/halctl: ${JOBD_PREREQS}
 jobd/gtests: ${JOBD_PREREQS}
 	${NICDIR}/tools/run_gtests.sh
 
+.PHONY: jobd/upgrade_manager/gtests
+jobd/upgrade_manager/gtests: ${JOBD_PREREQS}
+	${NICDIR}/upgrade_manager/tools/run_upgrade_manager_gtests.sh
+
 .PHONY: jobd/filter/gtest
 jobd/filter/gtest: ${JOBD_PREREQS}
+	${MAKE} -j1 -C ${TOPDIR}/platform/src/lib/hal_api
 	./run.py --filter_gtest --classic
 	./run.py --filter_gtest
+
+.PHONY: jobd/nicmgr/gtest
+jobd/nicmgr/gtest: ${JOBD_PREREQS}
+	./run.py --nicmgr_gtest
+
+.PHONY: jobd/nicmgr/gtest_classic
+jobd/nicmgr/gtest_classic: ${JOBD_PREREQS}
+	./run.py --nicmgr_gtest --classic

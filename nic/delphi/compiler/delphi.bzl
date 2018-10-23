@@ -36,5 +36,8 @@ def delphi_compile(name, srcs, ):
         srcs = genfiles,
         deps = [
             "//nic/delphi/sdk:headers",
+            "//nic:gen_proto_includes",
+            "//nic/delphi/proto/delphi:delphi_cc_proto",
         ],
+        copts = ["-Inic/gen/proto/hal"],
     )

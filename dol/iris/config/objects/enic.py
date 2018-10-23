@@ -69,7 +69,7 @@ class EnicObject(base.ConfigObjectBase):
         if self.lif is None:
             self.lif = self.tenant.AllocLif()
             self.lif_id = self.lif.id
-        
+
         if GlobalOptions.classic is False:
             assert(self.ep == None)
             self.ep = ep
@@ -166,7 +166,7 @@ class EnicObject(base.ConfigObjectBase):
         if self.IsClassic():
             req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_CLASSIC
             if self.native_segment is not None:
-                req_spec.if_enic_info.classic_enic_info.native_l2segment_handle = self.native_segment.hal_handle
+                req_spec.if_enic_info.classic_enic_info.native_l2segment_id = self.native_segment.id
             for s in self.segments:
                 l2seg_key_handle = req_spec.if_enic_info.classic_enic_info.l2segment_key_handle.add()
                 l2seg_key_handle.l2segment_handle = s.hal_handle

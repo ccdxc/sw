@@ -349,6 +349,23 @@ def run_platform_model_server(args, standalone=False):
         return platform_model_server_process.returncode
     return 0
 
+# Run nicmgr gtest
+def run_nicmgr_gtest(args, standalone=False):
+    #wait_for_hal()
+    bin_dir = nic_dir + "/../platform/gen/x86_64/src/app/nicmgr_gtest/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../platform/gen/x86_64/lib/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/build/x86_64/iris/lib/"
+    print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
+    os.chdir(nic_dir)
+    if args.classic:
+        cmd = [bin_dir + "./nicmgr_test", "--classic"]
+    else:
+        cmd = [bin_dir + './nicmgr_test']
+
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
+
+
 # Run nicmgr
 def run_nicmgr(args, standalone=False):
     wait_for_hal()
@@ -438,11 +455,15 @@ def run_storage_dol(port, args):
 def run_filter_gtest(args):
     #os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../platform/gen/x86_64/lib/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/build/x86_64/iris/lib/"
     os.chdir(nic_dir)
+    hal_api_gtest_bin_dir = nic_dir + "/../platform/gen/x86_64/src/lib/hal_api/gtest/filter_test"
+    hal_api_gtest_bin_dir1 = nic_dir + "/../platform/gen/x86_64/src/lib/hal_api/gtest/filter_smart_test"
     if args.classic is True:
-        cmd = [bin_dir + '/iris_c_filter_test']
+        cmd = [hal_api_gtest_bin_dir + '/hal_api_filter_test']
     else:
-        cmd = [bin_dir + '/iris_c_filter_smart_test']
+        cmd = [hal_api_gtest_bin_dir1 + '/hal_api_filter_smart_test']
     p = Popen(cmd)
     #p.communicate()
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -986,6 +1007,8 @@ def main():
                         default=False, help="Run filter gtests")
     parser.add_argument("--span_gtest", dest='span_gtest', action="store_true",
                         default=False, help="Run Span gtests")
+    parser.add_argument("--nicmgr_gtest", dest='nicmgr_gtest', action="store_true",
+                        default=False, help="Run nicmgr gtests")
     parser.add_argument("--apollo_gtest", dest='apollo_gtest', action="store_true",
                         default=False, help="Run Apollo2 gtests")
     parser.add_argument('--shuffle', dest='shuffle', action="store_true",
@@ -1111,6 +1134,10 @@ def main():
         status = run_filter_gtest(args)
         if status != 0:
             print "- Filter test failed, status=", status
+    elif args.nicmgr_gtest:
+        status = run_nicmgr_gtest(args)
+        if status != 0:
+            print "- nicmgr gtest failed, status=", status
     elif args.span_gtest:
         status = run_span_gtest(args)
         if status != 0:

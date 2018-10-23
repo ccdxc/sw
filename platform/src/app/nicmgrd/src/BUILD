@@ -26,6 +26,9 @@ cc_binary(
         ],
         deps = [
                 "//platform/src/lib/nicmgr/src:libnicmgr",
+                "//platform/src/app/nicmgrd/src/upgrade:libnicmgr_upgrade",
+                "//platform/src/app/nicmgrd/src/sysmgr:libnicmgr_sysmgr",
+                "//platform/src/app/nicmgrd/src/delphi:libnicmgr_delphi_client",
                 "//platform/src/lib/nicmgr/include:libnicmgr_hdrs",
                 "//platform/src/lib/misc/include:libmisc_hdrs",
                 "//platform/include/common:platformcommon_hdrs",

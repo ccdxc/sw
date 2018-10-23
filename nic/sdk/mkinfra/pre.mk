@@ -2,7 +2,6 @@
 MODULE_ARCH                 := x86_64 aarch64
 MODULE_PIPELINE             := iris gft apollo
 MODULE_SRC_DIR              := ${MODULE_DIR}
-MODULE_PROTOC_GOFAST_OPTS   := ${CMD_PROTOC_GOFAST_OPTS}
 MODULE_EXPORT_DIR           := ${MODULE_DIR}/${ARCH}
 MODULE_BASECMD              :=
 MODULE_GENERATOR            :=

@@ -14,11 +14,11 @@ using namespace delphi::objects;
 extern UpgCtx ctx;
 
 void UpgSdk::SendAppRespSuccess(void) {
-    UPG_LOG_DEBUG("Application returning success via UpgSdk");
+    //UPG_LOG_DEBUG("Application returning success via UpgSdk");
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     auto upgStateReqPtr = upgAppRespPtr_->GetUpgStateReqPtr();
     if (upgStateReqPtr == NULL) {
-        UPG_LOG_ERROR("upgStateReqPtr is NULL");
+        //UPG_LOG_ERROR("upgStateReqPtr is NULL");
         return;
     }
     UpgReqStateType reqType = upgStateReqPtr->upgreqstate(); 
@@ -27,11 +27,11 @@ void UpgSdk::SendAppRespSuccess(void) {
 }
 
 void UpgSdk::SendAppRespFail(string str) {
-    UPG_LOG_DEBUG("UpgSdk::SendAppRespFail");
+    //UPG_LOG_DEBUG("UpgSdk::SendAppRespFail");
     HdlrResp resp = {.resp=FAIL, .errStr=str};
     auto upgStateReqPtr = upgAppRespPtr_->GetUpgStateReqPtr();
     if (upgStateReqPtr == NULL) {
-        UPG_LOG_ERROR("upgStateReqPtr is NULL");
+        //UPG_LOG_ERROR("upgStateReqPtr is NULL");
         return;
     }
     UpgReqStateType reqType = upgStateReqPtr->upgreqstate();
@@ -86,15 +86,15 @@ delphi::error UpgSdk::CanPerformNonDisruptiveUpgrade() {
 
 delphi::error UpgSdk::CanPerformUpgrade(UpgType upgType) {
     delphi::error err = delphi::error::OK();
-    UPG_LOG_DEBUG("UpgSdk::CanPerformUpgrade");
+    //UPG_LOG_DEBUG("UpgSdk::CanPerformUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Service is not of role AGENT."));
 
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();
     if (req == NULL) {
-        UPG_LOG_DEBUG("UpgReq not found. Create it now.");
+        //UPG_LOG_DEBUG("UpgReq not found. Create it now.");
         req = CreateUpgReqSpec();
     }
-    UPG_LOG_DEBUG("UpgReq set to IsUpgPossible.");
+    //UPG_LOG_DEBUG("UpgReq set to IsUpgPossible.");
     UpdateUpgReqSpec(req, IsUpgPossible, upgType);
 
     return err;
@@ -110,7 +110,7 @@ delphi::error UpgSdk::StartNonDisruptiveUpgrade(void) {
 
 delphi::error UpgSdk::StartUpgrade(UpgType upgType) {
     delphi::error err = delphi::error::OK();
-    UPG_LOG_DEBUG("UpgSdk::StartUpgrade");
+    //UPG_LOG_DEBUG("UpgSdk::StartUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
 
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();
@@ -124,7 +124,7 @@ delphi::error UpgSdk::StartUpgrade(UpgType upgType) {
 
 delphi::error UpgSdk::AbortUpgrade(void) {
     delphi::error err = delphi::error::OK();
-    UPG_LOG_DEBUG("UpgSdk::AbortUpgrade");
+    //UPG_LOG_DEBUG("UpgSdk::AbortUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
 
     delphi::objects::UpgReqPtr req = FindUpgReqSpec();
@@ -137,20 +137,20 @@ delphi::error UpgSdk::AbortUpgrade(void) {
 }
 
 bool UpgSdk::IsUpgradeInProgress(void) {
-    UPG_LOG_DEBUG("UpgSdk::IsUpgradeInProgress");
+    //UPG_LOG_DEBUG("UpgSdk::IsUpgradeInProgress");
 
     delphi::objects::UpgReqPtr upgReq = FindUpgReqSpec();
     if (upgReq && upgReq->upgreqcmd() == UpgStart) {
-        UPG_LOG_DEBUG("Upgrade in progress");
+        //UPG_LOG_DEBUG("Upgrade in progress");
         return true;
     }
-    UPG_LOG_DEBUG("Upgrade not in progress");
+    //UPG_LOG_DEBUG("Upgrade not in progress");
     return false;
     
 }
 
 delphi::error UpgSdk::GetUpgradeStatus(vector<string>& retStr) {
-    UPG_LOG_DEBUG("UpgSdk::GetUpgradeStatus");
+    //UPG_LOG_DEBUG("UpgSdk::GetUpgradeStatus");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Cannot get upgrade status because service is not of role Agent"));
 
     //Check if upgrade is initiated

@@ -49,7 +49,7 @@ void get_qstate_entry_base_address(T *entry, uint64_t *lif_base_addr) {
         *lif_base_addr = (uint64_t) (entry->qstate_base() << 12);
     } else {
         *lif_base_addr = 0;
-    } 
+    }
 }
 
 template <typename T>
@@ -76,7 +76,7 @@ void get_qstate_lif_params(hal::LIFQState *qstate, T *entry, uint32_t *is_valid)
     qstate->params_in.type[7].size = (uint8_t) entry->size7();
 }
 
- 
+
 int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
   // qstate is a multiple for 4K So it is safe to assume
   // 256 byte boundary.
@@ -100,8 +100,12 @@ void push_qstate_to_capri(hal::LIFQState *qstate, int cos) {
   cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
   if (!qstate->params_in.dont_zero_memory) {
+      printf("%s: Zeroing out qstate at: %lx for hw_lif_id: %d\n",
+             __FUNCTION__, qstate->hbm_address, qstate->lif_id);
       clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
   }
+  printf("%s: Writing qstate at: %lx for hw_lif_id: %d\n",
+         __FUNCTION__, qstate->hbm_address, qstate->lif_id);
   auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
   set_qstate_entry(qstate, wa_entry, cos);
   auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];

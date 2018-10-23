@@ -11,7 +11,7 @@ import subprocess
 
 # increment this version whenever delphi protoc plugin is changed
 # This will force all the proto files to be recompiled
-version = "1.4"
+version = "1.6"
 
 # Wrapper to execute a command
 def runProcess(exe):
@@ -48,14 +48,28 @@ delphi_path = args.workspace + "nic/delphi/proto/delphi/"
 
 # determine to import directories
 import_dir = []
+input_files = []
+firstDir = ""
 for inp in args.input:
-    impath = "-I ./" + os.path.dirname(inp) + "/"
+    impath = "--proto_path ./" + os.path.dirname(inp) + "/"
     import_dir.append(impath)
+    if firstDir == "":
+        firstDir = os.path.dirname(inp)
+    inpf = inp.replace(os.path.dirname(inp) + "/", "", 1)
+    input_files.append(inpf)
 
-import_dir = set(import_dir);
+import_dir = set(import_dir)
+outDir = args.outdir + firstDir + "/"
+
+print "outDir"
+print outDir
+print "input_files:"
+print input_files
 
 # command to run
-runCmd = protoc_exe  + " -I ./ -I /usr/local/include/ -I nic/hal/third-party/google/include/ -I " + args.workspace + " -I " + delphi_path + " " + " ".join(import_dir) + " --cpp_out=" + args.outdir + " --go_out=" + args.outdir + " --delphi_out=logtostderr=1,v=1:" + args.outdir + " " + " ".join(str(x) for x in args.input)
+runCmd = protoc_exe  + " -I ./ -I /usr/local/include/ -I nic/hal/third-party/google/include/ -I nic/third-party/gogo/protobuf/gogoproto -I " + args.workspace + " -I " + delphi_path + " " + " ".join(import_dir) + " --cpp_out=" + outDir + " --go_out=" + outDir + " --delphi_out=logtostderr=1,v=1:" + outDir + " " + " ".join(str(x) for x in input_files)
+print "runCmd:"
+print runCmd
 
 # print "running command: " + runCmd
 

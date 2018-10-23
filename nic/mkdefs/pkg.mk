@@ -19,7 +19,9 @@ package: ${PKG_PREREQS}
 		${MAKE} package-clean
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py
     else
-		#${MAKE} -j1 BUILD_ARCHES=x86_64 -C ${TOPDIR}/platform
+        ifeq ($(PIPELINE),iris)
+			${MAKE} -j1 BUILD_ARCHES=x86_64 -C ${TOPDIR}/platform
+        endif
 		${MAKE} package-clean
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target sim --no-strip
     endif
@@ -30,11 +32,11 @@ package-zebu: package-clean ${PKG_PREREQS}
     endif
 
 package-arm-dev: package-clean ${PKG_PREREQS}
-	${MAKE} -j1 BUILD_ARCHES=aarch64 -C ${TOPDIR}/platform
+	${MAKE} -j1 BUILD_ARCHES=aarch64 OPT=-g -C ${TOPDIR}/platform
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target arm-dev --no-strip
 
 package-haps-dbg: package-clean ${PKG_PREREQS}
-	${MAKE} -j1 BUILD_ARCHES=aarch64 -C ${TOPDIR}/platform
+	${MAKE} -j1 BUILD_ARCHES=aarch64 OPT=-g -C ${TOPDIR}/platform
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target haps-dbg
 
 package-storage-offload:

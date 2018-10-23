@@ -9,9 +9,9 @@ namespace example {
 
 using namespace std;
 
-// OnInterfaceSpecCreate gets called when InterfaceSpec object is created
-delphi::error InterfaceMgr::OnInterfaceSpecCreate(delphi::objects::InterfaceSpecPtr intf) {
-    LogInfo("InterfaceSpec got created for {}/{}", intf, intf->meta().ShortDebugString());
+// OnExampleSpecCreate gets called when ExampleSpec object is created
+delphi::error ExampleReactor::OnExampleSpecCreate(delphi::objects::ExampleSpecPtr intf) {
+    LogInfo("ExampleSpec got created for {}/{}", intf, intf->meta().ShortDebugString());
 
     // find the status object
     auto intfStatus = this->findIntfStatus(intf->key().ifidx());
@@ -23,14 +23,14 @@ delphi::error InterfaceMgr::OnInterfaceSpecCreate(delphi::objects::InterfaceSpec
     return delphi::error::OK();
 }
 
-// OnInterfaceSpecDelete gets called when InterfaceSpec object is deleted
-delphi::error InterfaceMgr::OnInterfaceSpecDelete(delphi::objects::InterfaceSpecPtr intf) {
-    LogInfo("InterfaceSpec got deleted");
+// OnExampleSpecDelete gets called when ExampleSpec object is deleted
+delphi::error ExampleReactor::OnExampleSpecDelete(delphi::objects::ExampleSpecPtr intf) {
+    LogInfo("ExampleSpec got deleted");
     return delphi::error::OK();
 }
 
 // OnAdminState gets called when AdminState attribute changes
-delphi::error InterfaceMgr::OnAdminState(delphi::objects::InterfaceSpecPtr intf) {
+delphi::error ExampleReactor::OnAdminState(delphi::objects::ExampleSpecPtr intf) {
     // up or down?
     if (intf->adminstate() == example::IntfStateUp) {
         LogInfo("Interface is up");
@@ -49,9 +49,9 @@ delphi::error InterfaceMgr::OnAdminState(delphi::objects::InterfaceSpecPtr intf)
 }
 
 // createIntfStatus creates a interface status object
-delphi::error InterfaceMgr::createIntfStatus(uint32_t ifidx, example::IntfState status) {
+delphi::error ExampleReactor::createIntfStatus(uint32_t ifidx, example::IntfState status) {
     // create an object
-    delphi::objects::InterfaceStatusPtr intf = make_shared<delphi::objects::InterfaceStatus>();
+    delphi::objects::ExampleStatusPtr intf = make_shared<delphi::objects::ExampleStatus>();
     intf->set_key(ifidx);
     intf->set_operstate(status);
 
@@ -64,14 +64,14 @@ delphi::error InterfaceMgr::createIntfStatus(uint32_t ifidx, example::IntfState 
 }
 
 // findIntfStatus finds an interface status object
-delphi::objects::InterfaceStatusPtr InterfaceMgr::findIntfStatus(uint32_t ifidx) {
-    delphi::objects::InterfaceStatusPtr intf = make_shared<delphi::objects::InterfaceStatus>();
+delphi::objects::ExampleStatusPtr ExampleReactor::findIntfStatus(uint32_t ifidx) {
+    delphi::objects::ExampleStatusPtr intf = make_shared<delphi::objects::ExampleStatus>();
     intf->set_key(ifidx);
 
     // find the object
     delphi::BaseObjectPtr obj = sdk_->FindObject(intf);
 
-    return static_pointer_cast<delphi::objects::InterfaceStatus>(obj);
+    return static_pointer_cast<delphi::objects::ExampleStatus>(obj);
 }
 
 // ExampleService constructor
@@ -85,17 +85,17 @@ ExampleService::ExampleService(delphi::SdkPtr sk, string name) {
     this->svcName_ = name;
 
     // mount objects
-    delphi::objects::InterfaceSpec::Mount(sdk_, delphi::ReadWriteMode);
+    delphi::objects::ExampleSpec::Mount(sdk_, delphi::ReadWriteMode);
 
     // create interface event handler
-    intf_mgr_ = make_shared<InterfaceMgr>(sdk_);
+    intf_mgr_ = make_shared<ExampleReactor>(sdk_);
 
     // Register interface reactor
-    delphi::objects::InterfaceSpec::Watch(sdk_, intf_mgr_);
+    delphi::objects::ExampleSpec::Watch(sdk_, intf_mgr_);
 
     // create interface stats mgr
-    intf_stats_mgr_ = make_shared<InterfaceStatsMgr>();
-    
+    intf_stats_mgr_ = make_shared<ExampleStatsMgr>();
+
     LogInfo("Example service constructor got called");
 }
 
@@ -106,9 +106,9 @@ void ExampleService::OnMountComplete() {
     LogInfo("ExampleService OnMountComplete got called\n");
 
     // walk all interface objects and reconcile them
-    vector<delphi::objects::InterfaceSpecPtr> iflist = delphi::objects::InterfaceSpec::List(sdk_);
-    for (vector<delphi::objects::InterfaceSpecPtr>::iterator intf=iflist.begin(); intf!=iflist.end(); ++intf) {
-        intf_mgr_->OnInterfaceSpecCreate(*intf);
+    vector<delphi::objects::ExampleSpecPtr> iflist = delphi::objects::ExampleSpec::List(sdk_);
+    for (vector<delphi::objects::ExampleSpecPtr>::iterator intf=iflist.begin(); intf!=iflist.end(); ++intf) {
+        intf_mgr_->OnExampleSpecCreate(*intf);
     }
 
     LogInfo("============== ExampleService Finished Reconciliation ==================\n");
@@ -117,7 +117,7 @@ void ExampleService::OnMountComplete() {
 // createIntfSpec creates a dummy interface
 void ExampleService::createIntfSpec() {
     // create an object
-    delphi::objects::InterfaceSpecPtr intf = make_shared<delphi::objects::InterfaceSpec>();
+    delphi::objects::ExampleSpecPtr intf = make_shared<delphi::objects::ExampleSpec>();
     srand(time(NULL));
     intf->mutable_key()->set_ifidx(rand());
     intf->set_adminstate(example::IntfStateDown);

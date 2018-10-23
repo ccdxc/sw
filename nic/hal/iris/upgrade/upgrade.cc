@@ -11,61 +11,70 @@
 namespace hal {
 namespace upgrade {
 
-//------------------------------------------------------------------------------
-// constructor method
-//------------------------------------------------------------------------------
-hal_upg_hndlr::hal_upg_hndlr()
-{
-}
+std::string empty_str("");
 
 //------------------------------------------------------------------------------
 // perform compat check
 //------------------------------------------------------------------------------
 HdlrResp
-hal_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
+upgrade_handler::CompatCheckHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling compat checks msg ...");
-    return HdlrResp(SUCCESS, "");
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------
-// perform quiesce start
+// handler to bring link(s) down
 //------------------------------------------------------------------------------
 HdlrResp
-hal_upg_hndlr::ProcessQuiesceHandler(UpgCtx& upgCtx)
-{
-    hal_ret_t    ret;
-
-    HAL_TRACE_DEBUG("[upgrade] Handling queiesce msg ...");
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, NULL);
-    if (ret != HAL_RET_OK) {
-        return HdlrResp(FAIL, std::string(HAL_RET_ENTRIES_str));
-    }
-    return HdlrResp(SUCCESS, "");
-}
-
-//------------------------------------------------------------------------------
-// bring link down
-//------------------------------------------------------------------------------
-HdlrResp
-hal_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
+upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
 {
     hal_ret_t    ret;
 
     HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
+
+    // disable all uplink ports and as part of this delphi notifications
+    // will be sent out
     ret = linkmgr::port_disable(0);
     if (ret != HAL_RET_OK) {
-        return HdlrResp(FAIL, std::string(HAL_RET_ENTRIES_str))
+        return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
     }
-    return HdlrResp(SUCCESS, "");
+
+    // quiesece the pipeline (TODO: only for uplink ports !!)
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, NULL);
+    if (ret != HAL_RET_OK) {
+        return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
+    }
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
-#if 0
+//------------------------------------------------------------------------------
+// handle post host down message by shutting of scheduler
+//------------------------------------------------------------------------------
+HdlrResp
+upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
+{
+    HAL_TRACE_DEBUG("[upgrade] Handling post host down msg ...");
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
+}
+
+//------------------------------------------------------------------------------
+// take care post restart activities during upgrade
+//------------------------------------------------------------------------------
+HdlrResp
+upgrade_handler::PostRestartHandler(UpgCtx& upgCtx)
+{
+    HAL_TRACE_DEBUG("[upgrade] Handling post restart msg ...");
+    // TODO: mostly regular asic init path should work here, no special handling
+    // needed
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
+}
+
 //------------------------------------------------------------------------------
 // bring link up
 //------------------------------------------------------------------------------
 HdlrResp
-hal_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
+upgrade_handler::LinkUpHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {};
     HAL_TRACE_DEBUG("[upgrade] Handling link up msg ...");
@@ -73,32 +82,10 @@ hal_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
 }
 
 //------------------------------------------------------------------------------
-// post restart handling
-//------------------------------------------------------------------------------
-HdlrResp
-hal_upg_hndlr::PostRestartHandler(UpgCtx& upgCtx)
-{
-    HdlrResp resp = {};
-    HAL_TRACE_DEBUG("[upgrade] Handling post restart msg ...");
-    return resp;
-}
-
-//------------------------------------------------------------------------------
-// bring data plane down
-//------------------------------------------------------------------------------
-HdlrResp
-hal_upg_hndlr::DataplaneDowntimeStartHandler(UpgCtx& upgCtx)
-{
-    HdlrResp resp = {};
-    HAL_TRACE_DEBUG("[upgrade] Handling dataplane down msg ...");
-    return resp;
-}
-
-//------------------------------------------------------------------------------
 // handle upgrade success by releasing any transient state we are holding
 //------------------------------------------------------------------------------
 void
-hal_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
+upgrade_handler::SuccessHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling success msg ...");
 }
@@ -107,11 +94,10 @@ hal_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
 // handle upgrade abort
 //------------------------------------------------------------------------------
 void
-hal_upg_hndlr::AbortHandler(UpgCtx& upgCtx)
+upgrade_handler::AbortHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling abort msg ...");
 }
-#endif
 
 }    // namespace upgrade
 }    // namespace hal

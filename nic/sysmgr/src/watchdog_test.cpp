@@ -42,3 +42,8 @@ TEST(Watchdog, BasicFunctionality)
     ASSERT_EQ(sleep, 2);
     assert_expired(w.expired(), {"nicmgr", "agent"});
 }
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

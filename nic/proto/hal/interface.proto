@@ -7,6 +7,7 @@ syntax = "proto3";
 import "types.proto";
 import "qos.proto";
 import "kh.proto";
+import "delphi.proto";
 
 package intf;
 option go_package="halproto";
@@ -119,26 +120,29 @@ message PktFilter {
 
 // LIF object
 message LifSpec {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta          Meta                       = 1;
+
   // key_or_handle is LIF's key or handle
-  kh.LifKeyHandle            key_or_handle               = 1 [(gogoproto.moretags) = "venice:key"];
-  kh.InterfaceKeyHandle      pinned_uplink_if_key_handle = 2 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}" ];
-  IfStatus                   admin_status                = 3;    // admin status of the interface
-  repeated LifQStateMapEntry lif_qstate_map              = 4;    // LIF -> Qstate map.
-  bool                       vlan_strip_en               = 5;    // LIF vlan strip enable
-  bool                       vlan_insert_en              = 6;    // Ingress vlan tag in p4plus_to_p4 hdr
-  bool                       enable_rdma                 = 7;    // RDMA: enable RDMA on LIF
-  bool                       is_management               = 8 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
-  PktFilter                  packet_filter               = 9;   // Packet filters
-  uint32                     hw_lif_id                   = 10;   // hw lif id. Zero will make Hal allocate it
-  uint32                     rdma_max_keys               = 11;   // RDMA: max key entries
-  uint32                     rdma_max_ahs                = 12;
-  uint32                     rdma_max_pt_entries         = 13;   // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate                  = 14;   // Initialize Qstate
-  LifRssSpec                 rss                         = 15;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer                  = 16;   // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer                  = 17;   // QOS Policer for rx traffic
-  kh.QosClassKeyHandle       rx_qos_class                = 18;   // QOS class-of-service for Rx traffic.
-  kh.QosClassKeyHandle       tx_qos_class                = 19;   // QOS class-of-service for Tx traffic.
+  kh.LifKeyHandle            key_or_handle               = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.InterfaceKeyHandle      pinned_uplink_if_key_handle = 3 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}" ];
+  IfStatus                   admin_status                = 4;    // admin status of the interface
+  repeated LifQStateMapEntry lif_qstate_map              = 5;    // LIF -> Qstate map.
+  bool                       vlan_strip_en               = 6;    // LIF vlan strip enable
+  bool                       vlan_insert_en              = 7;    // Ingress vlan tag in p4plus_to_p4 hdr
+  bool                       enable_rdma                 = 8;    // RDMA: enable RDMA on LIF
+  bool                       is_management               = 9 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
+  PktFilter                  packet_filter               = 10;   // Packet filters
+  uint32                     hw_lif_id                   = 11;   // hw lif id. Zero will make Hal allocate it
+  uint32                     rdma_max_keys               = 12;   // RDMA: max key entries
+  uint32                     rdma_max_ahs                = 13;
+  uint32                     rdma_max_pt_entries         = 14;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate                  = 15;   // Initialize Qstate
+  LifRssSpec                 rss                         = 16;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer                  = 17;   // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 18;   // QOS Policer for rx traffic
+  kh.QosClassKeyHandle       rx_qos_class                = 19;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle       tx_qos_class                = 20;   // QOS class-of-service for Tx traffic.
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -148,9 +152,13 @@ message LifRequestMsg {
 
 // LifStatus represents the operational status of LIF
 message LifStatus {
-  IfStatus    lif_status = 1;    // currrent status of the interface
-  fixed64     lif_handle = 2;    // id of the interface returned by HAL
-  uint64      hw_lif_id  = 3;    // Hardware Lif Id
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta   Meta = 1;
+  kh.LifKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+
+  IfStatus    lif_status = 3;    // currrent status of the interface
+  fixed64     lif_handle = 4;    // id of the interface returned by HAL
+  uint64      hw_lif_id  = 5;    // Hardware Lif Id
 }
 
 // LifQstate entries
@@ -389,7 +397,7 @@ message EnicInfo {
 
 message EnicClassicInfo {
     repeated kh.L2SegmentKeyHandle l2segment_key_handle = 1 [(gogoproto.moretags) = "venice:ref"]; // classic: l2segs allowed on the enic
-    uint64                native_l2segment_handle       = 2; // classic: native l2seg on the enic
+    uint64  native_l2segment_id                         = 2;
 }
 
 // mandatory attributes expected if interface type is IF_TYPE_ENIC
@@ -459,16 +467,19 @@ message IfAppRedirInfo {
 
 // InterfaceSpec is used to add or update of an interface
 message InterfaceSpec {
-  kh.InterfaceKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];     // interface being created/updated
-  IfType             type              = 2 [(gogoproto.moretags) = "venice:immutable"];     // type of interface
-  IfStatus           admin_status      = 3;     // admin status of the interface
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta       Meta         = 1;
+
+  kh.InterfaceKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];     // interface being created/updated
+  IfType             type              = 3 [(gogoproto.moretags) = "venice:immutable"];     // type of interface
+  IfStatus           admin_status      = 4;     // admin status of the interface
   oneof if_info {
-    IfEnicInfo       if_enic_info      = 4 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
-    IfUplinkInfo     if_uplink_info    = 5 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
-    IfUplinkPCInfo   if_uplink_pc_info = 6 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK_PC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
-    IfTunnelInfo     if_tunnel_info    = 7 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
-    IfCPUInfo        if_cpu_info       = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton
-    IfAppRedirInfo   if_app_redir_info = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_APP_REDIR}"];     // app redirect interface informaton
+    IfEnicInfo       if_enic_info      = 5 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_ENIC}"];     // enic data if interface type is IF_TYPE_ENIC
+    IfUplinkInfo     if_uplink_info    = 6 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK}"];     // uplink port number if interface type is IF_TYPE_UPLINK
+    IfUplinkPCInfo   if_uplink_pc_info = 7 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_UPLINK_PC}"];     // uplink port channel number if interface type is IF_TYPE_UPLINK_PC
+    IfTunnelInfo     if_tunnel_info    = 8 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_TUNNEL}"];     // tunnel interface information
+    IfCPUInfo        if_cpu_info       = 9 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_CPU}"];     // cpu interface informaton
+    IfAppRedirInfo   if_app_redir_info = 10 [(gogoproto.moretags) = "venice:constraints={intf.InterfaceSpec.type==interface_pb2.IF_TYPE_APP_REDIR}"];     // app redirect interface informaton
   }
 }
 
@@ -538,14 +549,18 @@ message AppRedirIfInfo {
 
 // InterfaceStatus represents the current status of the interface
 message InterfaceStatus {
-  IfStatus                  if_status         = 1;    // currrent status of the interface
-  fixed64                   if_handle         = 2;    // id of the interface returned by HAL
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta         Meta              = 1;
+
+  kh.InterfaceKeyHandle key_or_handle         = 2 [(gogoproto.moretags) = "venice:key"];     // interface being created/updated
+  IfStatus                  if_status         = 3;    // currrent status of the interface
+  fixed64                   if_handle         = 4;    // id of the interface returned by HAL
   oneof if_response_info {
-    UplinkResponseInfo      uplink_info       = 3;    // Uplink/Uplink PC info
-    EnicResponseInfo        enic_info         = 4;    // Enic's info
-    CpuIfResponseInfo       cpu_info          = 5;    // CPU If's info
-    TunnelIfResponseInfo    tunnel_info       = 6;    // Tunnel If's info
-    AppRedirIfInfo          app_redir_info    = 7;    // App Redir info
+    UplinkResponseInfo      uplink_info       = 5;    // Uplink/Uplink PC info
+    EnicResponseInfo        enic_info         = 6;    // Enic's info
+    CpuIfResponseInfo       cpu_info          = 7;    // CPU If's info
+    TunnelIfResponseInfo    tunnel_info       = 8;    // Tunnel If's info
+    AppRedirIfInfo          app_redir_info    = 9;    // App Redir info
   }
 }
 

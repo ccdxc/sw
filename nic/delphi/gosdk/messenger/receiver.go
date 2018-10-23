@@ -10,11 +10,11 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/pensando/sw/nic/delphi/messanger/proto"
+	"github.com/pensando/sw/nic/delphi/messenger/proto"
 )
 
 type transportHander interface {
-	HandleMessage(message *delphi_messanger.Message) error
+	HandleMessage(message *delphi_messenger.Message) error
 	SocketClosed()
 }
 
@@ -44,7 +44,7 @@ func (r *receiver) loopForever() {
 			panic(err)
 		}
 
-		var message delphi_messanger.Message
+		var message delphi_messenger.Message
 		err = proto.Unmarshal(body, &message)
 		if err != nil {
 			panic(err)

@@ -18,7 +18,8 @@ cc_library(
 
     srcs = select({
         "//conditions:default": [
-            "libev/x86_64/lib/libev.a",
+#            "libev/x86_64/lib/libev.a",
+            "libev/x86_64/lib/libev.so.4.0.0",
         ],
 
         ":aarch64_mode" : [

@@ -8,9 +8,9 @@
 namespace hal {
 namespace sysmgr {
 
-std::pair<delphi::error, string>
+std::pair<delphi::error, std::string>
 sysmgr_client::Heartbeat(void) {
-    if (is_hal_healthy()) {
+    if (hal::hb::is_hal_healthy()) {
         return std::make_pair(delphi::error::OK(), "");
     } else {
         return std::make_pair(delphi::error::New("HAL heartbeat failure"), "");

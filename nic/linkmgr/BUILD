@@ -32,6 +32,7 @@ cc_library(
         "linkmgr_debug_svc.cc",
         "linkmgr_state.cc",
         "linkmgr_utils.cc",
+        "linkmgr_delphi.cc",
     ],
     deps = [
         "//nic:gen_proto_includes",
@@ -55,6 +56,9 @@ cc_library(
         "//nic:libprotobuf",
         "//nic/utils/trace:trace",
         "//nic:google_includes",
+        "//nic/delphi/sdk",
+        "//nic/proto/hal:hal_delphi_gen",
+        "//nic/delphi/proto/delphi:delphi_cc_proto",
         "@sdk//obj:sdk_twheel",
     ],
     copts = sdk_copts,
@@ -130,6 +134,7 @@ cc_library(
         "//nic/hal:hal_utils_includes",
         "//nic/utils/block_list:block_list",
         "//nic:google_includes",
+        "//nic/delphi/proto/delphi:delphi_cc_proto",
 
         "//nic:libaapl",
         "//nic/linkmgr:linkmgr_includes",
@@ -189,6 +194,7 @@ cc_binary(
     deps = [
         ":linkmgr_libsrc",
     ],
+    linkopts = ["-fPIC"],
 )
 
 # csr shared lib
@@ -199,4 +205,3 @@ cc_binary(
         ":linkmgrcsr",
     ],
 )
-

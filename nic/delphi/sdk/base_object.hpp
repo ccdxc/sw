@@ -6,7 +6,7 @@
 #include <map>
 
 #include "nic/delphi/utils/utils.hpp"
-#include "nic/delphi/messanger/proto/types.pb.h"
+#include "gen/proto//messenger.pb.h"
 #include "object_factory.hpp"
 
 namespace delphi {

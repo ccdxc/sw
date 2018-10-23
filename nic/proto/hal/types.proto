@@ -5,7 +5,6 @@
 
 syntax = "proto3";
 
-// import public "protos/github/gogo/protobuf/gogoproto/gogo.proto";
 import public "gogo.proto";
 
 package types;
