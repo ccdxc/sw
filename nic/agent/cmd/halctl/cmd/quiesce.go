@@ -56,14 +56,18 @@ func quiesceStartCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var empty *halproto.EmptyRequest
+	empty := new(halproto.EmptyRequest)
+	empty.Request = make([]*halproto.Empty, 0)
+	empty.Request = append(empty.Request, &halproto.Empty{})
 
 	// HAL call
 	_, err = client.QuiesceStart(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Getting Table Metadata failed. %v\n", err)
+		fmt.Printf("Dataplane quiesce start failed. %v\n", err)
 		return
 	}
+
+	fmt.Println("Dataplane quiesce started.")
 }
 
 func quiesceStopCmdHandler(cmd *cobra.Command, args []string) {
@@ -81,12 +85,16 @@ func quiesceStopCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var empty *halproto.EmptyRequest
+	empty := new(halproto.EmptyRequest)
+	empty.Request = make([]*halproto.Empty, 0)
+	empty.Request = append(empty.Request, &halproto.Empty{})
 
 	// HAL call
 	_, err = client.QuiesceStop(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Getting Table Metadata failed. %v\n", err)
+		fmt.Printf("Dataplane quiesce stop failed. %v\n", err)
 		return
 	}
+
+	fmt.Println("Dataplane quiesce stopped.")
 }
