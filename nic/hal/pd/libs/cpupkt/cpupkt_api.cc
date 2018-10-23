@@ -465,9 +465,13 @@ cpupkt_descr_to_headers (pd_descr_aol_t& descr,
     }
 
     //hard-coding to 9K buffer for now. needs to be replaced with page.
-    uint8_t* buffer = (uint8_t* ) malloc(9216);
+    //uint8_t* buffer = (uint8_t* ) malloc(9216);
+    uint8_t *buffer = (uint8_t *) g_hal_state->cpu_pkt_slab()->alloc();
+
 
     uint64_t pktaddr = descr.a0 + descr.o0;
+
+    HAL_TRACE_DEBUG("read buffer of length {}", descr.l0 + descr.l1);
 
     if (asic_mem_read(pktaddr, buffer, descr.l0, true) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read hbm page");

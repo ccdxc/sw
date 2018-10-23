@@ -107,6 +107,7 @@ public:
     slab *vrf_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VRF]); }
     slab *network_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NETWORK]); }
     slab *nwsec_profile_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SECURITY_PROFILE]); }
+    slab *cpu_pkt_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_CPU_PKT]); }
     slab *nwsec_group_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_GROUP]); }
     slab *nwsec_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_RULE]); }
     slab *nwsec_rulelist_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_RULE_LIST]); }
@@ -426,6 +427,8 @@ public:
     slab *nwsec_profile_slab(void) const { return cfg_db_->nwsec_profile_slab(); }
     ht *nwsec_profile_id_ht(void) const { return oper_db_->nwsec_profile_id_ht(); }
 
+    
+    slab *cpu_pkt_slab(void) const { return cfg_db_->cpu_pkt_slab(); }
     // get APIs for security Policy related state
     slab *nwsec_group_slab(void) const { return cfg_db_->nwsec_group_slab(); }
     slab *nwsec_rule_slab(void) const { return cfg_db_->nwsec_rule_slab(); }

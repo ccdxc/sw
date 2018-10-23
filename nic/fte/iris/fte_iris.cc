@@ -847,6 +847,12 @@ ctx_t::update_for_snat(hal::flow_role_t role, const header_rewrite_info_t& heade
 
     return  HAL_RET_OK;
 }
+
+void free_flow_miss_pkt(uint8_t * pkt)
+{
+    HAL_TRACE_DEBUG("free flow miss packet");
+    hal::free_to_slab(hal::HAL_SLAB_CPU_PKT, pkt);
+}
 //------------------------------------------------------------------------------
 // Queues pkt for transmission on ASQ at the end of pipeline processing,
 // after updating the flow table
@@ -939,7 +945,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
     if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() &&
        !hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
-        queue_txpkt(pkt_, pkt_len_);
+         queue_txpkt(pkt_, pkt_len_, NULL, NULL, hal::SERVICE_LIF_CPU, CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, types::WRING_TYPE_ASQ, free_flow_miss_pkt);
     }
 
     for (int i = 0; i < txpkt_cnt_; i++) {
@@ -987,9 +993,12 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         }
         incr_inst_fte_tx_stats(pkt_info->pkt_len);
         // Issue a callback to free the packet
-        if (pkt_info->cb)
-            pkt_info->cb(pkt_info->pkt);
-    }
+        if (pkt_info->cb) {
+            HAL_TRACE_DEBUG(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
+            free_flow_miss_pkt((uint8_t *)cpu_rxhdr_);
+            //pkt_info->cb(pkt_info->pkt);
+        }
+    } 
     txpkt_cnt_ = 0;
 
     return HAL_RET_OK;

@@ -308,6 +308,12 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_ACL] != NULL), false);
 
+    slabs_[HAL_SLAB_CPU_PKT] = 
+        slab::factory("cpu_pkt", HAL_SLAB_CPU_PKT,
+                      9216, 64,
+                      true, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_CPU_PKT] != NULL), false);
+
     slabs_[HAL_SLAB_NWSEC_GROUP] =
         slab::factory("nwsec_group", HAL_SLAB_NWSEC_GROUP,
                       sizeof(hal::nwsec_group_t), 64,
@@ -1777,6 +1783,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_SECURITY_PROFILE:
         g_hal_state->nwsec_profile_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_CPU_PKT:
+        g_hal_state->cpu_pkt_slab()->free(elem);
         break;
 
     case HAL_SLAB_NWSEC_GROUP:

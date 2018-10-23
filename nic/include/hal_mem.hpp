@@ -115,7 +115,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_DPKT_LEARN                      = 103,
     HAL_SLAB_L2SEG_UPLINK_OIF_LIST           = 104,
     HAL_SLAB_FTE_SPAN                        = 105,
-    HAL_SLAB_PI_MAX                          = 106,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_CPU_PKT                         = 106,
+    HAL_SLAB_PI_MAX                          = 107,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,
