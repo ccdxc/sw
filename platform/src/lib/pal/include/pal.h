@@ -107,6 +107,9 @@ void pal_reg_trace(const char *fmt, ...)
 void pal_mem_trace(const char *fmt, ...)
     __attribute__((format (printf, 1, 2)));
 
+/* CPLD APIs */
+int pal_is_qsfp_port_psnt(int port_no);
+
 #ifdef __cplusplus
 }
 #endif

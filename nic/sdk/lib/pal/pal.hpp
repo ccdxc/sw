@@ -36,6 +36,7 @@ typedef struct pal_rwvectors_s {
                                                  uint64_t *phy_addr);
     pal_ret_t   (*mem_set)(const uint64_t pa, uint8_t c,
                            const uint32_t sz, uint32_t flags);
+    bool        (*is_qsfp_port_present)(int port_no);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
@@ -98,6 +99,12 @@ static inline pal_ret_t
 pal_virtual_addr_to_physical_addr (uint64_t  virtual_addr, uint64_t  *phy_addr)
 {
     return gl_pal_info.rwvecs.virtual_addr_to_physical_addr(virtual_addr, phy_addr);
+}
+
+static inline bool
+pal_is_qsfp_port_present(int port_no)
+{
+    return gl_pal_info.rwvecs.is_qsfp_port_present(port_no);
 }
 
 }    // namespace lib

@@ -15,6 +15,7 @@ SUBDIRS = \
 	nicmgrd \
 	asicerrord \
 	nicmgr_gtest \
+	cpldapp \
 	$(NULL)
 
 TOPDIR = ../..

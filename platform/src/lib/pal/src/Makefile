@@ -10,6 +10,7 @@ SOURCES = \
 	mmap_region.c \
         pal_mm.c \
 	trace.c \
+	pal_cpld.c \
 	$(NULL)
 
 LCFLAGS += \

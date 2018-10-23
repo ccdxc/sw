@@ -91,78 +91,6 @@ copy_int(void *dst, const void *src, size_t n)
     return dst;
 }
 
-/* 
- * Locks are Co-Operative.
- *
- * It is expected that the developer uses these APIs for
- * process level synchronization to access PAL library.
- * Both Read locks (shareable by multiple applications) and
- * Write locks (Exclusive access) are provided.
- */
-static pal_ret_t 
-pal_wr_lock_int(int fd)
-{
-    struct flock lock = {F_WRLCK, 0, SEEK_SET, 0};
-    struct flock get_lock_int;
-
-    /* Checks to see if the lock is already with the process */
-    fcntl(fd, F_GETLK, &get_lock_int);  /* Overwrites lock structure with preventors. */
-    if (get_lock_int.l_type == F_WRLCK) {
-        return PAL_FAIL;
-    } else if (get_lock_int.l_type == F_RDLCK) {
-	return PAL_FAIL;
-    }
-
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
-        return PAL_FAIL;
-    } else {
-        return PAL_SUCCESS;
-    }
-}
-
-static pal_ret_t
-pal_rd_lock_int(int fd)
-{
-    struct flock lock = {F_RDLCK, 0, SEEK_SET, 0};
-    struct flock get_lock_int;
-
-    /* Checks to see if the lock is already with the process */
-    fcntl(fd, F_GETLK, &get_lock_int);  /* Overwrites lock structure with preventors. */
-    if (get_lock_int.l_type == F_WRLCK) {
-        return PAL_FAIL;
-    } 
-
-    if (fcntl(fd, F_SETLKW, &lock) == -1) {
-        return PAL_FAIL;
-    } else {
-        return PAL_SUCCESS;
-    }
-}
-
-static pal_ret_t
-pal_wr_unlock_int(int fd)
-{
-   struct flock lock = {F_UNLCK, 0, SEEK_SET, 0};
-
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
-        return PAL_FAIL;
-    } else {
-	return PAL_SUCCESS;
-    }
-}
-
-static pal_ret_t
-pal_rd_unlock_int(int fd)
-{
-   struct flock lock = {F_UNLCK, 0, SEEK_SET, 0};
-
-    if (fcntl(fd, F_SETLK, &lock) == -1) {
-        return PAL_FAIL;
-    } else {
-        return PAL_SUCCESS;
-    }
-}
-
 /* PAL_MM : Memory Alloc and Frees */
 static u_int64_t
 pal_get_aligned_size_int(u_int64_t size)
@@ -293,12 +221,7 @@ pal_mm_init(char *application_name)
      copy_int(buf, pr_ptov(mem_start, 8, FREEACCESS), 8);
 
      if (strncmp(buf, MAGIC, strlen(MAGIC)) == 0) {
-        /* Note: O_CREAT flag is not added here as we want the open to fail 
-         * if the lock file does not already exist. This is required as we
-         * should be executing these lines of code iff the library has
-         * already been initialized. 
-         */
-        pd->memlckfd = open(MEMLOCKFILE, O_RDWR);
+        pd->memlckfd = pal_lock_init(MEMLOCKFILE);
 
 	if (pd->memlckfd == -1) {
 	    printf("Could not open lockfile.\n");
@@ -365,7 +288,7 @@ pal_mm_init(char *application_name)
      copy_int(pr_ptov(mem_start, sizeof(metadata), FREEACCESS),
          (const void*)&metadata, sizeof(metadata));
      pal_unmap_metadata();
-     if (pal_wr_unlock_int(pd->memlckfd) == PAL_FAIL) {
+     if (pal_wr_unlock_int(pd->memlckfd) == LCK_FAIL) {
 	printf("Failed to unlock.\n");
      }
      pd->init_done = 1;
@@ -526,7 +449,7 @@ pal_mem_map_region_int(char *region_name)
         goto exit;
     }
 
-    if (pal_rd_lock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
         return NULL;
     }
 
@@ -556,7 +479,7 @@ pal_mem_map_region_int(char *region_name)
 
 exit:
     pal_unmap_metadata();
-    if (pal_rd_unlock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
 	printf("Failed to unlock.\n");
     }
     return va;
@@ -575,7 +498,7 @@ pal_mem_unmap_region_int(char *region_name)
         goto exit;
     }
 
-    if (pal_rd_lock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
         return;
     }
 
@@ -606,7 +529,7 @@ pal_mem_unmap_region_int(char *region_name)
 
 exit:
     pal_unmap_metadata();
-    if (pal_rd_unlock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
 	printf("Failed to unlock.");
     }
     return;
@@ -630,7 +553,7 @@ pal_mem_alloc_int(char *region_name,
 	return 0;
     }
 
-    if (pal_wr_lock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_wr_lock_int(pd->memlckfd) == LCK_FAIL) {
 	return 0;
     }
     metadata = (pal_mem_metadata_t*) pal_map_metadata_int();
@@ -738,7 +661,7 @@ pal_mem_alloc_int(char *region_name,
 exit:
     pal_unmap_metadata();
 
-    if (pal_wr_unlock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_wr_unlock_int(pd->memlckfd) == LCK_FAIL) {
 	pal_mem_trace("Failed to unlock.\n");
     }
 
@@ -759,7 +682,7 @@ pal_mem_free_int(char *region_name)
 	goto exit;
     }
 
-    if (pal_wr_lock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_wr_lock_int(pd->memlckfd) == LCK_FAIL) {
 	printf("Couldnot get write lock. Exiting.");
 	return;
     }
@@ -810,7 +733,7 @@ pal_mem_free_int(char *region_name)
 exit:
     pal_unmap_metadata();
 
-    if (pal_wr_unlock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_wr_unlock_int(pd->memlckfd) == LCK_FAIL) {
 	pal_mem_trace("Failed to unlock.\n");
     }
 }
@@ -823,7 +746,7 @@ pal_pa_access_allowed(u_int64_t pa, u_int64_t sz)
     u_int16_t i = 0;
     u_int8_t needs_check = 0;
 
-    if (pal_rd_lock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
         return PAL_FAIL;
     }
 
@@ -869,7 +792,7 @@ pal_pa_access_allowed(u_int64_t pa, u_int64_t sz)
    }
 
    pal_unmap_metadata();
-   if (pal_rd_unlock_int(pd->memlckfd) == PAL_FAIL) {
+   if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
 	pal_mem_trace("Failed to unlock.\n");
    }
    return PAL_SUCCESS;
@@ -886,7 +809,7 @@ pal_print_application_regions(char *application_name)
     u_int64_t total_shareable = 0;
     u_int64_t total_coherent_int = 0;
 
-    if (pal_rd_lock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
         return;
     }
 
@@ -921,7 +844,7 @@ pal_print_application_regions(char *application_name)
     printf("\n======================================================================\n");
 
     pal_unmap_metadata();
-    if (pal_rd_unlock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
 	pal_mem_trace("Failed to unlock.\n");
     }
 }
@@ -931,7 +854,7 @@ pal_print_metadata(void) {
     pal_data_t *pd = pal_get_data();
     pal_mem_metadata_t *metadata = NULL;
 
-    if (pal_rd_lock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
 	return;
     }
 
@@ -940,7 +863,7 @@ pal_print_metadata(void) {
     print_metadata(metadata);
     pal_unmap_metadata();
 
-    if (pal_rd_unlock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
         pal_mem_trace("Failed to unlock.\n");
     }
 }
@@ -958,7 +881,7 @@ pal_mem_region_pa_int(char *region_name)
         goto exit;
     }
 
-    if (pal_rd_lock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
     	goto exit; 
     }
 
@@ -983,7 +906,7 @@ pal_mem_region_pa_int(char *region_name)
 
 exit:
     pal_unmap_metadata();
-    if (pal_rd_unlock_int(pd->memlckfd) == PAL_FAIL) {
+    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
         printf("Failed to unlock.\n");
     }
     return pa; 

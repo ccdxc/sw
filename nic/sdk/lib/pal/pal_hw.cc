@@ -21,17 +21,19 @@ typedef bool (*ring_doorbell_fn_t)(uint64_t addr, uint64_t data);
 typedef uint64_t (*mem_vtop_fn_t)(const void *va);
 typedef void *(*mem_ptov_fn_t)(const uint64_t pa);
 typedef int (*memset_fn_t)(const uint64_t pa, uint8_t c, const size_t sz, uint32_t flags);
+typedef int (*is_qsfp_port_present_fn_t)(int port_no);
 
 typedef struct pal_hw_vectors_s {
-    hw_init_fn_t            hw_init;
-    reg_read_fn_t           reg_read;
-    reg_write_fn_t          reg_write;
-    reg_write64_fn_t        reg_write64;
-    mem_read_fn_t           mem_read;
-    mem_write_fn_t          mem_write;
-    mem_vtop_fn_t           mem_vtop;
-    mem_ptov_fn_t           mem_ptov;
-    memset_fn_t             mem_set;
+    hw_init_fn_t                hw_init;
+    reg_read_fn_t               reg_read;
+    reg_write_fn_t              reg_write;
+    reg_write64_fn_t            reg_write64;
+    mem_read_fn_t               mem_read;
+    mem_write_fn_t              mem_write;
+    mem_vtop_fn_t               mem_vtop;
+    mem_ptov_fn_t               mem_ptov;
+    memset_fn_t                 mem_set;
+    is_qsfp_port_present_fn_t	is_qsfp_port_present;
 } pal_hw_vectors_t;
 
 static pal_hw_vectors_t   gl_hw_vecs;
@@ -65,6 +67,10 @@ pal_init_hw_vectors (void)
 
     gl_hw_vecs.mem_set = (memset_fn_t)dlsym(gl_lib_handle, "pal_memset");
     SDK_ASSERT(gl_hw_vecs.mem_set);
+
+    gl_hw_vecs.is_qsfp_port_present = (is_qsfp_port_present_fn_t)dlsym(gl_lib_handle,
+                                      "pal_is_qsfp_port_psnt");
+    SDK_ASSERT(gl_hw_vecs.is_qsfp_port_present);
 
     return PAL_RET_OK;
 }
@@ -137,6 +143,12 @@ pal_hw_memset (uint64_t pa, uint8_t c, uint32_t sz, uint32_t flags)
     return PAL_RET_OK;
 }
 
+static bool
+pal_hw_is_qsfp_port_present(int port_no)
+{
+    return ((*gl_hw_vecs.is_qsfp_port_present)(port_no) != 0);
+}
+
 static pal_ret_t
 pal_hw_init_rwvectors (void)
 {
@@ -150,6 +162,7 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
                         pal_hw_virtual_addr_to_physical_addr;
     gl_pal_info.rwvecs.mem_set = pal_hw_memset;
+    gl_pal_info.rwvecs.is_qsfp_port_present = pal_hw_is_qsfp_port_present;
 
     pal_init_hw_vectors();
 
