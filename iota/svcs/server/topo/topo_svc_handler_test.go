@@ -85,8 +85,6 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	t.Parallel()
 	var tbMsg iota.TestBedMsg
 
-	//var macAddr []string
-	//var usegVlan, externalVlan []uint32
 	var naplesHosts []*iota.NaplesHost
 	initNodes := []*iota.TestBedNode{
 		{
@@ -270,8 +268,6 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.FailNow()
 	}
 
-	fmt.Println("BALERION: ", addNodeResp)
-
 	quorumNodes := []string{"venice-node-1", "venice-node-2", "venice-node-3"}
 	clusterObj := &cluster.Cluster{
 		TypeMeta: api.TypeMeta{
@@ -367,7 +363,6 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		json.Unmarshal(jsonBytes, &object)
 
 		m := object.(map[string]interface{})
-		fmt.Println("RHAEGON: ", m)
 		switch strings.ToLower(m["kind"].(string)) {
 
 		case "workload":
