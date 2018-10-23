@@ -150,7 +150,8 @@ class NaplesNode(Node):
         ports_exposed = """ -p {}:9008 """.format(exposedPortBase + 5000 + self.containerIndex)
         if self.testMode == "TELEMETRY":
             self.setupCommon()
-            runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/tmagent" """.format(self.name))
+            runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/tmagent" """.format(self.name))
+            runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/nmd" """.format(self.name))
         elif self.testMode == "HAL":
             self.setupCommon()
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/netagent" """.format(self.name))
@@ -177,7 +178,8 @@ class NaplesNode(Node):
     def startCluster(self):
         # start nmd as a native process on NaplesNode
         if self.testMode == "TELEMETRY":
-            runCommand("""docker exec -d {} bash -c "tools/start_fte_sim.sh" """.format(self.name))
+            runCommand("""docker exec -d {} nmd -cmdregistration {}:9002 -cmdupdates {}:9009 -cmdcerts {}:9009 -hostif eth1 -hostname {}-host -resolver {}:9009 -mode managed  & """.format(self.name, self.clustervip, self.clustervip, self.clustervip,  self.name, self.clustervip))
+            runCommand("""docker exec -d {} bash -c "tools/start_fte_sim.sh {}:9009 " """.format(self.name, self.clustervip))
         elif self.testMode == "HAL":
             runCommand("""docker exec -d {} nmd -cmdregistration {}:9002 -cmdupdates {}:9009 -hostif eth1 -hostname {}-host -resolver {}:9009 -mode network  & """.format(self.name, self.clustervip, self.clustervip, self.name, self.clustervip))
             runCommand("""docker exec -d {} make e2e-sanity-hal-bringup""".format(self.name))
@@ -234,6 +236,16 @@ def copyElasticAccessCredentials():
     finally:
       shutil.rmtree(tmpDir)
 
+# Copy credentials to access etcd cluster from node0
+def copyEtcdAccessCredentials():
+    tmpDir = tempfile.mkdtemp()
+    try:
+        runCommand("""docker cp node1:/var/lib/pensando/pki/shared/etcd-client-auth/. {}""".format(tmpDir))
+        runCommand("""docker exec node0 mkdir -p /var/lib/pensando/pki/shared/etcd-client-auth""")
+        runCommand("""docker cp {}/. node0:/var/lib/pensando/pki/shared/etcd-client-auth""".format(tmpDir))
+    finally:
+        shutil.rmtree(tmpDir)
+
 def deleteCluster():
     runCommand("""docker stop -t 3 node0 >/dev/null 2>&1""", ignore_error=True)
     runCommand(""" for i in $(docker ps -f label=pens-dind --format '{{.ID}}'); do docker exec $i init 0; done """, ignore_error=True)
@@ -285,6 +297,7 @@ def restartCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
     if not args.skipnode0:
       copyK8sAccessCredentials()
       copyElasticAccessCredentials()
+      copyEtcdAccessCredentials()
 
 parser = argparse.ArgumentParser()
 # these 4 below are used internally not to be directly executed by the caller
@@ -417,5 +430,6 @@ if not args.skipnode0:
     testMgmtNode.startNode()
     copyK8sAccessCredentials()
     copyElasticAccessCredentials()
+    copyEtcdAccessCredentials()
 
 sys.exit(0)

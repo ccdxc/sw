@@ -60,7 +60,7 @@ func (tt *TimeTable) MatchRow(ts string, r Row) bool {
 }
 
 // MatchQueryRow checks if the query result row matches the table
-func (tt *TimeTable) MatchQueryRow(qr models.Row) error {
+func (tt *TimeTable) MatchQueryRow(qr *models.Row) error {
 	if qr.Name != tt.name {
 		return fmt.Errorf("Expected name %s, got %s", tt.name, qr.Name)
 	}
@@ -72,7 +72,7 @@ func (tt *TimeTable) MatchQueryRow(qr models.Row) error {
 	for ix, val := range qr.Values {
 		ts, row := parseValues(qr.Columns, val)
 		if !tt.MatchRow(ts, row) {
-			return fmt.Errorf("Row %d ts: %s does not match", ix, ts)
+			return fmt.Errorf("Row %d ts: %s does not match [%+v]", ix, ts, row)
 		}
 	}
 

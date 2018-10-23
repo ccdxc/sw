@@ -7,6 +7,7 @@
     "SSHPasswd":      "vagrant",
     "SSHAuthMethod":  "password",
     "FirstVeniceIP":  "192.168.30.11",
+    "FirstNaplesIP":  "192.168.30.21",
     "FirstSimPort":   14990,
     "NumSims" :       3,
     "E2EMode":        "TELEMETRY",

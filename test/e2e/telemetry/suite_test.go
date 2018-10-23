@@ -9,11 +9,17 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"reflect"
+	"strings"
 	"testing"
 	"time"
 
-	influx "github.com/influxdata/influxdb/client/v2"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
+
+	"github.com/influxdata/influxdb/models"
+
+	"github.com/pensando/sw/venice/citadel/broker"
+	"github.com/pensando/sw/venice/citadel/meta"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc"
@@ -33,18 +39,15 @@ var configFile string
 type teleSuite struct {
 	simClients []halproto.InternalClient
 	conns      []*grpc.ClientConn
-	infClient  influx.Client
+	broker     *broker.Broker
 	tt         *cinteg.TimeTable
-}
-
-type qResult struct {
-	results []influx.Result
 }
 
 type tbConfig struct {
 	NumVeniceNodes int
 	NumNaplesHosts int
 	FirstVeniceIP  string
+	FirstNaplesIP  string
 	FirstSimPort   int
 	NumSims        int
 	Scheme         string
@@ -76,16 +79,15 @@ func newTS() (*teleSuite, error) {
 		return nil, err
 	}
 
-	infURL, err := getInfluxURL(cfg.Scheme)
+	citadelHost, err := getCitadelURLs(cfg.Scheme)
 	if err != nil {
 		return nil, err
 	}
 
-	hc := influx.HTTPConfig{
-		Addr: cfg.Scheme + infURL,
-	}
-
-	ic, err := influx.NewHTTPClient(hc)
+	cluster := meta.DefaultClusterConfig()
+	cluster.MetastoreURL = citadelHost + ":" + globals.KVStoreClientPort
+	cluster.MetastoreType = store.KVStoreTypeEtcd
+	br, err := broker.NewBroker(cluster, citadelHost)
 	if err != nil {
 		return nil, err
 	}
@@ -98,47 +100,35 @@ func newTS() (*teleSuite, error) {
 	return &teleSuite{
 		simClients: sims,
 		conns:      conns,
-		infClient:  ic,
+		broker:     br,
 		tt:         cinteg.NewTimeTable("firewall"),
 	}, nil
 }
 
-// getInfluxURL fetches the influx backends from resolver
-// TODO: migrate when query api is available
-func getInfluxURL(scheme string) (string, error) {
-	for ix := 0; ix < 10; ix++ {
-		icList := getInfluxURLs(scheme + "node1:" + globals.CMDRESTPort + "/api/v1/services")
-		if len(icList) > 0 {
-			return icList[0], nil
-		}
-
-		time.Sleep(5 * time.Second)
-		log.Infof("No Influx service found. Retrying...")
-	}
-
-	return "", fmt.Errorf("no influx service found")
-}
-
-func getInfluxURLs(cmdAddr string) []string {
+func getCitadelURLs(scheme string) (string, error) {
 	var result stypes.ServiceList
-	var urls []string
-	err := netutils.HTTPGet(cmdAddr, &result)
-	if err != nil {
-		log.Errorf("%v", err)
-		return urls
-	}
 
-	for _, svc := range result.Items {
-		if svc.Name == "pen-influx" {
-			for _, inst := range svc.Instances {
-				urls = append(urls, inst.URL)
-			}
-		} else {
-			log.Infof("svc name: %s", svc.Name)
+	for i := 0; i < 20; i++ {
+		err := netutils.HTTPGet(scheme+"node1:"+globals.CMDRESTPort+"/api/v1/services", &result)
+		if err != nil {
+			log.Errorf("%v", err)
+			return "", err
 		}
 
+		for _, svc := range result.Items {
+			if svc.Name == globals.Citadel {
+				for _, inst := range svc.Instances {
+					h := strings.Split(inst.URL, ":")[0]
+					return h, nil
+				}
+			}
+		}
+
+		log.Infof("citadel service not ready, Retrying...")
+		time.Sleep(time.Second)
 	}
-	return urls
+
+	return "", fmt.Errorf("no citadel service found")
 }
 
 func getSimClients(cfg *tbConfig) ([]halproto.InternalClient, []*grpc.ClientConn, error) {
@@ -146,11 +136,10 @@ func getSimClients(cfg *tbConfig) ([]halproto.InternalClient, []*grpc.ClientConn
 	var conns []*grpc.ClientConn
 	var err error
 
-	naplesIP := net.ParseIP(cfg.FirstVeniceIP).To4()
+	naplesIP := net.ParseIP(cfg.FirstNaplesIP).To4()
 	if naplesIP == nil {
-		return nil, nil, fmt.Errorf("Bad IP %v", cfg.FirstVeniceIP)
+		return nil, nil, fmt.Errorf("Bad IP %v", cfg.FirstNaplesIP)
 	}
-	naplesIP[3] += byte(cfg.NumVeniceNodes)
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
@@ -184,50 +173,31 @@ func getSimClients(cfg *tbConfig) ([]halproto.InternalClient, []*grpc.ClientConn
 	return sims, conns, nil
 }
 
-func (ts *teleSuite) InfluxQuery(db, cmd string) ([]influx.Result, error) {
-	var res []influx.Result
+func (ts *teleSuite) DbQuery(ctx context.Context, db, cmd string) (models.Rows, error) {
+	response, err := ts.broker.ExecuteQuery(ctx, db, cmd)
+	if err != nil {
+		return nil, err
+	}
 
-	q := influx.Query{
-		Command:  cmd,
-		Database: db,
-	}
-	if response, err := ts.infClient.Query(q); err == nil {
-		if response.Error() != nil {
-			return res, response.Error()
-		}
-		res = response.Results
-	} else {
-		return res, err
-	}
-	return res, nil
+	return response[0].Series, nil
 }
 
-func (ts *teleSuite) CreateDB(db string) error {
-	_, err := ts.InfluxQuery("", fmt.Sprintf("CREATE DATABASE %s", db))
-	if err != nil {
-		return err
-	}
-
-	// verify the database was created
-	res, err := ts.InfluxQuery("", "SHOW DATABASES")
-	if err != nil {
-		return err
-	}
-
-	log.Infof("CreateDB: %+v", res)
-	qr := &qResult{results: res}
-	return qr.mustHaveValue(db)
+func (ts *teleSuite) CreateDB(ctx context.Context, db string) error {
+	return ts.broker.CreateDatabase(ctx, db)
 }
 
-func (ts *teleSuite) DeleteDB(db string) error {
-	_, err := ts.InfluxQuery("", fmt.Sprintf("DROP DATABASE %s", db))
-	return err
+func (ts *teleSuite) DeleteDB(ctx context.Context, db string) error {
+	//if err := ts.broker.DeleteDatabase(ctx, db); err != nil {
+	//	return err
+	//	}
+
+	return nil
 }
 
 func (ts *teleSuite) InjectLogs(count int) error {
 	ctx := context.Background()
 	stamp := time.Now()
-	twoms, err := time.ParseDuration("2ms")
+	twoms, err := time.ParseDuration("5ms")
 	if err != nil {
 		return err
 	}
@@ -242,7 +212,7 @@ func (ts *teleSuite) InjectLogs(count int) error {
 			Sipv4:      uint32(rand.Intn(0xc0ffffff)),
 			Dipv4:      uint32(rand.Intn(0xc0ffffff)),
 			Sport:      uint32(rand.Intn(60000)),
-			Dport:      uint32(rand.Intn(20000)),
+			Dport:      uint32(10000 + ix),
 			Timestamp:  stamp.UnixNano(),
 		}
 
@@ -272,53 +242,29 @@ func (ts *teleSuite) addTimeTable(fwe *halproto.FWEvent) {
 	stamp := time.Unix(0, fwe.Timestamp)
 	tags := map[string]string{"src": ipSrc, "dest": ipDest, "dPort": dPort, "ipProt": ipProt, "action": action, "direction": dir}
 	fields := map[string]interface{}{"sPort": int64(fwe.Sport)}
-	ts.tt.AddRow(cinteg.InfluxTS(stamp, time.Millisecond), tags, fields)
+	ts.tt.AddRow(cinteg.InfluxTS(stamp, time.Nanosecond), tags, fields)
 }
 
 func (ts *teleSuite) VerifyQueryAll(db, meas string) error {
-	res, err := ts.InfluxQuery(db, "SELECT * FROM "+meas)
+	ctx := context.Background()
+	res, err := ts.DbQuery(ctx, db, "SELECT * FROM "+meas)
 	if err != nil {
 		return err
 	}
 
-	return ts.tt.MatchQueryRow(res[0].Series[0])
+	return ts.tt.MatchQueryRow(res[0])
 }
 
 func (ts *teleSuite) CountPoints(db, meas string) (int, error) {
-	res, err := ts.InfluxQuery(db, "SELECT * FROM "+meas)
+	count := 0
+	res, err := ts.DbQuery(context.Background(), db, "SELECT * FROM "+meas)
 	if err != nil {
 		return 0, err
 	}
-	qr := &qResult{results: res}
-	return qr.countRows(), nil
-}
 
-func (qr *qResult) mustHaveValue(v interface{}) error {
-	for _, res := range qr.results {
-		for _, s := range res.Series {
-			for _, r := range s.Values {
-				for _, c := range r {
-					if reflect.DeepEqual(c, v) {
-						log.Infof("found %v", c)
-						return nil
-					}
-				}
-			}
-		}
+	for _, i := range res {
+		count += len(i.Values)
 	}
 
-	log.Infof("DB not found")
-	return fmt.Errorf("%v Not found", v)
-}
-
-func (qr *qResult) countRows() int {
-	var count int
-
-	for _, res := range qr.results {
-		for _, s := range res.Series {
-			count += len(s.Values)
-		}
-	}
-
-	return count
+	return count, nil
 }

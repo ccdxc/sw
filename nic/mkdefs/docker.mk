@@ -28,7 +28,7 @@ docker/coverage: docker/build-runtime-image
 
 docker/e2e-sanity-build: docker/build-runtime-image
 	mkdir -p ${SW_DIR}/bazel-cache;
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make pull-assets && make nic && cd /sw/platform && make && make -C src/sim/qemu && make -C src/sim/model_server'
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v $(SW_DIR)/bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make'
 
 docker/e2e-sanity-hal-bringup:
 	@bash -c '(./tools/start-model.sh &) && ./tools/start-hal.sh'
@@ -52,7 +52,7 @@ REGISTRY = registry.test.pensando.io:5000
 
 docker/build-runtime-image: docker/install_box
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.26; fi
-	cd .. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box -t pensando/nic nic/box.rb
+	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
 
 docker/build-runtime-image-skip-box:
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.26; fi

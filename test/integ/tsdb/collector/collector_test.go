@@ -78,7 +78,7 @@ func TestCollector(t *testing.T) {
 	Assert(t, len(res[0].Series) == 1, "Expected 1 series, got %d,{%+v}", len(res[0].Series), res[0].Series)
 	tt := NewTimeTable("measA")
 	tt.AddRow(InfluxTS(ts1, time.Millisecond), tagsA, fieldsA)
-	err = tt.MatchQueryRow(res[0].Series[0])
+	err = tt.MatchQueryRow(&res[0].Series[0])
 	if err != nil {
 		t.Fatal(err)
 	}

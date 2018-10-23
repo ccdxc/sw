@@ -11,5 +11,5 @@ export LUA_PATH="$SNORT_EXPORT_DIR/lua/?.lua;;"
 export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
 
 echo "STARTING fte_sim: `date +%x_%H:%M:%S:%N`"
-/go/bin/tmagent -resolver-urls "192.168.30.10:9009" &
-$NIC_DIR/build/x86_64/iris/bin/fte_sim 2>&1
+/go/bin/tmagent -resolver-urls $* &
+$NIC_DIR/build/x86_64/iris/bin/fte_sim > /var/log/ftesim.$$ 2>&1

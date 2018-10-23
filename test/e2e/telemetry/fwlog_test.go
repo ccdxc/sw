@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"context"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -13,12 +14,19 @@ var _ = BeforeSuite(func() {
 	var err error
 	ts, err = newTS()
 	Expect(err).Should(BeNil())
-	err = ts.CreateDB("FWLogs")
+
+	Eventually(func() error {
+		err := ts.broker.ClusterCheck()
+		return err
+	}, 20, 1).Should(BeNil(), "cluster is not ready, %s", err)
+
+	err = ts.CreateDB(context.Background(), "FWLogs")
 	Expect(err).Should(BeNil())
+
 })
 
 var _ = AfterSuite(func() {
-	err := ts.DeleteDB("FWLogs")
+	err := ts.DeleteDB(context.Background(), "FWLogs")
 	Expect(err).Should(BeNil())
 })
 

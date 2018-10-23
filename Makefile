@@ -386,7 +386,7 @@ e2e-sanities:
 # Target to run telemetry e2e test cases
 e2e-telemetry:
 	$(MAKE) venice-image
-	$(MAKE) -C nic e2e-sanity-build
+	$(MAKE) -C nic docker/e2e-sanity-build
 	@echo "Setting up cluster..."
 	./test/e2e/dind/do.py -configFile test/e2e/telemetry/tb_config.json
 	@stty sane
