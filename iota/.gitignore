@@ -1,6 +1,6 @@
 __pycache__
-protos/gogen*
-protos/pygen*
+protos/*gogen*
+protos/*pygen*
 bin/
 images/raw.tar.gz
 *.log
