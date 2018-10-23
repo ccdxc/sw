@@ -440,7 +440,7 @@ init_service_info(enum pnso_service_type svc_type,
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
-		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC_HOT;
+		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP;
 		/* TODO-chain: rolling back to previous PR setting DCq failed */
 		// svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
@@ -501,7 +501,7 @@ init_service_info_ex(struct batch_info *batch_info,
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
-		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC_HOT;
+		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP;
 		/* TODO-chain: rolling back to previous PR setting DCq failed */
 		// svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;

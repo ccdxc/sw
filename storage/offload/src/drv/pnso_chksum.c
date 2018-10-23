@@ -27,9 +27,9 @@ fill_chksum_desc(uint32_t algo_type, uint32_t buf_len,
 
 	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_buf);
 
-	desc->u.cd_bits.cc_enabled = 0;
 	desc->u.cd_bits.cc_integrity_src = 1;
 	desc->u.cd_bits.cc_src_is_list = flat_buf ? 0 : 1;
+
 	switch (algo_type) {
 	case PNSO_CHKSUM_TYPE_MCRC64:
 		desc->u.cd_bits.cc_integrity_type = 1;
@@ -49,6 +49,7 @@ fill_chksum_desc(uint32_t algo_type, uint32_t buf_len,
 	}
 
 	desc->cd_datain_len = buf_len;
+
 	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_CHKSUM_STATUS_DATA;
 
@@ -266,6 +267,9 @@ chksum_poll(const struct service_info *svc_info)
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
+
+	OSAL_LOG_DEBUG("polling ... status_desc: 0x%llx",
+			(uint64_t) status_desc);
 
 	err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 
