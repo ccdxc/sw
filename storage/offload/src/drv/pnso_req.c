@@ -781,7 +781,8 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	if (svc_req->num_services != svc_res->num_services) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("mismatch in # of services listed in request/result! req: %d res: %d err: %d",
-				svc_req->num_services, svc_res->num_services, err);
+				svc_req->num_services, svc_res->num_services,
+				err);
 		goto out;
 	}
 
@@ -790,7 +791,6 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	 *      before going deeper into other layers
 	 */
 
-	/* build service chain */
 	err = chn_build_chain(svc_req, svc_res, cb, cb_ctx,
 			pnso_poll_fn, pnso_poll_ctx);
 	if (err) {
@@ -839,7 +839,8 @@ pnso_add_to_batch(struct pnso_service_request *svc_req,
 	if (svc_req->num_services != svc_res->num_services) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("mismatch in # of services listed in request/result! req: %d res: %d err: %d",
-				svc_req->num_services, svc_res->num_services, err);
+				svc_req->num_services, svc_res->num_services,
+				err);
 		goto out;
 	}
 

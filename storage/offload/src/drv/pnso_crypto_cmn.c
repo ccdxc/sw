@@ -292,19 +292,11 @@ crypto_setup_batch_desc(struct service_info *svc_info, struct crypto_desc *desc)
 		OSAL_LOG_DEBUG("sequencer setup not needed!");
 		return PNSO_OK;
 	}
-
-	OSAL_LOG_DEBUG("--- YOYO num_entries: %d bulk_desc_idx: %d desc_idx: %d",
-			svc_batch_info->sbi_num_entries, 
-			svc_batch_info->sbi_bulk_desc_idx, 
-			svc_batch_info->sbi_desc_idx);
 	
 	remaining = svc_batch_info->sbi_num_entries -
 		(svc_batch_info->sbi_bulk_desc_idx * MAX_PAGE_ENTRIES);
 	batch_size = (remaining / MAX_PAGE_ENTRIES) ? MAX_PAGE_ENTRIES :
 		remaining;
-
-	OSAL_LOG_DEBUG("--- YOYO remaining: %d batch_size: %d",
-			remaining, batch_size);
 
 	/* indicate batch processing only for 1st entry in the batch */
 	svc_info->si_seq_info.sqi_batch_mode = true;

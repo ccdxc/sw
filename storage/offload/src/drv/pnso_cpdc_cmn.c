@@ -62,6 +62,7 @@ cpdc_poll(const struct service_info *svc_info)
 {
 	pnso_error_t err;
 	volatile struct cpdc_status_desc *status_desc;
+	uint32_t attempt = 0;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -70,11 +71,17 @@ cpdc_poll(const struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
 
-	OSAL_LOG_DEBUG("polling ... service: %s status_desc: 0x%llx",
-			svc_get_type_str(svc_info->si_type),
-			(uint64_t) status_desc);
+	while (attempt < 16) {
+		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
+		if (!err)
+			break;
 
-	err = status_desc->csd_valid ? PNSO_OK : EBUSY;
+		attempt++;
+		OSAL_LOG_DEBUG("attempt: %d service: %s status_desc: 0x%llx",
+				attempt, svc_get_type_str(svc_info->si_type),
+				(uint64_t) status_desc);
+		osal_yield();
+	}
 
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
@@ -648,18 +655,10 @@ cpdc_setup_batch_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 		return PNSO_OK;
 	}
 
-	OSAL_LOG_DEBUG("--- YOYO num_entries: %d bulk_desc_idx: %d desc_idx: %d",
-			svc_batch_info->sbi_num_entries, 
-			svc_batch_info->sbi_bulk_desc_idx, 
-			svc_batch_info->sbi_desc_idx);
-			
 	remaining = svc_batch_info->sbi_num_entries -
 		(svc_batch_info->sbi_bulk_desc_idx * MAX_PAGE_ENTRIES);
 	batch_size = (remaining / MAX_PAGE_ENTRIES) ? MAX_PAGE_ENTRIES :
 		remaining;
-
-	OSAL_LOG_DEBUG("--- YOYO remaining: %d batch_size: %d",
-			remaining, batch_size);
 
 	/* indicate batch processing only for 1st entry in the batch */
 	svc_info->si_seq_info.sqi_batch_mode = true;

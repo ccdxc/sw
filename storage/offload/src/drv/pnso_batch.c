@@ -460,16 +460,51 @@ poll_all_chains(struct batch_info *batch_info)
 	pnso_error_t err = EINVAL;
 	struct batch_page *batch_page;
 	struct batch_page_entry *page_entry;
-	int i;
+	int16_t i;
 
-	for (i = 0; i < batch_info->bi_num_entries;  i++) {
-		batch_page = GET_PAGE(batch_info, i);
-		page_entry = GET_PAGE_ENTRY(batch_page, i);
+	bool first_flag = false, last_flag  = false;
+	ktime_t first_req_done, last_req_done;
+	uint64_t time_us;
 
+	first_req_done = last_req_done = 0;
+
+	i = (batch_info->bi_num_entries % 2) ?
+		batch_info->bi_num_entries/2 :
+		(batch_info->bi_num_entries/2) - 1;
+
+	batch_page = GET_PAGE(batch_info, i);
+	page_entry = GET_PAGE_ENTRY(batch_page, i);
+	while (1) {
 		err = chn_poll_all_services(page_entry->bpe_chain);
-		if (err)
-			break;
+		if (err) {
+			first_flag = true;
+			continue;
+		}
+
+		first_req_done = ktime_get();
+		break;
 	}
+
+	i = batch_info->bi_num_entries-1;
+	batch_page = GET_PAGE(batch_info, i);
+	page_entry = GET_PAGE_ENTRY(batch_page, i);
+	while (1) {
+		err = chn_poll_all_services(page_entry->bpe_chain);
+		if (err) {
+			last_flag = true;
+			continue;
+		}
+
+		last_req_done = ktime_get();
+		break;
+	}
+
+	OSAL_LOG_NOTICE("--- num_entries: %d, first_flag: %d last_flag: %d",
+				batch_info->bi_num_entries,
+				first_flag, last_flag);
+
+	time_us = ktime_us_delta(last_req_done, first_req_done);
+	OSAL_LOG_NOTICE("PERF hack -- elapsed: %llu us", time_us);
 
 	return err;
 }

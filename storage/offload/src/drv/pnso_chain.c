@@ -232,18 +232,23 @@ chn_poll_all_services(struct service_chain *chain)
 	pnso_error_t err = EINVAL;
 	struct chain_entry *sc_entry;
 	struct service_ops *svc_ops;
+	struct service_info *svc_info;
 
 	OSAL_ASSERT(chain);
 	OSAL_ASSERT(chain->sc_entry);
 
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
-		svc_ops = &sc_entry->ce_svc_info.si_ops;
-		err = svc_ops->poll(&sc_entry->ce_svc_info);
+		svc_info = &sc_entry->ce_svc_info;
+		svc_ops = &svc_info->si_ops;
+		err = svc_ops->poll(svc_info);
 		if (err) {
 			PPRINT_CHAIN(chain);
-			OSAL_LOG_ERROR("failed to poll svc_type: %d err: %d",
-					sc_entry->ce_svc_info.si_type, err);
+			OSAL_LOG_ERROR("poll failed! svc_type: %d desc 0x%llx status_desc: 0x%llx err: %d",
+					svc_info->si_type,
+					(uint64_t) svc_info->si_desc,
+					(uint64_t) svc_info->si_status_desc,
+					err);
 			break;
 		}
 		sc_entry = sc_entry->ce_next;
@@ -340,11 +345,11 @@ setup_service_param_buffers(struct pnso_service *pnso_svc,
 		struct service_buf_list *interm_blist)
 {
 	switch (pnso_svc->svc_type) {
+	case PNSO_SVC_TYPE_ENCRYPT:
+	case PNSO_SVC_TYPE_DECRYPT:
 	case PNSO_SVC_TYPE_COMPRESS:
 	case PNSO_SVC_TYPE_DECOMPRESS:
 	case PNSO_SVC_TYPE_HASH:
-	case PNSO_SVC_TYPE_ENCRYPT:
-	case PNSO_SVC_TYPE_DECRYPT:
 	case PNSO_SVC_TYPE_CHKSUM:
 		if (chn_service_is_in_chain(svc_info) &&
 				!chn_service_is_first(svc_info))
@@ -406,7 +411,6 @@ init_service_info(enum pnso_service_type svc_type,
 		struct service_params *svc_params,
 		struct service_info *svc_info)
 {
-
 	switch (svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 		svc_info->si_ops = encrypt_ops;
@@ -471,6 +475,7 @@ init_service_info_ex(struct batch_info *batch_info,
 		uint16_t batch_num_entries, uint16_t batch_request_idx,
 		struct pnso_service *pnso_svc,
 		struct pnso_service_status *svc_status,
+		struct service_params *svc_params,
 		struct service_info *svc_info)
 {
 	switch (pnso_svc->svc_type) {
@@ -478,26 +483,31 @@ init_service_info_ex(struct batch_info *batch_info,
 		svc_info->si_ops = encrypt_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS0;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_ENC_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CRYPTO_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECRYPT:
 		svc_info->si_ops = decrypt_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS1;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_DEC_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CRYPTO_STATUS;
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 		svc_info->si_ops = cp_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		svc_info->si_ops = dc_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_HASH:
 		svc_info->si_ops = hash_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP_HOT;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
@@ -505,6 +515,7 @@ init_service_info_ex(struct batch_info *batch_info,
 		/* TODO-chain: rolling back to previous PR setting DCq failed */
 		// svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
@@ -513,8 +524,18 @@ init_service_info_ex(struct batch_info *batch_info,
 		return EINVAL;
 	}
 
+	/* svc_info->si_flags updated outside TODO-chain: leave this here?? */
 	svc_info->si_block_size = 4096;	/* TODO-chain: get via init params??  */
 	svc_info->si_svc_status = svc_status;
+
+	svc_info->si_src_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
+	svc_info->si_src_blist.blist = svc_params->sp_src_blist;
+	svc_info->si_src_blist.len =
+		pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+	svc_info->si_dst_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
+	svc_info->si_dst_blist.blist = svc_params->sp_dst_blist;
+	svc_info->si_dst_blist.len =
+		pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
 
 	if (batch_info)
 		init_service_batch_params(batch_info, batch_num_entries,
@@ -685,6 +706,7 @@ chn_build_chain(struct pnso_service_request *svc_req,
 
 		init_service_info(req->svc[i].svc_type, &res->svc[i],
 				  &svc_params, svc_info);
+
 		svc_info->si_pc_res = chain->sc_pc_res;
 		svc_info->si_centry = centry;
 
@@ -701,10 +723,21 @@ chn_build_chain(struct pnso_service_request *svc_req,
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
 
-	/* execute the chain  */
-	chn_execute_chain(chain);
-	err = PNSO_OK;
+	/* chain the services  */
+	centry = chain->sc_entry;
+	svc_info = &centry->ce_svc_info;
 
+	err = svc_info->si_ops.chain(centry);
+	if (err)
+		goto out_free_chain;
+	PPRINT_CHAIN(chain);
+
+	/* execute the chain  */
+	err = chn_execute_chain(chain);
+	if (err)
+		goto out_free_chain;
+
+	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 
@@ -743,13 +776,12 @@ chn_update_overall_result(struct service_chain *chain)
 	}
 }
 
-void
+pnso_error_t
 chn_execute_chain(struct service_chain *chain)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
 	struct chain_entry *sc_entry;
 	struct chain_entry *ce_first, *ce_last;
-	struct service_info *svc_info;
 	struct service_ops *svc_ops;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -758,17 +790,10 @@ chn_execute_chain(struct service_chain *chain)
 
 	ce_first = ce_last = chain->sc_entry;
 	if (!ce_first)
-		return;
+		goto out;
 
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
-
-		/* chain the services  */
-		svc_info = &sc_entry->ce_svc_info;
-		err = svc_info->si_ops.chain(sc_entry);
-		if (err)
-			goto out;
-
 		ce_last = sc_entry;
 		sc_entry = sc_entry->ce_next;
 	}
@@ -811,13 +836,11 @@ chn_execute_chain(struct service_chain *chain)
 	/* update over all status of the chain */
 	chn_update_overall_result(chain);
 
+	OSAL_LOG_DEBUG("exit!");
+	return PNSO_OK;
 out:
-	/* TODO-chain: revisit this on error handling path */
-	if (chain->sc_req_cb)
-		chain->sc_req_cb(chain->sc_req_cb_ctx, chain->sc_res);
-
-	chn_destroy_chain(chain);
-	OSAL_LOG_DEBUG("exit");
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
 }
 
 pnso_error_t
@@ -911,38 +934,30 @@ chn_build_batch_chain(struct batch_info *batch_info,
 			centry_prev->ce_next = centry;
 		centry_prev = centry;
 
-		init_service_params(req, &res->svc[i], &req->svc[i],
-				&svc_params);
+		if (!(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE))
+			if (i+1 == chain->sc_num_services)
+				svc_info->si_flags |= CHAIN_SFLAG_LAST_SERVICE;
+
+		init_service_params(req, &res->svc[i],
+				&req->svc[i], &svc_params);
 
 		init_service_info_ex(batch_info, batch_info->bi_num_entries,
 				batch_request_idx, &req->svc[i], &res->svc[i],
-				svc_info);
+				&svc_params, svc_info);
 
 		svc_info->si_pc_res = chain->sc_pc_res;
 		svc_info->si_centry = centry;
 
-		/* TODO-chain: need to make this setup generic */
-		if (i != 0)
-			setup_service_param_buffers(&req->svc[i], &svc_params,
+		setup_service_param_buffers(&req->svc[i], &svc_params,
 					svc_info, &interm_blist);
 
 		err = svc_info->si_ops.setup(svc_info, &svc_params);
 		if (err)
 			goto out_free_chain;
 
-		if (!(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE))
-			if (i+1 == chain->sc_num_services)
-				svc_info->si_flags |= CHAIN_SFLAG_LAST_SERVICE;
-
-		/*
-		 * TODO-chain:
-		 *	- set output buffer of compression service as input
-		 *	buffer to hash; need to make it generic ...
-		 *
-		 */
-		interm_blist = svc_info->si_dst_blist;
-
 		PPRINT_SERVICE_INFO(svc_info);
+
+		interm_blist = svc_info->si_dst_blist;
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
 
@@ -953,13 +968,9 @@ chn_build_batch_chain(struct batch_info *batch_info,
 	err = svc_info->si_ops.chain(centry);
 	if (err)
 		goto out_free_chain;
+	PPRINT_CHAIN(chain);
 
 	page_entry->bpe_chain = chain;
-
-#if 0
-	/* execute the chain  */
-	chn_execute_chain(chain);
-#endif
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");

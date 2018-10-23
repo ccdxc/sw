@@ -388,13 +388,31 @@ crypto_poll(const struct service_info *svc_info)
 	pnso_error_t err;
 	volatile struct crypto_status_desc *status_desc;
 	uint64_t cpl_data;
+	uint32_t attempt = 0;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	OSAL_ASSERT(svc_info);
 
 	status_desc = svc_info->si_status_desc;
-	cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
-		   CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
+	OSAL_ASSERT(status_desc);
 
-	err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
+	while (attempt < 16) {
+		cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
+			CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 
+		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
+		if (!err)
+			break;
+
+		attempt++;
+		OSAL_LOG_DEBUG("attempt: %d svc_type: %d status_desc: 0x%llx",
+				attempt, svc_info->si_type,
+				(uint64_t) status_desc);
+		osal_yield();
+	}
+
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 

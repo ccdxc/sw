@@ -287,10 +287,10 @@ pnso_error_t chn_build_chain(struct pnso_service_request *svc_req,
  * @chain:	[in]	specifies the chain structure.
  *
  * Return Value:
- *	None
+ *	PNSO_OK/EINVAL/TODO
  *
  */
-void chn_execute_chain(struct service_chain *chain);
+pnso_error_t chn_execute_chain(struct service_chain *chain);
 
 /**
  * chn_destroy_chain() - destroys the chain structure.
