@@ -537,11 +537,39 @@ capri_program_to_base_addr(const char *handle,
 static int
 capri_dump_program_info (const char *filename)
 {
+    struct stat             st = { 0 };
+    std::string             prog_info_file;
     capri_loader_ctx_t      *ctx;
     capri_program_info_t    *program_info;
     pt::ptree               root, programs, program;
     MpuSymbol               *symbol;
     char                    numbuf[32];
+    char                    *cfg_path = std::getenv("HAL_CONFIG_PATH");
+
+    if (!cfg_path) {
+        // write in the current dir
+        prog_info_file = std::string(LDD_INFO_FILE_NAME);
+    } else {
+        std::string gen_dir = std::string(cfg_path) + std::string("/gen");
+        // check if the gen dir exists
+        if (stat(gen_dir.c_str(), &st) == -1) {
+            // doesn't exist, try to create
+            if (mkdir(gen_dir.c_str(), 0755) < 0) {
+                HAL_TRACE_ERR("Gen directory {}/ doesn't exist, failed to create one\n",
+                        gen_dir.c_str());
+                return HAL_RET_ERR;
+            }
+        } else {
+            // gen dir exists, check if we have write permissions
+            if (access(gen_dir.c_str(), W_OK) < 0) {
+                // don't have permissions to create this directory
+                HAL_TRACE_ERR("No permissions to create log file in {}\n", gen_dir.c_str());
+                return HAL_RET_ERR;
+            }
+        }
+
+        prog_info_file = gen_dir + std::string("/") + std::string(LDD_INFO_FILE_NAME);
+    }
 
     for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
         if ((ctx = loader_instances[it->first]) != NULL) {
@@ -585,8 +613,9 @@ capri_dump_program_info (const char *filename)
                             it->first);
         }
     }
+
     root.add_child("programs", programs);
-    pt::write_json(LDD_INFO_FILE_NAME, root);
+    pt::write_json(prog_info_file, root);
 
     return 0;
 }

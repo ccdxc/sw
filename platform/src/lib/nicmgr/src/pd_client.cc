@@ -58,7 +58,7 @@ PdClient::p4plus_rxdma_init_tables()
             .p4pd_pgm_name       = "iris",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
-            .cfg_path            = hal_cfg_path_.c_str(),
+            .cfg_path            = hal_cfg_path_,
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -102,7 +102,7 @@ PdClient::p4plus_rxdma_init_tables()
     return 0;
 }
 
-PdClient* PdClient::factory(platform_mode_t platform, std::string hal_cfg_path)
+PdClient* PdClient::factory(platform_mode_t platform)
 {
     int ret;
     hal::hal_cfg_t      hal_cfg;
@@ -112,20 +112,25 @@ PdClient* PdClient::factory(platform_mode_t platform, std::string hal_cfg_path)
     assert(pdc);
 
     pdc->platform_ = platform;
-    pdc->hal_cfg_path_ = hal_cfg_path;
+    pdc->hal_cfg_path_ = std::getenv("HAL_CONFIG_PATH");
 
-    NIC_LOG_INFO("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path);
+    if (!pdc->hal_cfg_path_) {
+        pdc->hal_cfg_path_ = (char*)"./";
+    }
+
+    NIC_LOG_INFO("Loading p4plus RxDMA asic lib tables cfg_path: {}...", pdc->hal_cfg_path_);
     ret = pdc->p4plus_rxdma_init_tables();
     assert(ret == 0);
 
     NIC_LOG_INFO("Initializing HBM Memory Partitions ...");
-    pdc->mp_ = sdk::platform::utils::mpartition::factory((hal_cfg_path +
+    pdc->mp_ = sdk::platform::utils::mpartition::factory((string(pdc->hal_cfg_path_) +
                                                          "/iris/hbm_mem.json").c_str(),
                                                          CAPRI_HBM_BASE);
     assert(pdc->mp_);
 
     NIC_LOG_INFO("Initializing Program Info ...");
-    pdc->pinfo_ = sdk::platform::program_info::factory("mpu_prog_info.json");
+    pdc->pinfo_ = sdk::platform::program_info::factory((string(pdc->hal_cfg_path_) +
+                                                       "/gen/mpu_prog_info.json").c_str());
     assert(pdc->pinfo_);
 
     switch (pdc->platform_){
@@ -149,6 +154,7 @@ PdClient* PdClient::factory(platform_mode_t platform, std::string hal_cfg_path)
             break;
     }
 
+    hal_cfg.cfg_path = pdc->hal_cfg_path_;
     NIC_LOG_INFO("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init(&hal_cfg);
     assert(ret == 0);

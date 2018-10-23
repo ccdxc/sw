@@ -27,10 +27,10 @@
 
 class PdClient {
 public:
-    static PdClient* factory(platform_mode_t platform, std::string hal_cfg_path);
+    static PdClient* factory(platform_mode_t platform);
     void destroy(PdClient *pdc);
 
-    std::string hal_cfg_path_;
+    char *hal_cfg_path_;
     platform_mode_t platform_;
     class sdk::platform::program_info *pinfo_;
     class sdk::platform::utils::mpartition *mp_;

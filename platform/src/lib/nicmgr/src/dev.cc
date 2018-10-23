@@ -70,7 +70,7 @@ invalidate_txdma_cacheline(uint64_t addr)
               ((addr >> 6) << 1));
 }
 
-DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, string hal_cfg_path, platform_mode_t platform)
+DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platform)
 {
     hal = new HalClient(fwd_mode);
     hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
@@ -85,7 +85,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, string hal_cfg_path, 
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
 
-    pd = PdClient::factory(platform, hal_cfg_path);
+    pd = PdClient::factory(platform);
     assert(pd);
 
     // Create nicmgr service lif

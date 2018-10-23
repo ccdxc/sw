@@ -34,7 +34,6 @@ uint16_t base_mac = 0x0a0a;
 static int poll_enabled;
 static DeviceManager *devmgr;
 static string config_file;
-static string hal_cfg_path = "/nic/conf/";
 enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
 platform_mode_t platform = PLATFORM_MODE_NONE;
 extern void nicmgr_do_client_registration(void);
@@ -128,7 +127,7 @@ loop()
         exit(1);
     }
 
-    devmgr = new DeviceManager(fwd_mode, hal_cfg_path, platform);
+    devmgr = new DeviceManager(fwd_mode, platform);
     devmgr->LoadConfig(config_file);
 
     // Register for PCI events
@@ -199,16 +198,13 @@ int main(int argc, char *argv[])
 
     poll_enabled = 1;
 
-    while ((opt = getopt(argc, argv, "c:sp:h:")) != -1) {
+    while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
         case 'c':
             config_file = string(optarg);
             break;
         case 's':
             fwd_mode = FWD_MODE_SMART_NIC;
-            break;
-        case 'h':
-            hal_cfg_path = string(optarg);
             break;
         case 'p':
             if (string(optarg) == "sim") {
