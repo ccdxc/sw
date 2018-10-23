@@ -32,7 +32,7 @@ using namespace std;
 uint16_t base_mac = 0x0a0a;
 
 static int poll_enabled;
-static DeviceManager *devmgr;
+DeviceManager *devmgr;
 static string config_file;
 enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
 platform_mode_t platform = PLATFORM_MODE_NONE;
