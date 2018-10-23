@@ -79,6 +79,7 @@ define INCLUDE_MODULEMK
     MODULE_BIN_DIR              :=
     MODULE_LIBS                 :=
     MODULE_GEN_DIR              :=
+    MODULE_GOPKG                :=
 
     # MODULE_DIR can be used by module.mk to know their current
     # directory.
@@ -182,6 +183,7 @@ define INCLUDE_MODULEMK
     else ifeq "$$(suffix $${MODULE_TARGET})" ".gobin"
         $${TGID}_RECIPE_TYPE        := GOBIN
         GOBIN_TARGETIDS             += $${TGID}
+        $${TGID}_GOPKG              := $${MODULE_GOPKG}
     else ifeq "$$(suffix $${MODULE_TARGET})" ".submake"
         $${TGID}_RECIPE_TYPE        := SUBMAKE
         SUBMAKE_TARGETIDS           += $${TGID}

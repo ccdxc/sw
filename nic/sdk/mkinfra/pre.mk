@@ -10,3 +10,4 @@ MODULE_OUTFILE              :=
 MODULE_ARGS                 :=
 MODULE_EXPORT_LIBS          :=
 MODULE_EXPORT_BINS          :=
+MODULE_GOPKG                := github.com/pensando/sw/nic/${MODULE_DIR}

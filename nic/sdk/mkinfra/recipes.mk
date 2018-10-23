@@ -90,8 +90,8 @@ endef
 
 define ADD_RECIPE_FOR_GOBIN
 $${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
-	${NAT}${AT}echo ${NAME_GOBUILD} github.com/pensando/sw/nic/$${${1}_MK_DIR}
-	${AT}$$(strip ${CMD_GOBIN} $${${1}_FLAGS}) -o $$@ github.com/pensando/sw/nic/$${${1}_MK_DIR}
+	${NAT}${AT}echo ${NAME_GOBUILD} $${${1}_GOPKG}
+	${AT}$$(strip ${CMD_GOBIN} $${${1}_FLAGS}) -o $$@ $${${1}_GOPKG}
 	${AT}mkdir -p ${BLD_BIN_DIR}
 	${NAT}${AT}echo ${NAME_SYMLINK} ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})
 	${AT}ln -sf $$@ ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})

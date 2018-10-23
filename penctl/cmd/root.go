@@ -56,7 +56,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml json")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", false, "display in json format")
 	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", true, "display in tabular format")
-	rootCmd.PersistentFlags().BoolVarP(&mockMode, "debug", "d", false, "run penctl in mock mode")
+	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock mode to localhost")
 	rootCmd.PersistentFlags().StringVarP(&intf, "interface", "e", "", "ethernet device of naples")
 
 	rootCmd.PersistentFlags().MarkHidden("debug")
