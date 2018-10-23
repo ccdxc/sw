@@ -1611,6 +1611,13 @@
   revision = "dda5db59c0af764a4646445653ed6b2266fe3fb2"
 
 [[projects]]
+  digest = "1:0332ddbee3ad55b3abb8e2d45bd17b89416675b63f566cc4743681b651b7420c"
+  name = "github.com/pensando/test-infra"
+  packages = ["public"]
+  pruneopts = "NUT"
+  revision = "7526781a3c31739348ea5016ce0c2e5304c2f42b"
+
+[[projects]]
   branch = "master"
   digest = "1:38636af81bc2ba30882292a8833552f48064ade916d2e2e38e3b3ff348a33a66"
   name = "github.com/pensando/test-infra-tracker"
@@ -2628,6 +2635,7 @@
     "github.com/pensando/grpc-gateway/third_party/googleapis/google/api",
     "github.com/pensando/grpc-gateway/utilities",
     "github.com/pensando/test-infra-tracker/types",
+    "github.com/pensando/test-infra/public",
     "github.com/pensando/vic/pkg/vsphere/simulator",
     "github.com/pensando/vic/pkg/vsphere/simulator/esx",
     "github.com/pkg/errors",

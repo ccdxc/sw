@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pensando/test-infra/public"
 	"github.com/pkg/sftp"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -71,20 +72,16 @@ func getVMIP() net.IP {
 		panic(err)
 	}
 
-	hosts := map[string]interface{}{}
+	warmdEnv := public.WarmdEnv{}
 
-	if err := json.NewDecoder(warmd).Decode(&hosts); err != nil {
+	if err := json.NewDecoder(warmd).Decode(&warmdEnv); err != nil {
 		panic(err)
 	}
 
-	instanceMap := hosts["Instances"].(map[string]interface{})
-
-	instances := []string{}
-	for key := range instanceMap {
-		instances = append(instances, key)
+	if len(warmdEnv.Instances) == 0 {
+		return nil
 	}
-
-	return net.ParseIP(instanceMap[instances[0]].(string))
+	return net.ParseIP(warmdEnv.Instances[0].NodeMgmtIP)
 }
 
 // RunSingle runs a make target on a single instance

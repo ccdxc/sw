@@ -18,6 +18,8 @@ import (
 	"golang.org/x/crypto/ssh"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/pensando/test-infra/public"
+
 	ionic "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	Agent "github.com/pensando/sw/test/utils/infra/agent"
 	NodeService "github.com/pensando/sw/test/utils/infra/agent/service"
@@ -229,7 +231,7 @@ func (infraCtx *infraCtx) warmdInit(warmdFile string) error {
 		return e
 	}
 
-	var warmd interface{}
+	var warmd public.WarmdEnv
 	var err error
 	err = json.Unmarshal(file, &warmd)
 	if err != nil {
@@ -237,26 +239,22 @@ func (infraCtx *infraCtx) warmdInit(warmdFile string) error {
 		return err
 	}
 
-	jsonWarmd := warmd.(map[string]interface{})
-	instances := jsonWarmd["Instances"]
-	warmdInstances := instances.(map[string]interface{})
-
 	vmEntities := infraCtx.FindRemoteEntity(EntityKindVM)
 
-	if len(vmEntities) > len(warmdInstances) {
+	if len(vmEntities) > len(warmd.Instances) {
 		err := fmt.Errorf("User topo has more vm Entities %d than wamrd %d", len(vmEntities),
-			len(warmdInstances))
+			len(warmd.Instances))
 		infraCtx.logger.Printf(err.Error())
 		return err
 	}
 
 	cnt := 0
-	for _, y := range warmdInstances {
+	for _, y := range warmd.Instances {
 		vm, ok := vmEntities[cnt].(*vmEntity)
 		if !ok {
 			return fmt.Errorf("invalid vm entity %+v", vmEntities[cnt])
 		}
-		vm.ipAddress = y.(string)
+		vm.ipAddress = y.NodeMgmtIP
 		vm.nodeID = cnt + 1
 		//This should come from Warmd after all.
 		vm.userName = vmUserName
