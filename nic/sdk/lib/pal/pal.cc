@@ -15,13 +15,15 @@ pal_init_cfg (sdk::types::platform_type_t platform_type)
 {
     memset(&gl_pal_info, 0, sizeof(gl_pal_info));
     gl_pal_info.platform_type = platform_type;
-    return PAL_RET_OK;
+    return pal_default_init();
 }
 
 pal_ret_t
 pal_init (sdk::types::platform_type_t platform_type)
 {
-    pal_init_cfg(platform_type);
+    if(pal_init_cfg(platform_type) != PAL_RET_OK) {
+	return PAL_RET_NOK;
+    }
 
     switch(platform_type) {
     case sdk::types::platform_type_t::PLATFORM_TYPE_HW:
