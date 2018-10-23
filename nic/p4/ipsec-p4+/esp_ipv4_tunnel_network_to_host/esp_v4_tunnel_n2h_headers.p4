@@ -163,12 +163,12 @@ header_type esp_header_t {
 
 header_type n2h_stats_header_t {
     fields {
-        n2h_rx_pkts : 32;
-        n2h_rx_bytes : 32;
-        n2h_rx_drops : 32;
-        n2h_tx_pkts : 32;
-        n2h_tx_bytes : 32;
-        n2h_tx_drops : 32;
+        n2h_rx_pkts : 64;
+        n2h_rx_bytes : 64;
+        n2h_rx_drops : 64;
+        n2h_tx_pkts : 64;
+        n2h_tx_bytes : 64;
+        n2h_tx_drops : 64;
     }
 }
 

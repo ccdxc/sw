@@ -5,9 +5,7 @@
 #define rx_table_s0_t1_action ipsec_encap_rxdma_initial_table
 
 #define rx_table_s1_t0_action allocate_input_desc_semaphore 
-#define rx_table_s1_t1_action allocate_output_desc_semaphore 
-#define rx_table_s1_t2_action allocate_input_page_semaphore 
-#define rx_table_s1_t3_action allocate_output_page_semaphore 
+#define rx_table_s1_t2_action rxmda_ring_full_error
 
 #define rx_table_s2_t0_action allocate_input_desc_index 
 #define rx_table_s2_t1_action allocate_output_desc_index 
@@ -454,40 +452,12 @@ action allocate_input_desc_index(in_desc_index)
     IPSEC_SCRATCH_T0_S2S
 }
 
-//stage 1
-action allocate_output_page_semaphore(out_page_ring_index)
+//stage 1 - table2
+action rxmda_ring_full_error(H2N_STATS_UPDATE_PARAMS)
 {
-    modify_field(p42p4plus_hdr.table3_valid, 1);
-    modify_field(common_te3_phv.table_pc, 0); 
-    modify_field(common_te3_phv.table_raw_table_size, 3);
-    modify_field(common_te3_phv.table_lock_en, 0);
-    modify_field(common_te3_phv.table_addr, OUT_PAGE_RING_BASE+(PAGE_PTR_SIZE * out_page_ring_index));
-    IPSEC_SCRATCH_GLOBAL
-    IPSEC_SCRATCH_T3_S2S
-}
-
-//stage 1
-action allocate_input_page_semaphore(in_page_ring_index)
-{
-    modify_field(p42p4plus_hdr.table2_valid, 1);
-    modify_field(common_te2_phv.table_pc, 0); 
-    modify_field(common_te2_phv.table_raw_table_size, 3);
-    modify_field(common_te2_phv.table_lock_en, 0);
-    modify_field(common_te2_phv.table_addr, IN_PAGE_RING_BASE+(PAGE_PTR_SIZE * in_page_ring_index));
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T2_S2S
-}
-
-//stage 1
-action allocate_output_desc_semaphore(out_desc_ring_index)
-{
-    modify_field(p42p4plus_hdr.table1_valid, 1);
-    modify_field(common_te1_phv.table_pc, 0); 
-    modify_field(common_te1_phv.table_raw_table_size, 3);
-    modify_field(common_te1_phv.table_lock_en, 0);
-    modify_field(common_te1_phv.table_addr, OUT_DESC_RING_BASE+(DESC_PTR_SIZE * out_desc_ring_index));
-    IPSEC_SCRATCH_GLOBAL
-    IPSEC_SCRATCH_T1_S2S
+    H2N_STATS_UPDATE_SET
 }
 
 //stage 1

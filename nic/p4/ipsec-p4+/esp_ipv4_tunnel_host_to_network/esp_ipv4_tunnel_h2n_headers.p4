@@ -129,12 +129,12 @@ header_type ipsec_cb_metadata_t {
 
 header_type h2n_stats_header_t {
     fields {
-        h2n_rx_pkts : 32;
-        h2n_rx_bytes : 32;
-        h2n_rx_drops : 32;
-        h2n_tx_pkts : 32;
-        h2n_tx_bytes : 32; 
-        h2n_tx_drops : 32;
+        h2n_rx_pkts : 64;
+        h2n_rx_bytes : 64;
+        h2n_rx_drops : 64;
+        h2n_tx_pkts : 64;
+        h2n_tx_bytes : 64; 
+        h2n_tx_drops : 64;
     }
 }
 

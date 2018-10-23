@@ -72,6 +72,10 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
     uint64_t                                    ipsec_barco_ring_addr;
     uint16_t                                    key_index;
     ipsec_sa_t*                                 ipsec_sa = ipsec_sa_pd->ipsec_sa;
+    uint8_t                                     zeros[P4PD_HBM_IPSEC_CB_ENTRY_SIZE];
+
+    memset(zeros, 0, P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
+
     // hardware index for this entry
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_QSTATE1);
@@ -169,6 +173,10 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
     }
 
     HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {:#x}", hwid);
+    if (!p4plus_hbm_write(hwid, (uint8_t*)&zeros, sizeof(zeros), P4PLUS_CACHE_INVALIDATE_BOTH)) {
+        HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
+        ret = HAL_RET_HW_FAIL;
+    }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
@@ -366,12 +374,12 @@ p4pd_get_ipsec_sa_encrypt_stats(pd_ipsec_t* ipsec_sa_pd)
         HAL_TRACE_ERR("Failed to get Stats: entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
-    ipsec_sa->total_rx_pkts = ntohl(stats_data.h2n_rx_pkts);
-    ipsec_sa->total_rx_bytes = ntohl(stats_data.h2n_rx_bytes);
-    ipsec_sa->total_rx_drops = ntohl(stats_data.h2n_rx_drops);
-    ipsec_sa->total_pkts = ntohl(stats_data.h2n_tx_pkts);
-    ipsec_sa->total_bytes = ntohl(stats_data.h2n_tx_bytes);
-    ipsec_sa->total_drops = ntohl(stats_data.h2n_tx_drops);
+    ipsec_sa->total_rx_pkts = ntohll(stats_data.h2n_rx_pkts);
+    ipsec_sa->total_rx_bytes = ntohll(stats_data.h2n_rx_bytes);
+    ipsec_sa->total_rx_drops = ntohll(stats_data.h2n_rx_drops);
+    ipsec_sa->total_pkts = ntohll(stats_data.h2n_tx_pkts);
+    ipsec_sa->total_bytes = ntohll(stats_data.h2n_tx_bytes);
+    ipsec_sa->total_drops = ntohll(stats_data.h2n_tx_drops);
 
     HAL_TRACE_DEBUG("Stats: h2n: rx_pkts {} rx_bytes {} rx_drops {} tx_pkts {} tx_bytes {} tx_drops {}",
         ipsec_sa->total_rx_pkts, ipsec_sa->total_rx_bytes,
