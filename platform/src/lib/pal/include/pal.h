@@ -12,6 +12,8 @@ extern "C" {
 #endif
 #endif
 
+#include "pali2c.h"
+
 enum {
     PAL_ENV_ASIC = 0,
     PAL_ENV_HAPS = 1,
@@ -109,6 +111,22 @@ void pal_mem_trace(const char *fmt, ...)
 
 /* CPLD APIs */
 int pal_is_qsfp_port_psnt(int port_no);
+/*
+ * I2C read/write API's
+ */
+int pal_i2c_read(u_int8_t *buffer, u_int32_t size, u_int32_t nretry,
+                 u_int32_t bus, u_int32_t slaveaddr);
+
+/*
+ * I2C read/write API's
+ */
+int pal_fru_read(u_int8_t *buffer, u_int32_t size, u_int32_t nretry);
+int pal_qsfp_read(u_int8_t *buffer, u_int32_t size,
+                  u_int32_t nretry, u_int32_t port);
+int pal_qsfp_dom_read(u_int8_t *buffer, u_int32_t size,
+                      u_int32_t nretry, u_int32_t port);
+
+
 
 #ifdef __cplusplus
 }

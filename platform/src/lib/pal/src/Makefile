@@ -8,9 +8,11 @@ SOURCES = \
 	reg.c \
 	mem.c \
 	mmap_region.c \
-        pal_mm.c \
+	pal_mm.c \
 	trace.c \
 	pal_cpld.c \
+	i2c.c \
+	pali2c.c \
 	$(NULL)
 
 LCFLAGS += \
