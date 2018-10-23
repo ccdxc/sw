@@ -70,7 +70,7 @@ decompress_setup(struct service_info *svc_info,
 		svc_params->u.sp_dc_desc;
 	flags = pnso_dc_desc->flags;
 
-	dc_desc = cpdc_get_desc_ex(svc_info, false);
+	dc_desc = cpdc_get_desc(svc_info, false);
 	if (!dc_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain dc desc from pool! err: %d", err);
@@ -140,7 +140,7 @@ out_status_desc:
 		OSAL_ASSERT(0);
 	}
 out_dc_desc:
-	err = cpdc_put_desc_ex(svc_info, false, dc_desc);
+	err = cpdc_put_desc(svc_info, false, dc_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return dc desc to pool! err: %d",
 				err);
@@ -337,7 +337,7 @@ decompress_teardown(struct service_info *svc_info)
 	}
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc_ex(svc_info, false, dc_desc);
+	err = cpdc_put_desc(svc_info, false, dc_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return dc desc to pool! dc_desc: %p err: %d",
 				dc_desc, err);

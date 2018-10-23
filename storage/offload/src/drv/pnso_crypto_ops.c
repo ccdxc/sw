@@ -217,11 +217,11 @@ crypto_setup(struct service_info *svc_info,
 	if (err)
 		return err;
 
-	pcr = svc_info->si_pcr;
-	svc_info->si_desc = crypto_get_desc_ex(svc_info, false);
+	svc_info->si_desc = crypto_get_desc(svc_info, false);
 	if (!svc_info->si_desc)
 		return ENOMEM;
 
+	pcr = svc_info->si_pcr;
 	svc_info->si_status_desc = pc_res_mpool_object_get(pcr,
 					  MPOOL_TYPE_CRYPTO_STATUS_DESC);
 	if (!svc_info->si_status_desc)
@@ -464,7 +464,7 @@ crypto_teardown(struct service_info *svc_info)
 	pc_res_mpool_object_put(pcr, MPOOL_TYPE_CRYPTO_STATUS_DESC,
 				svc_info->si_status_desc);
 
-	crypto_put_desc_ex(svc_info, false, svc_info->si_desc);
+	crypto_put_desc(svc_info, false, svc_info->si_desc);
 
 	svc_interm_buf_list_put(svc_info);
 	pc_res_mpool_object_put(pcr, MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,

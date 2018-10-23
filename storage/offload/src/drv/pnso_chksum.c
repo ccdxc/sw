@@ -77,7 +77,7 @@ chksum_setup(struct service_info *svc_info,
 	flags = pnso_chksum_desc->flags;
 	per_block = svc_is_chksum_per_block_enabled(flags);
 
-	chksum_desc = cpdc_get_desc_ex(svc_info, per_block);
+	chksum_desc = cpdc_get_desc(svc_info, per_block);
 	if (!chksum_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain chksum desc from pool err: %d!",
@@ -178,7 +178,7 @@ out_sgl_desc:
 		OSAL_ASSERT(0);
 	}
 out_chksum_desc:
-	err = cpdc_put_desc_ex(svc_info, per_block, chksum_desc);
+	err = cpdc_put_desc(svc_info, per_block, chksum_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return chksum desc to pool! err: %d",
 				err);
@@ -558,7 +558,7 @@ chksum_teardown(struct service_info *svc_info)
 	}
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc_ex(svc_info, per_block, chksum_desc);
+	err = cpdc_put_desc(svc_info, per_block, chksum_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return chksum desc to pool! err: %d",
 				err);

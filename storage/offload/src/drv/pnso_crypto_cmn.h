@@ -36,26 +36,15 @@ pnso_error_t crypto_desc_status_convert(uint64_t status);
 pnso_error_t crypto_setup_batch_desc(struct service_info *svc_info,
 		struct crypto_desc *desc);
 
-struct crypto_desc *crypto_get_desc(struct per_core_resource *pcr,
-		bool per_block);
-
-struct crypto_desc *crypto_get_batch_desc(struct service_info *svc_info);
-
-struct crypto_desc *crypto_get_desc_ex(struct service_info *svc_info,
-		bool per_block);
-
 struct crypto_desc *crypto_get_batch_bulk_desc(struct mem_pool *mpool);
-
-pnso_error_t crypto_put_desc(struct per_core_resource *pcr, bool per_block,
-		struct crypto_desc *desc);
-
-pnso_error_t crypto_put_batch_desc(const struct service_info *svc_info,
-		struct crypto_desc *desc);
-
-pnso_error_t crypto_put_desc_ex(const struct service_info *svc_info,
-		bool per_block, struct crypto_desc *desc);
 
 pnso_error_t crypto_put_batch_bulk_desc(struct mem_pool *mpool,
 		struct crypto_desc *desc);
+
+struct crypto_desc *crypto_get_desc(struct service_info *svc_info,
+		bool per_block);
+
+pnso_error_t crypto_put_desc(const struct service_info *svc_info,
+		bool per_block, struct crypto_desc *desc);
 
 #endif /* __PNSO_CRYPTO_CMN_H__ */

@@ -312,8 +312,8 @@ crypto_setup_batch_desc(struct service_info *svc_info, struct crypto_desc *desc)
 	return PNSO_OK;
 }
 
-struct crypto_desc *
-crypto_get_desc(struct per_core_resource *pcr, bool per_block)
+static struct crypto_desc *
+get_desc(struct per_core_resource *pcr, bool per_block)
 {
 	struct mem_pool *mpool;
 
@@ -323,8 +323,8 @@ crypto_get_desc(struct per_core_resource *pcr, bool per_block)
 	return (struct crypto_desc *) mpool_get_object(mpool);
 }
 
-struct crypto_desc *__attribute__((unused))
-crypto_get_batch_desc(struct service_info *svc_info)
+static struct crypto_desc *
+get_batch_desc(struct service_info *svc_info)
 {
 	struct service_batch_info *svc_batch_info;
 	struct crypto_desc *desc;
@@ -340,8 +340,8 @@ crypto_get_batch_desc(struct service_info *svc_info)
 	return desc;
 }
 
-struct crypto_desc *__attribute__((unused))
-crypto_get_desc_ex(struct service_info *svc_info, bool per_block)
+struct crypto_desc *
+crypto_get_desc(struct service_info *svc_info, bool per_block)
 {
 	struct crypto_desc *desc;
 	bool in_batch = false;
@@ -349,8 +349,8 @@ crypto_get_desc_ex(struct service_info *svc_info, bool per_block)
 	if (putil_is_service_in_batch(svc_info->si_flags))
 		in_batch = true;
 
-	desc =  in_batch ? crypto_get_batch_desc(svc_info) :
-		crypto_get_desc(svc_info->si_pcr, per_block);
+	desc = in_batch ? get_batch_desc(svc_info) :
+		get_desc(svc_info->si_pcr, per_block);
 
 	OSAL_ASSERT(desc);
 	return desc;
@@ -371,8 +371,8 @@ crypto_get_batch_bulk_desc(struct mem_pool *mpool)
 	return desc;
 }
 
-pnso_error_t
-crypto_put_desc(struct per_core_resource *pcr, bool per_block,
+static pnso_error_t
+put_desc(struct per_core_resource *pcr, bool per_block,
 		struct crypto_desc *desc)
 {
 	struct mem_pool *mpool;
@@ -383,8 +383,8 @@ crypto_put_desc(struct per_core_resource *pcr, bool per_block,
 	return mpool_put_object(mpool, desc);
 }
 
-pnso_error_t __attribute__((unused))
-crypto_put_batch_desc(const struct service_info *svc_info,
+static pnso_error_t
+put_batch_desc(const struct service_info *svc_info,
 		struct crypto_desc *desc)
 {
 	pnso_error_t err = PNSO_OK;
@@ -403,8 +403,8 @@ crypto_put_batch_desc(const struct service_info *svc_info,
 	return err;
 }
 
-pnso_error_t __attribute__((unused))
-crypto_put_desc_ex(const struct service_info *svc_info, bool per_block,
+pnso_error_t
+crypto_put_desc(const struct service_info *svc_info, bool per_block,
 		struct crypto_desc *desc)
 {
 	pnso_error_t err;
@@ -413,8 +413,8 @@ crypto_put_desc_ex(const struct service_info *svc_info, bool per_block,
 	if (putil_is_service_in_batch(svc_info->si_flags))
 		in_batch = true;
 
-	err =  in_batch ? crypto_put_batch_desc(svc_info, desc) :
-		crypto_put_desc(svc_info->si_pcr, per_block, desc);
+	err = in_batch ? put_batch_desc(svc_info, desc) :
+		put_desc(svc_info->si_pcr, per_block, desc);
 
 	return err;
 }

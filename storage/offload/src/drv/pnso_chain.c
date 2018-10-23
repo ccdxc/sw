@@ -24,9 +24,6 @@
  *	- once all services are in, use union for si_desc/si_status_desc
  *	as needed
  *	- investigate SONIC_QTYPE_DC_SQ vs SONIC_QTYPE_CP_SQ for checksum
- *	- poll service op was added for testing sync requests temporarily.
- *	remove/readjust when sync/async/batch logic kicks-in
- *	- use get_per_core_resource(void)
  *
  */
 #ifdef NDEBUG

@@ -29,28 +29,12 @@
 /*
  * TODO:
  *	- add additional UTs for read/write status/result, as needed
- *	- reuse/common code (write_result, read_status, etc.)
- *	- move validation routines from services to higher layer
- *
- * TODO-cp:
  *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
- *	- see embedded ones
- *
- * TODO-dc:
- *	- see embedded ones
- *
- * TODO-hash:
- * TODO-chksum:
- *	- per_block support assumes flat buf as input for now; revalidate
- *	when chaining logic kicks-in along with buffer list support
- *	- check for per-block iterator, move into common and then refine
- *	- handle input len for per-block/entire buffer in setup and fill
- *	routines
+ *	- reuse/common code (write_result, read_status, etc.)
  *	- address cpdc_fill_per_block_desc_ex()
  *	- see embedded ones
  *
  */
-
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {
@@ -150,7 +134,8 @@ pprint_sgl(uint64_t sgl_pa)
 	if (!sgl)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x" PRIx64, "", (uint64_t) sgl, sgl_pa);
+	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x" PRIx64, "",
+			(uint64_t) sgl, sgl_pa);
 	while (sgl) {
 		OSAL_LOG_DEBUG("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
 				"",
@@ -317,8 +302,8 @@ get_next_sgl(struct cpdc_sgl *sgl, uint32_t object_size)
 	return sgl;
 }
 
-struct cpdc_desc *
-cpdc_get_desc(struct per_core_resource *pcr, bool per_block)
+static struct cpdc_desc *
+get_desc(struct per_core_resource *pcr, bool per_block)
 {
 	struct mem_pool *mpool;
 
@@ -328,8 +313,8 @@ cpdc_get_desc(struct per_core_resource *pcr, bool per_block)
 	return (struct cpdc_desc *) mpool_get_object(mpool);
 }
 
-struct cpdc_desc *__attribute__((unused))
-cpdc_get_batch_desc(struct service_info *svc_info)
+static struct cpdc_desc *
+get_batch_desc(struct service_info *svc_info)
 {
 	struct service_batch_info *svc_batch_info;
 	struct cpdc_desc *desc;
@@ -346,7 +331,7 @@ cpdc_get_batch_desc(struct service_info *svc_info)
 }
 
 struct cpdc_desc *__attribute__((unused))
-cpdc_get_desc_ex(struct service_info *svc_info, bool per_block)
+cpdc_get_desc(struct service_info *svc_info, bool per_block)
 {
 	struct cpdc_desc *desc;
 	bool in_batch = false;
@@ -354,8 +339,8 @@ cpdc_get_desc_ex(struct service_info *svc_info, bool per_block)
 	if (cpdc_is_service_in_batch(svc_info->si_flags))
 		in_batch = true;
 
-	desc =  in_batch ? cpdc_get_batch_desc(svc_info) :
-		cpdc_get_desc(svc_info->si_pcr, per_block);
+	desc = in_batch ? get_batch_desc(svc_info) :
+		get_desc(svc_info->si_pcr, per_block);
 
 	OSAL_ASSERT(desc);
 	return desc;
@@ -376,8 +361,8 @@ cpdc_get_batch_bulk_desc(struct mem_pool *mpool)
 	return desc;
 }
 
-pnso_error_t
-cpdc_put_desc(struct per_core_resource *pcr, bool per_block,
+static pnso_error_t
+put_desc(struct per_core_resource *pcr, bool per_block,
 		struct cpdc_desc *desc)
 {
 	struct mem_pool *mpool;
@@ -388,8 +373,8 @@ cpdc_put_desc(struct per_core_resource *pcr, bool per_block,
 	return mpool_put_object(mpool, desc);
 }
 
-pnso_error_t __attribute__((unused))
-cpdc_put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
+static pnso_error_t
+put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
 {
 	pnso_error_t err = PNSO_OK;
 	struct service_batch_info *svc_batch_info;
@@ -408,7 +393,7 @@ cpdc_put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
 }
 
 pnso_error_t __attribute__((unused))
-cpdc_put_desc_ex(const struct service_info *svc_info, bool per_block,
+cpdc_put_desc(const struct service_info *svc_info, bool per_block,
 		struct cpdc_desc *desc)
 {
 	pnso_error_t err;
@@ -417,8 +402,8 @@ cpdc_put_desc_ex(const struct service_info *svc_info, bool per_block,
 	if (cpdc_is_service_in_batch(svc_info->si_flags))
 		in_batch = true;
 
-	err =  in_batch ? cpdc_put_batch_desc(svc_info, desc) :
-		cpdc_put_desc(svc_info->si_pcr, per_block, desc);
+	err = in_batch ? put_batch_desc(svc_info, desc) :
+		put_desc(svc_info->si_pcr, per_block, desc);
 
 	return err;
 }

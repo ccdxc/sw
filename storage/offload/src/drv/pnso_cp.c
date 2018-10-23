@@ -102,7 +102,7 @@ compress_setup(struct service_info *svc_info,
 	flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
 
-	cp_desc = cpdc_get_desc_ex(svc_info, false);
+	cp_desc = cpdc_get_desc(svc_info, false);
 	if (!cp_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain cp desc from pool! err: %d", err);
@@ -171,7 +171,7 @@ out_status_desc:
 		OSAL_ASSERT(0);
 	}
 out_cp_desc:
-	err = cpdc_put_desc_ex(svc_info, false, cp_desc);
+	err = cpdc_put_desc(svc_info, false, cp_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return cp desc to pool! err: %d",
 				err);
@@ -454,7 +454,7 @@ compress_teardown(struct service_info *svc_info)
 	}
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc_ex(svc_info, false, cp_desc);
+	err = cpdc_put_desc(svc_info, false, cp_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return cp desc to pool! cp_desc: %p err: %d",
 				cp_desc, err);

@@ -75,7 +75,7 @@ hash_setup(struct service_info *svc_info,
 	flags = pnso_hash_desc->flags;
 	per_block = svc_is_dflag_pblock_enabled(flags);
 
-	hash_desc = cpdc_get_desc_ex(svc_info, per_block);
+	hash_desc = cpdc_get_desc(svc_info, per_block);
 	if (!hash_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash desc from pool err: %d!",
@@ -176,7 +176,7 @@ out_sgl_desc:
 		}
 	// }
 out_hash_desc:
-	err = cpdc_put_desc_ex(svc_info, per_block, hash_desc);
+	err = cpdc_put_desc(svc_info, per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);
@@ -618,7 +618,7 @@ hash_teardown(struct service_info *svc_info)
 	// }
 
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc_ex(svc_info, per_block, hash_desc);
+	err = cpdc_put_desc(svc_info, per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);
