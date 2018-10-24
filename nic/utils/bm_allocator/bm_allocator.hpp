@@ -42,6 +42,12 @@ class BMAllocator {
   // Returns -1 if the allocation fails.
   int Alloc(uint32_t n, uint32_t align=1);
 
+  // Allocate a continous stretch of 'n' bits.
+  // Look from beginning.
+  // Returns the bit offset.
+  // Returns -1 if the allocation fails.
+  int AllocFromBegin(uint32_t n, uint32_t align=1);
+
   // Reserve a specific range. Return error if the
   // range is not free.
   // Returns

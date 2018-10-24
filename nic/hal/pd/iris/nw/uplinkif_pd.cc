@@ -201,6 +201,20 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
                     if_get_if_id((if_t *)pd_upif->pi_if),
                     pd_upif->hw_lif_id);
 
+    // TODO: The macro of 32 is define in dev.hpp in platform.
+    //       Needs to work on a single place to define the id splits.
+    // Nicmgr uses hw_lif_ids of above 32 for host lifs.
+
+    // nic/agent jobd is creating lots of lifs without with_hw_lif_id
+    // which are being allocated in hal. After those lifs an uplink
+    // is being created and it gets a large hw_lif_id.
+    // So having this check only in hw.
+    if (g_hal_cfg.platform_mode ==  HAL_PLATFORM_MODE_HAPS ||
+        g_hal_cfg.platform_mode == HAL_PLATFORM_MODE_HW) {
+        HAL_ASSERT_RETURN(pd_upif->hw_lif_id <= 32, HAL_RET_NO_RESOURCE);
+    }
+
+
     // Allocate ifpc id
     rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->up_ifpc_id);
@@ -306,7 +320,7 @@ uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
             goto end;
         }
 #endif
-        // TODO: Have to free up the index from lif manager
+        if_free_hwlif_id(upif_pd->hw_lif_id);
 
         HAL_TRACE_DEBUG("freed hw_lif_id: {}",
                         upif_pd->hw_lif_id);

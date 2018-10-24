@@ -14,9 +14,12 @@
 #include "uplink.hpp"
 #include "hal_grpc_client.hpp"
 
+#define HAL_HW_LIF_ID_MAX 32
+
 #ifdef __x86_64__
 
 #include "sdk/pal.hpp"
+
 
 #define READ_MEM        sdk::lib::pal_mem_read
 #define WRITE_MEM       sdk::lib::pal_mem_write

@@ -88,6 +88,13 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
     pd = PdClient::factory(platform);
     assert(pd);
 
+    // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
+    int32_t ret = pd->lm_->LIFRangeAlloc(1, HAL_HW_LIF_ID_MAX);
+    if (ret <= 0) {
+        NIC_LOG_ERR("Unable to reserve 1-32 lifs for uplinks");
+        return;
+    }
+
     // Create nicmgr service lif
     struct eth_admin_qstate qstate_req = { 0 };
     struct eth_admin_qstate qstate_resp = { 0 };

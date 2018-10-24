@@ -397,6 +397,12 @@ if_allocate_hwlif_id (void)
     return (uint32_t)hw_lif_id;
 }
 
+void
+if_free_hwlif_id(uint32_t hwlif_id)
+{
+    lif_manager()->DeleteLIF(hwlif_id);
+}
+
 //----------------------------------------------------------------------------
 // given a PI If and L2 Seg, get its encap vlan
 //----------------------------------------------------------------------------

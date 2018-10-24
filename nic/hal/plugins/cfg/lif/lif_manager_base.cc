@@ -18,7 +18,7 @@ int32_t LIFManagerBase::LIFRangeAlloc(int32_t start, uint32_t count) {
   std::lock_guard<std::mutex> lk(lk_);
   int32_t base;
   if (start < 0) {
-    base = lif_allocator_.Alloc(count);
+    base = lif_allocator_.AllocFromBegin(count);
     if (base < 0)
       return -ENOSPC;
   } else {

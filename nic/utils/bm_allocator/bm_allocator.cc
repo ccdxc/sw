@@ -144,6 +144,87 @@ void BMAllocator::Free(uint32_t offset, uint32_t allocation_length) {
   bitmap_.ResetBits(offset, allocation_length);
 }
 
+int BMAllocator::AllocFromBegin(uint32_t n, uint32_t align) {
+  std::lock_guard<std::mutex> lk(lk_);
+
+  if (n == 0)
+    return -1;
+
+#if 0
+  // Bring current_ptr to the required align.
+  uint32_t r = current_ptr_ % align;
+  current_ptr_ = r ? current_ptr_ + (align - r) : current_ptr_;
+
+  // If there is not enough left, reset the curptr.
+  if ((current_ptr_ + n) >= total_bits_)
+    current_ptr_ = 0;
+#endif
+  current_ptr_ = 0;
+
+  uint32_t offset = 0;
+  uint32_t alloced_length = 0;
+  bool found_offset = false;
+  bool try_again;
+  do {
+    try_again = false;
+    for(uint32_t ndx = current_ptr_; ndx < total_bits_;) {
+      if (found_offset) {
+        // Allocation mode.
+        if (bitmap_.IsBitClear(ndx)) {
+          ndx++;
+          alloced_length++;
+          if (alloced_length == n)
+            break;
+        } else {
+          // Not enough bits in this stretch. Reset and enter
+          // back into search mode.
+          found_offset = false;
+          alloced_length = 0;
+          uint32_t r = ndx % align;
+          ndx = r ? ndx + (align - r) : ndx;
+          if (ndx >= total_bits_)
+            break;
+        }
+      } else {
+        // Search mode. Looking for a potential point to start.
+        if (bitmap_.IsBitClear(ndx)) {
+          found_offset = true;
+          offset = ndx;
+          alloced_length = 1;
+          if (n == 1) {
+            // For 1-bit allocations, no need to enter allocation mode.
+            break;
+          }
+          ndx++;
+        } else {
+          ndx += align;
+        }
+      }  // Search mode.
+    }  // For bits from current_ptr_
+    if (found_offset && (n == alloced_length)) {
+      // We got what we wanted, go on to state update.
+      break;
+    }
+    if (current_ptr_ == 0) {
+      // Failed, even when we searched from beginning.
+      return -1;
+    }
+    // Setup to search from beginning.
+    current_ptr_ = 0;
+    found_offset = 0;
+    alloced_length = 0;
+    try_again = true;
+  } while (try_again);
+
+  // At this point the allocation has succeeded.
+  // Update state and get out.
+  bitmap_.SetBits(offset, alloced_length);
+  current_ptr_ = offset + alloced_length;
+  if (current_ptr_ >= total_bits_)
+    current_ptr_ = 0;
+  return offset;
+}
+
 int BMAllocator::Alloc(uint32_t n, uint32_t align) {
   std::lock_guard<std::mutex> lk(lk_);
 
