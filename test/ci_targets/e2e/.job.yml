@@ -6,7 +6,7 @@ image:
 rebase: true
 
 warmd:
-  target: [ "go", "run", "e2e.go" ]
+  #target: [ "go", "run", "e2e.go" ] TODO this needs to be ported to IOTA
   repo_dir: "/import/src/github.com/pensando/sw"
   create:
     image: build-30
