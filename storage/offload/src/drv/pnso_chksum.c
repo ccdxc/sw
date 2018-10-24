@@ -183,7 +183,7 @@ chksum_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-chksum_schedule(const struct service_info *svc_info)
+chksum_ring_db(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	const struct sequencer_info *seq_info;
@@ -511,7 +511,7 @@ struct service_ops chksum_ops = {
 	.chain = chksum_chain,
 	.sub_chain_from_cpdc = chksum_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = chksum_sub_chain_from_crypto,
-	.pnso_schedule = chksum_schedule,
+	.ring_db = chksum_ring_db,
 	.poll = chksum_poll,
 	.read_status = chksum_read_status,
 	.write_result = chksum_write_result,

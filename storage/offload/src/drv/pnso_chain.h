@@ -42,7 +42,7 @@
  *
  *	Once the chain is setup, the chained request will be submitted to the
  *	hardware by ringing the door bell of the first service in the chain,
- *	via schedule(). Subsequently, the request processing thread will return
+ *	via ring_db(). Subsequently, the request processing thread will return
  *	to the caller.
  *
  *	In the caller's polling thread, the driver will poll the last services'
@@ -125,7 +125,7 @@ struct service_ops {
 					      struct crypto_chain_params *crypto_chain);
 
 	/* a NULL-op for all services except the first within the chain */
-	pnso_error_t (*pnso_schedule)(const struct service_info *svc_info);
+	pnso_error_t (*ring_db)(const struct service_info *svc_info);
 
 	/* a NULL-op for all services except the last within the chain */
 	pnso_error_t (*poll)(const struct service_info *svc_info);

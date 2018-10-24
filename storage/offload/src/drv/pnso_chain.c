@@ -684,9 +684,9 @@ chn_execute_chain(struct service_chain *chain)
 
 	/* ring 'first' service door bell */
 	sc_entry = ce_first;
-	err = ce_first->ce_svc_info.si_ops.pnso_schedule(&sc_entry->ce_svc_info);
+	err = ce_first->ce_svc_info.si_ops.ring_db(&sc_entry->ce_svc_info);
 	if (err) {
-		OSAL_LOG_ERROR("failed to schedule the service svc_type: %d err: %d",
+		OSAL_LOG_ERROR("failed to ring service door bell! svc_type: %d err: %d",
 			       ce_first->ce_svc_info.si_type, err);
 		goto out;
 	}

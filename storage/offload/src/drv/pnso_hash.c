@@ -214,7 +214,7 @@ hash_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-hash_schedule(const struct service_info *svc_info)
+hash_ring_db(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	const struct sequencer_info *seq_info;
@@ -576,7 +576,7 @@ struct service_ops hash_ops = {
 	.chain = hash_chain,
 	.sub_chain_from_cpdc = hash_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = hash_sub_chain_from_crypto,
-	.pnso_schedule = hash_schedule,
+	.ring_db = hash_ring_db,
 	.poll = hash_poll,
 	.read_status = hash_read_status,
 	.write_result = hash_write_result,

@@ -36,7 +36,7 @@ decompact_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-decompact_schedule(const struct service_info *svc_info)
+decompact_ring_db(const struct service_info *svc_info)
 {
 	return EOPNOTSUPP;
 }
@@ -70,7 +70,7 @@ struct service_ops decompact_ops = {
 	.chain = decompact_chain,
 	.sub_chain_from_cpdc = decompact_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = decompact_sub_chain_from_crypto,
-	.pnso_schedule = decompact_schedule,
+	.ring_db = decompact_ring_db,
 	.poll = decompact_poll,
 	.read_status = decompact_read_status,
 	.write_result  = decompact_write_result,

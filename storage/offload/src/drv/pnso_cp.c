@@ -238,7 +238,7 @@ compress_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-compress_schedule(const struct service_info *svc_info)
+compress_ring_db(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	const struct sequencer_info *seq_info;
@@ -434,7 +434,7 @@ struct service_ops cp_ops = {
 	.chain = compress_chain,
 	.sub_chain_from_cpdc = compress_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = compress_sub_chain_from_crypto,
-	.pnso_schedule = compress_schedule,
+	.ring_db = compress_ring_db,
 	.poll = compress_poll,
 	.read_status = compress_read_status,
 	.write_result = compress_write_result,

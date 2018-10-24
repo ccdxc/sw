@@ -558,10 +558,10 @@ execute_batch(struct batch_info *batch_info)
 		OSAL_LOG_DEBUG("ring DB batch idx: %d", idx);
 
 		/* ring DB first chain's first service within the mini-batch  */
-		err = first_ce->ce_svc_info.si_ops.pnso_schedule(
+		err = first_ce->ce_svc_info.si_ops.ring_db(
 				&first_ce->ce_svc_info);
 		if (err) {
-			OSAL_LOG_DEBUG("failed to schedule the service svc_type: %d err: %d",
+			OSAL_LOG_DEBUG("failed to ring service door bell! svc_type: %d err: %d",
 				       first_ce->ce_svc_info.si_type, err);
 			goto out;
 		}

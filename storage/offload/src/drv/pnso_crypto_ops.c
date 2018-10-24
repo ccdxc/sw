@@ -350,7 +350,7 @@ crypto_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
-crypto_schedule(const struct service_info *svc_info)
+crypto_ring_db(const struct service_info *svc_info)
 {
 	if (!chn_service_is_in_chain(svc_info) || chn_service_is_first(svc_info)) {
 		seq_ring_db(svc_info);
@@ -460,7 +460,7 @@ struct service_ops encrypt_ops = {
 	.chain = crypto_chain,
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
-	.pnso_schedule = crypto_schedule,
+	.ring_db = crypto_ring_db,
 	.poll = crypto_poll,
 	.read_status = crypto_read_status,
 	.write_result = crypto_write_result,
@@ -472,7 +472,7 @@ struct service_ops decrypt_ops = {
 	.chain = crypto_chain,
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
-	.pnso_schedule = crypto_schedule,
+	.ring_db = crypto_ring_db,
 	.poll = crypto_poll,
 	.read_status = crypto_read_status,
 	.write_result = crypto_write_result,
