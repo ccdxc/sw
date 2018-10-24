@@ -4,14 +4,14 @@
 
 #include <iostream>
 #include "grpc++/grpc++.h"
-#include "nic/linkmgr/linkmgr_delphi.hpp"
+#include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/linkmgr/linkmgr_svc.hpp"
-
 #include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/sdk/include/sdk/port_mac.hpp"
+
 
 namespace linkmgr {
 
@@ -24,24 +24,23 @@ using delphi::objects::PortStatus;
 using delphi::objects::PortSpecPtr;
 using delphi::objects::PortStatusPtr;
 
-// port reactors
-port_svc_ptr_t g_port_rctr;
+typedef struct linkmgr_svc_s {
+    delphi::SdkPtr    sdk;
+    port_svc_ptr_t    port_svc;
+} linkmgr_svc_t;
+linkmgr_svc_t g_linkmgr_svc;
 
-// linkmgr_get_port_reactor gets the port reactor object
-port_svc_ptr_t linkmgr_get_port_reactor () {
-    return g_port_rctr;
-}
-
-// linkmgr_init_port_reactors creates a port reactor
-Status linkmgr_init_port_reactors (delphi::SdkPtr sdk) {
-    // create the PortSpec reactor
-    g_port_rctr = std::make_shared<port_svc>(sdk);
+// port_svc_init creates a port object handler
+Status port_svc_init(delphi::SdkPtr sdk) {
+    g_linkmgr_svc.sdk = sdk;
+    // create the PortSpec handler
+    g_linkmgr_svc.port_svc = std::make_shared<port_svc>(sdk);
 
     // mount objects
     PortSpec::Mount(sdk, delphi::ReadMode);
 
-    // Register PortSpec reactor
-    PortSpec::Watch(sdk, g_port_rctr);
+    // Register PortSpec handler
+    PortSpec::Watch(sdk, g_linkmgr_svc.port_svc);
 
     // mount status objects
     PortStatus::Mount(sdk, delphi::ReadWriteMode);
@@ -49,6 +48,20 @@ Status linkmgr_init_port_reactors (delphi::SdkPtr sdk) {
     HAL_TRACE_DEBUG("Linkmgr: Mounted port objects from delphi...");
 
     return Status::OK;
+}
+
+// delphi_sdk_get returns pointer to delphi sdk
+delphi::SdkPtr
+delphi_sdk_get (void)
+{
+    return g_linkmgr_svc.sdk;
+}
+
+// port_svc_get returns pointer to port service object
+port_svc_ptr_t
+port_svc_get (void)
+{
+    return g_linkmgr_svc.port_svc;
 }
 
 // OnPortSpecCreate gets called when PortSpec object is created
@@ -59,23 +72,21 @@ error port_svc::OnPortSpecCreate(PortSpecPtr portSpec) {
     hal_handle_t    hal_handle = 0;
 
     // validate port params
-    if (validate_port_create (*portSpec.get(), &response) == false) {
+    if (validate_port_create(*portSpec.get(), &response) == false) {
         HAL_TRACE_ERR("port create validation failed");
         return error::New("port create validation failed");
     }
 
     // set the params in port_args
-    populate_port_create_args (*portSpec.get(), &port_args);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    populate_port_create_args(*portSpec.get(), &port_args);
 
     // create the port
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     hal_ret = linkmgr::port_create(&port_args, &hal_handle);
     if (hal_ret != HAL_RET_OK) {
         HAL_TRACE_ERR("port create failed with error {}", hal_ret);
         return error::New("port create failed");
     }
-
     hal::hal_cfg_db_close();
 
     HAL_TRACE_DEBUG("Linkmgr: Port {} got created", port_args.port_num);
@@ -90,7 +101,7 @@ error port_svc::OnPortSpecUpdate(PortSpecPtr portSpec) {
     hal_ret_t       hal_ret    = HAL_RET_OK;
 
     // validate port params
-    if (validate_port_update (*portSpec.get(), &response) == false) {
+    if (validate_port_update(*portSpec.get(), &response) == false) {
         HAL_TRACE_ERR("port update validation failed");
         return error::New("port update validation failed");
     }
@@ -154,6 +165,34 @@ error port_svc::update_port_status(google::protobuf::uint32 port_id,
                     "port: {}", port_id, status, port);
 
     return error::OK();
+}
+
+void
+port_event_cb (uint32_t port_num, port_event_t event)
+{
+    PortStatusPtr port_status;
+
+    // TODO: FIX ME
+    //port_status = PortStatus::FindObject(g_linkmgr_svc.sdk, key(port_num));
+    if (port_status == nullptr) {
+        HAL_TRACE_ERR("Failed to find port status object for port {}", port_num);
+        return;
+    }
+
+    switch (event) {
+    case port_event_t::PORT_EVENT_LINK_UP:
+        HAL_TRACE_DEBUG("port: {}, Link UP", port_num);
+        port_status->set_oper_status(port::PORT_OPER_STATUS_UP);
+        break;
+
+    case port_event_t::PORT_EVENT_LINK_DOWN:
+        HAL_TRACE_DEBUG("port: {}, Link DOWN", port_num);
+        port_status->set_oper_status(port::PORT_OPER_STATUS_DOWN);
+        break;
+
+    default:
+        break;
+    }
 }
 
 }    // namespace linkmgr

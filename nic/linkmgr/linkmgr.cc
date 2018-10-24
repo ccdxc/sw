@@ -14,6 +14,7 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 #include "nic/hal/pd/capri/csr/cpu_hal_if.h"
+#include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -266,23 +267,6 @@ linkmgr_thread_init (void)
     return HAL_RET_OK;
 }
 
-void
-port_event_cb (uint32_t port_num, port_event_t event)
-{
-    switch (event) {
-        case port_event_t::PORT_EVENT_LINK_UP:
-            HAL_TRACE_DEBUG("port: {}, Link UP", port_num);
-            break;
-
-        case port_event_t::PORT_EVENT_LINK_DOWN:
-            HAL_TRACE_DEBUG("port: {}, Link DOWN", port_num);
-            break;
-
-        default:
-            break;
-    }
-}
-
 hal_ret_t
 linkmgr_csr_init (void)
 {
@@ -347,7 +331,7 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
     sdk_cfg.cfg_path       = cfg_path;
     sdk_cfg.catalog        = catalog;
     sdk_cfg.server_builder = &server_builder;
-    sdk_cfg.port_event_cb  = &port_event_cb;
+    sdk_cfg.port_event_cb  = port_event_cb;
     sdk_cfg.process_mode   = true;
 
     linkmgr_csr_init();

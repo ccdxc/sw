@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "grpc++/grpc++.h"
-#include "nic/linkmgr/linkmgr_delphi.hpp"
+#include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
 #include "gen/proto/port.delphi_utest.hpp"
 #include "nic/linkmgr/test/utils/linkmgr_base_test.hpp"
 
@@ -48,16 +48,16 @@ TEST_F(port_svc_test, PortSpecTest) {
 }
 
 TEST_F(port_svc_test, PortStatusTest) {
-    linkmgr_init_port_reactors(sdk_);
+    port_svc_init(sdk_);
 
     // set port status
-    linkmgr_get_port_reactor()->update_port_status(1, port::PORT_OPER_STATUS_NONE);
+    port_svc_get()->update_port_status(1, port::PORT_OPER_STATUS_NONE);
 
     ASSERT_EQ_EVENTUALLY(sdk_->ListKind("PortStatus").size(), 1) << "Port status object was not created";
     ASSERT_EQ_EVENTUALLY(delphi::objects::PortStatus::List(sdk_)[0]->oper_status(), port::PORT_OPER_STATUS_NONE) << "invalid port status";
 
     // change port status to up
-    linkmgr_get_port_reactor()->update_port_status(1, port::PORT_OPER_STATUS_UP);
+    port_svc_get()->update_port_status(1, port::PORT_OPER_STATUS_UP);
 
     // verify opert state got changed
     ASSERT_EQ_EVENTUALLY(delphi::objects::PortStatus::List(sdk_)[0]->oper_status(), port::PORT_OPER_STATUS_UP) << "invalid port status";

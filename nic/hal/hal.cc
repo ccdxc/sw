@@ -182,6 +182,7 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
                                    thread_prio, sched_policy,
                                    NULL);
     HAL_ABORT(hal_thread != NULL);
+    hal_thread->start(hal_thread);
     return HAL_RET_OK;
 }
 
@@ -249,6 +250,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
+    HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
 
     // unless periodic thread is fully initialized and
     // done calling all plugins' thread init callbacks
@@ -279,7 +281,6 @@ hal_init (hal_cfg_t *hal_cfg)
     // linkmgr init
     hal_linkmgr_init(hal_cfg);
 
-    HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
 
     // start monitoring HAL heartbeat
     hal::hb::heartbeat_init();

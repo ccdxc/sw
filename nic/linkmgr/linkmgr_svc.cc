@@ -13,6 +13,7 @@
 #include "linkmgr_src.hpp"
 #include "linkmgr_utils.hpp"
 #include "linkmgr_internal.hpp"
+#include "delphi/linkmgr_delphi.hpp"
 
 using hal::hal_cfg_db_open;
 using hal::hal_cfg_db_close;
@@ -185,12 +186,13 @@ PortServiceImpl::PortCreate(ServerContext *context,
                             const PortRequestMsg *req,
                             PortResponseMsg *rsp)
 {
-    uint32_t        i          = 0;
-    uint32_t        nreqs      = req->request_size();
-    PortResponse    *response  = NULL;
-    port_args_t     port_args  = {0};
-    hal_ret_t       hal_ret    = HAL_RET_OK;
-    hal_handle_t    hal_handle = 0;
+    uint32_t               i          = 0;
+    uint32_t               nreqs      = req->request_size();
+    PortResponse           *response  = NULL;
+    port_args_t            port_args  = {0};
+    hal_ret_t              hal_ret    = HAL_RET_OK;
+    hal_handle_t           hal_handle = 0;
+    dobj::PortStatusPtr    port_status;
 
     HAL_TRACE_DEBUG("Rcvd Port Create Request");
     if (nreqs == 0) {
@@ -198,25 +200,23 @@ PortServiceImpl::PortCreate(ServerContext *context,
     }
 
     hal_cfg_db_open(CFG_OP_WRITE);
-
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-
-        if (validate_port_create (spec, response) == false) {
+        if (validate_port_create(spec, response) == false) {
             HAL_TRACE_ERR("port create validation failed");
             continue;
         }
-
         // set the params in port_args
-        populate_port_create_args (spec, &port_args);
-
+        populate_port_create_args(spec, &port_args);
         // create the port
         hal_ret = linkmgr::port_create(&port_args, &hal_handle);
-
         response->set_api_status(hal_ret_to_api_status(hal_ret));
+        if (hal_ret == HAL_RET_OK) {
+            port_status = std::make_shared<dobj::PortStatus>(response->status());
+            linkmgr::delphi_sdk_get()->SetObject(port_status);
+        }
     }
-
     hal_cfg_db_close();
 
     return Status::OK;
@@ -348,8 +348,8 @@ PortServiceImpl::PortDelete(ServerContext *context,
     uint32_t     nreqs      = req->request_size();
     hal_ret_t    hal_ret    = HAL_RET_OK;
     port_args_t  port_args  = { 0 };
-
     PortDeleteResponse *response = NULL;
+    dobj::PortStatusPtr    port_status;
 
     HAL_TRACE_DEBUG("Rcvd Port Delete Request");
     if (nreqs == 0) {
@@ -357,7 +357,6 @@ PortServiceImpl::PortDelete(ServerContext *context,
     }
 
     hal_cfg_db_open(CFG_OP_WRITE);
-
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
@@ -367,18 +366,18 @@ PortServiceImpl::PortDelete(ServerContext *context,
             HAL_TRACE_ERR("port delete request validation failed");
             continue;
         }
-
         sdk::linkmgr::port_args_init(&port_args);
-
         // set port number in port_args
         port_args.port_num = spec.key_or_handle().port_id();
-
         // delete the port
         hal_ret = linkmgr::port_delete(&port_args);
-
         response->set_api_status(hal_ret_to_api_status(hal_ret));
+        if (hal_ret == HAL_RET_OK) {
+            port_status = std::make_shared<dobj::PortStatus>();
+            port_status->mutable_key_or_handle()->set_port_id(spec.key_or_handle().port_id());
+            linkmgr::delphi_sdk_get()->DeleteObject(port_status);
+        }
     }
-
     hal_cfg_db_close();
 
     return Status::OK;

@@ -8,7 +8,7 @@
 #include "nic/utils/trace/trace.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/hal/iris/delphi/delphic.hpp"
-#include "nic/linkmgr/linkmgr_delphi.hpp"
+#include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
 
 namespace hal {
 namespace svc {
@@ -30,7 +30,7 @@ delphi_client_start (void *ctxt)
     HAL_TRACE_DEBUG("HAL delphi thread started...");
 
     // init linkmgr services
-    Status sts = linkmgr::linkmgr_init_port_reactors(sdk);
+    Status sts = linkmgr::port_svc_init(sdk);
     HAL_ABORT(sts.ok());
 
     // register delphi client

@@ -361,18 +361,18 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         HAL_TRACE_DEBUG("writing {} to semaphore {:#x}",
                         val32, meta->alloc_semaphore_addr +
                         CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
-        p4plus_reg_write(
-                meta->alloc_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
-                val32);
+        asic_reg_write(meta->alloc_semaphore_addr +
+                           CAPRI_SEM_INC_NOT_FULL_CI_OFFSET, &val32);
         // Set PI to 0
-        p4plus_reg_write(meta->alloc_semaphore_addr, 0);
+        val32 = 0;
+        asic_reg_write(meta->alloc_semaphore_addr, &val32);
     }
     if (meta->free_semaphore_addr &&
                     CAPRI_SEM_RAW_IS_PI_CI(meta->free_semaphore_addr)) {
         // Initialize this ring as
         // FP.PI = AP.CI = meta->num_slots
         uint32_t val32 = meta->num_slots;
-        p4plus_reg_write(meta->free_semaphore_addr, val32);
+        asic_reg_write(meta->free_semaphore_addr, &val32);
         HAL_TRACE_DEBUG("writing {} to semaphore {:#x}",
                         val32, meta->free_semaphore_addr);
 
@@ -382,8 +382,8 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         // INC can be FULL is if we are trying to free a page, before it
         // has been allocated. Keeping this semaphore here for future need
         val32++;
-        p4plus_reg_write(meta->free_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
-                                        val32);
+        asic_reg_write(meta->free_semaphore_addr +
+                           CAPRI_SEM_INC_NOT_FULL_CI_OFFSET, &val32);
         HAL_TRACE_DEBUG("writing {} to semaphore {:#x}",
                         val32, meta->free_semaphore_addr +
                         CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
@@ -515,8 +515,8 @@ barco_gcm0_get_hw_meta(pd_wring_t* wring_pd)
     uint32_t            value;
     hal_ret_t           ret = HAL_RET_OK;
 
-    if(!p4plus_reg_read(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
-                        value)) {
+    if (asic_reg_read(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
+                      &value) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read the Barco PIDX value from hw)");
     }
     else {
@@ -524,8 +524,8 @@ barco_gcm0_get_hw_meta(pd_wring_t* wring_pd)
         wring_pd->wring->pi = value;
     }
 
-    if(!p4plus_reg_read(CAPRI_BARCO_MD_HENS_REG_GCM0_CONSUMER_IDX,
-                        value)) {
+    if (asic_reg_read(CAPRI_BARCO_MD_HENS_REG_GCM0_CONSUMER_IDX,
+                      &value) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read the Barco CIDX value from hw)");
     }
     else {
@@ -555,14 +555,14 @@ arqrx_get_hw_meta(pd_wring_t* wring_pd)
         return HAL_RET_QUEUE_NOT_FOUND;
     }
 
-    if(!p4plus_reg_read(addr, value)) {
+    if (asic_reg_read(addr, &value) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read pindex value");
 		return HAL_RET_HW_FAIL;
     }
 
     wring_pd->wring->pi = value;
     addr += 4;
-    if(!p4plus_reg_read(addr, value)) {
+    if (asic_reg_read(addr, &value) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read cindex value");
 		return HAL_RET_HW_FAIL;
     }
@@ -598,8 +598,7 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     HAL_TRACE_DEBUG("Reading pi from the addr: {:#x}", sem_addr);
 
     uint32_t value;
-    if(!p4plus_reg_read(sem_addr,
-                        value)) {
+    if (asic_reg_read(sem_addr, &value) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");
     }
 
@@ -608,8 +607,7 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     sem_addr += 4;
     HAL_TRACE_DEBUG("Reading ci from the addr: {:#x}", sem_addr);
 
-    if(!p4plus_reg_read(sem_addr,
-                        value)) {
+    if (asic_reg_read(sem_addr, &value) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to read the data from the hw)");
     }
 
@@ -633,8 +631,7 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
     HAL_TRACE_DEBUG("Writing pi {} to addr: {:#x}",
             wring->pi, sem_addr);
 
-    if(!p4plus_reg_write(sem_addr,
-                        wring->pi)) {
+    if (asic_reg_write(sem_addr, &wring->pi) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to write data to hw)");
     }
 
@@ -642,14 +639,12 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
     HAL_TRACE_DEBUG("Writing ci {} to addr: {:#x}",
             wring->ci, sem_addr);
 
-    if(!p4plus_reg_write(sem_addr,
-                        wring->ci)) {
+    if (asic_reg_write(sem_addr, &wring->ci) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to write data to hw)");
     }
 
     return ret;
 }
-
 
 hal_ret_t
 wring_pd_init_global_rings()

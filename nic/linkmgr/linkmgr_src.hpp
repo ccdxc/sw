@@ -7,7 +7,6 @@
 #include "nic/sdk/include/sdk/linkmgr.hpp"
 #include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
-
 #include "linkmgr.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_debug_svc.hpp"

@@ -8,4 +8,5 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/linkmgr.cc \
 MODULE_INCS     = ${NIC_CSR_INCS}
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
+MODULE_SOLIBS   = linkmgrdelphi
 include ${MKDEFS}/post.mk

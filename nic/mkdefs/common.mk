@@ -123,7 +123,7 @@ export NIC_FTE_SOLIBS := fte fte_iris
 
 export NIC_HAL_TLS_SOLIBS := tls_pse tls_api
 
-export NIC_LINKMGR_SOLIBS := linkmgr_libsrc sdklinkmgr linkmgrcsr
+export NIC_LINKMGR_SOLIBS := linkmgr_libsrc sdklinkmgr linkmgrcsr linkmgrdelphi
 export NIC_LINKMGR_LDLIBS := AAPL
 
 export NIC_LKL_SOLIBS := lklshim_tls lkl_api

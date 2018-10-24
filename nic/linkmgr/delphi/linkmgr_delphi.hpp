@@ -1,6 +1,7 @@
+//------------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
-
-// delphi reactor APIs for linkmgr
+// delphi handler APIs for linkmgr
+//------------------------------------------------------------------------------
 
 #ifndef __LINKMGR_DELPHI_HPP__
 #define __LINKMGR_DELPHI_HPP__
@@ -9,6 +10,9 @@
 #include "grpc++/grpc++.h"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "gen/proto/port.delphi.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
+
+namespace dobj = delphi::objects;
 
 namespace linkmgr {
 
@@ -16,8 +20,9 @@ using grpc::Status;
 using delphi::error;
 using delphi::objects::PortSpecPtr;
 using port::PortOperStatus;
+using sdk::types::port_event_t;
 
-// port_svc is the reactor for the Port object
+// port_svc is the handler for the Port object
 class port_svc : public delphi::objects::PortSpecReactor {
 public:
     port_svc(delphi::SdkPtr sk) {
@@ -42,11 +47,13 @@ private:
 };
 typedef std::shared_ptr<port_svc> port_svc_ptr_t;
 
-// linkmgr_get_port_reactor gets the port reactor object
-port_svc_ptr_t linkmgr_get_port_reactor(void);
+// initialize port service
+Status port_svc_init(delphi::SdkPtr sdk);
 
-// linkmgr_init_port_reactors creates a port reactor
-Status linkmgr_init_port_reactors(delphi::SdkPtr sdk);
+// get port service object
+port_svc_ptr_t port_svc_get(void);
+delphi::SdkPtr delphi_sdk_get(void);
+void port_event_cb(uint32_t port_num, port_event_t event);
 
 }    // namespace linkmgr
 
