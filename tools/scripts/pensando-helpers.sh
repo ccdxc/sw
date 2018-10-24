@@ -207,7 +207,7 @@ start_model_how() {
     kill_model
 
     # export GDB="gdb -ex run -e ~/.gdbinit --args"
-    # IRIS_DEBUG=1 LOG_LEVEL=“info”
+    # IRIS_DEBUG=1 LOG_LEVEL=info
 
     LD_LIBRARY_PATH="$PWD/../nic/build/x86_64/iris/lib" \
     ZMQ_SOC_DIR="$PWD/../nic" \
@@ -215,7 +215,7 @@ start_model_how() {
 }
 
 start_model_accel() {
-    start_model_how type=accel,bdf=03:00.0,lif=2,intr_base=0,devcmd_pa=0x11c6a7000,devcmddb_pa=0x11c6a8000
+    start_model_how type=accel,bdf=03:00.0,lif=2,intr_base=0,devcmd_pa=0x1168a7000,devcmddb_pa=0x1168a8000
 }
 
 start_model_eth() {
@@ -314,6 +314,7 @@ start_nicmgr_eth() {
         return -1 
     fi
 
+    HAL_CONFIG_PATH="../nic/conf" \
     LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../bazel-bin/nic/model_sim/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -c ./src/app/nicmgrd/etc/eth.json
@@ -325,6 +326,7 @@ start_nicmgr_eth_smart() {
         return -1 
     fi
 
+    HAL_CONFIG_PATH="../nic/conf" \
     LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../bazel-bin/nic/model_sim/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -s -c ./src/app/nicmgrd/etc/eth-smart.json
@@ -336,9 +338,10 @@ start_nicmgr_accel() {
         return -1 
     fi
 
+    HAL_CONFIG_PATH="../nic/conf" \
     LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../bazel-bin/nic/model_sim/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
-        $GDB ./gen/x86_64/bin/nicmgrd -c ./src/app/nicmgrd/etc/accel.json
+        $GDB ./gen/x86_64/bin/nicmgrd -p sim -c ./src/app/nicmgrd/etc/accel.json
 }
 
 start_qemu() {

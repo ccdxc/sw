@@ -146,11 +146,11 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
 
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                    const struct lif_info *nicmgr_lif_info,
-                   PdClient *pd_client) :
+                   PdClient *pd_client,
+                   bool dol_integ) :
     seq_qid_init_high(0),
     nicmgr_lif_info(nicmgr_lif_info)
 {
-    // uint64_t    lif_handle;
     uint64_t    hbm_addr;
     uint32_t    hbm_size;
     uint32_t    num_keys_max;
@@ -161,7 +161,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     spec = (accel_devspec_t *)dev_spec;
     pd = pd_client;
 
-    NIC_LOG_INFO("In accel constructor");
+    NIC_LOG_INFO("In accel constructor: dol_integ {}", dol_integ);
 
     // Locate HBM region dedicated to crypto keys
     if (hal->AllocHbmAddress(CAPRI_BARCO_KEY_DESC, &hbm_addr, &hbm_size)) {
@@ -235,41 +235,31 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     // Create LIF
     qinfo[STORAGE_SEQ_QTYPE_SQ].entries = log_2(spec->seq_queue_count);
     spec->seq_created_count = 1 << qinfo[STORAGE_SEQ_QTYPE_SQ].entries;
-    if (hal->lif_map.find(spec->lif_id) != hal->lif_map.end()) {
-        if (hal->LifDelete(spec->lif_id)) {
-            NIC_LOG_ERR("Failed to delete LIF, id = {}", spec->lif_id);
+    info.lif_id = spec->lif_id;
+    if (dol_integ) {
+        if (hal->lif_map.find(spec->lif_id) != hal->lif_map.end()) {
+            if (hal->LifDelete(spec->lif_id)) {
+                NIC_LOG_ERR("Failed to delete LIF, id = {}", spec->lif_id);
+                return;
+            }
+        }
+
+        info.hw_lif_id = 0;
+        uint64_t lif_handle = hal->LifCreate(info.lif_id, qinfo, &info,
+                                             0, false, 0, 0, 0, info.hw_lif_id);
+        if (lif_handle == 0) {
+            NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.lif_id);
             return;
         }
+        spec->hw_lif_id = info.hw_lif_id;
+    } else {
+        info.hw_lif_id = spec->hw_lif_id;
+        uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+        pd->program_qstate(qinfo, &info, coses);
     }
 
-    info.lif_id = spec->lif_id;
-    info.hw_lif_id = nicmgr_lif_info->hw_lif_id;
-    uint64_t rs = hal->LifCreate(spec->lif_id,
-                                 NULL,
-                                 qinfo,
-                                 &info);
-    if (rs != 0) {
-        NIC_LOG_ERR("Failed to create LIF");
-        return;
-    }
-
-     NIC_LOG_INFO("Accel lif created: id:{}, hw_lif_id: {}",
-                  info.lif_id, info.hw_lif_id);
-
-     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
-     pd->program_qstate(qinfo, &info, coses);
-#if 0
-    lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info, 0, false, 0, 0, 0,
-                                nicmgr_lif_info->hw_lif_id);
-    if (lif_handle == 0) {
-        NIC_LOG_ERR("Failed to create LIF");
-        return;
-    }
-#endif
-
-    NIC_LOG_INFO("lif{}: {} sequencer queues created",
-           info.hw_lif_id, spec->seq_created_count);
-
+    NIC_LOG_INFO("Accel lif id:{}, hw_lif_id: {}, seq_created_count: {}",
+                 info.lif_id, info.hw_lif_id, spec->seq_created_count);
     name = string_format("accel{}", spec->lif_id);
 
     // Configure PCI resources
@@ -571,6 +561,11 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     // Reset and reenable accelerator rings
     accel_ring_reset_all();
+
+    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
+        intr_pba_clear(pci_resources.intrb + intr);
+        intr_drvcfg(pci_resources.intrb + intr);
+    }
     return (DEVCMD_SUCCESS);
 }
 

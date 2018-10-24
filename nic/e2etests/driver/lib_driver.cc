@@ -267,11 +267,14 @@ static queue_info_t alloc_adminq(uint16_t lif, queue_type qtype, uint32_t qid,
   qstate->p_index0 = 0;
   qstate->c_index0 = 0;
   qstate->comp_index = 0;
+  qstate->ci_fetch = 0;
   // ring status
   qstate->sta.color = 1;
   // ring cfg
   qstate->cfg.enable = 1;
   qstate->cfg.host_queue = 1;
+  qstate->cfg.intr_enable = 1;
+  qstate->intr_assert_index = 0;
   // ring params
   qstate->ring_base = (1ULL << 63) | qi.ring_base;
   qstate->ring_size = (uint16_t)log2(qi.ring_size);

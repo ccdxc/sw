@@ -370,6 +370,8 @@ def run_nicmgr_gtest(args, standalone=False):
 def run_nicmgr(args, standalone=False):
     wait_for_hal()
     bin_dir = nic_dir + "/../platform/gen/x86_64/bin/"
+    os.environ["DOL"] = "1"
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../platform/gen/x86_64/lib/"
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/build/x86_64/iris/lib/"
     os.chdir(bin_dir)

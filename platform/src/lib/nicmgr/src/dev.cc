@@ -77,6 +77,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
     hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
     uint8_t     cosA = 1;
     uint8_t     cosB = 0;
+    const char  *dol_integ_str;
 
     utils::logger::init();
 
@@ -89,12 +90,14 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
     pd = PdClient::factory(platform);
     assert(pd);
 
+#ifdef __aarch64__
     // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
     int32_t ret = pd->lm_->LIFRangeAlloc(1, HAL_HW_LIF_ID_MAX);
     if (ret <= 0) {
         NIC_LOG_ERR("Unable to reserve 1-32 lifs for uplinks");
         return;
     }
+#endif
 
     // Create nicmgr service lif
     nicmgr_req_qstate_t qstate_req = { 0 };
@@ -121,17 +124,22 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
         },
     };
 
-#if 0
-    // Should skip creation of this lif in HAL as this is non-ethernet..
-    lif_handle = hal->LifCreate(1, qinfo, &info, 0, false, 0, 0, 0);
-    if (lif_handle == 0) {
-        throw runtime_error("Failed to create nicmgr lif!");
+    dol_integ_str = std::getenv("DOL");
+    dol_integ = dol_integ_str ? !!atoi(dol_integ_str) : false;
+    info.lif_id = 1;
+    if (dol_integ) {
+        info.hw_lif_id = 0;
+        uint64_t lif_handle = hal->LifCreate(info.lif_id, qinfo, &info,
+                                             0, false, 0, 0, 0, info.hw_lif_id);
+        if (lif_handle == 0) {
+            throw runtime_error("Failed to create HAL nicmgr LIF");
+        }
+        NIC_LOG_INFO("nicmgr lif id:{}, hw_lif_id: {}", info.lif_id, info.hw_lif_id);
+    } else {
+        info.hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
+        uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+        pd->program_qstate(qinfo, &info, coses);
     }
-#endif
-
-    info.hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-    uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
-    pd->program_qstate(qinfo, &info, coses);
 
     // Init QState
     uint64_t hbm_base = NICMGR_BASE;
@@ -499,7 +507,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         devices[eth_dev->info.hw_lif_id] = (Device *)eth_dev;
         return (Device *)eth_dev;
     case ACCEL:
-        accel_dev = new Accel_PF(hal, dev_spec, &info, pd);
+        accel_dev = new Accel_PF(hal, dev_spec, &info, pd, dol_integ);
         devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
         return (Device *)accel_dev;
     case NVME:

@@ -58,7 +58,7 @@ nicmgr_post_adminq:
 
 nicmgr_post_adminq_completion:
   // Do we need to generate an interrupt?
-  seq             c2, r0, d.intr_enable
+  sne             c2, r0, d.intr_enable
 
   // DMA adminq completion
   DMA_CMD_PTR(_r_ptr, _r_index, r7)

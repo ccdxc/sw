@@ -260,6 +260,7 @@ private:
     uint32_t lif_id;
     // Bharat TODO: Not needed anymore as its being used for non-eth lif
     uint64_t lif_handle;
+    bool dol_integ;
 
     PdClient *pd;
 

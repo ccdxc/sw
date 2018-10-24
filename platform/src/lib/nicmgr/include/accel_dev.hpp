@@ -192,7 +192,8 @@ class Accel_PF : public Device {
 public:
     Accel_PF(HalClient *hal_client, void *dev_spec,
              const struct lif_info *nicmgr_lif_info,
-             PdClient *pd_client);
+             PdClient *pd_client,
+             bool dol_integ);
 
     void DevcmdHandler();
     void DevcmdPoll();
