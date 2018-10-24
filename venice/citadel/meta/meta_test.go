@@ -181,7 +181,7 @@ func TestMetaBasic(t *testing.T) {
 	// verify that fourth node gets some shards
 	AssertEventually(t, func() (bool, interface{}) {
 		return ((len(w1.GetCluster(meta.ClusterTypeTstore).NodeMap) == 4) &&
-				w4.GetCluster(meta.ClusterTypeTstore).NodeMap["4444"].NumShards >= (meta.DefaultShardCount*meta.DefaultReplicaCount/4)) &&
+				w1.GetCluster(meta.ClusterTypeTstore).NodeMap["4444"].NumShards >= (meta.DefaultShardCount*meta.DefaultReplicaCount/4)) &&
 				(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["1111"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
 				(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["2222"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
 				(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["3333"].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)),
