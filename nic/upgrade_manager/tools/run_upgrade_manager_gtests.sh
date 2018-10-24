@@ -8,8 +8,8 @@ export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 set -e
 # Upgrade Manager gtests
 export PATH=${PATH}:${BUILD_DIR}/bin
-#${CMD_OPTS} upgrade_sdk_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/upgrade_sdk_test.xml"
-#${CMD_OPTS} upgrade_manager_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/upgrade_manager_test.xml"
+${CMD_OPTS} upgrade_sdk_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/upgrade_sdk_test.xml"
+${CMD_OPTS} upgrade_manager_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/upgrade_manager_test.xml"
 
 #@# SDK tests
 #@find build/x86_64/iris/bin/ -name *.runfiles_manifest* | sed 's/\.runfiles_manifest$$//1' | \

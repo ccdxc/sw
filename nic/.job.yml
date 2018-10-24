@@ -88,7 +88,7 @@ targets:
   #filter/gtest          : ["make", "jobd/filter/gtest"]
 
   # ====================== Upg Mgr Tests ===========================
-  #upgrade_manager/gtests   : ["make", "jobd/upgrade_manager/gtests"]
+  upgrade_manager/gtests   : ["make", "jobd/upgrade_manager/gtests"]
 
   # ====================== Nic Mgr Tests ===========================
   #nicmgr/gtest          : ["make", "jobd/nicmgr/gtest"]
