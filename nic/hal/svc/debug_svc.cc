@@ -450,3 +450,18 @@ DebugServiceImpl::LlcGet(ServerContext *context,
     hal::llc_get(response);
     return Status::OK;
 }
+
+Status
+DebugServiceImpl::HbmCacheSetup(ServerContext *context,
+                                const HbmCacheRequestMsg *req,
+                                HbmCacheResponseMsg *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd HBM Cache Setup Request");
+
+    HbmCacheRequest request = req->request(0);
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hbm_cache_setup(&request, rsp->add_response());
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}

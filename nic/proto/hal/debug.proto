@@ -44,6 +44,7 @@ service Debug {
   rpc HbmBwGet (HbmBwGetRequestMsg) returns (HbmBwGetResponseMsg) {}
   rpc LlcSetup (LlcSetupRequestMsg) returns (LlcSetupResponseMsg) {}
   rpc LlcGet   (types.Empty)   returns (LlcGetResponseMsg)   {}
+  rpc HbmCacheSetup (HbmCacheRequestMsg) returns (HbmCacheResponseMsg) {}
 }
 
 
@@ -540,4 +541,42 @@ message LlcGetResponse {
 
 message LlcGetResponseMsg {
   repeated LlcGetResponse     response = 1;
+}
+
+enum HbmSramType {
+  SRAM_P4_INGRESS    = 0;
+  SRAM_P4_EGRESS     = 1;
+  SRAM_P4_ALL        = 2;
+  SRAM_P4PLUS_RXDMA  = 3;
+  SRAM_P4PLUS_TXDMA  = 4;
+  SRAM_P4PLUS_ALL    = 5;
+  SRAM_ALL           = 6;
+}
+
+message HbmCacheSram {
+  HbmSramType type   = 1;
+  bool        enable = 2;
+}
+
+message HbmCacheLlc {
+  bool        enable = 1;
+}
+
+message HbmCacheRequest {
+  oneof cache_regions {
+    HbmCacheSram sram = 1;
+    HbmCacheLlc  llc  = 2;
+  }
+}
+
+message HbmCacheRequestMsg {
+  repeated HbmCacheRequest   request = 1;
+}
+
+message HbmCacheResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+message HbmCacheResponseMsg {
+  repeated HbmCacheResponse  response = 1;
 }

@@ -854,4 +854,14 @@ llc_get(LlcGetResponse *rsp)
     return ret;
 }
 
+hal_ret_t
+hbm_cache_setup(HbmCacheRequest *req, HbmCacheResponse *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return ret;
+}
+
 }    // namespace hal

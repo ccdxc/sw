@@ -62,6 +62,10 @@ using debug::LlcSetupResponse;
 using debug::LlcSetupResponseMsg;
 using debug::LlcGetResponse;
 using debug::LlcGetResponseMsg;
+using debug::HbmCacheRequest;
+using debug::HbmCacheRequestMsg;
+using debug::HbmCacheResponse;
+using debug::HbmCacheResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -125,6 +129,9 @@ public:
     Status LlcGet(ServerContext *context,
                   const Empty *req,
                   LlcGetResponseMsg *rsp);
+    Status HbmCacheSetup(ServerContext *context,
+                         const HbmCacheRequestMsg *req,
+                         HbmCacheResponseMsg *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__

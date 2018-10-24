@@ -128,6 +128,64 @@ func (mr *MockisMemoryRequest_IdOrNameMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisMemoryRequest_IdOrName)(nil).Size))
 }
 
+// MockisHbmCacheRequest_CacheRegions is a mock of isHbmCacheRequest_CacheRegions interface
+type MockisHbmCacheRequest_CacheRegions struct {
+	ctrl     *gomock.Controller
+	recorder *MockisHbmCacheRequest_CacheRegionsMockRecorder
+}
+
+// MockisHbmCacheRequest_CacheRegionsMockRecorder is the mock recorder for MockisHbmCacheRequest_CacheRegions
+type MockisHbmCacheRequest_CacheRegionsMockRecorder struct {
+	mock *MockisHbmCacheRequest_CacheRegions
+}
+
+// NewMockisHbmCacheRequest_CacheRegions creates a new mock instance
+func NewMockisHbmCacheRequest_CacheRegions(ctrl *gomock.Controller) *MockisHbmCacheRequest_CacheRegions {
+	mock := &MockisHbmCacheRequest_CacheRegions{ctrl: ctrl}
+	mock.recorder = &MockisHbmCacheRequest_CacheRegionsMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisHbmCacheRequest_CacheRegions) EXPECT() *MockisHbmCacheRequest_CacheRegionsMockRecorder {
+	return m.recorder
+}
+
+// isHbmCacheRequest_CacheRegions mocks base method
+func (m *MockisHbmCacheRequest_CacheRegions) isHbmCacheRequest_CacheRegions() {
+	m.ctrl.Call(m, "isHbmCacheRequest_CacheRegions")
+}
+
+// isHbmCacheRequest_CacheRegions indicates an expected call of isHbmCacheRequest_CacheRegions
+func (mr *MockisHbmCacheRequest_CacheRegionsMockRecorder) isHbmCacheRequest_CacheRegions() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isHbmCacheRequest_CacheRegions", reflect.TypeOf((*MockisHbmCacheRequest_CacheRegions)(nil).isHbmCacheRequest_CacheRegions))
+}
+
+// MarshalTo mocks base method
+func (m *MockisHbmCacheRequest_CacheRegions) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisHbmCacheRequest_CacheRegionsMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisHbmCacheRequest_CacheRegions)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisHbmCacheRequest_CacheRegions) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisHbmCacheRequest_CacheRegionsMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisHbmCacheRequest_CacheRegions)(nil).Size))
+}
+
 // MockDebugClient is a mock of DebugClient interface
 type MockDebugClient struct {
 	ctrl     *gomock.Controller
@@ -529,6 +587,24 @@ func (mr *MockDebugClientMockRecorder) LlcGet(ctx, in interface{}, opts ...inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LlcGet", reflect.TypeOf((*MockDebugClient)(nil).LlcGet), varargs...)
 }
 
+// HbmCacheSetup mocks base method
+func (m *MockDebugClient) HbmCacheSetup(ctx context.Context, in *HbmCacheRequestMsg, opts ...grpc.CallOption) (*HbmCacheResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "HbmCacheSetup", varargs...)
+	ret0, _ := ret[0].(*HbmCacheResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HbmCacheSetup indicates an expected call of HbmCacheSetup
+func (mr *MockDebugClientMockRecorder) HbmCacheSetup(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmCacheSetup", reflect.TypeOf((*MockDebugClient)(nil).HbmCacheSetup), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -823,4 +899,17 @@ func (m *MockDebugServer) LlcGet(arg0 context.Context, arg1 *Empty) (*LlcGetResp
 // LlcGet indicates an expected call of LlcGet
 func (mr *MockDebugServerMockRecorder) LlcGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LlcGet", reflect.TypeOf((*MockDebugServer)(nil).LlcGet), arg0, arg1)
+}
+
+// HbmCacheSetup mocks base method
+func (m *MockDebugServer) HbmCacheSetup(arg0 context.Context, arg1 *HbmCacheRequestMsg) (*HbmCacheResponseMsg, error) {
+	ret := m.ctrl.Call(m, "HbmCacheSetup", arg0, arg1)
+	ret0, _ := ret[0].(*HbmCacheResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HbmCacheSetup indicates an expected call of HbmCacheSetup
+func (mr *MockDebugServerMockRecorder) HbmCacheSetup(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmCacheSetup", reflect.TypeOf((*MockDebugServer)(nil).HbmCacheSetup), arg0, arg1)
 }

@@ -73,11 +73,32 @@ var platHbmDebugCmd = &cobra.Command{
 	Short: "set platform hbm options",
 	Long:  "set platform hbm options",
 }
+
 var platLlcDebugCmd = &cobra.Command{
 	Use:   "llc-setup",
 	Short: "debug platform hbm llc-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
 	Long:  "debug platform hbm llc-setup [cache-read|cache-write|scratchpad-access|cache-hit|cache-miss|partial-write|cache-maint-op|eviction|retry-needed|retry-access|disable]",
 	Run:   llcSetupCmdHandler,
+}
+
+var platHbmCacheDebugCmd = &cobra.Command{
+	Use:   "hbm-cache",
+	Short: "Set platform hbm-cache options",
+	Long:  "Set platform hbm-cache options",
+}
+
+var platHbmCacheSramDebugCmd = &cobra.Command{
+	Use:   "sram",
+	Short: "debug platform hbm-cache sram [p4-ingress|p4-egress|p4-all|p4plus-rxdma|p4plus-txdma|p4plus-all|all] [enable|disable]",
+	Long:  "debug platform hbm-cache sram [p4-ingress|p4-egress|p4-all|p4plus-rxdma|p4plus-txdma|p4plus-all|all] [enable|disable]",
+	Run:   sramDebugCmdHandler,
+}
+
+var platHbmCacheLlcDebugCmd = &cobra.Command{
+	Use:   "llc",
+	Short: "debug platform hbm-cache llc [enable|disable]",
+	Long:  "debug platform hbm-cache llc [enable|disable]",
+	Run:   llcDebugCmdHandler,
 }
 
 func init() {
@@ -90,12 +111,146 @@ func init() {
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
+	platDebugCmd.AddCommand(platHbmCacheDebugCmd)
+	platHbmCacheDebugCmd.AddCommand(platHbmCacheSramDebugCmd)
+	platHbmCacheDebugCmd.AddCommand(platHbmCacheLlcDebugCmd)
 
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
 	secProfDebugCmd.Flags().Uint32Var(&secProfID, "id", 0, "Specify firewall security profile ID")
 	secProfDebugCmd.Flags().StringVar(&connTrack, "conntrack", "off", "Turn connection tracking on/off")
 	secProfDebugCmd.MarkFlagRequired("id")
 	secProfDebugCmd.MarkFlagRequired("conntrack")
+}
+
+func sramDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var enable bool
+	var sramType halproto.HbmSramType
+
+	if len(args) != 2 {
+		fmt.Printf("Arguments required. Use -h to get list of arguments\n")
+		return
+	}
+
+	if strings.Compare(args[0], "p4-ingress") == 0 {
+		sramType = halproto.HbmSramType_SRAM_P4_INGRESS
+	} else if strings.Compare(args[0], "p4-egress") == 0 {
+		sramType = halproto.HbmSramType_SRAM_P4_EGRESS
+	} else if strings.Compare(args[0], "p4-all") == 0 {
+		sramType = halproto.HbmSramType_SRAM_P4_ALL
+	} else if strings.Compare(args[0], "p4plus-rxdma") == 0 {
+		sramType = halproto.HbmSramType_SRAM_P4PLUS_RXDMA
+	} else if strings.Compare(args[0], "p4plus-txdma") == 0 {
+		sramType = halproto.HbmSramType_SRAM_P4PLUS_TXDMA
+	} else if strings.Compare(args[0], "p4plus-all") == 0 {
+		sramType = halproto.HbmSramType_SRAM_P4PLUS_ALL
+	} else if strings.Compare(args[0], "all") == 0 {
+		sramType = halproto.HbmSramType_SRAM_ALL
+	} else {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if strings.Compare(args[1], "enable") == 0 {
+		enable = true
+	} else if strings.Compare(args[1], "disable") == 0 {
+		enable = false
+	} else {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	req := &halproto.HbmCacheRequest{
+		CacheRegions: &halproto.HbmCacheRequest_Sram{
+			Sram: &halproto.HbmCacheSram{
+				Type:   sramType,
+				Enable: enable,
+			},
+		},
+	}
+
+	reqMsg := &halproto.HbmCacheRequestMsg{
+		Request: []*halproto.HbmCacheRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.HbmCacheSetup(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("HBM cache setup failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+		} else {
+			fmt.Printf("HBM cache setup success\n")
+		}
+	}
+}
+
+func llcDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var enable bool
+
+	if len(args) != 1 {
+		fmt.Printf("Arguments required. Use -h to get list of arguments\n")
+		return
+	}
+
+	if strings.Compare(args[1], "enable") == 0 {
+		enable = true
+	} else if strings.Compare(args[1], "disable") == 0 {
+		enable = false
+	} else {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	req := &halproto.HbmCacheRequest{
+		CacheRegions: &halproto.HbmCacheRequest_Llc{
+			Llc: &halproto.HbmCacheLlc{
+				Enable: enable,
+			},
+		},
+	}
+
+	reqMsg := &halproto.HbmCacheRequestMsg{
+		Request: []*halproto.HbmCacheRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.HbmCacheSetup(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("HBM cache setup failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+		} else {
+			fmt.Printf("HBM cache setup success\n")
+		}
+	}
 }
 
 func traceShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -129,7 +284,6 @@ func traceShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
-
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
