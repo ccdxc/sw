@@ -132,31 +132,10 @@ chksum_setup(struct service_info *svc_info,
 	svc_info->si_num_tags = num_tags;
 	svc_info->si_p4_sgl = sgl;
 
-	if (cpdc_is_service_in_batch(svc_info->si_flags)) {
-		err = cpdc_setup_batch_desc(svc_info, chksum_desc);
-		if (err) {
-			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
-					err);
-			goto out_status_desc;
-		}
-	} else {
-		if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-				(svc_info->si_flags &
-				 CHAIN_SFLAG_FIRST_SERVICE)) {
-			if (num_tags > 1) {
-				svc_info->si_seq_info.sqi_batch_mode = true;
-				svc_info->si_seq_info.sqi_batch_size = num_tags;
-			}
-			svc_info->si_seq_info.sqi_desc =
-				seq_setup_desc(svc_info,
-				chksum_desc, sizeof(*chksum_desc));
-			if (!svc_info->si_seq_info.sqi_desc) {
-				err = EINVAL;
-				OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
-						err);
-				goto out_status_desc;
-			}
-		}
+	err = cpdc_setup_seq_desc(svc_info, chksum_desc, num_tags);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+		goto out_status_desc;
 	}
 
 	err = PNSO_OK;

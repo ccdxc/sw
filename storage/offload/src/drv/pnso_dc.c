@@ -105,27 +105,10 @@ decompress_setup(struct service_info *svc_info,
 	svc_info->si_desc = dc_desc;
 	svc_info->si_status_desc = status_desc;
 
-	if (cpdc_is_service_in_batch(svc_info->si_flags)) {
-		err = cpdc_setup_batch_desc(svc_info, dc_desc);
-		if (err) {
-			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
-					err);
-			goto out_status_desc;
-		}
-	} else {
-		if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-				(svc_info->si_flags &
-				 CHAIN_SFLAG_FIRST_SERVICE)) {
-			svc_info->si_seq_info.sqi_desc =
-				seq_setup_desc(svc_info,
-					dc_desc, sizeof(*dc_desc));
-			if (!svc_info->si_seq_info.sqi_desc) {
-				err = EINVAL;
-				OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
-						err);
-				goto out_status_desc;
-			}
-		}
+	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
+	if (err) {
+		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+		goto out_status_desc;
 	}
 
 	err = PNSO_OK;

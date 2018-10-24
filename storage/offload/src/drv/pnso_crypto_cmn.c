@@ -421,3 +421,35 @@ crypto_put_batch_bulk_desc(struct mem_pool *mpool, struct crypto_desc *desc)
 {
 	return mpool_put_object(mpool, desc);
 }
+
+pnso_error_t
+crypto_setup_seq_desc(struct service_info *svc_info, struct crypto_desc *desc)
+{
+	pnso_error_t err = EINVAL;
+	uint8_t	flags;
+
+	if (putil_is_service_in_batch(svc_info->si_flags)) {
+		err = crypto_setup_batch_desc(svc_info, desc);
+		if (err)
+			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
+					err);
+		goto out;
+	}
+
+	flags = svc_info->si_flags;
+	if ((flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+				desc, sizeof(struct crypto_desc));
+		if (!svc_info->si_seq_info.sqi_desc) {
+			OSAL_LOG_ERROR("failed to setup sequencer desc! flags: %d err: %d",
+						flags, err);
+			goto out;
+		}
+
+		err = PNSO_OK;
+	}
+
+out:
+	return err;
+}

@@ -238,28 +238,9 @@ crypto_setup(struct service_info *svc_info,
 	svc_info->si_desc_flags = 0;
 	crypto_desc_fill(svc_info, svc_params->u.sp_crypto_desc);
 
-	if (putil_is_service_in_batch(svc_info->si_flags)) {
-		err = crypto_setup_batch_desc(svc_info, svc_info->si_desc);
-		if (err) {
-			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
-					err);
-			return err;
-		}
-	} else {
-		if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-				(svc_info->si_flags &
-				 CHAIN_SFLAG_FIRST_SERVICE)) {
-			svc_info->si_seq_info.sqi_desc =
-				seq_setup_desc(svc_info, svc_info->si_desc,
-						sizeof(struct crypto_desc));
-			if (!svc_info->si_seq_info.sqi_desc) {
-				err = EINVAL;
-				OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
-						err);
-				return err;
-			}
-		}
-	}
+	err = crypto_setup_seq_desc(svc_info, svc_info->si_desc);
+	if (err)
+		return err;
 
 	return PNSO_OK;
 }

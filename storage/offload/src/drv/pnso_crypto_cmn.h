@@ -47,4 +47,7 @@ struct crypto_desc *crypto_get_desc(struct service_info *svc_info,
 void crypto_put_desc(const struct service_info *svc_info,
 		bool per_block, struct crypto_desc *desc);
 
+pnso_error_t crypto_setup_seq_desc(struct service_info *svc_info,
+		struct crypto_desc *desc);
+
 #endif /* __PNSO_CRYPTO_CMN_H__ */

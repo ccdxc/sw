@@ -33,8 +33,6 @@
  *	- reuse/common code (write_result, read_status, etc.)
  *	- address cpdc_fill_per_block_desc_ex()
  *	- see embedded ones
- *	- use common code for cpdc_setup_batch_desc/crypto_setup_batch_desc/
- *	seq_setup_desc() in each service
  *	- fixup %llx with PRIx64
  *	- currently poll is attempted atmost 16 times, and this is temporary
  *	only. From the poll-branch, where request mode flag is used to determine
@@ -655,4 +653,42 @@ cpdc_setup_batch_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	}
 
 	return PNSO_OK;
+}
+
+pnso_error_t
+cpdc_setup_seq_desc(struct service_info *svc_info, struct cpdc_desc *desc,
+		uint32_t num_tags)
+{
+	pnso_error_t err = EINVAL;
+	uint8_t	flags;
+
+	if (cpdc_is_service_in_batch(svc_info->si_flags)) {
+		err = cpdc_setup_batch_desc(svc_info, desc);
+		if (err)
+			OSAL_LOG_DEBUG("failed to setup batch sequencer desc! err: %d",
+					err);
+		goto out;
+	}
+
+	flags = svc_info->si_flags;
+	if ((flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		if (num_tags > 1) {
+			svc_info->si_seq_info.sqi_batch_mode = true;
+			svc_info->si_seq_info.sqi_batch_size = num_tags;
+		}
+
+		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+				desc, sizeof(*desc));
+		if (!svc_info->si_seq_info.sqi_desc) {
+			OSAL_LOG_DEBUG("failed to setup sequencer desc! num_tags: %d flags: %d err: %d",
+						num_tags, flags, err);
+			goto out;
+		}
+
+		err = PNSO_OK;
+	}
+
+out:
+	return err;
 }
