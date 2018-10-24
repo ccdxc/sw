@@ -24,7 +24,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     phvwri p.barco_req_header_size, ESP_FIXED_HDR_SIZE_LI 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req[33:6] 
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14
-    phvwr.f  p.common_te0_phv_table_addr, k.txdma1_global_ipsec_cb_addr
-    nop.e
+    phvwr.e  p.common_te0_phv_table_addr, k.txdma1_global_ipsec_cb_addr
     nop 
 

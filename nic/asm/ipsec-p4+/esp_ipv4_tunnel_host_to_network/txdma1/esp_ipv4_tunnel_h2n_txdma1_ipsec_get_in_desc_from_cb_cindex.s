@@ -19,7 +19,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex:
     phvwr p.common_te0_phv_table_addr, d.in_desc_addr
     phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 14
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2[33:6] 
-    phvwr.f p.common_te1_phv_table_addr, d.in_desc_addr
-    nop.e
+    phvwr.e p.common_te1_phv_table_addr, d.in_desc_addr
     nop
     

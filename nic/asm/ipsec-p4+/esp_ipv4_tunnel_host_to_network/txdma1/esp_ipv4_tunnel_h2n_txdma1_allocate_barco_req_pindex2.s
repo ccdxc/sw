@@ -23,12 +23,10 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2:
     phvwr p.barco_dbell_pi, r4.wx
     phvwri p.brq_req_write_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri.f p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET
-    nop.e
+    phvwri.e p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET
     nop
 
 esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_fail:
-    phvwri p.p4_intr_global_drop, 1
-    nop.e
+    phvwri.e p.p4_intr_global_drop, 1
     nop
     

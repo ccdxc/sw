@@ -27,6 +27,5 @@ esp_ipv4_tunnel_h2n_update_output_desc_aol:
     phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, ((1 << 3) | 6 ) 
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats[33:6]
     phvwr p.common_te1_phv_table_addr, r4 
-    phvwri.f p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((1 << 3) | 6 ) 
-    nop.e
+    phvwri.e p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((1 << 3) | 6 ) 
     nop

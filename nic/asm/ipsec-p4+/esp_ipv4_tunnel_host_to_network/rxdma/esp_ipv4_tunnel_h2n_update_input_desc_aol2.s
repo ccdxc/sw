@@ -37,7 +37,6 @@ dma_cmd_to_write_pad_size_l4_proto:
     phvwr p.tail_2_bytes_dma_cmd_addr, r2
 
 dma_cmd_write_salt_to_in_desc:
-    phvwr p.dma_cmd_iv_salt_dma_cmd_addr, k.t3_s2s_in_page_addr[51:0]
-    nop.e 
+    phvwr.e p.dma_cmd_iv_salt_dma_cmd_addr, k.t3_s2s_in_page_addr[51:0]
     nop
 

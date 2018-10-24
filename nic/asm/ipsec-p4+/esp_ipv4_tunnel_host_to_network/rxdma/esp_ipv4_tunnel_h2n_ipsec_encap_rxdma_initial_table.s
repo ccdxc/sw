@@ -43,15 +43,12 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     addui r6, r0, hiword(IPSEC_PAD_BYTES_HBM_TABLE_BASE)
     addi r6, r6, loword(IPSEC_PAD_BYTES_HBM_TABLE_BASE)
     phvwr p.ipsec_to_stage3_pad_addr, r6
-    //add r7, r5, d.icv_size
-    //addi r7, r7, 2
     phvwr p.ipsec_int_header_payload_size, r3
     phvwrpair p.ipsec_int_header_pad_size, r5, p.ipsec_int_header_l4_protocol, k.p42p4plus_hdr_l4_protocol
     add  r1, r0, k.p42p4plus_hdr_ipsec_payload_end
     add.c1 r1, r1, IPV6_HDR_SIZE 
     phvwr p.ipsec_to_stage3_packet_len, r1 
-    phvwr p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
-    nop.e
+    phvwr.e p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     nop
 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full:

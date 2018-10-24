@@ -7,7 +7,8 @@ struct tx_table_s0_t0_ipsec_encap_txdma_initial_table_d d;
 struct phv_ p;
 
 %%
-        .param esp_ipv4_tunnel_h2n_txdma1_s1_dummy 
+        .param esp_ipv4_tunnel_h2n_txdma1_s1_dummy
+        .param esp_ipv4_tunnel_h2n_txdma1_ring_full_error 
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     //sub r1, d.{barco_ring_cindex}.hx, 1
@@ -49,6 +50,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing:
     nop
    
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table_barco_ring_full:
-    phvwri p.p4_intr_global_drop, 1 
+    add r5, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}, IPSEC_H2N_STATS_CB_OFFSET
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma1_ring_full_error, r5, TABLE_SIZE_32_BITS)
     nop.e
     nop

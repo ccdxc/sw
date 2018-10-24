@@ -34,7 +34,6 @@ esp_ipv4_tunnel_h2n_dma_cmd_to_write_output_desc_aol:
     add r1, k.ipsec_to_stage4_out_desc_addr, 64
     phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, r1 
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_OUT_DESC_AOL_START
-    phvwri.f p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
-    nop.e
+    phvwri.e p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
     nop
 

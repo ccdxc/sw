@@ -3,6 +3,7 @@
 #define tx_table_s0_t0_action ipsec_encap_txdma_initial_table 
 
 #define tx_table_s1_t0_action ipsec_stage1_dummy 
+#define tx_table_s1_t1_action ipsec_stage1_drops
 
 #define tx_table_s2_t0_action ipsec_get_in_desc_from_cb_cindex 
 #define tx_table_s2_t1_action allocate_barco_req_pindex 
@@ -187,6 +188,9 @@ metadata ipsec_int_header_t ipsec_int_hdr_scratch;
 @pragma scratch_metadata
 metadata barco_shadow_params_d_t barco_shadow_params_d;
 
+@pragma scratch_metadata
+metadata h2n_stats_header_t ipsec_stats_scratch;
+
 
 #define IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT \
     modify_field(txdma1_global_scratch.ipsec_cb_addr, txdma1_global.ipsec_cb_addr); \
@@ -262,7 +266,7 @@ action ipsec_get_barco_req_index_ptr(barco_req_index_address)
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 }
 
-//stage 2 - table0
+//stage 3 - table1
 action ipsec_encap_txdma_load_head_desc_int_header2(in_desc, out_desc, in_page, out_page,
                                                    ipsec_cb_index, headroom, 
                                                    tailroom, headroom_offset,
@@ -308,7 +312,7 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, o
     modify_field(scratch_to_s3.barco_req_addr, ipsec_to_stage3.barco_req_addr);
 }
 
-//stage 1 - table1
+//stage 2 - table1
 action allocate_barco_req_pindex (BARCO_SHADOW_PARAMS)
 {
     modify_field(p4plus2p4_hdr.table1_valid, 1);
@@ -316,7 +320,7 @@ action allocate_barco_req_pindex (BARCO_SHADOW_PARAMS)
     GENERATE_BARCO_SHADOW_PARAMS_D
 }
 
-//stage 1 - table0
+//stage 2 - table0
 action ipsec_get_in_desc_from_cb_cindex(in_desc_addr)
 {
     modify_field(txdma1_global.in_desc_addr, in_desc_addr);
@@ -327,11 +331,17 @@ action ipsec_get_in_desc_from_cb_cindex(in_desc_addr)
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, in_desc_addr);
 }
-
+//stage 1
 action ipsec_stage1_dummy()
 {
     IPSEC_TXDMA1_S2S0_SCRATCH_INIT
     IPSEC_TXDMA1_TO_STAGE1_INIT
+}
+
+//stage 1
+action ipsec_stage1_drops(H2N_STATS_UPDATE_PARAMS)
+{
+    H2N_STATS_UPDATE_SET
 }
 
 //stage 0
