@@ -33,6 +33,9 @@
  *	- reuse/common code (write_result, read_status, etc.)
  *	- address cpdc_fill_per_block_desc_ex()
  *	- see embedded ones
+ *	- use common code for cpdc_setup_batch_desc/crypto_setup_batch_desc/
+ *	seq_setup_desc() in each service
+ *	- fixup %llx with PRIx64
  *
  */
 pnso_error_t
