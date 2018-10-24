@@ -202,7 +202,7 @@ const char *mpool_get_type_str(enum mem_pool_type mpool_type);
 static inline bool
 mpool_type_is_valid(enum mem_pool_type mpool_type)
 {
-	return (mpool_type != MPOOL_TYPE_NONE) && (mpool_type < MPOOL_TYPE_MAX);
+	return (mpool_type > MPOOL_TYPE_NONE) && (mpool_type < MPOOL_TYPE_MAX);
 }
 
 static inline bool

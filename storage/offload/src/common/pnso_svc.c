@@ -24,7 +24,7 @@ const char __attribute__ ((unused)) *pnso_service_types[] = {
 bool
 svc_type_is_valid(enum pnso_service_type svc_type)
 {
-	return (svc_type != PNSO_SVC_TYPE_NONE) &&
+	return (svc_type >  PNSO_SVC_TYPE_NONE) &&
 		(svc_type < PNSO_SVC_TYPE_MAX);
 }
 

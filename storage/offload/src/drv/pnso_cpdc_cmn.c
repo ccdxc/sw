@@ -30,9 +30,8 @@
  * TODO:
  *	- add additional UTs for read/write status/result, as needed
  *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
- *	- reuse/common code (write_result, read_status, etc.)
+ *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *	- address cpdc_fill_per_block_desc_ex()
- *	- see embedded ones
  *	- fixup %llx with PRIx64
  *	- currently poll is attempted atmost 16 times, and this is temporary
  *	only. From the poll-branch, where request mode flag is used to determine
