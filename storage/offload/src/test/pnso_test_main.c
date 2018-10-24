@@ -14,7 +14,7 @@
 #include "osal_sys.h"
 #include "pnso_test.h"
 
-void status_output_func(const char *status, void *opaque)
+static void status_output_func(const char *status, void *opaque)
 {
 	printf("%s", status);
 }

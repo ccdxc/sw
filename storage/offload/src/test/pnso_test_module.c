@@ -7,10 +7,11 @@
 #include "osal.h"
 #include "pnso_api.h"
 #include "pnso_test.h"
+#include "pnso_test_sysfs.h"
 
 OSAL_LICENSE("Dual BSD/GPL");
 
-static char *y = NULL;
+static char *y;
 //S_RUGO | S_IWUSR);
 module_param(y, charp, 0444);
 MODULE_PARM_DESC(y, "simple YAML prefix string");
@@ -59,7 +60,11 @@ pnso_test_mod_init(void)
 	int rv;
 
 	rv = osal_log_init(loglevel);
+	if (rv)
+		goto done;
+	rv = pnso_test_sysfs_init();
 
+done:	
 	return rv;
 }
 
@@ -70,12 +75,15 @@ pnso_test_mod_fini(void)
 
 	osal_thread_stop(&g_main_thread);
 
+	pnso_test_sysfs_finit();
+
 	return PNSO_OK;
 }
 
 static void
 status_output_func(const char *status, void *opaque)
 {
+	pnso_test_sysfs_write_status_data(status, strlen(status), opaque);
 	OSAL_LOG(status);
 }
 
@@ -375,6 +383,7 @@ body(void *not_used)
 	struct test_desc *cfg = NULL;
 	pnso_error_t err = 0;
 	uint32_t i;
+	bool ctl_repeat = 0;
 
 	pnso_test_init_fns(pnso_submit_request, status_output_func,
 			   osal_alloc, osal_free, osal_realloc);
@@ -508,7 +517,57 @@ body(void *not_used)
 //	test_dump_desc(cfg);
 	pnso_run_unit_tests(cfg);
 
+	/* run default testcases */
 	err = pnso_test_run_all(cfg);
+	pnso_test_desc_free(cfg);
+	cfg = NULL;
+	PNSO_LOG_INFO("PenCAKE completed all default testcases, status %d\n", err);
+
+	/* loop running testcases from ctl program */
+	while (!pnso_test_is_shutdown()) {
+		int ctl_state;
+
+		ctl_state = pnso_test_sysfs_read_ctl();
+		switch (ctl_state) {
+		case CTL_STATE_START:
+		case CTL_STATE_REPEAT:
+			/* setup configuration */
+			pnso_test_desc_free(cfg);
+			cfg = pnso_test_desc_alloc();
+			if (cfg) {
+				char *cfg_str;
+
+				cfg_str = pnso_test_sysfs_alloc_and_get_cfg();
+				if (cfg_str) {
+					err = pnso_test_parse_buf(cfg_str,
+						strlen(cfg_str), cfg);
+					if (err) {
+						pnso_test_desc_free(cfg);
+						cfg = NULL;
+					}
+					TEST_FREE(cfg_str);
+				} else {
+					PNSO_LOG_ERROR("unable to get config string\n");
+					pnso_test_desc_free(cfg);
+					cfg = NULL;
+				}
+			}
+			ctl_repeat = cfg && (ctl_state == CTL_STATE_REPEAT);
+			break;
+		case CTL_STATE_STOP:
+			ctl_repeat = 0;
+			pnso_test_desc_free(cfg);
+			cfg = NULL;
+			break;
+		default:
+			break;
+		}
+
+		if (cfg && (ctl_repeat || ctl_state == CTL_STATE_START)) {
+			err = pnso_test_run_all(cfg);
+		}
+		osal_yield();
+	}
 
 done:
 	pnso_test_desc_free(cfg);

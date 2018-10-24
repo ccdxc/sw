@@ -190,6 +190,22 @@ int safe_strcmp(const char *str1, const char *str2)
 	return strcmp(str1, str2);
 }
 
+/* String compare which allows NULL inputs */
+/* Treat empty string and NULL string as equivalent */
+int safe_strncmp(const char *str1, const char *str2, uint32_t len)
+{
+        char empty_str[1] = "";
+
+	if (!str1) {
+		str1 = empty_str;
+	}
+	if (!str2) {
+		str2 = empty_str;
+	}
+
+	return strncmp(str1, str2, len);
+}
+
 static inline unsigned int char2val(char c)
 {
 	if (c >= '0' && c <= '9')

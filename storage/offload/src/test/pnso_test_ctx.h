@@ -8,6 +8,8 @@
 #define __PNSO_TEST_CTX_H__
 
 #include "pnso_test_desc.h"
+#include "osal_atomic.h"
+#include "osal_thread.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -140,6 +142,8 @@ struct testcase_aggregate_stats {
 	uint64_t svcs_per_sec;
 	uint64_t reqs_per_sec;
 	uint64_t batches_per_sec;
+	uint64_t validation_successes;
+	uint64_t validation_failures;
 };
 
 #define TESTCASE_IO_STATS_COUNT (sizeof(struct testcase_io_stats)/sizeof(uint64_t))

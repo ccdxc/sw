@@ -79,6 +79,7 @@ uint32_t safe_itoa(char *dst, uint32_t dst_len, uint64_t val);
 uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len);
 uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len);
 int safe_strcmp(const char *str1, const char *str2);
+int safe_strncmp(const char *str1, const char *str2, uint32_t len);
 long long safe_strtoll(const char *val);
 
 void *pnso_test_alloc(size_t sz);
@@ -88,8 +89,7 @@ void pnso_test_free(void *ptr);
 #define TEST_ALLOC_ALIGNED pnso_test_alloc_aligned
 #define TEST_FREE pnso_test_free
 
-
-
+  
 #define PNSO_LOG_ERROR OSAL_LOG_ERROR
 #define PNSO_LOG_WARN  OSAL_LOG_WARN
 #define PNSO_LOG_INFO  OSAL_LOG

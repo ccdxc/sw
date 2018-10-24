@@ -61,7 +61,7 @@ static inline uint32_t str_hash(const char *str)
 
 pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 		uint64_t *stats, const char **stats_names, uint32_t stat_count,
-		bool output_validations);
+		bool output_validations, void *opaque);
 
 void test_free_desc(struct test_desc *desc);
 

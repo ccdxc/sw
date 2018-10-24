@@ -166,8 +166,6 @@ struct test_svc_chain {
 
 static inline struct pnso_service *get_cur_svc(struct test_node *node)
 {
-	OSAL_ASSERT(node->type == NODE_SVC);
-
 	return &((struct test_svc *) node)->svc;
 }
 

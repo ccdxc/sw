@@ -2121,7 +2121,7 @@ static uint32_t validation_stats_to_yaml(const struct test_validation *validatio
 #define TEST_MAX_STAT_NAME_LEN 32
 pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 		uint64_t *stats, const char **stats_names, uint32_t stat_count,
-		bool output_validations)
+		bool output_validations, void *opaque)
 {
 	uint32_t i;
 	uint32_t len = 0;
@@ -2187,7 +2187,7 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 	if (len >= max_len-1)
 		goto nomem;
 
-	g_hooks.status_output(dst, NULL);
+	g_hooks.status_output(dst, opaque);
 
 	TEST_FREE(dst);
 	return PNSO_OK;

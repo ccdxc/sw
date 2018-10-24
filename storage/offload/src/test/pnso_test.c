@@ -1169,6 +1169,8 @@ static const char *testcase_stats_names[TESTCASE_STATS_COUNT] = {
 	"svcs_per_sec",
 	"reqs_per_sec",
 	"batches_per_sec",
+	"validation_successes",
+	"validation_failures",
 
 	"in_svc_count",
 	"in_req_count",
@@ -1431,17 +1433,20 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 	}
 
 done:
-	osal_atomic_lock(&ctx->test_ctx->stats_lock);
+	osal_atomic_lock(&test_ctx->stats_lock);
 	if (err == PNSO_OK) {
 		if (is_compare_true(validation->cmp_type, cmp)) {
 			validation->rt_success_count++;
+			test_ctx->stats.agg_stats.validation_successes++;
 		} else {
 			validation->rt_failure_count++;
+			test_ctx->stats.agg_stats.validation_failures++;
 		}
 	} else {
 		validation->rt_failure_count++;
+		test_ctx->stats.agg_stats.validation_failures++;
 	}
-	osal_atomic_unlock(&ctx->test_ctx->stats_lock);
+	osal_atomic_unlock(&test_ctx->stats_lock);
 	return err;
 }
 
@@ -1453,6 +1458,7 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 	size_t i;
 	int cmp = 0;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
+	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 
 	if (req_ctx->svc_res.num_services < validation->svc_count) {
 		err = EINVAL;
@@ -1473,17 +1479,20 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 	}
 
 done:
-	osal_atomic_lock(&batch_ctx->test_ctx->stats_lock);
+	osal_atomic_lock(&test_ctx->stats_lock);
 	if (err == PNSO_OK) {
 		if (is_compare_true(validation->cmp_type, cmp)) {
 			validation->rt_success_count++;
+			test_ctx->stats.agg_stats.validation_successes++;
 		} else {
 			validation->rt_failure_count++;
+			test_ctx->stats.agg_stats.validation_failures++;
 		}
 	} else {
 		validation->rt_failure_count++;
+		test_ctx->stats.agg_stats.validation_failures++;
 	}
-	osal_atomic_unlock(&batch_ctx->test_ctx->stats_lock);
+	osal_atomic_unlock(&test_ctx->stats_lock);
 	return err;
 }
 
@@ -2122,7 +2131,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 					pnso_test_stats_to_yaml(testcase,
 						(uint64_t*) (&ctx->stats),
 						testcase_stats_names,
-						TESTCASE_STATS_COUNT, false);
+						TESTCASE_STATS_COUNT, false, ctx);
 					next_status_time += desc->status_interval;
 
 					PNSO_LOG("PenCAKE Testcase %u %s: status %d, elapsed_time %llums, "
@@ -2155,7 +2164,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 				(uint64_t*) (&ctx->stats),
 				testcase_stats_names,
 				TESTCASE_STATS_COUNT,
-				true);
+				true, ctx);
 
 	PNSO_LOG("PenCAKE Testcase %u %s: status %d, elapsed_time %llums, "
 		 "req_submit_count %llu, max_idle_time_ns %llu, "

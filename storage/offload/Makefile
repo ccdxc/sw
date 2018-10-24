@@ -91,6 +91,7 @@ PENCAKE = pencake
 PENCAKE_INCDIRS = include src/osal src/test src/drv/linux/kernel src/common third-party/libyaml/include
 
 $(PENCAKE)-y = src/test/pnso_test_module.o
+$(PENCAKE)-y += src/test/pnso_test_sysfs.o
 $(PENCAKE)-y += src/test/pnso_test_parse.o
 $(PENCAKE)-y += src/test/pnso_test_util.o
 $(PENCAKE)-y += src/test/pnso_test.o
