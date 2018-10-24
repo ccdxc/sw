@@ -13,6 +13,7 @@ struct rdma_stage0_table_k k;
 #define TO_S4_P to_s4_dcqcn_info
 #define TO_S5_P to_s5_rqcb1_wb_info
 #define BT_TO_S_INFO_P to_s1_bt_info
+#define RQCB_TO_PI_UPDATE_INFO_P t0_s2s_rqcb_to_pi_update_info
 
 #define RSQWQE_P            r1
 #define RQCB2_P             r2
@@ -26,6 +27,7 @@ struct rdma_stage0_table_k k;
     .param      resp_tx_dcqcn_rate_process
     .param      resp_tx_dcqcn_timer_process
     .param      resp_tx_bt_mpu_only_process
+    .param      resp_tx_proxy_pindex_update_process
 
 resp_tx_rqcb_process:
 
@@ -48,17 +50,12 @@ resp_tx_rqcb_process:
         //against proxy_cindex for queue full/empty conditions
         //proxy_c_index would track the real c_index
     
-        tblwr           RQ_C_INDEX, RQ_P_INDEX
-        add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
-        add             r2, r2, FIELD_OFFSET(rqcb1_t, proxy_pindex)
-        // we do not need to load RQCB1 to populate this value.
-        // we can use memwr
-        // There is always a possibility of RxDMA seeing this
-        // change in a delayed manner, irrespective of whether we 
-        // update using tblwr, memwr or DMA.
-        memwr.hx        r2, RQ_P_INDEX
-        phvwr.e         p.common.p4_intr_global_drop, 1
-        nop             //Exit Slot
+        tblwr.f         RQ_C_INDEX, RQ_P_INDEX
+
+        phvwr           CAPRI_PHV_FIELD(RQCB_TO_PI_UPDATE_INFO_P, rq_p_index), RQ_P_INDEX
+        // load an mpu only program to inject a feedback phv towards RXDMA to
+        // update proxy_pindex variable in rqcb1
+        CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_proxy_pindex_update_process, r0) //Exit Slot
 
     .brcase         RSQ_RING_ID
         // reset sched_eval_done

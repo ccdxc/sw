@@ -56,6 +56,7 @@
 #define tx_table_s1_t0_action1  resp_tx_ack_process
 #define tx_table_s1_t0_action2  resp_tx_rsq_backtrack_adjust_process
 #define tx_table_s1_t0_action3  resp_tx_rqcb2_bt_process
+#define tx_table_s1_t0_action4  resp_tx_proxy_pindex_update_process
 
 #define tx_table_s2_t0_action   resp_tx_rsqwqe_process
 #define tx_table_s2_t0_action1  resp_tx_rsqwqe_bt_process
@@ -126,6 +127,13 @@ header_type resp_tx_rqcb_to_ack_info_t {
     fields {
         header_template_addr             :   32;
         pad                              :  128;
+    }
+}
+
+header_type resp_tx_rqcb_to_pi_update_info_t {
+    fields {
+        rq_p_index                       :   16;
+        pad                              :  144;
     }
 }
 
@@ -417,6 +425,11 @@ metadata resp_tx_rqcb_to_ack_info_t t0_s2s_rqcb_to_ack_info;
 metadata resp_tx_rqcb_to_ack_info_t t0_s2s_rqcb_to_ack_info_scr;
 
 @pragma pa_header_union ingress common_t0_s2s
+metadata resp_tx_rqcb_to_pi_update_info_t t0_s2s_rqcb_to_pi_update_info;
+@pragma scratch_metadata
+metadata resp_tx_rqcb_to_pi_update_info_t t0_s2s_rqcb_to_pi_update_info_scr;
+
+@pragma pa_header_union ingress common_t0_s2s
 metadata resp_tx_rsq_backtrack_adjust_info_t t0_s2s_rsq_backtrack_adjust_info;
 @pragma scratch_metadata
 metadata resp_tx_rsq_backtrack_adjust_info_t t0_s2s_rsq_backtrack_adjust_info_scr;
@@ -498,6 +511,19 @@ action resp_tx_ack_process () {
     modify_field(t0_s2s_rqcb_to_ack_info_scr.pad, t0_s2s_rqcb_to_ack_info.pad);
 
 }
+
+action resp_tx_proxy_pindex_update_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t0_s2s_rqcb_to_pi_update_info_scr.rq_p_index, t0_s2s_rqcb_to_pi_update_info.rq_p_index);
+    modify_field(t0_s2s_rqcb_to_pi_update_info_scr.pad, t0_s2s_rqcb_to_pi_update_info.pad);
+
+}
+
 #if 0
 action resp_tx_dcqcn_enforce_process_s2 () {
     // from ki global

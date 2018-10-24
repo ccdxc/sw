@@ -311,6 +311,15 @@ header_type rdma_sq_drain_feedback_header_t {
 }
 
 //248
+header_type rdma_rq_proxy_pi_feedback_header_t {
+    fields {
+        common_header_bits  : 160;
+        feedback_type       : 8;
+        proxy_pindex        : 16;
+    }
+}
+
+//248
 header_type rdma_aq_completion_feedback_header_create_qp_t {
     fields {
         common_roce_bits    :  48;
