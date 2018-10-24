@@ -349,8 +349,20 @@ serdes_global_init_hw(uint32_t     jtag_id,
     aapl->jtag_idcode[0]       = jtag_id;
     aapl->sbus_rings           = num_sbus_rings;
     aapl->chips                = num_chips;
-    aapl->debug                = 8;
-    aapl->verbose              = 1;
+    aapl->debug                = 0;
+    aapl->verbose              = 0;
+    aapl->serdes_int_timeout   = 3000;
+
+    // TODO workaround
+    FILE *d_fp = fopen("/aapl_avago.cfg", "r");
+    if (d_fp) {
+        fscanf(d_fp, "%d %d %d",
+               &aapl->debug, &aapl->verbose, &aapl->serdes_int_timeout);
+        fclose(d_fp);
+    }
+
+    SDK_TRACE_DEBUG("debug: %d, verbose: %d, int_timeout: %d\n",
+                    aapl->debug, aapl->verbose, aapl->serdes_int_timeout);
 
     if (aacs_connect == true) {
         aapl->aacs  = aacs_connect;
@@ -380,6 +392,27 @@ serdes_signal_detect_hw (uint32_t sbus_addr)
 
     SDK_TRACE_DEBUG("Rx Data: 0x%x 0x%x 0x%x 0x%x",
                     data[0], data[1], data[2], data[3]);
+
+    // TODO workaround
+    FILE *d_fp = fopen("/aapl_enable_ei", "r");
+    if (d_fp) {
+        int threshold = 3;
+        bool idle = false;
+        avago_serdes_initialize_signal_ok(aapl, sbus_addr, threshold);
+
+        // check for electricle idle
+        idle = avago_serdes_get_electrical_idle (aapl, sbus_addr);
+
+        if (idle == true) {
+            SDK_TRACE_DEBUG("EI detected on sbus: 0x%x", sbus_addr);
+        } else {
+            SDK_TRACE_DEBUG("EI not detected on sbus: 0x%x", sbus_addr);
+        }
+
+        // Disable electrical idle
+        avago_spico_int(aapl, sbus_addr, 0x20, 0x0);
+        fclose(d_fp);
+    }
 
     if (data[0] == 0xfffff || data[0] == 0x0 ||
         data[1] == 0xfffff || data[1] == 0x0 ||

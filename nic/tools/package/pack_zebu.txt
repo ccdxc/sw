@@ -4,7 +4,6 @@ nic/build/x86_64/iris/bin/hal                                       /nic/bin/
 nic/build/x86_64/iris/bin/port_client                               /nic/bin
 
 nic/build/x86_64/iris/lib/libpacket_parser.so                       /nic/lib/
-nic/build/x86_64/iris/lib/libAAPL.so                                /nic/lib/
 nic/build/x86_64/iris/lib/libagent_api.so                           /nic/lib/
 nic/build/x86_64/iris/lib/libasicpd.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libbitmap.so                              /nic/lib/
@@ -71,6 +70,10 @@ nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/
 
+# AAPL
+nic/sdk/third-party/avago/build/x86_64/bin/aapl                  /nic/bin/
+nic/sdk/third-party/avago/build/x86_64/lib/aapl/C/libAAPL.so     /nic/lib/
+
 nic/gen/x86_64/lib/libhalproto.so                                /nic/lib/
 nic/hal/third-party/lkl/export/x86_64/bin/liblkl.so              /nic/lib/
 nic/asic/capri/model/capsim-master/gen/x86_64/lib/libmpuobj.so   /nic/lib/
@@ -79,7 +82,6 @@ nic/asic/capri/model/capsim-master/gen/x86_64/lib/libisa.so      /nic/lib/
 nic/hal/third-party/openssl/x86_64/lib/libssl.so.1.1             /nic/lib/
 nic/hal/third-party/openssl/x86_64/lib/libcrypto.so.1.1          /nic/lib/
 nic/hal/third-party/google/x86_64/lib/libprotobuf.so.14          /nic/lib/
-nic/sdk/third-party/avago/build/x86_64/lib/aapl/C/libAAPL.so     /nic/lib/
 platform/gen/x86_64/bin                                          /platform/bin/
 platform/gen/x86_64/lib                                          /platform/lib/
 nic/tools/start-hal-zebu.sh                                      /nic/tools/

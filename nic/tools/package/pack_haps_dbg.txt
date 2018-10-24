@@ -9,7 +9,6 @@ nic/build/aarch64/iris/bin/hal_scale_test                            /nic/bin/
 nic/build/aarch64/iris/lib/libproto.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libcommonproto.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libhal_mock.so                            /nic/lib/
-nic/build/aarch64/iris/lib/libAAPL.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libagent_api.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libasicpd.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libbitmap.so                              /nic/lib/

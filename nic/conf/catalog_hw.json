@@ -36,7 +36,7 @@
         "aacs_connect"   : "0",
         "ip"             : "",
         "port"           : "90",
-        "sbm_clk_div"    : "32"
+        "sbm_clk_div"    : "6"
     },
 
     "num_fp_ports": "3",
