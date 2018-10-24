@@ -301,19 +301,9 @@ compress_poll(const struct service_info *svc_info)
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
-	OSAL_LOG_DEBUG("polling status_desc: 0x%llx", (uint64_t) status_desc);
 
-#if 0
-	while (status_desc->csd_valid == 0)
-		;
-#else
-	uint64_t i;
-	for (i = 0; i < 100000000; i++) {
-		if (status_desc->csd_valid)
-			break;
-		// osal_yield();
-	}
-#endif
+	OSAL_LOG_DEBUG("polling status_desc: 0x%llx", (uint64_t) status_desc);
+	err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 
 	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;

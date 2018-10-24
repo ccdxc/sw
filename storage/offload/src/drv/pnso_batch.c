@@ -349,6 +349,8 @@ add_page(struct batch_info *batch_info)
 	page_idx = batch_info->bi_num_entries / MAX_PAGE_ENTRIES;
 	OSAL_ASSERT(page_idx < MAX_NUM_PAGES);
 	batch_info->bi_pages[page_idx] = batch_page;
+
+	/* get a vector of either CPDC or Crypto bulk desc */
 	get_bulk_batch_desc(batch_info, page_idx);
 
 	OSAL_LOG_DEBUG("added new page 0x%llx page_idx: %d",
@@ -440,8 +442,6 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 	page_entry->bpe_res = svc_res;
 	batch_info->bi_num_entries++;
 
-	PPRINT_BATCH_INFO(batch_info);
-
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return err;
@@ -453,6 +453,7 @@ out:
 	return err;
 }
 
+#if 1	/* TODO-batch: clean-up unsed one -- best perf 512 requests hw: 337 us*/
 static pnso_error_t
 poll_all_chains(struct batch_info *batch_info)
 {
@@ -472,8 +473,9 @@ poll_all_chains(struct batch_info *batch_info)
 
 	return err;
 }
+#endif
 
-#if 0
+#if 0	/* TODO-batch: clean-up unsed one -- good perf */
 static pnso_error_t
 poll_all_chains(struct batch_info *batch_info)
 {
@@ -483,7 +485,7 @@ poll_all_chains(struct batch_info *batch_info)
 	uint32_t idx = 0;
 
 	while (err) {
-		OSAL_LOG_DEBUG("re/attempt polling batch/chain idx: %d", idx);
+		OSAL_LOG_DEBUG("poll batch/chain idx: %d", idx);
 		for (; idx < batch_info->bi_num_entries; idx++) {
 			batch_page = GET_PAGE(batch_info, idx);
 			page_entry = GET_PAGE_ENTRY(batch_page, idx);
@@ -493,6 +495,31 @@ poll_all_chains(struct batch_info *batch_info)
 
 			err = chn_poll_all_services(page_entry->bpe_chain);
 			if (err)
+				break;
+		}
+	}
+
+	return err;
+}
+#endif
+
+#if 0	/* TODO-batch: clean-up unsed one -- better perf */
+static pnso_error_t
+poll_all_chains(struct batch_info *batch_info)
+{
+	pnso_error_t err = EINVAL;
+	struct batch_page *batch_page;
+	struct batch_page_entry *page_entry;
+	int32_t idx = 0;
+
+	for (idx = batch_info->bi_num_entries - 1; idx > 0; idx--) {
+		OSAL_LOG_DEBUG("poll batch/chain idx: %d", idx);
+		batch_page = GET_PAGE(batch_info, idx);
+		page_entry = GET_PAGE_ENTRY(batch_page, idx);
+
+		while (1) {
+			err = chn_poll_all_services(page_entry->bpe_chain);
+			if (!err)
 				break;
 		}
 	}
@@ -532,10 +559,6 @@ execute_batch(struct batch_info *batch_info)
 	uint32_t idx;
 
 	OSAL_LOG_DEBUG("enter ...");
-
-	/* get first chain's first service */
-	first_chain = chn_get_first_service_chain(batch_info);
-	first_ce = chn_get_first_centry(first_chain);
 
 	/* get last chain's last service */
 	last_chain = chn_get_last_service_chain(batch_info);

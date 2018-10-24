@@ -327,10 +327,9 @@ init_service_batch_params(struct batch_info *batch_info,
 		OSAL_ASSERT(0);
 	}
 
-	OSAL_LOG_DEBUG("initalize batch params ... batch_num_entries: %d batch_request_idx: %d bulk_desc_idx: %d, desc_idx: %d",
+	OSAL_LOG_DEBUG("batch_num_entries: %d batch_request_idx: %d bulk_desc_idx: %d, desc_idx: %d bulk_desc: 0x%llx",
 			batch_num_entries, batch_request_idx,
-			bulk_desc_idx, desc_idx);
-	OSAL_LOG_DEBUG("initalize batch params ... bulk_desc: 0x%llx",
+			bulk_desc_idx, desc_idx,
 			(uint64_t) batch_info->bi_bulk_desc[bulk_desc_idx]);
 }
 
@@ -347,7 +346,8 @@ setup_service_param_buffers(struct pnso_service *pnso_svc,
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
 	case PNSO_SVC_TYPE_CHKSUM:
-		if (chn_service_is_in_chain(svc_info) && !chn_service_is_first(svc_info))
+		if (chn_service_is_in_chain(svc_info) &&
+				!chn_service_is_first(svc_info))
 			svc_info->si_src_blist = *interm_blist;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
@@ -837,7 +837,7 @@ chn_build_batch_chain(struct batch_info *batch_info,
 	struct chain_entry *centry = NULL, *centry_prev = NULL;
 	struct service_info *svc_info;
 	struct service_params svc_params;
-	struct pnso_buffer_list *interm_blist = NULL;
+	struct service_buf_list interm_blist;
 	uint32_t i;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -924,7 +924,7 @@ chn_build_batch_chain(struct batch_info *batch_info,
 		/* TODO-chain: need to make this setup generic */
 		if (i != 0)
 			setup_service_param_buffers(&req->svc[i], &svc_params,
-					interm_blist);
+					svc_info, &interm_blist);
 
 		err = svc_info->si_ops.setup(svc_info, &svc_params);
 		if (err)
@@ -940,7 +940,7 @@ chn_build_batch_chain(struct batch_info *batch_info,
 		 *	buffer to hash; need to make it generic ...
 		 *
 		 */
-		interm_blist = svc_params.sp_dst_blist;
+		interm_blist = svc_info->si_dst_blist;
 
 		PPRINT_SERVICE_INFO(svc_info);
 	}
