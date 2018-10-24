@@ -20,13 +20,10 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet2:
     phvwri p.enc_pay_load_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     //ICV
     phvwri p.icv_header_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-
     phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     seq c1, k.ipsec_to_stage4_is_vlan_encap, 1
     phvwri.c1  p.eth_hdr_dma_cmd_size, ETH_FIXED_HDR_SIZE
     phvwri.!c1  p.eth_hdr_dma_cmd_size, ETH_FIXED_HDR_SIZE_NO_VLAN
     phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA2_DMA_COMMANDS_OFFSET
-
-    phvwri.f p.{icv_header_dma_pkt_eop...icv_header_dma_cmd_eop}, 3
-    nop.e
+    phvwri.e p.{icv_header_dma_pkt_eop...icv_header_dma_cmd_eop}, 3
     nop 

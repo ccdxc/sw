@@ -18,8 +18,7 @@ esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int:
     phvwr p.t0_s2s_headroom_offset, d.headroom_offset
     phvwr p.t0_s2s_tailroom_offset, d.tailroom_offset
     phvwr p.ipsec_to_stage4_in_page, d.in_page
-    phvwr.f p.ipsec_to_stage4_headroom, d.headroom
-    nop.e
+    phvwr.e p.ipsec_to_stage4_headroom, d.headroom
     nop
 
 esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int_phv_drop:

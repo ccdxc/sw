@@ -10,8 +10,6 @@ struct phv_ p;
 %%
         .align
 esp_v4_tunnel_n2h_txdma2_build_decap_packet:
-    
-
     // Ethernet Hdr 
     phvwr  p.eth_hdr_dma_cmd_addr, k.ipsec_to_stage4_in_page
     // take only MAC addresses, etype will come from next DMA command based on v4 or v6
@@ -30,9 +28,6 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     sub r3, k.txdma2_global_payload_size, k.txdma2_global_pad_size
     subi r3, r3, 2
     phvwr p.dec_pay_load_dma_cmd_size, r3
-    phvwri p.dec_pay_load_dma_cmd_eop, 1
-    phvwri p.dec_pay_load_dma_pkt_eop, 1
-
-    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0 
-    nop.e 
+    phvwri p.{dec_pay_load_dma_pkt_eop...dec_pay_load_dma_cmd_eop}, 3
+    phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0 
     nop

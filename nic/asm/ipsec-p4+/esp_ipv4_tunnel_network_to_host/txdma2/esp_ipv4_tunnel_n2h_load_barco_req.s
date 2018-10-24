@@ -25,6 +25,5 @@ esp_ipv4_tunnel_n2h_load_barco_req:
     phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int[33:6] 
     sub r3, d.{input_list_address}.dx, 64
     phvwr  p.common_te2_phv_table_addr, r3 
-    phvwr.f p.txdma2_global_in_desc_addr, r3 
-    nop.e
+    phvwr.e p.txdma2_global_in_desc_addr, r3 
     nop
