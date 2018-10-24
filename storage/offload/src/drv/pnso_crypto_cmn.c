@@ -292,7 +292,7 @@ crypto_setup_batch_desc(struct service_info *svc_info, struct crypto_desc *desc)
 		OSAL_LOG_DEBUG("sequencer setup not needed!");
 		return PNSO_OK;
 	}
-	
+
 	remaining = svc_batch_info->sbi_num_entries -
 		(svc_batch_info->sbi_bulk_desc_idx * MAX_PAGE_ENTRIES);
 	batch_size = (remaining / MAX_PAGE_ENTRIES) ? MAX_PAGE_ENTRIES :

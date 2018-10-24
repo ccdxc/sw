@@ -218,7 +218,7 @@ init_batch_info(struct pnso_service_request *req)
 	struct batch_info *batch_info = NULL;
 
 	mpool_type = get_batch_mpool_type(req->svc[0].svc_type);
-	if (MPOOL_TYPE_NONE == mpool_type)
+	if (mpool_type == MPOOL_TYPE_NONE)
 		goto out;
 
 	batch_info = (struct batch_info *)

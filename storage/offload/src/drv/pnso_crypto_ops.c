@@ -386,6 +386,7 @@ static pnso_error_t
 crypto_poll(const struct service_info *svc_info)
 {
 	pnso_error_t err;
+
 	volatile struct crypto_status_desc *status_desc;
 	uint64_t cpl_data;
 	uint32_t attempt = 0;

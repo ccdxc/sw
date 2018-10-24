@@ -26,9 +26,9 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 		      struct service_crypto_aol *svc_aol);
 pnso_error_t
 crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
-		          uint32_t block_size,
-		          const struct service_buf_list *svc_blist,
-		          struct service_crypto_aol *svc_aol);
+			  uint32_t block_size,
+			  const struct service_buf_list *svc_blist,
+			  struct service_crypto_aol *svc_aol);
 void crypto_aol_put(const struct per_core_resource *pcr,
 		    struct service_crypto_aol *svc_aol);
 pnso_error_t crypto_desc_status_convert(uint64_t status);

@@ -239,7 +239,7 @@ mpool_get_object_size(const struct mem_pool *mpool)
 
 static inline void
 mpool_clear_object(const struct mem_pool *mpool,
-                   void *object)
+		   void *object)
 {
 	if (mpool_type_is_rmem(mpool->mp_config.mpc_type))
 		sonic_rmem_set((uint64_t)object, 0,
@@ -279,7 +279,8 @@ mpool_get_object_num_allocs(const struct mem_pool *mpool)
 static inline void
 mpool_void_ptr_check(uint64_t v)
 {
-	void *p = (void *)v; 
+	void *p = (void *)v;
+
 	OSAL_ASSERT((sizeof(void *) >= sizeof(uint64_t)) ||
 		    ((uint64_t)p == v));
 }

@@ -9,8 +9,8 @@
 #include "sonic_dev.h"
 
 /*
- * The current intermediate buffer implementation optimizes for the sweet spot 
- * of 8K size, i.e., one single source of up to 8K, which has these 
+ * The current intermediate buffer implementation optimizes for the sweet spot
+ * of 8K size, i.e., one single source of up to 8K, which has these
  * desired properties:
  *
  * a) The smaller size provides for a larger pool of intermediate buffers

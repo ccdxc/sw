@@ -48,6 +48,7 @@ pnso_error_t
 cpdc_poll(const struct service_info *svc_info)
 {
 	pnso_error_t err;
+
 	volatile struct cpdc_status_desc *status_desc;
 	uint32_t attempt = 0;
 
@@ -364,7 +365,7 @@ cpdc_get_batch_bulk_desc(struct mem_pool *mpool)
 	return desc;
 }
 
-static void 
+static void
 put_desc(struct per_core_resource *pcr, bool per_block, struct cpdc_desc *desc)
 {
 	struct mem_pool *mpool;
