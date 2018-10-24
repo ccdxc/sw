@@ -36,6 +36,9 @@
  *	- use common code for cpdc_setup_batch_desc/crypto_setup_batch_desc/
  *	seq_setup_desc() in each service
  *	- fixup %llx with PRIx64
+ *	- currently poll is attempted atmost 16 times, and this is temporary
+ *	only. From the poll-branch, where request mode flag is used to determine
+ *	and relax/limit the iterations will need to be brought-in
  *
  */
 pnso_error_t
@@ -54,11 +57,7 @@ cpdc_poll(const struct service_info *svc_info)
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	OSAL_ASSERT(svc_info);
-
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	OSAL_ASSERT(status_desc);
-
 	while (attempt < 16) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 		if (!err)

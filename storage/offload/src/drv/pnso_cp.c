@@ -283,6 +283,7 @@ compress_schedule(const struct service_info *svc_info)
 static pnso_error_t
 compress_poll(const struct service_info *svc_info)
 {
+	OSAL_ASSERT(svc_info);
 	return cpdc_poll(svc_info);
 }
 
