@@ -76,7 +76,7 @@ func main() {
 		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
 	}
 
-	naplesUUID := fmt.Sprintf("uuid-%s", macAddr)
+	naplesUUID := macAddr.String()
 
 	var dp types.NetDatapathAPI
 	// ToDo Remove mock hal datapath prior to FCS

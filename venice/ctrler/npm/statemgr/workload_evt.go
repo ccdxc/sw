@@ -79,9 +79,9 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 					return err
 				}
 				if snic.Status.PrimaryMAC != "" {
-					nodeUUID = "uuid-" + snic.Status.PrimaryMAC
+					nodeUUID = snic.Status.PrimaryMAC
 				} else {
-					nodeUUID = "uuid-" + snic.Name
+					nodeUUID = snic.Name
 				}
 			}
 			// create the endpoint for the interface

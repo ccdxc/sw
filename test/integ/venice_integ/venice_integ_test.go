@@ -421,7 +421,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		// Create netagent
-		agent, aerr := netagent.NewAgent(dp, n, fmt.Sprintf("uuid-44:44:44:44:00:%02d", i), globals.Npm, rc, state.AgentMode_MANAGED)
+		agent, aerr := netagent.NewAgent(dp, n, fmt.Sprintf("44:44:44:44:00:%02d", i), globals.Npm, rc, state.AgentMode_MANAGED)
 		c.Assert(aerr, IsNil)
 
 		tsdp, aerr := tshal.NewHalDatapath("mock")
