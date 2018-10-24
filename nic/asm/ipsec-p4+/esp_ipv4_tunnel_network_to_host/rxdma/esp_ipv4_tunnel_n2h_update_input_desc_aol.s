@@ -36,6 +36,5 @@ dma_cmd_to_move_input_pkt_to_mem:
 
 dma_cmd_to_write_salt_after_seq_no:
     add r1, k.ipsec_to_stage3_iv_salt_off, k.t0_s2s_in_page_addr
-    phvwr p.dma_cmd_iv_salt_dma_cmd_addr, r1
-    nop.e
+    phvwr.e p.dma_cmd_iv_salt_dma_cmd_addr, r1
     nop

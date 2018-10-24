@@ -41,6 +41,5 @@ dma_cmd_ring_doorbell:
     add r1, r0, k.ipsec_global_ipsec_cb_index
     tblwr d.cb_pindex, r7
     phvwri          p.doorbell_cmd_dma_cmd_eop, 1
-    phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
-    nop.e
+    phvwri.e        p.doorbell_cmd_dma_cmd_wr_fence, 1
     nop 

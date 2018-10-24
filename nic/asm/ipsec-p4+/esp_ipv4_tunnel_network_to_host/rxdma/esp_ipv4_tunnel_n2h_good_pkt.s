@@ -22,8 +22,6 @@ ipsec_esp_v4_tunnel_n2h_good_pkt:
     phvwr p.ipsec_global_icv_size, d.icv_size
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
-    phvwr p.ipsec_to_stage3_iv_size, d.iv_size
-
-    nop.e
+    phvwr.e p.ipsec_to_stage3_iv_size, d.iv_size
     nop
 
