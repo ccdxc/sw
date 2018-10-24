@@ -494,6 +494,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/stagingClearAction"
+            }
           }
         ],
         "tags": [
@@ -554,6 +562,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/stagingCommitAction"
+            }
           }
         ],
         "tags": [

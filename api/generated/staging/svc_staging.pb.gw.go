@@ -519,10 +519,6 @@ func request_StagingV1_Clear_0(ctx context.Context, marshaler runtime.Marshaler,
 
 }
 
-var (
-	filter_StagingV1_Clear_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
 func request_StagingV1_Clear_1(ctx context.Context, marshaler runtime.Marshaler, client StagingV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &ClearAction{}
 	var smetadata runtime.ServerMetadata
@@ -567,10 +563,6 @@ func request_StagingV1_Clear_1(ctx context.Context, marshaler runtime.Marshaler,
 	}
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_StagingV1_Clear_1); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
 
 	msg, err := client.Clear(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -638,10 +630,6 @@ func request_StagingV1_Commit_0(ctx context.Context, marshaler runtime.Marshaler
 
 }
 
-var (
-	filter_StagingV1_Commit_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
 func request_StagingV1_Commit_1(ctx context.Context, marshaler runtime.Marshaler, client StagingV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &CommitAction{}
 	var smetadata runtime.ServerMetadata
@@ -686,10 +674,6 @@ func request_StagingV1_Commit_1(ctx context.Context, marshaler runtime.Marshaler
 	}
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_StagingV1_Commit_1); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
 
 	msg, err := client.Commit(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err

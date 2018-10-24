@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IStagingBufferList,IApiStatus,IStagingBuffer,StagingBuffer,IStagingClearAction,IStagingCommitAction,StagingClearAction,StagingCommitAction } from '../../models/generated/staging';
+import { IStagingBufferList,IApiStatus,IStagingBuffer,StagingBuffer,IStagingClearAction,StagingClearAction,IStagingCommitAction,StagingCommitAction } from '../../models/generated/staging';
 
 @Injectable()
 export class Stagingv1Service extends AbstractService {
@@ -45,13 +45,13 @@ export class Stagingv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, 'DeleteBuffer_1') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
-  public Clear_1(O_Name, body: ):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
+  public Clear_1(O_Name, body: StagingClearAction):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/clear';
     url = url.replace('{O.Name}', O_Name);
     return this.invokeAJAXPostCall(url, body.getValues(), 'Clear_1') as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
   }
   
-  public Commit_1(O_Name, body: ):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
+  public Commit_1(O_Name, body: StagingCommitAction):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/commit';
     url = url.replace('{O.Name}', O_Name);
     return this.invokeAJAXPostCall(url, body.getValues(), 'Commit_1') as Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}>;

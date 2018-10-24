@@ -770,7 +770,7 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 			if strings.Contains(path, "tenant/{O.Tenant}") {
 				npath := strings.Replace(path, "tenant/{O.Tenant}/", "", 1)
 				dopt := googapi.HttpRule_Post{Post: npath}
-				restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt})
+				restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt, Body: "*"})
 				defTenant = true
 			}
 			insertMethod(s, name, reqType, respType, "create", false, defTenant, restopt)
