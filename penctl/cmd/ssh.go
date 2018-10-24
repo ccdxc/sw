@@ -27,7 +27,11 @@ func init() {
 }
 
 func sshCmdHandler(cmd *cobra.Command, args []string) {
-	var escapePrompt = []byte{'$', ' '}
+	var escapePrompt = []byte{'#', ' '}
+	if mockMode {
+		escapePrompt[0] = '$'
+		naplesIP = "192.168.68.155" //srv3
+	}
 	arg := os.Args[2:]
 	config := &ssh.ClientConfig{
 		User: getNaplesUser(),
@@ -36,7 +40,7 @@ func sshCmdHandler(cmd *cobra.Command, args []string) {
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	dialURL := naplesSSHIP + ":" + "22"
+	dialURL := naplesIP + ":" + "22"
 	client, err := ssh.Dial("tcp", dialURL, config)
 	if err != nil {
 		printErr(err)
@@ -62,7 +66,6 @@ func sshCmdHandler(cmd *cobra.Command, args []string) {
 		printErr(err)
 		return
 	}
-
 	w, err := session.StdinPipe()
 	if err != nil {
 		printErr(err)

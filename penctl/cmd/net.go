@@ -17,7 +17,6 @@ import (
 )
 
 var naplesIP string
-var naplesSSHIP string
 var revProxyPort string
 
 func getNaplesIPFromIntf(ifname string) (string, error) {
@@ -84,7 +83,6 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 		}
 		return err
 	}
-	naplesSSHIP = "192.168.68.155"
 	revProxyPort = globals.RevProxyPort
 	if !impl.IPAddr(naplesIP) {
 		panic(errors.New("Not valid Naples IP"))
@@ -97,10 +95,16 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 
 //TODO: Fix the username
 func getNaplesUser() string {
-	return "penctltestuser"
+	if mockMode {
+		return "penctltestuser"
+	}
+	return "root"
 }
 
 //TODO: Fix the password
 func getNaplesPwd() string {
-	return "Pen%Ctl%Test%Pwd"
+	if mockMode {
+		return "Pen%Ctl%Test%Pwd"
+	}
+	return "pen123"
 }

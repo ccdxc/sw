@@ -26,16 +26,32 @@ func init() {
 }
 
 func execBinCmdHandler(cmd *cobra.Command, args []string) {
-	v := &nmd.NaplesCmdExecute{
-		Executable: args[0],
-		Opts:       strings.Join(args[1:], " "),
+	var v *nmd.NaplesCmdExecute
+	if args[0] == "-v" {
+		v = &nmd.NaplesCmdExecute{
+			Executable: args[1],
+			Opts:       strings.Join(args[2:], " "),
+		}
+	} else {
+		v = &nmd.NaplesCmdExecute{
+			Executable: args[0],
+			Opts:       strings.Join(args[1:], " "),
+		}
 	}
 
+	if args[0] == "-v" {
+		verbose = true
+	}
 	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-	fmt.Printf("%s", s)
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+	if verbose {
+		fmt.Println(string(resp))
+	}
 }

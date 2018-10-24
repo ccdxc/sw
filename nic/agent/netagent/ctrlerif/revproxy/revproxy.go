@@ -15,6 +15,7 @@ var revProxyMap map[string]string
 // Get the port for a given request
 func getProxyPort(requrl *url.URL) (string, error) {
 	sliceP := strings.Split(requrl.Path, "/")
+	log.Infof("getProxyPort: %s", sliceP[1])
 	if port, ok := revProxyMap[sliceP[1]]; ok == true {
 		return port, nil
 	}
@@ -52,6 +53,7 @@ func initRevProxyMap() {
 func AddRevProxyDest(prefix string, port string) {
 	initRevProxyMap()
 	revProxyMap[prefix] = port
+	log.Infof("AddRevProxyDest: %s:%d", prefix, port)
 }
 
 // Server holds information about the reverse proxy http server
