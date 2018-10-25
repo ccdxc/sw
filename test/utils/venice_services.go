@@ -44,7 +44,7 @@ var (
 )
 
 // SetupAuth setsup the authentication service
-func SetupAuth(apiServerAddr string, enableLocalAuth bool, ldapConf *auth.Ldap, creds *auth.PasswordCredential, logger log.Logger) error {
+func SetupAuth(apiServerAddr string, enableLocalAuth bool, ldapConf *auth.Ldap, radiusConf *auth.Radius, creds *auth.PasswordCredential, logger log.Logger) error {
 	// create API server client
 	apiClient, err := client.NewGrpcUpstream("venice_integ_test_setupAuth", apiServerAddr, logger)
 	if err != nil {
@@ -63,7 +63,7 @@ func SetupAuth(apiServerAddr string, enableLocalAuth bool, ldapConf *auth.Ldap, 
 	// create admin role binding
 	authntestutils.MustCreateRoleBinding(apiClient, "AdminRoleBinding", creds.GetTenant(), globals.AdminRole, []string{creds.GetUsername()}, nil)
 	// create authentication policy
-	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{Enabled: enableLocalAuth}, ldapConf)
+	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{Enabled: enableLocalAuth}, ldapConf, radiusConf)
 	// set auth bootstrap flag to true
 	authntestutils.MustSetAuthBootstrapFlag(apiClient)
 	return nil

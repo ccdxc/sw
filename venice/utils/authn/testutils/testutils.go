@@ -19,6 +19,24 @@ import (
 	"github.com/pensando/sw/venice/utils/testutils"
 )
 
+// RadiusConfig to define test config for ACS or OpenRadius
+type RadiusConfig struct {
+	// URL is the host:port of the radius server
+	URL string `json:",omitempty"`
+	// NasID of venice
+	NasID string `json:",omitempty"`
+	// NasSecret is the shared secret between venice and radius server
+	NasSecret string `json:",omitempty"`
+	// User is the radius username
+	User string `json:",omitempty"`
+	// Password is the radius user password
+	Password string `json:",omitempty"`
+	// UserGroups contain groups to which user belongs
+	UserGroups []string `json:",omitempty"`
+	// Tenant to which user belongs
+	Tenant string `json:",omitempty"`
+}
+
 func encodeHTTPRequest(req *http.Request, request interface{}) error {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(request)
@@ -139,9 +157,9 @@ func CreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, lda
 	return CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()})
 }
 
-// MustCreateAuthenticationPolicy creates an authentication policy with local and ldap auth config. secret and radius config is set to nil in the policy
-func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap) *auth.AuthenticationPolicy {
-	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, nil, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()})
+// MustCreateAuthenticationPolicy creates an authentication policy with local, ldap and radius auth config
+func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius) *auth.AuthenticationPolicy {
+	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, radius, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()})
 	if err != nil {
 		panic(fmt.Sprintf("CreateAuthenticationPolicy failed with err %s", err))
 	}

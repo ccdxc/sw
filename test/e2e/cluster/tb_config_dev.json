@@ -11,5 +11,14 @@
     "E2EMode":        "MOCK",
     "User":           "test",
     "Password":       "pensando",
-    "AuthMethod":     "LOCAL"
+    "AuthMethod":     "LOCAL",
+    "Radius": {
+        "URL": "10.11.100.101:1812",
+        "NasID": "Venice",
+        "NasSecret": "testing123",
+        "User": "radiususer",
+        "Password": "password",
+        "Tenant": "default",
+        "UserGroups":["Admin"]
+    }
 }

@@ -117,7 +117,8 @@ func createDefaultAuthenticationPolicy(config *LdapConfig) *auth.AuthenticationP
 				GroupObjectClass: config.GroupObjectClassAttribute,
 				Tenant:           config.TenantAttribute,
 			},
-		})
+		},
+		&auth.Radius{Enabled: false})
 }
 
 func testAuthenticate(t *testing.T, config *LdapConfig) {

@@ -29,7 +29,7 @@ func TestLogin(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -112,7 +112,7 @@ func TestLoginFailures(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -142,7 +142,7 @@ func TestUserPasswordRemoval(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -219,7 +219,7 @@ func TestAuthPolicy(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -305,7 +305,7 @@ func TestUserStatus(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -400,7 +400,7 @@ func TestLdapLogin(t *testing.T) {
 		},
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, localUserCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, &auth.Radius{Enabled: false}, localUserCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
@@ -468,7 +468,7 @@ func TestUsernameConflict(t *testing.T) {
 		},
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, localUserCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, &auth.Radius{Enabled: false}, localUserCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
@@ -536,7 +536,7 @@ func TestLdapChecks(t *testing.T) {
 	MustCreateCluster(tinfo.apicl)
 	defer MustDeleteCluster(tinfo.apicl)
 	// create authentication policy
-	MustCreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapConf)
+	MustCreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapConf, &auth.Radius{Enabled: false})
 	defer MustDeleteAuthenticationPolicy(tinfo.apicl)
 	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
 	if err != nil {
@@ -602,4 +602,56 @@ func TestLdapChecks(t *testing.T) {
 	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Connect_Failure.String(), "expected ldap connection check to fail")
 	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
 		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+}
+
+func TestRadiusLogin(t *testing.T) {
+	config := getACSConfig()
+	localUserCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   config.Tenant,
+	}
+	radiusConf := &auth.Radius{
+		Enabled: true,
+		Servers: []*auth.RadiusServer{{
+			Url:        config.URL,
+			Secret:     config.NasSecret,
+			AuthMethod: auth.Radius_PAP.String(),
+		}},
+		NasID: config.NasID,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, radiusConf, localUserCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
+	radiusUserCred := &auth.PasswordCredential{
+		Username: config.User,
+		Password: config.Password,
+	}
+
+	currtime := time.Now()
+	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
+	if err != nil {
+		panic("error creating rest client")
+	}
+	MustCreateRoleBinding(tinfo.apicl, "RadiusAdminRoleBinding", config.Tenant, globals.AdminRole, nil, config.UserGroups)
+	defer MustDeleteRoleBinding(tinfo.apicl, "RadiusAdminRoleBinding", config.Tenant)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, radiusUserCred)
+	AssertOk(t, err, "unable to get logged in context")
+	// test GET user
+	var user *auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: config.User, Tenant: config.Tenant})
+		return err == nil, nil
+	}, "unable to fetch user")
+	defer MustDeleteUser(tinfo.apicl, config.User, config.Tenant)
+	Assert(t, user.Spec.Type == auth.UserSpec_EXTERNAL.String(), "unexpected user type: %s", user.Spec.Type)
+	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
+	logintime, err := user.Status.LastSuccessfulLogin.Time()
+	AssertOk(t, err, "error getting successful login time")
+	Assert(t, logintime.After(currtime), fmt.Sprintf("login time [%v] not after current time [%v]", logintime.Local(), currtime.Local()))
+	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
+	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_RADIUS.String(),
+		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_RADIUS.String(), user.Status.Authenticators[0]))
 }

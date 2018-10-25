@@ -36,19 +36,20 @@ const clientName = "test-utils"
 
 // TestBedConfig is Config that can be changed with a json file and environment variables
 type TestBedConfig struct {
-	NumVeniceNodes int    `json:",omitempty"`
-	NumQuorumNodes int    `json:",omitempty"`
-	NumNaplesHosts int    `json:",omitempty"`
-	ClusterVIP     string `json:",omitempty"`
-	SSHUser        string `json:",omitempty"`
-	SSHPasswd      string `json:",omitempty"`
-	SSHAuthMethod  string `json:",omitempty"` // Only password is implemented now. Cert will come later.
-	FirstVeniceIP  string `json:",omitempty"`
-	FirstNaplesIP  string `json:",omitempty"`
-	SSHPrivKeyFile string `json:",omitempty"`
-	User           string `json:",omitempty"`
-	Password       string `json:",omitempty"`
-	AuthMethod     string `json:",omitempty"`
+	NumVeniceNodes int                    `json:",omitempty"`
+	NumQuorumNodes int                    `json:",omitempty"`
+	NumNaplesHosts int                    `json:",omitempty"`
+	ClusterVIP     string                 `json:",omitempty"`
+	SSHUser        string                 `json:",omitempty"`
+	SSHPasswd      string                 `json:",omitempty"`
+	SSHAuthMethod  string                 `json:",omitempty"` // Only password is implemented now. Cert will come later.
+	FirstVeniceIP  string                 `json:",omitempty"`
+	FirstNaplesIP  string                 `json:",omitempty"`
+	SSHPrivKeyFile string                 `json:",omitempty"`
+	User           string                 `json:",omitempty"`
+	Password       string                 `json:",omitempty"`
+	AuthMethod     string                 `json:",omitempty"`
+	Radius         testutils.RadiusConfig `json:",omitempty"`
 }
 
 var defaultTestBedConfig = TestBedConfig{
@@ -64,6 +65,15 @@ var defaultTestBedConfig = TestBedConfig{
 	User:           "test",
 	Password:       "pensando",
 	AuthMethod:     auth.Authenticators_LOCAL.String(),
+	Radius: testutils.RadiusConfig{
+		URL:        "10.11.100.101:1812",
+		NasID:      "Venice",
+		NasSecret:  "testing123",
+		User:       "radiususer",
+		Password:   "password",
+		Tenant:     "default",
+		UserGroups: []string{"Admin"},
+	},
 }
 
 // TestUtils holds test config, state and any helper caches .
@@ -80,7 +90,7 @@ type TestUtils struct {
 	sshConfig       *ssh.ClientConfig
 	client          map[string]*ssh.Client
 	resolver        resolver.Interface
-	apiGwAddr       string
+	APIGwAddr       string
 	tlsProvider     rpckit.TLSProvider
 	APIClient       apiclient.Services
 	Logger          log.Logger
@@ -188,7 +198,7 @@ func (tu *TestUtils) sshInit() {
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
-	tu.apiGwAddr = tu.ClusterVIP + ":" + globals.APIGwRESTPort
+	tu.APIGwAddr = tu.ClusterVIP + ":" + globals.APIGwRESTPort
 	tu.VeniceConf = tu.CommandOutput(tu.VeniceNodeIPs[0], "bash -c 'if [ -f /etc/pensando/shared/common/venice-conf.json ] ; then  cat /etc/pensando/shared/common/venice-conf.json; fi' ")
 
 	var disabledModules struct {
@@ -204,7 +214,7 @@ func (tu *TestUtils) sshInit() {
 
 // SetupAuth bootstraps default tenant, authentication policy, local user and super admin role
 func (tu *TestUtils) SetupAuth() {
-	apicl, err := apiclient.NewRestAPIClient(tu.apiGwAddr)
+	apicl, err := apiclient.NewRestAPIClient(tu.APIGwAddr)
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("cannot create rest client, err: %v", err))
 	}
@@ -244,7 +254,10 @@ func (tu *TestUtils) SetupAuth() {
 	// set bootstrap flag
 	_, err = testutils.SetAuthBootstrapFlag(apicl)
 	if err != nil {
-		ginkgo.Fail(fmt.Sprintf("SetAuthBootstrapFlag failed with err: %v", err))
+		// 401 when auth is already bootstrapped. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(401)") {
+			ginkgo.Fail(fmt.Sprintf("SetAuthBootstrapFlag failed with err: %v", err))
+		}
 	}
 }
 
@@ -268,7 +281,7 @@ func (tu *TestUtils) Init() {
 	ginkgo.By(fmt.Sprintf("VeniceNodeIPs: %+v ", tu.VeniceNodeIPs))
 	ginkgo.By(fmt.Sprintf("NameToIPMap: %+v", tu.NameToIPMap))
 	ginkgo.By(fmt.Sprintf("IPToNameMap: %+v", tu.IPToNameMap))
-	ginkgo.By(fmt.Sprintf("apiGwAddr : %+v ", tu.apiGwAddr))
+	ginkgo.By(fmt.Sprintf("APIGwAddr : %+v ", tu.APIGwAddr))
 
 	// We purposefully create Auth at the start of the test and dont delete these policies at the end.
 	//  deletion is not possible because as soon as we delete the user, we lose privileges to delete authpolicy.
@@ -276,7 +289,7 @@ func (tu *TestUtils) Init() {
 	tu.SetupAuth()
 	ginkgo.By("auth setup complete")
 
-	cmdClient := cmdclient.NewRestCrudClientClusterV1(tu.apiGwAddr)
+	cmdClient := cmdclient.NewRestCrudClientClusterV1(tu.APIGwAddr)
 	clusterIf := cmdClient.Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
 	var cl *cluster.Cluster
@@ -443,7 +456,7 @@ func (tu *TestUtils) DebugStatsOnNode(node string, restPort string, statsStruct 
 
 // NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT.
 func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
-	nctx, err := testutils.NewLoggedInContext(ctx, tu.apiGwAddr, &auth.PasswordCredential{Username: tu.User, Password: tu.Password, Tenant: globals.DefaultTenant})
+	nctx, err := testutils.NewLoggedInContext(ctx, tu.APIGwAddr, &auth.PasswordCredential{Username: tu.User, Password: tu.Password, Tenant: globals.DefaultTenant})
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("err : %s", err))
 	}
