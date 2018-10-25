@@ -50,7 +50,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	struct qcq *qcq = q_to_qcq(q);
 	struct rx_stats *stats = q_to_rx_stats(q);
 	dma_addr_t dma_addr;
-#ifdef HAPS
+#ifdef CSUM_DEBUG
 	__sum16 csum;
 #endif
 
@@ -60,7 +60,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		return;
 	}
 
-#ifdef HAPS
+#ifdef CSUM_DEBUG
 	if (comp->len > netdev->mtu + VLAN_ETH_HLEN) {
 		printk(KERN_ERR "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
 		ionic_rx_recycle(q, desc_info, skb);
@@ -79,7 +79,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	//prefetch(skb->data - NET_IP_ALIGN);
 	skb_put(skb, comp->len);
 	skb->protocol = eth_type_trans(skb, netdev);
-#ifdef HAPS
+#ifdef CSUM_DEBUG
 	csum = ip_compute_csum(skb->data, skb->len);
 #endif
 	skb_record_rx_queue(skb, q->index);
@@ -105,7 +105,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	if (netdev->features & NETIF_F_RXCSUM && comp->csum_calc) {
 		skb->ip_summed = CHECKSUM_COMPLETE;
 		skb->csum = comp->csum;
-#ifdef HAPS
+#ifdef CSUM_DEBUG
 		if (skb->csum != (u16)~csum)
 			printk(KERN_ERR "Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n", (u16)~csum, skb->csum, htons(skb->protocol));
 #endif
