@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __BASE_H__
-#define __BASE_H__
+#ifndef __BASE_HPP__
+#define __BASE_HPP__
 
 #include <stdint.h>
 #include <assert.h>
@@ -335,5 +335,5 @@ hal_sdk_ret_to_hal_ret(sdk_ret_t sdk_ret)
     }
 }
 
-#endif    // __BASE_H__
+#endif    // __BASE_HPP__
 

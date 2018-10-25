@@ -53,7 +53,6 @@ Status port_svc_init(delphi::SdkPtr sdk);
 // get port service object
 port_svc_ptr_t port_svc_get(void);
 delphi::SdkPtr delphi_sdk_get(void);
-void port_event_cb(uint32_t port_num, port_event_t event);
 
 }    // namespace linkmgr
 

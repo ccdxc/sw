@@ -162,6 +162,7 @@ nic/tools/speed_change.sh                                           /nic/tools/
 
 nic/tools/start-hal-haps.sh                                         /nic/tools/
 nic/tools/sysinit.sh                                                /nic/tools/
+nic/tools/syskill.sh                                                /nic/tools/
 nic/tools/sysreset.sh                                               /nic/tools/
 nic/tools/sysupdate.sh                                              /nic/tools/
 

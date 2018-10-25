@@ -609,6 +609,7 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg)
         sdk_cfg.cfg_path       = hal_cfg->cfg_path.c_str();
         sdk_cfg.catalog        = hal_cfg->catalog;
         sdk_cfg.server_builder = hal_cfg->server_builder;
+        sdk_cfg.port_event_cb  = linkmgr::port_event_cb;
 
         ret = linkmgr::linkmgr_init(&sdk_cfg);
         if (ret != HAL_RET_OK) {
