@@ -244,75 +244,6 @@ func TestAuthnRegistration(t *testing.T) {
 	Assert(t, err != nil, "expected error in authBootstrap hook registration")
 }
 
-func TestRemovePassword(t *testing.T) {
-	tests := []struct {
-		name string
-		in   interface{}
-		err  bool
-	}{
-		{
-			name: "User object",
-			in: &auth.User{
-				TypeMeta: api.TypeMeta{Kind: "User"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testuser",
-				},
-				Spec: auth.UserSpec{
-					Fullname: "Test User",
-					Password: "password",
-					Email:    "testuser@pensandio.io",
-					Type:     auth.UserSpec_LOCAL.String(),
-				},
-			},
-			err: false,
-		},
-		{
-			name: "User list",
-			in: &auth.UserList{
-				Items: []*auth.User{
-					{
-						TypeMeta: api.TypeMeta{Kind: "User"},
-						ObjectMeta: api.ObjectMeta{
-							Tenant: "testTenant",
-							Name:   "testuser",
-						},
-						Spec: auth.UserSpec{
-							Fullname: "Test User",
-							Password: "password",
-							Email:    "testuser@pensandio.io",
-							Type:     auth.UserSpec_LOCAL.String(),
-						},
-					},
-				},
-			},
-			err: false,
-		},
-		{
-			name: "invalid object",
-			in:   &struct{ name string }{name: "invalid object type"},
-			err:  true,
-		},
-	}
-	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
-	l := log.GetNewLogger(logConfig)
-	r := &authHooks{}
-	r.logger = l
-	for _, test := range tests {
-		_, out, err := r.removePassword(context.TODO(), test.in)
-		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
-		switch obj := out.(type) {
-		case *auth.User:
-			Assert(t, obj.Spec.Password == "", "non empty password")
-		case *auth.UserList:
-			for _, user := range obj.GetItems() {
-				Assert(t, user.Spec.Password == "", "non empty password in user list")
-			}
-		}
-
-	}
-}
-
 func TestAddRoles(t *testing.T) {
 	tests := []struct {
 		name string
@@ -383,75 +314,6 @@ func TestAddRoles(t *testing.T) {
 	}
 }
 
-func TestRemoveSecret(t *testing.T) {
-	tests := []struct {
-		name string
-		in   interface{}
-		err  bool
-	}{
-		{
-			name: "auth policy",
-			in: &auth.AuthenticationPolicy{
-				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-				ObjectMeta: api.ObjectMeta{
-					Name: "AuthenticationPolicy",
-				},
-				Spec: auth.AuthenticationPolicySpec{
-					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{
-							Enabled: false,
-						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
-						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
-					},
-					Secret: []byte("secret"),
-				},
-			},
-			err: false,
-		},
-		{
-			name: "invalid object",
-			in:   &struct{ name string }{name: "invalid object type"},
-			err:  true,
-		},
-	}
-	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
-	l := log.GetNewLogger(logConfig)
-	r := &authHooks{}
-	r.logger = l
-	for _, test := range tests {
-		_, out, err := r.removeSecret(context.TODO(), test.in)
-		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
-		switch obj := out.(type) {
-		case *auth.AuthenticationPolicy:
-			Assert(t, obj.Spec.Secret == nil, "secret not nil")
-		}
-	}
-}
-
-func TestRemovePasswordHookRegistration(t *testing.T) {
-	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
-	l := log.GetNewLogger(logConfig)
-	svc := mocks.NewFakeAPIGwService(l, false)
-	r := &authHooks{}
-	r.logger = l
-	err := r.registerRemovePasswordHook(svc)
-	AssertOk(t, err, "removePassword hook registration failed")
-
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper}
-	for _, oper := range opers {
-		prof, err := svc.GetCrudServiceProfile("User", oper)
-		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
-		Assert(t, len(prof.PostCallHooks()) == 1, fmt.Sprintf("unexpected number of post call hooks [%d] for User operation [%v]", len(prof.PostCallHooks()), oper))
-	}
-	// test err
-	svc = mocks.NewFakeAPIGwService(l, true)
-	err = r.registerRemovePasswordHook(svc)
-	Assert(t, err != nil, "expected error in removePassword hook registration")
-}
-
 func TestAddRolesHookRegistration(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
 	l := log.GetNewLogger(logConfig)
@@ -461,7 +323,7 @@ func TestAddRolesHookRegistration(t *testing.T) {
 	err := r.registerAddRolesHook(svc)
 	AssertOk(t, err, "addRoles hook registration failed")
 
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper}
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
@@ -471,27 +333,6 @@ func TestAddRolesHookRegistration(t *testing.T) {
 	svc = mocks.NewFakeAPIGwService(l, true)
 	err = r.registerAddRolesHook(svc)
 	Assert(t, err != nil, "expected error in addRoles hook registration")
-}
-
-func TestRemoveSecretHookRegistration(t *testing.T) {
-	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
-	l := log.GetNewLogger(logConfig)
-	svc := mocks.NewFakeAPIGwService(l, false)
-	r := &authHooks{}
-	r.logger = l
-	err := r.registerRemoveSecretHook(svc)
-	AssertOk(t, err, "removeSecret hook registration failed")
-
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.GetOper, apiserver.WatchOper}
-	for _, oper := range opers {
-		prof, err := svc.GetCrudServiceProfile("AuthenticationPolicy", oper)
-		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
-		Assert(t, len(prof.PostCallHooks()) == 1, fmt.Sprintf("unexpected number of post call hooks [%d] for AuthenticationPolicy operation [%v]", len(prof.PostCallHooks()), oper))
-	}
-	// test err
-	svc = mocks.NewFakeAPIGwService(l, true)
-	err = r.registerRemoveSecretHook(svc)
-	Assert(t, err != nil, "expected error in removeSecret hook registration")
 }
 
 func TestAdminRoleCheck(t *testing.T) {

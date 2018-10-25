@@ -16,7 +16,7 @@ import (
 var certSrvEndpoint = "localhost:" + globals.CMDCertAPIPort
 
 var mu sync.Mutex
-var defaultTLSProvider TLSProvider
+var defaultTLSProviders = make(map[string]TLSProvider)
 
 // GetDefaultTLSProvider returns the default TLS provider.
 // svcName is needed by the TLS provider to acquire a valid certificate
@@ -30,16 +30,16 @@ func GetDefaultTLSProvider(svcName string) (TLSProvider, error) {
 	}
 	mu.Lock()
 	defer mu.Unlock()
-	if defaultTLSProvider != nil {
-		return defaultTLSProvider, nil
+	if defaultTLSProviders[svcName] != nil {
+		return defaultTLSProviders[svcName], nil
 	}
 	tp, err := tlsproviders.NewDefaultCMDBasedProvider(certSrvEndpoint, svcName)
 	if err != nil {
 		log.Errorf("Error getting CMD-based TLS provider for service %s at %s", svcName, certSrvEndpoint)
 		return nil, err
 	}
-	defaultTLSProvider = tp
-	return defaultTLSProvider, nil
+	defaultTLSProviders[svcName] = tp
+	return tp, nil
 }
 
 // ********** FOR TESTING ONLY **********

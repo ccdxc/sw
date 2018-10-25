@@ -7,6 +7,7 @@ Input file: svc_auth.proto
 package auth
 
 import (
+	"context"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -491,6 +492,72 @@ func (m *UserList) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 // Transformers
+
+func (m *AuthenticationPolicyList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgAuthenticationPolicyWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AutoMsgUserWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgUserWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

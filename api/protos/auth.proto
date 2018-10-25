@@ -24,7 +24,7 @@ message UserSpec {
 
     string Fullname = 1 [(gogoproto.jsontag) = "fullname,omitempty"];
     string Email    = 2 [(gogoproto.jsontag) = "email,omitempty"];
-    string Password = 3 [(gogoproto.jsontag) = "password,omitempty"];
+    string Password = 3 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "password,omitempty"];
     string Type     = 4 [(venice.check) = "StrEnum(UserSpec.UserType)", (gogoproto.jsontag) = "type,omitempty"];
 }
 
@@ -60,7 +60,7 @@ message User {
 message AuthenticationPolicySpec {
     Authenticators Authenticators = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "authenticators,omitempty"];
     // Secret used to sign JWT token
-    bytes Secret                  = 2 [(gogoproto.jsontag) = "secret,omitempty"];
+    bytes Secret                  = 2 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "secret,omitempty"];
 }
 
 message Authenticators {

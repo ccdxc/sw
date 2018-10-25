@@ -202,15 +202,16 @@ func GetAuthGetter(name, apiServer string, rslver resolver.Interface, tokenExpir
 		gAuthGetter.Start()
 	}
 	once.Do(func() {
+		module := name + authn.ModuleSuffix
 		// create logger
-		config := log.GetDefaultConfig(name)
+		config := log.GetDefaultConfig(module)
 		l := log.GetNewLogger(config)
 
 		cache := memdb.NewMemdb()
 		// start the watcher on api server
-		watcher := newWatcher(cache, name, apiServer, rslver)
+		watcher := newWatcher(cache, module, apiServer, rslver)
 		gAuthGetter = &defaultAuthGetter{
-			name:            name,
+			name:            module,
 			apiServer:       apiServer,
 			resolver:        rslver,
 			tokenExpiration: tokenExpiration,

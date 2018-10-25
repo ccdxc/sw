@@ -235,7 +235,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				}
 				return nil, errors.New("invalid object")
 			}
-		}),
+		}).WithStorageTransformer(&auth.StorageAuthenticationPolicyTransformer),
 
 		"auth.AuthenticationPolicySpec":   apisrvpkg.NewMessage("auth.AuthenticationPolicySpec"),
 		"auth.AuthenticationPolicyStatus": apisrvpkg.NewMessage("auth.AuthenticationPolicyStatus"),
@@ -835,7 +835,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				}
 				return nil, errors.New("invalid object")
 			}
-		}),
+		}).WithStorageTransformer(&auth.StorageUserTransformer),
 
 		"auth.UserSpec":   apisrvpkg.NewMessage("auth.UserSpec"),
 		"auth.UserStatus": apisrvpkg.NewMessage("auth.UserStatus"),

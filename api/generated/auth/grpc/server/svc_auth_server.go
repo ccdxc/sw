@@ -91,6 +91,10 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
 				return nil, err
 			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.AuthenticationPolicyList)
@@ -162,6 +166,10 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				return nil, err
+			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
 				return nil, err
 			}
 			return into, nil
@@ -456,7 +464,14 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
-
+					{
+						txin, err := auth.StorageUserTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to User")
+						}
+						obj := txin.(auth.User)
+						in = &obj
+					}
 					strEvent := &auth.AutoMsgUserWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
@@ -547,7 +562,14 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						}
 						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
 					}
-
+					{
+						txin, err := auth.StorageAuthenticationPolicyTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to AuthenticationPolicy")
+						}
+						obj := txin.(auth.AuthenticationPolicy)
+						in = &obj
+					}
 					strEvent := &auth.AutoMsgAuthenticationPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,

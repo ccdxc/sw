@@ -8,6 +8,11 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
+const (
+	// ModuleSuffix is used to identify authentication module
+	ModuleSuffix = "-authn"
+)
+
 // CreateExternalUser creates in memory external user object
 func CreateExternalUser(username, tenant, fullname, email string, groups []string, authenticator auth.Authenticators_AuthenticatorType) (*auth.User, bool, error) {
 	// assigning default tenant if external store doesn't return tenant information

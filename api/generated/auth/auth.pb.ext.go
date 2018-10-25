@@ -7,6 +7,7 @@ Input file: auth.proto
 package auth
 
 import (
+	"context"
 	"errors"
 	fmt "fmt"
 
@@ -14,10 +15,10 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	validators "github.com/pensando/sw/venice/utils/apigen/validators"
-
 	"github.com/pensando/sw/venice/globals"
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/transformers/storage"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -27,6 +28,8 @@ var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
 var validatorMapAuth = make(map[string]map[string][]func(string, interface{}) error)
+
+var storageTransformersMapAuth = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
 
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicy) MakeKey(prefix string) string {
@@ -1033,6 +1036,86 @@ func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 // Transformers
 
+func (m *AuthenticationPolicy) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+type storageAuthenticationPolicyTransformer struct{}
+
+var StorageAuthenticationPolicyTransformer storageAuthenticationPolicyTransformer
+
+func (st *storageAuthenticationPolicyTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(AuthenticationPolicy)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageAuthenticationPolicyTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(AuthenticationPolicy)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *AuthenticationPolicySpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapAuth["AuthenticationPolicySpec"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *User) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+type storageUserTransformer struct{}
+
+var StorageUserTransformer storageUserTransformer
+
+func (st *storageUserTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(User)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageUserTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(User)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *UserSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapAuth["UserSpec"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
@@ -1128,5 +1211,49 @@ func init() {
 		}
 		return nil
 	})
+
+	{
+		AuthenticationPolicySpecSecretTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapAuth["AuthenticationPolicySpec"] = append(storageTransformersMapAuth["AuthenticationPolicySpec"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*AuthenticationPolicySpec)
+
+				if toStorage {
+					data, err = AuthenticationPolicySpecSecretTx.TransformToStorage(ctx, []byte(m.Secret))
+				} else {
+					data, err = AuthenticationPolicySpecSecretTx.TransformFromStorage(ctx, []byte(m.Secret))
+				}
+				m.Secret = []byte(data)
+
+				return err
+			})
+	}
+
+	{
+		UserSpecPasswordTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapAuth["UserSpec"] = append(storageTransformersMapAuth["UserSpec"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*UserSpec)
+
+				if toStorage {
+					data, err = UserSpecPasswordTx.TransformToStorage(ctx, []byte(m.Password))
+				} else {
+					data, err = UserSpecPasswordTx.TransformFromStorage(ctx, []byte(m.Password))
+				}
+				m.Password = string(data)
+
+				return err
+			})
+	}
 
 }
