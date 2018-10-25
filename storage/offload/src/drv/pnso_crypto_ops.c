@@ -41,20 +41,18 @@ crypto_validate_input(struct service_info *svc_info,
 	struct pnso_crypto_desc	*pnso_crypto_desc;
 
 	if (!svc_info || !svc_params) {
-		OSAL_LOG_ERROR("invalid svc_info 0x%llx or svc_params 0x%llx!",
-				(uint64_t)svc_info, (uint64_t)svc_params);
+		OSAL_LOG_ERROR("null svc_info or svc_params specified");
 		return EINVAL;
 	}
 
 	if (!svc_info->si_src_blist.blist) {
-		OSAL_LOG_ERROR("null si_src_blist");
+		OSAL_LOG_ERROR("null si_src_blist specified");
 		return EINVAL;
 	}
 
 	pnso_crypto_desc = svc_params->u.sp_crypto_desc;
 	if (!pnso_crypto_desc) {
-		OSAL_LOG_ERROR("invalid desc 0x%llx specified!",
-				(uint64_t)pnso_crypto_desc);
+		OSAL_LOG_ERROR("null crypto_desc specified");
 		return EINVAL;
 	}
 
@@ -66,8 +64,7 @@ crypto_validate_input(struct service_info *svc_info,
 	}
 
 	if (!pnso_crypto_desc->iv_addr) {
-		OSAL_LOG_ERROR("invalid iv_addr 0x%llx specified!",
-				pnso_crypto_desc->iv_addr);
+		OSAL_LOG_ERROR("null iv_addr specified");
 		return EINVAL;
 	}
 
@@ -161,8 +158,8 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 	 * Validate a destination buffer list exists (it could come from app or
          * intermediate pool as evaluated above and elsewhere).
 	 */
-	OSAL_LOG_INFO("src_total_len %u dst_total_len %u",
-		      svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
+	OSAL_LOG_DEBUG("src_total_len %u dst_total_len %u",
+		       svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
 	if ((svc_info->si_src_blist.len == 0) ||
 	    (svc_info->si_dst_blist.len < svc_info->si_src_blist.len)) {
 		OSAL_LOG_ERROR("length error: src_len %u dst_len %u",
@@ -278,7 +275,7 @@ crypto_chain(struct chain_entry *centry)
 	struct crypto_chain_params	*crypto_chain = &svc_info->si_crypto_chain;
 	struct interm_buf_list		*iblist;
 	struct service_info		*svc_next;
-	pnso_error_t			err;
+	pnso_error_t			err = PNSO_OK;
 
 	if (chn_service_has_sub_chain(svc_info)) {
 		if (svc_info->si_sgl_pdma) {
@@ -322,18 +319,15 @@ crypto_chain(struct chain_entry *centry)
 
 		OSAL_ASSERT(centry->ce_next);
 		svc_next = &centry->ce_next->ce_svc_info;
-		err = svc_next->si_ops.sub_chain_from_crypto(svc_next,
-							     crypto_chain);
-		if (!err) {
-			svc_info->si_seq_info.sqi_desc = 
-				seq_setup_crypto_chain(svc_info, svc_info->si_desc);
-			if (!svc_info->si_seq_info.sqi_desc) {
-				OSAL_LOG_ERROR("failed seq_setup_crypto_chain");
-				return EINVAL;
-			}
-		}
+		err = svc_next->si_ops.sub_chain_from_crypto(svc_next, crypto_chain);
+		if (!err)
+			err = seq_setup_crypto_chain(svc_info, svc_info->si_desc);
 	}
-	return PNSO_OK;
+
+	if (err)
+		OSAL_LOG_ERROR("failed seq_setup_crypto_chain: err %d", err);
+
+	return err;
 }
 
 static pnso_error_t
@@ -427,6 +421,10 @@ crypto_teardown(struct service_info *svc_info)
 {
 	struct per_core_resource *pc_res = svc_info->si_pc_res;
 
+	/*
+	 * Trace the desc/AOLs once more to verify any padding applied
+	 * by sequencer.
+	 */
 	CRYPTO_PPRINT_DESC(svc_info->si_desc);
         SGL_PDMA_PPRINT(svc_info->si_crypto_chain.ccp_sgl_pdma_dst_addr);
 

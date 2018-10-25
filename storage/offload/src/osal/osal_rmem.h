@@ -19,6 +19,11 @@
 extern "C" {
 #endif
 
+uint64_t osal_rmem_addr_invalid_def(void);
+bool osal_rmem_addr_valid(uint64_t addr);
+uint32_t osal_rmem_total_pages_get(void);
+uint32_t osal_rmem_avail_pages_get(void);
+uint32_t osal_rmem_page_size_get(void);
 uint64_t osal_rmem_alloc(size_t size);
 uint64_t osal_rmem_calloc(size_t size);
 uint64_t osal_rmem_aligned_alloc(size_t alignment, size_t size);

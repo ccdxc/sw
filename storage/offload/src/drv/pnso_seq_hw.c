@@ -22,6 +22,7 @@
 #include "pnso_chain_params.h"
 #include "pnso_seq_ops.h"
 #include "pnso_cpdc.h"
+#include "pnso_init.h"
 
 /**
  * TODO-seq:
@@ -55,8 +56,6 @@
 		pprint_crypto_chain_params(cp);				\
 	} while (0)
 #endif
-
-extern uint64_t pad_buffer;
 
 static void __attribute__((unused))
 pprint_seq_desc(const struct sequencer_desc *desc)
@@ -865,14 +864,13 @@ hw_cleanup_cpdc_chain(const struct service_info *svc_info)
 		sonic_put_seq_statusq(cpdc_chain->ccp_seq_spec.sqs_seq_status_q);
 }
 
-static void *
+static pnso_error_t
 hw_setup_crypto_chain(struct service_info *svc_info,
 		      struct crypto_desc *desc)
 {
 	struct sequencer_info *seq_info;
 	struct sequencer_spec *seq_spec;
 	struct lif *lif;
-	void *seq_desc;
 	uint32_t statusq_index;
 	pnso_error_t err;
 
@@ -880,15 +878,14 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 	seq_info = &svc_info->si_seq_info;
 	lif = sonic_get_lif();
 	if (!lif) {
-		OSAL_ASSERT(lif);
-		return NULL;
+		OSAL_LOG_ERROR("failed to obtain LIF");
+		return EPERM;
 	}
 
 	err = sonic_get_seq_statusq(lif, seq_info->sqi_status_qtype,
 	                            &seq_spec->sqs_seq_status_q);
 	if (err) {
-		OSAL_ASSERT(!err);
-		return NULL;
+		return err;
 	}
 
 	seq_info->sqi_status_desc = 
@@ -896,21 +893,17 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 	                                         &statusq_index);
 	if (!seq_info->sqi_status_desc) {
 		OSAL_LOG_ERROR("failed to obtain crypto sequencer statusq desc");
-		OSAL_ASSERT(seq_info->sqi_status_desc);
-		return NULL;
+		return EPERM;
 	}
 	desc->cd_db_addr = sonic_get_lif_local_dbaddr();
 	desc->cd_db_data = sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, statusq_index);
 
-	OSAL_LOG_INFO("ring_id: %u index: %u desc: 0x%llx",
-		      seq_info->sqi_ring_id, statusq_index, (uint64_t)desc);
+	OSAL_LOG_DEBUG("ring_id: %u index: %u desc: 0x"PRIx64,
+		       seq_info->sqi_ring_id, statusq_index, (uint64_t)desc);
 	fill_crypto_seq_status_desc(&svc_info->si_crypto_chain,
                                     seq_info->sqi_status_desc);
-	PPRINT_CRYPTO_CHAIN_PARAMS(&svc_info->si_crypto_chain);
-
-	seq_desc = hw_setup_desc(svc_info, desc, sizeof(*desc));
 	PPRINT_SEQUENCER_INFO(seq_info);
-	return seq_desc;
+	return PNSO_OK;
 }
 
 static void

@@ -73,9 +73,9 @@ void *pc_res_mpool_object_get(const struct per_core_resource *pc_res,
 void *pc_res_mpool_object_get_with_size(const struct per_core_resource *pc_res,
 					enum mem_pool_type type,
 					uint32_t *ret_size);
-void *pc_res_mpool_object_get_with_count(const struct per_core_resource *pc_res,
-					enum mem_pool_type type,
-					uint32_t *ret_count);
+void *pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pc_res,
+						 enum mem_pool_type type,
+						 uint32_t *ret_num_vec_elems);
 void pc_res_mpool_object_put(const struct per_core_resource *pc_res,
 			     enum mem_pool_type type,
 			     void *obj);

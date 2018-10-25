@@ -52,6 +52,8 @@ extern "C" {
 #define PNSO_MEM_ALIGN_BUF	256
 #define PNSO_MEM_ALIGN_PAGE	4096
 
+#define MPOOL_VEC_ELEM_SINGLE	1
+
 /* Different types of objects */
 enum mem_pool_type {
 	MPOOL_TYPE_NONE = 0,
@@ -88,7 +90,9 @@ struct mem_pool_config {
 	enum mem_pool_type mpc_type;	/* cpdc/crypto/sgl/etc pool */
 	uint32_t mpc_num_allocs;	/* total number of object allocs */
 	uint32_t mpc_num_objects;	/* total number of objects */
+	uint32_t mpc_num_vec_elems;	/* total number of vector elements */
 	uint32_t mpc_object_size;	/* size of an object */
+	uint32_t mpc_vec_elem_size;	/* size of a vector element */
 	uint32_t mpc_align_size;	/* object alignment size */
 	uint32_t mpc_pad_size;		/* from object and align size */
 	uint32_t mpc_pool_size;		/* total pool size */
@@ -107,6 +111,8 @@ struct mem_pool {
  * @mpool_type:		[in]	specifies the type of mpool.
  * @num_objects:	[in]	specifies the maximum number of objects the
  *				pool to hold.
+ * @num_vec_elems:	[in]	specifies the maximum number of vector elements
+ *				comprising the object.
  * @object_size:	[in]	specifies the size of an object in bytes.
  * @align_size:		[in]	specifies the alignment size of an object.
  * @out_mpool:		[out]	specifies the pointer to the newly created pool.
@@ -123,7 +129,7 @@ struct mem_pool {
  *
  */
 pnso_error_t mpool_create(enum mem_pool_type mpool_type,
-		uint32_t num_objects, uint32_t object_size,
+		uint32_t num_objects, uint32_t num_vec_elems, uint32_t object_size,
 		uint32_t align_size, struct mem_pool **out_mpool);
 
 /**
@@ -224,43 +230,43 @@ mpool_get_object_alloc_addr(enum mem_pool_type mpool_type,
 		return sonic_phy_to_virt(object_pa);
 }
 
+static inline uint32_t
+mpool_get_object_size(const struct mem_pool *mpool)
+{
+	return mpool->mp_config.mpc_vec_elem_size;
+}
+
 static inline void
-mpool_clear_object(struct mem_pool *mpool,
+mpool_clear_object(const struct mem_pool *mpool,
                    void *object)
 {
 	if (mpool_type_is_rmem(mpool->mp_config.mpc_type))
 		sonic_rmem_set((uint64_t)object, 0,
-				mpool->mp_config.mpc_object_size);
+				mpool_get_object_size(mpool));
 	else
-		memset(object, 0, mpool->mp_config.mpc_object_size);
+		memset(object, 0, mpool_get_object_size(mpool));
 }
 
 static inline uint32_t
-mpool_get_object_size(struct mem_pool *mpool)
+mpool_get_object_num_vec_elems(const struct mem_pool *mpool)
 {
-	return mpool->mp_config.mpc_object_size;
+	return mpool->mp_config.mpc_num_vec_elems;
 }
 
 static inline uint32_t
-mpool_get_object_count(struct mem_pool *mpool)
-{
-	return mpool->mp_config.mpc_num_objects;
-}
-
-static inline uint32_t
-mpool_get_object_page_size(struct mem_pool *mpool)
+mpool_get_object_page_size(const struct mem_pool *mpool)
 {
 	return mpool->mp_config.mpc_page_size;
 }
 
 static inline uint32_t
-mpool_get_object_pad_size(struct mem_pool *mpool)
+mpool_get_object_pad_size(const struct mem_pool *mpool)
 {
 	return mpool->mp_config.mpc_pad_size;
 }
 
 static inline uint32_t
-mpool_get_object_num_allocs(struct mem_pool *mpool)
+mpool_get_object_num_allocs(const struct mem_pool *mpool)
 {
 	return mpool->mp_config.mpc_num_allocs;
 }

@@ -4,6 +4,7 @@
  *
  */
 #include "osal.h"
+#include "osal_rmem.h"
 #include "pnso_mpool.h"
 
 #define MPOOL_MAGIC_VALID	0xffff012345670000
@@ -120,7 +121,7 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 	 * rmem alignment is always page_size so ensure it can
 	 * subsume align_size.
 	 */
-	mpool->mp_config.mpc_page_size = sonic_rmem_page_size_get();
+	mpool->mp_config.mpc_page_size = osal_rmem_page_size_get();
 	OSAL_ASSERT(is_power_of_2(mpool->mp_config.mpc_page_size));
 	if ((mpool->mp_config.mpc_align_size != PNSO_MEM_ALIGN_NONE) && 
 	    (!is_power_of_2(mpool->mp_config.mpc_align_size) || 
@@ -131,11 +132,16 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		return NULL;
 	}
 
-	first_rmem = SONIC_RMEM_ADDR_INVALID;
-	prev_rmem  = SONIC_RMEM_ADDR_INVALID;
+	/*
+	 * rmem supports allocation of multiple pages, but it would do so in
+	 * power of 2 count, e.g., an allocation of 20 pages will end up taking
+	 * 32 pages. To avoid this, we loop and allocate each page individually.
+	 */
+	first_rmem = osal_rmem_addr_invalid_def();
+	prev_rmem  = first_rmem;
 	while (total_size) {
-		curr_rmem = sonic_rmem_alloc(mpool->mp_config.mpc_page_size);
-		if (!sonic_rmem_addr_valid(curr_rmem)) {
+		curr_rmem = osal_rmem_alloc(mpool->mp_config.mpc_page_size);
+		if (!osal_rmem_addr_valid(curr_rmem)) {
 			OSAL_LOG_ERROR("pool %s failed after %u allocs remaining size %u",
 				       mem_pool_get_type_str(mpool->mp_config.mpc_type),
 				       mpool->mp_config.mpc_num_allocs, total_size);
@@ -143,14 +149,14 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		}
 
 		mpool_void_ptr_check(curr_rmem);
-		if (!sonic_rmem_addr_valid(first_rmem))
+		if (!osal_rmem_addr_valid(first_rmem))
 			first_rmem = curr_rmem;
 
-		if (sonic_rmem_addr_valid(prev_rmem) && 
+		if (osal_rmem_addr_valid(prev_rmem) && 
                     ((curr_rmem - mpool->mp_config.mpc_page_size) != prev_rmem)) {
-			OSAL_LOG_ERROR("unexpected non-contiguous alloc curr_rmem 0x%llx "
-				       "prev_rmem 0x" PRIx64, curr_rmem, prev_rmem);
-			sonic_rmem_free(curr_rmem, mpool->mp_config.mpc_page_size);
+			OSAL_LOG_ERROR("unexpected non-contiguous alloc curr_rmem 0x" PRIx64
+				       " prev_rmem 0x" PRIx64, curr_rmem, prev_rmem);
+			osal_rmem_free(curr_rmem, mpool->mp_config.mpc_page_size);
 			goto error;
 		}
 		mpool->mp_config.mpc_num_allocs++;
@@ -162,7 +168,7 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 	return (void *)first_rmem;
 error:
 	while (mpool->mp_config.mpc_num_allocs--) {
-		sonic_rmem_free(first_rmem, mpool->mp_config.mpc_page_size);
+		osal_rmem_free(first_rmem, mpool->mp_config.mpc_page_size);
 		first_rmem += mpool->mp_config.mpc_page_size;
 	}
 	return NULL;
@@ -177,7 +183,7 @@ mpool_destroy_rmem_objects(struct mem_pool *mpool)
 		OSAL_ASSERT(mpool->mp_config.mpc_num_allocs);
 		rmem = (uint64_t)mpool->mp_objects;
 		while (mpool->mp_config.mpc_num_allocs--) {
-			sonic_rmem_free(rmem, mpool->mp_config.mpc_page_size);
+			osal_rmem_free(rmem, mpool->mp_config.mpc_page_size);
 			rmem += mpool->mp_config.mpc_page_size;
 		}
 		mpool->mp_objects = NULL;
@@ -186,38 +192,39 @@ mpool_destroy_rmem_objects(struct mem_pool *mpool)
 
 pnso_error_t
 mpool_create(enum mem_pool_type mpool_type,
-		uint32_t num_objects, uint32_t object_size,
+		uint32_t num_objects, uint32_t num_vec_elems, uint32_t object_size,
 		uint32_t align_size, struct mem_pool **out_mpool)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
 	struct mem_pool *mpool = NULL;
 	void **objects;
 	char *obj;
 	int i;
 
 	if (!mpool_type_is_valid(mpool_type)) {
-		err = EINVAL;
 		OSAL_LOG_ERROR("invalid pool type specified. mpool_type: %d err: %d",
 			       mpool_type, err);
 		goto out;
 	}
 
+	if (num_vec_elems == 0) {
+		OSAL_LOG_ERROR("num_vec_elems must be at least 1");
+		goto out;
+	}
+
 	if (object_size == 0) {
-		err = EINVAL;
 		OSAL_LOG_ERROR("invalid object size specified. object_size: %d err: %d",
 			       object_size, err);
 		goto out;
 	}
 
 	if ((align_size != PNSO_MEM_ALIGN_NONE) && !is_power_of_2(align_size)) {
-		err = EINVAL;
 		OSAL_LOG_ERROR("invalid alignment size specified. align_size: %d err: %d",
 			       align_size, err);
 		goto out;
 	}
 
 	if (!out_mpool) {
-		err = EINVAL;
 		OSAL_LOG_ERROR("invalid pointer for pool specified. out_mpool: %p err: %d",
 			       out_mpool, err);
 		goto out;
@@ -235,13 +242,15 @@ mpool_create(enum mem_pool_type mpool_type,
 	mpool->mp_magic = MPOOL_MAGIC_VALID;
 	mpool->mp_config.mpc_type = mpool_type;
 	mpool->mp_config.mpc_num_objects = num_objects;
-	mpool->mp_config.mpc_object_size = object_size;
+	mpool->mp_config.mpc_num_vec_elems = num_vec_elems;
 	mpool->mp_config.mpc_align_size = align_size;
 
 	/* compute pad and total pool size */
-	mpool->mp_config.mpc_pad_size = mpool_get_pad_size(object_size, align_size);
+	mpool->mp_config.mpc_object_size = object_size;
+	mpool->mp_config.mpc_vec_elem_size = object_size * num_vec_elems;
+	mpool->mp_config.mpc_pad_size = mpool_get_pad_size(mpool->mp_config.mpc_vec_elem_size, align_size);
 	mpool->mp_config.mpc_pool_size = 
-                ((object_size + mpool->mp_config.mpc_pad_size) * num_objects);
+                ((mpool->mp_config.mpc_vec_elem_size + mpool->mp_config.mpc_pad_size) * num_objects);
 
 	mpool->mp_objects = mpool_type_is_rmem(mpool_type) ?
 			    mpool_create_rmem_objects(mpool) :
@@ -266,25 +275,25 @@ mpool_create(enum mem_pool_type mpool_type,
 	obj = (char *) mpool->mp_objects;
 	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
 		objects[i] = obj;
-		OSAL_LOG_DEBUG("%30s[%d]: 0x%llx 0x%llx 0x%llx %u %u %u",
+		OSAL_LOG_DEBUG("%30s[%d]: 0x"PRIx64" 0x"PRIx64" 0x"PRIx64" %u %u %u",
 			       "mpool->mp_dstack.mps_objects", i,
 			       (uint64_t) &objects[i], (uint64_t) objects[i],
 			       (uint64_t) mpool_get_object_phy_addr(mpool_type, objects[i]),
-			       object_size, mpool->mp_config.mpc_pad_size, align_size);
-		obj += (object_size + mpool->mp_config.mpc_pad_size);
+			       mpool->mp_config.mpc_vec_elem_size, mpool->mp_config.mpc_pad_size, align_size);
+		obj += (mpool->mp_config.mpc_vec_elem_size + mpool->mp_config.mpc_pad_size);
 	}
 	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
 
 	*out_mpool = mpool;
-	OSAL_LOG_INFO("pool allocated. mpool_type: %s num_objects: %d object_size: %d align_size: %d pad_size: %d mpool: 0x" PRIx64,
-		      mem_pool_get_type_str(mpool_type), num_objects, object_size,
+	OSAL_LOG_INFO("pool allocated. mpool_type: %s num_objects: %d vec_elem_size: %d align_size: %d pad_size: %d mpool: 0x" PRIx64,
+		      mem_pool_get_type_str(mpool_type), num_objects, mpool->mp_config.mpc_vec_elem_size,
 		      align_size, mpool->mp_config.mpc_pad_size, (uint64_t) mpool);
 
 	err = PNSO_OK;
 	return err;
 out:
-	OSAL_LOG_ERROR("failed to allocate pool!  mpool_type: %s num_objects: %d object_size: %d align_size: %d",
-			mem_pool_get_type_str(mpool_type), num_objects, object_size, align_size);
+	OSAL_LOG_ERROR("failed to allocate pool!  mpool_type: %s num_objects: %d vec_elem_size: %d align_size: %d",
+			mem_pool_get_type_str(mpool_type), num_objects, mpool->mp_config.mpc_vec_elem_size, align_size);
 	if (mpool)
 		mpool_destroy(&mpool);
 	return err;
@@ -379,8 +388,12 @@ mpool_pprint(const struct mem_pool *mpool)
 			mem_pool_get_type_str(mpool->mp_config.mpc_type));
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_objects",
 			mpool->mp_config.mpc_num_objects);
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_vec_elems",
+			mpool->mp_config.mpc_num_vec_elems);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_object_size",
 			mpool->mp_config.mpc_object_size);
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_vec_elem_size",
+			mpool->mp_config.mpc_vec_elem_size);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_align_size",
 			mpool->mp_config.mpc_align_size);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_pad_size",

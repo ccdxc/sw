@@ -21,34 +21,6 @@
 #define PNSO_NUM_OBJECTS		128
 #define PNSO_NUM_OBJECTS_IN_OBJECT	16
 
-uint64_t pad_buffer;
-
-static pnso_error_t
-alloc_pad_buffer(void)
-{
-	pnso_error_t err = EINVAL;
-
-	pad_buffer = osal_rmem_aligned_calloc(PNSO_MEM_ALIGN_PAGE,
-			PNSO_MEM_ALIGN_PAGE);
-	if (pad_buffer <= 0) {
-		OSAL_LOG_ERROR("failed to allocate static pad buffer! err: %d",
-				err);
-		goto out;
-	}
-
-	err = PNSO_OK;
-	OSAL_LOG_ERROR("aligned pad buffer allocated and initialized! pad_buffer: 0x" PRIx64,
-			pad_buffer);
-out:
-	return err;
-}
-
-static inline void
-free_pad_buffer(uint64_t pad_buffer)
-{
-	osal_rmem_free(pad_buffer, PNSO_MEM_ALIGN_PAGE);
-}
-
 static void
 deinit_mpools(struct per_core_resource *pc_res)
 {
@@ -67,42 +39,42 @@ init_mpools(struct pc_res_init_params *pc_init,
 	    struct per_core_resource *pc_res)
 {
 	pnso_error_t err;
-	uint32_t num_objects, num_object_set, object_size, pad_size;
+	uint32_t num_objects, num_object_set, object_size;
 	enum mem_pool_type mpool_type;
 
 	OSAL_ASSERT(pc_res);
 
 	num_objects = pc_init->max_seq_sq_descs;
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
-	err = mpool_create(mpool_type, num_objects,
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_CPDC_SGL;
-	err = mpool_create(mpool_type, num_objects,
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_CPDC_STATUS_DESC;
-	err = mpool_create(mpool_type, num_objects,
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_SERVICE_CHAIN;
-	err = mpool_create(mpool_type, num_objects,
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct service_chain), PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_SERVICE_CHAIN_ENTRY;
-	err = mpool_create(mpool_type, num_objects,
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct chain_entry), PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
@@ -115,43 +87,35 @@ init_mpools(struct pc_res_init_params *pc_init,
 	 */
 	num_object_set = pc_init->max_seq_sq_descs;
 	num_objects = PNSO_NUM_OBJECTS_IN_OBJECT;
-	pad_size = mpool_get_pad_size(sizeof(struct cpdc_desc),
-			PNSO_MEM_ALIGN_DESC);
-	object_size = (sizeof(struct cpdc_desc) + pad_size) * num_objects;
+	object_size = sizeof(struct cpdc_desc);
 
 	mpool_type = MPOOL_TYPE_CPDC_DESC_VECTOR;
-	err = mpool_create(mpool_type, num_object_set,
+	err = mpool_create(mpool_type, num_object_set, num_objects,
 			object_size, PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
 
-	pad_size = mpool_get_pad_size(sizeof(struct cpdc_status_desc),
-			PNSO_MEM_ALIGN_DESC);
-	object_size = (sizeof(struct cpdc_status_desc) +
-			pad_size) * num_objects;
+	object_size = sizeof(struct cpdc_status_desc);
 
 	mpool_type = MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR;
-	err = mpool_create(mpool_type, num_object_set,
+	err = mpool_create(mpool_type, num_object_set, num_objects,
 			object_size, PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
 
-	pad_size = mpool_get_pad_size(sizeof(struct cpdc_sgl),
-			PNSO_MEM_ALIGN_DESC);
-	object_size = (sizeof(struct cpdc_sgl) +
-			pad_size) * num_objects;
+	object_size = sizeof(struct cpdc_sgl);
 
 	mpool_type = MPOOL_TYPE_CPDC_SGL_VECTOR;
-	err = mpool_create(mpool_type, num_object_set,
+	err = mpool_create(mpool_type, num_object_set, num_objects,
 			object_size, PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS;
-	err = mpool_create(mpool_type, num_objects,
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
 			&pc_res->mpools[mpool_type]);
 	if (err)
@@ -192,10 +156,6 @@ cpdc_init_accelerator(struct pc_res_init_params *pc_init,
 	if (err)
 		goto out_mpools;
 
-	err = alloc_pad_buffer();
-	if (err)
-		goto out_mpools;
-
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 
@@ -212,8 +172,6 @@ cpdc_deinit_accelerator(struct per_core_resource *pc_res)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(pc_res);
-
-	free_pad_buffer(pad_buffer);
 
 	deinit_mpools(pc_res);
 

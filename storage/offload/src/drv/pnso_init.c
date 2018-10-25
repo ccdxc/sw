@@ -7,8 +7,10 @@
 #include <net.h>
 #include <kernel.h>
 
+#include "osal.h"
 #include "osal_logger.h"
 #include "osal_setup.h"
+#include "osal_rmem.h"
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_api_int.h"
@@ -19,6 +21,8 @@
 #include "pnso_crypto.h"
 #include "pnso_chain.h"
 #include "pnso_chain_params.h"
+
+uint64_t pad_buffer;
 
 static uint32_t
 seq_sq_descs_total_get(struct lif *lif);
@@ -48,6 +52,15 @@ pnso_init(struct pnso_init_params *pnso_init)
 	uint32_t			i;
 	pnso_error_t			err = PNSO_OK;
 
+	pad_buffer = osal_rmem_aligned_calloc(PNSO_MEM_ALIGN_PAGE,
+			PNSO_MEM_ALIGN_PAGE);
+	if (!osal_rmem_addr_valid(pad_buffer)) {
+		OSAL_LOG_ERROR("failed to allocate global pad buffer!");
+		err = ENOMEM;
+		goto out;
+	}
+	OSAL_LOG_DEBUG("pad buffer allocated: 0x" PRIx64, pad_buffer);
+
 	memset(&pc_init, 0, sizeof(pc_init));
 	pc_init.pnso_init = *pnso_init;
 	pc_init.rmem_page_size = sonic_rmem_page_size_get();
@@ -60,7 +73,11 @@ pnso_init(struct pnso_init_params *pnso_init)
 	 *         gets continually adjusted as resources get allocated.
 	 */
 	num_pc_res = sonic_get_num_per_core_res(lif);
-	OSAL_ASSERT(num_pc_res);
+	if (!num_pc_res) {
+		OSAL_LOG_ERROR("num_pc_res must be at least 1");
+		err = EPERM;
+		goto out;
+	}
 
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
 		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
@@ -80,8 +97,13 @@ pnso_init(struct pnso_init_params *pnso_init)
 			     (pc_init.pnso_init.block_size /
 			      pc_init.rmem_page_size);
 	pc_num_bufs = avail_bufs / num_pc_res;
-	OSAL_LOG_INFO("avail_bufs %u pc_num_bufs %u", avail_bufs, pc_num_bufs);
-	OSAL_ASSERT(avail_bufs && pc_num_bufs);
+	OSAL_LOG_DEBUG("avail_bufs %u pc_num_bufs %u", avail_bufs, pc_num_bufs);
+	if ((err == PNSO_OK) && (!avail_bufs || !pc_num_bufs)) {
+		OSAL_LOG_ERROR("invalid avail_bufs %u or pc_num_bufs %u",
+			       avail_bufs, pc_num_bufs);
+		err = ENOMEM;
+		goto out;
+	}
 
 	/*
 	 * Pass 2: use the calculated pc_num_bufs to allocate
@@ -92,6 +114,7 @@ pnso_init(struct pnso_init_params *pnso_init)
 		err = pc_res_interm_buf_init(&pc_init, pc_res, pc_num_bufs);
 	}
 
+out:
 	if (err != PNSO_OK)
 		pnso_deinit();
 
@@ -112,6 +135,9 @@ pnso_deinit(void)
 		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
 		pc_res_deinit(pc_res);
 	}
+
+	if (osal_rmem_addr_valid(pad_buffer))
+		osal_rmem_free(pad_buffer, PNSO_MEM_ALIGN_PAGE);
 }
 
 static pnso_error_t
@@ -120,14 +146,21 @@ pc_res_init(struct pc_res_init_params *pc_init,
 {
 	pnso_error_t err;
 
-	OSAL_ASSERT(is_power_of_2(pc_init->pnso_init.block_size) &&
-		    is_power_of_2(pc_init->rmem_page_size));
-	OSAL_ASSERT(sonic_rmem_avail_pages_get());
+	if (!is_power_of_2(pc_init->pnso_init.block_size) ||
+	    !is_power_of_2(pc_init->rmem_page_size)) {
+
+		OSAL_LOG_ERROR("block_size or rmem_page_size not power of 2");
+		return EINVAL;
+	}
+
+	if (!sonic_rmem_avail_pages_get()) {
+		OSAL_LOG_ERROR("no rmem pages left");
+		return ENOMEM;
+	}
 
 	err = cpdc_init_accelerator(pc_init, pc_res);
-	if (err == PNSO_OK) {
+	if (err == PNSO_OK)
 		err = crypto_init_accelerator(pc_init, pc_res);
-	}
 
 	return err;
 }
@@ -153,15 +186,19 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 	 * each vector handles the max request buffer size.
 	 */
         num_buf_vecs = pc_num_bufs / INTERM_BUF_NOMINAL_NUM_BUFS;
-	OSAL_ASSERT(num_buf_vecs);
+	if (!num_buf_vecs) {
+		OSAL_LOG_ERROR("failure: zero num_buf_vecs");
+		return ENOMEM;
+	}
 
 	err = mpool_create(MPOOL_TYPE_RMEM_INTERM_BUF, num_buf_vecs,
-			   INTERM_BUF_NOMINAL_NUM_BUFS * pc_init->pnso_init.block_size,
-			   PNSO_MEM_ALIGN_NONE,
+			   INTERM_BUF_NOMINAL_NUM_BUFS,
+			   pc_init->pnso_init.block_size, PNSO_MEM_ALIGN_NONE,
 			   &pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
 	if (!err)
 		err = mpool_create(MPOOL_TYPE_CHAIN_SGL_PDMA,
 			   pc_init->max_seq_sq_descs,
+			   MPOOL_VEC_ELEM_SINGLE,
 			   sizeof(struct chain_sgl_pdma),
 			   sizeof(struct chain_sgl_pdma),
 			   &pc_res->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);

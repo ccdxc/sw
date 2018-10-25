@@ -33,7 +33,7 @@ void *seq_setup_cpdc_chain_desc(struct chain_entry *centry,
 
 void seq_cleanup_cpdc_chain(const struct service_info *svc_info);
 
-void  *seq_setup_crypto_chain(struct service_info *svc_info,
+pnso_error_t seq_setup_crypto_chain(struct service_info *svc_info,
 			struct crypto_desc *desc);
 void seq_cleanup_crypto_chain(const struct service_info *svc_info);
 
