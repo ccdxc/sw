@@ -242,7 +242,7 @@ struct test_testcase {
 	struct test_node node;
 	char name[TEST_MAX_NAME_LEN];
 	bool turbo;
-	uint32_t repeat;
+	uint64_t repeat;
 	uint16_t batch_depth;
 	uint16_t sync_mode;
 	uint32_t svc_chain_count;

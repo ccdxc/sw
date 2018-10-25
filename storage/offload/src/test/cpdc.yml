@@ -31,6 +31,17 @@ tests:
             idx: 1
             retcode: 0
             svc_retcodes: 0
+        - size_compare:
+            idx: 2
+            type: lt
+            file1: '1_compressed.bin'
+            val: '$1block'
+        #- data_compare:
+        #    idx: 3
+        #    file1: '1_compressed.bin'
+        #    pattern: 0x00
+        #    offset: 2048
+        #    len: 2048
   - test:
       idx: 2
       svc_chains: 2

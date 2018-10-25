@@ -366,7 +366,7 @@ static void dump_testcase(struct test_testcase *testcase)
 	if (testcase->name[0]) {
 		PNSO_LOG_INFO("    Name %s\n", testcase->name);
 	}
-	PNSO_LOG_INFO("    Repeat %u\n", testcase->repeat);
+	PNSO_LOG_INFO("    Repeat %llu\n", (unsigned long long) testcase->repeat);
 	PNSO_LOG_INFO("    Batch depth %u\n", testcase->batch_depth);
 	PNSO_LOG_INFO("    Sync mode %u\n", testcase->sync_mode);
 	for (i = 0; i < testcase->svc_chain_count; i++) {
@@ -872,7 +872,7 @@ FUNC_SET_STRING(test_set_input_file, ((struct test_svc_chain *)parent)->input.pa
 FUNC_SET_STRING(test_set_input_pattern, ((struct test_svc_chain *)parent)->input.pattern, TEST_MAX_PATTERN_LEN)
 FUNC_SET_STRING(test_set_output_file, ((struct test_svc *)parent)->output_path, TEST_MAX_PATH_LEN)
 
-FUNC_SET_INT(test_set_testcase_repeat, ((struct test_testcase *)parent)->repeat, 0, UINT_MAX)
+FUNC_SET_INT(test_set_testcase_repeat, ((struct test_testcase *)parent)->repeat, 0, LLONG_MAX)
 FUNC_SET_INT(test_set_testcase_turbo, ((struct test_testcase *)parent)->turbo, 0, 1)
 FUNC_SET_INT(test_set_testcase_batch_depth, ((struct test_testcase *)parent)->batch_depth, 1, TEST_MAX_BATCH_DEPTH)
 FUNC_SET_PARAM(test_set_testcase_sync_mode, ((struct test_testcase *)parent)->sync_mode,

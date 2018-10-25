@@ -287,7 +287,10 @@ static pnso_error_t test_read_input(const char *path,
 	return err;
 }
 
-static struct pnso_buffer_list *test_alloc_buffer_list(uint32_t count, uint32_t total_bytes)
+#define POISIN_BYTE 'P'
+static struct pnso_buffer_list *test_alloc_buffer_list(uint32_t count,
+						       uint32_t total_bytes,
+						       bool poisin)
 {
 	struct pnso_buffer_list *buflist;
 	uint8_t *data;
@@ -308,6 +311,8 @@ static struct pnso_buffer_list *test_alloc_buffer_list(uint32_t count, uint32_t 
 		TEST_FREE(buflist);
 		return NULL;
 	}
+	if (poisin)
+		memset(data, POISIN_BYTE, count*block_size);
 
 	buflist->count = count;
 	for (i = 0; i < count; i++) {
@@ -1128,7 +1133,10 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 						 TEST_OUTPUT_FLAG_TINY) ? 1 :
 						(output_len /
 						 batch_ctx->desc->init_params.block_size),
-						output_len);
+						output_len,
+						!testcase->turbo &&
+						svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS &&
+						(svc->svc.u.cp_desc.flags & PNSO_CP_DFLAG_ZERO_PAD));
 				if (!svc_status->u.dst.sgl) {
 					PNSO_LOG_TRACE(
 						"Out of memory for output_buf\n");
@@ -2326,7 +2334,7 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 	struct pnso_buffer_list *buflists[UNIT_TEST_BUFLIST_COUNT] = { NULL };
 
 	for (i = 0; i < UNIT_TEST_BUFLIST_COUNT; i++) {
-		buflists[i] = test_alloc_buffer_list((i+1)*2, UNIT_TEST_BUFLIST_SIZE);
+		buflists[i] = test_alloc_buffer_list((i+1)*2, UNIT_TEST_BUFLIST_SIZE, false);
 		if (!buflists[i]) {
 			err = ENOMEM;
 			safe_strcpy(reason, "test_alloc_buffer_list",
