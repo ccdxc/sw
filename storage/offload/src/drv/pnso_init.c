@@ -23,6 +23,7 @@
 #include "pnso_chain_params.h"
 
 uint64_t pad_buffer;
+static bool pnso_initialized;
 
 static uint32_t
 seq_sq_descs_total_get(struct lif *lif);
@@ -51,6 +52,9 @@ pnso_init(struct pnso_init_params *pnso_init)
 	uint32_t			pc_num_bufs;
 	uint32_t			i;
 	pnso_error_t			err = PNSO_OK;
+
+	if (pnso_initialized)
+		return PNSO_OK;
 
 	pad_buffer = osal_rmem_aligned_calloc(PNSO_MEM_ALIGN_PAGE,
 			PNSO_MEM_ALIGN_PAGE);
@@ -115,6 +119,8 @@ pnso_init(struct pnso_init_params *pnso_init)
 	}
 
 out:
+	pnso_initialized = true;
+
 	if (err != PNSO_OK)
 		pnso_deinit();
 
@@ -130,6 +136,9 @@ pnso_deinit(void)
 	uint32_t			num_pc_res;
 	uint32_t			i;
 
+	if (!pnso_initialized)
+		return;
+
 	num_pc_res = sonic_get_num_per_core_res(lif);
 	for (i = 0; i < num_pc_res; i++) {
 		pc_res = sonic_get_per_core_res_by_res_id(lif, i);
@@ -138,6 +147,8 @@ pnso_deinit(void)
 
 	if (osal_rmem_addr_valid(pad_buffer))
 		osal_rmem_free(pad_buffer, PNSO_MEM_ALIGN_PAGE);
+
+	pnso_initialized = false;
 }
 
 static pnso_error_t
