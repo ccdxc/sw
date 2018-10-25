@@ -7,6 +7,7 @@
 #include <net.h>
 #include <kernel.h>
 
+#include "osal.h"
 #include "osal_logger.h"
 #include "osal_setup.h"
 #include "osal_rmem.h"
@@ -58,7 +59,7 @@ pnso_init(struct pnso_init_params *pnso_init)
 		err = ENOMEM;
 		goto out;
 	}
-	OSAL_LOG_DEBUG("pad buffer allocated: 0x%llx", pad_buffer);
+	OSAL_LOG_DEBUG("pad buffer allocated: 0x" PRIx64, pad_buffer);
 
 	memset(&pc_init, 0, sizeof(pc_init));
 	pc_init.pnso_init = *pnso_init;

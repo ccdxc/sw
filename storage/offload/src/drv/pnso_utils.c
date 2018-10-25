@@ -3,6 +3,7 @@
  * All rights reserved.
  *
  */
+#include "osal.h"
 #include "sonic_api_int.h"
 
 #include "pnso_utils.h"
@@ -410,8 +411,8 @@ pc_res_mpool_get(const struct per_core_resource *pc_res,
 		return pc_res->mpools[type];
 	}
 
-	OSAL_LOG_ERROR("invalid pc_res 0x%llx or mpool type %s", (uint64_t)pc_res,
-			mem_pool_get_type_str(type));
+	OSAL_LOG_ERROR("invalid pc_res 0x"PRIx64" or mpool type %s",
+		       (uint64_t)pc_res, mem_pool_get_type_str(type));
 	return NULL;
 }
 
@@ -499,10 +500,10 @@ pprint_chain_sgl_pdma(uint64_t sgl_pa)
 
 	if (sgl_pa) {
 		sgl = (const struct chain_sgl_pdma *) sonic_phy_to_virt(sgl_pa);
-		OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x%llx", "", (uint64_t)sgl, sgl_pa);
+		OSAL_LOG_DEBUG("%30s: 0x"PRIx64" ==> 0x"PRIx64, "", (uint64_t)sgl, sgl_pa);
 		tuple = sgl->tuple;
-		OSAL_LOG_DEBUG("%30s: 0x%llx/%d 0x%llx/%d 0x%llx/%d "
-				"0x%llx/%d", "",
+		OSAL_LOG_DEBUG("%30s: 0x"PRIx64"/%d 0x"PRIx64"/%d 0x"PRIx64"/%d "
+				"0x"PRIx64"/%d", "",
 				tuple[0].addr, tuple[0].len,
 				tuple[1].addr, tuple[1].len,
 				tuple[2].addr, tuple[2].len,

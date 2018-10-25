@@ -1066,8 +1066,7 @@ exec_cp_encrypt_req(struct thread_state *tstate)
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_COMPRESS);
 		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-		if (!tstate->suppress_chain_interm_dst)
-			svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
+		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
 		svc_req->svc[0].u.cp_desc.threshold_len = 
 			(rstate->buflists[0].buflist->count * PNSO_TEST_BLOCK_SIZE) - 8;
 
@@ -1110,7 +1109,8 @@ exec_decrypt_dc_req(struct thread_state *tstate)
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_DECRYPT);
 		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_DECRYPT;
-		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
+		if (!tstate->suppress_chain_interm_dst)
+			svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
 
 		init_svc_desc(&svc_req->svc[1], PNSO_SVC_TYPE_DECOMPRESS);
 		memset(&svc_res->svc[1], 0, sizeof(struct pnso_service_status));

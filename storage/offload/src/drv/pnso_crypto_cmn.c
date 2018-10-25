@@ -21,14 +21,14 @@ crypto_pprint_aol(uint64_t aol_pa)
 
 	aol = (const struct crypto_aol *) sonic_phy_to_virt(aol_pa);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x%llx", "", (uint64_t) aol, aol_pa);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64" ==> 0x"PRIx64, "", (uint64_t) aol, aol_pa);
 	while (aol) {
-		OSAL_LOG_DEBUG("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
-				"",
+		OSAL_LOG_DEBUG("%30s: 0x"PRIx64"/%d/%d 0x"PRIx64"/%d/%d 0x"PRIx64
+				"/%d/%d", "",
 				aol->ca_addr_0, aol->ca_off_0, aol->ca_len_0,
 				aol->ca_addr_1, aol->ca_off_1, aol->ca_len_1,
 				aol->ca_addr_2, aol->ca_off_2, aol->ca_len_2);
-		OSAL_LOG_DEBUG("%30s: 0x%llx/0x%llx", "",
+		OSAL_LOG_DEBUG("%30s: 0x"PRIx64"/0x"PRIx64, "",
 				aol->ca_next, aol->ca_rsvd);
 
 		aol = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) : NULL;
@@ -54,21 +54,21 @@ crypto_pprint_desc(const struct crypto_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "crypto_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "crypto_desc", (uint64_t) desc);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_src", desc->cd_in_aol);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_dst", desc->cd_out_aol);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "cd_src", desc->cd_in_aol);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "cd_dst", desc->cd_out_aol);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== crypto_cmd", (uint64_t)&desc->cd_cmd);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "=== crypto_cmd", (uint64_t)&desc->cd_cmd);
 	crypto_pprint_cmd(&desc->cd_cmd);
 
 	OSAL_LOG_DEBUG("%30s: %d", "cd_key_desc_idx", desc->cd_key_desc_idx);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_iv_addr", desc->cd_iv_addr);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "cd_iv_addr", desc->cd_iv_addr);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_auth_tag", desc->cd_auth_tag);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "cd_auth_tag", desc->cd_auth_tag);
 
 	OSAL_LOG_DEBUG("%30s: %d", "cd_hdr_size", desc->cd_hdr_size);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_status_addr", desc->cd_status_addr);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "cd_status_addr", desc->cd_status_addr);
 
 	OSAL_LOG_DEBUG("%30s: %d", "cd_otag", desc->cd_otag);
 	OSAL_LOG_DEBUG("%30s: %d", "cd_otag_on", desc->cd_otag_on);
@@ -78,13 +78,13 @@ crypto_pprint_desc(const struct crypto_desc *desc)
 	OSAL_LOG_DEBUG("%30s: %d", "cd_app_tag", desc->cd_app_tag);
 	OSAL_LOG_DEBUG("%30s: %d", "cd_sector_num", desc->cd_sector_num);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_db_addr", desc->cd_db_addr);
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_db_data", desc->cd_db_data);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "cd_db_addr", desc->cd_db_addr);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "cd_db_data", desc->cd_db_data);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== cd_in_aol", desc->cd_in_aol);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "=== cd_in_aol", desc->cd_in_aol);
 	crypto_pprint_aol(desc->cd_in_aol);
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== cd_out_aol", desc->cd_out_aol);
+	OSAL_LOG_DEBUG("%30s: 0x"PRIx64, "=== cd_out_aol", desc->cd_out_aol);
 	crypto_pprint_aol(desc->cd_out_aol);
 }
 

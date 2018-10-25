@@ -275,7 +275,7 @@ mpool_create(enum mem_pool_type mpool_type,
 	obj = (char *) mpool->mp_objects;
 	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
 		objects[i] = obj;
-		OSAL_LOG_DEBUG("%30s[%d]: 0x%llx 0x%llx 0x%llx %u %u %u",
+		OSAL_LOG_DEBUG("%30s[%d]: 0x"PRIx64" 0x"PRIx64" 0x"PRIx64" %u %u %u",
 			       "mpool->mp_dstack.mps_objects", i,
 			       (uint64_t) &objects[i], (uint64_t) objects[i],
 			       (uint64_t) mpool_get_object_phy_addr(mpool_type, objects[i]),

@@ -898,7 +898,7 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 	desc->cd_db_addr = sonic_get_lif_local_dbaddr();
 	desc->cd_db_data = sonic_q_ringdb_data(seq_spec->sqs_seq_status_q, statusq_index);
 
-	OSAL_LOG_DEBUG("ring_id: %u index: %u desc: 0x%llx",
+	OSAL_LOG_DEBUG("ring_id: %u index: %u desc: 0x"PRIx64,
 		       seq_info->sqi_ring_id, statusq_index, (uint64_t)desc);
 	fill_crypto_seq_status_desc(&svc_info->si_crypto_chain,
                                     seq_info->sqi_status_desc);

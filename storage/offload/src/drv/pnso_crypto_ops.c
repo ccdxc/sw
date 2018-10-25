@@ -41,20 +41,18 @@ crypto_validate_input(struct service_info *svc_info,
 	struct pnso_crypto_desc	*pnso_crypto_desc;
 
 	if (!svc_info || !svc_params) {
-		OSAL_LOG_ERROR("invalid svc_info 0x%llx or svc_params 0x%llx!",
-				(uint64_t)svc_info, (uint64_t)svc_params);
+		OSAL_LOG_ERROR("null svc_info or svc_params specified");
 		return EINVAL;
 	}
 
 	if (!svc_info->si_src_blist.blist) {
-		OSAL_LOG_ERROR("null si_src_blist");
+		OSAL_LOG_ERROR("null si_src_blist specified");
 		return EINVAL;
 	}
 
 	pnso_crypto_desc = svc_params->u.sp_crypto_desc;
 	if (!pnso_crypto_desc) {
-		OSAL_LOG_ERROR("invalid desc 0x%llx specified!",
-				(uint64_t)pnso_crypto_desc);
+		OSAL_LOG_ERROR("null crypto_desc specified");
 		return EINVAL;
 	}
 
@@ -66,8 +64,7 @@ crypto_validate_input(struct service_info *svc_info,
 	}
 
 	if (!pnso_crypto_desc->iv_addr) {
-		OSAL_LOG_ERROR("invalid iv_addr 0x%llx specified!",
-				pnso_crypto_desc->iv_addr);
+		OSAL_LOG_ERROR("null iv_addr specified");
 		return EINVAL;
 	}
 
