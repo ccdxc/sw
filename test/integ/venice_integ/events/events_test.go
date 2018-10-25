@@ -867,6 +867,11 @@ func TestEventsAlertEngine(t *testing.T) {
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
 
+	alertPolicy3 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_WARNING,
+		"policy with no reqs", []*fields.Requirement{}, []string{})
+	alertPolicy3, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy3)
+	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+
 	// generate events
 	// define list of events to be recorded
 	dummyObjRef := &cluster.Node{
@@ -1023,6 +1028,7 @@ func TestEventsAlertEngine(t *testing.T) {
 	}{
 		{policyMeta: alertPolicy1.GetObjectMeta(), totalHits: 8, openAlerts: 8, acknowledgedAlerts: 0},
 		{policyMeta: alertPolicy2.GetObjectMeta(), totalHits: 8, openAlerts: 5, acknowledgedAlerts: 0},
+		{policyMeta: alertPolicy3.GetObjectMeta(), totalHits: 0, openAlerts: 0, acknowledgedAlerts: 0}, // no reqs so, there should be no alerts
 	}
 	for _, as := range expectedAlertStatus {
 		AssertEventually(t, func() (bool, interface{}) {

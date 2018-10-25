@@ -47,24 +47,7 @@ func CreateElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.Certificate) (string, string, error) {
 	log.Info("starting elasticsearch ..")
 
-	// set max_map_count; this is a must requirement to run elasticsearch
-	// https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
-	//
-	// this need to be set manually for docker for mac using the below commands:
-	// $ screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty
-	// $ sysctl -w vm.max_map_count=262144
-	//
-	if runtime.GOOS != "darwin" {
-		if out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput(); err != nil {
-			log.Errorf("failed to set max_map_count %s, err: %v", out, err)
-			return "", "", err
-		}
-	} else {
-		fmt.Println("\n++++++ run this one time setup commands from your mac if you haven't done yet +++++++\n" +
-			"screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty\n" +
-			"on the blank screen, press return and run: sysctl -w vm.max_map_count=262144")
-		fmt.Println()
-	}
+	setMaxMapCount()
 
 	var authDir string
 	if signer != nil {
@@ -252,5 +235,32 @@ func createElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 			}
 			return esClient, nil
 		}
+	}
+}
+
+func setMaxMapCount() {
+	// set max_map_count; this is a must requirement to run elasticsearch
+	// https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+	//
+	// this need to be set manually for docker for mac using the below commands:
+	// $ screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty
+	// $ sysctl -w vm.max_map_count=262144
+	//
+	if runtime.GOOS == "darwin" {
+		fmt.Println("\n++++++ run this one time setup commands from your mac if you haven't done yet +++++++\n" +
+			"screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty\n" +
+			"on the blank screen, press return and run: sysctl -w vm.max_map_count=262144")
+		fmt.Println()
+		return
+	}
+
+	fmt.Println("\n++++++ setting vm.max_map_count=262144 +++++++")
+	out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput()
+	outStr := strings.TrimSpace(string(out))
+	if err != nil || outStr != "vm.max_map_count = 262144" {
+		fmt.Println(fmt.Sprintf("failed to set max_map_count: %s, err: %v\n", outStr, err) +
+			"run the below command manually on your machine if you haven't done yet\n" +
+			"sysctl -w vm.max_map_count=262144")
+		fmt.Println()
 	}
 }

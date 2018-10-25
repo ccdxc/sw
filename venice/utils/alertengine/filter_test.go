@@ -167,6 +167,10 @@ func TestFilter(t *testing.T) {
 			},
 			expSuccess: false,
 		},
+		{
+			reqs:       []*fields.Requirement{},
+			expSuccess: false,
+		},
 	}
 
 	for i, test := range tests {

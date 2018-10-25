@@ -11,6 +11,10 @@ import (
 // returns true or false accordingly. Also, Observed values for each requirement is
 // returned as set of monitoring.MatchedRequirement.
 func Match(reqs []*fields.Requirement, obj runtime.Object) (bool, []*monitoring.MatchedRequirement) {
+	if len(reqs) == 0 {
+		return false, nil
+	}
+
 	fs := &fields.Selector{
 		Requirements: reqs,
 	}
