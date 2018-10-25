@@ -1,8 +1,8 @@
 #ifndef __CAPRI_MACROS_H__
 #define __CAPRI_MACROS_H__
 
-#include <capri_common.h>
-#include <capri_barco.h>
+#include "nic/include/capri_common.h"
+#include "nic/include/capri_barco.h"
 
 #define CAPRI_READ_IDX(_idx, _table_type, _stage_entry) \
         addi        r1, r0, _idx                                    ;\

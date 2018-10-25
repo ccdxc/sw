@@ -9,8 +9,12 @@ struct phv_ p;
 struct rx_table_s2_t0_k_ k;
 struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 
-#define  _r_desc_addr       r1    // Descriptor address
-#define  _r_cq_desc_addr    r2    // CQ descriptor address
+#define  _c_queue_disabled    c1
+#define  _c_queue_empty       c2
+
+#define  _r_desc_addr         r1    // Descriptor address
+#define  _r_cq_desc_addr      r2    // CQ descriptor address
+#define  _r_stats             r3    // Stats
 
 %%
 
@@ -18,11 +22,15 @@ struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 
 .align
 eth_rx_fetch_desc:
-  seq             c1, d.enable, 0
-  bcf             [c1], eth_rx_queue_disabled
-  seq             c2, d.p_index0, d.c_index0
-  bcf             [c2], eth_rx_queue_nobuf
+  LOAD_STATS(_r_stats)
+
+  seq             _c_queue_disabled, d.enable, 0
+  bcf             [_c_queue_disabled], eth_rx_queue_disabled
+  seq             _c_queue_empty, d.p_index0, d.c_index0
+  bcf             [_c_queue_empty], eth_rx_queue_nobuf
   nop
+
+  SET_STAT(_r_stats, _C_TRUE, queue_scheduled)
 
   // Compute descriptor fetch address
   add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_RX_DESC_SIZE
@@ -39,14 +47,16 @@ eth_rx_fetch_desc:
 
   // Update color
   phvwr           p.eth_rx_cq_desc_color, d.color
-  seq             c1, d.comp_index, 0
-  tblmincri.c1    d.color, 1, 1
+  seq             c7, d.comp_index, 0
+  tblmincri.c7    d.color, 1, 1
 
   // Setup Descriptor read for next stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
   phvwri          p.common_te0_phv_table_lock_en, 0
   phvwri          p.common_te0_phv_table_pc, eth_rx[38:6]
   phvwrpair       p.common_te0_phv_table_raw_table_size, LG2_RX_DESC_SIZE, p.common_te0_phv_table_addr, _r_desc_addr
+
+  SAVE_STATS(_r_stats)
 
   // Save completion and interrupt information
   phvwr           p.eth_rx_global_host_queue, d.host_queue
@@ -57,5 +67,10 @@ eth_rx_fetch_desc:
 
 eth_rx_queue_nobuf:
 eth_rx_queue_disabled:
+  SET_STAT(_r_stats, _c_queue_disabled, queue_disabled_drop)
+  SET_STAT(_r_stats, _c_queue_empty, queue_empty_drop)
+
+  SAVE_STATS(_r_stats)
+
   phvwri.e        p.p4_intr_global_drop, 1
   phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0

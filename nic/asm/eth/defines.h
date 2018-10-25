@@ -1,6 +1,7 @@
 
-
-#include "capri-macros.h"
+#include "nic/include/capri_common.h"
+#include "nic/p4/common/defines.h"
+#include "nic/asm/common-p4+/include/capri-macros.h"
 
 struct phv2pkt {
     rsvd: 41;
@@ -105,7 +106,20 @@ struct mem2mem {
 #define SIZEOF_FIELD_RANGE(_s, _f1, _fn) \
     (offsetof(_s, _f1) + sizeof(_s._f1) - offsetof(_s, _fn))
 
+// Constants
+#define _C_TRUE          c0
+#define _C_FALSE        !c0
 
+/*
+ * Stats
+ */
+#define LIF_STATS_SIZE          (4096)      // Size of per lif stats
+#define LIF_STATS_RX_OFFSET     (0)         // Relative (to lif stats) offset of RX stats
+#define LIF_STATS_TX_OFFSET     (2048)      // Relative (to lif stats) offset of TX stats
+
+/*
+ * DMA command macros
+ */
 #define DMA_CMD_PTR(_r_ptr, _r_index, _r_tmp) \
     sll         _r_ptr, _r_index[6:2], LOG_NUM_BITS_PER_FLIT; \
     add         _r_tmp, _r_index[1:0], 1; \
@@ -324,3 +338,76 @@ struct mem2mem {
     phvwrp      _r, offsetof(struct mem2mem, addr), sizeof(struct mem2mem.addr), _addr; \
     phvwrp      _r, offsetof(struct mem2mem, size), sizeof(struct mem2mem.size), _size; \
     phvwrp._c   _r, offsetof(struct mem2mem, cmd_eop), sizeof(struct mem2mem.cmd_eop), 1;
+
+/**
+ * Atomic Counters
+ */
+
+#define ATOMIC_INC_VAL_1(_r_b, _r_o, _r_a, _r_v, _v0)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.d     _r_a, _r_v
+
+#define ATOMIC_INC_VAL_2(_r_b, _r_o, _r_a, _r_v, _v0, _v1)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 32; \
+    or          _r_v, _r_v, 1, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.d     _r_a, _r_v
+
+#define ATOMIC_INC_VAL_3(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 16; \
+    or          _r_v, _r_v, _v2, 32; \
+    or          _r_v, _r_v, 2, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.d     _r_a, _r_v
+
+#define ATOMIC_INC_VAL_4(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 16; \
+    or          _r_v, _r_v, _v2, 32; \
+    or          _r_v, _r_v, _v3, 48; \
+    or          _r_v, _r_v, 2, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.d     _r_a, _r_v
+
+#define ATOMIC_INC_VAL_5(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 8; \
+    or          _r_v, _r_v, _v2, 16; \
+    or          _r_v, _r_v, _v3, 24; \
+    or          _r_v, _r_v, _v4, 32; \
+    or          _r_v, _r_v, 3, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.d     _r_a, _r_v
+
+#define ATOMIC_INC_VAL_6(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4, _v5)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 8; \
+    or          _r_v, _r_v, _v2, 16; \
+    or          _r_v, _r_v, _v3, 24; \
+    or          _r_v, _r_v, _v4, 32; \
+    or          _r_v, _r_v, _v5, 40; \
+    or          _r_v, _r_v, 3, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.d     _r_a, _r_v
+
+#define ATOMIC_INC_VAL_7(_r_b, _r_o, _r_a, _r_v, _v0, _v1, _v2, _v3, _v4, _v5, _v6)   \
+    add         _r_a, _r_b, _r_o[26:0]; \
+    or          _r_v, r0, _v0; \
+    or          _r_v, _r_v, _v1, 8; \
+    or          _r_v, _r_v, _v2, 16; \
+    or          _r_v, _r_v, _v3, 24; \
+    or          _r_v, _r_v, _v4, 32; \
+    or          _r_v, _r_v, _v5, 40; \
+    or          _r_v, _r_v, _v6, 48; \
+    or          _r_v, _r_v, 3, 56; \
+    or          _r_v, _r_v, _r_o[31:27], 58; \
+    memwr.d     _r_a, _r_v

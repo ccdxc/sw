@@ -3,8 +3,7 @@
 #include "ingress.h"
 #include "INGRESS_tx_table_s2_t0_k.h"
 
-#include "../../asm/eth/tx/defines.h"
-#include "nic/p4/common/defines.h"
+#include "defines.h"
 
 struct phv_ p;
 struct tx_table_s2_t0_k_ k;
@@ -142,7 +141,7 @@ eth_tx_commit_done:
   nop
 
 eth_tx_commit_eval_db:
-  CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.eth_tx_to_s2_qtype, k.eth_tx_to_s2_lif)   // R4 = ADDR
+  CAPRI_RING_DOORBELL_ADDR_HOST(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.eth_tx_to_s2_qtype, k.eth_tx_global_lif)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.eth_tx_to_s2_qid, 0, 0)   // R3 = DATA
   memwr.dx.e      _r_dbaddr, _r_dbval
   nop

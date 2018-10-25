@@ -2,8 +2,7 @@
 #include "INGRESS_p.h"
 #include "INGRESS_tx_table_s7_t0_k.h"
 
-#include "../../asm/eth/tx/defines.h"
-#include "nic/p4/common/defines.h"
+#include "defines.h"
 
 #define __ASSEMBLY__
 
@@ -15,6 +14,7 @@ struct phv_ p;
 struct tx_table_s7_t0_k_ k;
 
 #define   _r_intr_addr  r1        // Interrupt Assert Address
+#define   _r_stats      r2        // Stats
 #define   _r_ptr        r5        // Current DMA byte offset in PHV
 #define   _r_index      r6        // Current DMA command index in PHV
 
@@ -29,6 +29,7 @@ struct tx_table_s7_t0_k_ k;
 
 .align
 eth_tx_completion:
+    LOAD_STATS(_r_stats)
 
     bbeq             k.eth_tx_global_cq_entry, 0, eth_tx_completion_skip
 
@@ -36,6 +37,7 @@ eth_tx_completion:
     add             _r_index, r0, k.eth_tx_global_dma_cur_index
 
 eth_tx_completion_entry:
+    SET_STAT(_r_stats, _C_TRUE, cqe)
 
     // Do we need to generate an interrupt
     seq             c1, k.eth_tx_global_intr_enable, 1
@@ -49,6 +51,7 @@ eth_tx_completion_entry:
     nop
 
 eth_tx_completion_interrupt:
+    SET_STAT(_r_stats, _C_TRUE, intr)
 
     addi            _r_intr_addr, r0, INTR_ASSERT_BASE
     add             _r_intr_addr, _r_intr_addr, k.eth_tx_t0_s2s_intr_assert_index, LG2_INTR_ASSERT_STRIDE
@@ -59,6 +62,7 @@ eth_tx_completion_interrupt:
     DMA_CMD_NEXT(_r_index)
 
 eth_tx_completion_done:
+    SAVE_STATS(_r_stats)
 
     // End of pipeline - Make sure no more tables will be launched
     phvwri.e.f      p.{app_header_table0_valid...app_header_table3_valid}, 0

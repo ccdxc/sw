@@ -6,6 +6,8 @@
 struct tx_stats_k k;
 struct phv_       p;
 
+#define DROP_(pkt_type)     ((1 << 2) | pkt_type)
+
 %%
 
 tx_stats:
@@ -18,37 +20,37 @@ tx_stats:
     addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
     .brbegin
     br          r1[2:0]
-    add         r5, r5, k.control_metadata_src_lif, 9
-    .brcase 0
-    add         r5, r5, LIF_STATS_TX_UCAST_OFFSET
+    add         r5, r5, k.control_metadata_src_lif, LIF_STATS_SIZE_SHIFT
+    .brcase PACKET_TYPE_UNICAST
+    add         r5, r5, LIF_STATS_TX_UCAST_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or.e        r7, r7, r5[31:27], 58
     memwr.dx    r6, r7
-    .brcase 1
-    add         r5, r5, LIF_STATS_TX_MCAST_OFFSET
+    .brcase PACKET_TYPE_MULTICAST
+    add         r5, r5, LIF_STATS_TX_MCAST_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or.e        r7, r7, r5[31:27], 58
     memwr.dx    r6, r7
-    .brcase 2
-    add         r5, r5, LIF_STATS_TX_BCAST_OFFSET
+    .brcase PACKET_TYPE_BROADCAST
+    add         r5, r5, LIF_STATS_TX_BCAST_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or.e        r7, r7, r5[31:27], 58
     memwr.dx    r6, r7
     .brcase 3
     nop.e
     nop
-    .brcase 4
-    add         r5, r5, LIF_STATS_TX_UCAST_DROP_OFFSET
+    .brcase DROP_(PACKET_TYPE_UNICAST)
+    add         r5, r5, LIF_STATS_TX_UCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or.e        r7, r7, r5[31:27], 58
     memwr.dx    r6, r7
-    .brcase 5
-    add         r5, r5, LIF_STATS_TX_MCAST_DROP_OFFSET
+    .brcase DROP_(PACKET_TYPE_MULTICAST)
+    add         r5, r5, LIF_STATS_TX_MCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or.e        r7, r7, r5[31:27], 58
     memwr.dx    r6, r7
-    .brcase 6
-    add         r5, r5, LIF_STATS_TX_BCAST_DROP_OFFSET
+    .brcase DROP_(PACKET_TYPE_BROADCAST)
+    add         r5, r5, LIF_STATS_TX_BCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or.e        r7, r7, r5[31:27], 58
     memwr.dx    r6, r7

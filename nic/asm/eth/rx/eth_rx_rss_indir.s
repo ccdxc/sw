@@ -29,6 +29,7 @@ eth_rx_rss_indir:
 
     // Pass RSS hash to the driver in the completion entry
     phvwr           p.eth_rx_cq_desc_rss_hash, r1.wx
+    phvwr           p.eth_rx_global_stats[STAT_oper_rss], 1
 
     // Compute Qstate address for d.qid
     add             r5, k.toeplitz_key2_data[33:0], d.qid, LG2_RX_QSTATE_SIZE

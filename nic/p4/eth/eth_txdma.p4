@@ -163,6 +163,8 @@ header_type eth_tx_global_k {
         host_queue : 1;
         cq_entry : 1;   // generate a completion
         intr_enable : 1;    // generate an interrupt
+        lif : 11;
+        stats : 32;
     }
 }
 
@@ -196,7 +198,6 @@ header_type eth_tx_to_s1_k {
 
 header_type eth_tx_to_s2_k {
     fields {
-        lif : 11;
         qtype : 3;
         qid : 24;
         my_ci : 16;
@@ -228,6 +229,33 @@ header_type eth_tx_to_s6_k {
         HEADER_TX_DESC(3)
     }
 }
+
+/*header_type eth_tx_t3_s2s_k {
+    fields {
+        // queue stats
+        queue_disabled : 1;
+        queue_scheduled : 1;
+        // descriptor stats
+        desc_addr_error : 1;
+        // descriptor opcode counters
+        desc_opcode_invalid : 1;
+        desc_opcode_csum_none : 1;
+        desc_opcode_csum_partial : 1;
+        desc_opcode_csum_hw : 1;
+        desc_opcode_tso : 1;
+        // operation stats (upto 64 bits combined)
+        oper_sg : 1;
+        oper_tso_sg : 1;
+        oper_tso_sot : 1;
+        oper_tso_eot : 1;
+        oper_csum_hw : 1;
+        oper_csum_hw_inner : 1;
+        oper_vlan_insert : 1;
+        // completion counters
+        cqe : 1;
+        intr : 1;
+    }
+}*/
 
 /*****************************************************************************
  *  D-vector
@@ -289,7 +317,6 @@ metadata eth_tx_to_s7_k eth_tx_to_s7;
 @pragma scratch_metadata
 metadata eth_tx_to_s7_k eth_tx_to_s7_scratch;
 */
-
 // Stage to Stage headers (Available in STAGES=ALL, MPUS=N)
 @pragma pa_header_union ingress common_t0_s2s
 metadata eth_tx_t0_s2s_k eth_tx_t0_s2s;
@@ -305,12 +332,11 @@ metadata eth_tx_t1_s2s_k eth_tx_t1_s2s_scratch;
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s;
 @pragma scratch_metadata
 metadata eth_tx_t2_s2s_k eth_tx_t2_s2s_scratch;
-/*
-@pragma pa_header_union ingress common_t3_s2s
+
+/*@pragma pa_header_union ingress common_t3_s2s
 metadata eth_tx_t3_s2s_k eth_tx_t3_s2s;
 @pragma scratch_metadata
-metadata eth_tx_t3_s2s_k eth_tx_t3_s2s_scratch;
-*/
+metadata eth_tx_t3_s2s_k eth_tx_t3_s2s_scratch;*/
 
 /*****************************************************************************
  * P-vector

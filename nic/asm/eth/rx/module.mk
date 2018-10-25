@@ -6,9 +6,6 @@ MODULE_PIPELINE     = iris gft
 MODULE_INCS         = ${BLD_P4GEN_DIR}/eth_rxdma_actions/asm_out \
                       ${BLD_P4GEN_DIR}/eth_rxdma_actions/alt_asm_out \
                       ${MODULE_DIR}/.. \
-                      ${TOPDIR}/nic/asm/common-p4+/include \
-                      ${TOPDIR}/nic/p4/include \
-                      ${TOPDIR}/nic/include \
                       ${TOPDIR}/nic/asic/capri/model/cap_top \
                       ${TOPDIR}/nic/asic/capri/model/cap_top/csr_defines
 MODULE_DEPS         = $(shell find ${MODULE_DIR} -name '*.h')

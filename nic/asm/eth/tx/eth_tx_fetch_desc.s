@@ -3,16 +3,19 @@
 #include "ingress.h"
 #include "INGRESS_tx_table_s0_t0_k.h"
 
-#include "../../asm/eth/tx/defines.h"
-#include "nic/p4/common/defines.h"
+#include "defines.h"
 
 struct phv_ p;
 struct tx_table_s0_t0_k_ k;
 struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 
+// NOTE: Be careful while using aliased registers, don't overlap their usage
+// in any codepath.
+
 #define  _r_ringsz      r1    // Ring size
 #define  _r_numtodo     r2    // Number of descriptors to process
-#define  _r_dbval       r3    // Doorbell value
+#define  _r_stats       r3    // Stats              (Alias)
+#define  _r_dbval       r3    // Doorbell value     (Alias)
 #define  _r_dbaddr      r4    // Doorbell address
 #define  _r_tbladdr     r5    // Descriptor address
 #define  _r_tblsz       r6    // Descriptor read size
@@ -23,6 +26,7 @@ struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 
 .align
 eth_tx_fetch_desc:
+
   seq             c1, d.enable, 0
   bcf             [c1], eth_tx_queue_disabled
   seq             c2, d.p_index0, d.c_index0
@@ -47,6 +51,8 @@ eth_tx_fetch_desc:
   bcf             [c1], eth_tx_fetch_drop
 
   sll             _r_ringsz, 1, d.{ring_size}.hx
+
+  SET_STAT(_r_stats, _C_TRUE, queue_scheduled)
 
   // Drop the PHV if we are speculating too far ahead
   sub             r7, d.{ci_fetch}.hx, d.{c_index0}.hx
@@ -77,8 +83,10 @@ eth_tx_fetch_desc:
   // Save data for next stages
   phvwr           p.eth_tx_t0_s2s_num_todo, _r_numtodo
   phvwr           p.eth_tx_to_s1_qstate_addr[33:0], k.p4_txdma_intr_qstate_addr
-  phvwrpair       p.eth_tx_to_s2_lif, k.p4_intr_global_lif, p.eth_tx_to_s2_qtype, k.p4_txdma_intr_qtype
-  phvwrpair       p.eth_tx_to_s2_qid, k.p4_txdma_intr_qid, p.eth_tx_to_s2_my_ci, d.ci_fetch
+  phvwr           p.eth_tx_global_lif, k.p4_intr_global_lif
+  phvwr           p.eth_tx_to_s2_qtype, k.p4_txdma_intr_qtype
+  phvwr           p.eth_tx_to_s2_qid, k.p4_txdma_intr_qid
+  phvwr           p.eth_tx_to_s2_my_ci, d.ci_fetch
 
   // Speculatively claim the descriptors
   tblmincr.f      d.{ci_fetch}.hx, d.{ring_size}.hx, _r_numtodo
@@ -87,6 +95,8 @@ eth_tx_fetch_desc:
   // read_size = (num_todo == 1) ? 16 : 64
   seq             c4, _r_numtodo, 1
   cmov            _r_tblsz, c4, LG2_TX_DESC_SIZE, LG2_TX_DESC_SIZE + 2
+
+  SAVE_STATS(_r_stats)
 
   // Setup Descriptor read for next stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
@@ -98,6 +108,8 @@ eth_tx_spurious_db:
   bcf             [c3], eth_tx_eval_db
   tblmincri.f     d.spurious_db_cnt, LG2_MAX_SPURIOUS_DB, 1
 
+  SAVE_STATS(_r_stats)
+
   phvwri.e        p.p4_intr_global_drop, 1
   phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
 
@@ -107,10 +119,14 @@ eth_tx_eval_db:
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
   memwr.dx        _r_dbaddr, _r_dbval
 
+  SAVE_STATS(_r_stats)
+
   phvwri.e        p.p4_intr_global_drop, 1
   phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 eth_tx_queue_disabled:
+  SET_STAT(_r_stats, _C_TRUE, queue_disabled)
+  SAVE_STATS(_r_stats)
 
   CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA

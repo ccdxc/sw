@@ -72,12 +72,6 @@
 #define FLOW_MISS_ACTION_DROP          1
 #define FLOW_MISS_ACTION_FLOOD         2
 #define FLOW_MISS_ACTION_REDIRECT      3
-/*****************************************************************************/
-/* packet type                                                               */
-/*****************************************************************************/
-#define PACKET_TYPE_UNICAST            0
-#define PACKET_TYPE_MULTICAST          1
-#define PACKET_TYPE_BROADCAST          2
 
 /*****************************************************************************/
 /* NIC mode                                                                  */
@@ -281,17 +275,6 @@
 #define DDOS_TYPE_UDP                  3
 
 #define P4_RECIRC_HDR_SZ               5
-
-/*****************************************************************************/
-/* Classic NIC header flags                                                  */
-/*****************************************************************************/
-#define CLASSIC_NIC_PKT_TYPE_NON_IP     0x000
-#define CLASSIC_NIC_PKT_TYPE_IPV4       0x001
-#define CLASSIC_NIC_PKT_TYPE_IPV4_TCP   0x003
-#define CLASSIC_NIC_PKT_TYPE_IPV4_UDP   0x005
-#define CLASSIC_NIC_PKT_TYPE_IPV6       0x008
-#define CLASSIC_NIC_PKT_TYPE_IPV6_TCP   0x018
-#define CLASSIC_NIC_PKT_TYPE_IPV6_UDP   0x028
 
 /*****************************************************************************/
 /* TCP OPTIONS                                                               */

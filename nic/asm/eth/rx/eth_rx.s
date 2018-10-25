@@ -11,16 +11,19 @@ struct rx_table_s3_t0_eth_rx_packet_d d;
 
 #define   _r_pktlen     r1        // Packet length
 #define   _r_addr       r2        // Buffer address
-#define   _r_len        r3        // Buffer length        
+#define   _r_len        r3        // Buffer length
+#define   _r_stats      r4        // Stats
 #define   _r_ptr        r5        // Current DMA byte offset in PHV
 #define   _r_index      r6        // Current DMA command index in PHV
 
 %%
 
 .param eth_rx_completion
+.param eth_rx_stats
 
 .align
 eth_rx:
+    LOAD_STATS(_r_stats)
 
     bcf             [c2 | c3 | c7], eth_rx_desc_addr_error
     nop
@@ -47,14 +50,24 @@ eth_rx:
     phvwr           p.eth_rx_global_dma_cur_index, _r_index
 
 eth_rx_desc_addr_error:
+    SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
+
     b               eth_rx_done
     phvwri          p.eth_rx_cq_desc_status, ETH_RX_DESC_ADDR_ERROR
 
 eth_rx_desc_data_error:
+    SET_STAT(_r_stats, _C_TRUE, desc_data_error)
+
     b               eth_rx_done
     phvwri          p.eth_rx_cq_desc_status, ETH_RX_DESC_DATA_ERROR
 
 eth_rx_done:
+    SAVE_STATS(_r_stats)
+
+    // Launch eth_rx_stats action
+    phvwri          p.common_te3_phv_table_pc, eth_rx_stats[38:6]
+    phvwri          p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+
     // Launch eth_rx_completion stage
     phvwri.e        p.common_te0_phv_table_pc, eth_rx_completion[38:6]
     phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

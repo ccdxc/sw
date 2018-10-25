@@ -14,6 +14,7 @@
 #define rx_table_s2_t0_action eth_rx_fetch_desc
 #define rx_table_s3_t0_action eth_rx_packet
 #define rx_table_s4_t0_action eth_rx_completion
+#define rx_table_s4_t3_action eth_rx_stats
 
 #include "../common-p4+/common_rxdma.p4"
 #include "eth_rxdma.p4"
@@ -55,6 +56,7 @@ action eth_rx_app_header(PARAMS_ETH_RX_QSTATE)
     modify_field(p4_to_p4plus_scratch.csum_tcp_bad, p4_to_p4plus.csum_tcp_bad);
     modify_field(p4_to_p4plus_scratch.csum_tcp_ok, p4_to_p4plus.csum_tcp_ok);
 
+    modify_field(p4_to_p4plus_scratch.l2_pkt_type, p4_to_p4plus.l2_pkt_type);
     modify_field(p4_to_p4plus_scratch.pkt_type, p4_to_p4plus.pkt_type);
 
     // --- For D-struct generation
@@ -100,6 +102,15 @@ action eth_rx_completion()
 
     MODIFY_ETH_RX_GLOBAL
     MODIFY_ETH_RX_T0_S2S
+
+    // --- For D-struct generation
+}
+
+action eth_rx_stats()
+{
+    // --- For K+I struct generation
+
+    MODIFY_ETH_RX_GLOBAL
 
     // --- For D-struct generation
 }

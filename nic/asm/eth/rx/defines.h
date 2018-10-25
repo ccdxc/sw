@@ -7,6 +7,10 @@
 #define LG2_RX_CMPL_DESC_SIZE   (4)
 #define LG2_RX_QSTATE_SIZE      (6)
 
+#define L2_PKT_TYPE_UNICAST     0
+#define L2_PKT_TYPE_MULTICAST   1
+#define L2_PKT_TYPE_BROADCAST   2
+
 #define PKT_TYPE_NON_IP         (0)
 #define PKT_TYPE_IPV4           BIT(0)
 #define PKT_TYPE_IPV4_TCP       BIT(1)
@@ -33,22 +37,62 @@
 #define ETH_RX_DESC_ADDR_ERROR      1
 #define ETH_RX_DESC_DATA_ERROR      2
 
+/*
+ * Stats Macros
+ */
+
+#define LOAD_STATS(_r) \
+    add         _r, r0, k.eth_rx_global_stats;
+
+#define SET_STAT(_r, _c, name) \
+    ori._c      _r, _r, (1 << STAT_##name);
+
+#define CLR_STAT(_r, _c, name) \
+    andi._c     _r, _r, ~(1 << STAT_##name);
+
+#define SAVE_STATS(_r) \
+    phvwr       p.eth_rx_global_stats, _r;
+
+/*
+ * Stat position within stats register
+ */
+
+// packet counters
+#define STAT_unicast_bytes                  0
+#define STAT_unicast_packets                1
+#define STAT_multicast_bytes                2
+#define STAT_multicast_packets              3
+#define STAT_broadcast_bytes                4
+#define STAT_broadcast_packets              5
+// drop counters
+#define STAT_unicast_drop_bytes             8
+#define STAT_unicast_drop_packets           9
+#define STAT_multicast_drop_bytes           10
+#define STAT_multicast_drop_packets         11
+#define STAT_broadcast_drop_bytes           12
+#define STAT_broadcast_drop_packets         13
+// queue & descriptor counters
+#define STAT_queue_disabled_drop            16
+#define STAT_queue_empty_drop               17
+#define STAT_queue_scheduled                18
+#define STAT_desc_fetch_error               19
+#define STAT_desc_data_error                20
+// DEBUG: operation counters
+#define STAT_oper_rss                       24
+#define STAT_oper_csum_complete             25
+#define STAT_oper_csum_ip_bad               26
+#define STAT_oper_csum_tcp_bad              27
+#define STAT_oper_csum_udp_bad              28
+#define STAT_oper_vlan_strip                29
+#define STAT_cqe                            30
+#define STAT_intr                           31
+
+/*
+ * DMA Macros
+ */
+
 #define DMA_PKT(_r_ptr, _r_addr, _gs_len) \
     or          _r_addr, d.addr_lo, d.addr_hi, sizeof(d.addr_lo); \
     add         _r_addr, r0, _r_addr.dx; \
     or          _r_addr, _r_addr[63:16], _r_addr[11:8], sizeof(d.addr_lo); \
     DMA_PKT2MEM(_r_ptr, !c0, k.eth_rx_global_host_queue, _r_addr, _gs_len);
-
-#define DEBUG_DESCR_FLD(name) \
-    add         r7, r0, d.##name
-
-#define DEBUG_DESCR(n) \
-    DEBUG_DESCR_FLD(addr_lo##n); \
-    DEBUG_DESCR_FLD(addr_hi##n); \
-    DEBUG_DESCR_FLD(rsvd0##n); \
-    DEBUG_DESCR_FLD(rsvd1##n); \
-    DEBUG_DESCR_FLD(len##n); \
-    DEBUG_DESCR_FLD(opcode##n); \
-    DEBUG_DESCR_FLD(rsvd2##n); \
-    DEBUG_DESCR_FLD(rsvd3##n); \
-    DEBUG_DESCR_FLD(rsvd4##n)

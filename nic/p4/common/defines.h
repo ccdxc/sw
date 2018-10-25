@@ -211,13 +211,90 @@
 #define Q_TYPE_RDMA_EQ                 6
 
 /*****************************************************************************/
+/* packet type                                                               */
+/*****************************************************************************/
+#define PACKET_TYPE_UNICAST            0
+#define PACKET_TYPE_MULTICAST          1
+#define PACKET_TYPE_BROADCAST          2
+
+/*****************************************************************************/
+/* Classic NIC header flags                                                  */
+/*****************************************************************************/
+#define CLASSIC_NIC_PKT_TYPE_NON_IP     0x000
+#define CLASSIC_NIC_PKT_TYPE_IPV4       0x001
+#define CLASSIC_NIC_PKT_TYPE_IPV4_TCP   0x003
+#define CLASSIC_NIC_PKT_TYPE_IPV4_UDP   0x005
+#define CLASSIC_NIC_PKT_TYPE_IPV6       0x008
+#define CLASSIC_NIC_PKT_TYPE_IPV6_TCP   0x018
+#define CLASSIC_NIC_PKT_TYPE_IPV6_UDP   0x028
+
+/*****************************************************************************/
 /* LIF stats offsets                                                         */
 /*****************************************************************************/
-#define LIF_STATS_TX_UCAST_OFFSET                   256
-#define LIF_STATS_TX_MCAST_OFFSET                   272
-#define LIF_STATS_TX_BCAST_OFFSET                   288
-#define LIF_STATS_TX_UCAST_DROP_OFFSET              320
-#define LIF_STATS_TX_MCAST_DROP_OFFSET              336
-#define LIF_STATS_TX_BCAST_DROP_OFFSET              352
+
+#define LIF_STATS_SIZE_SHIFT                        10
+
+#define LIF_STATS_RX_UCAST_BYTES_OFFSET             0
+#define LIF_STATS_RX_UCAST_PACKETS_OFFSET           8
+#define LIF_STATS_RX_MCAST_BYTES_OFFSET             16
+#define LIF_STATS_RX_MCAST_PACKETS_OFFSET           24
+#define LIF_STATS_RX_BCAST_BYTES_OFFSET             32
+#define LIF_STATS_RX_BCAST_PACKETS_OFFSET           40
+
+#define LIF_STATS_RX_UCAST_DROP_BYTES_OFFSET        64
+#define LIF_STATS_RX_UCAST_DROP_PACKETS_OFFSET      72
+#define LIF_STATS_RX_MCAST_DROP_BYTES_OFFSET        80
+#define LIF_STATS_RX_MCAST_DROP_PACKETS_OFFSET      88
+#define LIF_STATS_RX_BCAST_DROP_BYTES_OFFSET        96
+#define LIF_STATS_RX_BCAST_DROP_PACKETS_OFFSET      104
+#define LIF_STATS_RX_DMA_ERROR_OFFSET               112
+
+#define LIF_STATS_TX_UCAST_BYTES_OFFSET             128
+#define LIF_STATS_TX_UCAST_PACKETS_OFFSET           136
+#define LIF_STATS_TX_MCAST_BYTES_OFFSET             144
+#define LIF_STATS_TX_MCAST_PACKETS_OFFSET           152
+#define LIF_STATS_TX_BCAST_BYTES_OFFSET             160
+#define LIF_STATS_TX_BCAST_PACKETS_OFFSET           168
+
+#define LIF_STATS_TX_UCAST_DROP_BYTES_OFFSET        192
+#define LIF_STATS_TX_UCAST_DROP_PACKETS_OFFSET      200
+#define LIF_STATS_TX_MCAST_DROP_BYTES_OFFSET        208
+#define LIF_STATS_TX_MCAST_DROP_PACKETS_OFFSET      216
+#define LIF_STATS_TX_BCAST_DROP_BYTES_OFFSET        224
+#define LIF_STATS_TX_BCAST_DROP_PACKETS_OFFSET      232
+#define LIF_STATS_TX_DMA_ERROR_OFFSET               240
+
+#define LIF_STATS_RX_QUEUE_DISABLED_DROP_OFFSET     256
+#define LIF_STATS_RX_QUEUE_EMPTY_DROP_OFFSET        264
+#define LIF_STATS_RX_QUEUE_SCHEDULED_OFFSET         272
+#define LIF_STATS_RX_DESC_FETCH_ERROR_OFFSET        280
+#define LIF_STATS_RX_DESC_DATA_ERROR_OFFSET         288
+
+#define LIF_STATS_TX_QUEUE_DISABLED_OFFSET          320
+#define LIF_STATS_TX_QUEUE_SCHEDULED_OFFSET         328
+#define LIF_STATS_TX_DESC_FETCH_ERROR_OFFSET        336
+#define LIF_STATS_TX_DESC_DATA_ERROR_OFFSET         344
+
+// Debug counters
+#define LIF_STATS_RX_RSS_OFFSET                     384
+#define LIF_STATS_RX_CSUM_COMPLETE_OFFSET           392
+#define LIF_STATS_RX_CSUM_IP_BAD_OFFSET             400
+#define LIF_STATS_RX_CSUM_TCP_BAD_OFFSET            408
+#define LIF_STATS_RX_CSUM_UDP_BAD_OFFSET            416
+#define LIF_STATS_RX_VLAN_STRIP_OFFSET              424
+
+#define LIF_STATS_TX_CSUM_HW_OFFSET                 448
+#define LIF_STATS_TX_CSUM_HW_INNER_OFFSET           456
+#define LIF_STATS_TX_VLAN_INSERT_OFFSET             464
+#define LIF_STATS_TX_SG_OFFSET                      472
+#define LIF_STATS_TX_TSO_SG_OFFSET                  480
+#define LIF_STATS_TX_TSO_SOP_OFFSET                 488
+#define LIF_STATS_TX_TSO_EOP_OFFSET                 496
+
+#define LIF_STATS_TX_OPCODE_INVALID_OFFSET          560
+#define LIF_STATS_TX_OPCODE_CSUM_NONE_OFFSET        568
+#define LIF_STATS_TX_OPCODE_CSUM_PARTIAL_OFFSET     576
+#define LIF_STATS_TX_OPCODE_CSUM_HW_OFFSET          584
+#define LIF_STATS_TX_OPCODE_CSUM_TSO_OFFSET         592
 
 #endif //__P4_COMMON_DEFINES_H__

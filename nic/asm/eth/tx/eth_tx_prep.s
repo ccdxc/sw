@@ -3,8 +3,7 @@
 #include "ingress.h"
 #include "INGRESS_tx_table_s1_t0_k.h"
 
-#include "../../asm/eth/tx/defines.h"
-#include "nic/p4/common/defines.h"
+#include "defines.h"
 
 struct phv_ p;
 struct tx_table_s1_t0_k_ k;
@@ -22,6 +21,8 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 #define  _r_op_x          r2  // Opcode processing register
 #define  _r_op_y          r3  // Opcode processing register
 #define  _r_tx_pktlen     r5  // Number of bytes that will be transferred
+#define  _r_stats         r6  // Stats
+
 
 .align
 eth_tx_prep:
@@ -50,7 +51,7 @@ eth_tx_prep:
   phvwri          p.common_te0_phv_table_pc, eth_tx_commit[38:6]
 
 eth_tx_prep1:
-  BUILD_APP_HEADER(0, _r_op_x, _r_op_y)
+  BUILD_APP_HEADER(0, _r_op_x, _r_op_y, _r_stats)
   addi            _r_num_desc, r0, 1
   add             _r_tx_pktlen, r0, d.{len0}.hx
   phvwr           p.to_stage_3_to_stage_data, d[511:384]
@@ -64,7 +65,7 @@ eth_tx_prep1:
   nop
 
 eth_tx_prep2:
-  BUILD_APP_HEADER(1, _r_op_x, _r_op_y)
+  BUILD_APP_HEADER(1, _r_op_x, _r_op_y, _r_stats)
   addi            _r_num_desc, _r_num_desc, 1
   add             _r_tx_pktlen, _r_tx_pktlen, d.{len1}.hx
   phvwr           p.to_stage_4_to_stage_data, d[383:256]
@@ -78,7 +79,7 @@ eth_tx_prep2:
   nop
 
 eth_tx_prep3:
-  BUILD_APP_HEADER(2, _r_op_x, _r_op_y)
+  BUILD_APP_HEADER(2, _r_op_x, _r_op_y, _r_stats)
   addi            _r_num_desc, _r_num_desc, 1
   add             _r_tx_pktlen, _r_tx_pktlen, d.{len2}.hx
   phvwr           p.to_stage_5_to_stage_data, d[255:128]
@@ -92,7 +93,7 @@ eth_tx_prep3:
   nop
 
 eth_tx_prep4:
-  BUILD_APP_HEADER(3, _r_op_x, _r_op_y)
+  BUILD_APP_HEADER(3, _r_op_x, _r_op_y, _r_stats)
   addi            _r_num_desc, _r_num_desc, 1
   add             _r_tx_pktlen, _r_tx_pktlen, d.{len3}.hx
   phvwr           p.to_stage_6_to_stage_data, d[127:0]
@@ -100,8 +101,12 @@ eth_tx_prep4:
 eth_tx_prep_done:
   // Set number of sg elements to process
   sne             c1, d.num_sg_elems0, 0
+  SET_STAT(_r_stats, c1, oper_sg)
+
   phvwr.c1        p.eth_tx_t0_s2s_do_sg, 1
   phvwr.c1        p.eth_tx_global_num_sg_elems, d.num_sg_elems0
+
+  SAVE_STATS(_r_stats)
 
   // Set number of descriptors to process
   phvwr.e         p.eth_tx_t0_s2s_num_desc, _r_num_desc
@@ -109,5 +114,7 @@ eth_tx_prep_done:
   phvwr.f         p.p4_intr_packet_len, _r_tx_pktlen
 
 eth_tx_prep_error:
+  SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
+  SAVE_STATS(_r_stats)
   phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
   phvwri.f        p.p4_intr_global_drop, 1

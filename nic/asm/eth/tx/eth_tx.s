@@ -3,8 +3,7 @@
 #include "ingress.h"
 #include "INGRESS_tx_table_s3_t0_k.h"
 
-#include "../../asm/eth/tx/defines.h"
-#include "nic/p4/common/defines.h"
+#include "defines.h"
 
 struct phv_ p;
 struct tx_table_s3_t0_k_ k;
@@ -16,6 +15,7 @@ struct tx_table_s3_t0_k_ k;
 %%
 
 .param eth_tx_completion
+.param eth_tx_stats
 
 .align
 eth_tx_start:
@@ -60,7 +60,13 @@ eth_tx_done:
   // Update the remaining number of descriptors
   phvwr           p.eth_tx_t0_s2s_num_desc, _r_num_desc
 
-  // Launch eth_tx_completion stage
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | 1)
+
+  // Launch eth_tx_stats action
+  phvwri          p.common_te3_phv_table_pc, eth_tx_stats[38:6]
+  phvwri          p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+
+  // Launch eth_tx_completion action
   phvwri.e        p.common_te0_phv_table_pc, eth_tx_completion[38:6]
   phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 

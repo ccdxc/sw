@@ -37,21 +37,21 @@ ingress_tx_stats:
     addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
     .brbegin
     br          r1[1:0]
-    add         r5, r5, k.control_metadata_src_lif, 9
-    .brcase 0
-    add         r5, r5, LIF_STATS_TX_UCAST_DROP_OFFSET
+    add         r5, r5, k.control_metadata_src_lif, LIF_STATS_SIZE_SHIFT
+    .brcase PACKET_TYPE_UNICAST
+    add         r5, r5, LIF_STATS_TX_UCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or          r7, r7, r5[31:27], 58
     b           tcp_options_fixup
     memwr.dx    r6, r7
-    .brcase 1
-    add         r5, r5, LIF_STATS_TX_MCAST_DROP_OFFSET
+    .brcase PACKET_TYPE_MULTICAST
+    add         r5, r5, LIF_STATS_TX_MCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or          r7, r7, r5[31:27], 58
     b           tcp_options_fixup
     memwr.dx    r6, r7
-    .brcase 2
-    add         r5, r5, LIF_STATS_TX_BCAST_DROP_OFFSET
+    .brcase PACKET_TYPE_BROADCAST
+    add         r5, r5, LIF_STATS_TX_BCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or          r7, r7, r5[31:27], 58
     b           tcp_options_fixup

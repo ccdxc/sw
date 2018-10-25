@@ -98,14 +98,15 @@ header_type eth_rx_global_k {
         qstate_addr : 34;
         host_queue : 1;
         intr_enable : 1;
+        lif : 11;
+        stats : 32;
     }
 }
 
 header_type eth_rx_t0_s2s_k {
     fields {
         packet_len : 16;
-        cq_desc_addr : 52;
-        __pad : 4;
+        cq_desc_addr : 64;
         intr_assert_index : 16;
         intr_assert_data : 32;  // Should be byte-aligned for PHV2MEM
     }

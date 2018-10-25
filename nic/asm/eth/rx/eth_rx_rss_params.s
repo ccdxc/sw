@@ -68,6 +68,7 @@ eth_rx_rss_params:
 
 eth_rx_rss_none:
   phvwri              p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
+  phvwr               p.common_te0_phv_table_lock_en, 0
   phvwri.e            p.common_te0_phv_table_pc, eth_rx_rss_skip[38:6]
   phvwri.f            p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
