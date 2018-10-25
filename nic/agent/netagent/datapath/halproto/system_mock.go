@@ -71,6 +71,132 @@ func (mr *MockSystemClientMockRecorder) SystemGet(ctx, in interface{}, opts ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SystemGet", reflect.TypeOf((*MockSystemClient)(nil).SystemGet), varargs...)
 }
 
+// ClearIngressDropStats mocks base method
+func (m *MockSystemClient) ClearIngressDropStats(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClearIngressDropStats", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearIngressDropStats indicates an expected call of ClearIngressDropStats
+func (mr *MockSystemClientMockRecorder) ClearIngressDropStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearIngressDropStats", reflect.TypeOf((*MockSystemClient)(nil).ClearIngressDropStats), varargs...)
+}
+
+// ClearEgressDropStats mocks base method
+func (m *MockSystemClient) ClearEgressDropStats(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClearEgressDropStats", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearEgressDropStats indicates an expected call of ClearEgressDropStats
+func (mr *MockSystemClientMockRecorder) ClearEgressDropStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearEgressDropStats", reflect.TypeOf((*MockSystemClient)(nil).ClearEgressDropStats), varargs...)
+}
+
+// ClearPbDropStats mocks base method
+func (m *MockSystemClient) ClearPbDropStats(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClearPbDropStats", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearPbDropStats indicates an expected call of ClearPbDropStats
+func (mr *MockSystemClientMockRecorder) ClearPbDropStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPbDropStats", reflect.TypeOf((*MockSystemClient)(nil).ClearPbDropStats), varargs...)
+}
+
+// ClearFteStats mocks base method
+func (m *MockSystemClient) ClearFteStats(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClearFteStats", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearFteStats indicates an expected call of ClearFteStats
+func (mr *MockSystemClientMockRecorder) ClearFteStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearFteStats", reflect.TypeOf((*MockSystemClient)(nil).ClearFteStats), varargs...)
+}
+
+// ClearFteTxRxStats mocks base method
+func (m *MockSystemClient) ClearFteTxRxStats(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClearFteTxRxStats", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearFteTxRxStats indicates an expected call of ClearFteTxRxStats
+func (mr *MockSystemClientMockRecorder) ClearFteTxRxStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearFteTxRxStats", reflect.TypeOf((*MockSystemClient)(nil).ClearFteTxRxStats), varargs...)
+}
+
+// ClearTableStats mocks base method
+func (m *MockSystemClient) ClearTableStats(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClearTableStats", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearTableStats indicates an expected call of ClearTableStats
+func (mr *MockSystemClientMockRecorder) ClearTableStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearTableStats", reflect.TypeOf((*MockSystemClient)(nil).ClearTableStats), varargs...)
+}
+
+// ClearPbStats mocks base method
+func (m *MockSystemClient) ClearPbStats(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClearPbStats", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearPbStats indicates an expected call of ClearPbStats
+func (mr *MockSystemClientMockRecorder) ClearPbStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPbStats", reflect.TypeOf((*MockSystemClient)(nil).ClearPbStats), varargs...)
+}
+
 // MockSystemServer is a mock of SystemServer interface
 type MockSystemServer struct {
 	ctrl     *gomock.Controller
@@ -118,4 +244,95 @@ func (m *MockSystemServer) SystemGet(arg0 context.Context, arg1 *Empty) (*System
 // SystemGet indicates an expected call of SystemGet
 func (mr *MockSystemServerMockRecorder) SystemGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SystemGet", reflect.TypeOf((*MockSystemServer)(nil).SystemGet), arg0, arg1)
+}
+
+// ClearIngressDropStats mocks base method
+func (m *MockSystemServer) ClearIngressDropStats(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "ClearIngressDropStats", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearIngressDropStats indicates an expected call of ClearIngressDropStats
+func (mr *MockSystemServerMockRecorder) ClearIngressDropStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearIngressDropStats", reflect.TypeOf((*MockSystemServer)(nil).ClearIngressDropStats), arg0, arg1)
+}
+
+// ClearEgressDropStats mocks base method
+func (m *MockSystemServer) ClearEgressDropStats(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "ClearEgressDropStats", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearEgressDropStats indicates an expected call of ClearEgressDropStats
+func (mr *MockSystemServerMockRecorder) ClearEgressDropStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearEgressDropStats", reflect.TypeOf((*MockSystemServer)(nil).ClearEgressDropStats), arg0, arg1)
+}
+
+// ClearPbDropStats mocks base method
+func (m *MockSystemServer) ClearPbDropStats(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "ClearPbDropStats", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearPbDropStats indicates an expected call of ClearPbDropStats
+func (mr *MockSystemServerMockRecorder) ClearPbDropStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPbDropStats", reflect.TypeOf((*MockSystemServer)(nil).ClearPbDropStats), arg0, arg1)
+}
+
+// ClearFteStats mocks base method
+func (m *MockSystemServer) ClearFteStats(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "ClearFteStats", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearFteStats indicates an expected call of ClearFteStats
+func (mr *MockSystemServerMockRecorder) ClearFteStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearFteStats", reflect.TypeOf((*MockSystemServer)(nil).ClearFteStats), arg0, arg1)
+}
+
+// ClearFteTxRxStats mocks base method
+func (m *MockSystemServer) ClearFteTxRxStats(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "ClearFteTxRxStats", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearFteTxRxStats indicates an expected call of ClearFteTxRxStats
+func (mr *MockSystemServerMockRecorder) ClearFteTxRxStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearFteTxRxStats", reflect.TypeOf((*MockSystemServer)(nil).ClearFteTxRxStats), arg0, arg1)
+}
+
+// ClearTableStats mocks base method
+func (m *MockSystemServer) ClearTableStats(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "ClearTableStats", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearTableStats indicates an expected call of ClearTableStats
+func (mr *MockSystemServerMockRecorder) ClearTableStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearTableStats", reflect.TypeOf((*MockSystemServer)(nil).ClearTableStats), arg0, arg1)
+}
+
+// ClearPbStats mocks base method
+func (m *MockSystemServer) ClearPbStats(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "ClearPbStats", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearPbStats indicates an expected call of ClearPbStats
+func (mr *MockSystemServerMockRecorder) ClearPbStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPbStats", reflect.TypeOf((*MockSystemServer)(nil).ClearPbStats), arg0, arg1)
 }

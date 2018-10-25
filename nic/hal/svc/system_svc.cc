@@ -38,3 +38,93 @@ SystemServiceImpl::SystemGet(ServerContext *context,
     return Status::OK;
 }
 
+Status
+SystemServiceImpl::ClearIngressDropStats(ServerContext *context,
+                                         const Empty *request,
+                                         Empty *rsp) 
+{
+    HAL_TRACE_DEBUG("Rcvd Clear Ingress Drop Stats");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+SystemServiceImpl::ClearEgressDropStats(ServerContext *context,
+                                        const Empty *request,
+                                        Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Clear Egress Drop Stats");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+SystemServiceImpl::ClearPbDropStats(ServerContext *context,
+                                    const Empty *request,
+                                    Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Clear Pb Drop Stats");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+SystemServiceImpl::ClearFteStats(ServerContext *context,
+                                 const Empty *request,
+                                 Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Clear FTE Stats");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+SystemServiceImpl::ClearFteTxRxStats(ServerContext *context,
+                                     const Empty *request,
+                                     Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Clear FTE Tx-Rx Stats");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+SystemServiceImpl::ClearTableStats(ServerContext *context,
+                                   const Empty *request,
+                                   Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Clear Table Stats");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
+SystemServiceImpl::ClearPbStats(ServerContext *context,
+                                const Empty *request,
+                                Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd Clear Pb Stats");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
