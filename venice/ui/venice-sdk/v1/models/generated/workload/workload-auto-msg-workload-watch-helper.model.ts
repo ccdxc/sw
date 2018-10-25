@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { WorkloadAutoMsgWorkloadWatchHelperWatchEvent, IWorkloadAutoMsgWorkloadWatchHelperWatchEvent } from './workload-auto-msg-workload-watch-helper-watch-event.model';
 
 export interface IWorkloadAutoMsgWorkloadWatchHelper {
-    'Events'?: Array<IWorkloadAutoMsgWorkloadWatchHelperWatchEvent>;
+    'events'?: Array<IWorkloadAutoMsgWorkloadWatchHelperWatchEvent>;
 }
 
 
 export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWorkloadAutoMsgWorkloadWatchHelper {
-    'Events': Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent> = null;
+    'events': Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>();
+        this['events'] = new Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>(this, 'Events', values['Events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
+            this.fillModelArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>(this, 'events', values['events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>('Events', this['Events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
+            this.fillFormArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>('events', this['events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>(this, 'Events', this['Events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
+            this.fillModelArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>(this, 'events', this['events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
         }
     }
 }

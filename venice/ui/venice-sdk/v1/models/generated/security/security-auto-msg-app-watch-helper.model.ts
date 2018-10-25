@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { SecurityAutoMsgAppWatchHelperWatchEvent, ISecurityAutoMsgAppWatchHelperWatchEvent } from './security-auto-msg-app-watch-helper-watch-event.model';
 
 export interface ISecurityAutoMsgAppWatchHelper {
-    'Events'?: Array<ISecurityAutoMsgAppWatchHelperWatchEvent>;
+    'events'?: Array<ISecurityAutoMsgAppWatchHelperWatchEvent>;
 }
 
 
 export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurityAutoMsgAppWatchHelper {
-    'Events': Array<SecurityAutoMsgAppWatchHelperWatchEvent> = null;
+    'events': Array<SecurityAutoMsgAppWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurit
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<SecurityAutoMsgAppWatchHelperWatchEvent>();
+        this['events'] = new Array<SecurityAutoMsgAppWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurit
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<SecurityAutoMsgAppWatchHelperWatchEvent>(this, 'Events', values['Events'], SecurityAutoMsgAppWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgAppWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgAppWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurit
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecurityAutoMsgAppWatchHelperWatchEvent>('Events', this['Events'], SecurityAutoMsgAppWatchHelperWatchEvent);
+            this.fillFormArray<SecurityAutoMsgAppWatchHelperWatchEvent>('events', this['events'], SecurityAutoMsgAppWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurit
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<SecurityAutoMsgAppWatchHelperWatchEvent>(this, 'Events', this['Events'], SecurityAutoMsgAppWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgAppWatchHelperWatchEvent>(this, 'events', this['events'], SecurityAutoMsgAppWatchHelperWatchEvent);
         }
     }
 }

@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent, IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent } from './monitoring-auto-msg-alert-destination-watch-helper-watch-event.model';
 
 export interface IMonitoringAutoMsgAlertDestinationWatchHelper {
-    'Events'?: Array<IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>;
+    'events'?: Array<IMonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>;
 }
 
 
 export class MonitoringAutoMsgAlertDestinationWatchHelper extends BaseModel implements IMonitoringAutoMsgAlertDestinationWatchHelper {
-    'Events': Array<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent> = null;
+    'events': Array<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class MonitoringAutoMsgAlertDestinationWatchHelper extends BaseModel impl
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>();
+        this['events'] = new Array<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class MonitoringAutoMsgAlertDestinationWatchHelper extends BaseModel impl
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>(this, 'Events', values['Events'], MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class MonitoringAutoMsgAlertDestinationWatchHelper extends BaseModel impl
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>('Events', this['Events'], MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent);
+            this.fillFormArray<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>('events', this['events'], MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class MonitoringAutoMsgAlertDestinationWatchHelper extends BaseModel impl
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>(this, 'Events', this['Events'], MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>(this, 'events', this['events'], MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent);
         }
     }
 }

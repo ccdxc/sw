@@ -10,19 +10,19 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringEventPolicy, IMonitoringEventPolicy } from './monitoring-event-policy.model';
 
 export interface IMonitoringAutoMsgEventPolicyWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: IMonitoringEventPolicy;
+    'type'?: string;
+    'object'?: IMonitoringEventPolicy;
 }
 
 
 export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgEventPolicyWatchHelperWatchEvent {
-    'Type': string = null;
-    'Object': MonitoringEventPolicy = null;
+    'type': string = null;
+    'object': MonitoringEventPolicy = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
+        'type': {
             type: 'string'
         },
-        'Object': {
+        'object': {
             type: 'object'
         },
     }
@@ -46,7 +46,7 @@ export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new MonitoringEventPolicy();
+        this['object'] = new MonitoringEventPolicy();
         this.setValues(values);
     }
 
@@ -55,13 +55,13 @@ export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.hasDefaultValue('Type')) {
-            this['Type'] = MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.propInfo['type'].default;
         }
         if (values) {
-            this['Object'].setValues(values['Object']);
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { SecurityTrafficEncryptionPolicy, ISecurityTrafficEncryptionPolicy } from './security-traffic-encryption-policy.model';
 
 export interface ISecurityTrafficEncryptionPolicyList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<ISecurityTrafficEncryptionPolicy>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<ISecurityTrafficEncryptionPolicy>;
 }
 
 
 export class SecurityTrafficEncryptionPolicyList extends BaseModel implements ISecurityTrafficEncryptionPolicyList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<SecurityTrafficEncryptionPolicy> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<SecurityTrafficEncryptionPolicy> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<SecurityTrafficEncryptionPolicy>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<SecurityTrafficEncryptionPolicy>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
         } else if (fillDefaults && SecurityTrafficEncryptionPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = SecurityTrafficEncryptionPolicyList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && SecurityTrafficEncryptionPolicyList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = SecurityTrafficEncryptionPolicyList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<SecurityTrafficEncryptionPolicy>(this, 'Items', values['Items'], SecurityTrafficEncryptionPolicy);
+            this.fillModelArray<SecurityTrafficEncryptionPolicy>(this, 'items', values['items'], SecurityTrafficEncryptionPolicy);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecurityTrafficEncryptionPolicy>('Items', this['Items'], SecurityTrafficEncryptionPolicy);
+            this.fillFormArray<SecurityTrafficEncryptionPolicy>('items', this['items'], SecurityTrafficEncryptionPolicy);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<SecurityTrafficEncryptionPolicy>(this, 'Items', this['Items'], SecurityTrafficEncryptionPolicy);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<SecurityTrafficEncryptionPolicy>(this, 'items', this['items'], SecurityTrafficEncryptionPolicy);
         }
     }
 }

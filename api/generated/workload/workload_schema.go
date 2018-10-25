@@ -20,39 +20,67 @@ var typesMapWorkload = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+			"ObjectMeta": api.Field{Name: "ObjectMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
 
 			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadSpec"},
 
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadStatus"},
+
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"ResourceVersion": api.Field{Name: "ResourceVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"UUID": api.Field{Name: "UUID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uuid", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Labels": api.Field{Name: "Labels", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "labels", Pointer: true, Slice: false, Map: true, Inline: false, FromInline: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+
+			"CreationTime": api.Field{Name: "CreationTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "creation-time", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"ModTime": api.Field{Name: "ModTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mod-time", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"SelfLink": api.Field{Name: "SelfLink", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "self-link", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":    api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"endpoint":       api.CLIInfo{Path: "Status.Interfaces[].Endpoint", Skip: false, Insert: "", Help: ""},
-			"external-vlan":  api.CLIInfo{Path: "Spec.Interfaces[].ExternalVlan", Skip: false, Insert: "", Help: ""},
-			"host-name":      api.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: ""},
-			"ip-addresses":   api.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
-			"kind":           api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"micro-seg-vlan": api.CLIInfo{Path: "Spec.Interfaces[].MicroSegVlan", Skip: false, Insert: "", Help: ""},
+			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"endpoint":         api.CLIInfo{Path: "Status.Interfaces[].Endpoint", Skip: false, Insert: "", Help: ""},
+			"external-vlan":    api.CLIInfo{Path: "Spec.Interfaces[].ExternalVlan", Skip: false, Insert: "", Help: ""},
+			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"host-name":        api.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: ""},
+			"ip-addresses":     api.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
+			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"micro-seg-vlan":   api.CLIInfo{Path: "Spec.Interfaces[].MicroSegVlan", Skip: false, Insert: "", Help: ""},
+			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"workload.WorkloadIntfSpec": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadIntfSpec{}) },
 		Fields: map[string]api.Field{
-			"MicroSegVlan": api.Field{Name: "MicroSegVlan", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "micro-seg-vlan", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"MicroSegVlan": api.Field{Name: "MicroSegVlan", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "micro-seg-vlan", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"ExternalVlan": api.Field{Name: "ExternalVlan", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "external-vlan", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"ExternalVlan": api.Field{Name: "ExternalVlan", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "external-vlan", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"workload.WorkloadIntfStatus": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadIntfStatus{}) },
 		Fields: map[string]api.Field{
-			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Endpoint": api.Field{Name: "Endpoint", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoint", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
@@ -67,7 +95,7 @@ var typesMapWorkload = map[string]*api.Struct{
 	},
 	"workload.WorkloadSpec.InterfacesEntry": &api.Struct{
 		Fields: map[string]api.Field{
-			"key": api.Field{Name: "key", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": api.Field{Name: "key", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"value": api.Field{Name: "value", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfSpec"},
 		},
@@ -80,7 +108,7 @@ var typesMapWorkload = map[string]*api.Struct{
 	},
 	"workload.WorkloadStatus.InterfacesEntry": &api.Struct{
 		Fields: map[string]api.Field{
-			"key": api.Field{Name: "key", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"key": api.Field{Name: "key", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"value": api.Field{Name: "value", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfStatus"},
 		},

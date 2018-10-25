@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { ClusterAutoMsgSmartNICWatchHelperWatchEvent, IClusterAutoMsgSmartNICWatchHelperWatchEvent } from './cluster-auto-msg-smart-nic-watch-helper-watch-event.model';
 
 export interface IClusterAutoMsgSmartNICWatchHelper {
-    'Events'?: Array<IClusterAutoMsgSmartNICWatchHelperWatchEvent>;
+    'events'?: Array<IClusterAutoMsgSmartNICWatchHelperWatchEvent>;
 }
 
 
 export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClusterAutoMsgSmartNICWatchHelper {
-    'Events': Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent> = null;
+    'events': Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClu
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent>();
+        this['events'] = new Array<ClusterAutoMsgSmartNICWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClu
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<ClusterAutoMsgSmartNICWatchHelperWatchEvent>(this, 'Events', values['Events'], ClusterAutoMsgSmartNICWatchHelperWatchEvent);
+            this.fillModelArray<ClusterAutoMsgSmartNICWatchHelperWatchEvent>(this, 'events', values['events'], ClusterAutoMsgSmartNICWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClu
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterAutoMsgSmartNICWatchHelperWatchEvent>('Events', this['Events'], ClusterAutoMsgSmartNICWatchHelperWatchEvent);
+            this.fillFormArray<ClusterAutoMsgSmartNICWatchHelperWatchEvent>('events', this['events'], ClusterAutoMsgSmartNICWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClu
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<ClusterAutoMsgSmartNICWatchHelperWatchEvent>(this, 'Events', this['Events'], ClusterAutoMsgSmartNICWatchHelperWatchEvent);
+            this.fillModelArray<ClusterAutoMsgSmartNICWatchHelperWatchEvent>(this, 'events', this['events'], ClusterAutoMsgSmartNICWatchHelperWatchEvent);
         }
     }
 }

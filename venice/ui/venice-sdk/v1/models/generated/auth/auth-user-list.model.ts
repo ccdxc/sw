@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { AuthUser, IAuthUser } from './auth-user.model';
 
 export interface IAuthUserList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IAuthUser>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IAuthUser>;
 }
 
 
 export class AuthUserList extends BaseModel implements IAuthUserList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<AuthUser> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<AuthUser> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<AuthUser>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<AuthUser>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
         } else if (fillDefaults && AuthUserList.hasDefaultValue('api-version')) {
             this['api-version'] = AuthUserList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && AuthUserList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = AuthUserList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<AuthUser>(this, 'Items', values['Items'], AuthUser);
+            this.fillModelArray<AuthUser>(this, 'items', values['items'], AuthUser);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<AuthUser>('Items', this['Items'], AuthUser);
+            this.fillFormArray<AuthUser>('items', this['items'], AuthUser);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<AuthUser>(this, 'Items', this['Items'], AuthUser);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<AuthUser>(this, 'items', this['items'], AuthUser);
         }
     }
 }

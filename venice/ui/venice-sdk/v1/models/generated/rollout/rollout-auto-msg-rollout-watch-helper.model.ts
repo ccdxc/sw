@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { RolloutAutoMsgRolloutWatchHelperWatchEvent, IRolloutAutoMsgRolloutWatchHelperWatchEvent } from './rollout-auto-msg-rollout-watch-helper-watch-event.model';
 
 export interface IRolloutAutoMsgRolloutWatchHelper {
-    'Events'?: Array<IRolloutAutoMsgRolloutWatchHelperWatchEvent>;
+    'events'?: Array<IRolloutAutoMsgRolloutWatchHelperWatchEvent>;
 }
 
 
 export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRolloutAutoMsgRolloutWatchHelper {
-    'Events': Array<RolloutAutoMsgRolloutWatchHelperWatchEvent> = null;
+    'events': Array<RolloutAutoMsgRolloutWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRoll
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<RolloutAutoMsgRolloutWatchHelperWatchEvent>();
+        this['events'] = new Array<RolloutAutoMsgRolloutWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRoll
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<RolloutAutoMsgRolloutWatchHelperWatchEvent>(this, 'Events', values['Events'], RolloutAutoMsgRolloutWatchHelperWatchEvent);
+            this.fillModelArray<RolloutAutoMsgRolloutWatchHelperWatchEvent>(this, 'events', values['events'], RolloutAutoMsgRolloutWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRoll
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<RolloutAutoMsgRolloutWatchHelperWatchEvent>('Events', this['Events'], RolloutAutoMsgRolloutWatchHelperWatchEvent);
+            this.fillFormArray<RolloutAutoMsgRolloutWatchHelperWatchEvent>('events', this['events'], RolloutAutoMsgRolloutWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRoll
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<RolloutAutoMsgRolloutWatchHelperWatchEvent>(this, 'Events', this['Events'], RolloutAutoMsgRolloutWatchHelperWatchEvent);
+            this.fillModelArray<RolloutAutoMsgRolloutWatchHelperWatchEvent>(this, 'events', this['events'], RolloutAutoMsgRolloutWatchHelperWatchEvent);
         }
     }
 }

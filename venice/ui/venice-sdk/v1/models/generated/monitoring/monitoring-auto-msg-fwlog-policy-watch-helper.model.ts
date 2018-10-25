@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent, IMonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent } from './monitoring-auto-msg-fwlog-policy-watch-helper-watch-event.model';
 
 export interface IMonitoringAutoMsgFwlogPolicyWatchHelper {
-    'Events'?: Array<IMonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>;
+    'events'?: Array<IMonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>;
 }
 
 
 export class MonitoringAutoMsgFwlogPolicyWatchHelper extends BaseModel implements IMonitoringAutoMsgFwlogPolicyWatchHelper {
-    'Events': Array<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent> = null;
+    'events': Array<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class MonitoringAutoMsgFwlogPolicyWatchHelper extends BaseModel implement
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>();
+        this['events'] = new Array<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class MonitoringAutoMsgFwlogPolicyWatchHelper extends BaseModel implement
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>(this, 'Events', values['Events'], MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class MonitoringAutoMsgFwlogPolicyWatchHelper extends BaseModel implement
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>('Events', this['Events'], MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent);
+            this.fillFormArray<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>('events', this['events'], MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class MonitoringAutoMsgFwlogPolicyWatchHelper extends BaseModel implement
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>(this, 'Events', this['Events'], MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent>(this, 'events', this['events'], MonitoringAutoMsgFwlogPolicyWatchHelperWatchEvent);
         }
     }
 }

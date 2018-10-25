@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { AuthAutoMsgUserWatchHelperWatchEvent, IAuthAutoMsgUserWatchHelperWatchEvent } from './auth-auto-msg-user-watch-helper-watch-event.model';
 
 export interface IAuthAutoMsgUserWatchHelper {
-    'Events'?: Array<IAuthAutoMsgUserWatchHelperWatchEvent>;
+    'events'?: Array<IAuthAutoMsgUserWatchHelperWatchEvent>;
 }
 
 
 export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMsgUserWatchHelper {
-    'Events': Array<AuthAutoMsgUserWatchHelperWatchEvent> = null;
+    'events': Array<AuthAutoMsgUserWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMs
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<AuthAutoMsgUserWatchHelperWatchEvent>();
+        this['events'] = new Array<AuthAutoMsgUserWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMs
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<AuthAutoMsgUserWatchHelperWatchEvent>(this, 'Events', values['Events'], AuthAutoMsgUserWatchHelperWatchEvent);
+            this.fillModelArray<AuthAutoMsgUserWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgUserWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMs
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<AuthAutoMsgUserWatchHelperWatchEvent>('Events', this['Events'], AuthAutoMsgUserWatchHelperWatchEvent);
+            this.fillFormArray<AuthAutoMsgUserWatchHelperWatchEvent>('events', this['events'], AuthAutoMsgUserWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMs
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<AuthAutoMsgUserWatchHelperWatchEvent>(this, 'Events', this['Events'], AuthAutoMsgUserWatchHelperWatchEvent);
+            this.fillModelArray<AuthAutoMsgUserWatchHelperWatchEvent>(this, 'events', this['events'], AuthAutoMsgUserWatchHelperWatchEvent);
         }
     }
 }

@@ -4997,10 +4997,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authAuthenticationPolicy"
@@ -5075,7 +5075,7 @@
     "authAutoMsgAuthenticationPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authAutoMsgAuthenticationPolicyWatchHelperWatchEvent"
@@ -5087,10 +5087,10 @@
     "authAutoMsgAuthenticationPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/authAuthenticationPolicy"
         }
       }
@@ -5098,7 +5098,7 @@
     "authAutoMsgRoleBindingWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authAutoMsgRoleBindingWatchHelperWatchEvent"
@@ -5110,10 +5110,10 @@
     "authAutoMsgRoleBindingWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/authRoleBinding"
         }
       }
@@ -5121,7 +5121,7 @@
     "authAutoMsgRoleWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authAutoMsgRoleWatchHelperWatchEvent"
@@ -5133,10 +5133,10 @@
     "authAutoMsgRoleWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/authRole"
         }
       }
@@ -5144,7 +5144,7 @@
     "authAutoMsgUserWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authAutoMsgUserWatchHelperWatchEvent"
@@ -5156,10 +5156,10 @@
     "authAutoMsgUserWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/authUser"
         }
       }
@@ -5511,10 +5511,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authRoleBinding"
@@ -5558,10 +5558,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authRole"
@@ -5643,10 +5643,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authUser"

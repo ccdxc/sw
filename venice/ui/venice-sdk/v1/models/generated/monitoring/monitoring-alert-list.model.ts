@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { MonitoringAlert, IMonitoringAlert } from './monitoring-alert.model';
 
 export interface IMonitoringAlertList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IMonitoringAlert>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IMonitoringAlert>;
 }
 
 
 export class MonitoringAlertList extends BaseModel implements IMonitoringAlertList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<MonitoringAlert> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<MonitoringAlert> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<MonitoringAlert>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<MonitoringAlert>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
         } else if (fillDefaults && MonitoringAlertList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringAlertList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && MonitoringAlertList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = MonitoringAlertList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<MonitoringAlert>(this, 'Items', values['Items'], MonitoringAlert);
+            this.fillModelArray<MonitoringAlert>(this, 'items', values['items'], MonitoringAlert);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringAlert>('Items', this['Items'], MonitoringAlert);
+            this.fillFormArray<MonitoringAlert>('items', this['items'], MonitoringAlert);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<MonitoringAlert>(this, 'Items', this['Items'], MonitoringAlert);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<MonitoringAlert>(this, 'items', this['items'], MonitoringAlert);
         }
     }
 }

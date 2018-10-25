@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { NetworkNetwork, INetworkNetwork } from './network-network.model';
 
 export interface INetworkNetworkList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<INetworkNetwork>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<INetworkNetwork>;
 }
 
 
 export class NetworkNetworkList extends BaseModel implements INetworkNetworkList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<NetworkNetwork> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<NetworkNetwork> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<NetworkNetwork>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<NetworkNetwork>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
         } else if (fillDefaults && NetworkNetworkList.hasDefaultValue('api-version')) {
             this['api-version'] = NetworkNetworkList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && NetworkNetworkList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = NetworkNetworkList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<NetworkNetwork>(this, 'Items', values['Items'], NetworkNetwork);
+            this.fillModelArray<NetworkNetwork>(this, 'items', values['items'], NetworkNetwork);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<NetworkNetwork>('Items', this['Items'], NetworkNetwork);
+            this.fillFormArray<NetworkNetwork>('items', this['items'], NetworkNetwork);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class NetworkNetworkList extends BaseModel implements INetworkNetworkList
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<NetworkNetwork>(this, 'Items', this['Items'], NetworkNetwork);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<NetworkNetwork>(this, 'items', this['items'], NetworkNetwork);
         }
     }
 }

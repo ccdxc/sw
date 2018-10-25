@@ -10,19 +10,19 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringAlert, IMonitoringAlert } from './monitoring-alert.model';
 
 export interface IMonitoringAutoMsgAlertWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: IMonitoringAlert;
+    'type'?: string;
+    'object'?: IMonitoringAlert;
 }
 
 
 export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgAlertWatchHelperWatchEvent {
-    'Type': string = null;
-    'Object': MonitoringAlert = null;
+    'type': string = null;
+    'object': MonitoringAlert = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
+        'type': {
             type: 'string'
         },
-        'Object': {
+        'object': {
             type: 'object'
         },
     }
@@ -46,7 +46,7 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new MonitoringAlert();
+        this['object'] = new MonitoringAlert();
         this.setValues(values);
     }
 
@@ -55,13 +55,13 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && MonitoringAutoMsgAlertWatchHelperWatchEvent.hasDefaultValue('Type')) {
-            this['Type'] = MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && MonitoringAutoMsgAlertWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = MonitoringAutoMsgAlertWatchHelperWatchEvent.propInfo['type'].default;
         }
         if (values) {
-            this['Object'].setValues(values['Object']);
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class MonitoringAutoMsgAlertWatchHelperWatchEvent extends BaseModel imple
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

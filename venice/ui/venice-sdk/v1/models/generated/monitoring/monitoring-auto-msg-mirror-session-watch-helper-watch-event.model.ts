@@ -10,19 +10,19 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringMirrorSession, IMonitoringMirrorSession } from './monitoring-mirror-session.model';
 
 export interface IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: IMonitoringMirrorSession;
+    'type'?: string;
+    'object'?: IMonitoringMirrorSession;
 }
 
 
 export class MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent {
-    'Type': string = null;
-    'Object': MonitoringMirrorSession = null;
+    'type': string = null;
+    'object': MonitoringMirrorSession = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
+        'type': {
             type: 'string'
         },
-        'Object': {
+        'object': {
             type: 'object'
         },
     }
@@ -46,7 +46,7 @@ export class MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent extends BaseMod
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new MonitoringMirrorSession();
+        this['object'] = new MonitoringMirrorSession();
         this.setValues(values);
     }
 
@@ -55,13 +55,13 @@ export class MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent extends BaseMod
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent.hasDefaultValue('Type')) {
-            this['Type'] = MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent.propInfo['type'].default;
         }
         if (values) {
-            this['Object'].setValues(values['Object']);
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent extends BaseMod
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent extends BaseMod
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

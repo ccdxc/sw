@@ -995,7 +995,7 @@ func TestFilters(t *testing.T) {
 					defer wmu[i].Unlock()
 					wmu[i].Lock()
 					return len(rwatches[i]) == counts[i], nil
-				}, fmt.Sprintf("[%s]inconsistent count on watch[%d] channel exp: %d got: %d", name, i, counts[i], len(rwatches[i])))
+				}, fmt.Sprintf("[%s]inconsistent count on watch[%d] channel exp: %d got: %d", name, i, counts[i], len(rwatches[i])), "10ms", "3s")
 			}
 		}
 	}

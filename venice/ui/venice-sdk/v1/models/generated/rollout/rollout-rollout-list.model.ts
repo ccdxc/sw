@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { RolloutRollout, IRolloutRollout } from './rollout-rollout.model';
 
 export interface IRolloutRolloutList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IRolloutRollout>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IRolloutRollout>;
 }
 
 
 export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<RolloutRollout> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<RolloutRollout> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<RolloutRollout>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<RolloutRollout>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
         } else if (fillDefaults && RolloutRolloutList.hasDefaultValue('api-version')) {
             this['api-version'] = RolloutRolloutList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && RolloutRolloutList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = RolloutRolloutList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<RolloutRollout>(this, 'Items', values['Items'], RolloutRollout);
+            this.fillModelArray<RolloutRollout>(this, 'items', values['items'], RolloutRollout);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<RolloutRollout>('Items', this['Items'], RolloutRollout);
+            this.fillFormArray<RolloutRollout>('items', this['items'], RolloutRollout);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<RolloutRollout>(this, 'Items', this['Items'], RolloutRollout);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<RolloutRollout>(this, 'items', this['items'], RolloutRollout);
         }
     }
 }

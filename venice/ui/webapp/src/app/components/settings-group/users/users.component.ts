@@ -141,9 +141,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this._authService.ListUser().subscribe(
       (data) => {
         const authUserList: AuthUserList = new AuthUserList(<IAuthUserList>data.body);
-        if (authUserList.Items.length > 0) {
+        if (authUserList.items.length > 0) {
           this.authusers.length = 0;
-          this.authusers = authUserList.Items;
+          this.authusers = authUserList.items;
           this.setDataReadyMap('users', true);
         }
       },
@@ -155,9 +155,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this._authService.ListRole().subscribe(
       (data) => {
         const authRoleList: AuthRoleList = new AuthRoleList(<IAuthRoleList>data.body);
-        if (authRoleList.Items.length > 0) {
+        if (authRoleList.items.length > 0) {
           this.authRoles.length = 0;
-          this.authRoles = authRoleList.Items;
+          this.authRoles = authRoleList.items;
           this.setDataReadyMap('roles', true);
         }
       },
@@ -169,9 +169,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this._authService.ListRoleBinding().subscribe(
       (data) => {
         const authRoleBindings: AuthRoleBindingList = new AuthRoleBindingList(<IAuthRoleBindingList>data.body);
-        if (authRoleBindings.Items.length > 0) {
+        if (authRoleBindings.items.length > 0) {
           this.authRoleBindings.length = 0;
-          this.authRoleBindings = authRoleBindings.Items;
+          this.authRoleBindings = authRoleBindings.items;
           this.setDataReadyMap('rolebindings', true);
         }
       },

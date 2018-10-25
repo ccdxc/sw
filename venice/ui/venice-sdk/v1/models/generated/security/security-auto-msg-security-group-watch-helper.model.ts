@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { SecurityAutoMsgSecurityGroupWatchHelperWatchEvent, ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent } from './security-auto-msg-security-group-watch-helper-watch-event.model';
 
 export interface ISecurityAutoMsgSecurityGroupWatchHelper {
-    'Events'?: Array<ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent>;
+    'events'?: Array<ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent>;
 }
 
 
 export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implements ISecurityAutoMsgSecurityGroupWatchHelper {
-    'Events': Array<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent> = null;
+    'events': Array<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implement
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>();
+        this['events'] = new Array<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implement
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>(this, 'Events', values['Events'], SecurityAutoMsgSecurityGroupWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgSecurityGroupWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implement
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>('Events', this['Events'], SecurityAutoMsgSecurityGroupWatchHelperWatchEvent);
+            this.fillFormArray<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>('events', this['events'], SecurityAutoMsgSecurityGroupWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implement
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>(this, 'Events', this['Events'], SecurityAutoMsgSecurityGroupWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>(this, 'events', this['events'], SecurityAutoMsgSecurityGroupWatchHelperWatchEvent);
         }
     }
 }

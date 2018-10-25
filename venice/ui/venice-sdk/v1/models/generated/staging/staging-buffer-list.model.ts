@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { StagingBuffer, IStagingBuffer } from './staging-buffer.model';
 
 export interface IStagingBufferList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IStagingBuffer>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IStagingBuffer>;
 }
 
 
 export class StagingBufferList extends BaseModel implements IStagingBufferList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<StagingBuffer> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<StagingBuffer> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<StagingBuffer>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<StagingBuffer>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
         } else if (fillDefaults && StagingBufferList.hasDefaultValue('api-version')) {
             this['api-version'] = StagingBufferList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && StagingBufferList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = StagingBufferList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<StagingBuffer>(this, 'Items', values['Items'], StagingBuffer);
+            this.fillModelArray<StagingBuffer>(this, 'items', values['items'], StagingBuffer);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<StagingBuffer>('Items', this['Items'], StagingBuffer);
+            this.fillFormArray<StagingBuffer>('items', this['items'], StagingBuffer);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class StagingBufferList extends BaseModel implements IStagingBufferList {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<StagingBuffer>(this, 'Items', this['Items'], StagingBuffer);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<StagingBuffer>(this, 'items', this['items'], StagingBuffer);
         }
     }
 }

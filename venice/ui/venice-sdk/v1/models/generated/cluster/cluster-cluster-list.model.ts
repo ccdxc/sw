@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { ClusterCluster, IClusterCluster } from './cluster-cluster.model';
 
 export interface IClusterClusterList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IClusterCluster>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IClusterCluster>;
 }
 
 
 export class ClusterClusterList extends BaseModel implements IClusterClusterList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<ClusterCluster> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<ClusterCluster> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<ClusterCluster>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<ClusterCluster>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
         } else if (fillDefaults && ClusterClusterList.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterClusterList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && ClusterClusterList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = ClusterClusterList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<ClusterCluster>(this, 'Items', values['Items'], ClusterCluster);
+            this.fillModelArray<ClusterCluster>(this, 'items', values['items'], ClusterCluster);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterCluster>('Items', this['Items'], ClusterCluster);
+            this.fillFormArray<ClusterCluster>('items', this['items'], ClusterCluster);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<ClusterCluster>(this, 'Items', this['Items'], ClusterCluster);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<ClusterCluster>(this, 'items', this['items'], ClusterCluster);
         }
     }
 }

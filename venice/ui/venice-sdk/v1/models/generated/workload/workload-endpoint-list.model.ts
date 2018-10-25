@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { WorkloadEndpoint, IWorkloadEndpoint } from './workload-endpoint.model';
 
 export interface IWorkloadEndpointList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IWorkloadEndpoint>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IWorkloadEndpoint>;
 }
 
 
 export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpointList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<WorkloadEndpoint> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<WorkloadEndpoint> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<WorkloadEndpoint>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<WorkloadEndpoint>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
         } else if (fillDefaults && WorkloadEndpointList.hasDefaultValue('api-version')) {
             this['api-version'] = WorkloadEndpointList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && WorkloadEndpointList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = WorkloadEndpointList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<WorkloadEndpoint>(this, 'Items', values['Items'], WorkloadEndpoint);
+            this.fillModelArray<WorkloadEndpoint>(this, 'items', values['items'], WorkloadEndpoint);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<WorkloadEndpoint>('Items', this['Items'], WorkloadEndpoint);
+            this.fillFormArray<WorkloadEndpoint>('items', this['items'], WorkloadEndpoint);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<WorkloadEndpoint>(this, 'Items', this['Items'], WorkloadEndpoint);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<WorkloadEndpoint>(this, 'items', this['items'], WorkloadEndpoint);
         }
     }
 }

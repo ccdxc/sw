@@ -889,3 +889,125 @@ func TestGetLocation(t *testing.T) {
 		}
 	}
 }
+
+func TestGetFieldExtensions(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+			name: 'example.proto'
+			package: 'example'
+			syntax: 'proto3'
+			message_type <
+				name: 'msg1'
+				field <
+					name: 'msg1fld1'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					options:<[gogoproto.embed]: true>
+					number: 1
+				>
+				field <
+					name: 'msg1fld2'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.msg2'
+					options:<[gogoproto.embed]: true, [gogoproto.jsontag]: "testTag">
+					number: 2
+				>
+				field <
+				name: 'msg1fld3'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.msg2'
+				options:<[gogoproto.embed]: true, [gogoproto.jsontag]: "testTag,inline">
+				number: 3
+				>
+				field <
+				name: 'msg1fld4'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.msg2'
+				options:<[gogoproto.jsontag]: "testTag,inline">
+				number: 4
+				>
+			>
+			message_type <
+				name: 'msg2'
+				field <
+					name: 'msg2fld1'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 1
+				>
+				field <
+					name: 'msg2fld2'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 2
+				>
+			>
+			`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	RegisterOptionParsers()
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	msg, err := r.LookupMsg("", "example.msg1")
+	if err != nil {
+		t.Fatalf("could not find message (%s)", err)
+	}
+	for _, f := range msg.Fields {
+		switch *f.Name {
+		case "msg1fld1":
+			if IsEmbed(f) {
+				t.Fatalf("returned Embed as true")
+			}
+			if GetJSONTag(f) != "" {
+				t.Fatalf("got wrong JSON tag [%v]", GetJSONTag(f))
+			}
+			if IsInline(f) {
+				t.Fatalf("expecting inline to be false")
+			}
+		case "msg1fld2":
+			if !IsEmbed(f) {
+				t.Fatalf("expecting Embed to be true")
+			}
+			if GetJSONTag(f) != "testTag" {
+				t.Fatalf("got wrong JSON tag [%v]", GetJSONTag(f))
+			}
+			if IsInline(f) {
+				t.Fatalf("expecting inline to be false")
+			}
+		case "msg1fld3":
+			if !IsEmbed(f) {
+				t.Fatalf("expecting Embed to be true")
+			}
+			if GetJSONTag(f) != "testTag" {
+				t.Fatalf("got wrong JSON tag [%v]", GetJSONTag(f))
+			}
+			if !IsInline(f) {
+				t.Fatalf("expecting inline to be true")
+			}
+		case "msg1fld4":
+			if IsEmbed(f) {
+				t.Fatalf("expecting Embed to be false")
+			}
+			if GetJSONTag(f) != "testTag" {
+				t.Fatalf("got wrong JSON tag [%v]", GetJSONTag(f))
+			}
+			if !IsInline(f) {
+				t.Fatalf("expecting inline to be true")
+			}
+		}
+
+	}
+
+}

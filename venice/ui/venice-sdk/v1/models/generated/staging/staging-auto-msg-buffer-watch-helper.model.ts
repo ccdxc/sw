@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { StagingAutoMsgBufferWatchHelperWatchEvent, IStagingAutoMsgBufferWatchHelperWatchEvent } from './staging-auto-msg-buffer-watch-helper-watch-event.model';
 
 export interface IStagingAutoMsgBufferWatchHelper {
-    'Events'?: Array<IStagingAutoMsgBufferWatchHelperWatchEvent>;
+    'events'?: Array<IStagingAutoMsgBufferWatchHelperWatchEvent>;
 }
 
 
 export class StagingAutoMsgBufferWatchHelper extends BaseModel implements IStagingAutoMsgBufferWatchHelper {
-    'Events': Array<StagingAutoMsgBufferWatchHelperWatchEvent> = null;
+    'events': Array<StagingAutoMsgBufferWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class StagingAutoMsgBufferWatchHelper extends BaseModel implements IStagi
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<StagingAutoMsgBufferWatchHelperWatchEvent>();
+        this['events'] = new Array<StagingAutoMsgBufferWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class StagingAutoMsgBufferWatchHelper extends BaseModel implements IStagi
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<StagingAutoMsgBufferWatchHelperWatchEvent>(this, 'Events', values['Events'], StagingAutoMsgBufferWatchHelperWatchEvent);
+            this.fillModelArray<StagingAutoMsgBufferWatchHelperWatchEvent>(this, 'events', values['events'], StagingAutoMsgBufferWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class StagingAutoMsgBufferWatchHelper extends BaseModel implements IStagi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<StagingAutoMsgBufferWatchHelperWatchEvent>('Events', this['Events'], StagingAutoMsgBufferWatchHelperWatchEvent);
+            this.fillFormArray<StagingAutoMsgBufferWatchHelperWatchEvent>('events', this['events'], StagingAutoMsgBufferWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class StagingAutoMsgBufferWatchHelper extends BaseModel implements IStagi
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<StagingAutoMsgBufferWatchHelperWatchEvent>(this, 'Events', this['Events'], StagingAutoMsgBufferWatchHelperWatchEvent);
+            this.fillModelArray<StagingAutoMsgBufferWatchHelperWatchEvent>(this, 'events', this['events'], StagingAutoMsgBufferWatchHelperWatchEvent);
         }
     }
 }

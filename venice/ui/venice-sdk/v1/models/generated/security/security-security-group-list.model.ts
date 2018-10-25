@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { SecuritySecurityGroup, ISecuritySecurityGroup } from './security-security-group.model';
 
 export interface ISecuritySecurityGroupList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<ISecuritySecurityGroup>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<ISecuritySecurityGroup>;
 }
 
 
 export class SecuritySecurityGroupList extends BaseModel implements ISecuritySecurityGroupList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<SecuritySecurityGroup> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<SecuritySecurityGroup> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<SecuritySecurityGroup>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<SecuritySecurityGroup>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
         } else if (fillDefaults && SecuritySecurityGroupList.hasDefaultValue('api-version')) {
             this['api-version'] = SecuritySecurityGroupList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && SecuritySecurityGroupList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = SecuritySecurityGroupList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<SecuritySecurityGroup>(this, 'Items', values['Items'], SecuritySecurityGroup);
+            this.fillModelArray<SecuritySecurityGroup>(this, 'items', values['items'], SecuritySecurityGroup);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecuritySecurityGroup>('Items', this['Items'], SecuritySecurityGroup);
+            this.fillFormArray<SecuritySecurityGroup>('items', this['items'], SecuritySecurityGroup);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<SecuritySecurityGroup>(this, 'Items', this['Items'], SecuritySecurityGroup);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<SecuritySecurityGroup>(this, 'items', this['items'], SecuritySecurityGroup);
         }
     }
 }

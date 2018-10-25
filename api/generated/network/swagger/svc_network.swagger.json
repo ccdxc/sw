@@ -4637,7 +4637,7 @@
     "networkAutoMsgLbPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkAutoMsgLbPolicyWatchHelperWatchEvent"
@@ -4649,10 +4649,10 @@
     "networkAutoMsgLbPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/networkLbPolicy"
         }
       }
@@ -4660,7 +4660,7 @@
     "networkAutoMsgNetworkWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkAutoMsgNetworkWatchHelperWatchEvent"
@@ -4672,10 +4672,10 @@
     "networkAutoMsgNetworkWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/networkNetwork"
         }
       }
@@ -4683,7 +4683,7 @@
     "networkAutoMsgServiceWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkAutoMsgServiceWatchHelperWatchEvent"
@@ -4695,10 +4695,10 @@
     "networkAutoMsgServiceWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/networkService"
         }
       }
@@ -4764,10 +4764,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkLbPolicy"
@@ -4842,10 +4842,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkNetwork"
@@ -4941,10 +4941,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkService"

@@ -1492,6 +1492,7 @@ type Field struct {
 	CLITag     cliInfo
 	Pointer    bool
 	Inline     bool
+	Embed      bool
 	FromInline bool
 	Slice      bool
 	Map        bool
@@ -1566,55 +1567,58 @@ func parseCLITags(in string, fld *Field) {
 			fld.CLITag.tag = kv[1]
 		}
 	}
-	if fld.CLITag.ins != "" {
-		fld.CLITag.tag = fld.CLITag.ins + "-" + fld.CLITag.tag
+}
+
+func parseFieldCLIParams(fld *descriptor.Field, strct *Struct, msg *descriptor.Message, path string, locs []int, file *descriptor.File, msgMap map[string]Struct) Field {
+	name := *fld.Name
+	if common.IsEmbed(fld) {
+		p := strings.Split(*fld.TypeName, ".")
+		name = p[len(p)-1]
 	}
+	sfld, ok := strct.Fields[name]
+	if !ok {
+		glog.Fatalf("did not find struct field for %s.%s", path, name)
+	}
+	loc, err := common.GetLocation(file.SourceCodeInfo, locs)
+	if err != nil {
+		return sfld
+	}
+	for _, line := range strings.Split(loc.GetLeadingComments(), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "cli-tags:") {
+			parseCLITags(line, &sfld)
+		}
+		if strings.HasPrefix(line, "cli-help:") {
+			sfld.CLITag.help = strings.TrimSpace(strings.TrimPrefix(line, "cli-help:"))
+		}
+	}
+	return sfld
 }
 
 // parseMessageCLIParams parses and updates CLI tags and help strings for a message
 func parseMessageCLIParams(strct *Struct, msg *descriptor.Message, path string, locs []int, file *descriptor.File, msgMap map[string]Struct) {
 	for flid, fld := range msg.Fields {
-		fpath := append(locs, common.FieldType, flid)
-		loc, err := common.GetLocation(file.SourceCodeInfo, fpath)
-		if err != nil {
-			continue
-		}
+		flocs := append(locs, common.FieldType, flid)
 		name := *fld.Name
-		if common.IsInline(fld) {
+		if common.IsEmbed(fld) {
 			p := strings.Split(*fld.TypeName, ".")
 			name = p[len(p)-1]
 		}
-		sfld, ok := strct.Fields[name]
+		strct.Fields[name] = parseFieldCLIParams(fld, strct, msg, path, flocs, file, msgMap)
+	}
+	for nid, nmsg := range msg.NestedType {
+		nfqname := path + "." + *nmsg.Name
+		nstrct, ok := msgMap[nfqname]
 		if !ok {
-			glog.Fatalf("did not find struct field for %s.%s", path, name)
+			glog.Fatalf("did not find struct for %s", nfqname)
 		}
+		nestedMsg, err := file.Reg.LookupMsg("", nfqname)
 		if err != nil {
-			continue
+			glog.Fatalf("Could not find nested message %v (%s)", *nmsg.Name, err)
 		}
-		for _, line := range strings.Split(loc.GetLeadingComments(), "\n") {
-			line = strings.TrimSpace(line)
-			if strings.HasPrefix(line, "cli-tags:") {
-				parseCLITags(line, &sfld)
-			}
-			if strings.HasPrefix(line, "cli-help:") {
-				sfld.CLITag.help = strings.TrimSpace(strings.TrimPrefix(line, "cli-help:"))
-			}
-		}
-		for nid, nmsg := range msg.NestedType {
-			nfqname := path + "." + *nmsg.Name
-			nstrct, ok := msgMap[nfqname]
-			if !ok {
-				glog.Fatalf("did not find struct for %s", nfqname)
-			}
-			nestedMsg, err := file.Reg.LookupMsg("", nfqname)
-			if err != nil {
-				glog.Fatalf("Could not find nested message %v (%s)", *nmsg.Name, err)
-			}
-			nlocs := append(locs, common.NestedMsgType, nid)
-			parseMessageCLIParams(&nstrct, nestedMsg, nfqname, nlocs, file, msgMap)
-			msgMap[nfqname] = nstrct
-		}
-		strct.Fields[*fld.Name] = sfld
+		nlocs := append(locs, common.NestedMsgType, nid)
+		parseMessageCLIParams(&nstrct, nestedMsg, nfqname, nlocs, file, msgMap)
+		msgMap[nfqname] = nstrct
 	}
 }
 
@@ -1645,11 +1649,15 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 		repeated = true
 	}
 	pointer := true
+	if isScalarType(fld.Type.String()) {
+		pointer = false
+	}
 	if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
 		glog.Infof("setting pointer found nullable [%v] for %s]", r, msg+"/"+*fld.Name)
 		pointer = r.(bool)
 	}
 	inline := common.IsInline(fld)
+	embed := common.IsEmbed(fld)
 	isMap := false
 	typeName := ""
 	keyType := ""
@@ -1693,7 +1701,7 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 		cliTag = *fld.Name
 	}
 	name := *fld.Name
-	if inline {
+	if embed {
 		p := strings.Split(*fld.TypeName, ".")
 		name = p[len(p)-1]
 	}
@@ -1703,6 +1711,7 @@ func genField(msg string, fld *descriptor.Field, file *descriptor.File) (Field, 
 		CLITag:  cliInfo{tag: cliTag},
 		Pointer: pointer,
 		Slice:   repeated,
+		Embed:   embed,
 		Map:     isMap,
 		Inline:  inline,
 		KeyType: keyType,
@@ -1724,7 +1733,7 @@ func isScalarType(in string) bool {
 
 // getCLITags updates the CLITags for the give Struct. It recurses through all fields and their
 //   types in the message.
-func getCLITags(strct Struct, path string, msgMap map[string]Struct, m map[string]cliInfo) error {
+func getCLITags(strct Struct, path, prefix string, msgMap map[string]Struct, m map[string]cliInfo) error {
 	if path != "" {
 		path = path + "."
 	}
@@ -1732,27 +1741,32 @@ func getCLITags(strct Struct, path string, msgMap map[string]Struct, m map[strin
 		fld := strct.Fields[k]
 		if isScalarType(fld.Type) {
 			fpath := path + fld.Name
-			if _, ok := m[fld.CLITag.tag]; ok {
+			tag := prefix + fld.CLITag.tag
+			if _, ok := m[tag]; ok {
 				// panic(fmt.Sprintf("duplicate tag [%s] at [%s]", fld.CLITag, fpath))
 				// Dont panic during initial development. Will panic in production
 				glog.V(1).Infof("Duplicate tag [%v] at [%s] Will CRASH&BURN", fld.CLITag, fpath)
 			}
 			fld.CLITag.path = fpath
-			m[fld.CLITag.tag] = fld.CLITag
+			m[tag] = fld.CLITag
 			continue
 		}
 		fpath := path + fld.Name
 		if fld.Map || fld.Slice {
 			fpath = fpath + "[]"
 		}
-		getCLITags(msgMap[fld.Type], fpath, msgMap, m)
+		fldPrefix := prefix
+		if fld.CLITag.ins != "" {
+			fldPrefix = prefix + fld.CLITag.ins + "-"
+		}
+		getCLITags(msgMap[fld.Type], fpath, fldPrefix, msgMap, m)
 	}
 	return nil
 }
 
-// flattenInline flattens any inlined structures in to the parent struct.
+// flattenEmbedded flattens any inlined structures in to the parent struct.
 // XXX-TODO(sanjayt): Carry CLI Tags from the inlined elements to the flattened members.
-func flattenInline(file *descriptor.File, field Field) (map[string]Field, []string, error) {
+func flattenEmbedded(file *descriptor.File, field Field) (map[string]Field, []string, error) {
 	glog.V(1).Infof("Generating Inline for field %v/%v", field.Type, field.Name)
 	ret := make(map[string]Field)
 	keys := []string{}
@@ -1769,7 +1783,7 @@ func flattenInline(file *descriptor.File, field Field) (map[string]Field, []stri
 		f.FromInline = true
 		glog.V(1).Infof("Inline Got field %v", f.Name)
 		name := f.Name
-		if f.Inline {
+		if f.Embed {
 			p := strings.Split(f.Type, ".")
 			name = p[len(p)-1]
 		}
@@ -1779,8 +1793,8 @@ func flattenInline(file *descriptor.File, field Field) (map[string]Field, []stri
 			ret[name] = f
 			keys = append(keys, name)
 		}
-		if common.IsInline(fld) {
-			flds, ks, err := flattenInline(file, f)
+		if common.IsEmbed(fld) {
+			flds, ks, err := flattenEmbedded(file, f)
 			if err != nil {
 				return ret, keys, err
 			}
@@ -1813,36 +1827,41 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 			fqname = pkg + "." + fqname
 		}
 		node := Struct{Kind: kind, APIGroup: group, CLITags: make(map[string]cliInfo), Fields: make(map[string]Field), mapEntry: isMapEntry(msg)}
+		embeddedStructs := []Field{}
 		for _, fld := range msg.Fields {
 			f, err := genField(fqname, fld, file)
 			if err != nil {
 				return ret, keys, err
 			}
 			name := f.Name
-			if f.Inline {
+			if f.Embed {
 				p := strings.Split(f.Type, ".")
 				name = p[len(p)-1]
 			}
 			node.Fields[name] = f
 			node.keys = append(node.keys, name)
-			if f.Inline {
-				// Flatten the fields that are inlined and add them here.
-				flds, names, err := flattenInline(file, f)
-				if err == nil {
-					for _, k := range names {
-						glog.V(1).Infof("check inline field %v", k)
-						if _, ok := node.Fields[k]; !ok {
-							glog.V(1).Infof("add inline field %v", k)
-							node.Fields[k] = flds[k]
-							node.keys = append(node.keys, k)
-						}
-					}
-				} else {
-					return ret, keys, err
-				}
+			if f.Embed {
+				embeddedStructs = append(embeddedStructs, f)
 			}
-
 		}
+		// flatten inlines
+		for _, f := range embeddedStructs {
+			// Flatten the fields that are inlined and add them here.
+			flds, names, err := flattenEmbedded(file, f)
+			if err == nil {
+				for _, k := range names {
+					glog.V(1).Infof("check inline field %v", k)
+					if _, ok := node.Fields[k]; !ok {
+						glog.V(1).Infof("add inline field %v", k)
+						node.Fields[k] = flds[k]
+						node.keys = append(node.keys, k)
+					}
+				}
+			} else {
+				return ret, keys, err
+			}
+		}
+
 		ret[fqname] = node
 		keys = append(keys, fqname)
 	}
@@ -1853,7 +1872,7 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 		}
 		fqname := pkg + "." + *msg.Name
 		strct := ret[fqname]
-		getCLITags(strct, "", ret, strct.CLITags)
+		getCLITags(strct, "", "", ret, strct.CLITags)
 		ret[fqname] = strct
 	}
 	return ret, keys, nil

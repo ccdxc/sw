@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { AuthAutoMsgRoleBindingWatchHelperWatchEvent, IAuthAutoMsgRoleBindingWatchHelperWatchEvent } from './auth-auto-msg-role-binding-watch-helper-watch-event.model';
 
 export interface IAuthAutoMsgRoleBindingWatchHelper {
-    'Events'?: Array<IAuthAutoMsgRoleBindingWatchHelperWatchEvent>;
+    'events'?: Array<IAuthAutoMsgRoleBindingWatchHelperWatchEvent>;
 }
 
 
 export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAuthAutoMsgRoleBindingWatchHelper {
-    'Events': Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent> = null;
+    'events': Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAut
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent>();
+        this['events'] = new Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAut
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<AuthAutoMsgRoleBindingWatchHelperWatchEvent>(this, 'Events', values['Events'], AuthAutoMsgRoleBindingWatchHelperWatchEvent);
+            this.fillModelArray<AuthAutoMsgRoleBindingWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgRoleBindingWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAut
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<AuthAutoMsgRoleBindingWatchHelperWatchEvent>('Events', this['Events'], AuthAutoMsgRoleBindingWatchHelperWatchEvent);
+            this.fillFormArray<AuthAutoMsgRoleBindingWatchHelperWatchEvent>('events', this['events'], AuthAutoMsgRoleBindingWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAut
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<AuthAutoMsgRoleBindingWatchHelperWatchEvent>(this, 'Events', this['Events'], AuthAutoMsgRoleBindingWatchHelperWatchEvent);
+            this.fillModelArray<AuthAutoMsgRoleBindingWatchHelperWatchEvent>(this, 'events', this['events'], AuthAutoMsgRoleBindingWatchHelperWatchEvent);
         }
     }
 }

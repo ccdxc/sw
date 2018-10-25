@@ -10,19 +10,19 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { RolloutRollout, IRolloutRollout } from './rollout-rollout.model';
 
 export interface IRolloutAutoMsgRolloutWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: IRolloutRollout;
+    'type'?: string;
+    'object'?: IRolloutRollout;
 }
 
 
 export class RolloutAutoMsgRolloutWatchHelperWatchEvent extends BaseModel implements IRolloutAutoMsgRolloutWatchHelperWatchEvent {
-    'Type': string = null;
-    'Object': RolloutRollout = null;
+    'type': string = null;
+    'object': RolloutRollout = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
+        'type': {
             type: 'string'
         },
-        'Object': {
+        'object': {
             type: 'object'
         },
     }
@@ -46,7 +46,7 @@ export class RolloutAutoMsgRolloutWatchHelperWatchEvent extends BaseModel implem
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new RolloutRollout();
+        this['object'] = new RolloutRollout();
         this.setValues(values);
     }
 
@@ -55,13 +55,13 @@ export class RolloutAutoMsgRolloutWatchHelperWatchEvent extends BaseModel implem
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && RolloutAutoMsgRolloutWatchHelperWatchEvent.hasDefaultValue('Type')) {
-            this['Type'] = RolloutAutoMsgRolloutWatchHelperWatchEvent.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && RolloutAutoMsgRolloutWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = RolloutAutoMsgRolloutWatchHelperWatchEvent.propInfo['type'].default;
         }
         if (values) {
-            this['Object'].setValues(values['Object']);
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class RolloutAutoMsgRolloutWatchHelperWatchEvent extends BaseModel implem
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class RolloutAutoMsgRolloutWatchHelperWatchEvent extends BaseModel implem
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

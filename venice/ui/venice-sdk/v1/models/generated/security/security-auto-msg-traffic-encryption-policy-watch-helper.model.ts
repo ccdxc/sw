@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent, ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent } from './security-auto-msg-traffic-encryption-policy-watch-helper-watch-event.model';
 
 export interface ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper {
-    'Events'?: Array<ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>;
+    'events'?: Array<ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>;
 }
 
 
 export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel implements ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper {
-    'Events': Array<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent> = null;
+    'events': Array<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>();
+        this['events'] = new Array<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>(this, 'Events', values['Events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>('Events', this['Events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
+            this.fillFormArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>('events', this['events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>(this, 'Events', this['Events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>(this, 'events', this['events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
         }
     }
 }

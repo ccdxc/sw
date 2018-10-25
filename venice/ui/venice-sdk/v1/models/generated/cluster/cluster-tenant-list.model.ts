@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { ClusterTenant, IClusterTenant } from './cluster-tenant.model';
 
 export interface IClusterTenantList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IClusterTenant>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IClusterTenant>;
 }
 
 
 export class ClusterTenantList extends BaseModel implements IClusterTenantList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<ClusterTenant> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<ClusterTenant> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<ClusterTenant>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<ClusterTenant>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
         } else if (fillDefaults && ClusterTenantList.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterTenantList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && ClusterTenantList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = ClusterTenantList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<ClusterTenant>(this, 'Items', values['Items'], ClusterTenant);
+            this.fillModelArray<ClusterTenant>(this, 'items', values['items'], ClusterTenant);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterTenant>('Items', this['Items'], ClusterTenant);
+            this.fillFormArray<ClusterTenant>('items', this['items'], ClusterTenant);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<ClusterTenant>(this, 'Items', this['Items'], ClusterTenant);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<ClusterTenant>(this, 'items', this['items'], ClusterTenant);
         }
     }
 }

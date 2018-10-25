@@ -3100,7 +3100,7 @@
     "workloadAutoMsgEndpointWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/workloadAutoMsgEndpointWatchHelperWatchEvent"
@@ -3112,10 +3112,10 @@
     "workloadAutoMsgEndpointWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/workloadEndpoint"
         }
       }
@@ -3123,7 +3123,7 @@
     "workloadAutoMsgWorkloadWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/workloadAutoMsgWorkloadWatchHelperWatchEvent"
@@ -3135,10 +3135,10 @@
     "workloadAutoMsgWorkloadWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/workloadWorkload"
         }
       }
@@ -3175,10 +3175,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/workloadEndpoint"
@@ -3341,10 +3341,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/workloadWorkload"

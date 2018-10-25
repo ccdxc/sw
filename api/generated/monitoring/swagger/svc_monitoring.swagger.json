@@ -11496,10 +11496,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAlertDestination"
@@ -11553,10 +11553,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAlert"
@@ -11596,10 +11596,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAlertPolicy"
@@ -11846,7 +11846,7 @@
     "monitoringAutoMsgAlertDestinationWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgAlertDestinationWatchHelperWatchEvent"
@@ -11858,10 +11858,10 @@
     "monitoringAutoMsgAlertDestinationWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringAlertDestination"
         }
       }
@@ -11869,7 +11869,7 @@
     "monitoringAutoMsgAlertPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgAlertPolicyWatchHelperWatchEvent"
@@ -11881,10 +11881,10 @@
     "monitoringAutoMsgAlertPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringAlertPolicy"
         }
       }
@@ -11892,7 +11892,7 @@
     "monitoringAutoMsgAlertWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgAlertWatchHelperWatchEvent"
@@ -11904,10 +11904,10 @@
     "monitoringAutoMsgAlertWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringAlert"
         }
       }
@@ -11915,7 +11915,7 @@
     "monitoringAutoMsgEventPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgEventPolicyWatchHelperWatchEvent"
@@ -11927,10 +11927,10 @@
     "monitoringAutoMsgEventPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringEventPolicy"
         }
       }
@@ -11938,7 +11938,7 @@
     "monitoringAutoMsgFlowExportPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent"
@@ -11950,10 +11950,10 @@
     "monitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringFlowExportPolicy"
         }
       }
@@ -11961,7 +11961,7 @@
     "monitoringAutoMsgFwlogPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgFwlogPolicyWatchHelperWatchEvent"
@@ -11973,10 +11973,10 @@
     "monitoringAutoMsgFwlogPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringFwlogPolicy"
         }
       }
@@ -11984,7 +11984,7 @@
     "monitoringAutoMsgMirrorSessionWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgMirrorSessionWatchHelperWatchEvent"
@@ -11996,10 +11996,10 @@
     "monitoringAutoMsgMirrorSessionWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringMirrorSession"
         }
       }
@@ -12007,7 +12007,7 @@
     "monitoringAutoMsgStatsPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgStatsPolicyWatchHelperWatchEvent"
@@ -12019,10 +12019,10 @@
     "monitoringAutoMsgStatsPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringStatsPolicy"
         }
       }
@@ -12030,7 +12030,7 @@
     "monitoringAutoMsgTroubleshootingSessionWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent"
@@ -12042,10 +12042,10 @@
     "monitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/monitoringTroubleshootingSession"
         }
       }
@@ -12113,10 +12113,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringEventPolicy"
@@ -12240,10 +12240,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringFlowExportPolicy"
@@ -12377,10 +12377,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringFwlogPolicy"
@@ -12567,10 +12567,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringMirrorSession"
@@ -12771,10 +12771,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringStatsPolicy"
@@ -12893,10 +12893,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/monitoringTroubleshootingSession"

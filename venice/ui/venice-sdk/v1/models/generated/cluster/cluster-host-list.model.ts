@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { ClusterHost, IClusterHost } from './cluster-host.model';
 
 export interface IClusterHostList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IClusterHost>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IClusterHost>;
 }
 
 
 export class ClusterHostList extends BaseModel implements IClusterHostList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<ClusterHost> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<ClusterHost> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<ClusterHost>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<ClusterHost>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
         } else if (fillDefaults && ClusterHostList.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterHostList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && ClusterHostList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = ClusterHostList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<ClusterHost>(this, 'Items', values['Items'], ClusterHost);
+            this.fillModelArray<ClusterHost>(this, 'items', values['items'], ClusterHost);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterHost>('Items', this['Items'], ClusterHost);
+            this.fillFormArray<ClusterHost>('items', this['items'], ClusterHost);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<ClusterHost>(this, 'Items', this['Items'], ClusterHost);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<ClusterHost>(this, 'items', this['items'], ClusterHost);
         }
     }
 }

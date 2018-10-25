@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { MonitoringFlowExportPolicy, IMonitoringFlowExportPolicy } from './monitoring-flow-export-policy.model';
 
 export interface IMonitoringFlowExportPolicyList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IMonitoringFlowExportPolicy>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IMonitoringFlowExportPolicy>;
 }
 
 
 export class MonitoringFlowExportPolicyList extends BaseModel implements IMonitoringFlowExportPolicyList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<MonitoringFlowExportPolicy> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<MonitoringFlowExportPolicy> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<MonitoringFlowExportPolicy>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<MonitoringFlowExportPolicy>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
         } else if (fillDefaults && MonitoringFlowExportPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringFlowExportPolicyList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && MonitoringFlowExportPolicyList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = MonitoringFlowExportPolicyList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<MonitoringFlowExportPolicy>(this, 'Items', values['Items'], MonitoringFlowExportPolicy);
+            this.fillModelArray<MonitoringFlowExportPolicy>(this, 'items', values['items'], MonitoringFlowExportPolicy);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringFlowExportPolicy>('Items', this['Items'], MonitoringFlowExportPolicy);
+            this.fillFormArray<MonitoringFlowExportPolicy>('items', this['items'], MonitoringFlowExportPolicy);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<MonitoringFlowExportPolicy>(this, 'Items', this['Items'], MonitoringFlowExportPolicy);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<MonitoringFlowExportPolicy>(this, 'items', this['items'], MonitoringFlowExportPolicy);
         }
     }
 }

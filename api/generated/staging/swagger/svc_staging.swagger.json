@@ -1435,7 +1435,7 @@
     "stagingAutoMsgBufferWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/stagingAutoMsgBufferWatchHelperWatchEvent"
@@ -1447,10 +1447,10 @@
     "stagingAutoMsgBufferWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/stagingBuffer"
         }
       }
@@ -1484,10 +1484,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/stagingBuffer"

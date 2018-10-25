@@ -6308,10 +6308,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityApp"
@@ -6354,7 +6354,7 @@
     "securityAutoMsgAppWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityAutoMsgAppWatchHelperWatchEvent"
@@ -6366,10 +6366,10 @@
     "securityAutoMsgAppWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/securityApp"
         }
       }
@@ -6377,7 +6377,7 @@
     "securityAutoMsgCertificateWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityAutoMsgCertificateWatchHelperWatchEvent"
@@ -6389,10 +6389,10 @@
     "securityAutoMsgCertificateWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/securityCertificate"
         }
       }
@@ -6400,7 +6400,7 @@
     "securityAutoMsgSGPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityAutoMsgSGPolicyWatchHelperWatchEvent"
@@ -6412,10 +6412,10 @@
     "securityAutoMsgSGPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/securitySGPolicy"
         }
       }
@@ -6423,7 +6423,7 @@
     "securityAutoMsgSecurityGroupWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityAutoMsgSecurityGroupWatchHelperWatchEvent"
@@ -6435,10 +6435,10 @@
     "securityAutoMsgSecurityGroupWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/securitySecurityGroup"
         }
       }
@@ -6446,7 +6446,7 @@
     "securityAutoMsgTrafficEncryptionPolicyWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent"
@@ -6458,10 +6458,10 @@
     "securityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/securityTrafficEncryptionPolicy"
         }
       }
@@ -6498,10 +6498,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityCertificate"
@@ -6631,10 +6631,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securitySGPolicy"
@@ -6799,10 +6799,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securitySecurityGroup"
@@ -6918,10 +6918,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityTrafficEncryptionPolicy"

@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent, IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent } from './monitoring-auto-msg-troubleshooting-session-watch-helper-watch-event.model';
 
 export interface IMonitoringAutoMsgTroubleshootingSessionWatchHelper {
-    'Events'?: Array<IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>;
+    'events'?: Array<IMonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>;
 }
 
 
 export class MonitoringAutoMsgTroubleshootingSessionWatchHelper extends BaseModel implements IMonitoringAutoMsgTroubleshootingSessionWatchHelper {
-    'Events': Array<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent> = null;
+    'events': Array<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class MonitoringAutoMsgTroubleshootingSessionWatchHelper extends BaseMode
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>();
+        this['events'] = new Array<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class MonitoringAutoMsgTroubleshootingSessionWatchHelper extends BaseMode
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>(this, 'Events', values['Events'], MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class MonitoringAutoMsgTroubleshootingSessionWatchHelper extends BaseMode
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>('Events', this['Events'], MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent);
+            this.fillFormArray<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>('events', this['events'], MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class MonitoringAutoMsgTroubleshootingSessionWatchHelper extends BaseMode
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>(this, 'Events', this['Events'], MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>(this, 'events', this['events'], MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent);
         }
     }
 }

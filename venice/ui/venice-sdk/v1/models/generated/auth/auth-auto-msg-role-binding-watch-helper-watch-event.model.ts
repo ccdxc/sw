@@ -10,19 +10,19 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { AuthRoleBinding, IAuthRoleBinding } from './auth-role-binding.model';
 
 export interface IAuthAutoMsgRoleBindingWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: IAuthRoleBinding;
+    'type'?: string;
+    'object'?: IAuthRoleBinding;
 }
 
 
 export class AuthAutoMsgRoleBindingWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgRoleBindingWatchHelperWatchEvent {
-    'Type': string = null;
-    'Object': AuthRoleBinding = null;
+    'type': string = null;
+    'object': AuthRoleBinding = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
+        'type': {
             type: 'string'
         },
-        'Object': {
+        'object': {
             type: 'object'
         },
     }
@@ -46,7 +46,7 @@ export class AuthAutoMsgRoleBindingWatchHelperWatchEvent extends BaseModel imple
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new AuthRoleBinding();
+        this['object'] = new AuthRoleBinding();
         this.setValues(values);
     }
 
@@ -55,13 +55,13 @@ export class AuthAutoMsgRoleBindingWatchHelperWatchEvent extends BaseModel imple
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && AuthAutoMsgRoleBindingWatchHelperWatchEvent.hasDefaultValue('Type')) {
-            this['Type'] = AuthAutoMsgRoleBindingWatchHelperWatchEvent.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && AuthAutoMsgRoleBindingWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = AuthAutoMsgRoleBindingWatchHelperWatchEvent.propInfo['type'].default;
         }
         if (values) {
-            this['Object'].setValues(values['Object']);
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class AuthAutoMsgRoleBindingWatchHelperWatchEvent extends BaseModel imple
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class AuthAutoMsgRoleBindingWatchHelperWatchEvent extends BaseModel imple
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

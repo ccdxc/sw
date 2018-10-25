@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent, IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent } from './monitoring-auto-msg-mirror-session-watch-helper-watch-event.model';
 
 export interface IMonitoringAutoMsgMirrorSessionWatchHelper {
-    'Events'?: Array<IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>;
+    'events'?: Array<IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>;
 }
 
 
 export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel implements IMonitoringAutoMsgMirrorSessionWatchHelper {
-    'Events': Array<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent> = null;
+    'events': Array<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel impleme
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>();
+        this['events'] = new Array<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel impleme
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>(this, 'Events', values['Events'], MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel impleme
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>('Events', this['Events'], MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent);
+            this.fillFormArray<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>('events', this['events'], MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel impleme
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>(this, 'Events', this['Events'], MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>(this, 'events', this['events'], MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent);
         }
     }
 }

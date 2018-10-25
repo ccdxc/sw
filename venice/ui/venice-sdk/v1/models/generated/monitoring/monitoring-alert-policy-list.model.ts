@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { MonitoringAlertPolicy, IMonitoringAlertPolicy } from './monitoring-alert-policy.model';
 
 export interface IMonitoringAlertPolicyList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IMonitoringAlertPolicy>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IMonitoringAlertPolicy>;
 }
 
 
 export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringAlertPolicyList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<MonitoringAlertPolicy> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<MonitoringAlertPolicy> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringA
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringA
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<MonitoringAlertPolicy>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<MonitoringAlertPolicy>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringA
         } else if (fillDefaults && MonitoringAlertPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringAlertPolicyList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && MonitoringAlertPolicyList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = MonitoringAlertPolicyList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<MonitoringAlertPolicy>(this, 'Items', values['Items'], MonitoringAlertPolicy);
+            this.fillModelArray<MonitoringAlertPolicy>(this, 'items', values['items'], MonitoringAlertPolicy);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringA
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringAlertPolicy>('Items', this['Items'], MonitoringAlertPolicy);
+            this.fillFormArray<MonitoringAlertPolicy>('items', this['items'], MonitoringAlertPolicy);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class MonitoringAlertPolicyList extends BaseModel implements IMonitoringA
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<MonitoringAlertPolicy>(this, 'Items', this['Items'], MonitoringAlertPolicy);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<MonitoringAlertPolicy>(this, 'items', this['items'], MonitoringAlertPolicy);
         }
     }
 }

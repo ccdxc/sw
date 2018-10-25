@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { MonitoringTroubleshootingSession, IMonitoringTroubleshootingSession } from './monitoring-troubleshooting-session.model';
 
 export interface IMonitoringTroubleshootingSessionList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IMonitoringTroubleshootingSession>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IMonitoringTroubleshootingSession>;
 }
 
 
 export class MonitoringTroubleshootingSessionList extends BaseModel implements IMonitoringTroubleshootingSessionList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<MonitoringTroubleshootingSession> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<MonitoringTroubleshootingSession> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<MonitoringTroubleshootingSession>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<MonitoringTroubleshootingSession>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
         } else if (fillDefaults && MonitoringTroubleshootingSessionList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringTroubleshootingSessionList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && MonitoringTroubleshootingSessionList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = MonitoringTroubleshootingSessionList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<MonitoringTroubleshootingSession>(this, 'Items', values['Items'], MonitoringTroubleshootingSession);
+            this.fillModelArray<MonitoringTroubleshootingSession>(this, 'items', values['items'], MonitoringTroubleshootingSession);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringTroubleshootingSession>('Items', this['Items'], MonitoringTroubleshootingSession);
+            this.fillFormArray<MonitoringTroubleshootingSession>('items', this['items'], MonitoringTroubleshootingSession);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class MonitoringTroubleshootingSessionList extends BaseModel implements I
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<MonitoringTroubleshootingSession>(this, 'Items', this['Items'], MonitoringTroubleshootingSession);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<MonitoringTroubleshootingSession>(this, 'items', this['items'], MonitoringTroubleshootingSession);
         }
     }
 }

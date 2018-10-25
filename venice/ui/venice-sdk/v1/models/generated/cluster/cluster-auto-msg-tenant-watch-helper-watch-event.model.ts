@@ -10,19 +10,19 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { ClusterTenant, IClusterTenant } from './cluster-tenant.model';
 
 export interface IClusterAutoMsgTenantWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: IClusterTenant;
+    'type'?: string;
+    'object'?: IClusterTenant;
 }
 
 
 export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgTenantWatchHelperWatchEvent {
-    'Type': string = null;
-    'Object': ClusterTenant = null;
+    'type': string = null;
+    'object': ClusterTenant = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
+        'type': {
             type: 'string'
         },
-        'Object': {
+        'object': {
             type: 'object'
         },
     }
@@ -46,7 +46,7 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new ClusterTenant();
+        this['object'] = new ClusterTenant();
         this.setValues(values);
     }
 
@@ -55,13 +55,13 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && ClusterAutoMsgTenantWatchHelperWatchEvent.hasDefaultValue('Type')) {
-            this['Type'] = ClusterAutoMsgTenantWatchHelperWatchEvent.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && ClusterAutoMsgTenantWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = ClusterAutoMsgTenantWatchHelperWatchEvent.propInfo['type'].default;
         }
         if (values) {
-            this['Object'].setValues(values['Object']);
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

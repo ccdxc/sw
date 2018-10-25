@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { ClusterSmartNIC, IClusterSmartNIC } from './cluster-smart-nic.model';
 
 export interface IClusterSmartNICList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<IClusterSmartNIC>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<IClusterSmartNIC>;
 }
 
 
 export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<ClusterSmartNIC> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<ClusterSmartNIC> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<ClusterSmartNIC>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<ClusterSmartNIC>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
         } else if (fillDefaults && ClusterSmartNICList.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterSmartNICList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && ClusterSmartNICList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = ClusterSmartNICList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<ClusterSmartNIC>(this, 'Items', values['Items'], ClusterSmartNIC);
+            this.fillModelArray<ClusterSmartNIC>(this, 'items', values['items'], ClusterSmartNIC);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterSmartNIC>('Items', this['Items'], ClusterSmartNIC);
+            this.fillFormArray<ClusterSmartNIC>('items', this['items'], ClusterSmartNIC);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<ClusterSmartNIC>(this, 'Items', this['Items'], ClusterSmartNIC);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<ClusterSmartNIC>(this, 'items', this['items'], ClusterSmartNIC);
         }
     }
 }

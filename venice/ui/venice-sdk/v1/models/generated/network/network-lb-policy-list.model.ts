@@ -7,21 +7,22 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
 import { NetworkLbPolicy, INetworkLbPolicy } from './network-lb-policy.model';
 
 export interface INetworkLbPolicyList {
     'kind'?: string;
     'api-version'?: string;
-    'resource-version'?: string;
-    'Items'?: Array<INetworkLbPolicy>;
+    'list-meta'?: IApiListMeta;
+    'items'?: Array<INetworkLbPolicy>;
 }
 
 
 export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyList {
     'kind': string = null;
     'api-version': string = null;
-    'resource-version': string = null;
-    'Items': Array<NetworkLbPolicy> = null;
+    'list-meta': ApiListMeta = null;
+    'items': Array<NetworkLbPolicy> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -29,10 +30,10 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
         'api-version': {
             type: 'string'
         },
-        'resource-version': {
-            type: 'string'
+        'list-meta': {
+            type: 'object'
         },
-        'Items': {
+        'items': {
             type: 'object'
         },
     }
@@ -56,7 +57,8 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
     */
     constructor(values?: any) {
         super();
-        this['Items'] = new Array<NetworkLbPolicy>();
+        this['list-meta'] = new ApiListMeta();
+        this['items'] = new Array<NetworkLbPolicy>();
         this.setValues(values);
     }
 
@@ -75,13 +77,11 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
         } else if (fillDefaults && NetworkLbPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = NetworkLbPolicyList.propInfo['api-version'].default;
         }
-        if (values && values['resource-version'] != null) {
-            this['resource-version'] = values['resource-version'];
-        } else if (fillDefaults && NetworkLbPolicyList.hasDefaultValue('resource-version')) {
-            this['resource-version'] = NetworkLbPolicyList.propInfo['resource-version'].default;
+        if (values) {
+            this['list-meta'].setValues(values['list-meta']);
         }
         if (values) {
-            this.fillModelArray<NetworkLbPolicy>(this, 'Items', values['Items'], NetworkLbPolicy);
+            this.fillModelArray<NetworkLbPolicy>(this, 'items', values['items'], NetworkLbPolicy);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,11 +92,11 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
-                'Items': new FormArray([]),
+                'list-meta': this['list-meta'].$formGroup,
+                'items': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<NetworkLbPolicy>('Items', this['Items'], NetworkLbPolicy);
+            this.fillFormArray<NetworkLbPolicy>('items', this['items'], NetworkLbPolicy);
         }
         return this._formGroup;
     }
@@ -109,8 +109,8 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this._formGroup.controls['resource-version'].setValue(this['resource-version']);
-            this.fillModelArray<NetworkLbPolicy>(this, 'Items', this['Items'], NetworkLbPolicy);
+            this['list-meta'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<NetworkLbPolicy>(this, 'items', this['items'], NetworkLbPolicy);
         }
     }
 }

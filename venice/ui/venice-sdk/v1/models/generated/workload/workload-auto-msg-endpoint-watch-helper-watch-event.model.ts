@@ -10,19 +10,19 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { WorkloadEndpoint, IWorkloadEndpoint } from './workload-endpoint.model';
 
 export interface IWorkloadAutoMsgEndpointWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: IWorkloadEndpoint;
+    'type'?: string;
+    'object'?: IWorkloadEndpoint;
 }
 
 
 export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel implements IWorkloadAutoMsgEndpointWatchHelperWatchEvent {
-    'Type': string = null;
-    'Object': WorkloadEndpoint = null;
+    'type': string = null;
+    'object': WorkloadEndpoint = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
+        'type': {
             type: 'string'
         },
-        'Object': {
+        'object': {
             type: 'object'
         },
     }
@@ -46,7 +46,7 @@ export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel impl
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new WorkloadEndpoint();
+        this['object'] = new WorkloadEndpoint();
         this.setValues(values);
     }
 
@@ -55,13 +55,13 @@ export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel impl
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && WorkloadAutoMsgEndpointWatchHelperWatchEvent.hasDefaultValue('Type')) {
-            this['Type'] = WorkloadAutoMsgEndpointWatchHelperWatchEvent.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && WorkloadAutoMsgEndpointWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = WorkloadAutoMsgEndpointWatchHelperWatchEvent.propInfo['type'].default;
         }
         if (values) {
-            this['Object'].setValues(values['Object']);
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel impl
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel impl
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

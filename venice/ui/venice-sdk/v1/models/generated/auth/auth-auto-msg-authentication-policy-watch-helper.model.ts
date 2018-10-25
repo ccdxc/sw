@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent, IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent } from './auth-auto-msg-authentication-policy-watch-helper-watch-event.model';
 
 export interface IAuthAutoMsgAuthenticationPolicyWatchHelper {
-    'Events'?: Array<IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>;
+    'events'?: Array<IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>;
 }
 
 
 export class AuthAutoMsgAuthenticationPolicyWatchHelper extends BaseModel implements IAuthAutoMsgAuthenticationPolicyWatchHelper {
-    'Events': Array<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent> = null;
+    'events': Array<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelper extends BaseModel implem
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>();
+        this['events'] = new Array<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelper extends BaseModel implem
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>(this, 'Events', values['Events'], AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent);
+            this.fillModelArray<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelper extends BaseModel implem
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>('Events', this['Events'], AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent);
+            this.fillFormArray<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>('events', this['events'], AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelper extends BaseModel implem
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>(this, 'Events', this['Events'], AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent);
+            this.fillModelArray<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>(this, 'events', this['events'], AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent);
         }
     }
 }

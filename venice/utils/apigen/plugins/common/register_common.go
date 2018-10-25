@@ -657,6 +657,17 @@ func IsInline(fld *descriptor.Field) bool {
 	return false
 }
 
+// IsEmbed returns true if the field is an inline field.
+func IsEmbed(fld *descriptor.Field) bool {
+	if *fld.Type != gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+		return false
+	}
+	if i, err := reg.GetExtension("gogoproto.embed", fld); err == nil {
+		return i.(bool)
+	}
+	return false
+}
+
 // Hardcoded path Ids for the types
 const (
 	MsgType        = 4
@@ -709,6 +720,7 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.check", parseStringSliceOptions)
 	reg.RegisterOptionParser("venice.storageTransformer", parseStringSliceOptions)
 	reg.RegisterOptionParser("gogoproto.nullable", parseBoolOptions)
+	reg.RegisterOptionParser("gogoproto.embed", parseBoolOptions)
 	reg.RegisterOptionParser("gogoproto.jsontag", parseStringOptions)
 	reg.RegisterOptionParser("venice.naplesRestService", parseNaplesRestService)
 	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)

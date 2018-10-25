@@ -2288,7 +2288,7 @@
     "bookstoreAutoMsgBookWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreAutoMsgBookWatchHelperWatchEvent"
@@ -2300,10 +2300,10 @@
     "bookstoreAutoMsgBookWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/bookstoreBook"
         }
       }
@@ -2311,7 +2311,7 @@
     "bookstoreAutoMsgCouponWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreAutoMsgCouponWatchHelperWatchEvent"
@@ -2323,10 +2323,10 @@
     "bookstoreAutoMsgCouponWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/bookstoreCoupon"
         }
       }
@@ -2334,7 +2334,7 @@
     "bookstoreAutoMsgCustomerWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreAutoMsgCustomerWatchHelperWatchEvent"
@@ -2346,10 +2346,10 @@
     "bookstoreAutoMsgCustomerWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/bookstoreCustomer"
         }
       }
@@ -2357,7 +2357,7 @@
     "bookstoreAutoMsgOrderWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreAutoMsgOrderWatchHelperWatchEvent"
@@ -2369,10 +2369,10 @@
     "bookstoreAutoMsgOrderWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/bookstoreOrder"
         }
       }
@@ -2380,7 +2380,7 @@
     "bookstoreAutoMsgPublisherWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreAutoMsgPublisherWatchHelperWatchEvent"
@@ -2392,10 +2392,10 @@
     "bookstoreAutoMsgPublisherWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/bookstorePublisher"
         }
       }
@@ -2403,7 +2403,7 @@
     "bookstoreAutoMsgStoreWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreAutoMsgStoreWatchHelperWatchEvent"
@@ -2415,10 +2415,10 @@
     "bookstoreAutoMsgStoreWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/bookstoreStore"
         }
       }
@@ -2473,10 +2473,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreBook"
@@ -2578,10 +2578,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreCoupon"
@@ -2620,10 +2620,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreCustomer"
@@ -2724,10 +2724,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreOrder"
@@ -2832,10 +2832,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstorePublisher"
@@ -2939,10 +2939,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/bookstoreStore"

@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { SecurityAutoMsgSGPolicyWatchHelperWatchEvent, ISecurityAutoMsgSGPolicyWatchHelperWatchEvent } from './security-auto-msg-sg-policy-watch-helper-watch-event.model';
 
 export interface ISecurityAutoMsgSGPolicyWatchHelper {
-    'Events'?: Array<ISecurityAutoMsgSGPolicyWatchHelperWatchEvent>;
+    'events'?: Array<ISecurityAutoMsgSGPolicyWatchHelperWatchEvent>;
 }
 
 
 export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISecurityAutoMsgSGPolicyWatchHelper {
-    'Events': Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent> = null;
+    'events': Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>();
+        this['events'] = new Array<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>(this, 'Events', values['Events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>('Events', this['Events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
+            this.fillFormArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>('events', this['events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>(this, 'Events', this['Events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
+            this.fillModelArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>(this, 'events', this['events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
         }
     }
 }

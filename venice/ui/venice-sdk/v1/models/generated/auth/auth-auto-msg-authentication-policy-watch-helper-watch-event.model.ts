@@ -10,19 +10,19 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { AuthAuthenticationPolicy, IAuthAuthenticationPolicy } from './auth-authentication-policy.model';
 
 export interface IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
-    'Type'?: string;
-    'Object'?: IAuthAuthenticationPolicy;
+    'type'?: string;
+    'object'?: IAuthAuthenticationPolicy;
 }
 
 
 export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
-    'Type': string = null;
-    'Object': AuthAuthenticationPolicy = null;
+    'type': string = null;
+    'object': AuthAuthenticationPolicy = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Type': {
+        'type': {
             type: 'string'
         },
-        'Object': {
+        'object': {
             type: 'object'
         },
     }
@@ -46,7 +46,7 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
     */
     constructor(values?: any) {
         super();
-        this['Object'] = new AuthAuthenticationPolicy();
+        this['object'] = new AuthAuthenticationPolicy();
         this.setValues(values);
     }
 
@@ -55,13 +55,13 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['Type'] != null) {
-            this['Type'] = values['Type'];
-        } else if (fillDefaults && AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.hasDefaultValue('Type')) {
-            this['Type'] = AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.propInfo['Type'].default;
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
+        } else if (fillDefaults && AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {
+            this['type'] = AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.propInfo['type'].default;
         }
         if (values) {
-            this['Object'].setValues(values['Object']);
+            this['object'].setValues(values['object']);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -70,8 +70,8 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Type': new FormControl(this['Type']),
-                'Object': this['Object'].$formGroup,
+                'type': new FormControl(this['type']),
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -83,8 +83,8 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['type'].setValue(this['type']);
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

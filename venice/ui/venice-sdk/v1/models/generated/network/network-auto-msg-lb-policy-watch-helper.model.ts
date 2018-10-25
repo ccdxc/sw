@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { NetworkAutoMsgLbPolicyWatchHelperWatchEvent, INetworkAutoMsgLbPolicyWatchHelperWatchEvent } from './network-auto-msg-lb-policy-watch-helper-watch-event.model';
 
 export interface INetworkAutoMsgLbPolicyWatchHelper {
-    'Events'?: Array<INetworkAutoMsgLbPolicyWatchHelperWatchEvent>;
+    'events'?: Array<INetworkAutoMsgLbPolicyWatchHelperWatchEvent>;
 }
 
 
 export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INetworkAutoMsgLbPolicyWatchHelper {
-    'Events': Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent> = null;
+    'events': Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>();
+        this['events'] = new Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'Events', values['Events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
+            this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'events', values['events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>('Events', this['Events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
+            this.fillFormArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>('events', this['events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'Events', this['Events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
+            this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'events', this['events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
         }
     }
 }

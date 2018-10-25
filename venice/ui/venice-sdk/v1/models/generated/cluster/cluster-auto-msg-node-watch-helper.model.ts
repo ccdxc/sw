@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { ClusterAutoMsgNodeWatchHelperWatchEvent, IClusterAutoMsgNodeWatchHelperWatchEvent } from './cluster-auto-msg-node-watch-helper-watch-event.model';
 
 export interface IClusterAutoMsgNodeWatchHelper {
-    'Events'?: Array<IClusterAutoMsgNodeWatchHelperWatchEvent>;
+    'events'?: Array<IClusterAutoMsgNodeWatchHelperWatchEvent>;
 }
 
 
 export class ClusterAutoMsgNodeWatchHelper extends BaseModel implements IClusterAutoMsgNodeWatchHelper {
-    'Events': Array<ClusterAutoMsgNodeWatchHelperWatchEvent> = null;
+    'events': Array<ClusterAutoMsgNodeWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class ClusterAutoMsgNodeWatchHelper extends BaseModel implements ICluster
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<ClusterAutoMsgNodeWatchHelperWatchEvent>();
+        this['events'] = new Array<ClusterAutoMsgNodeWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class ClusterAutoMsgNodeWatchHelper extends BaseModel implements ICluster
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<ClusterAutoMsgNodeWatchHelperWatchEvent>(this, 'Events', values['Events'], ClusterAutoMsgNodeWatchHelperWatchEvent);
+            this.fillModelArray<ClusterAutoMsgNodeWatchHelperWatchEvent>(this, 'events', values['events'], ClusterAutoMsgNodeWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class ClusterAutoMsgNodeWatchHelper extends BaseModel implements ICluster
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<ClusterAutoMsgNodeWatchHelperWatchEvent>('Events', this['Events'], ClusterAutoMsgNodeWatchHelperWatchEvent);
+            this.fillFormArray<ClusterAutoMsgNodeWatchHelperWatchEvent>('events', this['events'], ClusterAutoMsgNodeWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class ClusterAutoMsgNodeWatchHelper extends BaseModel implements ICluster
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<ClusterAutoMsgNodeWatchHelperWatchEvent>(this, 'Events', this['Events'], ClusterAutoMsgNodeWatchHelperWatchEvent);
+            this.fillModelArray<ClusterAutoMsgNodeWatchHelperWatchEvent>(this, 'events', this['events'], ClusterAutoMsgNodeWatchHelperWatchEvent);
         }
     }
 }

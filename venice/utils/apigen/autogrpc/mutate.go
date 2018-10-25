@@ -511,12 +511,17 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 	}
 	embedDesc, err := getExtensionDesc(&descriptor.FieldOptions{}, "gogoproto.embed")
 	if err != nil {
-		glog.V(1).Infof("Get objectAutoGen desc failed (%s)\n", err)
+		glog.V(1).Infof("Get gogoproto.embed desc failed (%s)\n", err)
 		return
 	}
 	nullDesc, err := getExtensionDesc(&descriptor.FieldOptions{}, "gogoproto.nullable")
 	if err != nil {
-		glog.V(1).Infof("Get objectAutoGen desc failed (%s)\n", err)
+		glog.V(1).Infof("Get gogoproto.nullable desc failed (%s)\n", err)
+		return
+	}
+	jsontagDesc, err := getExtensionDesc(&descriptor.FieldOptions{}, "gogoproto.jsontag")
+	if err != nil {
+		glog.V(1).Infof("Get gogoproto.jsontag desc failed (%s)\n", err)
 		return
 	}
 	// Watch helper message
@@ -529,6 +534,8 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 		nfldname1 := "Type"
 		nfldname2 := "Object"
 
+		nfldjsontag1 := "type,omitempty"
+		nfldjsontag2 := "object,omitempty"
 		var nfldnum1 int32 = 1
 		var nfldnum2 int32 = 2
 
@@ -551,19 +558,22 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 		}
 
 		nfield1 := descriptor.FieldDescriptorProto{
-			Name:   &nfldname1,
-			Number: &nfldnum1,
-			Label:  &nfldlabel1,
-			Type:   &nfldtype1,
+			Name:    &nfldname1,
+			Number:  &nfldnum1,
+			Label:   &nfldlabel1,
+			Type:    &nfldtype1,
+			Options: &descriptor.FieldOptions{},
 		}
+		proto.SetExtension(nfield1.GetOptions(), jsontagDesc, &nfldjsontag1)
 		nfield2 := descriptor.FieldDescriptorProto{
 			Name:     &nfldname2,
 			Number:   &nfldnum2,
 			Label:    &nfldlabel2,
 			Type:     &nfldtype2,
 			TypeName: &mtype,
+			Options:  &descriptor.FieldOptions{},
 		}
-
+		proto.SetExtension(nfield2.GetOptions(), jsontagDesc, &nfldjsontag2)
 		var nestedFields []*descriptor.FieldDescriptorProto
 		nestedFields = append(nestedFields, &nfield1)
 		nestedFields = append(nestedFields, &nfield2)
@@ -576,6 +586,7 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 			&nestedMsg,
 		}
 		var fldname1 = "Events"
+		var fldjsontag1 = "events"
 		var fldnum1 int32 = 1
 		var fldlabel1 = descriptor.FieldDescriptorProto_LABEL_REPEATED
 		var fldtype2 = descriptor.FieldDescriptorProto_TYPE_MESSAGE
@@ -586,7 +597,9 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 			Label:    &fldlabel1,
 			Type:     &fldtype2,
 			TypeName: &fldtype1,
+			Options:  &descriptor.FieldOptions{},
 		}
+		proto.SetExtension(field1.GetOptions(), jsontagDesc, &fldjsontag1)
 		fields := []*descriptor.FieldDescriptorProto{
 			&field1,
 		}
@@ -615,6 +628,9 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 		fldname2 := "T"
 		fldname3 := "ListMeta"
 		fldname4 := "Items"
+		fldjsontag2 := ",inline"
+		fldjsontag3 := "list-meta,inline"
+		fldjsontag4 := "items"
 		sci.msgs[name] = msgSrcCodeInfo{
 			codeInfo: codeInfo{comments: fmt.Sprintf("%s is a container object for list of %s objects", name, msg)},
 			fields: map[string]codeInfo{
@@ -646,6 +662,7 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 		}
 		proto.SetExtension(field2.GetOptions(), embedDesc, &embed)
 		proto.SetExtension(field2.GetOptions(), nullDesc, &nullable)
+		proto.SetExtension(field2.GetOptions(), jsontagDesc, &fldjsontag2)
 
 		field3 := descriptor.FieldDescriptorProto{
 			Name:     &fldname3,
@@ -657,6 +674,7 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 		}
 		proto.SetExtension(field3.GetOptions(), embedDesc, &embed)
 		proto.SetExtension(field3.GetOptions(), nullDesc, &nullable)
+		proto.SetExtension(field3.GetOptions(), jsontagDesc, &fldjsontag3)
 
 		field4 := descriptor.FieldDescriptorProto{
 			Name:     &fldname4,
@@ -664,7 +682,10 @@ func insertGrpcAutoMsgs(f *descriptor.FileDescriptorProto, sci *srcCodeInfo, msg
 			Label:    &fldlabel4,
 			Type:     &fldtype4,
 			TypeName: &mtype,
+			Options:  &descriptor.FieldOptions{},
 		}
+		proto.SetExtension(field4.GetOptions(), jsontagDesc, &fldjsontag4)
+
 		var fields []*descriptor.FieldDescriptorProto
 		fields = append(fields, &field2)
 		fields = append(fields, &field3)

@@ -18,9 +18,9 @@ var typesMapMirror = map[string]*api.Struct{
 	"monitoring.AppProtoSelector": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppProtoSelector{}) },
 		Fields: map[string]api.Field{
-			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Apps": api.Field{Name: "Apps", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "applications", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Apps": api.Field{Name: "Apps", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "applications", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MatchRule": &api.Struct{
@@ -36,17 +36,17 @@ var typesMapMirror = map[string]*api.Struct{
 	"monitoring.MatchSelector": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchSelector{}) },
 		Fields: map[string]api.Field{
-			"Endpoints": api.Field{Name: "Endpoints", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoints", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Endpoints": api.Field{Name: "Endpoints", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoints", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IPAddresses": api.Field{Name: "IPAddresses", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"IPAddresses": api.Field{Name: "IPAddresses", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"MACAddresses": api.Field{Name: "MACAddresses", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addresses", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"MACAddresses": api.Field{Name: "MACAddresses", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addresses", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MirrorCollector": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorCollector{}) },
 		Fields: map[string]api.Field{
-			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 		},
@@ -56,104 +56,86 @@ var typesMapMirror = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+			"ObjectMeta": api.Field{Name: "ObjectMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
 
-			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
-
-			"MirrorSessionSpec": api.Field{Name: "MirrorSessionSpec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-session-spec", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorSessionSpec"},
-
-			"PacketSize": api.Field{Name: "PacketSize", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-size", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
-
-			"MirrorStartConditions": api.Field{Name: "MirrorStartConditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-condition", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "monitoring.MirrorStartConditions"},
-
-			"ScheduleTime": api.Field{Name: "ScheduleTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "schedule-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
-
-			"MirrorStopConditions": api.Field{Name: "MirrorStopConditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-condition", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "monitoring.MirrorStopConditions"},
-
-			"MaxPacketCount": api.Field{Name: "MaxPacketCount", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-packets", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
-
-			"ExpiryDuration": api.Field{Name: "ExpiryDuration", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "expiry-duration", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"MirrorCollector": api.Field{Name: "MirrorCollector", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "collectors", Pointer: false, Slice: true, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "monitoring.MirrorCollector"},
-
-			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.ExportConfig"},
-
-			"MatchRule": api.Field{Name: "MatchRule", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "monitoring.MatchRule"},
-
-			"Src": api.Field{Name: "Src", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.MatchSelector"},
-
-			"Dst": api.Field{Name: "Dst", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.MatchSelector"},
-
-			"AppProtoSel": api.Field{Name: "AppProtoSel", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-protocol-selectors", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.AppProtoSelector"},
-
-			"PacketFilters": api.Field{Name: "PacketFilters", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-filters", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-session-spec", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorSessionSpec"},
 
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MirrorSessionStatus"},
+
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"ResourceVersion": api.Field{Name: "ResourceVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"UUID": api.Field{Name: "UUID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uuid", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Labels": api.Field{Name: "Labels", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "labels", Pointer: true, Slice: false, Map: true, Inline: false, FromInline: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+
+			"CreationTime": api.Field{Name: "CreationTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "creation-time", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"ModTime": api.Field{Name: "ModTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mod-time", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"SelfLink": api.Field{Name: "SelfLink", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "self-link", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":     api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"applications":    api.CLIInfo{Path: "AppProtoSel.Apps", Skip: false, Insert: "", Help: ""},
-			"endpoints":       api.CLIInfo{Path: "Dst.Endpoints", Skip: false, Insert: "", Help: ""},
-			"expiry-duration": api.CLIInfo{Path: "ExpiryDuration", Skip: false, Insert: "", Help: ""},
-			"ip-addresses":    api.CLIInfo{Path: "Dst.IPAddresses", Skip: false, Insert: "", Help: ""},
-			"kind":            api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"mac-addresses":   api.CLIInfo{Path: "Dst.MACAddresses", Skip: false, Insert: "", Help: ""},
-			"max-packets":     api.CLIInfo{Path: "MaxPacketCount", Skip: false, Insert: "", Help: ""},
-			"oper-state":      api.CLIInfo{Path: "Status.State", Skip: false, Insert: "", Help: ""},
-			"packet-filters":  api.CLIInfo{Path: "PacketFilters", Skip: false, Insert: "", Help: ""},
-			"packet-size":     api.CLIInfo{Path: "PacketSize", Skip: false, Insert: "", Help: ""},
-			"pcap-file-url":   api.CLIInfo{Path: "Status.PcapFileURL", Skip: false, Insert: "", Help: ""},
-			"ports":           api.CLIInfo{Path: "AppProtoSel.Ports", Skip: false, Insert: "", Help: ""},
-			"type":            api.CLIInfo{Path: "Type", Skip: false, Insert: "", Help: ""},
+			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"applications":     api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Apps", Skip: false, Insert: "", Help: ""},
+			"endpoints":        api.CLIInfo{Path: "Spec.MatchRules[].Dst.Endpoints", Skip: false, Insert: "", Help: ""},
+			"expiry-duration":  api.CLIInfo{Path: "Spec.StopConditions.ExpiryDuration", Skip: false, Insert: "", Help: ""},
+			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"ip-addresses":     api.CLIInfo{Path: "Spec.MatchRules[].Dst.IPAddresses", Skip: false, Insert: "", Help: ""},
+			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"mac-addresses":    api.CLIInfo{Path: "Spec.MatchRules[].Dst.MACAddresses", Skip: false, Insert: "", Help: ""},
+			"max-packets":      api.CLIInfo{Path: "Spec.StopConditions.MaxPacketCount", Skip: false, Insert: "", Help: ""},
+			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"oper-state":       api.CLIInfo{Path: "Status.State", Skip: false, Insert: "", Help: ""},
+			"packet-filters":   api.CLIInfo{Path: "Spec.PacketFilters", Skip: false, Insert: "", Help: ""},
+			"packet-size":      api.CLIInfo{Path: "Spec.PacketSize", Skip: false, Insert: "", Help: ""},
+			"pcap-file-url":    api.CLIInfo{Path: "Status.PcapFileURL", Skip: false, Insert: "", Help: ""},
+			"ports":            api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Ports", Skip: false, Insert: "", Help: ""},
+			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"type":             api.CLIInfo{Path: "Spec.Collectors[].Type", Skip: false, Insert: "", Help: ""},
+			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"monitoring.MirrorSessionSpec": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionSpec{}) },
 		Fields: map[string]api.Field{
-			"PacketSize": api.Field{Name: "PacketSize", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-size", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"PacketSize": api.Field{Name: "PacketSize", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-size", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"MirrorStartConditions": api.Field{Name: "MirrorStartConditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-condition", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorStartConditions"},
+			"StartConditions": api.Field{Name: "StartConditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-condition", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorStartConditions"},
 
-			"ScheduleTime": api.Field{Name: "ScheduleTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "schedule-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+			"StopConditions": api.Field{Name: "StopConditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-condition", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorStopConditions"},
 
-			"MirrorStopConditions": api.Field{Name: "MirrorStopConditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stop-condition", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorStopConditions"},
+			"Collectors": api.Field{Name: "Collectors", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "collectors", Pointer: false, Slice: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorCollector"},
 
-			"MaxPacketCount": api.Field{Name: "MaxPacketCount", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-packets", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_UINT32"},
+			"MatchRules": api.Field{Name: "MatchRules", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
 
-			"ExpiryDuration": api.Field{Name: "ExpiryDuration", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "expiry-duration", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"MirrorCollector": api.Field{Name: "MirrorCollector", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "collectors", Pointer: false, Slice: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MirrorCollector"},
-
-			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
-
-			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.ExportConfig"},
-
-			"MatchRule": api.Field{Name: "MatchRule", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
-
-			"Src": api.Field{Name: "Src", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.MatchSelector"},
-
-			"Dst": api.Field{Name: "Dst", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.MatchSelector"},
-
-			"AppProtoSel": api.Field{Name: "AppProtoSel", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-protocol-selectors", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.AppProtoSelector"},
-
-			"PacketFilters": api.Field{Name: "PacketFilters", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-filters", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"PacketFilters": api.Field{Name: "PacketFilters", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-filters", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MirrorSessionStatus": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionStatus{}) },
 		Fields: map[string]api.Field{
-			"State": api.Field{Name: "State", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"State": api.Field{Name: "State", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"PcapFileURL": api.Field{Name: "PcapFileURL", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pcap-file-url", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"PcapFileURL": api.Field{Name: "PcapFileURL", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pcap-file-url", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Timestamp": api.Field{Name: "Timestamp", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "started-at", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.Timestamp"},
-
-			"Time": api.Field{Name: "Time", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "google.protobuf.Timestamp"},
+			"StartedAt": api.Field{Name: "StartedAt", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "started-at", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 	"monitoring.MirrorStartConditions": &api.Struct{
@@ -165,9 +147,9 @@ var typesMapMirror = map[string]*api.Struct{
 	"monitoring.MirrorStopConditions": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStopConditions{}) },
 		Fields: map[string]api.Field{
-			"MaxPacketCount": api.Field{Name: "MaxPacketCount", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-packets", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"MaxPacketCount": api.Field{Name: "MaxPacketCount", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-packets", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
-			"ExpiryDuration": api.Field{Name: "ExpiryDuration", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "expiry-duration", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"ExpiryDuration": api.Field{Name: "ExpiryDuration", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "expiry-duration", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

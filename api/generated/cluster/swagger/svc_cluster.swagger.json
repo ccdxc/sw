@@ -3572,7 +3572,7 @@
     "clusterAutoMsgClusterWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterAutoMsgClusterWatchHelperWatchEvent"
@@ -3584,10 +3584,10 @@
     "clusterAutoMsgClusterWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/clusterCluster"
         }
       }
@@ -3595,7 +3595,7 @@
     "clusterAutoMsgHostWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterAutoMsgHostWatchHelperWatchEvent"
@@ -3607,10 +3607,10 @@
     "clusterAutoMsgHostWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/clusterHost"
         }
       }
@@ -3618,7 +3618,7 @@
     "clusterAutoMsgNodeWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterAutoMsgNodeWatchHelperWatchEvent"
@@ -3630,10 +3630,10 @@
     "clusterAutoMsgNodeWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/clusterNode"
         }
       }
@@ -3641,7 +3641,7 @@
     "clusterAutoMsgSmartNICWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterAutoMsgSmartNICWatchHelperWatchEvent"
@@ -3653,10 +3653,10 @@
     "clusterAutoMsgSmartNICWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/clusterSmartNIC"
         }
       }
@@ -3664,7 +3664,7 @@
     "clusterAutoMsgTenantWatchHelper": {
       "type": "object",
       "properties": {
-        "Events": {
+        "events": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterAutoMsgTenantWatchHelperWatchEvent"
@@ -3676,10 +3676,10 @@
     "clusterAutoMsgTenantWatchHelperWatchEvent": {
       "type": "object",
       "properties": {
-        "Type": {
+        "type": {
           "type": "string"
         },
-        "Object": {
+        "object": {
           "$ref": "#/definitions/clusterTenant"
         }
       }
@@ -3779,10 +3779,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterCluster"
@@ -3912,10 +3912,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterHost"
@@ -4094,10 +4094,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterNode"
@@ -4337,10 +4337,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterSmartNIC"
@@ -4524,10 +4524,10 @@
         "api-version": {
           "type": "string"
         },
-        "resource-version": {
-          "type": "string"
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
         },
-        "Items": {
+        "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterTenant"

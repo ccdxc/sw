@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringAutoMsgAlertWatchHelperWatchEvent, IMonitoringAutoMsgAlertWatchHelperWatchEvent } from './monitoring-auto-msg-alert-watch-helper-watch-event.model';
 
 export interface IMonitoringAutoMsgAlertWatchHelper {
-    'Events'?: Array<IMonitoringAutoMsgAlertWatchHelperWatchEvent>;
+    'events'?: Array<IMonitoringAutoMsgAlertWatchHelperWatchEvent>;
 }
 
 
 export class MonitoringAutoMsgAlertWatchHelper extends BaseModel implements IMonitoringAutoMsgAlertWatchHelper {
-    'Events': Array<MonitoringAutoMsgAlertWatchHelperWatchEvent> = null;
+    'events': Array<MonitoringAutoMsgAlertWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class MonitoringAutoMsgAlertWatchHelper extends BaseModel implements IMon
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<MonitoringAutoMsgAlertWatchHelperWatchEvent>();
+        this['events'] = new Array<MonitoringAutoMsgAlertWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class MonitoringAutoMsgAlertWatchHelper extends BaseModel implements IMon
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<MonitoringAutoMsgAlertWatchHelperWatchEvent>(this, 'Events', values['Events'], MonitoringAutoMsgAlertWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgAlertWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgAlertWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class MonitoringAutoMsgAlertWatchHelper extends BaseModel implements IMon
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<MonitoringAutoMsgAlertWatchHelperWatchEvent>('Events', this['Events'], MonitoringAutoMsgAlertWatchHelperWatchEvent);
+            this.fillFormArray<MonitoringAutoMsgAlertWatchHelperWatchEvent>('events', this['events'], MonitoringAutoMsgAlertWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class MonitoringAutoMsgAlertWatchHelper extends BaseModel implements IMon
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringAutoMsgAlertWatchHelperWatchEvent>(this, 'Events', this['Events'], MonitoringAutoMsgAlertWatchHelperWatchEvent);
+            this.fillModelArray<MonitoringAutoMsgAlertWatchHelperWatchEvent>(this, 'events', this['events'], MonitoringAutoMsgAlertWatchHelperWatchEvent);
         }
     }
 }

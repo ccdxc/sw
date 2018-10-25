@@ -10,14 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { WorkloadAutoMsgEndpointWatchHelperWatchEvent, IWorkloadAutoMsgEndpointWatchHelperWatchEvent } from './workload-auto-msg-endpoint-watch-helper-watch-event.model';
 
 export interface IWorkloadAutoMsgEndpointWatchHelper {
-    'Events'?: Array<IWorkloadAutoMsgEndpointWatchHelperWatchEvent>;
+    'events'?: Array<IWorkloadAutoMsgEndpointWatchHelperWatchEvent>;
 }
 
 
 export class WorkloadAutoMsgEndpointWatchHelper extends BaseModel implements IWorkloadAutoMsgEndpointWatchHelper {
-    'Events': Array<WorkloadAutoMsgEndpointWatchHelperWatchEvent> = null;
+    'events': Array<WorkloadAutoMsgEndpointWatchHelperWatchEvent> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'Events': {
+        'events': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class WorkloadAutoMsgEndpointWatchHelper extends BaseModel implements IWo
     */
     constructor(values?: any) {
         super();
-        this['Events'] = new Array<WorkloadAutoMsgEndpointWatchHelperWatchEvent>();
+        this['events'] = new Array<WorkloadAutoMsgEndpointWatchHelperWatchEvent>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class WorkloadAutoMsgEndpointWatchHelper extends BaseModel implements IWo
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this.fillModelArray<WorkloadAutoMsgEndpointWatchHelperWatchEvent>(this, 'Events', values['Events'], WorkloadAutoMsgEndpointWatchHelperWatchEvent);
+            this.fillModelArray<WorkloadAutoMsgEndpointWatchHelperWatchEvent>(this, 'events', values['events'], WorkloadAutoMsgEndpointWatchHelperWatchEvent);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,10 +60,10 @@ export class WorkloadAutoMsgEndpointWatchHelper extends BaseModel implements IWo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Events': new FormArray([]),
+                'events': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<WorkloadAutoMsgEndpointWatchHelperWatchEvent>('Events', this['Events'], WorkloadAutoMsgEndpointWatchHelperWatchEvent);
+            this.fillFormArray<WorkloadAutoMsgEndpointWatchHelperWatchEvent>('events', this['events'], WorkloadAutoMsgEndpointWatchHelperWatchEvent);
         }
         return this._formGroup;
     }
@@ -74,7 +74,7 @@ export class WorkloadAutoMsgEndpointWatchHelper extends BaseModel implements IWo
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<WorkloadAutoMsgEndpointWatchHelperWatchEvent>(this, 'Events', this['Events'], WorkloadAutoMsgEndpointWatchHelperWatchEvent);
+            this.fillModelArray<WorkloadAutoMsgEndpointWatchHelperWatchEvent>(this, 'events', this['events'], WorkloadAutoMsgEndpointWatchHelperWatchEvent);
         }
     }
 }
