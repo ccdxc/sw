@@ -240,6 +240,11 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 	}
 	shard := val.(*TshardState)
 
+	// TODO: remove the debug message
+	if shard.syncPending {
+		log.Warnf("replicate points in %s, shard: %+v while sync is pending", dn.nodeUUID, shard)
+	}
+
 	// parse the points
 	points, err := models.ParsePointsWithPrecision([]byte(req.Points), time.Time{}, "n")
 	if err != nil {

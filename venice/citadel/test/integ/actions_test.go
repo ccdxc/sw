@@ -402,12 +402,13 @@ func (it *integTestSuite) waitForTasks(c *C, locator string, params ActionParams
 // writePoints writes a point using one of the brokers
 func (it *integTestSuite) writePoints(points []models.Point) error {
 	var err error
-	for _, broker := range it.brokers {
+	for i, broker := range it.brokers {
 		if !broker.IsStopped() {
 			err = broker.WritePoints(context.Background(), "default", points)
 			if err == nil {
 				return nil
 			}
+			log.Warnf("write failed on broker-%d, %s", i, err)
 			// retry next broker after a small delay
 			time.Sleep(time.Millisecond * 100)
 		}
@@ -488,7 +489,7 @@ func (it *integTestSuite) verifyPointsPattern(c *C, locator string, params Actio
 		Assert(c, len(results[0].Series[0].Columns) == 5, fmt.Sprintf("%s: Invalid number of columns", locator), results)
 		Assert(c, (results[0].Series[0].Columns[0] == "time" && results[0].Series[0].Columns[1] == "key1" && results[0].Series[0].Columns[2] == "key2" &&
 			results[0].Series[0].Columns[3] == "value1" && results[0].Series[0].Columns[4] == "value2"), fmt.Sprintf("%s: Invalid column names", locator), results)
-		Assert(c, len(results[0].Series[0].Values) == count, fmt.Sprintf("%s: Invalid number of rows", locator), results)
+		Assert(c, len(results[0].Series[0].Values) == count, fmt.Sprintf("%s: Invalid number of rows, expected:%d, got:%d", locator, count, len(results[0].Series[0].Values)), results)
 
 		// verify each key and value
 		for ridx := 0; ridx < count; ridx++ {

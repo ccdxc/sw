@@ -57,7 +57,7 @@ func (it *integTestSuite) TestTstoreNodeRestartQuick(c *C) {
 				},
 			},
 			{
-				StepName: "NodeRestatQuick",
+				StepName: "NodeRestartQuick",
 				Repeat:   it.numNodes,
 				Actions: []TestAction{
 					{
@@ -181,7 +181,7 @@ func (it *integTestSuite) TestTstoreNodeRestartQuickWriteLoss(c *C) {
 				},
 			},
 			{
-				StepName: "NodeRestatQuick",
+				StepName: "NodeRestartQuick",
 				Repeat:   it.numNodes,
 				Actions: []TestAction{
 					{
@@ -244,7 +244,7 @@ func (it *integTestSuite) TestTstoreNodeRestartSlow(c *C) {
 				},
 			},
 			{
-				StepName: "NodeRestatSlow",
+				StepName: "NodeRestartSlow",
 				Repeat:   it.numNodes,
 				Actions: []TestAction{
 					{
@@ -459,7 +459,7 @@ func (it *integTestSuite) TestTstoreNodeRestartLeaderQuick(c *C) {
 				},
 			},
 			{
-				StepName: "NodeRestatQuickLeader",
+				StepName: "NodeRestartQuickLeader",
 				Repeat:   it.numNodes,
 				Actions: []TestAction{
 					{
@@ -521,7 +521,7 @@ func (it *integTestSuite) TestTstoreNodeSoftRestartLeader(c *C) {
 				},
 			},
 			{
-				StepName: "NodeSoftRestatLeader",
+				StepName: "NodeSoftRestartLeader",
 				Repeat:   it.numNodes,
 				Actions: []TestAction{
 					{
@@ -585,7 +585,7 @@ func (it *integTestSuite) TestTstoreNodeRestartLeaderSlow(c *C) {
 				},
 			},
 			{
-				StepName: "NodeRestatSlowLeader",
+				StepName: "NodeRestartSlowLeader",
 				Repeat:   it.numNodes,
 				Actions: []TestAction{
 					{
