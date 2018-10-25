@@ -170,24 +170,15 @@ error port_svc::update_port_status(google::protobuf::uint32 port_id,
 void
 port_event_cb (uint32_t port_num, port_event_t event)
 {
-    PortStatusPtr port_status;
-
-    // TODO: FIX ME
-    //port_status = PortStatus::FindObject(g_linkmgr_svc.sdk, key(port_num));
-    if (port_status == nullptr) {
-        HAL_TRACE_ERR("Failed to find port status object for port {}", port_num);
-        return;
-    }
-
     switch (event) {
     case port_event_t::PORT_EVENT_LINK_UP:
         HAL_TRACE_DEBUG("port: {}, Link UP", port_num);
-        port_status->set_oper_status(port::PORT_OPER_STATUS_UP);
+        port_svc_get()->update_port_status(port_num, port::PORT_OPER_STATUS_UP);
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
         HAL_TRACE_DEBUG("port: {}, Link DOWN", port_num);
-        port_status->set_oper_status(port::PORT_OPER_STATUS_DOWN);
+        port_svc_get()->update_port_status(port_num, port::PORT_OPER_STATUS_DOWN);
         break;
 
     default:
