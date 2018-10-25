@@ -20,20 +20,17 @@ esp_ipv4_tunnel_h2n_dma_cmd_fill_esp_hdr:
     add r1, k.t2_s2s_in_page_addr, IPSEC_SALT_HEADROOM
     add r1, r1, d.iv_size
     phvwr p.dma_cmd_fill_esp_hdr_dma_cmd_addr, r1
-    phvwri p.dma_cmd_fill_esp_hdr_dma_cmd_phv_start_addr, IPSEC_ESP_HDR_PHV_START
     smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
-    phvwri.!c3 p.dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr, IPSEC_ESP_HDR_PHV_END
-    phvwri.c3 p.dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr, IPSEC_ESP2_HDR_PHV_END
+    phvwri.!c3 p.{dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr...dma_cmd_fill_esp_hdr_dma_cmd_phv_start_addr}, ((IPSEC_ESP_HDR_PHV_END << 10) | IPSEC_ESP_HDR_PHV_START)
+    phvwri.c3 p.{dma_cmd_fill_esp_hdr_dma_cmd_phv_end_addr...dma_cmd_fill_esp_hdr_dma_cmd_phv_start_addr}, ((IPSEC_ESP2_HDR_PHV_END << 10) | IPSEC_ESP_HDR_PHV_START)
   
 esp_ipv4_tunnel_h2n_dma_cmd_to_write_input_desc_aol:
     add r1, k.t2_s2s_in_desc_addr, 64
     phvwr p.dma_cmd_in_desc_aol_dma_cmd_addr, r1
     
 esp_ipv4_tunnel_h2n_dma_cmd_to_write_output_desc_aol:
-    phvwri p.dma_cmd_out_desc_aol_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     add r1, k.ipsec_to_stage4_out_desc_addr, 64
     phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, r1 
-    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_OUT_DESC_AOL_START
-    phvwri.e p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
+    phvwri.e p.{dma_cmd_out_desc_aol_dma_cmd_phv_end_addr...dma_cmd_out_desc_aol_dma_cmd_type}, ((IPSEC_OUT_DESC_AOL_END << 18) | (IPSEC_OUT_DESC_AOL_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     nop
 

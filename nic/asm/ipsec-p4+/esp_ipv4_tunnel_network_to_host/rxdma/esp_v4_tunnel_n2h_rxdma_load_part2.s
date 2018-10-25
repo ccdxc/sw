@@ -18,8 +18,7 @@ esp_v4_tunnel_n2h_rxdma_load_part2:
     phvwri p.dma_cmd_iv_salt_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
     phvwri p.dma_cmd_pkt2mem2_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
-    phvwr p.dma_cmd_iv_salt_dma_cmd_phv_start_addr, IPSEC_IN_DESC_IV_SALT_START
-    phvwr.e p.dma_cmd_iv_salt_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_SALT_END
+    phvwr.e p.{dma_cmd_iv_salt_dma_cmd_phv_end_addr...dma_cmd_iv_salt_dma_cmd_phv_start_addr}, ((IPSEC_IN_DESC_IV_SALT_END << 10) | IPSEC_IN_DESC_IV_SALT_START)
     nop
     
 

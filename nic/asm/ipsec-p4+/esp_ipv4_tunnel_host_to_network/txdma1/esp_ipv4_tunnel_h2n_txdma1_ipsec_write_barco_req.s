@@ -11,16 +11,14 @@ struct phv_ p;
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     phvwr p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage4_barco_req_addr 
-    phvwri p.brq_req_write_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
-    phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END 
+    phvwri p.{brq_req_write_dma_cmd_phv_end_addr...brq_req_write_dma_cmd_phv_start_addr}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 10) | IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START)
 
 esp_ipv4_tunnel_h2n_post_to_barco_ring:
     and r3, d.barco_pindex, IPSEC_BARCO_RING_INDEX_MASK 
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr 
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
-    phvwri p.dma_cmd_post_barco_ring_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
-    phvwri p.dma_cmd_post_barco_ring_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END
+    phvwri p.{dma_cmd_post_barco_ring_dma_cmd_phv_end_addr...dma_cmd_post_barco_ring_dma_cmd_phv_start_addr}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 10) | IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START)
 
 esp_ipv4_tunnel_h2n_dma_cmd_incr_barco_pindex:
     add r7, d.barco_pindex, 1

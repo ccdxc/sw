@@ -21,8 +21,7 @@ esp_v4_tunnel_n2h_post_to_barco_ring:
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
-    phvwri p.dma_cmd_post_barco_ring_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
-    phvwri p.dma_cmd_post_barco_ring_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END
+    phvwri p.{dma_cmd_post_barco_ring_dma_cmd_phv_end_addr...dma_cmd_post_barco_ring_dma_cmd_phv_start_addr}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 10) | IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START)
 
 esp_v4_tunnel_n2h_dma_cmd_incr_barco_pindex:
     add r7, d.barco_pindex, 1
@@ -37,8 +36,5 @@ esp_v4_tunnel_n2h_dma_cmd_incr_barco_pindex:
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP)
     phvwr p.barco_req_doorbell_address, r4.dx
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, r7)
-    phvwr p.barco_req_doorbell_data, r3.dx
-
-
-    nop.e
+    phvwr.e p.barco_req_doorbell_data, r3.dx
     nop

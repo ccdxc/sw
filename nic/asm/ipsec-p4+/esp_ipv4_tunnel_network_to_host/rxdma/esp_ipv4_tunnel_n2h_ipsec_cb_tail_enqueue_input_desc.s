@@ -30,8 +30,7 @@ esp_ipv4_tunnel_n2h_post_to_cb_ring:
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.cb_ring_base_addr 
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
-    phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_start_addr, IPSEC_CB_RING_IN_DESC_START
-    phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_end_addr, IPSEC_CB_RING_IN_DESC_END
+    phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_phv_start_addr}, ((IPSEC_CB_RING_IN_DESC_END << 10) | IPSEC_CB_RING_IN_DESC_START)
 
 esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
     add r7, d.cb_pindex, 1

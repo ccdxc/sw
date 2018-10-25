@@ -21,10 +21,8 @@ esp_ipv4_tunnel_h2n_post_to_cb_ring:
     and r3, k.ipsec_global_ipsec_cb_pindex, IPSEC_CB_RING_INDEX_MASK 
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     add r3, r3, r2
-    phvwri p.dma_cmd_post_cb_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
-    phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_start_addr, IPSEC_CB_RING_IN_DESC_START
-    phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_end_addr, IPSEC_CB_RING_IN_DESC_END 
+    phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_type}, ((IPSEC_CB_RING_IN_DESC_END << 18) | (IPSEC_CB_RING_IN_DESC_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     add r7, k.ipsec_global_ipsec_cb_pindex, 1
     andi r7, r7, IPSEC_CB_RING_INDEX_MASK 
 esp_ipv4_tunnel_h2n_rxdma_dma_cmd_ring_doorbell:
