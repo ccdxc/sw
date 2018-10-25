@@ -509,8 +509,9 @@ void usage(char *argv[])
               << "       " << argv[0] << " conf <cfg_file>" << std::endl
               << "       " << argv[0] << " dump <out_file>" << std::endl
               << "       " << argv[0] << " show" << std::endl
-              << "       " << argv[0] << " fmt" << std::endl
-              << "       " << argv[0] << " <enable/disable/reset>" << std::endl;
+              << "       " << argv[0] << " enable" << std::endl
+              << "       " << argv[0] << " disable" << std::endl
+              << "       " << argv[0] << " reset" << std::endl;
 }
 
 int main(int argc, char *argv[])
