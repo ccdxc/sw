@@ -8,6 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils/nodewatcher"
+
 	"github.com/pensando/sw/nic/agent/ipc"
 	ipcproto "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
@@ -35,14 +39,31 @@ func (s *service) OnMountComplete() {
 	log.Printf("OnMountComplete() done for %s\n", s.name)
 	s.sysmgrClient.InitDone()
 }
+
 func (s *service) Name() string {
 	return s.name
+}
+
+func reportMetrics(nodeUUID string, rc resolver.Interface) error {
+	// report node metrics
+	node := &cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{
+			Kind: "SmartNIC",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: fmt.Sprintf("naples-%s", nodeUUID),
+		},
+	}
+
+	return nodewatcher.NewNodeWatcher(context.Background(), node, rc, 30, log.WithContext("pkg", "nodewatcher"))
 }
 
 func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		hostIf          = flag.String("hostif", "ntrunk0", "Host facing interface")
+		mode            = flag.String("mode", "classic", "specify the agent mode either classic or managed")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tmagent)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
@@ -70,6 +91,11 @@ func main() {
 	// Initialize logger config
 	log.SetConfig(logConfig)
 
+	macAddr, err := netutils.GetIntfMac(*hostIf)
+	if err != nil {
+		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
+	}
+
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
 	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
 	shm, err := ipc.NewSharedMem(mSize, instCount, "/fwlog_ipc_shm")
@@ -77,28 +103,30 @@ func main() {
 		log.Fatal(err)
 	}
 
-	rList := strings.Split(*resolverURLs, ",")
-	cfg := &resolver.Config{
-		Name:    globals.Tmagent,
-		Servers: rList,
-	}
+	if *mode == "managed" {
+		rList := strings.Split(*resolverURLs, ",")
+		cfg := &resolver.Config{
+			Name:    globals.Tmagent,
+			Servers: rList,
+		}
 
-	rc := resolver.New(cfg)
-	tsdbOpts := &ntsdb.Opts{ClientName: "tmAgent",
-		ResolverClient: rc,
-		Collector:      globals.Collector,
-		DBName:         "FWLogs",
-	}
-	ntsdb.Init(context.Background(), tsdbOpts)
+		rc := resolver.New(cfg)
 
-	fwTable, err = ntsdb.NewTable("firewall", &ntsdb.TableOpts{})
-	if err != nil {
-		log.Fatal(err)
-	}
+		if err := reportMetrics(macAddr.String(), rc); err != nil {
+			log.Fatal(err)
+		}
 
-	for ix := 0; ix < instCount; ix++ {
-		ipc := shm.IPCInstance()
-		go ipc.Receive(context.Background(), processFWEvent)
+		fwTable, err = ntsdb.NewTable("firewall", &ntsdb.TableOpts{})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for ix := 0; ix < instCount; ix++ {
+			ipc := shm.IPCInstance()
+			go ipc.Receive(context.Background(), processFWEvent)
+		}
+
+	} else { // todo: fwlog export to external syslog server
 	}
 
 	_, err = restapi.NewRestServer(*restURL)

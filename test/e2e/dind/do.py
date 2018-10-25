@@ -170,6 +170,7 @@ class NaplesNode(Node):
 
     def stopCluster(self):
         self.runCmd("""killall -q netagent""", ignore_error=True)
+        self.runCmd("""killall -q tmagent""", ignore_error=True)
         self.runCmd("""killall -q nmd""", ignore_error=True)
         pass
     def restartCluster(self):
@@ -187,6 +188,7 @@ class NaplesNode(Node):
         else:
             runCommand("""docker exec -d {} /nmd -cmdregistration {}:9002 -cmdupdates {}:9009 -cmdcerts {}:9009 -hostif eth1 -primary-mac 44:44:44:44:00:{:02d} -hostname {}-host -resolver {}:9009 -mode host -updinterval 2 & """.format(self.name, self.clustervip, self.clustervip, self.clustervip, self.containerIndex, self.name, self.clustervip))
             runCommand("""docker exec -d {} /netagent -npm pen-npm -resolver-urls {}:9009 -hostif eth1 -datapath mock -mode managed -disabletsa &""".format(self.name, self.clustervip))
+            runCommand("""docker exec -d {} /tmagent -resolver-urls {}:9009 -hostif eth1 -mode managed  &""".format(self.name, self.clustervip))
             runCommand("""docker exec -d {} /nevtsproxy -resolver-urls {}:9009 &""".format(self.name, self.clustervip))
 
 def initCluster(nodeAddr, quorumNodes, clustervip):
