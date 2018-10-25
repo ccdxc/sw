@@ -33,6 +33,7 @@ message CpuCbSpec {
   uint64                total_tx_pkts              = 4;
   uint64                total_rx_pkts              = 5;
   uint64                rx_qfull_drop_errors       = 6;
+  uint64                tx_sem_full_drops          = 7;
 }
 
 // CpuCbRequestMsg is batched add or modify cpucb request

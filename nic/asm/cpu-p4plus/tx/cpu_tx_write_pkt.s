@@ -21,6 +21,7 @@ struct cpu_tx_write_pkt_d d;
         
 %%
     .align
+    .param cpu_tx_sem_full_drop_error
 cpu_tx_write_pkt_start:
     CAPRI_CLEAR_TABLE_VALID(0)
 
@@ -132,10 +133,10 @@ cpu_tx_write_pkt_done:
     nop
 
 cpu_tx_ascq_full_fatal_error:
-    CAPRI_CLEAR_TABLE0_VALID
+    add r3, r0, k.{common_phv_cpucb_addr_sbit0_ebit3...common_phv_cpucb_addr_sbit36_ebit39}
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, cpu_tx_sem_full_drop_error, r3, TABLE_SIZE_512_BITS)
     CAPRI_CLEAR_TABLE1_VALID
     CAPRI_CLEAR_TABLE2_VALID
     CAPRI_CLEAR_TABLE3_VALID
-    illegal
     nop.e
     nop

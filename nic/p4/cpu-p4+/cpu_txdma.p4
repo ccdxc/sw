@@ -22,6 +22,8 @@
 #define tx_table_s4_t0 cpu_tx_write_pkt
 #define tx_table_s4_t0_action write_pkt
 
+#define tx_table_s5_t0_action cpu_tx_sem_full_drop
+
 #include "../common-p4+/common_txdma.p4"
 
 #define GENERATE_GLOBAL_K \
@@ -30,6 +32,7 @@
     modify_field(common_global_scratch.add_qs_trlr, common_phv.add_qs_trlr); \
     modify_field(common_global_scratch.free_buffer, common_phv.free_buffer); \
     modify_field(common_global_scratch.ascq_base, common_phv.ascq_base); \
+    modify_field(common_global_scratch.cpucb_addr, common_phv.cpucb_addr); \
    
 
 /********************
@@ -59,6 +62,24 @@ header_type cpu_txdma_initial_action_t {
         ascq_sem_inf_addr       : 64;
         asq_pi_ci_eq_drops      : 64;
         asq_total_pkts          : 64;
+        ascq_sem_full_drops     : 32;
+    }
+}
+
+header_type cpu_txdma_initial_action_with_pc_t {
+    fields {
+        pc                       : 8;
+        // 8 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        
+        CAPRI_QSTATE_HEADER_RING(0)
+
+        asq_base                : 64;
+        ascq_base               : 64;
+        ascq_sem_inf_addr       : 64;
+        asq_pi_ci_eq_drops      : 64;
+        asq_total_pkts          : 64;
+        ascq_sem_full_drops     : 32;
     }
 }
 
@@ -91,6 +112,7 @@ header_type common_global_phv_t {
         add_qs_trlr             : 1;
         free_buffer             : 1;
         ascq_base               : CPU_HBM_ADDRESS_WIDTH;
+        cpucb_addr              : 40;
     }
 }
 
@@ -116,6 +138,9 @@ header_type to_stage_4_phv_t {
  *****************************************************************************/
 @pragma scratch_metadata
 metadata cpu_txdma_initial_action_t cpu_txdma_initial_d;
+
+@pragma scratch_metadata
+metadata cpu_txdma_initial_action_with_pc_t cpu_txdma_initial_with_pc_d;
 
 @pragma scratch_metadata
 metadata read_asq_ci_d_t read_asq_ci_d;
@@ -203,13 +228,40 @@ metadata dma_cmd_phv2mem_t dma_cmd_ascq;
  * These action functions are currently only to generate the k+i and d structs
  * and do not implement any pseudo code
  *****************************************************************************/
+action cpu_tx_sem_full_drop(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
+                            pi_0, ci_0, asq_base, ascq_base, ascq_sem_inf_addr,
+                            asq_pi_ci_eq_drops, asq_total_pkts, ascq_sem_full_drops) {
+
+    GENERATE_GLOBAL_K
+    // d for stage 0
+    
+    modify_field(cpu_txdma_initial_with_pc_d.pc, pc);
+    modify_field(cpu_txdma_initial_with_pc_d.rsvd, rsvd);
+    modify_field(cpu_txdma_initial_with_pc_d.cosA, cosA);
+    modify_field(cpu_txdma_initial_with_pc_d.cosB, cosB);
+    modify_field(cpu_txdma_initial_with_pc_d.cos_sel, cos_sel);
+    modify_field(cpu_txdma_initial_with_pc_d.eval_last, eval_last);
+    modify_field(cpu_txdma_initial_with_pc_d.host, host);
+    modify_field(cpu_txdma_initial_with_pc_d.total, total);
+    modify_field(cpu_txdma_initial_with_pc_d.pid, pid);
+
+    modify_field(cpu_txdma_initial_with_pc_d.pi_0, pi_0);
+    modify_field(cpu_txdma_initial_with_pc_d.ci_0, ci_0);
+    
+    modify_field(cpu_txdma_initial_with_pc_d.asq_base, asq_base);
+    modify_field(cpu_txdma_initial_with_pc_d.ascq_base, ascq_base);
+    modify_field(cpu_txdma_initial_with_pc_d.ascq_sem_inf_addr, ascq_sem_inf_addr);
+    modify_field(cpu_txdma_initial_with_pc_d.asq_pi_ci_eq_drops, asq_pi_ci_eq_drops);
+    modify_field(cpu_txdma_initial_with_pc_d.asq_total_pkts, asq_total_pkts);
+    modify_field(cpu_txdma_initial_with_pc_d.ascq_sem_full_drops, ascq_sem_full_drops);
+}
 
 /*
  * Stage 0 table 0 action
  */
 action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
                              pi_0, ci_0, asq_base, ascq_base, ascq_sem_inf_addr, 
-                             asq_pi_ci_eq_drops, asq_total_pkts) {
+                             asq_pi_ci_eq_drops, asq_total_pkts, ascq_sem_full_drops) {
     // k + i for stage 0
 
     // from intrinsic
@@ -238,6 +290,7 @@ action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, 
     modify_field(cpu_txdma_initial_d.ascq_sem_inf_addr, ascq_sem_inf_addr);
     modify_field(cpu_txdma_initial_d.asq_pi_ci_eq_drops, asq_pi_ci_eq_drops);
     modify_field(cpu_txdma_initial_d.asq_total_pkts, asq_total_pkts);
+    modify_field(cpu_txdma_initial_d.ascq_sem_full_drops, ascq_sem_full_drops);
 }
 
 // Stage 1 table 0

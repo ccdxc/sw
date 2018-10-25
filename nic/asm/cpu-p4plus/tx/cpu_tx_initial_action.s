@@ -30,7 +30,7 @@ cpu_tx_stage0_start:
     
     phvwr   p.common_phv_ascq_base, d.{u.cpu_tx_initial_action_d.ascq_base}.dx
     phvwr   p.to_s3_ascq_sem_inf_addr, d.{u.cpu_tx_initial_action_d.ascq_sem_inf_addr}.dx
-        
+    phvwr   p.common_phv_cpucb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 table_read_asq_cindex:
     add     r_asq_addr, r0, d.{u.cpu_tx_initial_action_d.ci_0}.hx
     andi    r_asq_addr, r_asq_addr, ((1 << CPU_ASQ_TABLE_SHIFT) - 1)
