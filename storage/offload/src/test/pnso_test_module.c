@@ -339,6 +339,7 @@ static const unsigned char *default_feature_yaml_list[PNSO_SVC_TYPE_MAX] = {
 
 
 static const unsigned char default_cp_hash_yaml[] =
+"tests:\n"
 "  - test:\n"
 "      idx: 5\n"
 "      svc_chains: 5\n"
