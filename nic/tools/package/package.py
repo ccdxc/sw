@@ -46,6 +46,11 @@ parser.add_argument('--dry-run', dest='dry_run',
                     action='store_true',
                     help='Dump debug info. Does not package anything')
 
+# pipeline
+parser.add_argument('--pipeline', dest='pipeline', default='iris',
+                     action='store', choices=['apollo', 'gft', 'iris'],
+                     help='Pipeline')
+
 args = parser.parse_args()
 
 if args.target == 'sim':
@@ -54,7 +59,10 @@ if args.target == 'sim':
     objcopy_bin = 'objcopy'
     strip_bin   = 'strip'
     output_dir  = pwd + '/fake_root_target/x86_64'
-    files.append('nic/tools/package/pack_sim.txt')
+    if args.pipeline == 'apollo':
+        files.append('nic/tools/package/pack_sim_apollo.txt')
+    else:
+        files.append('nic/tools/package/pack_sim.txt')
 elif args.target == 'zebu':
     print ("Packaging for zebu")
     arm_pkg     = 0

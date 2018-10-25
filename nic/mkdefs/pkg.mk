@@ -23,7 +23,8 @@ package: ${PKG_PREREQS}
 			${MAKE} -j1 BUILD_ARCHES=x86_64 -C ${TOPDIR}/platform
         endif
 		${MAKE} package-clean
-		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target sim --no-strip
+		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py \
+			--pipeline $(PIPELINE) --target sim --no-strip
     endif
 
 package-zebu: package-clean ${PKG_PREREQS}
@@ -40,7 +41,7 @@ package-haps-dbg: package-clean ${PKG_PREREQS}
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target haps-dbg
 
 package-storage-offload:
-	${TOPDIR}/storage/offload/tools/drivers-linux.sh	 
+	${TOPDIR}/storage/offload/tools/drivers-linux.sh
 
 release: ${PKG_PREREQS}
     ifneq ($(ARCH),aarch64)

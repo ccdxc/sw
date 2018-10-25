@@ -692,7 +692,7 @@ TEST_F(apollo_test, test1) {
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
 
-    const char *hal_conf_file = "conf/hal.json";
+    const char *hal_conf_file = "conf/apollo/hal.json";
     if (getenv("HAL_PLATFORM_MODE_RTL")) {
         hal_conf_file = "conf/apollo/hal_rtl.json";
     }
@@ -703,11 +703,11 @@ TEST_F(apollo_test, test1) {
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_EQ(ret, HAL_RET_OK);
     printf("Loading Capri config\n");
-    ret = capri_load_config((char *)"build/x86_64/apollo/pgm_bin/apollo_p4");
+    ret = capri_load_config((char *)"conf/apollo/p4_bin");
     ASSERT_EQ(ret, HAL_RET_OK);
-    ret = capri_load_config((char *)"build/x86_64/apollo/pgm_bin/apollo_rxdma");
+    ret = capri_load_config((char *)"conf/apollo/rxdma_bin");
     ASSERT_EQ(ret, HAL_RET_OK);
-    ret = capri_load_config((char *)"build/x86_64/apollo/pgm_bin/apollo_txdma");
+    ret = capri_load_config((char *)"conf/apollo/txdma_bin");
     ASSERT_EQ(ret, HAL_RET_OK);
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
@@ -725,17 +725,17 @@ TEST_F(apollo_test, test1) {
     printf("Loading Programs\n");
     asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
     ret = capri_load_mpu_programs("apollo_p4",
-                                  (char *)"build/x86_64/apollo/bin/p4asm",
+                                  (char *)"conf/apollo/p4_asm",
                                   asm_base_addr, NULL, 0, sort_mpu_programs);
     ASSERT_EQ(ret, HAL_RET_OK);
     asm_base_addr = (uint64_t)get_start_offset((char *)JRXDMA_PRGM);
     ret = capri_load_mpu_programs("apollo_rxdma",
-                                  (char *)"build/x86_64/apollo/bin/p4pasm_rxdma",
+                                  (char *)"conf/apollo/rxdma_asm",
                                   asm_base_addr, NULL, 0, NULL);
     ASSERT_EQ(ret, HAL_RET_OK);
     asm_base_addr = (uint64_t)get_start_offset((char *)JTXDMA_PRGM);
     ret = capri_load_mpu_programs("apollo_txdma",
-                                  (char *)"build/x86_64/apollo/bin/p4pasm_txdma",
+                                  (char *)"conf/apollo/txdma_asm",
                                   asm_base_addr, NULL, 0, NULL);
     ASSERT_EQ(ret, HAL_RET_OK);
 
