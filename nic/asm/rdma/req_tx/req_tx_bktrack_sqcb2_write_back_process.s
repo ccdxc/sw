@@ -15,6 +15,7 @@ struct sqcb2_t d;
 #define K_INV_KEY         CAPRI_KEY_RANGE(IN_P, inv_key_sbit0_ebit6, inv_key_sbit31_ebit31)
 #define K_OP_TYPE         CAPRI_KEY_FIELD(IN_P, op_type)
 #define K_SQ_C_INDEX      CAPRI_KEY_RANGE(IN_P, sq_cindex_sbit0_ebit2, sq_cindex_sbit11_ebit15)
+#define K_BKTRACK_IN_PROGRESS CAPRI_KEY_FIELD(IN_P, bktrack_in_progress)
 %%
 
 .align
@@ -44,9 +45,8 @@ req_tx_bktrack_sqcb2_write_back_process:
      // Update tx_psn, ssn and lsn in sqcb1 for RXDMA
      SQCB1_ADDR_GET(r1)
      add            r2, FIELD_OFFSET(sqcb1_t, tx_psn), r1
-     memwr.w        r2, d.{tx_psn...ssn[23:16]}
-     add            r2, r2, 4
-     memwr.h        r2, d.ssn[15:0]
+     add            r3, r0, d.{tx_psn...ssn}, 16
+     memwr.d        r2, r3
      // Also, empty rrq ring, which will then get posted
      // with retransmit requests
      add            r2, FIELD_OFFSET(sqcb1_t, rrq_pindex), r1
@@ -56,10 +56,8 @@ req_tx_bktrack_sqcb2_write_back_process:
      add            r2, FIELD_OFFSET(sqcb1_t, rrq_spec_cindex), r1
      memwr.h        r2, 0
 
-     tblwr            d.rrq_pindex, 0
-     tblwr            d.rrq_cindex, 0
+     tblwr           d.{rrq_pindex...rrq_cindex}, 0
  
-     SQCB0_ADDR_GET(r1)
      tblwr          d.need_credits, 0
      tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
 
@@ -68,5 +66,11 @@ req_tx_bktrack_sqcb2_write_back_process:
      tblwr          d.exp_rsp_psn, r3
      CAPRI_SET_TABLE_1_VALID(0)
 
+     // Finally, clear bktrack_in_progress
+     bbeq           K_BKTRACK_IN_PROGRESS, 1, exit
+     add            r2, FIELD_OFFSET(sqcb1_t, bktrack_in_progress), r1
+     memwr.b        r2, 0
+
+exit:
      nop.e
      nop

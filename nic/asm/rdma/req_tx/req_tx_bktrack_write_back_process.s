@@ -40,11 +40,6 @@ req_tx_bktrack_write_back_process:
      // accepting response packets
      tblwr         SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
 
-     SQCB1_ADDR_GET(r1)
-     add           r1, FIELD_OFFSET(sqcb1_t, bktrack_in_progress), r1
-     memwr.b       r1, 0
-
-
 update_spec_cindex:
  
      // Set speculative cindex to next cindex so that speculative wqe 

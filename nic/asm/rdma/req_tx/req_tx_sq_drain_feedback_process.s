@@ -51,6 +51,7 @@ req_tx_sq_drain_feedback_process:
 
     phvwr          CAPRI_PHV_FIELD(TO_S7_STATS_P, sq_drain), 1
 
+    CAPRI_SET_TABLE_2_VALID(0)
     //invoke stats_process to account for sq_drain event
     CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
 

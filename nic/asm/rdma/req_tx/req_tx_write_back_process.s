@@ -57,6 +57,7 @@ write_back:
 #endif
 
 skip_poll_success:
+    tblwr.c1      d.curr_wqe_ptr, 0
     // if (write_back_info_p->last)
     // RING_C_INDEX_INCREMENT(sqcb0_p, SQ_RING_ID)
     tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1

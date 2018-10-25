@@ -419,6 +419,10 @@ op_type_end:
     // if read_len is < pmtu, then increment tx_psn by 1
     sne            c6, r3, r0
 
+    // set exp_rsp_psn to be the last read response psn
+    sub            r7, d.tx_psn, 1
+    mincr          r7, 24, 0
+
     // tx_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0
     add.c6         r3, K_RD_READ_LEN, r0
     mincr.c6       r3, K_RD_LOG_PMTU, r0
@@ -427,7 +431,7 @@ op_type_end:
 inc_psn:
     // exp_rsp_psn is the psn for which ack_req bit is set or psn of last read
     // rsp packet of read_req or psn of rsp packet of atomic_req
-    add            r7, d.tx_psn, r0
+    add.!c6        r7, d.tx_psn, r0
 
     // sqcb1_p->tx_psn++
     tblmincri.!c6  d.tx_psn, 24, 1
@@ -438,9 +442,9 @@ inc_psn:
 
     SQCB1_ADDR_GET(r1)
     add            r2, FIELD_OFFSET(sqcb1_t, tx_psn), r1
-    memwr.w        r2, d.{tx_psn...ssn[23:16]}
-    add            r2, r2, 4
-    memwr.h        r2, d.ssn[15:0]
+    // memwr to sqcb1 - tx_psn[63:40], ssn[39:16], rsvd2[15:0]
+    add            r3, r0, d.{tx_psn...ssn}, 16
+    memwr.d        r2, r3
 
     // set check_credits to false if credit check is disabled
     bbeq           d.disable_credits, 1, rrq_p_index_chk
@@ -542,7 +546,7 @@ spec_fail:
     CAPRI_SET_TABLE_2_VALID(0)
 
 rrq_full:
-#ifndef HAPS
+#if !(defined(HAPS) || defined(HW))
     // For Model, to avoid infinite loop, disable scheduler for this QP and upon
     // receiving response for the outstanding request, scheduler will be
     // re-enabled in the test to process the next read request.

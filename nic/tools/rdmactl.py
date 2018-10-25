@@ -137,7 +137,6 @@ class RdmaEQstate(Packet):
 class RdmaSQCB0state(Packet):
     name = "RdmaSQCB0state"
     fields_desc = [
-        #SQCB0
         ByteField("pc_offset", 0),
         ByteField("rsvd0", 0),
         BitField("cosB", 0, 4),
@@ -157,7 +156,7 @@ class RdmaSQCB0state(Packet):
         LEShortField("p_index3", 0),
         LEShortField("c_index3", 0),
         LEShortField("sqd_cindex", 0),
-        LEShortField("rsvd1", 0),
+        LEShortField("sqcb0_rsvd1", 0),
 
         XIntField("pt_base_addr/sq_hbm_base_addr", 0),
         XIntField("sqcb0_header_template_addr", 0),
@@ -188,23 +187,17 @@ class RdmaSQCB0state(Packet):
         ByteField("num_sges", 0),
 
         BitField("sqcb0_sq_drained", 0, 1),
-        BitField("ac_local_wr", 0, 1),
-        BitField("ac_mw_bind", 0, 1),
-        BitField("rsvd_state_flags", 0, 5),
-
+        BitField("rsvd_state_flags", 0, 7),
         BitField("priv_oper_enable", 0, 1),
         BitField("in_progress", 0, 1),
         BitField("sqcb0_bktrack_in_progress", 0, 1),
-        BitField("rsvd_flag", 0, 1),
+        BitField("frpmr_in_progress", 0, 1),
         BitField("color", 0, 1),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
         BitField("busy", 0, 1),
 
-        BitField("cb1_busy", 0, 1),
-        BitField("need_credits", 0, 1),
-        BitField("frpmr_in_progress", 0, 1),
-        BitField("rsvd_cb1_flags", 0, 5),
+        BitField("sqcb0_rsvd2", 0, 8),
     ]
         
 class RdmaSQCB1state(Packet):
@@ -213,8 +206,9 @@ class RdmaSQCB1state(Packet):
         # SQCB1 
         ByteField("pc_offset", 0),
         X3BytesField("cq_id", 0),
-        ShortField("sqcb1_p_index4", 0),
-        ShortField("c_index4", 0),
+        ByteField("sqcb1_p_index4", 0),
+        ByteField("c_index4", 0),
+        ShortField("sqcb1_rsvd1", 16),
 
         XIntField("sqcb1_rrq_base_addr", 0),
         ByteField("sqcb1_log_rrq_size", 0),
@@ -227,7 +221,8 @@ class RdmaSQCB1state(Packet):
 
         X3BytesField("sqcb1_tx_psn", 0),
         X3BytesField("sqcb1_ssn", 0),
-        X3BytesField("rsvd2", 0),
+        ShortField("sqcb1_rsvd2", 0),
+        ByteField("sqcb1_rsvd3", 0),
 
         XIntField("sqcb1_header_template_addr", 0),
         ByteField("sqcb1_header_template_size", 0),
@@ -240,7 +235,7 @@ class RdmaSQCB1state(Packet):
         X3BytesField("msn", 0),
 
         BitField("credits", 0, 5),
-        BitField("rsvd3", 0, 3),
+        BitField("sqcb1_rsvd4", 0, 3),
 
         X3BytesField("max_tx_psn", 0),
         X3BytesField("max_ssn", 0),
@@ -253,11 +248,11 @@ class RdmaSQCB1state(Packet):
         BitField("sqcb1_priv_oper_enable", 0, 1),
         BitField("sqcb1_drained", 0, 1),
         BitField("sqd_async_notify_enable", 0, 1),
-        BitField("rsvd4", 0, 1),
+        BitField("sqcb1_rsvd5", 0, 1),
         ByteField("sqcb1_bktrack_in_progress", 0),
         IntField("sqcb1_pd", 0),
         BitField("rrq_spec_cindex", 0, 16),
-        BitField("pad1", 0, 16),
+        BitField("sqcb1_rsvd6", 0, 16),
     ]
 
 class RdmaSQCB2state(Packet):
@@ -278,7 +273,7 @@ class RdmaSQCB2state(Packet):
         X3BytesField("lsn_tx", 0),
         X3BytesField("lsn_rx", 0),
         X3BytesField("sqcb2_rexmit_psn", 0),
-     
+
         BitField("last_ack_or_req_ts", 0, 48),
         BitField("err_retry_ctr", 0, 4),
         BitField("rnr_retry_ctr", 0, 4),
@@ -297,8 +292,9 @@ class RdmaSQCB2state(Packet):
         IntField("imm_data_or_inv_key", 0),
 
         ShortField("sq_cindex", 0),
-        ShortField("p_index4", 0),
-        ShortField("sqcb2_c_index4", 0),
+        ByteField("p_index4", 0),
+        ByteField("sqcb2_c_index4", 0),
+        ShortField("sqcb2_rsvd1", 0),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
         BitField("fence_done", 0, 1),

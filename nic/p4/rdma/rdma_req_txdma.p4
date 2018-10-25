@@ -190,7 +190,8 @@ header_type req_tx_bktrack_sqcb2_write_back_info_t {
         op_type                          :    4;
         sq_cindex                        :   16;
         in_progress                      :    1;
-        pad                              :   26;
+        bktrack_in_progress              :    1;
+        pad                              :   25;
     }
 }
 
@@ -958,6 +959,7 @@ action req_tx_bktrack_sqcb2_write_back_process () {
     modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.op_type, t1_s2s_bktrack_sqcb2_write_back_info.op_type);
     modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.sq_cindex, t1_s2s_bktrack_sqcb2_write_back_info.sq_cindex);
     modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.in_progress, t1_s2s_bktrack_sqcb2_write_back_info.in_progress);
+    modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.bktrack_in_progress, t1_s2s_bktrack_sqcb2_write_back_info.bktrack_in_progress);
     modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.pad, t1_s2s_bktrack_sqcb2_write_back_info.pad);
 
 }

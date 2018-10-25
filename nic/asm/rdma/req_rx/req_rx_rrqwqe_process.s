@@ -13,15 +13,15 @@ struct req_rx_s1_t0_k k;
 #define IN_P t0_s2s_sqcb1_to_rrqwqe_info
 #define IN_TO_S_P to_s1_rrqwqe_info
 
-#define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_or_ssn_sbit0_ebit7, e_rsp_psn_or_ssn_sbit16_ebit23)
-#define K_SSN       CAPRI_KEY_RANGE(IN_P, e_rsp_psn_or_ssn_sbit0_ebit7, e_rsp_psn_or_ssn_sbit16_ebit23)
+#define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit15, e_rsp_psn_sbit16_ebit23)
+#define K_SSN       CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit16_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit7, msn_sbit16_ebit23)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit16_ebit31)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_RRQ_CINDEX CAPRI_KEY_RANGE(IN_P, rrq_cindex_sbit0_ebit0, rrq_cindex_sbit1_ebit7)
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
-#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
-#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit0, rexmit_psn_sbit17_ebit23)
+//#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit15, cq_id_sbit16_ebit23)
+#define K_TX_PSN CAPRI_KEY_RANGE(IN_P, tx_psn_sbit0_ebit0, tx_psn_sbit17_ebit23)
 
 #define K_AETH_SYNDROME CAPRI_KEY_FIELD(IN_TO_S_P, aeth_syndrome)
 #define K_AETH_MSN      CAPRI_KEY_FIELD(IN_TO_S_P, aeth_msn)
@@ -39,7 +39,6 @@ struct req_rx_s1_t0_k k;
 req_rx_rrqwqe_process:
     add            r5, r0, K_GLOBAL_FLAGS
     ARE_ALL_FLAGS_SET(c1, r5, REQ_RX_FLAG_ACK)
-    add            r6, K_REXMIT_PSN, r0
 
     bcf            [!c1], read_or_atomic_or_implicit_nak
     ARE_ALL_FLAGS_SET(c4, r5, REQ_RX_FLAG_COMPLETION)  // Branch Delay Slot
@@ -54,9 +53,11 @@ ack_or_nak_or_rnr_or_implicit_nak:
     // of ack drops, response to retried request can have PSN/MSN 
     // logically greater than PSN/MSN of the retried request but
     // that should not result in completion of WQEs more than those
-    // that have been retransmitted
-    scwlt24        c3, K_AETH_MSN, K_SSN
-    cmov           r2, c3, K_AETH_MSN, K_SSN
+    // that have been retransmitted. If c6 is FALSE, requester is in
+    // retransmitting packets and so bound to see acks/read/atomic
+    // responses with MSN/PSN that are not sent out
+    scwlt24        c6, K_AETH_MSN, K_SSN
+    cmov           r2, c6, K_AETH_MSN, K_SSN
 
     // This is an ack/nak/rnr packet. If rrq_empty (no outstanding
     // read or atomic response) then msn in this ack/nak/rnr 
@@ -65,16 +66,16 @@ ack_or_nak_or_rnr_or_implicit_nak:
     // completion should be posted for lowest of msn in the ack or 
     // msn of the message before oldest read/atomic request in rrq
     bbeq           CAPRI_KEY_FIELD(IN_P, rrq_empty), 1, ack_or_nak_or_rnr
-    mincr.!c3      r2, 24, -1 // Branch Delay Slot
-    add            r2, d.msn, 0
-    mincr          r2, 24, -1
-    scwle24        c5, r2, K_AETH_MSN
-    cmov           r2, c5, r2, K_AETH_MSN
+    mincr.!c6      r2, 24, -1 // Branch Delay Slot
+    add            r3, d.msn, 0
+    mincr          r3, 24, -1
+    scwle24        c5, r3, r2
+    cmov           r2, c5, r3, r2
 
     // if (pkt_psn >= rrqwqe_p->psn)
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
     scwle24        c5, d.psn, K_BTH_PSN // Branch Delay Slot
-    bcf            [c5], implicit_nak
+    bcf            [c5 & c6], implicit_nak
 ack_or_nak_or_rnr:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
@@ -85,14 +86,14 @@ ack_or_nak_or_rnr:
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), K_CUR_SGE_ID
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rrq_in_progress), CAPRI_KEY_FIELD(IN_P, rrq_in_progress), \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, tbl_id), 3
-    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6
     
     phvwr          p.cqe.send.msn, r2
     IS_MASKED_VAL_EQUAL(c3, r1, SYNDROME_MASK, ACK_SYNDROME)
-    bcf            [!c3], nak_or_rnr
+    bcf            [c6 & !c3], nak_or_rnr
   
 ack:
-    add            r6, K_BTH_PSN, 1 // Branch Delay Slot
+    cmov           r6, c6, K_BTH_PSN, K_TX_PSN // Branch Delay Slot
+    mincr.c6       r6, 24, 1
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
     phvwr.e        p.rexmit_psn, r6
     phvwrpair      CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
@@ -146,6 +147,7 @@ rnr:
     nop            // Branch Delay Slot
 
     // TODO compute timeout from rnr syndrome
+    phvwr          p.rnr_timeout, r1[4:0]
 
     phvwrpair.e    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), K_BTH_PSN, \
                    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
@@ -255,8 +257,8 @@ atomic:
     phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, dma_cmd_eop), 0, \
               CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, dma_cmd_start_index), K_DMA_CMD_START_INDEX
     //phvwr CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, sge_index), 0
-    phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, cq_dma_cmd_index), REQ_RX_DMA_CMD_CQ, \
-              CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, cq_id), K_CQ_ID
+    //phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, cq_dma_cmd_index), REQ_RX_DMA_CMD_CQ, \
+    //          CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, cq_id), K_CQ_ID
     phvwrpair CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, is_atomic), 1, \
               CAPRI_PHV_FIELD(RRQSGE_TO_LKEY_P, bubble_one_stage), 1
 

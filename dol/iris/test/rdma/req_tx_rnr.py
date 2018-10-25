@@ -143,7 +143,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify rnr_timeout is set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_timeout', 0):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_timeout', 5):
             return False
 
         # validate cqcb pindex and color

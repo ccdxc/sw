@@ -202,6 +202,10 @@ wqe_match:
 
     // bktrack_in_progres = False
     setcf          c6, [!c0]
+
+    // set r5 - wqe_addr to zero on match
+    add            r5, r0, r0
+
     // Fall throguh to retransmit from this matching wqe's start psn
 
 wqe_page_bktrack:
@@ -221,6 +225,7 @@ sqcb_writeback:
     // only if op_type is send/write
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data), d.send.imm_data, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, inv_key), d.send.inv_key
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, sq_cindex), r4
+    phvwr.c6 CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, bktrack_in_progress), 1
 
     SQCB2_ADDR_GET(r5)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_write_back_process, r5)

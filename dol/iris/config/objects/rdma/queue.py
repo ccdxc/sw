@@ -328,7 +328,8 @@ class RdmaSQstate(Packet):
 
         X3BytesField("sqcb1_tx_psn", 0),
         X3BytesField("sqcb1_ssn", 0),
-        X3BytesField("sqcb1_rsvd2", 0),
+        ShortField("sqcb1_rsvd2", 0),
+        ByteField("sqcb1_rsvd3", 0),
 
         XIntField("sqcb1_header_template_addr", 0),
         ByteField("sqcb1_header_template_size", 0),
@@ -341,7 +342,7 @@ class RdmaSQstate(Packet):
         X3BytesField("msn", 0),
 
         BitField("credits", 0, 5),
-        BitField("sqcb1_rsvd3", 0, 3),
+        BitField("sqcb1_rsvd4", 0, 3),
 
         X3BytesField("max_tx_psn", 0),
         X3BytesField("max_ssn", 0),
@@ -354,11 +355,11 @@ class RdmaSQstate(Packet):
         BitField("sqcb1_priv_oper_enable", 0, 1),
         BitField("sqcb1_drained", 0, 1),
         BitField("sqd_async_notify_enable", 0, 1),
-        BitField("sqcb1_rsvd4", 0, 1),
+        BitField("sqcb1_rsvd5", 0, 1),
         ByteField("sqcb1_bktrack_in_progress", 0),
         IntField("sqcb1_pd", 0),
         BitField("rrq_spec_cindex", 0, 16),
-        BitField("sqcb1_rsvd5", 0, 16),
+        BitField("sqcb1_rsvd6", 0, 16),
 
         #SQCB2
         X3BytesField("dst_qp", 0),

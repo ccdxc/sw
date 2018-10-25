@@ -211,7 +211,7 @@ check_duplicate_resp:
 
 process_aeth:
     sne.c6         c6, CAPRI_APP_DATA_AETH_SYNDROME[4:0], 0x1F // Branch Delay Slot
-    // Skip LSN update if not AETH hdr or AETH hdr but not ACK syndrome in the response
+    // Skip LSN update if not ACK syndrome or ACK syndrome but invalid credits
     bcf            [!c6], post_rexmit_psn
 
     DECODE_ACK_SYNDROME_CREDITS(r2, CAPRI_APP_DATA_AETH_SYNDROME, c1)
@@ -258,15 +258,14 @@ set_arg:
 
     CAPRI_RESET_TABLE_0_ARG()
     phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_offset), d.rrqwqe_cur_sge_offset, \
-              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rexmit_psn), r5
+              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, tx_psn), d.tx_psn
     phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_id), d.rrqwqe_cur_sge_id, \
               CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_in_progress), d.rrq_in_progress
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cq_id), d.cq_id, \
-              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn_or_ssn), d.e_rsp_psn
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn), d.e_rsp_psn, \
+              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, ssn), d.ssn
     phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msn), d.msn, \
               CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, dma_cmd_start_index), REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START
-    phvwrpair.c4  CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn_or_ssn), d.ssn, \
-              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_empty), 1
+    phvwr.c4  CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_empty), 1
     //phvwr CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, timer_active), d.timer_active
     add            r2, RRQ_C_INDEX, r0
     mincr          r2, d.log_rrq_size, 1

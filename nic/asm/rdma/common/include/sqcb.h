@@ -142,7 +142,8 @@ struct sqcb1_t {
 
     tx_psn                         : 24; // R0 S0 (WO S5 TXDMA)
     ssn                            : 24; // R0 S0 (WO S5 TXDMA)
-    rsvd2                          : 24;
+    rsvd2                          : 16; // rsvd for TXDMA memwr
+    rsvd3                          :  8;
 
     header_template_addr           : 32; // RO SO // DCQCN ???
     header_template_size           : 8;  // RO SO
@@ -155,7 +156,7 @@ struct sqcb1_t {
     msn                            : 24; // RW S0
 
     credits                        : 5;  // RW S0 
-    rsvd3                          : 3;
+    rsvd4                          : 3;
 
     max_tx_psn                     : 24; // RW S0
     max_ssn                        : 24; // RW S0
@@ -168,12 +169,12 @@ struct sqcb1_t {
     sqcb1_priv_oper_enable         : 1;  // RO
     sq_drained                     : 1;  // RW S5
     sqd_async_notify_enable        : 1;  // RO S5
-    rsvd4                          : 1;
+    rsvd5                          : 1;
 
     bktrack_in_progress            : 8; // RW S3 (W0 S5 TXDMA)
     pd                             : 32; // RO
     rrq_spec_cindex                : 16;
-    rsvd5                          : 16;
+    rsvd6                          : 16;
 };
 
 struct sqcb2_t {

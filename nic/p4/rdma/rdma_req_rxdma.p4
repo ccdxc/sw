@@ -165,16 +165,16 @@ header_type req_rx_rrqwqe_to_cq_info_t {
 header_type req_rx_sqcb1_to_rrqwqe_info_t {
     fields {
         cur_sge_offset                   :   32;
-        cq_id                            :   24;
+        e_rsp_psn                        :   24;
         cur_sge_id                       :    8;
-        e_rsp_psn_or_ssn                 :   24;
+        ssn                              :   24;
         msn                              :   24;
         rrq_in_progress                  :    1;
         rrq_empty                        :    1;
         timer_active                     :    1;
         dma_cmd_start_index              :    4;
         rrq_cindex                       :    8;
-        rexmit_psn                       :   24;
+        tx_psn                           :   24;
     }
 }
 
@@ -1390,16 +1390,16 @@ action req_rx_rrqwqe_process () {
 
     // stage to stage
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_offset, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_offset);
-    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cq_id, t0_s2s_sqcb1_to_rrqwqe_info.cq_id);
+    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.ssn, t0_s2s_sqcb1_to_rrqwqe_info.ssn);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_id, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_id);
-    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.e_rsp_psn_or_ssn, t0_s2s_sqcb1_to_rrqwqe_info.e_rsp_psn_or_ssn);
+    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.e_rsp_psn, t0_s2s_sqcb1_to_rrqwqe_info.e_rsp_psn);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.msn, t0_s2s_sqcb1_to_rrqwqe_info.msn);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rrq_in_progress, t0_s2s_sqcb1_to_rrqwqe_info.rrq_in_progress);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rrq_empty, t0_s2s_sqcb1_to_rrqwqe_info.rrq_empty);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.timer_active, t0_s2s_sqcb1_to_rrqwqe_info.timer_active);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.dma_cmd_start_index, t0_s2s_sqcb1_to_rrqwqe_info.dma_cmd_start_index);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rrq_cindex, t0_s2s_sqcb1_to_rrqwqe_info.rrq_cindex);
-    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rexmit_psn, t0_s2s_sqcb1_to_rrqwqe_info.rexmit_psn);
+    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.tx_psn, t0_s2s_sqcb1_to_rrqwqe_info.tx_psn);
 
 }
 
