@@ -51,21 +51,20 @@ export class Metrics_queryQueryResult extends BaseModel implements IMetrics_quer
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['statement_id'] != null) {
             this['statement_id'] = values['statement_id'];
-        } else if (Metrics_queryQueryResult.hasDefaultValue('statement_id')) {
+        } else if (fillDefaults && Metrics_queryQueryResult.hasDefaultValue('statement_id')) {
             this['statement_id'] = Metrics_queryQueryResult.propInfo['statement_id'].default;
         }
         if (values) {
             this.fillModelArray<Metrics_queryResultSeries>(this, 'series', values['series'], Metrics_queryResultSeries);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -80,7 +79,11 @@ export class Metrics_queryQueryResult extends BaseModel implements IMetrics_quer
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['statement_id'].setValue(this['statement_id']);
             this.fillModelArray<Metrics_queryResultSeries>(this, 'series', this['series'], Metrics_queryResultSeries);

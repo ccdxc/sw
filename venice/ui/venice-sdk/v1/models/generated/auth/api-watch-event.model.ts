@@ -51,21 +51,20 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (ApiWatchEvent.hasDefaultValue('type')) {
+        } else if (fillDefaults && ApiWatchEvent.hasDefaultValue('type')) {
             this['type'] = ApiWatchEvent.propInfo['type'].default;
         }
         if (values) {
             this['object'].setValues(values['object']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,10 +77,14 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
-            this['object'].setFormGroupValues();
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

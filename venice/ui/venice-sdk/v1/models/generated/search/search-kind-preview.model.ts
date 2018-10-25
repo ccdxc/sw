@@ -44,18 +44,17 @@ export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['kinds'] != null) {
             this['kinds'] = values['kinds'];
-        } else if (SearchKindPreview.hasDefaultValue('kinds')) {
+        } else if (fillDefaults && SearchKindPreview.hasDefaultValue('kinds')) {
             this['kinds'] = SearchKindPreview.propInfo['kinds'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['kinds'].setValue(this['kinds']);
         }

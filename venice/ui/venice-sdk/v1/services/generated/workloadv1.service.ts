@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IWorkloadEndpointList,IApiStatus,IWorkloadEndpoint,WorkloadEndpoint,IWorkloadWorkloadList,IWorkloadWorkload,WorkloadWorkload,IWorkloadAutoMsgEndpointWatchHelper,IWorkloadAutoMsgWorkloadWatchHelper } from '../../models/generated/workload';
+import { IWorkloadEndpointList,IApiStatus,IWorkloadEndpoint,IWorkloadWorkloadList,IWorkloadWorkload,IWorkloadAutoMsgEndpointWatchHelper,IWorkloadAutoMsgWorkloadWatchHelper } from '../../models/generated/workload';
 
 @Injectable()
 export class Workloadv1Service extends AbstractService {
@@ -26,9 +26,9 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Create Endpoint object */
-  public AddEndpoint_1(body: WorkloadEndpoint):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
+  public AddEndpoint_1(body: IWorkloadEndpoint):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/endpoints';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Endpoint object */
@@ -46,10 +46,10 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Update Endpoint object */
-  public UpdateEndpoint_1(O_Name, body: WorkloadEndpoint):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
+  public UpdateEndpoint_1(O_Name, body: IWorkloadEndpoint):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/endpoints/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Endpoint objects */
@@ -60,10 +60,10 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Create Endpoint object */
-  public AddEndpoint(body: WorkloadEndpoint):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
+  public AddEndpoint(body: IWorkloadEndpoint):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/endpoints';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Endpoint object */
@@ -83,11 +83,11 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Update Endpoint object */
-  public UpdateEndpoint(O_Name, body: WorkloadEndpoint):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
+  public UpdateEndpoint(O_Name, body: IWorkloadEndpoint):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/endpoints/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Workload objects */
@@ -98,10 +98,10 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Create Workload object */
-  public AddWorkload(body: WorkloadWorkload):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public AddWorkload(body: IWorkloadWorkload):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddWorkload') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddWorkload') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Workload object */
@@ -121,11 +121,11 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Update Workload object */
-  public UpdateWorkload(O_Name, body: WorkloadWorkload):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public UpdateWorkload(O_Name, body: IWorkloadWorkload):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateWorkload') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateWorkload') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Endpoint objects */
@@ -161,9 +161,9 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Create Workload object */
-  public AddWorkload_1(body: WorkloadWorkload):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public AddWorkload_1(body: IWorkloadWorkload):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/workloads';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddWorkload_1') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddWorkload_1') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Workload object */
@@ -181,10 +181,10 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Update Workload object */
-  public UpdateWorkload_1(O_Name, body: WorkloadWorkload):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public UpdateWorkload_1(O_Name, body: IWorkloadWorkload):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/workloads/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateWorkload_1') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateWorkload_1') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
 }

@@ -49,23 +49,22 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['version'] != null) {
             this['version'] = values['version'];
-        } else if (SecurityTLSProtocolSpec.hasDefaultValue('version')) {
+        } else if (fillDefaults && SecurityTLSProtocolSpec.hasDefaultValue('version')) {
             this['version'] = SecurityTLSProtocolSpec.propInfo['version'].default;
         }
         if (values && values['cipher-suite'] != null) {
             this['cipher-suite'] = values['cipher-suite'];
-        } else if (SecurityTLSProtocolSpec.hasDefaultValue('cipher-suite')) {
+        } else if (fillDefaults && SecurityTLSProtocolSpec.hasDefaultValue('cipher-suite')) {
             this['cipher-suite'] = SecurityTLSProtocolSpec.propInfo['cipher-suite'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,7 +77,11 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['version'].setValue(this['version']);
             this._formGroup.controls['cipher-suite'].setValue(this['cipher-suite']);

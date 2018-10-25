@@ -44,18 +44,17 @@ export class SecuritySIP extends BaseModel implements ISecuritySIP {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['max-call-duration'] != null) {
             this['max-call-duration'] = values['max-call-duration'];
-        } else if (SecuritySIP.hasDefaultValue('max-call-duration')) {
+        } else if (fillDefaults && SecuritySIP.hasDefaultValue('max-call-duration')) {
             this['max-call-duration'] = SecuritySIP.propInfo['max-call-duration'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class SecuritySIP extends BaseModel implements ISecuritySIP {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['max-call-duration'].setValue(this['max-call-duration']);
         }

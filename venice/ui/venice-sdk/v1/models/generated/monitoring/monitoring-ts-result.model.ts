@@ -51,21 +51,20 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this['time-window'].setValues(values['time-window']);
         }
         if (values && values['report-url'] != null) {
             this['report-url'] = values['report-url'];
-        } else if (MonitoringTsResult.hasDefaultValue('report-url')) {
+        } else if (fillDefaults && MonitoringTsResult.hasDefaultValue('report-url')) {
             this['report-url'] = MonitoringTsResult.propInfo['report-url'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,9 +77,13 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this['time-window'].setFormGroupValues();
+            this['time-window'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['report-url'].setValue(this['report-url']);
         }
     }

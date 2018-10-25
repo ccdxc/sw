@@ -51,21 +51,20 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringMatchedRequirement>(this, 'matched-requirements', values['matched-requirements'], MonitoringMatchedRequirement);
         }
         if (values && values['alert-policy-id'] != null) {
             this['alert-policy-id'] = values['alert-policy-id'];
-        } else if (MonitoringAlertReason.hasDefaultValue('alert-policy-id')) {
+        } else if (fillDefaults && MonitoringAlertReason.hasDefaultValue('alert-policy-id')) {
             this['alert-policy-id'] = MonitoringAlertReason.propInfo['alert-policy-id'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -80,7 +79,11 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this.fillModelArray<MonitoringMatchedRequirement>(this, 'matched-requirements', this['matched-requirements'], MonitoringMatchedRequirement);
             this._formGroup.controls['alert-policy-id'].setValue(this['alert-policy-id']);

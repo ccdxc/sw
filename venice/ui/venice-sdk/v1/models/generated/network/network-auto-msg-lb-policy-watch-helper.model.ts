@@ -46,16 +46,15 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'Events', values['Events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -69,7 +68,11 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'Events', this['Events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
         }

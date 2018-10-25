@@ -63,13 +63,13 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
-        } else if (SecurityTrafficEncryptionPolicySpec.hasDefaultValue('mode')) {
+        } else if (fillDefaults && SecurityTrafficEncryptionPolicySpec.hasDefaultValue('mode')) {
             this['mode'] = SecurityTrafficEncryptionPolicySpec.propInfo['mode'].default;
         }
         if (values) {
@@ -80,12 +80,11 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
         }
         if (values && values['key-rotation-interval-secs'] != null) {
             this['key-rotation-interval-secs'] = values['key-rotation-interval-secs'];
-        } else if (SecurityTrafficEncryptionPolicySpec.hasDefaultValue('key-rotation-interval-secs')) {
+        } else if (fillDefaults && SecurityTrafficEncryptionPolicySpec.hasDefaultValue('key-rotation-interval-secs')) {
             this['key-rotation-interval-secs'] = SecurityTrafficEncryptionPolicySpec.propInfo['key-rotation-interval-secs'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -100,11 +99,15 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['mode'].setValue(this['mode']);
-            this['tls'].setFormGroupValues();
-            this['ipsec'].setFormGroupValues();
+            this['tls'].setFormGroupValuesToBeModelValues();
+            this['ipsec'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['key-rotation-interval-secs'].setValue(this['key-rotation-interval-secs']);
         }
     }

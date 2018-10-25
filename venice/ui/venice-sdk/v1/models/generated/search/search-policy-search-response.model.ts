@@ -54,23 +54,22 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (SearchPolicySearchResponse.hasDefaultValue('status')) {
+        } else if (fillDefaults && SearchPolicySearchResponse.hasDefaultValue('status')) {
             this['status'] = <SearchPolicySearchResponse_status>  SearchPolicySearchResponse.propInfo['status'].default;
         }
         if (values && values['results'] != null) {
             this['results'] = values['results'];
-        } else if (SearchPolicySearchResponse.hasDefaultValue('results')) {
+        } else if (fillDefaults && SearchPolicySearchResponse.hasDefaultValue('results')) {
             this['results'] = SearchPolicySearchResponse.propInfo['results'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -83,7 +82,11 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['status'].setValue(this['status']);
             this._formGroup.controls['results'].setValue(this['results']);

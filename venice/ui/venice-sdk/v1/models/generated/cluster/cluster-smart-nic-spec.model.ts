@@ -79,18 +79,18 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['admit'] != null) {
             this['admit'] = values['admit'];
-        } else if (ClusterSmartNICSpec.hasDefaultValue('admit')) {
+        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('admit')) {
             this['admit'] = ClusterSmartNICSpec.propInfo['admit'].default;
         }
         if (values && values['hostname'] != null) {
             this['hostname'] = values['hostname'];
-        } else if (ClusterSmartNICSpec.hasDefaultValue('hostname')) {
+        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('hostname')) {
             this['hostname'] = ClusterSmartNICSpec.propInfo['hostname'].default;
         }
         if (values) {
@@ -98,20 +98,19 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         }
         if (values && values['mgmt-mode'] != null) {
             this['mgmt-mode'] = values['mgmt-mode'];
-        } else if (ClusterSmartNICSpec.hasDefaultValue('mgmt-mode')) {
+        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('mgmt-mode')) {
             this['mgmt-mode'] = <ClusterSmartNICSpec_mgmt_mode>  ClusterSmartNICSpec.propInfo['mgmt-mode'].default;
         }
         if (values && values['mgmt-vlan'] != null) {
             this['mgmt-vlan'] = values['mgmt-vlan'];
-        } else if (ClusterSmartNICSpec.hasDefaultValue('mgmt-vlan')) {
+        } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('mgmt-vlan')) {
             this['mgmt-vlan'] = ClusterSmartNICSpec.propInfo['mgmt-vlan'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'controllers', values['controllers']);
+        if (values && values['controllers'] != null) {
+            this['controllers'] = values['controllers'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -122,22 +121,24 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
                 'ip-config': this['ip-config'].$formGroup,
                 'mgmt-mode': new FormControl(this['mgmt-mode'], [enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
                 'mgmt-vlan': new FormControl(this['mgmt-vlan'], [maxValueValidator(4095), ]),
-                'controllers': new FormArray([]),
+                'controllers': new FormControl(this['controllers']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('controllers', this['controllers']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['admit'].setValue(this['admit']);
             this._formGroup.controls['hostname'].setValue(this['hostname']);
-            this['ip-config'].setFormGroupValues();
+            this['ip-config'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['mgmt-mode'].setValue(this['mgmt-mode']);
             this._formGroup.controls['mgmt-vlan'].setValue(this['mgmt-vlan']);
-            this.fillModelArray<string>(this, 'controllers', this['controllers']);
+            this._formGroup.controls['controllers'].setValue(this['controllers']);
         }
     }
 }

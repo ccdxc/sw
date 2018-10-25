@@ -44,18 +44,17 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['total-notifications-sent'] != null) {
             this['total-notifications-sent'] = values['total-notifications-sent'];
-        } else if (MonitoringAlertDestinationStatus.hasDefaultValue('total-notifications-sent')) {
+        } else if (fillDefaults && MonitoringAlertDestinationStatus.hasDefaultValue('total-notifications-sent')) {
             this['total-notifications-sent'] = MonitoringAlertDestinationStatus.propInfo['total-notifications-sent'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['total-notifications-sent'].setValue(this['total-notifications-sent']);
         }

@@ -67,31 +67,30 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['name'] != null) {
             this['name'] = values['name'];
-        } else if (Metrics_queryObjectSelector.hasDefaultValue('name')) {
+        } else if (fillDefaults && Metrics_queryObjectSelector.hasDefaultValue('name')) {
             this['name'] = Metrics_queryObjectSelector.propInfo['name'].default;
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
-        } else if (Metrics_queryObjectSelector.hasDefaultValue('tenant')) {
+        } else if (fillDefaults && Metrics_queryObjectSelector.hasDefaultValue('tenant')) {
             this['tenant'] = Metrics_queryObjectSelector.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
-        } else if (Metrics_queryObjectSelector.hasDefaultValue('namespace')) {
+        } else if (fillDefaults && Metrics_queryObjectSelector.hasDefaultValue('namespace')) {
             this['namespace'] = Metrics_queryObjectSelector.propInfo['namespace'].default;
         }
         if (values) {
             this['selector'].setValues(values['selector']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -106,12 +105,16 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['tenant'].setValue(this['tenant']);
             this._formGroup.controls['namespace'].setValue(this['namespace']);
-            this['selector'].setFormGroupValues();
+            this['selector'].setFormGroupValuesToBeModelValues();
         }
     }
 }

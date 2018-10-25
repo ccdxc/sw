@@ -44,18 +44,17 @@ export class SearchCategoryAggregation extends BaseModel implements ISearchCateg
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['categories'] != null) {
             this['categories'] = values['categories'];
-        } else if (SearchCategoryAggregation.hasDefaultValue('categories')) {
+        } else if (fillDefaults && SearchCategoryAggregation.hasDefaultValue('categories')) {
             this['categories'] = SearchCategoryAggregation.propInfo['categories'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class SearchCategoryAggregation extends BaseModel implements ISearchCateg
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['categories'].setValue(this['categories']);
         }

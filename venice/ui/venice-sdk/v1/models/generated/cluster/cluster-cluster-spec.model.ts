@@ -74,52 +74,51 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'quorum-nodes', values['quorum-nodes']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['quorum-nodes'] != null) {
+            this['quorum-nodes'] = values['quorum-nodes'];
         }
         if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
-        } else if (ClusterClusterSpec.hasDefaultValue('virtual-ip')) {
+        } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('virtual-ip')) {
             this['virtual-ip'] = ClusterClusterSpec.propInfo['virtual-ip'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'ntp-servers', values['ntp-servers']);
+        if (values && values['ntp-servers'] != null) {
+            this['ntp-servers'] = values['ntp-servers'];
         }
         if (values && values['auto-admit-nics'] != null) {
             this['auto-admit-nics'] = values['auto-admit-nics'];
-        } else if (ClusterClusterSpec.hasDefaultValue('auto-admit-nics')) {
+        } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('auto-admit-nics')) {
             this['auto-admit-nics'] = ClusterClusterSpec.propInfo['auto-admit-nics'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'quorum-nodes': new FormArray([]),
+                'quorum-nodes': new FormControl(this['quorum-nodes']),
                 'virtual-ip': new FormControl(this['virtual-ip']),
-                'ntp-servers': new FormArray([]),
+                'ntp-servers': new FormControl(this['ntp-servers']),
                 'auto-admit-nics': new FormControl(this['auto-admit-nics']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('quorum-nodes', this['quorum-nodes']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('ntp-servers', this['ntp-servers']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'quorum-nodes', this['quorum-nodes']);
+            this._formGroup.controls['quorum-nodes'].setValue(this['quorum-nodes']);
             this._formGroup.controls['virtual-ip'].setValue(this['virtual-ip']);
-            this.fillModelArray<string>(this, 'ntp-servers', this['ntp-servers']);
+            this._formGroup.controls['ntp-servers'].setValue(this['ntp-servers']);
             this._formGroup.controls['auto-admit-nics'].setValue(this['auto-admit-nics']);
         }
     }

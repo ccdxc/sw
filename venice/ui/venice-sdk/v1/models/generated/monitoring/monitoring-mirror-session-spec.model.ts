@@ -81,13 +81,13 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['packet-size'] != null) {
             this['packet-size'] = values['packet-size'];
-        } else if (MonitoringMirrorSessionSpec.hasDefaultValue('packet-size')) {
+        } else if (fillDefaults && MonitoringMirrorSessionSpec.hasDefaultValue('packet-size')) {
             this['packet-size'] = MonitoringMirrorSessionSpec.propInfo['packet-size'].default;
         }
         if (values) {
@@ -102,12 +102,11 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         if (values) {
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', values['match-rules'], MonitoringMatchRule);
         }
-        if (values) {
-            this.fillModelArray<MonitoringMirrorSessionSpec_packet_filters>(this, 'packet-filters', values['packet-filters']);
+        if (values && values['packet-filters'] != null) {
+            this['packet-filters'] = values['packet-filters'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -118,26 +117,28 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
                 'stop-condition': this['stop-condition'].$formGroup,
                 'collectors': new FormArray([]),
                 'match-rules': new FormArray([]),
-                'packet-filters': new FormArray([]),
+                'packet-filters': new FormControl(this['packet-filters']),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringMirrorCollector>('collectors', this['collectors'], MonitoringMirrorCollector);
             // generate FormArray control elements
             this.fillFormArray<MonitoringMatchRule>('match-rules', this['match-rules'], MonitoringMatchRule);
-            // generate FormArray control elements
-            this.fillFormArray<MonitoringMirrorSessionSpec_packet_filters>('packet-filters', this['packet-filters']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['packet-size'].setValue(this['packet-size']);
-            this['start-condition'].setFormGroupValues();
-            this['stop-condition'].setFormGroupValues();
+            this['start-condition'].setFormGroupValuesToBeModelValues();
+            this['stop-condition'].setFormGroupValuesToBeModelValues();
             this.fillModelArray<MonitoringMirrorCollector>(this, 'collectors', this['collectors'], MonitoringMirrorCollector);
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
-            this.fillModelArray<MonitoringMirrorSessionSpec_packet_filters>(this, 'packet-filters', this['packet-filters']);
+            this._formGroup.controls['packet-filters'].setValue(this['packet-filters']);
         }
     }
 }

@@ -49,23 +49,22 @@ export class Metrics_queryPaginationSpec extends BaseModel implements IMetrics_q
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['offset'] != null) {
             this['offset'] = values['offset'];
-        } else if (Metrics_queryPaginationSpec.hasDefaultValue('offset')) {
+        } else if (fillDefaults && Metrics_queryPaginationSpec.hasDefaultValue('offset')) {
             this['offset'] = Metrics_queryPaginationSpec.propInfo['offset'].default;
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
-        } else if (Metrics_queryPaginationSpec.hasDefaultValue('count')) {
+        } else if (fillDefaults && Metrics_queryPaginationSpec.hasDefaultValue('count')) {
             this['count'] = Metrics_queryPaginationSpec.propInfo['count'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,7 +77,11 @@ export class Metrics_queryPaginationSpec extends BaseModel implements IMetrics_q
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['offset'].setValue(this['offset']);
             this._formGroup.controls['count'].setValue(this['count']);

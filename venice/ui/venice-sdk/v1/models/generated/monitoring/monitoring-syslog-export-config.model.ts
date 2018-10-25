@@ -49,23 +49,22 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['facility-override'] != null) {
             this['facility-override'] = values['facility-override'];
-        } else if (MonitoringSyslogExportConfig.hasDefaultValue('facility-override')) {
+        } else if (fillDefaults && MonitoringSyslogExportConfig.hasDefaultValue('facility-override')) {
             this['facility-override'] = MonitoringSyslogExportConfig.propInfo['facility-override'].default;
         }
         if (values && values['prefix'] != null) {
             this['prefix'] = values['prefix'];
-        } else if (MonitoringSyslogExportConfig.hasDefaultValue('prefix')) {
+        } else if (fillDefaults && MonitoringSyslogExportConfig.hasDefaultValue('prefix')) {
             this['prefix'] = MonitoringSyslogExportConfig.propInfo['prefix'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,7 +77,11 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['facility-override'].setValue(this['facility-override']);
             this._formGroup.controls['prefix'].setValue(this['prefix']);

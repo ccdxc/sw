@@ -50,38 +50,39 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'ip-addresses', values['ip-addresses']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['ip-addresses'] != null) {
+            this['ip-addresses'] = values['ip-addresses'];
         }
         if (values && values['endpoint'] != null) {
             this['endpoint'] = values['endpoint'];
-        } else if (WorkloadWorkloadIntfStatus.hasDefaultValue('endpoint')) {
+        } else if (fillDefaults && WorkloadWorkloadIntfStatus.hasDefaultValue('endpoint')) {
             this['endpoint'] = WorkloadWorkloadIntfStatus.propInfo['endpoint'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ip-addresses': new FormArray([]),
+                'ip-addresses': new FormControl(this['ip-addresses']),
                 'endpoint': new FormControl(this['endpoint']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('ip-addresses', this['ip-addresses']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'ip-addresses', this['ip-addresses']);
+            this._formGroup.controls['ip-addresses'].setValue(this['ip-addresses']);
             this._formGroup.controls['endpoint'].setValue(this['endpoint']);
         }
     }

@@ -89,10 +89,10 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<RolloutRolloutPhase>(this, 'controller-nodes-status', values['controller-nodes-status'], RolloutRolloutPhase);
         }
@@ -104,32 +104,31 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
         }
         if (values && values['state'] != null) {
             this['state'] = values['state'];
-        } else if (RolloutRolloutStatus.hasDefaultValue('state')) {
+        } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('state')) {
             this['state'] = <RolloutRolloutStatus_state>  RolloutRolloutStatus.propInfo['state'].default;
         }
         if (values && values['completion-percent'] != null) {
             this['completion-percent'] = values['completion-percent'];
-        } else if (RolloutRolloutStatus.hasDefaultValue('completion-percent')) {
+        } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('completion-percent')) {
             this['completion-percent'] = RolloutRolloutStatus.propInfo['completion-percent'].default;
         }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
-        } else if (RolloutRolloutStatus.hasDefaultValue('start-time')) {
+        } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('start-time')) {
             this['start-time'] = RolloutRolloutStatus.propInfo['start-time'].default;
         }
         if (values && values['end-time'] != null) {
             this['end-time'] = values['end-time'];
-        } else if (RolloutRolloutStatus.hasDefaultValue('end-time')) {
+        } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('end-time')) {
             this['end-time'] = RolloutRolloutStatus.propInfo['end-time'].default;
         }
         if (values && values['prev-version'] != null) {
             this['prev-version'] = values['prev-version'];
-        } else if (RolloutRolloutStatus.hasDefaultValue('prev-version')) {
+        } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('prev-version')) {
             this['prev-version'] = RolloutRolloutStatus.propInfo['prev-version'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -154,7 +153,11 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this.fillModelArray<RolloutRolloutPhase>(this, 'controller-nodes-status', this['controller-nodes-status'], RolloutRolloutPhase);
             this.fillModelArray<RolloutRolloutPhase>(this, 'controller-services-status', this['controller-services-status'], RolloutRolloutPhase);

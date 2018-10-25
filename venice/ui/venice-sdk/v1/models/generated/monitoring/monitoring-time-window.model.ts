@@ -51,23 +51,22 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
-        } else if (MonitoringTimeWindow.hasDefaultValue('start-time')) {
+        } else if (fillDefaults && MonitoringTimeWindow.hasDefaultValue('start-time')) {
             this['start-time'] = MonitoringTimeWindow.propInfo['start-time'].default;
         }
         if (values && values['stop-time'] != null) {
             this['stop-time'] = values['stop-time'];
-        } else if (MonitoringTimeWindow.hasDefaultValue('stop-time')) {
+        } else if (fillDefaults && MonitoringTimeWindow.hasDefaultValue('stop-time')) {
             this['stop-time'] = MonitoringTimeWindow.propInfo['stop-time'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -80,7 +79,11 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['start-time'].setValue(this['start-time']);
             this._formGroup.controls['stop-time'].setValue(this['stop-time']);

@@ -55,21 +55,20 @@ export class ClusterPFStatus extends BaseModel implements IClusterPFStatus {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['primary-mac'] != null) {
             this['primary-mac'] = values['primary-mac'];
-        } else if (ClusterPFStatus.hasDefaultValue('primary-mac')) {
+        } else if (fillDefaults && ClusterPFStatus.hasDefaultValue('primary-mac')) {
             this['primary-mac'] = ClusterPFStatus.propInfo['primary-mac'].default;
         }
         if (values) {
             this.fillModelArray<ClusterPortCondition>(this, 'conditions', values['conditions'], ClusterPortCondition);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -84,7 +83,11 @@ export class ClusterPFStatus extends BaseModel implements IClusterPFStatus {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
             this.fillModelArray<ClusterPortCondition>(this, 'conditions', this['conditions'], ClusterPortCondition);

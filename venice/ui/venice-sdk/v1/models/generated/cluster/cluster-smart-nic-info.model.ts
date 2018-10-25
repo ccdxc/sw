@@ -74,10 +74,10 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this['bios-info'].setValues(values['bios-info']);
         }
@@ -93,9 +93,8 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
         if (values) {
             this['storage-info'].setValues(values['storage-info']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -111,13 +110,17 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this['bios-info'].setFormGroupValues();
-            this['os-info'].setFormGroupValues();
-            this['cpu-info'].setFormGroupValues();
-            this['memory-info'].setFormGroupValues();
-            this['storage-info'].setFormGroupValues();
+            this['bios-info'].setFormGroupValuesToBeModelValues();
+            this['os-info'].setFormGroupValuesToBeModelValues();
+            this['cpu-info'].setFormGroupValuesToBeModelValues();
+            this['memory-info'].setFormGroupValuesToBeModelValues();
+            this['storage-info'].setFormGroupValuesToBeModelValues();
         }
     }
 }

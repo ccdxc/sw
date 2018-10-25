@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IRolloutRolloutList,IApiStatus,IRolloutRollout,RolloutRollout,IRolloutAutoMsgRolloutWatchHelper } from '../../models/generated/rollout';
+import { IRolloutRolloutList,IApiStatus,IRolloutRollout,IRolloutAutoMsgRolloutWatchHelper } from '../../models/generated/rollout';
 
 @Injectable()
 export class Rolloutv1Service extends AbstractService {
@@ -26,9 +26,9 @@ export class Rolloutv1Service extends AbstractService {
   }
   
   /** Create Rollout object */
-  public AddRollout(body: RolloutRollout):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+  public AddRollout(body: IRolloutRollout):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddRollout') as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddRollout') as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Rollout object */
@@ -46,10 +46,10 @@ export class Rolloutv1Service extends AbstractService {
   }
   
   /** Update Rollout object */
-  public UpdateRollout(O_Name, body: RolloutRollout):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
+  public UpdateRollout(O_Name, body: IRolloutRollout):Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/rollout/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateRollout') as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateRollout') as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Rollout objects */

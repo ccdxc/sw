@@ -74,18 +74,18 @@ export class ClusterTenant extends BaseModel implements IClusterTenant {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (ClusterTenant.hasDefaultValue('kind')) {
+        } else if (fillDefaults && ClusterTenant.hasDefaultValue('kind')) {
             this['kind'] = ClusterTenant.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (ClusterTenant.hasDefaultValue('api-version')) {
+        } else if (fillDefaults && ClusterTenant.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterTenant.propInfo['api-version'].default;
         }
         if (values) {
@@ -97,9 +97,8 @@ export class ClusterTenant extends BaseModel implements IClusterTenant {
         if (values) {
             this['status'].setValues(values['status']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -115,13 +114,17 @@ export class ClusterTenant extends BaseModel implements IClusterTenant {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this['meta'].setFormGroupValues();
-            this['spec'].setFormGroupValues();
-            this['status'].setFormGroupValues();
+            this['meta'].setFormGroupValuesToBeModelValues();
+            this['spec'].setFormGroupValuesToBeModelValues();
+            this['status'].setFormGroupValuesToBeModelValues();
         }
     }
 }

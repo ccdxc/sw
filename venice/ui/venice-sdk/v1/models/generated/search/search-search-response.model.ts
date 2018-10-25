@@ -82,23 +82,23 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['total-hits'] != null) {
             this['total-hits'] = values['total-hits'];
-        } else if (SearchSearchResponse.hasDefaultValue('total-hits')) {
+        } else if (fillDefaults && SearchSearchResponse.hasDefaultValue('total-hits')) {
             this['total-hits'] = SearchSearchResponse.propInfo['total-hits'].default;
         }
         if (values && values['actual-hits'] != null) {
             this['actual-hits'] = values['actual-hits'];
-        } else if (SearchSearchResponse.hasDefaultValue('actual-hits')) {
+        } else if (fillDefaults && SearchSearchResponse.hasDefaultValue('actual-hits')) {
             this['actual-hits'] = SearchSearchResponse.propInfo['actual-hits'].default;
         }
         if (values && values['time-taken-msecs'] != null) {
             this['time-taken-msecs'] = values['time-taken-msecs'];
-        } else if (SearchSearchResponse.hasDefaultValue('time-taken-msecs')) {
+        } else if (fillDefaults && SearchSearchResponse.hasDefaultValue('time-taken-msecs')) {
             this['time-taken-msecs'] = SearchSearchResponse.propInfo['time-taken-msecs'].default;
         }
         if (values) {
@@ -113,9 +113,8 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
         if (values) {
             this['aggregated-entries'].setValues(values['aggregated-entries']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -135,15 +134,19 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['total-hits'].setValue(this['total-hits']);
             this._formGroup.controls['actual-hits'].setValue(this['actual-hits']);
             this._formGroup.controls['time-taken-msecs'].setValue(this['time-taken-msecs']);
-            this['error'].setFormGroupValues();
+            this['error'].setFormGroupValuesToBeModelValues();
             this.fillModelArray<SearchEntry>(this, 'entries', this['entries'], SearchEntry);
-            this['preview-entries'].setFormGroupValues();
-            this['aggregated-entries'].setFormGroupValues();
+            this['preview-entries'].setFormGroupValuesToBeModelValues();
+            this['aggregated-entries'].setFormGroupValuesToBeModelValues();
         }
     }
 }

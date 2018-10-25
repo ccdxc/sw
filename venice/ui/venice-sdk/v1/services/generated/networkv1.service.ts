@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { INetworkLbPolicyList,IApiStatus,INetworkLbPolicy,NetworkLbPolicy,INetworkNetworkList,INetworkNetwork,NetworkNetwork,INetworkServiceList,INetworkService,NetworkService,INetworkAutoMsgLbPolicyWatchHelper,INetworkAutoMsgNetworkWatchHelper,INetworkAutoMsgServiceWatchHelper } from '../../models/generated/network';
+import { INetworkLbPolicyList,IApiStatus,INetworkLbPolicy,INetworkNetworkList,INetworkNetwork,INetworkServiceList,INetworkService,INetworkAutoMsgLbPolicyWatchHelper,INetworkAutoMsgNetworkWatchHelper,INetworkAutoMsgServiceWatchHelper } from '../../models/generated/network';
 
 @Injectable()
 export class Networkv1Service extends AbstractService {
@@ -26,9 +26,9 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create LbPolicy object */
-  public AddLbPolicy_1(body: NetworkLbPolicy):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddLbPolicy_1(body: INetworkLbPolicy):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/lb-policy';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddLbPolicy_1') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddLbPolicy_1') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get LbPolicy object */
@@ -46,10 +46,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update LbPolicy object */
-  public UpdateLbPolicy_1(O_Name, body: NetworkLbPolicy):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateLbPolicy_1(O_Name, body: INetworkLbPolicy):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/lb-policy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateLbPolicy_1') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateLbPolicy_1') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Network objects */
@@ -59,9 +59,9 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create Network object */
-  public AddNetwork_1(body: NetworkNetwork):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public AddNetwork_1(body: INetworkNetwork):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networks';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddNetwork_1') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddNetwork_1') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Network object */
@@ -79,10 +79,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update Network object */
-  public UpdateNetwork_1(O_Name, body: NetworkNetwork):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public UpdateNetwork_1(O_Name, body: INetworkNetwork):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networks/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateNetwork_1') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateNetwork_1') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Service objects */
@@ -92,9 +92,9 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create Service object */
-  public AddService_1(body: NetworkService):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
+  public AddService_1(body: INetworkService):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/services';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddService_1') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddService_1') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Service object */
@@ -112,10 +112,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update Service object */
-  public UpdateService_1(O_Name, body: NetworkService):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
+  public UpdateService_1(O_Name, body: INetworkService):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/services/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateService_1') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateService_1') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List LbPolicy objects */
@@ -126,10 +126,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create LbPolicy object */
-  public AddLbPolicy(body: NetworkLbPolicy):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddLbPolicy(body: INetworkLbPolicy):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/lb-policy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddLbPolicy') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddLbPolicy') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get LbPolicy object */
@@ -149,11 +149,11 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update LbPolicy object */
-  public UpdateLbPolicy(O_Name, body: NetworkLbPolicy):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateLbPolicy(O_Name, body: INetworkLbPolicy):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/lb-policy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateLbPolicy') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateLbPolicy') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Network objects */
@@ -164,10 +164,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create Network object */
-  public AddNetwork(body: NetworkNetwork):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public AddNetwork(body: INetworkNetwork):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/networks';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddNetwork') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddNetwork') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Network object */
@@ -187,11 +187,11 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update Network object */
-  public UpdateNetwork(O_Name, body: NetworkNetwork):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public UpdateNetwork(O_Name, body: INetworkNetwork):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/networks/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateNetwork') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateNetwork') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Service objects */
@@ -202,10 +202,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Create Service object */
-  public AddService(body: NetworkService):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
+  public AddService(body: INetworkService):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/services';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddService') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddService') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Service object */
@@ -225,11 +225,11 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Update Service object */
-  public UpdateService(O_Name, body: NetworkService):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
+  public UpdateService(O_Name, body: INetworkService):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/services/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateService') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateService') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch LbPolicy objects */

@@ -59,33 +59,32 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (ClusterOsInfo.hasDefaultValue('type')) {
+        } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('type')) {
             this['type'] = ClusterOsInfo.propInfo['type'].default;
         }
         if (values && values['kernel-relase'] != null) {
             this['kernel-relase'] = values['kernel-relase'];
-        } else if (ClusterOsInfo.hasDefaultValue('kernel-relase')) {
+        } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('kernel-relase')) {
             this['kernel-relase'] = ClusterOsInfo.propInfo['kernel-relase'].default;
         }
         if (values && values['kernel-version'] != null) {
             this['kernel-version'] = values['kernel-version'];
-        } else if (ClusterOsInfo.hasDefaultValue('kernel-version')) {
+        } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('kernel-version')) {
             this['kernel-version'] = ClusterOsInfo.propInfo['kernel-version'].default;
         }
         if (values && values['processor'] != null) {
             this['processor'] = values['processor'];
-        } else if (ClusterOsInfo.hasDefaultValue('processor')) {
+        } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('processor')) {
             this['processor'] = ClusterOsInfo.propInfo['processor'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -100,7 +99,11 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['kernel-relase'].setValue(this['kernel-relase']);

@@ -74,26 +74,26 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'workload-labels', values['workload-labels']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['workload-labels'] != null) {
+            this['workload-labels'] = values['workload-labels'];
         }
         if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
-        } else if (NetworkServiceSpec.hasDefaultValue('virtual-ip')) {
+        } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('virtual-ip')) {
             this['virtual-ip'] = NetworkServiceSpec.propInfo['virtual-ip'].default;
         }
         if (values && values['ports'] != null) {
             this['ports'] = values['ports'];
-        } else if (NetworkServiceSpec.hasDefaultValue('ports')) {
+        } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('ports')) {
             this['ports'] = NetworkServiceSpec.propInfo['ports'].default;
         }
         if (values && values['lb-policy'] != null) {
             this['lb-policy'] = values['lb-policy'];
-        } else if (NetworkServiceSpec.hasDefaultValue('lb-policy')) {
+        } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('lb-policy')) {
             this['lb-policy'] = NetworkServiceSpec.propInfo['lb-policy'].default;
         }
         if (values) {
@@ -102,35 +102,36 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
         if (values) {
             this['tls-client-policy'].setValues(values['tls-client-policy']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workload-labels': new FormArray([]),
+                'workload-labels': new FormControl(this['workload-labels']),
                 'virtual-ip': new FormControl(this['virtual-ip']),
                 'ports': new FormControl(this['ports']),
                 'lb-policy': new FormControl(this['lb-policy']),
                 'tls-server-policy': this['tls-server-policy'].$formGroup,
                 'tls-client-policy': this['tls-client-policy'].$formGroup,
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('workload-labels', this['workload-labels']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'workload-labels', this['workload-labels']);
+            this._formGroup.controls['workload-labels'].setValue(this['workload-labels']);
             this._formGroup.controls['virtual-ip'].setValue(this['virtual-ip']);
             this._formGroup.controls['ports'].setValue(this['ports']);
             this._formGroup.controls['lb-policy'].setValue(this['lb-policy']);
-            this['tls-server-policy'].setFormGroupValues();
-            this['tls-client-policy'].setFormGroupValues();
+            this['tls-server-policy'].setFormGroupValuesToBeModelValues();
+            this['tls-client-policy'].setFormGroupValuesToBeModelValues();
         }
     }
 }

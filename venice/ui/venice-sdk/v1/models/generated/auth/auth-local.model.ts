@@ -44,18 +44,17 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['enabled'] != null) {
             this['enabled'] = values['enabled'];
-        } else if (AuthLocal.hasDefaultValue('enabled')) {
+        } else if (fillDefaults && AuthLocal.hasDefaultValue('enabled')) {
             this['enabled'] = AuthLocal.propInfo['enabled'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['enabled'].setValue(this['enabled']);
         }

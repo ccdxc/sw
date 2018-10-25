@@ -73,28 +73,28 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['enabled'] != null) {
             this['enabled'] = values['enabled'];
-        } else if (AuthLdap.hasDefaultValue('enabled')) {
+        } else if (fillDefaults && AuthLdap.hasDefaultValue('enabled')) {
             this['enabled'] = AuthLdap.propInfo['enabled'].default;
         }
         if (values && values['base-dn'] != null) {
             this['base-dn'] = values['base-dn'];
-        } else if (AuthLdap.hasDefaultValue('base-dn')) {
+        } else if (fillDefaults && AuthLdap.hasDefaultValue('base-dn')) {
             this['base-dn'] = AuthLdap.propInfo['base-dn'].default;
         }
         if (values && values['bind-dn'] != null) {
             this['bind-dn'] = values['bind-dn'];
-        } else if (AuthLdap.hasDefaultValue('bind-dn')) {
+        } else if (fillDefaults && AuthLdap.hasDefaultValue('bind-dn')) {
             this['bind-dn'] = AuthLdap.propInfo['bind-dn'].default;
         }
         if (values && values['bind-password'] != null) {
             this['bind-password'] = values['bind-password'];
-        } else if (AuthLdap.hasDefaultValue('bind-password')) {
+        } else if (fillDefaults && AuthLdap.hasDefaultValue('bind-password')) {
             this['bind-password'] = AuthLdap.propInfo['bind-password'].default;
         }
         if (values) {
@@ -103,9 +103,8 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
         if (values) {
             this.fillModelArray<AuthLdapServer>(this, 'servers', values['servers'], AuthLdapServer);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -124,13 +123,17 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['enabled'].setValue(this['enabled']);
             this._formGroup.controls['base-dn'].setValue(this['base-dn']);
             this._formGroup.controls['bind-dn'].setValue(this['bind-dn']);
             this._formGroup.controls['bind-password'].setValue(this['bind-password']);
-            this['attribute-mapping'].setFormGroupValues();
+            this['attribute-mapping'].setFormGroupValuesToBeModelValues();
             this.fillModelArray<AuthLdapServer>(this, 'servers', this['servers'], AuthLdapServer);
         }
     }

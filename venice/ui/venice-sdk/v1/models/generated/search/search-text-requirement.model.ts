@@ -48,32 +48,33 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'text', values['text']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['text'] != null) {
+            this['text'] = values['text'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'text': new FormArray([]),
+                'text': new FormControl(this['text']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('text', this['text']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'text', this['text']);
+            this._formGroup.controls['text'].setValue(this['text']);
         }
     }
 }

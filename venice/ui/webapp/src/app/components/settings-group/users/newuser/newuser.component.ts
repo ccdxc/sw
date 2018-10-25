@@ -70,14 +70,15 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   }
 
   addUser() {
-    this._authService.AddUser(this.newAuthUser).subscribe(
+    const newUser = this.newAuthUser.getFormGroupValues();
+    this._authService.AddUser(newUser).subscribe(
       response => {
         const createdUser: AuthUser = response.body as AuthUser;
+
+        this.invokeSuccessToaster('Creation Successful', 'Created user ' + newUser.meta.name);
         this.handleAddUpdateUserRESTCallSuccess(createdUser);
       },
-      error => {
-        this.handleRESTCallError(error, 'AuthService.AddUser() returned code: ');
-      }
+      this.restErrorHandler('Create User Failed')
     );
   }
 

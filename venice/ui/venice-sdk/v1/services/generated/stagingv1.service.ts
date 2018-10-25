@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IStagingBufferList,IApiStatus,IStagingBuffer,StagingBuffer,IStagingClearAction,StagingClearAction,IStagingCommitAction,StagingCommitAction } from '../../models/generated/staging';
+import { IStagingBufferList,IApiStatus,IStagingBuffer,IStagingClearAction,IStagingCommitAction } from '../../models/generated/staging';
 
 @Injectable()
 export class Stagingv1Service extends AbstractService {
@@ -26,9 +26,9 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** Create Buffer object */
-  public AddBuffer_1(body: StagingBuffer):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
+  public AddBuffer_1(body: IStagingBuffer):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddBuffer_1') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddBuffer_1') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Buffer object */
@@ -45,16 +45,16 @@ export class Stagingv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, 'DeleteBuffer_1') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
-  public Clear_1(O_Name, body: StagingClearAction):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
+  public Clear_1(O_Name, body: IStagingClearAction):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/clear';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'Clear_1') as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'Clear_1') as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
   }
   
-  public Commit_1(O_Name, body: StagingCommitAction):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
+  public Commit_1(O_Name, body: IStagingCommitAction):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/commit';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'Commit_1') as Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'Commit_1') as Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Buffer objects */
@@ -65,10 +65,10 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** Create Buffer object */
-  public AddBuffer(body: StagingBuffer):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
+  public AddBuffer(body: IStagingBuffer):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddBuffer') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddBuffer') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Buffer object */
@@ -87,18 +87,18 @@ export class Stagingv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, 'DeleteBuffer') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
-  public Clear(O_Name, body: StagingClearAction):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
+  public Clear(O_Name, body: IStagingClearAction):Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/clear';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'Clear') as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'Clear') as Observable<{body: IStagingClearAction | IApiStatus | Error, statusCode: number}>;
   }
   
-  public Commit(O_Name, body: StagingCommitAction):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
+  public Commit(O_Name, body: IStagingCommitAction):Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/commit';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'Commit') as Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'Commit') as Observable<{body: IStagingCommitAction | IApiStatus | Error, statusCode: number}>;
   }
   
 }

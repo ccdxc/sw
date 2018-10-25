@@ -154,16 +154,11 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   getAuthRoles() {
     this._authService.ListRole().subscribe(
       (data) => {
-        const status = data.statusCode;
-        if (status === 200) {
-          const authRoleList: AuthRoleList = new AuthRoleList(<IAuthRoleList>data.body);
-          if (authRoleList.Items.length > 0) {
-            this.authRoles.length = 0;
-            this.authRoles = authRoleList.Items;
-            this.setDataReadyMap('roles', true);
-          }
-        } else {
-          console.error(this.getClassName() + '_authService.ListRole()' + data);
+        const authRoleList: AuthRoleList = new AuthRoleList(<IAuthRoleList>data.body);
+        if (authRoleList.Items.length > 0) {
+          this.authRoles.length = 0;
+          this.authRoles = authRoleList.Items;
+          this.setDataReadyMap('roles', true);
         }
       },
       this.restErrorHandler('Failed to get Roles')
@@ -249,6 +244,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       this._authService.DeleteUser(user.meta.name).subscribe(
         (data) => {
           // refresh users list
+          this.invokeSuccessToaster('Delete Successful', "Deleted user " + user.meta.name);
           this.getUsers();
         },
         this.restErrorHandler('Delete User Failed')
@@ -322,16 +318,14 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   updateUser() {
-    this._authService.UpdateUser(this.selectedAuthUser.meta.name, this.selectedAuthUser).subscribe(
+    this._authService.UpdateUser(this.selectedAuthUser.meta.name, this.selectedAuthUser.getFormGroupValues()).subscribe(
       response => {
+        this.invokeSuccessToaster('Update Successful', 'Updated user ' + this.selectedAuthUser.meta.name);
         const updatedAuthUser: AuthUser = response.body as AuthUser;
         this.handleAddUpdateUserRESTCallSuccess(updatedAuthUser);
       },
-      error => {
-        this.handleRESTCallError(error, 'AuthService.AddUser() returned code: ');
-      }
+      this.restErrorHandler('Update User Failed')
     );
-
   }
 
   protected handleAddUpdateUserRESTCallSuccess(authUser: AuthUser) {
@@ -345,35 +339,25 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleRESTCallError(error: any, callerMessage: string) {
-    // TODO: Error handling
-    if (error.body instanceof Error) {
-      console.log(callerMessage + error.statusCode + ' data: ' + <Error>error.body);
-    } else {
-      console.log(callerMessage + error.statusCode + ' data: ' + <IApiStatus>error.body);
-    }
-  }
-
   isUserAlreadyInRoleBinding(rolebinding: AuthRoleBinding, username: string): boolean {
-    return (rolebinding.getValues().spec.users.indexOf(username) >= 0);
+    return (rolebinding.getFormGroupValues().spec.users.indexOf(username) >= 0);
   }
 
   addUserToRolebinding(rolebinding: AuthRoleBinding, username: string) {
     if (this.isUserAlreadyInRoleBinding(rolebinding, username)) {
       return; // Since username is already in rolebinding.users list, we will do nothing;
     }
-    rolebinding.getValues().spec.users.push(username);
+    rolebinding.getFormGroupValues().spec.users.push(username);
     // TODO:
     // We update to the rolebinding.getValues().
     // rolebinding.spec.users.push(username); will not work
-    this._authService.UpdateRoleBinding(rolebinding.meta.name, rolebinding).subscribe(
+    this._authService.UpdateRoleBinding(rolebinding.meta.name, rolebinding.getFormGroupValues()).subscribe(
       response => {
+        this.invokeSuccessToaster('Update Successful', 'Updated role binding ' + rolebinding.meta.name);
         const status = response.statusCode;
         this.setDataReadyMap(rolebinding.meta.name, true);
       },
-      error => {
-        this.handleRESTCallError(error, 'AuthService.AddUser() returned code: ');
-      }
+      this.restErrorHandler('Update Role Binding Failed')
     );
   }
 

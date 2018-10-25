@@ -59,26 +59,25 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['result'] != null) {
             this['result'] = values['result'];
-        } else if (AuthLdapServerStatus.hasDefaultValue('result')) {
+        } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('result')) {
             this['result'] = <AuthLdapServerStatus_result>  AuthLdapServerStatus.propInfo['result'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
-        } else if (AuthLdapServerStatus.hasDefaultValue('message')) {
+        } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('message')) {
             this['message'] = AuthLdapServerStatus.propInfo['message'].default;
         }
         if (values) {
             this['server'].setValues(values['server']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -92,11 +91,15 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['result'].setValue(this['result']);
             this._formGroup.controls['message'].setValue(this['message']);
-            this['server'].setFormGroupValues();
+            this['server'].setFormGroupValuesToBeModelValues();
         }
     }
 }

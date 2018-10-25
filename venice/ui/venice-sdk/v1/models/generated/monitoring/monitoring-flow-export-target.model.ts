@@ -68,18 +68,18 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['interval'] != null) {
             this['interval'] = values['interval'];
-        } else if (MonitoringFlowExportTarget.hasDefaultValue('interval')) {
+        } else if (fillDefaults && MonitoringFlowExportTarget.hasDefaultValue('interval')) {
             this['interval'] = MonitoringFlowExportTarget.propInfo['interval'].default;
         }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
-        } else if (MonitoringFlowExportTarget.hasDefaultValue('format')) {
+        } else if (fillDefaults && MonitoringFlowExportTarget.hasDefaultValue('format')) {
             this['format'] = <MonitoringFlowExportTarget_format>  MonitoringFlowExportTarget.propInfo['format'].default;
         }
         if (values) {
@@ -88,9 +88,8 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
         if (values) {
             this.fillModelArray<MonitoringExportConfig>(this, 'exports', values['exports'], MonitoringExportConfig);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -109,7 +108,11 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['interval'].setValue(this['interval']);
             this._formGroup.controls['format'].setValue(this['format']);

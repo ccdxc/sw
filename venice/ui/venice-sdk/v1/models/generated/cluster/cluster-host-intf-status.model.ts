@@ -45,32 +45,33 @@ export class ClusterHostIntfStatus extends BaseModel implements IClusterHostIntf
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'ip-addrs', values['ip-addrs']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['ip-addrs'] != null) {
+            this['ip-addrs'] = values['ip-addrs'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ip-addrs': new FormArray([]),
+                'ip-addrs': new FormControl(this['ip-addrs']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('ip-addrs', this['ip-addrs']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'ip-addrs', this['ip-addrs']);
+            this._formGroup.controls['ip-addrs'].setValue(this['ip-addrs']);
         }
     }
 }

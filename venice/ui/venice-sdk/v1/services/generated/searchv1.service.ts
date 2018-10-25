@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { ISearchPolicySearchResponse,SearchPolicySearchRequest,ISearchSearchResponse,SearchSearchRequest } from '../../models/generated/search';
+import { ISearchPolicySearchResponse,ISearchPolicySearchRequest,ISearchSearchResponse,ISearchSearchRequest } from '../../models/generated/search';
 
 @Injectable()
 export class Searchv1Service extends AbstractService {
@@ -26,9 +26,9 @@ export class Searchv1Service extends AbstractService {
   }
   
   /** Security Policy Query */
-  public PostPolicyQuery(body: SearchPolicySearchRequest):Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
+  public PostPolicyQuery(body: ISearchPolicySearchRequest):Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/policy-query';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'PostPolicyQuery') as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'PostPolicyQuery') as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
   }
   
   /** In the example below a query like
@@ -44,9 +44,9 @@ export class Searchv1Service extends AbstractService {
    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
  generates a RPC call Query with the parameter as
  SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
-  public PostQuery(body: SearchSearchRequest):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
+  public PostQuery(body: ISearchSearchRequest):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'PostQuery') as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'PostQuery') as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
   }
   
 }

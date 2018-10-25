@@ -52,23 +52,22 @@ export class StagingCommitResponse extends BaseModel implements IStagingCommitRe
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (StagingCommitResponse.hasDefaultValue('status')) {
+        } else if (fillDefaults && StagingCommitResponse.hasDefaultValue('status')) {
             this['status'] = <StagingCommitResponse_status>  StagingCommitResponse.propInfo['status'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
-        } else if (StagingCommitResponse.hasDefaultValue('reason')) {
+        } else if (fillDefaults && StagingCommitResponse.hasDefaultValue('reason')) {
             this['reason'] = StagingCommitResponse.propInfo['reason'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -81,7 +80,11 @@ export class StagingCommitResponse extends BaseModel implements IStagingCommitRe
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['status'].setValue(this['status']);
             this._formGroup.controls['reason'].setValue(this['reason']);

@@ -62,29 +62,28 @@ export class Metrics_queryResultSeries extends BaseModel implements IMetrics_que
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['name'] != null) {
             this['name'] = values['name'];
-        } else if (Metrics_queryResultSeries.hasDefaultValue('name')) {
+        } else if (fillDefaults && Metrics_queryResultSeries.hasDefaultValue('name')) {
             this['name'] = Metrics_queryResultSeries.propInfo['name'].default;
         }
         if (values && values['tags'] != null) {
             this['tags'] = values['tags'];
-        } else if (Metrics_queryResultSeries.hasDefaultValue('tags')) {
+        } else if (fillDefaults && Metrics_queryResultSeries.hasDefaultValue('tags')) {
             this['tags'] = Metrics_queryResultSeries.propInfo['tags'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'columns', values['columns']);
+        if (values && values['columns'] != null) {
+            this['columns'] = values['columns'];
         }
         if (values) {
             this.fillModelArray<ApiInterfaceSlice>(this, 'values', values['values'], ApiInterfaceSlice);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -92,22 +91,24 @@ export class Metrics_queryResultSeries extends BaseModel implements IMetrics_que
             this._formGroup = new FormGroup({
                 'name': new FormControl(this['name']),
                 'tags': new FormControl(this['tags']),
-                'columns': new FormArray([]),
+                'columns': new FormControl(this['columns']),
                 'values': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('columns', this['columns']);
             // generate FormArray control elements
             this.fillFormArray<ApiInterfaceSlice>('values', this['values'], ApiInterfaceSlice);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['tags'].setValue(this['tags']);
-            this.fillModelArray<string>(this, 'columns', this['columns']);
+            this._formGroup.controls['columns'].setValue(this['columns']);
             this.fillModelArray<ApiInterfaceSlice>(this, 'values', this['values'], ApiInterfaceSlice);
         }
     }

@@ -66,36 +66,35 @@ export class ApiInterface extends BaseModel implements IApiInterface {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['Str'] != null) {
             this['Str'] = values['Str'];
-        } else if (ApiInterface.hasDefaultValue('Str')) {
+        } else if (fillDefaults && ApiInterface.hasDefaultValue('Str')) {
             this['Str'] = ApiInterface.propInfo['Str'].default;
         }
         if (values && values['Int64'] != null) {
             this['Int64'] = values['Int64'];
-        } else if (ApiInterface.hasDefaultValue('Int64')) {
+        } else if (fillDefaults && ApiInterface.hasDefaultValue('Int64')) {
             this['Int64'] = ApiInterface.propInfo['Int64'].default;
         }
         if (values && values['Bool'] != null) {
             this['Bool'] = values['Bool'];
-        } else if (ApiInterface.hasDefaultValue('Bool')) {
+        } else if (fillDefaults && ApiInterface.hasDefaultValue('Bool')) {
             this['Bool'] = ApiInterface.propInfo['Bool'].default;
         }
         if (values && values['Float'] != null) {
             this['Float'] = values['Float'];
-        } else if (ApiInterface.hasDefaultValue('Float')) {
+        } else if (fillDefaults && ApiInterface.hasDefaultValue('Float')) {
             this['Float'] = ApiInterface.propInfo['Float'].default;
         }
         if (values) {
             this['Interfaces'].setValues(values['Interfaces']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -111,13 +110,17 @@ export class ApiInterface extends BaseModel implements IApiInterface {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['Str'].setValue(this['Str']);
             this._formGroup.controls['Int64'].setValue(this['Int64']);
             this._formGroup.controls['Bool'].setValue(this['Bool']);
             this._formGroup.controls['Float'].setValue(this['Float']);
-            this['Interfaces'].setFormGroupValues();
+            this['Interfaces'].setFormGroupValuesToBeModelValues();
         }
     }
 }

@@ -57,28 +57,27 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['oper-state'] != null) {
             this['oper-state'] = values['oper-state'];
-        } else if (MonitoringMirrorSessionStatus.hasDefaultValue('oper-state')) {
+        } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('oper-state')) {
             this['oper-state'] = <MonitoringMirrorSessionStatus_oper_state>  MonitoringMirrorSessionStatus.propInfo['oper-state'].default;
         }
         if (values && values['pcap-file-url'] != null) {
             this['pcap-file-url'] = values['pcap-file-url'];
-        } else if (MonitoringMirrorSessionStatus.hasDefaultValue('pcap-file-url')) {
+        } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('pcap-file-url')) {
             this['pcap-file-url'] = MonitoringMirrorSessionStatus.propInfo['pcap-file-url'].default;
         }
         if (values && values['started-at'] != null) {
             this['started-at'] = values['started-at'];
-        } else if (MonitoringMirrorSessionStatus.hasDefaultValue('started-at')) {
+        } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('started-at')) {
             this['started-at'] = MonitoringMirrorSessionStatus.propInfo['started-at'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -92,7 +91,11 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['oper-state'].setValue(this['oper-state']);
             this._formGroup.controls['pcap-file-url'].setValue(this['pcap-file-url']);

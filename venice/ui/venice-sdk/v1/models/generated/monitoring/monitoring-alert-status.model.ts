@@ -94,13 +94,13 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
-        } else if (MonitoringAlertStatus.hasDefaultValue('severity')) {
+        } else if (fillDefaults && MonitoringAlertStatus.hasDefaultValue('severity')) {
             this['severity'] = <MonitoringAlertStatus_severity>  MonitoringAlertStatus.propInfo['severity'].default;
         }
         if (values) {
@@ -108,7 +108,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
         }
         if (values && values['event-uri'] != null) {
             this['event-uri'] = values['event-uri'];
-        } else if (MonitoringAlertStatus.hasDefaultValue('event-uri')) {
+        } else if (fillDefaults && MonitoringAlertStatus.hasDefaultValue('event-uri')) {
             this['event-uri'] = MonitoringAlertStatus.propInfo['event-uri'].default;
         }
         if (values) {
@@ -116,7 +116,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
-        } else if (MonitoringAlertStatus.hasDefaultValue('message')) {
+        } else if (fillDefaults && MonitoringAlertStatus.hasDefaultValue('message')) {
             this['message'] = MonitoringAlertStatus.propInfo['message'].default;
         }
         if (values) {
@@ -128,9 +128,8 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
         if (values) {
             this['resolved'].setValues(values['resolved']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -149,16 +148,20 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['severity'].setValue(this['severity']);
-            this['source'].setFormGroupValues();
+            this['source'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['event-uri'].setValue(this['event-uri']);
-            this['object-ref'].setFormGroupValues();
+            this['object-ref'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['message'].setValue(this['message']);
-            this['reason'].setFormGroupValues();
-            this['acknowledged'].setFormGroupValues();
-            this['resolved'].setFormGroupValues();
+            this['reason'].setFormGroupValuesToBeModelValues();
+            this['acknowledged'].setFormGroupValuesToBeModelValues();
+            this['resolved'].setFormGroupValuesToBeModelValues();
         }
     }
 }

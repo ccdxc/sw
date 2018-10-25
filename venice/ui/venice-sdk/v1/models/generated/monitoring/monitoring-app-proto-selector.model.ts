@@ -55,39 +55,38 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'ports', values['ports']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['ports'] != null) {
+            this['ports'] = values['ports'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'applications', values['applications']);
+        if (values && values['applications'] != null) {
+            this['applications'] = values['applications'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ports': new FormArray([]),
-                'applications': new FormArray([]),
+                'ports': new FormControl(this['ports']),
+                'applications': new FormControl(this['applications']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('ports', this['ports']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('applications', this['applications']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'ports', this['ports']);
-            this.fillModelArray<string>(this, 'applications', this['applications']);
+            this._formGroup.controls['ports'].setValue(this['ports']);
+            this._formGroup.controls['applications'].setValue(this['applications']);
         }
     }
 }

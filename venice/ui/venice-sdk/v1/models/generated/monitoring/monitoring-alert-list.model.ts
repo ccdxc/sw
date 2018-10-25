@@ -61,31 +61,30 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (MonitoringAlertList.hasDefaultValue('kind')) {
+        } else if (fillDefaults && MonitoringAlertList.hasDefaultValue('kind')) {
             this['kind'] = MonitoringAlertList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (MonitoringAlertList.hasDefaultValue('api-version')) {
+        } else if (fillDefaults && MonitoringAlertList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringAlertList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
-        } else if (MonitoringAlertList.hasDefaultValue('resource-version')) {
+        } else if (fillDefaults && MonitoringAlertList.hasDefaultValue('resource-version')) {
             this['resource-version'] = MonitoringAlertList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringAlert>(this, 'Items', values['Items'], MonitoringAlert);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -102,7 +101,11 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);

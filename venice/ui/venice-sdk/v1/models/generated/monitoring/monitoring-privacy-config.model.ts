@@ -54,23 +54,22 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['algo'] != null) {
             this['algo'] = values['algo'];
-        } else if (MonitoringPrivacyConfig.hasDefaultValue('algo')) {
+        } else if (fillDefaults && MonitoringPrivacyConfig.hasDefaultValue('algo')) {
             this['algo'] = <MonitoringPrivacyConfig_algo>  MonitoringPrivacyConfig.propInfo['algo'].default;
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
-        } else if (MonitoringPrivacyConfig.hasDefaultValue('password')) {
+        } else if (fillDefaults && MonitoringPrivacyConfig.hasDefaultValue('password')) {
             this['password'] = MonitoringPrivacyConfig.propInfo['password'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -83,7 +82,11 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['algo'].setValue(this['algo']);
             this._formGroup.controls['password'].setValue(this['password']);

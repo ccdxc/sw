@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IMetrics_queryQueryResponse,Metrics_queryQuerySpec } from '../../models/generated/metrics_query';
+import { IMetrics_queryQueryResponse,IMetrics_queryQuerySpec } from '../../models/generated/metrics_query';
 
 @Injectable()
 export class Metrics_queryv1Service extends AbstractService {
@@ -26,9 +26,9 @@ export class Metrics_queryv1Service extends AbstractService {
   }
   
   /** Query is the telemetry metrics query RPC, http://localhost:9000/metrics/v1/query */
-  public PostQuery(body: Metrics_queryQuerySpec):Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}> {
+  public PostQuery(body: IMetrics_queryQuerySpec):Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/metrics/v1/query';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'PostQuery') as Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'PostQuery') as Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}>;
   }
   
 }

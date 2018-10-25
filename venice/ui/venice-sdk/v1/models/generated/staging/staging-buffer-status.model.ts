@@ -61,13 +61,13 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['validation-result'] != null) {
             this['validation-result'] = values['validation-result'];
-        } else if (StagingBufferStatus.hasDefaultValue('validation-result')) {
+        } else if (fillDefaults && StagingBufferStatus.hasDefaultValue('validation-result')) {
             this['validation-result'] = <StagingBufferStatus_validation_result>  StagingBufferStatus.propInfo['validation-result'].default;
         }
         if (values) {
@@ -76,9 +76,8 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
         if (values) {
             this.fillModelArray<StagingItem>(this, 'items', values['items'], StagingItem);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -96,7 +95,11 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['validation-result'].setValue(this['validation-result']);
             this.fillModelArray<StagingValidationError>(this, 'errors', this['errors'], StagingValidationError);

@@ -383,7 +383,7 @@ describe('SgpolicydetailComponent', () => {
     expectedReq['namespace'] = 'default';
     expectedReq['sg-policy'] = 'policy1';
     let calledObj = postQuerySpy.calls.mostRecent().args[0];
-    expect(_.isEqual(expectedReq.getValues(), calledObj.getValues())).toBeTruthy();
+    expect(_.isEqual(expectedReq.getFormGroupValues(), calledObj.getFormGroupValues())).toBeTruthy();
 
     // Putting in text into dest IP
     testingUtility.setText(destIPInput, '10.1.1.8');
@@ -395,7 +395,7 @@ describe('SgpolicydetailComponent', () => {
     expectedReq['to-ip-address'] = '10.1.1.8';
     expectedReq['sg-policy'] = 'policy1';
     calledObj = postQuerySpy.calls.mostRecent().args[0];
-    expect(_.isEqual(expectedReq.getValues(), calledObj.getValues())).toBeTruthy();
+    expect(_.isEqual(expectedReq.getFormGroupValues(), calledObj.getFormGroupValues())).toBeTruthy();
 
     // Putting text into APP
     testingUtility.setText(portInput, 'tcp/80');
@@ -408,7 +408,7 @@ describe('SgpolicydetailComponent', () => {
     expectedReq['app'] = 'tcp/80';
     expectedReq['sg-policy'] = 'policy1';
     calledObj = postQuerySpy.calls.mostRecent().args[0];
-    expect(_.isEqual(expectedReq.getValues(), calledObj.getValues())).toBeTruthy();
+    expect(_.isEqual(expectedReq.getFormGroupValues(), calledObj.getFormGroupValues())).toBeTruthy();
 
   });
 

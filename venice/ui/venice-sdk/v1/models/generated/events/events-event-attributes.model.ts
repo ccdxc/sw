@@ -76,23 +76,23 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
-        } else if (EventsEventAttributes.hasDefaultValue('severity')) {
+        } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('severity')) {
             this['severity'] = <EventsEventAttributes_severity>  EventsEventAttributes.propInfo['severity'].default;
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (EventsEventAttributes.hasDefaultValue('type')) {
+        } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('type')) {
             this['type'] = EventsEventAttributes.propInfo['type'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
-        } else if (EventsEventAttributes.hasDefaultValue('message')) {
+        } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('message')) {
             this['message'] = EventsEventAttributes.propInfo['message'].default;
         }
         if (values) {
@@ -103,12 +103,11 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
-        } else if (EventsEventAttributes.hasDefaultValue('count')) {
+        } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('count')) {
             this['count'] = EventsEventAttributes.propInfo['count'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -125,13 +124,17 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['severity'].setValue(this['severity']);
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['message'].setValue(this['message']);
-            this['object-ref'].setFormGroupValues();
-            this['source'].setFormGroupValues();
+            this['object-ref'].setFormGroupValuesToBeModelValues();
+            this['source'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['count'].setValue(this['count']);
         }
     }

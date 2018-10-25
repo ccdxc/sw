@@ -52,23 +52,22 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['host-name'] != null) {
             this['host-name'] = values['host-name'];
-        } else if (WorkloadWorkloadSpec.hasDefaultValue('host-name')) {
+        } else if (fillDefaults && WorkloadWorkloadSpec.hasDefaultValue('host-name')) {
             this['host-name'] = WorkloadWorkloadSpec.propInfo['host-name'].default;
         }
         if (values && values['interfaces'] != null) {
             this['interfaces'] = values['interfaces'];
-        } else if (WorkloadWorkloadSpec.hasDefaultValue('interfaces')) {
+        } else if (fillDefaults && WorkloadWorkloadSpec.hasDefaultValue('interfaces')) {
             this['interfaces'] = WorkloadWorkloadSpec.propInfo['interfaces'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -81,7 +80,11 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['host-name'].setValue(this['host-name']);
             this._formGroup.controls['interfaces'].setValue(this['interfaces']);

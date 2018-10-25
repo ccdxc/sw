@@ -54,21 +54,20 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['state'] != null) {
             this['state'] = values['state'];
-        } else if (MonitoringTroubleshootingSessionStatus.hasDefaultValue('state')) {
+        } else if (fillDefaults && MonitoringTroubleshootingSessionStatus.hasDefaultValue('state')) {
             this['state'] = <MonitoringTroubleshootingSessionStatus_state>  MonitoringTroubleshootingSessionStatus.propInfo['state'].default;
         }
         if (values) {
             this.fillModelArray<MonitoringTsResult>(this, 'troubleshooting-results', values['troubleshooting-results'], MonitoringTsResult);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -83,7 +82,11 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['state'].setValue(this['state']);
             this.fillModelArray<MonitoringTsResult>(this, 'troubleshooting-results', this['troubleshooting-results'], MonitoringTsResult);

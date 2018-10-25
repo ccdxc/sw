@@ -54,28 +54,27 @@ export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSp
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['compaction-interval '] != null) {
             this['compaction-interval '] = values['compaction-interval '];
-        } else if (MonitoringStatsSpec.hasDefaultValue('compaction-interval ')) {
+        } else if (fillDefaults && MonitoringStatsSpec.hasDefaultValue('compaction-interval ')) {
             this['compaction-interval '] = MonitoringStatsSpec.propInfo['compaction-interval '].default;
         }
         if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
-        } else if (MonitoringStatsSpec.hasDefaultValue('retention-time')) {
+        } else if (fillDefaults && MonitoringStatsSpec.hasDefaultValue('retention-time')) {
             this['retention-time'] = MonitoringStatsSpec.propInfo['retention-time'].default;
         }
         if (values && values['downsample-retention-time'] != null) {
             this['downsample-retention-time'] = values['downsample-retention-time'];
-        } else if (MonitoringStatsSpec.hasDefaultValue('downsample-retention-time')) {
+        } else if (fillDefaults && MonitoringStatsSpec.hasDefaultValue('downsample-retention-time')) {
             this['downsample-retention-time'] = MonitoringStatsSpec.propInfo['downsample-retention-time'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -89,7 +88,11 @@ export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSp
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['compaction-interval '].setValue(this['compaction-interval ']);
             this._formGroup.controls['retention-time'].setValue(this['retention-time']);

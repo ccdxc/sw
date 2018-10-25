@@ -84,18 +84,18 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SearchTextRequirement>(this, 'texts', values['texts'], SearchTextRequirement);
         }
-        if (values) {
-            this.fillModelArray<SearchSearchQuery_categories>(this, 'categories', values['categories']);
+        if (values && values['categories'] != null) {
+            this['categories'] = values['categories'];
         }
-        if (values) {
-            this.fillModelArray<SearchSearchQuery_kinds>(this, 'kinds', values['kinds']);
+        if (values && values['kinds'] != null) {
+            this['kinds'] = values['kinds'];
         }
         if (values) {
             this['fields'].setValues(values['fields']);
@@ -103,37 +103,36 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
         if (values) {
             this['labels'].setValues(values['labels']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'texts': new FormArray([]),
-                'categories': new FormArray([]),
-                'kinds': new FormArray([]),
+                'categories': new FormControl(this['categories']),
+                'kinds': new FormControl(this['kinds']),
                 'fields': this['fields'].$formGroup,
                 'labels': this['labels'].$formGroup,
             });
             // generate FormArray control elements
             this.fillFormArray<SearchTextRequirement>('texts', this['texts'], SearchTextRequirement);
-            // generate FormArray control elements
-            this.fillFormArray<SearchSearchQuery_categories>('categories', this['categories']);
-            // generate FormArray control elements
-            this.fillFormArray<SearchSearchQuery_kinds>('kinds', this['kinds']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this.fillModelArray<SearchTextRequirement>(this, 'texts', this['texts'], SearchTextRequirement);
-            this.fillModelArray<SearchSearchQuery_categories>(this, 'categories', this['categories']);
-            this.fillModelArray<SearchSearchQuery_kinds>(this, 'kinds', this['kinds']);
-            this['fields'].setFormGroupValues();
-            this['labels'].setFormGroupValues();
+            this._formGroup.controls['categories'].setValue(this['categories']);
+            this._formGroup.controls['kinds'].setValue(this['kinds']);
+            this['fields'].setFormGroupValuesToBeModelValues();
+            this['labels'].setFormGroupValuesToBeModelValues();
         }
     }
 }

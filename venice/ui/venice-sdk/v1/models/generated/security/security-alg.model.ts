@@ -88,10 +88,10 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this['dns'].setValues(values['dns']);
         }
@@ -113,9 +113,8 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
         if (values) {
             this['rstp'].setValues(values['rstp']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -133,15 +132,19 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this['dns'].setFormGroupValues();
-            this['sip'].setFormGroupValues();
-            this['sunrpc'].setFormGroupValues();
-            this['ftp'].setFormGroupValues();
-            this['msrpc'].setFormGroupValues();
-            this['tftp'].setFormGroupValues();
-            this['rstp'].setFormGroupValues();
+            this['dns'].setFormGroupValuesToBeModelValues();
+            this['sip'].setFormGroupValuesToBeModelValues();
+            this['sunrpc'].setFormGroupValuesToBeModelValues();
+            this['ftp'].setFormGroupValuesToBeModelValues();
+            this['msrpc'].setFormGroupValuesToBeModelValues();
+            this['tftp'].setFormGroupValuesToBeModelValues();
+            this['rstp'].setFormGroupValuesToBeModelValues();
         }
     }
 }

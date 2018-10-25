@@ -101,13 +101,13 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['admission-phase'] != null) {
             this['admission-phase'] = values['admission-phase'];
-        } else if (ClusterSmartNICStatus.hasDefaultValue('admission-phase')) {
+        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('admission-phase')) {
             this['admission-phase'] = <ClusterSmartNICStatus_admission_phase>  ClusterSmartNICStatus.propInfo['admission-phase'].default;
         }
         if (values) {
@@ -115,12 +115,12 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         }
         if (values && values['serial-num'] != null) {
             this['serial-num'] = values['serial-num'];
-        } else if (ClusterSmartNICStatus.hasDefaultValue('serial-num')) {
+        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('serial-num')) {
             this['serial-num'] = ClusterSmartNICStatus.propInfo['serial-num'].default;
         }
         if (values && values['primary-mac'] != null) {
             this['primary-mac'] = values['primary-mac'];
-        } else if (ClusterSmartNICStatus.hasDefaultValue('primary-mac')) {
+        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('primary-mac')) {
             this['primary-mac'] = ClusterSmartNICStatus.propInfo['primary-mac'].default;
         }
         if (values) {
@@ -135,9 +135,8 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         if (values) {
             this.fillModelArray<ClusterPFStatus>(this, 'pfs', values['pfs'], ClusterPFStatus);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -162,14 +161,18 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['admission-phase'].setValue(this['admission-phase']);
             this.fillModelArray<ClusterSmartNICCondition>(this, 'conditions', this['conditions'], ClusterSmartNICCondition);
             this._formGroup.controls['serial-num'].setValue(this['serial-num']);
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
-            this['ip-config'].setFormGroupValues();
-            this['system-info'].setFormGroupValues();
+            this['ip-config'].setFormGroupValuesToBeModelValues();
+            this['system-info'].setFormGroupValuesToBeModelValues();
             this.fillModelArray<ClusterUplinkStatus>(this, 'uplinks', this['uplinks'], ClusterUplinkStatus);
             this.fillModelArray<ClusterPFStatus>(this, 'pfs', this['pfs'], ClusterPFStatus);
         }

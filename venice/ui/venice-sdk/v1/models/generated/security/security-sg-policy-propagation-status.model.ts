@@ -61,33 +61,32 @@ export class SecuritySGPolicyPropagationStatus extends BaseModel implements ISec
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['generation-id'] != null) {
             this['generation-id'] = values['generation-id'];
-        } else if (SecuritySGPolicyPropagationStatus.hasDefaultValue('generation-id')) {
+        } else if (fillDefaults && SecuritySGPolicyPropagationStatus.hasDefaultValue('generation-id')) {
             this['generation-id'] = SecuritySGPolicyPropagationStatus.propInfo['generation-id'].default;
         }
         if (values && values['updated'] != null) {
             this['updated'] = values['updated'];
-        } else if (SecuritySGPolicyPropagationStatus.hasDefaultValue('updated')) {
+        } else if (fillDefaults && SecuritySGPolicyPropagationStatus.hasDefaultValue('updated')) {
             this['updated'] = SecuritySGPolicyPropagationStatus.propInfo['updated'].default;
         }
         if (values && values['pending'] != null) {
             this['pending'] = values['pending'];
-        } else if (SecuritySGPolicyPropagationStatus.hasDefaultValue('pending')) {
+        } else if (fillDefaults && SecuritySGPolicyPropagationStatus.hasDefaultValue('pending')) {
             this['pending'] = SecuritySGPolicyPropagationStatus.propInfo['pending'].default;
         }
         if (values && values['min-version'] != null) {
             this['min-version'] = values['min-version'];
-        } else if (SecuritySGPolicyPropagationStatus.hasDefaultValue('min-version')) {
+        } else if (fillDefaults && SecuritySGPolicyPropagationStatus.hasDefaultValue('min-version')) {
             this['min-version'] = SecuritySGPolicyPropagationStatus.propInfo['min-version'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -102,7 +101,11 @@ export class SecuritySGPolicyPropagationStatus extends BaseModel implements ISec
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['generation-id'].setValue(this['generation-id']);
             this._formGroup.controls['updated'].setValue(this['updated']);

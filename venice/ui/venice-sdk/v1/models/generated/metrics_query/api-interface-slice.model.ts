@@ -46,16 +46,15 @@ export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<ApiInterface>(this, 'Values', values['Values'], ApiInterface);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -69,7 +68,11 @@ export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this.fillModelArray<ApiInterface>(this, 'Values', this['Values'], ApiInterface);
         }

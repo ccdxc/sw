@@ -55,26 +55,25 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
-        } else if (StagingValidationError.hasDefaultValue('uri')) {
+        } else if (fillDefaults && StagingValidationError.hasDefaultValue('uri')) {
             this['uri'] = StagingValidationError.propInfo['uri'].default;
         }
         if (values && values['method'] != null) {
             this['method'] = values['method'];
-        } else if (StagingValidationError.hasDefaultValue('method')) {
+        } else if (fillDefaults && StagingValidationError.hasDefaultValue('method')) {
             this['method'] = StagingValidationError.propInfo['method'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'error', values['error']);
+        if (values && values['error'] != null) {
+            this['error'] = values['error'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -82,19 +81,21 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
             this._formGroup = new FormGroup({
                 'uri': new FormControl(this['uri']),
                 'method': new FormControl(this['method']),
-                'error': new FormArray([]),
+                'error': new FormControl(this['error']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('error', this['error']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['uri'].setValue(this['uri']);
             this._formGroup.controls['method'].setValue(this['method']);
-            this.fillModelArray<string>(this, 'error', this['error']);
+            this._formGroup.controls['error'].setValue(this['error']);
         }
     }
 }

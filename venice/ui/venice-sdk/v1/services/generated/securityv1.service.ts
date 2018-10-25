@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { ISecurityAppList,IApiStatus,ISecurityApp,SecurityApp,ISecurityCertificateList,ISecurityCertificate,SecurityCertificate,ISecuritySecurityGroupList,ISecuritySecurityGroup,SecuritySecurityGroup,ISecuritySGPolicyList,ISecuritySGPolicy,SecuritySGPolicy,ISecurityTrafficEncryptionPolicy,SecurityTrafficEncryptionPolicy,ISecurityAutoMsgAppWatchHelper,ISecurityAutoMsgCertificateWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,ISecurityAutoMsgSGPolicyWatchHelper,ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper } from '../../models/generated/security';
+import { ISecurityAppList,IApiStatus,ISecurityApp,ISecurityCertificateList,ISecurityCertificate,ISecuritySecurityGroupList,ISecuritySecurityGroup,ISecuritySGPolicyList,ISecuritySGPolicy,ISecurityTrafficEncryptionPolicy,ISecurityAutoMsgAppWatchHelper,ISecurityAutoMsgCertificateWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,ISecurityAutoMsgSGPolicyWatchHelper,ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper } from '../../models/generated/security';
 
 @Injectable()
 export class Securityv1Service extends AbstractService {
@@ -26,9 +26,9 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create App object */
-  public AddApp(body: SecurityApp):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public AddApp(body: ISecurityApp):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get App object */
@@ -46,10 +46,10 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update App object */
-  public UpdateApp(O_Name, body: SecurityApp):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+  public UpdateApp(O_Name, body: ISecurityApp):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/apps/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateApp') as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Certificate objects */
@@ -59,9 +59,9 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create Certificate object */
-  public AddCertificate_1(body: SecurityCertificate):Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}> {
+  public AddCertificate_1(body: ISecurityCertificate):Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/certificates';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddCertificate_1') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddCertificate_1') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Certificate object */
@@ -79,10 +79,10 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update Certificate object */
-  public UpdateCertificate_1(O_Name, body: SecurityCertificate):Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}> {
+  public UpdateCertificate_1(O_Name, body: ISecurityCertificate):Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/certificates/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateCertificate_1') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateCertificate_1') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List SecurityGroup objects */
@@ -92,9 +92,9 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create SecurityGroup object */
-  public AddSecurityGroup_1(body: SecuritySecurityGroup):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+  public AddSecurityGroup_1(body: ISecuritySecurityGroup):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/security-groups';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddSecurityGroup_1') as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddSecurityGroup_1') as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get SecurityGroup object */
@@ -112,10 +112,10 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update SecurityGroup object */
-  public UpdateSecurityGroup_1(O_Name, body: SecuritySecurityGroup):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+  public UpdateSecurityGroup_1(O_Name, body: ISecuritySecurityGroup):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/security-groups/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateSecurityGroup_1') as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateSecurityGroup_1') as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List SGPolicy objects */
@@ -125,9 +125,9 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create SGPolicy object */
-  public AddSGPolicy_1(body: SecuritySGPolicy):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddSGPolicy_1(body: ISecuritySGPolicy):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/sgpolicies';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddSGPolicy_1') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddSGPolicy_1') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get SGPolicy object */
@@ -145,10 +145,10 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update SGPolicy object */
-  public UpdateSGPolicy_1(O_Name, body: SecuritySGPolicy):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateSGPolicy_1(O_Name, body: ISecuritySGPolicy):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/sgpolicies/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateSGPolicy_1') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateSGPolicy_1') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Certificate objects */
@@ -159,10 +159,10 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create Certificate object */
-  public AddCertificate(body: SecurityCertificate):Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}> {
+  public AddCertificate(body: ISecurityCertificate):Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/certificates';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddCertificate') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddCertificate') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Certificate object */
@@ -182,11 +182,11 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update Certificate object */
-  public UpdateCertificate(O_Name, body: SecurityCertificate):Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}> {
+  public UpdateCertificate(O_Name, body: ISecurityCertificate):Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/certificates/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateCertificate') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateCertificate') as Observable<{body: ISecurityCertificate | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List SecurityGroup objects */
@@ -197,10 +197,10 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create SecurityGroup object */
-  public AddSecurityGroup(body: SecuritySecurityGroup):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+  public AddSecurityGroup(body: ISecuritySecurityGroup):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/security-groups';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddSecurityGroup') as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddSecurityGroup') as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get SecurityGroup object */
@@ -220,11 +220,11 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update SecurityGroup object */
-  public UpdateSecurityGroup(O_Name, body: SecuritySecurityGroup):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+  public UpdateSecurityGroup(O_Name, body: ISecuritySecurityGroup):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/security-groups/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateSecurityGroup') as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateSecurityGroup') as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List SGPolicy objects */
@@ -235,10 +235,10 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Create SGPolicy object */
-  public AddSGPolicy(body: SecuritySGPolicy):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddSGPolicy(body: ISecuritySGPolicy):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/sgpolicies';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddSGPolicy') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddSGPolicy') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get SGPolicy object */
@@ -258,18 +258,18 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update SGPolicy object */
-  public UpdateSGPolicy(O_Name, body: SecuritySGPolicy):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateSGPolicy(O_Name, body: ISecuritySGPolicy):Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/sgpolicies/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateSGPolicy') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateSGPolicy') as Observable<{body: ISecuritySGPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create TrafficEncryptionPolicy object */
-  public AddTrafficEncryptionPolicy(body: SecurityTrafficEncryptionPolicy):Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddTrafficEncryptionPolicy(body: ISecurityTrafficEncryptionPolicy):Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/trafficEncryptionPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddTrafficEncryptionPolicy') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddTrafficEncryptionPolicy') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get TrafficEncryptionPolicy object */
@@ -289,17 +289,17 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update TrafficEncryptionPolicy object */
-  public UpdateTrafficEncryptionPolicy(O_Name, body: SecurityTrafficEncryptionPolicy):Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateTrafficEncryptionPolicy(O_Name, body: ISecurityTrafficEncryptionPolicy):Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/trafficEncryptionPolicy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateTrafficEncryptionPolicy') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateTrafficEncryptionPolicy') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create TrafficEncryptionPolicy object */
-  public AddTrafficEncryptionPolicy_1(body: SecurityTrafficEncryptionPolicy):Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddTrafficEncryptionPolicy_1(body: ISecurityTrafficEncryptionPolicy):Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/trafficEncryptionPolicy';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddTrafficEncryptionPolicy_1') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddTrafficEncryptionPolicy_1') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get TrafficEncryptionPolicy object */
@@ -317,10 +317,10 @@ export class Securityv1Service extends AbstractService {
   }
   
   /** Update TrafficEncryptionPolicy object */
-  public UpdateTrafficEncryptionPolicy_1(O_Name, body: SecurityTrafficEncryptionPolicy):Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateTrafficEncryptionPolicy_1(O_Name, body: ISecurityTrafficEncryptionPolicy):Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/trafficEncryptionPolicy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateTrafficEncryptionPolicy_1') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateTrafficEncryptionPolicy_1') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch App objects */

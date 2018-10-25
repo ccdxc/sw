@@ -51,21 +51,20 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['url'] != null) {
             this['url'] = values['url'];
-        } else if (AuthLdapServer.hasDefaultValue('url')) {
+        } else if (fillDefaults && AuthLdapServer.hasDefaultValue('url')) {
             this['url'] = AuthLdapServer.propInfo['url'].default;
         }
         if (values) {
             this['tls-options'].setValues(values['tls-options']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,10 +77,14 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['url'].setValue(this['url']);
-            this['tls-options'].setFormGroupValues();
+            this['tls-options'].setFormGroupValuesToBeModelValues();
         }
     }
 }

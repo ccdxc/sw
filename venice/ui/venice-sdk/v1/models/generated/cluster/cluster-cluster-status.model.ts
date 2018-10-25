@@ -71,43 +71,42 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['leader'] != null) {
             this['leader'] = values['leader'];
-        } else if (ClusterClusterStatus.hasDefaultValue('leader')) {
+        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('leader')) {
             this['leader'] = ClusterClusterStatus.propInfo['leader'].default;
         }
         if (values && values['last-leader-transition-time'] != null) {
             this['last-leader-transition-time'] = values['last-leader-transition-time'];
-        } else if (ClusterClusterStatus.hasDefaultValue('last-leader-transition-time')) {
+        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('last-leader-transition-time')) {
             this['last-leader-transition-time'] = ClusterClusterStatus.propInfo['last-leader-transition-time'].default;
         }
         if (values && values['build-version'] != null) {
             this['build-version'] = values['build-version'];
-        } else if (ClusterClusterStatus.hasDefaultValue('build-version')) {
+        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('build-version')) {
             this['build-version'] = ClusterClusterStatus.propInfo['build-version'].default;
         }
         if (values && values['vcs-commit'] != null) {
             this['vcs-commit'] = values['vcs-commit'];
-        } else if (ClusterClusterStatus.hasDefaultValue('vcs-commit')) {
+        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('vcs-commit')) {
             this['vcs-commit'] = ClusterClusterStatus.propInfo['vcs-commit'].default;
         }
         if (values && values['build-date'] != null) {
             this['build-date'] = values['build-date'];
-        } else if (ClusterClusterStatus.hasDefaultValue('build-date')) {
+        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('build-date')) {
             this['build-date'] = ClusterClusterStatus.propInfo['build-date'].default;
         }
         if (values && values['auth-bootstrapped'] != null) {
             this['auth-bootstrapped'] = values['auth-bootstrapped'];
-        } else if (ClusterClusterStatus.hasDefaultValue('auth-bootstrapped')) {
+        } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('auth-bootstrapped')) {
             this['auth-bootstrapped'] = ClusterClusterStatus.propInfo['auth-bootstrapped'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -124,7 +123,11 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['leader'].setValue(this['leader']);
             this._formGroup.controls['last-leader-transition-time'].setValue(this['last-leader-transition-time']);

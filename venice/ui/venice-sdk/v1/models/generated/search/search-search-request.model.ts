@@ -95,41 +95,40 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['query-string'] != null) {
             this['query-string'] = values['query-string'];
-        } else if (SearchSearchRequest.hasDefaultValue('query-string')) {
+        } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('query-string')) {
             this['query-string'] = SearchSearchRequest.propInfo['query-string'].default;
         }
         if (values && values['from'] != null) {
             this['from'] = values['from'];
-        } else if (SearchSearchRequest.hasDefaultValue('from')) {
+        } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('from')) {
             this['from'] = SearchSearchRequest.propInfo['from'].default;
         }
         if (values && values['max-results'] != null) {
             this['max-results'] = values['max-results'];
-        } else if (SearchSearchRequest.hasDefaultValue('max-results')) {
+        } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('max-results')) {
             this['max-results'] = SearchSearchRequest.propInfo['max-results'].default;
         }
         if (values && values['sort-by'] != null) {
             this['sort-by'] = values['sort-by'];
-        } else if (SearchSearchRequest.hasDefaultValue('sort-by')) {
+        } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('sort-by')) {
             this['sort-by'] = SearchSearchRequest.propInfo['sort-by'].default;
         }
         if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
-        } else if (SearchSearchRequest.hasDefaultValue('mode')) {
+        } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('mode')) {
             this['mode'] = <SearchSearchRequest_mode>  SearchSearchRequest.propInfo['mode'].default;
         }
         if (values) {
             this['query'].setValues(values['query']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -146,14 +145,18 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['query-string'].setValue(this['query-string']);
             this._formGroup.controls['from'].setValue(this['from']);
             this._formGroup.controls['max-results'].setValue(this['max-results']);
             this._formGroup.controls['sort-by'].setValue(this['sort-by']);
             this._formGroup.controls['mode'].setValue(this['mode']);
-            this['query'].setFormGroupValues();
+            this['query'].setFormGroupValuesToBeModelValues();
         }
     }
 }

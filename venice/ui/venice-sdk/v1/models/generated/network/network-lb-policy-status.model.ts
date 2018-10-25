@@ -45,32 +45,33 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'type', values['type']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['type'] != null) {
+            this['type'] = values['type'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormArray([]),
+                'type': new FormControl(this['type']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('type', this['type']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'type', this['type']);
+            this._formGroup.controls['type'].setValue(this['type']);
         }
     }
 }

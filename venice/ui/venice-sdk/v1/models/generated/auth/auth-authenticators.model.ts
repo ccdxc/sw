@@ -69,12 +69,12 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<AuthAuthenticators_authenticator_order>(this, 'authenticator-order', values['authenticator-order']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['authenticator-order'] != null) {
+            this['authenticator-order'] = values['authenticator-order'];
         }
         if (values) {
             this['ldap'].setValues(values['ldap']);
@@ -85,31 +85,32 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
         if (values) {
             this['radius'].setValues(values['radius']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'authenticator-order': new FormArray([]),
+                'authenticator-order': new FormControl(this['authenticator-order']),
                 'ldap': this['ldap'].$formGroup,
                 'local': this['local'].$formGroup,
                 'radius': this['radius'].$formGroup,
             });
-            // generate FormArray control elements
-            this.fillFormArray<AuthAuthenticators_authenticator_order>('authenticator-order', this['authenticator-order']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<AuthAuthenticators_authenticator_order>(this, 'authenticator-order', this['authenticator-order']);
-            this['ldap'].setFormGroupValues();
-            this['local'].setFormGroupValues();
-            this['radius'].setFormGroupValues();
+            this._formGroup.controls['authenticator-order'].setValue(this['authenticator-order']);
+            this['ldap'].setFormGroupValuesToBeModelValues();
+            this['local'].setFormGroupValuesToBeModelValues();
+            this['radius'].setFormGroupValuesToBeModelValues();
         }
     }
 }

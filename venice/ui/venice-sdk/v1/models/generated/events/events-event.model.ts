@@ -93,18 +93,18 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (EventsEvent.hasDefaultValue('kind')) {
+        } else if (fillDefaults && EventsEvent.hasDefaultValue('kind')) {
             this['kind'] = EventsEvent.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (EventsEvent.hasDefaultValue('api-version')) {
+        } else if (fillDefaults && EventsEvent.hasDefaultValue('api-version')) {
             this['api-version'] = EventsEvent.propInfo['api-version'].default;
         }
         if (values) {
@@ -112,17 +112,17 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         }
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
-        } else if (EventsEvent.hasDefaultValue('severity')) {
+        } else if (fillDefaults && EventsEvent.hasDefaultValue('severity')) {
             this['severity'] = <EventsEvent_severity>  EventsEvent.propInfo['severity'].default;
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (EventsEvent.hasDefaultValue('type')) {
+        } else if (fillDefaults && EventsEvent.hasDefaultValue('type')) {
             this['type'] = EventsEvent.propInfo['type'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
-        } else if (EventsEvent.hasDefaultValue('message')) {
+        } else if (fillDefaults && EventsEvent.hasDefaultValue('message')) {
             this['message'] = EventsEvent.propInfo['message'].default;
         }
         if (values) {
@@ -133,12 +133,11 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
-        } else if (EventsEvent.hasDefaultValue('count')) {
+        } else if (fillDefaults && EventsEvent.hasDefaultValue('count')) {
             this['count'] = EventsEvent.propInfo['count'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -158,16 +157,20 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this['meta'].setFormGroupValues();
+            this['meta'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['severity'].setValue(this['severity']);
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['message'].setValue(this['message']);
-            this['object-ref'].setFormGroupValues();
-            this['source'].setFormGroupValues();
+            this['object-ref'].setFormGroupValuesToBeModelValues();
+            this['source'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['count'].setValue(this['count']);
         }
     }

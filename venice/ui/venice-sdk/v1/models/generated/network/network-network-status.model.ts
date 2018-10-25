@@ -50,38 +50,39 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'workloads', values['workloads']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['workloads'] != null) {
+            this['workloads'] = values['workloads'];
         }
         if (values && values['allocated-ipv4-addrs'] != null) {
             this['allocated-ipv4-addrs'] = values['allocated-ipv4-addrs'];
-        } else if (NetworkNetworkStatus.hasDefaultValue('allocated-ipv4-addrs')) {
+        } else if (fillDefaults && NetworkNetworkStatus.hasDefaultValue('allocated-ipv4-addrs')) {
             this['allocated-ipv4-addrs'] = NetworkNetworkStatus.propInfo['allocated-ipv4-addrs'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': new FormArray([]),
+                'workloads': new FormControl(this['workloads']),
                 'allocated-ipv4-addrs': new FormControl(this['allocated-ipv4-addrs']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('workloads', this['workloads']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'workloads', this['workloads']);
+            this._formGroup.controls['workloads'].setValue(this['workloads']);
             this._formGroup.controls['allocated-ipv4-addrs'].setValue(this['allocated-ipv4-addrs']);
         }
     }

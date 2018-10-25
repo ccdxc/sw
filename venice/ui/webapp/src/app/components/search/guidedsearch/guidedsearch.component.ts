@@ -180,7 +180,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     // suppor case like "has:name=~Liz,test,tenant=default"
     for (let i = 0; i < values.length; i++) {
       const exprStr = values[i];
-      const expr: SearchExpression = SearchUtil.parseToExpression(exprStr, isField);
+      const expr: SearchExpression = SearchUtil.parseToExpression(exprStr, isField, isEvent);
       if (expr) {
         list.push(expr);
         prevExp = expr;
@@ -331,19 +331,19 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     }
   }
 
-   /**
-    * The fieldData looks like below
-     {
-      key: { label: 'name', value: 'name' },
-      operators: [
-        { label: 'equal', value: 'equal' },
-        { label: 'not equal', value: 'not equal' },
-        { label: 'in', value: 'in' },
-        { label: 'not in', value: 'not in' }
-      ],
-      valueType: ValueType.inputField
-    }
-     */
+  /**
+   * The fieldData looks like below
+    {
+     key: { label: 'name', value: 'name' },
+     operators: [
+       { label: 'equal', value: 'equal' },
+       { label: 'not equal', value: 'not equal' },
+       { label: 'in', value: 'in' },
+       { label: 'not in', value: 'not in' }
+     ],
+     valueType: ValueType.inputField
+   }
+    */
   getFieldData(): any {
     const kind = (this.selectedKinds && this.selectedKinds[0]) ? this.selectedKinds[0] : null;
     if (!kind) {
@@ -353,8 +353,8 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     let fieldData = [];
     const keys = Object.keys(modelData);
     keys.forEach((key) => {
-        const keyData = this.getFieldDataHelper(kind, modelData, key);
-        fieldData = fieldData.concat(keyData);
+      const keyData = this.getFieldDataHelper(kind, modelData, key);
+      fieldData = fieldData.concat(keyData);
     });
 
 
@@ -368,7 +368,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
         const config = {
           key: {
             label: key + '.' + item,
-            value:  key + '.' + item,
+            value: key + '.' + item,
           },
           operators: this.getFieldOperators(kind, key, item),
           valueType: ValueType.inputField
@@ -389,7 +389,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   }
 
   getFieldOperators(kind: string, key: string, subKey: string): any[] {
-   return SearchUtil.getOperators(kind, [key, subKey]);
+    return SearchUtil.getOperators(kind, [key, subKey]);
   }
 
   getMetaOperators(item: any): any[] {

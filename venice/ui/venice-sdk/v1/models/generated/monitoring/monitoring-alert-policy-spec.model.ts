@@ -106,23 +106,23 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['resource'] != null) {
             this['resource'] = values['resource'];
-        } else if (MonitoringAlertPolicySpec.hasDefaultValue('resource')) {
+        } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('resource')) {
             this['resource'] = MonitoringAlertPolicySpec.propInfo['resource'].default;
         }
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
-        } else if (MonitoringAlertPolicySpec.hasDefaultValue('severity')) {
+        } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('severity')) {
             this['severity'] = <MonitoringAlertPolicySpec_severity>  MonitoringAlertPolicySpec.propInfo['severity'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
-        } else if (MonitoringAlertPolicySpec.hasDefaultValue('message')) {
+        } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('message')) {
             this['message'] = MonitoringAlertPolicySpec.propInfo['message'].default;
         }
         if (values) {
@@ -130,30 +130,29 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
         }
         if (values && values['persistence-duration'] != null) {
             this['persistence-duration'] = values['persistence-duration'];
-        } else if (MonitoringAlertPolicySpec.hasDefaultValue('persistence-duration')) {
+        } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('persistence-duration')) {
             this['persistence-duration'] = MonitoringAlertPolicySpec.propInfo['persistence-duration'].default;
         }
         if (values && values['clear-duration'] != null) {
             this['clear-duration'] = values['clear-duration'];
-        } else if (MonitoringAlertPolicySpec.hasDefaultValue('clear-duration')) {
+        } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('clear-duration')) {
             this['clear-duration'] = MonitoringAlertPolicySpec.propInfo['clear-duration'].default;
         }
         if (values && values['enable'] != null) {
             this['enable'] = values['enable'];
-        } else if (MonitoringAlertPolicySpec.hasDefaultValue('enable')) {
+        } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('enable')) {
             this['enable'] = MonitoringAlertPolicySpec.propInfo['enable'].default;
         }
         if (values && values['auto-resolve'] != null) {
             this['auto-resolve'] = values['auto-resolve'];
-        } else if (MonitoringAlertPolicySpec.hasDefaultValue('auto-resolve')) {
+        } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('auto-resolve')) {
             this['auto-resolve'] = MonitoringAlertPolicySpec.propInfo['auto-resolve'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'destinations', values['destinations']);
+        if (values && values['destinations'] != null) {
+            this['destinations'] = values['destinations'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -167,17 +166,19 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
                 'clear-duration': new FormControl(this['clear-duration']),
                 'enable': new FormControl(this['enable']),
                 'auto-resolve': new FormControl(this['auto-resolve']),
-                'destinations': new FormArray([]),
+                'destinations': new FormControl(this['destinations']),
             });
             // generate FormArray control elements
             this.fillFormArray<FieldsRequirement>('requirements', this['requirements'], FieldsRequirement);
-            // generate FormArray control elements
-            this.fillFormArray<string>('destinations', this['destinations']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['resource'].setValue(this['resource']);
             this._formGroup.controls['severity'].setValue(this['severity']);
@@ -187,7 +188,7 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
             this._formGroup.controls['clear-duration'].setValue(this['clear-duration']);
             this._formGroup.controls['enable'].setValue(this['enable']);
             this._formGroup.controls['auto-resolve'].setValue(this['auto-resolve']);
-            this.fillModelArray<string>(this, 'destinations', this['destinations']);
+            this._formGroup.controls['destinations'].setValue(this['destinations']);
         }
     }
 }

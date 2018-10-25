@@ -45,32 +45,33 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'attached-policies', values['attached-policies']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['attached-policies'] != null) {
+            this['attached-policies'] = values['attached-policies'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'attached-policies': new FormArray([]),
+                'attached-policies': new FormControl(this['attached-policies']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('attached-policies', this['attached-policies']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'attached-policies', this['attached-policies']);
+            this._formGroup.controls['attached-policies'].setValue(this['attached-policies']);
         }
     }
 }

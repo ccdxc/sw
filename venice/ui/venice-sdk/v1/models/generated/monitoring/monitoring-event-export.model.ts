@@ -68,13 +68,13 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['format'] != null) {
             this['format'] = values['format'];
-        } else if (MonitoringEventExport.hasDefaultValue('format')) {
+        } else if (fillDefaults && MonitoringEventExport.hasDefaultValue('format')) {
             this['format'] = <MonitoringEventExport_format>  MonitoringEventExport.propInfo['format'].default;
         }
         if (values) {
@@ -86,9 +86,8 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
         if (values) {
             this['syslog-config'].setValues(values['syslog-config']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -103,12 +102,16 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['format'].setValue(this['format']);
-            this['selector'].setFormGroupValues();
-            this['target'].setFormGroupValues();
-            this['syslog-config'].setFormGroupValues();
+            this['selector'].setFormGroupValuesToBeModelValues();
+            this['target'].setFormGroupValuesToBeModelValues();
+            this['syslog-config'].setFormGroupValuesToBeModelValues();
         }
     }
 }

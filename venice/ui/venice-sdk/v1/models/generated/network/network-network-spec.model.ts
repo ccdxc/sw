@@ -74,48 +74,47 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (NetworkNetworkSpec.hasDefaultValue('type')) {
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('type')) {
             this['type'] = NetworkNetworkSpec.propInfo['type'].default;
         }
         if (values && values['ipv4-subnet'] != null) {
             this['ipv4-subnet'] = values['ipv4-subnet'];
-        } else if (NetworkNetworkSpec.hasDefaultValue('ipv4-subnet')) {
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ipv4-subnet')) {
             this['ipv4-subnet'] = NetworkNetworkSpec.propInfo['ipv4-subnet'].default;
         }
         if (values && values['ipv4-gateway'] != null) {
             this['ipv4-gateway'] = values['ipv4-gateway'];
-        } else if (NetworkNetworkSpec.hasDefaultValue('ipv4-gateway')) {
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ipv4-gateway')) {
             this['ipv4-gateway'] = NetworkNetworkSpec.propInfo['ipv4-gateway'].default;
         }
         if (values && values['ipv6-subnet'] != null) {
             this['ipv6-subnet'] = values['ipv6-subnet'];
-        } else if (NetworkNetworkSpec.hasDefaultValue('ipv6-subnet')) {
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ipv6-subnet')) {
             this['ipv6-subnet'] = NetworkNetworkSpec.propInfo['ipv6-subnet'].default;
         }
         if (values && values['ipv6-gateway'] != null) {
             this['ipv6-gateway'] = values['ipv6-gateway'];
-        } else if (NetworkNetworkSpec.hasDefaultValue('ipv6-gateway')) {
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ipv6-gateway')) {
             this['ipv6-gateway'] = NetworkNetworkSpec.propInfo['ipv6-gateway'].default;
         }
         if (values && values['vlan-id'] != null) {
             this['vlan-id'] = values['vlan-id'];
-        } else if (NetworkNetworkSpec.hasDefaultValue('vlan-id')) {
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('vlan-id')) {
             this['vlan-id'] = NetworkNetworkSpec.propInfo['vlan-id'].default;
         }
         if (values && values['vxlan-vni'] != null) {
             this['vxlan-vni'] = values['vxlan-vni'];
-        } else if (NetworkNetworkSpec.hasDefaultValue('vxlan-vni')) {
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('vxlan-vni')) {
             this['vxlan-vni'] = NetworkNetworkSpec.propInfo['vxlan-vni'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -133,7 +132,11 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['ipv4-subnet'].setValue(this['ipv4-subnet']);

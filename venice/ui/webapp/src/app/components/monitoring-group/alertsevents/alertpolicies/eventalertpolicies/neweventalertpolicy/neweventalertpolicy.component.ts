@@ -36,7 +36,6 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
 
   errorChecker = new ErrorStateMatcher();
 
-  destinationsControl: FormControl;
 
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
@@ -53,7 +52,6 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
       // Remove once Sanjay adds better defaults to the swagger
       this.newPolicy.spec.enable = true;
     }
-    this.destinationsControl = new FormControl(this.newPolicy.spec.destinations);
 
     if (this.isInline) {
       // disable name field
@@ -123,29 +121,14 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
 
   savePolicy() {
     // Submit to server
-    // Read in correct format from the field selector
-    const policy = new MonitoringAlertPolicy(this.newPolicy.getValues());
-    const specControl = policy.$formGroup.get('spec') as FormGroup;
-    // populating destinations
-    // Making the values form groups
-    let destinationValues = this.destinationsControl.value;
-    destinationValues = destinationValues.map((item) => {
-      return new FormControl(item);
-    });
-    specControl.removeControl('destinations');
-    specControl.addControl('destinations', new FormArray(destinationValues));
-
-
-    // Making the values form groups
-    let fieldSelectorValues = this.fieldSelector.getValuesWithValueFormAsArray();
-    fieldSelectorValues = fieldSelectorValues.map((item) => {
-      return new FieldsRequirement(item).$formGroup;
-    });
-    // To reset a form array, we have to delete the old and readd
-    specControl.removeControl('requirements');
-    specControl.addControl('requirements', new FormArray(fieldSelectorValues));
+    const policy: IMonitoringAlertPolicy = this.newPolicy.getFormGroupValues();
     let handler: Observable<{ body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number }>;
+
+    policy.spec.requirements = this.fieldSelector.getValues();
     if (this.isInline) {
+      // Using this.newPolicy to get name, as the name is gone when we call getFormGroupValues
+      // This is beacuse we disabled it in the form group to stop the user from editing it.
+      // When you disable an angular control, in doesn't show up when you get the value of the group
       handler = this._monitoringService.UpdateAlertPolicy(this.newPolicy.meta.name, policy);
     } else {
       handler = this._monitoringService.AddAlertPolicy(policy);
@@ -156,7 +139,7 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
         if (this.isInline) {
           this.invokeSuccessToaster('Update Successful', 'Updated policy ' + this.newPolicy.meta.name);
         } else {
-          this.invokeSuccessToaster('Creation Successful', 'Created policy ' + this.newPolicy.meta.name);
+          this.invokeSuccessToaster('Creation Successful', 'Created policy ' + policy.meta.name);
         }
         this.cancelPolicy();
       },

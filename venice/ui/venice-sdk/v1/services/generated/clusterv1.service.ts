@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IClusterCluster,IApiStatus,ClusterCluster,ClusterClusterAuthBootstrapRequest,IClusterHostList,IClusterHost,ClusterHost,IClusterNodeList,IClusterNode,ClusterNode,IClusterSmartNICList,IClusterSmartNIC,ClusterSmartNIC,IClusterTenantList,IClusterTenant,ClusterTenant,IClusterAutoMsgClusterWatchHelper,IClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,IClusterAutoMsgSmartNICWatchHelper,IClusterAutoMsgTenantWatchHelper } from '../../models/generated/cluster';
+import { IClusterCluster,IApiStatus,IClusterClusterAuthBootstrapRequest,IClusterHostList,IClusterHost,IClusterNodeList,IClusterNode,IClusterSmartNICList,IClusterSmartNIC,IClusterTenantList,IClusterTenant,IClusterAutoMsgClusterWatchHelper,IClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,IClusterAutoMsgSmartNICWatchHelper,IClusterAutoMsgTenantWatchHelper } from '../../models/generated/cluster';
 
 @Injectable()
 export class Clusterv1Service extends AbstractService {
@@ -32,14 +32,14 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update Cluster object */
-  public UpdateCluster(body: ClusterCluster):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
+  public UpdateCluster(body: IClusterCluster):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster';
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateCluster') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateCluster') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
   }
   
-  public AuthBootstrapComplete(body: ClusterClusterAuthBootstrapRequest):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
+  public AuthBootstrapComplete(body: IClusterClusterAuthBootstrapRequest):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster/AuthBootstrapComplete';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AuthBootstrapComplete') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AuthBootstrapComplete') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Host objects */
@@ -49,9 +49,9 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Create Host object */
-  public AddHost(body: ClusterHost):Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}> {
+  public AddHost(body: IClusterHost):Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/hosts';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddHost') as Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddHost') as Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Host object */
@@ -69,10 +69,10 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update Host object */
-  public UpdateHost(O_Name, body: ClusterHost):Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}> {
+  public UpdateHost(O_Name, body: IClusterHost):Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/hosts/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateHost') as Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateHost') as Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Node objects */
@@ -82,9 +82,9 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Create Node object */
-  public AddNode(body: ClusterNode):Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}> {
+  public AddNode(body: IClusterNode):Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/nodes';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddNode') as Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddNode') as Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Node object */
@@ -102,10 +102,10 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update Node object */
-  public UpdateNode(O_Name, body: ClusterNode):Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}> {
+  public UpdateNode(O_Name, body: IClusterNode):Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/nodes/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateNode') as Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateNode') as Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List SmartNIC objects */
@@ -129,10 +129,10 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update SmartNIC object */
-  public UpdateSmartNIC(O_Name, body: ClusterSmartNIC):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
+  public UpdateSmartNIC(O_Name, body: IClusterSmartNIC):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateSmartNIC') as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateSmartNIC') as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Tenant objects */
@@ -142,9 +142,9 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Create Tenant object */
-  public AddTenant(body: ClusterTenant):Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}> {
+  public AddTenant(body: IClusterTenant):Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/tenants';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddTenant') as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddTenant') as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Tenant object */
@@ -162,10 +162,10 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Update Tenant object */
-  public UpdateTenant(O_Name, body: ClusterTenant):Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}> {
+  public UpdateTenant(O_Name, body: IClusterTenant):Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/tenants/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateTenant') as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateTenant') as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Cluster objects */

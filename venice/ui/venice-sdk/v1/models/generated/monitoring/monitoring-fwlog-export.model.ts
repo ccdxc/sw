@@ -70,27 +70,26 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringExportConfig>(this, 'targets', values['targets'], MonitoringExportConfig);
         }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
-        } else if (MonitoringFwlogExport.hasDefaultValue('format')) {
+        } else if (fillDefaults && MonitoringFwlogExport.hasDefaultValue('format')) {
             this['format'] = <MonitoringFwlogExport_format>  MonitoringFwlogExport.propInfo['format'].default;
         }
-        if (values) {
-            this.fillModelArray<MonitoringFwlogExport_export_filter>(this, 'export-filter', values['export-filter']);
+        if (values && values['export-filter'] != null) {
+            this['export-filter'] = values['export-filter'];
         }
         if (values) {
             this['syslog-config'].setValues(values['syslog-config']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -98,23 +97,25 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
             this._formGroup = new FormGroup({
                 'targets': new FormArray([]),
                 'format': new FormControl(this['format'], [enumValidator(MonitoringFwlogExport_format), ]),
-                'export-filter': new FormArray([]),
+                'export-filter': new FormControl(this['export-filter']),
                 'syslog-config': this['syslog-config'].$formGroup,
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringExportConfig>('targets', this['targets'], MonitoringExportConfig);
-            // generate FormArray control elements
-            this.fillFormArray<MonitoringFwlogExport_export_filter>('export-filter', this['export-filter']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this.fillModelArray<MonitoringExportConfig>(this, 'targets', this['targets'], MonitoringExportConfig);
             this._formGroup.controls['format'].setValue(this['format']);
-            this.fillModelArray<MonitoringFwlogExport_export_filter>(this, 'export-filter', this['export-filter']);
-            this['syslog-config'].setFormGroupValues();
+            this._formGroup.controls['export-filter'].setValue(this['export-filter']);
+            this['syslog-config'].setFormGroupValuesToBeModelValues();
         }
     }
 }

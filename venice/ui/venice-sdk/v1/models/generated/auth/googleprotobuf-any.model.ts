@@ -73,23 +73,22 @@ export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type_url'] != null) {
             this['type_url'] = values['type_url'];
-        } else if (GoogleprotobufAny.hasDefaultValue('type_url')) {
+        } else if (fillDefaults && GoogleprotobufAny.hasDefaultValue('type_url')) {
             this['type_url'] = GoogleprotobufAny.propInfo['type_url'].default;
         }
         if (values && values['value'] != null) {
             this['value'] = values['value'];
-        } else if (GoogleprotobufAny.hasDefaultValue('value')) {
+        } else if (fillDefaults && GoogleprotobufAny.hasDefaultValue('value')) {
             this['value'] = GoogleprotobufAny.propInfo['value'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -102,7 +101,11 @@ export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type_url'].setValue(this['type_url']);
             this._formGroup.controls['value'].setValue(this['value']);

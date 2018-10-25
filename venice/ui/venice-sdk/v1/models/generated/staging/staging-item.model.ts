@@ -56,26 +56,25 @@ export class StagingItem extends BaseModel implements IStagingItem {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
-        } else if (StagingItem.hasDefaultValue('uri')) {
+        } else if (fillDefaults && StagingItem.hasDefaultValue('uri')) {
             this['uri'] = StagingItem.propInfo['uri'].default;
         }
         if (values && values['method'] != null) {
             this['method'] = values['method'];
-        } else if (StagingItem.hasDefaultValue('method')) {
+        } else if (fillDefaults && StagingItem.hasDefaultValue('method')) {
             this['method'] = StagingItem.propInfo['method'].default;
         }
         if (values) {
             this['object'].setValues(values['object']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -89,11 +88,15 @@ export class StagingItem extends BaseModel implements IStagingItem {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['uri'].setValue(this['uri']);
             this._formGroup.controls['method'].setValue(this['method']);
-            this['object'].setFormGroupValues();
+            this['object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

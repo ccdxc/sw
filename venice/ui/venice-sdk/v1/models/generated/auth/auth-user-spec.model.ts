@@ -62,33 +62,32 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['fullname'] != null) {
             this['fullname'] = values['fullname'];
-        } else if (AuthUserSpec.hasDefaultValue('fullname')) {
+        } else if (fillDefaults && AuthUserSpec.hasDefaultValue('fullname')) {
             this['fullname'] = AuthUserSpec.propInfo['fullname'].default;
         }
         if (values && values['email'] != null) {
             this['email'] = values['email'];
-        } else if (AuthUserSpec.hasDefaultValue('email')) {
+        } else if (fillDefaults && AuthUserSpec.hasDefaultValue('email')) {
             this['email'] = AuthUserSpec.propInfo['email'].default;
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
-        } else if (AuthUserSpec.hasDefaultValue('password')) {
+        } else if (fillDefaults && AuthUserSpec.hasDefaultValue('password')) {
             this['password'] = AuthUserSpec.propInfo['password'].default;
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (AuthUserSpec.hasDefaultValue('type')) {
+        } else if (fillDefaults && AuthUserSpec.hasDefaultValue('type')) {
             this['type'] = <AuthUserSpec_type>  AuthUserSpec.propInfo['type'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -103,7 +102,11 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['fullname'].setValue(this['fullname']);
             this._formGroup.controls['email'].setValue(this['email']);

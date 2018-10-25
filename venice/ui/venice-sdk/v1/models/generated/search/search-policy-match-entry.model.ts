@@ -51,21 +51,20 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this['rule'].setValues(values['rule']);
         }
         if (values && values['index'] != null) {
             this['index'] = values['index'];
-        } else if (SearchPolicyMatchEntry.hasDefaultValue('index')) {
+        } else if (fillDefaults && SearchPolicyMatchEntry.hasDefaultValue('index')) {
             this['index'] = SearchPolicyMatchEntry.propInfo['index'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,9 +77,13 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this['rule'].setFormGroupValues();
+            this['rule'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['index'].setValue(this['index']);
         }
     }

@@ -59,12 +59,12 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'email-list', values['email-list']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['email-list'] != null) {
+            this['email-list'] = values['email-list'];
         }
         if (values) {
             this.fillModelArray<MonitoringSNMPTrapServer>(this, 'snmp-trap-servers', values['snmp-trap-servers'], MonitoringSNMPTrapServer);
@@ -72,20 +72,17 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
         if (values) {
             this.fillModelArray<MonitoringSyslogExport>(this, 'syslog-servers', values['syslog-servers'], MonitoringSyslogExport);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'email-list': new FormArray([]),
+                'email-list': new FormControl(this['email-list']),
                 'snmp-trap-servers': new FormArray([]),
                 'syslog-servers': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('email-list', this['email-list']);
             // generate FormArray control elements
             this.fillFormArray<MonitoringSNMPTrapServer>('snmp-trap-servers', this['snmp-trap-servers'], MonitoringSNMPTrapServer);
             // generate FormArray control elements
@@ -94,9 +91,13 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'email-list', this['email-list']);
+            this._formGroup.controls['email-list'].setValue(this['email-list']);
             this.fillModelArray<MonitoringSNMPTrapServer>(this, 'snmp-trap-servers', this['snmp-trap-servers'], MonitoringSNMPTrapServer);
             this.fillModelArray<MonitoringSyslogExport>(this, 'syslog-servers', this['syslog-servers'], MonitoringSyslogExport);
         }

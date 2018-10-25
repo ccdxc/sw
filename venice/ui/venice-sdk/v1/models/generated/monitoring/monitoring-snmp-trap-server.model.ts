@@ -87,28 +87,28 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['host'] != null) {
             this['host'] = values['host'];
-        } else if (MonitoringSNMPTrapServer.hasDefaultValue('host')) {
+        } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('host')) {
             this['host'] = MonitoringSNMPTrapServer.propInfo['host'].default;
         }
         if (values && values['port'] != null) {
             this['port'] = values['port'];
-        } else if (MonitoringSNMPTrapServer.hasDefaultValue('port')) {
+        } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('port')) {
             this['port'] = MonitoringSNMPTrapServer.propInfo['port'].default;
         }
         if (values && values['version'] != null) {
             this['version'] = values['version'];
-        } else if (MonitoringSNMPTrapServer.hasDefaultValue('version')) {
+        } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('version')) {
             this['version'] = <MonitoringSNMPTrapServer_version>  MonitoringSNMPTrapServer.propInfo['version'].default;
         }
         if (values && values['community-or-user'] != null) {
             this['community-or-user'] = values['community-or-user'];
-        } else if (MonitoringSNMPTrapServer.hasDefaultValue('community-or-user')) {
+        } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('community-or-user')) {
             this['community-or-user'] = MonitoringSNMPTrapServer.propInfo['community-or-user'].default;
         }
         if (values) {
@@ -117,9 +117,8 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
         if (values) {
             this['privacy-config'].setValues(values['privacy-config']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -136,14 +135,18 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['host'].setValue(this['host']);
             this._formGroup.controls['port'].setValue(this['port']);
             this._formGroup.controls['version'].setValue(this['version']);
             this._formGroup.controls['community-or-user'].setValue(this['community-or-user']);
-            this['auth-config'].setFormGroupValues();
-            this['privacy-config'].setFormGroupValues();
+            this['auth-config'].setFormGroupValuesToBeModelValues();
+            this['privacy-config'].setFormGroupValuesToBeModelValues();
         }
     }
 }

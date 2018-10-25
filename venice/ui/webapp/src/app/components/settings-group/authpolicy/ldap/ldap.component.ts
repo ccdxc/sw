@@ -5,7 +5,7 @@ import { AuthLdap, AuthLdapServer } from '@sdk/v1/models/generated/auth';
 import { FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material';
 
-import { LDAPCheckResponse , LDAPCheckType, CheckResponseError } from '@app/components/settings-group/authpolicy/.';
+import { LDAPCheckResponse, LDAPCheckType, CheckResponseError } from '@app/components/settings-group/authpolicy/.';
 import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPolicyUtil';
 import { Utility } from '@app/common/Utility';
 /**
@@ -59,12 +59,11 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
 
   updateLDAPObject() {
     this.LDAPObject.setValues(this.LDAPData);
-    this.LDAPObject.setFormGroupValues();
   }
 
   updateLDAPData() {
     if (this.LDAPObject) {
-      this.LDAPData.setValues(this.LDAPObject.getValues());
+      this.LDAPData.setValues(this.LDAPObject.getFormGroupValues());
     }
   }
 
@@ -164,15 +163,15 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.invokeCheckLDAPServerConnect.emit(this.LDAPData);
   }
 
-  onCheckLDAPBindConnect ($event) {
+  onCheckLDAPBindConnect($event) {
     this.updateLDAPData();
     this.ldapBindCheckResponse = null;
     this.invokeCheckLDAPBindConnect.emit(this.LDAPData);
   }
 
-   /**
-   * This api serves API
-   */
+  /**
+  * This api serves API
+  */
   hasBindConfigError(checkResponse: LDAPCheckResponse): boolean {
     const bindCheckResponseError = this.hasConfigErrorHelper(this.ldapBindCheckResponse);
     return (bindCheckResponseError.errors.length > 0);

@@ -65,53 +65,50 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'roles', values['roles']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['roles'] != null) {
+            this['roles'] = values['roles'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'user-groups', values['user-groups']);
+        if (values && values['user-groups'] != null) {
+            this['user-groups'] = values['user-groups'];
         }
         if (values && values['last-successful-login'] != null) {
             this['last-successful-login'] = values['last-successful-login'];
-        } else if (AuthUserStatus.hasDefaultValue('last-successful-login')) {
+        } else if (fillDefaults && AuthUserStatus.hasDefaultValue('last-successful-login')) {
             this['last-successful-login'] = AuthUserStatus.propInfo['last-successful-login'].default;
         }
-        if (values) {
-            this.fillModelArray<AuthUserStatus_authenticators>(this, 'authenticators', values['authenticators']);
+        if (values && values['authenticators'] != null) {
+            this['authenticators'] = values['authenticators'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'roles': new FormArray([]),
-                'user-groups': new FormArray([]),
+                'roles': new FormControl(this['roles']),
+                'user-groups': new FormControl(this['user-groups']),
                 'last-successful-login': new FormControl(this['last-successful-login']),
-                'authenticators': new FormArray([]),
+                'authenticators': new FormControl(this['authenticators']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('roles', this['roles']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('user-groups', this['user-groups']);
-            // generate FormArray control elements
-            this.fillFormArray<AuthUserStatus_authenticators>('authenticators', this['authenticators']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'roles', this['roles']);
-            this.fillModelArray<string>(this, 'user-groups', this['user-groups']);
+            this._formGroup.controls['roles'].setValue(this['roles']);
+            this._formGroup.controls['user-groups'].setValue(this['user-groups']);
             this._formGroup.controls['last-successful-login'].setValue(this['last-successful-login']);
-            this.fillModelArray<AuthUserStatus_authenticators>(this, 'authenticators', this['authenticators']);
+            this._formGroup.controls['authenticators'].setValue(this['authenticators']);
         }
     }
 }

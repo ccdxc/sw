@@ -49,23 +49,22 @@ export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['program-id'] != null) {
             this['program-id'] = values['program-id'];
-        } else if (SecuritySunRPC.hasDefaultValue('program-id')) {
+        } else if (fillDefaults && SecuritySunRPC.hasDefaultValue('program-id')) {
             this['program-id'] = SecuritySunRPC.propInfo['program-id'].default;
         }
         if (values && values['map-entry-timeout'] != null) {
             this['map-entry-timeout'] = values['map-entry-timeout'];
-        } else if (SecuritySunRPC.hasDefaultValue('map-entry-timeout')) {
+        } else if (fillDefaults && SecuritySunRPC.hasDefaultValue('map-entry-timeout')) {
             this['map-entry-timeout'] = SecuritySunRPC.propInfo['map-entry-timeout'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,7 +77,11 @@ export class SecuritySunRPC extends BaseModel implements ISecuritySunRPC {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['program-id'].setValue(this['program-id']);
             this._formGroup.controls['map-entry-timeout'].setValue(this['map-entry-timeout']);

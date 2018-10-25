@@ -55,23 +55,22 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['micro-seg-vlan'] != null) {
             this['micro-seg-vlan'] = values['micro-seg-vlan'];
-        } else if (WorkloadWorkloadIntfSpec.hasDefaultValue('micro-seg-vlan')) {
+        } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('micro-seg-vlan')) {
             this['micro-seg-vlan'] = WorkloadWorkloadIntfSpec.propInfo['micro-seg-vlan'].default;
         }
         if (values && values['external-vlan'] != null) {
             this['external-vlan'] = values['external-vlan'];
-        } else if (WorkloadWorkloadIntfSpec.hasDefaultValue('external-vlan')) {
+        } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('external-vlan')) {
             this['external-vlan'] = WorkloadWorkloadIntfSpec.propInfo['external-vlan'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -84,7 +83,11 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['micro-seg-vlan'].setValue(this['micro-seg-vlan']);
             this._formGroup.controls['external-vlan'].setValue(this['external-vlan']);

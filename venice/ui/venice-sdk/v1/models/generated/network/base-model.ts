@@ -46,8 +46,12 @@ export abstract class BaseModel {
     protected abstract getFormGroup(): FormGroup;
     public abstract getPropInfo(propName: string): PropInfoItem;
 
-    getValues() {
+    getFormGroupValues() {
         return this.$formGroup.value;
+    }
+
+    getModelValues() {
+        return JSON.parse(JSON.stringify(this));
     }
 
     /** 

@@ -63,26 +63,25 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['phase'] != null) {
             this['phase'] = values['phase'];
-        } else if (ClusterNodeStatus.hasDefaultValue('phase')) {
+        } else if (fillDefaults && ClusterNodeStatus.hasDefaultValue('phase')) {
             this['phase'] = <ClusterNodeStatus_phase>  ClusterNodeStatus.propInfo['phase'].default;
         }
         if (values && values['quorum'] != null) {
             this['quorum'] = values['quorum'];
-        } else if (ClusterNodeStatus.hasDefaultValue('quorum')) {
+        } else if (fillDefaults && ClusterNodeStatus.hasDefaultValue('quorum')) {
             this['quorum'] = ClusterNodeStatus.propInfo['quorum'].default;
         }
         if (values) {
             this.fillModelArray<ClusterNodeCondition>(this, 'conditions', values['conditions'], ClusterNodeCondition);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -98,7 +97,11 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['phase'].setValue(this['phase']);
             this._formGroup.controls['quorum'].setValue(this['quorum']);

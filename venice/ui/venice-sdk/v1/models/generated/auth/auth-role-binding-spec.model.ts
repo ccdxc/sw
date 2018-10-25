@@ -56,45 +56,44 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'users', values['users']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['users'] != null) {
+            this['users'] = values['users'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'user-groups', values['user-groups']);
+        if (values && values['user-groups'] != null) {
+            this['user-groups'] = values['user-groups'];
         }
         if (values && values['role'] != null) {
             this['role'] = values['role'];
-        } else if (AuthRoleBindingSpec.hasDefaultValue('role')) {
+        } else if (fillDefaults && AuthRoleBindingSpec.hasDefaultValue('role')) {
             this['role'] = AuthRoleBindingSpec.propInfo['role'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'users': new FormArray([]),
-                'user-groups': new FormArray([]),
+                'users': new FormControl(this['users']),
+                'user-groups': new FormControl(this['user-groups']),
                 'role': new FormControl(this['role']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('users', this['users']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('user-groups', this['user-groups']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'users', this['users']);
-            this.fillModelArray<string>(this, 'user-groups', this['user-groups']);
+            this._formGroup.controls['users'].setValue(this['users']);
+            this._formGroup.controls['user-groups'].setValue(this['user-groups']);
             this._formGroup.controls['role'].setValue(this['role']);
         }
     }

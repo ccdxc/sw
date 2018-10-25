@@ -61,31 +61,30 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (NetworkLbPolicySpec.hasDefaultValue('type')) {
+        } else if (fillDefaults && NetworkLbPolicySpec.hasDefaultValue('type')) {
             this['type'] = NetworkLbPolicySpec.propInfo['type'].default;
         }
         if (values && values['algorithm'] != null) {
             this['algorithm'] = values['algorithm'];
-        } else if (NetworkLbPolicySpec.hasDefaultValue('algorithm')) {
+        } else if (fillDefaults && NetworkLbPolicySpec.hasDefaultValue('algorithm')) {
             this['algorithm'] = NetworkLbPolicySpec.propInfo['algorithm'].default;
         }
         if (values && values['session-affinity'] != null) {
             this['session-affinity'] = values['session-affinity'];
-        } else if (NetworkLbPolicySpec.hasDefaultValue('session-affinity')) {
+        } else if (fillDefaults && NetworkLbPolicySpec.hasDefaultValue('session-affinity')) {
             this['session-affinity'] = NetworkLbPolicySpec.propInfo['session-affinity'].default;
         }
         if (values) {
             this['health-check'].setValues(values['health-check']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -100,12 +99,16 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['algorithm'].setValue(this['algorithm']);
             this._formGroup.controls['session-affinity'].setValue(this['session-affinity']);
-            this['health-check'].setFormGroupValues();
+            this['health-check'].setFormGroupValuesToBeModelValues();
         }
     }
 }

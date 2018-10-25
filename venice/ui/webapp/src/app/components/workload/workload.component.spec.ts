@@ -202,15 +202,15 @@ describe('WorkloadComponent', () => {
             Events: [
               {
                 Type: 'Created',
-                Object: workload1.getValues()
+                Object: workload1.getFormGroupValues()
               },
               {
                 Type: 'Created',
-                Object: workload2.getValues()
+                Object: workload2.getFormGroupValues()
               },
               {
                 Type: 'Created',
-                Object: workload3.getValues()
+                Object: workload3.getFormGroupValues()
               }
             ]
           }

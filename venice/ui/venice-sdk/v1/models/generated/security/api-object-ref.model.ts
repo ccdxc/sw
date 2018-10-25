@@ -74,38 +74,37 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
-        } else if (ApiObjectRef.hasDefaultValue('tenant')) {
+        } else if (fillDefaults && ApiObjectRef.hasDefaultValue('tenant')) {
             this['tenant'] = ApiObjectRef.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
-        } else if (ApiObjectRef.hasDefaultValue('namespace')) {
+        } else if (fillDefaults && ApiObjectRef.hasDefaultValue('namespace')) {
             this['namespace'] = ApiObjectRef.propInfo['namespace'].default;
         }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (ApiObjectRef.hasDefaultValue('kind')) {
+        } else if (fillDefaults && ApiObjectRef.hasDefaultValue('kind')) {
             this['kind'] = ApiObjectRef.propInfo['kind'].default;
         }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
-        } else if (ApiObjectRef.hasDefaultValue('name')) {
+        } else if (fillDefaults && ApiObjectRef.hasDefaultValue('name')) {
             this['name'] = ApiObjectRef.propInfo['name'].default;
         }
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
-        } else if (ApiObjectRef.hasDefaultValue('uri')) {
+        } else if (fillDefaults && ApiObjectRef.hasDefaultValue('uri')) {
             this['uri'] = ApiObjectRef.propInfo['uri'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -121,7 +120,11 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['tenant'].setValue(this['tenant']);
             this._formGroup.controls['namespace'].setValue(this['namespace']);

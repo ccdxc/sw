@@ -71,36 +71,35 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (ClusterHostStatus.hasDefaultValue('type')) {
+        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('type')) {
             this['type'] = <ClusterHostStatus_type>  ClusterHostStatus.propInfo['type'].default;
         }
         if (values && values['operating-system'] != null) {
             this['operating-system'] = values['operating-system'];
-        } else if (ClusterHostStatus.hasDefaultValue('operating-system')) {
+        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('operating-system')) {
             this['operating-system'] = ClusterHostStatus.propInfo['operating-system'].default;
         }
         if (values && values['orchestrator'] != null) {
             this['orchestrator'] = values['orchestrator'];
-        } else if (ClusterHostStatus.hasDefaultValue('orchestrator')) {
+        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('orchestrator')) {
             this['orchestrator'] = ClusterHostStatus.propInfo['orchestrator'].default;
         }
         if (values && values['interfaces'] != null) {
             this['interfaces'] = values['interfaces'];
-        } else if (ClusterHostStatus.hasDefaultValue('interfaces')) {
+        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('interfaces')) {
             this['interfaces'] = ClusterHostStatus.propInfo['interfaces'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'smartnics', values['smartnics']);
+        if (values && values['smartnics'] != null) {
+            this['smartnics'] = values['smartnics'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -110,21 +109,23 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
                 'operating-system': new FormControl(this['operating-system']),
                 'orchestrator': new FormControl(this['orchestrator']),
                 'interfaces': new FormControl(this['interfaces']),
-                'smartnics': new FormArray([]),
+                'smartnics': new FormControl(this['smartnics']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('smartnics', this['smartnics']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['operating-system'].setValue(this['operating-system']);
             this._formGroup.controls['orchestrator'].setValue(this['orchestrator']);
             this._formGroup.controls['interfaces'].setValue(this['interfaces']);
-            this.fillModelArray<string>(this, 'smartnics', this['smartnics']);
+            this._formGroup.controls['smartnics'].setValue(this['smartnics']);
         }
     }
 }

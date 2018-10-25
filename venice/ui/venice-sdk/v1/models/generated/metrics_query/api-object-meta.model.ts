@@ -112,63 +112,62 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['name'] != null) {
             this['name'] = values['name'];
-        } else if (ApiObjectMeta.hasDefaultValue('name')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('name')) {
             this['name'] = ApiObjectMeta.propInfo['name'].default;
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
-        } else if (ApiObjectMeta.hasDefaultValue('tenant')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('tenant')) {
             this['tenant'] = ApiObjectMeta.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
-        } else if (ApiObjectMeta.hasDefaultValue('namespace')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('namespace')) {
             this['namespace'] = ApiObjectMeta.propInfo['namespace'].default;
         }
         if (values && values['generation-id'] != null) {
             this['generation-id'] = values['generation-id'];
-        } else if (ApiObjectMeta.hasDefaultValue('generation-id')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('generation-id')) {
             this['generation-id'] = ApiObjectMeta.propInfo['generation-id'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
-        } else if (ApiObjectMeta.hasDefaultValue('resource-version')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('resource-version')) {
             this['resource-version'] = ApiObjectMeta.propInfo['resource-version'].default;
         }
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
-        } else if (ApiObjectMeta.hasDefaultValue('uuid')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('uuid')) {
             this['uuid'] = ApiObjectMeta.propInfo['uuid'].default;
         }
         if (values && values['labels'] != null) {
             this['labels'] = values['labels'];
-        } else if (ApiObjectMeta.hasDefaultValue('labels')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('labels')) {
             this['labels'] = ApiObjectMeta.propInfo['labels'].default;
         }
         if (values && values['creation-time'] != null) {
             this['creation-time'] = values['creation-time'];
-        } else if (ApiObjectMeta.hasDefaultValue('creation-time')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('creation-time')) {
             this['creation-time'] = ApiObjectMeta.propInfo['creation-time'].default;
         }
         if (values && values['mod-time'] != null) {
             this['mod-time'] = values['mod-time'];
-        } else if (ApiObjectMeta.hasDefaultValue('mod-time')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('mod-time')) {
             this['mod-time'] = ApiObjectMeta.propInfo['mod-time'].default;
         }
         if (values && values['self-link'] != null) {
             this['self-link'] = values['self-link'];
-        } else if (ApiObjectMeta.hasDefaultValue('self-link')) {
+        } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('self-link')) {
             this['self-link'] = ApiObjectMeta.propInfo['self-link'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -189,7 +188,11 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['tenant'].setValue(this['tenant']);

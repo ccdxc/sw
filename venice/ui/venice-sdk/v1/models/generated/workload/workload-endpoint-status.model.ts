@@ -120,91 +120,90 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['endpoint-uuid'] != null) {
             this['endpoint-uuid'] = values['endpoint-uuid'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('endpoint-uuid')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('endpoint-uuid')) {
             this['endpoint-uuid'] = WorkloadEndpointStatus.propInfo['endpoint-uuid'].default;
         }
         if (values && values['workload-uuid'] != null) {
             this['workload-uuid'] = values['workload-uuid'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('workload-uuid')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('workload-uuid')) {
             this['workload-uuid'] = WorkloadEndpointStatus.propInfo['workload-uuid'].default;
         }
         if (values && values['workload-name'] != null) {
             this['workload-name'] = values['workload-name'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('workload-name')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('workload-name')) {
             this['workload-name'] = WorkloadEndpointStatus.propInfo['workload-name'].default;
         }
         if (values && values['network'] != null) {
             this['network'] = values['network'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('network')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('network')) {
             this['network'] = WorkloadEndpointStatus.propInfo['network'].default;
         }
         if (values && values['homing-host-addr'] != null) {
             this['homing-host-addr'] = values['homing-host-addr'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('homing-host-addr')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('homing-host-addr')) {
             this['homing-host-addr'] = WorkloadEndpointStatus.propInfo['homing-host-addr'].default;
         }
         if (values && values['homing-host-name'] != null) {
             this['homing-host-name'] = values['homing-host-name'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('homing-host-name')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('homing-host-name')) {
             this['homing-host-name'] = WorkloadEndpointStatus.propInfo['homing-host-name'].default;
         }
         if (values && values['ipv4-address'] != null) {
             this['ipv4-address'] = values['ipv4-address'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('ipv4-address')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv4-address')) {
             this['ipv4-address'] = WorkloadEndpointStatus.propInfo['ipv4-address'].default;
         }
         if (values && values['ipv4-gateway'] != null) {
             this['ipv4-gateway'] = values['ipv4-gateway'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('ipv4-gateway')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv4-gateway')) {
             this['ipv4-gateway'] = WorkloadEndpointStatus.propInfo['ipv4-gateway'].default;
         }
         if (values && values['ipv6-address'] != null) {
             this['ipv6-address'] = values['ipv6-address'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('ipv6-address')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv6-address')) {
             this['ipv6-address'] = WorkloadEndpointStatus.propInfo['ipv6-address'].default;
         }
         if (values && values['ipv6-gateway'] != null) {
             this['ipv6-gateway'] = values['ipv6-gateway'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('ipv6-gateway')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv6-gateway')) {
             this['ipv6-gateway'] = WorkloadEndpointStatus.propInfo['ipv6-gateway'].default;
         }
         if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('mac-address')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('mac-address')) {
             this['mac-address'] = WorkloadEndpointStatus.propInfo['mac-address'].default;
         }
         if (values && values['node-uuid'] != null) {
             this['node-uuid'] = values['node-uuid'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('node-uuid')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('node-uuid')) {
             this['node-uuid'] = WorkloadEndpointStatus.propInfo['node-uuid'].default;
         }
         if (values && values['EndpointState'] != null) {
             this['EndpointState'] = values['EndpointState'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('EndpointState')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('EndpointState')) {
             this['EndpointState'] = WorkloadEndpointStatus.propInfo['EndpointState'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'SecurityGroups', values['SecurityGroups']);
+        if (values && values['SecurityGroups'] != null) {
+            this['SecurityGroups'] = values['SecurityGroups'];
         }
         if (values && values['micro-segment-vlan'] != null) {
             this['micro-segment-vlan'] = values['micro-segment-vlan'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('micro-segment-vlan')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('micro-segment-vlan')) {
             this['micro-segment-vlan'] = WorkloadEndpointStatus.propInfo['micro-segment-vlan'].default;
         }
         if (values && values['workload-attributes'] != null) {
             this['workload-attributes'] = values['workload-attributes'];
-        } else if (WorkloadEndpointStatus.hasDefaultValue('workload-attributes')) {
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('workload-attributes')) {
             this['workload-attributes'] = WorkloadEndpointStatus.propInfo['workload-attributes'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -223,17 +222,19 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
                 'mac-address': new FormControl(this['mac-address']),
                 'node-uuid': new FormControl(this['node-uuid']),
                 'EndpointState': new FormControl(this['EndpointState']),
-                'SecurityGroups': new FormArray([]),
+                'SecurityGroups': new FormControl(this['SecurityGroups']),
                 'micro-segment-vlan': new FormControl(this['micro-segment-vlan']),
                 'workload-attributes': new FormControl(this['workload-attributes']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('SecurityGroups', this['SecurityGroups']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['endpoint-uuid'].setValue(this['endpoint-uuid']);
             this._formGroup.controls['workload-uuid'].setValue(this['workload-uuid']);
@@ -248,7 +249,7 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
             this._formGroup.controls['mac-address'].setValue(this['mac-address']);
             this._formGroup.controls['node-uuid'].setValue(this['node-uuid']);
             this._formGroup.controls['EndpointState'].setValue(this['EndpointState']);
-            this.fillModelArray<string>(this, 'SecurityGroups', this['SecurityGroups']);
+            this._formGroup.controls['SecurityGroups'].setValue(this['SecurityGroups']);
             this._formGroup.controls['micro-segment-vlan'].setValue(this['micro-segment-vlan']);
             this._formGroup.controls['workload-attributes'].setValue(this['workload-attributes']);
         }

@@ -56,26 +56,25 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['destination'] != null) {
             this['destination'] = values['destination'];
-        } else if (MonitoringExportConfig.hasDefaultValue('destination')) {
+        } else if (fillDefaults && MonitoringExportConfig.hasDefaultValue('destination')) {
             this['destination'] = MonitoringExportConfig.propInfo['destination'].default;
         }
         if (values && values['transport'] != null) {
             this['transport'] = values['transport'];
-        } else if (MonitoringExportConfig.hasDefaultValue('transport')) {
+        } else if (fillDefaults && MonitoringExportConfig.hasDefaultValue('transport')) {
             this['transport'] = MonitoringExportConfig.propInfo['transport'].default;
         }
         if (values) {
             this['credentials'].setValues(values['credentials']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -89,11 +88,15 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['destination'].setValue(this['destination']);
             this._formGroup.controls['transport'].setValue(this['transport']);
-            this['credentials'].setFormGroupValues();
+            this['credentials'].setFormGroupValuesToBeModelValues();
         }
     }
 }

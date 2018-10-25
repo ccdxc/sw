@@ -49,23 +49,22 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['encryption-transform'] != null) {
             this['encryption-transform'] = values['encryption-transform'];
-        } else if (SecurityIPsecProtocolSpec.hasDefaultValue('encryption-transform')) {
+        } else if (fillDefaults && SecurityIPsecProtocolSpec.hasDefaultValue('encryption-transform')) {
             this['encryption-transform'] = SecurityIPsecProtocolSpec.propInfo['encryption-transform'].default;
         }
         if (values && values['integrity-transform'] != null) {
             this['integrity-transform'] = values['integrity-transform'];
-        } else if (SecurityIPsecProtocolSpec.hasDefaultValue('integrity-transform')) {
+        } else if (fillDefaults && SecurityIPsecProtocolSpec.hasDefaultValue('integrity-transform')) {
             this['integrity-transform'] = SecurityIPsecProtocolSpec.propInfo['integrity-transform'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,7 +77,11 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['encryption-transform'].setValue(this['encryption-transform']);
             this._formGroup.controls['integrity-transform'].setValue(this['integrity-transform']);

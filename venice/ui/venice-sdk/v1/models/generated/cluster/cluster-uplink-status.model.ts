@@ -60,26 +60,25 @@ export class ClusterUplinkStatus extends BaseModel implements IClusterUplinkStat
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['primary-mac'] != null) {
             this['primary-mac'] = values['primary-mac'];
-        } else if (ClusterUplinkStatus.hasDefaultValue('primary-mac')) {
+        } else if (fillDefaults && ClusterUplinkStatus.hasDefaultValue('primary-mac')) {
             this['primary-mac'] = ClusterUplinkStatus.propInfo['primary-mac'].default;
         }
         if (values && values['link-speed'] != null) {
             this['link-speed'] = values['link-speed'];
-        } else if (ClusterUplinkStatus.hasDefaultValue('link-speed')) {
+        } else if (fillDefaults && ClusterUplinkStatus.hasDefaultValue('link-speed')) {
             this['link-speed'] = ClusterUplinkStatus.propInfo['link-speed'].default;
         }
         if (values) {
             this.fillModelArray<ClusterPortCondition>(this, 'conditions', values['conditions'], ClusterPortCondition);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -95,7 +94,11 @@ export class ClusterUplinkStatus extends BaseModel implements IClusterUplinkStat
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
             this._formGroup.controls['link-speed'].setValue(this['link-speed']);

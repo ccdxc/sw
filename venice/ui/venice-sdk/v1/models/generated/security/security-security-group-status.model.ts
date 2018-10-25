@@ -51,39 +51,38 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'workloads', values['workloads']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['workloads'] != null) {
+            this['workloads'] = values['workloads'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'Policies', values['Policies']);
+        if (values && values['Policies'] != null) {
+            this['Policies'] = values['Policies'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': new FormArray([]),
-                'Policies': new FormArray([]),
+                'workloads': new FormControl(this['workloads']),
+                'Policies': new FormControl(this['Policies']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('workloads', this['workloads']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('Policies', this['Policies']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'workloads', this['workloads']);
-            this.fillModelArray<string>(this, 'Policies', this['Policies']);
+            this._formGroup.controls['workloads'].setValue(this['workloads']);
+            this._formGroup.controls['Policies'].setValue(this['Policies']);
         }
     }
 }

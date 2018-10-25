@@ -53,23 +53,22 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['max-packets'] != null) {
             this['max-packets'] = values['max-packets'];
-        } else if (MonitoringMirrorStopConditions.hasDefaultValue('max-packets')) {
+        } else if (fillDefaults && MonitoringMirrorStopConditions.hasDefaultValue('max-packets')) {
             this['max-packets'] = MonitoringMirrorStopConditions.propInfo['max-packets'].default;
         }
         if (values && values['expiry-duration'] != null) {
             this['expiry-duration'] = values['expiry-duration'];
-        } else if (MonitoringMirrorStopConditions.hasDefaultValue('expiry-duration')) {
+        } else if (fillDefaults && MonitoringMirrorStopConditions.hasDefaultValue('expiry-duration')) {
             this['expiry-duration'] = MonitoringMirrorStopConditions.propInfo['expiry-duration'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -82,7 +81,11 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['max-packets'].setValue(this['max-packets']);
             this._formGroup.controls['expiry-duration'].setValue(this['expiry-duration']);

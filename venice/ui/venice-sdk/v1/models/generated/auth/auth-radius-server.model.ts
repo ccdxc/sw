@@ -62,33 +62,32 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['url'] != null) {
             this['url'] = values['url'];
-        } else if (AuthRadiusServer.hasDefaultValue('url')) {
+        } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('url')) {
             this['url'] = AuthRadiusServer.propInfo['url'].default;
         }
         if (values && values['secret'] != null) {
             this['secret'] = values['secret'];
-        } else if (AuthRadiusServer.hasDefaultValue('secret')) {
+        } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('secret')) {
             this['secret'] = AuthRadiusServer.propInfo['secret'].default;
         }
         if (values && values['auth-method'] != null) {
             this['auth-method'] = values['auth-method'];
-        } else if (AuthRadiusServer.hasDefaultValue('auth-method')) {
+        } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('auth-method')) {
             this['auth-method'] = <AuthRadiusServer_auth_method>  AuthRadiusServer.propInfo['auth-method'].default;
         }
         if (values && values['trusted-certs'] != null) {
             this['trusted-certs'] = values['trusted-certs'];
-        } else if (AuthRadiusServer.hasDefaultValue('trusted-certs')) {
+        } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('trusted-certs')) {
             this['trusted-certs'] = AuthRadiusServer.propInfo['trusted-certs'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -103,7 +102,11 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['url'].setValue(this['url']);
             this._formGroup.controls['secret'].setValue(this['secret']);

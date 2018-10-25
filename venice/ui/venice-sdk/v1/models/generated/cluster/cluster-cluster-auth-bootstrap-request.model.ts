@@ -56,26 +56,25 @@ export class ClusterClusterAuthBootstrapRequest extends BaseModel implements ICl
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (ClusterClusterAuthBootstrapRequest.hasDefaultValue('kind')) {
+        } else if (fillDefaults && ClusterClusterAuthBootstrapRequest.hasDefaultValue('kind')) {
             this['kind'] = ClusterClusterAuthBootstrapRequest.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (ClusterClusterAuthBootstrapRequest.hasDefaultValue('api-version')) {
+        } else if (fillDefaults && ClusterClusterAuthBootstrapRequest.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterClusterAuthBootstrapRequest.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -89,11 +88,15 @@ export class ClusterClusterAuthBootstrapRequest extends BaseModel implements ICl
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this['meta'].setFormGroupValues();
+            this['meta'].setFormGroupValuesToBeModelValues();
         }
     }
 }

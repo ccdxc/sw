@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, ViewEncapsulation, ViewChild, ElementRef, OnChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { ModuleUtility } from '../../ModuleUtility';
 
 @Component({

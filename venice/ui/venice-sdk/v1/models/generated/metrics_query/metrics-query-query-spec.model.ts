@@ -105,57 +105,56 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (Metrics_queryQuerySpec.hasDefaultValue('kind')) {
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('kind')) {
             this['kind'] = Metrics_queryQuerySpec.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (Metrics_queryQuerySpec.hasDefaultValue('api-version')) {
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('api-version')) {
             this['api-version'] = Metrics_queryQuerySpec.propInfo['api-version'].default;
         }
         if (values) {
             this['meta'].setValues(values['meta']);
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'fields', values['fields']);
+        if (values && values['fields'] != null) {
+            this['fields'] = values['fields'];
         }
         if (values && values['function'] != null) {
             this['function'] = values['function'];
-        } else if (Metrics_queryQuerySpec.hasDefaultValue('function')) {
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('function')) {
             this['function'] = <Metrics_queryQuerySpec_function>  Metrics_queryQuerySpec.propInfo['function'].default;
         }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
-        } else if (Metrics_queryQuerySpec.hasDefaultValue('start-time')) {
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('start-time')) {
             this['start-time'] = Metrics_queryQuerySpec.propInfo['start-time'].default;
         }
         if (values && values['end-time'] != null) {
             this['end-time'] = values['end-time'];
-        } else if (Metrics_queryQuerySpec.hasDefaultValue('end-time')) {
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('end-time')) {
             this['end-time'] = Metrics_queryQuerySpec.propInfo['end-time'].default;
         }
         if (values && values['group-by-time'] != null) {
             this['group-by-time'] = values['group-by-time'];
-        } else if (Metrics_queryQuerySpec.hasDefaultValue('group-by-time')) {
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('group-by-time')) {
             this['group-by-time'] = Metrics_queryQuerySpec.propInfo['group-by-time'].default;
         }
         if (values && values['group-by-field'] != null) {
             this['group-by-field'] = values['group-by-field'];
-        } else if (Metrics_queryQuerySpec.hasDefaultValue('group-by-field')) {
+        } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('group-by-field')) {
             this['group-by-field'] = Metrics_queryQuerySpec.propInfo['group-by-field'].default;
         }
         if (values) {
             this['pagination'].setValues(values['pagination']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -164,7 +163,7 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
                 'meta': this['meta'].$formGroup,
-                'fields': new FormArray([]),
+                'fields': new FormControl(this['fields']),
                 'function': new FormControl(this['function'], [enumValidator(Metrics_queryQuerySpec_function), ]),
                 'start-time': new FormControl(this['start-time']),
                 'end-time': new FormControl(this['end-time']),
@@ -172,24 +171,26 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
                 'group-by-field': new FormControl(this['group-by-field']),
                 'pagination': this['pagination'].$formGroup,
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('fields', this['fields']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this['meta'].setFormGroupValues();
-            this.fillModelArray<string>(this, 'fields', this['fields']);
+            this['meta'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['fields'].setValue(this['fields']);
             this._formGroup.controls['function'].setValue(this['function']);
             this._formGroup.controls['start-time'].setValue(this['start-time']);
             this._formGroup.controls['end-time'].setValue(this['end-time']);
             this._formGroup.controls['group-by-time'].setValue(this['group-by-time']);
             this._formGroup.controls['group-by-field'].setValue(this['group-by-field']);
-            this['pagination'].setFormGroupValues();
+            this['pagination'].setFormGroupValuesToBeModelValues();
         }
     }
 }

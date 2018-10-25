@@ -92,53 +92,52 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
-        } else if (SearchPolicySearchRequest.hasDefaultValue('tenant')) {
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('tenant')) {
             this['tenant'] = SearchPolicySearchRequest.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
-        } else if (SearchPolicySearchRequest.hasDefaultValue('namespace')) {
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('namespace')) {
             this['namespace'] = SearchPolicySearchRequest.propInfo['namespace'].default;
         }
         if (values && values['sg-policy'] != null) {
             this['sg-policy'] = values['sg-policy'];
-        } else if (SearchPolicySearchRequest.hasDefaultValue('sg-policy')) {
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('sg-policy')) {
             this['sg-policy'] = SearchPolicySearchRequest.propInfo['sg-policy'].default;
         }
         if (values && values['app'] != null) {
             this['app'] = values['app'];
-        } else if (SearchPolicySearchRequest.hasDefaultValue('app')) {
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('app')) {
             this['app'] = SearchPolicySearchRequest.propInfo['app'].default;
         }
         if (values && values['from-ip-address'] != null) {
             this['from-ip-address'] = values['from-ip-address'];
-        } else if (SearchPolicySearchRequest.hasDefaultValue('from-ip-address')) {
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('from-ip-address')) {
             this['from-ip-address'] = SearchPolicySearchRequest.propInfo['from-ip-address'].default;
         }
         if (values && values['to-ip-address'] != null) {
             this['to-ip-address'] = values['to-ip-address'];
-        } else if (SearchPolicySearchRequest.hasDefaultValue('to-ip-address')) {
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('to-ip-address')) {
             this['to-ip-address'] = SearchPolicySearchRequest.propInfo['to-ip-address'].default;
         }
         if (values && values['from-security-group'] != null) {
             this['from-security-group'] = values['from-security-group'];
-        } else if (SearchPolicySearchRequest.hasDefaultValue('from-security-group')) {
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('from-security-group')) {
             this['from-security-group'] = SearchPolicySearchRequest.propInfo['from-security-group'].default;
         }
         if (values && values['to-security-group'] != null) {
             this['to-security-group'] = values['to-security-group'];
-        } else if (SearchPolicySearchRequest.hasDefaultValue('to-security-group')) {
+        } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('to-security-group')) {
             this['to-security-group'] = SearchPolicySearchRequest.propInfo['to-security-group'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -157,7 +156,11 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['tenant'].setValue(this['tenant']);
             this._formGroup.controls['namespace'].setValue(this['namespace']);

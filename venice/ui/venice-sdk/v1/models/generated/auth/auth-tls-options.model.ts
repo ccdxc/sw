@@ -67,33 +67,32 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['start-tls'] != null) {
             this['start-tls'] = values['start-tls'];
-        } else if (AuthTLSOptions.hasDefaultValue('start-tls')) {
+        } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('start-tls')) {
             this['start-tls'] = AuthTLSOptions.propInfo['start-tls'].default;
         }
         if (values && values['skip-server-cert-verification'] != null) {
             this['skip-server-cert-verification'] = values['skip-server-cert-verification'];
-        } else if (AuthTLSOptions.hasDefaultValue('skip-server-cert-verification')) {
+        } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('skip-server-cert-verification')) {
             this['skip-server-cert-verification'] = AuthTLSOptions.propInfo['skip-server-cert-verification'].default;
         }
         if (values && values['server-name'] != null) {
             this['server-name'] = values['server-name'];
-        } else if (AuthTLSOptions.hasDefaultValue('server-name')) {
+        } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('server-name')) {
             this['server-name'] = AuthTLSOptions.propInfo['server-name'].default;
         }
         if (values && values['trusted-certs'] != null) {
             this['trusted-certs'] = values['trusted-certs'];
-        } else if (AuthTLSOptions.hasDefaultValue('trusted-certs')) {
+        } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('trusted-certs')) {
             this['trusted-certs'] = AuthTLSOptions.propInfo['trusted-certs'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -108,7 +107,11 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['start-tls'].setValue(this['start-tls']);
             this._formGroup.controls['skip-server-cert-verification'].setValue(this['skip-server-cert-verification']);

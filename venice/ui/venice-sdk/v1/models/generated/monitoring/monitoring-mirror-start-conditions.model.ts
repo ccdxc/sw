@@ -44,18 +44,17 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['schedule-time'] != null) {
             this['schedule-time'] = values['schedule-time'];
-        } else if (MonitoringMirrorStartConditions.hasDefaultValue('schedule-time')) {
+        } else if (fillDefaults && MonitoringMirrorStartConditions.hasDefaultValue('schedule-time')) {
             this['schedule-time'] = MonitoringMirrorStartConditions.propInfo['schedule-time'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['schedule-time'].setValue(this['schedule-time']);
         }

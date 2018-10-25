@@ -80,7 +80,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   }
 
   onCheckLDAPServerConnect(ldap: AuthLdap) {
-    this._authService.LdapConnectionCheck(this.authPolicy).subscribe(
+    this._authService.LdapConnectionCheck(this.authPolicy.getFormGroupValues()).subscribe(
       response => {
         const respAuthPolicy: AuthAuthenticationPolicy = response.body as AuthAuthenticationPolicy;
         const ldapCheckResponse = this.makeLDAPCheckResponse(LDAPCheckType.CONNECTION, ldap, respAuthPolicy);
@@ -100,7 +100,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   }
 
   onCheckLDAPBindConnect(ldap: AuthLdap) {
-    this._authService.LdapBindCheck(this.authPolicy).subscribe(
+    this._authService.LdapBindCheck(this.authPolicy.getFormGroupValues()).subscribe(
       response => {
         const respAuthPolicy: AuthAuthenticationPolicy = response.body as AuthAuthenticationPolicy;
         const ldapCheckResponse = this.makeLDAPCheckResponse(LDAPCheckType.BIND, ldap, respAuthPolicy);
@@ -136,7 +136,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   saveAuthenticationPolicy() {
     let handler: Observable<{ body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number }>;
     // If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
-    handler = this._authService.UpdateAuthenticationPolicy(this.authPolicy);
+    handler = this._authService.UpdateAuthenticationPolicy(this.authPolicy.getFormGroupValues());
     handler.subscribe(
       (response) => {
         this.invokeSuccessToaster('Update Successful', 'Updated Authentication policy');

@@ -60,45 +60,46 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
-        } else if (MonitoringFwlogSpec.hasDefaultValue('retention-time')) {
+        } else if (fillDefaults && MonitoringFwlogSpec.hasDefaultValue('retention-time')) {
             this['retention-time'] = MonitoringFwlogSpec.propInfo['retention-time'].default;
         }
-        if (values) {
-            this.fillModelArray<MonitoringFwlogSpec_filter>(this, 'filter', values['filter']);
+        if (values && values['filter'] != null) {
+            this['filter'] = values['filter'];
         }
         if (values) {
             this.fillModelArray<MonitoringFwlogExport>(this, 'exports', values['exports'], MonitoringFwlogExport);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'retention-time': new FormControl(this['retention-time']),
-                'filter': new FormArray([]),
+                'filter': new FormControl(this['filter']),
                 'exports': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<MonitoringFwlogSpec_filter>('filter', this['filter']);
             // generate FormArray control elements
             this.fillFormArray<MonitoringFwlogExport>('exports', this['exports'], MonitoringFwlogExport);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['retention-time'].setValue(this['retention-time']);
-            this.fillModelArray<MonitoringFwlogSpec_filter>(this, 'filter', this['filter']);
+            this._formGroup.controls['filter'].setValue(this['filter']);
             this.fillModelArray<MonitoringFwlogExport>(this, 'exports', this['exports'], MonitoringFwlogExport);
         }
     }

@@ -82,37 +82,36 @@ export class ApiStatus extends BaseModel implements IApiStatus {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (ApiStatus.hasDefaultValue('kind')) {
+        } else if (fillDefaults && ApiStatus.hasDefaultValue('kind')) {
             this['kind'] = ApiStatus.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (ApiStatus.hasDefaultValue('api-version')) {
+        } else if (fillDefaults && ApiStatus.hasDefaultValue('api-version')) {
             this['api-version'] = ApiStatus.propInfo['api-version'].default;
         }
         if (values) {
             this['result'].setValues(values['result']);
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'message', values['message']);
+        if (values && values['message'] != null) {
+            this['message'] = values['message'];
         }
         if (values && values['code'] != null) {
             this['code'] = values['code'];
-        } else if (ApiStatus.hasDefaultValue('code')) {
+        } else if (fillDefaults && ApiStatus.hasDefaultValue('code')) {
             this['code'] = ApiStatus.propInfo['code'].default;
         }
         if (values) {
             this['object-ref'].setValues(values['object-ref']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -121,24 +120,26 @@ export class ApiStatus extends BaseModel implements IApiStatus {
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
                 'result': this['result'].$formGroup,
-                'message': new FormArray([]),
+                'message': new FormControl(this['message']),
                 'code': new FormControl(this['code']),
                 'object-ref': this['object-ref'].$formGroup,
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('message', this['message']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this['result'].setFormGroupValues();
-            this.fillModelArray<string>(this, 'message', this['message']);
+            this['result'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['message'].setValue(this['message']);
             this._formGroup.controls['code'].setValue(this['code']);
-            this['object-ref'].setFormGroupValues();
+            this['object-ref'].setFormGroupValuesToBeModelValues();
         }
     }
 }

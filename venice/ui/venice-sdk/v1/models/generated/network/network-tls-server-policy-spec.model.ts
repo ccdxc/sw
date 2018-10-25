@@ -85,53 +85,50 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'tls-server-certificates', values['tls-server-certificates']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['tls-server-certificates'] != null) {
+            this['tls-server-certificates'] = values['tls-server-certificates'];
         }
         if (values && values['client-authentication'] != null) {
             this['client-authentication'] = values['client-authentication'];
-        } else if (NetworkTLSServerPolicySpec.hasDefaultValue('client-authentication')) {
+        } else if (fillDefaults && NetworkTLSServerPolicySpec.hasDefaultValue('client-authentication')) {
             this['client-authentication'] = <NetworkTLSServerPolicySpec_client_authentication>  NetworkTLSServerPolicySpec.propInfo['client-authentication'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'tls-server-trust-roots', values['tls-server-trust-roots']);
+        if (values && values['tls-server-trust-roots'] != null) {
+            this['tls-server-trust-roots'] = values['tls-server-trust-roots'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'tls-server-allowed-peer-id', values['tls-server-allowed-peer-id']);
+        if (values && values['tls-server-allowed-peer-id'] != null) {
+            this['tls-server-allowed-peer-id'] = values['tls-server-allowed-peer-id'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tls-server-certificates': new FormArray([]),
+                'tls-server-certificates': new FormControl(this['tls-server-certificates']),
                 'client-authentication': new FormControl(this['client-authentication'], [enumValidator(NetworkTLSServerPolicySpec_client_authentication), ]),
-                'tls-server-trust-roots': new FormArray([]),
-                'tls-server-allowed-peer-id': new FormArray([]),
+                'tls-server-trust-roots': new FormControl(this['tls-server-trust-roots']),
+                'tls-server-allowed-peer-id': new FormControl(this['tls-server-allowed-peer-id']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('tls-server-certificates', this['tls-server-certificates']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('tls-server-trust-roots', this['tls-server-trust-roots']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('tls-server-allowed-peer-id', this['tls-server-allowed-peer-id']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'tls-server-certificates', this['tls-server-certificates']);
+            this._formGroup.controls['tls-server-certificates'].setValue(this['tls-server-certificates']);
             this._formGroup.controls['client-authentication'].setValue(this['client-authentication']);
-            this.fillModelArray<string>(this, 'tls-server-trust-roots', this['tls-server-trust-roots']);
-            this.fillModelArray<string>(this, 'tls-server-allowed-peer-id', this['tls-server-allowed-peer-id']);
+            this._formGroup.controls['tls-server-trust-roots'].setValue(this['tls-server-trust-roots']);
+            this._formGroup.controls['tls-server-allowed-peer-id'].setValue(this['tls-server-allowed-peer-id']);
         }
     }
 }

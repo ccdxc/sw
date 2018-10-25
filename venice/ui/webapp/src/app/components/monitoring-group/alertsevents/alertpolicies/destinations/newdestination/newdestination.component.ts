@@ -142,17 +142,18 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
 
   saveDestination() {
     let handler: Observable<{ body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number }>;
+    const destination = this.newDestination.getFormGroupValues();
     if (this.isInline) {
-      handler = this._monitoringService.UpdateAlertDestination(this.newDestination.meta.name, this.newDestination);
+      handler = this._monitoringService.UpdateAlertDestination(this.newDestination.meta.name, destination);
     } else {
-      handler = this._monitoringService.AddAlertDestination(this.newDestination);
+      handler = this._monitoringService.AddAlertDestination(destination);
     }
     handler.subscribe(
       (response) => {
         if (this.isInline) {
           this.invokeSuccessToaster('Update Successful', 'Updated destination ' + this.newDestination.meta.name);
         } else {
-          this.invokeSuccessToaster('Creation Successful', 'Created destination ' + this.newDestination.meta.name);
+          this.invokeSuccessToaster('Creation Successful', 'Created destination ' + destination.meta.name);
         }
         this.cancelDestination();
       },

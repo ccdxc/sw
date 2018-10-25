@@ -64,38 +64,37 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['interval'] != null) {
             this['interval'] = values['interval'];
-        } else if (NetworkHealthCheckSpec.hasDefaultValue('interval')) {
+        } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('interval')) {
             this['interval'] = NetworkHealthCheckSpec.propInfo['interval'].default;
         }
         if (values && values['probes-per-interval'] != null) {
             this['probes-per-interval'] = values['probes-per-interval'];
-        } else if (NetworkHealthCheckSpec.hasDefaultValue('probes-per-interval')) {
+        } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('probes-per-interval')) {
             this['probes-per-interval'] = NetworkHealthCheckSpec.propInfo['probes-per-interval'].default;
         }
         if (values && values['probe-port-or-url'] != null) {
             this['probe-port-or-url'] = values['probe-port-or-url'];
-        } else if (NetworkHealthCheckSpec.hasDefaultValue('probe-port-or-url')) {
+        } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('probe-port-or-url')) {
             this['probe-port-or-url'] = NetworkHealthCheckSpec.propInfo['probe-port-or-url'].default;
         }
         if (values && values['max-timeouts'] != null) {
             this['max-timeouts'] = values['max-timeouts'];
-        } else if (NetworkHealthCheckSpec.hasDefaultValue('max-timeouts')) {
+        } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('max-timeouts')) {
             this['max-timeouts'] = NetworkHealthCheckSpec.propInfo['max-timeouts'].default;
         }
         if (values && values['declare-healthy-count'] != null) {
             this['declare-healthy-count'] = values['declare-healthy-count'];
-        } else if (NetworkHealthCheckSpec.hasDefaultValue('declare-healthy-count')) {
+        } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('declare-healthy-count')) {
             this['declare-healthy-count'] = NetworkHealthCheckSpec.propInfo['declare-healthy-count'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -111,7 +110,11 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['interval'].setValue(this['interval']);
             this._formGroup.controls['probes-per-interval'].setValue(this['probes-per-interval']);

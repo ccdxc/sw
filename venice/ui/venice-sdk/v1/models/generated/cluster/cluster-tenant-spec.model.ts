@@ -44,18 +44,17 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['admin-user'] != null) {
             this['admin-user'] = values['admin-user'];
-        } else if (ClusterTenantSpec.hasDefaultValue('admin-user')) {
+        } else if (fillDefaults && ClusterTenantSpec.hasDefaultValue('admin-user')) {
             this['admin-user'] = ClusterTenantSpec.propInfo['admin-user'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['admin-user'].setValue(this['admin-user']);
         }

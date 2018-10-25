@@ -45,32 +45,33 @@ export class ClusterHostIntfSpec extends BaseModel implements IClusterHostIntfSp
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'mac-addrs', values['mac-addrs']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['mac-addrs'] != null) {
+            this['mac-addrs'] = values['mac-addrs'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'mac-addrs': new FormArray([]),
+                'mac-addrs': new FormControl(this['mac-addrs']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('mac-addrs', this['mac-addrs']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'mac-addrs', this['mac-addrs']);
+            this._formGroup.controls['mac-addrs'].setValue(this['mac-addrs']);
         }
     }
 }

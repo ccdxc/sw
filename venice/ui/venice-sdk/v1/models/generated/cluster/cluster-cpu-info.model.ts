@@ -59,33 +59,32 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['speed'] != null) {
             this['speed'] = values['speed'];
-        } else if (ClusterCPUInfo.hasDefaultValue('speed')) {
+        } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('speed')) {
             this['speed'] = ClusterCPUInfo.propInfo['speed'].default;
         }
         if (values && values['num-sockets'] != null) {
             this['num-sockets'] = values['num-sockets'];
-        } else if (ClusterCPUInfo.hasDefaultValue('num-sockets')) {
+        } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('num-sockets')) {
             this['num-sockets'] = ClusterCPUInfo.propInfo['num-sockets'].default;
         }
         if (values && values['num-cores'] != null) {
             this['num-cores'] = values['num-cores'];
-        } else if (ClusterCPUInfo.hasDefaultValue('num-cores')) {
+        } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('num-cores')) {
             this['num-cores'] = ClusterCPUInfo.propInfo['num-cores'].default;
         }
         if (values && values['num-threads'] != null) {
             this['num-threads'] = values['num-threads'];
-        } else if (ClusterCPUInfo.hasDefaultValue('num-threads')) {
+        } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('num-threads')) {
             this['num-threads'] = ClusterCPUInfo.propInfo['num-threads'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -100,7 +99,11 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['speed'].setValue(this['speed']);
             this._formGroup.controls['num-sockets'].setValue(this['num-sockets']);

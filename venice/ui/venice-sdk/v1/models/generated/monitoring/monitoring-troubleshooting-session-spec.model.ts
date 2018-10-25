@@ -63,10 +63,10 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this['flow-selector'].setValues(values['flow-selector']);
         }
@@ -75,17 +75,16 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
         }
         if (values && values['repeat-every'] != null) {
             this['repeat-every'] = values['repeat-every'];
-        } else if (MonitoringTroubleshootingSessionSpec.hasDefaultValue('repeat-every')) {
+        } else if (fillDefaults && MonitoringTroubleshootingSessionSpec.hasDefaultValue('repeat-every')) {
             this['repeat-every'] = MonitoringTroubleshootingSessionSpec.propInfo['repeat-every'].default;
         }
         if (values && values['enable-mirroring'] != null) {
             this['enable-mirroring'] = values['enable-mirroring'];
-        } else if (MonitoringTroubleshootingSessionSpec.hasDefaultValue('enable-mirroring')) {
+        } else if (fillDefaults && MonitoringTroubleshootingSessionSpec.hasDefaultValue('enable-mirroring')) {
             this['enable-mirroring'] = MonitoringTroubleshootingSessionSpec.propInfo['enable-mirroring'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -100,10 +99,14 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this['flow-selector'].setFormGroupValues();
-            this['time-window'].setFormGroupValues();
+            this['flow-selector'].setFormGroupValuesToBeModelValues();
+            this['time-window'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['repeat-every'].setValue(this['repeat-every']);
             this._formGroup.controls['enable-mirroring'].setValue(this['enable-mirroring']);
         }

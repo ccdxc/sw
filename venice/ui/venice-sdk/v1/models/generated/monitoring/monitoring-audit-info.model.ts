@@ -53,23 +53,22 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['user'] != null) {
             this['user'] = values['user'];
-        } else if (MonitoringAuditInfo.hasDefaultValue('user')) {
+        } else if (fillDefaults && MonitoringAuditInfo.hasDefaultValue('user')) {
             this['user'] = MonitoringAuditInfo.propInfo['user'].default;
         }
         if (values && values['time'] != null) {
             this['time'] = values['time'];
-        } else if (MonitoringAuditInfo.hasDefaultValue('time')) {
+        } else if (fillDefaults && MonitoringAuditInfo.hasDefaultValue('time')) {
             this['time'] = MonitoringAuditInfo.propInfo['time'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -82,7 +81,11 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['user'].setValue(this['user']);
             this._formGroup.controls['time'].setValue(this['time']);

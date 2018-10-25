@@ -51,21 +51,20 @@ export class WorkloadAutoMsgWorkloadWatchHelperWatchEvent extends BaseModel impl
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
-        } else if (WorkloadAutoMsgWorkloadWatchHelperWatchEvent.hasDefaultValue('Type')) {
+        } else if (fillDefaults && WorkloadAutoMsgWorkloadWatchHelperWatchEvent.hasDefaultValue('Type')) {
             this['Type'] = WorkloadAutoMsgWorkloadWatchHelperWatchEvent.propInfo['Type'].default;
         }
         if (values) {
             this['Object'].setValues(values['Object']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,10 +77,14 @@ export class WorkloadAutoMsgWorkloadWatchHelperWatchEvent extends BaseModel impl
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['Type'].setValue(this['Type']);
-            this['Object'].setFormGroupValues();
+            this['Object'].setFormGroupValuesToBeModelValues();
         }
     }
 }

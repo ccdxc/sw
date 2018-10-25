@@ -53,23 +53,22 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['component'] != null) {
             this['component'] = values['component'];
-        } else if (EventsEventSource.hasDefaultValue('component')) {
+        } else if (fillDefaults && EventsEventSource.hasDefaultValue('component')) {
             this['component'] = EventsEventSource.propInfo['component'].default;
         }
         if (values && values['node-name'] != null) {
             this['node-name'] = values['node-name'];
-        } else if (EventsEventSource.hasDefaultValue('node-name')) {
+        } else if (fillDefaults && EventsEventSource.hasDefaultValue('node-name')) {
             this['node-name'] = EventsEventSource.propInfo['node-name'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -82,7 +81,11 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['component'].setValue(this['component']);
             this._formGroup.controls['node-name'].setValue(this['node-name']);

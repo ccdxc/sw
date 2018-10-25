@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IAuthAuthenticationPolicy,IApiStatus,AuthAuthenticationPolicy,IAuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,IAuthRole,AuthRole,IAuthUserList,IAuthUser,AuthUser,IAuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
+import { IAuthAuthenticationPolicy,IApiStatus,IAuthRoleBindingList,IAuthRoleBinding,IAuthRoleList,IAuthRole,IAuthUserList,IAuthUser,IAuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
 
 @Injectable()
 export class Authv1Service extends AbstractService {
@@ -26,25 +26,25 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create AuthenticationPolicy object */
-  public AddAuthenticationPolicy(body: AuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public AddAuthenticationPolicy(body: IAuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddAuthenticationPolicy') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddAuthenticationPolicy') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update AuthenticationPolicy object */
-  public UpdateAuthenticationPolicy(body: AuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public UpdateAuthenticationPolicy(body: IAuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy';
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateAuthenticationPolicy') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateAuthenticationPolicy') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
-  public LdapBindCheck(body: AuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public LdapBindCheck(body: IAuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/LdapBindCheck';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'LdapBindCheck') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'LdapBindCheck') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
-  public LdapConnectionCheck(body: AuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+  public LdapConnectionCheck(body: IAuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/LdapConnectionCheck';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'LdapConnectionCheck') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'LdapConnectionCheck') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List RoleBinding objects */
@@ -54,9 +54,9 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create RoleBinding object */
-  public AddRoleBinding_1(body: AuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+  public AddRoleBinding_1(body: IAuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddRoleBinding_1') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddRoleBinding_1') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get RoleBinding object */
@@ -74,10 +74,10 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update RoleBinding object */
-  public UpdateRoleBinding_1(O_Name, body: AuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+  public UpdateRoleBinding_1(O_Name, body: IAuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateRoleBinding_1') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateRoleBinding_1') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Role objects */
@@ -87,9 +87,9 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create Role object */
-  public AddRole_1(body: AuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+  public AddRole_1(body: IAuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddRole_1') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddRole_1') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Role object */
@@ -107,10 +107,10 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update Role object */
-  public UpdateRole_1(O_Name, body: AuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+  public UpdateRole_1(O_Name, body: IAuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateRole_1') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateRole_1') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List RoleBinding objects */
@@ -121,10 +121,10 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create RoleBinding object */
-  public AddRoleBinding(body: AuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+  public AddRoleBinding(body: IAuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/role-bindings';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddRoleBinding') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddRoleBinding') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get RoleBinding object */
@@ -144,11 +144,11 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update RoleBinding object */
-  public UpdateRoleBinding(O_Name, body: AuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+  public UpdateRoleBinding(O_Name, body: IAuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/role-bindings/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateRoleBinding') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateRoleBinding') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Role objects */
@@ -159,10 +159,10 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create Role object */
-  public AddRole(body: AuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+  public AddRole(body: IAuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/roles';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddRole') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddRole') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Role object */
@@ -182,11 +182,11 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update Role object */
-  public UpdateRole(O_Name, body: AuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+  public UpdateRole(O_Name, body: IAuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/roles/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateRole') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateRole') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List User objects */
@@ -197,10 +197,10 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create User object */
-  public AddUser(body: AuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public AddUser(body: IAuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddUser') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddUser') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get User object */
@@ -220,11 +220,11 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update User object */
-  public UpdateUser(O_Name, body: AuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public UpdateUser(O_Name, body: IAuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateUser') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateUser') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List User objects */
@@ -234,9 +234,9 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Create User object */
-  public AddUser_1(body: AuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public AddUser_1(body: IAuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users';
-    return this.invokeAJAXPostCall(url, body.getValues(), 'AddUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPostCall(url, body, 'AddUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get User object */
@@ -254,10 +254,10 @@ export class Authv1Service extends AbstractService {
   }
   
   /** Update User object */
-  public UpdateUser_1(O_Name, body: AuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public UpdateUser_1(O_Name, body: IAuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXPutCall(url, body, 'UpdateUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch AuthenticationPolicy objects */

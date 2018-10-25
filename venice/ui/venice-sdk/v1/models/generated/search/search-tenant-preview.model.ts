@@ -44,18 +44,17 @@ export class SearchTenantPreview extends BaseModel implements ISearchTenantPrevi
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['tenants'] != null) {
             this['tenants'] = values['tenants'];
-        } else if (SearchTenantPreview.hasDefaultValue('tenants')) {
+        } else if (fillDefaults && SearchTenantPreview.hasDefaultValue('tenants')) {
             this['tenants'] = SearchTenantPreview.propInfo['tenants'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class SearchTenantPreview extends BaseModel implements ISearchTenantPrevi
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['tenants'].setValue(this['tenants']);
         }

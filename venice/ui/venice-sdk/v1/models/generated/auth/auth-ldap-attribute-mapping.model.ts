@@ -74,48 +74,47 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['user'] != null) {
             this['user'] = values['user'];
-        } else if (AuthLdapAttributeMapping.hasDefaultValue('user')) {
+        } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('user')) {
             this['user'] = AuthLdapAttributeMapping.propInfo['user'].default;
         }
         if (values && values['user-object-class'] != null) {
             this['user-object-class'] = values['user-object-class'];
-        } else if (AuthLdapAttributeMapping.hasDefaultValue('user-object-class')) {
+        } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('user-object-class')) {
             this['user-object-class'] = AuthLdapAttributeMapping.propInfo['user-object-class'].default;
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
-        } else if (AuthLdapAttributeMapping.hasDefaultValue('tenant')) {
+        } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('tenant')) {
             this['tenant'] = AuthLdapAttributeMapping.propInfo['tenant'].default;
         }
         if (values && values['group'] != null) {
             this['group'] = values['group'];
-        } else if (AuthLdapAttributeMapping.hasDefaultValue('group')) {
+        } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('group')) {
             this['group'] = AuthLdapAttributeMapping.propInfo['group'].default;
         }
         if (values && values['group-object-class'] != null) {
             this['group-object-class'] = values['group-object-class'];
-        } else if (AuthLdapAttributeMapping.hasDefaultValue('group-object-class')) {
+        } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('group-object-class')) {
             this['group-object-class'] = AuthLdapAttributeMapping.propInfo['group-object-class'].default;
         }
         if (values && values['email'] != null) {
             this['email'] = values['email'];
-        } else if (AuthLdapAttributeMapping.hasDefaultValue('email')) {
+        } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('email')) {
             this['email'] = AuthLdapAttributeMapping.propInfo['email'].default;
         }
         if (values && values['fullname'] != null) {
             this['fullname'] = values['fullname'];
-        } else if (AuthLdapAttributeMapping.hasDefaultValue('fullname')) {
+        } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('fullname')) {
             this['fullname'] = AuthLdapAttributeMapping.propInfo['fullname'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -133,7 +132,11 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['user'].setValue(this['user']);
             this._formGroup.controls['user-object-class'].setValue(this['user-object-class']);

@@ -82,39 +82,38 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['resource-tenant'] != null) {
             this['resource-tenant'] = values['resource-tenant'];
-        } else if (AuthPermission.hasDefaultValue('resource-tenant')) {
+        } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-tenant')) {
             this['resource-tenant'] = AuthPermission.propInfo['resource-tenant'].default;
         }
         if (values && values['resource-group'] != null) {
             this['resource-group'] = values['resource-group'];
-        } else if (AuthPermission.hasDefaultValue('resource-group')) {
+        } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-group')) {
             this['resource-group'] = AuthPermission.propInfo['resource-group'].default;
         }
         if (values && values['resource-kind'] != null) {
             this['resource-kind'] = values['resource-kind'];
-        } else if (AuthPermission.hasDefaultValue('resource-kind')) {
+        } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-kind')) {
             this['resource-kind'] = <AuthPermission_resource_kind>  AuthPermission.propInfo['resource-kind'].default;
         }
         if (values && values['resource-namespace'] != null) {
             this['resource-namespace'] = values['resource-namespace'];
-        } else if (AuthPermission.hasDefaultValue('resource-namespace')) {
+        } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-namespace')) {
             this['resource-namespace'] = AuthPermission.propInfo['resource-namespace'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'resource-names', values['resource-names']);
+        if (values && values['resource-names'] != null) {
+            this['resource-names'] = values['resource-names'];
         }
-        if (values) {
-            this.fillModelArray<AuthPermission_actions>(this, 'actions', values['actions']);
+        if (values && values['actions'] != null) {
+            this['actions'] = values['actions'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -124,25 +123,25 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
                 'resource-group': new FormControl(this['resource-group']),
                 'resource-kind': new FormControl(this['resource-kind'], [enumValidator(AuthPermission_resource_kind), ]),
                 'resource-namespace': new FormControl(this['resource-namespace']),
-                'resource-names': new FormArray([]),
-                'actions': new FormArray([]),
+                'resource-names': new FormControl(this['resource-names']),
+                'actions': new FormControl(this['actions']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('resource-names', this['resource-names']);
-            // generate FormArray control elements
-            this.fillFormArray<AuthPermission_actions>('actions', this['actions']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['resource-tenant'].setValue(this['resource-tenant']);
             this._formGroup.controls['resource-group'].setValue(this['resource-group']);
             this._formGroup.controls['resource-kind'].setValue(this['resource-kind']);
             this._formGroup.controls['resource-namespace'].setValue(this['resource-namespace']);
-            this.fillModelArray<string>(this, 'resource-names', this['resource-names']);
-            this.fillModelArray<AuthPermission_actions>(this, 'actions', this['actions']);
+            this._formGroup.controls['resource-names'].setValue(this['resource-names']);
+            this._formGroup.controls['actions'].setValue(this['actions']);
         }
     }
 }

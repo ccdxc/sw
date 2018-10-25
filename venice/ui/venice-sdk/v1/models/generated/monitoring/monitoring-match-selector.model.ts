@@ -57,46 +57,43 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'endpoints', values['endpoints']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['endpoints'] != null) {
+            this['endpoints'] = values['endpoints'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'ip-addresses', values['ip-addresses']);
+        if (values && values['ip-addresses'] != null) {
+            this['ip-addresses'] = values['ip-addresses'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'mac-addresses', values['mac-addresses']);
+        if (values && values['mac-addresses'] != null) {
+            this['mac-addresses'] = values['mac-addresses'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'endpoints': new FormArray([]),
-                'ip-addresses': new FormArray([]),
-                'mac-addresses': new FormArray([]),
+                'endpoints': new FormControl(this['endpoints']),
+                'ip-addresses': new FormControl(this['ip-addresses']),
+                'mac-addresses': new FormControl(this['mac-addresses']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('endpoints', this['endpoints']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('ip-addresses', this['ip-addresses']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('mac-addresses', this['mac-addresses']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'endpoints', this['endpoints']);
-            this.fillModelArray<string>(this, 'ip-addresses', this['ip-addresses']);
-            this.fillModelArray<string>(this, 'mac-addresses', this['mac-addresses']);
+            this._formGroup.controls['endpoints'].setValue(this['endpoints']);
+            this._formGroup.controls['ip-addresses'].setValue(this['ip-addresses']);
+            this._formGroup.controls['mac-addresses'].setValue(this['mac-addresses']);
         }
     }
 }

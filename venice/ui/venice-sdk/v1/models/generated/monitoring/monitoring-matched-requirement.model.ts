@@ -63,31 +63,30 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['key'] != null) {
             this['key'] = values['key'];
-        } else if (MonitoringMatchedRequirement.hasDefaultValue('key')) {
+        } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('key')) {
             this['key'] = MonitoringMatchedRequirement.propInfo['key'].default;
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
-        } else if (MonitoringMatchedRequirement.hasDefaultValue('operator')) {
+        } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('operator')) {
             this['operator'] = <MonitoringMatchedRequirement_operator>  MonitoringMatchedRequirement.propInfo['operator'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'values', values['values']);
+        if (values && values['values'] != null) {
+            this['values'] = values['values'];
         }
         if (values && values['observed-value'] != null) {
             this['observed-value'] = values['observed-value'];
-        } else if (MonitoringMatchedRequirement.hasDefaultValue('observed-value')) {
+        } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('observed-value')) {
             this['observed-value'] = MonitoringMatchedRequirement.propInfo['observed-value'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -95,20 +94,22 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
             this._formGroup = new FormGroup({
                 'key': new FormControl(this['key']),
                 'operator': new FormControl(this['operator'], [enumValidator(MonitoringMatchedRequirement_operator), ]),
-                'values': new FormArray([]),
+                'values': new FormControl(this['values']),
                 'observed-value': new FormControl(this['observed-value']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('values', this['values']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['key'].setValue(this['key']);
             this._formGroup.controls['operator'].setValue(this['operator']);
-            this.fillModelArray<string>(this, 'values', this['values']);
+            this._formGroup.controls['values'].setValue(this['values']);
             this._formGroup.controls['observed-value'].setValue(this['observed-value']);
         }
     }

@@ -37,7 +37,6 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
   updateRadiusObject() {
     this.radiusObject.setValues(this.radiusData);
-    this.radiusObject.setFormGroupValues();
   }
 
   toggleEdit() {

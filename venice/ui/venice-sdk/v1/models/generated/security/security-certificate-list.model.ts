@@ -61,31 +61,30 @@ export class SecurityCertificateList extends BaseModel implements ISecurityCerti
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (SecurityCertificateList.hasDefaultValue('kind')) {
+        } else if (fillDefaults && SecurityCertificateList.hasDefaultValue('kind')) {
             this['kind'] = SecurityCertificateList.propInfo['kind'].default;
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (SecurityCertificateList.hasDefaultValue('api-version')) {
+        } else if (fillDefaults && SecurityCertificateList.hasDefaultValue('api-version')) {
             this['api-version'] = SecurityCertificateList.propInfo['api-version'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
-        } else if (SecurityCertificateList.hasDefaultValue('resource-version')) {
+        } else if (fillDefaults && SecurityCertificateList.hasDefaultValue('resource-version')) {
             this['resource-version'] = SecurityCertificateList.propInfo['resource-version'].default;
         }
         if (values) {
             this.fillModelArray<SecurityCertificate>(this, 'Items', values['Items'], SecurityCertificate);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -102,7 +101,11 @@ export class SecurityCertificateList extends BaseModel implements ISecurityCerti
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);

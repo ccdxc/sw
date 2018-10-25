@@ -44,18 +44,17 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['interfaces'] != null) {
             this['interfaces'] = values['interfaces'];
-        } else if (WorkloadWorkloadStatus.hasDefaultValue('interfaces')) {
+        } else if (fillDefaults && WorkloadWorkloadStatus.hasDefaultValue('interfaces')) {
             this['interfaces'] = WorkloadWorkloadStatus.propInfo['interfaces'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['interfaces'].setValue(this['interfaces']);
         }

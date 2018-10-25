@@ -113,38 +113,38 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['version'] != null) {
             this['version'] = values['version'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('version')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('version')) {
             this['version'] = RolloutRolloutSpec.propInfo['version'].default;
         }
         if (values && values['scheduled-start-time'] != null) {
             this['scheduled-start-time'] = values['scheduled-start-time'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('scheduled-start-time')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('scheduled-start-time')) {
             this['scheduled-start-time'] = RolloutRolloutSpec.propInfo['scheduled-start-time'].default;
         }
         if (values && values['duration'] != null) {
             this['duration'] = values['duration'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('duration')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('duration')) {
             this['duration'] = RolloutRolloutSpec.propInfo['duration'].default;
         }
         if (values && values['strategy'] != null) {
             this['strategy'] = values['strategy'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('strategy')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('strategy')) {
             this['strategy'] = <RolloutRolloutSpec_strategy>  RolloutRolloutSpec.propInfo['strategy'].default;
         }
         if (values && values['max-parallel'] != null) {
             this['max-parallel'] = values['max-parallel'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('max-parallel')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('max-parallel')) {
             this['max-parallel'] = RolloutRolloutSpec.propInfo['max-parallel'].default;
         }
         if (values && values['max-nic-failures-before-abort'] != null) {
             this['max-nic-failures-before-abort'] = values['max-nic-failures-before-abort'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('max-nic-failures-before-abort')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('max-nic-failures-before-abort')) {
             this['max-nic-failures-before-abort'] = RolloutRolloutSpec.propInfo['max-nic-failures-before-abort'].default;
         }
         if (values) {
@@ -152,27 +152,26 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         }
         if (values && values['suspend'] != null) {
             this['suspend'] = values['suspend'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('suspend')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('suspend')) {
             this['suspend'] = RolloutRolloutSpec.propInfo['suspend'].default;
         }
         if (values && values['smartnics-only'] != null) {
             this['smartnics-only'] = values['smartnics-only'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('smartnics-only')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('smartnics-only')) {
             this['smartnics-only'] = RolloutRolloutSpec.propInfo['smartnics-only'].default;
         }
         if (values && values['smartnic-must-match-constraint'] != null) {
             this['smartnic-must-match-constraint'] = values['smartnic-must-match-constraint'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('smartnic-must-match-constraint')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('smartnic-must-match-constraint')) {
             this['smartnic-must-match-constraint'] = RolloutRolloutSpec.propInfo['smartnic-must-match-constraint'].default;
         }
         if (values && values['upgrade-type'] != null) {
             this['upgrade-type'] = values['upgrade-type'];
-        } else if (RolloutRolloutSpec.hasDefaultValue('upgrade-type')) {
+        } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('upgrade-type')) {
             this['upgrade-type'] = <RolloutRolloutSpec_upgrade_type>  RolloutRolloutSpec.propInfo['upgrade-type'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -196,7 +195,11 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['version'].setValue(this['version']);
             this._formGroup.controls['scheduled-start-time'].setValue(this['scheduled-start-time']);

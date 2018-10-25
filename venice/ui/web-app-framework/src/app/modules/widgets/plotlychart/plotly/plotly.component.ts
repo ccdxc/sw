@@ -1,5 +1,5 @@
 
-import { Component, EventEmitter, Input, Output, OnInit, ViewEncapsulation, ViewChild, ElementRef, OnChanges } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { ModuleUtility } from '../../ModuleUtility';
 declare var Plotly: any;
 

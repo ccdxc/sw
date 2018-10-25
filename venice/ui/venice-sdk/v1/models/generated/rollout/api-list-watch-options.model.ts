@@ -121,86 +121,85 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['name'] != null) {
             this['name'] = values['name'];
-        } else if (ApiListWatchOptions.hasDefaultValue('name')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('name')) {
             this['name'] = ApiListWatchOptions.propInfo['name'].default;
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
-        } else if (ApiListWatchOptions.hasDefaultValue('tenant')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('tenant')) {
             this['tenant'] = ApiListWatchOptions.propInfo['tenant'].default;
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
-        } else if (ApiListWatchOptions.hasDefaultValue('namespace')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('namespace')) {
             this['namespace'] = ApiListWatchOptions.propInfo['namespace'].default;
         }
         if (values && values['generation-id'] != null) {
             this['generation-id'] = values['generation-id'];
-        } else if (ApiListWatchOptions.hasDefaultValue('generation-id')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('generation-id')) {
             this['generation-id'] = ApiListWatchOptions.propInfo['generation-id'].default;
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
-        } else if (ApiListWatchOptions.hasDefaultValue('resource-version')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('resource-version')) {
             this['resource-version'] = ApiListWatchOptions.propInfo['resource-version'].default;
         }
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
-        } else if (ApiListWatchOptions.hasDefaultValue('uuid')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('uuid')) {
             this['uuid'] = ApiListWatchOptions.propInfo['uuid'].default;
         }
         if (values && values['labels'] != null) {
             this['labels'] = values['labels'];
-        } else if (ApiListWatchOptions.hasDefaultValue('labels')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('labels')) {
             this['labels'] = ApiListWatchOptions.propInfo['labels'].default;
         }
         if (values && values['creation-time'] != null) {
             this['creation-time'] = values['creation-time'];
-        } else if (ApiListWatchOptions.hasDefaultValue('creation-time')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('creation-time')) {
             this['creation-time'] = ApiListWatchOptions.propInfo['creation-time'].default;
         }
         if (values && values['mod-time'] != null) {
             this['mod-time'] = values['mod-time'];
-        } else if (ApiListWatchOptions.hasDefaultValue('mod-time')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('mod-time')) {
             this['mod-time'] = ApiListWatchOptions.propInfo['mod-time'].default;
         }
         if (values && values['self-link'] != null) {
             this['self-link'] = values['self-link'];
-        } else if (ApiListWatchOptions.hasDefaultValue('self-link')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('self-link')) {
             this['self-link'] = ApiListWatchOptions.propInfo['self-link'].default;
         }
         if (values && values['label-selector'] != null) {
             this['label-selector'] = values['label-selector'];
-        } else if (ApiListWatchOptions.hasDefaultValue('label-selector')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('label-selector')) {
             this['label-selector'] = ApiListWatchOptions.propInfo['label-selector'].default;
         }
         if (values && values['field-selector'] != null) {
             this['field-selector'] = values['field-selector'];
-        } else if (ApiListWatchOptions.hasDefaultValue('field-selector')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('field-selector')) {
             this['field-selector'] = ApiListWatchOptions.propInfo['field-selector'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'field-change-selector', values['field-change-selector']);
+        if (values && values['field-change-selector'] != null) {
+            this['field-change-selector'] = values['field-change-selector'];
         }
         if (values && values['from'] != null) {
             this['from'] = values['from'];
-        } else if (ApiListWatchOptions.hasDefaultValue('from')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('from')) {
             this['from'] = ApiListWatchOptions.propInfo['from'].default;
         }
         if (values && values['max-results'] != null) {
             this['max-results'] = values['max-results'];
-        } else if (ApiListWatchOptions.hasDefaultValue('max-results')) {
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('max-results')) {
             this['max-results'] = ApiListWatchOptions.propInfo['max-results'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -218,17 +217,19 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
                 'self-link': new FormControl(this['self-link']),
                 'label-selector': new FormControl(this['label-selector']),
                 'field-selector': new FormControl(this['field-selector']),
-                'field-change-selector': new FormArray([]),
+                'field-change-selector': new FormControl(this['field-change-selector']),
                 'from': new FormControl(this['from']),
                 'max-results': new FormControl(this['max-results']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('field-change-selector', this['field-change-selector']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['tenant'].setValue(this['tenant']);
@@ -242,7 +243,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this._formGroup.controls['self-link'].setValue(this['self-link']);
             this._formGroup.controls['label-selector'].setValue(this['label-selector']);
             this._formGroup.controls['field-selector'].setValue(this['field-selector']);
-            this.fillModelArray<string>(this, 'field-change-selector', this['field-change-selector']);
+            this._formGroup.controls['field-change-selector'].setValue(this['field-change-selector']);
             this._formGroup.controls['from'].setValue(this['from']);
             this._formGroup.controls['max-results'].setValue(this['max-results']);
         }

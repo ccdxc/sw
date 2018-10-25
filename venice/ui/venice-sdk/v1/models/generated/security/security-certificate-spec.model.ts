@@ -75,51 +75,52 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['description'] != null) {
             this['description'] = values['description'];
-        } else if (SecurityCertificateSpec.hasDefaultValue('description')) {
+        } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('description')) {
             this['description'] = SecurityCertificateSpec.propInfo['description'].default;
         }
-        if (values) {
-            this.fillModelArray<SecurityCertificateSpec_usages>(this, 'usages', values['usages']);
+        if (values && values['usages'] != null) {
+            this['usages'] = values['usages'];
         }
         if (values && values['body'] != null) {
             this['body'] = values['body'];
-        } else if (SecurityCertificateSpec.hasDefaultValue('body')) {
+        } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('body')) {
             this['body'] = SecurityCertificateSpec.propInfo['body'].default;
         }
         if (values && values['trust-chain'] != null) {
             this['trust-chain'] = values['trust-chain'];
-        } else if (SecurityCertificateSpec.hasDefaultValue('trust-chain')) {
+        } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('trust-chain')) {
             this['trust-chain'] = SecurityCertificateSpec.propInfo['trust-chain'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'description': new FormControl(this['description']),
-                'usages': new FormArray([]),
+                'usages': new FormControl(this['usages']),
                 'body': new FormControl(this['body']),
                 'trust-chain': new FormControl(this['trust-chain']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<SecurityCertificateSpec_usages>('usages', this['usages']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['description'].setValue(this['description']);
-            this.fillModelArray<SecurityCertificateSpec_usages>(this, 'usages', this['usages']);
+            this._formGroup.controls['usages'].setValue(this['usages']);
             this._formGroup.controls['body'].setValue(this['body']);
             this._formGroup.controls['trust-chain'].setValue(this['trust-chain']);
         }

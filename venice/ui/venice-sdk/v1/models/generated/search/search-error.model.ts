@@ -49,23 +49,22 @@ export class SearchError extends BaseModel implements ISearchError {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (SearchError.hasDefaultValue('type')) {
+        } else if (fillDefaults && SearchError.hasDefaultValue('type')) {
             this['type'] = SearchError.propInfo['type'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
-        } else if (SearchError.hasDefaultValue('reason')) {
+        } else if (fillDefaults && SearchError.hasDefaultValue('reason')) {
             this['reason'] = SearchError.propInfo['reason'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,7 +77,11 @@ export class SearchError extends BaseModel implements ISearchError {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['reason'].setValue(this['reason']);

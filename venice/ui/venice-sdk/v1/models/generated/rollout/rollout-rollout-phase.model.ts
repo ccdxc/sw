@@ -77,43 +77,42 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['name'] != null) {
             this['name'] = values['name'];
-        } else if (RolloutRolloutPhase.hasDefaultValue('name')) {
+        } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('name')) {
             this['name'] = RolloutRolloutPhase.propInfo['name'].default;
         }
         if (values && values['phase'] != null) {
             this['phase'] = values['phase'];
-        } else if (RolloutRolloutPhase.hasDefaultValue('phase')) {
+        } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('phase')) {
             this['phase'] = <RolloutRolloutPhase_phase>  RolloutRolloutPhase.propInfo['phase'].default;
         }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
-        } else if (RolloutRolloutPhase.hasDefaultValue('start-time')) {
+        } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('start-time')) {
             this['start-time'] = RolloutRolloutPhase.propInfo['start-time'].default;
         }
         if (values && values['end-time'] != null) {
             this['end-time'] = values['end-time'];
-        } else if (RolloutRolloutPhase.hasDefaultValue('end-time')) {
+        } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('end-time')) {
             this['end-time'] = RolloutRolloutPhase.propInfo['end-time'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
-        } else if (RolloutRolloutPhase.hasDefaultValue('reason')) {
+        } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('reason')) {
             this['reason'] = RolloutRolloutPhase.propInfo['reason'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
-        } else if (RolloutRolloutPhase.hasDefaultValue('message')) {
+        } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('message')) {
             this['message'] = RolloutRolloutPhase.propInfo['message'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -130,7 +129,11 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['phase'].setValue(this['phase']);

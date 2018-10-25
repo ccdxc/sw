@@ -41,18 +41,18 @@ export class FieldselectorComponent implements OnInit, OnChanges {
     } else {
       this.genFieldData();
     }
-    this.convertArrayValuesToString();
+    // this.convertArrayValuesToString();
   }
 
   ngOnChanges(changes: SimpleChanges) {
   }
 
-  /**
-   * Converts the value from field into arrays instead of strings and returns the value
-   */
-  getValuesWithValueFormAsArray() {
-    return this.fieldRepeater ? this.filterEmptyValues(this.convertStringValuesToArray()) : [];
-  }
+  // /**
+  //  * Converts the value from field into arrays instead of strings and returns the value
+  //  */
+  // getValuesWithValueFormAsArray() {
+  //   return this.fieldRepeater ? this.filterEmptyValues(this.convertStringValuesToArray()) : [];
+  // }
 
   getValues() {
     return this.fieldRepeater ? this.filterEmptyValues(this.fieldRepeater.getValues()) : [];
@@ -72,46 +72,8 @@ export class FieldselectorComponent implements OnInit, OnChanges {
     return retData;
   }
 
-  convertArrayValuesToString() {
-    this.formArray.controls.forEach((control: FormGroup) => {
-      const key = control.get(this.keyFormName).value;
-      // Find matching data
-      const matches = this.fieldData.filter((item) => {
-        return item.key.value === key;
-      });
-      if (matches.length === 0) {
-        return;
-      } else if (matches.length > 1) {
-        console.error('found more than one matching key in the field selector data, duplicate key: ' + key);
-        return;
-      }
-      if (matches[0].valueType === ValueType.inputField) {
-        const value = control.get(this.valueFormName).value;
-        if (value instanceof Array) {
-          // Replacing as it is a form array instead of a form control
-          control.removeControl(this.valueFormName);
-          control.addControl(this.valueFormName, new FormControl(value.join(', ')));
-        }
-      }
-    });
-  }
-
-  convertStringValuesToArray(): string[] {
-    const repeaterValues = this.fieldRepeater.getValues();
-    repeaterValues.forEach((req) => {
-      const values = req[this.valueFormName];
-      if (typeof values === 'string' || values instanceof String) {
-        const newValue = values.split(',').map((item) => {
-          return item.trim();
-        });
-        req[this.valueFormName] = newValue;
-      }
-    });
-    return repeaterValues;
-  }
-
   emitRepeaterValues(values) {
-    this.repeaterValues.emit(this.convertStringValuesToArray());
+    this.repeaterValues.emit(this.getValues());
   }
 
   setDefaultData() {

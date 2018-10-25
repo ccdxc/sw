@@ -44,18 +44,17 @@ export class SearchTenantAggregation extends BaseModel implements ISearchTenantA
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['tenants'] != null) {
             this['tenants'] = values['tenants'];
-        } else if (SearchTenantAggregation.hasDefaultValue('tenants')) {
+        } else if (fillDefaults && SearchTenantAggregation.hasDefaultValue('tenants')) {
             this['tenants'] = SearchTenantAggregation.propInfo['tenants'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -67,7 +66,11 @@ export class SearchTenantAggregation extends BaseModel implements ISearchTenantA
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['tenants'].setValue(this['tenants']);
         }

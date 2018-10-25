@@ -77,67 +77,60 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'apps', values['apps']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['apps'] != null) {
+            this['apps'] = values['apps'];
         }
         if (values && values['action'] != null) {
             this['action'] = values['action'];
-        } else if (SecuritySGRule.hasDefaultValue('action')) {
+        } else if (fillDefaults && SecuritySGRule.hasDefaultValue('action')) {
             this['action'] = <SecuritySGRule_action>  SecuritySGRule.propInfo['action'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'from-ip-addresses', values['from-ip-addresses']);
+        if (values && values['from-ip-addresses'] != null) {
+            this['from-ip-addresses'] = values['from-ip-addresses'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'to-ip-addresses', values['to-ip-addresses']);
+        if (values && values['to-ip-addresses'] != null) {
+            this['to-ip-addresses'] = values['to-ip-addresses'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'from-security-groups', values['from-security-groups']);
+        if (values && values['from-security-groups'] != null) {
+            this['from-security-groups'] = values['from-security-groups'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'to-security-groups', values['to-security-groups']);
+        if (values && values['to-security-groups'] != null) {
+            this['to-security-groups'] = values['to-security-groups'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'apps': new FormArray([]),
+                'apps': new FormControl(this['apps']),
                 'action': new FormControl(this['action'], [enumValidator(SecuritySGRule_action), ]),
-                'from-ip-addresses': new FormArray([]),
-                'to-ip-addresses': new FormArray([]),
-                'from-security-groups': new FormArray([]),
-                'to-security-groups': new FormArray([]),
+                'from-ip-addresses': new FormControl(this['from-ip-addresses']),
+                'to-ip-addresses': new FormControl(this['to-ip-addresses']),
+                'from-security-groups': new FormControl(this['from-security-groups']),
+                'to-security-groups': new FormControl(this['to-security-groups']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('apps', this['apps']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('from-ip-addresses', this['from-ip-addresses']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('to-ip-addresses', this['to-ip-addresses']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('from-security-groups', this['from-security-groups']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('to-security-groups', this['to-security-groups']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'apps', this['apps']);
+            this._formGroup.controls['apps'].setValue(this['apps']);
             this._formGroup.controls['action'].setValue(this['action']);
-            this.fillModelArray<string>(this, 'from-ip-addresses', this['from-ip-addresses']);
-            this.fillModelArray<string>(this, 'to-ip-addresses', this['to-ip-addresses']);
-            this.fillModelArray<string>(this, 'from-security-groups', this['from-security-groups']);
-            this.fillModelArray<string>(this, 'to-security-groups', this['to-security-groups']);
+            this._formGroup.controls['from-ip-addresses'].setValue(this['from-ip-addresses']);
+            this._formGroup.controls['to-ip-addresses'].setValue(this['to-ip-addresses']);
+            this._formGroup.controls['from-security-groups'].setValue(this['from-security-groups']);
+            this._formGroup.controls['to-security-groups'].setValue(this['to-security-groups']);
         }
     }
 }

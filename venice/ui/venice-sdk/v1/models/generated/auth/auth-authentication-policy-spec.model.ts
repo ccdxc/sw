@@ -51,21 +51,20 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values) {
             this['authenticators'].setValues(values['authenticators']);
         }
         if (values && values['secret'] != null) {
             this['secret'] = values['secret'];
-        } else if (AuthAuthenticationPolicySpec.hasDefaultValue('secret')) {
+        } else if (fillDefaults && AuthAuthenticationPolicySpec.hasDefaultValue('secret')) {
             this['secret'] = AuthAuthenticationPolicySpec.propInfo['secret'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,9 +77,13 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this['authenticators'].setFormGroupValues();
+            this['authenticators'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['secret'].setValue(this['secret']);
         }
     }

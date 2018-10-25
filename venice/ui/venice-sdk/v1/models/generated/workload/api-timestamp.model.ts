@@ -49,23 +49,22 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['seconds'] != null) {
             this['seconds'] = values['seconds'];
-        } else if (ApiTimestamp.hasDefaultValue('seconds')) {
+        } else if (fillDefaults && ApiTimestamp.hasDefaultValue('seconds')) {
             this['seconds'] = ApiTimestamp.propInfo['seconds'].default;
         }
         if (values && values['nanos'] != null) {
             this['nanos'] = values['nanos'];
-        } else if (ApiTimestamp.hasDefaultValue('nanos')) {
+        } else if (fillDefaults && ApiTimestamp.hasDefaultValue('nanos')) {
             this['nanos'] = ApiTimestamp.propInfo['nanos'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -78,7 +77,11 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['seconds'].setValue(this['seconds']);
             this._formGroup.controls['nanos'].setValue(this['nanos']);

@@ -74,46 +74,45 @@ export class NetworkTLSClientPolicySpec extends BaseModel implements INetworkTLS
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['tls-client-certificates-selector'] != null) {
             this['tls-client-certificates-selector'] = values['tls-client-certificates-selector'];
-        } else if (NetworkTLSClientPolicySpec.hasDefaultValue('tls-client-certificates-selector')) {
+        } else if (fillDefaults && NetworkTLSClientPolicySpec.hasDefaultValue('tls-client-certificates-selector')) {
             this['tls-client-certificates-selector'] = NetworkTLSClientPolicySpec.propInfo['tls-client-certificates-selector'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'tls-client-trust-roots', values['tls-client-trust-roots']);
+        if (values && values['tls-client-trust-roots'] != null) {
+            this['tls-client-trust-roots'] = values['tls-client-trust-roots'];
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'tls-client-allowed-peer-id', values['tls-client-allowed-peer-id']);
+        if (values && values['tls-client-allowed-peer-id'] != null) {
+            this['tls-client-allowed-peer-id'] = values['tls-client-allowed-peer-id'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'tls-client-certificates-selector': new FormControl(this['tls-client-certificates-selector']),
-                'tls-client-trust-roots': new FormArray([]),
-                'tls-client-allowed-peer-id': new FormArray([]),
+                'tls-client-trust-roots': new FormControl(this['tls-client-trust-roots']),
+                'tls-client-allowed-peer-id': new FormControl(this['tls-client-allowed-peer-id']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('tls-client-trust-roots', this['tls-client-trust-roots']);
-            // generate FormArray control elements
-            this.fillFormArray<string>('tls-client-allowed-peer-id', this['tls-client-allowed-peer-id']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['tls-client-certificates-selector'].setValue(this['tls-client-certificates-selector']);
-            this.fillModelArray<string>(this, 'tls-client-trust-roots', this['tls-client-trust-roots']);
-            this.fillModelArray<string>(this, 'tls-client-allowed-peer-id', this['tls-client-allowed-peer-id']);
+            this._formGroup.controls['tls-client-trust-roots'].setValue(this['tls-client-trust-roots']);
+            this._formGroup.controls['tls-client-allowed-peer-id'].setValue(this['tls-client-allowed-peer-id']);
         }
     }
 }

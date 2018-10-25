@@ -59,33 +59,32 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['serial-num'] != null) {
             this['serial-num'] = values['serial-num'];
-        } else if (ClusterStorageDeviceInfo.hasDefaultValue('serial-num')) {
+        } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('serial-num')) {
             this['serial-num'] = ClusterStorageDeviceInfo.propInfo['serial-num'].default;
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (ClusterStorageDeviceInfo.hasDefaultValue('type')) {
+        } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('type')) {
             this['type'] = ClusterStorageDeviceInfo.propInfo['type'].default;
         }
         if (values && values['vendor'] != null) {
             this['vendor'] = values['vendor'];
-        } else if (ClusterStorageDeviceInfo.hasDefaultValue('vendor')) {
+        } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('vendor')) {
             this['vendor'] = ClusterStorageDeviceInfo.propInfo['vendor'].default;
         }
         if (values && values['capacity'] != null) {
             this['capacity'] = values['capacity'];
-        } else if (ClusterStorageDeviceInfo.hasDefaultValue('capacity')) {
+        } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('capacity')) {
             this['capacity'] = ClusterStorageDeviceInfo.propInfo['capacity'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -100,7 +99,11 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['serial-num'].setValue(this['serial-num']);
             this._formGroup.controls['type'].setValue(this['type']);

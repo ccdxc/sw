@@ -54,21 +54,20 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (MonitoringMirrorCollector.hasDefaultValue('type')) {
+        } else if (fillDefaults && MonitoringMirrorCollector.hasDefaultValue('type')) {
             this['type'] = <MonitoringMirrorCollector_type>  MonitoringMirrorCollector.propInfo['type'].default;
         }
         if (values) {
             this['export-config'].setValues(values['export-config']);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -81,10 +80,14 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
-            this['export-config'].setFormGroupValues();
+            this['export-config'].setFormGroupValuesToBeModelValues();
         }
     }
 }

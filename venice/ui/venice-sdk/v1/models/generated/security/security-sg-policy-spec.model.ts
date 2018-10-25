@@ -57,44 +57,45 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
-        if (values) {
-            this.fillModelArray<string>(this, 'attach-groups', values['attach-groups']);
+    setValues(values: any, fillDefaults = true): void {
+        if (values && values['attach-groups'] != null) {
+            this['attach-groups'] = values['attach-groups'];
         }
         if (values && values['attach-tenant'] != null) {
             this['attach-tenant'] = values['attach-tenant'];
-        } else if (SecuritySGPolicySpec.hasDefaultValue('attach-tenant')) {
+        } else if (fillDefaults && SecuritySGPolicySpec.hasDefaultValue('attach-tenant')) {
             this['attach-tenant'] = SecuritySGPolicySpec.propInfo['attach-tenant'].default;
         }
         if (values) {
             this.fillModelArray<SecuritySGRule>(this, 'rules', values['rules'], SecuritySGRule);
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'attach-groups': new FormArray([]),
+                'attach-groups': new FormControl(this['attach-groups']),
                 'attach-tenant': new FormControl(this['attach-tenant']),
                 'rules': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('attach-groups', this['attach-groups']);
             // generate FormArray control elements
             this.fillFormArray<SecuritySGRule>('rules', this['rules'], SecuritySGRule);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'attach-groups', this['attach-groups']);
+            this._formGroup.controls['attach-groups'].setValue(this['attach-groups']);
             this._formGroup.controls['attach-tenant'].setValue(this['attach-tenant']);
             this.fillModelArray<SecuritySGRule>(this, 'rules', this['rules'], SecuritySGRule);
         }

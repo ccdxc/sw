@@ -66,26 +66,25 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['key'] != null) {
             this['key'] = values['key'];
-        } else if (FieldsRequirement.hasDefaultValue('key')) {
+        } else if (fillDefaults && FieldsRequirement.hasDefaultValue('key')) {
             this['key'] = FieldsRequirement.propInfo['key'].default;
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
-        } else if (FieldsRequirement.hasDefaultValue('operator')) {
+        } else if (fillDefaults && FieldsRequirement.hasDefaultValue('operator')) {
             this['operator'] = <FieldsRequirement_operator>  FieldsRequirement.propInfo['operator'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'values', values['values']);
+        if (values && values['values'] != null) {
+            this['values'] = values['values'];
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -93,19 +92,21 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
             this._formGroup = new FormGroup({
                 'key': new FormControl(this['key']),
                 'operator': new FormControl(this['operator'], [enumValidator(FieldsRequirement_operator), ]),
-                'values': new FormArray([]),
+                'values': new FormControl(this['values']),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('values', this['values']);
         }
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['key'].setValue(this['key']);
             this._formGroup.controls['operator'].setValue(this['operator']);
-            this.fillModelArray<string>(this, 'values', this['values']);
+            this._formGroup.controls['values'].setValue(this['values']);
         }
     }
 }

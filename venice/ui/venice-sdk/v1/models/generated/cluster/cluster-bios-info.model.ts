@@ -59,33 +59,32 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['vendor'] != null) {
             this['vendor'] = values['vendor'];
-        } else if (ClusterBiosInfo.hasDefaultValue('vendor')) {
+        } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('vendor')) {
             this['vendor'] = ClusterBiosInfo.propInfo['vendor'].default;
         }
         if (values && values['version'] != null) {
             this['version'] = values['version'];
-        } else if (ClusterBiosInfo.hasDefaultValue('version')) {
+        } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('version')) {
             this['version'] = ClusterBiosInfo.propInfo['version'].default;
         }
         if (values && values['fw-major-ver'] != null) {
             this['fw-major-ver'] = values['fw-major-ver'];
-        } else if (ClusterBiosInfo.hasDefaultValue('fw-major-ver')) {
+        } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('fw-major-ver')) {
             this['fw-major-ver'] = ClusterBiosInfo.propInfo['fw-major-ver'].default;
         }
         if (values && values['fw-minor-ver'] != null) {
             this['fw-minor-ver'] = values['fw-minor-ver'];
-        } else if (ClusterBiosInfo.hasDefaultValue('fw-minor-ver')) {
+        } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('fw-minor-ver')) {
             this['fw-minor-ver'] = ClusterBiosInfo.propInfo['fw-minor-ver'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -100,7 +99,11 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['vendor'].setValue(this['vendor']);
             this._formGroup.controls['version'].setValue(this['version']);

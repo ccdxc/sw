@@ -72,38 +72,37 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     }
 
     /**
-     * set the values. If a value isn't provided and we have a default, we use that.
+     * set the values for both the Model and the Form Group. If a value isn't provided and we have a default, we use that.
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    setValues(values: any): void {
+    setValues(values: any, fillDefaults = true): void {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
-        } else if (ClusterNodeCondition.hasDefaultValue('type')) {
+        } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('type')) {
             this['type'] = <ClusterNodeCondition_type>  ClusterNodeCondition.propInfo['type'].default;
         }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (ClusterNodeCondition.hasDefaultValue('status')) {
+        } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('status')) {
             this['status'] = <ClusterNodeCondition_status>  ClusterNodeCondition.propInfo['status'].default;
         }
         if (values && values['last-transition-time'] != null) {
             this['last-transition-time'] = values['last-transition-time'];
-        } else if (ClusterNodeCondition.hasDefaultValue('last-transition-time')) {
+        } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('last-transition-time')) {
             this['last-transition-time'] = ClusterNodeCondition.propInfo['last-transition-time'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
-        } else if (ClusterNodeCondition.hasDefaultValue('reason')) {
+        } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('reason')) {
             this['reason'] = ClusterNodeCondition.propInfo['reason'].default;
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
-        } else if (ClusterNodeCondition.hasDefaultValue('message')) {
+        } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('message')) {
             this['message'] = ClusterNodeCondition.propInfo['message'].default;
         }
+        this.setFormGroupValuesToBeModelValues();
     }
-
-
 
 
     protected getFormGroup(): FormGroup {
@@ -119,7 +118,11 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
         return this._formGroup;
     }
 
-    setFormGroupValues() {
+    setModelToBeFormGroupValues() {
+        this.setValues(this.$formGroup.value, false);
+    }
+
+    setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['status'].setValue(this['status']);
