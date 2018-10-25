@@ -38,7 +38,7 @@ eth_rx_rss_indir:
     phvwri          p.common_te0_phv_table_lock_en, 1
     phvwri          p.common_te0_phv_table_pc, eth_rx_fetch_desc[38:6]
     phvwr.e         p.common_te0_phv_table_addr, r5
-    phvwri          p.common_te0_phv_table_raw_table_size, LG2_RX_QSTATE_SIZE
+    phvwri.f        p.common_te0_phv_table_raw_table_size, LG2_RX_QSTATE_SIZE
 
 eth_rx_rss_disabled:
     nop.e

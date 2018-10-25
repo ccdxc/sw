@@ -992,6 +992,16 @@ void prd_read_counters(int idle_check, int verbose, int polls)
   int pkt_ff_full=0;
   int pb_xoff=0;
   int sta_fifo=0;
+
+  rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
+      CAP_PR_CSR_PRD_BYTE_ADDRESS +
+	    CAP_PRD_CSR_CNT_PHV_BYTE_OFFSET, cnt, 4);
+  u_int32_t phv_drop = CAP_PRD_CSR_CNT_PHV_CNT_PHV_1_4_DROP_GET(cnt[1]);
+  u_int32_t phv_err = CAP_PRD_CSR_CNT_PHV_CNT_PHV_2_4_ERR_GET(cnt[2]);
+  u_int32_t phv_recirc = CAP_PRD_CSR_CNT_PHV_CNT_PHV_3_4_RECIRC_GET(cnt[3]);
+  printf(" PHV_drop=%u  PHV_err=%u  PHV_recirc=%u\n",
+	 phv_drop, phv_err, phv_recirc);
+
   // Get PHV counts:
   rd_reg32w(CAP_ADDR_BASE_PR_PR_OFFSET +
             CAP_PR_CSR_PRD_CNT_MA_BYTE_ADDRESS, cnt, 3);
@@ -1025,7 +1035,7 @@ void prd_read_counters(int idle_check, int verbose, int polls)
     pb_xoff = (CAP_PRD_CSR_STA_XOFF_STA_XOFF_1_3_PBPR_P15_PBUS_XOFF_27_0_GET(cnt[1]) << 4) |
               CAP_PRD_CSR_STA_XOFF_STA_XOFF_2_3_PBPR_P15_PBUS_XOFF_31_28_GET(cnt[2]);
   }
-  printf(" phv_cnt=%u pkt_cnt=%u resub=%u AXI_Reads=%u AXI_Writes=%u PHVs_in_P4+=%u\n",
+  printf("       phv_cnt=%u pkt_cnt=%u resub=%u AXI_Reads=%u AXI_Writes=%u PHVs_in_P4+=%u\n",
          ma_cnt, ps_cnt, resub_cnt,
          (pend_rd) / polls,
          (pend_wr) / polls,

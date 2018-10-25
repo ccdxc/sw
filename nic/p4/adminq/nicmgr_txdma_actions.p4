@@ -22,12 +22,7 @@
  * - These action functions are used to generate k+i and d structures.
  *****************************************************************************/
 
-action nicmgr_fetch_desc(
-    pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, comp_index, ci_fetch,
-    enable, color, rsvd1,
-    ring_base, ring_size, cq_ring_base, intr_assert_addr
-)
+action nicmgr_fetch_desc(PARAMS_NICMGR_QSTATE)
 {
     // K+I
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -40,12 +35,7 @@ action nicmgr_fetch_desc(
     MODIFY_NICMGR_QSTATE
 }
 
-action nicmgr_drop(
-    pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, comp_index, ci_fetch,
-    enable, color, rsvd1,
-    ring_base, ring_size, cq_ring_base, intr_assert_addr
-)
+action nicmgr_drop(PARAMS_NICMGR_QSTATE)
 {
     // K+I
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -84,13 +74,7 @@ action nicmgr_process_desc_data(adminq_comp_desc)
     modify_field(nicmgr_resp_desc.adminq_comp_desc, adminq_comp_desc);
 }
 
-action nicmgr_post_adminq(
-    pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, comp_index, ci_fetch,
-    enable, color, host_queue, rsvd1,
-    ring_base, ring_size, cq_ring_base, intr_assert_addr,
-    nicmgr_qstate_addr
-)
+action nicmgr_post_adminq(PARAMS_ADMINQ_QSTATE)
 {
     // K + I
     MODIFY_NICMGR_GLOBAL
@@ -102,12 +86,7 @@ action nicmgr_post_adminq(
     MODIFY_ADMINQ_QSTATE
 }
 
-action nicmgr_commit(
-    pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, comp_index, ci_fetch,
-    enable, color, rsvd1,
-    ring_base, ring_size, cq_ring_base, intr_assert_addr
-)
+action nicmgr_commit(PARAMS_NICMGR_QSTATE)
 {
     // K + I
     MODIFY_NICMGR_GLOBAL

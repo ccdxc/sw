@@ -13,6 +13,7 @@
 #define rx_table_s1_t0_action eth_rx_rss_skip
 #define rx_table_s2_t0_action eth_rx_fetch_desc
 #define rx_table_s3_t0_action eth_rx_packet
+#define rx_table_s4_t0_action eth_rx_completion
 
 #include "../common-p4+/common_rxdma.p4"
 #include "eth_rxdma.p4"
@@ -23,11 +24,7 @@
  * - These action functions are used to generate k+i and d structures.
  *****************************************************************************/
 
-action eth_rx_app_header(
-    rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, p_index1, c_index1,
-    enable, color, host_queue, rsvd1,
-    ring_base, ring_size, cq_ring_base, intr_assert_addr, rss_type)
+action eth_rx_app_header(PARAMS_ETH_RX_QSTATE)
 {
     // --- For K+I struct generation
 
@@ -59,24 +56,9 @@ action eth_rx_app_header(
     modify_field(p4_to_p4plus_scratch.csum_tcp_ok, p4_to_p4plus.csum_tcp_ok);
 
     modify_field(p4_to_p4plus_scratch.pkt_type, p4_to_p4plus.pkt_type);
-    modify_field(p4_to_p4plus_scratch.l4_sport, p4_to_p4plus.l4_sport);
-    modify_field(p4_to_p4plus_scratch.l4_dport, p4_to_p4plus.l4_dport);
-    modify_field(p4_to_p4plus_scratch.ip_sa, p4_to_p4plus.ip_sa);
-    modify_field(p4_to_p4plus_scratch.ip_da, p4_to_p4plus.ip_da);
 
     // --- For D-struct generation
-    MODIFY_QSTATE_INTRINSIC(eth_rx_qstate)
-    modify_field(eth_rx_qstate.p_index1, p_index1);
-    modify_field(eth_rx_qstate.c_index1, c_index1);
-    modify_field(eth_rx_qstate.enable, enable);
-    modify_field(eth_rx_qstate.color, color);
-    modify_field(eth_rx_qstate.host_queue, host_queue);
-    modify_field(eth_rx_qstate.rsvd1, rsvd1);
-    modify_field(eth_rx_qstate.ring_base, ring_base);
-    modify_field(eth_rx_qstate.ring_size, ring_size);
-    modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base);
-    modify_field(eth_rx_qstate.intr_assert_addr, intr_assert_addr);
-    modify_field(eth_rx_qstate.rss_type, rss_type);
+    MODIFY_ETH_RX_QSTATE
 }
 
 action eth_rx_rss_skip()
@@ -89,11 +71,7 @@ action eth_rx_rss_skip()
     // --- For D-struct generation
 }
 
-action eth_rx_fetch_desc(
-    pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, p_index1, c_index1,
-    enable, color, host_queue, rsvd1,
-    ring_base, ring_size, cq_ring_base, intr_assert_addr, rss_type)
+action eth_rx_fetch_desc(PARAMS_ETH_RX_QSTATE)
 {
     // --- For K+I struct generation
 
@@ -102,23 +80,10 @@ action eth_rx_fetch_desc(
 
     // --- For D-struct generation
     modify_field(eth_rx_qstate.pc, pc);
-    MODIFY_QSTATE_INTRINSIC(eth_rx_qstate)
-    modify_field(eth_rx_qstate.p_index1, p_index1);
-    modify_field(eth_rx_qstate.c_index1, c_index1);
-    modify_field(eth_rx_qstate.enable, enable);
-    modify_field(eth_rx_qstate.color, color);
-    modify_field(eth_rx_qstate.host_queue, host_queue);
-    modify_field(eth_rx_qstate.rsvd1, rsvd1);
-    modify_field(eth_rx_qstate.ring_base, ring_base);
-    modify_field(eth_rx_qstate.ring_size, ring_size);
-    modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base);
-    modify_field(eth_rx_qstate.intr_assert_addr, intr_assert_addr);
-    modify_field(eth_rx_qstate.rss_type, rss_type);
+    MODIFY_ETH_RX_QSTATE
 }
 
-action eth_rx_packet(
-    PARAM_RX_DESC()
-)
+action eth_rx_packet(PARAM_RX_DESC())
 {
     // --- For K+I struct generation
 
@@ -127,4 +92,14 @@ action eth_rx_packet(
 
     // --- For D-struct generation
     MODIFY_RX_DESC()
+}
+
+action eth_rx_completion()
+{
+    // --- For K+I struct generation
+
+    MODIFY_ETH_RX_GLOBAL
+    MODIFY_ETH_RX_T0_S2S
+
+    // --- For D-struct generation
 }

@@ -23,7 +23,7 @@ adminq_process_desc:
 
   // Setup DMA CMD PTR
   phvwr           p.p4_txdma_intr_dma_cmd_ptr, ADMINQ_DMA_CMD_START_OFFSET
-  phvwrpair       p.adminq_global_dma_cur_flit, ADMINQ_DMA_CMD_START_FLIT, p.adminq_global_dma_cur_index, ADMINQ_DMA_CMD_START_INDEX
+  phvwr           p.adminq_global_dma_cur_index, (ADMINQ_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ADMINQ_DMA_CMD_START_INDEX
 
   // Build nicmgr request descriptor
   phvwr           p.nicmgr_req_desc_lif, k.{adminq_t0_s2s_lif}.hx

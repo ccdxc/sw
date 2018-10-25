@@ -33,8 +33,9 @@ d = {
     addr_hi0 = 0x7;
     len0 = 0x6e;
     opcode0 = TXQ_DESC_OPCODE_TSO;
-    csum_l3_or_sot0 = 1;
-    hdr_len_hi0 = 0x3;
-    hdr_len_lo0 = 0xff;
+    csum_l3_or_sot0 = 0;
+    csum_l4_or_eot0 = 0;
     num_sg_elems0 = 1;
+    mss_or_csumoff_lo0 = 0xff;
+    mss_or_csumoff_hi0 = 0x3f;
 };

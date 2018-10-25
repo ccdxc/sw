@@ -16,7 +16,7 @@
 #include "pcieport.h"
 #include "hal_client.hpp"
 #include "accel_ring.h"
-#include "eth_common.h"
+#include "adminq.h"
 #include "storage_seq_common.h"
 
 #define ACCEL_DEV_PAGE_SIZE             4096

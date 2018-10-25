@@ -20,16 +20,23 @@ header_type adminq_qstate {
         c_index0 : 16;
         comp_index : 16;
         ci_fetch   : 16;
+        ci_miss    : 16;
 
-        enable : 1;
+        // sta
         color : 1;
+        spec_miss : 1;
+        rsvd1 : 6;
+
+        // cfg
+        enable : 1;
         host_queue : 1;
-        rsvd1 : 5;
+        intr_enable : 1;
+        rsvd2 : 5;
 
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;
-        intr_assert_addr : 32;
+        intr_assert_index : 16;
 
         nicmgr_qstate_addr : 64;
     }
@@ -76,14 +83,19 @@ header_type nicmgr_qstate {
         comp_index : 16;
         ci_fetch   : 16;
 
-        enable : 1;
+        // sta
         color : 1;
-        rsvd1 : 6;
+        rsvd1 : 7;
+
+        // cfg
+        enable : 1;
+        intr_enable : 1;
+        rsvd2 : 6;
 
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;
-        intr_assert_addr : 32;
+        intr_assert_index : 16;
     }
 }
 

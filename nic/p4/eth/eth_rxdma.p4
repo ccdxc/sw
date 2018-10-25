@@ -55,19 +55,22 @@ header_type eth_rx_qstate_d {
 
         p_index0 : 16;
         c_index0 : 16;
-        p_index1 : 16;
-        c_index1 : 16;
+        comp_index : 16;
 
-        enable : 1;
+        // sta
         color : 1;
+        rsvd1 : 7;
+
+        // cfg
+        enable : 1;
         host_queue : 1;
-        rsvd1 : 5;
+        intr_enable : 1;
+        rsvd2 : 5;
 
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;
-        intr_assert_addr : 32;
-        rss_type : 16;
+        intr_assert_index : 16;
     }
 }
 
@@ -91,8 +94,10 @@ header_type eth_rx_desc_d {
 
 header_type eth_rx_global_k {
     fields {
+        dma_cur_index : 6;
         qstate_addr : 34;
         host_queue : 1;
+        intr_enable : 1;
     }
 }
 
@@ -101,7 +106,7 @@ header_type eth_rx_t0_s2s_k {
         packet_len : 16;
         cq_desc_addr : 52;
         __pad : 4;
-        intr_assert_addr : 32;
+        intr_assert_index : 16;
         intr_assert_data : 32;  // Should be byte-aligned for PHV2MEM
     }
 }

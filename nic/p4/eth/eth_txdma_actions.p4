@@ -21,13 +21,7 @@
  * Action functions
  *****************************************************************************/
 
-action eth_tx_fetch_desc(
-        rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-        p_index0, c_index0, comp_index, ci_fetch,
-        enable, color, host_queue, rsvd1,
-        ring_base, ring_size, cq_ring_base, intr_assert_addr,
-        spurious_db_cnt, sg_ring_base,
-        tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta)
+action eth_tx_fetch_desc(PARAMS_ETH_TX_QSTATE)
 {
     // K+I
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
@@ -37,23 +31,7 @@ action eth_tx_fetch_desc(
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
 
     // D
-    MODIFY_QSTATE_INTRINSIC(eth_tx_qstate)
-    modify_field(eth_tx_qstate.comp_index, comp_index);
-    modify_field(eth_tx_qstate.ci_fetch, ci_fetch);
-    modify_field(eth_tx_qstate.enable, enable);
-    modify_field(eth_tx_qstate.color, color);
-    modify_field(eth_tx_qstate.host_queue, host_queue);
-    modify_field(eth_tx_qstate.rsvd1, rsvd1);
-    modify_field(eth_tx_qstate.ring_base, ring_base);
-    modify_field(eth_tx_qstate.ring_size, ring_size);
-    modify_field(eth_tx_qstate.cq_ring_base, cq_ring_base);
-    modify_field(eth_tx_qstate.intr_assert_addr, intr_assert_addr);
-    modify_field(eth_tx_qstate.spurious_db_cnt, spurious_db_cnt);
-    modify_field(eth_tx_qstate.sg_ring_base, sg_ring_base);
-    modify_field(eth_tx_qstate.tso_hdr_addr, tso_hdr_addr);
-    modify_field(eth_tx_qstate.tso_hdr_len, tso_hdr_len);
-    modify_field(eth_tx_qstate.tso_ipid_delta, tso_ipid_delta);
-    modify_field(eth_tx_qstate.tso_seq_delta, tso_seq_delta);
+    MODIFY_ETH_TX_QSTATE
 }
 
 action eth_tx_prep(
@@ -75,13 +53,7 @@ action eth_tx_prep(
     MODIFY_TX_DESC(3)
 }
 
-action eth_tx_commit(
-    pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-    p_index0, c_index0, comp_index, ci_fetch,
-    enable, color, host_queue, rsvd1,
-    ring_base, ring_size, cq_ring_base, intr_assert_addr,
-    spurious_db_cnt, sg_ring_base,
-    tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta)
+action eth_tx_commit(PARAMS_ETH_TX_QSTATE)
 {
     // K+I
     MODIFY_ETH_TX_GLOBAL
@@ -90,23 +62,7 @@ action eth_tx_commit(
 
     // D
     modify_field(eth_tx_qstate.pc, pc);
-    MODIFY_QSTATE_INTRINSIC(eth_tx_qstate)
-    modify_field(eth_tx_qstate.comp_index, comp_index);
-    modify_field(eth_tx_qstate.ci_fetch, ci_fetch);
-    modify_field(eth_tx_qstate.enable, enable);
-    modify_field(eth_tx_qstate.color, color);
-    modify_field(eth_tx_qstate.host_queue, host_queue);
-    modify_field(eth_tx_qstate.rsvd1, rsvd1);
-    modify_field(eth_tx_qstate.ring_base, ring_base);
-    modify_field(eth_tx_qstate.ring_size, ring_size);
-    modify_field(eth_tx_qstate.cq_ring_base, cq_ring_base);
-    modify_field(eth_tx_qstate.intr_assert_addr, intr_assert_addr);
-    modify_field(eth_tx_qstate.spurious_db_cnt, spurious_db_cnt);
-    modify_field(eth_tx_qstate.sg_ring_base, sg_ring_base);
-    modify_field(eth_tx_qstate.tso_hdr_addr, tso_hdr_addr);
-    modify_field(eth_tx_qstate.tso_hdr_len, tso_hdr_len);
-    modify_field(eth_tx_qstate.tso_ipid_delta, tso_ipid_delta);
-    modify_field(eth_tx_qstate.tso_seq_delta, tso_seq_delta);
+    MODIFY_ETH_TX_QSTATE
 }
 
 action eth_tx()

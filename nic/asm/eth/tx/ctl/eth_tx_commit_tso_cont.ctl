@@ -37,10 +37,9 @@ k = {
     eth_tx_t0_s2s_do_sg = 0x1;
     eth_tx_global_dma_cur_index = 0x20;
     eth_tx_global_num_sg_elems = 0x1;
-    eth_tx_global_tso_sot = 0x1;
+    eth_tx_global_tso_sot = 0x0;
     eth_tx_global_tso_eot = 0x0;
-    eth_tx_to_s2_tso_hdr_addr = 0x1ffffffffffff;
-    eth_tx_to_s2_tso_hdr_len = 0xff;
+    eth_tx_to_s2_tso_hdr_addr = 0x5a8; // mss
 };
 
 d = {
@@ -52,6 +51,8 @@ d = {
     ring_base = 0x8000000000010000;
     cq_ring_base = 0x8000000000020000;
     sg_ring_base = 0x8000000000030000;
-    tso_hdr_addr = 0x0;
-    tso_hdr_len = 0x0;
+    tso_ipid_delta = 0x0;
+    tso_seq_delta = 0x0;
+    tso_hdr_addr = 0x1ffffffffffff;
+    tso_hdr_len = 0xff;
 };

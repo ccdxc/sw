@@ -3,8 +3,7 @@
 
 header_type nicmgr_global_k {
     fields {
-        dma_cur_flit : 4;
-        dma_cur_index : 2;
+        dma_cur_index : 6;
     }
 }
 

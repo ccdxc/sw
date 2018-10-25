@@ -9,7 +9,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <arpa/inet.h> 
+#include <arpa/inet.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <errno.h>
@@ -32,6 +32,9 @@
 #include "nic/e2etests/hntap/dev.hpp"
 #include "nic/e2etests/lib/helpers.hpp"
 #include "nic/e2etests/lib/packet.hpp"
+
+#define HOST_RX_POLL_US         (10000)     // 10 ms
+#define HOST_RX_POLL_RETRIES    (400)       // 10 ms * 400 = 4 s
 
 #define PKTBUF_LEN        2000
 uint32_t hntap_port;
@@ -116,13 +119,19 @@ send_pkt_to_dev(dev_handle_t *dest_dev, uint8_t *recv_buf, uint16_t rsize)
     }
 }
 
-
-static void
-pkt_consume_cb(uint8_t *buf, uint32_t len, void *ctxt)
+void
+host_tx_done_cb(uint8_t *buf, uint32_t size, void *ctx)
 {
-    dev_handle_t *dest_dev = (dev_handle_t*)ctxt;
+  dev_handle_t *src_dev = (dev_handle_t*)ctx;
+  TLOG("%s: buf %p size %u tap %s\n", __FUNCTION__, buf, size, src_dev->name);
+}
 
-    send_pkt_to_dev(dest_dev, buf, len);
+void
+host_rx_done_cb(uint8_t *buf, uint32_t size, void* ctx)
+{
+  dev_handle_t *dest_dev = (dev_handle_t*)ctx;
+  TLOG("%s: buf %p size %u tap %s\n", __FUNCTION__, buf, size, dest_dev->name);
+  send_pkt_to_dev(dest_dev, buf, size);
 }
 
 static void
@@ -132,14 +141,12 @@ model_check_host_dev(dev_handle_t *dev_handles[], uint32_t max_handles)
 
     for (uint32_t i = 0 ; i < max_handles; i++) {
         dev_handle_t * dest_dev = dev_handles[i];
-        //First read the Host side.
         if (dest_dev->tap_ep == TAP_ENDPOINT_HOST) {
-            tx_consume_queue(dest_dev->lif_id, TX, 0);
-            consume_queue(dest_dev->lif_id, RX, 0, pkt_consume_cb, dest_dev);
+            consume_buffer(dest_dev->lif_id, TX, 0, host_tx_done_cb, dest_dev);
+            consume_buffer(dest_dev->lif_id, RX, 0, host_rx_done_cb, dest_dev);
         }
     }
 }
-
 
 static void
 model_check_uplinks(dev_handle_t *dev_handles[], uint32_t max_handles, HntapSwitchBase *hswitch)
@@ -273,16 +280,12 @@ hntap_model_send_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   }
 
 done:
-    if (send_buf) {
-        free_buffer(send_buf);
-    }
     model_mutex.unlock();
 }
 
-
 static bool
 model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
-       uint8_t *recv_buf, uint16_t &prev_cindex)
+       uint8_t *recv_buf)
 {
     uint16_t rsize = 0;
     bool pkt_sent = false;
@@ -290,22 +293,16 @@ model_read_and_send(model_pkt_read_t read_type, dev_handle_t *dest_dev,
     std::vector<uint8_t> opkt;
     uint16_t offset = 0;
     int nwrite = 0;
+    uint16_t count = 0;
+//    bool got_host_pkt = false;
 
     if (read_type == MODEL_PKT_READ_HOST) {
-#define POLL_RETRIES 4
-        if ((poll_queue(dest_dev->lif_id, RX, 0, POLL_RETRIES, &prev_cindex))) {
-              TLOG("Got some packet\n");
-              // Receive Packet
-              consume_buffer(dest_dev->lif_id, RX, 0, recv_buf, &rsize);
-              if (!rsize) {
-                  TLOG("Did not get packet back from host side of model!\n");
-              } else {
-                  TLOG("Got packet of size %d bytes back from host side of model!\n", rsize);
-                  dump_pkt((char *)recv_buf, rsize);
-              }
-        }
+        auto rx_done_cb = [](uint8_t *buf, uint32_t size, void *ctx) {
+            *((uint16_t *)ctx) = size;
+            TLOG("%s: buf %p size %u\n", __FUNCTION__, buf, size);
+        };
+        consume_buffer(dest_dev->lif_id, RX, 0, rx_done_cb, &rsize);
     } else if (read_type == MODEL_PKT_READ_UPLINK) {
-        uint16_t count = 0;
         do {
            get_next_pkt(opkt, port, cos);
            if (opkt.size() == 0) {usleep(10000); count++;}
@@ -359,7 +356,6 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   dev_handle_t *dest_dev_handle = get_dest_dev_handle(dev_handle);
   uint16_t dest_lif_id = (uint16_t)(dest_dev_handle->lif_id & 0xffff);
   uint32_t port = dev_handle->port, cos = 0;
-  uint16_t prev_cindex = 0xFFFF;
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt, opkt;
   uint8_t *recv_buf = nullptr;
@@ -439,12 +435,15 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
       assert(send_buf != NULL);
       memcpy(send_buf, pkt, size);
       TLOG("buf %p size %lu\n", send_buf, size);
-      //TODO
       dump_pkt((char *)send_buf, size);
 
       // Transmit Packet
       TLOG("Writing packet to model! size: %d on port: Host\n", size);
       post_buffer(src_lif_id, TX, 0, send_buf, size);
+      auto tx_done_cb = [](uint8_t *buf, uint32_t size, void *ctx) {
+        TLOG("%s: buf %p size %u\n", __FUNCTION__, buf, size);
+      };
+      consume_buffer(src_lif_id, TX, 0, tx_done_cb, NULL);
   } else if (dev_handle->tap_ep == TAP_ENDPOINT_NET)  {
       // Send packet to Model
       ipkt.resize(size);
@@ -462,7 +461,7 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
        * May be HAL/LKL will do proxy initially.
        */
       pkt_sent = model_read_and_send(MODEL_PKT_READ_HOST,
-              dest_dev_handle, recv_buf, prev_cindex);
+              dest_dev_handle, recv_buf);
 
       if (!pkt_sent) {
           /*
@@ -470,7 +469,7 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
            * Note, device should be the original device now.
            */
           pkt_sent = model_read_and_send(MODEL_PKT_READ_UPLINK,
-                  dev_handle, recv_buf, prev_cindex);
+                  dev_handle, recv_buf);
       } else {
           goto done;
       }
@@ -478,7 +477,7 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
 
   if (dest_dev_handle->tap_ep == TAP_ENDPOINT_NET) {
       pkt_sent = model_read_and_send(MODEL_PKT_READ_UPLINK,
-              dest_dev_handle, recv_buf, prev_cindex);
+              dest_dev_handle, recv_buf);
 
       if (pkt_sent) {
           goto done;
@@ -487,7 +486,7 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   } else if (dest_dev_handle->tap_ep == TAP_ENDPOINT_HOST) {
 
       pkt_sent = model_read_and_send(MODEL_PKT_READ_HOST,
-              dest_dev_handle, recv_buf, prev_cindex);
+              dest_dev_handle, recv_buf);
 
       if (pkt_sent) {
           goto done;
@@ -497,15 +496,9 @@ hntap_model_send_recv_process (dev_handle_t *dev_handle, char *pktbuf, int size)
   }
 
 done:
-    if (recv_buf) {
-        free_buffer(recv_buf);
-    }
-    if (send_buf) {
-        free_buffer(send_buf);
-    }
     //lib_model_conn_close();
+    return;
 }
-
 
 static int
 hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int len)
@@ -540,8 +533,8 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
       *seqnum = ntohl(tcp->seq);
 #endif
       if(tcp->rst)
-          return(1);	
-      
+          return(1);
+
       dev->seqnum[app_port_index] = ntohl(tcp->seq);
       tcp_header_t *flowtcp = &dev->flowtcp[app_port_index];
 
@@ -698,15 +691,15 @@ hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles,
                  eth = (struct ether_header*)(pktbuf);
                  memcpy(&dmacAddr, eth->ether_dhost, sizeof(mac_addr_t));
                  if (dev_handle->tap_ep == TAP_ENDPOINT_NET && is_broadcast(dmacAddr)) {
-		     /* If broadcast, send it on both uplinks */
-		     for (uint32_t k = 0 ; k < max_handles; k++) {
-			 if (parallel) {
-		             hntap_model_send_process(dev_handles[k], pktbuf, nread + offset);
-			 } else {
-			     hntap_model_send_recv_process(dev_handles[k], pktbuf, nread + offset);
-			 }
-		     }
-	         } else {
+             /* If broadcast, send it on both uplinks */
+             for (uint32_t k = 0 ; k < max_handles; k++) {
+             if (parallel) {
+                     hntap_model_send_process(dev_handles[k], pktbuf, nread + offset);
+             } else {
+                 hntap_model_send_recv_process(dev_handles[k], pktbuf, nread + offset);
+             }
+             }
+             } else {
                      if (parallel) {
                          hntap_model_send_process(dev_handle, pktbuf, nread + offset);
                      } else {

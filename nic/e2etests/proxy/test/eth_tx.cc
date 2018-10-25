@@ -41,8 +41,6 @@ int main(int argc, char *argv[]) {
   // Create Queues
   alloc_queue(lif_id, TX, 0, 1024);
   alloc_queue(lif_id, RX, 0, 1024);
-  print_queue(lif_id, TX, 0);
-  print_queue(lif_id, RX, 0);
 
   // --------------------------------------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
 #include "INGRESS_tx_table_s2_t0_k.h"
 
 #include "../../asm/eth/tx/defines.h"
-#include "nic/p4/common/defines.h"
+
 
 struct phv_ p;
 struct tx_table_s2_t0_k_ k;
@@ -34,12 +34,12 @@ p = {
 k = {
     eth_tx_t0_s2s_num_desc = 0x1;
     eth_tx_t0_s2s_do_tso = 0x1;
-    eth_tx_global_dma_cur_flit = 0x8;
-    eth_tx_global_dma_cur_index = 0x0;
+    eth_tx_t0_s2s_do_sg = 0x1;
+    eth_tx_global_dma_cur_index = 0x20;
     eth_tx_global_num_sg_elems = 0x1;
     eth_tx_global_tso_sot = 0x0;
+    eth_tx_global_tso_eot = 0x1;
     eth_tx_to_s2_tso_hdr_addr = 0x5a8;
-    eth_tx_to_s2_tso_hdr_len = 0x0;
 };
 
 d = {
@@ -51,11 +51,8 @@ d = {
     ring_base = 0x8000000000010000;
     cq_ring_base = 0x8000000000020000;
     sg_ring_base = 0x8000000000030000;
-    tso_ipid_delta = 0x0;
-    tso_seq_delta = 0x0;
-    tso_hdr_addr = 0x1efbeaddebaba;
-    tso_hdr_len = 0x42;
-#if 0
-    eval_db_cnt = 0x0;
-#endif
+    tso_ipid_delta = 0x1;
+    tso_seq_delta = 0x5a8;
+    tso_hdr_addr = 0x1ffffffffffff;
+    tso_hdr_len = 0xff;
 };

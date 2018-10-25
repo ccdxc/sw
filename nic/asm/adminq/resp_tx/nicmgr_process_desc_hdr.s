@@ -25,7 +25,7 @@ nicmgr_process_desc_hdr:
 
   // Setup DMA CMD PTR
   phvwr           p.p4_txdma_intr_dma_cmd_ptr, NICMGR_DMA_CMD_START_OFFSET
-  phvwrpair       p.nicmgr_global_dma_cur_flit, NICMGR_DMA_CMD_START_FLIT, p.nicmgr_global_dma_cur_index, NICMGR_DMA_CMD_START_INDEX
+  phvwr           p.nicmgr_global_dma_cur_index, (NICMGR_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | NICMGR_DMA_CMD_START_INDEX
 
   // Save data for next stages
   phvwr           p.nicmgr_t0_s2s_lif, d.{lif}.hx

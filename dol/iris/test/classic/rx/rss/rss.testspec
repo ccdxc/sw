@@ -1,13 +1,13 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://type=TENANT
-        segment     : filter://fabencap=VXLAN
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://type=TENANT
-        segment     : filter://fabencap=VXLAN
+        tenant      : filter://overlay=VLAN,type=TENANT,label=CLASSIC
+        segment     : filter://any
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://fwtype=L2
@@ -15,7 +15,7 @@ selectors:
 
 packets:
     - packet:
-        id          : BASE_PKT # Base Packet
+        id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
@@ -52,18 +52,8 @@ packets:
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            outereth    :
-                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
-                dst     : ref://testcase/config/src/endpoint/intf/macaddr
-            outeripv4   :
-                src     : ref://testcase/config/src/endpoint/intf/rtep
-                dst     : ref://testcase/config/src/endpoint/intf/ltep
-                tos     : 0
-                id      : 0
-            vxlan       :
-                vni     : ref://testcase/config/src/segment/vxlan_id
             qtag:
-                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                vlan    : callback://networking/packets/GetVlanId
             tcp:
                 flags: ack
 
@@ -74,7 +64,7 @@ packets:
         headers     :
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: ref://testcase/config/flow/txqos/cos
+                prio: callback://networking/packets/GetExpectedPacketCos
             ipv4:
                 tos : ref://testcase/config/flow/txqos/dscp
             ipv6:
@@ -82,9 +72,10 @@ packets:
             tcp:
                 flags: ack
 
+
 buffers:
     - buffer:
-        id      : BUF1 # Input Buffer
+        id      : BUF1  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
@@ -92,12 +83,12 @@ buffers:
             data: None
 
     - buffer:
-        id      : BUF2 # Expected Buffer
+        id      : BUF2  # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-            bind: False
-            size: ref://testcase/packets/id=PKT2/size
-            data: ref://testcase/packets/id=PKT2/rawbytes
+            bind  : False
+            size  : ref://testcase/packets/id=PKT2/size
+            data  : ref://testcase/packets/id=PKT2/rawbytes
 
 descriptors:
     - descriptor:
@@ -113,7 +104,7 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=BUF2
-            len                   : ref://testcase/buffers/id=BUF2/size
+            len           : ref://testcase/buffers/id=BUF2/size
             rss_type      : callback://eth/callbacks/GetRxRssType
             rss_hash      : callback://eth/callbacks/GetRxRssHash
 

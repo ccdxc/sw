@@ -106,16 +106,17 @@ struct mem2mem {
     (offsetof(_s, _f1) + sizeof(_s._f1) - offsetof(_s, _fn))
 
 
-#define DMA_CMD_PTR(_r, _flit, _index, _r_tmp) \
-    sll         _r, _flit, LOG_NUM_BITS_PER_FLIT; \
-    addi        _r_tmp, _index, 1; \
+#define DMA_CMD_PTR(_r_ptr, _r_index, _r_tmp) \
+    sll         _r_ptr, _r_index[6:2], LOG_NUM_BITS_PER_FLIT; \
+    add         _r_tmp, _r_index[1:0], 1; \
     sll         _r_tmp, _r_tmp, LOG_DMA_CMD_SIZE_BITS; \
-    sub         _r, _r, _r_tmp;
+    sub         _r_ptr, _r_ptr, _r_tmp;
 
-#define DMA_CMD_NEXT(_r_flit, _r_index, _c) \
-    mincr       _r_index, LOG_NUM_DMA_CMDS_PER_FLIT, 1; \
-    seq         _c, _r_index, 0; \
-    add._c      _r_flit, _r_flit, 1;
+#define DMA_CMD_NEXT(_r_index) \
+    addi        _r_index, _r_index, 1
+
+#define DMA_CMD_PREV(_r_index) \
+    addi        _r_index, _r_index, -1
 
 /**
  * PHV2PKT

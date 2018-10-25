@@ -76,23 +76,30 @@ header_type eth_tx_qstate_d {
         c_index0   : 16;
         comp_index : 16;
         ci_fetch   : 16;
+        ci_miss : 16;
 
-        enable : 1;
+        // sta
         color : 1;
+        spec_miss : 1;
+        rsvd1 : 6;
+
+        // cfg
+        enable : 1;
         host_queue : 1;
-        rsvd1 : 5;
+        intr_enable : 1;
+        rsvd2 : 5;
 
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;
-        intr_assert_addr : 32;
-        spurious_db_cnt : 8;
+        intr_assert_index : 16;
         sg_ring_base : 64;
 
         tso_hdr_addr : 64;
         tso_hdr_len : 10;
         tso_ipid_delta : 16;
         tso_seq_delta : 32;
+        spurious_db_cnt : 6;
     }
 }
 
@@ -147,13 +154,15 @@ header_type eth_tx_sg_desc_d {
 
 header_type eth_tx_global_k {
     fields {
-        dma_cur_flit : 4;
-        dma_cur_index : 2;
+        dma_cur_index : 6;
         sg_desc_addr : 64;
         sg_in_progress : 1;
         num_sg_elems : 5;
+        tso_eot : 1;    // end of tso
         tso_sot : 1;    // start of tso
         host_queue : 1;
+        cq_entry : 1;   // generate a completion
+        intr_enable : 1;    // generate an interrupt
     }
 }
 
@@ -163,10 +172,9 @@ header_type eth_tx_t0_s2s_k {
         num_desc : 4;
         do_sg : 1;
         do_tso : 1;
-        cq_entry : 1;   // generate a completion
-        __pad : 5;
+        __pad : 6;
         cq_desc_addr : 64;
-        intr_assert_addr : 32;
+        intr_assert_index : 16;
         intr_assert_data : 32;   // Should be byte-aligned for PHV2MEM
     }
 }

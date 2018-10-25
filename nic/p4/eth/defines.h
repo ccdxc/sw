@@ -19,15 +19,38 @@
  */
 
 #define MODIFY_ETH_RX_GLOBAL \
+    modify_field(eth_rx_global_scratch.dma_cur_index, eth_rx_global.dma_cur_index); \
     modify_field(eth_rx_global_scratch.qstate_addr, eth_rx_global.qstate_addr); \
-    modify_field(eth_rx_global_scratch.host_queue, eth_rx_global.host_queue);
+    modify_field(eth_rx_global_scratch.host_queue, eth_rx_global.host_queue); \
+    modify_field(eth_rx_global_scratch.intr_enable, eth_rx_global.intr_enable);
 
 #define MODIFY_ETH_RX_T0_S2S \
     modify_field(eth_rx_t0_s2s_scratch.packet_len, eth_rx_t0_s2s.packet_len); \
     modify_field(eth_rx_t0_s2s_scratch.__pad, eth_rx_t0_s2s.__pad); \
     modify_field(eth_rx_t0_s2s_scratch.cq_desc_addr, eth_rx_t0_s2s.cq_desc_addr); \
-    modify_field(eth_rx_t0_s2s_scratch.intr_assert_addr, eth_rx_t0_s2s.intr_assert_addr); \
+    modify_field(eth_rx_t0_s2s_scratch.intr_assert_index, eth_rx_t0_s2s.intr_assert_index); \
     modify_field(eth_rx_t0_s2s_scratch.intr_assert_data, eth_rx_t0_s2s.intr_assert_data);
+
+#define PARAMS_ETH_RX_QSTATE \
+    pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
+    p_index0, c_index0, comp_index, \
+    color, rsvd1, \
+    enable, host_queue, intr_enable, rsvd2, \
+    ring_base, ring_size, cq_ring_base, intr_assert_index
+
+#define MODIFY_ETH_RX_QSTATE \
+    MODIFY_QSTATE_INTRINSIC(eth_rx_qstate) \
+    modify_field(eth_rx_qstate.comp_index, comp_index); \
+    modify_field(eth_rx_qstate.color, color); \
+    modify_field(eth_rx_qstate.rsvd1, rsvd1); \
+    modify_field(eth_rx_qstate.enable, enable); \
+    modify_field(eth_rx_qstate.host_queue, host_queue); \
+    modify_field(eth_rx_qstate.intr_enable, intr_enable); \
+    modify_field(eth_rx_qstate.rsvd2, rsvd2); \
+    modify_field(eth_rx_qstate.ring_base, ring_base); \
+    modify_field(eth_rx_qstate.ring_size, ring_size); \
+    modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base); \
+    modify_field(eth_rx_qstate.intr_assert_index, intr_assert_index);
 
 #define PARAM_RX_DESC(n) \
     addr_lo##n, rsvd0##n, addr_hi##n, rsvd1##n, \
@@ -49,13 +72,15 @@
  */
 
 #define MODIFY_ETH_TX_GLOBAL \
-    modify_field(eth_tx_global_scratch.dma_cur_flit, eth_tx_global.dma_cur_flit); \
     modify_field(eth_tx_global_scratch.dma_cur_index, eth_tx_global.dma_cur_index); \
     modify_field(eth_tx_global_scratch.sg_desc_addr, eth_tx_global.sg_desc_addr); \
     modify_field(eth_tx_global_scratch.sg_in_progress, eth_tx_global.sg_in_progress); \
     modify_field(eth_tx_global_scratch.num_sg_elems, eth_tx_global.num_sg_elems); \
     modify_field(eth_tx_global_scratch.tso_sot, eth_tx_global.tso_sot); \
-    modify_field(eth_tx_global_scratch.host_queue, eth_tx_global.host_queue);
+    modify_field(eth_tx_global_scratch.tso_eot, eth_tx_global.tso_eot); \
+    modify_field(eth_tx_global_scratch.host_queue, eth_tx_global.host_queue); \
+    modify_field(eth_tx_global_scratch.cq_entry, eth_tx_global.cq_entry); \
+    modify_field(eth_tx_global_scratch.intr_enable, eth_tx_global.intr_enable);
 
 #define MODIFY_ETH_TX_T0_S2S \
     modify_field(eth_tx_t0_s2s_scratch.num_todo, eth_tx_t0_s2s.num_todo); \
@@ -64,7 +89,7 @@
     modify_field(eth_tx_t0_s2s_scratch.do_tso, eth_tx_t0_s2s.do_tso); \
     modify_field(eth_tx_t0_s2s_scratch.__pad, eth_tx_t0_s2s.__pad); \
     modify_field(eth_tx_t0_s2s_scratch.cq_desc_addr, eth_tx_t0_s2s.cq_desc_addr); \
-    modify_field(eth_tx_t0_s2s_scratch.intr_assert_addr, eth_tx_t0_s2s.intr_assert_addr); \
+    modify_field(eth_tx_t0_s2s_scratch.intr_assert_index, eth_tx_t0_s2s.intr_assert_index); \
     modify_field(eth_tx_t0_s2s_scratch.intr_assert_data, eth_tx_t0_s2s.intr_assert_data);
 
 #define MODIFY_ETH_TX_T1_S2S
@@ -88,6 +113,39 @@
 
 #define MODIFY_ETH_TX_TO_S3 \
     MODIFY_TX_DESC_KEY(to_s3, 0)
+
+#define PARAMS_ETH_TX_QSTATE \
+        pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
+        p_index0, c_index0, comp_index, ci_fetch, ci_miss, \
+        color, spec_miss, rsvd1, \
+        enable, host_queue, intr_enable, rsvd2, \
+        ring_base, ring_size, cq_ring_base, intr_assert_index, \
+        sg_ring_base, \
+        tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta, \
+        spurious_db_cnt
+
+#define MODIFY_ETH_TX_QSTATE \
+    MODIFY_QSTATE_INTRINSIC(eth_tx_qstate) \
+    modify_field(eth_tx_qstate.comp_index, comp_index); \
+    modify_field(eth_tx_qstate.ci_fetch, ci_fetch); \
+    modify_field(eth_tx_qstate.ci_miss, ci_miss); \
+    modify_field(eth_tx_qstate.color, color); \
+    modify_field(eth_tx_qstate.spec_miss, spec_miss); \
+    modify_field(eth_tx_qstate.rsvd1, rsvd1); \
+    modify_field(eth_tx_qstate.enable, enable); \
+    modify_field(eth_tx_qstate.host_queue, host_queue); \
+    modify_field(eth_tx_qstate.intr_enable, intr_enable); \
+    modify_field(eth_tx_qstate.rsvd2, rsvd2); \
+    modify_field(eth_tx_qstate.ring_base, ring_base); \
+    modify_field(eth_tx_qstate.ring_size, ring_size); \
+    modify_field(eth_tx_qstate.cq_ring_base, cq_ring_base); \
+    modify_field(eth_tx_qstate.intr_assert_index, intr_assert_index); \
+    modify_field(eth_tx_qstate.sg_ring_base, sg_ring_base); \
+    modify_field(eth_tx_qstate.tso_hdr_addr, tso_hdr_addr); \
+    modify_field(eth_tx_qstate.tso_hdr_len, tso_hdr_len); \
+    modify_field(eth_tx_qstate.tso_ipid_delta, tso_ipid_delta); \
+    modify_field(eth_tx_qstate.tso_seq_delta, tso_seq_delta); \
+    modify_field(eth_tx_qstate.spurious_db_cnt, spurious_db_cnt); \
 
 #define PARAM_TX_DESC(n) \
     addr_lo##n, rsvd##n, addr_hi##n, opcode##n, num_sg_elems##n, \

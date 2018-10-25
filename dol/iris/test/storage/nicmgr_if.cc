@@ -100,13 +100,15 @@ nicmgr_if_init(void)
     auto nicmgr_qstate_poll = [&nicmgr_qtype] () -> int
     {
         queue_info_t    qi = {0};
+        admin_qstate_t *qstate;
 
         qi.qstate_addr = get_qstate_addr(nicmgr_hw_lif_id, nicmgr_qtype, 0);
-        qi.qstate = (struct eth_qstate *) calloc(1, sizeof(*qi.qstate));
+        qi.qstate = calloc(1, sizeof(admin_qstate_t));
+        qstate = (admin_qstate_t *)qi.qstate;
         set_queue_info(nicmgr_hw_lif_id, nicmgr_qtype, 0, qi);
         read_queue(nicmgr_hw_lif_id, nicmgr_qtype, 0);
 
-        return qi.qstate->ring_base && qi.qstate->ring_size ? 0 : -1;
+        return qstate->ring_base && qstate->ring_size ? 0 : -1;
     };
 
     usleep(10000);
@@ -206,7 +208,7 @@ nicmgr_if_identify(uint64_t *ret_seq_lif,
         alloc_queue(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID, NICMGR_ADMIN_QSIZE);
         read_queue(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID);
         qinfo = get_queue_info(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID); 
-        ((struct eth_admin_qstate *)qinfo.qstate)->nicmgr_qstate_addr = 
+        ((admin_qstate_t *)qinfo.qstate)->nicmgr_qstate_addr =
                                     get_qstate_addr(nicmgr_hw_lif_id, RX, 0);
         write_queue(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID);
         nicmgr_admin_qcndx = NICMGR_ADMIN_QCNDX_UNKNOWN;
@@ -286,6 +288,7 @@ nicmgr_if_push(dev_cmd_t& cmd)
     dp_mem_t        *dev_cmd_curr;
     dev_cmd_regs_t  *dev_cmd;
     dev_cmd_db_t    *dev_cmd_db;
+    uint16_t        count = 0;
     tests::Poller   poll(FLAGS_long_poll_interval);
 
     switch (cmd.nop.opcode) {
@@ -321,7 +324,6 @@ nicmgr_if_push(dev_cmd_t& cmd)
     dev_cmd_curr->fragment_find(0, DEV_CMDREGS_CMDCPL_SIZE)->write_thru();
 
     if (dev_cmd_curr == nicmgr_devcmdpa_buf) {
-
         /*
          * Sending command thru devcmdpa so ring its doorbell
          */
@@ -330,13 +332,18 @@ nicmgr_if_push(dev_cmd_t& cmd)
         nicmgr_devcmddbpa_buf->write_thru();
     } else {
         post_buffer(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID,
-                    &dev_cmd->cmd, sizeof(dev_cmd->cmd));
-        if (!poll_queue(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID,
-                        NICMGR_ADMIN_QPOLL_RETRIES, &nicmgr_admin_qcndx)) {
-            printf("%s poll_queue timeout: last known CI %u\n", __FUNCTION__,
-                   nicmgr_admin_qcndx);
-            return nullptr;
+                    (uint8_t *)&dev_cmd->cmd, sizeof(dev_cmd->cmd));
+        count = 0;
+        while (!poll_queue(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID)) {
+            if (count == NICMGR_ADMIN_QPOLL_RETRIES) {
+                printf("%s poll_queue timeout\n", __FUNCTION__);
+                return nullptr;
+            }
+            usleep(10000);  // 10 ms
+            count++;
         }
+        consume_buffer(seq_hw_lif_id, ADMIN, NICMGR_ADMIN_QID,
+            NULL, NULL);
     }
 
     auto cmd_done_poll = [&dev_cmd] () -> int

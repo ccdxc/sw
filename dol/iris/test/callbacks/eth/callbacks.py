@@ -1,14 +1,14 @@
 
 import struct
 from socket import inet_aton
-from scapy.layers.inet import ICMP
 from scapy.utils import checksum
-import iris.config.hal.defs as haldefs
-from factory.objects.eth.descriptor import EthTxSgElement
-from scapy.layers.inet6 import in6_chksum
 from scapy.layers.l2 import Ether, Dot1Q
-from infra.common.logging       import logger
+from scapy.layers.inet import ICMP, TCP, UDP, IP
+from scapy.layers.inet6 import in6_chksum, IPv6
 
+import iris.config.hal.defs as haldefs
+from factory.objects.eth.descriptor import EthTxDescriptor, EthTxDescriptorObject, EthTxSgElement
+from infra.common.logging       import logger
 
 from .toeplitz import *
 
@@ -37,13 +37,12 @@ def GetRxRssTypeNum(tc, obj, args=None):
             flags.append(LifRssType.Value("RSS_TYPE_IPV4_TCP"))
         elif pkt.haslayer(UDP):
             flags.append(LifRssType.Value("RSS_TYPE_IPV4_UDP"))
-    if pkt.haslayer(IPv6):
+    elif pkt.haslayer(IPv6):
         flags.append(LifRssType.Value("RSS_TYPE_IPV6"))
         if pkt.haslayer(TCP):
             flags.append(LifRssType.Value("RSS_TYPE_IPV6_TCP"))
         elif pkt.haslayer(UDP):
             flags.append(LifRssType.Value("RSS_TYPE_IPV6_UDP"))
-
     return RssType2Enum[lif.rss_type & sum(flags)]
 
 
@@ -56,7 +55,6 @@ def GetRxRssHash(tc, obj, args=None):
     pkt = tc.packets.db['PKT2'].spktobj.spkt
     lif = tc.config.dst.endpoint.intf.lif
     rss_type_num = GetRxRssTypeNum(tc, obj, args)
-
     # Pass the RSS key as args to test
     return toeplitz_hash(toeplitz_input(rss_type_num, pkt), BitArray(bytes=toeplitz_msft_key))
 
@@ -225,6 +223,49 @@ def InitEthTxSgDescriptor(tc, obj, args=None):
     addr += bytes_rem
 
     logger.info("Init %s" % desc)
+
+
+def InitEthTxTsoDescriptor(tc, obj, args=None):
+    buf = tc.buffers.db[obj.buf]
+    pkt = tc.packets.db[obj.pkt].spktobj.spkt
+    mss = int(obj.mss)
+
+    assert pkt.haslayer(TCP)
+    hdr_len = len(pkt) - len(pkt[TCP].payload)
+
+    descriptors = list()
+    i = 0
+    sot, eot = 1, 0
+    addr = buf.addr
+    bytes_rem = len(pkt)
+    while bytes_rem:
+        if sot:
+            seglen = hdr_len + mss
+            sot = 0
+        else:
+            seglen = mss if bytes_rem >= mss else bytes_rem
+            eot = 1 if (seglen == bytes_rem) else 0
+
+        desc = EthTxDescriptor(addr=addr, len=seglen, num_sg_elems=0, csum_l3=sot, csum_l4=eot)
+        if sot:
+            desc.hdr_len = hdr_len
+        else:
+            desc.mss_or_csumoff = mss
+
+        descobj = EthTxDescriptorObject()
+        descobj.GID('DESC%d' % i)
+        obj.fields = desc
+        obj._data = bytes(desc)
+
+        i += 1
+        addr += seglen
+        bytes_rem -= seglen
+
+        descriptors.append(descobj)
+
+    logger.info("Init %s" % desc)
+
+    return descriptors
 
 
 def GetPayload(tc, obj, args=None):

@@ -10,11 +10,10 @@ struct tx_table_s3_t0_k_ k;
 struct tx_table_s3_t0_nicmgr_commit_d d;
 
 #define   _r_cq_desc_addr     r1
-#define   _r_ptr              r2        // Current DMA byte offset in PHV
 #define   _r_db_data          r3
 #define   _r_db_addr          r4
-#define   _r_flit             r5        // Current DMA flit offset in PHV
-#define   _r_index            r6        // Current DMA command offset in PHV flit
+#define   _r_ptr              r5        // Current DMA byte offset in PHV
+#define   _r_index            r6        // Current DMA command index in PHV
 
 #define NICMGR_DB_ADDR    (0x8800000 + \
                           (0x5 /* UPD = DB_IDX_UPD_CIDX_SET | DB_SCHED_UPD_EVAL */ << 17) + \
@@ -31,7 +30,6 @@ nicmgr_commit:
   nop
 
   // Load DMA command pointer
-  add             _r_flit, r0, k.nicmgr_global_dma_cur_flit
   add             _r_index, r0, k.nicmgr_global_dma_cur_index
 
 // TODO: Remove this section when nicmgr becomes interrupt driven
@@ -43,12 +41,12 @@ nicmgr_commit_ci_db:
   addi            _r_db_addr, r0, NICMGR_DB_ADDR
   phvwr           p.nicmgr_to_s2_nicmgr_db_data, _r_db_data.dx
 
-  DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+  DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_HBM_PHV2MEM(_r_ptr, c0, _r_db_addr, CAPRI_PHV_START_OFFSET(nicmgr_to_s2_nicmgr_db_data), CAPRI_PHV_END_OFFSET(nicmgr_to_s2_nicmgr_db_data), r7)
-  DMA_CMD_NEXT(_r_flit, _r_index, c7)
+  DMA_CMD_NEXT(_r_index)
 
   // Save DMA command pointer
-  phvwrpair.e     p.nicmgr_global_dma_cur_flit, _r_flit, p.nicmgr_global_dma_cur_index, _r_index
+  phvwr.e         p.nicmgr_global_dma_cur_index, _r_index
 
 #if 0
 nicmgr_commit_ci_update:

@@ -5,21 +5,33 @@
 
 #include "../../asm/adminq/defines.h"
 
+#define __ASSEMBLY__
+
+#include "cap_top_csr_defines.h"
+#include "cap_intr_c_hdr.h"
+
 struct phv_ p;
 struct tx_table_s2_t0_k_ k;
 struct tx_table_s2_t0_adminq_post_nicmgr_d d;
 
 #define   _r_desc_addr        r1
-#define   _r_ptr              r2        // Current DMA byte offset in PHV
+#define   _r_intr_addr        r2
 #define   _r_db_data          r3
 #define   _r_db_addr          r4
-#define   _r_flit             r5        // Current DMA flit offset in PHV
-#define   _r_index            r6        // Current DMA command offset in PHV flit
+#define   _r_ptr              r5        // Current DMA byte offset in PHV
+#define   _r_index            r6        // Current DMA command index in PHV
 
 #define NICMGR_DB_ADDR    (0x8800000 + \
                           (0x4 /* UPD = DB_IDX_UPD_CIDX_SET | DB_SCHED_UPD_NOP */ << 17) + \
                           (0x1 /* LIF */ << 6) + \
                           (0x0 /* QTYPE */ << 3))
+
+
+#define INTR_BASE               CAP_ADDR_BASE_INTR_INTR_OFFSET
+#define INTR_ASSERT_OFFSET      CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET
+#define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
+#define INTR_ASSERT_STRIDE      0x4
+#define LG2_INTR_ASSERT_STRIDE  0x2
 
 %%
 
@@ -38,27 +50,32 @@ adminq_post_nicmgr:
   nop
 
   // Load DMA command pointer
-  add             _r_flit, r0, k.adminq_global_dma_cur_flit
   add             _r_index, r0, k.adminq_global_dma_cur_index
 
   // Compute the descriptor address
   add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_NICMGR_REQ_DESC_SIZE
 
-  // DMA nicmgr request descriptor
-  DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
-  DMA_HBM_PHV2MEM(_r_ptr, !c0, _r_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_req_desc_lif), CAPRI_PHV_END_OFFSET(nicmgr_req_desc_adminq_cmd_desc), r7)
-  DMA_CMD_NEXT(_r_flit, _r_index, c7)
-
   // Do we need to generate an interrupt?
-  seq             c3, r0, d.intr_assert_addr
+  seq             c3, r0, d.intr_assert_index
+
+  // DMA nicmgr request descriptor
+  DMA_CMD_PTR(_r_ptr, _r_index, r7)
+  DMA_HBM_PHV2MEM(_r_ptr, !c3, _r_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_req_desc_lif), CAPRI_PHV_END_OFFSET(nicmgr_req_desc_adminq_cmd_desc), r7)
+  DMA_CMD_NEXT(_r_index)
+
   bcf             [c3], adminq_post_nicmgr_ci_db
   nop
 
+adminq_post_nicmgr_interrupt:
+
+  addi            _r_intr_addr, r0, INTR_ASSERT_BASE
+  add             _r_intr_addr, _r_intr_addr, d.intr_assert_index, LG2_INTR_ASSERT_STRIDE
+
   // DMA nicmgr request interrupt
   phvwri          p.adminq_to_s2_intr_assert_data, 0x01000000
-  DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
-  DMA_HBM_PHV2MEM(_r_ptr, !c0, d.intr_assert_addr, CAPRI_PHV_START_OFFSET(adminq_to_s2_intr_assert_data), CAPRI_PHV_END_OFFSET(adminq_to_s2_intr_assert_data), r7)
-  DMA_CMD_NEXT(_r_flit, _r_index, c7)
+  DMA_CMD_PTR(_r_ptr, _r_index, r7)
+  DMA_HBM_PHV2MEM(_r_ptr, !c0, _r_intr_addr, CAPRI_PHV_START_OFFSET(adminq_to_s2_intr_assert_data), CAPRI_PHV_END_OFFSET(adminq_to_s2_intr_assert_data), r7)
+  DMA_CMD_NEXT(_r_index)
 
 // TODO: Remove this section when nicmgr becomes interrupt driven
 adminq_post_nicmgr_ci_db:
@@ -69,9 +86,9 @@ adminq_post_nicmgr_ci_db:
   addi            _r_db_addr, r0, NICMGR_DB_ADDR
   phvwr           p.adminq_to_s2_nicmgr_db_data, _r_db_data.dx
 
-  DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+  DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_HBM_PHV2MEM_WF(_r_ptr, c0, _r_db_addr, CAPRI_PHV_START_OFFSET(adminq_to_s2_nicmgr_db_data), CAPRI_PHV_END_OFFSET(adminq_to_s2_nicmgr_db_data), r7)
-  DMA_CMD_NEXT(_r_flit, _r_index, c7)
+  DMA_CMD_NEXT(_r_index)
 
 #if 0
 adminq_post_nicmgr_ci_update:
@@ -92,7 +109,7 @@ adminq_post_nicmgr_evaldb:
 
 adminq_post_nicmgr_done:
   // Save DMA command pointer
-  phvwrpair       p.adminq_global_dma_cur_flit, _r_flit, p.adminq_global_dma_cur_index, _r_index
+  phvwr           p.adminq_global_dma_cur_index, _r_index
 
   // Setup adminq commit for next stage
   add             r7, r0, k.adminq_t0_s2s_adminq_qstate_addr

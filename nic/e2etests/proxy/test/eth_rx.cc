@@ -54,8 +54,8 @@ int main (int argc, char *argv[])
   step_network_pkt(ipkt, port);
 
   // Receive Packet
-  uint16_t size;
-  consume_buffer(lif_id, RX, 0, buf, &size);
+  uint16_t size = ipkt.size();
+  consume_buffer(lif_id, RX, 0, NULL, NULL);
   if (!size) {
     std::cout << "Did not get packet back from model!" << std::endl;
   } else {

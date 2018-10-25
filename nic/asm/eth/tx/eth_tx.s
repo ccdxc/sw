@@ -10,9 +10,8 @@ struct phv_ p;
 struct tx_table_s3_t0_k_ k;
 
 #define   _r_num_desc   r2        // Remaining number of descriptors
-#define   _r_ptr        r4        // Current DMA byte offset in PHV
-#define   _r_flit       r5        // Current DMA flit offset in PHV
-#define   _r_index      r6        // Current DMA command offset in PHV flit
+#define   _r_ptr        r5        // Current DMA byte offset in PHV
+#define   _r_index      r6        // Current DMA command index in PHV
 
 %%
 
@@ -25,7 +24,6 @@ eth_tx_start:
   nop
 
   // Load DMA command pointer
-  add             _r_flit, r0, k.eth_tx_global_dma_cur_flit
   add             _r_index, r0, k.eth_tx_global_dma_cur_index
 
   // Do we need to process any more descriptors ?
@@ -35,19 +33,19 @@ eth_tx_start:
 
   add             _r_num_desc, r0, k.eth_tx_t0_s2s_num_desc
 
-  DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+  DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_INTRINSIC(0, _r_ptr)
-  DMA_CMD_NEXT(_r_flit, _r_index, c7)
+  DMA_CMD_NEXT(_r_index)
 
-  DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)
+  DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_PKT(0, r3, _r_ptr, to_s3)
-  DMA_CMD_NEXT(_r_flit, _r_index, c7)
+  DMA_CMD_NEXT(_r_index)
 
   subi            _r_num_desc, _r_num_desc, 1
   beq             _r_num_desc, r0, eth_tx_done
 
-  // Save DMA command pointers
-  phvwrpair       p.eth_tx_global_dma_cur_flit, _r_flit, p.eth_tx_global_dma_cur_index, _r_index
+  // Save DMA command index
+  phvwr           p.eth_tx_global_dma_cur_index, _r_index
 
 eth_tx_continue:
 
@@ -62,7 +60,7 @@ eth_tx_done:
   // Update the remaining number of descriptors
   phvwr           p.eth_tx_t0_s2s_num_desc, _r_num_desc
 
-  // Launch eth_completion stage
+  // Launch eth_tx_completion stage
   phvwri.e        p.common_te0_phv_table_pc, eth_tx_completion[38:6]
   phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 

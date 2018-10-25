@@ -1150,6 +1150,7 @@ action eth_rx_rss_params(rss_type, rss_key)
     // --- For K+I generation
 
     // K: From Intrinsic & RXDMA headers
+    modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
 
     // I: From APP header
     modify_field(p4_to_p4plus_scratch.p4plus_app_id, p4_to_p4plus.p4plus_app_id);
@@ -1159,6 +1160,10 @@ action eth_rx_rss_params(rss_type, rss_key)
     modify_field(p4_to_p4plus_scratch.table3_valid, p4_to_p4plus.table3_valid);
 
     modify_field(p4_to_p4plus_scratch.pkt_type, p4_to_p4plus.pkt_type);
+    modify_field(p4_to_p4plus_scratch.l4_sport, p4_to_p4plus.l4_sport);
+    modify_field(p4_to_p4plus_scratch.l4_dport, p4_to_p4plus.l4_dport);
+    modify_field(p4_to_p4plus_scratch.ip_sa, p4_to_p4plus.ip_sa);
+    modify_field(p4_to_p4plus_scratch.ip_da, p4_to_p4plus.ip_da);
 
     // --- D-struct generation
     modify_field(eth_rx_rss_params_scratch.rss_type, rss_type);

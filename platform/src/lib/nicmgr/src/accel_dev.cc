@@ -527,9 +527,9 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     for (qid = 0; qid < spec->adminq_count; qid++) {
         qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_ADMIN, qid);
-        WRITE_MEM(qstate_addr + offsetof(eth_admin_qstate_t, p_index0),
-                  (uint8_t *)blank_qstate + offsetof(eth_admin_qstate_t, p_index0),
-                  sizeof(blank_qstate) - offsetof(eth_admin_qstate_t, p_index0), 0);
+        WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, p_index0),
+                  (uint8_t *)blank_qstate + offsetof(admin_qstate_t, p_index0),
+                  sizeof(blank_qstate) - offsetof(admin_qstate_t, p_index0), 0);
         invalidate_txdma_cacheline(qstate_addr);
     }
 
@@ -591,7 +591,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
 {
     adminq_init_cmd_t           *cmd = (adminq_init_cmd_t *)req;
     adminq_init_cpl_t           *cpl = (adminq_init_cpl_t *)resp;
-    storage_seq_admin_qstate_t  admin_qstate;
+    admin_qstate_t              admin_qstate;
     uint64_t                    addr;
 
     NIC_LOG_INFO("lif{}: queue_index {} ring_base {:#x} ring_size {} intr_index {}",
@@ -622,21 +622,21 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     admin_qstate.host = 1;
     admin_qstate.total = 1;
     admin_qstate.pid = cmd->pid;
-    admin_qstate.enable = 1;
-    admin_qstate.color = 1;
-    admin_qstate.rsvd1 = 0x1f;
     admin_qstate.p_index0 = 0;
     admin_qstate.c_index0 = 0;
     admin_qstate.comp_index = 0;
     admin_qstate.ci_fetch = 0;
-    admin_qstate.host_queue = ACCEL_PHYS_ADDR_HOST_GET(cmd->ring_base);
+    admin_qstate.sta.color = 1;
+    admin_qstate.cfg.enable = 1;
+    admin_qstate.cfg.host_queue = ACCEL_PHYS_ADDR_HOST_GET(cmd->ring_base);
+    admin_qstate.cfg.intr_enable = 1;
     admin_qstate.ring_base = cmd->ring_base;
-    if (admin_qstate.host_queue && !ACCEL_PHYS_ADDR_LIF_GET(cmd->ring_base)) {
+    if (admin_qstate.cfg.host_queue && !ACCEL_PHYS_ADDR_LIF_GET(cmd->ring_base)) {
         admin_qstate.ring_base |= ACCEL_PHYS_ADDR_LIF_SET(info.hw_lif_id);
     }
     admin_qstate.ring_size = cmd->ring_size;
     admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (64 << cmd->ring_size), 4096);
-    admin_qstate.intr_assert_addr = intr_assert_addr(spec->intr_base + cmd->intr_index);
+    admin_qstate.intr_assert_index = spec->intr_base + cmd->intr_index;
     if (nicmgr_lif_info) {
         admin_qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
         NIC_LOG_INFO("lif{}: nicmgr_qstate_addr RX {:#x}", info.hw_lif_id,
@@ -766,6 +766,7 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
     seq_queue_control_cmd_t *cmd = (seq_queue_control_cmd_t *)req;
     uint64_t                qstate_addr;
     uint8_t                 value;
+    struct admin_cfg_qstate admin_cfg = {0};
 
     if (cmd->qtype >= STORAGE_SEQ_QTYPE_MAX) {
         NIC_LOG_ERR("lif{}: bad qtype {}", info.hw_lif_id, cmd->qtype);
@@ -795,7 +796,10 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
             return (DEVCMD_ERROR);
         }
         qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
-        WRITE_MEM(qstate_addr + 16, (uint8_t *)&value, sizeof(value), 0);
+        admin_cfg.enable = enable;
+        admin_cfg.host_queue = 0x1;
+        WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg,
+            sizeof(admin_cfg), 0);
         invalidate_txdma_cacheline(qstate_addr);
         break;
     default:

@@ -30,6 +30,9 @@
 #define ETH_DMA_CMD_START_FLIT      ((offsetof(p, dma_dma_cmd_type) / 512) + 1)
 #define ETH_DMA_CMD_START_INDEX     0
 
+#define ETH_RX_DESC_ADDR_ERROR      1
+#define ETH_RX_DESC_DATA_ERROR      2
+
 #define DMA_PKT(_r_ptr, _r_addr, _gs_len) \
     or          _r_addr, d.addr_lo, d.addr_hi, sizeof(d.addr_lo); \
     add         _r_addr, r0, _r_addr.dx; \

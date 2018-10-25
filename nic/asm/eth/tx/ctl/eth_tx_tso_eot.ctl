@@ -4,7 +4,6 @@
 #include "INGRESS_tx_table_s3_t2_k.h"
 
 #include "../../asm/eth/tx/defines.h"
-#include "../../p4/iris/include/defines.h"
 
 struct phv_ p;
 struct tx_table_s3_t2_k_ k;
@@ -32,8 +31,7 @@ p = {
 };
 
 k = {
-    eth_tx_global_dma_cur_flit = 0x8;
-    eth_tx_global_dma_cur_index = 0x0;
+    eth_tx_global_dma_cur_index = 0x20;
     eth_tx_global_num_sg_elems = 0x1;
     eth_tx_global_tso_sot = 0x0;
     eth_tx_global_sg_desc_addr = 0x30000000080;

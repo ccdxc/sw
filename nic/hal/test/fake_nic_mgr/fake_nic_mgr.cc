@@ -12,6 +12,8 @@
 #include "gen/proto/debug.grpc.pb.h"
 #include "gen/proto/nic.pb.h"
 #include "nic/include/eth_common.h"
+#include "nic/include/adminq.h"
+
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -165,7 +167,7 @@ static bool is_smart_nic_mode() {
 void
 print_tx_qstate (const char *qstate)
 {
-   eth_tx_qstate  *tx  = (eth_tx_qstate *)qstate;
+   eth_tx_qstate_t *tx  = (eth_tx_qstate_t *)qstate;
    std::cout  << "tx_qstate: "
               << "pc offset: " << tx->pc_offset << "\n"
               << "rsvd0:" << tx->rsvd0 << "\n"
@@ -180,14 +182,14 @@ print_tx_qstate (const char *qstate)
               << "c_index0: " << tx->c_index0  << "\n"
               << "comp_index: " << tx->comp_index << "\n"
               << "ci_fetch: " << tx->ci_fetch << "\n"
-              << "enable: " << tx->enable << "\n"
-              << "color: " << tx->color << "\n"
-              << "host_queue: " << tx->host_queue << "\n"
-              << "rsvd1: " << tx->rsvd1 << "\n"
+              << "color: " << tx->sta.color << "\n"
+              << "spec_miss: " << tx->sta.spec_miss << "\n"
+              << "enable: " << tx->cfg.enable << "\n"
+              << "host_queue: " << tx->cfg.host_queue << "\n"
               << "ring_base: " << tx->ring_base << "\n"
               << "ring_size: " << tx->ring_size << "\n"
               << "cq_ring_base: " << tx->cq_ring_base << "\n"
-              << "intr_assert_addr: " << tx->intr_assert_addr << "\n"
+              << "intr_assert_index: " << tx->intr_assert_index << "\n"
               << "spurious_db_cnt: " << tx->spurious_db_cnt << "\n"
               << "sg_ring_base: " << tx->sg_ring_base << "\n"
               << std::endl;
@@ -197,7 +199,7 @@ print_tx_qstate (const char *qstate)
 void
 print_rx_qstate (const char *qstate)
 {
-   eth_rx_qstate  *rx  = (eth_rx_qstate *)qstate;
+   eth_rx_qstate_t *rx  = (eth_rx_qstate_t *)qstate;
    std::cout  << "rx_qstate: "
               << "pc offset " << rx->pc_offset << "\n"
               << "rsvd0" << rx->rsvd0 << "\n"
@@ -211,16 +213,13 @@ print_rx_qstate (const char *qstate)
               << "p_index0" << rx->p_index0 << "\n"
               << "c_index0" << rx->c_index0 << "\n"
               << "comp_index" << rx->comp_index << "\n"
-              << "c_index1" << rx->c_index1 << "\n"
-              << "enable" << rx->enable << "\n"
-              << "color" << rx->color << "\n"
-              << "host_queue: " << rx->host_queue << "\n"
-              << "rsvd1" << rx->rsvd1 << "\n"
+              << "color" << rx->sta.color << "\n"
+              << "enable" << rx->cfg.enable << "\n"
+              << "host_queue: " << rx->cfg.host_queue << "\n"
               << "ring_base" << rx->ring_base << "\n"
               << "ring_size" << rx->ring_size << "\n"
               << "cq_ring_base" << rx->cq_ring_base << "\n"
-              << "intr_assert_addr" << rx->intr_assert_addr << "\n"
-              << "rss_type" << rx->rss_type << "\n"
+              << "intr_assert_index" << rx->intr_assert_index << "\n"
               << std::endl;
 }
 
@@ -228,7 +227,7 @@ print_rx_qstate (const char *qstate)
 void
 print_admin_qstate (const char *qstate)
 {
-   eth_admin_qstate *ad  = (eth_admin_qstate *)qstate;
+   admin_qstate_t *ad  = (admin_qstate_t *)qstate;
    std::cout  << "admin_qstate: "
               << "pc offset " << ad->pc_offset << "\n"
               << "rsvd0" << ad->rsvd0 << "\n"
@@ -243,10 +242,9 @@ print_admin_qstate (const char *qstate)
               << "c_index0" << ad->c_index0 << "\n"
               << "comp_index" << ad->comp_index << "\n"
               << "ci_fetch" << ad->ci_fetch << "\n"
-              << "enable" << ad->enable << "\n"
-              << "color" << ad->color << "\n"
-              << "host_queue: " << ad->host_queue << "\n"
-              << "rsvd1" << ad->rsvd1 << "\n"
+              << "color" << ad->sta.color << "\n"
+              << "enable" << ad->cfg.enable << "\n"
+              << "host_queue: " << ad->cfg.host_queue << "\n"
               << "ring_base" << ad->ring_base << "\n"
               << "ring_size" << ad->ring_size << "\n"
               << "cq_ring_base" << ad->cq_ring_base << "\n"

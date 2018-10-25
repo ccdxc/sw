@@ -89,14 +89,4 @@ typedef struct storage_seq_qstate {
 
 static_assert (sizeof(storage_seq_qstate_t) == 64, "");
 
-#ifdef __ETH_COMMON_H__
-
-/**
- * storage_seq_admin_qstate - Storage Sequencer admin queue state
- */
-typedef eth_admin_qstate_t storage_seq_admin_qstate_t;
-
-static_assert (sizeof(storage_seq_admin_qstate_t) == 64, "");
-#endif
-
 #endif    // __STORAGE_SEQ_COMMON_H__

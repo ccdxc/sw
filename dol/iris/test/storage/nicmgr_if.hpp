@@ -7,7 +7,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "nic/include/eth_common.h"
+#include "nic/include/adminq.h"
 #include "nic/include/storage_seq_common.h"
 #include "nic/include/accel_ring.h"
 

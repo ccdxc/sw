@@ -23,19 +23,19 @@ class EthRxQstate(Packet):
 
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
-        LEShortField("p_index1", 0),
-        LEShortField("c_index1", 0),
+        LEShortField("comp_index", 0),
+
+        BitField("color", 0, 1),
+        BitField("rsvd1", 0, 7),
 
         BitField("enable", 0, 1),
-        BitField("color", 0, 1),
         BitField("host_queue", 0, 1),
-        BitField("rsvd1", 0, 5),
+        BitField("rsvd2", 0, 6),
 
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
         LELongField("cq_ring_base", 0),
-        LEIntField("intr_assert_addr", 0),
-        LEShortField("rss_type", 0),
+        LEShortField("intr_assert_index", 0),
     ]
 
 
@@ -54,19 +54,28 @@ class EthTxQstate(Packet):
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
         LEShortField("comp_index", 0),
-        LEShortField("spec_index", 0),
+        LEShortField("ci_fetch", 0),
+        LEShortField("ci_miss", 0),
+
+        BitField("color", 0, 1),
+        BitField("spec_miss", 0, 1),
+        BitField("rsvd1", 0, 6),
 
         BitField("enable", 0, 1),
-        BitField("color", 0, 1),
         BitField("host_queue", 0, 1),
-        BitField("rsvd1", 0, 5),
+        BitField("rsvd2", 0, 6),
 
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
         LELongField("cq_ring_base", 0),
-        LEIntField("intr_assert_addr", 0),
-        ByteField("spurious_db_cnt", 0),
+        LEShortField("intr_assert_index", 0),
         LELongField("sg_ring_base", 0),
+
+        LELongField("tso_hdr_addr", 0),
+        BitField("tso_hdr_len", 0, 10),
+        BitField("tso_ipid_delta", 0, 16),
+        BitField("tso_seq_delta", 0, 32),
+        BitField("spurious_db_cnt", 0, 6),
     ]
 
 
@@ -84,42 +93,50 @@ class AdminQstate(Packet):
 
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
-        LEShortField("p_index1", 0),
-        LEShortField("c_index1", 0),
+        LEShortField("comp_index", 0),
+        LEShortField("ci_fetch", 0),
+
+        BitField("color", 0, 1),
+        BitField("spec_miss", 0, 1),
+        BitField("rsvd1", 0, 6),
 
         BitField("enable", 0, 1),
-        BitField("color", 0, 1),
         BitField("host_queue", 0, 1),
-        BitField("rsvd1", 0, 5),
+        BitField("rsvd2", 0, 6),
 
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
+        LELongField("cq_ring_base", 0),
+        LELongField("intr_assert_addr", 0),
     ]
 
 
-class EthQstateObject(object):
+class QstateObject(object):
 
-    __data_class__ = None
-
-    def __init__(self, cls, addr, size):
+    def __init__(self, addr, __data_class__):
         self.addr = addr
-        self.size = size
-        self.__data_class__ = cls
-        self.data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
+        self.__data_class__ = __data_class__
+        self.size = len(self.__data_class__())
+        self.data = __data_class__(model_wrap.read_mem(self.addr, self.size))
 
     def Write(self, lgh = logger):
         if GlobalOptions.skipverify:
             return
-        lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
+        lgh.info("Writing %s @0x%x size: %d" % (self.__data_class__.__name__,
+            self.addr, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
         self.Read(lgh)
 
     def Read(self, lgh = logger):
         if GlobalOptions.skipverify:
             return
-        data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
-        lgh.ShowScapyObject(data)
-        lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
+        lgh.info("Reading %s @0x%x size: %d" % (self.__data_class__.__name__,
+            self.addr, self.size))
+        self.data = self.__data_class__(model_wrap.read_mem(self.addr, self.size))
+        lgh.ShowScapyObject(self.data)
+
+    def Show(self, lgh = logger):
+        lgh.ShowScapyObject(self.data)
 
     def set_pindex(self, ring, value):
         assert(isinstance(ring, int))
@@ -129,74 +146,74 @@ class EthQstateObject(object):
         assert(0 <= value <= math.pow(2, ring_size))
         model_wrap.write_mem_pcie(self.addr + 8 + (4 * ring), bytes(ctypes.c_uint16(value)), 2)
 
-    def get_pindex(self, ring):
-        assert(isinstance(ring, int))
-        assert(0 <= ring <= 1)
-        return getattr(self.data[self.__data_class__], 'p_index%d' % ring)
+
+class EthRxQstateObject(QstateObject):
+
+    def __init__(self, addr):
+        super().__init__(addr, EthRxQstate)
 
     def set_ring_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].ring_base = value
-        model_wrap.write_mem_pcie(self.addr + 17, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 16, bytes(ctypes.c_uint64(value)), 8)
 
     def set_ring_size(self, value):
         assert(isinstance(value, int))
         value = int(math.log(value, 2))
         self.data[self.__data_class__].ring_size = value
-        model_wrap.write_mem_pcie(self.addr + 25, bytes(ctypes.c_uint16(value)), 2)
+        model_wrap.write_mem_pcie(self.addr + 24, bytes(ctypes.c_uint16(value)), 2)
 
     def set_cq_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].cq_base = value
-        model_wrap.write_mem_pcie(self.addr + 27, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 26, bytes(ctypes.c_uint64(value)), 8)
+
+
+class EthTxQstateObject(QstateObject):
+
+    def __init__(self, addr):
+        super().__init__( addr, EthTxQstate)
+
+    def set_ring_base(self, value):
+        assert(isinstance(value, int))
+        self.data[self.__data_class__].ring_base = value
+        model_wrap.write_mem_pcie(self.addr + 20, bytes(ctypes.c_uint64(value)), 8)
+
+    def set_ring_size(self, value):
+        assert(isinstance(value, int))
+        value = int(math.log(value, 2))
+        self.data[self.__data_class__].ring_size = value
+        model_wrap.write_mem_pcie(self.addr + 28, bytes(ctypes.c_uint16(value)), 2)
+
+    def set_cq_base(self, value):
+        assert(isinstance(value, int))
+        self.data[self.__data_class__].cq_base = value
+        model_wrap.write_mem_pcie(self.addr + 30, bytes(ctypes.c_uint64(value)), 8)
 
     def set_sg_base(self, value):
         assert(isinstance(value, int))
         self.data[self.__data_class__].cq_base = value
         model_wrap.write_mem_pcie(self.addr + 40, bytes(ctypes.c_uint64(value)), 8)
 
-    def Show(self, lgh = logger):
-        lgh.ShowScapyObject(self.data)
 
+class AdminQstateObject(QstateObject):
 
-class AdminQstateObject(object):
-    def __init__(self, addr, size):
-        self.addr = addr
-        self.size = size
-        self.data = AdminQstate(model_wrap.read_mem(self.addr, self.size))
-
-    def Write(self, lgh = logger):
-        lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
-        model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
-        self.Read(lgh)
-
-    def Read(self, lgh = logger):
-        data = AdminQstate(model_wrap.read_mem(self.addr, self.size))
-        lgh.ShowScapyObject(data)
-        lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
-
-    def set_ring_count(self, host, total):
-        self.data[AdminQstate].host = host
-        self.data[AdminQstate].total = total
-        model_wrap.write_mem_pcie(self.addr + 5, bytes(ctypes.c_uint8(host << 4 | total)), 1)
+    def __init__(self, addr):
+        super().__init__(addr, AdminQstate)
 
     def set_ring_base(self, value):
         self.data[AdminQstate].ring_base = value
-        model_wrap.write_mem_pcie(self.addr + 17, bytes(ctypes.c_uint64(value)), 8)
+        model_wrap.write_mem_pcie(self.addr + 18, bytes(ctypes.c_uint64(value)), 8)
 
     def set_ring_size(self, value):
         value = int(math.log(value, 2))
         self.data[AdminQstate].ring_size = value
-        model_wrap.write_mem_pcie(self.addr + 25, bytes(ctypes.c_uint16(value)), 2)
+        model_wrap.write_mem_pcie(self.addr + 26, bytes(ctypes.c_uint16(value)), 2)
 
     def set_cq_base(self, value):
-        pass
-
-    def get_ring_size(self):
-        return int(math.pow(2, self.data[AdminQstate].ring_size))
-
-    def Show(self, lgh = logger):
-        lgh.ShowScapyObject(self.data)
+        assert(isinstance(value, int))
+        self.data[self.__data_class__].cq_base = value
+        model_wrap.write_mem_pcie(self.addr + 28, bytes(ctypes.c_uint64(value)), 8)
 
 
 class EthQueueObject(QueueObject):
@@ -220,11 +237,11 @@ class EthQueueObject(QueueObject):
     def qstate(self):
         if self._qstate is None:
             if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-                self._qstate = EthQstateObject(EthTxQstate, addr=self.GetQstateAddr(), size=self.queue_type.size)
+                self._qstate = EthTxQstateObject(addr=self.GetQstateAddr())
             elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
-                self._qstate = EthQstateObject(EthRxQstate, addr=self.GetQstateAddr(), size=self.queue_type.size)
+                self._qstate = EthRxQstateObject(addr=self.GetQstateAddr())
             elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
-                self._qstate = AdminQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
+                self._qstate = AdminQstateObject(addr=self.GetQstateAddr())
             else:
                 logger.critical("Unable to initialize Qstate for Queue Type %s" % self.queue_type.purpose)
                 raise NotImplementedError
@@ -253,8 +270,7 @@ class EthQueueObject(QueueObject):
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
             req_spec.queue_state = bytes(EthRxQstate(host=1, total=1,
                                                      enable=1, color=1,
-                                                     host_queue=1,
-                                                     rss_type=self.queue_type.lif.rss_type))
+                                                     host_queue=1))
             req_spec.label.prog_name = "rxdma_stage0.bin"
             req_spec.label.label = "eth_rx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
@@ -320,15 +336,6 @@ class EthQueueObject(QueueObject):
                 raise NotImplementedError
 
         self.Fill()
-
-        if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-            # Ignore completion ring posted index
-            model_wrap.eos_ignore_addr(self.qstate.addr + 12, 2)
-            # Ignore speculative index
-            model_wrap.eos_ignore_addr(self.qstate.addr + 14, 2)
-            # Ignore spurious_db_cnt
-            model_wrap.eos_ignore_addr(self.qstate.addr + 39, 1)
-
         self.qstate.Read()
 
     def Post(self, descriptor):

@@ -92,38 +92,35 @@ struct admin_comp_desc {
 
 typedef struct {
     uint64_t qstate_addr;
-    struct eth_qstate *qstate;
-    uint64_t queue_addr;
-    void *queue;
-
-    uint64_t cq_queue_addr;
-    void *cq_queue;
-    uint32_t cur_cq_index;
+    void *qstate;
+    uint64_t ring_base;
+    uint32_t ring_size;
+    uint64_t cq_ring_base;
+    void *q; // Q
+    uint16_t head;  // producer index
+    uint16_t tail;  // consumer index
+    void *cq; // CQ
+    uint16_t cq_tail;   // consumer index
+    uint16_t cq_color;  // expected color
 } queue_info_t;
 
-uint64_t get_qstate_addr(uint64_t lif, uint32_t qtype, uint32_t qid);
-queue_info_t get_queue_info(uint64_t lif, queue_type qtype, uint32_t qid);
+uint64_t get_qstate_addr(uint16_t lif, uint32_t qtype, uint32_t qid);
 
-std::pair<uint32_t,uint64_t>
-make_doorbell(int upd, int lif, int type, int pid, int qid, int ring, int p_index);
+queue_info_t &get_queue_info(uint16_t lif, queue_type qtype, uint32_t qid);
+void set_queue_info(uint16_t lif, queue_type qtype, uint32_t qid, queue_info_t queue_info);
 
-void set_queue_info(uint64_t lif, queue_type qtype, uint32_t qid, queue_info_t queue_info);
-void alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size);
-bool poll_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint32_t max_count, uint16_t *prev_cindex);
-void write_queue(uint64_t lif, queue_type qtype, uint32_t qid);
-void read_queue(uint64_t lif, queue_type qtype, uint32_t qid);
-void print_queue(uint64_t lif, queue_type qtype, uint32_t qid);
+void alloc_queue(uint16_t lif, queue_type qtype, uint32_t qid, uint16_t size);
+void write_queue(uint16_t lif, queue_type qtype, uint32_t qid);
+void read_queue(uint16_t lif, queue_type qtype, uint32_t qid);
+bool poll_queue(uint16_t lif, queue_type qtype, uint32_t qid);
 
-uint8_t *alloc_buffer(uint16_t size);
-void free_buffer(void *Addr);
-void post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t size);
-void consume_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t *size);
+uint8_t *alloc_buffer(uint32_t size);
+void free_buffer(uint8_t *buf);
 
+void post_buffer(uint16_t lif, queue_type qtype, uint32_t qid, uint8_t *buf, uint32_t size);
+typedef void (*completion_cb)(uint8_t *buf, uint32_t size, void *ctx);
+void consume_buffer(uint16_t lif, queue_type qtype, uint32_t qid, completion_cb cb, void *ctx);
 
-typedef void (*pkt_read_cb)(uint8_t *buf, uint32_t len, void *ctxt);
-void consume_queue(uint64_t lif, queue_type qtype, uint32_t qid,
-        pkt_read_cb pkt_cb, void *ctx);
-void tx_consume_queue(uint64_t lif, queue_type qtype, uint32_t qid);
-bool queue_has_space(uint64_t lif, queue_type qtype, uint32_t qid);
+bool queue_has_space(uint16_t lif, queue_type qtype, uint32_t qid);
 
 #endif

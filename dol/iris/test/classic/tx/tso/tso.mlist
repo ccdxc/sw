@@ -1,0 +1,16 @@
+# Feature Test Modules List
+feature:
+    id          : classic
+    sub         : tx_tso
+    package     : test.classic
+    module      : classic
+    enable      : False
+    ignore      : False
+
+modules:
+    - module:
+        name    : TSO_2K
+        spec    : tso_2k.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment : filter://native=False

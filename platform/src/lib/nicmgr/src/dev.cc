@@ -22,6 +22,7 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
+#include "adminq.h"
 
 
 sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
@@ -96,8 +97,8 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
     }
 
     // Create nicmgr service lif
-    struct eth_admin_qstate qstate_req = { 0 };
-    struct eth_admin_qstate qstate_resp = { 0 };
+    nicmgr_req_qstate_t qstate_req = { 0 };
+    nicmgr_resp_qstate_t qstate_resp = { 0 };
 
     struct queue_info qinfo [NUM_QUEUE_TYPES] = {
         [NICMGR_QTYPE_REQ] = {
@@ -157,15 +158,14 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
     READ_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
     NIC_LOG_INFO("Reading txdma cacheline at: {}", info.qstate_addr[NICMGR_QTYPE_REQ]);
 
+    qstate_req.host = 1;
+    qstate_req.total = 1;
     qstate_req.p_index0 = req_head;
     qstate_req.c_index0 = req_tail;
     qstate_req.comp_index = 0;
     qstate_req.ci_fetch = 0;
-    qstate_req.enable = 1;
-    qstate_req.host = 1;
-    qstate_req.total = 1;
-    qstate_req.color = 1;
-    qstate_req.rsvd1 = 0x1f;
+    qstate_req.sta.color = 1;
+    qstate_req.cfg.enable = 1;
     qstate_req.ring_base = req_ring_base;
     qstate_req.ring_size = log2(ring_size);
 
@@ -183,15 +183,14 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_RESP]);
     READ_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
 
+    qstate_resp.host = 1;
+    qstate_resp.total = 1;
     qstate_resp.p_index0 = resp_head;
     qstate_resp.c_index0 = resp_tail;
     qstate_resp.comp_index = 0;
     qstate_resp.ci_fetch = 0;
-    qstate_resp.enable = 1;
-    qstate_resp.host = 1;
-    qstate_resp.total = 1;
-    qstate_resp.color = 1;
-    qstate_resp.rsvd1 = 0x1f;
+    qstate_resp.sta.color = 1;
+    qstate_resp.cfg.enable = 1;
     qstate_resp.ring_base = resp_ring_base;
     qstate_resp.ring_size = log2(ring_size);
 
@@ -599,10 +598,10 @@ DeviceManager::AdminQPoll()
 
     invalidate_txdma_cacheline(req_qstate_addr);
 
-    READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, p_index0),
+    READ_MEM(req_qstate_addr + offsetof(admin_qstate_t, p_index0),
              (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
-    READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
+    READ_MEM(req_qstate_addr + offsetof(admin_qstate_t, c_index0),
              (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
     if (req_tail != c_index0) {
@@ -638,10 +637,10 @@ DeviceManager::AdminQPoll()
 
         invalidate_txdma_cacheline(req_qstate_addr);
 
-        READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, p_index0),
+        READ_MEM(req_qstate_addr + offsetof(admin_qstate_t, p_index0),
                  (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
-        READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
+        READ_MEM(req_qstate_addr + offsetof(admin_qstate_t, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
         NIC_LOG_INFO("request: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
@@ -650,10 +649,10 @@ DeviceManager::AdminQPoll()
         // Write nicmgr response descriptor
         invalidate_txdma_cacheline(resp_qstate_addr);
 
-        READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, p_index0),
+        READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, p_index0),
                  (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
-        READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
+        READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
         NIC_LOG_INFO("response: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
@@ -683,10 +682,10 @@ DeviceManager::AdminQPoll()
 
         invalidate_txdma_cacheline(resp_qstate_addr);
 
-        READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, p_index0),
+        READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, p_index0),
                  (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
-        READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
+        READ_MEM(resp_qstate_addr + offsetof(admin_qstate_t, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
         NIC_LOG_INFO("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",

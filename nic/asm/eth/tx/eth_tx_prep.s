@@ -14,19 +14,17 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 
 .param  eth_tx_commit
 
-#define  _r_num_rem       r1  // Number of descriptors remaining to prep
-#define  _r_num_desc      r2  // Number of descriptors to process
+#define  _c_do_sg         c2  // SG
+#define  _c_do_tso        c3  // TSO
+#define  _c_do_cq         c4  // Create CQ entry
+
+#define  _r_num_desc      r1  // Number of descriptors consumed
+#define  _r_op_x          r2  // Opcode processing register
+#define  _r_op_y          r3  // Opcode processing register
 #define  _r_tx_pktlen     r5  // Number of bytes that will be transferred
 
 .align
 eth_tx_prep:
-
-#if 0
-  DEBUG_DESCR(0)
-  DEBUG_DESCR(1)
-  DEBUG_DESCR(2)
-  DEBUG_DESCR(3)
-#endif
 
   bcf             [c2 | c3 | c7], eth_tx_prep_error
   nop
@@ -40,76 +38,75 @@ eth_tx_prep:
 
   // Setup DMA CMD PTR
   phvwr           p.p4_txdma_intr_dma_cmd_ptr, ETH_DMA_CMD_START_OFFSET
-  phvwrpair       p.eth_tx_global_dma_cur_flit, ETH_DMA_CMD_START_FLIT, p.eth_tx_global_dma_cur_index, ETH_DMA_CMD_START_INDEX
+  phvwr           p.eth_tx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
 
-  addi            _r_tx_pktlen, r0, 0
-  add             _r_num_rem, r0, k.eth_tx_t0_s2s_num_todo
-  beq             _r_num_rem, r0, eth_tx_prep_error
-  addi            _r_num_desc, r0, 0
-
-  sne             c1, d.num_sg_elems0, 0
-  seq             c7, d.opcode0, TXQ_DESC_OPCODE_TSO
-  bcf             [c1|c7], eth_tx_prep1
-  subi            _r_num_rem, _r_num_rem, 1
-  beq             _r_num_rem, r0, eth_tx_prep1
-  
-
-  sne             c2, d.num_sg_elems1, 0
-  seq             c7, d.opcode1, TXQ_DESC_OPCODE_TSO
-  bcf             [c2|c7], eth_tx_prep1
-  subi            _r_num_rem, _r_num_rem, 1
-  beq             _r_num_rem, r0, eth_tx_prep2
-
-  sne             c3, d.num_sg_elems2, 0
-  seq             c7, d.opcode2, TXQ_DESC_OPCODE_TSO
-  bcf             [c3|c7], eth_tx_prep2
-  subi            _r_num_rem, _r_num_rem, 1
-  beq             _r_num_rem, r0, eth_tx_prep3
-
-  sne             c4, d.num_sg_elems3, 0
-  seq             c7, d.opcode3, TXQ_DESC_OPCODE_TSO
-  bcf             [c4|c7], eth_tx_prep3
+  seq             c1, r0, k.eth_tx_t0_s2s_num_todo
+  bcf             [c1], eth_tx_prep_error
   nop
 
-eth_tx_prep4:
-  BUILD_APP_HEADER(3, r6, r7)
-  addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.{len3}.hx
-  phvwr           p.to_stage_6_to_stage_data, d[127:0]
+  // Launch commit stage
+  phvwri          p.common_te0_phv_table_lock_en, 1
+  phvwrpair       p.common_te0_phv_table_raw_table_size, LG2_TX_QSTATE_SIZE, p.common_te0_phv_table_addr, k.eth_tx_to_s1_qstate_addr
+  phvwri          p.common_te0_phv_table_pc, eth_tx_commit[38:6]
 
-eth_tx_prep3:
-  BUILD_APP_HEADER(2, r6, r7)
-  addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.{len2}.hx
-  phvwr           p.to_stage_5_to_stage_data, d[255:128]
+eth_tx_prep1:
+  BUILD_APP_HEADER(0, _r_op_x, _r_op_y)
+  addi            _r_num_desc, r0, 1
+  add             _r_tx_pktlen, r0, d.{len0}.hx
+  phvwr           p.to_stage_3_to_stage_data, d[511:384]
+
+  // if we have finished processing all the descriptors then stop
+  seq             c1, _r_num_desc, k.eth_tx_t0_s2s_num_todo
+  // if the next descriptor is SG or TSO then stop
+  sne             c2, d.num_sg_elems1, 0
+  seq             c3, d.opcode1, TXQ_DESC_OPCODE_TSO
+  bcf             [c1|c2|c3], eth_tx_prep_done
+  nop
 
 eth_tx_prep2:
-  BUILD_APP_HEADER(1, r6, r7)
+  BUILD_APP_HEADER(1, _r_op_x, _r_op_y)
   addi            _r_num_desc, _r_num_desc, 1
   add             _r_tx_pktlen, _r_tx_pktlen, d.{len1}.hx
   phvwr           p.to_stage_4_to_stage_data, d[383:256]
 
-eth_tx_prep1:
-  BUILD_APP_HEADER(0, r6, r7)
+  // if we have finished processing all the descriptors then stop
+  seq             c1, _r_num_desc, k.eth_tx_t0_s2s_num_todo
+  // if the next descriptor is SG or TSO then stop
+  sne             c2, d.num_sg_elems2, 0
+  seq             c3, d.opcode2, TXQ_DESC_OPCODE_TSO
+  bcf             [c1|c2|c3], eth_tx_prep_done
+  nop
+
+eth_tx_prep3:
+  BUILD_APP_HEADER(2, _r_op_x, _r_op_y)
   addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.{len0}.hx
-  phvwr           p.to_stage_3_to_stage_data, d[511:384]
+  add             _r_tx_pktlen, _r_tx_pktlen, d.{len2}.hx
+  phvwr           p.to_stage_5_to_stage_data, d[255:128]
+
+  // if we have finished processing all the descriptors then stop
+  seq             c1, _r_num_desc, k.eth_tx_t0_s2s_num_todo
+  // if the next descriptor is SG or TSO then stop
+  sne             c2, d.num_sg_elems3, 0
+  seq             c3, d.opcode3, TXQ_DESC_OPCODE_TSO
+  bcf             [c1|c2|c3], eth_tx_prep_done
+  nop
+
+eth_tx_prep4:
+  BUILD_APP_HEADER(3, _r_op_x, _r_op_y)
+  addi            _r_num_desc, _r_num_desc, 1
+  add             _r_tx_pktlen, _r_tx_pktlen, d.{len3}.hx
+  phvwr           p.to_stage_6_to_stage_data, d[127:0]
 
 eth_tx_prep_done:
-  // Set number of descriptors to process
-  phvwr           p.eth_tx_t0_s2s_num_desc, _r_num_desc
-
   // Set number of sg elements to process
+  sne             c1, d.num_sg_elems0, 0
   phvwr.c1        p.eth_tx_t0_s2s_do_sg, 1
   phvwr.c1        p.eth_tx_global_num_sg_elems, d.num_sg_elems0
 
-  // Set number of bytes to tx (for rate limited)
-  phvwr           p.p4_intr_packet_len, _r_tx_pktlen
-
-  // Launch commit stage
-  phvwri          p.common_te0_phv_table_lock_en, 1
-  phvwrpair.e     p.common_te0_phv_table_raw_table_size, LG2_TX_QSTATE_SIZE, p.common_te0_phv_table_addr, k.eth_tx_to_s1_qstate_addr
-  phvwri.f        p.common_te0_phv_table_pc, eth_tx_commit[38:6]
+  // Set number of descriptors to process
+  phvwr.e         p.eth_tx_t0_s2s_num_desc, _r_num_desc
+  // Set number of bytes to tx (for rate limiter)
+  phvwr.f         p.p4_intr_packet_len, _r_tx_pktlen
 
 eth_tx_prep_error:
   phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0

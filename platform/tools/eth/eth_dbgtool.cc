@@ -5,73 +5,25 @@
 #include <cassert>
 #include <cstdio>
 
+#include "adminq.h"
 #include "eth_common.h"
 #include "sdk/pal.hpp"
 
 
 struct eth_rx_qstate qstate_ethrx = { 0 };
 struct eth_tx_qstate qstate_ethtx = { 0 };
-struct eth_admin_qstate qstate_ethadmin = { 0 };
+struct admin_qstate qstate_ethadmin = { 0 };
 
-
-void write_qstate(char **argv)
-{
-    uint64_t addr = std::strtoul(argv[3], NULL, 0);
-
-    switch (std::strtoul(argv[2], NULL, 0)) {
-        case 0:
-            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
-            qstate_ethrx.pc_offset = 3;
-            qstate_ethrx.cosA = 0;
-            qstate_ethrx.cosB = 0;
-            qstate_ethrx.host = 1;
-            qstate_ethrx.total = 1;
-            qstate_ethrx.pid = 0;
-            qstate_ethrx.c_index0 = 0;
-            qstate_ethrx.comp_index = 0;
-            qstate_ethrx.enable = 1;
-            qstate_ethrx.color = 1;
-            qstate_ethrx.host_queue = 1;
-            qstate_ethrx.ring_base = std::strtoul(argv[4], NULL, 16);
-            qstate_ethrx.ring_size = std::strtoul(argv[5], NULL, 0);
-            qstate_ethrx.cq_ring_base = std::strtoul(argv[6], NULL, 16);
-            qstate_ethrx.intr_assert_addr = std::strtoul(argv[7], NULL, 16);
-            sdk::lib::pal_mem_write(addr, (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
-            break;
-        case 1:
-            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
-            qstate_ethtx.pc_offset = 4;
-            qstate_ethtx.cosA = 0;
-            qstate_ethtx.cosB = 0;
-            qstate_ethtx.host = 1;
-            qstate_ethtx.total = 1;
-            qstate_ethtx.pid = 0;
-            qstate_ethtx.p_index0 = 0;
-            qstate_ethtx.c_index0 = 0;
-            qstate_ethtx.comp_index = 0;
-            qstate_ethtx.enable = 1;
-            qstate_ethtx.color = 1;
-            qstate_ethtx.host_queue = 1;
-            qstate_ethtx.ring_base = std::strtoul(argv[4], NULL, 16);
-            qstate_ethtx.ring_size = std::strtoul(argv[5], NULL, 0);
-            qstate_ethtx.cq_ring_base = std::strtoul(argv[6], NULL, 16);
-            qstate_ethtx.intr_assert_addr = std::strtoul(argv[7], NULL, 16);
-            qstate_ethtx.sg_ring_base = std::strtoul(argv[8], NULL, 16);
-            qstate_ethtx.spurious_db_cnt = 0;
-            sdk::lib::pal_mem_write(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
-            break;
-        default:
-            std::cerr << "Invalid Queue Type!" << std::endl;
-            break;
-    }
-}
 
 void read_qstate(char **argv)
 {
-    uint64_t addr = std::strtoul(argv[3], NULL, 0);
+    uint64_t base = std::strtoul(argv[3], NULL, 16);
+    uint64_t qid = std::strtoul(argv[4], NULL, 0);
+    uint64_t addr;
 
     switch (std::strtoul(argv[2], NULL, 0)) {
         case 0:
+            addr = base + qid * sizeof(qstate_ethrx);
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
             printf("pc_offset=0x%0x\n"
                  "rsvd0=0x%0x\n"
@@ -79,26 +31,25 @@ void read_qstate(char **argv)
                  "eval_last=0x%0x\n"
                  "host=0x%0x\ntotal=0x%0x\n"
                  "pid=0x%0x\n"
-                 "p_index0=0x%0x\nc_index0=0x%0x\n"
-                 "comp_index=0x%0x\nc_index1=0x%0x\n"
-                 "enable=0x%0x\ncolor=0x%0x\nhost_queue=0x%0x\n"
+                 "p_index0=0x%0x\nc_index0=0x%0x\ncomp_index=0x%0x\n"
+                 "color=0x%0x\n"
+                 "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
                  "ring_base=0x%0lx\nring_size=0x%0x\n"
-                 "cq_ring_base=0x%0lx\nintr_assert_addr=0x%0x\n"
-                 "rss_type=0x%0x\n",
+                 "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
                  qstate_ethrx.pc_offset,
                  qstate_ethrx.rsvd0,
                  qstate_ethrx.cosA, qstate_ethrx.cosB, qstate_ethrx.cos_sel,
                  qstate_ethrx.eval_last,
                  qstate_ethrx.host, qstate_ethrx.total,
                  qstate_ethrx.pid,
-                 qstate_ethrx.p_index0, qstate_ethrx.c_index0,
-                 qstate_ethrx.comp_index, qstate_ethrx.c_index1,
-                 qstate_ethrx.enable, qstate_ethrx.color, qstate_ethrx.host_queue,
+                 qstate_ethrx.p_index0, qstate_ethrx.c_index0, qstate_ethrx.comp_index,
+                 qstate_ethrx.sta.color,
+                 qstate_ethrx.cfg.enable, qstate_ethrx.cfg.host_queue, qstate_ethrx.cfg.intr_enable,
                  qstate_ethrx.ring_base, qstate_ethrx.ring_size,
-                 qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_addr,
-                 qstate_ethrx.rss_type);
+                 qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_index);
             break;
         case 1:
+            addr = base + qid * sizeof(qstate_ethrx);
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
             printf("pc_offset=0x%0x\n"
                  "rsvd0=0x%0x\n"
@@ -107,12 +58,13 @@ void read_qstate(char **argv)
                  "host=0x%0x\ntotal=0x%0x\n"
                  "pid=0x%0x\n"
                  "p_index0=0x%0x\nc_index0=0x%0x\n"
-                 "comp_index=0x%0x\nci_fetch=0x%0x\n"
-                 "enable=0x%0x\ncolor=0x%0x\nhost_queue=0x%0x\n"
+                 "comp_index=0x%0x\nci_fetch=0x%0x\nci_miss=0x%0x\n"
+                 "color=0x%0x\nspec_miss=0x%0x\n"
+                 "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
                  "ring_base=0x%0lx\nring_size=0x%0x\n"
-                 "cq_ring_base=0x%0lx\nintr_assert_addr=0x%0x\n"
+                 "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                  "sg_ring_base=0x%0lx\n"
-                 "spurious_db_cnt=0x%0x\n",
+                 "spurious_db_cnt=0x%lx\n",
                  qstate_ethtx.pc_offset,
                  qstate_ethtx.rsvd0,
                  qstate_ethtx.cosA, qstate_ethtx.cosB, qstate_ethtx.cos_sel,
@@ -120,14 +72,16 @@ void read_qstate(char **argv)
                  qstate_ethtx.host, qstate_ethtx.total,
                  qstate_ethtx.pid,
                  qstate_ethtx.p_index0, qstate_ethtx.c_index0,
-                 qstate_ethtx.comp_index, qstate_ethtx.ci_fetch,
-                 qstate_ethtx.enable, qstate_ethtx.color, qstate_ethtx.host_queue,
+                 qstate_ethtx.comp_index, qstate_ethtx.ci_fetch, qstate_ethtx.ci_miss,
+                 qstate_ethtx.sta.color,  qstate_ethtx.sta.spec_miss,
+                 qstate_ethtx.cfg.enable, qstate_ethtx.cfg.host_queue, qstate_ethtx.cfg.intr_enable,
                  qstate_ethtx.ring_base, qstate_ethtx.ring_size,
-                 qstate_ethtx.cq_ring_base, qstate_ethtx.intr_assert_addr,
+                 qstate_ethtx.cq_ring_base, qstate_ethtx.intr_assert_index,
                  qstate_ethtx.sg_ring_base,
                  qstate_ethtx.spurious_db_cnt);
             break;
         case 2:
+            addr = base + qid * sizeof(qstate_ethrx);
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethadmin, sizeof(qstate_ethadmin));
             printf("pc_offset=0x%0x\n"
                  "rsvd0=0x%0x\n"
@@ -137,9 +91,10 @@ void read_qstate(char **argv)
                  "pid=0x%0x\n"
                  "p_index0=0x%0x\nc_index0=0x%0x\n"
                  "comp_index=0x%0x\nci_fetch=0x%0x\n"
-                 "enable=0x%0x\ncolor=0x%0x\nhost_queue=0x%0x\n"
+                 "color=0x%0x\n"
+                 "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
                  "ring_base=0x%0lx\nring_size=0x%0x\n"
-                 "cq_ring_base=0x%0lx\nintr_assert_addr=0x%0x\n"
+                 "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                  "nicmgr_qstate_addr=0x%0lx\n",
                  qstate_ethadmin.pc_offset,
                  qstate_ethadmin.rsvd0,
@@ -149,9 +104,10 @@ void read_qstate(char **argv)
                  qstate_ethadmin.pid,
                  qstate_ethadmin.p_index0, qstate_ethadmin.c_index0,
                  qstate_ethadmin.comp_index, qstate_ethadmin.ci_fetch,
-                 qstate_ethadmin.enable, qstate_ethadmin.color, qstate_ethadmin.host_queue,
+                 qstate_ethadmin.sta.color,
+                 qstate_ethadmin.cfg.enable, qstate_ethadmin.cfg.host_queue, qstate_ethadmin.cfg.intr_enable,
                  qstate_ethadmin.ring_base, qstate_ethadmin.ring_size,
-                 qstate_ethadmin.cq_ring_base, qstate_ethadmin.intr_assert_addr,
+                 qstate_ethadmin.cq_ring_base, qstate_ethadmin.intr_assert_index,
                  qstate_ethadmin.nicmgr_qstate_addr);
             break;
         default:
@@ -164,8 +120,7 @@ int main (int argc, char **argv)
 {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " op args ..." << std::endl;
-        std::cerr << "   read_qstate    <qtype> <qstate_addr>" << std::endl;
-        std::cerr << "   write_qstate   <qtype> <qstate_addr> <ring_base> <ring_size> <cq_ring_base> <intr_assert_addr>" << std::endl;
+        std::cerr << "   read_qstate    <qtype> <qstate_base> <qid>" << std::endl;
         std::cerr << "   memrd          <addr> <size_in_bytes>" << std::endl;
         std::cerr << "   memwr          <addr> <size_in_bytes> <bytes> ..." << std::endl;
         std::cerr << "   memwr32        <addr> <32-bit value>" << std::endl;
@@ -182,15 +137,12 @@ int main (int argc, char **argv)
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW) == sdk::lib::PAL_RET_OK);
 #endif
 
     if (strcmp(argv[1], "read_qstate") == 0) {
-        assert(argc == 4);
+        assert(argc == 5);
         read_qstate(argv);
-    } else if (strcmp(argv[1], "write_qstate") == 0) {
-        assert(argc == 8);
-        write_qstate(argv);
     } else if (strcmp(argv[1], "memrd") == 0) {
         assert(argc == 4);
         uint64_t addr = strtoul(argv[2], NULL, 16);
