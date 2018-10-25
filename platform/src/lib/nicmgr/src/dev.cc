@@ -29,8 +29,8 @@ sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
 #define LIF_ID_BASE     (100)
 sdk::lib::indexer *lif_allocator = sdk::lib::indexer::factory(1024);
 
-#define ENIC_ID_BASE    (100)
-sdk::lib::indexer *enic_allocator = sdk::lib::indexer::factory(4096);
+// #define ENIC_ID_BASE    (100)
+// sdk::lib::indexer *enic_allocator = sdk::lib::indexer::factory(4096);
 
 
 uint64_t
@@ -217,7 +217,7 @@ DeviceManager::LoadConfig(string path)
     boost::property_tree::read_json(path, spec);
     struct eth_devspec *eth_spec;
     struct accel_devspec *accel_spec;
-    uint32_t intr_base = 0, enic_id = 0;
+    uint32_t intr_base = 0;
 
 #if 0
     // Discover existing configuration
@@ -339,15 +339,16 @@ DeviceManager::LoadConfig(string path)
 
             eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             if (val.get_optional<string>("network")) {
-                eth_spec->vrf_id = val.get<uint64_t>("network.vrf");
+                // eth_spec->vrf_id = val.get<uint64_t>("network.vrf");
                 eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
                 eth_spec->uplink = uplinks[eth_spec->uplink_id];
                 if (eth_spec->uplink == NULL) {
                     NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
                 }
-                eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg");
+                // eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg");
             }
 
+#if 0
             eth_spec->enic_id = val.get<uint64_t>("network.enic", 0);
             if (eth_spec->enic_id == 0) {
                 if (enic_allocator->alloc(&enic_id) != sdk::lib::indexer::SUCCESS) {
@@ -356,6 +357,7 @@ DeviceManager::LoadConfig(string path)
                 }
                 eth_spec->enic_id = ENIC_ID_BASE + enic_id;
             }
+#endif
 
             eth_spec->host_dev = false;
             NIC_LOG_INFO("Adding mnic device with lif_id: {}, hw_lif_id: {}",
@@ -413,14 +415,15 @@ DeviceManager::LoadConfig(string path)
             }
 
             eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-            eth_spec->vrf_id = val.get<uint64_t>("network.vrf", 0);
+            // eth_spec->vrf_id = val.get<uint64_t>("network.vrf", 0);
             eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
             eth_spec->uplink = uplinks[eth_spec->uplink_id];
             if (eth_spec->uplink == NULL) {
                 NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
             }
-            eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg", 0);
 
+#if 0
+            eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg", 0);
             eth_spec->enic_id = val.get<uint64_t>("network.enic", 0);
             if (eth_spec->enic_id == 0) {
                 if (enic_allocator->alloc(&enic_id) != sdk::lib::indexer::SUCCESS) {
@@ -429,6 +432,7 @@ DeviceManager::LoadConfig(string path)
                 }
                 eth_spec->enic_id = ENIC_ID_BASE + enic_id;
             }
+#endif
 
             eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
             eth_spec->host_dev = true;

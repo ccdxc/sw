@@ -857,12 +857,13 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
     uint64_t addr;
-    uint64_t mac;
-    uint16_t vlan;
+    // uint64_t mac;
+    // uint16_t vlan;
 
     NIC_LOG_INFO("lif{}: CMD_OPCODE_LIF_INIT: lif_index {}", info.hw_lif_id,
             cmd->index);
 
+#if 0
     for (auto it = endpoints.cbegin(); it != endpoints.cend(); it++) {
         mac = get<0>(it->first);
         vlan = get<1>(it->first);
@@ -887,6 +888,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
             }
         }
     }
+#endif
 
     // Clear all fields after p_index0
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
@@ -2039,6 +2041,7 @@ ostream &operator<<(ostream& os, const Eth& obj) {
            << endl;
     }
 
+#if 0
     os << "ENICS:" << endl;
     os << "\tenic_id = " << obj.spec->enic_id << endl;
 
@@ -2049,6 +2052,7 @@ ostream &operator<<(ostream& os, const Eth& obj) {
            << ", endpoint_handle = " << it->second
            << endl;
     }
+#endif
 
     return os;
 }

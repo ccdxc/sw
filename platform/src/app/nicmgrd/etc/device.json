@@ -1,23 +1,15 @@
 {
     "network" : {
-        "vrf" : [
-            { "id" : 1 },
-            { "id" : 2 }
-        ],
-        "l2seg" : [
-            { "id" : 1, "vlan": 1, "vrf" : 1 },
-            { "id" : 2, "vlan": 10, "vrf" : 1 },
-            { "id" : 3, "vlan": 16, "vrf" : 1 }
-        ],
         "uplink" : [
-            { "id" : 128, "port": 1, "native_l2seg": 1, "nonnative_l2seg" : [2, 3] },
-            { "id" : 129, "port": 2, "native_l2seg": 1, "nonnative_l2seg" : [2, 3] }
+            { "id" : 128, "port": 1 },
+            { "id" : 129, "port": 2 },
+            { "id" : 130, "port": 9 }
         ]
     },
 
     "mnic_dev" : [
         {
-            "name" : "mnic0",
+            "name" : "oob_mnic0",
             "dev_uuid" : 11,
             "rxq_count" : 1,
             "txq_count" : 1,
@@ -26,13 +18,11 @@
             "intr_count" : 4,
             "mac_addr" : "00:02:00:00:01:01",
             "network" : {
-                "uplink" : 128,
-                "vrf" : 1,
-                "native_l2seg" : 1
+                "uplink" : 130
             }
         },
         {
-            "name" : "mnic1",
+            "name" : "inb_mnic0",
             "dev_uuid" : 12,
             "rxq_count" : 1,
             "txq_count" : 1,
@@ -41,9 +31,20 @@
             "intr_count" : 4,
             "mac_addr" : "00:02:00:00:01:02",
             "network" : {
-                "uplink" : 129,
-                "vrf" : 1,
-                "native_l2seg" : 1
+                "uplink" : 128
+            }
+        },
+        {
+            "name" : "inb_mnic1",
+            "dev_uuid" : 13,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "eq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "mac_addr" : "00:02:00:00:01:03",
+            "network" : {
+                "uplink" : 129
             }
         }
     ],
@@ -57,15 +58,13 @@
             "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 34,
-            "mac_addr" : "00:02:00:00:01:03",
+            "mac_addr" : "00:02:00:00:01:04",
             "pcie" : {
                 "port" : 0,
                 "num_vfs" : 0
             },
             "network" : {
-                "uplink" : 128,
-                "vrf" : 1,
-                "native_l2seg" : 1
+                "uplink" : 128
             },
             "rdma" : {
                 "sq_count" : 512,
@@ -87,15 +86,13 @@
             "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 34,
-            "mac_addr" : "00:02:00:00:01:04",
+            "mac_addr" : "00:02:00:00:01:05",
             "pcie" : {
                 "port" : 0,
                 "num_vfs" : 0
             },
             "network" : {
-                "uplink" : 129,
-                "vrf" : 1,
-                "native_l2seg" : 1
+                "uplink" : 129
             },
             "rdma" : {
                 "sq_count" : 512,
