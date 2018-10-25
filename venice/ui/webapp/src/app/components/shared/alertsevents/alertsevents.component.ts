@@ -130,7 +130,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
 
   // Alert State filters
   selectedStateFilters = [MonitoringAlertSpec_state_uihint.OPEN];
-  possibleFilterStates = Object.values(MonitoringAlertSpec_state_uihint);;
+  possibleFilterStates = Object.values(MonitoringAlertSpec_state_uihint);
 
   alertTrackBy = HttpEventUtility.trackBy;
 

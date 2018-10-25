@@ -19,7 +19,7 @@ export class SearchUtil {
   public static SEARCHFIELD_SPEC = 'spec';
   public static SEARCHFIELD_STATUS = 'status';
 
-  public static META_ATTRIBUTES = ['name', 'tenant', 'generation-id', 'resource-version',  'uuid',  'creation-time', 'mod-time', 'namespace', 'self-link'];
+  public static META_ATTRIBUTES = ['name', 'tenant', 'generation-id', 'resource-version', 'uuid', 'creation-time', 'mod-time', 'namespace', 'self-link'];
 
   // For the backend, equal expects only one value, while in can support multiple
   // The UI hides this distinction and shows equal, but allows user to select multiple if they wish to.
@@ -122,35 +122,6 @@ export class SearchUtil {
   }
 
   /**
-   * Follow
-   *  pensando/sw/venice/ui/venice-sdk/v1/models/generated/category-mapping.model.ts
-   */
-  public static getKindsByCategory(selectedCategory: string): any[] {
-    return Object.keys(CategoryMapping[selectedCategory]);
-  }
-
-  /**
-   * Find category from kind.
-   * e.g given "Node" as a kind, return "Cluster" as category.
-   * see pensando/sw/venice/ui/venice-sdk/v1/models/generated/category-mapping.model.ts
-   * @param kind
-   */
-  public static findCategoryByKind(kind: string): string {
-    const category = null;
-    const cats = Object.keys(CategoryMapping);
-    for (let i = 0; i < cats.length; i++) {
-      const cat = cats[i];
-      const kinds = this.getKindsByCategory(cat);
-      for (let j = 0; j < kinds.length; j++) {
-        if (kind === kinds[j]) {
-          return cat;
-        }
-      }
-    }
-    return category;
-  }
-
-  /**
    * Find Venice-SDK object model informaton
    * @param category
    * @param kind
@@ -175,7 +146,7 @@ export class SearchUtil {
   }
 
   public static getModelInfoByKind(kind: string): any {
-    const cat = this.findCategoryByKind(kind);
+    const cat = Utility.findCategoryByKind(kind);
     return this.getModelInfo(cat, kind);
   }
 
@@ -223,6 +194,9 @@ export class SearchUtil {
      * @param value
      */
   public static formatInputString(value: string): string {
+    if (value == null) {
+      return value;
+    }
     let inputstr = value.trim(); // "in:cluster is: node  has:meta.name=node9 ";
     inputstr = inputstr.replace(/\s\s+/g, ' ');
     inputstr = inputstr.replace(';', ':');   // format [is;node]  double [is:node]
@@ -401,7 +375,7 @@ export class SearchUtil {
    */
   public static isSearchInputAlreadyContain(searchInputString: string, grammarTag: string, selection: any): boolean {
     const compiled: CompileSearchInputStringResult = SearchUtil.compileSearchInputString(searchInputString);
-    if (! compiled.searchspec) {
+    if (!compiled.searchspec) {
       return false;
     }
     const grammarValues = compiled.searchspec[grammarTag];
@@ -593,7 +567,7 @@ export class SearchUtil {
         searchExpression.values = [strs[1].trim()];
       }
     }
-    return (searchExpression.key) ?  searchExpression : null;
+    return (searchExpression.key) ? searchExpression : null;
   }
 
   /**
@@ -602,8 +576,8 @@ export class SearchUtil {
    * @param key
    * @param subKey
    */
-   public static getOperators(kind: string, keys: string[]): any[] {
-    const category = this.findCategoryByKind(kind);
+  public static getOperators(kind: string, keys: string[]): any[] {
+    const category = Utility.findCategoryByKind(kind);
     const _ = Utility.getLodash();
     if (!category) {
       _.union(SearchUtil.stringOperators, SearchUtil.numberOperators);

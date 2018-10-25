@@ -1,8 +1,9 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, OnDestroy } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from 'primeng/primeng';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 @Component({
   selector: 'app-alertsevents',
@@ -10,7 +11,7 @@ import { MessageService } from 'primeng/primeng';
   styleUrls: ['./alertseventspage.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class AlertseventspageComponent extends BaseComponent implements OnInit {
+export class AlertseventspageComponent extends BaseComponent implements OnInit, OnDestroy {
   hideAlertpolicies: boolean = this.uiconfigsService.isObjectDisabled('AlertPolicies');
 
   constructor(protected _controllerService: ControllerService,
@@ -39,5 +40,12 @@ export class AlertseventspageComponent extends BaseComponent implements OnInit {
 
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  ngOnDestroy() {
+    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
+      'component': 'Alertseventspage', 'state':
+        Eventtypes.COMPONENT_DESTROY
+    });
   }
 }

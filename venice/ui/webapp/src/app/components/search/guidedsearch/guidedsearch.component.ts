@@ -246,7 +246,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     if (this.selectedCategories.length > 0) {
       for (let i = 0; i < this.selectedCategories.length; i++) {
         const cat = this.selectedCategories[i];
-        const kindByCat = SearchUtil.getKindsByCategory(cat);
+        const kindByCat = Utility.getKindsByCategory(cat);
         newKindList = newKindList.concat(kindByCat);
       }
       if (newKindList.length > 0) {

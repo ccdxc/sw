@@ -6,6 +6,8 @@ import { LogService } from '../services/logging/log.service';
 import { environment } from '@env/environment';
 import { SelectItem } from 'primeng/primeng';
 import * as $ from 'jquery';
+import * as pluralize from 'pluralize';
+import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
 
 
 
@@ -30,6 +32,10 @@ export class Utility {
    */
   static getRESTAPIServerAndPort(): string {
     return (environment.isRESTAPIReady && environment.production) ? window.location.protocol + '//' + window.location.hostname + ':' + window.location.port : environment.server_url + ':' + environment.server_port;
+  }
+
+  static getBaseUIUrl(): string {
+    return window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/#/';
   }
 
   static isIE(): boolean {
@@ -109,7 +115,7 @@ export class Utility {
   }
 
   static getMacAddress(): string {
-    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function() {
       return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
     });
   }
@@ -231,7 +237,7 @@ export class Utility {
 
   // encode(decode) html text into html entity
   static decodeHtmlEntity(str: string) {
-    return str.replace(/&#(\d+);/g, function (match, dec) {
+    return str.replace(/&#(\d+);/g, function(match, dec) {
       return String.fromCharCode(dec);
     });
   }
@@ -245,7 +251,7 @@ export class Utility {
   }
 
   static escape(s): any {
-    return s.replace(/[&"<>]/g, function (c) {
+    return s.replace(/[&"<>]/g, function(c) {
       return {
         '&': '&amp;',
         '"': '&quot;',
@@ -393,6 +399,10 @@ export class Utility {
 
   static getJQuery(): any {
     return $;
+  }
+
+  static getPluralize(): any {
+    return pluralize;
   }
 
   static compareDatePart(myDate: Date, compareToDate: Date): number {
@@ -590,14 +600,14 @@ export class Utility {
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
-      return str.replace(/({\d})/g, function (i) {
+      return str.replace(/({\d})/g, function(i) {
         return data[i.replace(/{/, '').replace(/}/, '')];
       });
     } else if (typeof str === 'string' && (data instanceof Object)) {
 
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          return str.replace(/({([^}]+)})/g, function (i) {
+          return str.replace(/({([^}]+)})/g, function(i) {
             i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
@@ -663,6 +673,58 @@ export class Utility {
       }
     }
     return ret;
+  }
+
+  /**
+   * Follow
+   *  pensando/sw/venice/ui/venice-sdk/v1/models/generated/category-mapping.model.ts
+   */
+  public static getKindsByCategory(selectedCategory: string): any[] {
+    return Object.keys(CategoryMapping[selectedCategory]);
+  }
+
+  /**
+   * Find category from kind.
+   * e.g given "Node" as a kind, return "Cluster" as category.
+   * see pensando/sw/venice/ui/venice-sdk/v1/models/generated/category-mapping.model.ts
+   * @param kind
+   */
+  public static findCategoryByKind(kind: string): string {
+    const category = null;
+    const cats = Object.keys(CategoryMapping);
+    for (let i = 0; i < cats.length; i++) {
+      const cat = cats[i];
+      const kinds = this.getKindsByCategory(cat);
+      for (let j = 0; j < kinds.length; j++) {
+        if (kind === kinds[j]) {
+          return cat;
+        }
+      }
+    }
+    return category;
+  }
+
+  public static genSelfLinkRoute(kind, name) {
+    const cat = this.findCategoryByKind(kind).toLowerCase();
+    switch (kind) {
+      case 'Cluster':
+      case 'Node':
+        return cat + '/cluster';
+      case 'SmartNIC':
+        return cat + '/naples';
+      case 'Workload':
+      case 'Endpoint':
+        return kind;
+      case 'Alert':
+      case 'Event':
+        return cat + '/alertsevents';
+      case 'AlertPolicy':
+        return cat + '/alertsevents/alertpolicies';
+      case 'AlertDestination':
+        return cat + '/alertsevents/alertdestinations';
+      default:
+        return cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
+    }
   }
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()

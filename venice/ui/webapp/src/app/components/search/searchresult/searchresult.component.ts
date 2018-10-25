@@ -9,6 +9,7 @@ import { SearchResultPayload } from '@app/components/search';
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
 import { MessageService } from 'primeng/primeng';
+import { Router } from '@angular/router';
 
 /**
  * SearchResult is a component hosted in VenicUI app main page.
@@ -38,7 +39,9 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   private _started = false;
 
   constructor(protected _controllerService: ControllerService,
-    protected messageService: MessageService) {
+    protected messageService: MessageService,
+    protected router: Router
+  ) {
     super(_controllerService, messageService);
   }
 
@@ -206,9 +209,8 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    * @param entry
    */
   onSearchResultEntryClick($event, category, entry) {
-    // console.log(this.getClassName() + '.onSearchResultEntryClick(..)', $event, category, entry.object.kind, entry);
-    // TODO: check entry.object.meta['self-link'] and fire up an event to display entry object detail.
-    return false;
+    const route = Utility.genSelfLinkRoute(entry.object.kind, entry.object.meta.name);
+    this.router.navigateByUrl(route);
   }
 
   /**

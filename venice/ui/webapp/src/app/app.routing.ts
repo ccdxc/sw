@@ -5,6 +5,7 @@ import { SearchresultComponent } from '@app/components/search/searchresult/searc
 import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsResolver } from '@app/services/uiconfigs.service';
 import { AppcontentComponent } from '@app/appcontent.component';
+import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
 
 
 /**
@@ -69,13 +70,13 @@ export const routes: Routes = [
       },
       {
         path: '**',
-        loadChildren: '@components/dashboard/dashboard.module#DashboardModule',
+        component: MissingpageComponent
       }
     ]
   },
   {
     path: '**',
-    redirectTo: '/dashboard'
+    redirectTo: '/login'
   }
 
 ];

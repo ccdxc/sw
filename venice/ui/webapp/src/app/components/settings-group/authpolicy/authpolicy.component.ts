@@ -145,6 +145,6 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         this.authPolicy = new AuthAuthenticationPolicy(body);
       },
       this.restErrorHandler('Update Failed')
-    )
+    );
   }
 }

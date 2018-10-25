@@ -10,11 +10,11 @@ enum EventTypes {
  * It processes the events and keeps the updated object in a readonly array.
  * All updates to the array are done in place, so consumers can just maintain a reference to the array
  * to always have the latest data.
- * 
+ *
  * ngOnChange will never be triggered for any bindings that use this array. Instead to detect a change
  * consumers should use an ngDoCheck with the trackBy method in this class. An example of how to do this
- * is in eventAlertPolicies and alertDestinations. 
- * 
+ * is in eventAlertPolicies and alertDestinations.
+ *
  * In order to keep the array in chronological ordering, it
  * inserts new items into the beginning of the array.
  */
@@ -101,7 +101,7 @@ export class HttpEventUtility<T> {
   }
 
   /**
-   * 
+   *
    * @param obj Object from the watch stream
    * @param objName Key to be used for the dataMapping
    */

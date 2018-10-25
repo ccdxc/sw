@@ -160,7 +160,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           buttons: [],
           breadcrumb: [
             { label: 'Security' },
-            { label: 'Security Group Policies', url: window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/#/security/sgpolicies' },
+            { label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' },
             { label: id }]
         });
       });

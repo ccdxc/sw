@@ -167,7 +167,7 @@ describe('AlertseventsComponent', () => {
           }
         };
         TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
-      })
+      });
     });
 
   }));
