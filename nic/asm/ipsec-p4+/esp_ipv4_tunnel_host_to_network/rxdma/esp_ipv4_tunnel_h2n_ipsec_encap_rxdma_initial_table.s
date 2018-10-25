@@ -53,6 +53,6 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full:
     add r5, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}, IPSEC_H2N_STATS_CB_OFFSET 
-    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_rxmda_ring_full_error, r5, TABLE_SIZE_32_BITS) 
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_rxmda_ring_full_error, r5, TABLE_SIZE_512_BITS) 
     nop.e
     nop
