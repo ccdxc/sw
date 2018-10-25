@@ -61,6 +61,7 @@ typedef struct port_info_s {
     bool                 update_mtu;
     bool                 update_db_time;
     bool                 port_id_set;
+    bool                 update_fec;
 } port_info_t;
 
 typedef struct debug_info_s {
@@ -332,7 +333,7 @@ public:
                           port_info->port_id, port_info->speed);
             }
 
-            if (port_info->fec_type == port::PORT_FEC_TYPE_NONE) {
+            if (port_info->update_fec == false) {
                 port_info->fec_type = get_response.spec().fec_type();
             } else {
                 PRINT_LOG("port: %d, udpating fec_type: %d",
@@ -751,6 +752,7 @@ parse_options(int argc, char **argv)
                     port_info.port_type   = parse_port_type(optarg);
                 } else if (!strcmp("fec_type",  longopts[option_index].name)) {
                     port_info.fec_type    = parse_fec_type(optarg);
+                    port_info.update_fec = true;
                 } else if (!strcmp("db_time",   longopts[option_index].name)) {
                     port_info.update_db_time = true;
                     port_info.db_time     = atoi(optarg);

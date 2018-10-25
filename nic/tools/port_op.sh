@@ -13,8 +13,8 @@ PORT_CLIENT=$NIC_DIR/bin/port_client
 GRPC_PORT=localhost:50054
 GDB=
 
-OPTIONS=crudp:s:y:e:ith
-LONGOPTS=create,get,update,delete,port:,speed:,type:,enable:,sim,test,help
+OPTIONS=crudp:s:y:f:e:ith
+LONGOPTS=create,get,update,delete,port:,speed:,type:,fec:,enable:,sim,test,help
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -32,6 +32,7 @@ speed=0
 en=0
 dry_run=0
 port_type=eth
+fec=not_set
 
 while true; do
     case "$1" in
@@ -61,6 +62,10 @@ while true; do
             ;;
         -y|--type)
             port_type=$2
+            shift 2
+            ;;
+        -f|--fec)
+            fec=$2
             shift 2
             ;;
         -e|--enable)
@@ -95,7 +100,6 @@ while true; do
 done
 
 num_lanes=1
-fec=none
 mac_id=0
 mac_ch=0
 admin_st=down
@@ -109,16 +113,24 @@ fi
 if [[ "$create" == "1" ]]; then
     if [[ "$speed" == "100" ]]; then
         num_lanes=4
-        fec=fc
+        if [[ "$fec" == "not_set" ]]; then
+            fec=fc
+        fi
     elif [[ "$speed" == "50" ]]; then
         num_lanes=2
-        fec=fc
+        if [[ "$fec" == "not_set" ]]; then
+            fec=fc
+        fi
     elif [[ "$speed" == "40" ]]; then
         num_lanes=4
-        fec=none
+        if [[ "$fec" == "not_set" ]]; then
+            fec=none
+        fi
     elif [[ "$speed" == "25" ]]; then
         num_lanes=1
-        fec=none
+        if [[ "$fec" == "not_set" ]]; then
+            fec=none
+        fi
     fi
 
     if [[ $port == "5" ]]; then
@@ -144,7 +156,11 @@ if [[ "$update" == "1" ]]; then
     if [[ "$en" == "1" ]];then
         admin_st=up
     fi
-    CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --update -p $port --admin_state $admin_st $dry_run"
+    if [[ "$fec" == "not_set" ]]; then
+        CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --update -p $port --admin_state $admin_st $dry_run"
+    else
+        CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --update -p $port --admin_state $admin_st --fec_type $fec $dry_run"
+    fi
 fi
 
 if [[ "$delete" == "1" ]]; then
