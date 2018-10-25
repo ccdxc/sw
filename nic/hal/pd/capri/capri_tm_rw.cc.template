@@ -2693,9 +2693,9 @@ capri_tm_periodic_stats_update (void)
             }
             new_val = &new_vals[fifo_type][context];
             cap_pb_read_hbm_ctx_stat(0, 0, port_in, context, good_count_in,
-                                     errored_count_in, watermark_in);
+                                     errored_count_in);
             cap_pb_read_hbm_ctx_stat(0, 0, port_out, context, good_count_out,
-                                     errored_count_out, watermark_out);
+                                     errored_count_out);
             new_val->good_pkts_in = good_count_in.convert_to<uint32_t>();
             new_val->good_pkts_out = good_count_out.convert_to<uint32_t>();
             new_val->errored_pkts_in = errored_count_in.convert_to<uint32_t>();

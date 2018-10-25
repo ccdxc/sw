@@ -59,7 +59,8 @@ export NIC_CSR_INCS := ${TOPDIR}/nic/asic/capri/model/cap_top \
     ${TOPDIR}/nic/asic/ip/verif/pcpp \
     ${TOPDIR}/nic/asic/capri/design/common/gen \
     ${TOPDIR}/nic/asic/capri/verif/apis \
-    ${TOPDIR}/nic/model_sim/include
+    ${TOPDIR}/nic/model_sim/include \
+	${TOPDIR}/nic/asic/capri/model/cap_top/csr_defines
 
 export NIC_COMMON_LDLIBS_x86_64     := zmq
 export NIC_COMMON_LDLIBS_aarch64    :=

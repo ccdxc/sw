@@ -6,7 +6,10 @@ class HOST_MEM {
 public:
     static pen_mem_base * access(pen_mem_base * p = nullptr)
     {
-        static pen_mem_base * _hm = p;
+        static pen_mem_base * _hm = nullptr;
+        if (p) {
+            _hm = p; 
+        }
         if (!_hm) {
             _hm = new pen_mem<12>("HOST_MEM", 0x0ull,
                                    0xfffffffffffffull);

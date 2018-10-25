@@ -7,7 +7,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include "string.h"
+#include <string>
+#include <cstring>
 #include "sknobs.h"
 #ifdef _CSV_INCLUDED_
 #include "vpi_user.h"

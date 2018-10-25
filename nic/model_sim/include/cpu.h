@@ -4,17 +4,9 @@
 #include "cpu_bus_base.h"
 
 
-#ifndef _COSIM_
-// TODO: add _COSIM_
-#ifdef _CSV_INCLUDED_
-#include "cpu_bus_if.h"
-#else
 #include "cpu_bus_stub.h"
-#endif
-#else // _COSIM_
-
-/* ZEBU or HAPS */
-// these are included outside, not needed here
+#if !defined(_COSIM_) && defined(_CSV_INCLUDED_)
+#include "cpu_bus_if.h"
 #endif
 
 
