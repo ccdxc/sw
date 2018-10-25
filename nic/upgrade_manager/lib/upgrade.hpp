@@ -8,6 +8,7 @@
 #include "upgrade_req_react.hpp"
 #include "upgrade_app_resp_reactor.hpp"
 #include "upgrade_app_reg_reactor.hpp"
+#include "nic/sysmgr/lib/sysmgr_client.hpp"
 
 namespace upgrade {
 
@@ -21,6 +22,7 @@ private:
     UpgAppRegReactPtr       upgAppRegHdlr_;
     delphi::SdkPtr          sdk_;
     string                  svcName_;
+    sysmgr::Client          sysMgr_;
 public:
     // UpgradeService constructor
     UpgradeService(delphi::SdkPtr sk);

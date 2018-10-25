@@ -16,7 +16,7 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk) : UpgradeService(sk, "UpgradeS
 }
 
 // UpgradeService constructor
-UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
+UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) : sysMgr_(sk, name){
     // save a pointer to sdk
     sdk_ = sk;
     svcName_ = name;
@@ -46,6 +46,7 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
 
 // OnMountComplete gets called when all the objects are mounted
 void UpgradeService::OnMountComplete() {
+    sysMgr_.init_done();
     UPG_LOG_DEBUG("UpgradeService OnMountComplete got called\n");
 
     // walk all upgrade request objects and reconcile them
