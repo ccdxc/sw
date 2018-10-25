@@ -68,7 +68,7 @@ int sonic_intr_alloc(struct lif *lif, struct intr *intr)
 	unsigned long index;
 
 	index = find_first_zero_bit(sonic->intrs, sonic->nintrs);
-	if (index == sonic->nintrs)
+	if (index >= sonic->nintrs)
 		return -ENOSPC;
 	set_bit(index, sonic->intrs);
 
@@ -859,7 +859,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 		return 0;
 	}
 	free_res_id = find_first_zero_bit(lif->res.pc_res_bmp, lif->sonic->num_per_core_resources);
-	if (free_res_id == lif->sonic->num_per_core_resources) {
+	if (free_res_id >= lif->sonic->num_per_core_resources) {
 		spin_unlock(&lif->res.lock);
 		OSAL_LOG_ERROR("Per core resource exhausted for core_id %d\n", core_id);
 		return err;
@@ -970,7 +970,7 @@ sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 	}
 
 	free_qid = find_first_zero_bit(bmp, max);
-	if (free_qid == max)
+	if (free_qid >= max)
 		return err;
 	set_bit(free_qid, bmp);
 
