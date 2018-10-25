@@ -69,7 +69,9 @@ Lif::Lif(EthLif * eth_lif)
 
     eth_lif_ = eth_lif;
 
-    HAL_TRACE_DEBUG("Creating Lif: prom: {}", lif_info->receive_promiscuous);
+    HAL_TRACE_DEBUG("Creating Lif: prom: {}, oob: {}",
+                    lif_info->receive_promiscuous,
+                    eth_lif_->IsOOBMnic());
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
@@ -81,7 +83,7 @@ Lif::Lif(EthLif * eth_lif)
     req->mutable_packet_filter()->set_receive_promiscuous(lif_info->receive_promiscuous);
     req->set_vlan_strip_en(lif_info->vlan_strip_en);
     req->set_vlan_insert_en(lif_info->vlan_insert_en);
-    req->set_is_management(lif_info->is_management);
+    req->set_is_management(eth_lif_->IsOOBMnic());
     req->set_admin_status(::intf::IF_STATUS_UP);
 
     // Populate qstate map
@@ -183,7 +185,7 @@ Lif::TriggerHalUpdate()
     req->mutable_packet_filter()->set_receive_promiscuous(lif_info->receive_promiscuous);
     req->set_vlan_strip_en(lif_info->vlan_strip_en);
     req->set_vlan_insert_en(lif_info->vlan_insert_en);
-    req->set_is_management(lif_info->is_management);
+    req->set_is_management(eth_lif_->IsOOBMnic());
 
     req->set_admin_status(::intf::IF_STATUS_UP);
 

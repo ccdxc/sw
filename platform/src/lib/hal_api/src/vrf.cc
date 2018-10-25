@@ -10,9 +10,9 @@ using namespace std;
 sdk::lib::indexer *HalVrf::allocator = sdk::lib::indexer::factory(HalVrf::max_vrfs, false, true);
 
 HalVrf *
-HalVrf::Factory()
+HalVrf::Factory(types::VrfType type)
 {
-    HalVrf *vrf = new HalVrf();
+    HalVrf *vrf = new HalVrf(type);
 
     return vrf;
 }
@@ -25,7 +25,7 @@ HalVrf::Destroy(HalVrf *vrf)
     }
 }
 
-HalVrf::HalVrf()
+HalVrf::HalVrf(types::VrfType type)
 {
     grpc::ClientContext         context;
     grpc::Status                status;
@@ -40,13 +40,15 @@ HalVrf::HalVrf()
         return;
     }
 
+    this->type = type;
+
     id += VRF_ID_BASE;
 
     HAL_TRACE_DEBUG("HalVrf create id: {}", id);
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_vrf_id(id);
-    req->set_vrf_type(::types::VRF_TYPE_CUSTOMER);
+    req->set_vrf_type(type);
 
     // status = hal->vrf_stub_->HalVrfCreate(&context, req_msg, &rsp_msg);
     status = hal->vrf_create(req_msg, rsp_msg);

@@ -55,7 +55,8 @@ MacVlanFilter::MacVlanFilter(
                     eth_lif->GetLif()->GetId(),
                     macaddr2str(mac), vlan);
 
-    if (hal->GetMode() == FWD_MODE_CLASSIC) {
+    if (hal->GetMode() == FWD_MODE_CLASSIC ||
+        eth_lif->IsOOBMnic()) {
         // Unicast:
         //  - Add vlan to Enic. May have already been added.
         //  - Create EP
@@ -136,7 +137,8 @@ MacVlanFilter::~MacVlanFilter()
                     eth_lif->GetLif()->GetId(),
                     macaddr2str(_mac), _vlan);
 
-    if (hal->GetMode() == FWD_MODE_CLASSIC) {
+    if (hal->GetMode() == FWD_MODE_CLASSIC ||
+        eth_lif->IsOOBMnic()) {
         enic = eth_lif->GetEnic();
         l2seg = enic->GetL2seg(_vlan);
         if (is_multicast(_mac)) {

@@ -1380,6 +1380,12 @@ uplink_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         *has_changed = true;
     }
 
+    if (hal_if->is_oob_management != spec.if_uplink_info().is_oob_management()) {
+        app_ctxt->is_oob = spec.if_uplink_info().is_oob_management();
+        app_ctxt->is_oob_change = true;
+        *has_changed = true;
+    }
+
 end:
 
     return ret;
@@ -2053,6 +2059,10 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             // update mbr list, valid only for uplink pc
             if (app_ctxt->mbrlist_change) {
                 ret = if_update_pi_with_mbr_list(intf_clone, app_ctxt);
+            }
+
+            if (app_ctxt->is_oob_change) {
+                intf_clone->is_oob_management = app_ctxt->is_oob;
             }
 
             break;

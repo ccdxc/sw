@@ -234,7 +234,7 @@ DeviceManager::LoadConfig(string path)
         if (spec.get_child_optional("network.uplink")) {
             for (const auto &node : spec.get_child("network.uplink")) {
                 auto val = node.second;
-                Uplink *up1 = Uplink::Factory(val.get<uint64_t>("id"));
+                Uplink *up1 = Uplink::Factory(val.get<uint64_t>("id"), val.get<bool>("oob", false));
                 uplinks[val.get<uint64_t>("id")] = up1;
             }
         }

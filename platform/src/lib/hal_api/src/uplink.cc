@@ -14,7 +14,7 @@ using namespace std;
 std::map<uint64_t, Uplink*> Uplink::uplink_db;
 
 Uplink *
-Uplink::Factory(uplink_id_t id)
+Uplink::Factory(uplink_id_t id, bool is_oob)
 {
     api_trace("Uplink Create");
 
@@ -24,17 +24,20 @@ Uplink::Factory(uplink_id_t id)
         return NULL;
     }
 
+    HAL_TRACE_DEBUG("Id: {}, is_oob: {}", id, is_oob);
 
-    Uplink *uplink = new Uplink(id);
+
+    Uplink *uplink = new Uplink(id, is_oob);
 
     // Store in DB for disruptive restart
     uplink_db[uplink->GetId()] = uplink;
 
     // Classic:
-    if (hal->GetMode() == FWD_MODE_CLASSIC) {
+    if (hal->GetMode() == FWD_MODE_CLASSIC ||
+        uplink->IsOOB()) {
 
         // Create VRF for each uplink
-        uplink->vrf = HalVrf::Factory();
+        uplink->vrf = HalVrf::Factory(uplink->IsOOB() ? types::VRF_TYPE_MANAGEMENT : types::VRF_TYPE_CUSTOMER);
 
 #if 0
         // Create native L2seg
@@ -56,7 +59,8 @@ Uplink::Destroy(Uplink *uplink)
 {
     api_trace("Uplink Delete");
 
-    if (hal->GetMode() == FWD_MODE_CLASSIC) {
+    if (hal->GetMode() == FWD_MODE_CLASSIC ||
+        uplink->IsOOB()) {
 
 #if 0
         // Remove uplink from l2seg
@@ -81,10 +85,11 @@ Uplink::Destroy(Uplink *uplink)
 }
 
 
-Uplink::Uplink(uplink_id_t id)
+Uplink::Uplink(uplink_id_t id, bool is_oob)
 {
     HAL_TRACE_DEBUG("Uplink Create: {}", id);
     this->id = id;
+    this->is_oob = is_oob;
     this->num_lifs = 0;
 }
 
@@ -121,6 +126,7 @@ Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
                     if_spec->CopyFrom(rsp.spec());
                     if_spec->mutable_if_uplink_info()->
                         set_native_l2segment_id(native_l2seg_id);
+                    if_spec->mutable_if_uplink_info()->set_is_oob_management(is_oob);
 
                     status = hal->interface_update(if_req_msg, if_rsp_msg);
                     if (status.ok()) {
@@ -195,6 +201,12 @@ HalL2Segment *
 Uplink::GetNativeL2Seg()
 {
     return native_l2seg;
+}
+
+bool
+Uplink::IsOOB()
+{
+    return is_oob;
 }
 
 void

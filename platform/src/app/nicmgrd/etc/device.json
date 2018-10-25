@@ -3,7 +3,7 @@
         "uplink" : [
             { "id" : 128, "port": 1 },
             { "id" : 129, "port": 2 },
-            { "id" : 130, "port": 9 }
+            { "id" : 130, "port": 9, "oob" : "true" }
         ]
     },
 

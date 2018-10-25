@@ -16,7 +16,7 @@ class Uplink : public HalObject
 {
 public:
 
-  static Uplink *Factory(uplink_id_t id);
+  static Uplink *Factory(uplink_id_t id, bool is_oob = false);
   static void Destroy(Uplink *uplink);
   int UpdateHalWithNativeL2seg(uint32_t native_l2seg_id);
 
@@ -30,6 +30,7 @@ public:
   HalVrf *GetVrf();
   HalL2Segment *GetNativeL2Seg();
   void SetNativeL2Seg(HalL2Segment *l2seg);
+  bool IsOOB();
 
   // Set APIs
   void SetPortNum();
@@ -38,13 +39,14 @@ public:
 
 private:
   // APIs
-  Uplink(uplink_id_t id);
+  Uplink(uplink_id_t id, bool is_oob = false);
   ~Uplink();
 
   uplink_id_t id;
   uint64_t handle;
   uint32_t port_num;
   uint32_t num_lifs;
+  bool     is_oob;
   intf::InterfaceSpec if_spec;
   HalVrf *vrf;
   HalL2Segment *native_l2seg;

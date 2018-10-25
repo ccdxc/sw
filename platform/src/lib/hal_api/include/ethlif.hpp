@@ -47,6 +47,7 @@ public:
     uint32_t GetHwLifId();
     bool GetIsPromiscuous();
     hal_lif_info_t *GetLifInfo();
+    bool IsOOBMnic();
 
 private:
     EthLif(hal_lif_info_t *info);

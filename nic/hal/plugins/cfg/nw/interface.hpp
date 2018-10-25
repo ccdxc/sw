@@ -204,6 +204,9 @@ typedef struct if_update_app_ctxt_s {
             // bool            l2segids_change;
             l2seg_t         *native_l2seg;             // native (vlan) on uplink (pc)
 
+            bool           is_oob_change;
+            bool           is_oob;
+
             // only to PC
             bool            mbrlist_change;
             block_list      *add_mbrlist;

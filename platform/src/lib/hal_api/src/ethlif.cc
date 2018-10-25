@@ -45,7 +45,8 @@ EthLif::Factory(hal_lif_info_t *info)
     ethlif_db[eth_lif->GetHwLifId()] = eth_lif;
 
     // Create Enic for every Lif in Classic Mode
-    if (hal->GetMode() == FWD_MODE_CLASSIC) {
+    if (hal->GetMode() == FWD_MODE_CLASSIC ||
+        eth_lif->IsOOBMnic()) {
 
         if (eth_lif->GetUplink()->GetNumLifs() == 1) {
 
@@ -100,7 +101,8 @@ EthLif::Destroy(EthLif *eth_lif)
         eth_lif->remove_mac_vlan_filters();
 
 
-        if (hal->GetMode() == FWD_MODE_CLASSIC) {
+        if (hal->GetMode() == FWD_MODE_CLASSIC ||
+            eth_lif->IsOOBMnic()) {
             // Delete Vlan filter
             eth_lif->DelVlan(NATIVE_VLAN_ID);
 
@@ -209,7 +211,8 @@ EthLif::AddMac(mac_t mac)
          * Smart:
          *      - Create Mac filter
          */
-        if (hal->GetMode() == FWD_MODE_CLASSIC) {
+        if (hal->GetMode() == FWD_MODE_CLASSIC ||
+            IsOOBMnic()) {
             // Register new mac across all existing vlans
             for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
                 // Check if (MacVlan) filter is already present
@@ -243,7 +246,8 @@ EthLif::DelMac(mac_t mac)
 
     mac_key = make_tuple(mac, 0);
     if (mac_table_.find(mac) != mac_table_.end()) {
-        if (hal->GetMode() == FWD_MODE_CLASSIC) {
+        if (hal->GetMode() == FWD_MODE_CLASSIC ||
+            IsOOBMnic()) {
             for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
                 vlan_key = make_tuple(0, *vlan_it);
                 mac_vlan_key = make_tuple(mac, *vlan_it);
@@ -294,7 +298,8 @@ EthLif::AddVlan(vlan_t vlan)
          * Smart:
          *      - Create Vlan filter
          */
-        if (hal->GetMode() == FWD_MODE_CLASSIC) {
+        if (hal->GetMode() == FWD_MODE_CLASSIC ||
+            IsOOBMnic()) {
             // Register new mac across all existing vlans
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 // Check if (MacVlan) filter is already present
@@ -327,7 +332,8 @@ EthLif::DelVlan(vlan_t vlan)
     HAL_TRACE_DEBUG("Deleting Vlan filter: {}", vlan);
 
     if (vlan_table_.find(vlan) != vlan_table_.end()) {
-        if (hal->GetMode() == FWD_MODE_CLASSIC) {
+        if (hal->GetMode() == FWD_MODE_CLASSIC ||
+            IsOOBMnic()) {
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 mac_vlan_key = make_tuple(*it, vlan);
                 if (mac_table_.find(*it) != mac_table_.end() &&
@@ -370,7 +376,8 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
                           GetHwLifId());
             return HAL_IRISC_RET_LIMIT_REACHED;
         }
-        if (hal->GetMode() == FWD_MODE_CLASSIC) {
+        if (hal->GetMode() == FWD_MODE_CLASSIC ||
+            IsOOBMnic()) {
             // Check if mac filter and vlan filter is present
             if (mac_table_.find(mac) == mac_table_.end() ||
                 vlan_table_.find(vlan) == vlan_table_.end()) {
@@ -401,7 +408,8 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
 
     mac_vlan_key = make_tuple(mac, vlan);
     if (mac_vlan_table_.find(mac_vlan_key) != mac_vlan_table_.end()) {
-        if (hal->GetMode() == FWD_MODE_CLASSIC) {
+        if (hal->GetMode() == FWD_MODE_CLASSIC ||
+            IsOOBMnic()) {
             if (mac_table_.find(mac) == mac_table_.end() ||
                  vlan_table_.find(vlan) == vlan_table_.end()) {
                 // One of Mac or Vlan is not present.
@@ -440,7 +448,8 @@ EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
 
     info_.receive_promiscuous = receive_promiscuous;
 
-    if (hal->GetMode() == FWD_MODE_CLASSIC) {
+    if (hal->GetMode() == FWD_MODE_CLASSIC ||
+        IsOOBMnic()) {
     } else {
         if (receive_promiscuous) {
             CreateMacVlanFilter(0, 0);
@@ -636,7 +645,7 @@ EthLif::GetLif()
 Uplink *
 EthLif::GetUplink()
 {
-    return info_.pinned_uplink;;
+    return info_.pinned_uplink;
 }
 
 Enic *
@@ -667,5 +676,15 @@ hal_lif_info_t *
 EthLif::GetLifInfo()
 {
     return &info_;
+}
+
+bool
+EthLif::IsOOBMnic()
+{
+    Uplink *up = GetUplink();
+    if (up) {
+        return up->IsOOB();
+    }
+    return false;
 }
 

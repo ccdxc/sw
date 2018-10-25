@@ -7,6 +7,7 @@
 #include "sdk/indexer.hpp"
 
 #include "hal.hpp"
+#include "types.pb.h"
 
 #define VRF_ID_BASE 17
 
@@ -14,7 +15,7 @@
 class HalVrf : public HalObject
 {
 public:
-  static HalVrf *Factory();
+  static HalVrf *Factory(types::VrfType type = types::VRF_TYPE_CUSTOMER);
   static void Destroy(HalVrf *vrf);
 
 
@@ -24,11 +25,12 @@ public:
   static void Probe();
 
 private:
-  HalVrf();
+  HalVrf(types::VrfType type = types::VRF_TYPE_CUSTOMER);
   ~HalVrf();
 
   uint32_t id;
   uint64_t handle;
+  types::VrfType type;
 
   // For vrf id
   static sdk::lib::indexer *allocator;

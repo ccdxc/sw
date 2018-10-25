@@ -99,6 +99,7 @@ enum VrfType {
   VRF_TYPE_NONE          = 0;
   VRF_TYPE_INFRA         = 1;    // infra Vrf
   VRF_TYPE_CUSTOMER      = 2;    // customer Vrf
+  VRF_TYPE_MANAGEMENT    = 3;    // management Vrf
 }
 
 // Types of L2 segments
