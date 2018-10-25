@@ -47,10 +47,24 @@ static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 	return true;
 }
 
+#ifndef __FreeBSD__
 static int sonic_adminq_napi(struct napi_struct *napi, int budget)
 {
 	return sonic_napi(napi, budget, sonic_adminq_service, NULL);
 }
+#else
+static void sonic_adminq_napi(struct napi_struct *napi)
+{
+	int budget = NAPI_POLL_WEIGHT;
+	int work_done;
+
+	printf("sonic_adminq_napi\n");
+	work_done = sonic_napi(napi, budget, sonic_adminq_service, NULL);
+
+	if (work_done == budget)
+		napi_schedule(napi);
+}
+#endif
 
 static irqreturn_t sonic_isr(int irq, void *data)
 {
@@ -241,7 +255,9 @@ static int sonic_lif_per_core_resources_alloc(struct lif *lif)
 {
 	int err = -ENOMEM;
 	int i, j;
+#ifndef __FreeBSD__
 	struct device *dev = lif->sonic->dev;
+#endif
 
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
 		lif->res.pc_res[i] = devm_kzalloc(dev, sizeof(*lif->res.pc_res[0]),
@@ -268,7 +284,11 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 	lif = devm_kzalloc(sonic->dev, sizeof(*lif), GFP_KERNEL);
 	if (!lif)
 		return -ENOMEM;
+#ifndef __FreeBSD__
 	init_dummy_netdev(&lif->dummy_netdev);
+#else
+	//INIT_LIST_HEAD(&lif->dummy_netdev.napi_list);
+#endif
 	lif->sonic = sonic;
 	lif->index = index;
 
@@ -314,9 +334,11 @@ int sonic_lifs_alloc(struct sonic *sonic)
 	return 0;
 }
 
-void sonic_per_core_resources_free(struct lif *lif)
+static void sonic_per_core_resources_free(struct lif *lif)
 {
+#ifndef __FreeBSD__
 	struct device *dev = lif->sonic->dev;
+#endif
 	int i;
 
 	for (i = 0; i < SONIC_MAX_CORES; i++) {
@@ -343,12 +365,16 @@ void sonic_lifs_free(struct sonic *sonic)
 
 static void sonic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 {
+#ifndef __FreeBSD__
 	struct device *dev = lif->sonic->dev;
+#endif
 
 	if (!(qcq->flags & QCQ_F_INITED))
 		return;
 	sonic_intr_mask(&qcq->intr, true);
+#ifndef __FreeBSD__
 	synchronize_irq(qcq->intr.vector);
+#endif
 	devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
 	netif_napi_del(&qcq->napi);
 	qcq->flags &= ~QCQ_F_INITED;
@@ -412,13 +438,25 @@ void sonic_lifs_deinit(struct sonic *sonic)
 
 static int sonic_request_irq(struct lif *lif, struct qcq *qcq)
 {
+#ifndef __FreeBSD__
 	struct device *dev = lif->sonic->dev;
+#endif
 	struct intr *intr = &qcq->intr;
+#ifndef __FreeBSD__
 	struct queue *q = &qcq->q;
+#endif
 	struct napi_struct *napi = &qcq->napi;
 
+#ifndef __FreeBSD__
 	snprintf(intr->name, sizeof(intr->name),
 		 "%s-%s-%s", DRV_NAME, lif->name, q->name);
+#else
+	/* 
+	 * BSD will prefix by device name, also limited by space. 
+	 */
+	snprintf(intr->name, sizeof(intr->name),
+		 "%s", "a");//q->name);
+#endif
 	return devm_request_irq(dev, intr->vector, sonic_isr,
 				0, intr->name, napi);
 }
@@ -441,7 +479,7 @@ static int sonic_lif_adminq_init(struct lif *lif)
 	q->pc_res = NULL;
 	q->qid = comp.qid;
 	q->qtype = comp.qtype;
-	q->qgroup = STORAGE_SEQ_QTYPE_ADMIN;
+	q->qgroup = (storage_seq_qgroup_t)STORAGE_SEQ_QTYPE_ADMIN;
 	q->db = sonic_db_map(idev, q);
 
 	netif_napi_add(&lif->dummy_netdev, napi, sonic_adminq_napi,

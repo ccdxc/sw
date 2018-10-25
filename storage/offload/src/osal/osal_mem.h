@@ -31,4 +31,10 @@ void *osal_phy_to_virt(uint64_t phy);
 }
 #endif
 
+#ifdef __FreeBSD__
+#define virt_to_phys(x)	vtophys(x)
+/* XXX: we shouldn't be doing this. */
+#define phys_to_virt(x)	(void *)PHYS_TO_DMAP(x)
+#endif
+
 #endif

@@ -279,7 +279,7 @@ compress_read_status(const struct service_info *svc_info)
 	struct cpdc_sgl	*dst_sgl;
 	struct pnso_compression_header *cp_hdr;
 	uint64_t cp_hdr_pa;
-	uint16_t datain_len;
+	uint32_t datain_len;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -305,7 +305,7 @@ compress_read_status(const struct service_info *svc_info)
 		cp_hdr_pa = sonic_devpa_to_hostpa(dst_sgl->cs_addr_0);
 		cp_hdr = (struct pnso_compression_header *)
 			sonic_phy_to_virt(cp_hdr_pa);
-		OSAL_LOG_DEBUG("compress_read_status: dst_sgl=0x%llx, cs_addr_0=0x%llx, cp_hdr-0x%llx\n",
+		OSAL_LOG_DEBUG("compress_read_status: dst_sgl=0x" PRIx64 ", cs_addr_0=0x" PRIx64 ", cp_hdr-0x" PRIx64 "\n",
 			       (uint64_t)dst_sgl,
 			       (uint64_t)dst_sgl->cs_addr_0,
 			       (uint64_t)cp_hdr);
@@ -434,7 +434,7 @@ struct service_ops cp_ops = {
 	.chain = compress_chain,
 	.sub_chain_from_cpdc = compress_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = compress_sub_chain_from_crypto,
-	.schedule = compress_schedule,
+	.pnso_schedule = compress_schedule,
 	.poll = compress_poll,
 	.read_status = compress_read_status,
 	.write_result = compress_write_result,

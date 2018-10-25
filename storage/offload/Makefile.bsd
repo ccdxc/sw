@@ -7,7 +7,9 @@ KMOD=pnso
 SRCS= \
  src/drv/pnso_mpool.c \
  src/drv/pnso_api.c \
+ src/common/pnso_svc.c \
  src/drv/pnso_req.c \
+ src/drv/pnso_init.c \
  src/drv/pnso_chain.c \
  src/drv/pnso_cp.c \
  src/drv/pnso_dc.c \
@@ -15,10 +17,9 @@ SRCS= \
  src/drv/pnso_hash.c \
  src/drv/pnso_cpdc.c \
  src/drv/pnso_cpdc_cmn.c \
- src/drv/pnso_encrypt.c \
- src/drv/pnso_decrypt.c \
- src/drv/pnso_xts_cmn.c \
- src/drv/pnso_xts.c \
+ src/drv/pnso_crypto.c \
+ src/drv/pnso_crypto_ops.c \
+ src/drv/pnso_crypto_cmn.c \
  src/drv/pnso_decompact.c \
  src/drv/pnso_seq.c \
  src/drv/pnso_seq_hw.c \
@@ -31,18 +32,17 @@ SRCS= \
  src/osal/linux/kernel/osal_logger.c \
  src/osal/linux/kernel/osal_sys.c \
  src/osal/linux/kernel/osal_atomic.c \
- src/osal/linux/kernel/drv/osal_mem.c \
+ src/osal/linux/kernel/osal_mem.c \
+ src/osal/linux/kernel/osal_rmem.c \
  src/osal/linux/kernel/osal_thread.c \
  src/drv/test/pnso_sonic_test.c \
  src/common/pnso_pbuf.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
 
-#CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
-#INCDIRS = include src/osal src/osal/test src/common src/drv/linux/kernel src/drv src/sim third-party/freebsd-crypto/src
 INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel src/drv/test
 CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
-CFLAGS+= -DHAPS -D__KERNEL__
+CFLAGS+= -DHAPS -D__KERNEL__ -DDENABLE_PNSO_SONIC_TEST
 
 .include <bsd.kmod.mk>
 

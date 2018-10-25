@@ -22,6 +22,7 @@
 
 #include "sonic.h"
 #include "sonic_lif.h"
+#include "sonic_bus.h"
 #include "sonic_debugfs.h"
 
 // TODO move PCI_VENDOR_ID_PENSANDO to include/linux/pci_ids.h
@@ -36,15 +37,18 @@ static const struct pci_device_id sonic_id_table[] = {
 };
 MODULE_DEVICE_TABLE(pci, sonic_id_table);
 
+const char *sonic_bus_info(struct sonic *sonic)
+{
+	return pci_name(sonic->pdev);
+}
+
+
+#ifndef __FreeBSD__
 int sonic_bus_get_irq(struct sonic *sonic, unsigned int num)
 {
 	return pci_irq_vector(sonic->pdev, num);
 }
 
-const char *sonic_bus_info(struct sonic *sonic)
-{
-	return pci_name(sonic->pdev);
-}
 
 int sonic_bus_alloc_irq_vectors(struct sonic *sonic, unsigned int nintrs)
 {
@@ -56,7 +60,41 @@ void sonic_bus_free_irq_vectors(struct sonic *sonic)
 {
 	pci_free_irq_vectors(sonic->pdev);
 }
+#else
+int sonic_bus_get_irq(struct sonic *sonic, unsigned int num)
+{
+	return sonic->pdev->dev.msix + num;
+}
 
+int sonic_bus_alloc_irq_vectors(struct sonic *sonic, unsigned int nintrs)
+{
+	struct resource_list_entry *rle;
+	int avail, ret;
+
+	avail = pci_msix_count(sonic->pdev->dev.bsddev);
+	dev_err(sonic->dev, "count nintrs %u avail %u\n", nintrs, avail);
+	if (avail < nintrs)
+		return -EINVAL;
+
+	avail = nintrs;
+
+	ret = -pci_alloc_msix(sonic->pdev->dev.bsddev, &avail);
+	dev_err(sonic->dev, "try alloc nintrs %u avail %u ret %u\n", nintrs, avail, ret);
+	if (ret)
+		return ret;
+
+	rle = linux_pci_get_rle(sonic->pdev, SYS_RES_IRQ, 1);
+	sonic->pdev->dev.msix = rle->start;
+	sonic->pdev->dev.msix_max = rle->start + avail;
+
+	return avail;
+}
+
+void sonic_bus_free_irq_vectors(struct sonic *sonic)
+{
+	pci_release_msi(sonic->pdev->dev.bsddev);
+}
+#endif
 static int sonic_map_bars(struct sonic *sonic)
 {
 	struct pci_dev *pdev = sonic->pdev;
@@ -68,13 +106,17 @@ static int sonic_map_bars(struct sonic *sonic)
 	for (i = 0, j = 0; i < SONIC_BARS_MAX; i++) {
 		if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
 			continue;
+		bars[j].bus_addr = pci_resource_start(pdev, i);
 		bars[j].len = pci_resource_len(pdev, i);
+#ifndef __FreeBSD__
 		bars[j].vaddr = pci_iomap(pdev, i, bars[j].len);
+#else
+		bars[j].vaddr = ioremap(bars[j].bus_addr, bars[j].len);
+#endif
 		if (!bars[j].vaddr) {
 			dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
 			return -ENODEV;
 		}
-		bars[j].bus_addr = pci_resource_start(pdev, i);
 		sonic->num_bars++;
 		j++;
 	}
@@ -98,7 +140,7 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	struct sonic *sonic;
 	int err;
 
-	sonic = devm_kzalloc(dev, sizeof(*sonic), GFP_KERNEL);
+	sonic = kzalloc(sizeof(*sonic), GFP_KERNEL);
 	if (!sonic)
 		return -ENOMEM;
 
@@ -120,8 +162,9 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	/* Setup PCI device
 	 */
-
+#ifndef __FreeBSD__
 	err = pci_enable_device_mem(pdev);
+#endif
 	if (err) {
 		dev_err(dev, "Cannot enable PCI device, aborting\n");
 		goto err_out_debugfs_del_dev;
@@ -205,7 +248,9 @@ err_out_unmap_bars:
 	sonic_unmap_bars(sonic);
 	pci_release_regions(pdev);
 err_out_disable_device:
+#ifndef __FreeBSD__
 	pci_disable_device(pdev);
+#endif
 err_out_debugfs_del_dev:
 	sonic_debugfs_del_dev(sonic);
 	pci_set_drvdata(pdev, NULL);
@@ -227,11 +272,15 @@ static void sonic_remove(struct pci_dev *pdev)
 		sonic_forget_identity(sonic);
 		sonic_unmap_bars(sonic);
 		pci_release_regions(pdev);
+#ifndef __FreeBSD__
 		pci_disable_sriov(pdev);
 		pci_disable_device(pdev);
+#endif
+		pci_clear_master(pdev);
 	}
 }
 
+#ifndef __FreeBSD__
 static int sonic_sriov_configure(struct pci_dev *pdev, int numvfs)
 {
 	int err;
@@ -250,13 +299,16 @@ static int sonic_sriov_configure(struct pci_dev *pdev, int numvfs)
 
 	return numvfs;
 }
+#endif
 
 static struct pci_driver sonic_driver = {
 	.name = DRV_NAME,
 	.id_table = sonic_id_table,
 	.probe = sonic_probe,
 	.remove = sonic_remove,
+#ifndef __FreeBSD__
 	.sriov_configure = sonic_sriov_configure,
+#endif
 };
 
 int sonic_bus_register_driver(void)

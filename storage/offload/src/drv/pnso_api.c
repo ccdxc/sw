@@ -57,7 +57,7 @@ tlv_to_buf(uint8_t *dst, uint32_t len, uint64_t val)
 	}
 }
 
-struct cp_header_format *
+static struct cp_header_format *
 lookup_hdr_format(uint32_t hdr_fmt_idx, bool alloc)
 {
 	size_t i;

@@ -34,8 +34,20 @@ extern unsigned int devcmd_timeout;
 extern unsigned int core_count;
 
 #ifdef __FreeBSD__
+
+#define devm_kzalloc(dev, x, y)		kzalloc(x, y)
+#define devm_kfree(dev, x)		kfree(x)
+
+#define devm_request_irq(dev, x, ...) 	request_irq(x, ##__VA_ARGS__)
+#define devm_free_irq(dev, x, y) 	free_irq(x, y)
+
 #ifndef print_hex_dump_debug
 #define print_hex_dump_debug(...) 			\
+		print_hex_dump(NULL, __VA_ARGS__);
+#endif
+
+#ifndef dynamic_hex_dump
+#define dynamic_hex_dump(...) 			\
 		print_hex_dump(NULL, __VA_ARGS__);
 #endif
 

@@ -17,9 +17,14 @@
  */
 
 #include <linux/module.h>
+#ifndef __FreeBSD__
 #include <linux/version.h>
-#include <linux/netdevice.h>
 #include <linux/utsname.h>
+#else
+#include <linux/io.h>
+#include <linux/printk.h>
+#endif
+#include <linux/netdevice.h>
 #include <linux/dma-mapping.h>
 
 #include "sonic.h"
@@ -31,7 +36,11 @@
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Pensando");
 MODULE_LICENSE("GPL");
+#ifndef __FreeBSD__
 MODULE_VERSION(DRV_VERSION);
+#else
+MODULE_VERSION(DRV_VERSION, 1);
+#endif
 
 unsigned int devcmd_timeout = 30;
 #ifdef HAPS
@@ -115,7 +124,9 @@ static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_wait)
 	signed long wait;
 	int done;
 
+#ifndef __FreeBSD__
 	WARN_ON(in_interrupt());
+#endif
 
 	/* Wait for dev cmd to complete...but no more than max_wait
 	 */
@@ -326,7 +337,15 @@ int sonic_identify(struct sonic *sonic)
 	unsigned int i;
 #endif
 
+#ifndef __FreeBSD__
 	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL | GFP_DMA);
+#else
+	/* 
+	 * KPI doesn't support GFP_DMA and we don't need for our hardware,
+	 * should be removed in Linux also.
+	 */
+	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL);
+#endif
 	if (!ident)
 		return -ENOMEM;
 	ident_pa = dma_map_single(dev, ident, sizeof(*ident),
@@ -434,7 +453,9 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 {
 	struct sonic_admin_ctx *ctx = cb_arg;
 	struct admin_cpl *comp = (struct admin_cpl *) cq_info->cq_desc;
+#ifndef __FreeBSD__
 	struct device *dev = q->lif->sonic->dev;
+#endif
 
 	if (WARN_ON(comp->cpl_index != desc_info->index))
 		return;
@@ -453,7 +474,9 @@ int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx)
 	struct queue *adminq = &lif->adminqcq->q;
 	int err = 0;
 
+#ifndef __FreeBSD__
 	WARN_ON(in_interrupt());
+#endif
 
 	spin_lock(&lif->adminq_lock);
 	if (!sonic_q_has_space(adminq, 1)) {

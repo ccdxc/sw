@@ -3,10 +3,6 @@
  * All rights reserved.
  *
  */
-#include <netdevice.h>
-#include <net.h>
-#include <kernel.h>
-
 #include "osal.h"
 #include "osal_logger.h"
 #include "osal_setup.h"

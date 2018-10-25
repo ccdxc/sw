@@ -3,8 +3,6 @@
  * All rights reserved.
  *
  */
-#include <netdevice.h>
-
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 
@@ -472,7 +470,7 @@ chn_destroy_chain(struct service_chain *chain)
 		return;
 
 	OSAL_LOG_DEBUG("enter ...");
-	OSAL_LOG_DEBUG("chain: 0x%llx num_services: %d ", (uint64_t)chain,
+	OSAL_LOG_DEBUG("chain: 0x" PRIx64 " num_services: %d ", (uint64_t)chain,
 			chain->sc_num_services);
 
 	pcr = chain->sc_pcr;
@@ -689,7 +687,7 @@ chn_execute_chain(struct service_chain *chain)
 
 	/* ring 'first' service door bell */
 	sc_entry = ce_first;
-	err = ce_first->ce_svc_info.si_ops.schedule(&sc_entry->ce_svc_info);
+	err = ce_first->ce_svc_info.si_ops.pnso_schedule(&sc_entry->ce_svc_info);
 	if (err) {
 		OSAL_LOG_ERROR("failed to schedule the service svc_type: %d err: %d",
 			       ce_first->ce_svc_info.si_type, err);

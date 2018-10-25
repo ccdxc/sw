@@ -3,10 +3,6 @@
  * All rights reserved.
  *
  */
-#include <netdevice.h>
-#include <net.h>
-#include <kernel.h>
-
 #include "osal.h"
 #include "sonic_dev.h"
 #include "sonic_lif.h"
@@ -463,7 +459,7 @@ struct service_ops encrypt_ops = {
 	.chain = crypto_chain,
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
-	.schedule = crypto_schedule,
+	.pnso_schedule = crypto_schedule,
 	.poll = crypto_poll,
 	.read_status = crypto_read_status,
 	.write_result = crypto_write_result,
@@ -475,7 +471,7 @@ struct service_ops decrypt_ops = {
 	.chain = crypto_chain,
 	.sub_chain_from_cpdc = crypto_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = crypto_sub_chain_from_crypto,
-	.schedule = crypto_schedule,
+	.pnso_schedule = crypto_schedule,
 	.poll = crypto_poll,
 	.read_status = crypto_read_status,
 	.write_result = crypto_write_result,

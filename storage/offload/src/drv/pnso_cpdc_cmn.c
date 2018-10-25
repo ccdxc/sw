@@ -137,12 +137,12 @@ pprint_sgl(uint64_t sgl_pa)
 	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x" PRIx64, "",
 			(uint64_t) sgl, sgl_pa);
 	while (sgl) {
-		OSAL_LOG_DEBUG("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d",
 				"",
 				sgl->cs_addr_0, sgl->cs_len_0, sgl->cs_rsvd_0,
 				sgl->cs_addr_1, sgl->cs_len_1, sgl->cs_rsvd_1,
 				sgl->cs_addr_2, sgl->cs_len_2, sgl->cs_rsvd_2);
-		OSAL_LOG_DEBUG("%30s: 0x%llx/0x" PRIx64, "",
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64, "",
 				sgl->cs_next, sgl->cs_rsvd_3);
 
 		sgl = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) : NULL;

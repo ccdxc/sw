@@ -125,7 +125,7 @@ struct service_ops {
 					      struct crypto_chain_params *crypto_chain);
 
 	/* a NULL-op for all services except the first within the chain */
-	pnso_error_t (*schedule)(const struct service_info *svc_info);
+	pnso_error_t (*pnso_schedule)(const struct service_info *svc_info);
 
 	/* a NULL-op for all services except the last within the chain */
 	pnso_error_t (*poll)(const struct service_info *svc_info);

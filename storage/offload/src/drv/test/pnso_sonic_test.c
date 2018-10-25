@@ -1586,7 +1586,7 @@ init_crypto(void)
 	iv_buf = osal_aligned_alloc(PNSO_TEST_BLOCK_SIZE, PNSO_TEST_BLOCK_SIZE);
 	memcpy(PNSO_TEST_ALIGN_DESC(iv_buf), iv_src, sizeof(iv_src));
 	iv_buf_pa = PNSO_TEST_ALIGN_DESC(osal_virt_to_phy(iv_buf));
-	OSAL_LOG_INFO("crypto iv_buf 0x%llx iv_buf_pa 0x%llx",
+	OSAL_LOG_INFO("crypto iv_buf 0x" PRIx64 " iv_buf_pa 0x" PRIx64,
 		      (uint64_t)iv_buf, iv_buf_pa);
 	if ((err = pnso_set_key_desc_idx(crypto_key1, crypto_key2,
 					 sizeof(crypto_key1),

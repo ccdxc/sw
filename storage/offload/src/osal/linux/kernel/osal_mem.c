@@ -8,6 +8,9 @@
 #include "osal_assert.h"
 #include "osal_mem.h"
 
+#ifdef __FreeBSD__
+#include <machine/pmap.h>
+#endif
 /*
  * TODO:
  * 1. Kernel doesnt provide an elegant way to allocate aligned memory. This may need to be moved to upper layer 

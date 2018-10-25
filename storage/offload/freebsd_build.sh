@@ -4,7 +4,7 @@
 : ${OS_DIR:=/usr/src}
 export OS_DIR=/home/anish/freebsd
 
-if [ -z ${OS_DIR}]
+if [ -z ${OS_DIR} ]
 then
 	echo OS_DIR should be set, example /usr/src
 	exit 1

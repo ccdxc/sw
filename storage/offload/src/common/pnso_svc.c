@@ -6,6 +6,7 @@
 #include "osal.h"
 #include "pnso_api.h"
 
+#include "pnso_svc.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
@@ -49,7 +50,7 @@ svc_is_crypto_desc_valid(const struct pnso_crypto_desc *desc)
 	}
 
 	if (!desc->iv_addr) {
-		OSAL_LOG_ERROR("invalid iv_addr 0x%llx specified! err: %d",
+		OSAL_LOG_ERROR("invalid iv_addr 0x" PRIx64 " specified! err: %d",
 				desc->iv_addr, err);
 		return false;
 	}

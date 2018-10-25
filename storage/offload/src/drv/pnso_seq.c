@@ -4,6 +4,7 @@
  *
  */
 #include "pnso_seq_ops.h"
+#include "pnso_seq.h"
 
 /* run on model/dol or on real hardware */
 #ifdef PNSO_API_ON_MODEL
@@ -45,7 +46,7 @@ seq_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 			hash_desc, sgl, num_hash_blks);
 }
 
-uint8_t *
+void *
 seq_setup_cpdc_chain_desc(struct chain_entry *centry,
 		struct service_info *svc_info,
 		const void *src_desc, size_t desc_size)

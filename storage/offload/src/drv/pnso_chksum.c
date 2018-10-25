@@ -386,7 +386,7 @@ chksum_write_result_per_block(struct service_info *svc_info)
 			PNSO_CHKSUM_TAG_LEN);
 
 		CPDC_PPRINT_STATUS_DESC(st_desc);
-		OSAL_LOG_INFO("tag: %d status_desc: 0x%llx chksum: %*phN",
+		OSAL_LOG_INFO("tag: %d status_desc: 0x" PRIx64 " chksum: %*phN",
 			i, (uint64_t) st_desc, 8,
 			svc_status->u.chksum.tags[i].chksum);
 
@@ -446,7 +446,7 @@ chksum_write_result_buffer(struct service_info *svc_info)
 			&status_desc->csd_integrity_data,
 			PNSO_CHKSUM_TAG_LEN);
 
-	OSAL_LOG_INFO("tag: 0 status_desc: 0x%llx chksum: %*phN",
+	OSAL_LOG_INFO("tag: 0 status_desc: 0x" PRIx64 " chksum: %*phN",
 			(uint64_t) status_desc, 8,
 			svc_status->u.chksum.tags[0].chksum);
 
@@ -522,7 +522,7 @@ struct service_ops chksum_ops = {
 	.chain = chksum_chain,
 	.sub_chain_from_cpdc = chksum_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = chksum_sub_chain_from_crypto,
-	.schedule = chksum_schedule,
+	.pnso_schedule = chksum_schedule,
 	.poll = chksum_poll,
 	.read_status = chksum_read_status,
 	.write_result = chksum_write_result,

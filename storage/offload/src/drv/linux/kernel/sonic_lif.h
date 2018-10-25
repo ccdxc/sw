@@ -19,6 +19,7 @@
 #ifndef _SONIC_LIF_H_
 #define _SONIC_LIF_H_
 
+#include "sonic.h"
 
 struct tx_stats {
 	u64 dma_map_err;
