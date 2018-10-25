@@ -250,7 +250,6 @@ static void ionic_remove(struct pci_dev *pdev)
 	struct ionic *ionic = pci_get_drvdata(pdev);
 
 	if (ionic) {
-		ionic_debugfs_del_dev(ionic);
 		ionic_lifs_unregister(ionic);
 		ionic_lifs_deinit(ionic);
 		ionic_lifs_free(ionic);
@@ -260,6 +259,7 @@ static void ionic_remove(struct pci_dev *pdev)
 		pci_release_regions(pdev);
 		pci_disable_sriov(pdev);
 		pci_disable_device(pdev);
+		ionic_debugfs_del_dev(ionic);
 	}
 }
 
