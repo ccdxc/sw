@@ -237,6 +237,8 @@ p4pd_get_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd)
     }
     cpucb_pd->cpucb->total_tx_pkts = ntohll(data.u.cpu_tx_initial_action_d.asq_total_pkts);
     cpucb_pd->cpucb->tx_sem_full_drops = ntohl(data.u.cpu_tx_initial_action_d.ascq_sem_full_drops);
+    cpucb_pd->cpucb->ascq_free_requests = ntohl(data.u.cpu_tx_initial_action_d.ascq_free_requests);
+
     return HAL_RET_OK;
 }
 

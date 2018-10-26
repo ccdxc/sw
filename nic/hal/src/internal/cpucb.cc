@@ -238,6 +238,7 @@ cpucb_get (CpuCbGetRequest& req, CpuCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_total_rx_pkts(cpucb->total_rx_pkts);
     rsp->mutable_spec()->set_rx_qfull_drop_errors(cpucb->rx_qfull_drop_errors);
     rsp->mutable_spec()->set_tx_sem_full_drops(cpucb->tx_sem_full_drops);  
+    rsp->mutable_spec()->set_ascq_free_requests(cpucb->ascq_free_requests);  
     // fill stats of this CPU CB
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

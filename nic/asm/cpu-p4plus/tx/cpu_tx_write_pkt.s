@@ -18,6 +18,8 @@ struct cpu_tx_write_pkt_d d;
 #define r_addr              r1
 #define r_len               r2
 #define r_temp              r3
+
+#define ASCQ_FREE_REQ_OFFSET 52 
         
 %%
     .align
@@ -127,6 +129,8 @@ cpu_tx_write_ascq:
                         dma_cmd_ascq_dma_cmd,
                         1,
                         1)
+    add r7, k.{common_phv_cpucb_addr_sbit0_ebit3...common_phv_cpucb_addr_sbit36_ebit39}, r0
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, ASCQ_FREE_REQ_OFFSET, 1)
 
 cpu_tx_write_pkt_done:
     nop.e

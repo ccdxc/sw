@@ -41,6 +41,7 @@ typedef struct cpucb_s {
     uint64_t              total_rx_pkts;
     uint64_t              rx_qfull_drop_errors;
     uint64_t              tx_sem_full_drops;
+    uint64_t              ascq_free_requests;
     // PD state
     void                  *pd;                     // all PD specific state
 
