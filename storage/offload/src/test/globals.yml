@@ -2,8 +2,8 @@ alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'
 alias: 'iter_high=100'
 alias: 'iter_low=1'
 global_params:
-  delete_output_files: 1
-  per_core_qdepth: 16
+  per_core_qdepth: 32
+  cpu_mask: 1
 cp_hdr_format:
   idx: 1
   cp_hdr_field:

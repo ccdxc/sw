@@ -339,6 +339,7 @@ static const unsigned char *default_feature_yaml_list[PNSO_SVC_TYPE_MAX] = {
 
 
 static const unsigned char default_cp_hash_yaml[] =
+"tests:\n"
 "  - test:\n"
 "      idx: 5\n"
 "      svc_chains: 5\n"
@@ -518,10 +519,14 @@ body(void *not_used)
 	pnso_run_unit_tests(cfg);
 
 	/* run default testcases */
-	err = pnso_test_run_all(cfg);
+	if (feat_mask == 0) {
+		PNSO_LOG_INFO("PenCAKE skipped all default testcases\n");
+	} else {
+		err = pnso_test_run_all(cfg);
+		PNSO_LOG_INFO("PenCAKE completed all default testcases, status %d\n", err);
+	}
 	pnso_test_desc_free(cfg);
 	cfg = NULL;
-	PNSO_LOG_INFO("PenCAKE completed all default testcases, status %d\n", err);
 
 	/* loop running testcases from ctl program */
 	while (!pnso_test_is_shutdown()) {
