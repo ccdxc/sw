@@ -122,12 +122,14 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 		return nil, err
 	}
 
-	err = upgmgr.RegisterNMD(&nm)
-	if err != nil {
-		log.Fatalf("Error Registering NMD with upgmgr, err: %+v", err)
-		// cleanup emstore and return
-		emdb.Close()
-		return nil, err
+	if upgmgr != nil {
+		err = upgmgr.RegisterNMD(&nm)
+		if err != nil {
+			log.Fatalf("Error Registering NMD with upgmgr, err: %+v", err)
+			// cleanup emstore and return
+			emdb.Close()
+			return nil, err
+		}
 	}
 
 	// Start the control loop based on configured Mode

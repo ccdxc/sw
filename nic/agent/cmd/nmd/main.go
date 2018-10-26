@@ -17,7 +17,6 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
 	"github.com/pensando/sw/nic/delphi/gosdk"
-	delphi "github.com/pensando/sw/nic/delphi/gosdk"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
@@ -65,7 +64,7 @@ func main() {
 		debugflag          = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag    = flag.Bool("logtostdout", false, "enable logging to stdout")
 		logToFile          = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Nmd)), "Path of the log file")
-		bypassDelphi       = flag.Bool("bypassdelphi", true, "Bypass Delphi")
+		standalone         = flag.Bool("standalone", true, "Bypass interactions with Delphi, Sysmgr and Upgmgr")
 	)
 	flag.Parse()
 
@@ -140,18 +139,19 @@ func main() {
 	}
 
 	var delphiClient clientAPI.Client
-	if !*bypassDelphi {
+	var uc *upg.NaplesUpgClient
+	if !*standalone {
 		dServ := nmd.NewDelphiService()
 		delphiClient, err = gosdk.NewClient(dServ)
 		if err != nil {
 			log.Fatalf("Error creating delphi client . Err: %v", err)
 		}
-	}
-
-	// create a upgrade client
-	uc, err := upg.NewNaplesUpgradeClient(delphiClient)
-	if err != nil {
-		log.Fatalf("Error creating Upgrade client . Err: %v", err)
+		// create a upgrade client
+		uc, err = upg.NewNaplesUpgradeClient(delphiClient)
+		if err != nil {
+			log.Fatalf("Error creating Upgrade client . Err: %v", err)
+		}
+		srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
 	}
 
 	// create the new NMD
@@ -172,13 +172,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
-
-	delphiClient, err = delphi.NewClient(srv)
-	if err != nil {
-		log.Fatalf("delphi NewClient failed")
-	}
-	srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
-	delphiClient.Dial()
 
 	log.Infof("%s is running {%+v}", globals.Nmd, nm)
 

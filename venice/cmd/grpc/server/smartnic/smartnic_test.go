@@ -643,7 +643,7 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 	baseMac := "44.44.44.44.00."
 
 	// set server-side timeout to a small value to speed-up tests
-	srvTimeout := 300
+	srvTimeout := 500
 	SetNICRegTimeout(time.Duration(srvTimeout) * time.Millisecond)
 
 	for i := 0; i < 50; i++ {
@@ -669,7 +669,7 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 		stream, err := smartNICRegistrationRPCClient.RegisterNIC(context.Background())
 		AssertOk(t, err, "Error creating stream")
 
-		minSleep := 100 // 100ms margin to avoid cases where sleep time and timout are too close
+		minSleep := 200 // 100ms margin to avoid cases where sleep time and timout are too close
 		sleepTimeDelta := mathrand.Intn(srvTimeout-minSleep) + minSleep
 		expectSuccess := (sleepTimeDelta % 2) == 0
 		var sleepTime time.Duration
