@@ -15,8 +15,8 @@
 #define MAXUUID 32
 #define FREEACCESS 0x01
 #define CONTROLLEDACCESS 0x00
-#define MEMLOCKFILE "/pal_mem.lck"
-#define CPLDLOCKFILE "/pal_cpld.lck"
+#define MEMLOCKFILE "/.pal_mem.lck"
+#define CPLDLOCKFILE "/.pal_cpld.lck"
 
 typedef struct pal_mmap_region_s {
     u_int64_t pa;
@@ -64,8 +64,8 @@ pal_lock_init(char *file) {
          * already been initialized.
          */
         fd = open(MEMLOCKFILE, O_RDWR);
-    } else if (strcmp(file, CPLDLOCKFILE)) {
-    	fd = open(MEMLOCKFILE, O_RDWR | O_CREAT);
+    } else if (strcmp(file, CPLDLOCKFILE) == 0) {
+        fd = open(CPLDLOCKFILE, O_RDWR | O_CREAT);
     }
 
     return fd;

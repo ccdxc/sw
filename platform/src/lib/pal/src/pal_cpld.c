@@ -22,11 +22,11 @@ int pal_is_qsfp_port_psnt(int port_no) {
 
     /* Calls to calm down the compiler - will be removed */
     if(0) {
-	cpld_write(0, 0);
+        cpld_write(0, 0);
     }
 
     if (pd->cpldlckfd <= 0) {
-	pd->cpldlckfd = pal_lock_init(CPLDLOCKFILE);
+        pd->cpldlckfd = pal_lock_init(CPLDLOCKFILE);
     }    
 
     /* Get Exclusive lock for now */
@@ -44,7 +44,7 @@ int pal_is_qsfp_port_psnt(int port_no) {
     if(port_no == 1) { 
         return ((cpld_rd_data & 0x10) != 0);
     } else if (port_no == 2) {
-	return ((cpld_rd_data & 0x20) != 0);
+        return ((cpld_rd_data & 0x20) != 0);
     }
 
     return 0;

@@ -1,9 +1,10 @@
 #
-# Copyright (c) 2017, Pensando Systems Inc.
+# Copyright (c) 2018, Pensando Systems Inc.
 #
 
 PROGRAM = cpld 
 SOURCES = cpld.c
+LBUILD_ARCHES = aarch64
 
 LCFLAGS = \
 	-I ../../src \
