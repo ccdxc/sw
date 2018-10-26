@@ -1176,27 +1176,16 @@ Eth::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
     );
 
     comp->status = 0;
-    if (hal->fwd_mode == FWD_MODE_SMART_NIC) {
-        comp->supported = (
-            //ETH_HW_VLAN_RX_STRIP |
-            //ETH_HW_VLAN_TX_TAG |
-            ETH_HW_RX_CSUM |
-            ETH_HW_TX_CSUM |
-            ETH_HW_RX_HASH |
-            ETH_HW_TX_SG
-        );
-    } else {
-        comp->supported = (
-            ETH_HW_VLAN_RX_STRIP |
-            ETH_HW_VLAN_TX_TAG |
-            ETH_HW_RX_CSUM |
-            ETH_HW_TX_CSUM |
-            ETH_HW_RX_HASH |
-            ETH_HW_TX_SG |
-            ETH_HW_TSO |
-            ETH_HW_TSO_IPV6
-        );
-    }
+    comp->supported = (
+        ETH_HW_VLAN_RX_STRIP |
+        ETH_HW_VLAN_TX_TAG |
+        ETH_HW_RX_CSUM |
+        ETH_HW_TX_CSUM |
+        ETH_HW_RX_HASH |
+        ETH_HW_TX_SG |
+        ETH_HW_TSO |
+        ETH_HW_TSO_IPV6
+    );
 
     hal->LifSetVlanOffload(spec->lif_id,
         cmd->wanted & comp->supported & ETH_HW_VLAN_RX_STRIP,
