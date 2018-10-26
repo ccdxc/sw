@@ -206,7 +206,12 @@ union {
 
 
 #define VLAN_VALID(hdr, hv)     ((hv)->tp_vlan_tci != 0 || ((hdr)->tp_status & TP_STATUS_VLAN_VALID))
+
+#ifdef TP_STATUS_VLAN_TPID_VALID
 #define VLAN_TPID(hdr, hv)     (((hv)->tp_vlan_tpid || ((hdr)->tp_status & TP_STATUS_VLAN_TPID_VALID)) ? (hv)->tp_vlan_tpid : ETH_P_8021Q)
+#else
+#define VLAN_TPID(hdr, hv)     (ETH_P_8021Q)
+#endif
 
 static int
 read_vlan_tag(struct msghdr *msg_hdr, uint16_t *tpid, uint16_t* vlan_id) {
