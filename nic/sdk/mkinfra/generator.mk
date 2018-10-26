@@ -227,8 +227,11 @@ define PROCESS_MODULEMK_OBJS
             ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_gobj,$$(basename $${${1}_SRCS})))
 #            ${1}_OBJS += $${${1}_BLD_OUT_DIR}/.proto_goobj
         endif
-		ifeq "$$(filter DELPHI,$${${1}_GEN_TYPES})" "DELPHI"
+        ifeq "$$(filter DELPHI,$${${1}_GEN_TYPES})" "DELPHI"
             ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_delphiobj,$$(basename $${${1}_SRCS})))
+        endif
+        ifeq "$$(filter GOMETRICS,$${${1}_GEN_TYPES})" "GOMETRICS"
+            ${1}_OBJS += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .proto_gometricsobj,$$(basename $${${1}_SRCS})))
         endif
     else ifeq "$${${1}_RECIPE_TYPE}" "MOCKGEN"
         ${1}_OBJS   += $$(patsubst %.pb.go,%_mock.go,$${${1}_SRCS})

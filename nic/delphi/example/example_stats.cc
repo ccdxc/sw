@@ -15,7 +15,7 @@ ExampleStatsMgr::ExampleStatsMgr() {
 
     // create a periodic timer to set stats
     this->statsTimer.set<ExampleStatsMgr, &ExampleStatsMgr::statsTimerHandler>(this);
-    this->statsTimer.start(5.0, 5.0);
+    this->statsTimer.start(0.1, 0.1);
 
     return;
 }

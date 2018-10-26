@@ -39,6 +39,7 @@ public:
     TestMetric(int32_t key, char *ptr);
     TestMetric(char *kptr, char *vptr) : TestMetric(*(int32_t *)kptr, vptr){ };
     int32_t GetKey() { return key_; };
+    void * Raw() { return shm_ptr_; };
     delphi::metrics::CounterPtr RxCounter() { return rx_counter_; };
     delphi::metrics::CounterPtr TxCounter() { return tx_counter_; };
     delphi::metrics::GaugePtr RxRate() { return rx_rate_; };
@@ -191,7 +192,7 @@ public:
     }
     virtual void TearDown() {
         usleep(1000);
-        srv_shm_->MemUnmap(DELPHI_SHM_NAME);
+        srv_shm_->MemUnmap();
     }
 };
 

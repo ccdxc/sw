@@ -179,6 +179,7 @@ public:
     delphi::error Delete();
     string DebugString();
     static {{.GetName}}Iterator Iterator();
+    void * Raw() { return shm_ptr_; };
 
     {{$fields := .Fields}}{{range $fields}}
     {{if (eq .GetName "Key") }}

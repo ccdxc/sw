@@ -30,4 +30,26 @@ for (int _tidx = 0; _tidx < 100; _tidx++) { \
 } \
 ASSERT_NE(left, right)
 
+// ASSERT_TRUE_EVENTUALLY asserts condition is true eventually
+// it retries the check every 50ms for up to 5sec
+#define ASSERT_TRUE_EVENTUALLY(condition) \
+    for (int _tidx = 0; _tidx < 100; _tidx++) { \
+        if (condition) { \
+            break; \
+        } \
+        usleep(1000 * 50); \
+    } \
+    ASSERT_TRUE(condition)
+
+// ASSERT_FALSE_EVENTUALLY asserts condition is false eventually
+// it retries the check every 50ms for up to 5sec
+#define ASSERT_FALSE_EVENTUALLY(condition) \
+    for (int _tidx = 0; _tidx < 100; _tidx++) { \
+        if (condition) { \
+            break; \
+        } \
+        usleep(1000 * 50); \
+    } \
+    ASSERT_FALSE(condition)
+
 #endif // _DELPHI_UTILS_UTEST_H_

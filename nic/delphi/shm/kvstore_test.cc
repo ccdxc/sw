@@ -32,7 +32,7 @@ public:
     }
     virtual void TearDown() {
         usleep(1000);
-        srv_shm_->MemUnmap(kshmName);
+        srv_shm_->MemUnmap();
     }
 };
 

@@ -89,8 +89,9 @@ error DelphiShm::MemMap(string name, int32_t size, bool is_srv) {
         return error::New("Shared memory size does not match");
     }
 
-    // set the mapped flag
+    // set the mapped flag and store shared memory name
     mapped_ = true;
+    shm_name_ = name;
 
     // instantiate the slab allocator
     slab_mgr_ = unique_ptr<SlabAllocator>(new SlabAllocator(&(shm_meta_->mempool), (uint8_t *)shm_meta_, my_id_));
@@ -133,12 +134,18 @@ error DelphiShm::initSharedMemory(int32_t size) {
 }
 
 // MemUnmap unmaps the delphi library
-error DelphiShm::MemUnmap(string name) {
-    int err = shm_unlink(name.c_str());
-    if (err < 0) {
-        LogError("Error unlinking shared memory {}. Err {}", name, errno);
+error DelphiShm::MemUnmap() {
+    // if memory is not mapped, we are done
+    if (!mapped_) {
+        return 0;
+    }
+
+    int err = shm_unlink(shm_name_.c_str());
+    if ((err < 0) && (errno != ENOENT)) {
+        LogError("Error unlinking shared memory {}. Err {}/{}", shm_name_, err, errno);
         return error::New("Error unmapping shared memory");
     }
+    mapped_ = false;
 
     return 0;
 }

@@ -1,8 +1,8 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 
-MODULE_TARGET       = example.proto
-MODULE_GEN_TYPES    = CC PY DELPHI
+MODULE_TARGET       = delphi_example.proto
+MODULE_GEN_TYPES    = CC PY DELPHI GOMETRICS
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
                       ${TOPDIR}/nic/hal/third-party/google/include \

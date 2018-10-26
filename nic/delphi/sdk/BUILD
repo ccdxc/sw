@@ -32,6 +32,7 @@ cc_library(
         "object_factory.hpp",
         "delphi_utest.hpp",
         "delphi_metrics.hpp",
+        "delphi_metrics_cgo.h",
     ],
     include_prefix = "nic/delphi/sdk",
     deps = [

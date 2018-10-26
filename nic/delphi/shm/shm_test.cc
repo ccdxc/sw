@@ -30,7 +30,7 @@ public:
         assert(err.IsOK());
     }
     virtual void TearDown() {
-        error err = srv_shm_->MemUnmap(kshmName);
+        error err = srv_shm_->MemUnmap();
         assert(err.IsOK());
     }
 };

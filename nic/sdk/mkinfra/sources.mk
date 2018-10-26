@@ -81,6 +81,16 @@ $${${1}_BLD_OUT_DIR}/${2}/%.proto_delphiobj: ${2}/%.proto $${${1}_DEPS}
 	${AT}touch $$@
 endef
 
+define ADD_SRC_RULE_PROTO_GEN_GOMETRICS
+$${${1}_BLD_OUT_DIR}/${2}/%.proto_gometricsobj: ${2}/%.proto $${${1}_DEPS}
+	${AT}mkdir -p $$(dir $$@)
+	${AT}mkdir -p ${BLD_PROTOGEN_DIR}/goproto
+	${NAT}${AT}echo ${NAME_PROT2GOMETRICS} $$(call CANPATH,$$<)
+	${AT}$(strip ${CMD_PROTOC} --delphigo-metrics_out=$${${1}_GEN_DIR}/goproto/ ${${1}_INCS} ${${1}_DEFS} $$<)
+	${AT}$(strip ${CMD_GOIMPORTS} -w ${${1}_GOIMPORTS_OPTS} $${${1}_GEN_DIR}/goproto/*) > $$(call CANPATH,$$@_build.log)
+	${AT}touch $$@
+endef
+
 define ADD_SRC_MOCKGEN_OBJECT_RULE
 ${2}/%_mock.go: ${2}/%.pb.go $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)

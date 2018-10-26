@@ -80,6 +80,22 @@ TEST_F(ExampleTest, BasicTest) {
         ASSERT_EQ(intfStatus->operstate(), example::IntfStateUp) << "Interface status object has wrong oper state";
     }
 }
+
+TEST_F(ExampleTest, MetricsTest) {
+    usleep(1000);
+
+    // iterate over all interface stats
+    int iter_count = 0;
+    for (auto iter = delphi::objects::ExampleMetrics::Iterator(); iter.IsNotNil(); iter.Next()) {
+        auto tmp = iter.Get();
+        ASSERT_TRUE_EVENTUALLY((tmp->RxPkts()->Get() > 1)) << "Interface RxPkts counter is wrong";
+        ASSERT_TRUE_EVENTUALLY((tmp->RxPktRate()->Get() > 0)) << "Interface RxPktRate gauge is wrong";
+        ASSERT_TRUE_EVENTUALLY((tmp->RxErrors()->Get() > 1)) << "Interface RxErrors counter is wrong";
+        iter_count++;
+    }
+    ASSERT_TRUE((iter_count > 0)) << "Got invalid number of metrics";
+}
+
 } // namespace
 
 int main(int argc, char **argv) {

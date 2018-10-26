@@ -55,8 +55,10 @@ typedef struct ht_entry_trailer_ {
                                         sizeof(ht_entry_t) + ROUND_KEYLAN(entry->key_len)))
 
 // get trailer and hash entry from value pointer
-#define TRAILER_FROM_VAL_PTR(ptr) (ht_entry_trailer_t *)((int8_t *)ptr - sizeof(ht_entry_trailer_t))
-#define HASH_ENTRY_FROM_VAL_PTR(ptr) ((ht_entry_t *)OFFSET_FROM_PTR(TRAILER_FROM_VAL_PTR(ptr)->ht_entry))
+#define TRAILER_FROM_VAL_PTR(ptr) ((ht_entry_trailer_t *)((int8_t *)ptr - sizeof(ht_entry_trailer_t)))
+
+// get hash entry from value pointer
+#define HASH_ENTRY_FROM_VAL_PTR(ptr, shm_ptr) ((ht_entry_t *)PTR_FROM_OFFSET(shm_ptr->GetBase(), (TRAILER_FROM_VAL_PTR(ptr)->ht_entry)))
 
 // ht_bucket_t represents a hash bucket
 typedef struct ht_bucket_ {
@@ -194,6 +196,12 @@ public:
     }
     inline bool IsNotNil() {
         return (entry_ != NULL);
+    }
+    inline void *Find(const char *key, int16_t keylen) {
+        return tbl_->Find(key, keylen);
+    }
+    inline error Delete(const char *key, int16_t keylen) {
+        return tbl_->Delete(key, keylen);
     }
     /*
     HtableEntry operator*() const;

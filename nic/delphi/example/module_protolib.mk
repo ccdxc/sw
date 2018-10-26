@@ -7,7 +7,7 @@ MODULE_INCS     = /usr/local/include \
                   ${TOPDIR}/hal/third-party/grpc/include
 MODULE_FLAGS    = -O3
 MODULE_EXCLUDE_FLAGS = -O2
-MODULE_PREREQS  = example.proto
+MODULE_PREREQS  = delphi_example.proto
 MODULE_SRCS     = ${BLD_PROTOGEN_DIR}/example.pb.cc ${BLD_PROTOGEN_DIR}/example.delphi.cc \
                   ${BLD_PROTOGEN_DIR}/example_stats.pb.cc ${BLD_PROTOGEN_DIR}/example_stats.delphi.cc
 

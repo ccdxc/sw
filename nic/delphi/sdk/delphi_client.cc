@@ -465,14 +465,18 @@ error DelphiClient::DeleteObject(BaseObjectPtr objinfo) {
 // ListKind returns all objects of a kind
 vector<BaseObjectPtr> DelphiClient::ListKind(string kind) {
     vector<BaseObjectPtr> objlist;
+    std::map<string, ObjSubtreePtr>::iterator it;
 
-    // get the subtree
-    ObjSubtreePtr subtree = this->getSubtree(kind);
+    // find the subtree by kind
+    it = this->subtrees.find(kind);
+    if (it != this->subtrees.end()) {
+        ObjSubtreePtr subtree = it->second;
 
-    // walk all objects in the DB
-    for (map<string, BaseObjectPtr>::iterator i = subtree->objects.begin(); i != subtree->objects.end(); ++i) {
-        BaseObjectPtr objinfo = i->second;
-        objlist.push_back(objinfo->Clone());
+        // walk all objects in the DB
+        for (map<string, BaseObjectPtr>::iterator i = subtree->objects.begin(); i != subtree->objects.end(); ++i) {
+            BaseObjectPtr objinfo = i->second;
+            objlist.push_back(objinfo->Clone());
+        }
     }
 
     return objlist;
