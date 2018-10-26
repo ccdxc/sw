@@ -25,25 +25,21 @@ using delphi::objects::PortStatusPtr;
 
 class NicMgrService : public delphi::Service, public enable_shared_from_this<NicMgrService> {
 private:
-    string                       svcName_;
-
-public:
     shared_ptr<sysmgr::Client>   sysmgr_;
     UpgSdkPtr                    upgsdk_;
     delphi::SdkPtr               sdk_;
+
+public:
+    delphi::SdkPtr sdk(void) const { return sdk_; }
     NicMgrService(delphi::SdkPtr sk);
-    NicMgrService(delphi::SdkPtr sk, string name);
- 
-    virtual string Name() { return svcName_; }
-    
     void OnMountComplete(void); 
 };
 
 // port_svc is the reactor for the Port object
 class port_svc : public delphi::objects::PortStatusReactor {
 public:
-    port_svc(delphi::SdkPtr sk) {
-        this->sdk_ = sk;
+    port_svc(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
     }
 
     // OnPortCreate gets called when PortStatus object is created
@@ -67,9 +63,6 @@ port_svc_ptr_t linkmgr_get_port_reactor(void);
 
 // linkmgr_init_port_reactors creates a port reactor
 Status linkmgr_init_port_reactors(delphi::SdkPtr sdk);
-
-
-
 shared_ptr<NicMgrService> nicmgr_svc_;
 
 }    // namespace nicmgr

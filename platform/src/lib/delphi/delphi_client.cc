@@ -9,6 +9,7 @@
 #include <dev.hpp>
 #include <eth_dev.hpp>
 #include <sdk/types.hpp>
+#include <logger.hpp>
 
 using namespace std;
 using namespace upgrade;
@@ -25,17 +26,15 @@ extern DeviceManager *devices[];
 
 namespace nicmgr {
 
-NicMgrService::NicMgrService(delphi::SdkPtr sk, string name) {
-    
+NicMgrService::NicMgrService(delphi::SdkPtr sk) {
     sdk_ = sk;
-    svcName_ = name;
-    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<nicmgr_upg_hndlr>(), name, NON_AGENT, (UpgAgentHandlerPtr)NULL);
-
-    sysmgr_ = make_shared<sysmgr::Client>(sdk_, name);
+    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<nicmgr_upg_hndlr>(), "nicmgr",
+                                  NON_AGENT, (UpgAgentHandlerPtr)NULL);
+    sysmgr_ = make_shared<sysmgr::Client>(sdk_, "nicmgr");
 }
 
 void NicMgrService::OnMountComplete() {
-    printf("On mount complete got called");
+    NIC_LOG_DEBUG("On mount complete got called");
     this->sysmgr_->init_done();
     // Delphi Object Iterator here
     //
@@ -101,6 +100,5 @@ error port_svc::update_port_status(PortStatusPtr port) {
 
     return error::OK();
 }
-
 
 }

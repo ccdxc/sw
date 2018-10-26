@@ -465,7 +465,7 @@ Eth::DevLinkDownHandler(uint32_t port_num)
     auto host_down_obj_ptr = make_shared<delphi::objects::EthDeviceHostDownStatusMsg>();
     host_down_obj_ptr->set_key(spec->dev_uuid);
     host_down_obj_ptr->set_port_num(port_num);
-    nicmgr_svc_->sdk_->SetObject(host_down_obj_ptr);
+    nicmgr_svc_->sdk()->SetObject(host_down_obj_ptr);
 }
 
 void
@@ -508,7 +508,7 @@ Eth::DevLinkUpHandler(uint32_t port_num)
     auto host_up_obj_ptr = make_shared<delphi::objects::EthDeviceHostUpStatusMsg>();
     host_up_obj_ptr->set_key(spec->dev_uuid);
     host_up_obj_ptr->set_port_num(port_num);
-    nicmgr_svc_->sdk_->SetObject(host_up_obj_ptr);
+    nicmgr_svc_->sdk()->SetObject(host_up_obj_ptr);
 
 }
 
@@ -537,7 +537,7 @@ void Eth::DevObjSave() {
         auto mac_addresses = eth_dev_obj_ptr->add_mac_addrs();
         mac_addresses->set_mac_addr(mac_addr);
     }
-    nicmgr_svc_->sdk_->SetObject(eth_dev_obj_ptr);
+    nicmgr_svc_->sdk()->SetObject(eth_dev_obj_ptr);
 }
 
 void
