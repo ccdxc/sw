@@ -147,6 +147,12 @@ def GetNaplesHostInterfaces(name):
 def GetWorkloadNodeHostInterfaces(name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadNodeHostInterfaces(name)
 
+def GetWorkloadTypeForNode(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadTypeForNode(node_name)
+
+def GetWorkloadImageForNode(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadImageForNode(node_name)
+
 def PrintCommandResults(cmd):
     Logger.header('COMMAND')
     Logger.info("%s (Exit Code = %d)" % (cmd.command, cmd.exit_code))
@@ -171,3 +177,52 @@ def SetVeniceAuthToken(auth_token):
     
 def GetVeniceAuthToken():
     return store.GetVeniceAuthToken()
+
+def IsSimulation():
+    return GlobalOptions.mode == 'simulation'
+
+
+# ================================
+# Wrappers for Trigger APIs
+# ================================
+def Trigger_CreateExecuteCommandsRequest(serial = True):
+    req = topo_svc.TriggerMsg()
+    req.trigger_op = topo_svc.EXEC_CMDS
+    req.trigger_mode = topo_svc.TRIGGER_SERIAL if serial else topo_svc.TRIGGER_PARALLEL
+    return req
+
+def Trigger_AddCommand(req, node_name, workload_name, command, background = False):
+    cmd = req.commands.add()
+    cmd.mode = topo_svc.COMMAND_BACKGROUND if background else topo_svc.COMMAND_FOREGROUND
+    cmd.entity_name = workload_name
+    cmd.node_name = node_name
+    cmd.command = command
+    return cmd
+
+def Trigger_IsBackgroundCommand(cmd):
+    return cmd.handle != ""
+
+def Trigger_TerminateAllCommands(exec_cmd_resp = None):
+    term_req = topo_svc.TriggerMsg()
+    term_req.trigger_op = topo_svc.TERMINATE_ALL_CMDS
+    if exec_cmd_resp is None:
+        return term_req
+
+    for cmd in exec_cmd_resp.commands:
+        if not Trigger_IsBackgroundCommand(cmd): continue
+        term_cmd = term_req.commands.add()
+        term_cmd.handle = cmd.handle
+        term_cmd.entity_name = cmd.entity_name
+        term_cmd.node_name = cmd.node_name
+        term_cmd.mode = cmd.mode
+    return Trigger(term_req)
+
+def Trigger_AggregateCommandsResponse(trig_resp, term_resp):
+    for cmd in trig_resp.commands:
+        if not Trigger_IsBackgroundCommand(cmd): continue
+        for term_cmd in term_resp.commands:
+            if cmd.handle != term_cmd.handle: continue
+            cmd.stdout = term_cmd.stdout
+            cmd.stderr = term_cmd.stderr
+            cmd.exit_code = term_cmd.exit_code
+    return trig_resp

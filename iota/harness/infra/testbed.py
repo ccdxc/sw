@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import os
 
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.parser as parser
@@ -27,8 +28,8 @@ class _Testbed:
 
     def __read_warmd_json(self):
         self.tbspec = parser.JsonParse(GlobalOptions.testbed_json)
-        for k,v in self.tbspec.Instances.__dict__.items():
-            self.__node_ips.append(v)
+        for instance in self.tbspec.Instances:
+            self.__node_ips.append(instance.NodeMgmtIP)
         return
     
     def __prepare_TestBedMsg(self, ts):
@@ -41,15 +42,20 @@ class _Testbed:
             msg.venice_image = getattr(images, 'venice', "")
             msg.driver_sources = getattr(images, 'drivers', "")
 
-        # TBD: Get it from warmd.json
         msg.username = self.tbspec.Provision.Username
         msg.password = self.tbspec.Provision.Password
-        msg.testbed_id = int(self.tbspec.DataNetworks.DataSwitch.Port)
+        # TBD: Get a unique ID for the testbed.
+        msg.testbed_id = 1 #int(self.tbspec.DataNetworks.DataSwitch.Port)
 
-        for node_ip in self.__node_ips:
+        for instance in self.tbspec.Instances:
             node_msg = msg.nodes.add()
             node_msg.type = topo_pb2.TESTBED_NODE_TYPE_SIM
-            node_msg.ip_address = node_ip
+            node_msg.ip_address = instance.NodeMgmtIP
+            node_os = getattr(instance, 'NodeOs', None)
+            if node_os == "freebsd":
+                node_msg.os = topo_pb2.TESTBED_NODE_OS_FREEBSD
+            else:
+                node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
         return msg
 
     def __cleanup_testbed(self):
@@ -61,7 +67,30 @@ class _Testbed:
         self.data_vlans = None
         return types.status.SUCCESS
 
+    def __get_instance_nic_type(self, instance):
+        resource = getattr(instance, "Resource", None)
+        if resource is None: return None
+        return getattr(resource, "NICType", None)
+
+    def __recover_testbed(self):
+        for instance in self.tbspec.Instances:
+            if self.__get_instance_nic_type(instance) != "pensando": continue
+            cmd = "%s/iota/scripts/boot_naples.py " % GlobalOptions.topdir
+            cmd += "--console-ip %s " % instance.NicConsoleIP
+            cmd += "--console-port %s " % instance.NicConsolePort
+            cmd += "--host-ip %s " % instance.NodeMgmtIP
+            cmd += "--cimc-ip %s " % instance.NodeCimcIP
+            cmd += "--image %s/nic/naples_fw.tar " % GlobalOptions.topdir
+            cmd += "--drivers-ionic-pkg %s/platform/gen/drivers-linux.tar.xz " % GlobalOptions.topdir
+            ret = os.system(cmd)
+            if ret != 0:
+                Logger.error("Recovery failed for %s" % instance.Name)
+                sys.exit(1)
+        return
+
+
     def __init_testbed(self):
+        self.__recover_testbed()
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         resp = api.InitTestbed(msg)
         if resp is None:

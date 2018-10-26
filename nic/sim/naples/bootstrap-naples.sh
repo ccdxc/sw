@@ -8,7 +8,7 @@ INTF2=pen-intf2
 NUM_IF=16
 LOGDIR=/var/run/naples/logs
 
-LONGOPTIONS="qemu,"
+LONGOPTIONS="qemu,naples-sim-name:"
 
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -19,11 +19,17 @@ fi
 
 eval set -- "$PARSED"
 qemu=0
+naples_sim_name="naples-sim"
 while true; do
     case "$1" in
          --qemu)
             qemu=1
             shift
+            ;;
+         --naples-sim-name)
+            naples_sim_name=$2
+            shift 2
+            break
             ;;
         --)
             shift
@@ -44,7 +50,7 @@ function setup_intf1()
     set +x
     while true; do
         sleep 5
-        pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)
+        pid=$(docker inspect --format '{{.State.Pid}}' $naples_sim_name)
         nsenter -t $pid -n ip link set $INTF1 netns 1  >& /dev/null
         if [ $? -eq 0 ]; then
             set -x
@@ -64,7 +70,7 @@ function setup_intf2()
     set +x
     while true; do
         sleep 5
-        pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)
+        pid=$(docker inspect --format '{{.State.Pid}}' $naples_sim_name)
         nsenter -t $pid -n ip link set $INTF2 netns 1  >& /dev/null
         if [ $? -eq 0 ]; then
             set -x
@@ -86,7 +92,7 @@ if [ "$qemu" -eq 0 ]
 then
     for ((intf=100; intf<100+$NUM_IF; intf++))
     do
-        pid=$(docker inspect --format '{{.State.Pid}}' naples-sim)
+        pid=$(docker inspect --format '{{.State.Pid}}' $naples_sim_name)
         nsenter -t $pid -n ip link set lif$intf netns 1 >& /dev/null
         while [ $? -ne 0 ]; do
             sleep 5
@@ -100,5 +106,3 @@ fi
 # setup the uplinks in background
 $(setup_intf1  >& $LOGDIR/bootstrap-intf1.log) &
 $(setup_intf2  >& $LOGDIR/bootstrap-intf2.log) &
-
-

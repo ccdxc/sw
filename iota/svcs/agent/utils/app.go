@@ -33,6 +33,16 @@ type Interface struct {
 	_VlanIntfs map[int]*Interface
 }
 
+type CommandHandle string
+
+//CommandResp returns command response context
+type CommandResp struct {
+	RetCode int32
+	Stdout  string
+	Stderr  string
+	Handle  CommandHandle
+}
+
 //NewInterface vlan interface create
 func NewInterface(name string, vlan int, macAddress string) *Interface {
 	intf := new(Interface)
@@ -83,7 +93,7 @@ func (intf *Interface) SetIPAddress(address string) error {
 type AppEngine interface {
 	GetName() string
 	BringUp()
-	RunCommand(cmd []string, timeout int, background bool) (string, string, error)
+	RunCommand(cmd []string, timeout int, background bool) (CommandResp, error)
 	StopCommand(CmdHandle)
 	AttachInterface(intfName string) error
 	AddVlan(intfName string, vlan int)
@@ -320,7 +330,7 @@ func (ctr *Container) PrintAppInformation() {
 }
 
 //StopCommand stop command
-func (ctr *Container) StopCommand(cmdHandle CmdHandle) {
+func (ctr *Container) StopCommand(cmdHandle CommandHandle) {
 	//TODO
 }
 
@@ -406,8 +416,8 @@ func (ctr *Container) CheckProcessRunning(process string) bool {
 	return false
 }
 
-//RunCommand run command on the container
-func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int32, string, string, error) {
+//SetUpCommand setups command to run later.
+func (ctr *Container) SetUpCommand(cmd []string, timeout uint32, background bool, shell bool) (CommandHandle, error) {
 
 	if shell {
 		cmd = []string{"sh", "-c", strings.Join(cmd, " ")}
@@ -421,37 +431,69 @@ func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, 
 		Cmd:          cmd,
 	})
 
+	if err != nil {
+		return "", err
+	}
+
+	return (CommandHandle)(resp.ID), nil
+}
+
+//StopBgCommand stop a command started
+func (ctr *Container) StopBgCommand(cmdHandle CommandHandle) error {
+
+	for true {
+		cResp, err := ctr.client.ContainerExecInspect(ctr.ctx, (string)(cmdHandle))
+		if err != nil || !cResp.Running {
+			return err
+		}
+		/* Pid may no be immediately available */
+		if cResp.Pid != 0 {
+			cmd := []string{"kill", "-9", strconv.Itoa(cResp.Pid)}
+			RunCmd(cmd, 0, false, false, nil)
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	return nil
+}
+
+//RunCommand run command on the container
+func (ctr *Container) RunCommand(cmdHandle CommandHandle) (CommandResp, error) {
+
 	var stdoutBuf, stderrBuf bytes.Buffer
 	stdout := io.MultiWriter(&stdoutBuf)
 	stderr := io.MultiWriter(&stderrBuf)
 
-	hResp, err := ctr.client.ContainerExecAttach(ctr.ctx, resp.ID,
+	hResp, err := ctr.client.ContainerExecAttach(ctr.ctx, (string)(cmdHandle),
 		types.ExecConfig{})
 
 	defer hResp.Close()
 	if err != nil {
-		return -1, "", "", err
+		return CommandResp{RetCode: -1}, err
 	}
 
-	err = ctr.client.ContainerExecStart(ctr.ctx, resp.ID, types.ExecStartCheck{})
+	err = ctr.client.ContainerExecStart(ctr.ctx, (string)(cmdHandle), types.ExecStartCheck{})
 	if err != nil {
-		return -1, "", "", err
+		return CommandResp{RetCode: -1}, err
 	}
 
 	retCode := 0
-	for !background {
-		cmdResp, _ := ctr.client.ContainerExecInspect(ctr.ctx, resp.ID)
-		StdCopy(stdout, stderr, hResp.Reader)
+	for true {
+		cmdResp, _ := ctr.client.ContainerExecInspect(ctr.ctx, (string)(cmdHandle))
+		go StdCopy(stdout, stderr, hResp.Reader)
 		if cmdResp.Running == false {
 			retCode = cmdResp.ExitCode
 			if cmdResp.ExitCode != 0 {
 				err = errors.New("Command Failed")
 			}
-			break
+			return CommandResp{RetCode: ((int32)(retCode)), Stdout: stdoutBuf.String(), Stderr: stderrBuf.String()}, err
 		}
+		time.Sleep(100 & time.Millisecond)
 	}
 
-	return ((int32)(retCode)), stdoutBuf.String(), stderrBuf.String(), err
+	/* It should never come here */
+	return CommandResp{}, nil
 }
 
 func bringUpAppContainer(name string, registry string, mountTarget string) (*string, error) {

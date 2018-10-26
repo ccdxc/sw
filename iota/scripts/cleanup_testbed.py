@@ -64,6 +64,10 @@ def cleanup_node(node_ip):
 
 import iota.harness.infra.utils.parser as parser
 from multiprocessing.dummy import Pool as ThreadPool 
+os.system("yum install -y sshpass")
 tbspec = parser.JsonParse(GlobalOptions.testbed_json)
-pool = ThreadPool(len(tbspec.Instances.__dict__.values())) 
-results = pool.map(cleanup_node, tbspec.Instances.__dict__.values())
+pool = ThreadPool(len(tbspec.Instances))
+mgmt_ips = []
+for instance in tbspec.Instances:
+    mgmt_ips.append(instance.NodeMgmtIP)
+results = pool.map(cleanup_node, mgmt_ips)

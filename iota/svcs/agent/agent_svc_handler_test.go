@@ -14,8 +14,14 @@ import (
 	TestUtils "github.com/pensando/sw/venice/utils/testutils"
 )
 
+const (
+	IotaWorkloadImage = "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
+	naplesSimName     = "naples-sim"
+)
+
 var agentClient iota.IotaAgentApiClient
 var stubNaplesContainer *Utils.Container
+var controlIntf string
 
 func stubRunCmd(cmdArgs []string, timeout int, background bool, shell bool,
 	env []string) (int, string, error) {
@@ -71,7 +77,7 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "en0",
+	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
 		VeniceIps: []string{"10.1.1.3/24"}}}
 
@@ -169,6 +175,17 @@ func TestAgentService_Node_Venice_Add_Delete(t *testing.T) {
 }
 
 func TestAgentService_Node_Naples_Hw_Add_Delete(t *testing.T) {
+
+	/* Create fake naples entity for ssh testing */
+	naplesUserName := "root"
+	naplesPassword := "root"
+	startCmd := []string{"docker", "run", "--rm", "-d", "--publish=22:22", "--name", "naplesnode", "sickp/alpine-sshd:7.5-r2"}
+	if retCode, stdout, err := Utils.RunCmd(startCmd, 0, false, false, nil); err != nil || retCode != 0 {
+		t.Errorf("Could not start docker container %v %v ", stdout, err)
+	}
+	stopCmd := []string{"docker", "stop", "naplesnode"}
+	defer Utils.RunCmd(stopCmd, 0, false, false, nil)
+
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
@@ -181,10 +198,12 @@ func TestAgentService_Node_Naples_Hw_Add_Delete(t *testing.T) {
 
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
+	time.Sleep(5 * time.Second)
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "en0",
+	iotaNode.Entities = []*iota.Entity{&iota.Entity{Name: naplesSimName, Type: iota.EntityType_ENTITY_TYPE_NAPLES}, &iota.Entity{Name: "naples-host", Type: iota.EntityType_ENTITY_TYPE_HOST}}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
-		VeniceIps: []string{"10.1.1.3/24"}}}
+		VeniceIps: []string{"10.1.1.3/24"}, NaplesIpAddress: "127.0.0.1", NaplesUsername: naplesUserName, NaplesPassword: naplesPassword}}
 
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
@@ -211,6 +230,49 @@ func TestAgentService_Node_Naples_Hw_Add_Delete(t *testing.T) {
 	}
 	TestUtils.Assert(t, iotaNodeHealth.GetHealthCode() == iota.NodeHealth_HEALTH_OK, "Node health not ok!")
 
+	triggerMsg := iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
+		Commands: []*iota.Command{&iota.Command{NodeName: naplesSimName, EntityName: naplesSimName,
+			Command: "ls"}}}
+
+	triggeResp, err := agentClient.Trigger(context.Background(), &triggerMsg)
+	if err != nil {
+		t.Errorf("Trigger call failed. Err: %v", err)
+	}
+
+	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
+		Commands: []*iota.Command{&iota.Command{NodeName: naplesSimName, EntityName: naplesSimName,
+			Command: "ping -c 10 127.0.0.1"}}}
+
+	triggeResp, err = agentClient.Trigger(context.Background(), &triggerMsg)
+	if err != nil {
+		t.Errorf("Trigger call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, triggeResp.GetApiResponse().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Trigger msg failed!")
+
+	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
+		Commands: []*iota.Command{&iota.Command{NodeName: naplesSimName, EntityName: naplesSimName,
+			Mode:    iota.CommandMode_COMMAND_BACKGROUND,
+			Command: "watch -d df"}}}
+
+	triggeResp, err = agentClient.Trigger(context.Background(), &triggerMsg)
+	if err != nil {
+		t.Errorf("Trigger call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, triggeResp.GetApiResponse().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Trigger msg failed!")
+
+	TestUtils.Assert(t, triggeResp.GetCommands()[0].GetHandle() != "", "handle not set")
+
+	time.Sleep(3 * time.Second)
+	triggeResp.TriggerOp = iota.TriggerOp_TERMINATE_ALL_CMDS
+	triggeResp, err = agentClient.Trigger(context.Background(), triggeResp)
+	if err != nil {
+		t.Errorf("Trigger call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, triggeResp.GetApiResponse().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Trigger msg failed!")
+
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	nodeResp, err = agentClient.DeleteNode(context.Background(), iotaNode)
 	if err != nil {
@@ -230,6 +292,8 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 	workload.EncapVlan = 500
 	workload.PinnedPort = 1
 	workload.UplinkVlan = 100
+	workload.WorkloadImage = IotaWorkloadImage
+	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
 	workload.IpPrefix = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	workloadDir = "/tmp"
@@ -289,15 +353,25 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 	var workload iota.Workload
 
 	workload.WorkloadName = "test-workload"
-	workload.NodeName = "naples"
+	workload.NodeName = naplesSimName
 	workload.Interface = "test"
 	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
 	workload.EncapVlan = 500
 	workload.PinnedPort = 1
 	workload.UplinkVlan = 100
 	workload.IpPrefix = "1.1.1.1/24"
+	workload.WorkloadImage = IotaWorkloadImage
+	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
 
-	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	startCmd := []string{"docker", "run", "--rm", "-d", "--publish=22:22", "--name", "naplesnode", "sickp/alpine-sshd:7.5-r2"}
+	if retCode, stdout, err := Utils.RunCmd(startCmd, 0, false, false, nil); err != nil || retCode != 0 {
+		t.Errorf("Could not start docker container %v %v ", stdout, err)
+	}
+	stopCmd := []string{"docker", "stop", "naplesnode"}
+	defer Utils.RunCmd(stopCmd, 0, false, false, nil)
+
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: naplesSimName,
+		Entities: []*iota.Entity{&iota.Entity{Name: naplesSimName, Type: iota.EntityType_ENTITY_TYPE_NAPLES}, &iota.Entity{Name: "naples-host", Type: iota.EntityType_ENTITY_TYPE_HOST}}}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -313,7 +387,8 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
 
 	triggerMsg := iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
-		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "test-workload", Command: "lsas"}}}
+		Commands: []*iota.Command{&iota.Command{NodeName: naplesSimName, EntityName: "test-workload",
+			Command: "ls"}}}
 
 	triggeResp, err := agentClient.Trigger(context.Background(), &triggerMsg)
 	if err != nil {
@@ -321,9 +396,43 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 	}
 
 	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
-		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "test-workload", Command: "ping -c 10 127.0.0.1"}}}
+		Commands: []*iota.Command{&iota.Command{NodeName: naplesSimName, EntityName: "test-workload",
+			Command: "ping -c 10 127.0.0.1"}}}
 
 	triggeResp, err = agentClient.Trigger(context.Background(), &triggerMsg)
+	if err != nil {
+		t.Errorf("Trigger call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, triggeResp.GetApiResponse().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Trigger msg failed!")
+
+	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
+		Commands: []*iota.Command{&iota.Command{NodeName: naplesSimName, EntityName: naplesSimName,
+			Command: "ls -lrt"}}}
+
+	triggeResp, err = agentClient.Trigger(context.Background(), &triggerMsg)
+	if err != nil {
+		t.Errorf("Trigger call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, triggeResp.GetApiResponse().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Trigger msg failed!")
+
+	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
+		Commands: []*iota.Command{&iota.Command{NodeName: naplesSimName, EntityName: "test-workload",
+			Mode:    iota.CommandMode_COMMAND_BACKGROUND,
+			Command: "echo HELLO WORLD && sleep 300"}}}
+
+	triggeResp, err = agentClient.Trigger(context.Background(), &triggerMsg)
+	if err != nil {
+		t.Errorf("Trigger call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, triggeResp.GetApiResponse().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Trigger msg failed!")
+
+	TestUtils.Assert(t, triggeResp.GetCommands()[0].GetHandle() != "", "handle not set")
+
+	triggeResp.TriggerOp = iota.TriggerOp_TERMINATE_ALL_CMDS
+	triggeResp, err = agentClient.Trigger(context.Background(), triggeResp)
 	if err != nil {
 		t.Errorf("Trigger call failed. Err: %v", err)
 	}
@@ -364,7 +473,7 @@ func TestAgentService_Node_Mellanox_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_MELLANOX, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "en0",
+	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
 		VeniceIps: []string{"10.1.1.3/24"}}}
 
@@ -415,6 +524,8 @@ func TestAgentService_Mellanox_Workload_Add_Delete(t *testing.T) {
 	workload.IpPrefix = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	workloadDir = "/tmp"
+	workload.WorkloadImage = IotaWorkloadImage
+	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
 	workloadResp, err := agentClient.AddWorkload(context.Background(), &workload)
 	if err != nil {
 		t.Errorf("Add Workload call failed. Err: %v", err)
@@ -479,6 +590,8 @@ func TestAgentService_Naples_Hw_Workload_Add_Delete(t *testing.T) {
 	workload.UplinkVlan = 100
 	workload.IpPrefix = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
+	workload.WorkloadImage = IotaWorkloadImage
+	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
 	workloadDir = "/tmp"
 	workloadResp, err := agentClient.AddWorkload(context.Background(), &workload)
 	if err != nil {
@@ -544,6 +657,8 @@ func TestAgentService_Naples_Hw_baremetal_Workload_Add_Delete(t *testing.T) {
 	workload.UplinkVlan = 100
 	workload.IpPrefix = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
+	workload.WorkloadImage = IotaWorkloadImage
+	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL
 	workloadDir = "/tmp"
 	workloadResp, err := agentClient.AddWorkload(context.Background(), &workload)
 	if err != nil {
@@ -572,7 +687,7 @@ func TestAgentService_Naples_Hw_baremetal_Workload_Add_Delete(t *testing.T) {
 
 	fmt.Println(workloadResp)
 
-	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
 
 	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
 	if err != nil {
@@ -608,6 +723,8 @@ func TestAgentService_baremetal_Workload_Trigger(t *testing.T) {
 	workload.PinnedPort = 1
 	workload.UplinkVlan = 100
 	workload.IpPrefix = "1.1.1.1/24"
+	workload.WorkloadImage = IotaWorkloadImage
+	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
@@ -625,7 +742,8 @@ func TestAgentService_baremetal_Workload_Trigger(t *testing.T) {
 	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
 
 	triggerMsg := iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
-		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "", Command: "lsas"}}}
+		Commands: []*iota.Command{&iota.Command{NodeName: "naples", EntityName: "",
+			Command: "ls"}}}
 
 	triggeResp, err := agentClient.Trigger(context.Background(), &triggerMsg)
 	if err != nil {
@@ -633,7 +751,8 @@ func TestAgentService_baremetal_Workload_Trigger(t *testing.T) {
 	}
 
 	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
-		Commands: []*iota.Command{&iota.Command{NodeName: "naples", WorkloadName: "", Command: "ping -c 10 127.0.0.1"}}}
+		Commands: []*iota.Command{&iota.Command{NodeName: "naples", EntityName: "",
+			Command: "ping -c 10 127.0.0.1"}}}
 
 	triggeResp, err = agentClient.Trigger(context.Background(), &triggerMsg)
 	if err != nil {
@@ -669,4 +788,6 @@ func init() {
 	runArpCmd = func(app workload, ip string, intf string) error {
 		return nil
 	}
+
+	controlIntf = Utils.GetIntfsMatchingPrefix("e")[0]
 }

@@ -27,7 +27,7 @@ NAPLES_OVERLAY_CONFIG_DIR = "/home/vagrant/configs/config_vxlan_overlay"
 NAPLES_IPSEC_CONFIG_DIR = "/home/vagrant/configs/config_ipsec"
 NAPLES_TCP_PROXY_CONFIG_DIR = "/home/vagrant/configs/config_tcp_proxy"
 
-NAPLES_SIM_NAME = "naples-sim"
+DEF_NAPLES_SIM_NAME = "naples-sim"
 NAPLES_VOLUME_MOUNTS = {
     NAPLES_DATA_DIR: {'bind': '/naples/data', 'mode': 'rw'}
 }
@@ -216,7 +216,7 @@ def __setup_hntap(container_obj, args):
     else:
         hntapFile = NAPLES_CFG_DIR + "/" + HNTAP_CFG_FILE
 
-    cpCmd = ["docker", "cp", NAPLES_SIM_NAME + ":" + hntapFile, HNTAP_TEMP_CFG_FILE]
+    cpCmd = ["docker", "cp", args.sim_name + ":" + hntapFile, HNTAP_TEMP_CFG_FILE]
 
     if not RunShellCmd(cpCmd):
         print "Error in coping hntap config file to host"
@@ -257,7 +257,7 @@ def __setup_hntap(container_obj, args):
     with open(HNTAP_TEMP_CFG_FILE, "w") as fp:
         json.dump(hntap_cfg, fp)
 
-    cpCmd = ["docker", "cp", HNTAP_TEMP_CFG_FILE,  NAPLES_SIM_NAME + ":" + hntapFile]
+    cpCmd = ["docker", "cp", HNTAP_TEMP_CFG_FILE,  args.sim_name + ":" + hntapFile]
     if not RunShellCmd(cpCmd):
         print "Error in coping hntap config to naples-sim"
         sys.exit(1)
@@ -318,13 +318,13 @@ def __wait_for_line_log(log_file, line_match):
                 return
 
 
-def __bringdown_naples_container():
+def __bringdown_naples_container(args):
     try:
-        print "Bringing down Naples container : %s " % (NAPLES_SIM_NAME)
-        _DOCKER_API_CLIENT.stop(NAPLES_SIM_NAME)
+        print "Bringing down Naples container : %s " % (args.sim_name)
+        _DOCKER_API_CLIENT.stop(args.sim_name)
         time.sleep(5)
     except:
-        print "Bringing down Naples container : %s failed " % (NAPLES_SIM_NAME)
+        print "Bringing down Naples container : %s failed " % (args.sim_name)
     try:
         print "Removing Naples image : %s" % NAPLES_IMAGE
         _DOCKER_API_CLIENT.remove_image(NAPLES_IMAGE, force=True)
@@ -333,7 +333,7 @@ def __bringdown_naples_container():
 
 
 def __bringup_naples_container(args):
-    __bringdown_naples_container()
+    __bringdown_naples_container(args)
     try:
         __load_naples_image()
     except:
@@ -362,7 +362,7 @@ def __bringup_naples_container(args):
         NAPLES_ENV.update(NETAGENT_CTRL_INTF)
 
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
-                                               name=NAPLES_SIM_NAME,
+                                               name=args.sim_name,
                                                privileged=True,
                                                detach=True,
                                                auto_remove=True,
@@ -396,7 +396,7 @@ def __run_bootstrap_naples(args):
     chmod_cmd = ["chmod", "+x", "/usr/bin/bootstrap-naples.sh"]
     RunShellCmd(chmod_cmd)
     #bootstrap_cmd = ["/usr/bin/bootstrap-naples.sh", str(args.node_id)]
-    bootstrap_cmd = ["/usr/bin/bootstrap-naples.sh"]
+    bootstrap_cmd = ["/usr/bin/bootstrap-naples.sh", "--naples-sim-name", args.sim_name]
     if args.with_qemu:
         bootstrap_cmd.append("--qemu")
     RunShellCmd(bootstrap_cmd, background=True)
@@ -421,6 +421,8 @@ def __reset(args):
 def main():
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--name', dest='sim_name', default=DEF_NAPLES_SIM_NAME,
+                        help='Naples sim name to be used.')
     parser.add_argument('--network-driver', dest='nw_driver', default="macvlan",
                         choices=["macvlan"], help='Network Driver for docker network')
     parser.add_argument('--control-intf', dest='control_intf', default=None,

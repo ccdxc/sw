@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -218,14 +219,11 @@ var SudoCmd = func(cmd string) string {
 	return "sudo " + cmd
 }
 
-//RunSSHCommand run command over SSH
-func RunSSHCommand(SSHHandle *ssh.Client, cmd string, sudo bool, bg bool, logger *log.Logger) (retCode int, stdout, stderr []string) {
-	logger.Println("Running cmd " + cmd)
-	var stdoutBuf, stderrBuf bytes.Buffer
+//CreateSSHSession create session so that caller will run on his own
+func CreateSSHSession(SSHHandle *ssh.Client) (*ssh.Session, io.Reader, io.Reader, error) {
 	sshSession, err := SSHHandle.NewSession()
 	if err != nil {
-		logger.Println("SSH session creation failed!")
-		return -1, nil, nil
+		return nil, nil, nil, err
 	}
 
 	modes := ssh.TerminalModes{
@@ -235,19 +233,31 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, sudo bool, bg bool, logger
 	}
 
 	if err = sshSession.RequestPty("xterm", 80, 40, modes); err != nil {
-		logger.Println("SSH session Pty creation failed!")
-		return -1, nil, nil
+		return nil, nil, nil, err
 	}
 
 	sshOut, err := sshSession.StdoutPipe()
 	if err != nil {
-		logger.Println("SSH session StdoutPipe creation failed!")
-		return -1, nil, nil
+		return nil, nil, nil, err
 	}
 	sshErr, err := sshSession.StderrPipe()
 	if err != nil {
-		logger.Println("SSH session StderrPipe creation failed!")
-		return -1, nil, nil
+		return nil, nil, nil, err
+	}
+
+	return sshSession, sshOut, sshErr, nil
+}
+
+//RunSSHCommand run command over SSH
+func RunSSHCommand(SSHHandle *ssh.Client, cmd string, sudo bool, bg bool, logger *log.Logger) (retCode int, stdout, stderr string) {
+	logger.Println("Running cmd " + cmd)
+	var stdoutBuf, stderrBuf bytes.Buffer
+
+	sshSession, sshOut, sshErr, err := CreateSSHSession(SSHHandle)
+	defer sshSession.Close()
+	if err != nil {
+		logger.Println("SSH session creation failed!")
+		return -1, "", ""
 	}
 
 	shout := io.MultiWriter(&stdoutBuf, (*LogWriter)(logger))
@@ -285,13 +295,11 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, sudo bool, bg bool, logger
 		retCode = 0
 	}
 
-	stdout = strings.Split(stdoutBuf.String(), "\n")
-	stderr = strings.Split(stderrBuf.String(), "\n")
 	logger.Println(stdout)
 	logger.Println(stderr)
 	logger.Println("Return code : " + strconv.Itoa(retCode))
 
-	return retCode, stdout, stderr
+	return retCode, stdoutBuf.String(), stderrBuf.String()
 
 }
 

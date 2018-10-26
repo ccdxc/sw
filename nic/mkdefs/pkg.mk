@@ -47,9 +47,20 @@ package-haps-dbg: package-clean ${PKG_PREREQS}
 	${MAKE} -j1 BUILD_ARCHES=aarch64 OPT=-g -C ${TOPDIR}/platform
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target haps-dbg
 
+.PHONY: package-storage-offload
 package-storage-offload:
+	@echo "Building Storage Offload driver package."
 	${TOPDIR}/storage/offload/tools/drivers-linux.sh
 
+.PHONY: package-ionic
+package-ionic:
+	@echo "Building IONIC driver package."
+	${TOPDIR}/platform/tools/drivers-linux.sh
+
+.PHONY: package-drivers
+package-drivers: package-ionic package-storage-offload
+
+.PHONY: release
 release: ${PKG_PREREQS}
     ifneq ($(ARCH),aarch64)
 	    ${NICDIR}/tools/release.sh

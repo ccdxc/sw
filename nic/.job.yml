@@ -112,7 +112,7 @@ logfiles:
   - /sw/nic/nic_sanity_logs.tar.gz
 
 #warmd:
-#  target: [ "sh", "-c", "cd /sw && sleep 3000000" ]
+#  target: [ "make", "jobd/iota/base" ]
 #  create:
 #    image: build-94
 #    count: 6

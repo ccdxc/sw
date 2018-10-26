@@ -1,5 +1,5 @@
 #!/bin/bash
-yum install \
+yum install -y \
     libtool \
     automake \
     autoconf \

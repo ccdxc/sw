@@ -26,6 +26,10 @@ class Node(object):
 
         self.__data_intfs = [ "eth2", "eth3" ]
         self.__host_intfs = []
+        
+        if self.IsWorkloadNode():
+            self.__workload_type = topo_pb2.WorkloadType.Value(spec.workloads.type)
+            self.__workload_image = spec.workloads.image
         Logger.info("- New Node: %s: %s (%s)" % (spec.name, self.__ip_address, spec.role))
         return
 
@@ -60,6 +64,12 @@ class Node(object):
     def MgmtIpAddress(self):
         return self.__ip_address
 
+    def WorkloadType(self):
+        return self.__workload_type
+
+    def WorkloadImage(self):
+        return self.__workload_image
+
     def AddToNodeMsg(self, msg, topology, testsuite):
         msg.type = self.__role
         msg.image = ""
@@ -85,6 +95,19 @@ class Node(object):
             for n in topology.Nodes():
                 if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
                 msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
+
+            # TBD: Fix these hard-code values and use it from testbed json.
+            msg.naples_config.naples_ip_address = "1.0.0.2"
+            msg.naples_config.naples_username = "root"
+            msg.naples_config.naples_password = "pen123"
+
+            host_entity = msg.entities.add()
+            host_entity.type = topo_pb2.ENTITY_TYPE_HOST
+            host_entity.name = self.__name + "_host"
+            if self.IsNaples():
+                nic_entity = msg.entities.add()
+                nic_entity.type = topo_pb2.ENTITY_TYPE_NAPLES
+                nic_entity.name = self.__name + "_naples"
 
         return types.status.SUCCESS
 
@@ -191,5 +214,11 @@ class Topology(object):
                 ips.append(n.Name())
         return ips
 
-    def GetWorkloadNodeHostInterfaces(self, name):
-        return self.__nodes[name].HostInterfaces()
+    def GetWorkloadNodeHostInterfaces(self, node_name):
+        return self.__nodes[node_name].HostInterfaces()
+
+    def GetWorkloadTypeForNode(self, node_name):
+        return self.__nodes[node_name].WorkloadType()
+    
+    def GetWorkloadImageForNode(self, node_name):
+        return self.__nodes[node_name].WorkloadImage()

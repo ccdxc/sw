@@ -213,7 +213,7 @@ jobd/dol/e2e/l7: ${JOBD_PREREQS}
 	${NICDIR}/run.py --topo proxy --feature proxy --config-only --e2e-l7-dol
 
 .PHONY: jobd/e2e/naples-sim
-jobd/e2e/naples-sim: package
+jobd/e2e/naples-sim: ${JOBD_PREREQS}
 	${NICDIR}/tools/release.sh
 	${NICDIR}/tools/validate-naples-docker.sh
 
@@ -232,7 +232,7 @@ jobd/make/nic:
 	${MAKE} PIPELINE=apollo ARCH=aarch64
 
 .PHONY: jobd/agent
-jobd/agent: package
+jobd/agent: ${JOBD_PREREQS}
 	${MAKE} -C ${GOPATH}/src/github.com/pensando/sw checks
 	${MAKE} release
 	go install github.com/pensando/sw/nic/agent/cmd/netagent
@@ -271,3 +271,10 @@ jobd/nicmgr/gtest: ${JOBD_PREREQS}
 .PHONY: jobd/nicmgr/gtest_classic
 jobd/nicmgr/gtest_classic: ${JOBD_PREREQS}
 	./run.py --nicmgr_gtest --classic
+
+.PHONY: jobd/iota/base
+jobd/iota/base: ${JOBD_PREREQS}
+	${MAKE} release
+	${MAKE} -C ${TOPDIR} venice-image
+	${TOPDIR}/iota.py --testsuite netagent_sim --debug
+	${TOPDIR}/iota.py --testsuite venice_sim --debug

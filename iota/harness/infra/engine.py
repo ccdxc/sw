@@ -20,15 +20,8 @@ class YmlObject(object):
 
 def __discover_testsuites():
     suites = []
-    if GlobalOptions.cfgmode is None:
-        expr = GlobalOptions.topdir +\
-               '/iota/test/%s/**/*.testsuite' %\
-               (GlobalOptions.pipeline)
-    else:
-        expr = GlobalOptions.topdir +\
-               '/iota/test/%s/%s/**/*.testsuite' %\
-               (GlobalOptions.pipeline, GlobalOptions.cfgmode)
-
+    expr = GlobalOptions.topdir + '/iota/test/%s/**/*.testsuite' %\
+                                  (GlobalOptions.pipeline)
     for filename in glob.iglob(expr, recursive = True):
         Logger.info("Reading testsuite: %s" % filename)
         data = parser.YmlParse(filename)

@@ -15,8 +15,14 @@ const (
 	// IotaAgentPort is the default IOTA Agent Port
 	IotaAgentPort = 60001
 
-	// IotaAgentBinaryName is the name of of the IOTA Agent Binary
-	IotaAgentBinaryName = "iota_agent"
+    // IotaAgentBinaryName is the name of of the IOTA Agent Binary
+    IotaAgentBinaryName = "iota_agent"
+
+	// IotaAgentBinaryNameLinux is the name of of the IOTA Agent Binary for Linux
+	IotaAgentBinaryNameLinux = "linux/" + IotaAgentBinaryName
+
+	// IotaAgentBinaryNameFreebsd is the name of of the IOTA Agent Binary for Freebsd
+	IotaAgentBinaryNameFreebsd = "freebsd/" + IotaAgentBinaryName
 
 	// VlansPerTestBed vlans that a testbed can manage
 	VlansPerTestBed = 10
@@ -54,9 +60,28 @@ const (
 
 // global derived vars from the constants
 var (
-	// IotaAgentBinaryPath captures the location of the build IOTA Agent Binary
-	IotaAgentBinaryPath = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/agent/%s", os.Getenv("GOPATH"), IotaAgentBinaryName)
+	// IotaAgentBinaryPathLinux captures the location of the build IOTA Agent Binary for Linux
+	IotaAgentBinaryPathLinux = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/agent/%s", os.Getenv("GOPATH"), IotaAgentBinaryNameLinux)
+	
+    // IotaAgentBinaryPathFreebsd captures the location of the build IOTA Agent Binary for Freebsd
+	IotaAgentBinaryPathFreebsd = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/agent/%s", os.Getenv("GOPATH"), IotaAgentBinaryNameFreebsd)
 
 	// DstIotaAgentBinary captures the location of agent on the remote nodes
 	DstIotaAgentBinary = fmt.Sprintf("%s/%s", DstIotaAgentDir, IotaAgentBinaryName)
+
+	// CleanupCommands lists the clean up commands required to clean up an IOTA node.
+	CleanupCommands = []string{
+		`sudo /tmp/iota/INSTALL.sh --clean-only`,
+		`sudo systemctl stop pen-cmd`,
+		`sudo docker rm -fv $(docker ps -aq)`,
+		`sudo docker system prune -f`,
+		`sudo rm /etc/hosts`,
+		`sudo pkill iota*`,
+		`sudo rm -rf /tmp/iota*`,
+		`sudo docker ps`,
+		`sudo docker rmi -f \$(docker images -aq)`,
+		`sudo rm -rf /var/run/naples`,
+		`sudo iptables -F`,
+		`sudo systemctl restart docker`,
+	}
 )

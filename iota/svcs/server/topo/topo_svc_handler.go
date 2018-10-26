@@ -81,18 +81,18 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 					IpAddress: node.IpAddress,
 					Name:      nodeName,
 				},
+                Os: node.Os,
 			}
 
 			ts.Nodes = append(ts.Nodes, &n)
-			copyArtifacts := []string{
-				common.IotaAgentBinaryPath,
+			commonCopyArtifacts := []string{
 				ts.TestBedInfo.VeniceImage,
 				ts.TestBedInfo.NaplesImage,
 			}
 
 			pool.Go(func() error {
 				n := n
-				return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, copyArtifacts)
+    			return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
 			})
 		}
 		return pool.Wait()
@@ -110,6 +110,32 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 // CleanUpTestBed cleans up a testbed
 func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | CleanUpTestBed. Received Request Msg: %v", req)
+
+	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
+	// Run clean up
+	cleanupTestBed := func(ctx context.Context) error {
+		pool, ctx := errgroup.WithContext(ctx)
+
+		for _, node := range req.Nodes {
+			n := testbed.TestNode{
+				Node: &iota.Node{
+					IpAddress: node.IpAddress,
+				},
+			}
+
+			pool.Go(func() error {
+				n := n
+				return n.CleanUpNode(ts.SSHConfig)
+			})
+		}
+		return pool.Wait()
+	}
+	err := cleanupTestBed(context.Background())
+	if err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Init Test Bed Call Failed. %v", err)
+		return nil, err
+	}
+
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 
 	return req, nil

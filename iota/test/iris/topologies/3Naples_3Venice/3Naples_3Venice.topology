@@ -1,0 +1,37 @@
+meta:
+    name: 3Naples_3Venice
+    description: 3 Naples + 3 Venice Topology
+
+nodes:
+    - node: node1
+      name: naples1
+      role: PERSONALITY_NAPLES_SIM
+      workloads:
+        type    : WORKLOAD_TYPE_CONTAINER
+        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0" 
+
+    - node: node2
+      name: naples2
+      role: PERSONALITY_NAPLES_SIM
+      workloads:
+        type    : WORKLOAD_TYPE_CONTAINER
+        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0" 
+
+    - node: node3
+      name: naples3
+      role: PERSONALITY_NAPLES_SIM
+      workloads:
+        type    : WORKLOAD_TYPE_CONTAINER
+        image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0" 
+
+    - node: node4
+      name: venice1
+      role: PERSONALITY_VENICE
+
+    - node: node5
+      name: venice2
+      role: PERSONALITY_VENICE
+
+    - node: node6
+      name: venice3
+      role: PERSONALITY_VENICE

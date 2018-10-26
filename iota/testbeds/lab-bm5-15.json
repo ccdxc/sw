@@ -1,0 +1,61 @@
+{
+    "Instances": [
+        {
+            "Type": "bm",
+            "DataNetworks": [
+                {
+                    "Name"              : "data-1",
+                    "SwitchIP"          : "",
+                    "SwitchPassword"    : "",
+                    "SwitchPort"        : -1,
+                    "SwitchUsername"    : ""
+               },
+               {
+                   "Name"               : "data-2",
+                   "SwitchIP"           : "",
+                   "SwitchPassword"     : "",
+                   "SwitchPort"         : -1,
+                   "SwitchUsername"     : ""
+               }           
+            ],
+            "NodeMgmtIP"    : "192.168.69.242",
+            "NodeOs"        : "freebsd",
+            "NicMgmtIP"     : "",
+            "Name"          : "lab-bm5-15",
+            "Resource"      : {
+                "NICType"   :  "pensando"
+            }
+       },
+       {
+            "Type": "bm",
+            "DataNetworks": [
+                {
+                    "Name"              : "data-1",
+                    "SwitchIP"          : "",
+                    "SwitchPassword"    : "",
+                    "SwitchPort"        : -1,
+                    "SwitchUsername"    : ""
+               },
+               {
+                   "Name"               : "data-2",
+                   "SwitchIP"           : "",
+                   "SwitchPassword"     : "",
+                   "SwitchPort"         : -1,
+                   "SwitchUsername"     : ""
+               }           
+            ],
+            "NodeMgmtIP"    : "192.168.68.26",
+            "NodeOs"        : "linux",
+            "NicMgmtIP"     : "",
+            "Name"          : "lab-bm5-14",
+            "Resource"      : {
+                "NICType"   :  "intel"
+            }
+       }
+  ],
+  "Provision": {
+    "Username": "vm",
+    "Password": "vm",
+    "PrivateKeyFile": ""
+  }
+}
