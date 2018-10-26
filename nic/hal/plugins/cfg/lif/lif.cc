@@ -548,13 +548,17 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // For rdma enabled Lifs, call RDMA specific init (allocates KT, PT, etc)
-    if (lif->enable_rdma) {
-        ret = rdma_lif_init(*spec, hw_lif_id);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("P4 Lif create failure, err : {}", ret);
-            ret = HAL_RET_ERR;
-            goto end;
+    // For NICmgr created lifs, hal doesn't have to do this init.
+    if (g_hal_cfg.platform_mode != HAL_PLATFORM_MODE_HAPS &&
+        g_hal_cfg.platform_mode != HAL_PLATFORM_MODE_HW) {
+        // For rdma enabled Lifs, call RDMA specific init (allocates KT, PT, etc)
+        if (lif->enable_rdma) {
+            ret = rdma_lif_init(*spec, hw_lif_id);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("P4 Lif create failure, err : {}", ret);
+                ret = HAL_RET_ERR;
+                goto end;
+            }
         }
     }
 

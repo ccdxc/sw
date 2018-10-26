@@ -81,6 +81,7 @@ struct queue_info {
 struct lif_info {
   uint64_t lif_id;
   uint64_t hw_lif_id;
+  bool enable_rdma;
   uint64_t qstate_addr[NUM_QUEUE_TYPES];
 };
 

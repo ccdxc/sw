@@ -71,7 +71,8 @@ Lif::Lif(EthLif * eth_lif)
 
     HAL_TRACE_DEBUG("Creating Lif: prom: {}, oob: {}",
                     lif_info->receive_promiscuous,
-                    eth_lif_->IsOOBMnic());
+                    eth_lif_->IsOOBMnic(),
+                    lif_info->enable_rdma);
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
@@ -85,7 +86,8 @@ Lif::Lif(EthLif * eth_lif)
     req->set_vlan_insert_en(lif_info->vlan_insert_en);
     req->set_is_management(eth_lif_->IsOOBMnic());
     req->set_admin_status(::intf::IF_STATUS_UP);
-
+    req->set_enable_rdma(lif_info->enable_rdma);
+    
     // Populate qstate map
     for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
         auto & qinfo = lif_info->queue_info[i];
@@ -186,9 +188,9 @@ Lif::TriggerHalUpdate()
     req->set_vlan_strip_en(lif_info->vlan_strip_en);
     req->set_vlan_insert_en(lif_info->vlan_insert_en);
     req->set_is_management(eth_lif_->IsOOBMnic());
-
     req->set_admin_status(::intf::IF_STATUS_UP);
-
+    req->set_enable_rdma(lif_info->enable_rdma);
+    
     status = hal->lif_update(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);

@@ -38,6 +38,7 @@ LCFLAGS = \
 	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/proto/common \
 	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/ \
 	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/p4gen/common_rxdma_actions/include \
+	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/p4gen/common_txdma_actions/include \
 	-I $(TOPDIR)/../nic/hal/pd/capri \
 	-I $(TOPDIR)/../nic/third-party/boost/include/ \
 	-I $(TOPDIR)/../nic/third-party/libev/include/ \

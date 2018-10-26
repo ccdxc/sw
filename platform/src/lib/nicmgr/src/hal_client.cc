@@ -754,6 +754,7 @@ HalClient::LifCreate(uint64_t lif_id,
     hal_lif_info.id = lif_id;
     hal_lif_info.pinned_uplink = uplink;
     hal_lif_info.hw_lif_id = lif_info->hw_lif_id;
+    hal_lif_info.enable_rdma = lif_info->enable_rdma;
     memcpy(hal_lif_info.queue_info, queue_info, sizeof(hal_lif_info.queue_info));
 
     EthLif *eth_lif = EthLif::Factory(&hal_lif_info);

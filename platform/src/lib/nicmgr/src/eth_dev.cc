@@ -18,6 +18,8 @@
 #include "hal_client.hpp"
 #include "pd_client.hpp"
 #include "ethlif.hpp"
+#include "rdma_dev.hpp"
+#include "nic/p4/common/defines.h"
 
 #include "metrics.delphi.hpp"
 #include "nicmgr.pb.h"
@@ -209,44 +211,10 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     }
 #endif
 
-    /*
-     * Create the HBM resident queue memory region for RDMA and register
-     * that memory with PCIe BAR2
-     */
-
-    if (spec->enable_rdma) {
-#define LLQ_HBM_HANDLE "rdma-hbm-queue"
-#define HBM_ADDR_ALIGN(addr, sz)                              \
-        (((addr) + ((uint64_t)(sz) - 1)) & ~((uint64_t)(sz) - 1))
-
-        if (hal->AllocHbmAddress(LLQ_HBM_HANDLE, &hbm_addr, &hbm_size)) {
-            NIC_LOG_ERR("Failed to get HBM base for {}", LLQ_HBM_HANDLE);
-            return;
-        }
-        // hal/pd/capri/capri_hbm.cc stores size in KB;
-        hbm_size *= 1024;
-
-        // First, ensure size is a power of 2, then per PCIe BAR mapping
-        // requirement, align the region on its natural boundary, i.e.,
-        // if size is 64MB then the region must be aligned on a 64MB boundary!
-        // This means we could potentially waste half of the space if
-        // the region was not already aligned.
-        assert(hbm_size && !(hbm_size & (hbm_size - 1)));
-        if (hbm_addr & (hbm_size - 1)) {
-            hbm_size /= 2;
-            hbm_addr = HBM_ADDR_ALIGN(hbm_addr, hbm_size);
-        }
-
-        pci_resources.cmbpa = hbm_addr;
-        pci_resources.cmbsz = hbm_size;
-        NIC_LOG_INFO("HBM address for RDMA LLQ memory {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
-
-        //MEM_SET(pci_resources.cmbpa, 0, hbm_size);
-    }
-
     // hal_api migration:
     info.lif_id = spec->lif_id;
     info.hw_lif_id = spec->hw_lif_id;
+    info.enable_rdma = spec->enable_rdma;
     uint64_t ret = hal->LifCreate(spec->lif_id,
                                   spec->uplink,
                                   qinfo,
@@ -377,6 +345,42 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     rss_type = LifRssType::RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
     memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
+
+    if (spec->enable_rdma) {
+        /*
+         * Create the HBM resident queue memory region for RDMA and 
+         * register that memory with PCIe BAR2
+         */
+
+#define LLQ_HBM_HANDLE "rdma-hbm-queue"
+#define HBM_ADDR_ALIGN(addr, sz)                                    \
+        (((addr) + ((uint64_t)(sz) - 1)) & ~((uint64_t)(sz) - 1))
+
+        if (hal->AllocHbmAddress(LLQ_HBM_HANDLE, &hbm_addr, &hbm_size)) {
+            NIC_LOG_ERR("Failed to get HBM base for {}", LLQ_HBM_HANDLE);
+            return;
+        }
+        // hal/pd/capri/capri_hbm.cc stores size in KB;
+        hbm_size *= 1024;
+
+        // First, ensure size is a power of 2, then per PCIe BAR mapping
+        // requirement, align the region on its natural boundary, i.e.,
+        // if size is 64MB then the region must be aligned on a 64MB boundary!
+        // This means we could potentially waste half of the space if
+        // the region was not already aligned.
+        assert(hbm_size && !(hbm_size & (hbm_size - 1)));
+        if (hbm_addr & (hbm_size - 1)) {
+            hbm_size /= 2;
+            hbm_addr = HBM_ADDR_ALIGN(hbm_addr, hbm_size);
+        }
+
+        pci_resources.cmbpa = hbm_addr;
+        pci_resources.cmbsz = hbm_size;
+        NIC_LOG_INFO("HBM address for RDMA LLQ memory {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
+
+        pd->rdma_lif_init(info.hw_lif_id, spec->key_count,
+                          spec->ah_count, spec->pte_count);
+    }
 }
 
 uint64_t
@@ -2013,29 +2017,157 @@ enum DevcmdStatus
 Eth::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *) req;
+    uint32_t               lif = info.hw_lif_id + cmd->lif_id;
+    uint32_t               num_cq_wqes, cqwqe_size;
+    cqcb_t                 cqcb;
+    uint8_t                offset;
+    int                    ret;
 
-    NIC_LOG_INFO("lif{}: CMD_OPCODE_RDMA_CREATE_CQ", info.hw_lif_id + cmd->lif_id);
-
+#if 0    
     hal->RDMACreateCQ(info.hw_lif_id + cmd->lif_id,
-                     cmd->qid_ver, 1u << cmd->stride_log2, 1u << cmd->depth_log2,
-                     1ull << (cmd->stride_log2 + cmd->depth_log2),
-                     cmd->dma_addr, cmd->cid);
+                      cmd->qid_ver, 1u << cmd->stride_log2, 1u << cmd->depth_log2,
+                      1ull << (cmd->stride_log2 + cmd->depth_log2),
+                      cmd->dma_addr, cmd->cid);
+#endif
+    
+    NIC_LOG_INFO("--------------------- API Start ------------------------");
+    NIC_LOG_INFO("PI-LIF:{}: RDMA CQ Create for lif {}", __FUNCTION__, lif);
+
+    NIC_LOG_INFO("{}: Inputs: cq_num: {} cq_wqe_size: {} num_cq_wqes: {} "
+                  "eq_id: {} hostmem_pg_size: {} ",
+                  __FUNCTION__, cmd->qid_ver,
+                  1u << cmd->stride_log2, 1u << cmd->depth_log2,
+                  cmd->cid, 1ull << (cmd->stride_log2 + cmd->depth_log2));
+    
+    cqwqe_size = 1u << cmd->stride_log2;
+    num_cq_wqes = 1u << cmd->depth_log2;
+
+    NIC_LOG_INFO("cqwqe_size: {} num_cq_wqes: {}", cqwqe_size, num_cq_wqes);
+
+    memset(&cqcb, 0, sizeof(cqcb_t));
+    cqcb.ring_header.total_rings = MAX_CQ_RINGS;
+    cqcb.ring_header.host_rings = MAX_CQ_HOST_RINGS;
+    
+    int32_t cq_pt_index = cmd->xxx_table_index;
+    uint64_t  pt_table_base_addr = pd->rdma_get_pt_base_addr(lif);
+
+    cqcb.pt_base_addr = pt_table_base_addr >> PT_BASE_ADDR_SHIFT;
+    cqcb.log_cq_page_size = cmd->stride_log2 + cmd->depth_log2;
+    cqcb.log_wqe_size = log2(cqwqe_size);
+    cqcb.log_num_wqes = log2(num_cq_wqes);
+    cqcb.cq_id = cmd->qid_ver;
+    cqcb.eq_id = cmd->cid;
+    cqcb.host_addr = 1; 
+
+    cqcb.pt_pa = cmd->dma_addr;
+    if (cqcb.host_addr) {
+        cqcb.pt_pa |= ((1UL << 63)  | (uint64_t)lif << 52);
+    }
+
+    cqcb.pt_pg_index = 0;
+    cqcb.pt_next_pg_index = 0x1FF;
+
+    int log_num_pages = cqcb.log_num_wqes + cqcb.log_wqe_size - cqcb.log_cq_page_size;
+    NIC_LOG_INFO("{}: LIF: {}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}: log_num_pages: {}", __FUNCTION__, lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pg_index, cqcb.pt_next_pg_index, log_num_pages);
+
+    /* store  pt_pa & pt_next_pa in little endian. So need an extra memrev */
+    memrev((uint8_t*)&cqcb.pt_pa, sizeof(uint64_t));
+
+    ret = pd->lm_->GetPCOffset("p4plus", "rxdma_stage0.bin", "rdma_cq_rx_stage0", &offset);
+    if (ret < 0) {
+        NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "rxdma_stage0.bin", "rdma_cq_rx_stage0");
+        return DEVCMD_ERROR;
+    }
+    
+    cqcb.ring_header.pc = offset;
+
+    // write to hardware
+    NIC_LOG_INFO("{}: LIF: {}: Writting initial CQCB State, "
+                  "CQCB->PT: {:#x} cqcb_size: {}",
+                  __FUNCTION__, lif, cqcb.pt_base_addr, sizeof(cqcb_t));
+    // Convert data before writting to HBM
+    memrev((uint8_t*)&cqcb, sizeof(cqcb_t));
+
+    uint64_t addr = GetQstateAddr(ETH_QTYPE_CQ, cmd->qid_ver);;
+    NIC_LOG_INFO("{}: QstateAddr = {:#x}\n", __FUNCTION__, addr);
+    if (addr == 0) {
+        NIC_LOG_ERR("lif{}: Failed to get qstate address for CQ qid {}",
+                    lif, cmd->qid_ver);
+        return DEVCMD_ERROR;
+    }
+    WRITE_MEM(addr, (uint8_t *)&cqcb, sizeof(cqcb), 0);
+    
+    uint64_t pt_table_addr = pt_table_base_addr+cq_pt_index*sizeof(uint64_t);
+
+    // There is only one page table entry for adminq CQ
+    WRITE_MEM(pt_table_addr, (uint8_t *)&cmd->dma_addr, sizeof(uint64_t), 0);
+    NIC_LOG_INFO("PT Entry Write: Lif {}: CQ PT Idx: {} PhyAddr: {:#x}",
+                  lif, cq_pt_index, cmd->dma_addr);
+    invalidate_rxdma_cacheline(pt_table_addr);
+    invalidate_txdma_cacheline(pt_table_addr);
+    
+    NIC_LOG_INFO("----------------------- API End ------------------------");
 
     return (DEVCMD_SUCCESS);
-
 }
 
 enum DevcmdStatus
 Eth::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
+    int                    ret;
+    uint32_t     lif = info.hw_lif_id + cmd->lif_id;
+    aqcb_t       aqcb;
+    uint8_t     offset;
 
-    NIC_LOG_INFO("lif{}: CMD_OPCODE_RDMA_CREATE_ADMINQ", info.hw_lif_id);
+    NIC_LOG_INFO("--------------------- API Start ------------------------");
+    NIC_LOG_INFO("PI-LIF:{}: RDMA AQ Create for lif {}", __FUNCTION__, lif);
+    NIC_LOG_INFO("{}: Inputs: aq_num: {} aq_log_wqe_size: {} "
+                    "aq_log_num_wqes: {} "
+                    "cq_num: {} phy_base_addr: {}", __FUNCTION__, cmd->qid_ver,
+                    cmd->stride_log2, cmd->depth_log2, cmd->cid, 
+                    cmd->dma_addr);
 
-    hal->RDMACreateAdminQ(info.hw_lif_id + cmd->lif_id,
-        cmd->qid_ver, cmd->depth_log2, cmd->stride_log2,
-        cmd->dma_addr, cmd->cid);
+    memset(&aqcb, 0, sizeof(aqcb_t));
+    aqcb.ring_header.total_rings = MAX_AQ_RINGS;
+    aqcb.ring_header.host_rings = MAX_AQ_HOST_RINGS;
+    
+    aqcb.log_wqe_size = cmd->stride_log2;
+    aqcb.log_num_wqes = cmd->depth_log2;
+    aqcb.aq_id = cmd->qid_ver;
+    aqcb.phy_base_addr = cmd->dma_addr | (1UL << 63) | ((uint64_t)lif << 52);
+    aqcb.cq_id = cmd->cid;
+    aqcb.cqcb_addr = GetQstateAddr(ETH_QTYPE_CQ, cmd->cid); 
+    
+    aqcb.proxy_pindex = 0;
 
+    ret = pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "rdma_aq_tx_stage0", &offset);
+    if (ret < 0) {
+        NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "txdma_stage0.bin", "rdma_aq_tx_stage0");
+        return DEVCMD_ERROR;
+    }
+    
+    aqcb.ring_header.pc = offset;
+
+    // write to hardware
+    NIC_LOG_INFO("{}: LIF: {}: Writting initial AQCB State, "
+                    "AQCB->phy_addr: {:#x} "
+                    "aqcb_size: {}",
+                    __FUNCTION__, lif, aqcb.phy_base_addr, sizeof(aqcb_t));
+
+    // Convert data before writting to HBM
+    memrev((uint8_t*)&aqcb, sizeof(aqcb_t));
+
+    uint64_t addr = GetQstateAddr(ETH_QTYPE_ADMIN, cmd->qid_ver);;
+    NIC_LOG_INFO("{}: QstateAddr = {:#x}\n", __FUNCTION__, addr);
+    if (addr == 0) {
+        NIC_LOG_ERR("lif{}: Failed to get qstate address for CQ qid {}",
+                    lif, cmd->qid_ver);
+        return DEVCMD_ERROR;
+    }
+    WRITE_MEM(addr, (uint8_t *)&aqcb, sizeof(aqcb), 0);
+
+    NIC_LOG_INFO("----------------------- API End ------------------------");
     return (DEVCMD_SUCCESS);
 }
 

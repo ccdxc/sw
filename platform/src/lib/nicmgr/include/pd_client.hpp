@@ -10,6 +10,7 @@
 #include "include/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/include/sdk/directmap.hpp"
 #include "common_rxdma_actions_p4pd.h"
+#include "common_txdma_actions_p4pd.h"
 #include "capri_hbm.hpp"
 
 // Maximum number of queue per LIF
@@ -36,6 +37,7 @@ public:
     class sdk::platform::utils::mpartition *mp_;
     class NicLIFManager *lm_;
     directmap    **p4plus_rxdma_dm_tables_;
+    directmap    **p4plus_txdma_dm_tables_;
 
     int lif_qstate_map_init(uint64_t hw_lif_id,
                             struct queue_info* queue_info,
@@ -48,6 +50,7 @@ public:
                        uint8_t coses);
 
     int p4plus_rxdma_init_tables();
+    int p4plus_txdma_init_tables();    
     int pd_state_init();
 
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
@@ -69,9 +72,60 @@ public:
 
     sdk::platform::utils::mem_addr_t mem_start_addr(const char *region);
 
+/* RDMA routines */
+    int rdma_lif_init(uint32_t lif, uint32_t max_keys,
+                      uint32_t max_ahs, uint32_t max_ptes);
+
+    int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
+        uint32_t idx,
+        uint8_t rdma_en_qtype_mask,
+        uint32_t pt_base_addr_page_id,
+        uint8_t log_num_pt_entries,
+        uint32_t cqcb_base_addr_hi,
+        uint32_t sqcb_base_addr_hi,
+        uint32_t rqcb_base_addr_hi,
+        uint8_t log_num_cq_entries,
+        uint32_t prefetch_pool_base_addr_page_id,
+        uint8_t log_num_prefetch_pool_entries,
+        uint8_t sq_qtype,
+        uint8_t rq_qtype,
+        uint8_t aq_qtype);
+    int p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(
+        uint32_t idx,
+        uint8_t rdma_en_qtype_mask,
+        uint32_t pt_base_addr_page_id,
+        uint32_t ah_base_addr_page_id,
+        uint8_t log_num_pt_entries,
+        uint32_t rrq_base_addr_page_id,
+        uint32_t rsq_base_addr_page_id,
+        uint32_t cqcb_base_addr_hi,
+        uint32_t sqcb_base_addr_hi,
+        uint32_t rqcb_base_addr_hi,
+        uint8_t log_num_cq_entries,
+        uint32_t prefetch_pool_base_addr_page_id,
+        uint8_t log_num_prefetch_pool_entries,
+        uint8_t sq_qtype,
+        uint8_t rq_qtype,
+        uint8_t aq_qtype);
+    void rdma_manager_init(void);
+    uint64_t RdmaHbmAlloc(uint32_t size);
+
+    uint64_t rdma_get_pt_base_addr(uint32_t lif);
+    uint64_t rdma_get_kt_base_addr(uint32_t lif);
+    uint64_t rdma_get_ah_base_addr(uint32_t lif);
+
 private:
     PdClient(){}
     ~PdClient(){}
+
+    std::unique_ptr<hal::BMAllocator> rdma_hbm_allocator_;
+    uint64_t rdma_hbm_base_;
+    std::map<uint64_t, uint64_t> rdma_allocation_sizes_;
+
+    int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
+        uint32_t idx, rx_stage0_load_rdma_params_actiondata *data);
+    int p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(
+        uint32_t idx, tx_stage0_lif_params_table_actiondata *data);
 
 };
 

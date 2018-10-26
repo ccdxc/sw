@@ -9,6 +9,7 @@
 #include "p4pd_api.hpp"
 #include "p4plus_pd_api.h"
 #include "common_rxdma_actions_p4pd_table.h"
+#include "common_txdma_actions_p4pd_table.h"
 #include "logger.hpp"
 #include "table_monitor.hpp"
 #include "pd_client.hpp"
@@ -18,8 +19,13 @@
 #include "logger.hpp"
 #include "capri_common.h"
 #include "hal_cfg.hpp"
+#include "rdma_dev.hpp"
+#include "nic/p4/common/defines.h"
 
 #define ENTRY_TRACE_EN      true
+
+const static char *kRdmaHBMLabel = "rdma";
+const static uint32_t kRdmaAllocUnit = 4096;
 
 static uint8_t *memrev(uint8_t *block, size_t elnum)
 {
@@ -31,6 +37,19 @@ static uint8_t *memrev(uint8_t *block, size_t elnum)
         *t = tmp;
     }
     return block;
+}
+
+static uint32_t
+roundup_to_pow_2(uint32_t x)
+{
+    uint32_t power = 1;
+
+    if (x == 1)
+        return (power << 1);
+
+    while(power < x)
+        power*=2;
+    return power;
 }
 
 void table_health_monitor(uint32_t table_id,
@@ -102,6 +121,101 @@ PdClient::p4plus_rxdma_init_tables()
     return 0;
 }
 
+int
+PdClient::p4plus_txdma_init_tables()
+{
+    uint32_t                   tid;
+    p4pd_table_properties_t    tinfo;
+    p4pd_error_t               rc;
+    p4pd_cfg_t                 p4pd_cfg = {
+        .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
+        .p4pd_pgm_name       = "iris",
+        .p4pd_rxdma_pgm_name = "p4plus",
+        .p4pd_txdma_pgm_name = "p4plus",
+        .cfg_path            = hal_cfg_path_,
+    };
+
+    memset(&tinfo, 0, sizeof(tinfo));
+
+    // parse the NCC generated table info file for p4+ tables
+    rc = p4pluspd_txdma_init(&p4pd_cfg);
+    assert(rc == P4PD_SUCCESS);
+
+    // start instantiating tables based on the parsed information
+    p4plus_txdma_dm_tables_ =
+        (directmap **)calloc(sizeof(directmap *),
+                             (P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX -
+                              P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
+    HAL_ASSERT(p4plus_txdma_dm_tables_ != NULL);
+
+    // TODO:
+    // 1. take care of instantiating flow_table_, acl_table_ and met_table_
+    // 2. When tables are instantiated proper names are not passed today,
+    // waiting for an API from Mahesh that gives table name given table id
+
+    for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
+         tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; tid++) {
+        rc = p4pluspd_txdma_table_properties_get(tid, &tinfo);
+        HAL_ASSERT(rc == P4PD_SUCCESS);
+
+        switch (tinfo.table_type) {
+        case P4_TBL_TYPE_INDEX:
+            p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
+                directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
+                                   false, ENTRY_TRACE_EN, table_health_monitor);
+            assert(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
+            break;
+
+        case P4_TBL_TYPE_MPU:
+        default:
+            break;
+        }
+    }
+
+    return 0;
+}
+
+void PdClient::rdma_manager_init (void)
+{
+    uint64_t hbm_addr = mp_->start_addr(kRdmaHBMLabel);
+    assert(hbm_addr > 0);
+
+    uint32_t size = mp_->size_kb(kRdmaHBMLabel);
+    assert(size != 0);
+
+    uint32_t num_units = (size * 1024) / kRdmaAllocUnit;    
+    if (hbm_addr & 0xFFF) {
+        // Not 4K aligned.
+        hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
+        num_units--;
+    }
+    
+    rdma_hbm_base_ = hbm_addr;
+    rdma_hbm_allocator_.reset(new hal::BMAllocator(num_units));
+    
+    NIC_LOG_DEBUG("{}: rdma_hbm_base_ : {}\n", __FUNCTION__, rdma_hbm_base_);
+}
+
+uint64_t PdClient::RdmaHbmAlloc (uint32_t size)
+{
+    uint32_t alloc_units;
+
+    alloc_units = (size + kRdmaAllocUnit - 1) & ~(kRdmaAllocUnit-1);
+    alloc_units /= kRdmaAllocUnit;
+    uint64_t alloc_offset = rdma_hbm_allocator_->Alloc(alloc_units);
+
+    if (alloc_offset < 0) {
+        NIC_LOG_DEBUG("{}: Invalid alloc_offset {}", __FUNCTION__, alloc_offset);
+        return -ENOMEM;
+    }
+    
+    rdma_allocation_sizes_[alloc_offset] = alloc_units;
+    alloc_offset *= kRdmaAllocUnit;
+    NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}\n",
+                    __FUNCTION__, size, alloc_offset, rdma_hbm_base_ + alloc_offset);
+    return rdma_hbm_base_ + alloc_offset;    
+}
+
 PdClient* PdClient::factory(platform_mode_t platform)
 {
     int ret;
@@ -120,6 +234,9 @@ PdClient* PdClient::factory(platform_mode_t platform)
 
     NIC_LOG_INFO("Loading p4plus RxDMA asic lib tables cfg_path: {}...", pdc->hal_cfg_path_);
     ret = pdc->p4plus_rxdma_init_tables();
+    assert(ret == 0);
+    NIC_LOG_INFO("Loading p4plus TxDMA asic lib tables cfg_path: {}...", pdc->hal_cfg_path_);
+    ret = pdc->p4plus_txdma_init_tables();
     assert(ret == 0);
 
     NIC_LOG_INFO("Initializing HBM Memory Partitions ...");
@@ -163,6 +280,8 @@ PdClient* PdClient::factory(platform_mode_t platform)
     pdc->lm_ = NicLIFManager::factory(pdc->mp_, pdc->pinfo_);
     assert(pdc->lm_);
 
+    pdc->rdma_manager_init();
+    
     NIC_LOG_DEBUG("{}: Exited\n", __FUNCTION__);
 
     return pdc;
@@ -183,6 +302,17 @@ void PdClient::destroy(PdClient *pdc)
         free(pdc->p4plus_rxdma_dm_tables_);
     }
 
+    if (pdc->p4plus_txdma_dm_tables_) {
+        for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN;
+             tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
+            if (pdc->p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
+                directmap::destroy(pdc->p4plus_txdma_dm_tables_[tid -
+                                                           P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
+            }
+        }
+        free(pdc->p4plus_txdma_dm_tables_);
+    }
+    
     lm_->destroy(lm_);
     mp_->destroy(mp_);
     delete pdc;
@@ -449,6 +579,396 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_ke
 
     NIC_LOG_DEBUG("{}: Leaving\n", __FUNCTION__);
     return 0;
+}
+
+int
+PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (
+    uint32_t idx,
+    uint8_t rdma_en_qtype_mask,
+    uint32_t pt_base_addr_page_id,
+    uint8_t log_num_pt_entries,
+    uint32_t cqcb_base_addr_hi,
+    uint32_t sqcb_base_addr_hi,
+    uint32_t rqcb_base_addr_hi,
+    uint8_t log_num_cq_entries,
+    uint32_t prefetch_pool_base_addr_page_id,
+    uint8_t log_num_prefetch_pool_entries,
+    uint8_t sq_qtype,
+    uint8_t rq_qtype,
+    uint8_t aq_qtype)
+{
+    p4pd_error_t        pd_err;
+    //directmap                    *dm;
+    rx_stage0_load_rdma_params_actiondata data = { 0 };
+
+    assert(idx < MAX_LIFS);
+
+    data.actionid = RX_STAGE0_LOAD_RDMA_PARAMS_RX_STAGE0_LOAD_RDMA_PARAMS_ID;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rdma_en_qtype_mask = rdma_en_qtype_mask;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id = pt_base_addr_page_id;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_pt_entries = log_num_pt_entries;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_cq_entries = log_num_cq_entries;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sq_qtype = sq_qtype;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rq_qtype = rq_qtype;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.aq_qtype = aq_qtype;
+
+    /* TODO: Do we need memrev */
+    pd_err = p4pd_global_entry_write(P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_STAGE0_LOAD_RDMA_PARAMS,
+                                     idx, NULL, NULL, &data);
+    if (pd_err != P4PD_SUCCESS) {
+        NIC_LOG_ERR("stage0 rdma LIF table write failure for rxdma, "
+                    "idx : {}, err : {}",
+                    idx, pd_err);
+        assert(0);
+    }
+    NIC_LOG_INFO("stage0 rdma LIF table entry add successful for rxdma, "
+                 "idx : {}, err : {}",
+                 idx, pd_err);
+    return 0;
+}
+
+
+int
+PdClient::p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t idx, rx_stage0_load_rdma_params_actiondata *data)
+{
+    p4pd_error_t        pd_err;
+
+    assert(idx < MAX_LIFS);
+    assert(data != NULL);
+    
+    pd_err = p4pd_global_entry_read(
+        P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_STAGE0_LOAD_RDMA_PARAMS,
+        idx, NULL, NULL, data);
+    if (pd_err != P4PD_SUCCESS) {
+        NIC_LOG_ERR("stage0 rdma LIF table entry get failure for "
+                    "rxdma, idx : {}, err : {}",
+                    idx, pd_err);
+        assert(0);
+    }
+
+    NIC_LOG_INFO("stage0 rdma LIF table entry get successful for "
+                 "rxdma, idx : {}, err : {}",
+                 idx, pd_err);
+    return 0;
+}
+
+int
+PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (
+    uint32_t idx,
+    uint8_t rdma_en_qtype_mask,
+    uint32_t pt_base_addr_page_id,
+    uint32_t ah_base_addr_page_id,
+    uint8_t log_num_pt_entries,
+    uint32_t rrq_base_addr_page_id,
+    uint32_t rsq_base_addr_page_id,
+    uint32_t cqcb_base_addr_hi,
+    uint32_t sqcb_base_addr_hi,
+    uint32_t rqcb_base_addr_hi,
+    uint8_t log_num_cq_entries,
+    uint32_t prefetch_pool_base_addr_page_id,
+    uint8_t log_num_prefetch_pool_entries,
+    uint8_t sq_qtype,
+    uint8_t rq_qtype,
+    uint8_t aq_qtype)
+{
+    p4pd_error_t                  pd_err;
+    tx_stage0_lif_params_table_actiondata data = { 0 };
+
+    assert(idx < MAX_LIFS);
+
+    data.actionid = TX_STAGE0_LIF_PARAMS_TABLE_TX_STAGE0_LIF_RDMA_PARAMS_ID;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rdma_en_qtype_mask = rdma_en_qtype_mask;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.pt_base_addr_page_id = pt_base_addr_page_id;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id = ah_base_addr_page_id;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_pt_entries = log_num_pt_entries;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rrq_base_addr_page_id = rrq_base_addr_page_id;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rsq_base_addr_page_id = rsq_base_addr_page_id;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;    
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_cq_entries = log_num_cq_entries;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sq_qtype = sq_qtype;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rq_qtype = rq_qtype;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.aq_qtype = aq_qtype;
+
+    /* TODO: Do we need memrev */
+    pd_err = p4pd_global_entry_write(
+        P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_STAGE0_LIF_PARAMS_TABLE,
+        idx, NULL, NULL, &data);
+    if (pd_err != P4PD_SUCCESS) {
+        NIC_LOG_ERR("stage0 rdma LIF table write failure for txdma, "
+                    "idx : {}, err : {}", idx, pd_err);
+        assert(0);
+    }
+    NIC_LOG_INFO("stage0 rdma LIF table entry add successful for "
+                 "txdma, idx : {}, err : {}", idx, pd_err);
+    return HAL_RET_OK;
+}
+
+
+int
+PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get (
+    uint32_t idx,
+    tx_stage0_lif_params_table_actiondata *data)
+{
+    p4pd_error_t                  pd_err;
+
+    assert(idx < MAX_LIFS);
+    assert(data != NULL);
+    
+    pd_err = p4pd_global_entry_read(
+        P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_STAGE0_LIF_PARAMS_TABLE,
+        idx, NULL, NULL, data);
+    if (pd_err != P4PD_SUCCESS) {
+        NIC_LOG_ERR("stage0 rdma LIF table entry get failure for "
+                    "txdma, idx : {}, err : {}", idx, pd_err);
+        assert(0);
+    }
+    NIC_LOG_INFO("stage0 rdma LIF table entry get successful for "
+                 "txdma, idx : {}, err : {}", idx, pd_err);
+    return 0;
+}
+
+uint64_t
+PdClient::rdma_get_pt_base_addr (uint32_t lif)
+{
+    uint64_t            pt_table_base_addr;
+    int                 rc;
+    rx_stage0_load_rdma_params_actiondata data = {0};
+
+    rc = p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(lif, &data);
+    if (rc) {
+        NIC_LOG_ERR("stage0 rdma LIF table entry get failure for "
+                    "rxdma, idx : {}, err : {}",
+                    lif, rc);
+        return rc;
+    }
+    
+    pt_table_base_addr = data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id;
+
+    NIC_LOG_INFO("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {}",
+                 __FUNCTION__, __LINE__, lif,
+                 pt_table_base_addr);
+
+    pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
+    return(pt_table_base_addr);
+}
+
+uint64_t
+PdClient::rdma_get_ah_base_addr (uint32_t lif)
+{
+    uint64_t            ah_table_base_addr;
+    int                 rc;
+    tx_stage0_lif_params_table_actiondata data = { 0 };
+
+    rc = p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(lif, &data);
+    if (rc) {
+        NIC_LOG_ERR("stage0 rdma LIF table entry get failure for "
+                    "txdma, idx : {}, err : {}",
+                    lif, rc);
+        return rc;
+    }
+    
+    ah_table_base_addr = data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id;
+
+    NIC_LOG_INFO("({},{}): Lif: {}: Rx LIF params - ah_base_addr_page_id {}",
+                 __FUNCTION__, __LINE__, lif,
+                 ah_table_base_addr);
+
+    ah_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
+    return(ah_table_base_addr);
+}
+
+int
+PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
+                         uint32_t max_ahs, uint32_t max_ptes)
+{
+    sram_lif_entry_t    sram_lif_entry;
+    uint32_t            pt_size, key_table_size, ah_table_size, rrq_size, rsq_size;
+    uint32_t            total_size;
+    uint64_t            base_addr;
+    uint64_t            size;
+    uint32_t            max_cqs;
+    uint32_t            max_rqps, max_sqps;
+    uint32_t            max_rd_atomic, max_dest_rd_atomic;
+    uint64_t            cq_base_addr; //address in HBM memory
+    uint64_t            sq_base_addr; //address in HBM memory
+    uint64_t            rq_base_addr; //address in HBM memory
+    uint64_t            pad_size;
+    int                 rc;
+
+    NIC_LOG_INFO("({},{}): LIF: {} ",
+                 __FUNCTION__, __LINE__, lif);
+
+    LIFQState *qstate = lm_->GetLIFQState(lif);
+    if (qstate == nullptr) {
+        NIC_LOG_ERR("({},{}): GetLIFQState failed for LIF: {} ", __FUNCTION__, __LINE__, lif);
+        return HAL_RET_ERR;
+    }
+
+    max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].num_queues;
+    max_rqps = qstate->type[Q_TYPE_RDMA_RQ].num_queues;
+    max_sqps = qstate->type[Q_TYPE_RDMA_SQ].num_queues;
+
+    max_rd_atomic = max_dest_rd_atomic = 16;
+
+
+    memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
+
+    // Fill the CQ info in sram_lif_entry
+    cq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
+    NIC_LOG_INFO("({},{}): Lif {} cq_base_addr: {:#x}, max_cqs: {} "
+                  "log_num_cq_entries: {}",
+                  __FUNCTION__, __LINE__, lif, cq_base_addr,
+                  max_cqs, log2(roundup_to_pow_2(max_cqs)));
+    assert((cq_base_addr & ((1 << CQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    sram_lif_entry.cqcb_base_addr_hi = cq_base_addr >> CQCB_ADDR_HI_SHIFT;
+    sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
+
+    // Fill the SQ info in sram_lif_entry
+    sq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
+    NIC_LOG_INFO("({},{}): Lif {} sq_base_addr: {:#x}",
+                    __FUNCTION__, __LINE__, lif, sq_base_addr);
+    HAL_ASSERT((sq_base_addr & ((1 << SQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
+
+    // Fill the RQ info in sram_lif_entry
+    rq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
+    NIC_LOG_INFO("({},{}): Lif {} rq_base_addr: {:#x}",
+                    __FUNCTION__, __LINE__, lif, rq_base_addr);
+    HAL_ASSERT((rq_base_addr & ((1 << RQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
+    
+    // Setup page table and key table entries
+    max_ptes = roundup_to_pow_2(max_ptes);
+
+    pt_size = sizeof(uint64_t) * max_ptes;
+    //adjust to page boundary
+    if (pt_size & (HBM_PAGE_SIZE - 1)) {
+        pt_size = ((pt_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+    }
+
+    max_keys = roundup_to_pow_2(max_keys);
+
+    key_table_size = sizeof(key_entry_t) * max_keys;
+    //adjust to page boundary
+    if (key_table_size & (HBM_PAGE_SIZE - 1)) {
+        key_table_size = ((key_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+    }
+
+    max_ahs = roundup_to_pow_2(max_ahs);
+
+    // TODO: Resize ah table after dcqcn related structures are moved to separate table
+    pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
+    if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
+        pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
+    }
+
+    ah_table_size = pad_size * max_ahs;
+    //adjust to page boundary
+    if (ah_table_size & (HBM_PAGE_SIZE - 1)) {
+        ah_table_size = ((ah_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+    }
+
+    rrq_size = sizeof(rrqwqe_t) * max_rd_atomic * max_rqps;
+    rsq_size = sizeof(rsqwqe_t) * max_dest_rd_atomic * max_sqps;
+
+    if (rrq_size & (HBM_PAGE_SIZE - 1)) {
+        rrq_size = ((rrq_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+    }
+
+    if (rsq_size & (HBM_PAGE_SIZE - 1)) {
+        rsq_size = ((rsq_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
+    }
+
+    total_size = pt_size + key_table_size + ah_table_size + rrq_size + rsq_size + HBM_PAGE_SIZE;
+
+    base_addr = RdmaHbmAlloc(total_size);
+
+    NIC_LOG_INFO("{}: pt_size: {}, key_table_size: {}, "
+                  "ah_table_size: {}, base_addr: {:#x}\n",
+                  __FUNCTION__, pt_size, key_table_size,
+                  ah_table_size, base_addr);
+
+    size = base_addr;
+    sram_lif_entry.pt_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
+    size += pt_size + key_table_size;
+    sram_lif_entry.ah_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
+    sram_lif_entry.log_num_pt_entries = log2(max_ptes);
+    size += ah_table_size;
+    sram_lif_entry.rrq_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
+    size += rrq_size;
+    sram_lif_entry.rsq_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
+
+    // TODO: Fill prefetch data and add corresponding code
+
+    sram_lif_entry.rdma_en_qtype_mask =
+        ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ) | (1 << Q_TYPE_ADMINQ));
+    sram_lif_entry.sq_qtype = Q_TYPE_RDMA_SQ;
+    sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
+    sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
+
+    NIC_LOG_INFO("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, "
+                  "ah_base_addr_page_id: {}, rdma_en_qtype_mask: {} "
+                  "sq_qtype: {} rq_qtype: {} aq_qtype: {}\n",
+                    __FUNCTION__, __LINE__,
+                    sram_lif_entry.pt_base_addr_page_id,
+                    sram_lif_entry.log_num_pt_entries,
+                    sram_lif_entry.ah_base_addr_page_id,
+                    sram_lif_entry.rdma_en_qtype_mask,
+                    sram_lif_entry.sq_qtype,
+                    sram_lif_entry.rq_qtype,
+                    sram_lif_entry.aq_qtype);
+
+    rc = p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
+                            lif,
+                            sram_lif_entry.rdma_en_qtype_mask,
+                            sram_lif_entry.pt_base_addr_page_id,
+                            sram_lif_entry.log_num_pt_entries,
+                            sram_lif_entry.cqcb_base_addr_hi,
+                            sram_lif_entry.sqcb_base_addr_hi,
+                            sram_lif_entry.rqcb_base_addr_hi,
+                            sram_lif_entry.log_num_cq_entries,
+                            sram_lif_entry.prefetch_pool_base_addr_page_id,
+                            sram_lif_entry.log_num_prefetch_pool_entries,
+                            sram_lif_entry.sq_qtype,
+                            sram_lif_entry.rq_qtype,
+                            sram_lif_entry.aq_qtype);
+    assert(rc == 0);
+
+    rc = p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(
+                            lif,
+                            sram_lif_entry.rdma_en_qtype_mask,
+                            sram_lif_entry.pt_base_addr_page_id,
+                            sram_lif_entry.ah_base_addr_page_id,
+                            sram_lif_entry.log_num_pt_entries,
+                            sram_lif_entry.rrq_base_addr_page_id,
+                            sram_lif_entry.rsq_base_addr_page_id,
+                            sram_lif_entry.cqcb_base_addr_hi,
+                            sram_lif_entry.sqcb_base_addr_hi,
+                            sram_lif_entry.rqcb_base_addr_hi,
+                            sram_lif_entry.log_num_cq_entries,
+                            sram_lif_entry.prefetch_pool_base_addr_page_id,
+                            sram_lif_entry.log_num_prefetch_pool_entries,
+                            sram_lif_entry.sq_qtype,
+                            sram_lif_entry.rq_qtype,
+                            sram_lif_entry.aq_qtype);
+    assert(rc == 0);
+    
+    NIC_LOG_INFO("({},{}): Lif: {}: SRAM LIF INIT successful\n",
+                  __FUNCTION__, __LINE__, lif);
+
+    NIC_LOG_INFO("({},{}): Lif: {}: LIF Init successful\n",
+                  __FUNCTION__, __LINE__, lif);
+
+    return HAL_RET_OK;
 }
 
 sdk::platform::utils::mem_addr_t

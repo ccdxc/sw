@@ -49,6 +49,7 @@ typedef struct hal_lif_info_s {
     bool receive_broadcast;
     bool receive_all_multicast;
     bool receive_promiscuous;
+    bool enable_rdma;
     uint32_t max_vlan_filters;
     uint32_t max_mac_filters;
     uint32_t max_mac_vlan_filters;

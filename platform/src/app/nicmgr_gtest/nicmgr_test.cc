@@ -6,7 +6,7 @@
 
 using namespace std;
 
-enum ForwardingMode g_fwd_mode = FWD_MODE_SMART_NIC;
+enum ForwardingMode g_fwd_mode = FWD_MODE_CLASSIC_NIC;
 
 class nicmgr_test : public ::testing::Test {
 protected:
