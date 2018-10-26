@@ -107,14 +107,14 @@ describe('NaplesComponent', () => {
       new BehaviorSubject({
         body: {
           result: {
-            Events: [
+            events: [
               {
-                Type: 'Created',
-                Object: naples1
+                type: 'Created',
+                object: naples1
               },
               {
-                Type: 'Created',
-                Object: naples2
+                type: 'Created',
+                object: naples2
               }
             ]
           }

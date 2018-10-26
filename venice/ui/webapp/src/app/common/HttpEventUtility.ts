@@ -55,20 +55,20 @@ export class HttpEventUtility<T> {
       console.log('event chunk was blank', eventChunk);
       return;
     }
-    const events = eventChunk.result.Events;
+    const events = eventChunk.result.events;
     events.forEach(event => {
       let obj;
       if (this.objectConstructor != null) {
-        obj = new this.objectConstructor(event.Object);
+        obj = new this.objectConstructor(event.object);
       } else {
-        obj = event.Object;
+        obj = event.object;
       }
       const objName = obj.meta.name;
       if (this.filter != null && !this.filter(obj)) {
         return;
       }
       let index;
-      switch (event.Type) {
+      switch (event.type) {
         case EventTypes.create:
           this.addItem(obj, objName);
           break;

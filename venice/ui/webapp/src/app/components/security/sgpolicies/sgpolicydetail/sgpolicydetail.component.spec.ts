@@ -332,10 +332,10 @@ describe('SgpolicydetailComponent', () => {
     sgPolicyObserver = new BehaviorSubject({
       body: {
         result: {
-          Events: [
+          events: [
             {
-              Type: 'Created',
-              Object: sgPolicy1
+              type: 'Created',
+              object: sgPolicy1
             }
           ]
         }
@@ -659,10 +659,10 @@ describe('SgpolicydetailComponent', () => {
     policyWatchObserver.next({
       body: {
         result: {
-          Events: [
+          events: [
             {
-              Type: 'Created',
-              Object: sgPolicy2
+              type: 'Created',
+              object: sgPolicy2
             }
           ]
         }
@@ -683,10 +683,10 @@ describe('SgpolicydetailComponent', () => {
     policyWatchObserver.next({
       body: {
         result: {
-          Events: [
+          events: [
             {
-              Type: 'Deleted',
-              Object: sgPolicy2
+              type: 'Deleted',
+              object: sgPolicy2
             }
           ]
         }
@@ -740,10 +740,10 @@ describe('SgpolicydetailComponent', () => {
       new BehaviorSubject({
         body: {
           result: {
-            Events: [
+            events: [
               {
-                Type: 'Created',
-                Object: sgPolicy2
+                type: 'Created',
+                object: sgPolicy2
               }
             ]
           }

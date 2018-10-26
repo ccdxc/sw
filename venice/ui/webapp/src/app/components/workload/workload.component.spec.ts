@@ -199,18 +199,18 @@ describe('WorkloadComponent', () => {
       new BehaviorSubject({
         body: {
           result: {
-            Events: [
+            events: [
               {
-                Type: 'Created',
-                Object: workload1.getFormGroupValues()
+                type: 'Created',
+                object: workload1.getFormGroupValues()
               },
               {
-                Type: 'Created',
-                Object: workload2.getFormGroupValues()
+                type: 'Created',
+                object: workload2.getFormGroupValues()
               },
               {
-                Type: 'Created',
-                Object: workload3.getFormGroupValues()
+                type: 'Created',
+                object: workload3.getFormGroupValues()
               }
             ]
           }

@@ -26,10 +26,10 @@ describe('HttpEventUtility', () => {
 
   const createEvents = {
     result: {
-      Events: [
+      events: [
         {
-          Type: 'Created',
-          Object: {
+          type: 'Created',
+          object: {
             meta: {
               name: 'obj1',
               'mod-time': '1'
@@ -38,8 +38,8 @@ describe('HttpEventUtility', () => {
           }
         },
         {
-          Type: 'Created',
-          Object: {
+          type: 'Created',
+          object: {
             meta: {
               name: 'obj2',
               'mod-time': '2'
@@ -47,8 +47,8 @@ describe('HttpEventUtility', () => {
           }
         },
         {
-          Type: 'Created',
-          Object: {
+          type: 'Created',
+          object: {
             meta: {
               name: 'obj3',
               'mod-time': '3'
@@ -56,8 +56,8 @@ describe('HttpEventUtility', () => {
           }
         },
         {
-          Type: 'Created',
-          Object: {
+          type: 'Created',
+          object: {
             meta: {
               name: 'obj4',
               'mod-time': '4'
@@ -70,10 +70,10 @@ describe('HttpEventUtility', () => {
 
   const createEvent = {
     result: {
-      Events: [
+      events: [
         {
-          Type: 'Created',
-          Object: {
+          type: 'Created',
+          object: {
             meta: {
               name: 'obj1',
               'mod-time': '1'
@@ -86,10 +86,10 @@ describe('HttpEventUtility', () => {
 
   const putEvent = {
     result: {
-      Events: [
+      events: [
         {
-          Type: 'Updated',
-          Object: {
+          type: 'Updated',
+          object: {
             meta: {
               name: 'obj2',
               'mod-time': '1'
@@ -102,10 +102,10 @@ describe('HttpEventUtility', () => {
 
   const deleteEvent = {
     result: {
-      Events: [
+      events: [
         {
-          Type: 'Deleted',
-          Object: {
+          type: 'Deleted',
+          object: {
             meta: {
               name: 'obj2',
               'mod-time': '1'
@@ -118,10 +118,10 @@ describe('HttpEventUtility', () => {
 
   const putAndCreateEvents = {
     result: {
-      Events: [
+      events: [
         {
-          Type: 'Updated',
-          Object: {
+          type: 'Updated',
+          object: {
             meta: {
               name: 'obj3',
               'mod-time': '6'
@@ -129,8 +129,8 @@ describe('HttpEventUtility', () => {
           }
         },
         {
-          Type: 'Created',
-          Object: {
+          type: 'Created',
+          object: {
             meta: {
               name: 'obj5',
               'mod-time': '8'
