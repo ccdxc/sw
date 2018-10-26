@@ -3447,6 +3447,40 @@ main (int argc, char** argv)
         }
         else if (proxy_type == types::PROXY_TYPE_TLS) {
             if (proxy_srv == true) {
+                if (key_type == types::CRYPTO_ASYM_KEY_TYPE_ECDSA) {
+                    if (hclient.tcp_tls_proxy_server_ecdsa_flow_setup(proxy_vrf_id,
+                            src_range_start,
+                            src_range_end,
+                            src_port_range_start,
+                            src_port_range_end,
+                            dst_range_start,
+                            dst_range_end,
+                            dst_port_range_start,
+                            dst_port_range_end
+                            )) {
+                        return -1;
+                    }
+                    else {
+                        return 0;
+                    }
+                }
+                else if (key_type == types::CRYPTO_ASYM_KEY_TYPE_RSA) {
+                    if (hclient.tcp_tls_proxy_server_rsa_flow_setup(proxy_vrf_id,
+                            src_range_start,
+                            src_range_end,
+                            src_port_range_start,
+                            src_port_range_end,
+                            dst_range_start,
+                            dst_range_end,
+                            dst_port_range_start,
+                            dst_port_range_end
+                            )) {
+                        return -1;
+                    }
+                    else {
+                        return 0;
+                    }
+                }
             }
             else {
                 if (key_type == types::CRYPTO_ASYM_KEY_TYPE_ECDSA) {

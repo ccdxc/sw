@@ -74,7 +74,7 @@ targets:
 
   # ====================== E2E DOL Tests ===========================
   #dol/e2e/tlsproxy      : ["make", "jobd/dol/e2e/tlsproxy"]
-  dol/e2e/tlsproxy/v6   : ["make", "jobd/dol/e2e/v6tlsproxy"]
+  #dol/e2e/tlsproxy/v6   : ["make", "jobd/dol/e2e/v6tlsproxy"]
   dol/e2e/eplearn       : ["make", "jobd/dol/e2e/eplearn"]
   #dol/e2e/alg           : ["make", "jobd/dol/e2e/alg"]
   dol/e2e/l7            : ["make", "jobd/dol/e2e/l7"]

@@ -401,10 +401,10 @@ hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.pk_ring_size.fld(barco_ring->ring_size);
     hens.dhs_crypto_ctl.pk_ring_size.write();
 
-    hens.dhs_crypto_ctl.pk_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
-    hens.dhs_crypto_ctl.pk_opa_tag_addr_w0.write();
-    hens.dhs_crypto_ctl.pk_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
-    hens.dhs_crypto_ctl.pk_opa_tag_addr_w1.write();
+    hens.dhs_crypto_ctl.pk_ci_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.pk_ci_addr_w0.write();
+    hens.dhs_crypto_ctl.pk_ci_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.pk_ci_addr_w1.write();
 
     hens.dhs_crypto_ctl.pk_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.pk_producer_idx.write();
@@ -425,17 +425,19 @@ bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     bool                                ret = FALSE;
     uint32_t                            curr_opaque_tag = 0;
 
+    /* The opaque tag address is used as the CI address for the Asym ring */
     if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag, sizeof(curr_opaque_tag))) {
         HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
                 barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        HAL_TRACE_DEBUG("Poll:{}: Retrieved opaque tag addr: {:#x}value: {:#x}", 
-                    barco_ring->ring_name, barco_ring->opaque_tag_addr, curr_opaque_tag);
-        /* TODO: Handle wraparounds */
-        if (curr_opaque_tag >= req_tag)
+        if ((int32_t(curr_opaque_tag - req_tag)) > 0) {
+            HAL_TRACE_DEBUG("Poll:{}: Check for req: {:#x}: Retrieved opaque tag addr: {:#x}value: {:#x}", 
+                    barco_ring->ring_name, req_tag, barco_ring->opaque_tag_addr, curr_opaque_tag);
+
             ret = TRUE;
+        }
     }
 
     return ret;
@@ -452,9 +454,6 @@ hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
 
     asym_req_descr = (barco_asym_descriptor_t*) req;
 
-    asym_req_descr->opaque_tag_value = barco_ring->opaqe_tag_value;
-    asym_req_descr->opage_tag_wr_en = 1;
-
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
 
     if (capri_hbm_write_mem(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
@@ -464,13 +463,13 @@ hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
         ret = HAL_RET_INVALID_ARG;
     }
     else {
+        *req_tag = barco_ring->producer_idx;;
         barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
 
         /* Barco doorbell */
         hens.dhs_crypto_ctl.pk_producer_idx.fld(barco_ring->producer_idx);
         hens.dhs_crypto_ctl.pk_producer_idx.write();
 
-        *req_tag = barco_ring->opaqe_tag_value++;
     }
 
     return ret;
