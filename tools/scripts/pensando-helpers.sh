@@ -243,6 +243,7 @@ start_hal_classic() {
 
     killall hal
 
+    export QEMU=1
     cp conf/hal_classic.ini conf/hal.ini
     # export GDB="gdb -ex run -e ~/.gdbinit --args"
     ZMQ_SOC_DIR="$PWD" ./tools/start-hal.sh
@@ -314,7 +315,7 @@ start_nicmgr_eth() {
         return -1 
     fi
 
-    HAL_CONFIG_PATH="../nic/conf" \
+    HAL_CONFIG_PATH="$PWD/../nic/conf" \
     LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../bazel-bin/nic/model_sim/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -c ./src/app/nicmgrd/etc/eth.json

@@ -450,6 +450,12 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         return HAL_RET_INVALID_ARG;
     }
 
+    bool qemu = std::getenv("QEMU");
+    if (qemu) {
+        hal_cfg->qemu = true;
+    } else {
+        hal_cfg->qemu = false;
+    }
     return HAL_RET_OK;
 }
 

@@ -76,6 +76,7 @@ typedef struct hal_cfg_s {
     uint64_t                 control_cores_mask;
     uint64_t                 data_cores_mask;
     bool                     shm_mode;
+    bool                     qemu;                      // true if this is running on QEMU
 } hal_cfg_t;
 
 }    // namespace hal
