@@ -42,7 +42,7 @@
                     (_lock_en << 3 | _table_read_size); \
         phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
         phvwr       p.common_te##_num##_phv_table_addr, _table_base; \
-        phvwri.e     p.app_header_table##_num##_valid, 1;
+        phvwri.e    p.app_header_table##_num##_valid, 1;
 
 #define CAPRI_NEXT_TABLE_READ_i(_num, _lock_en, _stage_entry, _table_base, _table_read_size) \
         phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
@@ -58,6 +58,15 @@
         add         r1, _table_base, _table_state_offset; \
         phvwr       p.common_te##_num##_phv_table_addr, r1; \
         phvwri      p.app_header_table##_num##_valid, 1;
+
+#define CAPRI_NEXT_TABLE_READ_OFFSET_e(_num, _lock_en, _stage_entry, _table_base, _table_state_offset, _table_read_size) \
+        phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
+                    (_lock_en << 3 | _table_read_size); \
+        phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
+        add         r1, _table_base, _table_state_offset; \
+        phvwr       p.common_te##_num##_phv_table_addr, r1; \
+        phvwri.e    p.app_header_table##_num##_valid, 1;
+
 
 #define CAPRI_NEXT_TABLE_READ_INDEX(_num, _index, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_read_size) \
         phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
@@ -250,6 +259,10 @@
 
 #define CAPRI_RING_DOORBELL_DATA_QID(_qid) \
         add             r3, r0, _qid, DB_QID_SHFT;\
+
+#define CAPRI_RING_DOORBELL_DATA_NOP(_qid, _ring) \
+        or              r3, r0, _qid, DB_QID_SHFT;\
+        or              r3, r3, _ring, DB_RING_SHFT;
 
 #define CAPRI_DMA_COMMAND_SIZE            128
 

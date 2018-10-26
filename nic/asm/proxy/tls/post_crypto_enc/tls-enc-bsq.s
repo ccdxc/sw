@@ -71,7 +71,6 @@ tls_enc_post_crypto_process:
 
     /* address will be in r4 */
     addi         r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
-    add	         r1, k.p4_txdma_intr_qid[15:0], r0
 
     /*
      * data will be in r3
@@ -80,19 +79,17 @@ tls_enc_post_crypto_process:
      * the scheduler re-evaluate if ci != pi. We can optimize to not ring the doorbell if
      * we can do the ci != pi check ourselves (in stage-0)
      */
-    add          r5, d.{u.read_tls_stg0_d.ci_1}.hx, r0
-    CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_BSQ, r5)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TLS_SCHED_RING_BSQ)
 
     memwr.dx     r4, r3
 
 	
 table_read_rx_bsq_enc: 
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_enc_rx_bsq_enc_dummy_process,
+    CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_DIS, tls_enc_rx_bsq_enc_dummy_process,
         k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0],
         TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
-    nop.e
     nop
 
 tls_enc_post_crypto_process_defer:
-    nop.e
+    phvwri.e        p.p4_intr_global_drop, 1
     nop

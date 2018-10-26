@@ -34,11 +34,11 @@ tls_pre_crypto_process:
     bnei.s      r2, -1, tls_pre_crypto_mac
     nop
 	
-    phvwr       p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
     seq         c1, r0, d.u.read_tls_stg0_d.dec_flow
+    j.c1        tls_enc_pre_crypto_process
+    phvwr       p.tls_global_phv_dec_flow, d.u.read_tls_stg0_d.dec_flow
     bcf         [!c1], tls_pre_crypto_dec
     nop
-    j           tls_enc_pre_crypto_process
     nop
     nop.e
     nop

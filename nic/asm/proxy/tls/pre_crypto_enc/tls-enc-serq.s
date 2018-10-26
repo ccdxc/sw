@@ -38,8 +38,7 @@ tls_enc_pre_crypto_process:
 
     tblmincri       d.u.read_tls_stg0_d.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
 
-    add         r6, r0, d.{u.read_tls_stg0_d.ci_0}.hx
-    sll         r6, r6, NIC_SERQ_ENTRY_SIZE_SHIFT
+    sll         r6, d.{u.read_tls_stg0_d.ci_0}.hx, NIC_SERQ_ENTRY_SIZE_SHIFT
 
     tblmincri.f   d.{u.read_tls_stg0_d.ci_0}.hx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
 
@@ -75,9 +74,7 @@ tls_enc_pre_crypto_process:
     addi    r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
 
     /* data will be in r3 */
-    add	    r1, k.p4_txdma_intr_qid[15:0], r0
-    add     r5, d.{u.read_tls_stg0_d.ci_0}.hx, r0
-    CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_SERQ, r5)
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid[15:0], TLS_SCHED_RING_SERQ)
 
 	memwr.dx  	 r4, r3
 
@@ -89,9 +86,8 @@ tls_enc_pre_crypto_process_skip_serq_dbell:
     add         r3, r6, d.u.read_tls_stg0_d.serq_base
 
 table_read_DESC:
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_enc_read_serq_entry_process, r3, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ_e(0, TABLE_LOCK_DIS, tls_enc_read_serq_entry_process, r3, TABLE_SIZE_64_BITS)
 
-    nop.e
     nop
 
 tls_enc_pre_crypto_process_defer:

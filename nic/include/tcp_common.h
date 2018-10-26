@@ -75,6 +75,15 @@
 #define TCP_TX_DDOL_FORCE_TBL_SETADDR   0x20
 #define TCP_TX_DDOL_TSOPT_SUPPORT       0x40
 
+// Tx endcoding bit position
+#define TCP_TX_DDOL_DONT_SEND_ACK_BIT       0
+#define TCP_TX_DDOL_DONT_TX_BIT             1
+#define TCP_TX_DDOL_BYPASS_BARCO_BIT        2
+#define TCP_TX_DDOL_DONT_START_RETX_TIMER_BIT   3
+#define TCP_TX_DDOL_FORCE_TIMER_FULL_BIT    4
+#define TCP_TX_DDOL_FORCE_TBL_SETADDR_BIT   5
+#define TCP_TX_DDOL_TSOPT_SUPPORT_BIT       6
+
 #define TCP_DDOL_TBLADDR_SHIFT_OFFSET   (64 * 15)
 #define TCP_DDOL_TBLADDR_VALUE          0x59
 
