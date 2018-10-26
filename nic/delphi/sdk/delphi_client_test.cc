@@ -129,6 +129,7 @@ public:
         TestObjectPtr tobj = make_shared<TestObject>();
         tobj->set_testdata1("Test Data");
         tobj->mutable_key()->set_idx(unique_id);
+        LogInfo("queued TestObject create");
 
         // add it to database
         return client->QueueUpdate(tobj);
@@ -176,7 +177,7 @@ TEST_F(DelphiClientTest, BasicClientTest) {
     usleep(1000);
 
     // verify  the service is inited
-    ASSERT_EQ(service->inited, true) << "client was not inited";
+    ASSERT_EQ_EVENTUALLY(service->inited, true) << "client was not inited";
 
     // create one object from client
     service->CreateObject(1);

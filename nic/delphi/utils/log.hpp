@@ -14,6 +14,8 @@ typedef std::shared_ptr<spdlog::logger> Logger;
 // GetLogger returns the current logger instance
 Logger GetLogger();
 
+void SetLogger(Logger lg);
+
 #ifdef DEBUG_ENABLE
 #define LogDebug(args...) delphi::GetLogger()->debug(args)
 #else

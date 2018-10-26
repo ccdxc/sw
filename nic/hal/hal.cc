@@ -178,7 +178,7 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
                                    HAL_THREAD_ID_DELPHI_CLIENT,
                                    sdk::lib::THREAD_ROLE_CONTROL,
                                    0x0,    // use all control cores
-                                   svc::delphi_client_start,
+                                   hal::svc::delphi_client_start,
                                    thread_prio, sched_policy,
                                    NULL);
     HAL_ABORT(hal_thread != NULL);

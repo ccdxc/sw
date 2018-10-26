@@ -92,7 +92,7 @@ public:
 protected:
     void syncTimerHandler(ev::timer &watcher, int revents);      // sync object updates to delphi hub
     void eventTimerHandler(ev::timer &watcher, int revents);     // handle pending events
-    void msgqTimerHandler(ev::timer &watcher, int revents);      // handle updates from other threads
+    void msgqAsyncHandler(ev::async &watcher, int revents);      // handle msq events
     void heartbeatTimerHandler(ev::timer &watcher, int revents); // publish client status
     error allocHandle(BaseObjectPtr objinfo);                    // allocate a object handle
     error freeHandle(BaseObjectPtr objinfo);                     // free object handle
@@ -115,7 +115,7 @@ private:
     pthread_mutex_t                msgQlock;       // lock for the message queue
     ev::timer                      syncTimer;      // timer to sync to hub
     ev::timer                      eventTimer;     // timer to trigger pending events
-    ev::timer                      msgqTimer;      // timer to handle message queue updates
+    ev::async                      msgqAsync;      // async handler for message queue updates
     ev::timer                      heartbeatTimer; // timer to handle message queue updates
     uint64_t                       currObjectID;   // running counter of object handle
     vector<BaseReactorPtr>         mountWatchers;  // reactors watching mount complete

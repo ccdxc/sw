@@ -216,39 +216,69 @@ Main function does three things:
 2. It instantiates a service object and registers it with the delphi SDK.
 3. It runs the main eventloop. Delphi event loop watches for changes from delphi hub and triggers event callbacks.
 
-### 5. Create a bazel build file for the service
+### 5. Create a module.mk build file for the service
 
-Delphi provides convenient bazel macros for compiling protobuf object model into source files. Below shows an example of bazel `BUILD` file.
+For compiling a delphi service, you typically need to create three module.mk files.
+1. a .mk file to compile .proto files and genereate C++/Python/Go files
+2. a .mk file to compile generated C++ files to a library
+3. a .mk file to build the service binary
 
+Here is an example of module.mk file to compile the proto files
 ```
-load("//nic/delphi/compiler:delphi.bzl", "delphi_compile")
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+include ${MKDEFS}/pre.mk
 
-# compile the proto file
-delphi_compile(
-    name = "example_gen",
-    srcs = [ 'example.proto' ],
-)
+MODULE_TARGET       = example.proto
+MODULE_GEN_TYPES    = CC PY DELPHI
+MODULE_INCS         = ${MODULE_DIR} \
+                      ${TOPDIR}/nic \
+                      ${TOPDIR}/nic/hal/third-party/google/include \
+                      ${TOPDIR}/nic/delphi/proto/delphi \
+                      /usr/local/include
+MODULE_LDLIBS       = pthread
+MODULE_POSTGEN_MK   = module_protolib.mk
+MODULES_PREREQS = protoc-gen-delphi.gobin
 
-# compile the reactors and service
-cc_library(
-    name = "example_lib",
-    srcs = [
-        "example.cc",
-        "example.hpp",
-    ],
-    hdrs = [
-        "example.hpp",
-    ],
-    deps = [
-        "//nic/delphi/sdk",
-        ":example_gen",
-    ],
-)
+include ${MKDEFS}/post.mk
 ```
 
-1. first thing to note here is the build file loads delphi compiler macros from `load("//nic/delphi/compiler:delphi.bzl", "delphi_compile")`. This file contains a macro called `delphi_compile()` that can be used for compiling one or more proto files.
-2. call `delphi_compile()` macro with a rule name and list of `.proto` files. This macro will compile the proto files into `.pb` files and `.delphi` files and then compiles them into a library.
-3. Rest of the source files can be compiled using standard bazel rules and link to the delphi compiled library by adding it as a dependency.
+Notice that `MODULE_TARGET` variable has a `.proto` extension. This tells the make infra that this make file will compile the proto files. `MODULE_GEN_TYPES` variables specifies the type of source files to generate. Finally, if you dont specify `MODULE_SRCS` variable, it will compile all `.proto` files in the folder.
+
+Next, you need to write a .mk file to compile generated sources into a library
+
+```
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+include ${MKDEFS}/pre.mk
+
+MODULE_TARGET   = libdelphiexampleproto.a
+MODULE_INCS     = /usr/local/include \
+                  ${TOPDIR}/nic/hal/third-party/google/include \
+                  ${TOPDIR}/hal/third-party/grpc/include
+MODULE_FLAGS    = -O3
+MODULE_EXCLUDE_FLAGS = -O2
+MODULE_PREREQS  = example.proto
+MODULE_SRCS     = ${BLD_PROTOGEN_DIR}/example.pb.cc ${BLD_PROTOGEN_DIR}/example.delphi.cc \
+                  ${BLD_PROTOGEN_DIR}/example_stats.pb.cc ${BLD_PROTOGEN_DIR}/example_stats.delphi.cc
+
+include ${MKDEFS}/post.mk
+```
+
+Finally, you need to write a module.mk file to compile the entire service binary
+
+```
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+include ${MKDEFS}/pre.mk
+
+MODULE_TARGET   = delphi_example.bin
+MODULE_SOLIBS   = delphisdk
+MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
+MODULE_ARLIBS   = delphiexampleproto
+ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)
+ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cc)
+MODULE_SRCS     = $(filter-out $(ALL_TEST_FILES), $(ALL_CC_FILES))
+
+include ${MKDEFS}/post.mk
+```
 
 ## Writing unit tests
 
@@ -335,6 +365,36 @@ This will instantiate new `InterfaceMetrics` object in shared memory with key `1
 ```
 
 Example above shows how to periodically set or increment stats attributes. Note that stats attributes can be accessed using their name as specified in the proto file.
+
+#### Atomically publishing stats
+
+In some cases, we might want to publish an entire metric atomically, instead of updating individual variables. In those case, we can use `Publish()` API instead of setting individual attributes.
+
+Here is an example:
+
+```
+    interface_metrics_t if_metrics = {
+        RxPkts: 10,
+        TxPkts: 10,
+        RxPktRate: 10.0,
+        TxPktRate: 10.0,
+    };
+
+    // atomically publish a metric object
+    if_stats->Publish(&if_metrics);
+```
+
+#### Datapath stats from PAL memory
+
+Delphi metrics also provides a way to read datapath stats from PAL memory directly. In this case publisher(for example, nicmgr) will simply create a metric entry and point it to PAL physical memory address. We can just use `NewDpMetrics` API to publish a stats from PAL memory. When agents read this stats, they will simply read the datapath stats directly from PAL memory.
+
+Here is an example:
+
+```
+    // create a new datapath metric
+    int32_t key = 100;
+    InterfaceMetricPtr tmptr = InterfaceMetrics::NewDpInterfaceMetrics(key, pal_addr);
+```
 
 ## Coding Style Guide
 

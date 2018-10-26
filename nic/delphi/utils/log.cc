@@ -4,21 +4,28 @@
 
 namespace delphi {
 
+// global variable
+Logger g_delphi_logger = NULL;
 
 // GetLogger returns a logger instance
 Logger GetLogger() {
-    static Logger _logger = spdlog::stdout_color_mt("delphi");
-    static bool initDone = false;
-
-    if (!initDone) {
-        _logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
-        initDone = true;
+    if (g_delphi_logger == NULL) {
+        g_delphi_logger = spdlog::stdout_color_mt("delphi");
+        g_delphi_logger->set_pattern("%L [%Y-%m-%d %H:%M:%S.%f] %P/%n: %v");
 #ifdef DEBUG_ENABLE
         spdlog::set_level(spdlog::level::debug);
 #endif
     }
 
-    return _logger;
+    return g_delphi_logger;
+}
+
+// SetLogger sets the logger to use
+void SetLogger(Logger lg) {
+    if (g_delphi_logger != NULL) {
+        spdlog::drop("delphi");
+    }
+    g_delphi_logger = lg;
 }
 
 } // namespace delphi

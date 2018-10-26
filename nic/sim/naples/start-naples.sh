@@ -204,6 +204,9 @@ if [[ $NETAGENT_CTRL_INTF != "lo" ]]; then
     "$NIC_DIR"/bin/nmd  -cmdregistration "$CMD_URL":"$CMD_GRPC_UNAUTH_PORT" -cmdupdates "$CMD_URL":"$CMD_RESOLVER_PORT" -cmdcerts "$CMD_URL":"$CMD_RESOLVER_PORT" -hostif eth1 --log-to-file $LOG_DIR/nmd.log -resolver "$CMD_URL":"$CMD_RESOLVER_PORT" -mode network -hostname $NMD_HOSTNAME &
 fi
 
+echo "Starting delphi hub ..."
+"$NIC_DIR"/bin/delphi_hub > $LOG_DIR/delphi_hub.log 2>&1 &
+
 echo "NAPLES services/processes up and running ..."
 # keep the container running
 while :; do

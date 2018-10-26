@@ -7,6 +7,7 @@
 
 #include "messenger_client.hpp"
 #include "messenger_server.hpp"
+#include "nic/delphi/utils/utest.hpp"
 
 namespace {
 using namespace std;
@@ -142,12 +143,12 @@ TEST_F(MessangerTest, BasicMountTest) {
     usleep(1000);
 
     // verify server got all mount requests
-    ASSERT_EQ(serverHandler->mountReq, NUM_CLIENTS) << "Server did not receive all mount requests";
+    ASSERT_EQ_EVENTUALLY(serverHandler->mountReq, NUM_CLIENTS) << "Server did not receive all mount requests";
     LogDebug("Server got {} mount requests", serverHandler->mountReq);
 
     // verify clients got mount resp
     for (int i = 0; i < NUM_CLIENTS; i++) {
-        ASSERT_EQ(clientHandlers[i]->mountResp, 1) << "client did not receive mount resp";
+        ASSERT_EQ_EVENTUALLY(clientHandlers[i]->mountResp, 1) << "client did not receive mount resp";
         LogDebug("Client {} got {} mount resps\n", i, clientHandlers[i]->mountResp);
     }
 }
@@ -186,7 +187,7 @@ TEST_F(MessangerTest, ChangeReqTest) {
     }
     usleep(1000);
 
-    ASSERT_EQ(serverHandler->changeReq, NUM_CLIENTS) << "Server did not receive all change requests";
+    ASSERT_EQ_EVENTUALLY(serverHandler->changeReq, NUM_CLIENTS) << "Server did not receive all change requests";
     LogDebug("Server got {} change requests\n", serverHandler->changeReq);
 
     // send a notify message to each client
@@ -214,7 +215,7 @@ TEST_F(MessangerTest, ChangeReqTest) {
 
     // verify clients got notify message
     for (int i = 0; i < NUM_CLIENTS; i++) {
-        ASSERT_EQ(clientHandlers[i]->notify, 1) << "client did not receive notify message";
+        ASSERT_EQ_EVENTUALLY(clientHandlers[i]->notify, 1) << "client did not receive notify message";
         LogDebug("Client {} got {} notify messages\n", i, clientHandlers[i]->notify);
     }
 
@@ -241,8 +242,8 @@ TEST_F(MessangerTest, BidirMsgBenchmark) {
         }
         usleep(1000 * 10);
     }
-    ASSERT_EQ(serverHandler->mountReq, numIter * batchSize) << "server did not receive all mount requests";
-    ASSERT_EQ(clientHandlers[0]->mountResp, numIter * batchSize) << "client did not receive all mount response";
+    ASSERT_EQ_EVENTUALLY(serverHandler->mountReq, numIter * batchSize) << "server did not receive all mount requests";
+    ASSERT_EQ_EVENTUALLY(clientHandlers[0]->mountResp, numIter * batchSize) << "client did not receive all mount response";
 }
 
 

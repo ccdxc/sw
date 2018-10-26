@@ -8,6 +8,8 @@
 #include "gen/proto/example.delphi.hpp"
 #include "gen/proto/example_stats.delphi.hpp"
 #include "gen/proto/upgrade.delphi.hpp"
+#include "gen/proto/port.delphi.hpp"
+#include "gen/proto/interface.delphi.hpp"
 
 using namespace delphi;
 

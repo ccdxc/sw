@@ -22,7 +22,6 @@ public:
     error Send(MessagePtr msg);
     error Close();
 private:
-    ev::io                           evio;
     int                              hsock;
     TransportHandlerPtr              handler;
     SockReceiverUptr                  receiver;

@@ -5,15 +5,9 @@
 
 namespace delphi {
 
-// delphi_on_exit_handler flushes pending logs on process exit
-void delphi_on_exit_handler(int exitCode, void *arg) {
-    GetLogger()->flush();
-}
-
 // Sdk constructor
 Sdk::Sdk() {
     client_ = make_shared<DelphiClient>();
-    on_exit(delphi_on_exit_handler, NULL);
 }
 
 // MainLoop runs the main event loop

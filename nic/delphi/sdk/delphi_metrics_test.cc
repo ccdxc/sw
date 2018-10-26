@@ -17,6 +17,14 @@ typedef std::shared_ptr<TestMetric> TestMetricPtr;
 // forward declaration
 class TestMetricsIterator;
 
+// test_metric_t: c-struct for test metric
+typedef struct test_metric_ {
+    uint64_t   rx_counter;
+    uint64_t   tx_counter;
+    double     rx_rate;
+    double     tx_rate;
+} test_metric_t;
+
 // TestMetric class
 class TestMetric : public delphi::metrics::DelphiMetrics {
 private:
@@ -37,6 +45,8 @@ public:
     delphi::metrics::GaugePtr TxRate() { return tx_rate_; };
     static int32_t Size();
     static TestMetricPtr  NewTestMetric(int32_t key);
+    static TestMetricPtr  NewDpTestMetric(int32_t key, uint64_t pal_addr);
+    delphi::error  Publish(test_metric_t *mptr);
     delphi::error Delete();
     virtual string DebugString();
     static TestMetricsIterator Iterator();
@@ -107,6 +117,24 @@ TestMetricPtr TestMetric::NewTestMetric(int32_t key) {
 
     // return an instance of TestMetric
     return make_shared<TestMetric>(key, shmptr);
+}
+
+// NewDpTestMetric creates a new test metric in PAL memory
+TestMetricPtr TestMetric::NewDpTestMetric(int32_t key, uint64_t pal_addr) {
+    // FIXME: need to implement this using PAL memory.
+    // for now, just return a metrics object
+    return TestMetric::NewTestMetric(key);
+}
+
+// Publish publishes a metric atomically
+delphi::error TestMetric::Publish(test_metric_t *mptr) {
+    // FIXME: need to be implemented; for now, just a dummy writer
+    rx_counter_->Set(mptr->rx_counter);
+    tx_counter_->Set(mptr->tx_counter);
+    rx_rate_->Set(mptr->rx_rate);
+    tx_rate_->Set(mptr->tx_rate);
+
+    return delphi::error::OK();
 }
 
 // Delete deletes the metric instance
@@ -234,6 +262,74 @@ TEST_F(DelphiMetricTest, BasicMetricsTest) {
     ASSERT_TRUE((ptr == NULL)) << "key was not deleted from the hash table";
 }
 
+TEST_F(DelphiMetricTest, TestDpMetric) {
+    // create a new datapath metric
+    int32_t key = 100;
+    TestMetricPtr tmptr = TestMetric::NewDpTestMetric(key, (uint64_t)0x1001);
+    ASSERT_TRUE((tmptr != NULL)) << "Failed to create the dp metric";
+    delphi::shm::TableMgrUptr tbl = srv_shm_->Kvstore()->Table("TestMetric");
+
+    // verify default values are zero
+    ASSERT_EQ(tmptr->RxCounter()->Get(), 0) << "invalid default for counter";
+    ASSERT_EQ(tmptr->RxRate()->Get(), 0) << "invalid default value for gauge";
+
+    // increment the counter and verify its incremented
+    tmptr->RxCounter()->Incr();
+    tmptr->RxCounter()->Incr();
+    ASSERT_EQ(tmptr->RxCounter()->Get(), 2) << "invalid value for counter";
+
+    // iterate over all stats and count it
+    int iter_count = 0;
+    for (auto iter = TestMetric::Iterator(); iter.IsNotNil(); iter.Next()) {
+        auto tmp = iter.Get();
+        printf("Iterator Metrics: %s\n", tmp->DebugString().c_str());
+        iter_count++;
+    }
+    ASSERT_EQ(iter_count, 1) << "Got invalid number of metrics";
+
+    delphi::error err = tmptr->Delete();
+    ASSERT_TRUE(err.IsOK()) << "Failed to delete the metric";
+
+    // verify the key is removed from the hash table
+    void *ptr = tbl->Find((char *)&key, sizeof(key));
+    ASSERT_TRUE((ptr == NULL)) << "key was not deleted from the hash table";
+}
+
+TEST_F(DelphiMetricTest, TestPublish) {
+    usleep(1000);
+
+    // create a new metric
+    int32_t key = 100;
+    TestMetricPtr tmptr = TestMetric::NewTestMetric(key);
+    ASSERT_TRUE((tmptr != NULL)) << "Failed to create the metric";
+    delphi::shm::TableMgrUptr tbl = srv_shm_->Kvstore()->Table("TestMetric");
+
+    // verify default values are zero
+    ASSERT_EQ(tmptr->RxCounter()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(tmptr->RxRate()->Get(), 0) << "invalid default value for gauge";
+
+    // publish new values
+    test_metric_t stats = {
+        rx_counter: 10,
+        tx_counter: 10,
+        rx_rate: 10.0,
+        tx_rate: 10.0,
+    };
+    tmptr->Publish(&stats);
+
+    // display metrics
+    printf("Metrics: \n%s\n", tmptr->DebugString().c_str());
+
+    // verify new values are set
+    ASSERT_EQ(tmptr->RxCounter()->Get(), 10) << "invalid value for counter";
+
+    delphi::error err = tmptr->Delete();
+    ASSERT_TRUE(err.IsOK()) << "Failed to delete the metric";
+
+    // verify the key is removed from the hash table
+    void *ptr = tbl->Find((char *)&key, sizeof(key));
+    ASSERT_TRUE((ptr == NULL)) << "key was not deleted from the hash table";
+}
 } // namespace
 
 int main(int argc, char **argv) {

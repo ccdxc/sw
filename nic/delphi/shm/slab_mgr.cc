@@ -190,7 +190,7 @@ uint8_t * SlabAllocator::Alloc(int32_t len) {
 // Free frees memory and moves the chunk back to the free list
 error  SlabAllocator::Free(uint8_t *ptr) {
     if ((ptr < mem_base_) || (ptr > (mem_base_ + pool_->size))) {
-        LogError("Invalid address {} during free. memory Pool is {} - {}", ptr, mem_base_, (mem_base_ + pool_->size));
+        LogError("Invalid address {:p} during free. memory Pool is {} - {}", ptr, mem_base_, (mem_base_ + pool_->size));
         return error::New("Invalid memory address to free");
     }
 

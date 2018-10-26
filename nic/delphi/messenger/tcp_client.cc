@@ -69,7 +69,6 @@ error TcpClient::Send(MessagePtr msg) {
 
 error TcpClient::Close() {
     this->receiver->Stop();
-    this->evio.stop();
     close(this->hsock);
 
     return error::OK();

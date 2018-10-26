@@ -5,6 +5,7 @@
 
 #include <unistd.h>
 #include "gtest/gtest.h"
+#include "nic/delphi/utils/utest.hpp"
 
 // DELPHI_SERVICE_TEST instantiates a gtest fixture for testing a service
 #define DELPHI_SERVICE_TEST(test_name, svc_name) \
@@ -34,30 +35,6 @@ public: \
         usleep(1000); \
     } \
 };
-
-// -------------- wrappers for asynchronous assertions -------------------
-
-// ASSERT_EQ_EVENTUALLY asserts (left == right) eventually
-// it retries the check every 10ms for up to 1sec
-#define ASSERT_EQ_EVENTUALLY(left, right) \
-for (int _tidx = 0; _tidx < 100; _tidx++) { \
-    if ((left) == (right)) { \
-        break; \
-    } \
-    usleep(1000 * 10); \
-} \
-ASSERT_EQ(left, right)
-
-// ASSERT_NE_EVENTUALLY asserts (left != right) eventually
-// it retries the check every 10ms for up to 1sec
-#define ASSERT_NE_EVENTUALLY(left, right) \
-for (int _tidx = 0; _tidx < 100; _tidx++) { \
-    if ((left) != (right)) { \
-        break; \
-    } \
-    usleep(1000 * 10); \
-} \
-ASSERT_NE(left, right)
 
 
 // StartTestLoop starts the test loop in a pthread

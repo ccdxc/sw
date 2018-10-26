@@ -15,7 +15,8 @@ DelphiClient::DelphiClient() {
     this->syncTimer.set<DelphiClient, &DelphiClient::syncTimerHandler>(this);
     this->syncTimer.start(CLIENT_SYNC_PERIOD, CLIENT_SYNC_PERIOD);
     this->eventTimer.set<DelphiClient, &DelphiClient::eventTimerHandler>(this);
-    this->msgqTimer.set<DelphiClient, &DelphiClient::msgqTimerHandler>(this);
+    this->msgqAsync.set<DelphiClient, &DelphiClient::msgqAsyncHandler>(this);
+    this->msgqAsync.start();
     this->heartbeatTimer.set<DelphiClient, &DelphiClient::heartbeatTimerHandler>(this);
     pthread_mutex_init(&msgQlock, NULL);
     this->isConnected = false;
@@ -331,7 +332,7 @@ error DelphiClient::QueueUpdate(BaseObjectPtr objinfo) {
 
     // add it to the queue
     this->msgQueue.push_back(make_shared<ObjectMutation>(nullptr, objinfo, SetOp));
-    this->msgqTimer.start(0, 0);
+    this->msgqAsync.send();
 
     // unlock message queue
     pthread_mutex_unlock(&msgQlock);
@@ -358,7 +359,7 @@ error DelphiClient::QueueDelete(BaseObjectPtr objinfo) {
 
     // add it to the queue
     this->msgQueue.push_back(make_shared<ObjectMutation>(nullptr, objinfo, DeleteOp));
-    this->msgqTimer.start(0, 0);
+    this->msgqAsync.send();
 
     // unlock message queue
     pthread_mutex_unlock(&msgQlock);
@@ -495,7 +496,9 @@ map<string, BaseObjectPtr> DelphiClient::GetSubtree(string kind) {
 // Close stops the client and closes connection to delphi hub
 error DelphiClient::Close() {
     this->syncTimer.stop();
+    this->eventTimer.stop();
     this->heartbeatTimer.stop();
+    this->msgqAsync.stop();
     this->isConnected = true;
     this->myServiceID = 0;
     this->isMountComplete = false;
@@ -589,8 +592,8 @@ void DelphiClient::eventTimerHandler(ev::timer &watcher, int revents) {
     }
 }
 
-// msgqTimerHandler handles msg queue events
-void DelphiClient::msgqTimerHandler(ev::timer &watcher, int revents) {
+// msgqAsyncHandler handles msg queue events
+void DelphiClient::msgqAsyncHandler(ev::async &watcher, int revents) {
     // lock message queue
     pthread_mutex_lock(&msgQlock);
 

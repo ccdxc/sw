@@ -140,6 +140,17 @@ class {{.GetName}};
 typedef std::shared_ptr<{{.GetName}}> {{.GetName}}Ptr;
 class {{.GetName}}Iterator;
 
+// {{.GetName | ToLower}}_t: c-struct for {{.GetName}}
+typedef struct {{.GetName | ToLower}}_ {
+    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+    {{if (eq .GetTypeName ".delphi.Counter") }}
+    uint64_t    {{.GetName}};
+    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+    double      {{.GetName}};
+    {{end}}
+    {{end}}
+} {{.GetName | ToLower}}_t;
+
 // {{.GetName}} class
 class {{.GetName}} : public delphi::metrics::DelphiMetrics {
 private:
@@ -176,12 +187,15 @@ public:
 	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{$pkgName}}::{{.GetCppTypeName}} *)kptr, vptr){ };
     {{$pkgName}}::{{.GetCppTypeName}} GetKey() { return key_; };
     static {{$msgName}}Ptr  New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key);
+    static {{$msgName}}Ptr  NewDp{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
     {{else}}
     {{$msgName}}({{.GetCppTypeName}} key, char *ptr);
 	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, vptr){ };
     {{.GetCppTypeName}} GetKey() { return key_; };
     static {{$msgName}}Ptr  New{{$msgName}}({{.GetCppTypeName}} key);
+    static {{$msgName}}Ptr  NewDp{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
     {{end}}
+    delphi::error  Publish({{$msgName | ToLower}}_t *mptr);
     {{end}}
 
     {{if (eq .GetTypeName ".delphi.Counter") }}
@@ -375,6 +389,33 @@ int32_t {{.GetName}}::Size() {
 
     // return an instance of {{.GetName}}
     return make_shared<{{.GetName}}>(key, shmptr);
+}
+
+// NewDp{{.GetName}} creates a new metrics instance in PAL memory
+{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+{{if (eq .GetName "Key") }}
+{{ if .TypeIsMessage }}
+{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr) {
+{{else}}
+{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr) {
+{{end}} {{end}} {{end}}
+    // FIXME: need to implement this using PAL memory.
+    // for now, just return a metrics object
+    return {{$msgName}}::New{{$msgName}}(key);
+}
+
+// Publish publishes a metric atomically
+delphi::error {{.GetName}}::Publish({{.GetName | ToLower}}_t *mptr) {
+    // FIXME: need to be implemented; for now, just a dummy writer
+    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+    {{if (eq .GetTypeName ".delphi.Counter") }}
+    {{.GetName}}_->Set(mptr->{{.GetName}});
+    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+    {{.GetName}}_->Set(mptr->{{.GetName}});
+    {{end}}
+    {{end}}
+
+    return delphi::error::OK();
 }
 
 // Delete deletes the metric instance
