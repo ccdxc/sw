@@ -551,6 +551,24 @@ func (mr *MockDebugClientMockRecorder) HbmBwGet(ctx, in interface{}, opts ...int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmBwGet", reflect.TypeOf((*MockDebugClient)(nil).HbmBwGet), varargs...)
 }
 
+// LlcClear mocks base method
+func (m *MockDebugClient) LlcClear(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "LlcClear", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LlcClear indicates an expected call of LlcClear
+func (mr *MockDebugClientMockRecorder) LlcClear(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LlcClear", reflect.TypeOf((*MockDebugClient)(nil).LlcClear), varargs...)
+}
+
 // LlcSetup mocks base method
 func (m *MockDebugClient) LlcSetup(ctx context.Context, in *LlcSetupRequestMsg, opts ...grpc.CallOption) (*LlcSetupResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -873,6 +891,19 @@ func (m *MockDebugServer) HbmBwGet(arg0 context.Context, arg1 *HbmBwGetRequestMs
 // HbmBwGet indicates an expected call of HbmBwGet
 func (mr *MockDebugServerMockRecorder) HbmBwGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmBwGet", reflect.TypeOf((*MockDebugServer)(nil).HbmBwGet), arg0, arg1)
+}
+
+// LlcClear mocks base method
+func (m *MockDebugServer) LlcClear(arg0 context.Context, arg1 *Empty) (*Empty, error) {
+	ret := m.ctrl.Call(m, "LlcClear", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LlcClear indicates an expected call of LlcClear
+func (mr *MockDebugServerMockRecorder) LlcClear(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LlcClear", reflect.TypeOf((*MockDebugServer)(nil).LlcClear), arg0, arg1)
 }
 
 // LlcSetup mocks base method

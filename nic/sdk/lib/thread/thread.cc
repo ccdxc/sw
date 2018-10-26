@@ -140,6 +140,26 @@ thread::destroy(thread *th)
     SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, th);
 }
 
+uint64_t
+thread::get_cpu_mask (cpu_set_t cpu_set)
+{
+    uint64_t cpu_mask = 0x0;
+
+    for (int i = 0; i < get_nprocs(); ++i) {
+        if (CPU_ISSET(i, &cpu_set) != 0) {
+            cpu_mask |= (1 << i);
+        }
+    }
+
+    return cpu_mask;
+}
+
+uint64_t
+thread::get_cpu_mask (void)
+{
+    return get_cpu_mask(cpu_set_);
+}
+
 //------------------------------------------------------------------------------
 // start the thread
 //------------------------------------------------------------------------------
@@ -150,7 +170,6 @@ thread::start(void *ctxt)
     pthread_attr_t        attr;
     struct sched_param    sched_params;
     uint64_t              mask = cores_mask_;
-    cpu_set_t             cpu_cores;
 
     if (running_) {
         return SDK_RET_OK;
@@ -163,7 +182,7 @@ thread::start(void *ctxt)
         return SDK_RET_ERR;
     }
 
-    CPU_ZERO(&cpu_cores);
+    CPU_ZERO(&cpu_set_);
 
     switch (thread_role_) {
     case THREAD_ROLE_CONTROL:
@@ -177,12 +196,12 @@ thread::start(void *ctxt)
     }
 
     while (mask != 0) {
-        CPU_SET(ffsl(mask) - 1, &cpu_cores);
+        CPU_SET(ffsl(mask) - 1, &cpu_set_);
         mask = mask & (mask - 1);
     }
 
     // set core affinity
-    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu_cores);
+    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu_set_);
     if (rv != 0) {
         SDK_TRACE_ERR("pthread_attr_setaffinity_np failure, err : %d", rv);
         return SDK_RET_ERR;
@@ -228,11 +247,15 @@ thread::start(void *ctxt)
         int conf_cores, avail_cores;
         conf_cores = get_nprocs_conf();
         avail_cores = get_nprocs();
-        SDK_TRACE_DEBUG("Instantiated thread, name : %s, id : %u, role %u, "
-                        "sched_policy : %d, priority : %u, cores mask : %lu, "
+        SDK_TRACE_DEBUG("Instantiated thread, "
+                        "name : %s, id : %u, role %u, "
+                        "sched_policy : %d, priority : %u, "
+                        "CPU mask: 0x%lx, configured cores mask : %lu, "
                         "configured cores : %d, available cores : %d",
-                        name_, thread_id_, thread_role_, sched_policy_, prio_,
-                        cores_mask_, conf_cores, avail_cores);
+                        name_, thread_id_, thread_role_,
+                        sched_policy_, prio_,
+                        get_cpu_mask(), cores_mask_,
+                        conf_cores, avail_cores);
     }
 
     // set the thread's name, for debugging

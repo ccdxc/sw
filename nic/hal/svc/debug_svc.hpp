@@ -129,9 +129,9 @@ public:
     Status LlcGet(ServerContext *context,
                   const Empty *req,
                   LlcGetResponseMsg *rsp);
-    Status HbmCacheSetup(ServerContext *context,
-                         const HbmCacheRequestMsg *req,
-                         HbmCacheResponseMsg *rsp);
+    Status LlcClear(ServerContext *context,
+                    const Empty *request,
+                    Empty *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__

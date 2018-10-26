@@ -78,7 +78,7 @@ func llcStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.LlcGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Llc disable failed. %v\n", err)
+		fmt.Printf("Llc get failed. %v\n", err)
 		return
 	}
 

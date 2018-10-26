@@ -86,6 +86,7 @@ hal_ret_t thread_get (ThreadResponseMsg *rsp);
 hal_ret_t hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp);
 
 // LLC counters
+hal_ret_t llc_clear(void);
 hal_ret_t llc_setup(const LlcSetupRequest *req, LlcSetupResponse *rsp);
 hal_ret_t llc_get(LlcGetResponse *rsp);
 

@@ -47,6 +47,10 @@ func init() {
 	clearCmd.AddCommand(systemClearCmd)
 	systemClearCmd.AddCommand(systemStatsClearCmd)
 	systemStatsClearCmd.AddCommand(systemDropStatsClearCmd)
+
+	clearCmd.AddCommand(platformClearCmd)
+	platformClearCmd.AddCommand(platformHbmClearCmd)
+	platformHbmClearCmd.AddCommand(platformHbmLlcStatsClearCmd)
 }
 
 func systemDropStatsClearCmdHandler(cmd *cobra.Command, args []string) {
@@ -185,5 +189,50 @@ func systemStatsClearCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("Clearing Pb Stats failed. %v\n", err)
 			return
 		}
+	}
+}
+
+var platformClearCmd = &cobra.Command{
+	Use:   "platform",
+	Short: "clear platform hbm llc-stats",
+	Long:  "clear platform hmb llc-stats",
+}
+
+var platformHbmClearCmd = &cobra.Command{
+	Use:   "hbm",
+	Short: "clear platform hbm llc-stats",
+	Long:  "clear platform hmb llc-stats",
+}
+
+var platformHbmLlcStatsClearCmd = &cobra.Command{
+	Use:   "llc-stats",
+	Short: "clear platform hbm llc-stats",
+	Long:  "clear platform hmb llc-stats",
+	Run:   llcStatsClearCmdHandler,
+}
+
+func llcStatsClearCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	var empty *halproto.Empty
+
+	// HAL call
+	_, err = client.LlcClear(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Llc clear failed. %v\n", err)
+		return
 	}
 }

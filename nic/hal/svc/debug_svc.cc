@@ -422,6 +422,20 @@ DebugServiceImpl::HbmBwGet(ServerContext *context,
 }
 
 Status
+DebugServiceImpl::LlcClear(ServerContext *context,
+                           const Empty *request,
+                           Empty *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd LLC Clear Request");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    hal::llc_clear();
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}
+
+Status
 DebugServiceImpl::LlcSetup(ServerContext *context,
                            const LlcSetupRequestMsg *req,
                            LlcSetupResponseMsg *rsp)
@@ -430,7 +444,7 @@ DebugServiceImpl::LlcSetup(ServerContext *context,
 
     LlcSetupRequest request = req->request(0);
 
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     hal::llc_setup(&request, rsp->add_response());
     hal::hal_cfg_db_close();
 
@@ -447,20 +461,9 @@ DebugServiceImpl::LlcGet(ServerContext *context,
     HAL_TRACE_DEBUG("Received Llc Get Request");
 
     response = rsp->add_response();
-    hal::llc_get(response);
-    return Status::OK;
-}
 
-Status
-DebugServiceImpl::HbmCacheSetup(ServerContext *context,
-                                const HbmCacheRequestMsg *req,
-                                HbmCacheResponseMsg *rsp)
-{
-    HAL_TRACE_DEBUG("Rcvd HBM Cache Setup Request");
-
-    HbmCacheRequest request = req->request(0);
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    hal::hbm_cache_setup(&request, rsp->add_response());
+    hal::llc_get(response);
     hal::hal_cfg_db_close();
 
     return Status::OK;

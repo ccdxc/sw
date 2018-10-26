@@ -42,6 +42,7 @@ service Debug {
   rpc FteSpanUpdate (FteSpanRequestMsg) returns (FteSpanResponseMsg) {}
 
   rpc HbmBwGet (HbmBwGetRequestMsg) returns (HbmBwGetResponseMsg) {}
+  rpc LlcClear (types.Empty) returns (types.Empty) {}
   rpc LlcSetup (LlcSetupRequestMsg) returns (LlcSetupResponseMsg) {}
   rpc LlcGet   (types.Empty)   returns (LlcGetResponseMsg)   {}
   rpc HbmCacheSetup (HbmCacheRequestMsg) returns (HbmCacheResponseMsg) {}

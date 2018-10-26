@@ -240,7 +240,7 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
     int                 rv;
     struct sched_param  sched_param = { 0 };
     pthread_attr_t      attr;
-    cpu_set_t           cpus;
+    cpu_set_t           cpu_set;
     uint64_t            cores_mask = 0x0;
     sdk::lib::thread    *hal_thread;
 
@@ -252,15 +252,18 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
     }
 
     // compute core affinity
-    CPU_ZERO(&cpus);
+    CPU_ZERO(&cpu_set);
     cores_mask = hal_cfg->control_cores_mask;
     while (cores_mask != 0) {
-        CPU_SET(ffsl(cores_mask) - 1, &cpus);
+        CPU_SET(ffsl(cores_mask) - 1, &cpu_set);
         cores_mask = cores_mask & (cores_mask - 1);
     }
 
+    HAL_TRACE_INFO("Main thread CPU mask: {:#x}",
+                   sdk::lib::thread::get_cpu_mask(cpu_set));
+
     // and set the core affinity
-    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+    rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu_set);
     if (rv != 0) {
         HAL_TRACE_ERR("pthread_attr_setaffinity_np failure, err : {}", rv);
         return HAL_RET_ERR;

@@ -20,6 +20,7 @@
 #include "nic/asic/capri/model/cap_pcie/cap_pxb_csr.h"
 
 sdk::platform::utils::mpartition *g_mpartition;
+static uint32_t capri_freq = 0;
 
 static inline hal_ret_t
 cap_nx_block_write(uint32_t chip, uint64_t addr, int size,
@@ -490,6 +491,46 @@ capri_pxb_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
     return HAL_RET_OK;
 }
 
+static inline void
+populate_hbm_bw (uint64_t max_rd, uint64_t max_wr,
+                 uint64_t avg_rd, uint64_t avg_wr,
+                 asic_hbm_bw_t *hbm_bw)
+{
+    hbm_bw->max.read  = (max_rd * 400) / 256;
+    hbm_bw->max.write = (max_wr * 400) / 256;
+    hbm_bw->avg.read  = (avg_rd * 400) / 256;
+    hbm_bw->avg.write = (avg_wr * 400) / 256;
+}
+
+static uint32_t
+capri_freq_get (void)
+{
+    uint64_t prev_ts     = 0;
+    uint64_t cur_ts      = 0;
+    int      delay       = 10000;
+
+    prev_ts = capri_hbm_timestamp_get();
+    usleep(delay * 1000);
+    cur_ts  = capri_hbm_timestamp_get();
+
+    return ((((cur_ts - prev_ts) * 1.0) / delay) * 1000) / 1000000.0;
+}
+
+static inline uint64_t
+capri_pb_axi_read_cnt (void)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    pbc_csr.hbm.cnt_hbm_axi_rpl.read();
+    pbc_csr.hbm.cnt_hbm_axi_pyld.read();
+    pbc_csr.hbm.cnt_hbm_axi_ctrl.read();
+
+    return pbc_csr.hbm.cnt_hbm_axi_rpl.all().convert_to<uint64_t>()
+           + pbc_csr.hbm.cnt_hbm_axi_pyld.all().convert_to<uint64_t>()
+           + pbc_csr.hbm.cnt_hbm_axi_ctrl.all().convert_to<uint64_t>();
+}
+
 hal_ret_t
 capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
               asic_hbm_bw_t *hbm_bw_arr)
@@ -510,6 +551,10 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
     uint64_t cycle_per_nsec = 0;
     asic_hbm_bw_t *hbm_bw = NULL;
 
+    if (capri_freq == 0) {
+        capri_freq = capri_freq_get();
+    }
+
     prev_ts = capri_hbm_timestamp_get();
 
     for (uint32_t i = 0; i < samples; ++i) {
@@ -525,10 +570,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_tpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_tpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        hbm_bw->max.read  = max_rd;
-        hbm_bw->max.write = max_wr;
-        hbm_bw->avg.read  = avg_rd;
-        hbm_bw->avg.write = avg_wr;
+        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw);
         HAL_TRACE_DEBUG("CLK_DIFF: {}, TXD BW. MAX_RD: {}, MAX_WR: {}"
                         ", AVG_RD: {}, AVG_WR: {}",
                         clk_diff, max_rd, max_wr, avg_rd, avg_wr);
@@ -538,10 +580,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_rpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_rpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        hbm_bw->max.read  = max_rd;
-        hbm_bw->max.write = max_wr;
-        hbm_bw->avg.read  = avg_rd;
-        hbm_bw->avg.write = avg_wr;
+        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw);
         HAL_TRACE_DEBUG("CLK_DIFF: {}, RXD BW. MAX_RD: {}, MAX_WR: {}"
                         ", AVG_RD: {}, AVG_WR: {}",
                         clk_diff, max_rd, max_wr, avg_rd, avg_wr);
@@ -551,10 +590,7 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_ms_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_ms_bw_mon_wr_get(&max_wr, &avg_wr);
-        hbm_bw->max.read  = max_rd;
-        hbm_bw->max.write = max_wr;
-        hbm_bw->avg.read  = avg_rd;
-        hbm_bw->avg.write = avg_wr;
+        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw);
         HAL_TRACE_DEBUG("CLK_DIFF: {}, MS BW. MAX_RD: {}, MAX_WR: {}"
                         ", AVG_RD: {}, AVG_WR: {}",
                         clk_diff, max_rd, max_wr, avg_rd, avg_wr);
@@ -564,26 +600,23 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_pxb_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_pxb_bw_mon_wr_get(&max_wr, &avg_wr);
-        hbm_bw->max.read  = max_rd;
-        hbm_bw->max.write = max_wr;
-        hbm_bw->avg.read  = avg_rd;
-        hbm_bw->avg.write = avg_wr;
+        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw);
         HAL_TRACE_DEBUG("CLK_DIFF: {}, PCIE BW. MAX_RD: {}, MAX_WR: {}"
                         ", AVG_RD: {}, AVG_WR: {}",
                         clk_diff, max_rd, max_wr, avg_rd, avg_wr);
 
-        cycle_per_nsec = ((cur_ts - prev_ts) * 1000) / 830;
+        cycle_per_nsec = ((cur_ts - prev_ts) * 1000) / capri_freq;
 
         hbm_bw = &hbm_bw_arr[index++];
         hbm_bw->type = hal::pd::ASIC_BLOCK_PB;
         hbm_bw->clk_diff = clk_diff;
-        rd_cnt = cap_nx_read_pb_axi_cnt(1);
+        rd_cnt = capri_pb_axi_read_cnt();
         wr_cnt = cap_nx_read_pb_axi_cnt(0);
 
         // avoid arithmetic exceptions
         if (cycle_per_nsec != 0) {
-            avg_rd = ((rd_cnt - prev_rd_cnt) * num_bits * 1000) / cycle_per_nsec;
-            avg_wr = ((wr_cnt - prev_wr_cnt) * num_bits * 1000) / cycle_per_nsec;
+            avg_rd = ((rd_cnt - prev_rd_cnt) * num_bits) / cycle_per_nsec;
+            avg_wr = ((wr_cnt - prev_wr_cnt) * num_bits) / cycle_per_nsec;
         }
 
         hbm_bw->avg.read  = avg_rd;
@@ -594,6 +627,81 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         prev_rd_cnt = rd_cnt;
         prev_wr_cnt = wr_cnt;
         prev_ts     = cur_ts;
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_nx_set_llc_counters (uint32_t *data)
+{
+    for (int i = 0; i < 16; ++i) {
+        switch (i) {
+            case 0:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC0_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 1:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC1_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 2:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC2_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 3:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC3_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 4:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC4_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 5:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC5_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 6:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC6_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 7:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC7_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 8:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC8_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 9:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC9_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 10:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC10_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 11:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC11_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 12:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC12_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 13:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC13_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 14:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC14_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+            case 15:
+                cap_nx_block_write(0,
+                        RBM_AGENT_(CCC15_LLC_EVENT_COUNTER), 1, data, true, 1);
+                break;
+        }
     }
 
     return HAL_RET_OK;
@@ -691,23 +799,45 @@ capri_nx_setup_llc_counters (uint32_t mask)
     */
 
     uint32_t *data = &mask;
+    uint32_t reset = 0x0;
 
-    cap_nx_block_write(0, RBM_AGENT_(CCC0_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC1_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC10_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC11_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC12_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC13_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC14_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC15_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC2_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC3_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC4_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC5_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC6_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC7_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC8_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
-    cap_nx_block_write(0, RBM_AGENT_(CCC9_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    if (mask == 0xffffffff) {
+        capri_nx_set_llc_counters(&reset);
+        return HAL_RET_OK;
+    }
+
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC0_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC1_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC10_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC11_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC12_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC13_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC14_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC15_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC2_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC3_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC4_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC5_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC6_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC7_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC8_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
+    cap_nx_block_write(0,
+                RBM_AGENT_(CCC9_LLC_EVENT_COUNTER_MASK), 1, data, true, 1);
 
     return HAL_RET_OK;
 }

@@ -812,6 +812,19 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
 }
 
 hal_ret_t
+llc_clear (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_llc_get_args_t llc_args;
+
+    memset (&llc_args, 0, sizeof(pd::pd_llc_get_args_t));
+    llc_args.mask = 0xffffffff;
+
+    ret = pd::asic_pd_llc_setup(&llc_args);
+    return ret;
+}
+
+hal_ret_t
 llc_setup(const LlcSetupRequest *req, LlcSetupResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -849,16 +862,6 @@ llc_get(LlcGetResponse *rsp)
     for (int i = 0; i < 16; i ++) {
         rsp->add_count(llc_args.data[i]);
     }
-    rsp->set_api_status(types::API_STATUS_OK);
-
-    return ret;
-}
-
-hal_ret_t
-hbm_cache_setup(HbmCacheRequest *req, HbmCacheResponse *rsp)
-{
-    hal_ret_t ret = HAL_RET_OK;
-
     rsp->set_api_status(types::API_STATUS_OK);
 
     return ret;
