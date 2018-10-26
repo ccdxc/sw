@@ -20,7 +20,6 @@ using nicmgr::nicmgr_upg_hndlr;
 using nicmgr::sysmgr_client;
 using grpc::Status;
 using delphi::error;
-using delphi::objects::PortSpecPtr;
 using port::PortOperStatus;
 using delphi::objects::PortStatusPtr;
 
@@ -41,20 +40,20 @@ public:
 };
 
 // port_svc is the reactor for the Port object
-class port_svc : public delphi::objects::PortSpecReactor {
+class port_svc : public delphi::objects::PortStatusReactor {
 public:
     port_svc(delphi::SdkPtr sk) {
         this->sdk_ = sk;
     }
 
-    // OnPortCreate gets called when PortSpec object is created
-    virtual error OnPortSpecCreate(PortSpecPtr port);
+    // OnPortCreate gets called when PortStatus object is created
+    virtual error OnPortStatusCreate(PortStatusPtr port);
 
-    // OnPortUpdate gets called when PortSpec object is updated
-    virtual error OnPortSpecUpdate(PortSpecPtr port);
+    // OnPortUpdate gets called when PortStatus object is updated
+    virtual error OnPortStatusUpdate(PortStatusPtr port);
 
-    // OnPortDelete gets called when PortSpec object is deleted
-    virtual error OnPortSpecDelete(PortSpecPtr port);
+    // OnPortDelete gets called when PortStatus object is deleted
+    virtual error OnPortStatusDelete(PortStatusPtr port);
 
     // update_port_status updates port status in delphi
     error update_port_status(PortStatusPtr port);

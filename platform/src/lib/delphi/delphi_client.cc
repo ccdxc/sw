@@ -16,9 +16,7 @@ using grpc::Status;
 using delphi::error;
 using port::PortResponse;
 using port::PortOperStatus;
-using delphi::objects::PortSpec;
 using delphi::objects::PortStatus;
-using delphi::objects::PortSpecPtr;
 using delphi::objects::PortStatusPtr;
 using sdk::types::port_oper_status_t;
 
@@ -37,7 +35,7 @@ NicMgrService::NicMgrService(delphi::SdkPtr sk, string name) {
 }
 
 void NicMgrService::OnMountComplete() {
-    LogInfo("On mount complete got called");
+    printf("On mount complete got called");
     this->sysmgr_->init_done();
     // Delphi Object Iterator here
     //
@@ -56,33 +54,35 @@ port_svc_ptr_t linkmgr_get_port_reactor () {
 
 // linkmgr_init_port_reactors creates a port reactor
 Status linkmgr_init_port_reactors (delphi::SdkPtr sdk) {
-    // create the PortSpec reactor
+    // create the PortStatus reactor
     g_port_rctr = std::make_shared<port_svc>(sdk);
 
     // mount objects
-    PortSpec::Mount(sdk, delphi::ReadMode);
+    PortStatus::Mount(sdk, delphi::ReadMode);
 
-    // Register PortSpec reactor
-    PortSpec::Watch(sdk, g_port_rctr);
-
-    // mount status objects
-    PortStatus::Mount(sdk, delphi::ReadWriteMode);
+    // Register PortStatus reactor
+    PortStatus::Watch(sdk, g_port_rctr);
 
     return Status::OK;
 }
 
-// OnPortSpecCreate gets called when PortSpec object is created
-error port_svc::OnPortSpecCreate(PortSpecPtr portSpec) {
+// OnPortStatusCreate gets called when PortStatus object is created
+error port_svc::OnPortStatusCreate(PortStatusPtr portStatus) {
+    printf("Received port status create\n");
+    update_port_status(portStatus);
     return error::OK();
 }
 
-// OnPortSpecUpdate gets called when PortSpec object is updated
-error port_svc::OnPortSpecUpdate(PortSpecPtr portSpec) {
+// OnPortStatusUpdate gets called when PortStatus object is updated
+error port_svc::OnPortStatusUpdate(PortStatusPtr portStatus) {
+    printf("Received port status update\n");
+    update_port_status(portStatus);
     return error::OK();
 }
 
-// OnPortSpecDelete gets called when PortSpec object is deleted
-error port_svc::OnPortSpecDelete(PortSpecPtr portSpec) {
+// OnPortStatusDelete gets called when PortStatus object is deleted
+error port_svc::OnPortStatusDelete(PortStatusPtr portStatus) {
+    printf("Received port status delete\n");
     return error::OK();
 }
 
