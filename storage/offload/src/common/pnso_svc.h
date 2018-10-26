@@ -10,6 +10,11 @@
 extern "C" {
 #endif
 
+/* service utility routines */
+bool svc_type_is_valid(enum pnso_service_type svc_type);
+
+const char *svc_get_type_str(enum pnso_service_type svc_type);
+
 /* service descriptor validation routines */
 bool svc_is_crypto_desc_valid(const struct pnso_crypto_desc *desc);
 

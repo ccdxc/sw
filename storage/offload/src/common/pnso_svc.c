@@ -9,6 +9,33 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
+const char __attribute__ ((unused)) *pnso_service_types[] = {
+	[PNSO_SVC_TYPE_NONE] = "None (invalid)",
+	[PNSO_SVC_TYPE_ENCRYPT] = "ENCRYPT",
+	[PNSO_SVC_TYPE_DECRYPT] = "DECRYPT",
+	[PNSO_SVC_TYPE_COMPRESS] = "COMPRESS",
+	[PNSO_SVC_TYPE_DECOMPRESS] = "DECOMPRESS",
+	[PNSO_SVC_TYPE_HASH] = "HASH",
+	[PNSO_SVC_TYPE_CHKSUM] = "CHECKSUM",
+	[PNSO_SVC_TYPE_DECOMPACT] = "DECOMPACT",
+	[PNSO_SVC_TYPE_MAX] = "Max (invalid)"
+};
+
+bool
+svc_type_is_valid(enum pnso_service_type svc_type)
+{
+	return (svc_type != PNSO_SVC_TYPE_NONE) &&
+		(svc_type < PNSO_SVC_TYPE_MAX);
+}
+
+const char *
+svc_get_type_str(enum pnso_service_type svc_type)
+{
+	return svc_type_is_valid(svc_type) ?
+		pnso_service_types[svc_type] : "unknown";
+}
+
+/* -------------------------------------------------------------------------- */
 bool
 svc_is_crypto_desc_valid(const struct pnso_crypto_desc *desc)
 {
