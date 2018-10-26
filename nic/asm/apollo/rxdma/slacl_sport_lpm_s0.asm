@@ -243,5 +243,5 @@ lessthan0:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 slacl_sport_lpm_s0_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

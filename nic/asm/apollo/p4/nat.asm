@@ -33,5 +33,5 @@ dnat:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nat_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

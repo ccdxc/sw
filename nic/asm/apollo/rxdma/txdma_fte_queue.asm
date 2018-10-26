@@ -55,8 +55,7 @@ q_pkt_to_fte:
     nop
 
 txdma_q_full:
-    // drop - do nothing
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop
 
 /*****************************************************************************/
@@ -65,5 +64,5 @@ txdma_q_full:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 txdma_fte_queue_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

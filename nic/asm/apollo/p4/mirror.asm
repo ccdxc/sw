@@ -1,4 +1,7 @@
 #include "apollo.h"
+#include "EGRESS_p.h"
+
+struct phv_ p;
 
 %%
 
@@ -17,5 +20,5 @@ erspan:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 mirror_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

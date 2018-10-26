@@ -70,5 +70,5 @@ gre_tep_tx:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 tep_tx_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

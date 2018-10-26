@@ -22,3 +22,12 @@ struct route_lpm_s2_d  d;
 route_lpm_s2_ext:
     phvwr.e         p.txdma_to_p4e_header_nexthop_index, r7
     nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+route_lpm_s2_error:
+    phvwr.e         p.capri_intr_drop, 1
+    nop

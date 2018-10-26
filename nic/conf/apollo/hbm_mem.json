@@ -21,8 +21,8 @@
         },
         {
             "name": "rxdma_to_txdma_buf",
-            "size_kb": 10240,
-            "_comment": "10MB (1K buffers of size 10K)"
+            "size_kb": 163840,
+            "_comment": "160MB (16K buffers of size 10K)"
         },
         {
             "name": "local_ip_mapping",
@@ -83,6 +83,10 @@
         {
             "name": "qos-hbm-fifo",
             "size_kb": 262144
+        },
+        {
+            "name": "tx-scheduler",
+            "size_kb": 2048
         },
         {
             "_comment": "hash depth = 1024",

@@ -1,19 +1,10 @@
-#include "apollo_rxdma.h"
-#include "INGRESS_p.h"
-
-struct phv_ p;
-
-%%
-
-read_update_qid:
-    nop.e
-    nop
+#include "remote_vnic_mapping_rx.asm"
 
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-udp_flow_qid_update_virtual_error:
-    phvwr.e         p.capri_intr_drop, 1
+remote_vnic_mapping_rx_ohash_error:
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

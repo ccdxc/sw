@@ -39,5 +39,5 @@ local_vnic_info_rx_miss:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 local_vnic_by_slot_rx_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

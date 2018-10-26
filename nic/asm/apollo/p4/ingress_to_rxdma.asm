@@ -3,7 +3,7 @@
 #include "INGRESS_p.h"
 
 struct ingress_to_rxdma_k k;
-struct phv_     p;
+struct phv_ p;
 
 %%
 
@@ -45,5 +45,5 @@ recirc_packet:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 ingress_to_rxdma_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

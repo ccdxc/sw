@@ -38,5 +38,5 @@ local_vnic_info_tx_src_mac_error:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 local_vnic_by_vlan_tx_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

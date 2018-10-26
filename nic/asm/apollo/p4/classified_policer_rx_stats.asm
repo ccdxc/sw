@@ -1,4 +1,7 @@
 #include "apollo.h"
+#include "EGRESS_p.h"
+
+struct phv_ p;
 
 %%
 
@@ -12,5 +15,5 @@ classified_policer_stats:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 classified_policer_rx_stats_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

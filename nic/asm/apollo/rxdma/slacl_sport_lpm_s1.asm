@@ -72,5 +72,5 @@ lessthan1:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 slacl_sport_lpm_s1_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

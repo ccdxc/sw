@@ -1,4 +1,7 @@
 #include "apollo_rxdma.h"
+#include "INGRESS_p.h"
+
+struct phv_ p;
 
 %%
 
@@ -12,5 +15,5 @@ udp_start_q:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 udp_q_drain_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

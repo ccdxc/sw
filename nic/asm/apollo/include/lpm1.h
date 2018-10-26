@@ -2,7 +2,7 @@
 
 %%
 
-route_lpm_s1:
+prog_name:
     slt      c1,         key,          keys(7)     //if key < keys[7]
     bcf      [c1],       lessthan7                 //then goto lessthan7
     slt      c1,         key,          keys(11)    //if key < keys[11]

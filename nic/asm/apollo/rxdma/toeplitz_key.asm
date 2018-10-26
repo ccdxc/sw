@@ -23,3 +23,12 @@ toeplitz_key_init:
                         k.{p4_to_rxdma_header_flow_proto, \
                         p4_to_rxdma_header_flow_dport, \
                         p4_to_rxdma_header_flow_sport}
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+toeplitz_key_error:
+    phvwr.e         p.capri_intr_drop, 1
+    nop

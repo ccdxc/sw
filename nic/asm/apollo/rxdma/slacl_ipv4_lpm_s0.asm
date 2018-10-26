@@ -28,5 +28,5 @@ struct slacl_ipv4_lpm_s0_d  d;
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 slacl_ipv4_lpm_s0_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

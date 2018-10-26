@@ -1,4 +1,7 @@
 #include "apollo.h"
+#include "EGRESS_p.h"
+
+struct phv_ p;
 
 %%
 
@@ -12,5 +15,5 @@ execute_agg_policer:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 agg_policer_rx_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

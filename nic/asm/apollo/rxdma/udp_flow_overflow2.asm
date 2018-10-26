@@ -6,5 +6,5 @@
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 udp_flow_overflow2_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

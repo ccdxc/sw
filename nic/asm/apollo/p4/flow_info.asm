@@ -3,9 +3,9 @@
 #include "apollo.h"
 #include "nic/include/capri_common.h"
 
-struct flow_info_k   k;
-struct flow_info_d   d;
-struct phv_     p;
+struct flow_info_k  k;
+struct flow_info_d  d;
+struct phv_         p;
 
 %%
 
@@ -37,5 +37,5 @@ flow_info_drop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_info_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

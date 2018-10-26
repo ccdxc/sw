@@ -6,7 +6,7 @@ struct phv_                         p;
 struct slacl_proto_dport_lpm_s2_k   k;
 struct slacl_proto_dport_lpm_s2_d   d;
 
-#define prog_name       slacl_proto_dport_ipm_s2
+#define prog_name       slacl_proto_dport_lpm_s2
 #define prog_name_ext   slacl_proto_dport_lpm_s2_ext
 #define key             k.slacl_metadata_proto_dport
 #define keys(a)         d.slacl_proto_dport_lpm_s2_d.key ## a
@@ -34,5 +34,5 @@ slacl_proto_dport_lpm_s2_ext:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 slacl_proto_dport_lpm_s2_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

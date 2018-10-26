@@ -43,5 +43,5 @@ tunneled_nonip_packet:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 key_tunneled_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

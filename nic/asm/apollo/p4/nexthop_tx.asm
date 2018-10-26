@@ -2,8 +2,8 @@
 #include "EGRESS_p.h"
 #include "apollo.h"
 
-struct nexthop_tx_k     k;
-struct nexthop_tx_d     d;
+struct nexthop_tx_k k;
+struct nexthop_tx_d d;
 struct phv_         p;
 
 %%
@@ -22,5 +22,5 @@ nexthop_info:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nexthop_tx_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

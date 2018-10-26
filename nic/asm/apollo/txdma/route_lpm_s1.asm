@@ -21,3 +21,12 @@ struct route_lpm_s1_d  d;
 #define LPM_S2_ENTRY_PAD    20
 
 #include "../include/lpm1.h"
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+route_lpm_s1_error:
+    phvwr.e         p.capri_intr_drop, 1
+    nop

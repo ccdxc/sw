@@ -27,5 +27,5 @@ pkt_dma_setup:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 pkt_dma_setup_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

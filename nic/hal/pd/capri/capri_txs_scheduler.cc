@@ -60,14 +60,10 @@ capri_txs_timer_init_hsh_depth(uint32_t key_lines)
 
 // pre init and call timer hbm and sram init
 static void
-capri_txs_timer_init_pre (uint32_t key_lines)
+capri_txs_timer_init_pre (uint32_t key_lines, hal::hal_cfg_t *hal_cfg)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
-    hal::hal_cfg_t *hal_cfg =
-                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
-
-    HAL_ASSERT(hal_cfg);
 
     // Set timer_hsh_depth to actual value + 1
     // Per Cino we need to add 1 for an ASIC bug workaround
@@ -76,6 +72,7 @@ capri_txs_timer_init_pre (uint32_t key_lines)
     // timer hbm and sram init
 
     // sram_hw_init is not implemented in the C++ model, so skip it there
+    HAL_ASSERT(hal_cfg);
     txs_csr->cfw_timer_glb.read();
     if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
         HAL_TRACE_DEBUG("timer sram init");
@@ -145,7 +142,7 @@ capri_txs_timer_init_post (uint32_t key_lines)
 
 
 hal_ret_t
-capri_txs_scheduler_init (uint32_t admin_cos)
+capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
 {
 
     cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -180,10 +177,6 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     wa_sched_hint_csr.enable_src_mask(0x0);
     wa_sched_hint_csr.write();
 
-    hal::hal_cfg_t *hal_cfg =
-                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
-    HAL_ASSERT(hal_cfg);
-
     txs_sched_hbm_base_addr = (uint64_t) get_start_offset(CAPRI_HBM_REG_TXS_SCHEDULER);
 
     // Update HBM base addr.
@@ -193,6 +186,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     // Init sram.
     txs_csr.cfw_scheduler_glb.read();
     // skip init on RTL/Model.
+    HAL_ASSERT(hal_cfg);
     if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM &&
             hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_RTL) {
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
@@ -205,7 +199,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     txs_csr.cfw_scheduler_glb.write();
 
     // init timer
-    capri_txs_timer_init_pre(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
+    capri_txs_timer_init_pre(CAPRI_TIMER_NUM_KEY_CACHE_LINES, hal_cfg);
 
 #if 0
     // Find admin_cos and program it in dtdmhi-calendar for higher priority.

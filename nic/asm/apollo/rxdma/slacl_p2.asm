@@ -19,5 +19,5 @@ slacl_p2:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 slacl_p2_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

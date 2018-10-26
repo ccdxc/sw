@@ -81,5 +81,5 @@ remote_vnic_mapping_tx_hash_hit:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 remote_vnic_mapping_tx_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

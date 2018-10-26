@@ -1086,7 +1086,7 @@ capri_block_init_done(capri_cfg_t *cfg)
 //------------------------------------------------------------------------------
 // Init all the capri blocks owned by HAL
 //------------------------------------------------------------------------------
-static hal_ret_t
+hal_ret_t
 capri_block_init(capri_cfg_t *cfg)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -1169,7 +1169,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        ret = capri_txs_scheduler_init(cfg->admin_cos);
+        ret = capri_txs_scheduler_init(cfg->admin_cos, hal_cfg);
     }
 
     // Call PXB/PCIE init only in MODEL and RTL simulation

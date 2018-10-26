@@ -15,6 +15,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_qstate.hpp"
+#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
@@ -740,12 +741,31 @@ TEST_F(apollo_test, test1) {
     ASSERT_EQ(ret, HAL_RET_OK);
 
     std::ifstream json_cfg(hal_conf_file);
-    ptree pt;
-    read_json(json_cfg, pt);
-    capri_list_program_addr(pt.get<std::string>("asic.loader_info_file").c_str());
+    ptree hal_conf;
+    read_json(json_cfg, hal_conf);
+    capri_list_program_addr(hal_conf.get<std::string>("asic.loader_info_file").c_str());
+    hal::hal_platform_mode_t platform_mode = hal::HAL_PLATFORM_MODE_SIM;
+    try {
+        std::string mode = hal_conf.get<std::string>("mode");
+        if (mode == "sim") {
+            platform_mode = hal::HAL_PLATFORM_MODE_SIM;
+        } else if (mode == "hw") {
+            platform_mode = hal::HAL_PLATFORM_MODE_HW;
+        } else if (mode == "rtl") {
+            platform_mode = hal::HAL_PLATFORM_MODE_RTL;
+        } else if (mode == "haps") {
+            platform_mode = hal::HAL_PLATFORM_MODE_HAPS;
+        } else if (mode == "mock") {
+            platform_mode = hal::HAL_PLATFORM_MODE_MOCK;
+        }
+    } catch (std::exception const& e) {
+    }
+
     hal::hal_cfg_t hal_cfg = { 0 };
-    hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_SIM;
+    hal_cfg.platform_mode = platform_mode;
     ret = capri_table_rw_init(&hal_cfg);
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = capri_block_init(&cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
     ret = capri_hbm_cache_init(&cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
@@ -779,6 +799,9 @@ TEST_F(apollo_test, test1) {
         }
         ret = capri_default_config_init(&cfg);
     }
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    ret = capri_txs_scheduler_init(1, &hal_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
 
     ret = capri_tm_init(catalog);

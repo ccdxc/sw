@@ -20,5 +20,5 @@ vnic_rx_stats:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 vnic_rx_stats_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

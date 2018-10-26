@@ -21,5 +21,5 @@ slacl_ip_sport_p1:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 slacl_ip_sport_p1_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

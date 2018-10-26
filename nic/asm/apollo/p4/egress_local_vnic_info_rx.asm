@@ -4,7 +4,7 @@
 
 struct egress_local_vnic_info_rx_k k;
 struct egress_local_vnic_info_rx_d d;
-struct phv_                     p;
+struct phv_ p;
 
 %%
 
@@ -45,5 +45,5 @@ egress_local_vnic_native:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 egress_local_vnic_info_rx_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

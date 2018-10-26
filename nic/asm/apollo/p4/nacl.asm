@@ -2,6 +2,8 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 
+struct phv_ p;
+
 %%
 
 nacl_permit:
@@ -17,5 +19,5 @@ nacl_drop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nacl_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

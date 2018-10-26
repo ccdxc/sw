@@ -23,5 +23,5 @@ read_control_info:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 read_control_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop

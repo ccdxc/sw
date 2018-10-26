@@ -23,6 +23,7 @@ typedef struct capri_cfg_s {
 } capri_cfg_t;
 
 hal_ret_t capri_init(capri_cfg_t *hal_cfg);
+hal_ret_t capri_block_init(capri_cfg_t *cfg);
 
 #endif    // __CAPRI_HPP__
 

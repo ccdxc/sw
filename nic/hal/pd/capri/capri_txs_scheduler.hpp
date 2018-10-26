@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "nic/include/base.hpp"
+#include "nic/include/hal_cfg.hpp"
 
 #define CAPRI_TXS_MAX_TABLE_ENTRIES 2048
 // 2K * 8K scheduler
@@ -63,7 +64,7 @@ typedef struct capri_txs_policer_lif_params_s {
  * @return hal_ret_t: Status of the operation
  */
 
-hal_ret_t capri_txs_scheduler_init(uint32_t admin_cos);
+hal_ret_t capri_txs_scheduler_init(uint32_t admin_cos, hal::hal_cfg_t *hal_cfg);
 
 void capri_txs_timer_init_hsh_depth(uint32_t key_lines);
 

@@ -63,5 +63,5 @@ label_flow_hash_hit:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_error:
-    nop.e
+    phvwr.e         p.capri_intrinsic_drop, 1
     nop

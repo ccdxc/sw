@@ -28,5 +28,5 @@ struct slacl_proto_dport_lpm_s1_d   d;
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 slacl_proto_dport_lpm_s1_error:
-    nop.e
+    phvwr.e         p.capri_intr_drop, 1
     nop
