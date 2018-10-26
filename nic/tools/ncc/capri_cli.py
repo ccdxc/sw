@@ -24,7 +24,55 @@ def make_templates_outfiles(template_dir, cli_outputdir_map):
                            os.path.join(output_dir, genf)))
     return pdoutfiles
 
+def make_cli_common_swig_interface(cli_out_dir):
+    content_str = \
+"""
+/* This file is auto-generated. Changes will be overwritten! */
+%module cli
+%{
+    extern int cli_init(char*);
+%}
+int cli_init(char *grpc_server_port);
+"""
+    out_file = cli_out_dir + 'cli.i'
+    with open(out_file, "w") as of:
+        of.write(content_str)
 
+def make_cli_common_swig_main(cli_out_dir):
+    content_str = \
+"""
+/* This file is auto-generated. CHanges will be overwritten! */
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
+#include "gen/proto/debug.pb.h"
+#include "gen/proto/debug.grpc.pb.h"
+#include <grpc++/grpc++.h>
+
+using grpc::Channel;
+using ::debug::Debug;
+
+std::shared_ptr<Channel>     channel;
+std::unique_ptr<Debug::Stub> stub;
+
+int
+cli_init(char *grpc_server_port)
+{
+    grpc_init();
+
+    channel =
+	grpc::CreateChannel(grpc_server_port, grpc::InsecureChannelCredentials());
+
+    stub    = ::debug::Debug::NewStub(channel);
+
+    return 0;
+}
+"""
+    out_file = cli_out_dir + "cli_gen.cc"
+    with open(out_file, "w") as of:
+        of.write(content_str)
+      
 def create_dirs(dir_name):
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
@@ -36,13 +84,23 @@ cur_path      = os.path.abspath(__file__)
 cur_path      = os.path.split(cur_path)[0]
 
 # nic gen dir
-gen_dir       = os.path.join(cur_path, '../../gen/')
+#gen_dir       = os.path.join(cur_path, '../../gen/')
+
+gen_dir = sys.argv[1]
 
 # cli gen dir
-cli_outputdir = os.path.join(gen_dir + 'common/cli/')
+cli_outputdir = os.path.join(gen_dir + 'clicommon/')
 
 # create dir if not exist
 create_dirs(cli_outputdir)
+
+# create the cli.i file build/$AARCH/iris/gen/p4genclicommon/
+make_cli_common_swig_interface(cli_outputdir)
+
+cli_srcdir = os.path.join(cli_outputdir + 'src/')
+create_dirs(cli_srcdir)
+# creates cli.cc file in build/x86_64/iris/gen/p4genclicommon/src/ directory
+make_cli_common_swig_main(cli_srcdir)
 
 # template dir
 template_dir = os.path.join(cur_path, 'pi_templates/')

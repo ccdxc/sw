@@ -109,6 +109,7 @@ swig-cli-clean:
 swig-cli:
 	# Disable cli  for coverage
     ifeq ($(c),0)
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/p4pd:p4pd_utils
 		PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C $(TOPDIR)/debug_cli
 		PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C $(TOPDIR)/debug_cli PGM=common_txdma_actions
 		PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C $(TOPDIR)/debug_cli PGM=common_rxdma_actions
@@ -184,6 +185,7 @@ all: stages
 	$(MAKE) tests
 	$(MAKE) package-tests
 	$(MAKE) package-sim
+	$(MAKE) package-debug
 
 clean: platform-clean
 	bazel clean --expunge

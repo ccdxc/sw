@@ -16,7 +16,7 @@
 //::    api_prefix = 'p4pd'
 //::	start_table_base = 1
 //:: #endif
-//::
+//:: cli_name_import = "lib" +  pddict['cli-name'] + "_p4pdcli"
 #!/usr/bin/python
 # This file is auto-generated. Changes will be overwritten!
 #
@@ -26,8 +26,8 @@
 import os
 import json
 import glob
-from   ${pddict['cli-name']} import *
-import ${pddict['cli-name']}
+from   ${cli_name_import} import *
+import ${cli_name_import} as ${pddict['cli-name']}
 //::    tabledict = {}
 //::    tableid = start_table_base
 //::    for table in pddict['tables']:
@@ -1031,7 +1031,7 @@ def populate_table(ctx):
 
 def table_dump():
     tbl_dir = os.environ['HAL_CONFIG_PATH']
-    with open(tbl_dir + "/${pddict['cli-name']}/capri_p4_table_map.json") as data_file:
+    with open(tbl_dir + "/${pddict['pipeline']}/capri_p4_table_map.json") as data_file:
         data = json.load(data_file)
         print("=================================================================================")
         print( "{:<30} {:<6} {:<10} {:<10} {:<5} {:<10} {:<7}".format("Table","TblId", "Type", "In/Egress", "Stage", "StageTblID", "Size"))

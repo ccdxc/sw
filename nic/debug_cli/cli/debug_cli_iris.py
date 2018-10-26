@@ -10,7 +10,7 @@ import os
 import click
 from click_repl import register_repl
 import cli
-from iris_frontend import *
+from p4_frontend import *
 from common_txdma_actions_frontend import *
 from common_rxdma_actions_frontend import *
 

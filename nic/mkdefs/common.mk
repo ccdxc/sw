@@ -140,6 +140,18 @@ export NIC_gft_P4PD_SOLIBS := p4pd_gft p4pd_common_p4plus_txdma \
 export NIC_apollo_P4PD_SOLIBS := p4pd_apollo p4pd_apollo_rxdma p4pd_apollo_txdma
 
 # ==========================================================================
+#                           P4PD CLI Libs
+# ==========================================================================
+export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
+                        ${NIC_DIR}/hal/third_party/grpc/include   \
+                        /usr/include/python3.6m \
+                        /usr/include/python3.4m
+export CLI_P4PD_FLAGS := -Wl,--allow-multiple-definition -Wno-sign-compare
+export CLI_P4PD_LDLIBS := :libprotobuf.so.14 grpc++_reflection grpc++ grpc_unsecure grpc++_unsecure
+export CLI_P4PD_SOLIBS := halproto p4pd_utils
+
+
+# ==========================================================================
 #                           Third-party Libs
 # ==========================================================================
 export NIC_THIRDPARTY_LKL_LDLIBS := lkl

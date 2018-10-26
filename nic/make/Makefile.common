@@ -96,6 +96,10 @@ package-clean:
     endif
 	@rm -f  $(TOPDIR)/nic.tgz
 	@rm -f  $(TOPDIR)/nic.tar
+	@rm -f  $(TOPDIR)/debug.tgz
+	@rm -f  $(TOPDIR)/debug.tar
+	@rm -f  $(TOPDIR)/host.tgz
+	@rm -f  $(TOPDIR)/host.tar
 
 package: package-clean
     ifeq ($(ARCH),aarch64)
@@ -122,6 +126,13 @@ package-clean-host:
 
 package-host: package-clean-host
 	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target host --no-strip
+
+package-clean-debug:
+	@rm -f  $(TOPDIR)/debug.tgz
+	@rm -f  $(TOPDIR)/debug.tar
+
+package-debug: package-clean-debug
+	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target debug --no-strip
 
 release:
     ifneq ($(ARCH),aarch64)

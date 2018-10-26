@@ -8,6 +8,7 @@ export BLD_BIN_DIR         := ${BLD_ARCH_DIR}/bin
 export BLD_GEN_DIR         := ${BLD_ARCH_DIR}/gen
 export BLD_SVCGEN_DIR      := ${BLD_GEN_DIR}/hal/svc
 export BLD_P4GEN_DIR       := ${BLD_GEN_DIR}/p4gen
+export BLD_P4CLICMN_DIR    := ${BLD_GEN_DIR}/p4genclicommon
 export BLD_PROTOGEN_DIR    := ${BLD_GEN_DIR}/proto
 export BLD_PGMBIN_DIR      := ${BLD_ARCH_DIR}/pgm_bin
 export BLD_ASMBIN_DIR      := ${BLD_BIN_DIR}/asm
@@ -26,6 +27,7 @@ CMD_PROTOC              := LC_ALL=C LD_LIBRARY_PATH=${CMD_PROTOC_LDLIB_PATH} ${T
 CMD_PROTOC_C            := ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/protoc-c
 CMD_MOCKGEN             := mockgen
 CMD_GOIMPORTS           := goimports
+CMD_SWIG                := swig
 
 CMD_PROTOC_CPP_OPTS     := --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
 CMD_PROTOC_PY_OPTS      := --plugin=protoc-gen-grpc=${GRPC_PY_PLUGIN}

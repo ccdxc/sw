@@ -12,12 +12,13 @@ then
     exit 1
 fi
 
-# dependent modules for python
-export PYTHONPATH=$PYTHONPATH:$NIC_DIR/gen/proto/hal:$NIC_DIR/gen/$1/cli:$NIC_DIR/gen/common_txdma_actions/cli:$NIC_DIR/gen/common_rxdma_actions/cli:$NIC_DIR/gen/common/cli:.
+# dependent modules for python x86_64/iris/gen/p4gen/p4/cli
+export PYTHONPATH=$PYTHONPATH:$NIC_DIR/gen/proto/hal:$NIC_DIR/build/x86_64/iris/gen/p4gen/p4/cli:$NIC_DIR/build/x86_64/iris/gen/p4gen/common_txdma_actions/cli:$NIC_DIR/build/x86_64/iris/gen/p4gen/common_rxdma_actions/cli:$NIC_DIR/build/x86_64/iris/gen/p4genclicommon:../build/x86_64/iris/lib:.
 
 # dependent shared libs
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/gen/x86_64/lib:.
-
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../build/x86_64/iris/lib:.
+echo $PYTHONPATH
+echo $LD_LIBRARY_PATH
 # start the debug CLI prompt
 if [ "$1" = "iris" ] || [ "$1" = "" ]; then
     python3 cli/debug_cli_iris.py repl

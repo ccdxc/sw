@@ -11,5 +11,5 @@ MODULE_NCC_OPTS = --p4-plus --pd-gen --asm-out --no-ohi \
 MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.p4') \
                   $(shell find ${MODULE_DIR} -name '*.h') \
                   $(shell find ${MODULE_DIR}/../include -name '*')
-MODULE_POSTGEN_MK = module_txdma_p4pd.mk
+MODULE_POSTGEN_MK = module_txdma_p4pd.mk module_txdma_swig.mk
 include ${MKDEFS}/post.mk

@@ -58,6 +58,7 @@ NAME_GOIMPORT  := "[GOIMPORT]"
 NAME_TENJIN    := "[ TENJIN ]"
 NAME_GOBUILD   := "[GO BUILD]"
 NAME_SUBMAKE   := "[SUB MAKE]"
+NAME_SWIGCLI   := "[SWIGCLI ]"
 
 COMMON_CMD_NCC              := ${TOPDIR}/nic/tools/ncc/capri-ncc.py
 COMMON_NCC_OPTS             :=

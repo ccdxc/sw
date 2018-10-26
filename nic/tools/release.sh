@@ -11,6 +11,7 @@ if [ ! -f nic.tgz ]; then
 fi
 
 ln -f nic.tgz sim/naples
+#ln -f debug.tgz sim/naples
 
 echo "Building and saving a docker image ..."
 cd sim/naples

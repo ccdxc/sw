@@ -58,6 +58,7 @@ EXPORT_TARGETIDS    :=
 GOBIN_TARGETIDS     :=
 GTEST_TARGETIDS     :=
 SUBMAKE_TARGETIDS   :=
+SWIGCLI_TARGETIDS   :=
 EXPORT_PREREQS      :=
 define INCLUDE_MODULEMK
     MODULE_SRCS                 :=
@@ -187,6 +188,9 @@ define INCLUDE_MODULEMK
     else ifeq "$$(suffix $${MODULE_TARGET})" ".submake"
         $${TGID}_RECIPE_TYPE        := SUBMAKE
         SUBMAKE_TARGETIDS           += $${TGID}
+    else ifeq "$$(suffix $${MODULE_TARGET})" ".swigcli"
+        $${TGID}_RECIPE_TYPE        := SWIGCLI
+        SWIGCLI_TARGETIDS           += $${TGID}
     else
         $${TGID}_RECIPE_TYPE        := BIN
         $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
@@ -237,6 +241,8 @@ define PROCESS_MODULEMK_OBJS
         ${1}_OBJS   =
     else ifeq "$${${1}_RECIPE_TYPE}" "SUBMAKE"
         ${1}_OBJS   =
+    else ifeq "$${${1}_RECIPE_TYPE}" "SWIGCLI"
+        ${1}_OBJS   =
     else
         ${1}_OBJS   += $$(addprefix $${${1}_BLD_OUT_DIR}/,$$(addsuffix .o,$$(basename $${${1}_SRCS})))
     endif
@@ -279,7 +285,7 @@ TARGETIDS := $(strip ${CXX_TARGETIDS} ${P4_TARGETIDS} \
                      ${SVCGEN_TARGETIDS} ${MOCKGEN_TARGETIDS} \
                      ${GOIMPORTS_TARGETIDS} ${EXPORT_TARGETIDS} \
                      ${GOBIN_TARGETIDS} ${GTEST_TARGETIDS} \
-					 ${SUBMAKE_TARGETIDS})
+                     ${SUBMAKE_TARGETIDS} ${SWIGCLI_TARGETIDS})
 $(foreach tgid, ${TARGETIDS}, \
     $(eval $(call PROCESS_MODULEMK_TARGETS,${tgid})))
 $(foreach tgid, ${TARGETIDS}, \

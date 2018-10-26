@@ -16,6 +16,7 @@ objcopy_bin  = '/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy'
 strip_bin    = '/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-strip'
 output_dir   = pwd + '/fake_root_target/aarch64'
 tar_name     = 'nic'
+rm_out_dir   = 0   #It is not clear if we need fake root targer. Till then we use this flag to determine if we need to remove "output_dir" after packaging
 
 
 ###########################
@@ -26,7 +27,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--target', dest='target',
                     default='haps',
-                    help='Package for sim, haps, arm-dev, zebu')
+                    help='Package for sim, haps, arm-dev, zebu, debug')
 
 # Do not strip the target shared libs and binaries
 parser.add_argument('--no-strip', dest='no_strip',
@@ -86,6 +87,16 @@ elif args.target == 'host':
     tar_name    = 'host'
     files = []
     files.append('nic/tools/package/pack_host.txt')
+elif args.target == 'debug':
+    print ("Packaging for debug")
+    arm_pkg     = 0
+    objcopy_bin = 'objcopy'
+    strip_bin   = 'strip'
+    output_dir  = pwd + '/pack_tmp'
+    rm_out_dir  = 1
+    tar_name    = 'debug'
+    files = []
+    files.append('nic/tools/package/pack_debug.txt')
 else:
     print ("Packaging for haps")
     files.append('nic/tools/package/pack_haps.txt')
@@ -192,3 +203,7 @@ if create_tgz == 1:
     print ("creating gzipped " + tar_name + " tar ball")
     cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ' + tar_output_dir + '/' + tar_name + '.tgz * && chmod 766 ' + tar_output_dir + '/' + tar_name + '.tgz'
     call(cmd, shell=True)
+    if rm_out_dir:
+        cmd= 'rm -rf ' + output_dir
+        print cmd
+        call(cmd, shell=True)

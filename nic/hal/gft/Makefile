@@ -18,6 +18,8 @@ BAZEL_BUILD := bazel $(BZL_OPT) build $(BZL_BLD_OPT)
 #################################################
 
 swig-cli-gft-clean:
+	
+	$(BAZEL_BUILD) //nic/hal/pd/p4pd:p4pd_utils
 	make -C $(TOPDIR)/debug_cli clean PGM=gft
 	make -C $(TOPDIR)/debug_cli clean PGM=common_txdma_actions
 	make -C $(TOPDIR)/debug_cli clean PGM=common_rxdma_actions

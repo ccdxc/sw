@@ -4319,17 +4319,20 @@ def capri_p4pd_create_swig_interface(be):
         prefix = 'p4pd'
         caps_p4prog = ''
         hdr_name = ''
+    dir_str = be.args.gen_dir.split("/gen")[1]
+    p4pd_cli_swig_dir = "gen/p4gen" + "/" + name + "/include/" + hdr_name
+    p4pd_cust_dir = "gen/p4gen" + "/" + name + "/cli/"
 
-    if be.args.pipeline != None:
-        p4pd_cli_swig_dir = "nic/build/%s/gen/datapath/%s/include/%s" %\
-                            (be.args.pipeline, name, hdr_name)
-    else:
-        p4pd_cli_swig_dir = "nic/gen/%s/include/%s" % (name, hdr_name)
-
+    #if be.args.pipeline != None:
+    #    p4pd_cli_swig_dir = "nic/build/%s/gen/datapath/%s/include/%s" %\
+    #                         (be.args.pipeline, name, hdr_name)
+    # else:
+    #    p4pd_cli_swig_dir = "nic/gen/%s/include/%s" % (name, hdr_name) 
+    module_name = 'lib' + name + '_p4pdcli'
     content_str = \
 """/* This file is auto-generated. Changes will be overwritten! */
 /* %s.i */""" %(name) + """
-%module """ + """%s""" % (name) + """
+%module """ + """%s""" % (module_name) + """
 %include "carrays.i"
 %include "cmalloc.i"
 %include "cpointer.i"
@@ -4338,11 +4341,8 @@ def capri_p4pd_create_swig_interface(be):
 %{
     #include <thread>
     #include""" + ' "' + p4pd_cli_swig_dir + """p4pd_cli_swig.h"
-    #include""" +' "' + name + """_custom.h"
+    #include""" +' "' + p4pd_cust_dir + name + """_custom.h"
     extern int capri_init(void);
-    char """     + prefix + """_tbl_names[P4"""               + caps_p4prog + """TBL_ID_TBLMAX][P4""" + caps_p4prog + """TBL_NAME_MAX_LEN];
-    uint16_t """ + prefix + """_tbl_swkey_size[P4"""          + caps_p4prog + """TBL_ID_TBLMAX];
-    uint16_t """ + prefix + """_tbl_sw_action_data_size[P4""" + caps_p4prog + """TBL_ID_TBLMAX];
 
     namespace hal {
         thread_local std::thread *t_curr_thread;
@@ -4373,8 +4373,8 @@ typedef unsigned long long uint64_t;
 %free(uint16_t);
 %free(uint32_t);
 %free(uint64_t);
-%include"""+' "' + hdr_name + """p4pd_cli_swig.h"
-%include"""+' "' + name     + """_custom.h"
+%include"""+' "' + p4pd_cli_swig_dir + """p4pd_cli_swig.h"
+%include"""+' "' + p4pd_cust_dir + name + """_custom.h"
 """
     out_file = out_dir + '%s.i' % (name)
     with open(out_file, "w") as of:

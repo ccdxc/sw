@@ -68,6 +68,8 @@ debug_cli/cli/.dir
 debug_cli/cli/.swig
 nic.tar
 nic.tgz
+debug.tar
+debug.tgz
 host.tar
 host.tgz
 naples.tgz

@@ -15,6 +15,8 @@ ifeq "${MODULE_SRCS}" ""
         MODULE_SRCS = $(sort $(wildcard ${MODULE_SRC_DIR}/*.pb.go))
     else ifeq "$(suffix ${MODULE_TARGET})" ".goimports"
         MODULE_SRCS = $(sort $(wildcard ${MODULE_SRC_DIR}/*mock.go))
+    else ifeq "$(suffix ${MODULE_TARGET})" ".swigcli"
+        MODULE_SRCS = $(sort $(wildcard ${MODULE_SRC_DIR}/*.i))
     else
         MODULE_SRCS = $(wildcard ${MODULE_SRC_DIR}/*.cc) $(wildcard ${MODULE_SRC_DIR}/*.c)
     endif

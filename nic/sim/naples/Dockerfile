@@ -21,5 +21,7 @@ COPY bootstrap.sh /naples/nic/tools/
 COPY bootstrap-naples.sh /naples/nic/tools/
 HEALTHCHECK --interval=2m --timeout=5s --start-period=5m --retries=3 CMD /naples/nic/tools/health-check.sh || exit 1
 ADD nic.tgz /naples/
+#RUN mkdir /naples/debug
+#ADD debug.tgz /naples/debug
 
 CMD ["/naples/nic/tools/start-naples.sh"]
