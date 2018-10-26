@@ -4,22 +4,26 @@
             <div class="searchresult-empty-items-img"></div>
             <div class="searchresult-empty-items-message-div">
                 <span class="searchresult-empty-items-label">No search result. Please try again.</span>
-                <br/>
+                <br />
                 <ng-container *ngTemplateOutlet="inputErrors"></ng-container>
                 <span class="searchresult-empty-items-label"><a class="searchresult-empty-items-label-link" (click)="searchWithGrammarClick($event )"
-                        title="Show sample search text">To search with grammar </a>- in:xxx is:yyy has:fieldname=zzz tag:labelname=www
+                        title="Show sample search text">To search with grammar </a>- in:xxx is:yyy has:fieldname=zzz
+                    tag:labelname=www
                 </span>
-                <span class="searchresult-empty-items-label">For example: in:Cluster is:Node has:meta.name=node1 tag:meta.labels.os=esx,storage=ssd
+                <span class="searchresult-empty-items-label">For example: in:Cluster is:Node has:meta.name=node1
+                    tag:meta.labels.os=esx,storage=ssd
                 </span>
-                <br/>
-                <span class="searchresult-empty-items-label">You can also use free form search. (input search string, then
+                <br />
+                <span class="searchresult-empty-items-label">You can also use free form search. (input search string,
+                    then
                     hit tab key and enter key.) </span>
                 <span class="searchresult-empty-items-label">You may want to use <a class="searchresult-empty-items-label-link"
-                        (click)="advanceSearchClick($event)" title="Open advance search panel">Advance Search</a>. </span>
+                        (click)="advanceSearchClick($event)" title="Open advance search panel">Advance Search</a>.
+                </span>
             </div>
         </div>
     </div>
-    <app-pagebody>        
+    <app-pagebody>
         <app-penuitabs *ngIf="categories && categories.length>0" (selectedIndexChange)="onTabChange($event)">
             <app-penuitab title="{{getCategoryTitle(category)}}" [count]="getCategoryCount(category)" *ngFor="let category of categories">
                 <ng-template>
@@ -27,7 +31,8 @@
                         <div class="searchresult-filterby-div">Filter by kind</div>
                         <div class="searchresult-button-div">
 
-                            <p-selectButton [options]="getKinds(category)" [(ngModel)]="selectedKind" optionLabel="name" dataKey="name">
+                            <p-selectButton [options]="getKinds(category)" [(ngModel)]="selectedKind" optionLabel="name"
+                                dataKey="name">
                                 <ng-template let-kind>
                                     <div class="searchresult-kind-template">
                                         <span class="searchresult-kind-template-name">{{kind.name}}</span>
@@ -38,31 +43,37 @@
 
                             </p-selectButton>
                         </div>
-                        <div class="searchresult-button-category-kind">
+                        <div class="searchresult-button-category-kind" [ngClass]="[layoutGrid==true ? 'searchresult-button-category-kind_gridlayout' : '']">
                             <div *ngFor="let entry of getEntries(selectedKind)" class="searchresult-button-category-kind-entry">
-                                <div class="searchresult-button-category-kind-entry-kind">{{entry.object.kind}}</div>
-                                <div>
-                                    <a class="searchresult-button-category-kind-entry-link" (click)="onSearchResultEntryClick($event,category, entry)">{{entry.object.meta['self-link']}}</a>
-                                </div>
-                                <div class="searchresult-button-category-kind-entry-content">
-                                    <span class="searchresult-button-category-kind-entry-label-text">name: </span> {{entry.object.meta.name}}
-                                </div>
-                                <div class="searchresult-button-category-kind-entry-content">
-                                    <span class="searchresult-button-category-kind-entry-label-text">UUID: </span> {{entry.object.meta.uuid}}
-                                </div>
-                                <div class="searchresult-button-category-kind-entry-label">
-                                    <span class="searchresult-button-category-kind-entry-label-text">labels: </span> {{displayLabels(entry)}}
-                                </div>
-                                <!-- in case it is an Event object, we display more information -->
-                                <div *ngIf="entry.object.kind=='Event'">
-                                    <div *ngFor="let eventKey of getEventKeys(entry)">
-                                        <div class="searchresult-button-category-kind-entry-label">
-                                            <span class="searchresult-button-category-kind-entry-label-text">{{eventKey}}: </span> 
-                                            {{displayEventValue(entry.object, eventKey)}} 
+                                <div class="searchresult-button-category-kind-entry-div">
+                                    <div class="searchresult-button-category-kind-entry-kind">{{entry.object.kind}}</div>
+                                    <div>
+                                        <a class="searchresult-button-category-kind-entry-link" (click)="onSearchResultEntryClick($event,category, entry)">{{entry.object.meta['self-link']}}</a>
+                                    </div>
+                                    <div class="searchresult-button-category-kind-entry-content">
+                                        <span class="searchresult-button-category-kind-entry-label-text">name: </span>
+                                        {{entry.object.meta.name}}
+                                    </div>
+                                    <div class="searchresult-button-category-kind-entry-content">
+                                        <span class="searchresult-button-category-kind-entry-label-text">UUID: </span>
+                                        {{entry.object.meta.uuid}}
+                                    </div>
+                                    <div class="searchresult-button-category-kind-entry-label">
+                                        <span class="searchresult-button-category-kind-entry-label-text">labels: </span>
+                                        {{displayLabels(entry)}}
+                                    </div>
+                                    <!-- in case it is an Event object, we display more information -->
+                                    <div *ngIf="entry.object.kind=='Event'">
+                                        <div *ngFor="let eventKey of getEventKeys(entry)">
+                                            <div class="searchresult-button-category-kind-entry-label">
+                                                <span class="searchresult-button-category-kind-entry-label-text">{{eventKey}}:
+                                                </span>
+                                                {{displayEventValue(entry.object, eventKey)}}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <hr/>
+                                <hr />
                             </div>
                         </div>
                     </div>
@@ -73,18 +84,19 @@
 </div>
 
 <ng-template #inputErrors>
-    <div class="searchresult-inputErrors-div" *ngIf="getSearchInputErrors().length>0">       
+    <div class="searchresult-inputErrors-div" *ngIf="getSearchInputErrors().length>0">
         <ng-container *ngTemplateOutlet="searchinput"></ng-container>
         <div *ngFor="let message of getSearchInputErrors()">
             <span class="searchresult-button-category-kind-entry-label-text searchresult-error-span">{{message}} </span>
         </div>
     </div>
-    <br/>
+    <br />
 </ng-template>
 
 <ng-template #searchinput>
     <span class="searchresult-button-category-kind-entry-label-text searchresult-error-span">Your search input :
-        <a class="searchresult-empty-items-label-link" (click)="searchWithGrammarClick($event, getOriginalSearchInput())" title="Click to make search ">
+        <a class="searchresult-empty-items-label-link" (click)="searchWithGrammarClick($event, getOriginalSearchInput())"
+            title="Click to make search ">
             {{getOriginalSearchInput()}} </a>
     </span>
 </ng-template>

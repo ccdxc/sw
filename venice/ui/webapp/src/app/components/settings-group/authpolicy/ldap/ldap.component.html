@@ -108,7 +108,7 @@
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
               <input fxFlex="nogrow" formControlName="bind-dn" class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
               <div fxFlex="nogrow" class="global-button-primary ldap-bind-connection-button" (click)="onCheckLDAPBindConnect($event)">Test Bind</div>
-              <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"  title="{{getBindConfigErrorTooltip()}}">
+              <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"  title="{{getBindConfigErrorTooltip()}}" class="ldap-test-error-icon">
                   error
               </mat-icon>
             </div>
@@ -352,7 +352,7 @@
  
   </div>
   <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
-      <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick($event)"  title="{{getConnConfigErrorTooltip()}}">
+      <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick($event)"  title="{{getConnConfigErrorTooltip()}}" class="ldap-test-error-icon">
           error
       </mat-icon>
     <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button"  (click)="onCheckLdapConnection($event)">Test Connections</div>

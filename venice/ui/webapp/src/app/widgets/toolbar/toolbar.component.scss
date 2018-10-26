@@ -13,6 +13,11 @@
   margin-right: 12px;
   cursor: pointer;
   border-radius: 2px;
+  margin-top: 2px;
+}
+
+.toolbar-splitbutton {
+  @include primary-font(16px);
 }
 
 .toolbarcomponent-toolbar {
@@ -26,6 +31,25 @@
 }
 
 .ui-breadcrumb-chevron {
-  // font-family: material;
   font-size: 10px;
+}
+
+.toolbar-splitbutton {
+  @include primary-font(16px);
+}
+
+.toolbar-splitbutton-menu {
+  @include primary-font(16px);
+  width: 100%;
+  background: #fff;
+  padding: 0.1em;
+}
+
+.toolbar-splitbutton .ui-widget.ui-button, .ui-button {
+  border: 1px solid #97b8df;
+  background: #97b8df;
+  margin-top:1px;
+  &:hover {
+    background: #86a8d7;
+  }
 }

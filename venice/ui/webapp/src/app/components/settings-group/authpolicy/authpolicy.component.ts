@@ -87,6 +87,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         const connCheckResponseError = AuthPolicyUtil.processLDAPCheckResponse(ldapCheckResponse);
         if (connCheckResponseError.errors.length > 0) {
           this._ldapConnCheckResponse = ldapCheckResponse;
+          this.handleLDAPServerCheckFailure(LDAPCheckType.CONNECTION);
         } else {
           this.handleLDAPServerCheckSuccess(LDAPCheckType.CONNECTION);
         }
@@ -96,7 +97,11 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   }
 
   handleLDAPServerCheckSuccess(type: LDAPCheckType) {
-    alert('LDAP ' + type + ' pass'); // TODO: use toaster later.
+    this.invokeSuccessToaster('Test LDAP ' + type + ' pass', '');
+  }
+
+  handleLDAPServerCheckFailure(type: LDAPCheckType) {
+    this.invokeRESTErrorToaster('Test LDAP ' + type + ' fails', '');
   }
 
   onCheckLDAPBindConnect(ldap: AuthLdap) {
@@ -107,6 +112,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         const ldapBindCheckResponseError = AuthPolicyUtil.processLDAPCheckResponse(ldapCheckResponse);
         if (ldapBindCheckResponseError.errors.length > 0) {
           this._ldapBindCheckResponse = ldapCheckResponse;
+          this.handleLDAPServerCheckFailure(LDAPCheckType.BIND);
         } else {
           this.handleLDAPServerCheckSuccess(LDAPCheckType.BIND);
         }

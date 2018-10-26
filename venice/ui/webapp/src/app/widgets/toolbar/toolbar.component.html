@@ -1,7 +1,19 @@
 <mat-toolbar class="toolbarcomponent-toolbar">
   <p-breadcrumb class="toolbarcomponent-breadcrumb" [model]="breadcrumb" ></p-breadcrumb>
   <div class="toolbar-buffer" fxLayout="row">
-    <div fxFlex></div>
+    <div fxFlex></div>   
+    <span *ngFor="let dropdown of dropdowns" class="toolbar-dropdown-span">
+        <p-dropdown [options]="dropdown.options" [(ngModel)]="dropdown.model" placeholder="{{dropdown.placeholder}}"
+        styleClass="{{ dropdown.styleClass? dropdown.styleClass : 'toolbar-dropdown' }}" 
+        panelStyleClass="{{dropdown.panelStyleClass ? dropdown.panelStyleClass : 'toolbar-dropdown-panel'}}" (onChange)="dropdownChangeCallback($event, dropdown)"
+       
+        ></p-dropdown>
+    </span>
+    <span *ngFor="let button of splitbuttons" class="toolbar-splitbutton-span">
+        <p-splitButton label="{{button.text}}" class="toolbar-splitbutton" icon="{{button.icon}}" (onClick)="splitbuttonCallback($event, button)" [model]="button.items"
+        styleClass="{{ button.styleClass? button.styleClass : 'toolbar-splitbutton' }}" menuStyleClass="{{button.menuStyleClass ? button.menuStyleClass : 'toolbar-splitbutton-menu'}}"
+        ></p-splitButton>
+    </span>
     <span *ngFor="let button of buttons" class="toolbar-button" [ngClass]="[button.cssClass != null ? button.cssClass : '', button.computeClass != null ? button.computeClass() : '' ]" (click)="buttonCallback($event, button)">
       {{button.text}}
     </span>

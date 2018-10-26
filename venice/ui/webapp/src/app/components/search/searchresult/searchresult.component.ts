@@ -9,6 +9,7 @@ import { SearchResultPayload } from '@app/components/search';
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
 import { MessageService } from 'primeng/primeng';
+import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface' ;
 import { Router } from '@angular/router';
 
 /**
@@ -28,6 +29,8 @@ import { Router } from '@angular/router';
   encapsulation: ViewEncapsulation.None
 })
 export class SearchresultComponent extends BaseComponent implements OnInit, OnDestroy {
+  public static LAYOUT_ROW: string = 'Row';
+  public static LAYOUT_GRID: string = 'Grid';
   searchResult: any;
   categories: any[];
 
@@ -35,8 +38,12 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   selectedCategory: any;
   selectedKind: any;
 
+  selectedDropdown: any;
 
-  private _started = false;
+  // default layout
+  layoutGrid: boolean = false;
+
+  _started = false;
 
   constructor(protected _controllerService: ControllerService,
     protected messageService: MessageService,
@@ -63,11 +70,39 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     }
     this.subscriptions[Eventtypes.SEARCH_RESULT_LOAD_REQUEST] = this._controllerService.subscribe(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, (payload) => {
       this.getSearchResult();
+      // re-compute toolbar data if new search-result is available
+      this._controllerService.setToolbarData(this.buildToolbarData());
     });
+    // compute toolbar data
+    this._controllerService.setToolbarData(this.buildToolbarData());
+  }
 
-    this._controllerService.setToolbarData({
+  private buildToolbarData(): ToolbarData {
+    const toolbarData: ToolbarData =    {
       breadcrumb: [{ label: 'Search Results', url: '' }]
-    });
+    };
+    // add a dropdown in toolbar if there are search-result data.
+    if (this.categories && this.categories.length >= 0) {
+      toolbarData.dropdowns = [
+        {
+          callback: (event, sbutton) => {
+            this.onLayoutDropDownChange(sbutton);
+          },
+          options: [
+            { label: SearchresultComponent.LAYOUT_ROW, value: SearchresultComponent.LAYOUT_ROW },
+            { label: SearchresultComponent.LAYOUT_GRID, value: SearchresultComponent.LAYOUT_GRID }
+          ],
+          model: this.selectedDropdown,
+          placeholder: 'Select layout'
+        }
+      ];
+    }
+    return toolbarData;
+  }
+
+  onLayoutDropDownChange(sbutton: any) {
+    // w
+    this.layoutGrid = (sbutton.model === SearchresultComponent.LAYOUT_GRID);
   }
 
   /**

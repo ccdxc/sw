@@ -29,6 +29,22 @@
   margin: 10px;
 }
 
+.searchresult-button-category-kind_gridlayout {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.searchresult-button-category-kind-entry-div {
+  margin-right: 5px;
+  padding-bottom: 5px;
+  border: 1px solid transparent;
+  &:hover {
+    background-color: whitesmoke;
+    border: 1px solid #e3e3e3;
+    border-radius: 3px;
+  }
+}
+
 
 .searchresult-button-category-kind-entry-kind {
   font-size: 16px;
