@@ -53,10 +53,6 @@
  *	per-service status to the caller.  Before exiting the polling thread,
  *	the chain specific structures will be destroyed.
  *
- *	TODO-chain:
- *		- defer handling interrupts, batch processing, etc. for now.
- *		- optimize memset cp/hash/etc. desc, status desc, if/as needed.
- *
  */
 #ifdef __cplusplus
 extern "C" {

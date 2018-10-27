@@ -160,7 +160,7 @@ req_pprint_request(const struct pnso_service_request *req)
 	}
 }
 
-#define MAX_NUM_TAGS	16	/* TODO-cpdc: Move hash/chksum */
+#define MAX_NUM_TAGS	16
 static void __attribute__((unused))
 pprint_hash_tags(const struct pnso_hash_tag *tags, uint32_t num_tags)
 {

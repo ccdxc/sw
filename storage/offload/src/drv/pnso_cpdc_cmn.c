@@ -255,8 +255,6 @@ cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc)
 			status_desc->csd_partial_data);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "csd_integrity_data",
 			status_desc->csd_integrity_data);
-
-	/* TODO-cpdc: print SHA */
 }
 
 uint32_t
