@@ -69,6 +69,7 @@ string string_format( const std::string& format, Args ... args )
 }
 
 const char qstate[64] = { 0 };
+const char admin_qstate[128] = { 0 };
 
 const char rdma_qstate_1024[1024] = { 0 };
 const char rdma_qstate_32[32]     = { 0 };
@@ -97,12 +98,12 @@ struct queue_info Eth::qinfo [NUM_QUEUE_TYPES] = {
     },
     [ETH_QTYPE_ADMIN] = {
         .type_num = ETH_QTYPE_ADMIN,
-        .size = 1,
+        .size = 2,
         .entries = 0,
         .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
         .prog = "txdma_stage0.bin",
         .label = "adminq_stage0",
-        .qstate = qstate
+        .qstate = admin_qstate
     },
     [ETH_QTYPE_SQ] = {
         .type_num = ETH_QTYPE_SQ,
@@ -2129,17 +2130,17 @@ Eth::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data
                     cmd->dma_addr);
 
     memset(&aqcb, 0, sizeof(aqcb_t));
-    aqcb.ring_header.total_rings = MAX_AQ_RINGS;
-    aqcb.ring_header.host_rings = MAX_AQ_HOST_RINGS;
+    aqcb.aqcb0.ring_header.total_rings = MAX_AQ_RINGS;
+    aqcb.aqcb0.ring_header.host_rings = MAX_AQ_HOST_RINGS;
     
-    aqcb.log_wqe_size = cmd->stride_log2;
-    aqcb.log_num_wqes = cmd->depth_log2;
-    aqcb.aq_id = cmd->qid_ver;
-    aqcb.phy_base_addr = cmd->dma_addr | (1UL << 63) | ((uint64_t)lif << 52);
-    aqcb.cq_id = cmd->cid;
-    aqcb.cqcb_addr = GetQstateAddr(ETH_QTYPE_CQ, cmd->cid); 
+    aqcb.aqcb0.log_wqe_size = cmd->stride_log2;
+    aqcb.aqcb0.log_num_wqes = cmd->depth_log2;
+    aqcb.aqcb0.aq_id = cmd->qid_ver;
+    aqcb.aqcb0.phy_base_addr = cmd->dma_addr | (1UL << 63) | ((uint64_t)lif << 52);
+    aqcb.aqcb0.cq_id = cmd->cid;
+    aqcb.aqcb0.cqcb_addr = GetQstateAddr(ETH_QTYPE_CQ, cmd->cid); 
     
-    aqcb.proxy_pindex = 0;
+    aqcb.aqcb0.proxy_pindex = 0;
 
     ret = pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "rdma_aq_tx_stage0", &offset);
     if (ret < 0) {
@@ -2147,16 +2148,17 @@ Eth::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data
         return DEVCMD_ERROR;
     }
     
-    aqcb.ring_header.pc = offset;
+    aqcb.aqcb0.ring_header.pc = offset;
 
     // write to hardware
     NIC_LOG_INFO("{}: LIF: {}: Writting initial AQCB State, "
                     "AQCB->phy_addr: {:#x} "
                     "aqcb_size: {}",
-                    __FUNCTION__, lif, aqcb.phy_base_addr, sizeof(aqcb_t));
+                    __FUNCTION__, lif, aqcb.aqcb0.phy_base_addr, sizeof(aqcb_t));
 
     // Convert data before writting to HBM
-    memrev((uint8_t*)&aqcb, sizeof(aqcb_t));
+    memrev((uint8_t*)&aqcb.aqcb0, sizeof(aqcb0_t));
+    memrev((uint8_t*)&aqcb.aqcb1, sizeof(aqcb1_t));
 
     uint64_t addr = GetQstateAddr(ETH_QTYPE_ADMIN, cmd->qid_ver);;
     NIC_LOG_INFO("{}: QstateAddr = {:#x}\n", __FUNCTION__, addr);

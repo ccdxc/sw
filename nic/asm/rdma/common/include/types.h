@@ -44,6 +44,8 @@
 #define TOTAL_CB_BYTES      (16 * 64)
 #define PAGE_SIZE_4K        4096
 
+#define TOTAL_AQCB_BYTES    (2 * 64)
+
 #define LOG_SIZEOF_EQCB_T   6   // 2^6 = 64 Bytes
 
 #define LOG_SIZEOF_SQCB_T   10

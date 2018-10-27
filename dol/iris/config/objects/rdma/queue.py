@@ -50,6 +50,23 @@ class RdmaAQstate(Packet):
         ByteField("rsvd3", 0),
         XLongField("cqcb_addr", 0),
         BitField("pad", 0, 192),
+
+        # AQCB1
+        ShortField("num_nops", 0),
+        ShortField("num_create_cq", 0),
+        ShortField("num_create_qp", 0),
+        ShortField("num_reg_mr", 0),
+        ShortField("num_stats_hdrs", 0),
+        ShortField("num_stats_vals", 0),
+        ShortField("num_dereg_mr", 0),
+        ShortField("num_resize_cq", 0),
+        ShortField("num_destroy_cq", 0),
+        ShortField("num_modify_qp", 0),
+        ShortField("num_query_qp", 0),
+        ShortField("num_destroy_qp", 0),
+        ShortField("num_stats_dump", 0),
+        LongField("num_any", 0),
+        BitField("aqcb1_pad", 0, 240),
     ]
 
 class RdmaRQstate(Packet):

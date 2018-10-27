@@ -53,7 +53,7 @@ string string_format( const std::string& format, Args ... args )
 /*
  * blank_qstate, used only during LIF creation and device reset.
  */
-const uint8_t   blank_qstate[64] = { 0 };
+const uint8_t   blank_qstate[128] = { 0 };
 const uint8_t   blank_page[ACCEL_DEV_PAGE_SIZE] = { 0 };
 
 struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
@@ -68,7 +68,7 @@ struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
     },
     [STORAGE_SEQ_QTYPE_UNUSED] = {
         .type_num = STORAGE_SEQ_QTYPE_UNUSED,
-        .size = 1,
+        .size = 2,
         .entries = 0,
         .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
         .prog = "txdma_stage0.bin",
@@ -77,7 +77,7 @@ struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
     },
     [STORAGE_SEQ_QTYPE_ADMIN] = {
         .type_num = STORAGE_SEQ_QTYPE_ADMIN,
-        .size = 1,
+        .size = 2,
         .entries = 0,
         .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
         .prog = "txdma_stage0.bin",

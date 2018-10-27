@@ -43,11 +43,11 @@ typedef struct admin_qstate {
     uint16_t    intr_assert_index;
     uint64_t    nicmgr_qstate_addr;
 
-    uint8_t     __pad[18];
+    uint8_t     __pad[18 + 64];
 
 } admin_qstate_t;
 
-static_assert (sizeof(struct admin_qstate) == 64, "");
+static_assert (sizeof(struct admin_qstate) == 128, "");
 
 struct nicmgr_sta_qstate {
     uint8_t     rsvd1:7;
@@ -85,10 +85,10 @@ struct nicmgr_qstate {
     uint64_t    cq_ring_base;
     uint16_t    intr_assert_index;
 
-    uint8_t     __pad[26];
+    uint8_t     __pad[26 + 64];
 };
 
-static_assert (sizeof(struct nicmgr_qstate) == 64, "");
+static_assert (sizeof(struct nicmgr_qstate) == 128, "");
 
 typedef struct nicmgr_qstate nicmgr_req_qstate_t;
 typedef struct nicmgr_qstate nicmgr_resp_qstate_t;

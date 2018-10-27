@@ -13,10 +13,11 @@ struct aq_tx_s6_t0_k k;
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
 #define K_CQ_NUM CAPRI_KEY_FIELD(IN_TO_S_P, cq_num)
+#define K_CB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
     
 %%
 
-    .param      dummy
+    .param      rdma_aq_tx_stats_process
     
 .align
 rdma_aq_tx_feedback_process:
@@ -55,6 +56,11 @@ rdma_aq_tx_feedback_process:
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
 
     CAPRI_SET_TABLE_0_VALID(0)
+
+    //Get AQCB1 addr
+    add r1, K_CB_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_stats_process, r1)
+
     nop.e
     nop
 

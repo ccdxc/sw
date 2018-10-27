@@ -20,6 +20,8 @@ struct aq_tx_s1_t0_k k;
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)    
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_S2S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
 
+#define TO_S7_STATS_P       to_s7_stats_info
+
 %%
 
     .param      tx_dummy
@@ -38,43 +40,43 @@ rdma_aq_tx_wqe_process:
 
     .brcase     AQ_OP_TYPE_NOP
         b           prepare_feedback
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, nop), 1 //BD Slot
     .brcase     AQ_OP_TYPE_CREATE_CQ
         b           create_cq
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, create_cq), 1 //BD Slot
     .brcase     AQ_OP_TYPE_CREATE_QP
         b           create_qp
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, create_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_REG_MR
         b           reg_mr
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, reg_mr), 1 //BD Slot
     .brcase     AQ_OP_TYPE_STATS_HDRS
         b           exit
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_hdrs), 1 //BD Slot
     .brcase     AQ_OP_TYPE_STATS_VALS
         b           exit
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_vals), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DEREG_MR
         b           dereg_mr
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, dereg_mr), 1 //BD Slot
     .brcase     AQ_OP_TYPE_RESIZE_CQ
         b           exit
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, resize_cq), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DESTROY_CQ
         b           exit
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, destroy_cq), 1 //BD Slot
     .brcase     AQ_OP_TYPE_MODIFY_QP
         b           modify_qp
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, modify_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_QUERY_QP
         b           exit
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, query_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DESTROY_QP
         b           exit
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, destroy_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_STATS_DUMP
         b           stats_dump
-        nop
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_dump), 1 //BD Slot
     .brcase     13
         b           exit
         nop
@@ -386,9 +388,9 @@ stats_dump:
 aq_dump:
     add     r1, r0, K_CB_ADDR
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
-    DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB_UNIT_SIZE_BYTES, r1)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, TOTAL_AQCB_BYTES, r1)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
-    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB_UNIT_SIZE_BYTES, d.{stats.dma_addr}.dx)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, TOTAL_AQCB_BYTES, d.{stats.dma_addr}.dx)
 
     b           prepare_feedback
     nop

@@ -1906,9 +1906,12 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
                     spec.log_wqe_size(), spec.log_num_wqes(), spec.cq_num(), 
                     spec.phy_base_addr());
 
+    assert(sizeof(aqcb0_t) == 64);
+    assert(sizeof(aqcb1_t) == 64);
+
     memset(&aqcb, 0, sizeof(aqcb_t));
-    aqcb.ring_header.total_rings = MAX_AQ_RINGS;
-    aqcb.ring_header.host_rings = MAX_AQ_HOST_RINGS;
+    aqcb.aqcb0.ring_header.total_rings = MAX_AQ_RINGS;
+    aqcb.aqcb0.ring_header.host_rings = MAX_AQ_HOST_RINGS;
     
     /*
      * 1. Copy the VA translations to pt table.
@@ -1916,27 +1919,28 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
      * 3. Set the pt_base_addr
      */
 
-    aqcb.log_wqe_size = spec.log_wqe_size();
-    aqcb.log_num_wqes = spec.log_num_wqes();
-    aqcb.aq_id = spec.aq_num();
-    aqcb.phy_base_addr = spec.phy_base_addr() | (1UL << 63) | ((uint64_t)lif << 52);
-    aqcb.cq_id = spec.cq_num();
-    aqcb.cqcb_addr = lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_RDMA_CQ, spec.cq_num());
+    aqcb.aqcb0.log_wqe_size = spec.log_wqe_size();
+    aqcb.aqcb0.log_num_wqes = spec.log_num_wqes();
+    aqcb.aqcb0.aq_id = spec.aq_num();
+    aqcb.aqcb0.phy_base_addr = spec.phy_base_addr() | (1UL << 63) | ((uint64_t)lif << 52);
+    aqcb.aqcb0.cq_id = spec.cq_num();
+    aqcb.aqcb0.cqcb_addr = lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_RDMA_CQ, spec.cq_num());
     
-    aqcb.proxy_pindex = 0;
+    aqcb.aqcb0.proxy_pindex = 0;
 
     //stage0_rdma_aq_rx_prog_addr(&offset);
     stage0_rdma_aq_tx_prog_addr(&offset);
-    aqcb.ring_header.pc = offset >> 6;
+    aqcb.aqcb0.ring_header.pc = offset >> 6;
 
     //HAL_ASSERT(offset == offset_verify);
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial AQCB State, AQCB->phy_addr: {:#x} "
                     "aqcb_size: {}",
-                    __FUNCTION__, lif, aqcb.phy_base_addr, sizeof(aqcb_t));
+                    __FUNCTION__, lif, aqcb.aqcb0.phy_base_addr, sizeof(aqcb_t));
     // Convert data before writting to HBM
-    memrev((uint8_t*)&aqcb, sizeof(aqcb_t));
+    memrev((uint8_t*)&aqcb.aqcb0, sizeof(aqcb0_t));
+    memrev((uint8_t*)&aqcb.aqcb1, sizeof(aqcb1_t));
     lif_manager()->WriteQState(lif, Q_TYPE_ADMINQ, spec.aq_num(),
                                (uint8_t *)&aqcb, sizeof(aqcb_t));
     HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__,

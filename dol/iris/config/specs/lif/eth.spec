@@ -50,7 +50,7 @@ queue_types:
         id          : ADMIN
         type        : 2
         purpose     : LIF_QUEUE_PURPOSE_ADMIN
-        size        : 64    # Size of Qstate
+        size        : 128   # Size of Qstate
         count       : 1     # Number of queues of this type
         queues:
             - queue:

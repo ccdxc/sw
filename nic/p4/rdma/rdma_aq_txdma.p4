@@ -67,6 +67,8 @@
 
 #define tx_table_s6_t0_action aq_tx_feedback_process_s6
 
+#define tx_table_s7_t3_action aq_tx_stats_process
+
 #include "../common-p4+/common_txdma.p4"
 #include "./rdma_txdma_headers.p4"
 
@@ -134,7 +136,27 @@ header_type aq_tx_to_stage_rqcb_info_t {
 header_type aq_tx_to_stage_fb_info_t {
     fields {
         cq_num                           :    24;
-        pad                              :   104;
+        cb_addr                          :    34;
+        pad                              :    70;
+    }
+}
+
+header_type aq_tx_to_stage_stats_info_t {
+    fields {
+        nop                              :    1;
+        create_cq                        :    1;
+        create_qp                        :    1;
+        reg_mr                           :    1;
+        stats_hdrs                       :    1;
+        stats_vals                       :    1;
+        dereg_mr                         :    1;
+        resize_cq                        :    1;
+        destroy_cq                       :    1;
+        modify_qp                        :    1;
+        query_qp                         :    1;
+        destroy_qp                       :    1;
+        stats_dump                       :    1;
+        pad                              :  115;
     }
 }
 
@@ -167,6 +189,13 @@ header_type aq_tx_aqcb_to_wqe_t {
         cb_addr             : 34;
     }
 }
+
+header_type aq_tx_stats_info_t {
+    fields {
+        pad                              :  160;
+    }
+}
+
 
 /**** global header unions ****/
 
@@ -204,14 +233,19 @@ metadata aq_tx_to_stage_rqcb_info_t to_s4_info;
 metadata aq_tx_to_stage_rqcb_info_t to_s4_info_scr;
 
 //To-Stage-5
+
+//To-Stage-6
 @pragma pa_header_union ingress to_stage_6
 metadata aq_tx_to_stage_fb_info_t to_s6_info;
 @pragma scratch_metadata
 metadata aq_tx_to_stage_fb_info_t to_s6_info_scr;
 
-//To-Stage-6
-
 //To-Stage-7
+@pragma pa_header_union ingress to_stage_7 to_s7_stats_info
+metadata aq_tx_to_stage_stats_info_t to_s7_stats_info;
+@pragma scratch_metadata
+metadata aq_tx_to_stage_stats_info_t to_s7_stats_info_scr;
+
 
 /**** stage to stage header unions ****/
 
@@ -244,7 +278,7 @@ metadata aq_tx_aqcb_to_modqp_t t2_s2s_sqcb1_to_rqcb1_info;
 metadata aq_tx_aqcb_to_modqp_t t2_s2s_sqcb1_to_rqcb1_info_scr;
 
 //Table-3
-@pragma pa_header_union ingress common_t3_s2s t3_s2s_wqe2_to_sqcb2_info t3_s2s_sqcb2_to_rqcb2_info
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_wqe2_to_sqcb2_info t3_s2s_sqcb2_to_rqcb2_info t3_s2s_stats_info
 
 metadata aq_tx_aqcb_to_modqp_t t3_s2s_wqe2_to_sqcb2_info;
 @pragma scratch_metadata
@@ -253,6 +287,11 @@ metadata aq_tx_aqcb_to_modqp_t t3_s2s_wqe2_to_sqcb2_info_scr;
 metadata aq_tx_aqcb_to_modqp_t t3_s2s_sqcb2_to_rqcb2_info;
 @pragma scratch_metadata
 metadata aq_tx_aqcb_to_modqp_t t3_s2s_sqcb2_to_rqcb2_info_scr;
+
+metadata aq_tx_stats_info_t t3_s2s_stats_info;
+@pragma scratch_metadata
+metadata aq_tx_stats_info_t t3_s2s_stats_info_scr;
+
 
 /*
  * Stage 0 table 0 action
@@ -487,9 +526,32 @@ action aq_tx_feedback_process_s6 () {
 
     // to stage
     modify_field(to_s6_info_scr.cq_num, to_s6_info.cq_num);
+    modify_field(to_s6_info_scr.cb_addr, to_s6_info.cb_addr);
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
     
     // stage to stage
 }
 
 
+action aq_tx_stats_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s7_stats_info_scr.nop, to_s7_stats_info.nop);
+    modify_field(to_s7_stats_info_scr.create_cq, to_s7_stats_info.create_cq);
+    modify_field(to_s7_stats_info_scr.create_qp, to_s7_stats_info.create_qp);
+    modify_field(to_s7_stats_info_scr.reg_mr, to_s7_stats_info.reg_mr);
+    modify_field(to_s7_stats_info_scr.stats_hdrs, to_s7_stats_info.stats_hdrs);
+    modify_field(to_s7_stats_info_scr.stats_vals, to_s7_stats_info.stats_vals);
+    modify_field(to_s7_stats_info_scr.dereg_mr, to_s7_stats_info.dereg_mr);
+    modify_field(to_s7_stats_info_scr.resize_cq, to_s7_stats_info.resize_cq);
+    modify_field(to_s7_stats_info_scr.destroy_cq, to_s7_stats_info.destroy_cq);
+    modify_field(to_s7_stats_info_scr.modify_qp, to_s7_stats_info.modify_qp);
+    modify_field(to_s7_stats_info_scr.query_qp, to_s7_stats_info.query_qp);
+    modify_field(to_s7_stats_info_scr.destroy_qp, to_s7_stats_info.destroy_qp);
+    modify_field(to_s7_stats_info_scr.stats_dump, to_s7_stats_info.stats_dump);
+
+    // stage to stage
+    modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);
+}

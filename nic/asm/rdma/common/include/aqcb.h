@@ -21,7 +21,7 @@
 
 #define AQ_COLOR             d.color
 
-struct aqcb_t {
+struct aqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
     struct capri_intrinsic_ring_t ring0;
 
@@ -42,5 +42,31 @@ struct aqcb_t {
     cqcb_addr: 64;
     pad: 192;
 };
+
+struct aqcb1_t {
+    num_nop: 16;
+    num_create_cq: 16;
+    num_create_qp: 16;
+    num_reg_mr: 16;
+    num_stats_hdrs: 16;
+    num_stats_vals: 16;
+    num_dereg_mr: 16;
+    num_resize_cq: 16;
+    num_destroy_cq: 16;
+    num_modify_qp: 16;
+    num_query_qp: 16;
+    num_destroy_qp: 16;
+    num_stats_dump: 16;
+    
+    num_any: 64;
+
+    pad: 240;
+};
+
+struct aqcb_t {
+    struct aqcb0_t aqcb0;
+    struct aqcb1_t aqcb1;
+};
+
 
 #endif //__AQCB_H__

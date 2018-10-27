@@ -326,7 +326,7 @@ typedef struct cqcb_s {
 #define MAX_AQ_RINGS 1
 #define MAX_AQ_HOST_RINGS 1
     
-typedef struct aqcb_s {
+typedef struct aqcb0_s {
     uint8_t  pad[24];
 
     uint64_t cqcb_addr;
@@ -347,6 +347,32 @@ typedef struct aqcb_s {
 
     qpcb_ring_t           rings[MAX_AQ_RINGS];
     qpcb_intrinsic_base_t ring_header;
+} aqcb0_t;
+    
+typedef struct aqcb1_s {
+    uint8_t pad[30];
+
+    uint64_t num_any;
+
+    uint16_t num_stats_dump;
+    uint16_t num_destroy_qp;
+    uint16_t num_query_qp;
+    uint16_t num_modify_qp;
+    uint16_t num_destroy_cq;
+    uint16_t num_resize_cq;
+    uint16_t num_dereg_mr;
+    uint16_t num_stats_vals;
+    uint16_t num_stats_hdrs;
+    uint16_t num_reg_mr;
+    uint16_t num_create_qp;
+    uint16_t num_create_cq;
+    uint16_t num_nop;
+} PACKED aqcb1_t;
+
+typedef struct aqcb_s {
+    aqcb0_t aqcb0;
+    aqcb1_t aqcb1;
 } aqcb_t;
+
 
 #endif /*__RDMA_DEV_HPP__*/

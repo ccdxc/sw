@@ -66,7 +66,7 @@ cqcb_process:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_AQ_BUSY)
     phvwr       p.busy, 0               
     sll         r2, K_AQCB_ADDR, AQCB_ADDR_SHIFT
-    add         r2, r2, FIELD_OFFSET(aqcb_t, busy)
+    add         r2, r2, FIELD_OFFSET(aqcb0_t, busy)
     DMA_HBM_PHV2MEM_SETUP(r6, busy, busy, r2)
     
     

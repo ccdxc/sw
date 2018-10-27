@@ -106,7 +106,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
     struct queue_info qinfo [NUM_QUEUE_TYPES] = {
         [NICMGR_QTYPE_REQ] = {
             .type_num = NICMGR_QTYPE_REQ,
-            .size = 1,
+            .size = 2,
             .entries = 0,
             .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
             .prog = "txdma_stage0.bin",
@@ -115,7 +115,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_mode_t platf
         },
         [NICMGR_QTYPE_RESP] = {
             .type_num = NICMGR_QTYPE_RESP,
-            .size = 1,
+            .size = 2,
             .entries = 0,
             .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
             .prog = "txdma_stage0.bin",

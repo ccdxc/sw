@@ -2,7 +2,7 @@
 #include "aqcb.h"
 
 struct aq_rx_phv_t p;
-struct aqcb_t d;
+struct aqcb0_t d;
 struct common_p4plus_stage0_app_header_table_k k;
 
 #define PHV_GLOBAL_COMMON_P phv_global_common

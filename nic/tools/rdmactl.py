@@ -20,9 +20,8 @@ DBG_WR_CTRL='dbg_wr_ctrl'
 DBG_WR_DATA='dbg_wr_data'
 DUMP_DATA='/tmp/hexdump_data'
 
-
-class RdmaAQstate(Packet):
-    name = "RdmaAQstate"
+class RdmaAQCB0state(Packet):
+    name = "RdmaAQCB0state"
     fields_desc = [
         # AQCB0
         ByteField("pc_offset", 0),
@@ -50,6 +49,28 @@ class RdmaAQstate(Packet):
         ByteField("rsvd3", 0),
         XLongField("cqcb_addr", 0),
         BitField("pad", 0, 192),
+    ]
+
+
+class RdmaAQCB1state(Packet):
+    name = "RdmaAQCB1state"
+    fields_desc = [
+        # AQCB1
+        ShortField("num_nops", 0),
+        ShortField("num_create_cq", 0),
+        ShortField("num_create_qp", 0),
+        ShortField("num_reg_mr", 0),
+        ShortField("num_stats_hdrs", 0),
+        ShortField("num_stats_vals", 0),
+        ShortField("num_dereg_mr", 0),
+        ShortField("num_resize_cq", 0),
+        ShortField("num_destroy_cq", 0),
+        ShortField("num_modify_qp", 0),
+        ShortField("num_query_qp", 0),
+        ShortField("num_destroy_qp", 0),
+        ShortField("num_stats_dump", 0),
+        LongField("num_any", 0),
+        BitField("aqcb1_pad", 0, 240),
     ]
 
 class RdmaCQstate(Packet):
@@ -648,7 +669,8 @@ grp.add_argument('--rqcb2', help='prints rqcb2 state given qid', type=int, metav
 grp.add_argument('--rqcb3', help='prints rqcb3 state given qid', type=int, metavar='qid')
 grp.add_argument('--cqcb',  help='prints cqcb state given qid', type=int, metavar='qid')
 grp.add_argument('--eqcb',  help='prints eqcb state given qid', type=int, metavar='qid')
-grp.add_argument('--aqcb',  help='prints aqcb state given qid', type=int, metavar='qid')
+grp.add_argument('--aqcb0', help='prints aqcb0 state given qid', type=int, metavar='qid')
+grp.add_argument('--aqcb1', help='prints aqcb1 state given qid', type=int, metavar='qid')
 grp.add_argument('--req_tx_stats', help='prints req_tx stats given qid', type=int, metavar='qid')
 grp.add_argument('--req_rx_stats', help='prints req_rx stats given qid', type=int, metavar='qid')
 grp.add_argument('--resp_tx_stats', help='prints resp_tx stats given qid', type=int, metavar='qid')
@@ -675,12 +697,16 @@ elif args.eqcb is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_EQ, args.cqcb, 0, 64)
     eqcb = RdmaEQstate(bin_str)
     eqcb.show()
-elif args.aqcb is not None:
+elif args.aqcb0 is not None:
     #for now qid is ignored for aqcb dump.
     #qstate is dumped for the aq on which this rdmactl command is issued.
     bin_str = exec_dump_cmd(DUMP_TYPE_AQ, 1, 0, 64)
-    aqcb = RdmaAQstate(bin_str)
-    aqcb.show()
+    aqcb0 = RdmaAQCB0state(bin_str)
+    aqcb0.show()
+elif args.aqcb1 is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_AQ, 1, 64, 64)
+    aqcb1 = RdmaAQCB1state(bin_str)
+    aqcb1.show()
 elif args.sqcb0 is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.sqcb0, 0, 64)
     sqcb0 = RdmaSQCB0state(bin_str)
