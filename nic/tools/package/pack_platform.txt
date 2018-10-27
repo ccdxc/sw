@@ -60,3 +60,6 @@ platform/tools/start-nicmgr-haps.sh                                             
 platform/src/app/nicmgrd/etc/*.json                                             /platform/etc/nicmgrd/
 nic/build/aarch64/iris/out/capviewdb_submake/capviewdb.bin                      /platform/etc/
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                                  /platform/
+
+# Oprom
+nic/build/aarch64/iris/bin/ionic.efirom                                         /platform/oprom/

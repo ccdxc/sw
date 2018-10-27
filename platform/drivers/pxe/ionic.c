@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright 2017-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This program is free software; you may redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,14 +60,18 @@ static int ionic_reset(struct ionic *ionic)
  *
  * @v netdev				Network device
  */
-#if 0
-static void ionic_check_link ( struct net_device *netdev ) {
-		struct ionic *ionic = netdev->priv;
+static int ionic_check_link ( struct net_device *netdev ) {
+	struct ionic *ionic = netdev->priv;
+	u16 link_up;
 
-		DBGC ( ionic, "IONIC %p does not yet support link state\n", ionic );
-		netdev_link_err ( netdev, -ENOTSUP );
+	DBGC(ionic, "Inside %s::Checking for link status\n", __FUNCTION__ );
+	link_up = ionic->ionic_lif->notifyblock->link_status;
+	if(link_up) {
+		DBGC(ionic, "link up with speed %dMBPS\n",
+			 ionic->ionic_lif->notifyblock->link_speed);
+	}
+	return 0;
 }
-#endif
 /******************************************************************************
  *
  * Network device interface
@@ -225,7 +229,7 @@ static int ionic_map_bars(struct ionic *ionic, struct pci_device *pci)
 		bars[j].bus_addr = pci_bar_start(pci, PCI_BASE_ADDRESS(i * 2));
 		bars[j].virtaddr = ioremap(bars[j].bus_addr, bars[j].len);
 		if (!bars[j].virtaddr) {
-			DBG("Cannot memory-map BAR %d, aborting\n", j);
+			DBG2("Cannot memory-map BAR %d, aborting\n", j);
 			return -ENODEV;
 		}
 		ionic->num_bars++;
@@ -278,13 +282,15 @@ static int ionic_probe(struct pci_device *pci)
 	// Map registers
 	errorcode = ionic_map_bars(ionic, pci);
 	if (errorcode) {
-		DBG("%s :: the number of bars is %x mapped the bars.\n", __FUNCTION__, ionic->num_bars);
+		DBG2("%s :: the number of bars is %x mapped the bars.\n", __FUNCTION__, ionic->num_bars);
 		goto err_ionicunmap;
 	}
 
+	mdelay(100);  //TODO remove this once pcibar is fixed.
+
 	errorcode = ionic_setup(ionic);
 	if (errorcode) {
-		DBG("%s :: Cannot setup device, aborting\n", __FUNCTION__);
+		DBG2("%s :: Cannot setup device, aborting\n", __FUNCTION__);
 		goto err_ionicunmap;
 	}
 
@@ -295,28 +301,36 @@ static int ionic_probe(struct pci_device *pci)
 	// Identify the Ionic
 	errorcode = ionic_identify(ionic);
 	if (errorcode) {
-		DBG("%s :: Cannot identify device, aborting\n", __FUNCTION__);
+		DBG2("%s :: Cannot identify device, aborting\n", __FUNCTION__);
 		goto err_reset;
 	}
 
+	DBG2("ASIC %s rev 0x%X serial num %s fw version %s\n",
+		 ionic_dev_asic_name(ionic->ident->dev.asic_type),
+		 ionic->ident->dev.asic_rev, ionic->ident->dev.serial_num,
+		 ionic->ident->dev.fw_version);
+
 	errorcode = ionic_lif_alloc(ionic, 0);
 	if (errorcode) {
-		DBG("%s :: Cannot allocate LIFs, aborting\n", __FUNCTION__);
+		DBG2("%s :: Cannot allocate LIFs, aborting\n", __FUNCTION__);
 		goto err_free_identify;
 	}
 
 	errorcode = ionic_lif_init(netdev);
 	if (errorcode) {
-		DBG("%s :: Cannot initiate LIFs, aborting\n", __FUNCTION__);
+		DBG2("%s :: Cannot initiate LIFs, aborting\n", __FUNCTION__);
 		goto err_free_alloc;
 	}
+
 	// Register network device
 	if ((errorcode = register_netdev(netdev)) != 0)
 		goto err_register_netdev;
 
 	/* Mark as link up, since we have no way to test link state on
-		 * this hardware.
-		 */
+	 * this hardware.
+	 */
+
+	ionic_check_link(netdev);
 	netdev_link_up(netdev);
 
 	return 0;
@@ -326,8 +340,10 @@ err_register_netdev:
 	ionic_reset(ionic);
 err_free_alloc:
 	ionic_qcq_dealloc(ionic->ionic_lif->adminqcq);
+	ionic_qcq_dealloc(ionic->ionic_lif->notifyqcqs);
 	ionic_qcq_dealloc(ionic->ionic_lif->txqcqs);
 	ionic_qcq_dealloc(ionic->ionic_lif->rxqcqs);
+	free_dma(ionic->ionic_lif->notifyblock, sizeof(ionic->ionic_lif->notifyblock_sz));
 	free(ionic->ionic_lif);
 err_free_identify:
 	free_dma(ionic->ident, sizeof(union identity));
@@ -358,9 +374,11 @@ static void ionic_remove(struct pci_device *pci)
 
 	// Free network device
 	free_dma(ionic->ident, sizeof(union identity));
-	free(ionic->ionic_lif->adminqcq);
-	free(ionic->ionic_lif->txqcqs);
-	free(ionic->ionic_lif->rxqcqs);
+	ionic_qcq_dealloc(ionic->ionic_lif->adminqcq);
+	ionic_qcq_dealloc(ionic->ionic_lif->notifyqcqs);
+	ionic_qcq_dealloc(ionic->ionic_lif->txqcqs);
+	ionic_qcq_dealloc(ionic->ionic_lif->rxqcqs);
+	free_dma(ionic->ionic_lif->notifyblock, sizeof(ionic->ionic_lif->notifyblock_sz));
 	free(ionic->ionic_lif);
 	ionic_unmap_bars(ionic);
 	netdev_nullify(netdev);

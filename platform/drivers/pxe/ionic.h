@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright 2017-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This program is free software; you may redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,10 +34,14 @@ FILE_LICENCE(GPL2_OR_LATER_OR_UBDL);
 #include <ipxe/iobuf.h>
 #include <ipxe/malloc.h>
 #include <ipxe/pci.h>
+
+typedef u64 dma_addr_t;
+#define BIT(n)  (1 << (n))
+
 #include "ionic_if.h"
 
 #undef ERRFILE
-#define ERRFILE ERRFILE_Ionic
+#define ERRFILE ERRFILE_ionic
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -50,9 +54,12 @@ FILE_LICENCE(GPL2_OR_LATER_OR_UBDL);
 #define __ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
 
 #define DRV_VERSION "1.0"
-#define IPXE_VERSION_CODE "1.0"
+#define IPXE_VERSION_CODE 1
+#define IPXE_OS_DIST_STR "iPXE"
+#define IPXE_KERNEL_VERSION_STR "iPXE"
 
-#define IONIC_MAX_MTU 2304
+
+#define IONIC_MAX_MTU 5000
 
 // Queue alignment
 #define IDENTITY_ALIGN 4096
@@ -79,14 +86,17 @@ FILE_LICENCE(GPL2_OR_LATER_OR_UBDL);
 #define QCQ_F_INTR BIT(2)
 #define QCQ_F_TX_STATS BIT(3)
 #define QCQ_F_RX_STATS BIT(4)
+#define QCQ_F_NOTIFYQ BIT(5)
 
 // Q related definitions
 #define QUEUE_NAME_MAX_SZ (32)
 #define LIF_NAME_MAX_SZ (32)
 #define DEFAULT_COS 0
 #define DEFAULT_INTR_INDEX 0
-#define NRXQ_DESC 1024
-#define RX_RING_DOORBELL_STRIDE ((1 << 3) - 1)
+#define NTXQ_DESC 128
+#define NRXQ_DESC 16
+#define NOTIFYQ_LENGTH	16
+//#define RX_RING_DOORBELL_STRIDE ((1 << 3) - 1)
 
 #define INTR_CTRL_REGS_MAX 64
 #define INTR_CTRL_COAL_MAX 0x3F
@@ -120,13 +130,6 @@ union dev_cmd {
 	struct identify_cmd identify;
 	struct lif_init_cmd lif_init;
 	struct adminq_init_cmd adminq_init;
-	struct station_mac_addr_get_cmd station_mac_addr_get;
-	struct txq_init_cmd txq_init;
-	struct rxq_init_cmd rxq_init;
-	struct q_enable_cmd q_enable;
-	struct q_disable_cmd q_disable;
-	struct rx_mode_set_cmd rx_mode_set;
-	struct rx_filter_add_cmd rx_filter_add;
 };
 
 union dev_cmd_comp {
@@ -365,9 +368,13 @@ struct lif
 	struct ionic *ionic;
 	unsigned int index;
 	struct qcq *adminqcq;
+	struct qcq *notifyqcqs;
 	struct qcq *txqcqs;
 	struct qcq *rxqcqs;
 	struct io_buffer *rx_iobuf[NRXQ_DESC];
+	u32 notifyblock_sz;
+	struct notify_block *notifyblock;
+	dma_addr_t notifyblock_pa;
 };
 
 struct ionic_dev
@@ -381,6 +388,7 @@ struct ionic_dev
 	unsigned long *hbm_inuse;
 	dma_addr_t phy_hbm_pages;
 	u32 hbm_npages;
+	union identity __iomem *ident;
 };
 
 /** An ionic network card */
@@ -431,9 +439,5 @@ bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 							   unsigned int lif_index);
-void ionic_dev_cmd_station_get(struct ionic_dev *idev);
-void ionic_dev_cmd_rxq_init(struct ionic_dev *idev, struct queue *rxq);
-void ionic_enable_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
-void ionic_disable_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
 unsigned int ionic_q_space_avail(struct queue *q);
 #endif /* _IONIC_H */
