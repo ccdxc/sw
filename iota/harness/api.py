@@ -181,6 +181,11 @@ def GetVeniceAuthToken():
 def IsSimulation():
     return GlobalOptions.mode == 'simulation'
 
+def GetNicMode():
+    return store.GetTestbed().GetCurrentTestsuite().GetNicMode()
+
+def GetTopDir():
+    return GlobalOptions.topdir
 
 # ================================
 # Wrappers for Trigger APIs

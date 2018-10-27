@@ -37,6 +37,8 @@ parser.add_argument('--image', dest='image',
                     default='/sw/nic/naples_fw.tar', help='Naples Image.')
 parser.add_argument('--drivers-ionic-pkg', dest='drivers_ionic_pkg',
                     default='/sw/platform/gen/drivers-linux.tar.xz', help='IONIC Driver Package.')
+parser.add_argument('--drivers-sonic-pkg', dest='drivers_sonic_pkg',
+                    default='/sw/storage/gen/storage-offload.tar.xz', help='IONIC Driver Package.')
 parser.add_argument('--host-username', dest='host_username',
                     default="root", help='Host Username')
 parser.add_argument('--host-password', dest='host_password',
@@ -215,8 +217,10 @@ class HostManagement:
     def reboot(self):
         self.hdl.sendline("sync")
         self.hdl.expect_exact("#")
-        self.hdl.sendline("reboot -f")
-        self.hdl.expect_exact(["#",pexpect.TIMEOUT], timeout=3)
+        self.hdl.sendline("ls -l /root/")
+        self.hdl.expect_exact("#")
+        self.hdl.sendline("reboot")
+        self.hdl.expect_exact(["#",pexpect.TIMEOUT, pexpect.EOF], timeout=10)
         self.hdl.close()
         
         # Wait for the host to start rebooting.
@@ -235,6 +239,8 @@ class HostManagement:
         return
 
     def install_drivers(self):
+        # Install SONIC driver package.
+        self.copyin(GlobalOptions.drivers_ionic_pkg, HOST_NAPLES_DRIVERS_DIR)
         self.run("cd %s && tar xaf %s" %\
                  (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_ionic_pkg)))
         self.run("cd %s/drivers-linux/ && ./setup_apt.sh" % HOST_NAPLES_DRIVERS_DIR)
@@ -244,6 +250,16 @@ class HostManagement:
         self.run("cd %s/drivers-linux/ && insmod drivers/eth/ionic/ionic.ko" % HOST_NAPLES_DRIVERS_DIR)
         #self.run("modprobe ib_uverbs")
         #self.run("cd %s/drivers-linux/ && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1" % HOST_NAPLES_DRIVERS_DIR)
+
+        # Install SONIC driver package.
+        self.copyin(GlobalOptions.drivers_sonic_pkg, HOST_NAPLES_DRIVERS_DIR)
+        self.run("cd %s && tar xaf %s" %\
+                 (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_sonic_pkg)))
+        self.run("cd %s/storage-offload/ && make modules" % HOST_NAPLES_DRIVERS_DIR)
+        self.run("rmmod pencake", ignore_result = True)
+        self.run("rmmod sonic", ignore_result = True)
+        self.run("cd %s/storage-offload/ && insmod sonic.ko core_count=2" % HOST_NAPLES_DRIVERS_DIR)
+        self.run("cd %s/storage-offload/ && insmod pencake.ko repeat=1" % HOST_NAPLES_DRIVERS_DIR)
         return
 
 def Main():
@@ -263,12 +279,12 @@ def Main():
     host.copyin(GlobalOptions.image, 
                 host_dir = HOST_NAPLES_IMAGES_DIR,
                 naples_dir = "/tmp")
-    # Copy IONIC driver package.
-    host.copyin(GlobalOptions.drivers_ionic_pkg, HOST_NAPLES_DRIVERS_DIR)
+    
     # Install the firmware
     nap.install_fw()
     host.reboot()
     host.init()
+    
     # Install the drivers.
     host.install_drivers()
     return

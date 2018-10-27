@@ -8,13 +8,13 @@ nodes:
       role: PERSONALITY_NAPLES
       mode: classic
       workloads:
-            type:   WORKLOAD_TYPE_BM
-            image:  ubuntu_18_04
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : ubuntu_18_04
 
 
     - node: node2
       name: mellanox1
       role: PERSONALITY_MELLANOX
       workloads:
-            type    : WORKLOAD_TYPE_BM
+            type    : WORKLOAD_TYPE_BARE_METAL
             image   : ubuntu_18_04

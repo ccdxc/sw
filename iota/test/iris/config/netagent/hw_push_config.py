@@ -121,7 +121,9 @@ def Main(step):
 
     __read_jsons()
     __init_host_if_db() 
-    __config()
+    if api.GetNicMode() != 'classic':
+        __config()
+
     __add_workloads()
     return api.types.status.SUCCESS
 

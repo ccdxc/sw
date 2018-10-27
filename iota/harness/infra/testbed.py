@@ -1,10 +1,11 @@
 #! /usr/bin/python3
 import pdb
 import os
+import sys
 
+import iota.harness.api as api
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.parser as parser
-import iota.harness.api as api
 import iota.harness.infra.store as store
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
@@ -31,6 +32,11 @@ class _Testbed:
         for instance in self.tbspec.Instances:
             self.__node_ips.append(instance.NodeMgmtIP)
         return
+
+    def __get_full_path(self, path):
+        if path[0] == '/':
+            return path
+        return GlobalOptions.topdir + '/' + path
     
     def __prepare_TestBedMsg(self, ts):
         msg = topo_pb2.TestBedMsg()
@@ -38,9 +44,12 @@ class _Testbed:
             return msg
         if not GlobalOptions.rerun:
             images = ts.GetImages()
-            msg.naples_image = getattr(images, 'naples', "")
-            msg.venice_image = getattr(images, 'venice', "")
-            msg.driver_sources = getattr(images, 'drivers', "")
+            nap_img = getattr(images, 'naples', None)
+            if nap_img:
+                msg.naples_image = self.__get_full_path(nap_img)
+            ven_img = getattr(images, 'venice', None)
+            if ven_img:
+                msg.venice_image = self.__get_full_path(ven_img)
 
         msg.username = self.tbspec.Provision.Username
         msg.password = self.tbspec.Provision.Password
@@ -73,6 +82,9 @@ class _Testbed:
         return getattr(resource, "NICType", None)
 
     def __recover_testbed(self):
+        if GlobalOptions.skip_firmware_upgrade:
+            return
+
         for instance in self.tbspec.Instances:
             if self.__get_instance_nic_type(instance) != "pensando": continue
             cmd = "%s/iota/scripts/boot_naples.py " % GlobalOptions.topdir
@@ -82,6 +94,8 @@ class _Testbed:
             cmd += "--cimc-ip %s " % instance.NodeCimcIP
             cmd += "--image %s/nic/naples_fw.tar " % GlobalOptions.topdir
             cmd += "--drivers-ionic-pkg %s/platform/gen/drivers-linux.tar.xz " % GlobalOptions.topdir
+            cmd += "--drivers-sonic-pkg %s/storage/gen/storage-offload.tar.xz " % GlobalOptions.topdir 
+            cmd += "--mode %s " % self.curr_ts.GetNicMode()
             ret = os.system(cmd)
             if ret != 0:
                 Logger.error("Recovery failed for %s" % instance.Name)

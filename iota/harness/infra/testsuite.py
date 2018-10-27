@@ -43,10 +43,13 @@ class TestSuite:
     def GetTopology(self):
         return self.__topology
 
+    def GetNicMode(self):
+        return self.__spec.meta.nicmode
+
     def __resolve_testcases(self):
         for tc_spec in self.__spec.testcases:
             tc_spec.packages = self.__spec.packages
-            if tc_spec.verifs:
+            if getattr(tc_spec, 'verifs', None):
                 tc_spec.verifs.extend(self.__spec.common.verifs)
             tc = testcase.Testcase(tc_spec)
             self.__tcs.append(tc)

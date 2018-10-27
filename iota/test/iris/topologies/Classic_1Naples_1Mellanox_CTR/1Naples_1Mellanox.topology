@@ -9,7 +9,7 @@ nodes:
       mode: classic
       workloads:
             type:   WORKLOAD_TYPE_CONTAINER
-            image:  ubuntu_18_04
+            image:  "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
 
 
     - node: node2
@@ -17,4 +17,4 @@ nodes:
       role: PERSONALITY_MELLANOX
       workloads:
             type    : WORKLOAD_TYPE_CONTAINER
-            image   : ubuntu_18_04
+            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0"

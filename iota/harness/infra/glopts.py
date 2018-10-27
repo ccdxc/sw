@@ -30,6 +30,10 @@ parser.add_argument('--pipeline', dest='pipeline', default="iris",
                     help='Filter tests by Pipeline')
 parser.add_argument('--rerun', dest='rerun',
                     action='store_true', help='Re-run mode, Skips copy and few init steps.')
+parser.add_argument('--skip-firmware-upgrade', dest='skip_firmware_upgrade',
+                    action='store_true', help='Skip Firmware Upgrade and Start Tests.')
+parser.add_argument('--only-firmware-upgrade', dest='only_firmware_upgrade',
+                    action='store_true', help='Only Do Firmware Upgrade and Stop.')
 GlobalOptions = parser.parse_args()
 
 def __validate():
