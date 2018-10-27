@@ -106,6 +106,22 @@ pal_default_qsfp_reset_low_power_mode(int port_no)
     return PAL_RET_OK;
 }
 
+static pal_ret_t
+pal_default_qsfp_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
+          qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    SDK_TRACE_DEBUG("PAL default pal_default_qsfp_read");
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_default_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
+           qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    SDK_TRACE_DEBUG("PAL default pal_default_qsfp_write");
+    return PAL_RET_OK;
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -127,6 +143,8 @@ pal_default_init_rwvectors (void)
                                          pal_default_qsfp_set_low_power_mode;
     gl_pal_info.rwvecs.qsfp_reset_low_power_mode =
                                          pal_default_qsfp_reset_low_power_mode;
+    gl_pal_info.rwvecs.qsfp_read = pal_default_qsfp_read;
+    gl_pal_info.rwvecs.qsfp_write = pal_default_qsfp_write;
 
     return PAL_RET_OK;
 }

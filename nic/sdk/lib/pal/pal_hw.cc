@@ -14,7 +14,7 @@ extern pal_info_t   gl_pal_info;
 typedef void (*hw_init_fn_t)(char *application_name);
 typedef void (*reg_read_fn_t)(uint64_t addr, uint32_t *data, uint32_t nw);
 typedef void (*reg_write_fn_t)(uint64_t addr, uint32_t *data, uint32_t nw);
-typedef void (*reg_write64_fn_t)(const u_int64_t pa, const u_int64_t val);
+typedef void (*reg_write64_fn_t)(const uint64_t pa, const uint64_t val);
 typedef int (*mem_read_fn_t)(uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags);
 typedef int (*mem_write_fn_t)(uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags);
 typedef bool (*ring_doorbell_fn_t)(uint64_t addr, uint64_t data);
@@ -26,22 +26,28 @@ typedef int (*qsfp_set_port_fn_t)(int port_no);
 typedef int (*qsfp_reset_port_fn_t)(int port_no);
 typedef int (*qsfp_set_low_power_mode_fn_t)(int port_no);
 typedef int (*qsfp_reset_low_power_mode_fn_t)(int port_no);
-
+typedef int (*qsfp_read_fn_t)(const uint8_t *buffer, uint32_t size, uint32_t offset,
+                              uint32_t nretry, uint32_t port);
+typedef int (*qsfp_write_fn_t)(const uint8_t *buffer, uint32_t size, uint32_t addr,
+                               uint32_t nretry, uint32_t port);
+                               
 typedef struct pal_hw_vectors_s {
-    hw_init_fn_t                	hw_init;
-    reg_read_fn_t               	reg_read;
-    reg_write_fn_t              	reg_write;
-    reg_write64_fn_t            	reg_write64;
-    mem_read_fn_t               	mem_read;
-    mem_write_fn_t              	mem_write;
-    mem_vtop_fn_t               	mem_vtop;
-    mem_ptov_fn_t               	mem_ptov;
-    memset_fn_t                 	mem_set;
-    is_qsfp_port_present_fn_t		is_qsfp_port_present;
-    qsfp_set_port_fn_t	        	qsfp_set_port;
-    qsfp_reset_port_fn_t		qsfp_reset_port;
-    qsfp_set_low_power_mode_fn_t 	qsfp_set_low_power_mode;
-    qsfp_reset_low_power_mode_fn_t	qsfp_reset_low_power_mode;
+    hw_init_fn_t                hw_init;
+    reg_read_fn_t               reg_read;
+    reg_write_fn_t              reg_write;
+    reg_write64_fn_t            reg_write64;
+    mem_read_fn_t               mem_read;
+    mem_write_fn_t              mem_write;
+    mem_vtop_fn_t               mem_vtop;
+    mem_ptov_fn_t               mem_ptov;
+    memset_fn_t                 mem_set;
+    is_qsfp_port_present_fn_t   is_qsfp_port_present;
+    qsfp_set_port_fn_t          qsfp_set_port;
+    qsfp_reset_port_fn_t        qsfp_reset_port;
+    qsfp_set_low_power_mode_fn_t qsfp_set_low_power_mode;
+    qsfp_reset_low_power_mode_fn_t qsfp_reset_low_power_mode;
+    qsfp_read_fn_t              qsfp_read;
+    qsfp_write_fn_t             qsfp_write;
 } pal_hw_vectors_t;
 
 static pal_hw_vectors_t   gl_hw_vecs;
@@ -96,6 +102,13 @@ pal_init_hw_vectors (void)
                                       "pal_qsfp_reset_low_power_mode");
     SDK_ASSERT(gl_hw_vecs.qsfp_reset_low_power_mode);
 
+    gl_hw_vecs.qsfp_read = (qsfp_read_fn_t)dlsym(gl_lib_handle,
+                                      "pal_qsfp_read");
+    SDK_ASSERT(gl_hw_vecs.qsfp_read);
+
+    gl_hw_vecs.qsfp_write = (qsfp_write_fn_t)dlsym(gl_lib_handle,
+                                      "pal_qsfp_write");
+    SDK_ASSERT(gl_hw_vecs.qsfp_write);
 
     return PAL_RET_OK;
 }
@@ -215,6 +228,65 @@ pal_hw_qsfp_reset_low_power_mode(int port_no)
 }
 
 static pal_ret_t
+pal_hw_qsfp_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
+                 qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    qsfp_page_t lowpage = QSFP_PAGE_LOW;
+    pal_ret_t ret = PAL_RET_OK;
+
+    if(size == 0) {
+        SDK_TRACE_DEBUG("%s::size cannot be zero", __FUNCTION__);
+        return PAL_RET_NOK;
+    }
+
+    if(page != QSFP_PAGE_LOW) {
+        if((*gl_hw_vecs.qsfp_write)((uint8_t *)&page, 1, QSFP_PAGE_OFFSET, nretry, port) != 0) {
+            return PAL_RET_NOK;
+        }
+    }
+
+    if((*gl_hw_vecs.qsfp_read)(buffer, size, offset, nretry, port) != 0) {
+        ret = PAL_RET_NOK;
+    }
+    if(page != QSFP_PAGE_LOW) {
+        if((*gl_hw_vecs.qsfp_write)((uint8_t *)&lowpage, 1, QSFP_PAGE_OFFSET, nretry, port) != 0) {
+            ret = PAL_RET_NOK;
+        }
+    }
+    return ret;
+}
+
+static pal_ret_t
+pal_hw_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
+                  qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+
+    qsfp_page_t lowpage = QSFP_PAGE_LOW;
+    pal_ret_t ret = PAL_RET_OK;
+
+    if(size == 0) {
+        SDK_TRACE_DEBUG("%s::size cannot be zero", __FUNCTION__);
+        return PAL_RET_NOK;
+    }
+
+    if(page != QSFP_PAGE_LOW) {
+        if((*gl_hw_vecs.qsfp_write)((uint8_t *)&page, 1, QSFP_PAGE_OFFSET, nretry, port) != 0) {
+            return PAL_RET_NOK;
+        }
+    }
+
+    if((*gl_hw_vecs.qsfp_write)(buffer, size, offset, nretry, port) != 0) {
+        ret = PAL_RET_NOK;
+    }
+    if(page != QSFP_PAGE_LOW) {
+        if((*gl_hw_vecs.qsfp_write)((uint8_t *)&lowpage, 1, QSFP_PAGE_OFFSET, nretry, port) != 0) {
+            ret = PAL_RET_NOK;
+        }
+    }
+    return ret;
+}
+
+static pal_ret_t
 pal_hw_init_rwvectors (void)
 {
     gl_pal_info.rwvecs.reg_read = pal_hw_reg_read;
@@ -232,6 +304,8 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.qsfp_reset_port = pal_hw_qsfp_reset_port;
     gl_pal_info.rwvecs.qsfp_set_low_power_mode = pal_hw_qsfp_set_low_power_mode;
     gl_pal_info.rwvecs.qsfp_reset_low_power_mode = pal_hw_qsfp_reset_low_power_mode;
+    gl_pal_info.rwvecs.qsfp_read = pal_hw_qsfp_read;
+    gl_pal_info.rwvecs.qsfp_write = pal_hw_qsfp_write;
 
     pal_init_hw_vectors();
 

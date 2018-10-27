@@ -14,6 +14,17 @@ typedef enum pal_ret_s {
     PAL_RET_NOK,
 } pal_ret_t;
 
+typedef enum qsfp_page {
+    QSFP_PAGE_LOW,
+    QSFP_PAGE_HIGH0,
+    QSFP_PAGE_HIGH1,
+    QSFP_PAGE_HIGH2,
+    QSFP_PAGE_HIGH3,
+} qsfp_page_t;
+
+#define QSFP_PAGE_OFFSET  127
+#define MAX_QSFP_RETRIES 5
+
 #define IS_PAL_API_SUCCESS(_ret) ((_ret) == sdk::lib::PAL_RET_OK)
 #define IS_PAL_API_FAILURE(_ret) ((_ret) != sdk::lib::PAL_RET_OK)
 
@@ -41,6 +52,12 @@ typedef struct pal_rwvectors_s {
     pal_ret_t   (*qsfp_reset_port)(int port_no);
     pal_ret_t   (*qsfp_set_low_power_mode)(int port_no);
     pal_ret_t   (*qsfp_reset_low_power_mode)(int port_no);
+    pal_ret_t   (*qsfp_read)(const uint8_t *buffer, uint32_t size,
+                             uint32_t offset, qsfp_page_t page,
+                             uint32_t nretry, uint32_t port);
+    pal_ret_t   (*qsfp_write)(const uint8_t *buffer, uint32_t size,
+                             uint32_t offset, qsfp_page_t page,
+                             uint32_t nretry, uint32_t port);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
@@ -133,6 +150,22 @@ static inline pal_ret_t
 pal_qsfp_reset_low_power_mode(int port_no)
 {
     return gl_pal_info.rwvecs.qsfp_reset_low_power_mode(port_no);
+}
+
+static inline pal_ret_t
+pal_qsfp_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
+              qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    return gl_pal_info.rwvecs.qsfp_read(buffer, size, offset,
+                                            page, nretry, port);
+}
+
+static inline pal_ret_t
+pal_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
+               qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    return gl_pal_info.rwvecs.qsfp_write(buffer, size, offset,
+                                            page, nretry, port);
 }
 
 }    // namespace lib

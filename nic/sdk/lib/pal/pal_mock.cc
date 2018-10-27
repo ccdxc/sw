@@ -66,6 +66,22 @@ pal_mock_is_qsfp_port_present(int port_no)
     return true;
 }
 
+inline pal_ret_t
+pal_mock_qsfp_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
+          qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    SDK_TRACE_DEBUG("PAL default pal_mock_qsfp_read");
+    return PAL_RET_OK;
+}
+
+inline pal_ret_t
+pal_mock_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
+           qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    SDK_TRACE_DEBUG("PAL default pal_mock_qsfp_write");
+    return PAL_RET_OK;
+}
+
 pal_ret_t
 pal_mock_init_rwvectors (void)
 {
@@ -80,7 +96,8 @@ pal_mock_init_rwvectors (void)
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
                             pal_mock_virtual_addr_to_physical_addr;
     gl_pal_info.rwvecs.is_qsfp_port_present = pal_mock_is_qsfp_port_present;
-
+    gl_pal_info.rwvecs.qsfp_read = pal_mock_qsfp_read;
+    gl_pal_info.rwvecs.qsfp_write = pal_mock_qsfp_write;
     return PAL_RET_OK;
 }
 

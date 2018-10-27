@@ -181,6 +181,22 @@ pal_sim_connect (void)
 }
 
 pal_ret_t
+pal_sim_qsfp_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
+          qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    SDK_TRACE_DEBUG("PAL default pal_sim_qsfp_read");
+    return PAL_RET_OK;
+}
+
+pal_ret_t
+pal_sim_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
+           qsfp_page_t page, uint32_t nretry, uint32_t port)
+{
+    SDK_TRACE_DEBUG("PAL default pal_sim_qsfp_write");
+    return PAL_RET_OK;
+}
+
+pal_ret_t
 pal_sim_init_rwvectors (void)
 {
     gl_pal_info.rwvecs.reg_read = pal_sim_reg_read;
@@ -194,7 +210,8 @@ pal_sim_init_rwvectors (void)
                         pal_sim_physical_addr_to_virtual_addr;
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
                         pal_sim_virtual_addr_to_physical_addr;
-
+    gl_pal_info.rwvecs.qsfp_read = pal_sim_qsfp_read;
+    gl_pal_info.rwvecs.qsfp_write = pal_sim_qsfp_write;
     pal_init_sim_vectors();
 
     return PAL_RET_OK;
