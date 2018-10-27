@@ -1188,7 +1188,9 @@ Eth::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
             ETH_HW_RX_CSUM |
             ETH_HW_TX_CSUM |
             ETH_HW_RX_HASH |
-            ETH_HW_TX_SG
+            ETH_HW_TX_SG |
+            ETH_HW_TSO |
+            ETH_HW_TSO_IPV6
         );
     } else {
         comp->supported = (
