@@ -30,3 +30,14 @@ message SysmgrServiceStatus {
     string                 Key   = 2;
     int32                  Pid   = 3;
 }
+
+message SysmgrServiceSpec {
+    option (delphi.update_event)         = true;
+    delphi.ObjectMeta      Meta          = 1;
+    string                 Key           = 2;
+    string                 Command       = 3;
+    repeated string        Dependencies  = 4;
+    repeated string        Environment   = 5;
+    bool                   DelphiService = 7;
+    bool                   Restartable   = 8;
+}

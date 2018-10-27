@@ -72,6 +72,8 @@
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
 
+#include "nic/hal/iris/delphi/delphi.hpp"
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -163,6 +165,10 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
                     g_grpc_server_addr.c_str());
     hal::utils::hal_logger()->flush();
     HAL_SYSLOG_INFO("HAL-STATUS:UP");
+
+    // notify sysmgr that we are up
+    hal::svc::delphic->init_done();
+    
 
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());

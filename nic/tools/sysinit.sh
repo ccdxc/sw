@@ -5,6 +5,8 @@ export PLATFORM_DIR='/platform'
 export FWD_MODE="$1"
 export PLATFORM="$2"
 
+export LD_LIBRARY_PATH=$NIC_DIR/lib:$PLATFORM_DIR/lib
+
 ulimit -c unlimited
 
 cd /
@@ -29,16 +31,21 @@ if [[ ! -f $PLATFORM_DIR/bin/nicmgrd ]]; then
     exit 1
 fi
 
+# start sysmgr
+rm -f *.log
+rm -f agent.log* /tmp/*.db
+$NIC_DIR/bin/sysmgr &
+[[ $? -ne 0 ]] && echo "Aborting Sysinit - Sysmgr failed to start!" && exit 1
+
 # start HAL
-$NIC_DIR/tools/start-hal-haps.sh "$FWD_MODE" "$PLATFORM"
-[[ $? -ne 0 ]] && echo "Aborting Sysinit - HAL failed to start!" && exit 1
+#$NIC_DIR/tools/start-hal-haps.sh
+#[[ $? -ne 0 ]] && echo "Aborting Sysinit - HAL failed to start!" && exit 1
 
 # start netagent
 # Remove logs
-rm -f agent.log* /tmp/*.db
-
-$NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
-[[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
+#sleep 20
+#$NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
+#[[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
 
 #if [[ "$FWD_MODE" != "classic" ]]; then
 #    # Remove logs
@@ -53,11 +60,9 @@ $NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
 #    $NIC_DIR/tools/port_op.sh --create --port 9 --speed 1 --type mgmt --enable 1
 #fi
 
-sleep 30
-
 # start nicmgr
-PAL_TRACE='/pal_nicmgr.log' $PLATFORM_DIR/tools/start-nicmgr-haps.sh "$FWD_MODE"
-[[ $? -ne 0 ]] && echo "Aborting Sysinit - NICMGR failed to start!" && exit 1
+#PAL_TRACE='/pal_nicmgr.log' $PLATFORM_DIR/tools/start-nicmgr-haps.sh
+#[[ $? -ne 0 ]] && echo "Aborting Sysinit - NICMGR failed to start!" && exit 1
 
 # Renice HAL & LINKMGR so other apps & kernel contexts can run
 # renice 20 `pidof hal`

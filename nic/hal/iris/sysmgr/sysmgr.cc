@@ -8,14 +8,21 @@
 namespace hal {
 namespace sysmgr {
 
-std::pair<delphi::error, std::string>
-sysmgr_client::Heartbeat(void) {
-    if (hal::hb::is_hal_healthy()) {
-        return std::make_pair(delphi::error::OK(), "");
-    } else {
-        return std::make_pair(delphi::error::New("HAL heartbeat failure"), "");
-    }
-}
+   void sysmgr_client::init_done()
+   {
+      this->init_ok = true;
+      if (init_ok && mount_ok) {
+	 this->sysmgr_->init_done();
+      }
+   }
 
+   void sysmgr_client::mount_done()
+   {
+      this->mount_ok = true;
+      if (init_ok && mount_ok) {
+	 this->sysmgr_->init_done();
+      }
+   }
+   
 }    // namespace sysmgr
 }    // namespace hal

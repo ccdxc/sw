@@ -12,31 +12,51 @@
 
 using namespace std;
 
-class ExampleService : public delphi::Service, public enable_shared_from_this<ExampleService>
+class ExampleService :
+   public delphi::Service,
+   public sysmgr::ServiceStatusReactor,
+   public enable_shared_from_this<ExampleService>
 {
-  private:
-    delphi::SdkPtr delphi;
-    string name;
-    sysmgr::Client sysmgr;
+private:
+   delphi::SdkPtr delphi;
+   string name;
+   sysmgr::ClientPtr sysmgr;
 
-  public:
-    ExampleService(delphi::SdkPtr delphi, string name): sysmgr(delphi, name)
-    {
-        this->delphi = delphi;
-        this->name = name;
-    }
+public:
+   ExampleService(delphi::SdkPtr delphi, string name)
+   {
+      this->delphi = delphi;
+      this->name = name;
+      this->sysmgr = sysmgr::CreateClient(delphi, name);
+   }
 
-    virtual void OnMountComplete()
-    {
-        this->sysmgr.init_done();
-    }
+   void register_mounts()
+   {
+      this->sysmgr->register_service_reactor(
+	 "TestCompleteService",
+	 shared_from_this());
+   }
+
+   virtual void OnMountComplete()
+   {
+      this->sysmgr->init_done();
+   }
+
+   virtual void ServiceUp(std::string name)
+   {
+   }
+
+   virtual void ServiceDown(std::string)
+   {
+   }
 };
 
 int main(int argc, char **argv) {
-    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
+   delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
+   
+   shared_ptr<ExampleService> svc = make_shared<ExampleService>(sdk, "ExampleService");
+   svc->register_mounts();
+   sdk->RegisterService(svc);
 
-    shared_ptr<ExampleService> svc = make_shared<ExampleService>(sdk, "ExampleService");
-    sdk->RegisterService(svc);
-
-    return sdk->MainLoop();
+   return sdk->MainLoop();
 }

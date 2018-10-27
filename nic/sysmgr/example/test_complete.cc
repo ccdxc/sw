@@ -17,18 +17,19 @@ class TestCompleteService : public delphi::Service, public enable_shared_from_th
   private:
     delphi::SdkPtr sdk;
     string name;
-    sysmgr::Client sysmgr;
+    sysmgr::ClientPtr sysmgr;
 
   public:
-    TestCompleteService(delphi::SdkPtr sdk, string name): sysmgr(sdk, name)
+    TestCompleteService(delphi::SdkPtr sdk, string name)
     {
         this->sdk = sdk;
         this->name = name;
+	this->sysmgr = sysmgr::CreateClient(sdk, name);
     }
 
     virtual void OnMountComplete()
     {
-        this->sysmgr.init_done();
+        this->sysmgr->init_done();
     }
 
     virtual bool SkipHeartbeat()

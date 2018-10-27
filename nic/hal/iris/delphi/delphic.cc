@@ -17,14 +17,16 @@ using namespace std;
 using grpc::Status;
 using hal::upgrade::upgrade_handler;
 
+
+delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
+shared_ptr<delphi_client> delphic = make_shared<delphi_client>(sdk);
+
 //------------------------------------------------------------------------------
 // starting point for delphi thread
 //------------------------------------------------------------------------------
 void *
 delphi_client_start (void *ctxt)
 {
-    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-    shared_ptr<delphi_client> delphic = make_shared<delphi_client>(sdk);
     HAL_ASSERT(delphic != NULL);
 
     HAL_TRACE_DEBUG("HAL delphi thread started...");
@@ -46,15 +48,19 @@ delphi_client_start (void *ctxt)
 //------------------------------------------------------------------------------
 // delphi_client constructor
 //------------------------------------------------------------------------------
-delphi_client::delphi_client(delphi::SdkPtr sdk) : sysmgr_(sdk)
+delphi_client::delphi_client(delphi::SdkPtr &sdk) 
 {
     sdk_ = sdk;
+    sysmgr_ = ::sysmgr::CreateClient(sdk_, "hal");
     upgsdk_ =
         make_shared<::upgrade::UpgSdk>(sdk_, make_shared<upgrade_handler>(),
                                        "hal", ::upgrade::NON_AGENT, nullptr);
 
     // create the InterfaceSpec reactor
     if_svc_ = std::make_shared<if_svc>(sdk);
+
+    mount_ok = false;
+    init_ok = false;
 
     // mount InterfaceSpec objects
     delphi::objects::InterfaceSpec::Mount(sdk, delphi::ReadMode);
@@ -71,7 +77,21 @@ void
 delphi_client::OnMountComplete(void)
 {
     HAL_TRACE_DEBUG("OnMountComplete got called..");
+    mount_ok = true;
+    if (init_ok && this->mount_ok) {
+       sysmgr_->init_done();
+    }
 }
 
+void
+delphi_client::init_done(void)
+{
+   HAL_TRACE_DEBUG("Init done called..");
+   init_ok = true;
+   if (init_ok && mount_ok) {
+      sysmgr_->init_done();
+   }
+}
+   
 }    // namespace svc
 }    // namespace hal

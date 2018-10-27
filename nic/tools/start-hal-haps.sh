@@ -6,9 +6,11 @@ export NIC_DIR=`dirname $ABS_TOOLS_DIR`
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
-export HAL_LOG_FILE='/hal.stdout'
-export FWD_MODE="$1"
-export PLATFORM="$2"
+
+# These two must be set before the script gets executed 
+#export FWD_MODE="$1"
+#export PLATFORM="$2"
+
 export DISABLE_AGING=1
 
 # Remove logs
@@ -23,21 +25,23 @@ else
 fi
 
 if [[ "$PLATFORM" != "hw" ]]; then
-    LD_LIBRARY_PATH=$HAL_LIBRARY_PATH $NIC_DIR/bin/hal -c hal_haps.json > $HAL_LOG_FILE 2>&1 &
+    export LD_LIBRARY_PATH=$HAL_LIBRARY_PATH
+    exec $NIC_DIR/bin/hal -c hal_haps.json
 else
-    LD_LIBRARY_PATH=$HAL_LIBRARY_PATH $NIC_DIR/bin/hal -c hal_hw.json -p catalog_hw.json > $HAL_LOG_FILE 2>&1 &
+    export LD_LIBRARY_PATH=$HAL_LIBRARY_PATH
+    exec $NIC_DIR/bin/hal -c hal_hw.json -p catalog_hw.json
 fi
 [[ $? -ne 0 ]] && echo "Failed to start HAL!" && exit 1
 
-echo "HAL WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
+# echo "HAL WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
 
-while [ 1 ]
-do
-    OUTPUT="$(cat /hal.log 2>&1 | grep "gRPC server listening on")"
-    if [[ ! -z "$OUTPUT" ]]; then
-        break
-    fi
-    sleep 3
-done
+# while [ 1 ]
+# do
+#     OUTPUT="$(cat /hal.log 2>&1 | grep "gRPC server listening on")"
+#     if [[ ! -z "$OUTPUT" ]]; then
+#         break
+#     fi
+#     sleep 3
+# done
 
-echo "HAL UP: `date +%x_%H:%M:%S:%N`"
+# echo "HAL UP: `date +%x_%H:%M:%S:%N`"

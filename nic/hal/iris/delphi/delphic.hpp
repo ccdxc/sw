@@ -19,14 +19,17 @@ namespace svc {
 // delphi_client is the HAL’s delphi client obj
 class delphi_client : public delphi::Service {
 public:
-    delphi_client(delphi::SdkPtr sdk);
+   delphi_client(delphi::SdkPtr &sdk);
    void OnMountComplete(void);
+   void init_done();
 
 private:
-    delphi::SdkPtr          sdk_;
-    sysmgr_client           sysmgr_;
-    ::upgrade::UpgSdkPtr    upgsdk_;
-    if_svc_ptr_t            if_svc_;
+   delphi::SdkPtr          sdk_;
+   ::sysmgr::ClientPtr     sysmgr_;
+   ::upgrade::UpgSdkPtr    upgsdk_;
+   if_svc_ptr_t            if_svc_;
+   bool                    mount_ok;
+   bool                    init_ok;
 };
 
 }    // namespace svc

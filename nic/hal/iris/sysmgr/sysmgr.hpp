@@ -13,15 +13,21 @@
 namespace hal {
 namespace sysmgr {
 
-class sysmgr_client : public delphi::Service {
+class sysmgr_client {
 public:
-    sysmgr_client(delphi::SdkPtr sdk) : sysmgr_(sdk, "hal") {}
-    void OnMountComplete(void) { this->sysmgr_.init_done(); }
-    bool SkipHeartbeat(void) { return false; }
-    std::pair<delphi::error, std::string> Heartbeat(void);
+   sysmgr_client(delphi::SdkPtr &sdk) {
+      this->sysmgr_ = ::sysmgr::CreateClient(sdk, "hal");
+      init_ok = false;
+      mount_ok = false;
+   }
+   void init_done();
+   void mount_done();
+      
 
 private:
-    ::sysmgr::Client    sysmgr_;
+   ::sysmgr::ClientPtr sysmgr_;
+   bool init_ok;
+   bool mount_ok;
 };
 
 }    // namespace sysmgr
