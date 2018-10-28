@@ -28,6 +28,7 @@ using sdk::linkmgr::linkmgr_thread_id_t;
 namespace linkmgr {
 
 class linkmgr_state *g_linkmgr_state;
+hal::utils::log     *linkmgr_logger;
 
 sdk::lib::thread *
 current_thread (void)
@@ -81,6 +82,64 @@ svc_reg (ServerBuilder *server_builder,
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// logger init for linkmgr
+//------------------------------------------------------------------------------
+hal::utils::log *
+linkmgr_logger_init (void)
+{
+    std::string         logfile;
+    char                *logdir;
+    struct stat         st = { 0 };
+    hal::utils::log     *logger;
+
+    logdir = std::getenv("HAL_LOG_DIR");
+    if (!logdir) {
+        // log in the current dir
+        logfile = std::string("./linkmgr.log");
+    } else {
+        // check if this log dir exists
+        if (stat(logdir, &st) == -1) {
+            // doesn't exist, try to create
+            if (mkdir(logdir, 0755) < 0) {
+                fprintf(stderr,
+                        "Log directory %s/ doesn't exist, failed to create one\n",
+                        logdir);
+                return NULL;
+            }
+        } else {
+            // log dir exists, check if we have write permissions
+            if (access(logdir, W_OK) < 0) {
+                // don't have permissions to create this directory
+                fprintf(stderr,
+                        "No permissions to create log file in %s\n",
+                        logdir);
+                return NULL;
+            }
+        }
+        logfile = logdir + std::string("/linkmgr.log");
+    }
+
+    logger =
+        hal::utils::log::factory("linkmgr", 0x1, hal::utils::log_mode_sync,
+                                 false, logfile.c_str(),
+                                 TRACE_FILE_SIZE_DEFAULT,
+                                 1 /* number of files */,
+                                 hal::utils::trace_debug,
+                                 hal::utils::log_none);
+    HAL_ASSERT(logger != NULL);
+
+    return logger;
+}
+
+void linkmgr_log(std::string log_type,
+                 const char *buf,
+                 int len)
+{
+    linkmgr_logger->logger()->debug("{}", buf);
+    linkmgr_logger->logger()->flush();
+}
+
 hal_ret_t
 linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
 {
@@ -92,6 +151,10 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
 
     // store the catalog in global hal state
     g_linkmgr_state->set_catalog(sdk_cfg->catalog);
+
+    linkmgr_logger = linkmgr_logger_init();
+
+    sdk_cfg->port_log_fn = linkmgr_log;
 
     sdk_ret = sdk::linkmgr::linkmgr_init(sdk_cfg);
     if (sdk_ret != SDK_RET_OK) {

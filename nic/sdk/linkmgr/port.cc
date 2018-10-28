@@ -17,11 +17,6 @@ mac_fn_t    mac_fns;
 mac_fn_t    mac_mgmt_fns;
 serdes_fn_t serdes_fns;
 
-#define SDK_PORT_TRACE(port, state) { \
-    SDK_TRACE_DEBUG("MAC_ID: %d, MAC_CH: %d, state: %s", \
-                     port->mac_id_, port->mac_ch_, state); \
-}
-
 // Debounce timer expiration handler
 sdk_ret_t
 port::port_debounce_timer(void)
@@ -415,7 +410,7 @@ port::port_link_sm_dfe_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
 
-            SDK_PORT_TRACE(this, "start ICAL");
+            SDK_PORT_SM_DEBUG(this, "start ICAL");
 
             port_serdes_ical_start();
 
@@ -425,14 +420,12 @@ port::port_link_sm_dfe_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL:
 
-            SDK_PORT_TRACE(this, "wait ICAL");
+            SDK_PORT_SM_DEBUG(this, "wait ICAL");
 
             dfe_complete = port_serdes_dfe_complete();
 
             if(dfe_complete == false) {
                 this->bringup_timer_val_ += timeout;
-
-                SDK_TRACE_DEBUG("bringup timer: %d", timeout);
 
                 this->link_bring_up_timer_ =
                     sdk::lib::timer_schedule(
@@ -450,7 +443,7 @@ port::port_link_sm_dfe_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL:
 
-            SDK_PORT_TRACE(this, "start PCAL");
+            SDK_PORT_SM_DEBUG(this, "start PCAL");
 
             port_serdes_pcal_start();
 
@@ -460,14 +453,12 @@ port::port_link_sm_dfe_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL:
 
-            SDK_PORT_TRACE(this, "wait PCAL");
+            SDK_PORT_SM_DEBUG(this, "wait PCAL");
 
             dfe_complete = port_serdes_dfe_complete();
 
             if(dfe_complete == false) {
                 timeout = 100; // 100 msec for pCal
-
-                SDK_TRACE_DEBUG("bringup timer: %d", timeout);
 
                 this->bringup_timer_val_ += timeout;
 
@@ -535,20 +526,20 @@ port::port_link_sm_process(void)
             // reset number of link bringup retries
             set_num_retries(0);
 
-            SDK_PORT_TRACE(this, "Disabled");
+            SDK_PORT_SM_DEBUG(this, "Disabled");
 
             break;
 
         case port_link_sm_t::PORT_LINK_SM_ENABLED:
 
-            SDK_PORT_TRACE(this, "Enabled");
+            SDK_PORT_SM_DEBUG(this, "Enabled");
 
             // transition to serdes cfg state
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SERDES_CFG);
 
         case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
 
-            SDK_PORT_TRACE(this, "SerDes CFG");
+            SDK_PORT_SM_DEBUG(this, "SerDes CFG");
 
             // configure the serdes
             port_serdes_cfg();
@@ -561,7 +552,7 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
 
-            SDK_PORT_TRACE(this, "Wait SerDes RDY");
+            SDK_PORT_SM_DEBUG(this, "Wait SerDes RDY");
 
             serdes_rdy = port_serdes_rdy();
 
@@ -581,7 +572,7 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_MAC_CFG:
 
-            SDK_PORT_TRACE(this, "MAC CFG");
+            SDK_PORT_SM_DEBUG(this, "MAC CFG");
 
             // configure the mac
             port_mac_cfg();
@@ -604,7 +595,7 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
 
-            SDK_PORT_TRACE(this, "Wait for signal detect");
+            SDK_PORT_SM_DEBUG(this, "Wait for signal detect");
 
             sig_detect = port_serdes_signal_detect();
 
@@ -636,7 +627,7 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
 
-            SDK_PORT_TRACE(this, "Wait MAC SYNC");
+            SDK_PORT_SM_DEBUG(this, "Wait MAC SYNC");
 
             mac_sync = port_mac_sync_get();
 
@@ -657,7 +648,7 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:
 
-            SDK_PORT_TRACE(this, "Wait MAC faults clear");
+            SDK_PORT_SM_DEBUG(this, "Wait MAC faults clear");
 
             mac_faults = port_mac_faults_get();
 
@@ -677,11 +668,11 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_UP:
 
-            SDK_PORT_TRACE(this, "PCAL continuous");
+            SDK_PORT_SM_DEBUG(this, "PCAL continuous");
 
             port_serdes_pcal_continuous_start();
 
-            SDK_PORT_TRACE(this, "Link UP");
+            SDK_PORT_SM_TRACE(this, "Link UP");
 
             // enable mac interrupts
             port_mac_intr_en(true);

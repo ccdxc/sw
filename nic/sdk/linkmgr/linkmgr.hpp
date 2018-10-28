@@ -13,6 +13,10 @@ namespace linkmgr {
 typedef void (*port_event_notify_t)(uint32_t port_num,
                                     port_event_t port_event);
 
+typedef void (*port_log_fn_t)(std::string log_type,
+                              const char *buf,
+                              int len);
+
 typedef enum linkmgr_thread_id_e {
     LINKMGR_THREAD_ID_MIN         = 0,
     LINKMGR_THREAD_ID_CFG         = LINKMGR_THREAD_ID_MIN,
@@ -28,6 +32,7 @@ typedef struct linkmgr_cfg_s {
     void                *server_builder;
     const char          *cfg_path;
     port_event_notify_t port_event_cb;
+    port_log_fn_t       port_log_fn;
     bool                process_mode;
 } __PACK__ linkmgr_cfg_t;
 extern linkmgr_cfg_t g_linkmgr_cfg;

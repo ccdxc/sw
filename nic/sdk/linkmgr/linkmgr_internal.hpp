@@ -12,8 +12,41 @@ namespace linkmgr {
 
 #define MAX_PORT_LINKUP_RETRIES 100
 #define XCVR_POLL_TIME          1000 // 1000 ms = 1 s
+#define MAX_LOG_SIZE            1024
 
 extern linkmgr_cfg_t g_linkmgr_cfg;
+extern char log_buf[];
+
+#define SDK_LINKMGR_LOG(type, log_buf) { \
+    if (g_linkmgr_cfg.port_log_fn) {                                    \
+        g_linkmgr_cfg.port_log_fn(type, log_buf, strlen(log_buf));      \
+    } else {                                                            \
+        SDK_TRACE_DEBUG("%s", log_buf);                                 \
+    }                                                                   \
+}
+
+#define SDK_PORT_SM_LOG(type, port, state) {                            \
+    snprintf(log_buf, MAX_LOG_SIZE,                                     \
+             "port: %d, MAC_ID: %d, MAC_CH: %d, state: %s",             \
+             port->port_num(), port->mac_id_, port->mac_ch_, state);    \
+    SDK_LINKMGR_LOG(type, log_buf);                                     \
+}
+
+#define SDK_PORT_SM_DEBUG(port, state) \
+    SDK_PORT_SM_LOG("DEBUG", port, state)
+
+#define SDK_PORT_SM_TRACE(port, state) \
+    SDK_PORT_SM_LOG("TRACE", port, state)
+
+#define SDK_LINKMGR_TRACE_DEBUG(format, ...)  {             \
+    snprintf(log_buf, MAX_LOG_SIZE, format, ##__VA_ARGS__); \
+    SDK_LINKMGR_LOG("DEBUG", log_buf);                      \
+}
+
+#define SDK_LINKMGR_TRACE_ERR(format, ...)  {               \
+    snprintf(log_buf, MAX_LOG_SIZE, format, ##__VA_ARGS__); \
+    SDK_LINKMGR_LOG("ERROR", log_buf);                      \
+}
 
 sdk_ret_t
 linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data);

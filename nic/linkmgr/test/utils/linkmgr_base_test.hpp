@@ -61,8 +61,8 @@ linkmgr_initialize (const char c_file[])
     linkmgr::linkmgr_cfg_t       linkmgr_cfg;
 
     // Initialize the logger
-    trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
-               true, "linkmgr.log",
+    trace_init("linkmgr_gtest", sdk::lib::thread::control_cores_mask(),
+               true, "linkmgr_gtest.log",
                TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                trace_debug);
     sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);

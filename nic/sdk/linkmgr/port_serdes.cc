@@ -226,7 +226,7 @@ sbus_access (uint32_t sbus_addr,
     switch (command) {
     case 0x0:   // sbus reset
         /*
-        SDK_TRACE_DEBUG("sbus_reset."
+        SDK_LINKMGR_TRACE_DEBUG("sbus_reset."
                 " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
                 " ring: 0x%x, sbus_id: 0x%x",
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
@@ -235,7 +235,7 @@ sbus_access (uint32_t sbus_addr,
         if(ring_number == 0) {
             cap_pp_sbus_reset(chip_id, sbus_id);
         } else {
-            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            SDK_LINKMGR_TRACE_ERR("NO-OP for ring: %d", ring_number);
             // cap_ms_sbus_reset(chip_id, sbus_id);
         }
         status = 1;
@@ -244,7 +244,7 @@ sbus_access (uint32_t sbus_addr,
 
     case 0x1:   // sbus write
         /*
-        SDK_TRACE_DEBUG("sbus_write."
+        SDK_LINKMGR_TRACE_DEBUG("sbus_write."
                 " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
                 " ring: 0x%x, sbus_id: 0x%x",
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
@@ -253,7 +253,7 @@ sbus_access (uint32_t sbus_addr,
         if(ring_number == 0) {
             cap_pp_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
         } else {
-            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            SDK_LINKMGR_TRACE_ERR("NO-OP for ring: %d", ring_number);
             // cap_ms_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
         }
         status = 1;
@@ -263,12 +263,12 @@ sbus_access (uint32_t sbus_addr,
         if(ring_number == 0) {
             *sbus_data = cap_pp_sbus_read(chip_id, sbus_id, reg_addr);
         } else {
-            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            SDK_LINKMGR_TRACE_ERR("NO-OP for ring: %d", ring_number);
             // *sbus_data = cap_ms_sbus_read(chip_id, sbus_id, reg_addr);
         }
 
         /*
-        SDK_TRACE_DEBUG("sbus_read."
+        SDK_LINKMGR_TRACE_DEBUG("sbus_read."
                 " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
                 " ring: 0x%x, sbus_id: 0x%x, sbus:data: 0x%x",
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id,
@@ -279,7 +279,7 @@ sbus_access (uint32_t sbus_addr,
         break;
 
     default:
-        SDK_TRACE_DEBUG("Invalid cmd."
+        SDK_LINKMGR_TRACE_DEBUG("Invalid cmd."
                 " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
                 " ring: 0x%x, sbus_id: 0x%x",
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
@@ -321,7 +321,7 @@ int
 serdes_sbm_set_sbus_clock_divider (int val)
 {
     if (aapl != NULL) {
-        SDK_TRACE_DEBUG("SBUS master clock divider: %d", val);
+        SDK_LINKMGR_TRACE_DEBUG("SBUS master clock divider: %d", val);
         return avago_sbm_set_sbus_clock_divider(aapl, 0, val);
     }
     return 0;
@@ -361,7 +361,7 @@ serdes_global_init_hw(uint32_t     jtag_id,
         fclose(d_fp);
     }
 
-    SDK_TRACE_DEBUG("debug: %d, verbose: %d, int_timeout: %d\n",
+    SDK_LINKMGR_TRACE_DEBUG("debug: %d, verbose: %d, int_timeout: %d\n",
                     aapl->debug, aapl->verbose, aapl->serdes_int_timeout);
 
     if (aacs_connect == true) {
@@ -390,8 +390,8 @@ serdes_signal_detect_hw (uint32_t sbus_addr)
 
     avago_serdes_get_rx_data(aapl, sbus_addr, data);
 
-    SDK_TRACE_DEBUG("Rx Data: 0x%x 0x%x 0x%x 0x%x",
-                    data[0], data[1], data[2], data[3]);
+    SDK_LINKMGR_TRACE_DEBUG("Rx Data: 0x%lx 0x%lx 0x%lx 0x%lx",
+                            data[0], data[1], data[2], data[3]);
 
     // TODO workaround
     FILE *d_fp = fopen("/aapl_enable_ei", "r");
@@ -404,9 +404,9 @@ serdes_signal_detect_hw (uint32_t sbus_addr)
         idle = avago_serdes_get_electrical_idle (aapl, sbus_addr);
 
         if (idle == true) {
-            SDK_TRACE_DEBUG("EI detected on sbus: 0x%x", sbus_addr);
+            SDK_LINKMGR_TRACE_DEBUG("EI detected on sbus: 0x%x", sbus_addr);
         } else {
-            SDK_TRACE_DEBUG("EI not detected on sbus: 0x%x", sbus_addr);
+            SDK_LINKMGR_TRACE_DEBUG("EI not detected on sbus: 0x%x", sbus_addr);
         }
 
         // Disable electrical idle
@@ -495,7 +495,7 @@ serdes_spico_reset_hw (uint32_t sbus_addr)
     int rc = avago_spico_reset (aapl, sbus_addr);
 
     if (rc < 0) {
-        SDK_TRACE_ERR("spico reset failed for sbus: %u", sbus_addr);
+        SDK_LINKMGR_TRACE_ERR("spico reset failed for sbus: %u", sbus_addr);
     }
 
     return rc;
@@ -520,7 +520,7 @@ serdes_spico_upload_hw (uint32_t sbus_addr, const char* filename)
     int rc = avago_spico_upload_file(aapl, sbus_addr, 0, filename);
 
     if (rc < 0) {
-        SDK_TRACE_ERR("spico upload failed for sbus: %u", sbus_addr);
+        SDK_LINKMGR_TRACE_ERR("spico upload failed for sbus: %u", sbus_addr);
     }
 
     return rc;
@@ -605,7 +605,7 @@ serdes_eye_get_hw(uint32_t sbus_addr, int eye_type)
 
     switch (eye_type) {
         case 0:
-            SDK_TRACE_DEBUG ("Eye width (in real PI steps): %d\n"
+            SDK_LINKMGR_TRACE_DEBUG ("Eye width (in real PI steps): %d\n"
                              "Eye height (in DAC steps):    %d\n"
                              "Eye width (in mUI):           %d\n"
                              "Eye height (in mV):           %d",
@@ -648,7 +648,7 @@ serdes_spico_status_hw(uint32_t sbus_addr)
 
     avago_spico_status(aapl, sbus_addr, false /*no cache*/, &state);
 
-    SDK_TRACE_DEBUG("rev: 0x%x, build: 0x%x, pc: 0x%x, en: %d, state: %d,"
+    SDK_LINKMGR_TRACE_DEBUG("rev: 0x%x, build: 0x%x, pc: 0x%x, en: %d, state: %d,"
                     " clk: %d",
                     state.revision, state.build, state.pc, state.enabled,
                     state.state, state.clk);
@@ -743,7 +743,7 @@ serdes_prbs_start_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     uint32_t pre     = serdes_info->pre;
     uint32_t post    = serdes_info->post;
 
-    SDK_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
                     " rx_slip: 0x%x, rx_term: %d, amp: 0x%x, pre: 0x%x,"
                     " post: 0x%x",
                     sbus_addr, divider, width, tx_slip, rx_slip, rx_term,
@@ -751,7 +751,7 @@ serdes_prbs_start_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 
     Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
     if (NULL == cfg) {
-        SDK_TRACE_ERR("Failed to construct avago config");
+        SDK_LINKMGR_TRACE_ERR("Failed to construct avago config");
         return -1;
     }
 
@@ -783,7 +783,7 @@ serdes_prbs_start_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     avago_serdes_init(aapl, sbus_addr, cfg);
 
     if(aapl->return_code) {
-        SDK_TRACE_ERR("Failed to initialize SerDes\n");
+        SDK_LINKMGR_TRACE_ERR("Failed to initialize SerDes\n");
         return -1;
     }
 
@@ -802,7 +802,7 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     uint32_t pre     = serdes_info->pre;
     uint32_t post    = serdes_info->post;
 
-    SDK_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
                     " rx_slip: 0x%x, rx_term: %d, amp: 0x%x, pre: 0x%x,"
                     " post: 0x%x",
                     sbus_addr, divider, width, tx_slip, rx_slip, rx_term,
@@ -810,7 +810,7 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 
     Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
     if (NULL == cfg) {
-        SDK_TRACE_ERR("Failed to construct avago config");
+        SDK_LINKMGR_TRACE_ERR("Failed to construct avago config");
         return -1;
     }
 
@@ -841,7 +841,7 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     avago_serdes_init(aapl, sbus_addr, cfg);
 
     if(aapl->return_code) {
-        SDK_TRACE_ERR("Failed to initialize SerDes\n");
+        SDK_LINKMGR_TRACE_ERR("Failed to initialize SerDes\n");
         return -1;
     }
 

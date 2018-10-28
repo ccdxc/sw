@@ -12,6 +12,9 @@
 namespace sdk {
 namespace linkmgr {
 
+// global log buffer
+char log_buf[MAX_LOG_SIZE];
+
 // global sdk-linkmgr state
 linkmgr_state *g_linkmgr_state;
 
@@ -303,7 +306,7 @@ port_bringup_timer (linkmgr_entry_data_t *data)
         ret = port_p->port_disable();
 
         // Enable port only if max retries is not reached
-        if (retries < MAX_PORT_LINKUP_RETRIES) {
+        if (1 || retries < MAX_PORT_LINKUP_RETRIES) {
             port_p->set_num_retries(retries + 1);
             ret = port_p->port_enable();
         } else {
