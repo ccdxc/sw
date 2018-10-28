@@ -1596,8 +1596,10 @@ int main(int argc, char **argv) {
 
     logfile = std::string("./hal.log");
     hal::utils::trace_init("hal", 0x3, true,
-                            logfile.c_str(),
-                            hal::utils::trace_debug);
+                           logfile.c_str(),
+                           TRACE_FILE_SIZE_DEFAULT,
+                           TRACE_NUM_FILES_DEFAULT,
+                           hal::utils::trace_debug);
 
     HAL_TRACE_DEBUG("Starting Main ... ");
 

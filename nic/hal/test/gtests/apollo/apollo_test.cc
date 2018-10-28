@@ -700,7 +700,9 @@ TEST_F(apollo_test, test1) {
 
     printf("Connecting to ASIC SIM\n");
     hal::hal_sdk_init();
-    hal::utils::trace_init("hal", 0, true, "hal.log", hal::utils::trace_debug);
+    hal::utils::trace_init("hal", 0, true, "hal.log",
+                           TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
+                           hal::utils::trace_debug);
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_EQ(ret, HAL_RET_OK);
     printf("Loading Capri config\n");

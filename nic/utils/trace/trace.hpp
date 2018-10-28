@@ -82,6 +82,9 @@ enum syslog_level_e {
     log_debug     = 8,
 };
 
+#define TRACE_FILE_SIZE_DEFAULT        (10 << 20)     // 10 MB trace file by default
+#define TRACE_NUM_FILES_DEFAULT        1              // 1 file by default
+
 using logger = spdlog::logger;
 logger *hal_logger(void);
 logger *hal_syslogger(void);
@@ -94,6 +97,8 @@ public:
     static log *factory(const char *name, uint64_t cpu_mask,
                         log_mode_e log_mode, bool syslogger,
                         const char *trace_file_name,
+                        size_t file_size = TRACE_FILE_SIZE_DEFAULT,
+                        size_t max_files = TRACE_NUM_FILES_DEFAULT,
                         trace_level_e trace_level = trace_err,
                         syslog_level_e syslog_level = log_notice);
     static void destroy(log *logger_obj);
@@ -113,22 +118,21 @@ private:
     static const size_t                           k_async_qsize_;              // async queue size
     static const spdlog::async_overflow_policy    k_async_overflow_policy_;    // overflow policy
     static const std::chrono::milliseconds        k_flush_intvl_ms_;           // flush interval
-    static const size_t                           k_max_file_size_;            // max. trace file size
-    static const size_t                           k_max_files_;                // max. number of trace files before rotating
 
 private:
-    log(){}
+    log() {}
     ~log();
     bool init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
               bool syslogger, const char *trace_file_name,
+              size_t file_size, size_t max_files,
               trace_level_e trace_level, syslog_level_e syslog_level);
     static void set_cpu_affinity(void);
     spdlog::level::level_enum trace_level_to_spdlog_level(trace_level_e level);
     spdlog::level::level_enum syslog_level_to_spdlog_level(syslog_level_e level);
 };
 
-void trace_init(const char *name, uint64_t cpu_mask,
-                bool sync_mode, const char *trace_file,
+void trace_init(const char *name, uint64_t cpu_mask, bool sync_mode,
+                const char *trace_file, size_t file_size, size_t max_files,
                 trace_level_e trace_level);
 
 void trace_deinit(void);

@@ -564,6 +564,7 @@ hal_logger_init (hal_cfg_t *hal_cfg)
     hal_cfg->sync_mode_logging = true;
     hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
                            hal_cfg->sync_mode_logging, logfile.c_str(),
+                           TRACE_FILE_SIZE_DEFAULT, 10,    // 10 files
                            hal::utils::trace_debug);
 
     return HAL_RET_OK;

@@ -44,8 +44,6 @@ hal_trace_level (void)
 const size_t log::k_async_qsize_ = 64 * 1024;    // must be power of 2
 const spdlog::async_overflow_policy log::k_async_overflow_policy_ = spdlog::async_overflow_policy::discard_log_msg;
 const std::chrono::milliseconds log::k_flush_intvl_ms_ = std::chrono::milliseconds(10);
-const size_t log::k_max_file_size_ = 10*1024*1024;
-const size_t log::k_max_files_ = 10;
 
 // logger class methods
 spdlog::level::level_enum
@@ -112,6 +110,7 @@ log::set_cpu_affinity(void)
 bool
 log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
           bool syslogger, const char *trace_file_name,
+          size_t file_size, size_t max_files,
           trace_level_e trace_level, syslog_level_e syslog_level) {
     std::function<void()> worker_thread_cb = set_cpu_affinity;
 
@@ -129,8 +128,7 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
         logger_ = spdlog::syslog_logger(name, name, LOG_PID).get();
     } else {
         logger_ = spdlog::rotating_logger_mt(name, trace_file_name,
-                                             k_max_file_size_,
-                                             k_max_files_).get();
+                                             file_size, max_files).get();
     }
     if (logger_) {
         logger_->set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
@@ -150,6 +148,7 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
 log *
 log::factory(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
              bool syslogger, const char *trace_file_name,
+             size_t file_size, size_t max_files,
              trace_level_e trace_level, syslog_level_e syslog_level) {
     void    *mem;
     log     *new_logger;
@@ -165,6 +164,7 @@ log::factory(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
 
     new_logger = new (mem) log();
     if (new_logger->init(name, cpu_mask, log_mode, syslogger, trace_file_name,
+                         file_size, max_files,
                          trace_level, syslog_level) == false) {
         new_logger->~log();
         HAL_FREE(HAL_MEM_ALLOC_LIB_LOGGER, new_logger);
@@ -215,14 +215,17 @@ log::logger(void) {
 // wrapper HAL tracer init function
 void
 trace_init (const char *name, uint64_t cores_mask, bool sync_mode,
-            const char *trace_file, trace_level_e trace_level)
+            const char *trace_file, size_t file_size, size_t num_files,
+            trace_level_e trace_level)
 {
     if ((name == NULL) || (trace_file == NULL)) {
         return;
     }
     g_trace_logger = log::factory(name, cores_mask,
                                   sync_mode ? log_mode_sync : log_mode_async,
-                                  false, trace_file, trace_debug, log_none);
+                                  false, trace_file,
+                                  file_size, num_files,
+                                  trace_debug, log_none);
 }
 
 void

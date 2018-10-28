@@ -198,7 +198,9 @@ main (int argc, char **argv)
 
     // Initialize the logger
     trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
-                           true, "linkmgr.log", trace_debug);
+               true, "linkmgr.log",
+               TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
+               trace_debug);
     sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
 
     linkmgr::linkmgr_cfg_init();
