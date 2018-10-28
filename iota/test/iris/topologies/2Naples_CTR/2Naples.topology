@@ -1,0 +1,19 @@
+meta:
+    name: 2Naples
+    description: 2Naples Topology
+
+nodes:
+    - node: node1
+      name: naples1
+      role: PERSONALITY_NAPLES
+      workloads:
+            type    : WORKLOAD_TYPE_CONTAINER
+            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
+
+
+    - node: node2
+      name: naples2
+      role: PERSONALITY_NAPLES
+      workloads:
+            type    : WORKLOAD_TYPE_CONTAINER
+            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.0"

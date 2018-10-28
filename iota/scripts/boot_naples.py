@@ -36,9 +36,9 @@ parser.add_argument('--timeout', dest='timeout',
 parser.add_argument('--image', dest='image',
                     default='/sw/nic/naples_fw.tar', help='Naples Image.')
 parser.add_argument('--drivers-ionic-pkg', dest='drivers_ionic_pkg',
-                    default='/sw/platform/gen/drivers-linux.tar.xz', help='IONIC Driver Package.')
+                    default=None, help='IONIC Driver Package.')
 parser.add_argument('--drivers-sonic-pkg', dest='drivers_sonic_pkg',
-                    default='/sw/storage/gen/storage-offload.tar.xz', help='IONIC Driver Package.')
+                    default=None, help='IONIC Driver Package.')
 parser.add_argument('--host-username', dest='host_username',
                     default="root", help='Host Username')
 parser.add_argument('--host-password', dest='host_password',
@@ -103,8 +103,9 @@ class NaplesManagement:
             return
         if match_idx == 0:
             self.__login()
-        self.__reset()
-        match_idx = self.hdl.expect([ "Autoboot in 2 seconds; Press CTRL-B to stop",
+        #self.__reset()
+        self.__cimc_reset_restapi()
+        match_idx = self.hdl.expect(["Autoboot in 2 seconds; Press CTRL-B to stop",
                                       pexpect.TIMEOUT], timeout = 120)
         if match_idx == 1:
             print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
@@ -125,11 +126,13 @@ class NaplesManagement:
         hdl = pexpect.spawn("telnet %s" % GlobalOptions.console_ip)
         hdl.logfile = sys.stdout.buffer
         hdl.timeout = GlobalOptions.timeout
-        hdl.expect("Username:")
-        hdl.sendline(GlobalOptions.console_username)
-        hdl.expect("Password:")
-        hdl.sendline(GlobalOptions.console_password)
-        hdl.expect("ts#")
+        idx = hdl.expect(["Username:", "Password:"])
+        if idx == 0:
+            hdl.sendline(GlobalOptions.console_username)
+            hdl.expect("Password:")
+        if idx == 1:
+            hdl.sendline(GlobalOptions.console_password)
+        hdl.expect("#")
         for i in range(6):
             hdl.sendline("clear line %d" % (GlobalOptions.console_port - 2000))
             hdl.expect_exact("[confirm]")
@@ -142,7 +145,9 @@ class NaplesManagement:
         self.hdl.sendline("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
         self.hdl.expect_exact("Removing package directory /tmp/sysupdate", timeout = 600)
         self.__reset()
-        self.hdl.expect_exact("capri login:", timeout = 120)
+        idx = 0
+        while idx == 0:
+            idx = self.hdl.expect_exact(["#", "capri login:"], timeout = 120)
         self.__login()
         self.hdl.sendline("/nic/tools/sysinit.sh %s hw" % GlobalOptions.mode)
         self.hdl.expect_exact("All processes brought up, please check ...", timeout = 600)
@@ -231,49 +236,53 @@ class HostManagement:
 
     def init(self):
         assert(self.run("lspci | grep 1dd8") == 0)
-        self.hdl.sendline("/root/start_memtun.sh")
+        self.hdl.sendline("%s/start_memtun.sh" % HOST_NAPLES_DIR)
         self.hdl.expect_exact("#")
         self.run("ping -c 5 1.0.0.2")
         self.run("rm -f /root/.ssh/known_hosts")
-        self.run("apt install -y sshpass")
         return
 
     def install_drivers(self):
-        # Install SONIC driver package.
-        self.copyin(GlobalOptions.drivers_ionic_pkg, HOST_NAPLES_DRIVERS_DIR)
-        self.run("cd %s && tar xaf %s" %\
-                 (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_ionic_pkg)))
-        self.run("cd %s/drivers-linux/ && ./setup_apt.sh" % HOST_NAPLES_DRIVERS_DIR)
-        self.run("cd %s/drivers-linux/ && ./build.sh" % HOST_NAPLES_DRIVERS_DIR)
-        self.run("rmmod ionic", ignore_result = True)
-        self.run("rmmod ionic_rdma", ignore_result = True)
-        self.run("cd %s/drivers-linux/ && insmod drivers/eth/ionic/ionic.ko" % HOST_NAPLES_DRIVERS_DIR)
-        #self.run("modprobe ib_uverbs")
-        #self.run("cd %s/drivers-linux/ && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1" % HOST_NAPLES_DRIVERS_DIR)
+        if GlobalOptions.drivers_ionic_pkg:
+            # Install IONIC driver package.
+            self.copyin(GlobalOptions.drivers_ionic_pkg, HOST_NAPLES_DRIVERS_DIR)
+            self.run("cd %s && tar xaf %s" %\
+                     (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_ionic_pkg)))
+            self.run("cd %s/drivers-linux/ && ./setup_apt.sh" % HOST_NAPLES_DRIVERS_DIR)
+            self.run("cd %s/drivers-linux/ && ./build.sh" % HOST_NAPLES_DRIVERS_DIR)
+            self.run("rmmod ionic", ignore_result = True)
+            self.run("rmmod ionic_rdma", ignore_result = True)
+            self.run("cd %s/drivers-linux/ && insmod drivers/eth/ionic/ionic.ko" % HOST_NAPLES_DRIVERS_DIR)
+            #self.run("modprobe ib_uverbs")
+            #self.run("cd %s/drivers-linux/ && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1" % HOST_NAPLES_DRIVERS_DIR)
 
-        # Install SONIC driver package.
-        self.copyin(GlobalOptions.drivers_sonic_pkg, HOST_NAPLES_DRIVERS_DIR)
-        self.run("cd %s && tar xaf %s" %\
-                 (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_sonic_pkg)))
-        self.run("cd %s/storage-offload/ && make modules" % HOST_NAPLES_DRIVERS_DIR)
-        self.run("rmmod pencake", ignore_result = True)
-        self.run("rmmod sonic", ignore_result = True)
-        self.run("cd %s/storage-offload/ && insmod sonic.ko core_count=2" % HOST_NAPLES_DRIVERS_DIR)
-        self.run("cd %s/storage-offload/ && insmod pencake.ko repeat=1" % HOST_NAPLES_DRIVERS_DIR)
+        if GlobalOptions.drivers_sonic_pkg:
+            # Install SONIC driver package.
+            self.copyin(GlobalOptions.drivers_sonic_pkg, HOST_NAPLES_DRIVERS_DIR)
+            self.run("cd %s && tar xaf %s" %\
+                     (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_sonic_pkg)))
+            self.run("cd %s/storage-offload/ && make modules" % HOST_NAPLES_DRIVERS_DIR)
+            self.run("rmmod pencake", ignore_result = True)
+            self.run("rmmod sonic", ignore_result = True)
+            self.run("cd %s/storage-offload/ && insmod sonic.ko core_count=2" % HOST_NAPLES_DRIVERS_DIR)
+            self.run("cd %s/storage-offload/ && insmod pencake.ko repeat=1" % HOST_NAPLES_DRIVERS_DIR)
         return
 
 def Main():
     nap = NaplesManagement()
+    
     nap.clearline()
     nap.connect()
     nap.boot_altfw()
-
+    
     host = HostManagement()
-    host.reboot()
-    host.init()
     host.run("rm -rf %s" % HOST_NAPLES_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
+    host.copyin("/home/haps/memtun/memtun", HOST_NAPLES_DIR)
+    host.copyin("scripts/linux/start_memtun.sh", HOST_NAPLES_DIR)
+    host.reboot()
+    host.init()
 
     # Copy the firmare
     host.copyin(GlobalOptions.image, 

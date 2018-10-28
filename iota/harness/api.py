@@ -46,6 +46,12 @@ def __rpc(req, rpcfn):
         return None
     return resp
 
+def GetTestbedUsername():
+    return store.GetTestbed().GetProvisionUsername()
+
+def GetTestbedPassword():
+    return store.GetTestbed().GetProvisionPassword()
+
 def CleanupTestbed(req):
     global gl_topo_svc_stub
     Logger.debug("Cleaning up Testbed:")

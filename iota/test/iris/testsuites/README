@@ -4,6 +4,7 @@ meta:
     description : Simulation Test Suite
     mode        : simulation
     cfgmode     : netagent
+    nicmode     : classic
 
 # Python packages used by this testsuite
 packages:

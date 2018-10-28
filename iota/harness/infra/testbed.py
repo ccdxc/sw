@@ -2,6 +2,8 @@
 import pdb
 import os
 import sys
+import time
+import subprocess
 
 import iota.harness.api as api
 import iota.harness.infra.types as types
@@ -26,6 +28,12 @@ class _Testbed:
 
     def GetCurrentTestsuite(self):
         return self.curr_ts
+
+    def GetProvisionUsername(self):
+        return self.tbspec.Provision.Username
+
+    def GetProvisionPassword(self):
+        return self.tbspec.Provision.Password
 
     def __read_warmd_json(self):
         self.tbspec = parser.JsonParse(GlobalOptions.testbed_json)
@@ -84,22 +92,40 @@ class _Testbed:
     def __recover_testbed(self):
         if GlobalOptions.skip_firmware_upgrade:
             return
-
+        proc_hdls = []
+        logfiles = []
         for instance in self.tbspec.Instances:
             if self.__get_instance_nic_type(instance) != "pensando": continue
-            cmd = "%s/iota/scripts/boot_naples.py " % GlobalOptions.topdir
-            cmd += "--console-ip %s " % instance.NicConsoleIP
-            cmd += "--console-port %s " % instance.NicConsolePort
-            cmd += "--host-ip %s " % instance.NodeMgmtIP
-            cmd += "--cimc-ip %s " % instance.NodeCimcIP
-            cmd += "--image %s/nic/naples_fw.tar " % GlobalOptions.topdir
-            cmd += "--drivers-ionic-pkg %s/platform/gen/drivers-linux.tar.xz " % GlobalOptions.topdir
-            cmd += "--drivers-sonic-pkg %s/storage/gen/storage-offload.tar.xz " % GlobalOptions.topdir 
-            cmd += "--mode %s " % self.curr_ts.GetNicMode()
-            ret = os.system(cmd)
-            if ret != 0:
-                Logger.error("Recovery failed for %s" % instance.Name)
-                sys.exit(1)
+            cmd = [ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ]
+            cmd.extend(["--console-ip", instance.NicConsoleIP])
+            cmd.extend(["--console-port", instance.NicConsolePort])
+            cmd.extend(["--host-ip", instance.NodeMgmtIP])
+            cmd.extend(["--cimc-ip", instance.NodeCimcIP])
+            cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
+            cmd.extend(["--drivers-ionic-pkg", "%s/platform/gen/drivers-linux.tar.xz" % GlobalOptions.topdir])
+            #cmd.extend(["--drivers-sonic-pkg", "%s/storage/gen/storage-offload.tar.xz" % GlobalOptions.topdir])
+            logfile = "%s-recovery.log" % instance.Name
+            logfiles.append(logfile)
+            Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
+            Logger.info("Command = ", cmd)
+            loghdl = open(logfile, "w")
+            proc_hdl = subprocess.Popen(cmd, stdout=loghdl, stderr=loghdl)
+            proc_hdls.append(proc_hdl)
+
+        result = 0
+        for proc_hdl in proc_hdls:
+            while proc_hdl.poll() is None:
+                time.sleep(5)
+                continue
+            if proc_hdl.returncode != 0:
+                result = proc_hdl.returncode
+
+        if result != 0:
+            Logger.error("Firmware upgrade failed.")
+            for logfile in logfiles:
+                Logger.header("FIRMWARE UPGRADE LOGFILE: %s" % logfile)
+                os.system("cat %s" % logfile)
+            sys.exit(result)
         return
 
 

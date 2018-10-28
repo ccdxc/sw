@@ -41,8 +41,9 @@ def __hw_rest_api_handler(rest_api_path, obj):
         outfile.write(json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o))))
     outfile.close()
     for agent_ip in AGENT_IPS:
-        os.system("sshpass -p vm scp temp_config.json vm@%s:/home/vm/" % agent_ip)
-        ret = os.system("sshpass -p vm ssh vm@%s curl -X POST -d @temp_config.json -H \"Content-Type:application/json\" http://1.0.0.2:9007/%s" % (agent_ip, rest_api_path))
+        os.system("sshpass -p vm scp temp_config.json vm@%s:~" % agent_ip)
+        ret = os.system("sshpass -p %s ssh %s@%s curl -X POST -d @temp_config.json -H \"Content-Type:application/json\" http://1.0.0.2:9007/%s" %\
+                        (api.GetTestbedUsername(), api.GetTestbedPassword(), agent_ip, rest_api_path))
         assert(ret == 0)
     os.system("rm -f temp_config.json")
     return

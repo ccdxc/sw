@@ -3,6 +3,7 @@ meta:
     description : Simulation Test Suite
     mode        : simulation
     cfgmode     : netagent
+    nicmode     : hostpin
 
 packages:
     - iota.test.iris

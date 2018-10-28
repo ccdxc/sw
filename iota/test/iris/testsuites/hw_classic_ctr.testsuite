@@ -3,6 +3,7 @@ meta:
     description : Hardware Test Suite
     mode        : hardware
     cfgmode     : netagent
+    nicmode     : classic
 
 packages:
     - iota.test.iris

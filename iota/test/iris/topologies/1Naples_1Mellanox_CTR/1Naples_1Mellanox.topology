@@ -6,7 +6,6 @@ nodes:
     - node: node1
       name: naples1
       role: PERSONALITY_NAPLES
-      mode: classic
       workloads:
             type:   WORKLOAD_TYPE_CONTAINER
             image:  "registry.test.pensando.io:5000/pensando/iota/centos:1.0"
