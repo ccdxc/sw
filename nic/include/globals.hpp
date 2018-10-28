@@ -22,5 +22,11 @@
 #define NICMGR_VRF_ID_MAX                  64     // nicmgr vrf id range max
 #define NETAGENT_VRF_ID_MIN                65     // netagent vrf id range min
 
+// network security profile id ranges
+#define HAL_NWSEC_PROFILE_ID_MIN           0      // HAL security profile id min
+#define HAL_NWSEC_PROFILE_ID_MAX           15     // HAL security profile id max
+#define NETAGENT_NWSEC_PROFILE_ID_MIN      16     // netagent security profile id min
+#define NETAGENT_NWSEC_PROFILE_ID_MAX      255    // netagent security profile id max
+
 #endif    // __GLOBALS_HPP__
 

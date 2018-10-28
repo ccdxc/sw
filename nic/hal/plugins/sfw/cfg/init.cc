@@ -20,8 +20,8 @@ namespace sfw {
 
 NwSecurityServiceImpl    g_nwsec_svc;
 
-void 
-sfw_init_security_profile(hal_cfg_t *hal_cfg)
+static void 
+sfw_init_security_profile (hal_cfg_t *hal_cfg)
 {
     hal_ret_t                ret;
     SecurityProfileSpec      prof; 
