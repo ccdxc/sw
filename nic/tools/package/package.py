@@ -9,6 +9,7 @@ pwd          = os.getcwd()
 files        = [ ]#'nic/tools/package/pack_common.txt' ]
 
 # default is aarch64 packaging and strip the libs and binaries
+arch         = 'aarch64'
 arm_pkg      = 1
 strip_target = 1
 create_tgz   = 1
@@ -27,7 +28,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--target', dest='target',
                     default='haps',
-                    help='Package for sim, haps, arm-dev, zebu, debug')
+                    help='Package for sim, haps, arm-dev, zebu, debug, debug-arm')
 
 # Do not strip the target shared libs and binaries
 parser.add_argument('--no-strip', dest='no_strip',
@@ -53,7 +54,17 @@ parser.add_argument('--pipeline', dest='pipeline', default='iris',
                      help='Pipeline')
 
 args = parser.parse_args()
-
+def process_files(files, arch, pipeline):
+    new_files = []
+    for f in files:
+        f.replace("$ARCH", arch)
+        f.replace("$PIPELINE", pipeline);
+        new_files.append(f);
+    print files
+    print "NEW files"
+    print new_files
+    return new_files
+        
 if args.target == 'sim':
     print ("Packaging for sim platform")
     arm_pkg     = 0
@@ -87,16 +98,21 @@ elif args.target == 'host':
     tar_name    = 'host'
     files = []
     files.append('nic/tools/package/pack_host.txt')
-elif args.target == 'debug':
+elif args.target == 'debug' or args.target == 'debug-arm':
     print ("Packaging for debug")
-    arm_pkg     = 0
-    objcopy_bin = 'objcopy'
-    strip_bin   = 'strip'
+    if args.target == 'debug-arm':
+        arch = 'aarch64'
+    else:
+        arch = 'x86_64'
+        arm_pkg = 0
+        objcopy_bin = 'objcopy'
+        strip_bin   = 'strip'
     output_dir  = pwd + '/pack_tmp'
     rm_out_dir  = 1
-    tar_name    = 'debug'
+    tar_name    = 'debug_' + arch + '_' +  args.pipeline
     files = []
     files.append('nic/tools/package/pack_debug.txt')
+    process_files(files, arch, args.pipeline)
 else:
     print ("Packaging for haps")
     files.append('nic/tools/package/pack_haps.txt')
@@ -126,6 +142,9 @@ for input_file in files:
             continue
 
         items = line.split()
+        items[0] = items[0].replace("$ARCH", arch)
+        items[0] = items[0].replace("$PIPELINE", args.pipeline)
+        print items[0]
         directory = output_dir + '/' + items[1]
         if items[1][-1] == '/':
             if not os.path.exists(directory):

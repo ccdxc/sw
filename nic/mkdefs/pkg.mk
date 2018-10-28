@@ -27,12 +27,20 @@ package: ${PKG_PREREQS}
 			--pipeline $(PIPELINE) --target sim --no-strip
     endif
 
+
+package-clean-debug-arm:
+	@rm -f  $(TOPDIR)/debug_aarch64_iris.tgz
+	@rm -f  $(TOPDIR)/debug_aarch64_iris.tar
+
 package-clean-debug:
-	@rm -f  $(TOPDIR)/debug.tgz
-	@rm -f  $(TOPDIR)/debug.tar
+	@rm -f  $(TOPDIR)/debug_x86_64_iris.tgz
+	@rm -f  $(TOPDIR)/debug_x86_64_iris.tar
 
 package-debug: package-clean-debug
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target debug --no-strip
+
+package-debug-arm: package-clean-debug-arm
+	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target debug-arm --no-strip
 
 package-zebu: package-clean ${PKG_PREREQS}
     ifneq ($(ARCH),aarch64)

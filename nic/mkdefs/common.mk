@@ -147,8 +147,8 @@ export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
                         /usr/include/python3.6m \
                         /usr/include/python3.4m
 export CLI_P4PD_FLAGS := -Wl,--allow-multiple-definition -Wno-sign-compare
-export CLI_P4PD_LDLIBS := :libprotobuf.so.14 grpc++_reflection grpc++ grpc_unsecure grpc++_unsecure
-export CLI_P4PD_SOLIBS := halproto p4pd_utils
+export CLI_P4PD_LDLIBS := :libprotobuf.so.14 grpc++_reflection grpc++ grpc_unsecure grpc++_unsecure rt ev
+export CLI_P4PD_SOLIBS := halproto p4pd_utils delphisdk 
 
 
 # ==========================================================================

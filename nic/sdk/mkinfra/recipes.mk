@@ -116,7 +116,7 @@ define ADD_RECIPE_FOR_SWIGCLI
 $${${1}_MKTARGET}: $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${CMD_SWIGCLI} ${NAME_SWIGCLI} $${${1}_SRCS}
-	${AT}$$(strip ${CMD_SWIG} $${${1}_FLAGS} $${${1}_INCS} -o $$(dir $$@)swig.cc $${${1}_SRCS})
+	${AT}$$(strip ${CMD_SWIG} $${${1}_FLAGS} $${${1}_INCS} -o $${${1}_SRC_DIRS}/swig.cc $${${1}_SRCS})
 	${AT}touch $$@
 endef
 
