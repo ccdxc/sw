@@ -63,6 +63,7 @@ class NaplesManagement:
         return
 
     def __login(self):
+        time.sleep(3)
         self.hdl.sendline(GlobalOptions.username)
         self.hdl.expect("Password:")
         self.hdl.sendline(GlobalOptions.password)
@@ -147,10 +148,15 @@ class NaplesManagement:
         self.hdl.expect_exact("Removing package directory /tmp/sysupdate", timeout = 600)
         self.hdl.sendline("echo %s > /mnt/app-start.conf && sync" % GlobalOptions.mode)
         self.hdl.expect_exact("#")
+        self.hdl.sendline("sync")
+        self.hdl.expect_exact("#")
+        self.hdl.sendline("sync")
+        self.hdl.expect_exact("#")
         self.__reset()
         idx = 0
         while idx == 0:
             idx = self.hdl.expect_exact(["#", "capri login:"], timeout = 120)
+            self.__reset()
         self.__login()
         #self.hdl.sendline("/nic/tools/sysinit.sh %s hw" % GlobalOptions.mode)
         #self.hdl.expect_exact("All processes brought up, please check ...", timeout = 600)
