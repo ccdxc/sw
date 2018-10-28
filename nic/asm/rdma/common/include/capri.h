@@ -84,9 +84,6 @@
 // Feedback header fields
 #define CAPRI_FEEDBACK_FEEDBACK_TYPE k.rdma_completion_feedback_feedback_type
 
-// RQ Proxy PI update feedback fields
-#define CAPRI_RQ_PROXY_PI_FEEDBACK_PROXY_PINDEX k.{rdma_rq_proxy_pi_feedback_proxy_pindex_sbit0_ebit7...rdma_rq_proxy_pi_feedback_proxy_pindex_sbit8_ebit15}
-
 // Completion feedback header fields
 #define CAPRI_COMPLETION_FEEDBACK_WRID(_r) \
 add _r, k.{rdma_completion_feedback_wrid_sbit32_ebit47...rdma_completion_feedback_wrid_sbit56_ebit63}, k.{rdma_completion_feedback_wrid_sbit0_ebit7...rdma_completion_feedback_wrid_sbit24_ebit31}, 32

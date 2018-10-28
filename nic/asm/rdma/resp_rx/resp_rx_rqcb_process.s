@@ -23,7 +23,6 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TO_S_RQWQE_MPU_P to_s2_ext_hdr_info
 #define TO_S_LKEY_P to_s4_lkey_info
 #define TO_S_CQCB_P to_s6_cqcb_info
-#define TO_S_DUMMY_RQPT_INFO_P to_s1_dummy_rqpt_info
 
 #define REM_PYLD_BYTES  r6
 #define RSQWQE_P r2
@@ -839,7 +838,6 @@ rc_checkout:
     // flush the last tblwr in this path
     tblmincri.c7.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1 //BD Slot
 
-    phvwr       CAPRI_PHV_FIELD(TO_S_DUMMY_RQPT_INFO_P, cq_id), d.cq_id
     sll         r2, r1, d.log_wqe_size
     add         r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
 
@@ -955,14 +953,6 @@ exit:
     nop
 
 process_feedback:
-    seq         c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_COMPLETION_FEEDBACK
-    bcf         [c1], process_completion_feedback
-     
-    // assume fall thru is proxy pi update feedback
-    phvwr.!c1.e     p.common.p4_intr_global_drop, 1
-    tblwr       PROXY_RQ_P_INDEX, CAPRI_RQ_PROXY_PI_FEEDBACK_PROXY_PINDEX //Exit slot
-
-process_completion_feedback:
     // in future, if different kind of feedback phvs are handled, we may have to 
     // set error_disable_qp only for those feedback phvs which are of type error.
     // can't combine both the phvwr's as they span beyond 512b.

@@ -23,7 +23,6 @@
 #define common_p4plus_stage0_app_header_table_action_dummy15 rdma_stage0_bth_xrceth_ieth_action
 #define common_p4plus_stage0_app_header_table_action_dummy16 rdma_stage0_recirc_action
 #define common_p4plus_stage0_app_header_table_action_dummy17 rdma_stage0_completion_feedback_action
-#define common_p4plus_stage0_app_header_table_action_dummy18 rdma_stage0_rq_proxy_pi_feedback_action
 
 #define rx_stage0_load_rdma_params_dummy1 rdma_stage0_ext_bth_atomiceth_action
 #define rx_stage0_load_rdma_params_dummy2 rdma_stage0_ext_bth_xrceth_atomiceth_action
@@ -484,21 +483,10 @@ header_type resp_rx_to_stage_recirc_info_t {
     }
 }
 
-header_type resp_rx_to_stage_dummy_rqpt_info_t {
-    fields {
-        cqcb_base_addr_hi                :   24;
-        log_num_cq_entries               :    4;
-        rsvd1                            :    4;
-        cq_id                            :   24;
-        rsvd2                            :    8;
-        pad                              :   64;
-    }
-}
-
 
 /**** header unions and scratch ****/
 
-@pragma pa_header_union ingress app_header rdma_recirc rdma_bth rdma_bth_immeth rdma_bth_reth rdma_bth_reth_immeth rdma_bth_aeth rdma_bth_aeth_atomicaeth rdma_bth_atomiceth rdma_bth_ieth rdma_bth_deth rdma_bth_deth_immeth rdma_bth_xrceth rdma_bth_xrceth_immeth rdma_bth_xrceth_reth rdma_bth_xrceth_reth_immeth rdma_bth_xrceth_atomiceth rdma_bth_xrceth_ieth rdma_completion_feedback rdma_rq_proxy_pi_feedback
+@pragma pa_header_union ingress app_header rdma_recirc rdma_bth rdma_bth_immeth rdma_bth_reth rdma_bth_reth_immeth rdma_bth_aeth rdma_bth_aeth_atomicaeth rdma_bth_atomiceth rdma_bth_ieth rdma_bth_deth rdma_bth_deth_immeth rdma_bth_xrceth rdma_bth_xrceth_immeth rdma_bth_xrceth_reth rdma_bth_xrceth_reth_immeth rdma_bth_xrceth_atomiceth rdma_bth_xrceth_ieth rdma_completion_feedback
 
 metadata roce_recirc_header_t rdma_recirc;
 metadata p4_to_p4plus_roce_bth_header_t rdma_bth;
@@ -518,7 +506,6 @@ metadata p4_to_p4plus_roce_bth_xrceth_reth_immeth_header_t rdma_bth_xrceth_reth_
 metadata p4_to_p4plus_roce_bth_xrceth_atomiceth_header_t rdma_bth_xrceth_atomiceth;
 metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth;
 metadata rdma_completion_feedback_header_t rdma_completion_feedback;
-metadata rdma_rq_proxy_pi_feedback_header_t rdma_rq_proxy_pi_feedback;
 
 
 @pragma pa_header_union ingress ext_app_header rdma_bth_atomiceth_ext rdma_bth_xrceth_atomiceth_ext rdma_bth_xrceth_reth_immeth_ext rdma_bth_deth_immeth_ext
@@ -564,8 +551,6 @@ metadata p4_to_p4plus_roce_bth_xrceth_atomiceth_header_t rdma_bth_xrceth_atomice
 metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth_scr;
 @pragma scratch_metadata
 metadata rdma_completion_feedback_header_t rdma_completion_feedback_scr;
-@pragma scratch_metadata
-metadata rdma_rq_proxy_pi_feedback_header_t rdma_rq_proxy_pi_feedback_scr;
 
 
 //Extended headers
@@ -601,11 +586,6 @@ metadata resp_rx_to_stage_atomic_info_t to_s1_atomic_info_scr;
 metadata resp_rx_to_stage_recirc_info_t to_s1_recirc_info;
 @pragma scratch_metadata
 metadata resp_rx_to_stage_recirc_info_t to_s1_recirc_info_scr;
-
-@pragma pa_header_union ingress to_stage_1
-metadata resp_rx_to_stage_dummy_rqpt_info_t to_s1_dummy_rqpt_info;
-@pragma scratch_metadata
-metadata resp_rx_to_stage_dummy_rqpt_info_t to_s1_dummy_rqpt_info_scr;
 
 @pragma pa_header_union ingress to_stage_2
 metadata resp_rx_to_stage_ext_hdr_info_t to_s2_ext_hdr_info;
@@ -1247,7 +1227,7 @@ action rdma_stage0_bth_xrceth_ieth_action () {
 }
 
 /*
- * Stage 0 table 0 flush_feedback action
+ * Stage 0 table 0 ud_feedback action
  */
 action rdma_stage0_completion_feedback_action () {
     // k + i for stage 0
@@ -1267,27 +1247,6 @@ action rdma_stage0_completion_feedback_action () {
     modify_field(rdma_completion_feedback_scr.wrid, rdma_completion_feedback.wrid);
     modify_field(rdma_completion_feedback_scr.status, rdma_completion_feedback.status);
     modify_field(rdma_completion_feedback_scr.error, rdma_completion_feedback.error);
-}
-
-/*
- * Stage 0 table 0 rq_proxy_pi_feedback action
- */
-action rdma_stage0_rq_proxy_pi_feedback_action () {
-    // k + i for stage 0
-
-    // from intrinsic
-    modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
-    modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
-    modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
-    modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
-    modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
-
-    // from app header
-    modify_field(rdma_rq_proxy_pi_feedback_scr.common_header_bits, rdma_rq_proxy_pi_feedback.common_header_bits);
-
-    // ud_feedback_header bits
-    modify_field(rdma_rq_proxy_pi_feedback_scr.feedback_type, rdma_rq_proxy_pi_feedback.feedback_type);
-    modify_field(rdma_rq_proxy_pi_feedback_scr.proxy_pindex, rdma_rq_proxy_pi_feedback.proxy_pindex);
 }
 
 
@@ -1336,12 +1295,6 @@ action resp_rx_dummy_rqpt_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s1_dummy_rqpt_info_scr.cqcb_base_addr_hi, to_s1_dummy_rqpt_info.cqcb_base_addr_hi);
-    modify_field(to_s1_dummy_rqpt_info_scr.log_num_cq_entries, to_s1_dummy_rqpt_info.log_num_cq_entries);
-    modify_field(to_s1_dummy_rqpt_info_scr.rsvd1, to_s1_dummy_rqpt_info.rsvd1);
-    modify_field(to_s1_dummy_rqpt_info_scr.cq_id, to_s1_dummy_rqpt_info.cq_id);
-    modify_field(to_s1_dummy_rqpt_info_scr.rsvd2, to_s1_dummy_rqpt_info.rsvd2);
-    modify_field(to_s1_dummy_rqpt_info_scr.pad, to_s1_dummy_rqpt_info.pad);
 
     // stage to stage
     modify_field(t0_s2s_rqcb_to_wqe_info_scr.rsvd, t0_s2s_rqcb_to_wqe_info.rsvd);

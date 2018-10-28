@@ -1234,7 +1234,6 @@ struct dcqcn_cb_t {
 #define RDMA_TIMER_EXPIRY_FEEDBACK    0x3
 #define RDMA_AQ_FEEDBACK              0x4
 #define RDMA_SQ_DRAIN_FEEDBACK        0x5
-#define RDMA_RQ_PROXY_PI_FEEDBACK     0x6
 
 struct rdma_feedback_t {
     feedback_type:8;
@@ -1274,11 +1273,6 @@ struct rdma_feedback_t {
             ssn: 24;
             pad: 32;
         }sq_drain;
-        /* TYPE: RDMA_RQ_PROXY_PI_FEEDBACK */
-        struct {
-            proxy_pindex: 16;
-            pad: 64;
-        }rq_proxy_pi;
     }; 
 };
 
