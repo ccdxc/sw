@@ -15,7 +15,6 @@
 
 namespace nicmgr {
 
-
 using nicmgr::nicmgr_upg_hndlr;
 using nicmgr::sysmgr_client;
 using grpc::Status;
@@ -23,7 +22,8 @@ using delphi::error;
 using port::PortOperStatus;
 using delphi::objects::PortStatusPtr;
 
-class NicMgrService : public delphi::Service, public enable_shared_from_this<NicMgrService> {
+class NicMgrService : public delphi::Service,
+                      public enable_shared_from_this<NicMgrService> {
 private:
     shared_ptr<sysmgr::Client>   sysmgr_;
     UpgSdkPtr                    upgsdk_;
@@ -58,11 +58,8 @@ private:
 };
 typedef std::shared_ptr<port_svc> port_svc_ptr_t;
 
-// linkmgr_get_port_reactor gets the port reactor object
-port_svc_ptr_t linkmgr_get_port_reactor(void);
-
-// linkmgr_init_port_reactors creates a port reactor
-Status linkmgr_init_port_reactors(delphi::SdkPtr sdk);
+// init_port_reactors creates a port reactor
+Status init_port_reactors(delphi::SdkPtr sdk);
 shared_ptr<NicMgrService> nicmgr_svc_;
 
 }    // namespace nicmgr

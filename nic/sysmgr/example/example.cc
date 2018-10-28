@@ -33,8 +33,8 @@ public:
    void register_mounts()
    {
       this->sysmgr->register_service_reactor(
-	 "TestCompleteService",
-	 shared_from_this());
+	  "TestCompleteService",
+	  shared_from_this());
    }
 
    virtual void OnMountComplete()

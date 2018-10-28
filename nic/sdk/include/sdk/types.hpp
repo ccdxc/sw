@@ -11,8 +11,9 @@ namespace sdk {
 namespace types {
 
 enum class port_event_t {
-    PORT_EVENT_LINK_UP   = 0,
-    PORT_EVENT_LINK_DOWN = 1
+    PORT_EVENT_LINK_NONE = 0,
+    PORT_EVENT_LINK_UP   = 1,
+    PORT_EVENT_LINK_DOWN = 2
 };
 
 typedef enum cable_type_e {

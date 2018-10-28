@@ -26,33 +26,39 @@ extern DeviceManager *devices[];
 
 namespace nicmgr {
 
-NicMgrService::NicMgrService(delphi::SdkPtr sk) {
-    sdk_ = sk;
-    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<nicmgr_upg_hndlr>(), "nicmgr",
-                                  NON_AGENT, (UpgAgentHandlerPtr)NULL);
-    sysmgr_ = make_shared<sysmgr::Client>(sdk_, "nicmgr");
-}
-
-void NicMgrService::OnMountComplete() {
-    NIC_LOG_DEBUG("On mount complete got called");
-    this->sysmgr_->init_done();
-    // Delphi Object Iterator here
-    //
-    //vector <delphi::objects::EthDeviceInfoPtr> list = delphi::objects::EthDeviceInfo::List(sdk_);
-    //for (vector<delphi::objects::EthDeviceInfoPtr>::iterator info=list.begin(); info!=list.end(); ++info) {  
-    //}
-}
-
 // port reactors
 port_svc_ptr_t g_port_rctr;
 
-// linkmgr_get_port_reactor gets the port reactor object
-port_svc_ptr_t linkmgr_get_port_reactor () {
+// NicMgr delphi service
+NicMgrService::NicMgrService(delphi::SdkPtr sk) {
+    sdk_ = sk;
+    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<nicmgr_upg_hndlr>(),
+                                  "nicmgr", NON_AGENT,
+                                  (UpgAgentHandlerPtr)NULL);
+    sysmgr_ = make_shared<sysmgr::Client>(sdk_, "nicmgr");
+}
+
+// OnMountComplete gets called after all delphi objects are mounted
+void NicMgrService::OnMountComplete() {
+    NIC_LOG_DEBUG("On mount complete got called");
+
+    this->sysmgr_->init_done();
+    // walk all port status objects and handle them
+    vector <delphi::objects::PortStatusPtr> list =
+        delphi::objects::PortStatus::List(sdk_);
+    for (vector<delphi::objects::PortStatusPtr>::iterator port=list.begin();
+         port!=list.end(); ++port) {  
+        g_port_rctr->update_port_status(*port);
+    }
+}
+
+// get_port_reactor gets the port reactor object
+port_svc_ptr_t get_port_reactor (void) {
     return g_port_rctr;
 }
 
-// linkmgr_init_port_reactors creates a port reactor
-Status linkmgr_init_port_reactors (delphi::SdkPtr sdk) {
+// init_port_reactors creates a port reactor
+Status init_port_reactors (delphi::SdkPtr sdk) {
     // create the PortStatus reactor
     g_port_rctr = std::make_shared<port_svc>(sdk);
 
@@ -91,14 +97,17 @@ error port_svc::update_port_status(PortStatusPtr port) {
     uint32_t port_id = port->mutable_key_or_handle()->port_id();
     port::PortOperStatus oper_status = port->oper_status();
 
+    printf("Delphi setting port %u status to %u\n", port_id, oper_status);
+
+#if 0
     if (oper_status == port::PortOperStatus::PORT_OPER_STATUS_UP) {
         devmgr->DevLinkUpHandler(port_id);
     } else if (oper_status == port::PortOperStatus::PORT_OPER_STATUS_DOWN) {
         devmgr->DevLinkDownHandler(port_id);
     }
-
+#endif
 
     return error::OK();
 }
 
-}
+}    // namespace nicmgr

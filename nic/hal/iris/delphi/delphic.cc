@@ -32,8 +32,8 @@ delphi_client_start (void *ctxt)
     HAL_TRACE_DEBUG("HAL delphi thread started...");
 
     // init linkmgr services
-    Status sts = linkmgr::port_svc_init(sdk);
-    HAL_ABORT(sts.ok());
+    Status ret = linkmgr::port_svc_init(sdk);
+    HAL_ABORT(ret.ok());
 
     // register delphi client
     sdk->RegisterService(delphic);

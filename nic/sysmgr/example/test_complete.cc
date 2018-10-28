@@ -24,7 +24,7 @@ class TestCompleteService : public delphi::Service, public enable_shared_from_th
     {
         this->sdk = sdk;
         this->name = name;
-	this->sysmgr = sysmgr::CreateClient(sdk, name);
+	    this->sysmgr = sysmgr::CreateClient(sdk, name);
     }
 
     virtual void OnMountComplete()

@@ -17,7 +17,6 @@ namespace sysmgr
       virtual void ServiceDown(std::string name) = 0;
    };
    typedef std::shared_ptr<ServiceStatusReactor> ServiceStatusReactorPtr;
-  			
   
    class Client : public std::enable_shared_from_this<Client>,
 		  public delphi::objects::SysmgrServiceStatusReactor {

@@ -13,50 +13,35 @@ using namespace std;
 using namespace nicmgr;
 using namespace upgrade;
 
-
 sdk::lib::thread *g_nicmgr_threads[NICMGR_THREAD_ID_MAX];
 void *nicmgr_delphi_client_entry(void *ctxt);
 
-void nicmgr_do_client_registration(void)
+void nicmgr_do_client_registration (void)
 {
-    sdk::lib::thread *delphi_thread; 
-    delphi_thread =
-        sdk::lib::thread::factory("delphi-client",
-                                  NICMGR_DELPHI_REG_THREAD_ID, 
-                                  sdk::lib::THREAD_ROLE_CONTROL,
-                                  0x0, nicmgr_delphi_client_entry,
-                                  sched_get_priority_max(SCHED_OTHER), 
-                                  SCHED_OTHER, NULL);
-   if (!delphi_thread) {
-       // ASSERT
-   } else {
-       g_nicmgr_threads[NICMGR_DELPHI_REG_THREAD_ID] = delphi_thread;
-   }
+    pthread_t ev_thread_id = 0;
 
-   delphi_thread->set_data(delphi_thread);
-   delphi_thread->set_pthread_id(pthread_self());
-   delphi_thread->set_running(true);
-   NIC_LOG_DEBUG("Instantiated delphi thread ...");
+    // create a thread for delphi events
+    pthread_create(&ev_thread_id, 0, &nicmgr_delphi_client_entry, (void*)NULL);
+    printf("\nInstantiated delphi thread ...\n");
 }
 
 // this method is called from the pthread_create
 void *nicmgr_delphi_client_entry (void *ctxt)
 {
+    printf("Delphi thread starting ...\n");
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
 
     nicmgr_svc_ = make_shared<NicMgrService>(sdk);
 
-    // Sysmgr registration here ??
-    //
-    //
     // Register NicMgr as Delphi Service
     sdk->RegisterService(nicmgr_svc_);
 
-    NIC_LOG_DEBUG("Delphi thread entering main loop ...");
+    // init port reactor
+    init_port_reactors(sdk);
+
+    printf("Delphi thread entering main loop ...\n");
 
     //  Event loop 
     sdk->MainLoop();
     return NULL;
 }
-    
-
