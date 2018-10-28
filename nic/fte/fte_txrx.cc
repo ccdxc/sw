@@ -300,11 +300,11 @@ void inst_t::start(sdk::lib::thread *curr_thread)
 
     ctx_mem_init();
     while (true) {
-        if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
+        if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
             usleep(1000000/30);
-        } else if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL) {
+        } else if (hal_cfg->platform == hal::HAL_PLATFORM_RTL) {
             usleep(1000000 * 3);
-        } else if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) {
+        } else if (hal_cfg->platform == hal::HAL_PLATFORM_HAPS) {
             usleep(1000000/10);
         } else {
             usleep(1000);

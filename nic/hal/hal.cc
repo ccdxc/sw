@@ -142,18 +142,18 @@ end:
 
 // TODO remove duplicate in asic_pd
 platform_type_t
-hal_platform_mode_to_sdk_platform_type (hal_platform_mode_t platform_mode)
+hal_platform_to_sdk_platform_type (hal_platform_t platform)
 {
-    switch(platform_mode) {
-    case HAL_PLATFORM_MODE_SIM:
-    case HAL_PLATFORM_MODE_RTL:
+    switch(platform) {
+    case HAL_PLATFORM_SIM:
+    case HAL_PLATFORM_RTL:
         return sdk::types::platform_type_t::PLATFORM_TYPE_SIM;
 
-    case HAL_PLATFORM_MODE_HW:
-    case HAL_PLATFORM_MODE_HAPS:
+    case HAL_PLATFORM_HW:
+    case HAL_PLATFORM_HAPS:
         return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
 
-    case HAL_PLATFORM_MODE_MOCK:
+    case HAL_PLATFORM_MOCK:
         return sdk::types::platform_type_t::PLATFORM_TYPE_MOCK;
 
     default:

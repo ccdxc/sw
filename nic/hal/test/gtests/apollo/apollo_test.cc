@@ -694,7 +694,7 @@ TEST_F(apollo_test, test1) {
     };
 
     const char *hal_conf_file = "conf/apollo/hal.json";
-    if (getenv("HAL_PLATFORM_MODE_RTL")) {
+    if (getenv("HAL_PLATFORM_RTL")) {
         hal_conf_file = "conf/apollo/hal_rtl.json";
     }
 
@@ -746,25 +746,25 @@ TEST_F(apollo_test, test1) {
     ptree hal_conf;
     read_json(json_cfg, hal_conf);
     capri_list_program_addr(hal_conf.get<std::string>("asic.loader_info_file").c_str());
-    hal::hal_platform_mode_t platform_mode = hal::HAL_PLATFORM_MODE_SIM;
+    hal::hal_platform_t platform = hal::HAL_PLATFORM_SIM;
     try {
         std::string mode = hal_conf.get<std::string>("mode");
         if (mode == "sim") {
-            platform_mode = hal::HAL_PLATFORM_MODE_SIM;
+            platform = hal::HAL_PLATFORM_SIM;
         } else if (mode == "hw") {
-            platform_mode = hal::HAL_PLATFORM_MODE_HW;
+            platform = hal::HAL_PLATFORM_HW;
         } else if (mode == "rtl") {
-            platform_mode = hal::HAL_PLATFORM_MODE_RTL;
+            platform = hal::HAL_PLATFORM_RTL;
         } else if (mode == "haps") {
-            platform_mode = hal::HAL_PLATFORM_MODE_HAPS;
+            platform = hal::HAL_PLATFORM_HAPS;
         } else if (mode == "mock") {
-            platform_mode = hal::HAL_PLATFORM_MODE_MOCK;
+            platform = hal::HAL_PLATFORM_MOCK;
         }
     } catch (std::exception const& e) {
     }
 
     hal::hal_cfg_t hal_cfg = { 0 };
-    hal_cfg.platform_mode = platform_mode;
+    hal_cfg.platform = platform;
     ret = capri_table_rw_init(&hal_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
     ret = capri_block_init(&cfg);

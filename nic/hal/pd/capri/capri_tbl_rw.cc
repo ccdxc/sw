@@ -481,7 +481,7 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
             capri_action_p4plus_asm_base, 0);
 
     if (stage_txdma_act == 0 &&
-        hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
+        hal_cfg->platform != hal::HAL_PLATFORM_SIM) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
         te_csr->cfg_table_property[stage_tableid_txdma_act].max_bypass_cnt(0x10);
         te_csr->cfg_table_property[stage_tableid_txdma_act].write();
@@ -508,7 +508,7 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
             capri_action_p4plus_asm_base, 0);
 
     if (stage_txdma_act_ext == 0 &&
-        hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
+        hal_cfg->platform != hal::HAL_PLATFORM_SIM) {
         // TODO: This should 16 as we can process 16 packets per doorbell.
         te_csr->cfg_table_property[stage_tableid_txdma_act_ext].max_bypass_cnt(0x10);
         te_csr->cfg_table_property[stage_tableid_txdma_act_ext].write();
@@ -709,8 +709,8 @@ capri_tcam_memory_init (hal::hal_cfg_t *hal_cfg)
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     if (!hal_cfg ||
-        ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
-         (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW))) {
+        ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
+         (hal_cfg->platform != hal::HAL_PLATFORM_HW))) {
         return;
     }
 
@@ -775,8 +775,8 @@ capri_p4_zero_srams (hal::hal_cfg_t *hal_cfg)
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     if (!hal_cfg ||
-        ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
-         (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW))) {
+        ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
+         (hal_cfg->platform != hal::HAL_PLATFORM_HW))) {
         return;
     }
 
@@ -829,8 +829,8 @@ capri_p4plus_zero_srams (hal::hal_cfg_t *hal_cfg)
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     if (!hal_cfg ||
-        ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
-         (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW))) {
+        ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
+         (hal_cfg->platform != hal::HAL_PLATFORM_HW))) {
         return;
     }
 

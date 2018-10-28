@@ -24,14 +24,14 @@ enum {
 const uint16_t MAX_FTE_THREADS =
                HAL_THREAD_ID_FTE_MAX - HAL_THREAD_ID_FTE_MIN + 1;
 
-typedef enum hal_platform_mode_s {
-    HAL_PLATFORM_MODE_NONE,
-    HAL_PLATFORM_MODE_SIM,
-    HAL_PLATFORM_MODE_HW,
-    HAL_PLATFORM_MODE_HAPS,
-    HAL_PLATFORM_MODE_RTL,
-    HAL_PLATFORM_MODE_MOCK,
-} hal_platform_mode_t;
+typedef enum hal_platform_s {
+    HAL_PLATFORM_NONE,
+    HAL_PLATFORM_SIM,
+    HAL_PLATFORM_HW,
+    HAL_PLATFORM_HAPS,
+    HAL_PLATFORM_RTL,
+    HAL_PLATFORM_MOCK,
+} hal_platform_t;
 
 typedef enum hal_feature_set_s {
     HAL_FEATURE_SET_NONE,
@@ -59,7 +59,7 @@ typedef enum hal_feature_set_s {
 
 typedef struct hal_cfg_s {
     void                     *server_builder;    // grpc server builder
-    hal_platform_mode_t      platform_mode;
+    hal_platform_t           platform;
     char                     asic_name[HAL_MAX_NAME_STR];
     std::string              grpc_port;
     std::string              loader_info_file;

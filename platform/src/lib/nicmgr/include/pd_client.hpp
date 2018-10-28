@@ -28,12 +28,12 @@
 
 class PdClient {
 public:
-    static PdClient* factory(platform_mode_t platform);
+    static PdClient* factory(platform_t platform);
     void destroy(PdClient *pdc);
 
     string hal_cfg_path_;
     string gen_dir_path_;
-    platform_mode_t platform_;
+    platform_t platform_;
     class sdk::platform::program_info *pinfo_;
     class sdk::platform::utils::mpartition *mp_;
     class NicLIFManager *lm_;

@@ -1,7 +1,5 @@
 #!/bin/sh
 
-killall hal
-killall netagent
-killall nicmgrd
+killall sysmgr
 
 echo "Killed all processes ..."

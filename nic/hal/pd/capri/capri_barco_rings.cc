@@ -1720,8 +1720,8 @@ hal_ret_t capri_barco_rings_init(void)
 
         /* Model does not support sw_reset */
         if (barco_rings[idx].sw_reset_capable) {
-            if ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
-                (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW)) {
+            if ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
+                (hal_cfg->platform != hal::HAL_PLATFORM_HW)) {
                 barco_rings[idx].sw_reset_capable = false;
             }
         }

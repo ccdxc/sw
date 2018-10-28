@@ -44,7 +44,7 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
 
 TEST_F(nicmgr_test, test1)
 {
-    DeviceManager *devmgr = new DeviceManager(g_fwd_mode, PLATFORM_MODE_NONE);
+    DeviceManager *devmgr = new DeviceManager(g_fwd_mode, PLATFORM_NONE);
     EXPECT_TRUE(devmgr != NULL);
 
     // load config

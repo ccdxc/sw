@@ -103,8 +103,8 @@ reset_hbm_regions (void)
 
     hal_cfg = (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
     if (hal_cfg &&
-        ((hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) ||
-         (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HW))) {
+        ((hal_cfg->platform == hal::HAL_PLATFORM_HAPS) ||
+         (hal_cfg->platform == hal::HAL_PLATFORM_HW))) {
         for (int i = 0; i < g_mpartition->num_regions(); i++) {
             reg = g_mpartition->region(i);
             if (reg->reset) {

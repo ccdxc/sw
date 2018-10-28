@@ -209,8 +209,8 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
     // which are being allocated in hal. After those lifs an uplink
     // is being created and it gets a large hw_lif_id.
     // So having this check only in hw.
-    if (g_hal_cfg.platform_mode ==  HAL_PLATFORM_MODE_HAPS ||
-        g_hal_cfg.platform_mode == HAL_PLATFORM_MODE_HW) {
+    if (g_hal_cfg.platform ==  HAL_PLATFORM_HAPS ||
+        g_hal_cfg.platform == HAL_PLATFORM_HW) {
         HAL_ASSERT_RETURN(pd_upif->hw_lif_id <= 32, HAL_RET_NO_RESOURCE);
     }
 

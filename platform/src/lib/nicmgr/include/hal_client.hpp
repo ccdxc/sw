@@ -53,14 +53,14 @@ enum ForwardingMode
 /**
  * Platform Modes
  */
-typedef enum platform_mode_s {
-    PLATFORM_MODE_NONE,
-    PLATFORM_MODE_SIM,
-    PLATFORM_MODE_HW,
-    PLATFORM_MODE_HAPS,
-    PLATFORM_MODE_RTL,
-    PLATFORM_MODE_MOCK,
-} platform_mode_t;
+typedef enum platform_s {
+    PLATFORM_NONE,
+    PLATFORM_SIM,
+    PLATFORM_HW,
+    PLATFORM_HAPS,
+    PLATFORM_RTL,
+    PLATFORM_MOCK,
+} platform_t;
 
 /**
  * Queue info structure for LifCreate

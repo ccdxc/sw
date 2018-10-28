@@ -45,6 +45,10 @@ docker run -it  -v <path_to_pensando_sw>:/sw registry.test.pensando.io:5000/pens
 cd /buildroot
 make -j `nproc` BR2_ROOTFS_OVERLAY="board/pensando/capri/rootfs-overlay /sw/fake_root_target/aarch64"
 
+or just run
+
+docker run --rm -v <path_to_pensando_sw>:/sw registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181026.2036 sh -c 'make BR2_ROOTFS_OVERLAY="board/pensando/capri/rootfs-overlay /sw/fake_root_target/aarch64" && cp /buildroot/output/images/naples_fw.tar  /sw/nic'
+
 # Naples FW image
 cp output/images/naples_fw.tar /sw/nic/
 

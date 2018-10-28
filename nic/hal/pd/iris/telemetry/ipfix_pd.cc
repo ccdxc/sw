@@ -164,7 +164,7 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
 
     hal_cfg = g_hal_state_pd->hal_cfg();
     HAL_ASSERT(hal_cfg);
-    if (hal_cfg->platform_mode != HAL_PLATFORM_MODE_HW) {
+    if (hal_cfg->platform != HAL_PLATFORM_HW) {
         // For SIM, HAPS and RTL mode we need to use a smaller range since
         // the full flow hash table walk takes too long. Also install fake flow
         // entries within that range
@@ -219,7 +219,7 @@ ipfix_module_init (hal_cfg_t *hal_cfg)
     }
 
     // no periodic doorbell in sim mode
-    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
+    if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
         return HAL_RET_OK;
     }
 

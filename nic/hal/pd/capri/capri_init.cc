@@ -1175,8 +1175,8 @@ capri_init (capri_cfg_t *cfg = NULL)
     // Call PXB/PCIE init only in MODEL and RTL simulation
     // This will be done by PCIe manager for the actual chip
     if (ret == HAL_RET_OK &&
-        (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM ||
-         hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL)) {
+        (hal_cfg->platform == hal::HAL_PLATFORM_SIM ||
+         hal_cfg->platform == hal::HAL_PLATFORM_RTL)) {
         ret = capri_pxb_pcie_init();
     }
 

@@ -582,8 +582,8 @@ SSLHelper::init_pse_engine()
     }
 
     //eng_path =  std::string(cfg_path) + "/openssl/engine/libpse.so";
-    if (hal::g_hal_cfg.platform_mode == HAL_PLATFORM_MODE_HW ||
-        hal::g_hal_cfg.platform_mode == HAL_PLATFORM_MODE_HAPS) {
+    if (hal::g_hal_cfg.platform == HAL_PLATFORM_HW ||
+        hal::g_hal_cfg.platform == HAL_PLATFORM_HAPS) {
         eng_path = "/nic/lib/libtls_pse.so";
     } else {
         eng_path = "/sw/nic/build/x86_64/iris/lib/libtls_pse.so";

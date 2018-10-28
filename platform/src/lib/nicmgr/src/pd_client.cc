@@ -247,7 +247,7 @@ PdClient::create_dirs() {
     return 0;
 }
 
-PdClient* PdClient::factory(platform_mode_t platform)
+PdClient* PdClient::factory(platform_t platform)
 {
     int ret;
     hal::hal_cfg_t      hal_cfg;
@@ -281,23 +281,23 @@ PdClient* PdClient::factory(platform_mode_t platform)
     assert(pdc->pinfo_);
 
     switch (pdc->platform_){
-        case PLATFORM_MODE_SIM:
-            hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_SIM;
+        case PLATFORM_SIM:
+            hal_cfg.platform = hal::HAL_PLATFORM_SIM;
             break;
-        case PLATFORM_MODE_HW:
-            hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_HW;
+        case PLATFORM_HW:
+            hal_cfg.platform = hal::HAL_PLATFORM_HW;
             break;
-        case PLATFORM_MODE_HAPS:
-            hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_HAPS;
+        case PLATFORM_HAPS:
+            hal_cfg.platform = hal::HAL_PLATFORM_HAPS;
             break;
-        case PLATFORM_MODE_RTL:
-            hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_RTL;
+        case PLATFORM_RTL:
+            hal_cfg.platform = hal::HAL_PLATFORM_RTL;
             break;
-        case PLATFORM_MODE_MOCK:
-            hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_MOCK;
+        case PLATFORM_MOCK:
+            hal_cfg.platform = hal::HAL_PLATFORM_MOCK;
             break;
         default :
-            hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_NONE;
+            hal_cfg.platform = hal::HAL_PLATFORM_NONE;
             break;
     }
 

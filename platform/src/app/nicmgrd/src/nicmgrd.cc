@@ -27,7 +27,7 @@ static int poll_enabled;
 DeviceManager *devmgr;
 static string config_file;
 enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
-platform_mode_t platform = PLATFORM_MODE_NONE;
+platform_t platform = PLATFORM_NONE;
 extern void nicmgr_do_client_registration(void);
 
 static void
@@ -210,17 +210,17 @@ int main(int argc, char *argv[])
             break;
         case 'p':
             if (string(optarg) == "sim") {
-                platform = PLATFORM_MODE_SIM;
+                platform = PLATFORM_SIM;
             } else if (string(optarg) == "hw") {
-                platform = PLATFORM_MODE_HW;
+                platform = PLATFORM_HW;
             } else if (string(optarg) == "haps") {
-                platform = PLATFORM_MODE_HAPS;
+                platform = PLATFORM_HAPS;
             } else if (string(optarg) == "rtl") {
-                platform = PLATFORM_MODE_RTL;
+                platform = PLATFORM_RTL;
             } else if (string(optarg) == "mock") {
-                platform = PLATFORM_MODE_MOCK;
+                platform = PLATFORM_MOCK;
             } else  {
-                platform = PLATFORM_MODE_NONE;
+                platform = PLATFORM_NONE;
             }
             break;
         default:

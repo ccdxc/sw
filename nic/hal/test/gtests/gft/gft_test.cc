@@ -1453,7 +1453,7 @@ TEST_F(gft_test, test1) {
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
     hal::hal_cfg_t hal_cfg = { 0 };
-    hal_cfg.platform_mode = hal::HAL_PLATFORM_MODE_SIM;
+    hal_cfg.platform = hal::HAL_PLATFORM_SIM;
     ret = capri_table_rw_init(&hal_cfg);
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_init(NULL);

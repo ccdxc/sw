@@ -96,7 +96,7 @@ hal_ret_t capri_barco_crypto_init(void)
     /*
      * Initialize the barco DRBG random number generator.
      */
-    if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) {
+    if (hal_cfg->platform != hal::HAL_PLATFORM_HAPS) {
         /* HAPS does not contain the DRBG block */
         capri_barco_init_drbg();
     }

@@ -74,15 +74,15 @@ capri_txs_timer_init_pre (uint32_t key_lines, hal::hal_cfg_t *hal_cfg)
     // sram_hw_init is not implemented in the C++ model, so skip it there
     HAL_ASSERT(hal_cfg);
     txs_csr->cfw_timer_glb.read();
-    if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM) {
+    if (hal_cfg->platform != hal::HAL_PLATFORM_SIM) {
         HAL_TRACE_DEBUG("timer sram init");
         txs_csr->cfw_timer_glb.sram_hw_init(1);
     }
 
     // skip hbm init in model (C++ and RTL) as memory is 0 there and this
     // takes a long time
-    if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM &&
-            hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_RTL) {
+    if (hal_cfg->platform != hal::HAL_PLATFORM_SIM &&
+            hal_cfg->platform != hal::HAL_PLATFORM_RTL) {
         HAL_TRACE_DEBUG("timer hbm init");
         txs_csr->cfw_timer_glb.hbm_hw_init(1);
     }
@@ -187,8 +187,8 @@ capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
     txs_csr.cfw_scheduler_glb.read();
     // skip init on RTL/Model.
     HAL_ASSERT(hal_cfg);
-    if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM &&
-            hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_RTL) {
+    if (hal_cfg->platform != hal::HAL_PLATFORM_SIM &&
+            hal_cfg->platform != hal::HAL_PLATFORM_RTL) {
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
     }
     txs_csr.cfw_scheduler_glb.sram_hw_init(1);

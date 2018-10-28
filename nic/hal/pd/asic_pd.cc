@@ -452,6 +452,8 @@ asic_rw_logger_init (void)
     asic_rw_logger =
         hal::utils::log::factory("asicrw", 0x1, hal::utils::log_mode_sync,
                                  false, logfile.c_str(),
+                                 TRACE_FILE_SIZE_DEFAULT,
+                                 TRACE_NUM_FILES_DEFAULT,
                                  hal::utils::trace_debug,
                                  hal::utils::log_none);
     HAL_ASSERT(asic_rw_logger != NULL);
@@ -554,18 +556,18 @@ asic_rw_loop (void *ctxt)
 }
 
 static platform_type_t
-hal_platform_mode_to_sdk_platform_type (hal_platform_mode_t platform_mode)
+hal_platform_to_sdk_platform_type (hal_platform_t platform)
 {
-    switch(platform_mode) {
-    case HAL_PLATFORM_MODE_SIM:
-    case HAL_PLATFORM_MODE_RTL:
+    switch(platform) {
+    case HAL_PLATFORM_SIM:
+    case HAL_PLATFORM_RTL:
         return sdk::types::platform_type_t::PLATFORM_TYPE_SIM;
 
-    case HAL_PLATFORM_MODE_HW:
-    case HAL_PLATFORM_MODE_HAPS:
+    case HAL_PLATFORM_HW:
+    case HAL_PLATFORM_HAPS:
         return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
 
-    case HAL_PLATFORM_MODE_MOCK:
+    case HAL_PLATFORM_MOCK:
         return sdk::types::platform_type_t::PLATFORM_TYPE_MOCK;
 
     default:
@@ -589,7 +591,7 @@ asic_rw_init (hal_cfg_t *hal_cfg)
 
     // initialize PAL
     palrv = sdk::lib::pal_init(
-                hal_platform_mode_to_sdk_platform_type(hal_cfg->platform_mode));
+                hal_platform_to_sdk_platform_type(hal_cfg->platform));
     //palrv = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK);
     HAL_ABORT(IS_PAL_API_SUCCESS(palrv));
 
