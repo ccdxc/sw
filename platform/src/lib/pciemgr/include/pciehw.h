@@ -57,8 +57,6 @@ int pciehw_iowr(const u_int8_t port,
 unsigned long long pciehw_barsz(const u_int8_t port,
                                 const u_int16_t bdf, const int i);
 
-int pciehw_poll(void);
-
 #ifdef __cplusplus
 }
 #endif

@@ -78,7 +78,7 @@ main(int argc, char *argv[])
 {
     pciemgrenv_t *pme = pciemgrenv_get();
     pciehdev_params_t p;
-    int opt, port, interactive;
+    int r, opt, port, interactive;
 
     interactive = 1;
 
@@ -161,34 +161,24 @@ main(int argc, char *argv[])
         }
     }
 
+    /*
+     * Open and configure all the ports we are going to manage.
+     */
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
-            pcieport_t *pport;
-
-            if ((pport = pcieport_open(port)) == NULL) {
-                printf("pcieport_open %d failed\n", port);
+            if ((r = pcieport_open(port)) < 0) {
+                printf("pcieport_open %d failed: %d\n", port, r);
                 exit(1);
             }
-            if (pcieport_hostconfig(pport, &p) < 0) {
+            if (pcieport_hostconfig(port, &p) < 0) {
                 printf("pcieport_hostconfig %d failed\n", port);
                 exit(1);
             }
-
-            pme->pport[port] = pport;
         }
     }
-
     if (pciehdev_open(&p) < 0) {
         printf("pciehdev_open failed\n");
         exit(1);
-    }
-    for (port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->enabled_ports & (1 << port)) {
-            if (pciehdev_initialize(port) < 0) {
-                printf("pciehdev_initialize failed\n");
-                exit(1);
-            }
-        }
     }
 
     if (interactive) {
@@ -197,11 +187,12 @@ main(int argc, char *argv[])
         server_loop();
     }
 
-    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->pport[port]) {
-            pcieport_close(pme->pport[port]);
+    pciehdev_close();
+    /* close all the ports we opened */
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            pcieport_close(port);
         }
     }
-    pciehdev_close();
     exit(0);
 }

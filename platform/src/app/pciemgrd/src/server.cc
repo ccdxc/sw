@@ -50,6 +50,11 @@ do_finalize(pmmsg_t *m)
         pciesys_logerror("pciehdev_finalize(%d) failed %d\n", port, r);
     }
 
+    r = pcieport_crs_off(port);
+    if (r < 0) {
+        pciesys_logerror("pcieport_crs_off(%d) failed %d\n", port, r);
+    }
+
     // log some info about the final config
     pciehw_dev_show();
     pciehw_bar_show();
@@ -183,7 +188,10 @@ do_dev_add(pmmsg_t *m)
         }
     }
 
-    pciehdev_add(pdev);
+    if ((r = pciehdev_add(pdev)) < 0) {
+        pciesys_logerror("dev_add: port %d %s lif %d: failed %d\n",
+                         pdev->port, pdev->name, pdev->lif, r);
+    }
     return;
 
  out:
@@ -218,6 +226,16 @@ pciemgr_msg_cb(pmmsg_t *m)
 static void
 server_poll(void *arg)
 {
+    pciemgrenv_t *pme = pciemgrenv_get();
+
+    // poll for port events
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            pcieport_poll(port);
+        }
+    }
+
+    // poll for device events
     pciehdev_poll();
 }
 

@@ -145,9 +145,17 @@ pp_intr(void)
 }
 
 int
-pcieport_poll(pcieport_t *p)
+pcieport_poll(const int port)
 {
+    pcieport_info_t *pi = &pcieport_info;
+    pcieport_t *p;
+
+    if (port < 0 || port >= PCIEPORT_NPORTS) {
+        return -EBADF;
+    }
+
     pp_intr();
+    p = &pi->pcieport[port];
     pcieport_intr(p);
     return 0;
 }

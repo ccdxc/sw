@@ -115,7 +115,7 @@ pciemgr::add_device(pciehdev_t *pdev)
     // Make a local copy of the pdev struct so we can assign
     // our own private tag, using the callers pdev as our tag.
     // We can get the tag from the pdev associated with events
-    // so we can can link the event back to our caller's pdev.
+    // so we can link the event back to our caller's pdev.
     pciehdev_t lpdev;
     lpdev = *pdev;
     pciehdev_set_priv(&lpdev, pdev);

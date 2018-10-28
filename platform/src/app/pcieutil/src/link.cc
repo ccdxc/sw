@@ -14,35 +14,8 @@
 #include "cap_pxb_c_hdr.h"
 #include "cap_pp_c_hdr.h"
 #include "pal.h"
+#include "pcieport.h"
 #include "cmd.h"
-
-/*
- * Register convenience macros.
- */
-#define PP_(REG) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + CAP_PP_CSR_ ##REG## _BYTE_ADDRESS)
-
-#define PXC_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXC_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_C_ ##REG## _BYTE_ADDRESS)
-
-#define PXP_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXP_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_P_ ##REG## _BYTE_ADDRESS)
-
-/* sta_rst flags */
-#define STA_RSTF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_RST_ ##REG## _FIELD_MASK)
-
-/* sta_mac flags */
-#define STA_MACF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_MAC_ ##REG## _FIELD_MASK)
-
-/* cfg_mac flags */
-#define CFG_MACF_(REG) \
-    (CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_ ##REG## _FIELD_MASK)
 
 static const char *
 ltssm_str(const int ltssm)

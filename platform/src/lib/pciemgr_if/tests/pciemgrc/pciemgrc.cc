@@ -8,11 +8,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
 
+#include "evutils.h"
 #include "pciehdevices.h"
+#include "pciemgrutils.h"
+#include "pciehw_dev.h"
 #include "pciemgr_if.hpp"
 
 static int verbose_flag;
@@ -51,6 +55,11 @@ class myevhandler : public pciemgr::evhandler {
     virtual void memwr(const int port,
                        pciehdev_t *pdev,
                        const pciehdev_memrw_notify_t *n) {
+        printf("memwr: port %d pdev %p name %s\n"
+               "    bar %d baraddr 0x%" PRIx64 " baroffset 0x%" PRIx64 " "
+               "size %u data 0x%" PRIx64 "\n",
+               port, pdev, pciehdev_get_name(pdev),
+               n->cfgidx, n->baraddr, n->baroffset, n->size, n->data);
     }
 };
 
@@ -70,9 +79,13 @@ main(int argc, char *argv[])
     p.intrb = 0;
     p.intrc = 4;
     pciehdev_t *pdev = pciehdev_eth_new("eth", &p);
+    printf("adding pdev %p\n", pdev);
     pciemgr->add_device(pdev);
 
     pciemgr->finalize();
+
+    printf("evutil_run()\n");
+    evutil_run();
 
     delete pciemgr;
     exit(0);

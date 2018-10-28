@@ -225,9 +225,9 @@ static void
 pciehw_notify(pciehw_port_t *p, notify_entry_t *nentry)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    pciehw_spmt_t *spmt = pshmem->spmt;
-    u_int32_t pmti = nentry->info.pmti;
-    pciehwdevh_t hwdevh = spmt[pmti].owner;
+    const u_int32_t pmti = nentry->info.pmti;
+    const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
+    const pciehwdevh_t hwdevh = spmt->owner;
     pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
     pcie_stlp_t stlpbuf, *stlp = &stlpbuf;
 

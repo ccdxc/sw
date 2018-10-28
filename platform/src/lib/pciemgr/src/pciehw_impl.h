@@ -104,7 +104,8 @@ typedef struct pciehw_sprt_s {
 typedef struct pciehw_spmt_s {
     u_int64_t baroff;                   /* bar addr offset */
     pciehwdevh_t owner;                 /* current owner of this entry */
-    u_int32_t loaded:1;                 /* is loaded into hw */
+    u_int8_t loaded:1;                  /* is loaded into hw */
+    u_int8_t cfgidx;                    /* cfgidx for bar we belong to */
     pmt_t pmt;                          /* shadow copy of pmt */
 } pciehw_spmt_t;
 
@@ -224,6 +225,8 @@ void pciehw_tgt_port_init(void);
 void pciehw_tgt_port_skip_notify(const int port, const int on);
 
 void pciehw_itr_port_init(void);
+
+void pciehw_poll(void);
 
 void *pciehw_memset(void *s, int c, size_t n);
 void *pciehw_memcpy(void *dst, const void *src, size_t n);

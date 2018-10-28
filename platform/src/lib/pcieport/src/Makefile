@@ -7,6 +7,7 @@ SOURCES = \
 	pcieport.c \
 	events.c \
 	config.c \
+	init.c \
 	intr.c \
 	fsm.c \
 	utils.c \

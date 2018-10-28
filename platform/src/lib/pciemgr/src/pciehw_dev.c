@@ -17,6 +17,7 @@
 #include "pciehw.h"
 #include "pciemgrutils.h"
 #include "pciehw_dev.h"
+#include "pciehw_impl.h"
 #include "pciehdev_impl.h"
 
 #define NPORTS 8

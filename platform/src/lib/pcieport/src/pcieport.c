@@ -10,96 +10,28 @@
 #include <assert.h>
 #include <inttypes.h>
 
+#include "pci_ids.h"
 #include "pal.h"
 #include "pciesys.h"
+#include "pciehw_dev.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
 pcieport_info_t pcieport_info;
 
-static void
-pcieport_rx_credit_init(const int nports)
-{
-    int base, ncredits, i;
-
-    if (pal_is_asic()) {
-        assert(nports == 1); /* XXX tailored for 1 active port */
-        /* port 0 gets all credits for now */
-        pcieport_rx_credit_bfr(0, 0, 1023);
-    } else {
-        assert(nports == 4); /* XXX tailored for 4 active ports */
-        ncredits = 1024 / nports;
-        for (base = 0, i = 0; i < 8; i += 2, base += ncredits) {
-            const int limit = base + ncredits - 1;
-
-            pcieport_rx_credit_bfr(i, base, limit);
-            pcieport_rx_credit_bfr(i + 1, 0, 0);
-        }
-    }
-}
-
-static void
-pcieport_macfifo_thres(const int thres)
-{
-    union {
-        struct {
-            u_int32_t macfifo_thres:5;
-            u_int32_t rd_sgl_pnd:1;
-            u_int32_t tag_avl_guardband:3;
-            u_int32_t cnxt_avl_guardband:3;
-        } __attribute__((packed));
-        u_int32_t w;
-    } v;
-    const u_int64_t itr_tx_req =
-        (CAP_ADDR_BASE_PXB_PXB_OFFSET + 
-         CAP_PXB_CSR_CFG_ITR_TX_REQ_BYTE_ADDRESS);
-
-    v.w = pal_reg_rd32(itr_tx_req);
-    v.macfifo_thres = thres;
-    pal_reg_wr32(itr_tx_req, v.w);
-}
-
-static void
-pcieport_link_init_asic(void)
-{
-    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x0); /* 1 port x16 linkwidth mode */
-    pcieport_rx_credit_init(1);
-    pcieport_macfifo_thres(5); /* match late-stage ECO */
-}
-
-static void
-pcieport_link_init_haps(void)
-{
-    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x2222); /* 4 port x4 linkwidth mode */
-    pcieport_rx_credit_init(4);
-    pcieport_macfifo_thres(5); /* match late-stage ECO */
-}
-
-static void
-pcieport_link_init(void)
-{
-    if (pal_is_asic()) {
-        pcieport_link_init_asic();
-    } else {
-        pcieport_link_init_haps();
-    }
-}
-
-static int
-pcieport_onetime_init(void)
+static pcieport_t *
+pcieport_get(const int port)
 {
     pcieport_info_t *pi = &pcieport_info;
+    pcieport_t *p = NULL;
 
-    if (pi->init) {
-        /* already initialized */
-        return 0;
+    if (port >= 0 && port < PCIEPORT_NPORTS) {
+        p = &pi->pcieport[port];
     }
-    pcieport_link_init();
-    pi->init = 1;
-    return 0;
+    return p;
 }
 
-pcieport_t *
+int
 pcieport_open(const int port)
 {
     pcieport_info_t *pi = &pcieport_info;
@@ -109,13 +41,16 @@ pcieport_open(const int port)
     otrace = pal_reg_trace_control(getenv("PCIEPORT_INIT_TRACE") != NULL);
     pal_reg_trace("================ pcieport_open %d start\n", port);
 
-    assert(port < PCIEPORT_NPORTS);
+    if (port >= PCIEPORT_NPORTS) {
+        pciesys_logerror("pcieport_open port %d out of range\n", port);
+        return -EBADF;
+    }
     if (pcieport_onetime_init() < 0) {
-        return NULL;
+        return -EIO;
     }
     p = &pi->pcieport[port];
     if (p->open) {
-        return NULL;
+        return -EBUSY;
     }
     p->port = port;
     p->open = 1;
@@ -123,16 +58,215 @@ pcieport_open(const int port)
     p->config = 0;
     pal_reg_trace("================ pcieport_open %d end\n", port);
     pal_reg_trace_control(otrace);
-    return p;
+    return 0;
 }
 
 void
-pcieport_close(pcieport_t *p)
+pcieport_close(const int port)
 {
-    if (p->open) {
+    pcieport_t *p = pcieport_get(port);
+
+    if (p && p->open) {
         p->open = 0;
     }
 }
+
+static int
+pcieport_validate_hostconfig(pcieport_t *p)
+{
+    switch (p->cap_gen) {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+        /* all good */
+        break;
+    default:
+        pciesys_logerror("port %d unsupported gen%d\n", p->port, p->cap_gen);
+        return -EFAULT;
+    }
+
+    switch (p->cap_width) {
+    case 1: /* x1 uses 2 lanes */
+    case 2:
+        /* XXX verify peer isn't also configured to use our lanes */
+        break;
+    case 4:
+        /* odd ports don't support x4 */
+        if (p->port & 0x1) {
+            goto bad_width;
+        }
+        /* XXX verify peer isn't also configured to use our lanes */
+        break;
+    case 8:
+        /* only ports 0,4 can support x8 */
+        if (p->port != 0 && p->port != 4) {
+            goto bad_width;
+        }
+        break;
+    case 16:
+        /* only port 0 can use all 16 lanes */
+        if (p->port != 0) {
+            goto bad_width;
+        }
+        break;
+    default:
+        pciesys_logerror("port %d unsupported x%d\n", p->port, p->cap_width);
+        return -ERANGE;
+    }
+    return 0;
+
+ bad_width:
+    pciesys_logerror("port %d doesn't support x%d\n", p->port, p->cap_width);
+    return -EINVAL;
+}
+
+static int
+pcieport_parse_cap(char *cap, int *gen, int *width)
+{
+    if (sscanf(cap, "gen%dx%d", gen, width) == 2) {
+        if (*gen >= 1 && *gen <= 4 &&
+            *width >= 1 && *width <= 16) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int
+pcieport_getenv_cap(int port, int *gen, int *width)
+{
+    char envar[40];
+    char *env;
+
+    snprintf(envar, sizeof(envar), "PCIEPORT%d_CAP", port);
+    env = getenv(envar);
+    if (env && pcieport_parse_cap(env, gen, width)) {
+        pciesys_loginfo("pcieport: $%s selects gen%dx%d\n",
+                        envar, *gen, *width);
+        return 1;
+    }
+
+    snprintf(envar, sizeof(envar), "PCIEPORT_CAP");
+    env = getenv(envar);
+    if (env && pcieport_parse_cap(env, gen, width)) {
+        pciesys_loginfo("pcieport: $%s selects gen%dx%d\n",
+                        envar, *gen, *width);
+        return 1;
+    }
+
+    snprintf(envar, sizeof(envar), "PCIE_CAP");
+    env = getenv(envar);
+    if (env && pcieport_parse_cap(env, gen, width)) {
+        pciesys_loginfo("pcieport: $%s selects gen%dx%d\n",
+                        envar, *gen, *width);
+        return 1;
+    }
+
+    return 0;
+}
+
+static void
+pcieport_default_cap(pcieport_t *p, int *gen, int *width)
+{
+    /* check envar for override */
+    if (!pcieport_getenv_cap(p->port, gen, width)) {
+        /* no envar, provide defaults */
+        *gen = pal_is_asic() ? 4 : 1;
+        *width = pal_is_asic() ? 16 : 4;
+    }
+}
+
+static int
+pcieport_getenv_compliance(int *compliance)
+{
+    char *env = getenv("PCIE_COMPLIANCE");
+    if (env) {
+        *compliance = strtoul(env, NULL, 0);
+        pciesys_loginfo("pcieport: $PCIE_COMPLIANCE override %d\n",
+                        *compliance);
+        return 1;
+    }
+    return 0;
+}
+
+int
+pcieport_hostconfig(const int port, const pciehdev_params_t *params)
+{
+    pcieport_t *p = pcieport_get(port);
+    int r, default_gen, default_width, compliance;
+
+    if (p == NULL) {
+        return -EBADF;
+    }
+
+    pcieport_default_cap(p, &default_gen, &default_width);
+
+    if (params) {
+        p->cap_gen = params->cap_gen;
+        p->cap_width = params->cap_width;
+        p->subvendorid = params->subvendorid;
+        p->subdeviceid = params->subdeviceid;
+        p->compliance = params->compliance;
+        p->sris = params->sris;
+    }
+
+    /*
+     * Provide default params for any unspecified.
+     */
+    if (p->cap_gen == 0) {
+        p->cap_gen = default_gen;
+    }
+    if (p->cap_width == 0) {
+        p->cap_width = default_width;
+    }
+    if (p->subvendorid == 0) {
+        p->subvendorid = PCI_VENDOR_ID_PENSANDO;
+    }
+    if (p->subdeviceid == 0) {
+        p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
+    }
+    if (pcieport_getenv_compliance(&compliance)) {
+        p->compliance = compliance;
+    }
+
+    /*
+     * Verify the requested config is valid.
+     */
+    if ((r = pcieport_validate_hostconfig(p)) < 0) {
+        return r;
+    }
+
+    switch (p->cap_width) {
+    case  1: /* x1 uses 2 lanes */
+    case  2: p->lanemask = 0x0003 << (p->port << 0); break;
+    case  4: p->lanemask = 0x000f << (p->port << 1); break;
+    case  8: p->lanemask = 0x00ff << (p->port << 2); break;
+    case 16: p->lanemask = 0xffff << (p->port << 4); break;
+    }
+
+    p->host = 1;
+    p->config = 1;
+
+    return 0;
+}
+
+int
+pcieport_crs_off(const int port)
+{
+    pcieport_t *p = pcieport_get(port);
+
+    if (p == NULL)  return -EBADF;
+    if (!p->config) return -EIO;
+    if (!p->host)   return -EINVAL;
+    p->crs = 0;
+    pcieport_set_crs(p, p->crs);
+    return 0;
+}
+
+/******************************************************************
+ * debug
+ */
 
 static void
 cmd_fsm(int argc, char *argv[])
@@ -165,7 +299,7 @@ cmd_port(int argc, char *argv[])
         return;
     }
     port = strtoul(argv[1], NULL, 0);
-    if (port < 0 || port > PCIEPORT_NPORTS) {
+    if (port < 0 || port >= PCIEPORT_NPORTS) {
         pciesys_logerror("port %d out of range\n", port);
         return;
     }

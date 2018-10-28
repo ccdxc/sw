@@ -167,10 +167,9 @@ cmd_finalize(int argc, char *argv[])
     pciemgrenv_t *pme = pciemgrenv_get();
 
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->pport[port]) {
+        if (pme->enabled_ports & (1 << port)) {
             pciehdev_finalize(port);
-            const int off = 0;
-            pcieport_crs(pme->pport[port], off);
+            pcieport_crs_off(port);
         }
     }
 }
@@ -469,8 +468,8 @@ cmd_poll(int argc, char *argv[])
         tm_start = timestamp();
         if (poll_port) {
             for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-                if (pme->pport[port]) {
-                    pcieport_poll(pme->pport[port]);
+                if (pme->enabled_ports & (1 << port)) {
+                    pcieport_poll(port);
                 }
             }
         }
@@ -634,14 +633,27 @@ sighand(int s)
 void
 cli_loop(void)
 {
+    pciemgrenv_t *pme = pciemgrenv_get();
     char *line, prompt[32], *av[16];
-    int ac;
+    int port, ac;
+
+    /*
+     * In interactive mode, pre-initialize all the active ports
+     * to save the user some typing.
+     */
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            if (pciehdev_initialize(port) < 0) {
+                printf("pciehdev_initialize failed\n");
+                exit(1);
+            }
+        }
+    }
 
     if (setjmp(prompt_env) == 0) {
         signal(SIGINT, sighand);
         signal(SIGQUIT, sighand);
     }
-
     strncpy0(prompt, "pciemgr> ", sizeof(prompt));
     while (!exit_request && (line = readline(prompt)) != NULL) {
         if (line[0] != '\0') {

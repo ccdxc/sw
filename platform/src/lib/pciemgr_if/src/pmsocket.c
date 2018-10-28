@@ -18,7 +18,7 @@
 #define DEFAULT_PORT            50001
 #define HOST_ENVAR              "PCIESVC_HOST"
 #define SOCK_UN_ENVAR           "PCIESOCK_PATH"
-#define SOCK_UN_PATH            "/tmp/pciesock"
+#define SOCK_UN_PATH            "/var/run/pciesock"
 
 static int
 make_addr(char *host, int port, struct sockaddr_in *addr)
@@ -78,7 +78,7 @@ static char *
 socket_un_default_path(void)
 {
     static char path[256];
-    char *env, *user;
+    char *env, *user __attribute__((unused));
 
     env = getenv(SOCK_UN_ENVAR);
     if (env != NULL) {
@@ -86,6 +86,11 @@ socket_un_default_path(void)
         return path;
     }
 
+#ifdef __aarch64__
+    /* aarch64 use "/var/run/pciesock" */
+    strncpy(path, SOCK_UN_PATH, sizeof(path));
+#else
+    /* for x86_64 we use "/tmp/pciesock-$USER" */
     user = NULL;
     if (user == NULL) {
         user = getenv("SUDO_USER");
@@ -93,7 +98,8 @@ socket_un_default_path(void)
     if (user == NULL) {
         user = getenv("USER");
     }
-    snprintf(path, sizeof(path), "%s-%s", SOCK_UN_PATH, user);
+    snprintf(path, sizeof(path), "/tmp/pciesock-%s", user);
+#endif
     return path;
 }
 

@@ -15,7 +15,6 @@
 #include "eth_dev.hpp"
 #include "accel_dev.hpp"
 #include "hal_client.hpp"
-#include "pci_ids.h"
 #include "pciehw_dev.h"
 #include "pcieport.h"
 
@@ -47,7 +46,6 @@ sigusr1_handler(int sig)
 typedef struct pciemgrenv_s {
     pciehdev_t *current_dev;
     u_int8_t enabled_ports;
-    pcieport_t *pport[PCIEPORT_NPORTS];
 } pciemgrenv_t;
 
 static pciemgrenv_t pciemgrenv;
@@ -89,23 +87,20 @@ loop()
     p.first_bus = 1;
     p.fake_bios_scan = 1;
 #endif
-    p.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
     pme->enabled_ports = 0x1;
 
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
-            pcieport_t *pport;
+            int r;
 
-            if ((pport = pcieport_open(port)) == NULL) {
-                printf("pcieport_open %d failed\n", port);
+            if ((r = pcieport_open(port)) < 0) {
+                printf("pcieport_open %d failed: %d\n", port, r);
                 exit(1);
             }
-            if (pcieport_hostconfig(pport, &p) < 0) {
+            if (pcieport_hostconfig(port, &p) < 0) {
                 printf("pcieport_hostconfig %d failed\n", port);
                 exit(1);
             }
-
-            pme->pport[port] = pport;
         }
     }
 
@@ -137,40 +132,30 @@ loop()
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
             pciehdev_finalize(port);
-            const int off = 0;
-            pcieport_crs(pme->pport[port], off);
+            pcieport_crs_off(port);
         }
     }
 
-#ifdef __aarch64__
-    int off = 0;
-    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->pport[port]) {
-            pcieport_crs(pme->pport[port], off);
-        }
-    }
-#endif
     printf("Polling enabled every %dus, ^C to exit...\n", polltm_us);
-
     while (poll_enabled) {
 #ifdef __aarch64__
         u_int64_t tm_start, tm_stop, tm_port;
 
         tm_start = timestamp();
         for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-            if (pme->pport[port]) {
-                pcieport_poll(pme->pport[port]);
+            if (pme->enabled_ports & (1 << port)) {
+                pcieport_poll(port);
             }
         }
         tm_port = timestamp();
-        pciehw_poll();
+        pciehdev_poll();
         tm_stop = timestamp();
 
         if (tm_port - tm_start > 1000000) {
             printf("pcieport_poll: %ldus\n", tm_port - tm_start);
         }
         if (tm_stop - tm_port > 1000000) {
-            printf("pciehw_poll: %ldus\n", tm_stop - tm_port);
+            printf("pciehdev_poll: %ldus\n", tm_stop - tm_port);
         }
 #endif
         devmgr->DevcmdPoll();
@@ -187,8 +172,8 @@ loop()
     pciehdev_close();
 
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->pport[port]) {
-            pcieport_close(pme->pport[port]);
+        if (pme->enabled_ports & (1 << port)) {
+            pcieport_close(port);
         }
     }
 }
@@ -248,4 +233,3 @@ int main(int argc, char *argv[])
 
     return (0);
 }
-

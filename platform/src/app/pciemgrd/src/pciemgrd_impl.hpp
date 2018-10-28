@@ -9,7 +9,6 @@ struct pcieport_s; typedef struct pcieport_s pcieport_t;
 
 typedef struct pciemgrenv_s {
     u_int8_t enabled_ports;
-    pcieport_t *pport[PCIEPORT_NPORTS];
 } pciemgrenv_t;
 
 void verbose(const char *fmt, ...) __attribute__((format (printf, 1, 2)));

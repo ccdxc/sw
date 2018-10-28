@@ -8,8 +8,11 @@ SOURCES = pciemgrc.cc
 LBUILD_ARCHES = x86_64
 
 LCXXFLAGS = \
+	-I $(TOPDIR)/../nic/third-party/libev/include \
+	-I $(TOPDIR)/src/lib/evutils/include \
 	-I $(TOPDIR)/src/lib/pciehdevices/include \
 	-I $(TOPDIR)/src/lib/pciemgrutils/include \
+	-I $(TOPDIR)/src/lib/pciemgr/include \
 	-I $(TOPDIR)/src/lib/pciemgr_if/include \
 	$(NULL)
 

@@ -106,7 +106,7 @@ static void
 client_msg_cb(void *arg)
 {
     pmserver_t *pms = &pmserver;
-    pmsclient_t *pmsc = arg;;
+    pmsclient_t *pmsc = arg;
     pmmsg_t *m;
     int r;
 

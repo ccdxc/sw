@@ -13,13 +13,16 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include "pciesys.h"
 #include "pal.h"
 
 typedef u_int8_t bool;
 #define true 1
 #define false 0
 
-#define SW_PRINT printf
+#define SW_PRINT pciesys_logdebug
+#define SWPRINT  pciesys_logdebug
+#define SWPRINTF pciesys_logdebug
 
 #define PLOG_API_MSG(f, ...) do {} while (0)
 #define PLOG_MSG(f, ...) do {} while (0)

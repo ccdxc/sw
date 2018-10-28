@@ -929,12 +929,11 @@ pciehw_barsz(const u_int8_t port, const u_int16_t bdf, const int i)
     return pciehw_bar_getsize(phwbar);
 }
 
-int
+void
 pciehw_poll(void)
 {
     pciehw_indirect_poll();
     pciehw_notify_poll();
-    return 0;
 }
 
 void *

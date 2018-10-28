@@ -81,6 +81,7 @@ pcieport_info_get(void)
     return &pcieport_info;
 }
 
+int pcieport_onetime_init(void);
 int pcieport_config(pcieport_t *p);
 void pcieport_fsm(pcieport_t *p, pcieportev_t ev);
 int pcieport_tgt_marker_rx_wait(pcieport_t *p);
@@ -105,33 +106,5 @@ void pcieport_fault(pcieport_t *p, const char *fmt, ...)
     __attribute__((format (printf, 2, 3)));
 
 void pcieport_fsm_dbg(int argc, char *argv[]);
-
-/*
- * Register convenience macros.
- */
-#define PP_(REG) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + CAP_PP_CSR_ ##REG## _BYTE_ADDRESS)
-
-#define PXC_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXC_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_C_ ##REG## _BYTE_ADDRESS)
-
-#define PXP_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXP_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_P_ ##REG## _BYTE_ADDRESS)
-
-/* sta_rst flags */
-#define STA_RSTF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_RST_ ##REG## _FIELD_MASK)
-
-/* sta_mac flags */
-#define STA_MACF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_MAC_ ##REG## _FIELD_MASK)
-
-/* cfg_mac flags */
-#define CFG_MACF_(REG) \
-    (CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_ ##REG## _FIELD_MASK)
 
 #endif /* __PCIEPORT_IMPL_H__ */

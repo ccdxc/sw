@@ -20,6 +20,7 @@ LCFLAGS = \
 	-I $(TOPDIR)/src/lib/misc/include \
 	-I $(TOPDIR)/src/lib/pciemgrutils/include \
 	-I $(TOPDIR)/src/lib/pciemgr/include \
+	-I $(TOPDIR)/src/lib/pcieport/include \
 	$(NULL)
 
 LCXXFLAGS = $(LCFLAGS)

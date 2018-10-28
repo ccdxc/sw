@@ -86,6 +86,7 @@ bar_finalize(const pciehwdev_t *phwdev,
 
         spmt->owner = hwdevh;
         spmt->baroff = reg->baroff;
+        spmt->cfgidx = bar->cfgidx;
 
         prtc = reg->nprts;
         prtb = prt_alloc(prtc);
@@ -191,7 +192,7 @@ pciehw_barrw_notify(const pciehdev_event_t evtype,
     evd.pdev = phwdev->pdev;
     memrw = &evd.memrw_notify;
     memrw->baraddr = stlp->addr;
-    memrw->baridx = 0; /* XXX baridx from spmt? */
+    memrw->cfgidx = spmt->cfgidx;
     memrw->baroffset = stlp->addr - pmt_bar_getaddr(&spmt->pmt);
     memrw->size = stlp->size;
     memrw->data = stlp->data; /* data, if write */

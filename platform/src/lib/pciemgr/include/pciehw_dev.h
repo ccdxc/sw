@@ -52,7 +52,7 @@ typedef enum pciehdev_event_e {
 typedef struct pciehdev_memrw_notify_s {
     u_int64_t baraddr;          /* PCIe bar address */
     u_int64_t baroffset;        /* bar-local offset */
-    u_int8_t baridx;            /* bar index */
+    u_int8_t cfgidx;            /* bar cfgidx */
     u_int32_t size;             /* i/o size */
     u_int64_t data;             /* data, if write */
 } pciehdev_memrw_notify_t;
