@@ -17,9 +17,17 @@ ulimit -c unlimited
 sleep 30
 
 if [[ "$FWD_MODE" != "classic" ]]; then
-    ARGS="-s -c $NICMGR_CONFIG_PATH/eth-smart.json -p haps"
+    if [ -r /mnt/eth-smart.json ]; then
+        ARGS="-s -c /mnt/eth-smart.json -p haps"
+    else
+        ARGS="-s -c $NICMGR_CONFIG_PATH/eth-smart.json -p haps"
+    fi
 else
-    ARGS="-c $NICMGR_CONFIG_PATH/device.json -p haps"
+    if [ -r /mnt/device.json ]; then
+        ARGS="-c /mnt/device.json -p haps"
+    else
+        ARGS="-c $NICMGR_CONFIG_PATH/device.json -p haps"
+    fi
 fi
 
 export LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH
