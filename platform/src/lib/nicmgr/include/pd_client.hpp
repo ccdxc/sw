@@ -31,7 +31,8 @@ public:
     static PdClient* factory(platform_mode_t platform);
     void destroy(PdClient *pdc);
 
-    char *hal_cfg_path_;
+    string hal_cfg_path_;
+    string gen_dir_path_;
     platform_mode_t platform_;
     class sdk::platform::program_info *pinfo_;
     class sdk::platform::utils::mpartition *mp_;
@@ -49,6 +50,8 @@ public:
                        struct lif_info *lif_info,
                        uint8_t coses);
 
+
+    int create_dirs();
     int p4plus_rxdma_init_tables();
     int p4plus_txdma_init_tables();    
     int pd_state_init();

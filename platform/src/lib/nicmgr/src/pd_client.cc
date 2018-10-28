@@ -77,7 +77,7 @@ PdClient::p4plus_rxdma_init_tables()
             .p4pd_pgm_name       = "iris",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
-            .cfg_path            = hal_cfg_path_,
+            .cfg_path            = hal_cfg_path_.c_str(),
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -132,7 +132,7 @@ PdClient::p4plus_txdma_init_tables()
         .p4pd_pgm_name       = "iris",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",
-        .cfg_path            = hal_cfg_path_,
+        .cfg_path            = hal_cfg_path_.c_str(),
     };
 
     memset(&tinfo, 0, sizeof(tinfo));
@@ -216,6 +216,37 @@ uint64_t PdClient::RdmaHbmAlloc (uint32_t size)
     return rdma_hbm_base_ + alloc_offset;    
 }
 
+int
+PdClient::create_dirs() {
+    struct stat  st = { 0 };
+
+    if (hal_cfg_path_ == "") {
+        // use the current dir
+        hal_cfg_path_ = ".";
+        gen_dir_path_ = ".";
+    } else {
+        gen_dir_path_ = string(hal_cfg_path_ + "/gen");
+        // check if the gen dir exists
+        if (stat(gen_dir_path_.c_str(), &st) == -1) {
+            // doesn't exist, try to create
+            if (mkdir(gen_dir_path_.c_str(), 0755) < 0) {
+                NIC_LOG_ERR("Gen directory {}/ doesn't exist, failed to create one\n",
+                            gen_dir_path_.c_str());
+                return -1;
+            }
+        } else {
+            // gen dir exists, check if we have write permissions
+            if (access(gen_dir_path_.c_str(), W_OK) < 0) {
+                // don't have permissions to create this directory
+                NIC_LOG_ERR("No permissions to create files in {}\n", gen_dir_path_.c_str());
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 PdClient* PdClient::factory(platform_mode_t platform)
 {
     int ret;
@@ -226,11 +257,10 @@ PdClient* PdClient::factory(platform_mode_t platform)
     assert(pdc);
 
     pdc->platform_ = platform;
-    pdc->hal_cfg_path_ = std::getenv("HAL_CONFIG_PATH");
+    pdc->hal_cfg_path_ = string(std::getenv("HAL_CONFIG_PATH"));
 
-    if (!pdc->hal_cfg_path_) {
-        pdc->hal_cfg_path_ = (char*)"./";
-    }
+    ret = pdc->create_dirs();
+    assert(ret == 0);
 
     NIC_LOG_INFO("Loading p4plus RxDMA asic lib tables cfg_path: {}...", pdc->hal_cfg_path_);
     ret = pdc->p4plus_rxdma_init_tables();
@@ -239,15 +269,15 @@ PdClient* PdClient::factory(platform_mode_t platform)
     ret = pdc->p4plus_txdma_init_tables();
     assert(ret == 0);
 
-    NIC_LOG_INFO("Initializing HBM Memory Partitions ...");
-    pdc->mp_ = sdk::platform::utils::mpartition::factory((string(pdc->hal_cfg_path_) +
-                                                         "/iris/hbm_mem.json").c_str(),
-                                                         CAPRI_HBM_BASE);
+    NIC_LOG_INFO("Initializing HBM Memory Partitions from: {}...");
+    pdc->mp_ = sdk::platform::utils::mpartition::factory((pdc->hal_cfg_path_ +
+                                                          "/iris/hbm_mem.json").c_str(),
+                                                          CAPRI_HBM_BASE);
     assert(pdc->mp_);
 
     NIC_LOG_INFO("Initializing Program Info ...");
-    pdc->pinfo_ = sdk::platform::program_info::factory((string(pdc->hal_cfg_path_) +
-                                                       "/gen/mpu_prog_info.json").c_str());
+    pdc->pinfo_ = sdk::platform::program_info::factory((pdc->hal_cfg_path_ +
+                                                        "/gen/mpu_prog_info.json").c_str());
     assert(pdc->pinfo_);
 
     switch (pdc->platform_){
@@ -281,9 +311,8 @@ PdClient* PdClient::factory(platform_mode_t platform)
     assert(pdc->lm_);
 
     pdc->rdma_manager_init();
-    
-    NIC_LOG_DEBUG("{}: Exited\n", __FUNCTION__);
 
+    NIC_LOG_INFO("{}: Exited\n", __FUNCTION__);
     return pdc;
 }
 

@@ -2202,3 +2202,37 @@ ostream &operator<<(ostream& os, const Eth& obj) {
 
     return os;
 }
+
+int
+Eth::GenerateQstateInfoJson(pt::ptree &lifs)
+{
+    pt::ptree lif;
+    pt::ptree qstates;
+
+    NIC_LOG_INFO("{}: Entered for hw_lif_id: {}\n", __FUNCTION__, info.hw_lif_id);
+
+    lif.put("lif_id", info.lif_id);
+    lif.put("hw_lif_id", info.hw_lif_id);
+
+    for (int j = 0; j < NUM_QUEUE_TYPES; j++) {
+        pt::ptree qs;
+        char numbuf[32];
+
+        if (qinfo[j].size < 1) continue;
+
+        qs.put("qtype", qinfo[j].type_num);
+        qs.put("qsize", qinfo[j].size);
+        qs.put("qaddr", info.qstate_addr[qinfo[j].type_num]);
+        snprintf(numbuf, sizeof(numbuf), "0x%lx", info.qstate_addr[qinfo[j].type_num]);
+        qs.put("qaddr_hex", numbuf);
+        qstates.push_back(std::make_pair("", qs));
+        qs.clear();
+    }
+
+    lif.add_child("qstates", qstates);
+    lifs.push_back(std::make_pair("", lif));
+    qstates.clear();
+    lif.clear();
+    NIC_LOG_INFO("{}: Exited\n", __FUNCTION__);
+    return 0;
+}

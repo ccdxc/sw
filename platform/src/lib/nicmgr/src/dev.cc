@@ -24,6 +24,9 @@
 #include "cap_wa_c_hdr.h"
 #include "adminq.h"
 
+namespace pt = boost::property_tree;
+
+#define QSTATE_INFO_FILE_NAME  "nicmgr_qstate_info.json"
 
 sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
 
@@ -225,6 +228,8 @@ DeviceManager::LoadConfig(string path)
     struct eth_devspec *eth_spec;
     struct accel_devspec *accel_spec;
     uint32_t intr_base = 0;
+
+    NIC_LOG_INFO("{}: Entered\n", __FUNCTION__);
 
 #if 0
     // Discover existing configuration
@@ -480,6 +485,11 @@ DeviceManager::LoadConfig(string path)
         }
     }
 
+    NIC_LOG_INFO("Calling GenerateQstateInfoJson for: {}...",
+            pd->gen_dir_path_ + "/" + QSTATE_INFO_FILE_NAME);
+    GenerateQstateInfoJson(pd->gen_dir_path_ + "/" + QSTATE_INFO_FILE_NAME);
+
+    NIC_LOG_INFO("{}: Exited\n", __FUNCTION__);
     return 0;
 }
 
@@ -495,6 +505,8 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
     Eth *eth_dev;
     Accel_PF *accel_dev;
 
+    NIC_LOG_INFO("{}: Entered\n", __FUNCTION__);
+
     switch (type) {
     case MNIC:
         NIC_LOG_ERR("Unsupported Device Type MNIC");
@@ -505,10 +517,12 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
     case ETH:
         eth_dev = new Eth(hal, hal_common_client, dev_spec, pd);
         devices[eth_dev->info.hw_lif_id] = (Device *)eth_dev;
+        NIC_LOG_INFO("Eth Device lifid: {}\n", eth_dev->info.hw_lif_id);
         return (Device *)eth_dev;
     case ACCEL:
         accel_dev = new Accel_PF(hal, dev_spec, &info, pd, dol_integ);
         devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
+        NIC_LOG_INFO("Acc Device lifid: {}\n", accel_dev->info.hw_lif_id);
         return (Device *)accel_dev;
     case NVME:
         NIC_LOG_ERR("Unsupported Device Type NVME");
@@ -699,4 +713,23 @@ DeviceManager::AdminQPoll()
         NIC_LOG_INFO("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, resp_head, resp_tail);
     }
+}
+
+int
+DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
+{
+    pt::ptree root, lifs;
+
+    NIC_LOG_INFO("{}: Entered with filename: {}\n", __FUNCTION__, qstate_info_file);
+
+    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
+        Device *dev = it->second;
+        Eth *eth_dev = (Eth *) dev;
+        eth_dev->GenerateQstateInfoJson(lifs);
+    }
+
+    root.push_back(std::make_pair("lifs", lifs));
+    pt::write_json(qstate_info_file, root);
+    NIC_LOG_INFO("{}: Exited\n", __FUNCTION__);
+    return 0;
 }

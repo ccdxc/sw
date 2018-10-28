@@ -31,6 +31,11 @@
 
 #include "ionic_if.h"
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
+namespace pt = boost::property_tree;
+
 /**
  * ETH Qtype Enum
  */
@@ -141,6 +146,8 @@ public:
     void DevLinkUpHandler(uint32_t port_num);
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
         void *resp, void *resp_data);
+    int GenerateQstateInfoJson(pt::ptree &lifs);
+
 private:
     /* Static members */
     static sdk::lib::indexer *fltr_allocator;

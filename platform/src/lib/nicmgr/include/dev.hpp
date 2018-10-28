@@ -253,6 +253,7 @@ private:
     // Service Lif Info
     struct lif_info info;
     static struct queue_info qinfo[NUM_QUEUE_TYPES];
+    int GenerateQstateInfoJson(std::string qstate_info_file);
 
     // HAL Info
     HalClient *hal;
