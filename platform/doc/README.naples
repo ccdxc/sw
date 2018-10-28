@@ -13,7 +13,7 @@ srv3, srv6, srv8
 # Build APPS
 
 export WS_DIR=/local/$USER
-export WS_NAME=foo					# Change the name to your liking
+export WS_NAME=foo			# Change the name to your liking
 export GOPATH=$WS_DIR/$WS_NAME
 export PATH=$GOPATH/bin:$PATH
 
@@ -29,8 +29,10 @@ cd nic
 make ARCH=aarch64 PLATFORM=haps
 
 # Get buildroot container
-docker pull registry.test.pensando.io:5000/pensando/buildroot/neel:20180921.0946
-docker run -it  -v <path_to_pensando_sw>:/sw registry.test.pensando.io:5000/pensando/buildroot/neel:20180921.0946 
+docker pull \
+    registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181026.2036
+docker run -it -v /local/$USER/ws/src/github.com/pensando/sw:/sw \
+    registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181026.2036
 
 # Build images
 cd /buildroot
@@ -49,8 +51,6 @@ scp output/images/naples_fw.tar root@cap-srvX:
 # ON naples host
 /home/haps/memtun/memtun 1.0.0.1 &  # Do this once after every server reboot
 
-scp /home/neel/naples/stat root@1.0.0.2:/bin/
-scp /home/neel/naples/sysupdate.sh root@1.0.0.2:/nic/tools/sysupdate.sh
 scp naples_fw.tar root@1.0.0.2:/tmp
 ssh root@1.0.0.2
 # Password: pen123
