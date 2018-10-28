@@ -2,4 +2,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libcfg_plugin_gft.so
 MODULE_PIPELINE = iris gft
+MODULE_ARCH     = x86_64
 include ${MKDEFS}/post.mk

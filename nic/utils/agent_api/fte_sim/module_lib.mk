@@ -2,4 +2,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libfte_sim_lib.so
 MODULE_SRCS   = ${MODULE_SRC_DIR}/fwlogsim_svc.cc
+MODULE_ARCH   = x86_64
 include ${MKDEFS}/post.mk

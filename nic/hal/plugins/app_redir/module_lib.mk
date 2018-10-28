@@ -7,4 +7,5 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/app_redir.cc \
                   ${MODULE_SRC_DIR}/app_redir_appid.cc \
                   ${MODULE_SRC_DIR}/app_redir_scanner.cc \
                   ${MODULE_SRC_DIR}/app_redir_cb_ops.cc
+MODULE_ARCH     = x86_64
 include ${MKDEFS}/post.mk

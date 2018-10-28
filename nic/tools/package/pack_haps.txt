@@ -46,7 +46,8 @@ nic/build/aarch64/iris/lib/libcrypto.so.1.1                         /nic/lib/
 nic/build/aarch64/iris/lib/libdirectmap.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libeventmgr.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libfsm.so                                /nic/lib/
-nic/build/aarch64/iris/lib/libfte*.so                               /nic/lib/
+nic/build/aarch64/iris/lib/libfte.so                                /nic/lib/
+nic/build/aarch64/iris/lib/libfte_iris.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libhal_lib.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libhalproto.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libhal_src.so                            /nic/lib/
@@ -58,7 +59,6 @@ nic/build/aarch64/iris/lib/libhalupgrade.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libhash.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libhbmhash.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libheartbeat.so                          /nic/lib/
-nic/build/aarch64/iris/lib/libhost_mem.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libht.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libindexer.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libisa.so                                /nic/lib/
