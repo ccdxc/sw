@@ -130,6 +130,7 @@ class NaplesManagement:
         if idx == 0:
             hdl.sendline(GlobalOptions.console_username)
             hdl.expect("Password:")
+            hdl.sendline(GlobalOptions.console_password)
         if idx == 1:
             hdl.sendline(GlobalOptions.console_password)
         hdl.expect("#")
@@ -144,13 +145,15 @@ class NaplesManagement:
     def install_fw(self):
         self.hdl.sendline("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
         self.hdl.expect_exact("Removing package directory /tmp/sysupdate", timeout = 600)
+        self.hdl.sendline("echo %s > /mnt/app-start.conf && sync" % GlobalOptions.mode)
+        self.hdl.expect_exact("#")
         self.__reset()
         idx = 0
         while idx == 0:
             idx = self.hdl.expect_exact(["#", "capri login:"], timeout = 120)
         self.__login()
-        self.hdl.sendline("/nic/tools/sysinit.sh %s hw" % GlobalOptions.mode)
-        self.hdl.expect_exact("All processes brought up, please check ...", timeout = 600)
+        #self.hdl.sendline("/nic/tools/sysinit.sh %s hw" % GlobalOptions.mode)
+        #self.hdl.expect_exact("All processes brought up, please check ...", timeout = 600)
         return
 
 
