@@ -110,45 +110,44 @@ func TestFilter(t *testing.T) {
 				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Count", Operator: "gte", Values: []string{"5"}}, ObservedValue: "5"},
 			},
 		},
-		// TODO: enable these tests once the schema is fixed
-		// {
-		// 	reqs: []*fields.Requirement{
-		// 		&fields.Requirement{Key: "meta.name", Operator: "equals", Values: []string{"evt1"}},
-		// 	},
-		// 	expSuccess: true,
-		// 	expResp: []*monitoring.MatchedRequirement{
-		// 		&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.Name", Operator: "equals", Values: []string{"evt1"}}, ObservedValue: "evt1"},
-		// 	},
-		// },
-		// {
-		// 	reqs: []*fields.Requirement{
-		// 		&fields.Requirement{Key: "meta.creation-time", Operator: "equals", Values: []string{ts.String()}},
-		// 	},
-		// 	expSuccess: true,
-		// 	expResp: []*monitoring.MatchedRequirement{
-		// 		&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "equals", Values: []string{ts.String()}}, ObservedValue: ts.String()},
-		// 	},
-		// },
-		// {
-		// 	reqs: []*fields.Requirement{
-		// 		&fields.Requirement{Key: "meta.creation-time", Operator: "lte", Values: []string{nw.Format(time.RFC3339Nano)}},
-		// 	},
-		// 	expSuccess: true,
-		// 	expResp: []*monitoring.MatchedRequirement{
-		// 		&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "lte", Values: []string{nw.Format(time.RFC3339Nano)}}, ObservedValue: ts.String()},
-		// 	},
-		// },
-		// {
-		// 	reqs: []*fields.Requirement{
-		// 		&fields.Requirement{Key: "meta.creation-time", Operator: "gte", Values: []string{ts.String()}},
-		// 		&fields.Requirement{Key: "meta.mod-time", Operator: "lt", Values: []string{nw.Add(10 * time.Second).Format(time.RFC3339Nano)}},
-		// 	},
-		// 	expSuccess: true,
-		// 	expResp: []*monitoring.MatchedRequirement{
-		// 		&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "gte", Values: []string{ts.String()}}, ObservedValue: ts.String()},
-		// 		&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.ModTime", Operator: "lt", Values: []string{nw.Add(10 * time.Second).Format(time.RFC3339Nano)}}, ObservedValue: ts.String()},
-		// 	},
-		// },
+		{
+			reqs: []*fields.Requirement{
+				&fields.Requirement{Key: "meta.name", Operator: "equals", Values: []string{"evt1"}},
+			},
+			expSuccess: true,
+			expResp: []*monitoring.MatchedRequirement{
+				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.Name", Operator: "equals", Values: []string{"evt1"}}, ObservedValue: "evt1"},
+			},
+		},
+		{
+			reqs: []*fields.Requirement{
+				&fields.Requirement{Key: "meta.creation-time", Operator: "equals", Values: []string{ts.String()}},
+			},
+			expSuccess: true,
+			expResp: []*monitoring.MatchedRequirement{
+				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "equals", Values: []string{ts.String()}}, ObservedValue: ts.String()},
+			},
+		},
+		{
+			reqs: []*fields.Requirement{
+				&fields.Requirement{Key: "meta.creation-time", Operator: "lte", Values: []string{nw.Format(time.RFC3339Nano)}},
+			},
+			expSuccess: true,
+			expResp: []*monitoring.MatchedRequirement{
+				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "lte", Values: []string{nw.Format(time.RFC3339Nano)}}, ObservedValue: ts.String()},
+			},
+		},
+		{
+			reqs: []*fields.Requirement{
+				&fields.Requirement{Key: "meta.creation-time", Operator: "gte", Values: []string{ts.String()}},
+				&fields.Requirement{Key: "meta.mod-time", Operator: "lt", Values: []string{nw.Add(10 * time.Second).Format(time.RFC3339Nano)}},
+			},
+			expSuccess: true,
+			expResp: []*monitoring.MatchedRequirement{
+				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "gte", Values: []string{ts.String()}}, ObservedValue: ts.String()},
+				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.ModTime", Operator: "lt", Values: []string{nw.Add(10 * time.Second).Format(time.RFC3339Nano)}}, ObservedValue: ts.String()},
+			},
+		},
 		{
 			reqs: []*fields.Requirement{
 				&fields.Requirement{Key: "count", Operator: "gte", Values: []string{"15"}},
