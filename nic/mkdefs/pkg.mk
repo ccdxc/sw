@@ -66,7 +66,12 @@ package-ionic:
 	${TOPDIR}/platform/tools/drivers-linux.sh
 
 .PHONY: package-drivers
-package-drivers: package-ionic package-storage-offload
+package-drivers: package-ionic package-storage-offload package-freebsd
+
+.PHONY: package-freebsd
+package-freebsd:
+	@echo "Building FreeBSD IONIC driver package."
+	${TOPDIR}/platform/tools/package-freebsd.sh
 
 .PHONY: release
 release: ${PKG_PREREQS}
