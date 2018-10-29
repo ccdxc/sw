@@ -18,6 +18,6 @@ esp_ipv4_tunnel_h2n_txdma1_s1_dummy:
     phvwr  p.common_te0_phv_table_addr, k.ipsec_to_stage1_cb_ring_slot_addr
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
     addi        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2, r5, TABLE_SIZE_32_BITS) 
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2, r5, TABLE_SIZE_512_BITS) 
     nop.e
     nop

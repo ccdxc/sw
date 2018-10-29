@@ -21,6 +21,5 @@ esp_ipv4_tunnel_n2h_allocate_barco_req_pindex:
     add r1, d.pi, 1
     and r1, r1, IPSEC_BARCO_RING_INDEX_MASK
     tblwr d.pi, r1
-    phvwr p.barco_dbell_pi, r1.wx
-    nop.e
+    phvwr.e p.barco_dbell_pi, r1.wx
     nop 

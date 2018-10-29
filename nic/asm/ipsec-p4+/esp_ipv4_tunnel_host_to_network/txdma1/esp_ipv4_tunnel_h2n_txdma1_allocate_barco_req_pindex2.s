@@ -27,6 +27,8 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2:
     nop
 
 esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_fail:
-    phvwri.e p.p4_intr_global_drop, 1
+    tbladd d.stat_qfull, 1
+    phvwri p.p4_intr_global_drop, 1
+    nop.e
     nop
     

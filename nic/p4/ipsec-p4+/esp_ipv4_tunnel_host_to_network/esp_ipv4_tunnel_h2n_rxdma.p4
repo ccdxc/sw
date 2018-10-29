@@ -98,10 +98,10 @@ header_type ipsec_rxdma_global_t {
         rxdma_pad1     : 2;
         qid            : 24;
         frame_size     : 16; 
-        ipsec_cb_index : 16;
-        ipsec_cb_pindex : 8;
         ipsec_cb_addr : 34;
-        ipsec_global_pad : 14;
+        ipsec_global_pad : 6;
+        ipsec_cb_index : 16;
+        ipsec_cb_pindex : 16;
     }
 }
 
@@ -299,9 +299,7 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
     // Need to change to out_desc_addr
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
 
-    //DMA_COMMAND_PHV2MEM_FILL(dma_cmd_post_cb_ring, cb_ring_base_addr + (cb_pindex * 8), IPSEC_CB_RING_IN_DESC_START, IPSEC_CB_RING_IN_DESC_END, 0, 0, 0, 0)
 
-    //DMA_COMMAND_PHV2MEM_FILL(dma_cmd_fill_esp_hdr, t0_s2s.in_page_addr+IPSEC_SALT_HEADROOM+iv_size, IPSEC_ESP_HEADER_PAGE_START, IPSEC_ESP_HEADER_PAGE_END, 0, 0, 0 0);
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
     // Ring Doorbell for IPSec-CB (svc_lif, type, ipsec-cb-index(qid))
     IPSEC_SCRATCH_GLOBAL

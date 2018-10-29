@@ -37,7 +37,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     and r7, r7, IPSEC_CB_RING_INDEX_MASK 
     tblwr d.cb_cindex, r7
     //tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
-    tblmincri.f     d.{rxdma_ring_cindex}.hx, 8, 1
+    tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
     phvwr p.ipsec_to_stage1_cb_ring_slot_addr, r2
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     b.!c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing
