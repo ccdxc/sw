@@ -4,7 +4,6 @@
 #include "nic/include/asic_pd.hpp"
 #include "capri_qstate.hpp"
 
-#ifndef HAL_GTEST
 template <typename T>
 void set_qstate_entry(LIFQState *qstate, T *entry, int cos) {
     entry->qstate_base(qstate->hbm_address >> 12);
@@ -88,10 +87,8 @@ int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
     return 0;
 }
 
-#endif
 
 void push_qstate_to_capri(LIFQState *qstate, int cos) {
-#ifndef HAL_GTEST
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     if (!qstate->params_in.dont_zero_memory) {
@@ -103,11 +100,9 @@ void push_qstate_to_capri(LIFQState *qstate, int cos) {
     set_qstate_entry(qstate, psp_entry, cos);
     auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     set_qstate_entry(qstate, pr_entry, cos);
-#endif
 }
 
 void clear_qstate(LIFQState *qstate) {
-#ifndef HAL_GTEST
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
@@ -116,38 +111,31 @@ void clear_qstate(LIFQState *qstate) {
     clear_qstate_entry(psp_entry);
     auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     clear_qstate_entry(pr_entry);
-#endif
 }
 
 void read_lif_params_from_capri(LIFQState *qstate) {
-#ifndef HAL_GTEST
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     uint32_t is_valid = 0;
 
     auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     // Since content is going to be same in ASIC across all 3 blocks - reading from one is enough ??
     get_qstate_lif_params(qstate, psp_entry, &is_valid);
-#endif
 }
 
 
 int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
-#ifndef HAL_GTEST
     hal_ret_t rv = hal::pd::asic_mem_read(q_addr, buf, q_size);
     if (rv != HAL_RET_OK) {
         return -EIO;
     }
-#endif
     return 0;
 }
 
 int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
-#ifndef HAL_GTEST
     hal_ret_t rc = hal::pd::asic_mem_write(q_addr, (uint8_t *)buf, q_size);
     if (rc != HAL_RET_OK) {
         return -EIO;
     }
-#endif
     return 0;
 }
 
@@ -155,7 +143,6 @@ int32_t get_pc_offset(sdk::platform::program_info *pinfo,
                       const char *prog_name,
                       const char *label,
                       uint8_t *offset) {
-#ifndef HAL_GTEST
     hbm_addr_t off;
 
     off = pinfo->symbol_address((char *)prog_name, (char *)label);
@@ -170,6 +157,5 @@ int32_t get_pc_offset(sdk::platform::program_info *pinfo,
         return -EIO;
     }
     *offset = (uint8_t) (off >> 6);
-#endif
     return 0;
 }

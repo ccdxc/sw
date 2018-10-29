@@ -23,13 +23,11 @@
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/include/bitmap.hpp"
 
-#ifndef HAL_GTEST
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_pb/cap_pbc_csr.h"
 #include "nic/asic/capri/verif/apis/cap_pb_api.h"
 #include "nic/asic/capri/model/cap_pb/cap_pbc_decoders.h"
-#endif
 
 using namespace hal::utils;
 
@@ -552,7 +550,6 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
 
     stringstream data;
     data << hex << endl;
-#ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
@@ -674,7 +671,6 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
             return HAL_RET_ERR;
     }
 
-#endif
     HAL_TRACE_DEBUG("{}", data.str());
     HAL_TRACE_DEBUG("Updated the iq {} on port {}",
                     iq, port);
@@ -694,7 +690,6 @@ capri_tm_uplink_input_map_update (tm_port_t port,
     }
     stringstream data;
     data << hex << endl;
-#ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
@@ -731,7 +726,6 @@ capri_tm_uplink_input_map_update (tm_port_t port,
         default:
             return HAL_RET_INVALID_ARG;
     }
-#endif
     HAL_TRACE_DEBUG("{}", data.str());
     return HAL_RET_OK;
 }
@@ -747,7 +741,6 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
     }
     stringstream data;
     data << hex << endl;
-#ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
@@ -788,7 +781,6 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
         default:
             return HAL_RET_INVALID_ARG;
     }
-#endif
     HAL_TRACE_DEBUG("{}", data.str());
     return HAL_RET_OK;
 }
@@ -869,7 +861,6 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
 {
     stringstream data;
     data << hex << endl;
-#ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     (void)pbc_csr;
@@ -963,7 +954,6 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
         ${trace_register("pbc_csr.dhs_sched.entry[0]")}
         pbc_csr.dhs_sched.entry[0].write();
     }
-#endif
     HAL_TRACE_DEBUG("{}", data.str());
     HAL_TRACE_DEBUG("Updated the output queue scheduler on port {} "
                     "level {}, node {}",
@@ -1014,7 +1004,6 @@ capri_tm_uplink_lif_set (uint32_t port,
 
     stringstream data;
     data << hex << endl;
-#ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
 
@@ -1039,7 +1028,6 @@ capri_tm_uplink_lif_set (uint32_t port,
     /* Write the csr */
     ${trace_register("pbc_csr.cfg_src_port_to_lif_map")}
     pbc_csr.cfg_src_port_to_lif_map.write();
-#endif
     HAL_TRACE_DEBUG("{}", data.str());
 
     HAL_TRACE_DEBUG("Set the lif {} on port {}",
@@ -2527,7 +2515,6 @@ capri_tm_update_perf_run_config (void)
 hal_ret_t
 capri_tm_init (sdk::lib::catalog* catalog)
 {
-#ifndef HAL_GTEST
     hal_ret_t ret = HAL_RET_OK;
     capri_tm_cfg_profile_t tm_cfg_profile_;
     capri_tm_cfg_profile_t *tm_cfg_profile = &tm_cfg_profile_;
@@ -2587,8 +2574,6 @@ capri_tm_init (sdk::lib::catalog* catalog)
         return ret;
     }
 
-#endif
-
     char *perf_run = getenv("PERF_RUN");
     if (perf_run) {
         HAL_TRACE_DEBUG("perf-run env {}", perf_run);
@@ -2641,14 +2626,12 @@ capri_tm_repl_table_token_size_set (uint32_t size_in_bits)
 hal_ret_t
 capri_tm_get_clock_tick (uint64_t *tick)
 {
-#ifndef HAL_GTEST
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
 
     hbm_csr.sta_hbm_timestamp.read();
     *tick = (uint64_t)hbm_csr.sta_hbm_timestamp.value().convert_to<uint64_t>();
-#endif
     return HAL_RET_OK;
 }
 

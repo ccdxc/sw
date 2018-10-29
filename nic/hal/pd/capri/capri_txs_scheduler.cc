@@ -24,13 +24,11 @@
 #include "nic/hal/pd/capri/capri_state.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
 
-#ifndef HAL_GTEST
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_txs/cap_txs_csr.h"
 #include "nic/asic/capri/verif/apis/cap_txs_api.h"
 #include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
-#endif
 
 #define NUM_MAX_COSES 16
 #define CHECK_BIT(var,pos) ((var) & (1 << (pos)))
