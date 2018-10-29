@@ -225,9 +225,6 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
         return;
     }
 
-    NIC_LOG_INFO("lif created: id:{}, hw_lif_id: {}",
-                 info.lif_id, info.hw_lif_id);
-
     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
     pd->program_qstate(qinfo, &info, coses);
 
@@ -239,7 +236,12 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     }
     stats_mem_addr += info.hw_lif_id << LIF_STATS_SIZE_LOG;
 
-    auto lif_stats = delphi::objects::LifMetrics::NewLifMetrics(spec->lif_id);
+    NIC_LOG_INFO("lif created: id:{}, hw_lif_id: {}, stats_mem_addr {:#x}",
+                 info.lif_id, info.hw_lif_id, stats_mem_addr);
+
+    auto lif_stats = 
+        delphi::objects::LifMetrics::NewDpLifMetrics(spec->lif_id, 
+                                                     stats_mem_addr);
     if (lif_stats == NULL) {
         NIC_LOG_ERR("Failed lif metrics registration with delphi lif {}",
                     spec->lif_id);
