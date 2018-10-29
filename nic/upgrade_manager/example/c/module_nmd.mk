@@ -2,9 +2,8 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = nmd.bin
-MODULE_SOLIBS   = delphisdk utils upgrade_app
+MODULE_SOLIBS   = delphisdk utils upgrade_app upgradeproto
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
-MODULE_ARLIBS   = upgradeproto
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*nmd*.cc)
 MODULE_SRCS     = $(filter-out $(ALL_TEST_FILES), $(ALL_CC_FILES))
 

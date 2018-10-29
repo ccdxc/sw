@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 
-MODULE_TARGET   = libupgradeproto.a
+MODULE_TARGET   = libupgradeproto.so
 MODULE_INCS     = /usr/local/include \
                   ${TOPDIR}/nic/hal/third-party/google/include \
                   ${TOPDIR}/hal/third-party/grpc/include
