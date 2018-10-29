@@ -10,6 +10,7 @@ import { AuthService } from '@app/services/generated/auth.service';
 import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
 import { MessageService } from 'primeng/primeng';
 import { Observable } from 'rxjs/Observable';
+import { MatButtonBase } from '@angular/material';
 
 
 /**
@@ -18,6 +19,8 @@ import { Observable } from 'rxjs/Observable';
  * Thus, the component manage update/test operations.
  *
  * This component internally contain  local, ldap, radius sub components.  It handles REST call on behalf of sub-component. For example, it manages LDAP component's test-server calls.
+ *
+ * As Auth-policy is a singleton in Venice, user should re-login to Venice after auth-policy is updated.
  */
 @Component({
   selector: 'app-authpolicy',
@@ -45,14 +48,45 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
 
   ngOnInit() {
     // Setting the toolbar
-    this._controllerService.setToolbarData({
-      buttons: [],
-      breadcrumb: [{ label: 'Settings', url: '' }, { label: 'Auth Policy', url: '' }]
-    });
+    this.setupToolbarItems();
     // Retrieve auth-policy
     this.getAuthenticationPolicy();
   }
 
+  /**
+   * Since AuthPolicy is a singleton in Venice, we don't have to use watch-api to monitor AuthPolicy, we just let user refresh data.
+   *
+   * There are two places we will call this API.
+   * 1. Component is initialized (show only Refresh button)
+   * 2. User chagne policy rank
+   * If user changes the policy rank, we will display a "save" button.
+   */
+  private setupToolbarItems(rankChanged: boolean = false) {
+    const buttons = [
+      {
+        cssClass: 'global-button-primary authpolicy-toolbar-button',
+        text: 'Refresh',
+        callback: () => {
+          this.getAuthenticationPolicy();
+        }
+      }
+    ];
+    if (rankChanged === true) {
+      const saveRankChange = {
+        cssClass: 'global-button-primary authpolicy-toolbar-button',
+        text: 'Save',
+        callback: () => {
+          this.saveAuthenticationPolicy();
+        }
+      };
+      buttons.push(saveRankChange);
+    }
+
+    this._controllerService.setToolbarData({
+      buttons: buttons ,
+      breadcrumb: [{ label: 'Settings', url: '' }, { label: 'Auth Policy', url: '' }]
+    });
+  }
 
   getAuthenticationPolicy() {
     this._authService.GetAuthenticationPolicy().subscribe(
@@ -73,6 +107,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     copy[newRank] = copy[oldRank];
     copy[oldRank] = temp;
     this.authPolicy.spec.authenticators['authenticator-order'] = copy;
+    this.setupToolbarItems(true);
   }
 
   getClassName(): string {
@@ -139,16 +174,27 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     this.saveAuthenticationPolicy();
   }
 
+  /**
+   * This API serves html template
+   * @param isNewLDAP
+   *
+   * This is similar to onInvokeSaveLDAP(..) API
+   */
+  onInvokeSaveRadius(isNewRadius: boolean) {
+    this.saveAuthenticationPolicy();
+  }
+
   saveAuthenticationPolicy() {
     let handler: Observable<{ body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number }>;
     // If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
     handler = this._authService.UpdateAuthenticationPolicy(this.authPolicy.getFormGroupValues());
     handler.subscribe(
       (response) => {
-        this.invokeSuccessToaster('Update Successful', 'Updated Authentication policy');
+        this.invokeSuccessToaster('Update Successful', 'Updated Authentication policy. Please re-login');
         const status = response.statusCode;
         const body = response.body;
         this.authPolicy = new AuthAuthenticationPolicy(body);
+        this.setupToolbarItems();
       },
       this.restErrorHandler('Update Failed')
     );

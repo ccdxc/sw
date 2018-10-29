@@ -19,6 +19,7 @@ import { Observable } from 'rxjs/Observable';
 import { AuthAuthenticators_authenticator_order } from '@sdk/v1/models/generated/auth';
 import { By } from '@angular/platform-browser';
 import { MessageService } from 'primeng/primeng';
+import { PrimengModule } from '@app/lib/primeng.module';
 
 class MockAuthService extends AuthService {
   public GetAuthenticationPolicy(): any {
@@ -93,6 +94,7 @@ describe('AuthpolicyComponent', () => {
         FormsModule,
         ReactiveFormsModule,
         NoopAnimationsModule,
+        PrimengModule
       ],
       providers: [
         ControllerService,

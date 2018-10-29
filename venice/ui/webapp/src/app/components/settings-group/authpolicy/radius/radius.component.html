@@ -31,7 +31,7 @@
 <ng-template #Radius>
   <div fxFlex fxLayout="column">
     <div fxFlex="nogrow" fxLayout="row" [formGroup]="radiusObject.$formGroup">
-      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="radius-toggle"></mat-slide-toggle>
+      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="radius-toggle"  [disabled]="!radiusEditMode"></mat-slide-toggle>
       <div class="radius-title">
         Radius
       </div>
@@ -118,7 +118,7 @@
               <div fxFlex="30px" fxLayout="row" class="radius-fieldtitle radius-input" fxLayoutAlign="start center" fxLayoutGap="5px">
                 <mat-icon fxFlex="nogrow" class="authpolicy-lock">lock</mat-icon>
                 <div fxFlex="nogrow">
-                  {{ server.url }}
+                  {{ server.url }}  {{ server['auth-method']}}
                 </div>
               </div>
             </div>
@@ -181,10 +181,28 @@
   
         </div>
       </div>
-        
-    </div>
-    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
-      <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button">TEST CONNECTION</div>
+      <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
+        <div fxFlex fxLayout="row">
+          <!-- Field Title --> 
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Auth Method:</span>
+            </div>
+          </div>
+          <!-- Field Values - edit mode -->
+          <div fxFlex fxLayout="column" *ngIf="radiusEditMode">
+            <div fxFlex="30px" fxLayout="row" class="radius-value">
+                <p-dropdown class="radius-input radius-server-authmothod" fxFlex="150px" formControlName="auth-method"  styleClass="radius-server-authmothod-dropdown"
+                [options]="serverAuthMethodOptions"></p-dropdown>
+             </div>
+          </div>
+  
+        </div>
+      </div>
+      <!-- comment out test-RADIUS-connection for now.  Wait for server notice -->
+      <!-- <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
+          <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button">TEST CONNECTION</div>
+      </div> -->
     </div>
 </div>
 

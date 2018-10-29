@@ -3,6 +3,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { RadiusComponent } from './radius.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { PrimengModule } from '@app/lib/primeng.module';
 
 describe('RadiusComponent', () => {
   let component: RadiusComponent;
@@ -14,7 +15,8 @@ describe('RadiusComponent', () => {
       imports: [
         FormsModule,
         ReactiveFormsModule,
-        MaterialdesignModule
+        MaterialdesignModule,
+        PrimengModule
       ]
     })
       .compileComponents();

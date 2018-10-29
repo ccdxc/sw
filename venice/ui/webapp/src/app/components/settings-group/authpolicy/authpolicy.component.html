@@ -27,7 +27,9 @@
               <app-local [localData]="authPolicy.spec.authenticators.local" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"></app-local>
             </ng-container>
             <ng-container *ngSwitchCase="'RADIUS'">
-              <app-radius [radiusData]="authPolicy.spec.authenticators.radius" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"></app-radius>
+              <app-radius [radiusData]="authPolicy.spec.authenticators.radius" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
+              (invokeSaveRadius)="onInvokeSaveRadius($event)" 
+              ></app-radius>
             </ng-container>
           </ng-container>
           <ng-container *ngIf="authPolicy.spec.authenticators['authenticator-order'].length != 3">

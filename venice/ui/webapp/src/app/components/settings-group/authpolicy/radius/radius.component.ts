@@ -3,7 +3,16 @@ import { AuthpolicybaseComponent } from '@app/components/settings-group/authpoli
 import { Animations } from '@app/animations';
 import { IAuthRadius, AuthRadius, AuthRadiusServer } from '@sdk/v1/models/generated/auth';
 import { FormArray } from '@angular/forms';
+import { SelectItem } from 'primeng/primeng';
+import { Utility } from '@app/common/Utility';
 
+/**
+ * RadiusComponent is a child component of AuthPolicy.component (parent)
+ * parent passes in "radiusData" to child, child has a "radiusObject" to reflect "LDAPDradiusDataata".
+ *
+ * When user wants to save Radius, RadiusComponent emits event to parent and let parent handles the REST calls.
+ *
+ */
 @Component({
   selector: 'app-radius',
   templateUrl: './radius.component.html',
@@ -21,7 +30,11 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   inCreateMode: boolean = false;
   radiusObject: AuthRadius = new AuthRadius();
 
-  @Input() radiusData: IAuthRadius;
+  serverAuthMethodOptions: SelectItem[] = Utility.convertEnumToSelectItem(AuthRadiusServer.propInfo['auth-method'].enum);
+
+
+  @Input() radiusData: AuthRadius;
+  @Output() invokeSaveRadius: EventEmitter<any> = new EventEmitter();
 
   constructor() {
     super();
@@ -37,6 +50,12 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
   updateRadiusObject() {
     this.radiusObject.setValues(this.radiusData);
+  }
+
+  updateRadiusData() {
+    if (this.radiusObject) {
+      this.radiusData.setValues(this.radiusObject.getFormGroupValues());
+    }
   }
 
   toggleEdit() {
@@ -72,6 +91,8 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   saveRadius() {
+    this.updateRadiusData();
+    this.invokeSaveRadius.emit(false); // emit event to parent to update LDAP
     // POST DATA
     this.radiusEditMode = false;
     // Reset the radiusObject with the passed in data

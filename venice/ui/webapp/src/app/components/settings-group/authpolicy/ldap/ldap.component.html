@@ -32,7 +32,7 @@
 <ng-template #LDAP>
   <div fxFlex fxLayout="column">
     <div fxFlex="nogrow" fxLayout="row" [formGroup]="LDAPObject.$formGroup">
-      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="ldap-toggle"></mat-slide-toggle>
+      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="ldap-toggle" [disabled]="!LDAPEditMode"></mat-slide-toggle>
       <div class="ldap-title">
         LDAP
       </div>
@@ -43,7 +43,6 @@
   
     <!-- Server setup -->
     <div fxFlex fxLayout="row" [style.position]="'relative'">
-      <!-- <div fxFlex fxLayout="column" [@ldapServerAnimate]="LDAPEditMode ? 'editMode':'viewMode'"> -->
       <div fxFlex fxLayout="column">
         <ng-container *ngIf="LDAPEditMode;else LDAPServersViewMode">
           <ng-container *ngTemplateOutlet="LDAPServers"></ng-container>
