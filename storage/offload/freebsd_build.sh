@@ -2,7 +2,7 @@
 # Set OS_DIR to point to FreeBSD source code.
 # example OS_DIR=/home/anish/freebsd
 : ${OS_DIR:=/usr/src}
-export OS_DIR=/usr/src
+export OS_DIR=/home/anish/freebsd
 
 if [ -z ${OS_DIR}]
 then
@@ -10,8 +10,8 @@ then
 	exit 1
 fi
 
-make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -f Makefile-pencake.bsd clean cleandepend
-make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -f Makefile-pencake.bsd
+make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -f Makefile.bsd clean cleandepend
+make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -f Makefile.bsd
 
 if [ ! -f pnso.ko ]
 then

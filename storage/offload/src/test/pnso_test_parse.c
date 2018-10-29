@@ -513,38 +513,38 @@ struct svc_param_desc {
 };
 
 #define CP_DFLAG_DESC(name) \
-	{ #name, sizeof(#name), (1<<PNSO_SVC_TYPE_COMPRESS), PNSO_CP_DFLAG_##name }
+	{ #name, sizeof(#name)-1, (1<<PNSO_SVC_TYPE_COMPRESS), PNSO_CP_DFLAG_##name }
 #define DC_DFLAG_DESC(name) \
-	{ #name, sizeof(#name), (1<<PNSO_SVC_TYPE_DECOMPRESS), PNSO_DC_DFLAG_##name }
+	{ #name, sizeof(#name)-1, (1<<PNSO_SVC_TYPE_DECOMPRESS), PNSO_DC_DFLAG_##name }
 #define CPDC_DFLAG_DESC(name) \
-	{ #name, sizeof(#name), PNSO_SVC_TYPE_CPDC_MASK, PNSO_DC_DFLAG_##name }
+	{ #name, sizeof(#name)-1, PNSO_SVC_TYPE_CPDC_MASK, PNSO_DC_DFLAG_##name }
 #define HASH_DFLAG_DESC(name) \
-	{ #name, sizeof(#name), (1<<PNSO_SVC_TYPE_HASH), PNSO_HASH_DFLAG_##name }
+	{ #name, sizeof(#name)-1, (1<<PNSO_SVC_TYPE_HASH), PNSO_HASH_DFLAG_##name }
 #define CHKSUM_DFLAG_DESC(name) \
-	{ #name, sizeof(#name), (1<<PNSO_SVC_TYPE_CHKSUM), PNSO_CHKSUM_DFLAG_##name }
+	{ #name, sizeof(#name)-1, (1<<PNSO_SVC_TYPE_CHKSUM), PNSO_CHKSUM_DFLAG_##name }
 #define HASHCHKSUM_DFLAG_DESC(name) \
-	{ #name, sizeof(#name), PNSO_SVC_TYPE_HASHCHKSUM_MASK, PNSO_CHKSUM_DFLAG_##name }
+	{ #name, sizeof(#name)-1, PNSO_SVC_TYPE_HASHCHKSUM_MASK, PNSO_CHKSUM_DFLAG_##name }
 #define HASH_ALGO_DESC(name)		\
-	{ #name, sizeof(#name), (1<<PNSO_SVC_TYPE_HASH), PNSO_HASH_TYPE_##name }
+	{ #name, sizeof(#name)-1, (1<<PNSO_SVC_TYPE_HASH), PNSO_HASH_TYPE_##name }
 #define CHKSUM_ALGO_DESC(name)		\
-	{ #name, sizeof(#name), (1<<PNSO_SVC_TYPE_CHKSUM), PNSO_CHKSUM_TYPE_##name }
+	{ #name, sizeof(#name)-1, (1<<PNSO_SVC_TYPE_CHKSUM), PNSO_CHKSUM_TYPE_##name }
 #define CPDC_ALGO_DESC(name)		\
-	{ #name, sizeof(#name), PNSO_SVC_TYPE_CPDC_MASK, PNSO_COMPRESSION_TYPE_##name }
+	{ #name, sizeof(#name)-1, PNSO_SVC_TYPE_CPDC_MASK, PNSO_COMPRESSION_TYPE_##name }
 #define CRYPTO_ALGO_DESC(name)		\
-	{ #name, sizeof(#name), PNSO_SVC_TYPE_CRYPTO_MASK, PNSO_CRYPTO_TYPE_##name }
+	{ #name, sizeof(#name)-1, PNSO_SVC_TYPE_CRYPTO_MASK, PNSO_CRYPTO_TYPE_##name }
 #define OUTPUT_FLAG_DESC(name)		\
-	{ #name, sizeof(#name), 0, TEST_OUTPUT_FLAG_##name }
+	{ #name, sizeof(#name)-1, 0, TEST_OUTPUT_FLAG_##name }
 #define CP_HDR_FIELD_DESC(name) \
-	{ #name, sizeof(#name), 0, PNSO_HDR_FIELD_TYPE_##name }
+	{ #name, sizeof(#name)-1, 0, PNSO_HDR_FIELD_TYPE_##name }
 #define CP_HDR_FIELD_DESC(name) \
-	{ #name, sizeof(#name), 0, PNSO_HDR_FIELD_TYPE_##name }
+	{ #name, sizeof(#name)-1, 0, PNSO_HDR_FIELD_TYPE_##name }
 #define SYNC_MODE_DESC(name) \
-	{ #name, sizeof(#name), 0, SYNC_MODE_##name }
+	{ #name, sizeof(#name)-1, 0, SYNC_MODE_##name }
 #define CMP_TYPE_DESC(name) \
-	{ #name, sizeof(#name), 0, COMPARE_TYPE_##name }
+	{ #name, sizeof(#name)-1, 0, COMPARE_TYPE_##name }
 
 /* Keep alphabetized */
-struct svc_param_desc g_dflag_map[] = {
+static struct svc_param_desc g_dflag_map[] = {
 	CP_DFLAG_DESC(BYPASS_ONFAIL),
 	DC_DFLAG_DESC(HEADER_PRESENT),
 	CP_DFLAG_DESC(INSERT_HEADER),
@@ -557,7 +557,7 @@ struct svc_param_desc g_dflag_map[] = {
 };
 
 /* Keep alphabetized */
-struct svc_param_desc g_algo_map[] = {
+static struct svc_param_desc g_algo_map[] = {
 	CHKSUM_ALGO_DESC(ADLER32),
 	CHKSUM_ALGO_DESC(CRC32C),
 	CRYPTO_ALGO_DESC(GCM),
@@ -573,7 +573,7 @@ struct svc_param_desc g_algo_map[] = {
 };
 
 /* Keep alphabetized */
-struct svc_param_desc g_output_flags_map[] = {
+static struct svc_param_desc g_output_flags_map[] = {
 	OUTPUT_FLAG_DESC(APPEND),
 	OUTPUT_FLAG_DESC(TINY),
 
@@ -582,7 +582,7 @@ struct svc_param_desc g_output_flags_map[] = {
 };
 
 /* Keep alphabetized */
-struct svc_param_desc g_cp_hdr_field_map[] = {
+static struct svc_param_desc g_cp_hdr_field_map[] = {
 	CP_HDR_FIELD_DESC(ALGO),
 	CP_HDR_FIELD_DESC(INDATA_CHKSUM),
 	CP_HDR_FIELD_DESC(OUTDATA_LENGTH),
@@ -593,7 +593,7 @@ struct svc_param_desc g_cp_hdr_field_map[] = {
 };
 
 /* Keep alphabetized */
-struct svc_param_desc g_sync_mode_map[] = {
+static struct svc_param_desc g_sync_mode_map[] = {
 	SYNC_MODE_DESC(ASYNC),
 	SYNC_MODE_DESC(POLL),
 	SYNC_MODE_DESC(SYNC),
@@ -603,7 +603,7 @@ struct svc_param_desc g_sync_mode_map[] = {
 };
 
 /* Keep alphabetized */
-struct svc_param_desc g_cmp_type_map[] = {
+static struct svc_param_desc g_cmp_type_map[] = {
 	CMP_TYPE_DESC(EQ),
 	CMP_TYPE_DESC(GE),
 	CMP_TYPE_DESC(GT),
