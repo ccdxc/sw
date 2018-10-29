@@ -26,7 +26,7 @@
 
 namespace pt = boost::property_tree;
 
-#define QSTATE_INFO_FILE_NAME  "nicmgr_qstate_info.json"
+#define QSTATE_INFO_FILE_NAME  "lif_qstate_info.json"
 
 sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
 
