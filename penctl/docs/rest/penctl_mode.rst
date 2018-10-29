@@ -24,12 +24,14 @@ Options
 
 ::
 
-  -c, --cluster-ip stringSlice   List of cluster IP addresses (Required)
-  -h, --help                     help for mode
-  -n, --host-name string         Host name (Required)
-  -i, --management-ip string     Management IP (Required)
-  -m, --mode string              unmanaged vs managed mode (default "managed")
-  -p, --primary-mac string       Primary mac (Required)
+  -c, --controllers stringSlice   List of controller IP addresses or hostnames
+  -g, --default-gw string         Default GW for mgmt
+  -d, --dns-servers stringSlice   List of DNS servers
+  -h, --help                      help for mode
+  -n, --hostname string           Host name
+  -i, --mgmt-ip string            Management IP in CIDR format
+  -m, --mode string               host or network managed (default "network")
+  -p, --primary-mac string        Primary mac
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

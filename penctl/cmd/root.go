@@ -7,6 +7,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
@@ -59,7 +60,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock mode to localhost")
 	rootCmd.PersistentFlags().StringVarP(&intf, "interface", "e", "", "ethernet device of naples")
 
-	rootCmd.PersistentFlags().MarkHidden("debug")
+	rootCmd.PersistentFlags().MarkHidden("localhost")
 
 	rootCmd.GenBashCompletionFile("penctl.sh")
 }
@@ -95,10 +96,38 @@ func genManTreeDocs() {
 	}
 }
 
+var list []string
+
+func listAppend(cmd *cobra.Command, use string) {
+	if cmd == rootCmd {
+		if strings.Contains(use, "help") {
+			return
+		}
+		list = append(list, cmd.Use+" "+use)
+		return
+	}
+	listAppend(cmd.Parent(), cmd.Use+" "+use)
+}
+
+func genCmdList(cmd *cobra.Command) {
+	if list == nil {
+		list = make([]string, 0)
+	}
+	listAppend(cmd, "")
+	cmds := cmd.Commands()
+	for _, x := range cmds {
+		genCmdList(x)
+	}
+}
+
 func genDocs() {
 	genManTreeDocs()
 	genMarkdownDocs()
 	genRestTreeDocs()
+	genCmdList(rootCmd)
+	//for _, x := range list {
+	//	fmt.Println(x)
+	//}
 }
 
 func cliPreRunInit(cmd *cobra.Command, args []string) error {
