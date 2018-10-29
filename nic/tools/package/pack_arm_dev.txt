@@ -1,8 +1,6 @@
 # common arm libs
 nic/conf                                                            /nic/conf/
 nic/build/aarch64/iris/bin/hal                                       /nic/bin/
-# linkmgr debug CLIs
-nic/build/aarch64/iris/bin/port_client                               /nic/bin
 
 nic/build/aarch64/iris/lib/libhal_mock.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libpacket_parser.so                       /nic/lib/
@@ -33,7 +31,6 @@ nic/build/aarch64/iris/lib/libindexer.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libisa.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libisc_dhcp.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libJudy.so.1                              /nic/lib/
-nic/build/aarch64/iris/lib/liblink*.so                               /nic/lib/
 nic/build/aarch64/iris/lib/liblist.so                                /nic/lib/
 nic/build/aarch64/iris/lib/liblkl*.so                                /nic/lib/
 nic/build/aarch64/iris/lib/liblogger.so                              /nic/lib/
@@ -49,8 +46,6 @@ nic/build/aarch64/iris/lib/libperiodic.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libplugin*.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libprint.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libprotobuf.so.14                         /nic/lib/
-nic/build/aarch64/iris/lib/libsdklinkmgr.so                          /nic/lib/
-nic/build/aarch64/iris/lib/liblinkmgrdelphi.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libsdkpal.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libsdkplatformutils.so                    /nic/lib/
 nic/build/aarch64/iris/lib/libshmmgr.so                              /nic/lib/
@@ -85,6 +80,14 @@ nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1             /nic/lib/
 nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14             /nic/lib/
 
 nic/build/aarch64/iris/lib/*.so                                      /nic/lib/
+
+# linkmgr
+nic/build/aarch64/iris/bin/port_client                              /nic/bin
+nic/build/aarch64/iris/lib/liblinkmgrcsr.so                         /nic/lib/
+nic/build/aarch64/iris/lib/liblinkmgr_libsrc.so                     /nic/lib/
+nic/build/aarch64/iris/lib/liblinkmgr_src.so                        /nic/lib/
+nic/build/aarch64/iris/lib/liblinkmgrdelphi.so                      /nic/lib/
+nic/build/aarch64/iris/lib/libsdklinkmgr.so                         /nic/lib/
 
 # AAPL
 nic/sdk/third-party/avago/build/aarch64/bin/aapl                    /nic/bin/

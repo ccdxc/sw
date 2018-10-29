@@ -1,7 +1,5 @@
 nic/conf                                                            /nic/conf/
 nic/build/x86_64/iris/bin/hal                                       /nic/bin/
-# linkmgr debug CLIs
-nic/build/x86_64/iris/bin/port_client                               /nic/bin
 
 nic/build/x86_64/iris/lib/libpacket_parser.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libagent_api.so                           /nic/lib/
@@ -31,7 +29,6 @@ nic/build/x86_64/iris/lib/libindexer.so                             /nic/lib/
 nic/build/x86_64/iris/lib/libisa.so                                 /nic/lib/
 nic/build/x86_64/iris/lib/libisc_dhcp.so                            /nic/lib/
 nic/build/x86_64/iris/lib/libJudy.so.1                              /nic/lib/
-nic/build/x86_64/iris/lib/liblink*.so                               /nic/lib/
 nic/build/x86_64/iris/lib/liblist.so                                /nic/lib/
 nic/build/x86_64/iris/lib/liblkl*.so                                /nic/lib/
 nic/build/x86_64/iris/lib/liblogger.so                              /nic/lib/
@@ -47,8 +44,6 @@ nic/build/x86_64/iris/lib/libperiodic.so                            /nic/lib/
 nic/build/x86_64/iris/lib/libplugin*.so                             /nic/lib/
 nic/build/x86_64/iris/lib/libprint.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libprotobuf.so.14                         /nic/lib/
-nic/build/x86_64/iris/lib/libsdklinkmgr.so                          /nic/lib/
-nic/build/x86_64/iris/lib/liblinkmgrdelphi.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libsdkpal.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libsdkplatformutils.so                    /nic/lib/
 nic/build/x86_64/iris/lib/libshmmgr.so                              /nic/lib/
@@ -70,6 +65,14 @@ nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/
 
+# linkmgr
+nic/build/x86_64/iris/bin/port_client                            /nic/bin
+nic/build/x86_64/iris/lib/liblinkmgrcsr.so                       /nic/lib/
+nic/build/x86_64/iris/lib/liblinkmgr_libsrc.so                   /nic/lib/
+nic/build/x86_64/iris/lib/liblinkmgr_src.so                      /nic/lib/
+nic/build/x86_64/iris/lib/liblinkmgrdelphi.so                    /nic/lib/
+nic/build/x86_64/iris/lib/libsdklinkmgr.so                       /nic/lib/
+
 # AAPL
 nic/sdk/third-party/avago/build/x86_64/bin/aapl                  /nic/bin/
 nic/sdk/third-party/avago/build/x86_64/lib/aapl/C/libAAPL.so     /nic/lib/
@@ -85,7 +88,6 @@ nic/hal/third-party/google/x86_64/lib/libprotobuf.so.14          /nic/lib/
 platform/gen/x86_64/bin                                          /platform/bin/
 platform/gen/x86_64/lib                                          /platform/lib/
 nic/tools/start-hal-zebu.sh                                      /nic/tools/
-nic/tools/start-linkmgr-zebu.sh                                  /nic/tools/
 nic/tools/start-model-zebu.sh                                    /nic/tools/
 nic/sim/naples/print-cores.sh                                    /nic/tools/
 /lib64/libstdc++.so.6                                            /nic/lib64/

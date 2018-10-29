@@ -17,8 +17,6 @@ nic/build/aarch64/iris/bin/delphi_hub                               /nic/bin/
 nic/build/aarch64/iris/bin/delphictl                                /nic/bin/
 nic/build/aarch64/iris/bin/upgrade                                  /nic/bin/
 nic/build/aarch64/iris/bin/hal                                      /nic/bin/
-# linkmgr debug CLIs
-nic/build/aarch64/iris/bin/port_client                              /nic/bin/
 nic/build/aarch64/iris/bin/netagent                                 /nic/bin/
 nic/build/aarch64/iris/bin/tmagent                                  /nic/bin/
 nic/build/aarch64/iris/bin/heimdall                                 /nic/bin/
@@ -63,7 +61,6 @@ nic/build/aarch64/iris/lib/libht.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libindexer.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libisa.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libisc_dhcp.so                           /nic/lib/
-nic/build/aarch64/iris/lib/liblink*.so                              /nic/lib/
 nic/build/aarch64/iris/lib/liblist.so                               /nic/lib/
 nic/build/aarch64/iris/lib/liblkl*.so                               /nic/lib/
 nic/build/aarch64/iris/lib/liblogger.so                             /nic/lib/
@@ -86,8 +83,6 @@ nic/build/aarch64/iris/lib/libplugin_sfw*.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libplugin_telemetry.so                   /nic/lib/
 nic/build/aarch64/iris/lib/libprint.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libprotobuf.so.14                        /nic/lib/
-nic/build/aarch64/iris/lib/libsdklinkmgr.so                         /nic/lib/
-nic/build/aarch64/iris/lib/liblinkmgrdelphi.so                      /nic/lib/
 nic/build/aarch64/iris/lib/libsdkpal.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libsdkplatformutils.so                   /nic/lib/
 nic/build/aarch64/iris/lib/libshmmgr.so                             /nic/lib/
@@ -119,9 +114,25 @@ nic/build/aarch64/iris/lib/libdelphi*.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libsysmgr.so                             /nic/lib/
 nic/build/aarch64/iris/lib/*upgrade*                                /nic/lib/
 
+# linkmgr
+nic/build/aarch64/iris/bin/port_client                              /nic/bin
+nic/build/aarch64/iris/lib/liblinkmgrcsr.so                         /nic/lib/
+nic/build/aarch64/iris/lib/liblinkmgr_libsrc.so                     /nic/lib/
+nic/build/aarch64/iris/lib/liblinkmgr_src.so                        /nic/lib/
+nic/build/aarch64/iris/lib/liblinkmgrdelphi.so                      /nic/lib/
+nic/build/aarch64/iris/lib/libsdklinkmgr.so                         /nic/lib/
+
 # AAPL
 nic/sdk/third-party/avago/build/aarch64/bin/aapl                    /nic/bin/
 nic/sdk/third-party/avago/build/aarch64/lib/aapl/C/libAAPL.so       /nic/lib/
+
+# link scripts
+nic/tools/start-linkmgr-hw.sh                                       /nic/tools/
+nic/tools/port_init_100g.sh                                         /nic/tools/
+nic/tools/port_op.sh                                                /nic/tools/
+nic/tools/check_link.sh                                             /nic/tools/
+nic/tools/check_stats.sh                                            /nic/tools/
+nic/tools/speed_change.sh                                           /nic/tools/
 
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom                 /nic/conf/fw/
 nic/e2etests/go/agent/configs/golden                                /nic/conf/
@@ -153,14 +164,6 @@ platform/src/third-party/lib/ncurses/aarch64/*.so                   /platform/li
 platform/src/app/nicmgrd/etc/*.json                                 /platform/etc/nicmgrd/
 platform/gen/aarch64/src/app/capview/builddb/capviewdb.bin          /platform/etc/
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                      /platform/
-
-# link scripts
-nic/tools/start-linkmgr-hw.sh                                       /nic/tools/
-nic/tools/port_init_100g.sh                                         /nic/tools/
-nic/tools/port_op.sh                                                /nic/tools/
-nic/tools/check_link.sh                                             /nic/tools/
-nic/tools/check_stats.sh                                            /nic/tools/
-nic/tools/speed_change.sh                                           /nic/tools/
 
 nic/tools/start-hal-haps.sh                                         /nic/tools/
 nic/tools/sysinit.sh                                                /nic/tools/
