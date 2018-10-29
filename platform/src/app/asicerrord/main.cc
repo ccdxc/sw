@@ -27,7 +27,7 @@ void
 isr(struct asic_registers *intreg, uint32_t data)
 {
     if (intreg->name == NULL) {
-        INFO("Interrupt register at address {} has value {} and type {}\n",
+        INFO("Interrupt register at address {} has value {} and type {}",
              intreg->regaddr, data, errortostring(intreg->errortype));
     }
 
@@ -36,13 +36,13 @@ isr(struct asic_registers *intreg, uint32_t data)
             if (data & BIT(i)) {
                 intreg->map[i].count++;
                 if (intreg->name == NULL) {
-                    INFO("type {} interrupt {}\n",
+                    INFO("type {} interrupt {}",
                          errortostring(intreg->errortype), intreg->map[i].name);
                 }
                 else {
                     if (intreg->map[i].count <= 10000)
                     {
-                        INFO("type {} register name {} interrupt {} times {} \n",
+                        INFO("type {} register name {} interrupt {} times {}",
                              errortostring(intreg->errortype), intreg->name,
                              intreg->map[i].name, intreg->map[i].count);
                     }
@@ -86,7 +86,7 @@ pollinterrupts()
             // rewrite the same data back to clear the interrupt
             rc = sdk::lib::pal_reg_write(addr, &data, size);
             if (rc == sdk::lib::PAL_RET_NOK) {
-                INFO("clearing the interrupt {} failed\n", capri_registers[i].name);
+                INFO("clearing the interrupt {} failed", capri_registers[i].name);
             }
         }
     }

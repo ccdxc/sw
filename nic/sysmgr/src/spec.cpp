@@ -21,5 +21,7 @@ const vector<Spec> SPECS = {
    Spec("netagent", NO_WATCHDOG | NON_CRITICAL,
 	"/nic/bin/netagent -datapath hal "
 	"-logtofile /agent.log -hostif lo &", {"delphi", "hal"}),
+   Spec("asicerrord", NO_WATCHDOG, "/platform/bin/asicerrord", {
+	 "nicmgrd"}),
 };
 #endif
