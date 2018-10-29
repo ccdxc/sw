@@ -124,6 +124,7 @@ SystemServiceImpl::ClearPbStats(ServerContext *context,
     HAL_TRACE_DEBUG("Rcvd Clear Pb Stats");
 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::clear_pb_stats();
     hal::hal_cfg_db_close();
 
     return Status::OK;

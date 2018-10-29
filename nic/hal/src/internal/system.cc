@@ -546,4 +546,22 @@ end:
     return HAL_RET_OK;
 }
 
+hal_ret_t
+clear_pb_stats (void)
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("Clearing PB Stats:");
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_PB_STATS_CLEAR, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to clear pd stats, err : {}", ret);
+        goto end;
+    }
+end:
+    return ret;
+}
+
 }    // namespace hal

@@ -445,6 +445,7 @@ hal_pd_load_symbols (void)
 
     // pb
     PD_FUNC_LOAD(PD_FUNC_ID_PB_STATS_GET, pd_pb_stats_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_PB_STATS_CLEAR, pd_pb_stats_clear);
 
     // accelerator ring group
     PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_ADD, pd_capri_accel_rgroup_add);

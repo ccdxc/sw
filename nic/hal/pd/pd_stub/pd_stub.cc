@@ -404,6 +404,7 @@ PD_FUNC_STUB(pd_quiesce_stop);
 
 // pb
 PD_FUNC_STUB(pd_pb_stats_get);
+PD_FUNC_STUB(pd_pb_stats_clear);
 
 // accelerator ring group
 PD_FUNC_STUB(pd_capri_accel_rgroup_add);

@@ -707,7 +707,32 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(5)->set_count(debug_stats.oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
     }
 
-    return ret;
+    return first_err_ret;
+}
+
+hal_ret_t
+pd_pb_stats_clear (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t              first_err_ret = HAL_RET_OK;
+    hal_ret_t              ret = HAL_RET_OK;
+    unsigned               port;
+    bool                   reset = true;
+
+    HAL_TRACE_DEBUG("Clearing PB stats");
+
+    for (port = 0; port < TM_NUM_PORTS; port++) {
+        ret = capri_tm_get_pb_debug_stats(port, NULL, reset);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to clear pb debug stats for port {} ret {}",
+                          port, ret);
+            // Continue
+            if (first_err_ret != HAL_RET_OK) {
+                first_err_ret = ret;
+            }
+        }
+    }
+
+    return first_err_ret;
 }
 
 }    // namespace pd

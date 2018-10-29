@@ -3169,7 +3169,8 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID,  279, "PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID")\
     ENTRY(PD_FUNC_ID_CLOCK_DETAIL_GET,         280, "PD_FUNC_ID_CLOCK_DETAIL_GET")\
     ENTRY(PD_FUNC_ID_EP_IPSG_CHANGE,           281, "PD_FUNC_ID_EP_IPSG_CHANGE")\
-    ENTRY(PD_FUNC_ID_MAX,                      282, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_PB_STATS_CLEAR,           282, "PD_FUNC_ID_PB_STATS_CLEAR")\
+    ENTRY(PD_FUNC_ID_MAX,                      283, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3984,6 +3985,7 @@ PD_FUNCP_TYPEDEF(pd_quiesce_stop);
 
 // pb
 PD_FUNCP_TYPEDEF(pd_pb_stats_get);
+PD_FUNCP_TYPEDEF(pd_pb_stats_clear);
 
 // accelerator ring group
 PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_add);
