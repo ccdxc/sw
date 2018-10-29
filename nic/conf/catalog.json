@@ -336,8 +336,8 @@
     {
         "profile" :
         {
-            "sw_init_enable" : false,
-            "sw_cfg_write_enable" : false,
+            "sw_init_enable" : true,
+            "sw_cfg_write_enable" : true,
             "jumbo_mtu" : 9216,
             "num_uplink_qs" : 8,
             "num_p4ig_qs" : 25,

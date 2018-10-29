@@ -37,6 +37,9 @@
 
 #define HAL_TM_MAX_INTERPIPE_HDR_SZ HAL_TM_CELL_SIZE
 
+#define HAL_TM_DEFAULT_XON_THRESHOLD_BYTES  (64*2000)
+#define HAL_TM_DEFAULT_XOFF_THRESHOLD_BYTES (64*1000)
+
 // There are 32 queues at both P4-ig and P4-eg. The idea is to 
 // maintain the same queue when pkt goes through the pipeline in P4-ig and
 // P4-eg. However, hardware imposes few restrictions on the queue usage:

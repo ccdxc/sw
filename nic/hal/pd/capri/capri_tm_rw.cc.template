@@ -309,6 +309,22 @@ capri_tm_get_num_iqs_for_port_type (tm_port_type_e port_type)
 }
 
 static inline uint32_t
+capri_tm_get_num_oqs_for_port_type (tm_port_type_e port_type)
+{
+    switch(port_type) {
+        case TM_PORT_TYPE_UPLINK:
+            return 16;
+        case TM_PORT_TYPE_P4IG:
+        case TM_PORT_TYPE_P4EG:
+        case TM_PORT_TYPE_DMA:
+            return 32;
+        case NUM_TM_PORT_TYPES:
+            return 0;
+    }
+    return 0;
+}
+
+static inline uint32_t
 capri_tm_get_island_for_port_type (tm_port_type_e port_type)
 {
     switch(port_type) {
@@ -600,7 +616,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                         {
                             /* Update the MTU in the MTU register */
                             pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(
-                                bytes_to_cells(iq_params->mtu) - 1);
+                                bytes_to_cells(iq_params->mtu));
                             break;
                         }
 //::        #endfor
@@ -655,8 +671,9 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     cpp_helper.set_slc(xon_val, xon_threshold,
                                         hbm_context * 20, ((hbm_context + 1) * 20) - 1);
 
-                    hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
-                    hbm_csr.cfg_hbm_threshold.xon(xon_val);
+                    // TODO:write the user provided threshold values 
+                    //hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
+                    //hbm_csr.cfg_hbm_threshold.xon(xon_val);
                     // Write all the registers
                     if (tm_sw_cfg_write_enabled()) {
                         ${trace_register("pbc_csr.hbm.cfg_hbm_threshold")}
@@ -818,7 +835,8 @@ capri_tm_uplink_oq_update(tm_port_t port,
 
                 cpp_helper.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
 
-                pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
+                // TODO: write to disable xoff by default
+                // pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
 
                 pbc_csr.port_${p}.cfg_mac_xoff.read();
                 xoff_enable_val = pbc_csr.port_${p}.cfg_mac_xoff.enable().convert_to<uint32_t>();
@@ -827,7 +845,8 @@ capri_tm_uplink_oq_update(tm_port_t port,
                 } else {
                     xoff_enable_val &= ~(1<<xoff_cos);
                 }
-                pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
+                // TODO: write to disable xoff by default
+                // pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
 
                 xoff2oq_map_decoder.all(pbc_csr.port_${p}.cfg_oq_xoff2oq.map());
                 xoff2oq_map_decoder.set_name("cap0.pb.pbc.port_${p}.cfg_oq_xoff2oq.decoder");
@@ -1693,6 +1712,8 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     uint64_t payload_occupancy;
     uint64_t control_offset;
     uint64_t control_size;
+    uint64_t xoff_threshold;
+    uint64_t xon_threshold;
 
     uint32_t fifo_type;
     
@@ -1744,12 +1765,32 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
             // program it to drop when 1 jumbo-mtu worth of bytes still free
             payload_occupancy =
                 (hbm_chunks_to_bytes(payload_size) - tm_cfg_profile()->jumbo_mtu[port_type]) >> 10;
+
+            if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
+                // xoff_threshold is in units of 512 bytes
+                // program it to drop when 1000*64 bytes worth of bytes still free
+                xoff_threshold = 
+                    (hbm_chunks_to_bytes(payload_size) - 
+                     HAL_TM_DEFAULT_XOFF_THRESHOLD_BYTES) >> 9;
+
+                // xon_threshold is in units of 512 bytes
+                // program it to drop when 2000*64 bytes worth of bytes still free
+                xon_threshold = 
+                    (hbm_chunks_to_bytes(payload_size) -
+                     HAL_TM_DEFAULT_XON_THRESHOLD_BYTES) >> 9;
+            } else {
+                xoff_threshold = 0;
+                xon_threshold = 0;
+            }
+
             control_offset = hbm_cfg->control_offset;
             control_size = hbm_cfg->control_chunks;
         } else {
             payload_offset = 0;
             payload_size = 0;
             payload_occupancy = 0;
+            xoff_threshold = 0;
+            xon_threshold = 0; 
             control_offset = 0;
             control_size = 0;
         }
@@ -1785,6 +1826,15 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
         // 23 bits per context
         cpp_helper.set_slc(control_size_val[fifo_type], control_size,
                             context * 23, ((context + 1) * 23) - 1);
+
+        if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
+            // 20 bits per context
+            cpp_helper.set_slc(eth_xoff_val, xoff_threshold, 
+                               context * 20, ((context + 1) * 20) - 1);
+            // 20 bits per context
+            cpp_helper.set_slc(eth_xon_val, xon_threshold, 
+                               context * 20, ((context + 1) * 20) - 1);
+        }
     }
 
     hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload.base(port_payload_base_val);
@@ -1851,6 +1901,15 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
         hbm_csr.cfg_hbm_${reg_name}_ctrl.write();
     }
 //:: #endfor
+    
+    pbc_csr.hbm.cfg_hbm_threshold.read();
+    pbc_csr.hbm.cfg_hbm_threshold.xoff(eth_xoff_val);
+    pbc_csr.hbm.cfg_hbm_threshold.xon(eth_xon_val);
+    if (tm_sw_init_enabled()) {
+        ${trace_register("pbc_csr.hbm.cfg_hbm_threshold")};
+        pbc_csr.hbm.cfg_hbm_threshold.write();
+    }
+
     HAL_TRACE_DEBUG("{}", data.str());
 
     return ret;
@@ -1886,6 +1945,8 @@ capri_tm_port_program_defaults (void)
     cpp_int xoff2oq_map_val;
     tm_port_type_e port_type;
     uint32_t mtu_cells;
+    uint32_t nbits;
+    uint32_t oq;
 
     // For every port, program the tc_to_pg mapping
     // and mtu
@@ -1906,9 +1967,6 @@ capri_tm_port_program_defaults (void)
     pbc_csr.port_${p}.cfg_account_control.use_sp_as_wm(1);
 
     mtu_cells = bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]);
-    if (port_type == TM_PORT_TYPE_UPLINK) {
-        mtu_cells--;
-    }
 //::    nbits = int(math.log(pinfo["pgs"], 2))
 //::    for pg in range(pinfo["pgs"]):
     cpp_helper.set_slc(tc_to_pg_val, ${pg}, ${pg} * ${nbits}, ((${pg}+1) * ${nbits}) - 1);
@@ -1936,12 +1994,18 @@ capri_tm_port_program_defaults (void)
     // On dma port, set the xoff to oq for flow control in RxDMA
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
-//::    if pinfo["type"] == "dma":
+//::    if pinfo["type"] == "uplink" or pinfo["type"] == "dma":
     // ${pinfo["enum"]}
+    port_type = capri_tm_get_port_type(${pinfo["enum"]});
     xoff2oq_map_val = 0;
-//::        for q in range(pinfo["qs"]):
-    cpp_helper.set_slc(xoff2oq_map_val, ${q}, ${q}*5, ((${q}+1)*5)-1);
-//::        #endfor
+    if (port_type == TM_PORT_TYPE_UPLINK) {
+        nbits = 3;
+    } else {
+        nbits = 5;
+    }
+    for (oq = 0; oq < capri_tm_get_num_oqs_for_port_type(port_type); oq++) {
+        cpp_helper.set_slc(xoff2oq_map_val, oq, oq*nbits, ((oq+1)*nbits)-1);
+    }
 
     pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
     pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
@@ -1959,7 +2023,8 @@ capri_tm_port_program_defaults (void)
 //::    if pinfo["type"] == "uplink":
     // ${pinfo["enum"]}
     pbc_csr.port_${p}.cfg_mac_xoff.read();
-    pbc_csr.port_${p}.cfg_mac_xoff.enable(0);
+    // TODO: write to disable xoff by default
+    // pbc_csr.port_${p}.cfg_mac_xoff.enable(0);
     if (tm_sw_init_enabled()) {
         ${trace_register("pbc_csr.port_" + str(p) + ".cfg_mac_xoff")}
         pbc_csr.port_${p}.cfg_mac_xoff.write();
@@ -2174,7 +2239,7 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
     if (tm_sw_init_enabled()) {
         ${trace_register("pbc_csr.hbm.hbm_port_" + str(p) + ".cfg_hbm")}
         hbm_csr.hbm_port_${p}.cfg_hbm.write();
-        ${trace_register("pbc_csr.hbm.hbm_port_" + str(p) + ".cfg_hbm_read_fifo")}
+        //:: # ${trace_register("pbc_csr.hbm.hbm_port_" + str(p) + ".cfg_hbm_read_fifo")}
         // TODO: this is not written in cap_pb_api.cc
         // hbm_csr.hbm_port_${p}.cfg_hbm_read_fifo.write();
     }
@@ -2185,13 +2250,16 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
     hbm_csr.cfg_hbm_wb.read();
     hbm_csr.cfg_hbm_rb.read();
     hbm_csr.cfg_hbm_cut_thru.read();
+
+    hbm_csr.cfg_hbm_rb.enable_wrr(0);
+
     if (tm_sw_init_enabled()) {
         // TODO: this is not written in cap_pb_api.cc
-        ${trace_register("pbc_csr.hbm.cfg_hbm_wb")}
+        //:: # ${trace_register("pbc_csr.hbm.cfg_hbm_wb")}
         // hbm_csr.cfg_hbm_wb.write();
         ${trace_register("pbc_csr.hbm.cfg_hbm_rb")}
-        // hbm_csr.cfg_hbm_rb.write();
-        ${trace_register("pbc_csr.hbm.cfg_hbm_cut_thru")}
+        hbm_csr.cfg_hbm_rb.write();
+        //:: # ${trace_register("pbc_csr.hbm.cfg_hbm_cut_thru")}
         // hbm_csr.cfg_hbm_cut_thru.write();
     }
 
