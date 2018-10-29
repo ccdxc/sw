@@ -9,6 +9,9 @@
 #ifndef __KERNEL__
 #include <assert.h>
 #define OSAL_ASSERT(x) assert(x)
+#elif __FreeBSD__
+#include <linux/kernel.h>
+#define OSAL_ASSERT(x) BUG_ON(!(x))
 #else
 #include <linux/bug.h>
 #define OSAL_ASSERT(x) BUG_ON(!(x))

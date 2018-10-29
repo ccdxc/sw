@@ -5,8 +5,6 @@
  */
 
 /* TODO: remove userspace specific includes */
-#include <ctype.h>
-
 #include "osal.h"
 
 #include "yaml.h"
@@ -545,7 +543,7 @@ struct svc_param_desc {
 	{ #name, strlen(#name), 0, COMPARE_TYPE_##name }
 
 /* Keep alphabetized */
-static struct svc_param_desc g_dflag_map[] = {
+struct svc_param_desc g_dflag_map[] = {
 	CP_DFLAG_DESC(BYPASS_ONFAIL),
 	DC_DFLAG_DESC(HEADER_PRESENT),
 	CP_DFLAG_DESC(INSERT_HEADER),
@@ -558,7 +556,7 @@ static struct svc_param_desc g_dflag_map[] = {
 };
 
 /* Keep alphabetized */
-static struct svc_param_desc g_algo_map[] = {
+struct svc_param_desc g_algo_map[] = {
 	CHKSUM_ALGO_DESC(ADLER32),
 	CHKSUM_ALGO_DESC(CRC32C),
 	CRYPTO_ALGO_DESC(GCM),
@@ -574,7 +572,7 @@ static struct svc_param_desc g_algo_map[] = {
 };
 
 /* Keep alphabetized */
-static struct svc_param_desc g_output_flags_map[] = {
+struct svc_param_desc g_output_flags_map[] = {
 	OUTPUT_FLAG_DESC(APPEND),
 	OUTPUT_FLAG_DESC(TINY),
 
@@ -583,7 +581,7 @@ static struct svc_param_desc g_output_flags_map[] = {
 };
 
 /* Keep alphabetized */
-static struct svc_param_desc g_cp_hdr_field_map[] = {
+struct svc_param_desc g_cp_hdr_field_map[] = {
 	CP_HDR_FIELD_DESC(ALGO),
 	CP_HDR_FIELD_DESC(INDATA_CHKSUM),
 	CP_HDR_FIELD_DESC(OUTDATA_LENGTH),
@@ -594,7 +592,7 @@ static struct svc_param_desc g_cp_hdr_field_map[] = {
 };
 
 /* Keep alphabetized */
-static struct svc_param_desc g_sync_mode_map[] = {
+struct svc_param_desc g_sync_mode_map[] = {
 	SYNC_MODE_DESC(ASYNC),
 	SYNC_MODE_DESC(POLL),
 	SYNC_MODE_DESC(SYNC),
@@ -604,7 +602,7 @@ static struct svc_param_desc g_sync_mode_map[] = {
 };
 
 /* Keep alphabetized */
-static struct svc_param_desc g_cmp_type_map[] = {
+struct svc_param_desc g_cmp_type_map[] = {
 	CMP_TYPE_DESC(EQ),
 	CMP_TYPE_DESC(GE),
 	CMP_TYPE_DESC(GT),
@@ -905,6 +903,16 @@ FUNC_SET_INT(test_set_cp_hdr_pnso_algo, ((struct test_cp_hdr_mapping *)parent)->
 FUNC_SET_INT(test_set_cp_hdr_algo, ((struct test_cp_hdr_mapping *)parent)->hdr_algo,
 	0, UINT_MAX);
 
+pnso_error_t test_set_op_algo_type(struct test_desc *root,
+				   struct test_node *parent, const char *val);
+pnso_error_t test_set_output_flags(struct test_desc *root,
+				   struct test_node *parent, const char *val);
+pnso_error_t test_set_cp_hdr_type(struct test_desc *root,
+				   struct test_node *parent, const char *val);
+pnso_error_t test_set_op_flags(struct test_desc *root,
+			       struct test_node *parent, const char *val);
+pnso_error_t test_set_crypto_key_idx(struct test_desc *root,
+				     struct test_node *parent, const char *val);
 
 static pnso_error_t test_set_alias(struct test_desc *root,
 				   struct test_node *parent,

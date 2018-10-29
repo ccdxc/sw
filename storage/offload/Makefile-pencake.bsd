@@ -1,0 +1,36 @@
+# $FreeBSD: todo version tag $
+.PATH:	${.CURDIR}/
+
+.include <bsd.own.mk>
+
+KMOD=pencake
+SRCS= \
+src/test/pnso_test_module.c \
+src/test/pnso_test_sysfs.c \
+src/test/pnso_test_parse.c \
+src/test/pnso_test_util.c \
+src/test/pnso_test.c \
+src/common/pnso_pbuf.c \
+src/osal/linux/kernel/osal_logger.c \
+src/osal/linux/kernel/osal_sys.c \
+src/osal/linux/kernel/osal_atomic.c \
+src/osal/linux/kernel/osal_thread.c \
+src/osal/linux/kernel/osal_mem.c \
+third-party/libyaml/src/api.c \
+third-party/libyaml/src/dumper.c \
+third-party/libyaml/src/emitter.c \
+third-party/libyaml/src/loader.c \
+third-party/libyaml/src/parser.c \
+third-party/libyaml/src/reader.c \
+third-party/libyaml/src/scanner.c \
+third-party/libyaml/src/writer.c \
+device_if.h bus_if.h vnode_if.h pci_if.h 
+
+CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include -I${SRCTOP}/sys/compat/linuxkpi/common/include/linux
+INCDIRS = include src/osal src/test src/drv/linux/kernel src/common third-party/libyaml/include
+CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
+CFLAGS+= -DHAPS -D__KERNEL__
+
+.include <bsd.kmod.mk>
+
+CFLAGS+= -Wno-pointer-arith -Wno-cast-qual

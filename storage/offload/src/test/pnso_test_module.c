@@ -11,9 +11,10 @@
 
 OSAL_LICENSE("Dual BSD/GPL");
 
-static char *y;
+#define MAX_PARAM_STRING_LEN 64
+static char y[MAX_PARAM_STRING_LEN] = "";
 //S_RUGO | S_IWUSR);
-module_param(y, charp, 0444);
+module_param_string(y, y, sizeof(y), 0444);
 MODULE_PARM_DESC(y, "simple YAML prefix string");
 
 static long repeat = -1;
@@ -44,8 +45,8 @@ static int ctl_core_id = -1;
 module_param(ctl_core_id, int, 0444);
 MODULE_PARM_DESC(ctl_core_id, "cpu core on which to run control thread");
 
-static char *mode = NULL;
-module_param(mode, charp, 0444);
+static char mode[MAX_PARAM_STRING_LEN] = "";
+module_param_string(mode, mode, sizeof(mode), 0444);
 MODULE_PARM_DESC(mode, "mode is sync, async, or poll");
 
 static unsigned int loglevel = OSAL_LOG_LEVEL_WARNING;
@@ -84,7 +85,7 @@ static void
 status_output_func(const char *status, void *opaque)
 {
 	pnso_test_sysfs_write_status_data(status, strlen(status), opaque);
-	OSAL_LOG(status);
+	OSAL_LOG("%s", status);
 }
 
 static const unsigned char default_alias_yaml[] =
@@ -404,7 +405,7 @@ body(void *not_used)
 	}
 
 	/* Parse optional module parameters */
-	if (y && *y) {
+	if (strlen(y) > 0) {
 		err = pnso_test_parse_buf(y, strlen(y), cfg);
 		if (err) {
 			PNSO_LOG_ERROR("Failed to parse module parameter y\n");
@@ -412,7 +413,7 @@ body(void *not_used)
 		}
 	}
 	if (repeat >= 0 || batch >= 0 || cpu_mask >= 0 || rate >= 0 ||
-	    status_interval >= 0 || mode != NULL) {
+	    status_interval >= 0 || strlen(mode) > 0) {
 		uint32_t len = 0;
 		char alias_str[MAX_ALIAS_STR_LEN+1] = "";
 
@@ -471,7 +472,7 @@ body(void *not_used)
 				goto done;
 			}
 		}
-		if (mode) {
+		if (strlen(mode) > 0) {
 			len = generate_alias_yaml(alias_str, "default_mode",
 						  0, mode);
 			PNSO_LOG_WARN("module param mode: %s\n", alias_str);
