@@ -136,7 +136,7 @@ build: gopkglist
 # this will return a non 0 error when coverage for a package is < 75.0%
 unit-test-cover: gopkglist
 	$(info +++ running go tests)
-	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG}
+	#@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG}
 
 c-start:
 	@tools/scripts/create-container.sh startCluster
