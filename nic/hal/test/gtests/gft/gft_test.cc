@@ -12,6 +12,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "gen/p4gen/gft/include/p4pd.h"
 #include "nic/p4/gft/include/defines.h"
@@ -1417,58 +1418,87 @@ TEST_F(gft_test, test1) {
         .p4pd_txdma_pgm_name = "p4plus",
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
-    const char *hal_conf_file = "conf/hal.json";
     char *default_config_dir = NULL;
     capri_cfg_t cfg;
     sdk::lib::catalog    *catalog;
 
-    cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
-    ASSERT_TRUE(catalog != NULL);
+    const char *hal_conf_file = "conf/gft/hal.json";
+    hal::hal_platform_t platform = hal::HAL_PLATFORM_SIM;
+    if (getenv("HAL_PLATFORM_RTL")) {
+        hal_conf_file = "conf/gft/hal_rtl.json";
+        platform = hal::HAL_PLATFORM_RTL;
+    } else if (getenv("HAL_PLATFORM_HW")) {
+        hal_conf_file = "conf/gft/hal_hw.json";
+        platform= hal::HAL_PLATFORM_HW;
+    }
 
     printf("Connecting to ASIC SIM\n");
+    hal::hal_sdk_init();
     hal::utils::trace_init("hal", 0, true, "hal.log",
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            hal::utils::trace_debug);
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
-    ASSERT_NE(ret, -1);
-    ret = capri_load_config((char *)"build/x86_64/gft/pgm_bin");
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
+    printf("Loading Capri config\n");
+    ret = capri_load_config((char *)"conf/gft/pgm_bin");
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     cfg.pgm_name = "gft";
-    cfg.catalog = catalog;
-    ret = capri_hbm_parse(&cfg);
-    ASSERT_NE(ret, -1);
-    if (getenv("HAL_PLATFORM_MODE_RTL")) {
-        hal_conf_file = "conf/hal_gft_rtl.json";
+    cfg.llc_cache = true;
+    cfg.p4_cache = true;
+    cfg.p4plus_cache = true;
+    if (getenv("LLC_CACHE_DISABLED")) {
+        cfg.llc_cache = false;
+    }
+    if (getenv("P4_CACHE_DISABLED")) {
+        cfg.p4_cache = false;
+    }
+    if (getenv("P4PLUS_CACHE_DISABLE")) {
+        cfg.p4plus_cache = false;
     }
 
-    asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
-    ret = capri_load_mpu_programs("gft", (char *)"build/x86_64/gft/bin/p4asm",
-                                  asm_base_addr, NULL, 0, NULL);
-    ASSERT_NE(ret, -1);
-    std::ifstream json_cfg(hal_conf_file);
-    ptree pt;
-    read_json(json_cfg, pt);
-    capri_list_program_addr(pt.get<std::string>("asic.loader_info_file").c_str());
-    ret = p4pd_init(&p4pd_cfg);
-    ASSERT_NE(ret, -1);
-    hal::hal_cfg_t hal_cfg = { 0 };
-    hal_cfg.platform = hal::HAL_PLATFORM_SIM;
-    ret = capri_table_rw_init(&hal_cfg);
-    ASSERT_NE(ret, -1);
-    ret = capri_hbm_cache_init(NULL);
-    ASSERT_NE(ret, -1);
-    ret = capri_hbm_cache_regions_init();
-    ASSERT_NE(ret, -1);
-    ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
-    ASSERT_NE(ret, -1);
-    ret = hal::pd::asicpd_program_table_mpu_pc();
-    ASSERT_NE(ret, -1);
-    ret = hal::pd::asicpd_deparser_init();
-    ASSERT_NE(ret, -1);
-    ret = hal::pd::asicpd_program_hbm_table_base_addr();
-    ASSERT_NE(ret, -1);
+    printf("Parsing HBM config\n");
+    ret = capri_hbm_parse(&cfg);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
+    printf("Loading Programs\n");
+    ret = p4pd_init(&p4pd_cfg);
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
+    ret = capri_load_mpu_programs("gft", (char *)"conf/gft/asm_bin",
+                                  asm_base_addr, NULL, 0, NULL);
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    std::ifstream json_cfg(hal_conf_file);
+    ptree hal_conf;
+    read_json(json_cfg, hal_conf);
+    capri_list_program_addr(hal_conf.get<std::string>("asic.loader_info_file").c_str());
+
+    hal::hal_cfg_t hal_cfg = { 0 };
+    hal_cfg.platform = platform;
+    ret = capri_table_rw_init(&hal_cfg);
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = capri_block_init(&cfg);
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = capri_hbm_cache_init(&cfg);
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = capri_hbm_cache_regions_init();
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = capri_tm_asic_init();
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = hal::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = hal::pd::asicpd_program_table_mpu_pc();
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = hal::pd::asicpd_deparser_init();
+    ASSERT_EQ(ret, HAL_RET_OK);
+    ret = hal::pd::asicpd_program_hbm_table_base_addr();
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
+    ASSERT_TRUE(catalog != NULL);
     if (!catalog->qos_sw_init_enabled()) {
         default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
         if (default_config_dir) {
@@ -1478,9 +1508,13 @@ TEST_F(gft_test, test1) {
         }
         ret = capri_default_config_init(&cfg);
     }
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
+
+    ret = capri_txs_scheduler_init(1, &hal_cfg);
+    ASSERT_EQ(ret, HAL_RET_OK);
+
     ret = capri_tm_init(catalog);
-    ASSERT_NE(ret, -1);
+    ASSERT_EQ(ret, HAL_RET_OK);
 
     config_done();
 

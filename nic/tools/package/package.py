@@ -73,6 +73,8 @@ if args.target == 'sim':
     output_dir  = pwd + '/fake_root_target/x86_64'
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_sim_apollo.txt')
+    elif args.pipeline == 'gft':
+        files.append('nic/tools/package/pack_sim_gft.txt')
     else:
         files.append('nic/tools/package/pack_sim.txt')
 elif args.target == 'zebu':
