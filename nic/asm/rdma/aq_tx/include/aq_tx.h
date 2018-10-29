@@ -33,6 +33,10 @@
 #define AQ_TX_DMA_CMD_MOD_QP_AH_DST    (AQ_TX_MAX_DMA_CMDS - 2)
 #define AQ_TX_DMA_CMD_MOD_QP_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 3)
 
+#define AQ_TX_DMA_CMD_CREATE_AH_DST    (AQ_TX_MAX_DMA_CMDS - 2)
+#define AQ_TX_DMA_CMD_CREATE_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_CREATE_AH_SIZE   (AQ_TX_MAX_DMA_CMDS - 4)
+
 #define AQ_TX_DMA_CMD_STATS_DUMP_4 (AQ_TX_MAX_DMA_CMDS - 2)
 #define AQ_TX_DMA_CMD_STATS_DUMP_3 (AQ_TX_MAX_DMA_CMDS - 3)
 #define AQ_TX_DMA_CMD_STATS_DUMP_2 (AQ_TX_MAX_DMA_CMDS - 4)
@@ -109,6 +113,7 @@ struct aq_tx_phv_t {
         struct key_entry_t key;
         struct sqcb0_t sqcb0;
         struct cqcb_t  cqcb;
+        ah_size :8;
     };
 
     /* flit 0-5 */

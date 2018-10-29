@@ -19,6 +19,7 @@ struct aq_tx_s1_t0_k k;
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)    
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_S2S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
+#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
 
 #define TO_S7_STATS_P       to_s7_stats_info
 
@@ -77,8 +78,9 @@ rdma_aq_tx_wqe_process:
     .brcase     AQ_OP_TYPE_STATS_DUMP
         b           stats_dump
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_dump), 1 //BD Slot
-    .brcase     13
-        b           exit
+    .brcase     AQ_OP_TYPE_CREATE_AH
+//TODO:  need to add stats code
+        b           create_ah
         nop
     .brcase     14
         b           exit
@@ -234,10 +236,35 @@ cq_skip_dma_pt:
     phvwrpair   p.cqcb.pt_pg_index, 0, p.cqcb.pt_next_pg_index, 0x1ff
     
 cq_no_skip_dma_pt: 
-        
+
     b           prepare_feedback
     nop
+
+create_ah:
+
+    /* calculate the header_template_addr */
+    add         r2, r0, K_AH_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT
+    mul         r3, d.{id_ver}.wx, AT_ENTRY_SIZE_BYTES
+    add         r2, r2, r3
+
+    add         r3, d.{ah.length}.wx, r0
+    add         r3, r3[7:0], r0
     
+    //Setup DMA to copy AH header from host to HBM
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_AH_SRC)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r3, d.{ah.dma_addr}.dx)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_AH_DST)        
+    DMA_HBM_MEM2MEM_DST_SETUP(r6, r3, r2)
+
+    /* write the AH size at the end*/
+    phvwr       p.ah_size, r3[7:0]
+    add         r2, r2, AT_ENTRY_SIZE_BYTES
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_AH_SIZE)
+    DMA_HBM_PHV2MEM_SETUP(r6, ah_size, ah_size, r2)
+
+    b           prepare_feedback
+    nop
+
 create_qp:
 
     // SQCB0:

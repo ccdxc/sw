@@ -5,8 +5,9 @@ struct aq_tx_to_stage_wqe_info_t {
     cqcb_base_addr_hi       :  24;
     sqcb_base_addr_hi       :  24;
     rqcb_base_addr_hi       :  24;
-    log_num_cq_entries      :    4;
-    pad                     :  52;
+    log_num_cq_entries      :   4;
+    ah_base_addr_page_id    :  22;
+    pad                     :  30;
 };
 
 struct aq_tx_to_stage_wqe2_info_t {

@@ -1383,6 +1383,7 @@ struct resp_rx_send_fml_t {
 #define AQ_OP_TYPE_QUERY_QP     10
 #define AQ_OP_TYPE_DESTROY_QP   11
 #define AQ_OP_TYPE_STATS_DUMP   12
+#define AQ_OP_TYPE_CREATE_AH    13
 
 //Define all stat types requested by the driver
 #define AQ_STATS_DUMP_TYPE_QP   0
@@ -1403,10 +1404,6 @@ struct aqwqe_t {
 			length: 32;
 			rsvd: 352;
 		} stats;
-		struct {
-			dma_addr: 64;
-			rsvd: 384;
-		} ah;
 		struct {
 			va: 64;
 			length: 64;
@@ -1469,8 +1466,15 @@ struct aqwqe_t {
             rsvd:96;
             dma_addr:64;
 		} mod_qp;
+		struct {
+            dma_addr:64;
+            length:32;
+            pd_id:32;
+			rsvd:40;
+		} ah;
 	};
 };
 
 #define AQ_WQE_T_LOG_SIZE_BYTES 6
+
 #endif //__TYPES_H
