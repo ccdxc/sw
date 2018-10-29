@@ -293,6 +293,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 				break
 			}
 			if k.clusterEventHandler != nil {
+				// FIXME -- avoid spawning a goroutine once the issue on the clusterEventHandler is sorted out
 				go k.clusterEventHandler(event.Type, cluster)
 			}
 
@@ -310,7 +311,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 				break
 			}
 			if k.nodeEventHandler != nil {
-				go k.nodeEventHandler(event.Type, node)
+				k.nodeEventHandler(event.Type, node)
 			}
 
 		case event, ok := <-k.smartNICWatcher.EventChan():
@@ -327,7 +328,7 @@ func (k *CfgWatcherService) runUntilCancel() {
 				break
 			}
 			if k.smartNICEventHandler != nil {
-				go k.smartNICEventHandler(event.Type, snic)
+				k.smartNICEventHandler(event.Type, snic)
 			}
 		case <-k.ctx.Done():
 			k.stopWatchers()

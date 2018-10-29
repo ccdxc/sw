@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -270,12 +271,23 @@ func (s *RPCServer) UpdateHost(nic *cluster.SmartNIC, add bool) (*cluster.Host, 
 			if k == nic.Name {
 				if add {
 					log.Debugf("Adding %v to Host: %v", nic.Name, host.Name)
-					host.Status.SmartNICs = append(host.Status.SmartNICs, nic.Name)
+					// A NIC may register multiple times, so only add if it is not already present
+					found := false
+					for ii := range host.Status.SmartNICs {
+						if host.Status.SmartNICs[ii] == nic.Name {
+							found = true
+							break
+						}
+					}
+					if !found {
+						host.Status.SmartNICs = append(host.Status.SmartNICs, nic.Name)
+					}
 				} else {
 					log.Debugf("Deleting %v from Host: %v", nic.Name, host.Name)
 					for ii := range host.Status.SmartNICs {
 						if host.Status.SmartNICs[ii] == nic.Name {
 							host.Status.SmartNICs = append(host.Status.SmartNICs[:ii], host.Status.SmartNICs[ii+1:]...)
+							break
 						}
 					}
 				}
@@ -328,21 +340,20 @@ func (s *RPCServer) UpdateSmartNIC(obj *cluster.SmartNIC) (*cluster.SmartNIC, er
 		return nil, errAPIServerDown
 	}
 
-	// Check if object exists
+	// Check if object exists.
+	// If it doesn't exist, do not create it, as it might have been deleted by user.
+	// NIC object creation (for example during NIC registration) should always be explicit.
 	var nicObj *cluster.SmartNIC
 	refObj, err := s.GetSmartNIC(obj.ObjectMeta)
-	if err != nil || refObj == nil {
-
-		// Create smartNIC object
-		nicObj, err = cl.SmartNIC().Create(context.Background(), obj)
-	} else {
-
+	if err == nil && refObj != nil {
 		// Update the object with CAS semantics, the phase and status conditions
 		if obj.Status.AdmissionPhase != "" {
 			refObj.Status.AdmissionPhase = obj.Status.AdmissionPhase
 		}
 		refObj.Status.Conditions = obj.Status.Conditions
 		nicObj, err = cl.SmartNIC().Update(context.Background(), refObj)
+	} else {
+		return nil, fmt.Errorf("Unable to apply NIC update. Err: %v, update: %+v", err, obj)
 	}
 
 	log.Debugf("UpdateSmartNIC nic: %+v", nicObj)
@@ -490,45 +501,64 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			return intErrResp, errors.Wrapf(err, "Error getting Cluster object")
 		}
 
-		// Process the request based on the configured admission mode
-		var phase string
-		if clusterObj.Spec.AutoAdmitNICs == true {
-			// Admit NIC if autoAdmission is enabled
-			phase = cluster.SmartNICStatus_ADMITTED.String()
-		} else {
-			// Set the NIC to pendingState for Manual Approval
-			phase = cluster.SmartNICStatus_PENDING.String()
+		log.Infof("Validated NIC: %s", name)
+
+		nc := s.ClientGetter.APIClient()
+		if nc == nil {
+			return intErrResp, fmt.Errorf("Unable to get API client")
 		}
 
-		log.Infof("Validated NIC: %s, phase: %s", name, phase)
-
-		// Create SmartNIC object, if the status is either admitted or pending.
-		if phase == cluster.SmartNICStatus_ADMITTED.String() || phase == cluster.SmartNICStatus_PENDING.String() {
+		// Automatically admit to the cluster if there is no existing NIC object but cluster policy is auto-admit.
+		// If a NIC object is present, honor the value of Spec.Admit and set phase accordingly.
+		nicObj, err := cl.SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: name})
+		if err != nil {
+			if !strings.Contains(err.Error(), "NotFound") {
+				return intErrResp, errors.Wrapf(err, "Error reading NIC object")
+			}
+			// Error is not found. Create the NIC object and apply cluster-wide admission policy.
 			nic := req.GetNic()
-			nic.Status.AdmissionPhase = phase
+			if clusterObj.Spec.AutoAdmitNICs == true {
+				nic.Spec.Admit = true
+				nic.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
+			} else {
+				nic.Spec.Admit = false
+				nic.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+			}
 			nic.ObjectMeta.SelfLink = nic.MakeKey("cluster")
-
-			_, err = s.UpdateSmartNIC(&nic)
+			nicObj, err = cl.SmartNIC().Create(context.Background(), &nic)
 			if err != nil {
 				status := apierrors.FromError(err)
-				log.Errorf("Error updating smartNIC object: %+v err: %v status: %v", nic, err, status)
+				log.Errorf("Error creating smartNIC object: %+v err: %v status: %v", nicObj, err, status)
+				return intErrResp, errors.Wrapf(err, "Error creating smartNIC object")
+			}
+		} else {
+			// NIC object is already present.
+			if nicObj.Spec.Admit == true {
+				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
+			} else {
+				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+			}
+			nicObj, err = cl.SmartNIC().Update(context.Background(), nicObj)
+			if err != nil {
+				status := apierrors.FromError(err)
+				log.Errorf("Error updating smartNIC object: %+v err: %v status: %v", nicObj, err, status)
 				return intErrResp, errors.Wrapf(err, "Error updating smartNIC object")
 			}
+		}
 
-			// Update the Host
-			_, err = s.UpdateHost(&nic, true)
-			if err != nil {
-				return intErrResp, errors.Wrapf(err, "Error creating or updating Host object, mac: %s", nic.ObjectMeta.Name)
-			}
+		// Update the Host
+		_, err = s.UpdateHost(&nic, true)
+		if err != nil {
+			return intErrResp, errors.Wrapf(err, "Error creating or updating Host object, mac: %s", nic.ObjectMeta.Name)
 		}
 
 		okResp := &grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase: phase,
+				Phase: nicObj.Status.AdmissionPhase,
 			},
 		}
 
-		if phase == cluster.SmartNICStatus_ADMITTED.String() {
+		if nicObj.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
 			okResp.AdmissionResponse.ClusterCert = &certapi.CertificateSignResp{
 				Certificate: &certapi.Certificate{
 					Certificate: clusterCert.Raw,

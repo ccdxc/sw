@@ -270,6 +270,7 @@ func TestNICConfig(t *testing.T) {
 							Name: hostID,
 						},
 						Spec: cmd.SmartNICSpec{
+							Admit: true,
 							IPConfig: &cmd.IPConfig{
 								IPAddress: "0.0.0.0/0",
 							},
