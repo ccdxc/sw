@@ -10,7 +10,7 @@ typedef std::shared_ptr<spdlog::logger> Logger;
 // GetLogger returns the current logger instance
 Logger GetLogger();
 
-#define DEBUG_ENABLE
+//#define DEBUG_ENABLE
 #ifdef DEBUG_ENABLE
 #define DEBUG(args...) GetLogger()->debug(args)
 #else

@@ -12,7 +12,7 @@ shared_ptr<Service> Scheduler::get_for_pid(pid_t pid)
     auto s = this->pids.find(pid);
     if (s == this->pids.end())
     {
-        ERR("PID {} not found", pid);
+        DEBUG("PID {} not found", pid);
         return nullptr;
     }
 
@@ -24,7 +24,7 @@ shared_ptr<Service> Scheduler::get_for_name(const string &name)
     auto s = this->services.find(name);
     if (s == this->services.end())
     {
-        ERR("Name {} not found", name);
+       DEBUG("Name {} not found", name);
     }
     assert(s != this->services.end());
 
@@ -129,7 +129,7 @@ bool Scheduler::should_reboot()
 
 unique_ptr<Action> Scheduler::next_action()
 {
-    INFO("Waiting: {}, Starting: {}, Ready: {}, Running: {}, Dead: {}",
+    DEBUG("Waiting: {}, Starting: {}, Ready: {}, Running: {}, Dead: {}",
         this->waiting.size(), this->starting.size(), this->ready.size(),
         this->running.size(), this->dead.size());
 
@@ -243,7 +243,7 @@ void Scheduler::heartbeat(pid_t pid)
     if (service == nullptr) {
         return;
     }
-    INFO("Received heartbeat from {}", service->name);
+    DEBUG("Received heartbeat from {}", service->name);
 
     watchdog->refresh(service->name);
 }

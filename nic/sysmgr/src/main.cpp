@@ -155,7 +155,7 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
     if (fds == -1) {
         ERR("epoll_wait() error: {}", strerror(errno));
     }
-    INFO("Number of events: {}", fds);
+    DEBUG("Number of events: {}", fds);
     for (int i = 0; i < fds; i++)
     {
         if (events[i].data.fd == died_pids->raw_fd())
@@ -197,11 +197,11 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
         }
         else if (events[i].data.fd == heartbeats->raw_fd())
         {
-            INFO("heartbeat event");
+            DEBUG("heartbeat event");
             pid_t pid;
             while((pid = heartbeats->pipe_read()) > 0)
             {
-                INFO("heartbeat: pipe_read(): {}", pid);
+                DEBUG("heartbeat: pipe_read(): {}", pid);
                 scheduler.heartbeat(pid);
             }
         }
@@ -242,19 +242,20 @@ void loop(Scheduler &scheduler)
     for (;;)
     {
         auto action = scheduler.next_action();
-        INFO("Next action: {}", action->type);
+        DEBUG("Next action: {}", action->type);
         if (action->type == LAUNCH)
         {
             INFO("Launching services");
             for (auto service : action->launch_list)
             {
+	        INFO("Launching {}: {}", service->name, service->command);
                 pid_t pid = launch(service->name, service->command);
                 scheduler.service_launched(service, pid);
             }
         }
         else if (action->type == WAIT)
         {
-            INFO("Waiting for events");
+            DEBUG("Waiting for events");
             wait_for_events(scheduler, epollfd, action->sleep);
         }
         else if (action->type == REBOOT)

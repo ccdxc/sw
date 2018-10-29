@@ -17,7 +17,7 @@ DelphiClientStatusReactor::DelphiClientStatusReactor(shared_ptr<Pipe<pid_t> > he
 
 delphi::error DelphiClientStatusReactor::OnDelphiClientStatusCreate(delphi::objects::DelphiClientStatusPtr obj)
 {
-    INFO("DelphiServiceCreate {}({})", obj->key(), obj->pid());
+    DEBUG("DelphiServiceCreate {}({})", obj->key(), obj->pid());
     this->heartbeat_pipe->pipe_write(obj->pid());
     return delphi::error::OK();
 }
@@ -28,7 +28,7 @@ delphi::error DelphiClientStatusReactor::OnDelphiClientStatusDelete(delphi::obje
 
 delphi::error DelphiClientStatusReactor::OnDelphiClientStatusUpdate(delphi::objects::DelphiClientStatusPtr obj)
 {
-    INFO("DelphiServiceUpdate {}({})", obj->key(), obj->pid());
+    DEBUG("DelphiServiceUpdate {}({})", obj->key(), obj->pid());
     heartbeat_pipe->pipe_write(obj->pid());
     return delphi::error::OK();
 }
