@@ -98,34 +98,35 @@
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
 #define DROP_MALFORMED_PKT                      0
-#define DROP_INPUT_MAPPING                      1
-#define DROP_INPUT_MAPPING_DEJAVU               2
-#define DROP_FLOW_HIT                           3
-#define DROP_FLOW_MISS                          4
-#define DROP_NACL                               5
-#define DROP_IPSG                               6
-#define DROP_IP_NORMALIZATION                   7
-#define DROP_TCP_NORMALIZATION                  8
-#define DROP_TCP_RST_WITH_INVALID_ACK_NUM       9
-#define DROP_TCP_NON_SYN_FIRST_PKT              10
-#define DROP_ICMP_NORMALIZATION                 11
-#define DROP_INPUT_PROPERTIES_MISS              12
-#define DROP_TCP_OUT_OF_WINDOW                  13
-#define DROP_TCP_SPLIT_HANDSHAKE                14
-#define DROP_TCP_WIN_ZERO_DROP                  15
-#define DROP_TCP_DATA_AFTER_FIN                 16
-#define DROP_TCP_NON_RST_PKT_AFTER_RST          17
-#define DROP_TCP_INVALID_RESPONDER_FIRST_PKT    18
-#define DROP_TCP_UNEXPECTED_PKT                 19
-#define DROP_SRC_LIF_MISMATCH                   20
-#define DROP_PARSER_ICRC_ERR                    21
-#define DROP_PARSER_LEN_ERR                     22
-#define DROP_HARDWARE_ERR                       23
+#define DROP_PARSER_ICRC_ERR                    1
+#define DROP_PARSER_LEN_ERR                     2
+#define DROP_HARDWARE_ERR                       3
+#define DROP_INPUT_MAPPING                      4
+#define DROP_INPUT_MAPPING_DEJAVU               5
+#define DROP_MULTI_DEST_NOT_PINNED_UPLINK       6
+#define DROP_FLOW_HIT                           7
+#define DROP_FLOW_MISS                          8
+#define DROP_NACL                               9
+#define DROP_IPSG                               10
+#define DROP_IP_NORMALIZATION                   11
+#define DROP_TCP_NORMALIZATION                  12
+#define DROP_TCP_RST_WITH_INVALID_ACK_NUM       13
+#define DROP_TCP_NON_SYN_FIRST_PKT              14
+#define DROP_ICMP_NORMALIZATION                 15
+#define DROP_INPUT_PROPERTIES_MISS              16
+#define DROP_TCP_OUT_OF_WINDOW                  17
+#define DROP_TCP_SPLIT_HANDSHAKE                18
+#define DROP_TCP_WIN_ZERO_DROP                  19
+#define DROP_TCP_DATA_AFTER_FIN                 20
+#define DROP_TCP_NON_RST_PKT_AFTER_RST          21
+#define DROP_TCP_INVALID_RESPONDER_FIRST_PKT    22
+#define DROP_TCP_UNEXPECTED_PKT                 23
+#define DROP_SRC_LIF_MISMATCH                   24
 #define DROP_MIN                                DROP_MALFORMED_PKT
 /*****************************************************************************/
 /* Note: After adding a new drop code, update the system.proto file as well. */
 /*****************************************************************************/
-#define DROP_MAX                                DROP_HARDWARE_ERR
+#define DROP_MAX                                DROP_SRC_LIF_MISMATCH
 
 /*****************************************************************************/
 /* egress drop reasons - these are bit positions to be used in ASM           */

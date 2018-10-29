@@ -321,29 +321,30 @@ enum CpucbId {
 
 message DropReasons {
   bool      drop_malformed_pkt                      = 1;        // malformed pkt drop
-  bool      drop_input_mapping                      = 2;        // input mapping table miss
-  bool      drop_input_mapping_dejavu               = 3;        // deja-vu drop
-  bool      drop_flow_hit                           = 4;        // flow hit drop
-  bool      drop_flow_miss                          = 5;        // flow miss drop
-  bool      drop_nacl                               = 6;        // nacl drop
-  bool      drop_ipsg                               = 7;        // ipsg drop
-  bool      drop_ip_normalization                   = 8;        // ip norm. drop
-  bool      drop_tcp_normalization                  = 9;        // tcp norm. drop
-  bool      drop_tcp_rst_with_invalid_ack_num       = 10;       // rst with invalid ack num
-  bool      drop_tcp_non_syn_first_pkt              = 11;       // non-syn first pkt
-  bool      drop_icmp_normalization                 = 12;       // icmp norm. drop
-  bool      drop_input_properties_miss              = 13;       // input properties miss
-  bool      drop_tcp_out_of_window                  = 14;       // tcp OOW drop
-  bool      drop_tcp_split_handshake                = 15;       // split handshake drop
-  bool      drop_tcp_win_zero_drop                  = 16;       // tcp win. zero
-  bool      drop_tcp_data_after_fin                 = 17;       // tcp data after fin
-  bool      drop_tcp_non_rst_pkt_after_rst          = 18;       // tcp non rst
-  bool      drop_tcp_invalid_responder_first_pkt    = 19;       // tcp invalid resp.
-  bool      drop_tcp_unexpected_pkt                 = 20;       // tcp unexpected packet
-  bool      drop_src_lif_mismatch                   = 21;
-  bool      drop_parser_icrc_error                  = 22;       // RDMA ICRC Errors
-  bool      drop_parse_len_error                    = 23;       // Packet Length Errors
-  bool      drop_hardware_error                     = 24;
+  bool      drop_parser_icrc_error                  = 2;       // RDMA ICRC Errors
+  bool      drop_parse_len_error                    = 3;       // Packet Length Errors
+  bool      drop_hardware_error                     = 4;
+  bool      drop_input_mapping                      = 5;        // input mapping table miss
+  bool      drop_input_mapping_dejavu               = 6;        // deja-vu drop
+  bool      drop_multi_dest_not_pinned_uplink       = 7;        // Multi destination frame recieved for a l2seg on not pinned uplink
+  bool      drop_flow_hit                           = 8;        // flow hit drop
+  bool      drop_flow_miss                          = 9;        // flow miss drop
+  bool      drop_nacl                               = 10;        // nacl drop
+  bool      drop_ipsg                               = 11;        // ipsg drop
+  bool      drop_ip_normalization                   = 12;        // ip norm. drop
+  bool      drop_tcp_normalization                  = 13;        // tcp norm. drop
+  bool      drop_tcp_rst_with_invalid_ack_num       = 14;       // rst with invalid ack num
+  bool      drop_tcp_non_syn_first_pkt              = 15;       // non-syn first pkt
+  bool      drop_icmp_normalization                 = 16;       // icmp norm. drop
+  bool      drop_input_properties_miss              = 17;       // input properties miss
+  bool      drop_tcp_out_of_window                  = 18;       // tcp OOW drop
+  bool      drop_tcp_split_handshake                = 19;       // split handshake drop
+  bool      drop_tcp_win_zero_drop                  = 20;       // tcp win. zero
+  bool      drop_tcp_data_after_fin                 = 21;       // tcp data after fin
+  bool      drop_tcp_non_rst_pkt_after_rst          = 22;       // tcp non rst
+  bool      drop_tcp_invalid_responder_first_pkt    = 23;       // tcp invalid resp.
+  bool      drop_tcp_unexpected_pkt                 = 24;       // tcp unexpected packet
+  bool      drop_src_lif_mismatch                   = 25;
 }
 
 message EgressDropReasons {

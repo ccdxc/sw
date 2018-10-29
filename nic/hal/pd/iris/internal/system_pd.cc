@@ -270,6 +270,8 @@ pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
             drop_reason & (1 << DROP_INPUT_MAPPING));
     stats_entry->mutable_reasons()->set_drop_input_mapping_dejavu(
             drop_reason & (1 << DROP_INPUT_MAPPING_DEJAVU));
+    stats_entry->mutable_reasons()->set_drop_multi_dest_not_pinned_uplink(
+            drop_reason & (1 << DROP_MULTI_DEST_NOT_PINNED_UPLINK));
     stats_entry->mutable_reasons()->set_drop_flow_hit(
             drop_reason & (1 << DROP_FLOW_HIT));
     stats_entry->mutable_reasons()->set_drop_flow_miss(

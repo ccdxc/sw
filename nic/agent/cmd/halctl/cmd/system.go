@@ -746,11 +746,23 @@ func dropReasonToString(reasons *halproto.DropReasons) string {
 	if reasons.GetDropMalformedPkt() {
 		return "Drop Malformed Pkt"
 	}
+	if reasons.GetDropParserIcrcError() {
+		return "Drop Parser ICRC Error"
+	}
+	if reasons.GetDropParseLenError() {
+		return "Drop Parse Len Error"
+	}
+	if reasons.GetDropHardwareError() {
+		return "Drop Hardware Error"
+	}
 	if reasons.GetDropInputMapping() {
 		return "Drop Input Mapping"
 	}
 	if reasons.GetDropInputMappingDejavu() {
 		return "Drop Input Mapping Deja Vu"
+	}
+	if reasons.GetDropMultiDestNotPinnedUplink() {
+		return "Drop Multi Dest Not Pinned Uplink"
 	}
 	if reasons.GetDropFlowHit() {
 		return "Drop Flow Hit"
@@ -805,15 +817,6 @@ func dropReasonToString(reasons *halproto.DropReasons) string {
 	}
 	if reasons.GetDropSrcLifMismatch() {
 		return "Drop Src Lif Mismatch"
-	}
-	if reasons.GetDropParserIcrcError() {
-		return "Drop Parser ICRC Error"
-	}
-	if reasons.GetDropParseLenError() {
-		return "Drop Parse Len Error"
-	}
-	if reasons.GetDropHardwareError() {
-		return "Drop Hardware Error"
 	}
 	return "Invalid"
 }

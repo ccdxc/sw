@@ -96,7 +96,7 @@ action flow_miss() {
 	    modify_field(flow_miss_metadata.tunnel_originate,
                          flow_miss_metadata.tunnel_originate);
         } else {
-            modify_field(control_metadata.drop_reason, DROP_FLOW_MISS);
+            modify_field(control_metadata.drop_reason, DROP_MULTI_DEST_NOT_PINNED_UPLINK);
             drop_packet();
         }
     }

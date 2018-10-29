@@ -133,7 +133,7 @@ flow_miss_unicast:
 
 flow_miss_multicast:
   seq           c1, k.control_metadata_allow_flood, TRUE
-  bcf           [!c1], flow_miss_drop
+  bcf           [!c1], flow_miss_mdest_not_pinned_drop
   phvwrpair.c1  p.capri_intrinsic_tm_replicate_ptr, \
                     k.control_metadata_flow_miss_idx, \
                     p.capri_intrinsic_tm_replicate_en, 1
@@ -145,8 +145,8 @@ flow_miss_multicast:
   phvwr.f       p.rewrite_metadata_tunnel_rewrite_index[9:0], \
                     k.flow_miss_metadata_tunnel_rewrite_index
 
-flow_miss_drop:
-  phvwr.e       p.control_metadata_drop_reason[DROP_FLOW_MISS], 1
+flow_miss_mdest_not_pinned_drop:
+  phvwr.e       p.control_metadata_drop_reason[DROP_MULTI_DEST_NOT_PINNED_UPLINK], 1
   phvwr         p.capri_intrinsic_drop, 1
 
 flow_miss_input_properites_miss_drop:
