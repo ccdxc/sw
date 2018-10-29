@@ -16,6 +16,7 @@
 #include "osal_thread.h"
 #include "osal_setup.h"
 #include "osal_sys.h"
+#include "osal_random.h"
 
 
 #ifdef __FreeBSD__

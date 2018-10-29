@@ -5,6 +5,7 @@
  */
 
 /* TODO: remove userspace specific includes */
+#include <ctype.h>
 #include "osal.h"
 
 #include "yaml.h"

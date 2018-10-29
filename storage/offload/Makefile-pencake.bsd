@@ -7,7 +7,6 @@ KMOD=pencake
 SRCS= \
 src/test/pnso_test_module.c \
 src/test/pnso_test_sysfs.c \
-src/test/pnso_test_parse.c \
 src/test/pnso_test_util.c \
 src/test/pnso_test.c \
 src/common/pnso_pbuf.c \
@@ -24,9 +23,10 @@ third-party/libyaml/src/parser.c \
 third-party/libyaml/src/reader.c \
 third-party/libyaml/src/scanner.c \
 third-party/libyaml/src/writer.c \
+src/test/pnso_test_parse.c \
 device_if.h bus_if.h vnode_if.h pci_if.h 
 
-CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include -I${SRCTOP}/sys/compat/linuxkpi/common/include/linux
+CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include -I${SRCTOP}/sys/compat/linuxkpi/common/include/linux -I${SRCTOP}/sys/sys
 INCDIRS = include src/osal src/test src/drv/linux/kernel src/common third-party/libyaml/include
 CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
 CFLAGS+= -DHAPS -D__KERNEL__

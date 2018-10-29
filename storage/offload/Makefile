@@ -133,6 +133,7 @@ sonic: sonic-var modules-compile
 
 pencake-var: $(eval obj-m += $(PENCAKE).o)
 pencake-var: $(eval ccflags-y += $(PENCAKE_INCDIRS:%=-I$(PWD)/%))
+pencake-var: $(eval ccflags-y += -I$(KERN_DIR)/include/linux)
 pencake-var: $(eval ccflags-y += -DHAVE_CONFIG_H=0)
 pencake: pencake-var modules-compile
 

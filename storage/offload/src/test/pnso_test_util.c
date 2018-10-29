@@ -7,18 +7,16 @@
 #include <string.h>
 #include <ctype.h>
 #include "osal_stdtypes.h"
+#include "osal_random.h"
 #include "pnso_api.h"
 
-#ifdef __KERNEL__
-#include <linux/random.h>
-#define pnso_srand prandom_seed
-#define pnso_rand prandom_u32
-#else
-#include <stdlib.h>
-#define pnso_srand srand
-#define pnso_rand rand
-#endif
+#define pnso_srand osal_srand
+#define pnso_rand osal_rand
 
+uint32_t roundup_block_count(uint32_t len, uint32_t block_size);
+uint32_t roundup_len(uint32_t len, uint32_t block_size);
+void test_fill_buflist(struct pnso_buffer_list *buflist,
+		       const uint8_t *data, uint32_t data_len);
 
 uint32_t roundup_block_count(uint32_t len, uint32_t block_size)
 {
