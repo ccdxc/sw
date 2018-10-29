@@ -2,7 +2,7 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET       = upgrade.proto
-MODULE_GEN_TYPES    = CC PY DELPHI
+MODULE_GEN_TYPES    = CC PY DELPHI GOMETRICS
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
                       ${TOPDIR}/nic/hal/third-party/google/include \

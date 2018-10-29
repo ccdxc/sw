@@ -20,11 +20,12 @@ default: ${DEST} template penctl_template
 	mkdir -p ${NICDIR}
 	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src \
         -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
+        -I ${GOPATH}/src/github.com/pensando/sw/nic/delphi/proto/delphi \
         -I${GOPATH}/src/github.com/pensando/sw/ \
         -I${GOPATH}/src/github.com/pensando/sw/api/ \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
-        --gofast_out=Mnic/delphi/proto/delphi/delphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,plugins=grpc:. $<
+        --gofast_out=Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,plugins=grpc:. $<
 	mv $(DEST:/usr/src/%=%) .
 	sed -i.bak_ 's/api\/protos/api\/generated\/monitoring/g' $(notdir $@)
 	sed -i.bak_ '/import _ "."/d' $(notdir $@)
@@ -36,6 +37,7 @@ template:
 	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src \
         -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
         -I${GOPATH}/src/github.com/pensando/sw/ \
+        -I ${GOPATH}/src/github.com/pensando/sw/nic/delphi/proto/delphi \
         -I${GOPATH}/src/github.com/pensando/sw/api/ \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
@@ -48,6 +50,7 @@ penctl_template:
         -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
         -I${GOPATH}/src/github.com/pensando/sw/ \
         -I${GOPATH}/src/github.com/pensando/sw/api/ \
+        -I ${GOPATH}/src/github.com/pensando/sw/nic/delphi/proto/delphi \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
