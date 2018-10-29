@@ -5,6 +5,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { NaplesComponent } from './naples.component';
 import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgetheader/dsbdwidgetheader.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 describe('NaplesComponent', () => {
   let component: NaplesComponent;
@@ -12,7 +13,7 @@ describe('NaplesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [NaplesComponent, DsbdwidgetheaderComponent],
+      declarations: [NaplesComponent, DsbdwidgetheaderComponent, PrettyDatePipe],
       imports: [
         WidgetsModule,
         PrimengModule,

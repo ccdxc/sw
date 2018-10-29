@@ -114,6 +114,13 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('workload', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workload.svg'));
     this.matIconRegistry.addSvgIcon('workloads', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workloads.svg'));
 
+    // Cluster
+    this.matIconRegistry.addSvgIcon('cluster', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/ico-cluster.svg'));
+    this.matIconRegistry.addSvgIcon('node', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/ico-node.svg'));
+    this.matIconRegistry.addSvgIcon('memory', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-memory.svg'));
+    this.matIconRegistry.addSvgIcon('cpu', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-cpu.svg'));
+    this.matIconRegistry.addSvgIcon('storage', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-storage.svg'));
+
     // Naple icons
     this.matIconRegistry.addSvgIcon('naples', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/naples/ico-naples-black.svg'));
 

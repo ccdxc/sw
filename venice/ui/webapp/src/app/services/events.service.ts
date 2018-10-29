@@ -2,12 +2,8 @@ import { Injectable } from '@angular/core';
 import { EventsService as EventGenService } from '@app/services/generated/events.service';
 import { ControllerService } from '@app/services/controller.service';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { timer } from 'rxjs/observable/timer';
 import { IEventsEvent, IEventsEventList, ApiListWatchOptions, IApiListWatchOptions } from '@sdk/v1/models/generated/events';
-import { Utility } from '@app/common/Utility';
+import { PollUtility, PollingInstance } from '@app/services/PollUtility';
 
 /**
  * Events polling
@@ -22,42 +18,24 @@ import { Utility } from '@app/common/Utility';
  * call should be made as a single request.
  */
 
-interface PollingInstance {
-  pollingTimerSource: Observable<number>;
-  pollingTimerSubscription: Subscription;
-  handler: BehaviorSubject<any>;
-  body: any;
-  // Used to determine whether the results from the query should
-  // be appended to, or if they should wipe the current set
-  // Needed for when a consumer makes a request with a new body
-  isFirstPoll: boolean;
-}
-
 @Injectable()
 export class EventsService extends EventGenService {
+  pollingUtility: PollUtility;
   POLLING_INTERVAL = 10000;
   events: Array<IEventsEvent> = [];
-  protected pollingTimerSource: Observable<number>;
-  protected pollingTimerSubscription: Subscription;
-  private eventsHandlerMap: { [key: string]: PollingInstance } = {};
   constructor(protected _http: HttpClient,
     protected _controllerService: ControllerService) {
     super(_http, _controllerService);
+    this.pollingUtility = new PollUtility(
+      (key, body, useRealData) => {
+        this.pollingFetchData(key, body, useRealData);
+      },
+      this.POLLING_INTERVAL);
   }
 
   pollEvents(key: string, body: IApiListWatchOptions = {}) {
-    const poll: PollingInstance = this.initiatePolling(key, body, true, this.POLLING_INTERVAL, 0);
+    const poll: PollingInstance = this.pollingUtility.initiatePolling(key, body, true, this.POLLING_INTERVAL, 0);
     return poll.handler;
-  }
-
-  /**
-   * If this returns false, the polling will terminate
-   */
-  protected pollingHasObservers(key) {
-    if (this.eventsHandlerMap[key] == null) {
-      return false;
-    }
-    return this.eventsHandlerMap[key].handler.observers.length !== 0;
   }
 
   /**
@@ -73,13 +51,13 @@ export class EventsService extends EventGenService {
         if (items == null) {
           items = [];
         }
-        const poll = this.eventsHandlerMap[key];
+        const poll = this.pollingUtility.pollingHandlerMap[key];
         if (poll == null) {
           return false;
         }
         if (poll.isFirstPoll) {
           // Don't append data
-          this.eventsHandlerMap[key].handler.next(respBody.items);
+          this.pollingUtility.pollingHandlerMap[key].handler.next(respBody.items);
           poll.isFirstPoll = false;
           // modify body to look for changes after current mod-time
           // Search field-selector for the mod-time attribute, otherwise add it
@@ -94,7 +72,7 @@ export class EventsService extends EventGenService {
           if (items.length > 0) {
             const currArray = poll.handler.value;
             const res = items.concat(currArray);
-            this.eventsHandlerMap[key].handler.next(res);
+            this.pollingUtility.pollingHandlerMap[key].handler.next(res);
             // Modify time selector to only get new data
             this.addModTimeSelector(items[0].meta['mod-time'], poll.body);
           }
@@ -146,84 +124,5 @@ export class EventsService extends EventGenService {
       body['field-selector'] = selectorArray.join(',');
     }
   }
-
-  /**
-   * Returns a function to be used for processing the responses of the poll
-   * @param key
-   * @param useRealData
-   */
-  genOnPollData(key, useRealData) {
-    return () => {
-      // Check if there are any subscribers to our subjects
-      // if not, we terminate this timer.
-      if (!this.pollingHasObservers(key)) {
-        this.terminatePolling(key);
-        return;
-      }
-      if (useRealData) {
-        // Setting up data to be polled
-        const body = this.eventsHandlerMap[key].body;
-        this.pollingFetchData(key, body, useRealData);
-      }
-    };
-  }
-
-  /**
-   * Initates polling for data
-   * Will automatically terminate if pollingHasObservers returns false
-   */
-  public initiatePolling(key, body, useRealData, interval = 5000, initialDelay = 200): PollingInstance {
-    // See if there is already a polling instance existing
-    const poll = this.eventsHandlerMap[key];
-    if (poll == null || poll.pollingTimerSource == null) {
-      const pollingTimerSource = timer(initialDelay, interval);
-      const pollingTimerSubscription =
-        pollingTimerSource.subscribe(this.genOnPollData(key, useRealData));
-
-      this.eventsHandlerMap[key] = {
-        pollingTimerSource: pollingTimerSource,
-        pollingTimerSubscription: pollingTimerSubscription,
-        handler: new BehaviorSubject<IEventsEvent[]>([]),
-        body: body,
-        isFirstPoll: true
-      };
-      return this.eventsHandlerMap[key];
-    }
-    // If there is a polling instance, we check if the body is the same
-    // as the one in the current request. If it isn't, we restart the poll
-    // with the new body.
-    const bodyPoll = poll.body;
-    if (!Utility.getLodash().isEqual(body, bodyPoll)) {
-      // stop current poll and start again with new body.
-      this.terminatePolling(key, false);
-      const pollingTimerSource = timer(initialDelay, interval);
-      const pollingTimerSubscription =
-        pollingTimerSource.subscribe(this.genOnPollData(key, useRealData));
-      poll.pollingTimerSource = pollingTimerSource;
-      poll.pollingTimerSubscription = pollingTimerSubscription;
-      poll.body = body;
-    }
-    return this.eventsHandlerMap[key];
-  }
-
-  /**
-   * terminates the polling timer
-   */
-  protected terminatePolling(key, terminateHandler = true) {
-    const poll = this.eventsHandlerMap[key];
-    if (poll != null && poll.pollingTimerSubscription != null) {
-      poll.pollingTimerSubscription.unsubscribe();
-      poll.pollingTimerSource = null;
-      poll.pollingTimerSubscription = null;
-      poll.body = null;
-      poll.isFirstPoll = true;
-      if (terminateHandler) {
-        poll.handler.complete();
-        poll.handler = null;
-      }
-    }
-  }
-
-
 
 }

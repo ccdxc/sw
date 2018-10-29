@@ -13,12 +13,17 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
   encapsulation: ViewEncapsulation.None
 })
 export class DsbdwidgetheaderComponent implements OnInit, OnDestroy, OnChanges {
-  has_update_string: boolean;
+  hasUpdateString: boolean;
   _iconStyles: any;
 
   @Input() icon: Icon;
+  @Input() iconFillColor: string = '#FFF';
   @Input() title: String;
-  @Input() last_update: String;
+  // lastUpdateTime will be displayed if its given, otherwise it will
+  // try to display timeRange if given. If both are given, it will
+  // display lastUpdateTime
+  @Input() lastUpdateTime: string = '2018-08-23T17:35:08.534909931Z';
+  @Input() timeRange: string;
   @Input() id: String;
   @Input() menuItems: [any];
 
@@ -42,8 +47,8 @@ export class DsbdwidgetheaderComponent implements OnInit, OnDestroy, OnChanges {
       this.icon = { margin: {} };
     }
     this._iconStyles = this._setIconStyles();
-    this.has_update_string = this.last_update != null &&
-      this.last_update !== '';
+    this.hasUpdateString = this.lastUpdateTime != null &&
+      this.lastUpdateTime !== '';
   }
 
   _setIconStyles() {

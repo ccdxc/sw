@@ -19,6 +19,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { WhitespaceTrimDirective } from '@app/components/shared/directives/whitespacetrim.directive';
 import { FieldselectorComponent } from './fieldselector/fieldselector.component';
+import { HerocardComponent } from './herocard/herocard.component';
 import { WidgetsModule } from 'web-app-framework';
 
 @NgModule({
@@ -44,7 +45,8 @@ import { WidgetsModule } from 'web-app-framework';
     PrettyDatePipe,
     AlertseventsComponent,
     WhitespaceTrimDirective,
-    FieldselectorComponent
+    FieldselectorComponent,
+    HerocardComponent
   ],
   exports: [
     PagebodyComponent,
@@ -60,7 +62,8 @@ import { WidgetsModule } from 'web-app-framework';
     PrettyDatePipe,
     AlertseventsComponent,
     WhitespaceTrimDirective,
-    FieldselectorComponent
-  ],
+    FieldselectorComponent,
+    HerocardComponent
+  ]
 })
 export class SharedModule { }

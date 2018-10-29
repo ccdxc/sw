@@ -1,80 +1,100 @@
 <app-pagebody [icon]="bodyicon" header="Cluster Overview">
-  <!-- Since we are manually calculating table dimensions, whenever this panel changes
-        state we need to recalculate the table -->
-  <mat-expansion-panel fxFlex="nogrow" class="global-mat-expansion-panel" [expanded] = "true"
-      (closed)="alertsEventsComponent?.resizeTable(501)" (opened)="alertsEventsComponent?.resizeTable(501)">
-    <mat-expansion-panel-header class="cluster-details-panel-header">
-        <mat-panel-title class="cluster-details-panel-title">
-            Cluster Details
-        </mat-panel-title>
-    </mat-expansion-panel-header>
-    <div fxFlex="none" class="cluster-details-panel-content">
-      <div fxLayout="row">
-        <div fxFlex="50">
-          <div class="cluster-details-panel-content-label">Leader:</div>
-          <div class="cluster-details-panel-content-value cluster-details-panel-leader-value">{{cluster?.status.leader}}</div>
-        </div>
-        <div fxFlex="50">
-          <div class="cluster-details-panel-content-label">Last Leader Transition Time:</div>
-          <div class="cluster-details-panel-content-value cluster-details-panel-last-leader-transition-time">{{cluster?.status['last-leader-transition-time'] | date: 'MM-dd-yyyy HH:mm a'}}</div>
-        </div>
-      </div>
-      <div fxLayout="row">
-        <div fxFlex="50">
-          <div class="cluster-details-panel-content-label">Quorum Nodes:</div>
-          <div class="cluster-details-panel-content-value cluster-details-panel-quorum-nodes">{{cluster?.spec['quorum-nodes'].toString().split(',').join(', ')}}</div>
-        </div>
-        <div fxFlex="50">
-            <div class="cluster-details-panel-content-label">Virtual IP:</div>
-            <div class="cluster-details-panel-content-value cluster-details-panel-virtual-ip">{{cluster?.spec['virtual-ip']}}</div>
-          </div>
-      </div>
-      <div fxLayout="row">
-        <div fxFlex="50">
-          <div class="cluster-details-panel-content-label">NTP Servers:</div>
-          <div class="cluster-details-panel-content-value cluster-details-panel-ntp-servers">{{cluster?.spec['ntp-servers'].toString().split(',').join(', ')}}</div>
-        </div>
-        <div fxFlex="50">
-            <div class="cluster-details-panel-content-label">Auto Admit NICs:</div>
-            <div class="cluster-details-panel-content-value cluster-details-panel-auto-admit-nics">{{(cluster?.spec['auto-admit-nics'] === true) ? 'yes' : 'no'}}</div>
-        </div>
-      </div>
+  <div fxFlex="none" fxLayout="row">
+    <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
+    <div fxFlex fxLayout="row" class="cluster-card-container">
+      <ng-container *ngFor="let cardData of heroCards">
+        <app-herocard fxFlex="nogrow"
+                      [title]="cardData.title" 
+                      [firstStat]="cardData.firstStat" 
+                      [secondStat]="cardData.secondStat" 
+                      [thirdStat]="cardData.thirdStat" 
+                      [backgroundIcon]="cardData.backgroundIcon"
+                      [themeColor]="cardData.themeColor"
+                      [icon]="cardData.icon"
+                      [data]="cardData.data"
+                      [arrowDirection]="cardData.arrowDirection"
+                      [timeRange]="'Past 24 hours'"
+                      [isReady]="cardData.isReady"
+                      >
+        </app-herocard>
+      </ng-container>
     </div>
-  </mat-expansion-panel>
-  <div fxFlex="none">
-    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
   </div>
   <div fxFlex class="cluster-alertsevents-container">
     <app-shared-alertsevents></app-shared-alertsevents>
   </div>
 </app-pagebody>
 
-<ng-template #DataTable>
-  <!-- Table Caption -->
-  <div fxLayout="row" class="cluster-details-nodes-table-header">
-    <i fxFlex='nogrow' class="fa fa-table cluster-details-nodes-table-icon"></i>
-    <div fxFlex='nogrow' class="cluster-details-nodes-table-headercontent">
-      Total Nodes ({{nodes.length}})
+<ng-template #nodeTable>
+  <div fxFlex="none" fxLayout="column" class="cluster-node-table-container" >
+    <div fxFlex="none" fxLayout="row" class="cluster-node-table-title">
+      Nodes ({{nodes.length }})
+    </div>
+    <div *ngFor="let node of nodes" class="cluster-nodes-container-loop">
+      <div fxFlex="none" fxLayout="column"  class="cluster-node-container" [ngClass]="node == selectedNode ? 'cluster-node-seleced' : ''"   (click)="onNodeClick(node)">
+        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" class="cluster-node-name">
+          <div fxFlex="none" class="cluster-node-status"></div>
+          <span class="cluster-node-name" fxFlex="none" >{{ node.meta.name }}</span>
+          <mat-icon fxFlex="none" *ngIf="cluster.status.leader === node.meta.name" class="cluster-node-star" title="Leader">star_rate</mat-icon>
+        </div>
+        <div fxLayout="row">
+          <div fxFlex="none" fxLayout="column">
+            <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <div>Quorum Node:</div>
+            </div>
+          </div>
+          <div fxFlex fxLayout="column">
+            <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+              <div class="cluster-node-quorum">{{ node.status.quorum }}</div>
+            </div>
+          </div>
+          <div fxFlex="none" fxLayout="column">
+            <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <div>Phase:</div>
+            </div>
+          </div>
+          <div fxFlex fxLayout="column">
+            <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+              <div class="cluster-node-phase">{{ phaseEnum[node.status.phase] }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div fxFlex="none" fxLayout="column" class="cluster-details">
+      <div fxFlex="none" class="cluster-details-title"> Cluster Detail </div>
+      <div fxFlex="none" fxLayout="row">
+        <!-- Field titles -->
+        <div fxFlex="50" fxLayout="column">
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>Virtual IP:</div>
+          </div>
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>NTP Servers:</div>
+          </div>
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>Last Leader Transition Time:</div>
+          </div>
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>Auto Admit NICs:</div>
+          </div>
+        </div>
+        <!-- Values -->
+        <div fxFlex="none" fxLayout="column">
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+            <div class="cluster-details-panel-virtual-ip">{{ cluster?.spec['virtual-ip'] }}</div>
+          </div>
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+            <div class="cluster-details-panel-ntp-servers">{{ cluster?.spec['ntp-servers'].join(', ') }}</div>
+          </div>
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+            <div class="cluster-details-panel-last-leader-transition-time">{{ cluster?.status['last-leader-transition-time'] | PrettyDate }}</div>
+          </div>
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+            <div class="cluster-details-panel-auto-admit-nics">{{ (cluster?.spec['auto-admit-nics'] === true) ? 'yes' : 'no' }}</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  <!-- PrimeNG Turbo Table -->
-  <p-table #nodestable [value]="nodes" dataKey="name" class="cluster-details-nodes-table global-primeng-table">
-    <!-- Table Header -->  
-    <ng-template pTemplate="header">
-      <tr>
-        <th *ngFor="let col of cols" [pSortableColumn]="col.field">
-          {{col.header}}
-          <p-sortIcon style="float: right;" field="col.field"></p-sortIcon>
-        </th>
-      </tr>
-    </ng-template>
-    <!-- Table Data -->
-    <ng-template pTemplate="body" let-rowData let-node>
-      <tr [pSelectableRow]="rowData">
-        <td>{{node.meta.name}}</td>
-        <td>{{(node.status.quorum === true) ? 'yes' : ''}}</td>
-        <td>{{node.status.phase.charAt(0).toUpperCase() + node.status.phase.slice(1).toLowerCase()}}</td>
-      </tr>
-    </ng-template>  
-  </p-table>
 </ng-template>

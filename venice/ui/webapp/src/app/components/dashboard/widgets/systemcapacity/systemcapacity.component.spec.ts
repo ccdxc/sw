@@ -5,6 +5,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { SystemcapacitywidgetComponent } from './systemcapacity.component';
 import { DsbdwidgetheaderComponent } from '@components/shared/dsbdwidgetheader/dsbdwidgetheader.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 
 describe('SystemcapacitywidgetComponent', () => {
@@ -13,7 +14,7 @@ describe('SystemcapacitywidgetComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [SystemcapacitywidgetComponent, DsbdwidgetheaderComponent],
+      declarations: [SystemcapacitywidgetComponent, DsbdwidgetheaderComponent, PrettyDatePipe],
       imports: [
         WidgetsModule,
         PrimengModule,

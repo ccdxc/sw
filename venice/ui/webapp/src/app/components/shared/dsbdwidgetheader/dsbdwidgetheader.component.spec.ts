@@ -3,6 +3,7 @@ import { WidgetsModule } from 'web-app-framework';
 
 import { DsbdwidgetheaderComponent } from './dsbdwidgetheader.component';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 describe('DsbdwidgetheaderComponent', () => {
   let component: DsbdwidgetheaderComponent;
@@ -10,7 +11,7 @@ describe('DsbdwidgetheaderComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [DsbdwidgetheaderComponent],
+      declarations: [DsbdwidgetheaderComponent, PrettyDatePipe],
       imports: [
         WidgetsModule,
         MaterialdesignModule

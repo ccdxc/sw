@@ -727,6 +727,39 @@ export class Utility {
     }
   }
 
+  /**
+   * Returns a map from key values to series
+   */
+  public static splitDataIntoSeriesByKey(dataValues, keyIndex) {
+    return _.groupBy(dataValues, (item) => {
+      return item[keyIndex];
+    });
+  }
+
+  public static transformToPlotly(data, xFieldIndex, yFieldIndex) {
+    const x = [];
+    const y = [];
+    data.forEach((item) => {
+      x.push(item[xFieldIndex]);
+      y.push(item[yFieldIndex]);
+    });
+    return { x: x, y: y };
+  }
+
+  public static average(arr) {
+    return arr.reduce((a, b) => a + b, 0) / arr.length;
+  }
+
+  /**
+   * Rounds the time down to the nearest min
+   * @param min Nearest min to round down to
+   * @param time time to round, if blank is the current time
+   */
+  public static roundDownTime(min, time: Date = new Date): Date {
+    const coeff = 1000 * 60 * min;
+    return new Date(Math.floor(time.getTime() / coeff) * coeff);
+  }
+
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()
 
   setControllerService(controllerService: ControllerService) {

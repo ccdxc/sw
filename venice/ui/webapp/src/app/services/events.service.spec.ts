@@ -40,7 +40,7 @@ describe('EventsService', () => {
     spyOn(handler1, 'next');
     const subscription1 = handler1.subscribe();
     // Using <any> typecast to spy on protected member
-    spyOn<any>(service, 'terminatePolling').and.callThrough();
+    spyOn<any>(service.pollingUtility, 'terminatePolling').and.callThrough();
     tick(5000);
     subscription1.unsubscribe();
     const handler2 = service.pollEvents('handler2');
@@ -50,7 +50,7 @@ describe('EventsService', () => {
     expect(handler1.next).toHaveBeenCalled();
     expect(handler2.next).toHaveBeenCalled();
     // There are no subscribers for handler1 so it should have terminated
-    expect(serviceAny.terminatePolling).toHaveBeenCalledTimes(1);
+    expect(serviceAny.pollingUtility.terminatePolling).toHaveBeenCalledTimes(1);
     tick(5000);
     expect(handler2.next).toHaveBeenCalledTimes(2);
 
@@ -58,13 +58,13 @@ describe('EventsService', () => {
     expect(handler2.next).toHaveBeenCalledTimes(3);
     subscription2.unsubscribe();
     tick(10000);
-    expect(serviceAny.terminatePolling).toHaveBeenCalledTimes(2);
+    expect(serviceAny.pollingUtility.terminatePolling).toHaveBeenCalledTimes(2);
   })));
 
   it('polls with a new body should restart a poll', fakeAsync(inject([EventsService], (service: EventsService) => {
     const serviceAny = service as any;
     // Using <any> typecast to spy on protected member
-    spyOn<any>(service, 'terminatePolling').and.callThrough();
+    spyOn<any>(service.pollingUtility, 'terminatePolling').and.callThrough();
     const pollingSpy = spyOn<any>(service, 'pollingFetchData').and.callThrough();
 
     const handler1 = service.pollEvents('handler1');
@@ -74,7 +74,7 @@ describe('EventsService', () => {
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
     pollingSpy.calls.reset();
     service.pollEvents('handler1', { 'max-results': 100 });
-    expect(serviceAny.terminatePolling).toHaveBeenCalledTimes(1);
+    expect(serviceAny.pollingUtility.terminatePolling).toHaveBeenCalledTimes(1);
     tick(1000);
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
     expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'max-results': 100, 'field-selector': 'meta.mod-time>2018-08-20T19:09:04.777255798Z' }, true);
@@ -82,14 +82,14 @@ describe('EventsService', () => {
     expect(handler1.next).toHaveBeenCalledWith([{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
     subscription1.unsubscribe();
     tick(10000);
-    expect(serviceAny.terminatePolling).toHaveBeenCalledTimes(2);
+    expect(serviceAny.pollingUtility.terminatePolling).toHaveBeenCalledTimes(2);
   })));
 
   it('polls should automatically change the mod-time of the request', fakeAsync(inject([EventsService], (service: EventsService) => {
     // Poll
     const serviceAny = service as any;
     // Using <any> typecast to spy on protected member
-    spyOn<any>(service, 'terminatePolling').and.callThrough();
+    spyOn<any>(service.pollingUtility, 'terminatePolling').and.callThrough();
     const pollingSpy = spyOn<any>(service, 'pollingFetchData').and.callThrough();
 
     let handler1 = service.pollEvents('handler1');
@@ -118,7 +118,7 @@ describe('EventsService', () => {
     expect(handler1.next).toHaveBeenCalledTimes(1);
     subscription1.unsubscribe();
     tick(10000);
-    expect(serviceAny.terminatePolling).toHaveBeenCalledTimes(1);
+    expect(serviceAny.pollingUtility.terminatePolling).toHaveBeenCalledTimes(1);
 
     postSpy.and.returnValue(new BehaviorSubject(
       {
@@ -154,7 +154,7 @@ describe('EventsService', () => {
     expect(handler1.next).toHaveBeenCalledTimes(2);
     subscription1.unsubscribe();
     tick(10000);
-    expect(serviceAny.terminatePolling).toHaveBeenCalledTimes(2);
+    expect(serviceAny.pollingUtility.terminatePolling).toHaveBeenCalledTimes(2);
 
   })));
 

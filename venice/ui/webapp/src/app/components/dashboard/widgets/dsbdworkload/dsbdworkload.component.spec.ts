@@ -12,6 +12,7 @@ import { WidgetsModule } from 'web-app-framework';
 import { DsbdworkloadComponent } from './dsbdworkload.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 @Component({
   template: ''
@@ -24,7 +25,7 @@ describe('DsbdworkloadComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [DsbdworkloadComponent, DsbdwidgetheaderComponent, DummyComponent],
+      declarations: [DsbdworkloadComponent, DsbdwidgetheaderComponent, DummyComponent, PrettyDatePipe],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }

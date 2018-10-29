@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="168px" height="134px" viewBox="0 0 168 134" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: sketchtool 51.2 (57519) - http://www.bohemiancoding.com/sketch -->
+    <title>F25E47B3-E449-4D01-AE21-6DB828DFE618</title>
+    <desc>Created with sketchtool.</desc>
+    <defs></defs>
+    <g id="More-Clusters" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="clusters-3" transform="translate(-728.000000, -450.000000)">
+            <g id="graphs" transform="translate(220.000000, 167.000000)">
+                <g id="IOPS-chart" transform="translate(492.000000, 230.000000)">
+                    <g id="baseline-storage-24px" transform="translate(0.000000, 20.000000)">
+                        <polygon id="Shape" points="0 0 200 0 200 200 0 200"></polygon>
+                        <path d="M16.6666667,166.666667 L183.333333,166.666667 L183.333333,133.333333 L16.6666667,133.333333 L16.6666667,166.666667 Z M33.3333333,141.666667 L50,141.666667 L50,158.333333 L33.3333333,158.333333 L33.3333333,141.666667 Z M16.6666667,33.3333333 L16.6666667,66.6666667 L183.333333,66.6666667 L183.333333,33.3333333 L16.6666667,33.3333333 Z M50,58.3333333 L33.3333333,58.3333333 L33.3333333,41.6666667 L50,41.6666667 L50,58.3333333 Z M16.6666667,116.666667 L183.333333,116.666667 L183.333333,83.3333333 L16.6666667,83.3333333 L16.6666667,116.666667 Z M33.3333333,91.6666667 L50,91.6666667 L50,108.333333 L33.3333333,108.333333 L33.3333333,91.6666667 Z" id="Shape" fill-opacity="1" fill="currentcolor" fill-rule="nonzero"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

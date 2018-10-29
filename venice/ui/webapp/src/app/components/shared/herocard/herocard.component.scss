@@ -1,0 +1,62 @@
+.herocard-container {
+  position: relative;
+  width: 450px;
+  height: 220px;
+  margin: 10px;
+}
+
+.herocard-background {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.herocard-background-icon {
+  color: rgba(181, 146, 227, 0.1);
+  width: 150px;
+  height: 150px;
+  margin: 25px;
+}
+
+.herocard-background-mat-icon {
+  color: rgba(181, 146, 227, 0.1);
+  width: 175px;
+  height: 175px;
+  font-size: 175px;
+}
+
+.herocard-foreground {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.herocard-stat-arrow {
+  font-size: 32px;
+}
+
+.herocard-first-stat-value {
+  font-size: 60px;
+}
+
+.herocard-first-stat-description {
+  font-size: 18px;
+  white-space: nowrap
+}
+
+.herocard-second-stat-value {
+  font-size: 30px
+}
+
+.herocard-third-stat-value {
+  font-size: 30px;
+}
+
+.herocard-second-stat-description,
+.herocard-third-stat-description {
+  font-size: 16px;
+}
+
+.herocard-third-stat {
+  margin-right: 10px;
+}

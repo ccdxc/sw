@@ -4,10 +4,13 @@
   @include primary-font();
 }
 .dsbd-widgetheader-icon {
-  opacity: 0.3;
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+  border-radius: 50%;
+  svg {
+    vertical-align: initial;
+  }
 }
 
 .dsbd-widgetheader-title {
@@ -22,6 +25,7 @@
 .dsbd-widgetheader-update-text {
   @include primary-font(12px, #cccccc);
   text-align: right;
+  margin-top: 10px;
 }
 
 .dsbd-widgetheader-info {

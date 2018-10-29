@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="134px" height="168px" viewBox="0 0 134 168" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: sketchtool 51.2 (57519) - http://www.bohemiancoding.com/sketch -->
+    <title>F97252B2-D0C7-4A25-87BD-021118264A70</title>
+    <desc>Created with sketchtool.</desc>
+    <defs></defs>
+    <g id="use" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="node" transform="translate(-745.000000, -203.000000)">
+            <g id="graphs" transform="translate(220.000000, 167.000000)">
+                <g id="Memory-chart" transform="translate(492.000000, 0.000000)">
+                    <g id="baseline-sd_storage-24px" transform="translate(0.000000, 20.000000)">
+                        <polygon id="Shape" points="0 0 200 0 200 200 0 200"></polygon>
+                        <path d="M150,16.6666667 L83.3333333,16.6666667 L33.5,66.6666667 L33.3333333,166.666667 C33.3333333,175.833333 40.8333333,183.333333 50,183.333333 L150,183.333333 C159.166667,183.333333 166.666667,175.833333 166.666667,166.666667 L166.666667,33.3333333 C166.666667,24.1666667 159.166667,16.6666667 150,16.6666667 Z M100,66.6666667 L83.3333333,66.6666667 L83.3333333,33.3333333 L100,33.3333333 L100,66.6666667 Z M125,66.6666667 L108.333333,66.6666667 L108.333333,33.3333333 L125,33.3333333 L125,66.6666667 Z M150,66.6666667 L133.333333,66.6666667 L133.333333,33.3333333 L150,33.3333333 L150,66.6666667 Z" fill-opacity="1" fill="currentcolor" fill-rule="nonzero"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

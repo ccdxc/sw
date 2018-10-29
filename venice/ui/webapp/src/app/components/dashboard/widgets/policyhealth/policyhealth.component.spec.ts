@@ -5,6 +5,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { PolicyhealthComponent } from './policyhealth.component';
 import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgetheader/dsbdwidgetheader.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 describe('PolicyhealthComponent', () => {
   let component: PolicyhealthComponent;
@@ -12,7 +13,7 @@ describe('PolicyhealthComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [PolicyhealthComponent, DsbdwidgetheaderComponent],
+      declarations: [PolicyhealthComponent, DsbdwidgetheaderComponent, PrettyDatePipe],
       imports: [
         WidgetsModule,
         PrimengModule,

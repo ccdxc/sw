@@ -5,6 +5,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 
 import { SoftwareversionComponent } from './softwareversion.component';
 import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgetheader/dsbdwidgetheader.component';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 describe('SoftwareversionComponent', () => {
   let component: SoftwareversionComponent;
@@ -12,7 +13,7 @@ describe('SoftwareversionComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [SoftwareversionComponent, DsbdwidgetheaderComponent],
+      declarations: [SoftwareversionComponent, DsbdwidgetheaderComponent, PrettyDatePipe],
       imports: [
         WidgetsModule,
         PrimengModule,

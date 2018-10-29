@@ -244,7 +244,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       this._authService.DeleteUser(user.meta.name).subscribe(
         (data) => {
           // refresh users list
-          this.invokeSuccessToaster('Delete Successful', "Deleted user " + user.meta.name);
+          this.invokeSuccessToaster('Delete Successful', 'Deleted user ' + user.meta.name);
           this.getUsers();
         },
         this.restErrorHandler('Delete User Failed')
