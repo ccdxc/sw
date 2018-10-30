@@ -53,7 +53,7 @@ func initRevProxyMap() {
 func AddRevProxyDest(prefix string, port string) {
 	initRevProxyMap()
 	revProxyMap[prefix] = port
-	log.Infof("AddRevProxyDest: %s:%d", prefix, port)
+	log.Infof("AddRevProxyDest: %s:%s", prefix, port)
 }
 
 // Server holds information about the reverse proxy http server
