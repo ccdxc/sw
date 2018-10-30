@@ -21,9 +21,6 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_in_desc:
     phvwr  p.common_te1_phv_table_addr, k.txdma2_global_in_desc_addr
 
     add r1, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET
-    phvwr.f  p.eth_hdr_dma_cmd_addr, r1
-
-
-    nop.e
+    phvwr.e  p.eth_hdr_dma_cmd_addr, r1
     nop
  

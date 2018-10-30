@@ -11,8 +11,6 @@ struct phv_ p;
         .param esp_ipv4_tunnel_h2n_txdma1_ring_full_error 
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
-    //sub r1, d.{barco_ring_cindex}.hx, 1
-    //seq c5, d.{barco_ring_pindex}.hx, r1
     add r1, d.{barco_ring_pindex}.hx, 1
     and r1, r1, IPSEC_BARCO_RING_INDEX_MASK 
     seq c5, d.{barco_ring_cindex}.hx, r1
@@ -22,6 +20,11 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     b.c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing
     phvwri.c1 p.p4_intr_global_drop, 1
     // Fill the barco command and key-index
+    and r2, d.cb_cindex, IPSEC_CB_RING_INDEX_MASK 
+    add r7, d.cb_cindex, 1
+    and r7, r7, IPSEC_CB_RING_INDEX_MASK 
+    tblwr d.cb_cindex, r7
+    tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
     phvwr p.barco_req_command, d.barco_enc_cmd
     add r6, r0, d.{key_index}
@@ -30,14 +33,8 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwri p.app_header_table0_valid, 1
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 7 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_s1_dummy[33:6] 
-    and r2, d.cb_cindex, IPSEC_CB_RING_INDEX_MASK 
     sll r2, r2, 3
     add r2, r2, d.cb_ring_base_addr
-    add r7, d.cb_cindex, 1
-    and r7, r7, IPSEC_CB_RING_INDEX_MASK 
-    tblwr d.cb_cindex, r7
-    //tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
-    tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
     phvwr p.ipsec_to_stage1_cb_ring_slot_addr, r2
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     b.!c1 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_do_nothing

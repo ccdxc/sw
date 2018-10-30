@@ -19,7 +19,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_global_ipsec_cb_pindex, d.cb_pindex 
     add r7, d.cb_pindex, 1
     andi r7, r7, IPSEC_CB_RING_INDEX_MASK 
-    tblwr d.cb_pindex, r7
+    tblwr.f d.cb_pindex, r7
     phvwr p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
     // I understand that I need to take care of 32 bit overflow into esn-hi etc.
     smeqb c1, d.flags, IPSEC_FLAGS_V6_MASK, IPSEC_FLAGS_V6_MASK 

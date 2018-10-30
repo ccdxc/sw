@@ -16,10 +16,10 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2:
     seq c1, r4, d.ci 
     bcf [c1], esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_fail
     sll r2, d.pi, BRQ_RING_ENTRY_SIZE_SHIFT 
+    tblwr.f d.pi, r4
     addui r2, r2, hiword(BRQ_BASE)
     addi r2, r2, loword(BRQ_BASE)
     phvwr p.ipsec_to_stage4_barco_req_addr, r2
-    tblwr d.pi, r4
     phvwr p.barco_dbell_pi, r4.wx
     phvwri p.brq_req_write_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
@@ -27,7 +27,7 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2:
     nop
 
 esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_fail:
-    tbladd d.stat_qfull, 1
+    tbladd.f d.stat_qfull, 1
     phvwri p.p4_intr_global_drop, 1
     nop.e
     nop
