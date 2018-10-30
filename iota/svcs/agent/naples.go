@@ -340,14 +340,12 @@ func (dnode *dataNode) setupWorkload(wload workload, in *iota.Workload) (*iota.W
 	}
 	dnode.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
 
-	if in.GetEncapVlan() != 0 {
-		if err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), int(in.GetEncapVlan())); err != nil {
-			msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
-			dnode.logger.Error(msg)
-			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
-			return resp, errors.New(msg)
-		}
-	}
+    if err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), int(in.GetEncapVlan())); err != nil {
+        msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
+        dnode.logger.Error(msg)
+        resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+        return resp, errors.New(msg)
+    }
 
 	/* For SRIOV case, move the parent interface inside the workload so that it is not shared */
 	if in.GetInterfaceType() == iota.InterfaceType_INTERFACE_TYPE_SRIOV {

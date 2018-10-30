@@ -148,7 +148,8 @@ var runArpCmd = func(app workload, ip string, intf string) error {
 	arpCmd := []string{"arping", "-c", "5", "-U", ip, "-I", intf}
 	cmdResp, _ := app.RunCommand(arpCmd, 0, false, false)
 	if cmdResp.exitCode != 0 {
-		return errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.stdout)
+		errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.stdout)
+        return nil
 	}
 	return nil
 }

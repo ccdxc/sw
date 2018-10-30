@@ -150,6 +150,9 @@ def GetTopologyDirectory():
 def GetNaplesHostInterfaces(name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesHostInterfaces(name)
 
+def AllocateHostInterfaceForNode(name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().AllocateHostInterfaceForNode(name)
+
 def GetWorkloadNodeHostInterfaces(name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadNodeHostInterfaces(name)
 

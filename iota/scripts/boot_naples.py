@@ -73,57 +73,8 @@ class NaplesManagement:
             self.hdl.expect("#")
         return
 
-    def connect(self):
-        self.hdl = pexpect.spawn("telnet %s %s" %\
-                                 (GlobalOptions.console_ip, 
-                                  GlobalOptions.console_port))
-        self.hdl.timeout = GlobalOptions.timeout
-        self.hdl.logfile = sys.stdout.buffer
-        self.hdl.expect_exact("Escape character is '^]'.")
-        self.hdl.sendline("")
-        return
-    
-    def __reset(self):
-        self.hdl.sendline("/nic/tools/sysreset.sh")
-        return
-
-    def __cimc_reset_restapi(self):
-        session = requests.Session()
-        session.auth = (GlobalOptions.cimc_username, GlobalOptions.cimc_password)
-        resp = session.get("https://%s/redfish/v1/Systems" % GlobalOptions.cimc_ip, verify=False)
-        obj = resp.json()
-        sysurl = "https://%s%s/Actions/System.Reset" % (GlobalOptions.cimc_ip, obj['Members'][0]['@odata.id'])
-        session.post(sysurl, '{"ResetType":"ForceOff"}', verify=False)
-        time.sleep(10)
-        session.post(sysurl, '{"ResetType":"On"}', verify=False)
-        return
-
-    def __get_capri_prompt(self):
-        match_idx = self.hdl.expect_exact(["capri login:", "#", "Capri#"], timeout = 120)
-        if match_idx == 2:
-            return
-        if match_idx == 0:
-            self.__login()
-        #self.__reset()
-        self.__cimc_reset_restapi()
-        match_idx = self.hdl.expect(["Autoboot in 2 seconds; Press CTRL-B to stop",
-                                      pexpect.TIMEOUT], timeout = 120)
-        if match_idx == 1:
-            print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
-            self.__cimc_reset_restapi()
-            self.hdl.expect_exact("Autoboot in 2 seconds; Press CTRL-B to stop", timeout = 120)
-        self.hdl.sendcontrol('B')
-        self.hdl.expect_exact("Capri#")
-        return
-
-    def boot_altfw(self):
-        self.__get_capri_prompt()
-        self.hdl.sendline("bootalt")
-        self.hdl.expect_exact("capri login:", timeout = 120)
-        self.__login()
-        return
-
-    def clearline(self):
+    def __clearline(self):
+        print("Clearing Console Server Line")
         hdl = pexpect.spawn("telnet %s" % GlobalOptions.console_ip)
         hdl.logfile = sys.stdout.buffer
         hdl.timeout = GlobalOptions.timeout
@@ -143,20 +94,95 @@ class NaplesManagement:
         hdl.close()
         return
 
+
+    def connect(self):
+        while True:
+            self.hdl = pexpect.spawn("telnet %s %s" %\
+                                     (GlobalOptions.console_ip, 
+                                      GlobalOptions.console_port))
+            self.hdl.timeout = GlobalOptions.timeout
+            self.hdl.logfile = sys.stdout.buffer
+            idx = self.hdl.expect_exact(["Escape character is '^]'.",
+                                         "Connection refused"])
+            if idx == 0:
+                break
+            else:
+                self.__clearline()
+        self.hdl.sendline("")
+        return
+   
+    def __umount_mnt(self):
+        self.hdl.sendline("sync")
+        self.hdl.expect_exact("#")
+        self.hdl.sendline("sync")
+        self.hdl.expect_exact("#")
+        self.hdl.sendline("/etc/init.d/S22mount stop")
+        self.hdl.expect_exact("#")
+        return
+
+    def __reset(self):
+        self.hdl.sendline("/nic/tools/sysreset.sh")
+        return
+
+    def __cimc_reset_restapi(self):
+        session = requests.Session()
+        session.auth = (GlobalOptions.cimc_username, GlobalOptions.cimc_password)
+        resp = session.get("https://%s/redfish/v1/Systems" % GlobalOptions.cimc_ip, verify=False)
+        obj = resp.json()
+        print("Login Response =", obj)
+        sysurl = "https://%s%s/Actions/System.Reset" % (GlobalOptions.cimc_ip, obj['Members'][0]['@odata.id'])
+        print("SysURL = ", sysurl)
+
+        ret = os.system("curl -vv %s -d \'{\"ResetType\":\"On\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
+        assert(ret == 0)
+        time.sleep(5)
+
+        ret = os.system("curl -vv %s -d \'{\"ResetType\":\"ForceOff\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
+        assert(ret == 0)
+        time.sleep(5)
+
+        ret = os.system("curl -vv %s -d \'{\"ResetType\":\"On\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
+        assert(ret == 0)
+        time.sleep(5)
+        return
+
+    def __get_capri_prompt(self):
+        match_idx = self.hdl.expect_exact(["capri login:", "#", "Capri#"], timeout = 120)
+        if match_idx == 2:
+            return
+        if match_idx == 0:
+            self.__login()
+        #self.__reset()
+        self.__umount_mnt()
+        self.__cimc_reset_restapi()
+        match_idx = self.hdl.expect(["Autoboot in 2 seconds; Press CTRL-B to stop",
+                                      pexpect.TIMEOUT], timeout = 120)
+        if match_idx == 1:
+            print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
+            self.__cimc_reset_restapi()
+            self.hdl.expect_exact("Autoboot in 2 seconds; Press CTRL-B to stop", timeout = 120)
+        self.hdl.sendcontrol('B')
+        self.hdl.expect_exact("Capri#")
+        return
+
+    def boot_altfw(self):
+        self.__get_capri_prompt()
+        self.hdl.sendline("bootalt")
+        self.hdl.expect_exact("capri login:", timeout = 120)
+        self.__login()
+        return
+
     def install_fw(self):
         self.hdl.sendline("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
         self.hdl.expect_exact("Removing package directory /tmp/sysupdate", timeout = 600)
         self.hdl.sendline("echo %s > /mnt/app-start.conf && sync" % GlobalOptions.mode)
+        #self.hdl.sendline("echo off > /mnt/app-start.conf && sync")
         self.hdl.expect_exact("#")
-        self.hdl.sendline("sync")
-        self.hdl.expect_exact("#")
-        self.hdl.sendline("sync")
-        self.hdl.expect_exact("#")
-        self.__reset()
+        self.__umount_mnt()
         idx = 0
         while idx == 0:
-            idx = self.hdl.expect_exact(["#", "capri login:"], timeout = 120)
             self.__reset()
+            idx = self.hdl.expect_exact(["#", "capri login:"], timeout = 120)
         self.__login()
         #self.hdl.sendline("/nic/tools/sysinit.sh %s hw" % GlobalOptions.mode)
         #self.hdl.expect_exact("All processes brought up, please check ...", timeout = 600)
@@ -280,7 +306,6 @@ class HostManagement:
 def Main():
     nap = NaplesManagement()
     
-    nap.clearline()
     nap.connect()
     nap.boot_altfw()
     

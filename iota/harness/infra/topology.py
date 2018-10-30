@@ -26,6 +26,7 @@ class Node(object):
 
         self.__data_intfs = [ "eth2", "eth3" ]
         self.__host_intfs = []
+        self.__host_if_alloc_idx = 0
         
         if self.IsWorkloadNode():
             self.__workload_type = topo_pb2.WorkloadType.Value(spec.workloads.type)
@@ -57,6 +58,11 @@ class Node(object):
 
     def HostInterfaces(self):
         return self.__host_intfs
+
+    def AllocateHostInterface(self):
+        host_if = self.__host_intfs[self.__host_if_alloc_idx]
+        self.__host_if_alloc_idx = (self.__host_if_alloc_idx + 1) % len(self.__host_intfs)
+        return host_if
 
     def ControlIpAddress(self):
         return self.__control_ip
@@ -222,3 +228,6 @@ class Topology(object):
     
     def GetWorkloadImageForNode(self, node_name):
         return self.__nodes[node_name].WorkloadImage()
+
+    def AllocateHostInterfaceForNode(self, node_name):
+        return self.__nodes[node_name].AllocateHostInterface()

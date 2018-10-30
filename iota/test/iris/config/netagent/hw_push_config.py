@@ -74,22 +74,6 @@ def __get_l2segment_vlan_for_endpoint(ep):
     assert(nw_obj)
     return getattr(nw_obj.spec, 'vlan-id')
 
-def __init_host_if_db():
-    global gl_host_if_db
-    gl_host_if_db = {}
-    node_names = api.GetWorkloadNodeHostnames()
-    for name in node_names:
-        gl_host_if_db[name] = api.GetWorkloadNodeHostInterfaces(name)
-    return
-
-def __alloc_host_if(node_name):
-    global gl_host_if_db
-    global gl_host_if_idx
-    num_host_ifs = len(gl_host_if_db[node_name])
-    host_if = gl_host_if_db[node_name][gl_host_if_idx]
-    gl_host_if_idx = (gl_host_if_idx + 1) % num_host_ifs
-    return host_if
-
 def __add_workloads():
     ep_objs = __read_one_json('endpoints.json')
     for ep in ep_objs.endpoints:
@@ -100,13 +84,15 @@ def __add_workloads():
         wl_msg.node_name = getattr(ep.spec, "node-uuid", None)
         wl_msg.ip_prefix = __prepare_ip_address_str_for_endpoint(ep)
         wl_msg.mac_address = getattr(ep.spec, 'mac-address')
-        host_if = __alloc_host_if(wl_msg.node_name)
+        host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
         wl_msg.interface = host_if
         wl_msg.pinned_port = 1
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
-        wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
-        encap_vlan = getattr(ep.spec, 'useg-vlan', None)
-        wl_msg.encap_vlan = encap_vlan if encap_vlan else wl_msg.uplink_vlan
+        if api.GetNicMode() != 'classic':
+            wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
+            encap_vlan = getattr(ep.spec, 'useg-vlan', None)
+            wl_msg.encap_vlan = encap_vlan if encap_vlan else wl_msg.uplink_vlan
+
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
 
@@ -120,7 +106,6 @@ def Main(step):
     agent_api.Init(agent_ips, hw = True)
 
     __read_jsons()
-    __init_host_if_db() 
     if api.GetNicMode() != 'classic':
         __config()
 

@@ -102,6 +102,7 @@ class _Testbed:
             cmd.extend(["--host-ip", instance.NodeMgmtIP])
             cmd.extend(["--cimc-ip", instance.NodeCimcIP])
             cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
+            cmd.extend(["--mode", "%s" % api.GetNicMode()])
             cmd.extend(["--drivers-ionic-pkg", "%s/platform/gen/drivers-linux.tar.xz" % GlobalOptions.topdir])
             #cmd.extend(["--drivers-sonic-pkg", "%s/storage/gen/storage-offload.tar.xz" % GlobalOptions.topdir])
             logfile = "%s-recovery.log" % instance.Name
@@ -126,6 +127,10 @@ class _Testbed:
                 Logger.header("FIRMWARE UPGRADE LOGFILE: %s" % logfile)
                 os.system("cat %s" % logfile)
             sys.exit(result)
+
+        if GlobalOptions.only_firmware_upgrade:
+            Logger.info("Stopping after firmware upgrade based on cmdline options.")
+            sys.exit(0)
         return
 
 
