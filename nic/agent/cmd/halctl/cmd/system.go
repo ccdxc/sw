@@ -899,28 +899,31 @@ func fteTxRxStatsShow(stats *halproto.Stats) {
 		return
 	}
 	for _, fteinfo := range pmdstats.FteInfo {
-		fmt.Printf("%s%-3d\n", "FTE     : ", fteid)
-		fmt.Printf("%s\n", strings.Repeat("-", 13))
-		fmt.Printf("%-50s%-22s\n", "     STATS", "INFO")
-		fmt.Printf("%10s%44s\n", strings.Repeat("-", 5), strings.Repeat("-", 4))
+		fmt.Printf("%s%-3d\n", "FTE ", fteid)
 		for _, qinfo := range fteinfo.Qinfo {
-			fmt.Printf("%s%-15s\n", "Queue Type    : ", halproto.WRingType_name[int32(qinfo.GetQueueType())])
+			fmt.Printf("%s\n", strings.Repeat("-", 125))
+			fmt.Printf("Qtype : %s, Qid : %d, Base addr : %#x, PC idx : %#x, "+
+				"PC idx addr : %#x, Valid bit expected : %d\n",
+				halproto.WRingType_name[int32(qinfo.GetQueueType())],
+				qinfo.GetQueueId(), qinfo.GetBaseAddr(), qinfo.GetPcIndex(),
+				qinfo.GetPcIndexAddr(), qinfo.GetValidBitValue())
+			fmt.Printf("%s\n", strings.Repeat("-", 125))
 			ctr := qinfo.GetCtr()
-			fmt.Printf("%s%-15d%s%d\n", "send pkts                    : ", ctr.GetSendPkts(), "queue id         : ", qinfo.GetQueueId())
-			fmt.Printf("%s%-15d%s%#x\n", "recv pkts                   : ", ctr.GetRecvPkts(), "base addr        : ", qinfo.GetBaseAddr())
-			fmt.Printf("%s%-15d%s%#x\n", "Rx Sem Write Err            : ", ctr.GetRxSemWrErr(), "p/c index        : ", qinfo.GetPcIndex())
-			fmt.Printf("%s%-15d%s%#x\n", "Rx Slot Value Read Err      : ", ctr.GetRxSlotValueReadErr(), "p/c index_addr   : ", qinfo.GetPcIndexAddr())
-			fmt.Printf("%s%-15d%s%#x\n", "Rx Descr Read Err           : ", ctr.GetRxDescrReadErr(), "exp valid bit val: ", qinfo.GetValidBitValue())
-			fmt.Printf("%s%-15d\n", "Rx Descr To Hdr Err              : ", ctr.GetRxDescrToHdrErr())
-			fmt.Printf("%s%-15d\n", "Rx Descr Free_err                : ", ctr.GetRxDescrFreeErr())
-			fmt.Printf("%s%-15d\n", "Tx Descr Free_err                : ", ctr.GetTxDescrFreeErr())
-			fmt.Printf("%s%-15d\n", "Tx Page Alloc_err                : ", ctr.GetTxPageAllocErr())
-			fmt.Printf("%s%-15d\n", "Tx Page Copy Err                 : ", ctr.GetTxPageCopyErr())
-			fmt.Printf("%s%-15d\n", "Tx Descr Pgm Err                 : ", ctr.GetTxDescrPgmErr())
-			fmt.Printf("%s%-15d\n", "Tx Send Err                      : ", ctr.GetTxSendErr())
-			fmt.Printf("%s%-15d\n", "Poll count                       : ", ctr.GetPollCount())
-			fmt.Printf("%s%-15d\n", "Rx Descr out of bound err        : ", ctr.GetRxDescrAddrOob())
-			fmt.Printf("%s%-15d\n", "Tx Doorbell Err                  : ", ctr.GetTxDoorbellErr())
+			fmt.Printf("%s%-15d\n", "Tx pkts                                 : ", ctr.GetSendPkts())
+			fmt.Printf("%s%-15d\n", "Rx pkts                                 : ", ctr.GetRecvPkts())
+			fmt.Printf("%s%-15d\n", "Rx semaphore write errors               : ", ctr.GetRxSemWrErr())
+			fmt.Printf("%s%-15d\n", "Rx slot value read errors               : ", ctr.GetRxSlotValueReadErr())
+			fmt.Printf("%s%-15d\n", "Rx descriptor read errors               : ", ctr.GetRxDescrReadErr())
+			fmt.Printf("%s%-15d\n", "Rx descriptor to header errors          : ", ctr.GetRxDescrToHdrErr())
+			fmt.Printf("%s%-15d\n", "Rx descriptor free errors               : ", ctr.GetRxDescrFreeErr())
+			fmt.Printf("%s%-15d\n", "Tx descriptor free errors               : ", ctr.GetTxDescrFreeErr())
+			fmt.Printf("%s%-15d\n", "Tx page allocation errors               : ", ctr.GetTxPageAllocErr())
+			fmt.Printf("%s%-15d\n", "Tx page copy errors                     : ", ctr.GetTxPageCopyErr())
+			fmt.Printf("%s%-15d\n", "Tx descriptor programming errors        : ", ctr.GetTxDescrPgmErr())
+			fmt.Printf("%s%-15d\n", "Tx send errors                          : ", ctr.GetTxSendErr())
+			fmt.Printf("%s%-15d\n", "Poll count                              : ", ctr.GetPollCount())
+			fmt.Printf("%s%-15d\n", "Rx descriptor out of bound errors       : ", ctr.GetRxDescrAddrOob())
+			fmt.Printf("%s%-15d\n", "Tx doorbell errors                      : ", ctr.GetTxDoorbellErr())
 
 			fmt.Printf("\n")
 		}
