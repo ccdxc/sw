@@ -132,9 +132,17 @@ check_ack_nak:
     setcf       c4, [c7 | c6 | c5]
     // c4: read or atomic
 
-    // skip_ack_nak only if ack_req bit is not set
+    // skip_ack_nak if ack_req bit is not set
     // and it is not read or atomic
     bcf         [!c3 & !c4], invoke_stats
+    seq         c2, CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak_or_dup), 1 // BD Slot
+
+    // also skip_ack_nak if 
+    // ack req bit is not set and read_or_atomic and soft_nak_or_dup
+    // this is needed to avoid touching ack_info when 
+    // handling a duplicate read request, because ack_info and
+    // bt_info are in a union 
+    bcf         [!c3 & c4 & c2], invoke_stats
     // populate ack info
     RQ_CREDITS_GET(ACK_CREDITS, TMP, c2) // BD Slot
     phvwrpair   p.s1.ack_info.msn, d.msn, \

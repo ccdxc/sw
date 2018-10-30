@@ -35,9 +35,11 @@ resp_tx_rqcb0_bt_write_back_process:
     crestore    [c6,c5,c4,c3,c2,c1], K_UPDATE_FLAGS, 0x3F // BD Slot
     bcf         [c1], drain_done
 
-    // update read_rsp_in_progress/curr_read_rsp_psn if reqd
-    tblwr.c6    d.read_rsp_in_progress, K_READ_RSP_IN_PROGRESS // BD Slot
+    // update curr_read_rsp_psn if reqd
+    //tblwr.c6    d.read_rsp_in_progress, K_READ_RSP_IN_PROGRESS // BD Slot
     tblwr.c6    d.curr_read_rsp_psn, K_CURR_READ_RSP_PSN
+    //toggle color so that S0 resets spec_psn to curr_psn
+    tblmincri.c6 d.curr_color, 1, 1
 
     // update rsq_cindex if reqd
     tblwr.c5    RSQ_C_INDEX, K_RSQ_CINDEX

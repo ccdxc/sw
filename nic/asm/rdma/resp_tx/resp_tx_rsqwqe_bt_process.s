@@ -266,8 +266,8 @@ bt_end_subset_entry_found:
                 0x5E, \
                 CAPRI_PHV_FIELD(WB_INFO_P, rsq_cindex), \
                 K_SEARCH_INDEX
-    // TODO sub won't work in case of wrap-around. handle this
-    sub         SEARCH_PSN_OFFSET, K_SEARCH_PSN, d.psn
+    sub         SEARCH_PSN_OFFSET, r0, d.psn
+    mincr       SEARCH_PSN_OFFSET, 24, K_SEARCH_PSN
     phvwrpair   CAPRI_PHV_FIELD(WB_INFO_P, curr_read_rsp_psn), SEARCH_PSN_OFFSET, \
                 CAPRI_PHV_FIELD(WB_INFO_P, bt_cindex), K_BT_CINDEX
 

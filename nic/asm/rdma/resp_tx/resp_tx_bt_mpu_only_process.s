@@ -17,7 +17,7 @@ struct resp_tx_s1_t0_k k;
 resp_tx_bt_mpu_only_process:
 
     mfspr            r1, spr_mpuid
-    seq              c1, r1[4:2], STAGE_2
+    seq              c1, r1[4:2], STAGE_4
     bcf              [!c1], bubble_to_next_stage
     RQCB0_ADDR_GET(RQCB0_ADDR)      //BD Slot
 

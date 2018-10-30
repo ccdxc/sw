@@ -145,9 +145,10 @@ resp_tx_rqcb_process:
         bbeq            d.bt_lock, 1, exit
         add             RQCB2_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)    //BD Slot
 
+        bbeq            d.bt_in_progress, 1, skip_drain
         // since there is no read_rsp_lock, we need to make sure
         // that BT is processed after the PHV's that are already in the pipeline
-        seq             c7, d.drain_in_progress, 1
+        seq             c7, d.drain_in_progress, 1 // BD Slot
 
         bcf             [!c7], start_drain
         seq             c6, d.drain_done, 1 // BD Slot
@@ -157,8 +158,14 @@ resp_tx_rqcb_process:
         tblwr.c5        d.drain_in_progress, 0
         tblwr.c5        d.drain_done, 0
 
+skip_drain:
         // take the lock such that further scheduling opportunities are ignored
         tblwr           d.bt_lock, 1
+
+        // check if spec_color == curr_color
+        seq             c7, d.spec_color, d.curr_color
+        tblmincri.!c7   d.spec_color, 1, 1
+        tblwr.!c7       d.spec_read_rsp_psn, d.curr_read_rsp_psn
 
         add             r6, r0, RSQ_C_INDEX
 
@@ -181,8 +188,8 @@ bt_in_progress:
         // we want to start search from here
         CAPRI_SET_FIELD2(BT_TO_S_INFO_P, search_index, r6)
 
-        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, curr_read_rsp_psn, d.curr_read_rsp_psn)
-        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, read_rsp_in_progress, d.read_rsp_in_progress)
+        CAPRI_SET_FIELD2(BT_TO_S_INFO_P, curr_read_rsp_psn, d.spec_read_rsp_psn)
+        //CAPRI_SET_FIELD2(BT_TO_S_INFO_P, read_rsp_in_progress, d.read_rsp_in_progress)
         CAPRI_SET_FIELD2(BT_TO_S_INFO_P, bt_in_progress, d.bt_in_progress)
 
         //load rqcb2 to get psn to backtrack to (which is copied by rxdma)

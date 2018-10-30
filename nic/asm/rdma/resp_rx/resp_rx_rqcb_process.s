@@ -629,8 +629,9 @@ duplicate:
 
     // for duplicate packets, set this flag so that writeback
     // does not overwrite in_progress field for FML packets
-    // in case of read/atomic, wb is not loaded, so this should have no effect
-    CAPRI_SET_FIELD2(TO_S_WB1_P, soft_nak_or_dup, 1) // BD Slot
+    // this is also needed for duplicate read and atomic packets
+    phvwrpair       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
+                    CAPRI_PHV_FIELD(TO_S_WB1_P, soft_nak_or_dup), 1 // BD Slot
 
 duplicate_wr_send:
     /* 
@@ -645,12 +646,11 @@ duplicate_wr_send:
     phvwr       p.s1.ack_info.psn, r2
 
 generate_ack:
-    // forcefully turn on ACK req bit and invoke writeback with incr_nxt_to_go_token_id
+    // forcefully turn on ACK req bit
     or          r7, r7, RESP_RX_FLAG_ACK_REQ
     // clear inv_rkey flag if set
     and         r7, r7, ~(RESP_RX_FLAG_INV_RKEY)
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
-    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
 
     //Generate DMA command to skip to payload end
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
@@ -671,8 +671,15 @@ duplicate_rd_atomic:
     // we could load rqcb2 to see if the new duplicate psn is earlier than what is under process 
     // and recirc it instead of dropping it.
 
-    // TODO currently writeback is not invoked for duplicate rd/atomic. so decrementing token_id 
-    tblsub          d.token_id, 1
+    RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, 0)
+    // turn off ACK req bit for read/atomic
+    // so that ACK doorbell is not rung
+    and         r7, r7, ~(RESP_RX_FLAG_ACK_REQ)
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
+
+    // load writeback MPU only. in stage 5, writeback will increment nxt_to_go_token_id
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+
     seq             c1, d.bt_in_progress, 1
     bcf             [c1], drop_duplicate_rd_atomic
     tblwr.!c1.f     d.bt_in_progress, 1 //BD Slot
