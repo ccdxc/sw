@@ -39,6 +39,17 @@ SystemServiceImpl::SystemGet(ServerContext *context,
 }
 
 Status
+SystemServiceImpl::SystemUuidGet(ServerContext *context,
+                                 const Empty *request,
+                                 SystemResponse *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd System UUID Get Request");
+    hal::system_uuid_get(rsp);
+    return Status::OK;
+}
+
+
+Status
 SystemServiceImpl::ClearIngressDropStats(ServerContext *context,
                                          const Empty *request,
                                          Empty *rsp) 

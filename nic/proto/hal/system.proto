@@ -22,6 +22,7 @@ service System {
   // System related APIs
   rpc ApiStatsGet(types.Empty) returns (ApiStatsResponse) {}
   rpc SystemGet(types.Empty) returns (SystemResponse) {}
+  rpc SystemUuidGet(types.Empty) returns (SystemResponse) {}
   rpc ClearIngressDropStats(types.Empty) returns (types.Empty) {}
   rpc ClearEgressDropStats(types.Empty) returns (types.Empty) {}
   rpc ClearPbDropStats(types.Empty) returns (types.Empty) {}
@@ -256,6 +257,7 @@ message SystemResponse {
   types.ApiStatus    api_status      = 1;                  // API status code
   Stats              stats           = 2;                  // Statistics
   Status             status          = 3;                  // System status
+  string             uuid            = 4;                  // System UUID
 }
 
 // Stats object

@@ -456,6 +456,24 @@ api_stats_get (ApiStatsResponse *rsp)
 
     return HAL_RET_OK;
 }
+//------------------------------------------------------------------------------
+// process a system uuid get request
+//------------------------------------------------------------------------------
+hal_ret_t
+system_uuid_get (SystemResponse *rsp)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    char *uuid = NULL;
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    uuid = getenv("SYSUUID");
+    if (uuid) {
+        rsp->set_uuid(uuid);
+    } else {
+        rsp->set_uuid("");
+    }
+    return ret;
+}
 
 //------------------------------------------------------------------------------
 // process a system get request

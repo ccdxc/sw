@@ -22,6 +22,9 @@ public:
     Status SystemGet(ServerContext *context,
                      const Empty *request,
                      SystemResponse *rsp) override;
+    Status SystemUuidGet(ServerContext *context,
+                         const Empty *request,
+                         SystemResponse *rsp) override;
     Status ClearIngressDropStats(ServerContext *context,
                                  const Empty *request,
                                  Empty *rsp) override;

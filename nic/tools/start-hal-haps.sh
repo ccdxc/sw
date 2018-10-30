@@ -18,6 +18,11 @@ rm -f /hal.log* $HAL_LOG_FILE
 
 ulimit -c unlimited
 
+export SYSUUID=""
+if [ -r /mnt/sysuuid ]; then
+    export SYSUUID=`cat /mnt/sysuuid`
+fi
+
 if [[ "$FWD_MODE" != "classic" ]]; then
     cp $HAL_CONFIG_PATH/hal_hostpin.ini $HAL_CONFIG_PATH/hal.ini
 else
