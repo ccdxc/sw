@@ -27,6 +27,8 @@ static osal_atomic_int_t g_shutdown;
 static osal_atomic_int_t g_shutdown_complete;
 
 #define TEST_SHUTDOWN_TIMEOUT (5 * OSAL_NSEC_PER_SEC)
+
+
 void pnso_test_shutdown(void)
 {
 	uint64_t start;
@@ -64,7 +66,7 @@ static pnso_error_t read_file_node_input(struct test_file_table *table,
 					 struct pnso_buffer_list *buflist);
 
 
-struct test_file_table *test_get_output_file_table(void)
+static struct test_file_table *test_get_output_file_table(void)
 {
 	if (!g_output_file_tbl.initialized) {
 		memset(&g_output_file_tbl.table, 0, sizeof(g_output_file_tbl.table));
@@ -74,7 +76,7 @@ struct test_file_table *test_get_output_file_table(void)
 	return &g_output_file_tbl;
 }
 
-void test_free_output_file_table(void)
+static void test_free_output_file_table(void)
 {
 	struct test_node *node;
 	struct test_node *next_node;
@@ -99,7 +101,7 @@ struct lookup_var {
 	uint32_t name_len;
 };
 
-#define LOOKUP_VAR(name) { name, strlen(name) }
+#define LOOKUP_VAR(name) { name, sizeof(name) - 1 }
 
 struct lookup_var g_lookup_vars[TEST_VAR_MAX] = {
 	LOOKUP_VAR("test_iter"),
@@ -200,7 +202,7 @@ static const uint8_t *get_normalized_pattern(const char *pat,
 }
 
 /* Fill buffer by repeating the given pattern */
-pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
+static pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 			       const char *pat, uint32_t pat_len)
 {
 	const uint8_t *pat_data;
@@ -216,7 +218,7 @@ pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 }
 
 /* Compare buffer to the given repeating pattern */
-int test_cmp_pattern(const struct pnso_buffer_list *buflist,
+static int test_cmp_pattern(const struct pnso_buffer_list *buflist,
 		     uint32_t offset, uint32_t len,
 		     const char *pat, uint32_t pat_len)
 {
@@ -338,7 +340,7 @@ static void test_free_buffer_list(struct pnso_buffer_list *buflist)
 }
 
 const uint64_t TEST_MCRC64_POLY = 0x9a6c9329ac4bc9b5ULL;
-uint64_t compute_checksum(const struct pnso_buffer_list *buflist, uint8_t *data, uint32_t length)
+static uint64_t compute_checksum(const struct pnso_buffer_list *buflist, uint8_t *data, uint32_t length)
 {
 	size_t i, j;
 	uint64_t crc = 0xFFFFFFFFFFFFFFFFULL;
