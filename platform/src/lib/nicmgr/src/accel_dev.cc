@@ -253,7 +253,21 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         }
         spec->hw_lif_id = info.hw_lif_id;
     } else {
+        // hal_api migration:
         info.hw_lif_id = spec->hw_lif_id;
+        info.enable_rdma = false;
+        uint64_t ret = hal->LifCreate(spec->lif_id,
+                                      NULL,
+                                      qinfo,
+                                      &info);
+        if (ret != 0) {
+            NIC_LOG_ERR("Failed to create LIF");
+            return;
+        }
+
+        NIC_LOG_INFO("lif created: id:{}, hw_lif_id: {}",
+                     info.lif_id, info.hw_lif_id);
+
         uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
         pd->program_qstate(qinfo, &info, coses);
     }
