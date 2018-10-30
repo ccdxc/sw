@@ -94,7 +94,7 @@ targets:
   #nicmgr/gtest          : ["make", "jobd/nicmgr/gtest"]
   #nicmgr/gtest_classic  : ["make", "jobd/nicmgr/gtest_classic"]
 
-  coremgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/sysmgr/coremgr/... && cd /sw/nic/sysmgr/coremgr/test && ./test.sh; ret=$? ; exit $ret" ]
+  #coremgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/sysmgr/coremgr/... && cd /sw/nic/sysmgr/coremgr/test && ./test.sh; ret=$? ; exit $ret" ]
 
   delphi:  ["sh", "-c", "cd /sw/nic/delphi && make build test && cd $GOPATH/src/github.com/pensando/sw && go test -v ./nic/delphi/..." ]
   # upgmgr:  ["sh", "-c", "cd /sw/nic && bazel build //nic/upgrade_manager/... && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all" ]
