@@ -71,7 +71,7 @@ nicmgr_post_adminq_completion:
 nicmgr_post_adminq_interrupt:
 
   addi            _r_intr_addr, r0, INTR_ASSERT_BASE
-  add             _r_intr_addr, _r_intr_addr, d.intr_assert_index, LG2_INTR_ASSERT_STRIDE
+  add             _r_intr_addr, _r_intr_addr, d.{intr_assert_index}.hx, LG2_INTR_ASSERT_STRIDE
 
   // DMA adminq interrupt
   phvwri          p.nicmgr_to_s2_intr_assert_data, 0x01000000

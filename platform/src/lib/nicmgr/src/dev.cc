@@ -36,7 +36,6 @@ sdk::lib::indexer *lif_allocator = sdk::lib::indexer::factory(1024);
 // #define ENIC_ID_BASE    (100)
 // sdk::lib::indexer *enic_allocator = sdk::lib::indexer::factory(4096);
 
-
 uint64_t
 mac_to_int(std::string const& s)
 {
@@ -74,6 +73,50 @@ invalidate_txdma_cacheline(uint64_t addr)
               ((addr >> 6) << 1));
 }
 
+int
+DeviceManager::lifs_reservation(platform_t platform)
+{
+    struct queue_info empty_qinfo[NUM_QUEUE_TYPES] = {0};
+    struct lif_info linfo;
+    uint32_t lif_id;
+    int ret;
+
+    // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
+    ret = pd->lm_->LIFRangeAlloc(1, HAL_HW_LIF_ID_MAX);
+    if (ret <= 0) {
+        NIC_LOG_ERR("Unable to reserve 1-32 lifs for uplinks");
+        return -1;
+    }
+
+    /*
+     * Even though HAL_HW_LIF_ID_MAX IDs were reserved locally above,
+     * HAL in DOL mode only does the same when platform is HW/HAPS.
+     * So to ensure the nicmgr LIF is assigned the correct hw_lif_id,
+     * we need to create a bunch of throw aways HAL LIFs in the DOL case.
+     */
+    if (platform_is_hw(platform)) {
+        return 0;
+    }
+
+    /*
+     * Note that hal->LifCreate() starts its hw_lif_id range from 0,
+     * so the loop needs to go past HAL_HW_LIF_ID_MAX.
+     */
+    for (uint32_t i = 0; i <= HAL_HW_LIF_ID_MAX; i++) {
+        if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
+            NIC_LOG_ERR("Failed to allocate reserved lif_id");
+            return -1;
+        }
+        memset(&linfo, 0, sizeof(linfo));
+        linfo.lif_id = lif_id;
+        if (hal->LifCreate(lif_id,  NULL, empty_qinfo, &linfo)) {
+            NIC_LOG_ERR("Failed to reserve LIF {} thru HAL LifCreate", lif_id);
+            return -1;
+        }
+    }
+    return 0;
+}
+
 DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform)
 {
     hal = new HalClient(fwd_mode);
@@ -81,6 +124,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform)
     uint8_t     cosA = 1;
     uint8_t     cosB = 0;
     const char  *dol_integ_str;
+    uint32_t    lif_id;
 
     utils::logger::init();
 
@@ -92,15 +136,6 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform)
 
     pd = PdClient::factory(platform);
     assert(pd);
-
-#ifdef __aarch64__
-    // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
-    int32_t ret = pd->lm_->LIFRangeAlloc(1, HAL_HW_LIF_ID_MAX);
-    if (ret <= 0) {
-        NIC_LOG_ERR("Unable to reserve 1-32 lifs for uplinks");
-        return;
-    }
-#endif
 
     // Create nicmgr service lif
     nicmgr_req_qstate_t qstate_req = { 0 };
@@ -127,22 +162,49 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform)
         },
     };
 
+    if (lifs_reservation(platform)) {
+        throw runtime_error("Failed to reserve LIFs");
+    }
+
+    /*
+     * Allocate sw_lif_id for nicmgr LIF
+     */
+    if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
+        throw runtime_error("Failed to allocate nicmgr sw_lif_id");
+    }
+    memset(&info, 0, sizeof(info));
+    info.lif_id = lif_id;
+
     dol_integ_str = std::getenv("DOL");
     dol_integ = dol_integ_str ? !!atoi(dol_integ_str) : false;
-    info.lif_id = 1;
     if (dol_integ) {
-        info.hw_lif_id = 0;
-        uint64_t lif_handle = hal->LifCreate(info.lif_id, qinfo, &info,
-                                             0, false, 0, 0, 0, info.hw_lif_id);
-        if (lif_handle == 0) {
+
+        /*
+         * For DOL integration, allocate nicmgr LIF fully with HAL, i.e.,
+         * complete with qstate initialization by the HAL>
+         */
+        if (hal->LifCreate(info.lif_id, qinfo, &info,
+                           0, false, 0, 0, 0, 0) == 0) {
             throw runtime_error("Failed to create HAL nicmgr LIF");
         }
-        NIC_LOG_INFO("nicmgr lif id:{}, hw_lif_id: {}", info.lif_id, info.hw_lif_id);
+
     } else {
+
+        /*
+         * HAL in non-HW platforms (x86) will fail LifCreate() with
+         * non-zero hw_lif_id. One good thing is such a call isn't
+         * needed on thos platforms.
+         */
         info.hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
+        if (platform_is_hw(platform)) {
+            if (hal->LifCreate(info.lif_id,  NULL, qinfo, &info)) {
+                throw runtime_error("Failed to create HAL nicmgr LIF");
+            }
+        }
         uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
         pd->program_qstate(qinfo, &info, coses);
     }
+    NIC_LOG_INFO("nicmgr lif id:{}, hw_lif_id: {}", info.lif_id, info.hw_lif_id);
 
     // Init QState
     uint64_t hbm_base = NICMGR_BASE;
@@ -482,7 +544,15 @@ DeviceManager::LoadConfig(string path)
             }
 
             accel_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-            accel_spec->lif_id = STORAGE_SEQ_SW_LIF_ID;
+            if (dol_integ) {
+                    accel_spec->lif_id = STORAGE_SEQ_SW_LIF_ID;
+            } else {
+                if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
+                    NIC_LOG_ERR("Failed to allocate accel_dev lif_id");
+                    return -1;
+                }
+                accel_spec->lif_id =  LIF_ID_BASE + lif_id;
+            }
             accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
             accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
             accel_spec->intr_base = intr_base;

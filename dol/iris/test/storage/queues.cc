@@ -586,6 +586,29 @@ int lifs_setup() {
   // Create NVME, Sequencer and PVM LIFs
   hal_if::lif_params_t nvme_lif_params, seq_lif_params, pvm_lif_params;
 
+  // Let nicmgr create all the rserved LIFs first
+  if (run_nicmgr_tests) {
+      uint32_t nicmgr_num_seq_queues;
+      uint32_t num_seq_queues = (uint32_t)NUM_TO_VAL(SeqNumSQs);
+
+      if (nicmgr_if::nicmgr_if_init()) {
+          return -1;
+      }
+      if (nicmgr_if::nicmgr_if_reset()) {
+          return -1;
+      }
+      if (nicmgr_if::nicmgr_if_identify(&seq_lif, &nicmgr_num_seq_queues,
+                                        nicmgr_accel_ring_tbl,
+                                        sizeof(nicmgr_accel_ring_tbl))) {
+          return -1;
+      }
+      if (nicmgr_num_seq_queues < num_seq_queues) {
+          printf("ERROR: nicmgr_num_seq_queues %u is less than SeqNumSQs %u\n",
+                 nicmgr_num_seq_queues, num_seq_queues);
+          assert(nicmgr_num_seq_queues >= num_seq_queues);
+      }
+  }
+
   bzero(&nvme_lif_params, sizeof(nvme_lif_params));
   lif_params_init(&nvme_lif_params, SQ_TYPE, kDefaultQstateEntrySize, NvmeNumSQs);
   lif_params_init(&nvme_lif_params, CQ_TYPE, kDefaultQstateEntrySize, NvmeNumCQs);
@@ -618,28 +641,7 @@ int lifs_setup() {
   }
   printf("Successfully set PVM LIF %lu BDF %u \n", pvm_lif, kPvmLifBdf);
 
-  if (run_nicmgr_tests) {
-      uint32_t nicmgr_num_seq_queues;
-      uint32_t num_seq_queues = (uint32_t)NUM_TO_VAL(SeqNumSQs);
-
-      if (nicmgr_if::nicmgr_if_init()) {
-          return -1;
-      }
-      if (nicmgr_if::nicmgr_if_reset()) {
-          return -1;
-      }
-      if (nicmgr_if::nicmgr_if_identify(&seq_lif, &nicmgr_num_seq_queues,
-                                        nicmgr_accel_ring_tbl,
-                                        sizeof(nicmgr_accel_ring_tbl))) {
-          return -1;
-      }
-      if (nicmgr_num_seq_queues < num_seq_queues) {
-          printf("ERROR: nicmgr_num_seq_queues %u is less than SeqNumSQs %u\n",
-                 nicmgr_num_seq_queues, num_seq_queues);
-          assert(nicmgr_num_seq_queues >= num_seq_queues);
-      }
-
-  } else {
+  if (!run_nicmgr_tests) {
       bzero(&seq_lif_params, sizeof(seq_lif_params));
       lif_params_init(&seq_lif_params, SQ_TYPE, kDefaultQstateEntrySize, SeqNumSQs);
       seq_lif_params.sw_lif_id = STORAGE_SEQ_SW_LIF_ID;

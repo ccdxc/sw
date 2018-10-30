@@ -160,8 +160,10 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     hal = hal_client;
     spec = (accel_devspec_t *)dev_spec;
     pd = pd_client;
+    memset(&info, 0, sizeof(info));
 
-    NIC_LOG_INFO("In accel constructor: dol_integ {}", dol_integ);
+    NIC_LOG_INFO("In accel constructor: dol_integ {} intr_base {:#x}",
+                 dol_integ, spec->intr_base);
 
     // Locate HBM region dedicated to crypto keys
     if (hal->AllocHbmAddress(CAPRI_BARCO_KEY_DESC, &hbm_addr, &hbm_size)) {
@@ -252,22 +254,22 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
             return;
         }
         spec->hw_lif_id = info.hw_lif_id;
+
     } else {
-        // hal_api migration:
+
+        /*
+         * HAL in non-HW platforms (x86) will fail LifCreate() with
+         * non-zero hw_lif_id. One good thing is such a call isn't
+         * needed on thos platforms.
+         */
         info.hw_lif_id = spec->hw_lif_id;
-        info.enable_rdma = false;
-        uint64_t ret = hal->LifCreate(spec->lif_id,
-                                      NULL,
-                                      qinfo,
-                                      &info);
-        if (ret != 0) {
-            NIC_LOG_ERR("Failed to create LIF");
-            return;
+        if (platform_is_hw(pd->platform_)) {
+            uint64_t ret = hal->LifCreate(spec->lif_id,  NULL, qinfo, &info);
+            if (ret != 0) {
+                NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.lif_id);
+                return;
+            }
         }
-
-        NIC_LOG_INFO("lif created: id:{}, hw_lif_id: {}",
-                     info.lif_id, info.hw_lif_id);
-
         uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
         pd->program_qstate(qinfo, &info, coses);
     }
@@ -645,7 +647,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     }
     admin_qstate.ring_size = cmd->ring_size;
     admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (64 << cmd->ring_size), 4096);
-    admin_qstate.intr_assert_index = spec->intr_base + cmd->intr_index;
+    admin_qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
     if (nicmgr_lif_info) {
         admin_qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
         NIC_LOG_INFO("lif{}: nicmgr_qstate_addr RX {:#x}", info.hw_lif_id,

@@ -435,7 +435,7 @@ def run_storage_dol(port, args):
     if args.rtl:
         cmd.append('--rtl')
     if args.storage_test and args.storage_test == 'nicmgr':
-        cmd.extend(shlex.split('--nicmgr_lif 1'))
+        cmd.extend(shlex.split('--nicmgr_lif 33'))
         run_nicmgr(args)
 
     #pass additional arguments to storage_test

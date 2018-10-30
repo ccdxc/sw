@@ -215,7 +215,7 @@ start_model_how() {
 }
 
 start_model_accel() {
-    start_model_how type=accel,bdf=03:00.0,lif=2,intr_base=0,devcmd_pa=0x1168a7000,devcmddb_pa=0x1168a8000
+    start_model_how type=accel,bdf=03:00.0,lif=34,intr_base=0,devcmd_pa=0x1168a7000,devcmddb_pa=0x1168a8000
 }
 
 start_model_eth() {

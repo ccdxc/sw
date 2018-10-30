@@ -239,6 +239,8 @@ public:
     Device *GetDevice(uint64_t id);
 
 private:
+    int lifs_reservation(platform_t platform);
+
     boost::property_tree::ptree spec;
     std::map<uint64_t, Device*> devices; // lif -> device
     std::map<uint64_t, Uplink*> uplinks; // uplink_id -> Uplink

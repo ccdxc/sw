@@ -62,6 +62,12 @@ typedef enum platform_s {
     PLATFORM_MOCK,
 } platform_t;
 
+static inline bool
+platform_is_hw(platform_t platform)
+{
+    return (platform == PLATFORM_HW) || (platform == PLATFORM_HAPS);
+}
+
 /**
  * Queue info structure for LifCreate
  */

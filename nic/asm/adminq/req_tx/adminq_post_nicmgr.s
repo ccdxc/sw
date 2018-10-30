@@ -23,7 +23,7 @@ struct tx_table_s2_t0_adminq_post_nicmgr_d d;
 
 #define NICMGR_DB_ADDR    (0x8800000 + \
                           (0x4 /* UPD = DB_IDX_UPD_CIDX_SET | DB_SCHED_UPD_NOP */ << 17) + \
-                          (0x1 /* LIF */ << 6) + \
+                          (33 /* LIF */ << 6) + \
                           (0x0 /* QTYPE */ << 3))
 
 
@@ -69,7 +69,7 @@ adminq_post_nicmgr:
 adminq_post_nicmgr_interrupt:
 
   addi            _r_intr_addr, r0, INTR_ASSERT_BASE
-  add             _r_intr_addr, _r_intr_addr, d.intr_assert_index, LG2_INTR_ASSERT_STRIDE
+  add             _r_intr_addr, _r_intr_addr, d.{intr_assert_index}.hx, LG2_INTR_ASSERT_STRIDE
 
   // DMA nicmgr request interrupt
   phvwri          p.adminq_to_s2_intr_assert_data, 0x01000000
