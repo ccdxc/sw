@@ -39,17 +39,49 @@ static void ionic_rx_recycle(struct queue *q, struct desc_info *desc_info,
 	ionic_q_post(q, true, ionic_rx_clean, skb);
 }
 
-static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
-			   struct cq_info *cq_info, void *cb_arg)
+static bool ionic_rx_copybreak(struct queue *q, struct desc_info *desc_info,
+	struct cq_info *cq_info, struct sk_buff **skb)
 {
 	struct net_device *netdev = q->lif->netdev;
 	struct device *dev = q->lif->ionic->dev;
 	struct rxq_desc *desc = desc_info->desc;
 	struct rxq_comp *comp = cq_info->cq_desc;
+	struct sk_buff *new_skb;
+
+	// TODO: Make this tunable from ethtool
+#define IONIC_RX_COPYBREAK_DEFAULT		256
+
+	if (comp->len > IONIC_RX_COPYBREAK_DEFAULT) {
+		dma_unmap_single(dev, (dma_addr_t)desc->addr, desc->len, DMA_FROM_DEVICE);
+		return false;
+	}
+
+	new_skb = netdev_alloc_skb_ip_align(netdev, comp->len);
+	if (!new_skb) {
+		dma_unmap_single(dev, (dma_addr_t)desc->addr, desc->len, DMA_FROM_DEVICE);
+		return false;
+	}
+
+	dma_sync_single_for_cpu(dev, (dma_addr_t)desc->addr, comp->len,
+		DMA_FROM_DEVICE);
+
+	memcpy(new_skb->data, (*skb)->data, comp->len);
+
+	ionic_rx_recycle(q, desc_info, *skb);
+	*skb = new_skb;
+
+	return true;
+}
+
+static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
+			   struct cq_info *cq_info, void *cb_arg)
+{
+	struct net_device *netdev = q->lif->netdev;
+	struct rxq_comp *comp = cq_info->cq_desc;
 	struct sk_buff *skb = cb_arg;
 	struct qcq *qcq = q_to_qcq(q);
 	struct rx_stats *stats = q_to_rx_stats(q);
-	dma_addr_t dma_addr;
+
 #ifdef CSUM_DEBUG
 	__sum16 csum;
 #endif
@@ -71,12 +103,10 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	stats->pkts++;
 	stats->bytes += comp->len;
 
-	// TODO add copybreak to avoid allocating a new skb for small receive
-
-	dma_addr = (dma_addr_t)desc->addr;
-	dma_unmap_single(dev, dma_addr, desc->len, DMA_FROM_DEVICE);
+	ionic_rx_copybreak(q, desc_info, cq_info, &skb);
 
 	//prefetch(skb->data - NET_IP_ALIGN);
+
 	skb_put(skb, comp->len);
 	skb->protocol = eth_type_trans(skb, netdev);
 #ifdef CSUM_DEBUG
