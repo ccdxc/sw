@@ -15,6 +15,7 @@ src/osal/linux/kernel/osal_sys.c \
 src/osal/linux/kernel/osal_atomic.c \
 src/osal/linux/kernel/osal_thread.c \
 src/osal/linux/kernel/osal_mem.c \
+src/osal/freebsd/kernel/osal_random.c \
 third-party/libyaml/src/api.c \
 third-party/libyaml/src/dumper.c \
 third-party/libyaml/src/emitter.c \

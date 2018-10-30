@@ -12,5 +12,5 @@ void osal_srand(int seed)
 
 int osal_rand(void)
 {
-	return (int)prandom_u32;
+	return (int)prandom_u32();
 }

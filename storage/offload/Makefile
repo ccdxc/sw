@@ -103,6 +103,7 @@ $(PENCAKE)-y += src/osal/linux/kernel/osal_sys.o
 $(PENCAKE)-y += src/osal/linux/kernel/osal_atomic.o
 $(PENCAKE)-y += src/osal/linux/kernel/osal_thread.o
 $(PENCAKE)-y += src/osal/linux/kernel/osal_mem.o
+$(PENCAKE)-y += src/osal/linux/kernel/osal_random.o
 
 $(PENCAKE)-y += third-party/libyaml/src/api.o
 $(PENCAKE)-y += third-party/libyaml/src/dumper.o
