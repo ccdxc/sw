@@ -5,7 +5,6 @@ image:
 rebase: true
 references:
   - nic
-  - nic/sim/warmd
   - dol
   - venice
   - api
