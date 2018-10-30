@@ -8,6 +8,8 @@ namespace delphi {
 // Sdk constructor
 Sdk::Sdk() {
     client_ = make_shared<DelphiClient>();
+    stopAsync_.set<Sdk, &Sdk::asyncStop>(this);
+    stopAsync_.start();
 }
 
 // MainLoop runs the main event loop
@@ -85,13 +87,17 @@ void Sdk::TestLoop() {
 
 // Stop stops the sdk event loop and closes delphi hub client
 error Sdk::Stop() {
-    // break the loop
-    loop_.break_loop(ev::ALL);
-
-    // close delphi hub client
-    client_->Close();
-
+    this->stopAsync_.send();
     return error::OK();
 }
 
+// asyncStop is the async handler to stop the event loop and close delphi client
+void Sdk::asyncStop(ev::async &watcher, int revents) {
+    // break the loop
+    loop_.break_loop(ev::ALL);
+    stopAsync_.stop();
+
+    // close delphi hub client
+    client_->Close();
+}
 } // namespace delphi

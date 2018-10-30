@@ -10,7 +10,7 @@
 namespace delphi {
 
 // main SDK class
-class Sdk  {
+class Sdk : public enable_shared_from_this<Sdk> {
 public:
     // Delphi Sdk constructor
     Sdk();
@@ -61,9 +61,11 @@ public:
     error Stop();
 
 private:
-    DelphiClientPtr client_;
-    ev::default_loop loop_;
+    DelphiClientPtr    client_;      // delphi client
+    ev::default_loop   loop_;        // libev event loop
+    ev::async          stopAsync_;   // async stop loop
 
+    void asyncStop(ev::async &watcher, int revents);
 };
 typedef std::shared_ptr<Sdk> SdkPtr;
 
