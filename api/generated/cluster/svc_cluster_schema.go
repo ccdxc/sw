@@ -16,13 +16,13 @@ import (
 var typesMapSvc_cluster = map[string]*api.Struct{
 
 	"cluster.AutoMsgClusterWatchHelper": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgClusterWatchHelper{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgClusterWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgClusterWatchHelper.WatchEvent"},
 		},
 	},
 	"cluster.AutoMsgClusterWatchHelper.WatchEvent": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgClusterWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgClusterWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -30,13 +30,13 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.AutoMsgHostWatchHelper": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgHostWatchHelper{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgHostWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgHostWatchHelper.WatchEvent"},
 		},
 	},
 	"cluster.AutoMsgHostWatchHelper.WatchEvent": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgHostWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgHostWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -44,13 +44,13 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.AutoMsgNodeWatchHelper": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNodeWatchHelper{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNodeWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgNodeWatchHelper.WatchEvent"},
 		},
 	},
 	"cluster.AutoMsgNodeWatchHelper.WatchEvent": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNodeWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgNodeWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -58,13 +58,13 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.AutoMsgSmartNICWatchHelper": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSmartNICWatchHelper{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSmartNICWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgSmartNICWatchHelper.WatchEvent"},
 		},
 	},
 	"cluster.AutoMsgSmartNICWatchHelper.WatchEvent": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSmartNICWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgSmartNICWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -72,13 +72,13 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.AutoMsgTenantWatchHelper": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTenantWatchHelper{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTenantWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.AutoMsgTenantWatchHelper.WatchEvent"},
 		},
 	},
 	"cluster.AutoMsgTenantWatchHelper.WatchEvent": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTenantWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTenantWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -86,7 +86,7 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.ClusterList": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterList{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterList{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -102,7 +102,7 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.HostList": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostList{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostList{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -118,7 +118,7 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.NodeList": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeList{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeList{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -134,7 +134,7 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNICList": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICList{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICList{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -150,7 +150,7 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 		},
 	},
 	"cluster.TenantList": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantList{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantList{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 

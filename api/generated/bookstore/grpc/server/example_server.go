@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -449,6 +450,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Book{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Book")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -457,6 +459,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.BookList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -620,6 +623,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Coupon{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Coupon")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -628,6 +632,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.CouponList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -837,6 +842,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Customer{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Customer")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -849,6 +855,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.CustomerList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -1062,6 +1069,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Order{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Order")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -1070,6 +1078,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.OrderList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -1426,6 +1435,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Publisher{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Publisher")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -1434,6 +1444,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.PublisherList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -1935,6 +1946,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r := bookstore.Store{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "bookstore.Store")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -1943,6 +1955,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(bookstore.StoreList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -2266,7 +2279,8 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Order")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "bookstore.Order")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Order")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Order")
@@ -2357,7 +2371,8 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Book")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "bookstore.Book")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Book")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Book")
@@ -2448,7 +2463,8 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Publisher")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "bookstore.Publisher")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Publisher")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Publisher")
@@ -2539,7 +2555,8 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Store")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "bookstore.Store")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Store")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Store")
@@ -2630,7 +2647,8 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Coupon")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "bookstore.Coupon")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Coupon")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Coupon")
@@ -2721,7 +2739,8 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Customer")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "bookstore.Customer")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "bookstore.Customer")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Customer")

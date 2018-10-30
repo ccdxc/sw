@@ -16,7 +16,7 @@ import (
 var typesMapNetwork = map[string]*api.Struct{
 
 	"network.Network": &api.Struct{
-		Kind: "Network", APIGroup: "network", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Network{}) },
+		Kind: "Network", APIGroup: "network", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Network{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -74,7 +74,7 @@ var typesMapNetwork = map[string]*api.Struct{
 		},
 	},
 	"network.NetworkSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkSpec{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -92,7 +92,7 @@ var typesMapNetwork = map[string]*api.Struct{
 		},
 	},
 	"network.NetworkStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkStatus{}) },
 		Fields: map[string]api.Field{
 			"Workloads": api.Field{Name: "Workloads", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

@@ -16,7 +16,7 @@ import (
 var typesMapMetrics_query = map[string]*api.Struct{
 
 	"metrics_query.ObjectSelector": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectSelector{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectSelector{}) },
 		Fields: map[string]api.Field{
 			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -28,7 +28,7 @@ var typesMapMetrics_query = map[string]*api.Struct{
 		},
 	},
 	"metrics_query.PaginationSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PaginationSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PaginationSpec{}) },
 		Fields: map[string]api.Field{
 			"Offset": api.Field{Name: "Offset", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "offset", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
@@ -36,13 +36,13 @@ var typesMapMetrics_query = map[string]*api.Struct{
 		},
 	},
 	"metrics_query.QueryResponse": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResponse{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResponse{}) },
 		Fields: map[string]api.Field{
 			"Results": api.Field{Name: "Results", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "results", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.QueryResult"},
 		},
 	},
 	"metrics_query.QueryResult": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResult{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResult{}) },
 		Fields: map[string]api.Field{
 			"StatementId": api.Field{Name: "StatementId", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "statement_id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
@@ -50,7 +50,7 @@ var typesMapMetrics_query = map[string]*api.Struct{
 		},
 	},
 	"metrics_query.QuerySpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(QuerySpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(QuerySpec{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -84,7 +84,7 @@ var typesMapMetrics_query = map[string]*api.Struct{
 		},
 	},
 	"metrics_query.ResultSeries": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ResultSeries{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ResultSeries{}) },
 		Fields: map[string]api.Field{
 			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

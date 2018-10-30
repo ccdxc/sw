@@ -59,6 +59,7 @@ func TestSchemaTypes(t *testing.T) {
 		"test.Type1": &api.Struct{
 			Kind:     "TestKind1",
 			APIGroup: "TestGroup1",
+			Scopes:   []string{"Tenant"},
 			Fields: map[string]api.Field{
 				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
 				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
@@ -67,6 +68,7 @@ func TestSchemaTypes(t *testing.T) {
 		"test.Type2": &api.Struct{
 			Kind:     "TestKind2",
 			APIGroup: "TestGroup1",
+			Scopes:   []string{"Tenant"},
 			Fields: map[string]api.Field{
 				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
@@ -74,6 +76,7 @@ func TestSchemaTypes(t *testing.T) {
 		"test.Type3": &api.Struct{
 			Kind:     "TestKind3",
 			APIGroup: "TestGroup2",
+			Scopes:   []string{"Cluster"},
 			Fields: map[string]api.Field{
 				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
@@ -157,6 +160,26 @@ func TestSchemaTypes(t *testing.T) {
 		r := schema.Kind2APIGroup(k)
 		if r != v {
 			t.Errorf("returned Group did not match [%v] [%v]", r, v)
+		}
+	}
+	sCases := map[string]bool{
+		"TestKind1": true, "TestKind2": true, "TestKind3": false,
+	}
+	for k, v := range sCases {
+		s, err := schema.IsTenantScoped(k)
+		if err != nil {
+			t.Errorf("IsTenantScoped retured error (%s)", err)
+		}
+		if s != v {
+			t.Errorf("IsTenantScoped mismatch expecting[%v] got: [%v]", v, s)
+		}
+
+		s, err = schema.IsClusterScoped(k)
+		if err != nil {
+			t.Errorf("IsTenantScoped retured error (%s)", err)
+		}
+		if s != !v {
+			t.Errorf("IsTenantScoped mismatch expecting[%v] got: [%v]", !v, s)
 		}
 	}
 }

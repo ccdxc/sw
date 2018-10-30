@@ -16,7 +16,7 @@ import (
 var typesMapApp = map[string]*api.Struct{
 
 	"security.ALG": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ALG{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ALG{}) },
 		Fields: map[string]api.Field{
 			"DNS": api.Field{Name: "DNS", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.DNS"},
 
@@ -34,7 +34,7 @@ var typesMapApp = map[string]*api.Struct{
 		},
 	},
 	"security.App": &api.Struct{
-		Kind: "App", APIGroup: "security", GetTypeFn: func() reflect.Type { return reflect.TypeOf(App{}) },
+		Kind: "App", APIGroup: "security", Scopes: []string{"Cluster"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(App{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -89,7 +89,7 @@ var typesMapApp = map[string]*api.Struct{
 		},
 	},
 	"security.AppSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppSpec{}) },
 		Fields: map[string]api.Field{
 			"Protocol": api.Field{Name: "Protocol", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -97,37 +97,37 @@ var typesMapApp = map[string]*api.Struct{
 		},
 	},
 	"security.AppStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppStatus{}) },
 		Fields: map[string]api.Field{
 			"AttachedPolicies": api.Field{Name: "AttachedPolicies", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attached-policies", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"security.DNS": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(DNS{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(DNS{}) },
 		Fields: map[string]api.Field{
 			"DropMultiQuestionPackets": api.Field{Name: "DropMultiQuestionPackets", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "drop-multi-question-packets", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"security.FTP": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FTP{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FTP{}) },
 		Fields: map[string]api.Field{},
 	},
 	"security.MSRPC": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MSRPC{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MSRPC{}) },
 		Fields: map[string]api.Field{},
 	},
 	"security.RSTP": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RSTP{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RSTP{}) },
 		Fields: map[string]api.Field{},
 	},
 	"security.SIP": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SIP{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SIP{}) },
 		Fields: map[string]api.Field{
 			"MaxCallDuration": api.Field{Name: "MaxCallDuration", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-call-duration", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"security.SunRPC": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SunRPC{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SunRPC{}) },
 		Fields: map[string]api.Field{
 			"ProgramID": api.Field{Name: "ProgramID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "program-id", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -135,7 +135,7 @@ var typesMapApp = map[string]*api.Struct{
 		},
 	},
 	"security.TFTP": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TFTP{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TFTP{}) },
 		Fields: map[string]api.Field{},
 	},
 }

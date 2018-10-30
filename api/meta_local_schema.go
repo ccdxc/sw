@@ -11,7 +11,7 @@ import "reflect"
 var typesMapMeta = map[string]*Struct{
 
 	"api.Any": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Any{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Any{}) },
 		Fields: map[string]Field{
 			"Any": Field{Name: "Any", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "google.protobuf.Any"},
 
@@ -21,7 +21,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.Interface": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Interface{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Interface{}) },
 		Fields: map[string]Field{
 			"Str": Field{Name: "Str", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -35,19 +35,19 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.InterfaceSlice": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(InterfaceSlice{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(InterfaceSlice{}) },
 		Fields: map[string]Field{
 			"Values": Field{Name: "Values", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Interface"},
 		},
 	},
 	"api.ListMeta": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListMeta{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListMeta{}) },
 		Fields: map[string]Field{
 			"ResourceVersion": Field{Name: "ResourceVersion", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"api.ListWatchOptions": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListWatchOptions{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListWatchOptions{}) },
 		Fields: map[string]Field{
 			"ObjectMeta": Field{Name: "ObjectMeta", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
 
@@ -83,7 +83,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.ObjectMeta": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectMeta{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectMeta{}) },
 		Fields: map[string]Field{
 			"Name": Field{Name: "Name", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -114,7 +114,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.ObjectRef": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectRef{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectRef{}) },
 		Fields: map[string]Field{
 			"Tenant": Field{Name: "Tenant", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -128,7 +128,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.Status": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Status{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Status{}) },
 		Fields: map[string]Field{
 			"TypeMeta": Field{Name: "TypeMeta", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -146,13 +146,13 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.StatusResult": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatusResult{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatusResult{}) },
 		Fields: map[string]Field{
 			"Str": Field{Name: "Str", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"api.Timestamp": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Timestamp{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Timestamp{}) },
 		Fields: map[string]Field{
 			"Timestamp": Field{Name: "Timestamp", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "google.protobuf.Timestamp"},
 
@@ -162,7 +162,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.TypeMeta": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TypeMeta{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TypeMeta{}) },
 		Fields: map[string]Field{
 			"Kind": Field{Name: "Kind", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -170,7 +170,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.WatchEvent": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEvent{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEvent{}) },
 		Fields: map[string]Field{
 			"Type": Field{Name: "Type", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -178,7 +178,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.WatchEventList": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEventList{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEventList{}) },
 		Fields: map[string]Field{
 			"Events": Field{Name: "Events", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.WatchEvent"},
 		},

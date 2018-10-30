@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	network "github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -81,6 +82,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := network.LbPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "network.LbPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -89,6 +91,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(network.LbPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -104,6 +107,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := network.Network{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "network.Network")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -112,6 +116,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(network.NetworkList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -127,6 +132,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := network.Service{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "network.Service")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -135,6 +141,7 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(network.ServiceList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -351,7 +358,8 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.Network")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "network.Network")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.Network")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.Network")
@@ -442,7 +450,8 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.Service")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "network.Service")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.Service")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.Service")
@@ -533,7 +542,8 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.LbPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "network.LbPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "network.LbPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.LbPolicy")

@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	security "github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -90,6 +91,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.App{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "security.App")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -98,6 +100,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.AppList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -118,6 +121,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.Certificate{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "security.Certificate")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -126,6 +130,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.CertificateList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -141,6 +146,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.SGPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "security.SGPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -149,6 +155,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.SGPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -164,6 +171,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.SecurityGroup{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "security.SecurityGroup")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -172,6 +180,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.SecurityGroupList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -187,6 +196,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := security.TrafficEncryptionPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "security.TrafficEncryptionPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -195,6 +205,7 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(security.TrafficEncryptionPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -501,7 +512,8 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.SecurityGroup")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "security.SecurityGroup")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.SecurityGroup")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.SecurityGroup")
@@ -592,7 +604,8 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.SGPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "security.SGPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.SGPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.SGPolicy")
@@ -683,7 +696,8 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.App")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "security.App")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.App")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.App")
@@ -774,7 +788,8 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.Certificate")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "security.Certificate")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.Certificate")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.Certificate")
@@ -865,7 +880,8 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "security.TrafficEncryptionPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "security.TrafficEncryptionPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")

@@ -103,6 +103,8 @@ extend google.protobuf.MethodOptions {
   bool methodAutoGen = 51271;
   // methodTenantDefault marks that this method has a flavor with a default tenant
   bool methodTenantDefault = 51272;
+  // methodActionObject notes the Object against which the action is defined (for actions only)
+  string methodActionObject = 51273;
 };
 
 // Venice Option extensions applicable to messages

@@ -175,7 +175,7 @@ func (a adapterStagingV1) Clear(oldctx oldcontext.Context, t *staging.ClearActio
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ClearAction", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -198,7 +198,7 @@ func (a adapterStagingV1) Commit(oldctx oldcontext.Context, t *staging.CommitAct
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "CommitAction", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

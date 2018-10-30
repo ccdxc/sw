@@ -56,7 +56,7 @@ func (a adapterClusterV1) AuthBootstrapComplete(oldctx oldcontext.Context, t *cl
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ClusterAuthBootstrapRequest", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

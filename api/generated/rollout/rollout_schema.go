@@ -16,7 +16,7 @@ import (
 var typesMapRollout = map[string]*api.Struct{
 
 	"rollout.Rollout": &api.Struct{
-		Kind: "Rollout", APIGroup: "rollout", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Rollout{}) },
+		Kind: "Rollout", APIGroup: "rollout", Scopes: []string{"Cluster"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Rollout{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -80,7 +80,7 @@ var typesMapRollout = map[string]*api.Struct{
 		},
 	},
 	"rollout.RolloutPhase": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RolloutPhase{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RolloutPhase{}) },
 		Fields: map[string]api.Field{
 			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -96,7 +96,7 @@ var typesMapRollout = map[string]*api.Struct{
 		},
 	},
 	"rollout.RolloutSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RolloutSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RolloutSpec{}) },
 		Fields: map[string]api.Field{
 			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -122,7 +122,7 @@ var typesMapRollout = map[string]*api.Struct{
 		},
 	},
 	"rollout.RolloutStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RolloutStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RolloutStatus{}) },
 		Fields: map[string]api.Field{
 			"ControllerNodesStatus": api.Field{Name: "ControllerNodesStatus", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "controller-nodes-status", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "rollout.RolloutPhase"},
 

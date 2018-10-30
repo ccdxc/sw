@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	staging "github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -69,6 +70,7 @@ func (s *sstagingSvc_stagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := staging.Buffer{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "staging.Buffer")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -77,6 +79,7 @@ func (s *sstagingSvc_stagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(staging.BufferList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -213,7 +216,8 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "staging.Buffer")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "staging.Buffer")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "staging.Buffer")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "staging.Buffer")

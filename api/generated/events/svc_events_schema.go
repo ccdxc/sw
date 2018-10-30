@@ -16,7 +16,7 @@ import (
 var typesMapSvc_events = map[string]*api.Struct{
 
 	"events.GetEventRequest": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(GetEventRequest{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(GetEventRequest{}) },
 		Fields: map[string]api.Field{
 			"UUID": api.Field{Name: "UUID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uuid", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},

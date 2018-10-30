@@ -14,6 +14,8 @@ import (
 
 	"github.com/tchap/go-patricia/patricia"
 
+	"github.com/pensando/sw/api/utils"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	hdr "github.com/pensando/sw/venice/utils/histogram"
@@ -348,8 +350,13 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 			obj := item.Value.(*watchEvent)
 			qver = obj.version
 		}
+		kind := ""
+		k, ok := apiutils.GetVar(ctx, "ObjKind")
+		if ok {
+			kind = k.(string)
+		}
 		// List all objects
-		objs, err := w.store.List(w.path, opts)
+		objs, err := w.store.List(w.path, kind, opts)
 		if err == nil {
 			sort.Slice(objs, func(i int, j int) bool {
 				v1, err := w.versioner.GetVersion(objs[i])

@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	auth "github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -86,6 +87,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := auth.AuthenticationPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.AuthenticationPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -98,6 +100,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.AuthenticationPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -117,6 +120,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := auth.RoleBinding{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.RoleBinding")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -125,6 +129,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.RoleBindingList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -140,6 +145,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := auth.Role{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.Role")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -148,6 +154,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.RoleList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -163,6 +170,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			r := auth.User{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "auth.User")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -175,6 +183,7 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(auth.UserList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -428,7 +437,8 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "auth.User")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "auth.User")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.User")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.User")
@@ -526,7 +536,8 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "auth.AuthenticationPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.AuthenticationPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
@@ -624,7 +635,8 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "auth.Role")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "auth.Role")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.Role")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.Role")
@@ -715,7 +727,8 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "auth.RoleBinding")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "auth.RoleBinding")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "auth.RoleBinding")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.RoleBinding")

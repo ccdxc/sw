@@ -16,7 +16,7 @@ import (
 var typesMapTroubleshooting = map[string]*api.Struct{
 
 	"monitoring.PingPktStats": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PingPktStats{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PingPktStats{}) },
 		Fields: map[string]api.Field{
 			"NoResp": api.Field{Name: "NoResp", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "no-response", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
@@ -24,7 +24,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.PingStats": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PingStats{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PingStats{}) },
 		Fields: map[string]api.Field{
 			"SmartNIC": api.Field{Name: "SmartNIC", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smart-nic", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -44,7 +44,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TimeWindow": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TimeWindow{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TimeWindow{}) },
 		Fields: map[string]api.Field{
 			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
@@ -52,11 +52,11 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TraceRouteInfo": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TraceRouteInfo{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TraceRouteInfo{}) },
 		Fields: map[string]api.Field{},
 	},
 	"monitoring.TroubleshootingSession": &api.Struct{
-		Kind: "TroubleshootingSession", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSession{}) },
+		Kind: "TroubleshootingSession", APIGroup: "monitoring", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSession{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -109,7 +109,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TroubleshootingSessionSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionSpec{}) },
 		Fields: map[string]api.Field{
 			"FlowSelector": api.Field{Name: "FlowSelector", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "flow-selector", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
 
@@ -121,7 +121,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TroubleshootingSessionStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionStatus{}) },
 		Fields: map[string]api.Field{
 			"State": api.Field{Name: "State", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "state", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -129,19 +129,19 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TsAuditTrail": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsAuditTrail{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsAuditTrail{}) },
 		Fields: map[string]api.Field{},
 	},
 	"monitoring.TsFlowCounters": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsFlowCounters{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsFlowCounters{}) },
 		Fields: map[string]api.Field{},
 	},
 	"monitoring.TsFlowLogs": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsFlowLogs{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsFlowLogs{}) },
 		Fields: map[string]api.Field{},
 	},
 	"monitoring.TsPolicy": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsPolicy{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsPolicy{}) },
 		Fields: map[string]api.Field{
 			"Sgpolicy": api.Field{Name: "Sgpolicy", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sg-policy", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectRef"},
 
@@ -151,7 +151,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TsReport": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsReport{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsReport{}) },
 		Fields: map[string]api.Field{
 			"TimeWindow": api.Field{Name: "TimeWindow", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.TimeWindow"},
 
@@ -179,7 +179,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TsResult": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsResult{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsResult{}) },
 		Fields: map[string]api.Field{
 			"TimeWindow": api.Field{Name: "TimeWindow", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "time-window", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.TimeWindow"},
 
@@ -187,7 +187,7 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TsStats": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsStats{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TsStats{}) },
 		Fields: map[string]api.Field{},
 	},
 }

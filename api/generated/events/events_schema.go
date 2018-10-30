@@ -16,7 +16,7 @@ import (
 var typesMapEvents = map[string]*api.Struct{
 
 	"events.Event": &api.Struct{
-		Kind: "Event", APIGroup: "events", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Event{}) },
+		Kind: "Event", APIGroup: "events", Scopes: []string{"Cluster"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Event{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -62,7 +62,7 @@ var typesMapEvents = map[string]*api.Struct{
 		},
 	},
 	"events.EventAttributes": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventAttributes{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventAttributes{}) },
 		Fields: map[string]api.Field{
 			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -78,7 +78,7 @@ var typesMapEvents = map[string]*api.Struct{
 		},
 	},
 	"events.EventList": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventList{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventList{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -94,7 +94,7 @@ var typesMapEvents = map[string]*api.Struct{
 		},
 	},
 	"events.EventSource": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventSource{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventSource{}) },
 		Fields: map[string]api.Field{
 			"Component": api.Field{Name: "Component", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "component", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

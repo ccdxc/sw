@@ -16,7 +16,7 @@ import (
 var typesMapSmartnic = map[string]*api.Struct{
 
 	"cluster.BiosInfo": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BiosInfo{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(BiosInfo{}) },
 		Fields: map[string]api.Field{
 			"Vendor": api.Field{Name: "Vendor", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vendor", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -28,7 +28,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.IPConfig": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(IPConfig{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(IPConfig{}) },
 		Fields: map[string]api.Field{
 			"IPAddress": api.Field{Name: "IPAddress", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-address", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -38,7 +38,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.MacRange": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MacRange{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MacRange{}) },
 		Fields: map[string]api.Field{
 			"Start": api.Field{Name: "Start", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-start", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -46,7 +46,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.PFStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PFStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PFStatus{}) },
 		Fields: map[string]api.Field{
 			"PrimaryMac": api.Field{Name: "PrimaryMac", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "primary-mac", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -54,7 +54,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.PortCondition": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortCondition{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortCondition{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -68,7 +68,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNIC": &api.Struct{
-		Kind: "SmartNIC", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNIC{}) },
+		Kind: "SmartNIC", APIGroup: "cluster", Scopes: []string{"Cluster"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNIC{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -138,7 +138,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNICCondition": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICCondition{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICCondition{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -152,7 +152,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNICInfo": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICInfo{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICInfo{}) },
 		Fields: map[string]api.Field{
 			"BiosInfo": api.Field{Name: "BiosInfo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "bios-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.BiosInfo"},
 
@@ -166,7 +166,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNICSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICSpec{}) },
 		Fields: map[string]api.Field{
 			"Admit": api.Field{Name: "Admit", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admit", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
@@ -182,7 +182,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNICStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICStatus{}) },
 		Fields: map[string]api.Field{
 			"AdmissionPhase": api.Field{Name: "AdmissionPhase", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admission-phase", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -202,7 +202,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 	},
 	"cluster.UplinkStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(UplinkStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(UplinkStatus{}) },
 		Fields: map[string]api.Field{
 			"PrimaryMac": api.Field{Name: "PrimaryMac", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "primary-mac", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

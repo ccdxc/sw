@@ -56,7 +56,7 @@ func (a adapterBookstoreV1) AddOutage(oldctx oldcontext.Context, t *bookstore.Ou
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "OutageRequest", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Store", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -79,7 +79,7 @@ func (a adapterBookstoreV1) Applydiscount(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ApplyDiscountReq", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -804,7 +804,7 @@ func (a adapterBookstoreV1) Cleardiscount(oldctx oldcontext.Context, t *bookstor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "ApplyDiscountReq", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Order", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -827,7 +827,7 @@ func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.Rest
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "RestockRequest", t.Tenant, t.Namespace, "bookstore", t.Name
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Book", t.Tenant, t.Namespace, "bookstore", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

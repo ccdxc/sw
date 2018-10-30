@@ -313,7 +313,7 @@ func fixupJSONTag(file *descriptor.FileDescriptorProto) {
 	}
 }
 
-func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype, oper string, watch, defTenant bool, restopt *googapi.HttpRule) error {
+func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype, oper string, watch, defTenant bool, action string, restopt *googapi.HttpRule) error {
 	operDesc, err := getExtensionDesc(&descriptor.MethodOptions{}, "venice.methodOper")
 	if err != nil {
 		glog.V(1).Infof("Get methodOper desc failed (%s)", err)
@@ -332,6 +332,11 @@ func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype,
 	httpOpt, err := getExtensionDesc(&descriptor.MethodOptions{}, "google.api.http")
 	if err != nil {
 		glog.V(1).Infof("Get google.api.http desc failed (%s)", err)
+		return err
+	}
+	actOpt, err := getExtensionDesc(&descriptor.MethodOptions{}, "venice.methodActionObject")
+	if err != nil {
+		glog.V(1).Infof("Get venice.methodActionObject desc failed (%s)", err)
 		return err
 	}
 	autogen := true
@@ -358,6 +363,12 @@ func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype,
 	if err = proto.SetExtension(m.GetOptions(), autoDesc, &autogen); err != nil {
 		glog.V(1).Infof("Failed to set Extension (%s)", err)
 		return err
+	}
+	if action != "" {
+		if err = proto.SetExtension(m.GetOptions(), actOpt, &action); err != nil {
+			glog.V(1).Infof("Failed to set Extension (%s)", err)
+			return err
+		}
 	}
 	if restopt != nil {
 		if err = proto.SetExtension(m.GetOptions(), httpOpt, restopt); err != nil {
@@ -389,7 +400,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoAdd%s", m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
-		"create", false, defTenant, restopt)
+		"create", false, defTenant, "", restopt)
 	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoAdd%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Create %s object", m),
@@ -410,7 +421,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoUpdate%s", m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
-		"update", false, defTenant, restopt)
+		"update", false, defTenant, "", restopt)
 	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoUpdate%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Update %s object", m),
@@ -431,7 +442,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoGet%s", m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
-		"get", false, defTenant, restopt)
+		"get", false, defTenant, "", restopt)
 	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoGet%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Get %s object", m),
@@ -452,7 +463,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoDelete%s", m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
-		"delete", false, defTenant, restopt)
+		"delete", false, defTenant, "", restopt)
 	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoDelete%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Delete %s object", m),
@@ -473,7 +484,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoList%s", m),
 		".api.ListWatchOptions",
 		fmt.Sprintf(".%s.%sList", pkg, m),
-		"list", false, defTenant, restopt)
+		"list", false, defTenant, "", restopt)
 	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoList%s", m)] = codeInfo{
 		comments: fmt.Sprintf("List %s objects", m),
@@ -495,7 +506,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoWatch%s", m),
 		".api.ListWatchOptions",
 		fmt.Sprintf(".%s.AutoMsg%sWatchHelper", pkg, m),
-		"watch", true, defTenant, restopt)
+		"watch", true, defTenant, "", restopt)
 	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoWatch%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Watch %s objects", m),
@@ -759,6 +770,7 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 	} else {
 		for _, r := range act.([]*venice.ActionEndpoint) {
 			path := ""
+			targetObj := ""
 			if t := r.GetCollection(); t != "" {
 				if _, ok := msgMap[t]; !ok {
 					glog.Fatalf("unknown message [%s] in action definition", t)
@@ -767,6 +779,7 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 				if err != nil {
 					glog.Fatalf("could not get message URI prefix for collection [%s]", t)
 				}
+				targetObj = t
 			} else if t := r.GetObject(); t != "" {
 				if _, ok := msgMap[t]; !ok {
 					glog.Fatalf("unknown message [%s] in action definition", t)
@@ -775,6 +788,7 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 				if err != nil {
 					glog.Fatalf("could not get message URI for target [%s]", t)
 				}
+				targetObj = t
 			} else {
 				glog.Fatalf("empty Target")
 			}
@@ -794,7 +808,7 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 				restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt, Body: "*"})
 				defTenant = true
 			}
-			insertMethod(s, name, reqType, respType, "create", false, defTenant, restopt)
+			insertMethod(s, name, reqType, respType, "create", false, defTenant, targetObj, restopt)
 		}
 	}
 }
@@ -804,7 +818,7 @@ func addServiceWatcherMsg(f *descriptor.FileDescriptorProto, s *descriptor.Servi
 		fmt.Sprintf("AutoWatchSvc%s", *s.Name),
 		".api.ListWatchOptions",
 		".api.WatchEventList",
-		"watch", true, false, nil)
+		"watch", true, false, "", nil)
 }
 
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request

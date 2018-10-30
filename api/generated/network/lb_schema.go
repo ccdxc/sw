@@ -16,7 +16,7 @@ import (
 var typesMapLb = map[string]*api.Struct{
 
 	"network.HealthCheckSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(HealthCheckSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(HealthCheckSpec{}) },
 		Fields: map[string]api.Field{
 			"Interval": api.Field{Name: "Interval", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interval", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
@@ -30,7 +30,7 @@ var typesMapLb = map[string]*api.Struct{
 		},
 	},
 	"network.LbPolicy": &api.Struct{
-		Kind: "LbPolicy", APIGroup: "network", GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicy{}) },
+		Kind: "LbPolicy", APIGroup: "network", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -87,7 +87,7 @@ var typesMapLb = map[string]*api.Struct{
 		},
 	},
 	"network.LbPolicySpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicySpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -99,7 +99,7 @@ var typesMapLb = map[string]*api.Struct{
 		},
 	},
 	"network.LbPolicyStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicyStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(LbPolicyStatus{}) },
 		Fields: map[string]api.Field{
 			"Services": api.Field{Name: "Services", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},

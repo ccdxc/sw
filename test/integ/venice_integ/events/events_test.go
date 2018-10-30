@@ -955,42 +955,42 @@ func TestEventsAlertEngine(t *testing.T) {
 	}{
 		// TODO: change selector to use json tags once API server is fixed
 		{
-			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
 				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
 				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
 				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
 				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
 				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
 				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
 				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), "invalid"),
 			expSuccess: false,
 		},
 		{
-			selector:   fmt.Sprintf("Status.ObjectRef.Kind=invalid"),
+			selector:   fmt.Sprintf("status.object-ref.kind=invalid"),
 			expSuccess: false,
 		},
 	}

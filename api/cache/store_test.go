@@ -102,7 +102,7 @@ func TestStoreOper(t *testing.T) {
 
 	t.Logf("  ->List Multiple objects")
 	opts := api.ListWatchOptions{}
-	rs, err := s.List("/venice/books/book", opts)
+	rs, err := s.List("/venice/books/book", "", opts)
 	if err != nil {
 		t.Errorf("List failed (%s)", err)
 	}
@@ -126,7 +126,7 @@ func TestStoreOper(t *testing.T) {
 	}
 	t.Logf("  ->List filtered on version")
 	opts.ResourceVersion = "10"
-	rs, err = s.List("/venice/books/book", opts)
+	rs, err = s.List("/venice/books/book", "", opts)
 	if err != nil {
 		t.Errorf("List failed (%s)", err)
 	}
@@ -163,7 +163,7 @@ func TestStoreOper(t *testing.T) {
 	}
 	s.Sweep("/venice/books/book/", cbfunc)
 	opts.ResourceVersion = ""
-	rs, err = s.List("/venice/books/book", opts)
+	rs, err = s.List("/venice/books/book", "", opts)
 	if err != nil {
 		t.Errorf("List failed (%s)", err)
 	}

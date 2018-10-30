@@ -16,7 +16,7 @@ import (
 var typesMapSgpolicy = map[string]*api.Struct{
 
 	"security.SGPolicy": &api.Struct{
-		Kind: "SGPolicy", APIGroup: "security", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicy{}) },
+		Kind: "SGPolicy", APIGroup: "security", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -77,7 +77,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 		},
 	},
 	"security.SGPolicyPropagationStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyPropagationStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyPropagationStatus{}) },
 		Fields: map[string]api.Field{
 			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -89,7 +89,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 		},
 	},
 	"security.SGPolicySpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicySpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"AttachGroups": api.Field{Name: "AttachGroups", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-groups", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -99,7 +99,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 		},
 	},
 	"security.SGPolicyStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGPolicyStatus{}) },
 		Fields: map[string]api.Field{
 			"Workloads": api.Field{Name: "Workloads", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -107,7 +107,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 		},
 	},
 	"security.SGRule": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGRule{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SGRule{}) },
 		Fields: map[string]api.Field{
 			"Apps": api.Field{Name: "Apps", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "apps", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

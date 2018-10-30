@@ -729,4 +729,5 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.eventTypes", parseEventTypes)
 	reg.RegisterOptionParser("venice.fileCategory", parseStringOptions)
 	reg.RegisterOptionParser("venice.proxyPrefix", parseProxyEndpoint)
+	reg.RegisterOptionParser("venice.methodActionObject", parseStringOptions)
 }

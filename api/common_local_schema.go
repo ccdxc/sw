@@ -11,17 +11,17 @@ import "reflect"
 var typesMapCommon = map[string]*Struct{
 
 	"api.Empty": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Empty{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Empty{}) },
 		Fields: map[string]Field{},
 	},
 	"api.Filter": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Filter{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Filter{}) },
 		Fields: map[string]Field{
 			"Specs": Field{Name: "Specs", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Spec"},
 		},
 	},
 	"api.Spec": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Spec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Spec{}) },
 		Fields: map[string]Field{
 			"Key": Field{Name: "Key", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -31,7 +31,7 @@ var typesMapCommon = map[string]*Struct{
 		},
 	},
 	"api.WatchSpec": &Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchSpec{}) },
 		Fields: map[string]Field{
 			"RefVersion": Field{Name: "RefVersion", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

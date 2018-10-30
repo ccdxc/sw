@@ -84,3 +84,96 @@ func TestIntf(t *testing.T) {
 		t.Fatalf("did not get expected marshalled value want:\n%v\ngot\n%v", exp, string(m))
 	}
 }
+
+func TestSetGetVar(t *testing.T) {
+	ctx := context.Background()
+	_, ok := GetVar(ctx, "var1")
+	if ok {
+		t.Errorf("Found var1 on empty")
+	}
+	ctx = SetVar(ctx, "var1", "one")
+	vi, ok := GetVar(ctx, "var1")
+	if !ok {
+		t.Errorf("did not find var1")
+	}
+	if vi.(string) != "one" {
+		t.Errorf("mismatch - want [one] got [%v]", vi.(string))
+	}
+}
+
+type var1 struct{}
+type var2 struct{}
+type var3 struct{}
+type var4 struct{}
+type var5 struct{}
+type dummy struct {
+	a string
+}
+
+func BenchmarkGetVarOneCtx(b *testing.B) {
+	ctx := context.Background()
+	ctx = SetVar(ctx, "var1", "one")
+	SetVar(ctx, "var2", "two")
+	SetVar(ctx, "var3", "three")
+	SetVar(ctx, "var4", "four")
+	SetVar(ctx, "var5", "five")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		GetVar(ctx, "var3")
+	}
+}
+
+func BenchmarkGetVarChildContext(b *testing.B) {
+	ctx := context.Background()
+	ctx = SetVar(ctx, "var1", "one")
+	SetVar(ctx, "var2", "two")
+	SetVar(ctx, "var3", "three")
+	SetVar(ctx, "var4", "four")
+	SetVar(ctx, "var5", "five")
+	key := dummy{"Dummy1"}
+	ctx = context.WithValue(ctx, key, "")
+	key.a = "Dummy2"
+	ctx = context.WithValue(ctx, key, "")
+	key.a = "Dummy3"
+	ctx = context.WithValue(ctx, key, "")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		GetVar(ctx, "var3")
+	}
+}
+
+func BenchmarkContext5Deep(b *testing.B) {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, var1{}, "one")
+	ctx = context.WithValue(ctx, var2{}, "two")
+	ctx = context.WithValue(ctx, var3{}, "three")
+	ctx = context.WithValue(ctx, var4{}, "four")
+	ctx = context.WithValue(ctx, var5{}, "five")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ctx.Value(var3{})
+	}
+}
+
+func BenchmarkMapGet(b *testing.B) {
+	m := make(map[string]string)
+	m["var1"] = "one"
+	m["var2"] = "one"
+	m["var3"] = "one"
+	m["var4"] = "one"
+	m["var5"] = "one"
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = m["var3"]
+	}
+}
+
+func BenchmarkVarGet(b *testing.B) {
+	var x = "One"
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = x
+	}
+
+}

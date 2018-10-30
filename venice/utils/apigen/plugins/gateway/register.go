@@ -380,7 +380,6 @@ func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
 // want them.
 func getRestSvcOptions(s *descriptor.Service) ([]RestServiceOptions, error) {
 	var restOptions []RestServiceOptions
-	//var ok bool
 	i, _ := reg.GetExtension("venice.naplesRestService", s)
 	for _, r := range i.([]*venice.RestEndpoint) {
 		var restService RestServiceOptions
@@ -1366,6 +1365,18 @@ func getSvcActionEndpoints(svc *descriptor.Service, target string) ([]ActionEndp
 	return ret, nil
 }
 
+func getActionTarget(meth *descriptor.Method) (string, error) {
+	if act, err := reg.GetExtension("venice.methodActionObject", meth); err == nil {
+		return act.(string), nil
+	}
+	return "", errors.New("not found")
+}
+
+func isActionMethod(meth *descriptor.Method) bool {
+	_, err := getActionTarget(meth)
+	return err == nil
+}
+
 func isRestExposed(meth *descriptor.Method) bool {
 	glog.V(1).Infof("Checking for rest exposed for %s\n", *meth.Name)
 	if _, err := reg.GetExtension("google.api.http", meth); err == nil {
@@ -1514,6 +1525,7 @@ type cliInfo struct {
 type Struct struct {
 	Kind     string
 	APIGroup string
+	Scopes   []string
 	CLITags  map[string]cliInfo
 	Fields   map[string]Field
 	// keys is used to keep a stable order of Fields when generating the schema. This is
@@ -1816,9 +1828,16 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 	var keys []string
 	for _, msg := range file.Messages {
 		var kind, group string
+		var scopes []string
 		if isSpecStatusMessage(msg) || (hasTypeMeta(msg) && hasListHelper(msg)) {
 			kind = *msg.Name
 			group = file.GoPkg.Name
+			if v, _ := isTenanted(msg); v {
+				scopes = []string{"Tenant"}
+			} else {
+				scopes = []string{"Cluster"}
+			}
+
 		}
 		fqname := pkg + "." + *msg.Name
 		if len(msg.Outers) > 0 {
@@ -1826,7 +1845,7 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 			fqname = strings.TrimPrefix(fqname, ".")
 			fqname = pkg + "." + fqname
 		}
-		node := Struct{Kind: kind, APIGroup: group, CLITags: make(map[string]cliInfo), Fields: make(map[string]Field), mapEntry: isMapEntry(msg)}
+		node := Struct{Kind: kind, APIGroup: group, Scopes: scopes, CLITags: make(map[string]cliInfo), Fields: make(map[string]Field), mapEntry: isMapEntry(msg)}
 		embeddedStructs := []Field{}
 		for _, fld := range msg.Fields {
 			f, err := genField(fqname, fld, file)
@@ -1896,7 +1915,12 @@ func getMsgMap(file *descriptor.File) (string, error) {
 		if s.mapEntry {
 			ret = fmt.Sprintf("%s\n\"%s\": &%vStruct{\n Fields: map[string]%vField {", ret, k, pkg, pkg)
 		} else {
-			ret = fmt.Sprintf("%s\n\"%s\": &%vStruct{\n Kind: \"%s\", APIGroup: \"%s\", GetTypeFn: func() reflect.Type { return reflect.TypeOf(%s{}) }, \nFields: map[string]%vField {", ret, k, pkg, s.Kind, s.APIGroup, objPath, pkg)
+			scopeStr := "{"
+			for i := range s.Scopes {
+				scopeStr = scopeStr + "\"" + s.Scopes[i] + "\"" + ","
+			}
+			scopeStr = strings.TrimSuffix(scopeStr, ",") + "}"
+			ret = fmt.Sprintf("%s\n\"%s\": &%vStruct{\n Kind: \"%s\", APIGroup: \"%s\", Scopes: []string%s, GetTypeFn: func() reflect.Type { return reflect.TypeOf(%s{}) }, \nFields: map[string]%vField {", ret, k, pkg, s.Kind, s.APIGroup, scopeStr, objPath, pkg)
 		}
 
 		for _, k1 := range s.keys {
@@ -2160,6 +2184,8 @@ func init() {
 	reg.RegisterFunc("getProxyPaths", getProxyPaths)
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
 	reg.RegisterFunc("ToLower", strings.ToLower)
+	reg.RegisterFunc("isActionMethod", isActionMethod)
+	reg.RegisterFunc("getActionTarget", getActionTarget)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

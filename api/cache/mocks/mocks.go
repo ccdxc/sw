@@ -234,7 +234,7 @@ func (f *FakeStore) Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (ru
 }
 
 // List is mock implementation
-func (f *FakeStore) List(key string, opts api.ListWatchOptions) ([]runtime.Object, error) {
+func (f *FakeStore) List(key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error) {
 	f.Lists++
 	if f.Listfn != nil {
 		return f.Listfn(key, opts), nil

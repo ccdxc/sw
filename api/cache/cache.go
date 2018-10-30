@@ -11,6 +11,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/api/utils"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
@@ -643,7 +645,12 @@ func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Ob
 	if elem.Kind() == reflect.Ptr {
 		ptr = true
 	}
-	items, err := c.store.List(prefix, opts)
+	kind := ""
+	k, ok := apiutils.GetVar(ctx, "ObjKind")
+	if ok {
+		kind = k.(string)
+	}
+	items, err := c.store.List(prefix, kind, opts)
 	if err != nil {
 		return fmt.Errorf("Object list failed: %s", err.Error())
 	}
@@ -699,8 +706,13 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	if !c.active {
 		return nil, errorCacheInactive
 	}
-	c.logger.DebugLog("oper", "watchfiltered", "msg", "called")
-	filters, err := getFilters(opts)
+	kind := ""
+	k, ok := apiutils.GetVar(ctx, "ObjKind")
+	if ok {
+		kind = k.(string)
+	}
+	c.logger.DebugLog("oper", "watchfiltered", "msg", "called", "kind", kind)
+	filters, err := getFilters(opts, kind)
 	if err != nil {
 		return nil, fmt.Errorf("Establishing watch failed: %s", err.Error())
 	}

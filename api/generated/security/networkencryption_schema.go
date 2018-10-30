@@ -16,7 +16,7 @@ import (
 var typesMapNetworkencryption = map[string]*api.Struct{
 
 	"security.IPsecProtocolSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(IPsecProtocolSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(IPsecProtocolSpec{}) },
 		Fields: map[string]api.Field{
 			"EncryptionTransform": api.Field{Name: "EncryptionTransform", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "encryption-transform", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -24,7 +24,7 @@ var typesMapNetworkencryption = map[string]*api.Struct{
 		},
 	},
 	"security.TLSProtocolSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSProtocolSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSProtocolSpec{}) },
 		Fields: map[string]api.Field{
 			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -32,7 +32,7 @@ var typesMapNetworkencryption = map[string]*api.Struct{
 		},
 	},
 	"security.TrafficEncryptionPolicy": &api.Struct{
-		Kind: "TrafficEncryptionPolicy", APIGroup: "security", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicy{}) },
+		Kind: "TrafficEncryptionPolicy", APIGroup: "security", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -87,7 +87,7 @@ var typesMapNetworkencryption = map[string]*api.Struct{
 		},
 	},
 	"security.TrafficEncryptionPolicySpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicySpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"Mode": api.Field{Name: "Mode", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mode", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -99,7 +99,7 @@ var typesMapNetworkencryption = map[string]*api.Struct{
 		},
 	},
 	"security.TrafficEncryptionPolicyStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicyStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TrafficEncryptionPolicyStatus{}) },
 		Fields: map[string]api.Field{},
 	},
 }

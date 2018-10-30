@@ -852,6 +852,12 @@ func TestGetParams(t *testing.T) {
 				options:<[venice.methodOper]:"list" [venice.methodAutoGen]: true [google.api.http]:<selector:"" get:"/prefix">>
 			>
 			method: <
+				name: 'noncrudsvc_action'
+				input_type: '.example.Nest1'
+				output_type: '.example.testmsg'
+				options:<[venice.methodOper]:"create" [venice.methodAutoGen]: true [venice.methodAutoGen]: true [venice.methodActionObject]: "Nest1" [google.api.http]:<selector:"" get:"/prefix">>
+			>
+			method: <
 				name: 'noncrudsvc_watch'
 				input_type: '.example.Nest1'
 				output_type: '.example.Nest1'
@@ -930,6 +936,10 @@ func TestGetParams(t *testing.T) {
 				if mparams.Oper != "ListOper" {
 					t.Errorf("expecting ListOper got %s", mparams.Oper)
 				}
+			case "noncrudsvc_action":
+				if mparams.Oper != "CreateOper" {
+					t.Errorf("expecting CreateOper got %s", mparams.Oper)
+				}
 			case "noncrudsvc_watch":
 				if mparams.Oper != "WatchOper" {
 					t.Errorf("expecting WatchOper got %s", mparams.Oper)
@@ -965,6 +975,10 @@ func TestGetParams(t *testing.T) {
 				if restOper != "GET" {
 					t.Errorf("expecting GET got [%s]", restOper)
 				}
+			case "noncrudsvc_action":
+				if restOper != "POST" {
+					t.Errorf("expecting POST got [%s]", restOper)
+				}
 			case "noncrudsvc_watch":
 				if restOper != "" {
 					t.Errorf("expecting [] got [%s]", restOper)
@@ -996,6 +1010,17 @@ func TestGetParams(t *testing.T) {
 				}
 				if !reflect.DeepEqual(msgResult1, msgKeys) {
 					t.Errorf("key components (msg) do not match for [%s] got [%+v] want [%+v]", *meth.Name, msgKeys, result1)
+				}
+			case "noncrudsvc_action":
+				if !isActionMethod(meth) {
+					t.Errorf("expection actionMethod to be true")
+				}
+				target, err := getActionTarget(meth)
+				if err != nil {
+					t.Errorf("Expecting to succeed got (%s)", err)
+				}
+				if target != "Nest1" {
+					t.Errorf("expecint [Nest1] got [%v]", target)
 				}
 			}
 			if !isRestExposed(meth) {

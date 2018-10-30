@@ -16,7 +16,7 @@ import (
 var typesMapMirror = map[string]*api.Struct{
 
 	"monitoring.AppProtoSelector": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppProtoSelector{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppProtoSelector{}) },
 		Fields: map[string]api.Field{
 			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -24,7 +24,7 @@ var typesMapMirror = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MatchRule": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchRule{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchRule{}) },
 		Fields: map[string]api.Field{
 			"Src": api.Field{Name: "Src", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MatchSelector"},
 
@@ -34,7 +34,7 @@ var typesMapMirror = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MatchSelector": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchSelector{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchSelector{}) },
 		Fields: map[string]api.Field{
 			"Endpoints": api.Field{Name: "Endpoints", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoints", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -44,7 +44,7 @@ var typesMapMirror = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MirrorCollector": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorCollector{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorCollector{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -52,7 +52,7 @@ var typesMapMirror = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MirrorSession": &api.Struct{
-		Kind: "MirrorSession", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSession{}) },
+		Kind: "MirrorSession", APIGroup: "monitoring", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSession{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -113,7 +113,7 @@ var typesMapMirror = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MirrorSessionSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionSpec{}) },
 		Fields: map[string]api.Field{
 			"PacketSize": api.Field{Name: "PacketSize", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-size", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
@@ -129,7 +129,7 @@ var typesMapMirror = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MirrorSessionStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionStatus{}) },
 		Fields: map[string]api.Field{
 			"State": api.Field{Name: "State", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -139,13 +139,13 @@ var typesMapMirror = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MirrorStartConditions": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStartConditions{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStartConditions{}) },
 		Fields: map[string]api.Field{
 			"ScheduleTime": api.Field{Name: "ScheduleTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "schedule-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 	"monitoring.MirrorStopConditions": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStopConditions{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStopConditions{}) },
 		Fields: map[string]api.Field{
 			"MaxPacketCount": api.Field{Name: "MaxPacketCount", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-packets", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 

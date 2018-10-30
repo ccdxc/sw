@@ -13,6 +13,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/pensando/sw/api/utils"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache/ovpb"
 	"github.com/pensando/sw/api/interfaces"
@@ -694,7 +696,12 @@ func (c *overlay) Get(ctx context.Context, key string, into runtime.Object) erro
 
 func (c *overlay) list(ctx context.Context, prefix string, opts api.ListWatchOptions) []*overlayObj {
 	ret := []*overlayObj{}
-	filters, err := getFilters(opts)
+	kind := ""
+	k, ok := apiutils.GetVar(ctx, "ObjKind")
+	if ok {
+		kind = k.(string)
+	}
+	filters, err := getFilters(opts, kind)
 	if err != nil {
 		return nil
 	}

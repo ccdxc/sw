@@ -34,6 +34,7 @@ type Field struct {
 type Struct struct {
 	Kind      string
 	APIGroup  string
+	Scopes    []string
 	Fields    map[string]Field // Refers to to Field Object in Schema
 	Tags      map[string]string
 	GetTypeFn func() reflect.Type

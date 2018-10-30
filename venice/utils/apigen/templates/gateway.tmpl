@@ -65,9 +65,11 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	}{{else}}
 	t.Tenant, t.Namespace = "", ""{{end}}
 	oper, kind, tenant, namespace, group, name:= apiserver.ListOper, "{{getOutputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", ""
+	{{else}}{{if isActionMethod .}}
+	oper, kind, tenant, namespace, group, name := apiserver.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
 	{{else}}
 	oper, kind, tenant, namespace, group, name := apiserver.{{$params.Oper}}, "{{getInputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
-	{{end}}{{/*<isAutoList>*/}}
+	{{end}}{{end}}{{/*<isAutoList>*/}}
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	{{end}}{{/*<isAutoGenMethod>*/}}

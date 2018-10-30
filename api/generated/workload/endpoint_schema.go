@@ -16,7 +16,7 @@ import (
 var typesMapEndpoint = map[string]*api.Struct{
 
 	"workload.Endpoint": &api.Struct{
-		Kind: "Endpoint", APIGroup: "workload", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Endpoint{}) },
+		Kind: "Endpoint", APIGroup: "workload", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Endpoint{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -81,11 +81,11 @@ var typesMapEndpoint = map[string]*api.Struct{
 		},
 	},
 	"workload.EndpointSpec": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointSpec{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointSpec{}) },
 		Fields: map[string]api.Field{},
 	},
 	"workload.EndpointStatus": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointStatus{}) },
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointStatus{}) },
 		Fields: map[string]api.Field{
 			"EndpointUUID": api.Field{Name: "EndpointUUID", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoint-uuid", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

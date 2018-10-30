@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	rollout "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -67,6 +68,7 @@ func (s *srolloutSvc_rolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := rollout.Rollout{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "rollout.Rollout")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -75,6 +77,7 @@ func (s *srolloutSvc_rolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(rollout.RolloutList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -197,7 +200,8 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "rollout.Rollout")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "rollout.Rollout")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "rollout.Rollout")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "rollout.Rollout")

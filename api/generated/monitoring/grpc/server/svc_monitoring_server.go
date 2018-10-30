@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -114,6 +115,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.AlertDestination{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.AlertDestination")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -122,6 +124,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.AlertDestinationList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -137,6 +140,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.Alert{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.Alert")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -145,6 +149,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.AlertList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -160,6 +165,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.AlertPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.AlertPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -168,6 +174,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.AlertPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -192,6 +199,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.EventPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.EventPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -200,6 +208,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.EventPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -215,6 +224,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.FlowExportPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.FlowExportPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -223,6 +233,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.FlowExportPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -238,6 +249,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.FwlogPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.FwlogPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -246,6 +258,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.FwlogPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -261,6 +274,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.MirrorSession{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.MirrorSession")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -269,6 +283,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.MirrorSessionList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -284,6 +299,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.StatsPolicy{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.StatsPolicy")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -292,6 +308,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.StatsPolicyList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -307,6 +324,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := monitoring.TroubleshootingSession{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.TroubleshootingSession")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -315,6 +333,7 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.TroubleshootingSessionList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -785,7 +804,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.EventPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.EventPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.EventPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.EventPolicy")
@@ -876,7 +896,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.StatsPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.StatsPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.StatsPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.StatsPolicy")
@@ -967,7 +988,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.FwlogPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.FwlogPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.FwlogPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.FwlogPolicy")
@@ -1058,7 +1080,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.FlowExportPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.FlowExportPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.FlowExportPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.FlowExportPolicy")
@@ -1149,7 +1172,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.Alert")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.Alert")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.Alert")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.Alert")
@@ -1240,7 +1264,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.AlertPolicy")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.AlertPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.AlertPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.AlertPolicy")
@@ -1331,7 +1356,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.AlertDestination")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.AlertDestination")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.AlertDestination")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.AlertDestination")
@@ -1422,7 +1448,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.MirrorSession")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.MirrorSession")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.MirrorSession")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.MirrorSession")
@@ -1513,7 +1540,8 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "monitoring.TroubleshootingSession")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.TroubleshootingSession")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.TroubleshootingSession")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "monitoring.TroubleshootingSession")

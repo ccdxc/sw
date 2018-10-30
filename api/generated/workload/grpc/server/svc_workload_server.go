@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	workload "github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -74,6 +75,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := workload.Endpoint{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "workload.Endpoint")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -82,6 +84,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(workload.EndpointList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -97,6 +100,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			r := workload.Workload{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "workload.Workload")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -105,6 +109,7 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(workload.WorkloadList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -274,7 +279,8 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "workload.Endpoint")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "workload.Endpoint")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "workload.Endpoint")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "workload.Endpoint")
@@ -365,7 +371,8 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "workload.Workload")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "workload.Workload")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "workload.Workload")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "workload.Workload")

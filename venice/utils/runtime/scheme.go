@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -16,6 +17,10 @@ var (
 	once          sync.Once
 )
 
+type scopes struct {
+	tenant, cluster bool
+}
+
 // Scheme contains methods to help with serialization/deserialization of API
 // objects.
 type Scheme struct {
@@ -24,6 +29,7 @@ type Scheme struct {
 	group2Kinds map[string][]string
 	kind2Type   map[string]string
 	kind2Group  map[string]string
+	kind2Scopes map[string]scopes
 }
 
 // NewScheme returns a new Scheme.
@@ -34,6 +40,7 @@ func NewScheme() *Scheme {
 		group2Kinds: make(map[string][]string),
 		kind2Type:   make(map[string]string),
 		kind2Group:  make(map[string]string),
+		kind2Scopes: make(map[string]scopes),
 	}
 }
 
@@ -77,6 +84,16 @@ func (s *Scheme) AddSchema(in map[string]*api.Struct) {
 			s.group2Kinds[v.APIGroup] = append(s.group2Kinds[v.APIGroup], v.Kind)
 			s.kind2Type[v.Kind] = k
 			s.kind2Group[v.Kind] = v.APIGroup
+			scps := scopes{}
+			for i := range v.Scopes {
+				switch v.Scopes[i] {
+				case "Tenant":
+					scps.tenant = true
+				case "Cluster":
+					scps.cluster = true
+				}
+			}
+			s.kind2Scopes[v.Kind] = scps
 		}
 		s.Types[k] = v
 		if v.Tags == nil {
@@ -108,6 +125,22 @@ func (s *Scheme) Kind2SchemaType(in string) string {
 // Kind2APIGroup returns the API group given the Kind
 func (s *Scheme) Kind2APIGroup(in string) string {
 	return s.kind2Group[in]
+}
+
+// IsTenantScoped returns true if the Kind is tenant scoped.
+func (s *Scheme) IsTenantScoped(kind string) (bool, error) {
+	if v, ok := s.kind2Scopes[kind]; ok {
+		return v.tenant, nil
+	}
+	return false, errors.New("not found")
+}
+
+// IsClusterScoped returns true if the kind has cluster wide scope.
+func (s *Scheme) IsClusterScoped(kind string) (bool, error) {
+	if v, ok := s.kind2Scopes[kind]; ok {
+		return v.cluster, nil
+	}
+	return false, errors.New("not found")
 }
 
 // NewEmpty returns a new object of the same kind as the input

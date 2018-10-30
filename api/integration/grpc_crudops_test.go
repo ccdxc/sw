@@ -925,11 +925,11 @@ func TestFilters(t *testing.T) {
 		api.ListWatchOptions{FieldChangeSelector: []string{"Status"}},                                     // 4
 		api.ListWatchOptions{FieldChangeSelector: []string{"Spec.Category"}},                              // 5
 		api.ListWatchOptions{LabelSelector: "label1=xxx", FieldChangeSelector: []string{"Spec.Category"}}, // 6
-		api.ListWatchOptions{FieldSelector: "Name=selector1"},                                             // 7
-		api.ListWatchOptions{FieldSelector: "Spec.Author=foo"},                                            // 8
-		api.ListWatchOptions{FieldSelector: "Spec.Author=New Author"},                                     // 9
-		api.ListWatchOptions{FieldSelector: "Spec.Author in (New Author,foo)"},                            // 10
-		api.ListWatchOptions{FieldSelector: "Spec.Author in (New Author,foo),Spec.Category=YoungAdult"},   // 11
+		api.ListWatchOptions{FieldSelector: "name=selector1"},                                             // 7
+		api.ListWatchOptions{FieldSelector: "spec.author=foo"},                                            // 8
+		api.ListWatchOptions{FieldSelector: "spec.author=New Author"},                                     // 9
+		api.ListWatchOptions{FieldSelector: "spec.author in (New Author,foo)"},                            // 10
+		api.ListWatchOptions{FieldSelector: "spec.author in (New Author,foo),spec.category=YoungAdult"},   // 11
 	}
 	var watchers []kvstore.Watcher
 	var rwatches [][]kvstore.WatchEvent

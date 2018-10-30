@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api"
 	cluster "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -96,6 +97,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Cluster{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Cluster")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -104,6 +106,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.ClusterList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -119,6 +122,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Host{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Host")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -127,6 +131,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.HostList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -142,6 +147,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Node{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Node")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -150,6 +156,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.NodeList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -165,6 +172,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.SmartNIC{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.SmartNIC")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -173,6 +181,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.SmartNICList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -188,6 +197,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			r := cluster.Tenant{}
 			r.ObjectMeta = options.ObjectMeta
 			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Tenant")
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
@@ -196,6 +206,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(cluster.TenantList)
+			r.APIVersion = ver
 			for i := range r.Items {
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
@@ -487,7 +498,8 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.Cluster")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.Cluster")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Cluster")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Cluster")
@@ -578,7 +590,8 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.Node")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.Node")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Node")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Node")
@@ -669,7 +682,8 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.Host")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.Host")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Host")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Host")
@@ -760,7 +774,8 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.SmartNIC")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.SmartNIC")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.SmartNIC")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
@@ -851,7 +866,8 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.Tenant")
+			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.Tenant")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Tenant")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Tenant")

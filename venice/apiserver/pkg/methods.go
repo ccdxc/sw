@@ -63,7 +63,11 @@ func (e *errorStatus) makeError(i interface{}, msg []string, uri string) error {
 	if i != nil && iv.CanInterface() {
 		ivp := reflect.New(iv.Type())
 		ivp.Elem().Set(iv)
-		obj = ivp.Interface().(runtime.Object)
+		var ok bool
+		obj, ok = ivp.Interface().(runtime.Object)
+		if !ok {
+			obj = nil
+		}
 	}
 	return apierrors.ToGrpcError(errors.New(e.err), msg, int32(e.code), uri, obj)
 }

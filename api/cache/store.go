@@ -34,7 +34,7 @@ type Store interface {
 	Set(key string, rev uint64, obj runtime.Object, cb apiintf.SuccessCbFunc) error
 	Get(key string) (runtime.Object, error)
 	Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (runtime.Object, error)
-	List(key string, opts api.ListWatchOptions) ([]runtime.Object, error)
+	List(key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error)
 	Mark(key string)
 	Sweep(key string, cb apiintf.SuccessCbFunc)
 	PurgeDeleted(past time.Duration)
@@ -254,14 +254,14 @@ func (s *store) Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (obj ru
 
 // List lists all the onbjects for the prefix specified in key after applying a filter
 //  as per the opts parameter.
-func (s *store) List(key string, opts api.ListWatchOptions) ([]runtime.Object, error) {
+func (s *store) List(key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error) {
 	start := time.Now()
 	defer func() {
 		hdr.Record("store.List", time.Since(start))
 	}()
 	var ret []runtime.Object
 	prefix := patricia.Prefix(key)
-	filters, err := getFilters(opts)
+	filters, err := getFilters(opts, kind)
 	if err != nil {
 		return ret, err
 	}

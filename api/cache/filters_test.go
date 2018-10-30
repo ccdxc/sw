@@ -242,7 +242,7 @@ func TestFilters(t *testing.T) {
 		t.Logf(" -> Test [ %s ]", c.name)
 		opts := c.getOpts()
 		obj, prev := c.getObjs()
-		filters, err := getFilters(opts)
+		filters, err := getFilters(opts, "")
 		if err != nil {
 			t.Fatalf("   ** [%s] getFilters failed (%s)", c.name, err)
 		}

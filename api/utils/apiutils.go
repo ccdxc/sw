@@ -32,3 +32,36 @@ func IsDryRun(ctx context.Context) bool {
 	}
 	return true
 }
+
+// SetVar and GetVar allow for setting arbitrary values in the context
+//  - does not create new context for each value added (after the first one)
+//  - without having to create a new type to be used as key for new values
+// Should be used on only ephemeral contexts. Using it on long standing contexts
+//  should be considered carefully.
+// NOT CONCURRENCY SAFE
+
+type ctxVal struct{}
+
+// SetVar sets a arbitrary key Value in the context
+func SetVar(ctx context.Context, key string, val interface{}) context.Context {
+	v := ctx.Value(ctxVal{})
+	if v == nil {
+		m := make(map[string]interface{})
+		m[key] = val
+		return context.WithValue(ctx, ctxVal{}, m)
+	}
+	m := v.(map[string]interface{})
+	m[key] = val
+	return ctx
+}
+
+// GetVar gets the value for key if set in ctxVal
+func GetVar(ctx context.Context, key string) (interface{}, bool) {
+	v := ctx.Value(ctxVal{})
+	if v != nil {
+		m := v.(map[string]interface{})
+		val, ok := m[key]
+		return val, ok
+	}
+	return nil, false
+}
