@@ -20,27 +20,27 @@ int pal_is_qsfp_port_psnt(int port_no) {
     int cpld_rd_data = 0;
     pal_data_t *pd = pal_get_data();
 
-    /* Calls to calm down the compiler - will be removed */
     if(0) {
-        cpld_write(0, 0);
+	cpld_write(0x02, cpld_rd_data);
     }
+
 
     if (pd->cpldlckfd <= 0) {
         pd->cpldlckfd = pal_lock_init(CPLDLOCKFILE);
     }    
 
-    /* Get Exclusive lock for now */
-    if (!pal_wr_lock_int(pd->memlckfd)) {
+    if (!pal_rd_lock_int(pd->memlckfd)) {
         printf("Could not lock pal.lck\n");
         return 0;
     }
 
     cpld_rd_data = cpld_read(0x02);
 
-    if (!pal_wr_unlock_int(pd->memlckfd)) {
+
+    if (!pal_rd_unlock_int(pd->memlckfd)) {
         printf("Failed to unlock.\n");
     }
-  
+
     if(port_no == 1) { 
         return ((cpld_rd_data & 0x10) != 0);
     } else if (port_no == 2) {
