@@ -19,7 +19,7 @@ docker/shell: docker/build-shell-image
 endif
 
 docker/build-shell-image: docker/install_box
-	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.26; fi
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.27; fi
 	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
 
 docker/coverage: docker/build-runtime-image
@@ -51,11 +51,11 @@ docker/clean-docker: docker/build-runtime-image
 REGISTRY = registry.test.pensando.io:5000
 
 docker/build-runtime-image: docker/install_box
-	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.26; fi
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.27; fi
 	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
 
 docker/build-runtime-image-skip-box:
-	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.26; fi
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.27; fi
 	cd .. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box -t pensando/nic nic/box.rb
 
 
@@ -64,12 +64,12 @@ docker/install_box:
 
 # make a trial dependencies image. pass RELEASE=1 or run `make deps-release` to
 # do a release build.
-docker/deps: install_box
-	cd .. && RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t '$(REGISTRY)/pensando/nic:1.26' nic/box-deps.rb
+docker/deps: docker/install_box
+	cd .. && RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t '$(REGISTRY)/pensando/nic:1.27' nic/box-deps.rb
 
 # make a release build of the dependencies image
 docker/deps-release:
-	RELEASE=1 make deps
+	RELEASE=1 make docker/deps
 
 # make a shell based on the local build of the dependencies image, for testing
 docker/deps-test-shell:

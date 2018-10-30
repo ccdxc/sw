@@ -81,7 +81,7 @@ yum install -y ctags
 
 # install golang
 ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
-curl -sSL https://dl.google.com/go/go1.10.linux-amd64.tar.gz | tar xz -C /usr/local
+curl -sSL https://dl.google.com/go/go1.11.linux-amd64.tar.gz | tar xz -C /usr/local
 go get github.com/golang/protobuf/...
 
 # install gcc 6.1
