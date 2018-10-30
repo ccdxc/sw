@@ -118,11 +118,20 @@ bool Scheduler::should_reboot()
     }
     if (this->watchdog->expired().size() > 0)
     {
-        INFO("Watchdog restart");
+        bool reboot = false;
         for (auto ex: this->watchdog->expired()) {
-            INFO("Expired watchdog process: {}", ex);
+	    auto pr = get_for_name(ex);
+	    if (pr->is_watchdog_disabled == false) {
+	       INFO("Expired watchdog process: {}", ex);
+	       reboot = true;
+	    } else {
+	       DEBUG("Expired watchdog ignored for process: {}", ex);
+	    }
         }
-        return true;
+	if (reboot) {
+	    INFO("Watchdog restart");
+	}
+        return reboot;
     }
     return false;
 }
@@ -237,6 +246,12 @@ void Scheduler::debug()
     INFO("- Debug end -");
 }
 
+void Scheduler::heartbeat(const string &name)
+{
+    auto service = this->get_for_name(name);
+    this->heartbeat(service->pid);
+}
+
 void Scheduler::heartbeat(pid_t pid)
 {
     auto service = this->get_for_pid(pid);
@@ -245,5 +260,8 @@ void Scheduler::heartbeat(pid_t pid)
     }
     DEBUG("Received heartbeat from {}", service->name);
 
-    watchdog->refresh(service->name);
+    if (service->is_watchdog_disabled == false)
+    {
+       watchdog->refresh(service->name);
+    }
 }

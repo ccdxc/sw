@@ -18,9 +18,8 @@ fi
 
 popd
 
-#${BUILD_DIR}/bin/sysmgr_scheduler_test && ${BUILD_DIR}/bin/sysmgr_watchdog_test
-#RET_1=$?
-RET_1=0
+${BUILD_DIR}/bin/sysmgr_scheduler_test && ${BUILD_DIR}/bin/sysmgr_watchdog_test
+RET_1=$?
 
 pushd /usr/src/github.com/pensando/sw/nic/sysmgr/goexample && go build && popd
 

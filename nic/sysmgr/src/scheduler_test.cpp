@@ -3,6 +3,7 @@
 #include <set>
 
 #include <sys/types.h>
+#include <thread>
 
 #include "scheduler.hpp"
 #include "service.hpp"
@@ -198,6 +199,32 @@ TEST(Scheduler, NonRestartableStartingProcessDeath)
     sched.service_died("agent1");
     auto action = sched.next_action();
     next_action_is(sched, REBOOT, {});
+}
+
+TEST(Scheduler, WatchdogTest)
+{
+   const vector<Spec> specs = {
+      Spec("delphi", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {}),
+   };
+
+   auto sched = Scheduler(specs);
+   start_ready(sched);
+   sched.heartbeat("delphi");
+   std::this_thread::sleep_for(std::chrono::seconds(20));
+   next_action_is(sched, REBOOT, {});   
+}
+
+TEST(Scheduler, NoWatchdogTest)
+{
+   const vector<Spec> specs = {
+      Spec("delphi", NO_WATCHDOG, "/bin/ls -l", {}),
+   };
+
+   auto sched = Scheduler(specs);
+   start_ready(sched);
+   sched.heartbeat("delphi");
+   std::this_thread::sleep_for(std::chrono::seconds(20));
+   next_action_is(sched, WAIT, {});   
 }
 
 TEST(Specs, NoDuplicateNames)

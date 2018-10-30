@@ -39,7 +39,9 @@ public:
   void service_started(pid_t pid);
   void service_died(const string &name);
   void service_died(pid_t pid);
+  void heartbeat(const string &name);
   void heartbeat(pid_t pid);
+   
 
 private:
   void service_ready(shared_ptr<Service> srv);
