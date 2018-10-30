@@ -227,48 +227,48 @@ static const char *yaml_event_type_to_string(int event_type)
 
 static void dump_svc(struct test_svc *svc)
 {
-	PNSO_LOG_INFO("      Service type %u\n", svc->svc.svc_type);
+	PNSO_LOG("      Service type %u\n", svc->svc.svc_type);
 
 	switch (svc->svc.svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-		PNSO_LOG_INFO("        algo_type %u\n",
-			      svc->svc.u.crypto_desc.algo_type);
-		PNSO_LOG_INFO("        key_desc_idx %u\n",
-			      svc->svc.u.crypto_desc.key_desc_idx);
-		PNSO_LOG_INFO("        iv_addr 0x%llx\n",
+		PNSO_LOG("        algo_type %u\n",
+			 svc->svc.u.crypto_desc.algo_type);
+		PNSO_LOG("        key_desc_idx %u\n",
+			 svc->svc.u.crypto_desc.key_desc_idx);
+		PNSO_LOG("        iv_addr 0x%llx\n",
 			(unsigned long long) svc->svc.u.crypto_desc.iv_addr);
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
-		PNSO_LOG_INFO("        algo_type %u\n",
-			      svc->svc.u.cp_desc.algo_type);
-		PNSO_LOG_INFO("        flags 0x%x\n",
-			      svc->svc.u.cp_desc.flags);
-		PNSO_LOG_INFO("        threshold %u\n",
-			      svc->svc.u.cp_desc.threshold_len);
-		PNSO_LOG_INFO("        threshold_delta %u\n",
-			      svc->u.cpdc.threshold_delta);
+		PNSO_LOG("        algo_type %u\n",
+			 svc->svc.u.cp_desc.algo_type);
+		PNSO_LOG("        flags 0x%x\n",
+			 svc->svc.u.cp_desc.flags);
+		PNSO_LOG("        threshold %u\n",
+			 svc->svc.u.cp_desc.threshold_len);
+		PNSO_LOG("        threshold_delta %u\n",
+			 svc->u.cpdc.threshold_delta);
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
-		PNSO_LOG_INFO("        algo_type %u\n",
-			      svc->svc.u.dc_desc.algo_type);
-		PNSO_LOG_INFO("        flags 0x%x\n",
-			      svc->svc.u.dc_desc.flags);
+		PNSO_LOG("        algo_type %u\n",
+			 svc->svc.u.dc_desc.algo_type);
+		PNSO_LOG("        flags 0x%x\n",
+			 svc->svc.u.dc_desc.flags);
 		break;
 	case PNSO_SVC_TYPE_HASH:
-		PNSO_LOG_INFO("        algo_type %u\n",
-			      svc->svc.u.hash_desc.algo_type);
-		PNSO_LOG_INFO("        flags 0x%x\n",
-			      svc->svc.u.hash_desc.flags);
+		PNSO_LOG("        algo_type %u\n",
+			 svc->svc.u.hash_desc.algo_type);
+		PNSO_LOG("        flags 0x%x\n",
+			 svc->svc.u.hash_desc.flags);
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
-		PNSO_LOG_INFO("        algo_type %u\n",
-			      svc->svc.u.chksum_desc.algo_type);
-		PNSO_LOG_INFO("        flags 0x%x\n",
-			      svc->svc.u.chksum_desc.flags);
+		PNSO_LOG("        algo_type %u\n",
+			 svc->svc.u.chksum_desc.algo_type);
+		PNSO_LOG("        flags 0x%x\n",
+			 svc->svc.u.chksum_desc.flags);
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
-		PNSO_LOG_INFO("        vvbn 0x%llx\n",
+		PNSO_LOG("        vvbn 0x%llx\n",
 			(unsigned long long) svc->svc.u.decompact_desc.vvbn);
 		break;
 	default:
@@ -280,35 +280,35 @@ static void dump_svc_chain(struct test_svc_chain *svc_chain)
 {
 	struct test_node *node;
 
-	PNSO_LOG_INFO("  ID %d\n", svc_chain->node.idx);
+	PNSO_LOG("  ID %d\n", svc_chain->node.idx);
 	if (svc_chain->name[0]) {
-		PNSO_LOG_INFO("    Name %s\n", svc_chain->name);
+		PNSO_LOG("    Name %s\n", svc_chain->name);
 	}
 
-	PNSO_LOG_INFO("    Input format %u\n", svc_chain->input.format);
+	PNSO_LOG("    Input format %u\n", svc_chain->input.format);
 	if (svc_chain->input.offset) {
-		PNSO_LOG_INFO("      offset %u\n", svc_chain->input.offset);
+		PNSO_LOG("      offset %u\n", svc_chain->input.offset);
 	}
 	if (svc_chain->input.len) {
-		PNSO_LOG_INFO("      length %u\n", svc_chain->input.len);
+		PNSO_LOG("      length %u\n", svc_chain->input.len);
 	}
 	if (svc_chain->input.pattern[0]) {
-		PNSO_LOG_INFO("      pattern %s\n", svc_chain->input.pattern);
+		PNSO_LOG("      pattern %s\n", svc_chain->input.pattern);
 	}
 	if (svc_chain->input.pathname[0]) {
-		PNSO_LOG_INFO("      filename %s\n", svc_chain->input.pathname);
+		PNSO_LOG("      filename %s\n", svc_chain->input.pathname);
 	}
 	if (svc_chain->input.block_count) {
-		PNSO_LOG_INFO("      block count %u\n", svc_chain->input.block_count);
+		PNSO_LOG("      block count %u\n", svc_chain->input.block_count);
 	}
 	if (svc_chain->input.min_block_size) {
-		PNSO_LOG_INFO("      min block size %u\n", svc_chain->input.min_block_size);
+		PNSO_LOG("      min block size %u\n", svc_chain->input.min_block_size);
 	}
 	if (svc_chain->input.max_block_size) {
-		PNSO_LOG_INFO("      max block size %u\n", svc_chain->input.max_block_size);
+		PNSO_LOG("      max block size %u\n", svc_chain->input.max_block_size);
 	}
 
-	PNSO_LOG_INFO("    Num services %u\n", svc_chain->num_services);
+	PNSO_LOG("    Num services %u\n", svc_chain->num_services);
 
 	FOR_EACH_NODE(svc_chain->svcs) {
 		dump_svc((struct test_svc *) node);
@@ -317,28 +317,28 @@ static void dump_svc_chain(struct test_svc_chain *svc_chain)
 
 static void dump_validation(struct test_validation *validation)
 {
-	PNSO_LOG_INFO("      ID %d\n", validation->node.idx);
-	PNSO_LOG_INFO("        Type %d\n", validation->type);
+	PNSO_LOG("      ID %d\n", validation->node.idx);
+	PNSO_LOG("        Type %d\n", validation->type);
 	if (validation->svc_chain_idx) {
-		PNSO_LOG_INFO("        Svc_chain %u\n", validation->svc_chain_idx);
+		PNSO_LOG("        Svc_chain %u\n", validation->svc_chain_idx);
 	}
 	if (validation->file1[0]) {
-		PNSO_LOG_INFO("        File1 %s\n", validation->file1);
+		PNSO_LOG("        File1 %s\n", validation->file1);
 	}
 	if (validation->file2[0]) {
-		PNSO_LOG_INFO("        File2 %s\n", validation->file2);
+		PNSO_LOG("        File2 %s\n", validation->file2);
 	}
 	if (validation->pattern[0]) {
-		PNSO_LOG_INFO("        Pattern %s\n", validation->pattern);
+		PNSO_LOG("        Pattern %s\n", validation->pattern);
 	}
 	if (validation->offset) {
-		PNSO_LOG_INFO("        Offset %u\n", validation->offset);
+		PNSO_LOG("        Offset %u\n", validation->offset);
 	}
 	if (validation->len) {
-		PNSO_LOG_INFO("        Length %u\n", validation->len);
+		PNSO_LOG("        Length %u\n", validation->len);
 	}
 	if (validation->type == VALIDATION_RETCODE_COMPARE) {
-		PNSO_LOG_INFO("        Retcode %d\n", validation->retcode);
+		PNSO_LOG("        Retcode %d\n", validation->retcode);
 		if (validation->svc_count) {
 			uint32_t i, len;
 			char retcode_str[128] = "";
@@ -350,7 +350,7 @@ static void dump_validation(struct test_validation *validation)
 						 validation->svc_retcodes[i]);
 			}
 			retcode_str[len] = '\0';
-			PNSO_LOG_INFO("        SVC retcodes %s\n", retcode_str);
+			PNSO_LOG("        SVC retcodes %s\n", retcode_str);
 		}
 	}
 }
@@ -361,13 +361,13 @@ static void dump_testcase(struct test_testcase *testcase)
 	uint32_t i, len = 0;
 	char svc_chain_str[128] = "";
 
-	PNSO_LOG_INFO("  ID %d\n", testcase->node.idx);
+	PNSO_LOG("  ID %d\n", testcase->node.idx);
 	if (testcase->name[0]) {
-		PNSO_LOG_INFO("    Name %s\n", testcase->name);
+		PNSO_LOG("    Name %s\n", testcase->name);
 	}
-	PNSO_LOG_INFO("    Repeat %llu\n", (unsigned long long) testcase->repeat);
-	PNSO_LOG_INFO("    Batch depth %u\n", testcase->batch_depth);
-	PNSO_LOG_INFO("    Sync mode %u\n", testcase->sync_mode);
+	PNSO_LOG("    Repeat %llu\n", (unsigned long long) testcase->repeat);
+	PNSO_LOG("    Batch depth %u\n", testcase->batch_depth);
+	PNSO_LOG("    Sync mode %u\n", testcase->sync_mode);
 	for (i = 0; i < testcase->svc_chain_count; i++) {
 		len += safe_itoa(svc_chain_str+len, sizeof(svc_chain_str), testcase->svc_chains[i]);
 		if (len < sizeof(svc_chain_str) - 1) {
@@ -375,9 +375,9 @@ static void dump_testcase(struct test_testcase *testcase)
 			svc_chain_str[len] = '\0';
 		}
 	}
-	PNSO_LOG_INFO("    Service chains %s\n", svc_chain_str);
+	PNSO_LOG("    Service chains %s\n", svc_chain_str);
 
-	PNSO_LOG_INFO("    Validations:\n");
+	PNSO_LOG("    Validations:\n");
 	FOR_EACH_NODE(testcase->validations) {
 		dump_validation((struct test_validation *) node);
 	}
@@ -387,29 +387,29 @@ void test_dump_desc(struct test_desc *desc)
 {
 	struct test_node *node;
 
-	PNSO_LOG_INFO("\nTest Descriptor:\n");
+	PNSO_LOG("\nTest Descriptor:\n");
 
 	if (desc->aliases.head) {
-		PNSO_LOG_INFO("Aliases:\n");
+		PNSO_LOG("Aliases:\n");
 		FOR_EACH_NODE(desc->aliases) {
 			struct test_alias *alias = (struct test_alias *) node;
-			PNSO_LOG_INFO("  %s=%s\n", alias->name, alias->val);
+			PNSO_LOG("  %s=%s\n", alias->name, alias->val);
 		}
 	}
 
-	PNSO_LOG_INFO("Global params:\n");
-	PNSO_LOG_INFO("  per_core_qdepth %u\n", desc->init_params.per_core_qdepth);
-	PNSO_LOG_INFO("  block_size %u\n", desc->init_params.block_size);
-	PNSO_LOG_INFO("  cpu_mask 0x%llx\n", (unsigned long long) desc->cpu_mask);
-	PNSO_LOG_INFO("  output_file_prefix %s\n", desc->output_file_prefix);
-	PNSO_LOG_INFO("  output_file_suffix %s\n", desc->output_file_suffix);
+	PNSO_LOG("Global params:\n");
+	PNSO_LOG("  per_core_qdepth %u\n", desc->init_params.per_core_qdepth);
+	PNSO_LOG("  block_size %u\n", desc->init_params.block_size);
+	PNSO_LOG("  cpu_mask 0x%llx\n", (unsigned long long) desc->cpu_mask);
+	PNSO_LOG("  output_file_prefix %s\n", desc->output_file_prefix);
+	PNSO_LOG("  output_file_suffix %s\n", desc->output_file_suffix);
 
-	PNSO_LOG_INFO("Service chains:\n");
+	PNSO_LOG("Service chains:\n");
 	FOR_EACH_NODE(desc->svc_chains) {
 		dump_svc_chain((struct test_svc_chain *)node);
 	}
 
-	PNSO_LOG_INFO("Testcases:\n");
+	PNSO_LOG("Testcases:\n");
 	FOR_EACH_NODE(desc->tests) {
 		dump_testcase((struct test_testcase *)node);
 	}
@@ -1794,7 +1794,7 @@ static void dump_yaml_desc_children(const char *parent_name, uint32_t indent_len
 		}
 
 		if (safe_strcmp(parent_name, yaml_desc->parent_name) == 0) {
-			PNSO_LOG_INFO("%s%s\n", indent, yaml_desc->name);
+			PNSO_LOG("%s%s\n", indent, yaml_desc->name);
 			dump_yaml_desc_children(yaml_desc->name, indent_len+2);
 		}
 	}
@@ -2035,7 +2035,7 @@ pnso_error_t pnso_test_parse_buf(const unsigned char *buf, size_t buf_len,
 	/* Initialize YAML parser */
 	memset(&parser, 0, sizeof(parser));
 	if (!yaml_parser_initialize(&parser)) {
-		PNSO_LOG_WARN("Failed to init YAML parser.\n");
+		PNSO_LOG_ERROR("Failed to init YAML parser.\n");
 		return ENOMEM;
 	}
 	yaml_parser_set_input_string(&parser, buf, buf_len);

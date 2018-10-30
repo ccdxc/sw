@@ -178,8 +178,9 @@ struct batch_context {
 
 /* Assumes one producer, one consumer */
 struct worker_queue {
-	osal_atomic_int_t lock;
-	uint32_t count;
+	//osal_atomic_int_t lock;
+	//uint32_t count;
+	osal_atomic_int_t atomic_count;
 	uint32_t head;
 	uint32_t tail;
 	uint32_t max_count;
@@ -188,58 +189,48 @@ struct worker_queue {
 
 static inline bool worker_queue_is_full(struct worker_queue *q)
 {
-	bool rc;
-
-	osal_atomic_lock(&q->lock);
-	rc = (q->count >= q->max_count);
-	osal_atomic_unlock(&q->lock);
-
-	return rc;
+	return osal_atomic_read(&q->atomic_count) >= q->max_count;
 }
 
 static inline bool worker_queue_is_empty(struct worker_queue *q)
 {
-	bool rc;
+	return osal_atomic_read(&q->atomic_count) <= 0;
+}
 
-	osal_atomic_lock(&q->lock);
-	rc = (q->count == 0);
-	osal_atomic_unlock(&q->lock);
+static inline struct batch_context *_worker_queue_dequeue(struct worker_queue *q)
+{
+	struct batch_context *batch;
 
-	return rc;
+	batch = q->batch_ctxs[q->tail % q->max_count];
+	q->tail++;
+	osal_atomic_fetch_sub(&q->atomic_count, 1);
+	return batch;
 }
 
 static inline struct batch_context *worker_queue_dequeue(struct worker_queue *q)
 {
-	struct batch_context *batch = NULL;
+	if (worker_queue_is_empty(q))
+		return NULL;
 
-	osal_atomic_lock(&q->lock);
-	if (q->count) {
-		batch = q->batch_ctxs[q->tail++];
-		if (q->tail >= q->max_count) {
-			q->tail = 0;
-		}
-		q->count--;
-	}
-	osal_atomic_unlock(&q->lock);
-	return batch;
+	return _worker_queue_dequeue(q);
 }
 
-static inline bool worker_queue_enqueue(struct worker_queue *q, struct batch_context *batch)
+static inline void _worker_queue_enqueue(struct worker_queue *q,
+					 struct batch_context *batch)
 {
-	bool rc = false;
+	q->batch_ctxs[q->head % q->max_count] = batch;
+	q->head++;
+	osal_atomic_fetch_add(&q->atomic_count, 1);
+}
 
-	osal_atomic_lock(&q->lock);
-	if (q->count < q->max_count) {
-		q->batch_ctxs[q->head++] = batch;
-		if (q->head >= q->max_count) {
-			q->head = 0;
-		}
-		q->count++;
-		rc = true;
-	}
-	osal_atomic_unlock(&q->lock);
+static inline bool worker_queue_enqueue(struct worker_queue *q,
+					struct batch_context *batch)
+{
+	if (worker_queue_is_full(q))
+		return false;
 
-	return rc;
+	_worker_queue_enqueue(q, batch);
+	return true;
 }
 
 struct worker_context {
@@ -247,10 +238,10 @@ struct worker_context {
 	const struct testcase_context *test_ctx;
 	osal_thread_t worker_thread;
 	uint32_t worker_id;
+	uint64_t last_active_ts;
 
 	struct worker_queue *submit_q;
 	struct worker_queue *complete_q;
-	struct worker_queue *poll_q;
 };
 
 struct testcase_context {
@@ -271,6 +262,9 @@ struct testcase_context {
 	 */
 	struct batch_context batch_ctx_pool[TEST_MAX_BATCH_COUNT_TOTAL];
 	struct worker_queue *batch_ctx_freelist;
+
+	/* queue for polling batch_ctx, local to ctl thread */
+	struct worker_queue *poll_q;
 
 	uint32_t vars[TEST_VAR_MAX];
 };
@@ -304,7 +298,7 @@ struct test_node_file {
 
 struct test_file_table {
 	bool initialized;
-	osal_atomic_int_t lookup_lock;
+	osal_atomic_int_t bucket_locks[TEST_TABLE_BUCKET_COUNT];
 	struct test_node_table table;
 };
 

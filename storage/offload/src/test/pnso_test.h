@@ -92,7 +92,8 @@ void pnso_test_free(void *ptr);
   
 #define PNSO_LOG_ERROR OSAL_LOG_ERROR
 #define PNSO_LOG_WARN  OSAL_LOG_WARN
-#define PNSO_LOG_INFO  OSAL_LOG
+#define PNSO_LOG_NOTICE OSAL_LOG_NOTICE
+#define PNSO_LOG_INFO  OSAL_LOG_INFO
 #define PNSO_LOG_DEBUG OSAL_LOG_DEBUG
 #define PNSO_LOG_TRACE(...)
 #define PNSO_LOG       OSAL_LOG

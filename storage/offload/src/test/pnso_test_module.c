@@ -49,7 +49,7 @@ static char mode[MAX_PARAM_STRING_LEN] = "";
 module_param_string(mode, mode, sizeof(mode), 0444);
 MODULE_PARM_DESC(mode, "mode is sync, async, or poll");
 
-static unsigned int loglevel = OSAL_LOG_LEVEL_WARNING;
+static unsigned int loglevel = OSAL_LOG_LEVEL_NOTICE;
 module_param(loglevel, uint, 0444);
 MODULE_PARM_DESC(loglevel, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5=NOTICE,6=INFO,7=DBG");
 
@@ -430,7 +430,7 @@ body(void *not_used)
 		if (repeat >= 0) {
 			len = generate_alias_yaml(alias_str, "default_repeat",
 						  repeat, NULL);
-			PNSO_LOG_WARN("module param repeat: %s\n", alias_str);
+			PNSO_LOG_INFO("module param repeat: %s\n", alias_str);
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default repeat string '%s'\n",
@@ -441,7 +441,7 @@ body(void *not_used)
 		if (batch >= 0) {
 			len = generate_alias_yaml(alias_str, "default_batch",
 						  batch, NULL);
-			PNSO_LOG_WARN("module param batch: %s\n", alias_str);
+			PNSO_LOG_INFO("module param batch: %s\n", alias_str);
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default batch string '%s'\n",
@@ -452,7 +452,7 @@ body(void *not_used)
 		if (rate >= 0) {
 			len = generate_alias_yaml(alias_str, "default_rate",
 						  rate, NULL);
-			PNSO_LOG_WARN("module param rate: %s\n", alias_str);
+			PNSO_LOG_INFO("module param rate: %s\n", alias_str);
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default rate string '%s'\n",
@@ -463,7 +463,7 @@ body(void *not_used)
 		if (status_interval >= 0) {
 			len = generate_alias_yaml(alias_str, "default_status_interval",
 						  status_interval, NULL);
-			PNSO_LOG_WARN("module param status_interval: %s\n", alias_str);
+			PNSO_LOG_INFO("module param status_interval: %s\n", alias_str);
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default status_interval string '%s'\n",
@@ -474,7 +474,7 @@ body(void *not_used)
 		if (cpu_mask >= 0) {
 			len = generate_alias_yaml(alias_str, "default_cpu_mask",
 						  cpu_mask, NULL);
-			PNSO_LOG_WARN("module param cpu_mask: %s\n", alias_str);
+			PNSO_LOG_INFO("module param cpu_mask: %s\n", alias_str);
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default cpu_mask string '%s'\n",
@@ -485,7 +485,7 @@ body(void *not_used)
 		if (strlen(mode) > 0) {
 			len = generate_alias_yaml(alias_str, "default_mode",
 						  0, mode);
-			PNSO_LOG_WARN("module param mode: %s\n", alias_str);
+			PNSO_LOG_INFO("module param mode: %s\n", alias_str);
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default mode string '%s'\n",
@@ -526,15 +526,16 @@ body(void *not_used)
 		}
 	}
 
-//	test_dump_desc(cfg);
+	if (loglevel >= OSAL_LOG_LEVEL_DEBUG)
+		test_dump_desc(cfg);
 	pnso_run_unit_tests(cfg);
 
 	/* run default testcases */
 	if (feat_mask == 0) {
-		PNSO_LOG_INFO("PenCAKE skipped all default testcases\n");
+		PNSO_LOG("PenCAKE skipped all default testcases\n");
 	} else {
 		err = pnso_test_run_all(cfg);
-		PNSO_LOG_INFO("PenCAKE completed all default testcases, status %d\n", err);
+		PNSO_LOG("PenCAKE completed all default testcases, status %d\n", err);
 	}
 	pnso_test_desc_free(cfg);
 	cfg = NULL;

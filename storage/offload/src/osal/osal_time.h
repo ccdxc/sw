@@ -43,6 +43,11 @@ static inline uint64_t osal_get_clock_nsec(void)
 
 #endif
 
+static inline uint64_t osal_clock_delta(uint64_t ns1, uint64_t ns2)
+{
+	return (ns1 - ns2) > (ns2 - ns1) ? (ns2 - ns1) : (ns1 - ns2);
+}
+
 #ifdef __cplusplus
 }
 #endif

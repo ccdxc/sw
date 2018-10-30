@@ -219,6 +219,8 @@ static ssize_t stat_sysfs_show(struct kobject *kobj,
 	val = osal_atomic_read(&node->stat);
 
 	ret = (ssize_t) safe_itoa(buf, MAX_SYSFS_DATA_LEN, val);
+	buf[ret++] = '\n';
+	buf[ret] = '\0';
 
 	PNSO_LOG_DEBUG("Sysfs show stat %s = %s\n",
 		       attr->attr.name, buf);

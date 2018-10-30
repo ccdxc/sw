@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 	char filename[256];
 	char last_opt = '\0';
 
-	osal_log_init(OSAL_LOG_LEVEL_INFO);
+	osal_log_init(OSAL_LOG_LEVEL_NOTICE);
 
 	/* Parse cmdline parameters */
 	for (i = 1; i < argc; i++) {
@@ -140,8 +140,8 @@ int main(int argc, char *argv[])
 				}
 				break;
 			case 'h':
-				PNSO_LOG_INFO("Usage: pnso_test_main -y <literal_yaml> -o <output_file> -p <base_path> -i <yaml_files>\n");
-				PNSO_LOG_INFO("Valid YAML structure:\n");
+				PNSO_LOG("Usage: pencake_sim -y <literal_yaml> -o <output_file> -p <base_path> -i <yaml_files>\n");
+				PNSO_LOG("Valid YAML structure:\n");
 				test_dump_yaml_desc_tree();
 				exit(0);
 				break;
