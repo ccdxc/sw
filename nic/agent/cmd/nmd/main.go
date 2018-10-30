@@ -15,6 +15,7 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
+	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -139,7 +140,7 @@ func main() {
 	}
 
 	var delphiClient clientAPI.Client
-	var uc *upg.NaplesUpgClient
+	var uc state.UpgMgrAPI
 	if !*standalone {
 		dServ := nmd.NewDelphiService()
 		delphiClient, err = gosdk.NewClient(dServ)
