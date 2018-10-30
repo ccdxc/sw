@@ -643,7 +643,11 @@ func (be *Pkcs11Backend) readKeyPair(ID string) (crypto.Signer, error) {
 	case uint64(pkcs11.CKK_EC):
 		publicKey, err = be.readEcdsaPublicKey(publicKeyHandle)
 	default:
+<<<<<<< HEAD
 		return nil, errors.Wrapf(err, "Unsupported key type, ID: %v CKA_KEY_TYPE: %v", ID, keyType)
+=======
+		return nil, errors.Wrapf(err, "Unsupported key type, ID:%v CKA_KEY_TYPE: %v", ID, keyType)
+>>>>>>> 92e133bf0... Make checks
 	}
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error retrieving key pair, ID: %v, key type: %v, Backend: %+v", ID, keyType, be)
