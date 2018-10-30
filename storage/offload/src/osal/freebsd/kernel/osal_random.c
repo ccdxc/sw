@@ -1,3 +1,8 @@
+/*
+ * {C} Copyright 2018 Pensando Systems Inc.
+ * All rights reserved.
+ *
+ */
 #include <sys/random.h>
 #include <sys/libkern.h>
 
