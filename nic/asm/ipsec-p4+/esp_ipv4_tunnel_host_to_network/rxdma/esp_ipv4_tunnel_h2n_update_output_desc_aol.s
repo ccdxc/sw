@@ -20,11 +20,11 @@ esp_ipv4_tunnel_h2n_update_output_desc_aol:
     phvwri p.{app_header_table0_valid...app_header_table2_valid}, 7
     add r4, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}, IPSEC_H2N_STATS_CB_OFFSET
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc[33:6]
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, ((1 << 3) | 6 ) 
+    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size},  6
     phvwr p.common_te0_phv_table_addr, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}
     phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2[33:6]
     phvwr p.common_te2_phv_table_addr, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}
-    phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, ((1 << 3) | 6 ) 
+    phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 6 
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats[33:6]
     phvwr p.common_te1_phv_table_addr, r4 
     phvwri.e p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((1 << 3) | 6 ) 
