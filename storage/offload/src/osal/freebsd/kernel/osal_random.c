@@ -5,11 +5,9 @@
  */
 #include <sys/random.h>
 #include <sys/libkern.h>
+#include "osal_random.h"
 
-void osal_srand(int seed);
-int osal_rand(void);
-
-void osal_srand(int seed)
+void osal_srand(unsigned int seed)
 {
 	return srandom(seed);
 }

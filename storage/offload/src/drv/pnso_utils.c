@@ -3,8 +3,6 @@
  * All rights reserved.
  *
  */
-#include <netdevice.h>
-
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_api_int.h"

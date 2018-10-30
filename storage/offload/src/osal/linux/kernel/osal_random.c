@@ -4,10 +4,11 @@
  *
  */
 #include <linux/random.h>
+#include "osal_random.h"
 
-void osal_srand(int seed)
+void osal_srand(unsigned int seed)
 {
-	return prandom_seed((unsigned int)seed);
+	return prandom_seed(seed);
 }
 
 int osal_rand(void)

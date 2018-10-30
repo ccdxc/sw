@@ -783,7 +783,7 @@ get_request_mode(completion_cb_t cb, void *cb_ctx,
 		*req_mode = REQUEST_RFLAG_MODE_POLL;
 	else {
 		err = EINVAL;
-		OSAL_LOG_DEBUG("invalid sync/async/poll params! cb: 0x%llx cb_ctx: 0x%llx pnso_poll_fn: 0x%llx pnso_poll_ctx: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid sync/async/poll params! cb: 0x" PRIx64 " cb_ctx: 0x" PRIx64 " pnso_poll_fn: 0x" PRIx64 " pnso_poll_ctx: 0x" PRIx64 " err: %d",
 				(uint64_t) cb, (uint64_t) cb_ctx,
 				(uint64_t) pnso_poll_fn,
 				(uint64_t) pnso_poll_ctx, err);

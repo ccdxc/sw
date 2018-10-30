@@ -391,7 +391,7 @@ mpool_put_object(struct mem_pool *mpool, void *object)
 
 	mem_stack = &mpool->mp_stack;
 	if (mem_stack->mps_top >= mem_stack->mps_num_objects) {
-		OSAL_LOG_ERROR("cannot return object to pool! object: 0x%llx type: %s",
+		OSAL_LOG_ERROR("cannot return object to pool! object: 0x" PRIx64 "  type: %s",
 				(uint64_t) object,
 				mpool_get_type_str(mpool->mp_config.mpc_type));
 		OSAL_ASSERT(0);

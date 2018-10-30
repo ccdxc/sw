@@ -3,7 +3,7 @@
 
 .include <bsd.own.mk>
 
-KMOD=pnso
+KMOD=sonic
 SRCS= \
  src/drv/pnso_mpool.c \
  src/drv/pnso_api.c \

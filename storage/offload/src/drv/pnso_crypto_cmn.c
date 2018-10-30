@@ -332,7 +332,7 @@ get_batch_desc(struct service_info *svc_info)
 	svc_batch_info = &svc_info->si_batch_info;
 	desc = &svc_batch_info->u.sbi_crypto_desc[svc_batch_info->sbi_desc_idx];
 
-	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x%llx desc: 0x%llx",
+	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64 "",
 			svc_batch_info->sbi_num_entries,
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_crypto_desc,
@@ -393,7 +393,7 @@ put_batch_desc(const struct service_info *svc_info,
 
 	/* do nothing */
 
-	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x%llx desc: 0x%llx",
+	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64 "",
 			svc_batch_info->sbi_num_entries,
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_crypto_desc,

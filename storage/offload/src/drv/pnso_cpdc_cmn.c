@@ -32,7 +32,7 @@
  *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *	- address cpdc_fill_per_block_desc_ex()
- *	- fixup %llx with PRIx64
+ *	- fixup " PRIx64 " with PRIx64
  *	- currently poll is attempted atmost 16 times, and this is temporary
  *	only. From the poll-branch, where request mode flag is used to determine
  *	and relax/limit the iterations will need to be brought-in
@@ -61,7 +61,7 @@ cpdc_poll(const struct service_info *svc_info)
 			break;
 
 		attempt++;
-		OSAL_LOG_DEBUG("attempt: %d service: %s status_desc: 0x%llx",
+		OSAL_LOG_DEBUG("attempt: %d service: %s status_desc: 0x" PRIx64 "",
 				attempt, svc_get_type_str(svc_info->si_type),
 				(uint64_t) status_desc);
 		osal_yield();
@@ -71,7 +71,7 @@ cpdc_poll(const struct service_info *svc_info)
 	return err;
 }
 
-void
+static void
 cpdc_common_teardown(void *desc)
 {
 	/* TODO-chain: EOPNOTSUPP */
@@ -134,7 +134,7 @@ pprint_sgl(uint64_t sgl_pa)
 	if (!sgl)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x" PRIx64, "",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64 " ==> 0x" PRIx64, "",
 			(uint64_t) sgl, sgl_pa);
 	while (sgl) {
 		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d",
@@ -322,7 +322,7 @@ get_batch_desc(struct service_info *svc_info)
 	svc_batch_info = &svc_info->si_batch_info;
 	desc = &svc_batch_info->u.sbi_cpdc_desc[svc_batch_info->sbi_desc_idx];
 
-	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x%llx desc: 0x%llx",
+	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64 "",
 			svc_batch_info->sbi_num_entries,
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
@@ -381,7 +381,7 @@ put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
 
 	/* do nothing */
 
-	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x%llx desc: 0x%llx",
+	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64 "",
 			svc_batch_info->sbi_num_entries,
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_cpdc_desc,

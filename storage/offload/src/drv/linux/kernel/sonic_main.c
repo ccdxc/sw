@@ -462,7 +462,9 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
+#ifndef __FreeBSD__
 	dev_dbg(dev, "comp admin queue command:\n");
+#endif
 	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			 &ctx->comp, sizeof(ctx->comp), true);
 

@@ -4,8 +4,9 @@
  *
  */
 #include <stdlib.h>
+#include "osal_random.h"
 
-void osal_srand(int seed)
+void osal_srand(unsigned int seed)
 {
 	return srand(seed);
 }

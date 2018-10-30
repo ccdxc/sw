@@ -5,7 +5,7 @@
  */
 
 #include <string.h>
-//#include <ctype.h>
+#include <ctype.h>
 #include "osal_stdtypes.h"
 #include "osal_random.h"
 #include "pnso_api.h"

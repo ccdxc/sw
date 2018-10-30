@@ -1,4 +1,4 @@
-#ifdef HAVE_CONFIG_H
+#if 0
 #include <config.h>
 #else
 #define YAML_VERSION_MAJOR 0

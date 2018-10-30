@@ -384,7 +384,7 @@ crypto_poll(const struct service_info *svc_info)
 			break;
 
 		attempt++;
-		OSAL_LOG_DEBUG("attempt: %d svc_type: %d status_desc: 0x%llx",
+		OSAL_LOG_DEBUG("attempt: %d svc_type: %d status_desc: 0x" PRIx64 "",
 				attempt, svc_info->si_type,
 				(uint64_t) status_desc);
 		osal_yield();
