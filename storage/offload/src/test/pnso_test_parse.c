@@ -904,17 +904,6 @@ FUNC_SET_INT(test_set_cp_hdr_pnso_algo, ((struct test_cp_hdr_mapping *)parent)->
 FUNC_SET_INT(test_set_cp_hdr_algo, ((struct test_cp_hdr_mapping *)parent)->hdr_algo,
 	0, UINT_MAX);
 
-pnso_error_t test_set_op_algo_type(struct test_desc *root,
-				   struct test_node *parent, const char *val);
-pnso_error_t test_set_output_flags(struct test_desc *root,
-				   struct test_node *parent, const char *val);
-pnso_error_t test_set_cp_hdr_type(struct test_desc *root,
-				   struct test_node *parent, const char *val);
-pnso_error_t test_set_op_flags(struct test_desc *root,
-			       struct test_node *parent, const char *val);
-pnso_error_t test_set_crypto_key_idx(struct test_desc *root,
-				     struct test_node *parent, const char *val);
-
 static pnso_error_t test_set_alias(struct test_desc *root,
 				   struct test_node *parent,
 				   const char *val)
@@ -1168,7 +1157,7 @@ static pnso_error_t test_set_key2_data(struct test_desc *root,
 	return PNSO_OK;
 }
 
-pnso_error_t test_set_op_flags(struct test_desc *root,
+static pnso_error_t test_set_op_flags(struct test_desc *root,
 			       struct test_node *parent, const char *val)
 {
 	pnso_error_t err;
@@ -1216,7 +1205,7 @@ pnso_error_t test_set_op_flags(struct test_desc *root,
 	return err;
 }
 
-pnso_error_t test_set_op_algo_type(struct test_desc *root,
+static pnso_error_t test_set_op_algo_type(struct test_desc *root,
 				   struct test_node *parent, const char *val)
 {
 	pnso_error_t err = PNSO_OK;
@@ -1275,7 +1264,7 @@ pnso_error_t test_set_op_algo_type(struct test_desc *root,
 	return err;
 }
 
-pnso_error_t test_set_output_flags(struct test_desc *root,
+static pnso_error_t test_set_output_flags(struct test_desc *root,
 				   struct test_node *parent, const char *val)
 {
 	pnso_error_t err;
@@ -1300,7 +1289,7 @@ pnso_error_t test_set_output_flags(struct test_desc *root,
 	return err;
 }
 
-pnso_error_t test_set_cp_hdr_type(struct test_desc *root,
+static pnso_error_t test_set_cp_hdr_type(struct test_desc *root,
 				   struct test_node *parent, const char *val)
 {
 	pnso_error_t err;
@@ -1338,7 +1327,7 @@ FUNC_SET_INT(test_set_compress_threshold_delta,
 FUNC_SET_INT(test_set_decompact_vvbn,
 	     get_cur_svc(parent)->u.decompact_desc.vvbn, 0, (1ll<<48)-1);
 
-pnso_error_t test_set_crypto_key_idx(struct test_desc *root,
+static pnso_error_t test_set_crypto_key_idx(struct test_desc *root,
 				     struct test_node *parent, const char *val)
 {
 	struct pnso_service *svc = get_cur_svc(parent);

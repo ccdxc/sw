@@ -80,7 +80,7 @@ uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len);
 uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len);
 int safe_strcmp(const char *str1, const char *str2);
 int safe_strncmp(const char *str1, const char *str2, uint32_t len);
-long long safe_strtoll(const char *val);
+unsigned long long safe_strtoll(const char *val);
 
 void *pnso_test_alloc(size_t sz);
 void *pnso_test_alloc_aligned(size_t alignment, size_t sz);
