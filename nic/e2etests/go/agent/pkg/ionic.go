@@ -32,7 +32,7 @@ func ReadStationDevices(deviceFile string) ([]StationDevice, error) {
 	ethDevices := deviceJSON["eth_dev"].([]interface{})
 	for _, data := range ethDevices {
 		devData := data.(map[string]interface{})
-		sdevice := StationDevice{MacAddr: devData["mac_addr"].(string), LifID: int(devData["lif_id"].(float64))}
+		sdevice := StationDevice{MacAddr: devData["mac_addr"].(string)}
 		sdevices = append(sdevices, sdevice)
 	}
 

@@ -2,9 +2,52 @@
     "network" : {
         "uplink" : [
             { "id" : 128, "port": 1 },
-            { "id" : 129, "port": 2 }
+            { "id" : 129, "port": 2 },
+            { "id" : 130, "port": 9, "oob" : "true" }
         ]
     },
+
+    "mnic_dev" : [
+        {
+            "name" : "oob_mnic0",
+            "dev_uuid" : 11,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "eq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "mac_addr" : "00:02:00:00:01:01",
+            "network" : {
+                "uplink" : 130
+            }
+        },
+        {
+            "name" : "inb_mnic0",
+            "dev_uuid" : 12,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "eq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "mac_addr" : "00:02:00:00:01:02",
+            "network" : {
+                "uplink" : 128
+            }
+        },
+        {
+            "name" : "inb_mnic1",
+            "dev_uuid" : 13,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "eq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "mac_addr" : "00:02:00:00:01:03",
+            "network" : {
+                "uplink" : 129
+            }
+        }
+    ],
 
     "eth_dev" : [
         {
@@ -15,8 +58,7 @@
             "eq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 34,
-            "mac_addr" : "00:02:00:00:01:01",
-            "lif_id" : 100,
+            "mac_addr" : "00:02:00:00:01:04",
             "pcie" : {
                 "port" : 0,
                 "num_vfs" : 0

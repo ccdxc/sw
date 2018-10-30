@@ -305,7 +305,8 @@
         },
         {
             "name": "mcast_repl",
-            "size_kb": 4096
+            "size_kb": 4096,
+            "reset": true
         },
         {
             "name": "p4plus_program",
