@@ -263,11 +263,23 @@ crypto_aol_put(const struct per_core_resource *pcr,
 	struct crypto_aol *aol;
 
 	aol = svc_aol->aol;
-	while (aol) {
-		aol_next = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) :
-					  NULL;
+	switch (svc_aol->mpool_type) {
+
+	case MPOOL_TYPE_CRYPTO_AOL:
+		while (aol) {
+			aol_next = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) :
+						  NULL;
+			pc_res_mpool_object_put(pcr, svc_aol->mpool_type, aol);
+			aol = aol_next;
+		}
+		break;
+
+	default:
+		/*
+		 * Vector cases
+		 */
 		pc_res_mpool_object_put(pcr, svc_aol->mpool_type, aol);
-		aol = aol_next;
+		break;
 	}
 	svc_aol->aol = NULL;
 }
@@ -431,7 +443,7 @@ crypto_put_batch_bulk_desc(struct mem_pool *mpool, struct crypto_desc *desc)
 pnso_error_t
 crypto_setup_seq_desc(struct service_info *svc_info, struct crypto_desc *desc)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err = PNSO_OK;
 	uint8_t	flags;
 
 	if (putil_is_service_in_batch(svc_info->si_flags)) {
@@ -448,12 +460,11 @@ crypto_setup_seq_desc(struct service_info *svc_info, struct crypto_desc *desc)
 		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
 				desc, sizeof(struct crypto_desc));
 		if (!svc_info->si_seq_info.sqi_desc) {
+			err = EINVAL;
 			OSAL_LOG_ERROR("failed to setup sequencer desc! flags: %d err: %d",
 						flags, err);
 			goto out;
 		}
-
-		err = PNSO_OK;
 	}
 
 out:

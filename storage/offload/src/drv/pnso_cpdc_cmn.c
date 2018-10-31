@@ -660,7 +660,7 @@ pnso_error_t
 cpdc_setup_seq_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 		uint32_t num_tags)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err = PNSO_OK;
 	uint8_t	flags;
 
 	if (cpdc_is_service_in_batch(svc_info->si_flags)) {
@@ -682,12 +682,11 @@ cpdc_setup_seq_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
 				desc, sizeof(*desc));
 		if (!svc_info->si_seq_info.sqi_desc) {
+			err = EINVAL;
 			OSAL_LOG_DEBUG("failed to setup sequencer desc! num_tags: %d flags: %d err: %d",
 						num_tags, flags, err);
 			goto out;
 		}
-
-		err = PNSO_OK;
 	}
 
 out:
