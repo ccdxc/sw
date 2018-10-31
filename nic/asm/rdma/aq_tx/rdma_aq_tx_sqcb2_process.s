@@ -52,7 +52,8 @@ tx_psn:
     tblwr       d.rexmit_psn, K_TX_PSN
         
 done:
-    CAPRI_SET_TABLE_3_VALID(0)                  
+    CAPRI_SET_TABLE_3_VALID(0)
+    CAPRI_RESET_TABLE_3_ARG()    
     nop.e
     nop
     

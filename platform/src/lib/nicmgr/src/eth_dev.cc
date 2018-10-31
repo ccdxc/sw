@@ -763,7 +763,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     // TODO: Get this from sw
     sprintf((char *)&rsp->dev.fw_version, "v0.0.1");
     rsp->dev.nlifs = 1;
-    rsp->dev.ndbpgs_per_lif = 1;
+    rsp->dev.ndbpgs_per_lif = spec->rdma_pid_count;
     rsp->dev.ntxqs_per_lif = spec->txq_count;
     rsp->dev.nrxqs_per_lif = spec->rxq_count;
     rsp->dev.nintrs = spec->intr_count;
@@ -778,6 +778,9 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     rsp->dev.nrdmasqs_per_lif = spec->rdma_sq_count;
     rsp->dev.nrdmarqs_per_lif = spec->rdma_rq_count;
+    rsp->dev.nrdma_mrs_per_lif = spec->key_count;
+    rsp->dev.nrdma_pts_per_lif = spec->pte_count;
+    rsp->dev.nrdma_ahs_per_lif = spec->ah_count;
     rsp->dev.ncqs_per_lif = spec->rdma_cq_count;
 
     rsp->dev.rdma_version = 1;

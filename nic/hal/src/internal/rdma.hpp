@@ -1490,7 +1490,8 @@ typedef struct aqcb0_s {
 
     uint64_t phy_base_addr;
     
-    uint16_t rsvd2: 6;
+    uint16_t rsvd2: 5;
+    uint16_t ring_empty_sched_eval_done: 1;
     uint16_t log_num_wqes: 5;
     uint16_t log_wqe_size: 5;
 

@@ -29,19 +29,19 @@ rdma_aq_tx_aqcb_process:
 
     .brbegin
     br          r7[MAX_AQ_DOORBELL_RINGS-1: 0]
-        nop         
+    nop
     
     .brcase     0
+
+        bbeq        d.ring_empty_sched_eval_done, 1, exit
+        tblwr       d.ring_empty_sched_eval_done, 1 //BD Slot
+
         DOORBELL_NO_UPDATE(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, r2, r3) 
-        phvwr       p.common.p4_intr_global_drop, 1
-        nop.e       
+
+        phvwr.e       p.common.p4_intr_global_drop, 1
         nop         
 
     .brcase     1
-        seq         c1, d.busy, 1           
-        bcf         [c1], drop              
-        tblwr       d.busy, 1 //BD Slot
-
         // copy intrinsic to global
         add            r1, r0, offsetof(struct phv_, common_global_global_data) 
 
@@ -68,15 +68,13 @@ rdma_aq_tx_aqcb_process:
         /* increment the cindex */
         tblmincri   AQ_C_INDEX_HX, d.log_num_wqes, 1
 
-        nop.e
+        tblwr.e     d.ring_empty_sched_eval_done, 0 //BD Slot
         nop
-
+    
     .brend
     
-busy:
-drop:
+exit: 
     CAPRI_SET_TABLE_0_VALID(0)
 
-    phvwr       p.common.p4_intr_global_drop, 1
-    nop.e       
+    phvwr.e       p.common.p4_intr_global_drop, 1
     nop         //Exit Slot

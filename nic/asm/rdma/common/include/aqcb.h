@@ -29,7 +29,8 @@ struct aqcb0_t {
 
     log_wqe_size: 5;
     log_num_wqes: 5;
-    rsvd2: 6;
+    ring_empty_sched_eval_done: 1;
+    rsvd2: 5;
 
     phy_base_addr: 64;
     

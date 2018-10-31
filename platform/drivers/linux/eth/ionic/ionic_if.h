@@ -265,6 +265,9 @@ union identity {
 		u32 ncqs_per_lif;
 		u32 nrdmasqs_per_lif;
 		u32 nrdmarqs_per_lif;
+        u32 nrdma_pts_per_lif;
+        u32 nrdma_mrs_per_lif;
+        u32 nrdma_ahs_per_lif;
 		u32 neqs_per_lif;
 		u32 nintrs;
 		u32 nucasts_per_lif;

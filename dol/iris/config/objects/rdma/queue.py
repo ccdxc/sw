@@ -41,7 +41,8 @@ class RdmaAQstate(Packet):
         LEShortField("proxy_pindex", 0),
         BitField("log_wqe_size", 0, 5),
         BitField("log_num_size", 0, 5),
-        BitField("rsvd2", 0 , 6),
+        BitField("ring_empty_sched_eval_done", 0, 1), 
+        BitField("rsvd2", 0 , 5),
 
         XLongField("phy_base_addr", 0),
         X3BytesField("aq_id", 0),

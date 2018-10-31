@@ -6612,7 +6612,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_sge_rd = 0;
 	dev->dev_attr.max_cq = ident->dev.ncqs_per_lif;
 	dev->dev_attr.max_cqe = 0xffff;
-	dev->dev_attr.max_mr = 4096; /* XXX need from identify */
+	dev->dev_attr.max_mr = ident->dev.nrdma_mrs_per_lif; /* XXX need from identify */
 	dev->dev_attr.max_pd = 0x10000; /* XXX only limited by the size of bitset we can alloc */
 	dev->dev_attr.max_qp_rd_atom = 16;
 	dev->dev_attr.max_ee_rd_atom = 0;
@@ -6624,7 +6624,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_mw = 0; /* XXX same as max_mr */
 	dev->dev_attr.max_mcast_grp = 0;
 	dev->dev_attr.max_mcast_qp_attach = 0;
-	dev->dev_attr.max_ah = 4096; /* XXX need from identify */
+	dev->dev_attr.max_ah = ident->dev.nrdma_ahs_per_lif; /* XXX need from identify */
 	dev->dev_attr.max_srq = ident->dev.nrdmarqs_per_lif;
 	dev->dev_attr.max_srq_wr = 0xffff;
 	dev->dev_attr.max_srq_sge = 7;

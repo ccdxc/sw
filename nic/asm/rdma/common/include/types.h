@@ -1470,7 +1470,7 @@ struct aqwqe_t {
             dma_addr:64;
             length:32;
             pd_id:32;
-			rsvd:40;
+			rsvd:320;
 		} ah;
 	};
 };
