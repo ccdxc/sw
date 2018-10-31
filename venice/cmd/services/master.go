@@ -219,7 +219,7 @@ func (m *masterService) Start() error {
 
 // caller holds the lock
 func (m *masterService) startLeaderServices() error {
-	if err := m.configs.GenerateKubeMasterConfig("localhost"); err != nil {
+	if err := m.configs.GenerateKubeMasterConfig(globals.Localhost); err != nil {
 		log.Errorf("Error generating Kubernetes Master config: %v", err)
 		return err
 	}

@@ -50,7 +50,7 @@ func main() {
 	var (
 		httpaddr        = flag.String("port", ":"+globals.APIGwRESTPort, "HTTP port to listen on")
 		debugflag       = flag.Bool("debug", false, "enable debug mode")
-		host            = flag.String("host", "localhost", "host identity")
+		host            = flag.String("host", globals.Localhost, "host identity")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.APIGw)), "redirect logs to file")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:port>")

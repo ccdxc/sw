@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -19,7 +20,7 @@ func startLocalRESTServer(global *globalInfo) {
 	}
 	http.HandleFunc("/", localMetricsHandler)
 
-	global.httpServer = &http.Server{Addr: fmt.Sprintf("localhost:%d", global.opts.LocalPort)}
+	global.httpServer = &http.Server{Addr: fmt.Sprintf("%s:%d", globals.Localhost, global.opts.LocalPort)}
 	global.wg.Done()
 
 	err := global.httpServer.ListenAndServe()

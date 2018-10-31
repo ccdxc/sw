@@ -81,9 +81,10 @@ func GenKubernetesCredentials(nodeID string, csrSigner certs.CSRSigner, trustRoo
 	// controller-manager), so it must have the right DNS name and/or IP address (VIP) for the host,
 	// otherwise the TLS handshake will fail.
 	// We use whatever node ID user has provided (hostname, FQDN or IP) and virtual IPs if available.
-	// "localhost" is needed by kube-controller-manager and kube-scheduler, as they try to connect to "localhost:6443"
-	dnsNames := []string{globals.KubeAPIServer, "localhost"}
-	ipAddrs := []net.IP{}
+	// "127.0.0.1" is needed by kube-controller-manager and kube-scheduler, as they try to connect to "127.0.0.1:6443"
+	// We use "127.0.0.1" instead of "localhost" to avoid issues with Go DNS resolver that does not consult /etc/hosts by default
+	dnsNames := []string{globals.KubeAPIServer}
+	ipAddrs := []net.IP{net.IPv4(127, 0, 0, 1)}
 	for _, i := range vips {
 		a := net.ParseIP(i)
 		if a != nil {

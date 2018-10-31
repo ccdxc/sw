@@ -6,6 +6,8 @@ import (
 	"os"
 	"sort"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/urfave/cli"
 )
 
@@ -38,8 +40,8 @@ import (
 // - add help tour
 // - auth (user login, etc.)
 
-const (
-	defaultServer = "http://localhost:19001"
+var (
+	defaultServer = "http://" + globals.Localhost + ":19001"
 )
 
 type byName []cli.Command

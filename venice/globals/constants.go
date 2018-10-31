@@ -11,6 +11,14 @@ const (
 	// Default Namespace
 	DefaultNamespace = "default"
 
+	// Localhost name
+	// The Go resolver by default will contact the DNS servers listed in /etc/resolver.conf,
+	// by passing /etc/hosts and ignoring /etc/nsswitch.conf
+	// If localhost resolution fails because the remote server does not respond in time or
+	// responds with some non-local result, Venice cluster fails to form.
+	// To avoid this kind of issues we use "127.0.0.1" instead of "localhost"
+	Localhost = "127.0.0.1"
+
 	// Well-known user names
 	KubernetesAPIServerUserName = "kube-apiserver" // the name used by K8s API server to authenticate to other entities
 

@@ -255,7 +255,7 @@ func main() {
 		tstore = flag.Bool("tstore", false, "Test tstore")
 		write  = flag.Bool("write", false, "Write data")
 		check  = flag.Bool("check", false, "Check data")
-		url    = flag.String("url", "http://localhost:"+globals.CitadelHTTPPort, "Comma seperated list of urls")
+		url    = flag.String("url", fmt.Sprintf("http://%s:%s", globals.Localhost, globals.CitadelHTTPPort), "Comma seperated list of urls")
 		table  = flag.String("table", "test", "Table to write")
 		count  = flag.Int("count", 1, "Number of values to write")
 		rate   = flag.Int("rate", 1, "Rate(values per second) at which to write")
