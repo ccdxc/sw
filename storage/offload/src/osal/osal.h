@@ -8,6 +8,7 @@
 
 #ifdef __KERNEL__
 #include <linux/netdevice.h>
+#include <linux/ktime.h>
 
 #ifndef __FreeBSD__
 #include <linux/net.h>

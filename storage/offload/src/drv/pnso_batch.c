@@ -3,8 +3,6 @@
  * All rights reserved.
  *
  */
-#include <netdevice.h>
-
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 
@@ -39,10 +37,11 @@ pprint_batch_info(struct batch_info *batch_info)
 	if (!batch_info)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== batch_info",  (uint64_t) batch_info);
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== batch_info",
+			(uint64_t) batch_info);
 	OSAL_LOG_INFO("%30s: %d", "bi_svc_type", batch_info->bi_svc_type);
 	OSAL_LOG_INFO("%30s: %d", "bi_mpool_type", batch_info->bi_mpool_type);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bi_pcr",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_pcr",
 			(uint64_t) batch_info->bi_pcr);
 
 	OSAL_LOG_INFO("%30s: %d", "bi_num_entries", batch_info->bi_num_entries);
@@ -50,21 +49,23 @@ pprint_batch_info(struct batch_info *batch_info)
 		batch_page = GET_PAGE(batch_info, i);
 		page_entry = GET_PAGE_ENTRY(batch_page, i);
 		OSAL_LOG_DEBUG("%30s: (%d)", "", i);
-		OSAL_LOG_DEBUG("%30s: 0x%llx/0x%llx", "",
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64,
+				"",
 				(uint64_t) batch_page, (uint64_t) page_entry);
-		OSAL_LOG_DEBUG("%30s: 0x%llx/0x%llx/0x%llx", "",
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64 "/0x" PRIx64,
+				"",
 				(uint64_t) page_entry->bpe_req,
 				(uint64_t) page_entry->bpe_res,
 				(uint64_t) page_entry->bpe_chain);
 	}
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "bi_req_cb",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_req_cb",
 			(uint64_t) batch_info->bi_req_cb);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bi_req_cb_ctx",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_req_cb_ctx",
 			(uint64_t) batch_info->bi_req_cb_ctx);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bi_req_poll_fn",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_req_poll_fn",
 			(uint64_t) batch_info->bi_req_poll_fn);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bi_req_poll_ctx",
+	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_req_poll_ctx",
 			(uint64_t) batch_info->bi_req_poll_ctx);
 }
 
@@ -156,7 +157,7 @@ get_bulk_batch_desc(struct batch_info *batch_info, uint32_t page_idx)
 			cpdc_get_batch_bulk_desc(mpool);
 	}
 
-	OSAL_LOG_DEBUG("obtained batch desc pool_type: %d page_idx: %d desc: 0x%llx",
+	OSAL_LOG_DEBUG("obtained batch desc pool_type: %d page_idx: %d desc: 0x" PRIx64,
 			batch_info->bi_mpool_type, page_idx,
 			(uint64_t) batch_info->bi_bulk_desc[page_idx]);
 }
@@ -178,7 +179,7 @@ put_bulk_batch_desc(struct batch_info *batch_info, uint32_t page_idx)
 				batch_info->bi_bulk_desc[page_idx]);
 	}
 
-	OSAL_LOG_DEBUG("returned batch desc pool_type: %d page_idx: %d desc: 0x%llx",
+	OSAL_LOG_DEBUG("returned batch desc pool_type: %d page_idx: %d desc: 0x" PRIx64,
 			batch_info->bi_mpool_type, page_idx,
 			(uint64_t) batch_info->bi_bulk_desc[page_idx]);
 }
@@ -251,7 +252,7 @@ destroy_batch_chain(struct batch_info *batch_info)
 		batch_page = GET_PAGE(batch_info, idx);
 		page_entry = GET_PAGE_ENTRY(batch_page, idx);
 
-		OSAL_LOG_DEBUG("destroy chain num_entries: %d idx: %d pge: 0x%llx chain: 0x%llx",
+		OSAL_LOG_DEBUG("destroy chain num_entries: %d idx: %d pge: 0x" PRIx64 " chain: 0x" PRIx64,
 				num_entries, idx, (uint64_t) page_entry,
 				(uint64_t) page_entry->bpe_chain);
 
@@ -269,7 +270,7 @@ deinit_batch(struct batch_info *batch_info)
 	struct batch_page *batch_page;
 	uint32_t idx, num_pages;
 
-	OSAL_LOG_DEBUG("release pages/batch batch_info: 0x%llx",
+	OSAL_LOG_DEBUG("release pages/batch batch_info: 0x" PRIx64,
 			(uint64_t) batch_info);
 
 	if (batch_info->bi_chain_exists)
@@ -282,7 +283,7 @@ deinit_batch(struct batch_info *batch_info)
 		batch_page = batch_info->bi_pages[idx];
 		put_mpool_batch_object(MPOOL_TYPE_BATCH_PAGE, batch_page);
 
-		OSAL_LOG_DEBUG("released page 0x%llx idx: %d",
+		OSAL_LOG_DEBUG("released page 0x" PRIx64 " idx: %d",
 				(uint64_t) batch_page, idx);
 	}
 
@@ -302,7 +303,8 @@ bat_destroy_batch(void)
 
 	batch_info = pcr->batch_info;
 	if (!batch_info) {
-		OSAL_LOG_DEBUG("batch not found! pcr: 0x%llx", (uint64_t) pcr);
+		OSAL_LOG_DEBUG("batch not found! pcr: 0x" PRIx64,
+				(uint64_t) pcr);
 		goto out;
 	}
 	deinit_batch(batch_info);
@@ -335,14 +337,14 @@ add_page(struct batch_info *batch_info)
 	/* get a vector of either CPDC or Crypto bulk desc */
 	get_bulk_batch_desc(batch_info, page_idx);
 
-	OSAL_LOG_DEBUG("added new page 0x%llx page_idx: %d",
+	OSAL_LOG_DEBUG("added new page 0x" PRIx64 " page_idx: %d",
 			(uint64_t) batch_page, page_idx);
 	err = PNSO_OK;
 out:
 	return err;
 }
 
-pnso_error_t
+static pnso_error_t
 build_batch(struct batch_info *batch_info, struct request_params *req_params)
 {
 	pnso_error_t err;
@@ -365,8 +367,9 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 		batch_page = GET_PAGE(batch_info, idx);
 		page_entry = GET_PAGE_ENTRY(batch_page, idx);
 
-		OSAL_LOG_DEBUG("use pge to batch num_entries: %d idx: %d page: 0x%llx pge: 0x%llx",
-				num_entries, idx, (uint64_t) batch_page, (uint64_t) page_entry);
+		OSAL_LOG_DEBUG("use pge to batch num_entries: %d idx: %d page: 0x" PRIx64 " pge: 0x" PRIx64,
+				num_entries, idx, (uint64_t) batch_page,
+				(uint64_t) page_entry);
 
 		req_params->rp_svc_req = page_entry->bpe_req;
 		req_params->rp_svc_res = page_entry->bpe_res;
@@ -512,7 +515,7 @@ poll_all_chains(struct batch_info *batch_info)
 				first_flag, last_flag);
 
 	time_us = ktime_us_delta(last_req_done, first_req_done);
-	OSAL_LOG_NOTICE("PERF elapsed: %llu us", time_us);
+	OSAL_LOG_NOTICE("PERF elapsed: " PRIu64 "us", time_us);
 
 	return err;
 }

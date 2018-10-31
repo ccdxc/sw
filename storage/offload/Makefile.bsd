@@ -10,6 +10,7 @@ SRCS= \
  src/common/pnso_svc.c \
  src/drv/pnso_req.c \
  src/drv/pnso_init.c \
+ src/drv/pnso_batch.c \
  src/drv/pnso_chain.c \
  src/drv/pnso_cp.c \
  src/drv/pnso_dc.c \
