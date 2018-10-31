@@ -16,6 +16,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_PD k.{rdma_aq_feedback_qp_pd_sbit0_ebit15,rdma_aq_feedback_qp_pd_sbit16_ebit31}
 #define K_RQ_MAP_COUNT k.rdma_aq_feedback_qp_rq_map_count
 #define K_RQ_DMA_ADDR k.{rdma_aq_feedback_qp_rq_dma_addr_sbit0_ebit15...rdma_aq_feedback_qp_rq_dma_addr_sbit48_ebit63}
+#define K_RQ_CMB k.{rdma_aq_feedback_qp_rq_cmb}
 #define K_RQ_CQ_ID k.{rdma_aq_feedback_qp_rq_cq_id_sbit0_ebit7...rdma_aq_feedback_qp_rq_cq_id_sbit16_ebit23}
 
 #define K_RQ_ID k.{rdma_aq_feedback_qp_rq_id_sbit0_ebit15,rdma_aq_feedback_qp_rq_id_sbit16_ebit23}
@@ -125,6 +126,7 @@ create_qp:
 
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_map_count), K_RQ_MAP_COUNT
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_dma_addr), K_RQ_DMA_ADDR
+    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_cmb), K_RQ_CMB
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_wqe_process, r0) 
 

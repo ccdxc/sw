@@ -18,6 +18,8 @@ struct aq_tx_s1_t0_k k;
 #define K_SQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, sqcb_base_addr_hi) 
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)    
+#define K_BARMAP_BASE CAPRI_KEY_RANGE(IN_TO_S_P, barmap_base_sbit0_ebit5, barmap_base_sbit6_ebit9)
+#define K_BARMAP_SIZE CAPRI_KEY_RANGE(IN_TO_S_P, barmap_size_sbit0_ebit3, barmap_size_sbit4_ebit7)
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_S2S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
 #define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
 
@@ -327,9 +329,9 @@ create_qp:
     srl         r5, r3, CAPRI_LOG_SIZEOF_U64
     phvwr       p.sqcb0.pt_base_addr, r5
 
-    add         r4, r0, d.{qp.sq_map_count}.wx, CAPRI_LOG_SIZEOF_U64
+    add         r4, r0, d.{qp.sq_map_count}.wx, CAPRI_LOG_SIZEOF_U64 //BD Slot
     beqi        r4, 1<<CAPRI_LOG_SIZEOF_U64, qp_skip_dma_pt
-    nop
+    crestore    [c2, c1], d.{qp.rq_cmb...qp.sq_cmb}, 0x3
     
     //Setup     DMA for SQ PT
 
@@ -344,9 +346,42 @@ create_qp:
 
 qp_skip_dma_pt:
 
+    bcf        [!c1 & !c2], qp_skip_cmb
+    //obtain barmap end in r2
+    add        r1, r0, K_BARMAP_SIZE, BARMAP_SIZE_SHIFT
+    add        r2, r1, K_BARMAP_BASE, BARMAP_BASE_SHIFT
+
+    bcf        [!c2], qp_skip_rq_cmb
+
+    //obtain tail of the RQ in r5
+    add        r7, d.{qp.rq_dma_addr}.dx, K_BARMAP_BASE, BARMAP_BASE_SHIFT
+    add        r5, d.qp.rq_depth_log2[4:0], d.qp.rq_stride_log2[4:0]
+    sll        r5, 1, r5
+    add        r5, r7, r5
+
+    //if barmap_end < tail_of_rq, report failure
+    blt        r2, r5, report_failure
+    nop
+
+qp_skip_rq_cmb:
+
+    //obtain tail of the SQ in r5
+    add        r4, d.{qp.sq_dma_addr}.dx, K_BARMAP_BASE, BARMAP_BASE_SHIFT
+    add        r5, d.qp.sq_depth_log2[4:0], d.qp.sq_stride_log2[4:0]
+    sll        r5, 1, r5
+    add        r5, r4, r5
+
+    //if barmap_end < tail_of_sq, report failure
+    blt        r2, r5, report_failure
+    nop
+
+    phvwr      p.sqcb0.hbm_sq_base_addr, r4[33:HBM_SQ_BASE_ADDR_SHIFT]
+    phvwr      p.sqcb0.sq_in_hbm, 1
+
+qp_skip_cmb:
     //copy      the phy address of a single page directly.
     //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    memwr.d    r3, d.qp.sq_dma_addr //BD slot
+    memwr.!c1.d    r3, d.qp.sq_dma_addr
 
 qp_no_skip_dma_pt: 
     
@@ -364,7 +399,9 @@ qp_no_skip_dma_pt:
     phvwrpair   p.rdma_feedback.create_qp.rq_depth_log2, d.qp.rq_depth_log2, p.rdma_feedback.create_qp.rq_stride_log2, d.qp.rq_stride_log2
     add         r2, d.{qp.pd_id}.wx, r0
     phvwrpair   p.rdma_feedback.create_qp.rq_page_size_log2, d.qp.rq_page_size_log2, p.rdma_feedback.create_qp.pd, r2
-    phvwr       p.p4_to_p4plus.create_qp_ext.rq_dma_addr, d.{qp.rq_dma_addr}.dx
+    phvwr.!c2   p.p4_to_p4plus.create_qp_ext.rq_dma_addr, d.{qp.rq_dma_addr}.dx
+    phvwr.c2    p.p4_to_p4plus.create_qp_ext.rq_dma_addr, r7
+    phvwr.c2    p.p4_to_p4plus.create_qp_ext.rq_cmb, 1
     phvwr       p.rdma_feedback.create_qp.rq_type_state, d.type_state
     phvwr       p.rdma_feedback.create_qp.rq_map_count, d.{qp.rq_map_count}.wx
     phvwr       p.rdma_feedback.create_qp.rq_tbl_index, d.{qp.rq_tbl_index_srq_id}.wx
@@ -560,6 +597,9 @@ prepare_feedback:
     nop.e
     nop         //Exit Slot
                                   
+report_failure:
+    //TBD: post completion error using feedback
+
 exit: 
     phvwr.e       p.common.p4_intr_global_drop, 1
     nop         //Exit Slot

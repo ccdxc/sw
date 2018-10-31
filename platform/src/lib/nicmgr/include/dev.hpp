@@ -181,6 +181,8 @@ struct eth_devspec {
     uint32_t rdma_eq_count;
     uint32_t rdma_adminq_count;
     uint32_t rdma_pid_count;
+    //in 8MB units
+    uint32_t barmap_size;
 };
 
 typedef struct dev_cmd_db {

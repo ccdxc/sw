@@ -7,7 +7,9 @@ struct aq_tx_to_stage_wqe_info_t {
     rqcb_base_addr_hi       :  24;
     log_num_cq_entries      :   4;
     ah_base_addr_page_id    :  22;
-    pad                     :  30;
+    barmap_base             :  10;
+    barmap_size             :   8;
+    pad                     :  12;
 };
 
 struct aq_tx_to_stage_wqe2_info_t {

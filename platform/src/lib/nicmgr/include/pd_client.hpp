@@ -77,7 +77,8 @@ public:
 
 /* RDMA routines */
     int rdma_lif_init(uint32_t lif, uint32_t max_keys,
-                      uint32_t max_ahs, uint32_t max_ptes);
+                      uint32_t max_ahs, uint32_t max_ptes,
+                      uint64_t *hbm_bar_address, uint32_t *hbm_bar_size);
 
     int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
         uint32_t idx,
@@ -109,9 +110,12 @@ public:
         uint8_t log_num_prefetch_pool_entries,
         uint8_t sq_qtype,
         uint8_t rq_qtype,
-        uint8_t aq_qtype);
+        uint8_t aq_qtype,
+        uint64_t barmap_base_addr,
+        uint32_t barmap_size);
     void rdma_manager_init(void);
     uint64_t RdmaHbmAlloc(uint32_t size);
+    uint64_t RdmaHbmBarAlloc(uint32_t size);
 
     uint64_t rdma_get_pt_base_addr(uint32_t lif);
     uint64_t rdma_get_kt_base_addr(uint32_t lif);
@@ -122,8 +126,11 @@ private:
     ~PdClient(){}
 
     std::unique_ptr<hal::BMAllocator> rdma_hbm_allocator_;
+    std::unique_ptr<hal::BMAllocator> rdma_hbm_bar_allocator_;
     uint64_t rdma_hbm_base_;
+    uint64_t rdma_hbm_bar_base_;
     std::map<uint64_t, uint64_t> rdma_allocation_sizes_;
+    std::map<uint64_t, uint64_t> rdma_bar_allocation_sizes_;
 
     int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
         uint32_t idx, rx_stage0_load_rdma_params_actiondata *data);

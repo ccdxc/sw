@@ -27,6 +27,9 @@
 const static char *kRdmaHBMLabel = "rdma";
 const static uint32_t kRdmaAllocUnit = 4096;
 
+const static char *kRdmaHBMBarLabel = "rdma-hbm-bar";
+const static uint32_t kRdmaBarAllocUnit = 8 * 1024 * 1024;
+
 static uint8_t *memrev(uint8_t *block, size_t elnum)
 {
     uint8_t *s, *t, tmp;
@@ -194,6 +197,25 @@ void PdClient::rdma_manager_init (void)
     rdma_hbm_allocator_.reset(new hal::BMAllocator(num_units));
     
     NIC_LOG_DEBUG("{}: rdma_hbm_base_ : {}\n", __FUNCTION__, rdma_hbm_base_);
+
+    hbm_addr = mp_->start_addr(kRdmaHBMBarLabel);
+    assert(hbm_addr > 0);
+
+    size = mp_->size_kb(kRdmaHBMBarLabel);
+    assert(size != 0);
+
+    num_units = (size * 1024) / kRdmaBarAllocUnit;    
+    if (hbm_addr & 0x7FFFFF) {
+        // Not 4K aligned.
+        hbm_addr = (hbm_addr + 0x7FFFFF) & ~0x7FFFFFULL;
+        num_units--;
+    }
+    
+    rdma_hbm_bar_base_ = hbm_addr;
+    rdma_hbm_bar_allocator_.reset(new hal::BMAllocator(num_units));
+    
+    NIC_LOG_DEBUG("{}: rdma_hbm_bar_base_ : {}\n", __FUNCTION__, rdma_hbm_bar_base_);
+
 }
 
 uint64_t PdClient::RdmaHbmAlloc (uint32_t size)
@@ -214,6 +236,26 @@ uint64_t PdClient::RdmaHbmAlloc (uint32_t size)
     NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}\n",
                     __FUNCTION__, size, alloc_offset, rdma_hbm_base_ + alloc_offset);
     return rdma_hbm_base_ + alloc_offset;    
+}
+
+uint64_t PdClient::RdmaHbmBarAlloc (uint32_t size)
+{
+    uint32_t alloc_units;
+
+    alloc_units = (size + kRdmaBarAllocUnit - 1) & ~(kRdmaBarAllocUnit-1);
+    alloc_units /= kRdmaBarAllocUnit;
+    uint64_t alloc_offset = rdma_hbm_bar_allocator_->Alloc(alloc_units);
+
+    if (alloc_offset < 0) {
+        NIC_LOG_DEBUG("{}: Invalid alloc_offset {}", __FUNCTION__, alloc_offset);
+        return -ENOMEM;
+    }
+    
+    rdma_bar_allocation_sizes_[alloc_offset] = alloc_units;
+    alloc_offset *= kRdmaBarAllocUnit;
+    NIC_LOG_DEBUG("{}: size: {} alloc_offset: {} hbm_addr: {}\n",
+                    __FUNCTION__, size, alloc_offset, rdma_hbm_bar_base_ + alloc_offset);
+    return rdma_hbm_bar_base_ + alloc_offset;    
 }
 
 int
@@ -703,7 +745,9 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (
     uint8_t log_num_prefetch_pool_entries,
     uint8_t sq_qtype,
     uint8_t rq_qtype,
-    uint8_t aq_qtype)
+    uint8_t aq_qtype,
+    uint64_t barmap_base_addr,
+    uint32_t barmap_size)
 {
     p4pd_error_t                  pd_err;
     tx_stage0_lif_params_table_actiondata data = { 0 };
@@ -726,6 +770,8 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sq_qtype = sq_qtype;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rq_qtype = rq_qtype;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.aq_qtype = aq_qtype;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_base_addr = barmap_base_addr;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_size = barmap_size;
 
     /* TODO: Do we need memrev */
     pd_err = p4pd_global_entry_write(
@@ -849,7 +895,8 @@ PdClient::rdma_get_ah_base_addr (uint32_t lif)
 
 int
 PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
-                         uint32_t max_ahs, uint32_t max_ptes)
+                         uint32_t max_ahs, uint32_t max_ptes,
+                         uint64_t *hbm_bar_addr, uint32_t *hbm_bar_size)
 {
     sram_lif_entry_t    sram_lif_entry;
     uint32_t            pt_size, key_table_size, ah_table_size, rrq_size, rsq_size;
@@ -988,6 +1035,46 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                     sram_lif_entry.rq_qtype,
                     sram_lif_entry.aq_qtype);
 
+    //Controller Memory Buffer
+    //meant for SQ/RQ in HBM for good performance
+    //Allocated in units of 8MB
+    if (*hbm_bar_size != 0) {
+
+        uint64_t hbm_addr = 0;
+        uint32_t hbm_size = 0;
+
+        hbm_size = *hbm_bar_size;
+
+        assert(hbm_size <= (8 * 1024 * 1024));
+
+        hbm_addr = RdmaHbmBarAlloc(hbm_size);
+
+        NIC_LOG_INFO("{}: hbm_bar_addr: {:#x}, hbm_size: {}, ",
+                     __FUNCTION__, hbm_addr, hbm_size);
+
+        if (hbm_addr == 0) {
+            *hbm_bar_addr = 0;
+            *hbm_bar_size = 0;
+        } else {
+            //must be aligned to hbm_size
+            assert((hbm_addr % hbm_size) == 0);
+            *hbm_bar_addr = hbm_addr;
+            *hbm_bar_size = hbm_size;
+        }
+
+//In units of 8MB
+#define HBM_BARMAP_BASE_SHIFT 23
+//In units of 8MB
+#define HBM_BARMAP_SIZE_SHIFT 23
+
+        sram_lif_entry.barmap_base_addr  = (*hbm_bar_addr) >> HBM_BARMAP_BASE_SHIFT;
+        sram_lif_entry.barmap_size  = (*hbm_bar_size) >> HBM_BARMAP_SIZE_SHIFT;
+    } else {
+        sram_lif_entry.barmap_base_addr  = 0;
+        sram_lif_entry.barmap_size  = 0;
+    }
+
+
     rc = p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
                             lif,
                             sram_lif_entry.rdma_en_qtype_mask,
@@ -1020,7 +1107,9 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                             sram_lif_entry.log_num_prefetch_pool_entries,
                             sram_lif_entry.sq_qtype,
                             sram_lif_entry.rq_qtype,
-                            sram_lif_entry.aq_qtype);
+                            sram_lif_entry.aq_qtype,
+                            sram_lif_entry.barmap_base_addr,
+                            sram_lif_entry.barmap_size);
     assert(rc == 0);
     
     NIC_LOG_INFO("({},{}): Lif: {}: SRAM LIF INIT successful\n",

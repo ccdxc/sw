@@ -485,6 +485,8 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->key_count = val.get<uint64_t>("rdma.key_count");
                 eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
                 eth_spec->ah_count = val.get<uint64_t>("rdma.ah_count");
+                //eth_spec->barmap_size = val.get<uint64_t>("rdma.barmap_size");
+                eth_spec->barmap_size = 1;
             }
 
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);

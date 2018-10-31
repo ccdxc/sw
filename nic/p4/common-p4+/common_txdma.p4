@@ -58,7 +58,7 @@ header_type txdma_common_pad_t {
 
 @pragma dont_trim
 @pragma scratch_metadata
-metadata rdma_scratch_metadata_t scratch_rdma;
+metadata tx_rdma_scratch_metadata_t scratch_rdma;
 
 @pragma dont_trim
 metadata txdma_common_pad_t txdma_common_pad;
@@ -1118,6 +1118,8 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
                                  sq_qtype,
                                  rq_qtype,
                                  aq_qtype,
+                                 barmap_base_addr,
+                                 barmap_size,
                                  reserved) {
     if (((1 << p4_txdma_intr.qtype) & rdma_en_qtype_mask)  != 0) {
         modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
@@ -1137,6 +1139,8 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
         modify_field(scratch_rdma.sq_qtype, sq_qtype);
         modify_field(scratch_rdma.rq_qtype, rq_qtype);
         modify_field(scratch_rdma.aq_qtype, aq_qtype);
+        modify_field(scratch_rdma.barmap_base_addr, barmap_base_addr);
+        modify_field(scratch_rdma.barmap_size, barmap_size);
         modify_field(scratch_rdma.reserved, reserved);
     }
 }

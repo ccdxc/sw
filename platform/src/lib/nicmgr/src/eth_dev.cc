@@ -322,6 +322,26 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     NIC_LOG_INFO("lif{}: Devcmd PA {:#x} DevcmdDB PA {:#x}", info.hw_lif_id,
            pci_resources.devcmdpa, pci_resources.devcmddbpa);
 
+    if (spec->enable_rdma) {
+
+        //Request in 8MB units of CMB for per LIF
+        hbm_size = spec->barmap_size << 23;
+
+        pd->rdma_lif_init(info.hw_lif_id, spec->key_count,
+                          spec->ah_count, spec->pte_count,
+                          &hbm_addr, &hbm_size);
+
+        /*
+         * Create the HBM resident queue memory region for RDMA and 
+         * if successful, register that memory with PCIe BAR2
+         */
+        if (hbm_size != 0) {
+            pci_resources.cmbpa = hbm_addr;
+            pci_resources.cmbsz = hbm_size;
+            NIC_LOG_INFO("HBM address for RDMA LLQ memory {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
+        }
+    }
+
     if (spec->host_dev) {
         // Create PCI device
         pdev = pciehdev_eth_new(name.c_str(), &pci_resources);
@@ -348,42 +368,6 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     rss_type = LifRssType::RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
     memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
-
-    if (spec->enable_rdma) {
-        /*
-         * Create the HBM resident queue memory region for RDMA and 
-         * register that memory with PCIe BAR2
-         */
-
-#define LLQ_HBM_HANDLE "rdma-hbm-queue"
-#define HBM_ADDR_ALIGN(addr, sz)                                    \
-        (((addr) + ((uint64_t)(sz) - 1)) & ~((uint64_t)(sz) - 1))
-
-        if (hal->AllocHbmAddress(LLQ_HBM_HANDLE, &hbm_addr, &hbm_size)) {
-            NIC_LOG_ERR("Failed to get HBM base for {}", LLQ_HBM_HANDLE);
-            return;
-        }
-        // hal/pd/capri/capri_hbm.cc stores size in KB;
-        hbm_size *= 1024;
-
-        // First, ensure size is a power of 2, then per PCIe BAR mapping
-        // requirement, align the region on its natural boundary, i.e.,
-        // if size is 64MB then the region must be aligned on a 64MB boundary!
-        // This means we could potentially waste half of the space if
-        // the region was not already aligned.
-        assert(hbm_size && !(hbm_size & (hbm_size - 1)));
-        if (hbm_addr & (hbm_size - 1)) {
-            hbm_size /= 2;
-            hbm_addr = HBM_ADDR_ALIGN(hbm_addr, hbm_size);
-        }
-
-        pci_resources.cmbpa = hbm_addr;
-        pci_resources.cmbsz = hbm_size;
-        NIC_LOG_INFO("HBM address for RDMA LLQ memory {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
-
-        pd->rdma_lif_init(info.hw_lif_id, spec->key_count,
-                          spec->ah_count, spec->pte_count);
-    }
 }
 
 uint64_t

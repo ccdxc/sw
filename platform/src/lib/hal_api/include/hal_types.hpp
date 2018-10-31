@@ -91,6 +91,8 @@ struct eth_spec {
     // TODO: Implement feature spec
     uint32_t max_pt_entries;
     uint32_t max_keys;
+    //in 8MB units
+    uint32_t barmap_size;
 };
 
 typedef enum {

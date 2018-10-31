@@ -1,5 +1,6 @@
 #include "aq_rx.h"
 #include "aqcb.h"
+#include "types.h"
 
 struct aq_rx_phv_t p;
 struct aq_rx_s1_t3_k k;
@@ -13,6 +14,7 @@ struct aq_rx_s1_t3_k k;
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_RANGE(IN_TO_S_P, rqcb_base_addr_hi_sbit0_ebit2, rqcb_base_addr_hi_sbit19_ebit23)
 
 #define K_RQ_MAP_COUNT CAPRI_KEY_FIELD(IN_P, rq_map_count)
+#define K_RQ_CMB CAPRI_KEY_FIELD(IN_P, rq_cmb)
 
 %%
 
@@ -29,7 +31,7 @@ rdma_aq_rx_wqe_process:
 
     add         r4, r0, K_RQ_MAP_COUNT, CAPRI_LOG_SIZEOF_U64
     beqi        r4, 1<<CAPRI_LOG_SIZEOF_U64, qp_skip_dma_pt
-    nop
+    crestore    [c1], K_RQ_CMB, 0x1 //BD Slot
 
     DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC)
 
@@ -43,10 +45,14 @@ rdma_aq_rx_wqe_process:
 
 qp_skip_dma_pt:
 
+    phvwr.c1    p.rqcb0.hbm_rq_base_addr, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr[33:HBM_RQ_BASE_ADDR_SHIFT]
+    phvwr.c1    p.rqcb1.hbm_rq_base_addr, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr[33:HBM_RQ_BASE_ADDR_SHIFT]
+    phvwr.c1    p.rqcb0.rq_in_hbm, 1
+    phvwr.c1    p.rqcb1.rq_in_hbm, 1
     //copy      the phy address of a single page directly.
     //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    or          r2, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr, 0x1, 63    
-    memwr.dx    r3, r2 //BD slot
+    //or          r2, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr, 0x1, 63    
+    memwr.!c1.dx    r3, k.t3_s2s_aqcb_to_wqe_info_rq_dma_addr
 
 qp_no_skip_dma_pt: 
     

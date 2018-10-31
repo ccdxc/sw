@@ -80,6 +80,8 @@ typedef struct sram_lif_entry_s {
     uint32_t sq_qtype: 3;
     uint32_t rq_qtype: 3;
     uint32_t aq_qtype: 3;
+    uint32_t barmap_base_addr: 10;
+    uint32_t barmap_size: 10;
 } PACKED sram_lif_entry_t;
 
 typedef struct key_entry_s {

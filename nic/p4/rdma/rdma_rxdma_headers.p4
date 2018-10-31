@@ -316,7 +316,8 @@ header_type rdma_aq_completion_feedback_header_create_qp_t {
         common_roce_bits    :  48;
         rq_dma_addr         :  64;
         rq_id               :  24;
-        rsvd                :  24;
+        rq_cmb              :   1;
+        rsvd                :  23;
         aq_comp_common_bits :  56;
         rq_cq_id            :  24;
         rq_depth_log2       :   8;

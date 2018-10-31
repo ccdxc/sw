@@ -143,6 +143,7 @@ message LifSpec {
   qos.PolicerSpec            rx_policer                  = 18;   // QOS Policer for rx traffic
   kh.QosClassKeyHandle       rx_qos_class                = 19;   // QOS class-of-service for Rx traffic.
   kh.QosClassKeyHandle       tx_qos_class                = 20;   // QOS class-of-service for Tx traffic.
+  uint32                     rdma_barmap_size            = 21;   // RDMA: barmap size in bytes, rounded to power of 2
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

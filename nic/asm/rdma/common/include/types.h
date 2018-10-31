@@ -10,6 +10,8 @@
 
 #define HBM_NUM_PT_ENTRIES_PER_CACHE_LINE 8
 #define HBM_PAGE_SIZE_SHIFT 12 // HBM page size is assumed as 4K
+#define BARMAP_BASE_SHIFT 23 // Barmap is 8M aligned
+#define BARMAP_SIZE_SHIFT 23 // Barmap is in units of 8M
 #define HBM_CACHE_LINE_SIZE 64 // Bytes
 #define HBM_CACHE_LINE_SIZE_BITS (HBM_CACHE_LINE_SIZE * BITS_PER_BYTE)
 #define HBM_CACHE_LINE_SIZE_MASK (HBM_CACHE_LINE_SIZE - 1)
@@ -25,6 +27,7 @@
 #define RRQ_BASE_ADDR_SHIFT 3
 #define RSQ_BASE_ADDR_SHIFT 3
 #define HBM_SQ_BASE_ADDR_SHIFT 3
+#define HBM_RQ_BASE_ADDR_SHIFT 3
 #define CQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 #define SQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 #define RQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
@@ -1167,7 +1170,8 @@ struct p4_to_p4plus_roce_header_t {
 struct rdma_aq_feedback_create_qp_ext_t {
     rq_dma_addr: 64;
     rq_id      : 24;
-    rsvd: 24;
+    rq_cmb     : 1;
+    rsvd       : 23;
 };
         
 struct aq_p4_to_p4plus_roce_header_t {
@@ -1393,6 +1397,17 @@ struct resp_rx_send_fml_t {
 #define AQ_STATS_DUMP_TYPE_KT   4
 #define AQ_STATS_DUMP_TYPE_AQ   5
 
+#define AQ_QPF_LOCAL_WRITE      0x00000001
+#define AQ_QPF_REMOTE_WRITE     0x00000002
+#define AQ_QPF_REMOTE_READ      0x00000004
+#define AQ_QPF_REMOTE_ATOMIC    0x00000008
+#define AQ_QPF_MW_BIND          0x00000010
+
+#define AQ_QPF_SQD_NOTIFY       0x00001000
+#define AQ_QPF_SQ_CMB           0x00002000
+#define AQ_QPF_RQ_CMB           0x00004000
+#define AQ_QPF_PRIVILEGED       0x00008000
+
 struct aqwqe_t {
 	op: 8;
     type_state: 8;
@@ -1429,8 +1444,22 @@ struct aqwqe_t {
 		} cq;
 		struct {
 			pd_id: 32;
-			access_perms_flags: 16;
-			access_perms_rsvd: 16;
+            union {
+			    priv_flags: 32;
+                struct {
+                    pad1: 16;
+                    privileged:1;
+                    rq_cmb:1;
+                    sq_cmb:1;
+                    sqd_notify:1;
+                    pad2:7;
+                    access_mw_bind:1;
+                    access_remote_atomic:1;
+                    access_remote_read:1;
+                    access_remote_write:1;
+                    access_local_write:1;
+                };
+            };
 			sq_cq_id: 32;
 			sq_depth_log2: 8;
 			sq_stride_log2: 8;

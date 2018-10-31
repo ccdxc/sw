@@ -75,7 +75,8 @@
                 "pid_count" : 256,
                 "pte_count" : 1048576,
                 "key_count" : 262144,
-                "ah_count"  : 8192
+                "ah_count"  : 8192,
+                "barmap_size" : 1
             }
         },
         {
@@ -103,7 +104,8 @@
                 "pid_count" : 256,
                 "pte_count" : 1048576,
                 "key_count" : 262144,
-                "ah_count"  : 8192
+                "ah_count"  : 8192,
+                "barmap_size" : 1
             }
         }
     ],

@@ -64,15 +64,16 @@
                 "num_vfs" : 0
             },
             "rdma" : {
-                "sq_count" : 512,
-                "rq_count" : 512,
-                "cq_count" : 256,
-                "eq_count" : 512,
+                "sq_count" : 4096,
+                "rq_count" : 4096,
+                "cq_count" : 2048,
+                "eq_count" : 4096,
                 "adminq_count" : 1,
-                "pid_count" : 32,
-                "pte_count" : 131072,
-                "key_count" : 32768,
-                "ah_count"  : 1024
+                "pid_count" : 256,
+                "pte_count" : 1048576,
+                "key_count" : 262144,
+                "ah_count"  : 8192,
+                "barmap_size" : 1
             },
             "network" : {
                 "uplink" : 128

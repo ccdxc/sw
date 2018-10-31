@@ -255,7 +255,7 @@ header_type semaphore_pi_t {
         pi_##_x                           : 16;\
         ci_##_x                           : 16;\
 
-header_type rdma_scratch_metadata_t {
+header_type tx_rdma_scratch_metadata_t {
     fields {
         // All the page-ids are encoded as 22-bit, assuming HBM page
         // size is 4K, with appropriate shift it would form 22+12=34-bit
@@ -294,12 +294,60 @@ header_type rdma_scratch_metadata_t {
         sq_qtype: 3;
         rq_qtype: 3;
         aq_qtype: 3;
-
-        reserved: 32;
+        //barmap base address per LIF in units of 8MB
+        //need 10 bits to present 8GB
+        barmap_base_addr: 10;
+        //barmap size in 8MB units
+        //need 8 bits to present 2GB per LIF
+        barmap_size: 8;
+        reserved: 14;
 
     }
 }
 
+header_type rx_rdma_scratch_metadata_t {
+    fields {
+        // All the page-ids are encoded as 22-bit, assuming HBM page
+        // size is 4K, with appropriate shift it would form 22+12=34-bit
+        // hbm address.
+        // Where as CQCB base addr is encoded as 24-bit, so to get 1K alignment,
+        // with appropriate shift it would form 24+10=34-bit hbm address.
+        //QTYPEs on LIF can be allocated differently on different LIFs
+        //This mask will have the respective bit set for all qtype values
+        //where RDMA is enabled (if enabled)
+        //For case where RDMA is not enabled, it should be set to 0
+        rdma_en_qtype_mask : 8;
+
+        //Per LIF PageTranslationTable and MemoryRegionWindowTable
+        //are allocated adjacent to each other in HBM in that order.
+        //This is the base page_id of that allocation.
+        //Assumption is that it is 4K Byte(page) aligned and
+        //number of PT entries are in power of 2s.
+        pt_base_addr_page_id: 22;
+        ah_base_addr_page_id: 22;
+        log_num_pt_entries: 7;
+        rrq_base_addr_page_id: 22;
+        rsq_base_addr_page_id: 22;
+
+        //Per LIF CQCB and EQCB tables
+        //are allocated adjacent to each other in HBM in that order.
+        //CQCB address is 1K aligned, so store only 24 bits
+        cqcb_base_addr_hi: 24;
+        sqcb_base_addr_hi: 24;
+        rqcb_base_addr_hi: 24;        
+        log_num_cq_entries: 5;
+
+        //RQCB prefetch uses per LIF global ring
+        //This is the base address of that ring
+        prefetch_pool_base_addr_page_id: 22;
+        log_num_prefetch_pool_entries:5;
+        sq_qtype: 3;
+        rq_qtype: 3;
+        aq_qtype: 3;
+        reserved: 32;
+
+    }
+}
 header_type tcp_header_t {
     fields {
         source_port : 16;

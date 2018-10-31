@@ -86,7 +86,7 @@ metadata scratch_metadata_t scratch_metadata2;
 
 @pragma dont_trim
 @pragma scratch_metadata
-metadata rdma_scratch_metadata_t scratch_rdma;
+metadata rx_rdma_scratch_metadata_t scratch_rdma;
 
 @pragma dont_trim
 @pragma scratch_metadata

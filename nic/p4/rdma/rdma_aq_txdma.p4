@@ -104,7 +104,9 @@ header_type aq_tx_to_stage_wqe_info_t {
         rqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
         ah_base_addr_page_id             :   22;        
-        pad                              :   30;
+        barmap_base                      :   10;
+        barmap_size                      :    8;
+        pad                              :   12;
     }
 }
 
@@ -320,6 +322,8 @@ action aq_tx_aqwqe_process () {
     modify_field(to_s1_info_scr.rqcb_base_addr_hi, to_s1_info.rqcb_base_addr_hi);
     modify_field(to_s1_info_scr.log_num_cq_entries, to_s1_info.log_num_cq_entries);
     modify_field(to_s1_info_scr.ah_base_addr_page_id, to_s1_info.ah_base_addr_page_id);
+    modify_field(to_s1_info_scr.barmap_base, to_s1_info.barmap_base);
+    modify_field(to_s1_info_scr.barmap_size, to_s1_info.barmap_size);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
     
     // stage to stage

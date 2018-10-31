@@ -421,7 +421,7 @@
             "size_kb" : 32768
         },
         {
-            "name": "rdma-hbm-queue",
+            "name": "rdma-hbm-bar",
             "size_kb" : 32768,
             "cache": "p4plus-all"
         },

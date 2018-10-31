@@ -118,7 +118,8 @@ header_type aq_rx_aqcb_to_wqe_info_t {
 		rq_tbl_index                     :  32;
 		rq_map_count                     :  32;
 		rq_dma_addr                      :  64;
-        pad                              :   8;
+        rq_cmb                           :   1;
+        pad                              :   7;
     }
 }
 
@@ -315,6 +316,7 @@ action rdma_stage0_aq_feedback_action2 () {
     modify_field(rdma_aq_feedback_qp_scr.rq_type_state, rdma_aq_feedback_qp.rq_type_state);
     modify_field(rdma_aq_feedback_qp_scr.pd, rdma_aq_feedback_qp.pd);
     modify_field(rdma_aq_feedback_qp_scr.rq_dma_addr, rdma_aq_feedback_qp.rq_dma_addr);
+    modify_field(rdma_aq_feedback_qp_scr.rq_cmb, rdma_aq_feedback_qp.rq_cmb);
 }
 
 /*
@@ -382,6 +384,7 @@ action rdma_aq_rx_aqwqe_process () {
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_tbl_index, t3_s2s_aqcb_to_wqe_info.rq_tbl_index);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_map_count, t3_s2s_aqcb_to_wqe_info.rq_map_count);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_dma_addr, t3_s2s_aqcb_to_wqe_info.rq_dma_addr);
+    modify_field(t3_s2s_aqcb_to_wqe_info_scr.rq_cmb, t3_s2s_aqcb_to_wqe_info.rq_cmb);
     modify_field(t3_s2s_aqcb_to_wqe_info_scr.pad, t3_s2s_aqcb_to_wqe_info.pad);
 
 }
