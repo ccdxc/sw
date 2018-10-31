@@ -38,7 +38,8 @@ Scheduler::Scheduler(vector<Spec> specs)
     {
         auto service = make_shared<Service>(sp.name, sp.command, 
             (sp.flags & RESTARTABLE) == RESTARTABLE,
-            (sp.flags & NO_WATCHDOG) == NO_WATCHDOG);
+	    (sp.flags & NO_WATCHDOG) == NO_WATCHDOG,
+	    (sp.flags & NON_CRITICAL) != NON_CRITICAL);
         this->services.insert(pair<const string &, shared_ptr<Service>>(service->name, service));
         INFO("Added service {}", service->name);
     }
@@ -110,7 +111,7 @@ bool Scheduler::should_reboot()
     }
     for (auto s: this->dead)
     {
-        if (s->is_restartable == false)
+        if (s->is_restartable == false && s->is_critical)
         {
             INFO("Non-restartable process({}) restart", s->name);
             return true;

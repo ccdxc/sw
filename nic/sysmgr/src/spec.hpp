@@ -6,15 +6,14 @@
 
 using namespace std;
 
-enum flags {
-    DEFAULT_SPEC_FLAGS = 0x0000,
-    RESTARTABLE        = 0x0001,
-    NO_WATCHDOG        = 0x0002,
-};
+#define  DEFAULT_SPEC_FLAGS 0x0000
+#define  RESTARTABLE        0x0001
+#define  NO_WATCHDOG        0x0002
+#define  NON_CRITICAL       0x0004
 
 class Spec {
     public:
-        Spec(const string name, enum flags flags,
+        Spec(const string name, int flags,
             const string command, const vector<string> dependencies):
             name(name), command(command), dependencies(dependencies), 
             flags(flags) {
@@ -22,7 +21,7 @@ class Spec {
         const string name;
         const string command;
         const vector<string> dependencies;
-        const enum flags flags;
+        const int flags;
 };
 
 extern const vector<Spec> SPECS;

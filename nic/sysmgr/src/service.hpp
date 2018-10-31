@@ -29,10 +29,14 @@ class Service
     const string command;
     const bool is_restartable;
     const bool is_watchdog_disabled;
+    const bool is_critical;
 
-    Service(string name, string command, bool restartable, bool watchdog_disabled) : name(name), 
-        command(command), is_restartable(restartable),
-        is_watchdog_disabled(watchdog_disabled)
+    Service(string name, string command, bool restartable,
+	    bool watchdog_disabled, bool is_critical) :
+       name(name), 
+       command(command), is_restartable(restartable),
+       is_watchdog_disabled(watchdog_disabled),
+       is_critical(is_critical)
     {
         status = WAITING;
         pid = 0;

@@ -82,7 +82,7 @@ static void start_all(Scheduler &sched)
 TEST(Scheduler, ServiceCompare)
 {
     auto s = ServiceSet();
-    auto srv = make_shared<Service>("nicmgr", "/bin/ls -l", true, false);
+    auto srv = make_shared<Service>("nicmgr", "/bin/ls -l", true, false, false);
     auto srv2 = srv;
     s.insert(srv);
     s.insert(srv2);
@@ -199,6 +199,31 @@ TEST(Scheduler, NonRestartableStartingProcessDeath)
     sched.service_died("agent1");
     auto action = sched.next_action();
     next_action_is(sched, REBOOT, {});
+}
+
+TEST(Scheduler, NonCritical)
+{
+    const vector<Spec> specs = {
+        Spec("delphi", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {}),
+        Spec("agent1", NON_CRITICAL, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("hal", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi"}),
+        Spec("nicmgr", NON_CRITICAL, "/bin/ls -l", {"delphi", "hal"}),
+        Spec("agent2", RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+    };
+
+    auto sched = Scheduler(specs);
+    // starts delphi
+    start_ready(sched);
+    // starts hal
+    start_ready(sched);
+    // starts nicmgr
+    start_ready(sched);
+    // launches agent1 and agent 2
+    launch_ready(sched);
+
+    sched.service_died("agent1");
+    auto action = sched.next_action();
+    next_action_is(sched, WAIT, {});
 }
 
 TEST(Scheduler, WatchdogTest)
