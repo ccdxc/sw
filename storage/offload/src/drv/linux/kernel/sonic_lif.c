@@ -946,14 +946,13 @@ struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif, uint
 	       lif->res.pc_res[res_id] : NULL;
 }
 
-int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
-		struct queue **q)
+int sonic_get_per_core_seq_sq(struct per_core_resource *pc_res,
+			      enum sonic_queue_type sonic_qtype,
+			      struct queue **q)
 {
 	int err = -EPERM;
-	struct per_core_resource *pc_res = NULL;
 
 	*q = NULL;
-	pc_res = sonic_get_per_core_res(lif);
 	if (pc_res == NULL)
 		return err;
 	switch (sonic_qtype) {
@@ -974,6 +973,16 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		break;
 	}
 	return 0;
+}
+
+int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
+		struct queue **q)
+{
+	int err = -EPERM;
+	struct per_core_resource *pc_res = NULL;
+
+	pc_res = sonic_get_per_core_res(lif);
+	return sonic_get_per_core_seq_sq(pc_res, sonic_qtype, q);
 }
 
 int

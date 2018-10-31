@@ -142,6 +142,9 @@ int sonic_lif_crypto_seq_qs_init(struct per_core_resource *res);
 int sonic_lif_cpdc_seq_qs_control(struct per_core_resource *res, uint16_t opcode);
 int sonic_lif_crypto_seq_qs_control(struct per_core_resource *res, uint16_t opcode);
 
+int sonic_get_per_core_seq_sq(struct per_core_resource *res,
+		enum sonic_queue_type qtype,
+		struct queue **q);
 int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type qtype,
 		struct queue **q);
 
@@ -160,8 +163,10 @@ sonic_get_seq_sq_num_descs(struct lif *lif,
                            enum sonic_queue_type sonic_qtype)
 {
 	struct queue	*q;
+	struct per_core_resource *pc_res;
 
-	if (!sonic_get_seq_sq(lif, sonic_qtype, &q))
+	pc_res = sonic_get_per_core_res_by_res_id(lif, 0);
+	if (!sonic_get_per_core_seq_sq(pc_res, sonic_qtype, &q))
 		return q->num_descs;
 
 	return 0;
