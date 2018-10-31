@@ -471,7 +471,7 @@ func (hd *Datapath) convertPortTypeFec(portType string) (halPortType halproto.Po
 	switch portType {
 	case "TYPE_ETHERNET":
 		halPortType = halproto.PortType_PORT_TYPE_ETH
-		halFecType = halproto.PortFecType_PORT_FEC_TYPE_FC
+		halFecType = halproto.PortFecType_PORT_FEC_TYPE_RS
 	case "TYPE_MANAGEMENT":
 		halPortType = halproto.PortType_PORT_TYPE_MGMT
 		halFecType = halproto.PortFecType_PORT_FEC_TYPE_NONE

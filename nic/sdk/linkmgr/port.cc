@@ -23,8 +23,11 @@ port::port_debounce_timer(void)
 {
     // Notify if link is still down
     if (port_link_status() == false) {
-        // TODO disable the port?
-        port_event_notify(port_event_t::PORT_EVENT_LINK_DOWN);
+        // Disable notifies link down if link was UP before
+        port_disable();
+
+        // Enable the port
+        port_enable();
     }
 
     return SDK_RET_OK;
@@ -726,12 +729,20 @@ port::port_disable(void)
         return SDK_RET_OK;
     }
 
+    // store the current link status
+    port_oper_status_t prev_oper_status = oper_status();
+
     // disable the port
     set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DISABLED);
 
     port_link_sm_process();
 
     this->admin_state_ = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+
+    // Notfiy the link down if link was up before disable
+    if (prev_oper_status == port_oper_status_t::PORT_OPER_STATUS_UP) {
+        port_event_notify(port_event_t::PORT_EVENT_LINK_DOWN);
+    }
 
     return SDK_RET_OK;;
 }

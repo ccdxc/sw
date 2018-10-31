@@ -825,46 +825,93 @@ void cap_mx_set_tx_autodrain(int chip_id, int inst_id, int ch, int value) {
 
 void cap_mx_set_fec(int chip_id, int inst_id, int ch, int value) {
 
-  value &= 0x1;
-  PLOG_MSG("cap_mx_set_fec :: mx" << inst_id << " channel " << ch << ": set fec " << value << endl);
-  cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+    /* RS FEC: 0x2
+     * FC FEC: 0x1
+     * NO FEC: 0x0
+     */
 
+    PLOG_MSG("cap_mx_set_fec :: mx" << inst_id << " channel " << ch << ": set fec " << value << endl);
+    cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
 
-  int addr = (ch == 1) ? 0x910 : (ch == 2) ? 0xa10 : (ch == 3) ? 0xb10 : 0x810;
-  int data = cap_mx_apb_read(chip_id, inst_id, addr);
-  data = data & 0xfffc;
-  int global_mode = cap_mx_apb_read(chip_id, inst_id, 0x1);
-  int fec = (global_mode == 4) ? 0x1 :  // 1X40/50G, FEC = FC
-    0x2;  // 1X100G, 2X40/50G, 4X10/25G
-  data = value ? (data | fec) : data;
-  cap_mx_apb_write(chip_id, inst_id, addr, data);
+    int addr = (ch == 1) ? 0x910 : (ch == 2) ? 0xa10 : (ch == 3) ? 0xb10 : 0x810;
+    int data = cap_mx_apb_read(chip_id, inst_id, addr);
+    data = data & 0xfffc;
+    int global_mode = cap_mx_apb_read(chip_id, inst_id, 0x1);
 
-  addr = (ch == 1) ? 0x3000 : (ch == 2) ? 0x3100 : (ch == 3) ? 0x3200 : 0x1000;
-  data = cap_mx_apb_read(chip_id, inst_id, addr);
-  data = (value)? (data & 0xfffd) : (data | 0x2);
-  cap_mx_apb_write(chip_id, inst_id, addr, data);
+    // int fec = (global_mode == 4) ? 0x1 :  // 1X40/50G, FEC = FC
+    //    0x2;  // 1X100G, 2X40/50G, 4X10/25G
 
-  mx_csr.cfg_mac_gbl.read();
-  mx_csr.cfg_mac_gbl.cg_fec_enable_i(1);
-  mx_csr.cfg_mac_gbl.write();
+    data = data | value;
+    cap_mx_apb_write(chip_id, inst_id, addr, data);
 
-  if (value == 1) {
-    // Don't enable programmable alignment marker length
-    addr = (ch == 1) ? 0x9ff : (ch == 2) ? 0xaff : (ch == 3) ? 0xbff : 0x8ff;
-    cap_mx_apb_write(chip_id, inst_id, addr, 0x1E01);
-    mx[inst_id].for_simulation = 0;
-  }
+    //25G RS FEC IEEE mode - From Comira spreadsheet
+    if(global_mode == 8 && value == 0x2 /* RS FEC */) {
+        //0x10FD,30fd,31fd,32fd => 16'h59F0
+        addr = (ch == 1) ? 0x30fd : (ch == 2) ? 0x31fd : (ch == 3) ? 0x32fd : 0x10fd;
+        cap_mx_apb_write(chip_id, inst_id, addr, 0x59f0);
 
-  // If the mac is already out of reset, toggle soft reset after FEC enable
-  data = cap_mx_apb_read(chip_id, inst_id, 0x5);
-  int mask = 1 << ch;
-  if ((data & mask) == 0) {
-    //int data_new = data | mask;
-    //cap_mx_apb_write(chip_id, inst_id, 0x5, data_new);
-    //cap_mx_apb_write(chip_id, inst_id, 0x5, data);
-    cap_mx_set_soft_reset(chip_id, inst_id, ch, 1);
-    cap_mx_set_soft_reset(chip_id, inst_id, ch, 0);
-  }
+        //0x0850,950,a50,b50 => 0x3
+        addr = (ch == 1) ? 0x950 : (ch == 2) ? 0xa50 : (ch == 3) ? 0xb50 : 0x850;
+        cap_mx_apb_write(chip_id, inst_id, addr, 0x3);
+
+        //0x0863-0x085C => {0x337B,0x954D, 0x33E8,0x4B59, 0x338E,0x719D, 0x3321,0x68C1}
+        cap_mx_apb_write(chip_id, inst_id, 0x85c, 0x68C1);
+        cap_mx_apb_write(chip_id, inst_id, 0x85d, 0x3321);
+        cap_mx_apb_write(chip_id, inst_id, 0x85e, 0x719D);
+        cap_mx_apb_write(chip_id, inst_id, 0x85f, 0x338E);
+        cap_mx_apb_write(chip_id, inst_id, 0x860, 0x4B59);
+        cap_mx_apb_write(chip_id, inst_id, 0x861, 0x33E8);
+        cap_mx_apb_write(chip_id, inst_id, 0x862, 0x954D);
+        cap_mx_apb_write(chip_id, inst_id, 0x863, 0x337B);
+    } else {
+        // Below settings are the defaults when NOT in 25G RS FEC mode
+        // Defaults needs to be set when resetting 25G RS FEC mode
+
+        //0x10FD,30fd,31fd,32fd => 16'h99F0
+        addr = (ch == 1) ? 0x30fd : (ch == 2) ? 0x31fd : (ch == 3) ? 0x32fd : 0x10fd;
+        cap_mx_apb_write(chip_id, inst_id, addr, 0x99f0);
+
+        //0x0850,950,a50,b50 => 0x2
+        addr = (ch == 1) ? 0x950 : (ch == 2) ? 0xa50 : (ch == 3) ? 0xb50 : 0x850;
+        cap_mx_apb_write(chip_id, inst_id, addr, 0x2);
+
+        //0x0863-0x085C => {0x337B,0x954D, 0x33E8,0x4B59, 0x338E,0x719D, 0x3321,0x68C1}
+        cap_mx_apb_write(chip_id, inst_id, 0x85c, 0x0);
+        cap_mx_apb_write(chip_id, inst_id, 0x85d, 0x0);
+        cap_mx_apb_write(chip_id, inst_id, 0x85e, 0x0);
+        cap_mx_apb_write(chip_id, inst_id, 0x85f, 0x0);
+        cap_mx_apb_write(chip_id, inst_id, 0x860, 0x0);
+        cap_mx_apb_write(chip_id, inst_id, 0x861, 0x0);
+        cap_mx_apb_write(chip_id, inst_id, 0x862, 0x0);
+        cap_mx_apb_write(chip_id, inst_id, 0x863, 0x0);
+    }
+
+    addr = (ch == 1) ? 0x3000 : (ch == 2) ? 0x3100 : (ch == 3) ? 0x3200 : 0x1000;
+    data = cap_mx_apb_read(chip_id, inst_id, addr);
+    data = (value)? (data & 0xfffd) : (data | 0x2);
+    cap_mx_apb_write(chip_id, inst_id, addr, data);
+
+    mx_csr.cfg_mac_gbl.read();
+    mx_csr.cfg_mac_gbl.cg_fec_enable_i(1);
+    mx_csr.cfg_mac_gbl.write();
+
+    if (value == 1) {
+        // Don't enable programmable alignment marker length
+        addr = (ch == 1) ? 0x9ff : (ch == 2) ? 0xaff : (ch == 3) ? 0xbff : 0x8ff;
+        cap_mx_apb_write(chip_id, inst_id, addr, 0x1E01);
+        mx[inst_id].for_simulation = 0;
+    }
+
+    // If the mac is already out of reset, toggle soft reset after FEC enable
+    data = cap_mx_apb_read(chip_id, inst_id, 0x5);
+    int mask = 1 << ch;
+    if ((data & mask) == 0) {
+        //int data_new = data | mask;
+        //cap_mx_apb_write(chip_id, inst_id, 0x5, data_new);
+        //cap_mx_apb_write(chip_id, inst_id, 0x5, data);
+        cap_mx_set_soft_reset(chip_id, inst_id, ch, 1);
+        cap_mx_set_soft_reset(chip_id, inst_id, ch, 0);
+    }
 }
 
 void cap_mx_wait_fec_sync(int chip_id, int inst_id, int ch) {

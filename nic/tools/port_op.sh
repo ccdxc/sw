@@ -114,12 +114,12 @@ if [[ "$create" == "1" ]]; then
     if [[ "$speed" == "100" ]]; then
         num_lanes=4
         if [[ "$fec" == "not_set" ]]; then
-            fec=fc
+            fec=rs
         fi
     elif [[ "$speed" == "50" ]]; then
         num_lanes=2
         if [[ "$fec" == "not_set" ]]; then
-            fec=fc
+            fec=rs
         fi
     elif [[ "$speed" == "40" ]]; then
         num_lanes=4
@@ -129,7 +129,7 @@ if [[ "$create" == "1" ]]; then
     elif [[ "$speed" == "25" ]]; then
         num_lanes=1
         if [[ "$fec" == "not_set" ]]; then
-            fec=none
+            fec=fc
         fi
     fi
 
