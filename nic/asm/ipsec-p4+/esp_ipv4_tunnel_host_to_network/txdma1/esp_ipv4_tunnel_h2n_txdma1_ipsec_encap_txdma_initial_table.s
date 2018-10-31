@@ -29,7 +29,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwr p.barco_req_command, d.barco_enc_cmd
     add r6, r0, d.{key_index}
     phvwr p.barco_req_key_desc_index, r6.wx 
-    phvwr p.t0_s2s_iv_size, d.iv_size
+    //phvwr p.t0_s2s_iv_size, d.iv_size
     phvwri p.app_header_table0_valid, 1
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 7 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_s1_dummy[33:6] 

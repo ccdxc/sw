@@ -19,6 +19,7 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2:
     tblwr.f d.pi, r4
     addui r2, r2, hiword(BRQ_BASE)
     addi r2, r2, loword(BRQ_BASE)
+    phvwri p.barco_req_header_size, ESP_FIXED_HDR_SIZE_LI 
     phvwr p.ipsec_to_stage4_barco_req_addr, r2
     phvwr p.barco_dbell_pi, r4.wx
     phvwri p.brq_req_write_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM

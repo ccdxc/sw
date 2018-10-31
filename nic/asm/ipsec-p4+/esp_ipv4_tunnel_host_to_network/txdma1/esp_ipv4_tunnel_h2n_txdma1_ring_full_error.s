@@ -10,7 +10,7 @@ struct phv_ p;
 %%
         .align
 esp_ipv4_tunnel_h2n_txdma1_ring_full_error:
-    tbladd d.h2n_tx_drops, 1
+    tbladd.f d.h2n_tx_drops, 1
     phvwri p.p4_intr_global_drop, 1
     phvwri.e p.app_header_table1_valid, 0
     nop 

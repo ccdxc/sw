@@ -306,6 +306,7 @@ action ipsec_encap_txdma2_load_out_desc(addr0, offset0, length0,
 {
     modify_field(t0_s2s.out_page_addr, addr0);
     modify_field(p4plus2p4_hdr.table1_valid, 0);
+    modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
 }
 
 //stage 3 table 0 
