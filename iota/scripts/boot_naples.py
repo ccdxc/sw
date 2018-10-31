@@ -32,7 +32,7 @@ parser.add_argument('--username', dest='username',
 parser.add_argument('--password', dest='password',
                     default="pen123", help='Naples Password.')
 parser.add_argument('--timeout', dest='timeout',
-                    default=5, help='Naples Password.')
+                    default=60, help='Naples Password.')
 parser.add_argument('--image', dest='image',
                     default='/sw/nic/naples_fw.tar', help='Naples Image.')
 parser.add_argument('--drivers-ionic-pkg', dest='drivers_ionic_pkg',
