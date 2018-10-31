@@ -155,8 +155,10 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 		log.Infof("Nothing to update.")
 		return nil
 	}
+	// Populate the ID from existing sg policy to ensure that HAL recognizes this.
+	sgp.Status.SGPolicyID = existingSgp.Status.SGPolicyID
 
-	err = na.Datapath.UpdateSGPolicy(existingSgp, ns.Status.NamespaceID)
+	err = na.Datapath.UpdateSGPolicy(sgp, ns.Status.NamespaceID)
 	if err != nil {
 		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", existingSgp, err)
 		return err

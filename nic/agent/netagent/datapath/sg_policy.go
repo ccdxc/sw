@@ -124,7 +124,7 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 	}
 
 	if hd.Kind == "hal" {
-		resp, err := hd.Hal.Sgclient.SecurityPolicyCreate(context.Background(), sgPolicyUpdateReqMsg)
+		resp, err := hd.Hal.Sgclient.SecurityPolicyUpdate(context.Background(), sgPolicyUpdateReqMsg)
 		if err != nil {
 			log.Errorf("Error updating SGPolicy. Err: %v", err)
 			return err
