@@ -448,7 +448,7 @@ crypto_teardown(struct service_info *svc_info)
 	pc_res_mpool_object_put(pcr, MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 				svc_info->si_istatus_desc);
 	pc_res_sgl_pdma_put(pcr, svc_info->si_sgl_pdma);
-	pc_res_sgl_vec_put(pcr, &svc_info->si_src_sgl);
+	pc_res_sgl_put(pcr, &svc_info->si_src_sgl);
 	seq_cleanup_crypto_chain(svc_info);
 
 	OSAL_LOG_DEBUG("exit!");

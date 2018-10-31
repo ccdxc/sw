@@ -113,11 +113,23 @@ pc_res_sgl_put(const struct per_core_resource *pcr,
 	struct cpdc_sgl *sgl;
 
 	sgl = svc_sgl->sgl;
-	while (sgl) {
-		sgl_next = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) :
+	switch (svc_sgl->mpool_type) {
+
+	case MPOOL_TYPE_CPDC_SGL:
+		while (sgl) {
+			sgl_next = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) :
 					  NULL;
-		pc_res_mpool_object_put(pcr, svc_sgl->mpool_type, (void *)sgl);
-		sgl = sgl_next;
+			pc_res_mpool_object_put(pcr, svc_sgl->mpool_type, sgl);
+			sgl = sgl_next;
+		}
+		break;
+
+	default:
+		/*
+		 * Vector cases
+		 */
+		pc_res_mpool_object_put(pcr, svc_sgl->mpool_type, sgl);
+		break;
 	}
 	svc_sgl->sgl = NULL;
 }
@@ -198,16 +210,8 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 	}
 	return PNSO_OK;
 out:
-	pc_res_sgl_vec_put(pcr, svc_sgl);
+	pc_res_sgl_put(pcr, svc_sgl);
 	return err;
-}
-
-void
-pc_res_sgl_vec_put(const struct per_core_resource *pcr,
-		   struct service_cpdc_sgl *svc_sgl)
-{
-	pc_res_mpool_object_put(pcr, svc_sgl->mpool_type,
-				svc_sgl->sgl);
 }
 
 /*
