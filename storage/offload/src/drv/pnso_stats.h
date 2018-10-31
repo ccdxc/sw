@@ -58,8 +58,8 @@ struct pnso_api_stats {
 	uint64_t pas_num_chksum_bytes_in;
 	uint64_t pas_num_chksums;
 
-	uint64_t pas_latency_time;
-	uint64_t pas_hw_latency_time;
+	uint64_t pas_total_latency;
+	uint64_t pas_total_hw_latency;
 };
 
 #ifdef NO_PAS_STATS
@@ -184,7 +184,7 @@ struct pnso_api_stats {
 /* for measuring the time spent in both software and hardware */
 #define PAS_START_PERF()	ktime_t s; s = ktime_get()
 #define PAS_END_PERF(pcr)						\
-	pcr->pnso_api_stats.pas_latency_time +=				\
+	pcr->pnso_api_stats.pas_total_latency +=			\
 		ktime_us_delta(ktime_get(), s);				\
 	pas_show_stats(&pcr->pnso_api_stats);
 
@@ -192,7 +192,7 @@ struct pnso_api_stats {
 #define PAS_INIT_HW_PERF()	ktime_t h
 #define PAS_START_HW_PERF()	h = ktime_get()
 #define PAS_END_HW_PERF(pcr)						\
-	(pcr->pnso_api_stats.pas_hw_latency_time +=			\
+	(pcr->pnso_api_stats.pas_total_hw_latency +=			\
 		ktime_us_delta(ktime_get(), h))
 
 #define PAS_SHOW_STATS(pcr)	pas_show_stats(&pcr->pnso_api_stats);
