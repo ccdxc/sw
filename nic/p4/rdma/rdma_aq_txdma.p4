@@ -124,7 +124,11 @@ header_type aq_tx_to_stage_sqcb_info_t {
         rqcb_base_addr_hi                :   24;
         tx_psn_valid                     :    1;
         tx_psn                           :   24;
-        pad                              :   79;
+        local_ack_timeout                :    5;
+        local_ack_timeout_valid          :    1;
+        err_retry_count                  :    3;
+        err_retry_count_valid            :    1;
+        pad                              :   69;
     }
 }
 
@@ -345,6 +349,8 @@ action aq_tx_sqcb0_process () {
     modify_field(to_s3_info_scr.rqcb_base_addr_hi, to_s3_info.rqcb_base_addr_hi);
     modify_field(to_s3_info_scr.tx_psn, to_s3_info.tx_psn);
     modify_field(to_s3_info_scr.tx_psn_valid, to_s3_info.tx_psn_valid);
+    modify_field(to_s3_info_scr.local_ack_timeout_valid, to_s3_info.local_ack_timeout_valid);
+    modify_field(to_s3_info_scr.local_ack_timeout, to_s3_info.local_ack_timeout);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
@@ -373,6 +379,8 @@ action aq_tx_sqcb1_process () {
     modify_field(to_s3_info_scr.rqcb_base_addr_hi, to_s3_info.rqcb_base_addr_hi);
     modify_field(to_s3_info_scr.tx_psn, to_s3_info.tx_psn);
     modify_field(to_s3_info_scr.tx_psn_valid, to_s3_info.tx_psn_valid);
+    modify_field(to_s3_info_scr.err_retry_count, to_s3_info.err_retry_count);
+    modify_field(to_s3_info_scr.err_retry_count_valid, to_s3_info.err_retry_count_valid);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
@@ -402,6 +410,10 @@ action aq_tx_sqcb2_process () {
     modify_field(to_s3_info_scr.rqcb_base_addr_hi, to_s3_info.rqcb_base_addr_hi);
     modify_field(to_s3_info_scr.tx_psn, to_s3_info.tx_psn);
     modify_field(to_s3_info_scr.tx_psn_valid, to_s3_info.tx_psn_valid);
+    modify_field(to_s3_info_scr.local_ack_timeout_valid, to_s3_info.local_ack_timeout_valid);
+    modify_field(to_s3_info_scr.local_ack_timeout, to_s3_info.local_ack_timeout);
+    modify_field(to_s3_info_scr.err_retry_count, to_s3_info.err_retry_count);
+    modify_field(to_s3_info_scr.err_retry_count_valid, to_s3_info.err_retry_count_valid);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage

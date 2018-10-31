@@ -284,6 +284,7 @@ create_qp:
     phvwr       p.sqcb0.log_wqe_size, d.qp.sq_stride_log2[4:0]
     phvwr       p.sqcb0.pd, d.{qp.pd_id}.wx
     phvwr       p.sqcb0.service, d.type_state
+    phvwr       p.sqcb0.local_ack_timeout, 0xE
     
     // SQCB1:
 
@@ -307,8 +308,9 @@ create_qp:
     phvwr       p.sqcb2.service, d.type_state
     // TODO Default should enable credits and set as part of connection negotiation
     phvwr       p.sqcb2.disable_credits, 1
-    phvwrpair   p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<3|0x7), p.sqcb2.lsn, 0
+    phvwrpair   p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<4|0x7), p.sqcb2.lsn, 0
     phvwrpair   p.sqcb2.lsn_tx, 0, p.sqcb2.lsn_rx, 0
+    phvwr       p.sqcb2.local_ack_timeout, 0xE
 
     //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
     //          TODO: Move pmtu setup to modify_qp

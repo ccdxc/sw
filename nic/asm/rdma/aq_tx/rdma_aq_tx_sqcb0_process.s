@@ -16,7 +16,8 @@ struct aq_tx_s3_t1_k k;
 #define SQCB0_RQCB0_P t1_s2s_sqcb0_to_rqcb0_info
 
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)    
-
+#define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout)
+#define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
 %%
 
     .param      rdma_aq_tx_rqcb0_process
@@ -33,11 +34,17 @@ hdr_update:
     tblwr       d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     
 state:
-    bbne        CAPRI_KEY_FIELD(IN_P, state_valid), 1, pmtu
+    bbne        CAPRI_KEY_FIELD(IN_P, state_valid), 1, timeout
     nop
 
     tblwr       d.state, CAPRI_KEY_FIELD(IN_P, state)
-    
+
+timeout:
+    bbne        K_LOCAL_ACK_TIMEOUT_VALID, 1, pmtu
+    nop
+
+    tblwr       d.local_ack_timeout, K_LOCAL_ACK_TIMEOUT
+
 pmtu:
     bbne        CAPRI_KEY_FIELD(IN_P, pmtu_valid), 1, setup_sqcb_stages
     nop

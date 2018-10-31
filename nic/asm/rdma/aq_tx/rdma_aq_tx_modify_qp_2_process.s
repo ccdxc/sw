@@ -158,12 +158,26 @@ state_next:
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, state_valid), 1
 
 tx_psn:
-    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_SQ_PSN], 1, pmtu
+    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_SQ_PSN], 1, timeout
     nop
 
     add         r4, d.{mod_qp.sq_psn}.wx, r0
     phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, tx_psn), r4[23:0] 
     phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, tx_psn_valid), 1
+
+timeout:
+    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_TIMEOUT], 1, retry_cnt
+
+    add         r4, d.mod_qp.retry_timeout, r0
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, local_ack_timeout), r4[4:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, local_ack_timeout_valid), 1
+
+retry_cnt:
+    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_RETRY_CNT], 1, pmtu
+
+    add         r4, d.mod_qp.retry, r0
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, err_retry_count), r4[2:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, err_retry_count_valid), 1
 
 pmtu:
 
