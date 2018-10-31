@@ -32,7 +32,6 @@
  *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *	- address cpdc_fill_per_block_desc_ex()
- *	- fixup " PRIx64 " with PRIx64
  *	- currently poll is attempted atmost 16 times, and this is temporary
  *	only. From the poll-branch, where request mode flag is used to determine
  *	and relax/limit the iterations will need to be brought-in
@@ -61,7 +60,7 @@ cpdc_poll(const struct service_info *svc_info)
 			break;
 
 		attempt++;
-		OSAL_LOG_DEBUG("attempt: %d service: %s status_desc: 0x" PRIx64 "",
+		OSAL_LOG_DEBUG("attempt: %d service: %s status_desc: 0x" PRIx64,
 				attempt, svc_get_type_str(svc_info->si_type),
 				(uint64_t) status_desc);
 		osal_yield();
@@ -134,7 +133,8 @@ pprint_sgl(uint64_t sgl_pa)
 	if (!sgl)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64 " ==> 0x" PRIx64, "",
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64 " ==> 0x" PRIx64,
+			"",
 			(uint64_t) sgl, sgl_pa);
 	while (sgl) {
 		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d",
@@ -142,7 +142,8 @@ pprint_sgl(uint64_t sgl_pa)
 				sgl->cs_addr_0, sgl->cs_len_0, sgl->cs_rsvd_0,
 				sgl->cs_addr_1, sgl->cs_len_1, sgl->cs_rsvd_1,
 				sgl->cs_addr_2, sgl->cs_len_2, sgl->cs_rsvd_2);
-		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64, "",
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64,
+				"",
 				sgl->cs_next, sgl->cs_rsvd_3);
 
 		sgl = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) : NULL;
@@ -195,7 +196,8 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	OSAL_LOG_DEBUG("%30s: %d", "cd_extended_len", desc->cd_extended_len);
 	OSAL_LOG_DEBUG("%30s: %d", "cd_threshold_len", desc->cd_threshold_len);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_status_addr", desc->cd_status_addr);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_status_addr",
+			desc->cd_status_addr);
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_db_addr", desc->cd_db_addr);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "cd_db_data", desc->cd_db_data);
@@ -322,7 +324,7 @@ get_batch_desc(struct service_info *svc_info)
 	svc_batch_info = &svc_info->si_batch_info;
 	desc = &svc_batch_info->u.sbi_cpdc_desc[svc_batch_info->sbi_desc_idx];
 
-	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64 "",
+	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64,
 			svc_batch_info->sbi_num_entries,
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
@@ -381,7 +383,7 @@ put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
 
 	/* do nothing */
 
-	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64 "",
+	OSAL_LOG_DEBUG("num_entries: %d desc_idx: %d bulk_desc: 0x" PRIx64 " desc: 0x" PRIx64,
 			svc_batch_info->sbi_num_entries,
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
@@ -499,7 +501,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 	pb_status_desc = status_desc;
 	pb_sgl = sgl;
 
-	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x" PRIx64 " desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
+	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x" PRIx64 " desc: 0x" PRIx64 " status_desc: 0x" PRIx64,
 			block_cnt, block_size, src_buf_len, flat_buf.buf,
 			(uint64_t) desc, (uint64_t) status_desc);
 
@@ -516,7 +518,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		pb_sgl->cs_addr_0 = sonic_virt_to_phy(buf);
 		pb_sgl->cs_len_0 = len;
 
-		OSAL_LOG_INFO("blk_num: %d buf: 0x" PRIx64 ", len: %d desc: 0x" PRIx64 " status_desc: 0x" PRIx64 " sgl: 0x" PRIx64 "",
+		OSAL_LOG_INFO("blk_num: %d buf: 0x" PRIx64 ", len: %d desc: 0x" PRIx64 " status_desc: 0x" PRIx64 " sgl: 0x" PRIx64,
 			i, (uint64_t) buf, len, (uint64_t) pb_desc,
 			(uint64_t) pb_status_desc, (uint64_t) pb_sgl);
 
