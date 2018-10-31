@@ -112,6 +112,8 @@ class NaplesManagement:
         return
    
     def __umount_mnt(self):
+        self.hdl.sendline("rm -rf /mnt/*.json")
+        self.hdl.expect_exact("#")
         self.hdl.sendline("sync")
         self.hdl.expect_exact("#")
         self.hdl.sendline("sync")

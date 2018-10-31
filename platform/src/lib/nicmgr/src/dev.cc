@@ -228,8 +228,16 @@ DeviceManager::LoadConfig(string path)
     struct eth_devspec *eth_spec;
     struct accel_devspec *accel_spec;
     uint32_t intr_base = 0;
+    char *system_uuid = getenv("SYSUUID");
+    uint64_t sys_mac_base;
 
-    NIC_LOG_INFO("{}: Entered\n", __FUNCTION__);
+    if (!strcmp(system_uuid, "")) {
+        sys_mac_base = 0x00DEADBEEF00llu;
+    } else {
+        sys_mac_base = mac_to_int(system_uuid);
+    }
+
+    NIC_LOG_INFO("{}: Entered SysUuid={} SysMacBase={}\n", __FUNCTION__, system_uuid, sys_mac_base);
 
 #if 0
     // Discover existing configuration
@@ -338,7 +346,7 @@ DeviceManager::LoadConfig(string path)
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
             eth_spec->intr_base = intr_base;
             eth_spec->intr_count = val.get<uint64_t>("intr_count");
-            eth_spec->mac_addr = mac_to_int(val.get<string>("mac_addr"));
+            eth_spec->mac_addr = sys_mac_base++;
 
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
             if (eth_spec->lif_id == 0) {
@@ -402,7 +410,7 @@ DeviceManager::LoadConfig(string path)
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
             eth_spec->intr_base = intr_base;
             eth_spec->intr_count = val.get<uint64_t>("intr_count");
-            eth_spec->mac_addr = mac_to_int(val.get<string>("mac_addr"));
+            eth_spec->mac_addr = sys_mac_base++;
 
             if (val.get_optional<string>("rdma")) {
                 eth_spec->enable_rdma = true;

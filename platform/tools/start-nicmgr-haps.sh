@@ -14,6 +14,11 @@ rm -f /nicmgr.log*
 
 ulimit -c unlimited
 
+export SYSUUID=""
+if [ -r /mnt/sysuuid ]; then
+    export SYSUUID=`cat /mnt/sysuuid`
+fi
+
 sleep 30
 
 if [[ "$FWD_MODE" != "classic" ]]; then
