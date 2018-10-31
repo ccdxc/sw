@@ -2365,6 +2365,7 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc)
 			      desc->output_file_prefix, desc->output_file_suffix);
 	}
 #endif
+	test_free_output_file_table();
 
 	return PNSO_OK;
 }
