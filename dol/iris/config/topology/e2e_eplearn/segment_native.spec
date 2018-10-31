@@ -11,7 +11,8 @@ l4lb        : False
 proxy_arp_enabled : True
 eplearn :
     remote            : False
-    arp_entry_timeout : 120
+    arp_entry_timeout : 10
+    arp_probe         : True
     dhcp              : True
     dpkt              : True
 endpoints   :

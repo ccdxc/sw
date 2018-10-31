@@ -7,6 +7,9 @@
 #include "arp_trans.hpp"
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
+#include "nic/fte/utils/packet_utils.hpp"
+#include "nic/hal/plugins/cfg/nw/nw.hpp"
+#include "nic/include/pd_api.hpp"
 
 using hal::utils::fsm_transition_t;
 using hal::utils::fsm_transition_func;
@@ -17,6 +20,8 @@ using hal::utils::fsm_state_machine_t;
 namespace hal {
 
 namespace eplearn {
+
+#define ARP_PROBE_TIMEOUT  3 * (TIME_MSECS_PER_SEC)
 
 void *arptrans_get_key_func(void *entry) {
     HAL_ASSERT(entry != NULL);
@@ -40,6 +45,7 @@ bool arptrans_compare_key_func(void *key1, void *key2) {
 arp_trans_t::arp_fsm_t *arp_trans_t::arp_fsm_ = new arp_fsm_t();
 arp_trans_t::trans_timer_t *arp_trans_t::arp_timer_ =
         new trans_timer_t(ARP_TIMER_ID);
+uint32_t arp_trans_t::arp_probe_timeout = ARP_PROBE_TIMEOUT;
 slab *arp_trans_t::arplearn_slab_ =
     slab::factory("arpLearn", HAL_SLAB_ARP_LEARN,
                   sizeof(arp_trans_t), 16, false,
@@ -56,6 +62,7 @@ ht *arp_trans_t::arplearn_ip_entry_ht_ =
 
 // This is default, entry func can override this.
 #define BOUND_TIMEOUT      60 *  (TIME_MSECS_PER_MIN)
+
 
 // clang-format off
 void arp_trans_t::arp_fsm_t::_init_state_machine() {
@@ -80,7 +87,15 @@ void arp_trans_t::arp_fsm_t::_init_state_machine() {
                            ARP_BOUND)
             FSM_TRANSITION(ARP_IP_ADD, SM_FUNC(add_ip_entry), ARP_BOUND)
             FSM_TRANSITION(ARP_TIMEOUT, SM_FUNC(process_arp_timeout), ARP_DONE)
+            FSM_TRANSITION(ARP_PROBE_SENT, NULL, ARP_PROBING)
             FSM_TRANSITION(ARP_ERROR, NULL, ARP_DONE)
+            FSM_TRANSITION(ARP_DUPLICATE, NULL, ARP_DONE)
+            FSM_TRANSITION(ARP_REMOVE, NULL, ARP_DONE)
+        FSM_STATE_END
+        FSM_STATE_BEGIN(ARP_PROBING, 0, NULL, NULL)
+            FSM_TRANSITION(ARP_TIMEOUT, SM_FUNC(process_arp_probe_timeout), ARP_DONE)
+            FSM_TRANSITION(ARP_ADD, SM_FUNC(process_arp_renewal_request),
+                           ARP_BOUND)
             FSM_TRANSITION(ARP_DUPLICATE, NULL, ARP_DONE)
             FSM_TRANSITION(ARP_REMOVE, NULL, ARP_DONE)
         FSM_STATE_END
@@ -288,15 +303,88 @@ bool arp_trans_t::arp_fsm_t::process_rarp_request(fsm_state_ctx ctx,
     return true;
 }
 
+struct arp_probe_ctx_t {
+    arp_trans_t    *trans;
+    hal_ret_t       ret;
+    bool            sent;
+};
+
+
+static void
+send_arp_probe_request(void *data) {
+    arp_probe_ctx_t *arp_ctx = reinterpret_cast<arp_probe_ctx_t*>(data);
+    hal::l2seg_t   *l2seg;
+    ip_addr_t       zero_ip = { 0 };
+    ep_t*           ep = arp_ctx->trans->get_ep_entry();
+    fte::utils::arp_pkt_data_t pkt_data = { 0 };
+
+    arp_ctx->sent = false;
+    arp_ctx->ret = HAL_RET_OK;
+
+    if (ep == nullptr) {
+        arp_ctx->trans->log_info("EP not found to send ARP probe");
+        return;
+    }
+
+    l2seg = find_l2seg_by_id(arp_ctx->trans->trans_key_ptr()->l2_segid);
+    if (l2seg != nullptr && l2seg->eplearn_cfg.arp_cfg.enabled &&
+            l2seg->eplearn_cfg.arp_cfg.probe_enabled) {
+        arp_ctx->trans->log_info("Trying to send Probing ARP request");
+        pkt_data.ep = ep;
+        pkt_data.src_ip_addr = &zero_ip;
+        pkt_data.src_mac = g_hal_state->get_local_mac_address();
+        pkt_data.dst_ip_addr = &(arp_ctx->trans->trans_key_ptr()->ip_addr);
+        arp_ctx->ret = fte::utils::hal_inject_arp_request_pkt(&pkt_data);
+        if (arp_ctx->ret == HAL_RET_OK) {
+            arp_ctx->sent = true;
+        }
+    }
+}
+
 bool arp_trans_t::arp_fsm_t::process_arp_timeout(fsm_state_ctx ctx,
+                                               fsm_event_data fsm_data) {
+    arp_trans_t    *trans = reinterpret_cast<arp_trans_t *>(ctx);
+    trans->arp_timer_ctx = nullptr;
+    struct arp_probe_ctx_t *fn_ctx = (struct arp_probe_ctx_t*)
+            HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(struct arp_probe_ctx_t));
+    bool ret = true;
+    fn_ctx->trans = trans;
+    fte::fte_execute(0, send_arp_probe_request, fn_ctx);
+
+    if (fn_ctx->ret == HAL_RET_OK) {
+        if (fn_ctx->sent) {
+             HAL_TRACE_INFO("Starting ARP Probe timeout {} milli seconds",
+                     trans->arp_probe_timeout);
+              trans->arp_timer_ctx =
+                      arp_timer_->add_timer_with_custom_handler(
+                              trans->arp_probe_timeout,
+                              trans->sm_, arp_timeout_handler);
+             /* Successfully sent ARP probe request, wait for ARP probe*/
+             trans->sm_->throw_event(ARP_PROBE_SENT, NULL);
+             ret = false;
+             goto cleanup;
+        } else {
+            trans->log_error("Arp probe request not sent");
+        }
+    } else {
+        trans->log_error("Error in sending arp probe request..");
+    }
+
+cleanup:
+    HAL_FREE(hal::HAL_MEM_ALLOC_FTE, fn_ctx);
+    return ret;
+}
+
+bool arp_trans_t::arp_fsm_t::process_arp_probe_timeout(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data)
 {
-    arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
+    arp_trans_t    *trans = reinterpret_cast<arp_trans_t *>(ctx);
 
     trans->arp_timer_ctx = nullptr;
 
     return true;
 }
+
 
 bool arp_trans_t::arp_fsm_t::process_arp_renewal_request(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data) {

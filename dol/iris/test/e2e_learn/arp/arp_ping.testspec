@@ -40,5 +40,58 @@ session:
                     endpoint    : ref://testcase/config/dst_endpoints/0
                     cmd         : sleep
                     args        :
-                        - arg   : "140"
+                        - arg   : "15"
         expect:        
+    - step: #Do clean up and release IP address
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    cmd         : ifconfig
+                    args        :
+                         - arg   : ref://testcase/config/src_endpoints/0/intf
+                         - arg   : "down"
+                    ignore_error : True
+        expect:                       
+    - step: #Do clean up and release IP address
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : ifconfig
+                    args        :
+                         - arg   : ref://testcase/config/dst_endpoints/0/intf
+                         - arg   : "down"
+                    ignore_error : True
+        expect:                       
+    - step:
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : sleep
+                    args        :
+                        - arg   : "15"
+        expect:        
+    - step: #Do clean up and release IP address
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/src_endpoints/0
+                    cmd         : ifconfig
+                    args        :
+                         - arg   : ref://testcase/config/src_endpoints/0/intf
+                         - arg   : "up"
+                    ignore_error : True
+        expect:                       
+    - step: #Do clean up and release IP address
+        trigger:
+            commands:
+                - command:
+                    endpoint    : ref://testcase/config/dst_endpoints/0
+                    cmd         : ifconfig
+                    args        :
+                         - arg   : ref://testcase/config/dst_endpoints/0/intf
+                         - arg   : "up"
+                    ignore_error : True
+        expect:                       

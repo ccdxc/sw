@@ -20,6 +20,8 @@ namespace fte {
 
 namespace utils {
 
+static uint32_t g_cpu_bypass_flowid;
+
 static void
 build_arp_packet(uint8_t *pkt,
         uint8_t arp_pkt_type,
@@ -27,8 +29,7 @@ build_arp_packet(uint8_t *pkt,
         const mac_addr_t src_mac,
         const uint16_t *vlan_tag = nullptr,
         const ip_addr_t *dst_ip_addr = nullptr,
-        const mac_addr_t dst_mac = nullptr)
-{
+        const mac_addr_t dst_mac = nullptr) {
     ether_header_t             *eth_hdr;
     struct ether_arp           *arphead;
     ip_addr_t                   ip_addr;
@@ -76,91 +77,81 @@ build_arp_packet(uint8_t *pkt,
     arphead->ea_hdr.ar_pln = IP4_ADDR8_LEN;
 }
 
-void
-hal_build_arp_request_pkt(const mac_addr_t src_mac,
-        const ip_addr_t *src_ip_addr,
-        const ip_addr_t *dst_ip_addr, const uint16_t *vlan_tag,
-        uint8_t *pkt)
-{
-    build_arp_packet(pkt, ARPOP_REQUEST,
-            src_ip_addr, src_mac, vlan_tag, dst_ip_addr);
-}
 
-void
-hal_build_arp_response_pkt(const mac_addr_t src_mac,
-        const ip_addr_t *src_ip_addr,
-        const mac_addr_t dst_mac, const ip_addr_t *dst_ip_addr,
-        const uint16_t *vlan_tag, uint8_t *pkt)
-{
-    build_arp_packet(pkt, ARPOP_REPLY,
-            src_ip_addr, src_mac, vlan_tag, dst_ip_addr, dst_mac);
-}
-
-hal_ret_t
-hal_inject_arp_request_pkt(const l2seg_t *segment,
-        const mac_addr_t src_mac, const ip_addr_t *src_ip_addr,
-        const ip_addr_t *dst_ip_addr)
-{
-    uint8_t                     pkt[ARP_PKT_SIZE];
+static hal_ret_t
+hal_inject_arp_packet(const arp_pkt_data_t *pkt_data, uint32_t type) {
+    uint8_t                     pkt[ARP_DOT1Q_PKT_SIZE];
     cpu_to_p4plus_header_t      cpu_hdr = {0};
     p4plus_to_p4_header_t       p4plus_hdr = {0};
-    pd_l2seg_get_fromcpu_vlanid_args_t   l2_args;
     pd_func_args_t pd_func_args = {0};
     hal_ret_t                   ret = HAL_RET_OK;
+    hal::if_t *ep_if;
+    pd::pd_if_get_lport_id_args_t args;
+    uint16_t vlan_id;
+
+    if (pkt_data->ep == nullptr) {
+         ret = HAL_RET_INVALID_ARG;
+         goto out;
+     }
+
+     ep_if = hal::find_if_by_handle(pkt_data->ep->if_handle);
+     if (ep_if == nullptr) {
+         HAL_TRACE_ERR("EP interface not found..");
+         ret = HAL_RET_IF_NOT_FOUND;
+         goto out;
+     }
+
+     args.pi_if = ep_if;
+     pd_func_args.pd_if_get_lport_id = &args;
+     if (hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID,
+                                       &pd_func_args) != HAL_RET_OK) {
+         HAL_TRACE_ERR("EP Dest Lport not found..");
+         ret = HAL_RET_IF_NOT_FOUND;
+         goto out;
+     }
 
 
+    if (!g_cpu_bypass_flowid) {
+        pd_get_cpu_bypass_flowid_args_t args;
+        pd::pd_func_args_t          pd_func_args = {0};
+        args.hw_flowid = 0;
+        pd_func_args.pd_get_cpu_bypass_flowid = &args;
+        ret = hal_pd_call(PD_FUNC_ID_BYPASS_FLOWID_GET, &pd_func_args);
+        if (ret == HAL_RET_OK) {
+            g_cpu_bypass_flowid = args.hw_flowid;
+        }
+    }
     cpu_hdr.src_lif = SERVICE_LIF_CPU_BYPASS;
 
     p4plus_hdr.p4plus_app_id = P4PLUS_APPTYPE_CPU;
+    p4plus_hdr.flow_index_valid = 1;
+    p4plus_hdr.flow_index = g_cpu_bypass_flowid;
+    p4plus_hdr.dst_lport_valid = 1;
+    p4plus_hdr.dst_lport = args.lport_id;
 
-    l2_args.l2seg = (l2seg_t*)(segment);
-    l2_args.vid = &(cpu_hdr.hw_vlan_id);
+    vlan_id = (uint16_t)(ep_if->encap_vlan);
 
-    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &l2_args;
-    if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                      &pd_func_args) == HAL_RET_OK) {
-        cpu_hdr.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
-    }
+    build_arp_packet(pkt, type,
+            pkt_data->src_ip_addr, *pkt_data->src_mac,
+            &vlan_id, pkt_data->dst_ip_addr, pkt_data->ep->l2_key.mac_addr);
 
-    hal_build_arp_request_pkt(src_mac, src_ip_addr, dst_ip_addr, nullptr, pkt);
 
-    fte::fte_asq_send(&cpu_hdr, &p4plus_hdr, pkt, ARP_PKT_SIZE);
+    fte::fte_asq_send(&cpu_hdr, &p4plus_hdr, pkt, ARP_DOT1Q_PKT_SIZE);
 
+out:
     return ret;
 }
 
 hal_ret_t
-hal_inject_arp_response_pkt(const l2seg_t *segment,
-        const mac_addr_t src_mac, const ip_addr_t *src_ip_addr,
-        const mac_addr_t dst_mac, const ip_addr_t *dst_ip_addr)
-{
-    uint8_t                     pkt[ARP_PKT_SIZE];
-    cpu_to_p4plus_header_t      cpu_hdr = {0};
-    p4plus_to_p4_header_t       p4plus_hdr = {0};
-    pd_l2seg_get_fromcpu_vlanid_args_t   l2_args;
-    pd_func_args_t pd_func_args = {0};
-    hal_ret_t                   ret = HAL_RET_OK;
-
-
-    cpu_hdr.src_lif = SERVICE_LIF_CPU_BYPASS;
-
-    p4plus_hdr.p4plus_app_id = P4PLUS_APPTYPE_CPU;
-
-    l2_args.l2seg = (l2seg_t*)(segment);
-    l2_args.vid = &(cpu_hdr.hw_vlan_id);
-
-    pd_func_args.pd_l2seg_get_fromcpu_vlanid = &l2_args;
-    if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                      &pd_func_args) == HAL_RET_OK) {
-        cpu_hdr.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
-    }
-
-    hal_build_arp_response_pkt(src_mac, src_ip_addr, dst_mac, dst_ip_addr, nullptr, pkt);
-
-    fte::fte_asq_send(&cpu_hdr, &p4plus_hdr, pkt, ARP_PKT_SIZE);
-
-    return ret;
+hal_inject_arp_request_pkt(const arp_pkt_data_t *pkt_data) {
+    return hal_inject_arp_packet(pkt_data, ARPOP_REQUEST);
 }
+
+hal_ret_t
+hal_inject_arp_response_pkt(const arp_pkt_data_t *pkt_data) {
+    return hal_inject_arp_packet(pkt_data, ARPOP_REPLY);
+}
+
 
 } // namespace utils
 } // namespace fte

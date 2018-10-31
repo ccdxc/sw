@@ -1,5 +1,6 @@
 #include "nic/include/base.hpp"
 #include "nic/include/fte_ctx.hpp"
+#include "nic/include/fte.hpp"
 
 class flow_t;
 class phv_t;
@@ -65,6 +66,13 @@ fte::ctx_t::invoke_completion_handlers(bool fail)
             (*feature_state_[i].completion_handler)(*this, fail);
         }
     }
+}
+
+hal_ret_t
+fte::fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
+             hal::pd::p4plus_to_p4_header_t* p4plus_header,
+             uint8_t* pkt, size_t pkt_len) {
+    return HAL_RET_OK;
 }
 
 hal_ret_t fte::ctx_t::update_flow(const flow_update_t& flowupd,

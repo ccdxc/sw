@@ -324,7 +324,7 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
                  hal::pd::p4plus_to_p4_header_t* p4plus_header,
                  uint8_t* pkt, size_t pkt_len)
 {
-    HAL_TRACE_DEBUG("fte: sending pkt to id: {}", id_);
+    HAL_TRACE_DEBUG("fte: sending pkt to id: {}, {}", id_, hex_str(pkt, pkt_len));
     return fte::impl::cpupkt_send(arm_ctx_, id_, cpu_header, p4plus_header, pkt, pkt_len);
 }
 

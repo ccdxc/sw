@@ -8,6 +8,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/nw/nic.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 
 namespace hal {
 
@@ -55,6 +56,7 @@ hal_fwd_mode_to_device_mode (hal_forwarding_mode_t hal_mode)
 hal_ret_t
 device_create (DeviceRequest *req, DeviceResponseMsg *rsp)
 {
+    mac_addr_t local_mac_address;
     auto response = rsp->mutable_response();
 
     HAL_TRACE_DEBUG("Device Create: Mode change {} -> {}, "
@@ -67,6 +69,10 @@ device_create (DeviceRequest *req, DeviceResponseMsg *rsp)
     g_hal_state->set_forwarding_mode(
             device_mode_to_hal_fwd_mode(req->device().device_mode()));
     g_hal_state->set_allow_dynamic_pinning(req->device().allow_dynamic_pinning());
+
+    MAC_UINT64_TO_ADDR(local_mac_address, req->device().local_mac_address());
+    g_hal_state->set_local_mac_address(local_mac_address);
+
 
     response->set_api_status(types::API_STATUS_OK);
 

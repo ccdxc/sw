@@ -35,6 +35,7 @@ namespace eplearn {
 enum arp_fsm_state_t {
     ARP_INIT,
     ARP_BOUND,
+    ARP_PROBING,
     RARP_INIT,
     ARP_DONE,
 };
@@ -49,6 +50,7 @@ enum arp_fsm_state_t {
     ENTRY(ARP_TIMEOUT,         6, "ARP_TIMEOUT")              \
     ENTRY(ARP_IP_ADD,          7, "ARP_IP_ADD")               \
     ENTRY(ARP_IP_RESET_ADD,    8, "ARP_IP_RESET_ADD")         \
+    ENTRY(ARP_PROBE_SENT,      9, "ARP_PROBE_SENT")           \
 
 DEFINE_ENUM(arp_fsm_event_t, ARP_FSM_EVENT_ENTRIES)
 
@@ -81,6 +83,7 @@ public:
     static ht *arplearn_key_ht(void) { return arplearn_key_ht_; }
     static ht *arplearn_ip_entry_ht(void) { return arplearn_ip_entry_ht_; }
     static slab *arplearn_slab(void) { return arplearn_slab_; }
+    static uint32_t arp_probe_timeout;
 
 private:
     arp_trans_key_t trans_key_;
@@ -111,6 +114,7 @@ private:
         bool process_rarp_reply(fsm_state_ctx ctx, fsm_event_data data);
         bool process_arp_renewal_request(fsm_state_ctx ctx, fsm_event_data data);
         bool process_arp_timeout(fsm_state_ctx ctx, fsm_event_data data);
+        bool process_arp_probe_timeout(fsm_state_ctx ctx, fsm_event_data data);
         bool reset_and_add_new_ip(fsm_state_ctx ctx, fsm_event_data data);
         bool add_ip_entry(fsm_state_ctx ctx, fsm_event_data data);
         bool del_ip_entry(fsm_state_ctx ctx, fsm_event_data data);
@@ -196,6 +200,10 @@ private:
 
     static void set_state_timeout(uint32_t state, uint32_t timeout) {
         trans_t::set_state_timeout(get_sm_def_func(), state, timeout);
+    }
+
+    static void set_arp_probe_timeout(uint32_t timeout) {
+        arp_probe_timeout = timeout * TIME_MSECS_PER_SEC;
     }
 
     virtual void log_info(const char *message) {

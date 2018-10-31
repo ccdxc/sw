@@ -21,6 +21,7 @@ message EplearnDhcpCfg {
 // Arp/Ndp Cfg
 message EplearnArpCfg {
     uint32  entry_timeout        = 1;  // how long arp entry is valid.
+    bool    probe_enabled        = 2;  // send arp probe if entry timeout.
 }
 
 

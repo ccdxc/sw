@@ -224,86 +224,52 @@ out:
 }
 
 
+struct arp_proxy_reply_ctx_t {
+    ep_t          *ep;
+    hal_ret_t     ret;
+    ip_addr_t     src_ip;
+    ip_addr_t     dst_ip;
+    mac_addr_t    src_mac;
+};
+
+
 static void
-free_arp_proxy_reply_pkt (uint8_t *pkt)
-{
-    HAL_FREE(hal::HAL_MEM_ALLOC_SFW, pkt);
+send_proxy_arp_reply_request(void *data) {
+    arp_proxy_reply_ctx_t *arp_ctx = reinterpret_cast<arp_proxy_reply_ctx_t*>(data);
+    hal::l2seg_t   *l2seg;
+    ep_t*           ep = arp_ctx->ep;
+    fte::utils::arp_pkt_data_t pkt_data = { 0 };
+
+    arp_ctx->ret = HAL_RET_OK;
+
+    l2seg = l2seg_lookup_by_handle(ep->l2seg_handle);
+    if (l2seg != nullptr && l2seg->eplearn_cfg.arp_cfg.enabled &&
+            l2seg->eplearn_cfg.arp_cfg.probe_enabled) {
+        pkt_data.ep = ep;
+        pkt_data.src_ip_addr = &arp_ctx->src_ip;
+        pkt_data.src_mac = &arp_ctx->src_mac;
+        pkt_data.dst_ip_addr = &arp_ctx->dst_ip;
+        arp_ctx->ret = fte::utils::hal_inject_arp_request_pkt(&pkt_data);
+    }
 }
 
 static hal_ret_t
-proxy_arp_build_cpu_p4_plus_header(fte::ctx_t &ctx,
-        cpu_to_p4plus_header_t &send_cpu_hdr,
-        p4plus_to_p4_header_t &p4plus_hdr)
-{
-    hal_ret_t                            ret;
-    if_t                                *sif;
-    pd_if_get_lport_id_args_t            if_args;
-    pd_get_cpu_bypass_flowid_args_t      args;
-    pd_func_args_t pd_func_args = {0};
-
-    send_cpu_hdr.src_lif = SERVICE_LIF_CPU_BYPASS;
-
-    p4plus_hdr.p4plus_app_id = P4PLUS_APPTYPE_CPU;
-
-    /* This seems to be not required for now.
-    pd_l2seg_get_fromcpu_vlanid_args_t   l2_args;
-    l2_args.l2seg = (l2seg_t*)(l2seg);
-    l2_args.vid = &(send_cpu_hdr.hw_vlan_id);
-    if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
-                                      (void*)&l2_args) == HAL_RET_OK) {
-        send_cpu_hdr.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
-    }*/
-
-    args.hw_flowid = 0;
-    pd_func_args.pd_get_cpu_bypass_flowid = &args;
-    ret = hal_pd_call(PD_FUNC_ID_BYPASS_FLOWID_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        goto out;
-    }
-
-    p4plus_hdr.flow_index_valid = 1;
-    p4plus_hdr.flow_index = args.hw_flowid;
-    p4plus_hdr.dst_lport_valid = 1;
-
-    sif = hal::find_if_by_handle(ctx.sep()->if_handle);
-    if (!sif) {
-        HAL_TRACE_INFO("Source endpoint interface not found.");
-        goto out;
-    }
-
-    if_args.pi_if = sif;
-    pd_func_args.pd_if_get_lport_id = &if_args;
-    if (hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID,
-            &pd_func_args) != HAL_RET_OK) {
-        HAL_TRACE_INFO("Destination lport not found for proxy arp.");
-        goto out;
-    }
-    p4plus_hdr.dst_lport = if_args.lport_id;
-
-    ret = HAL_RET_OK;
-out:
-    return ret;
-}
-
-static hal_ret_t
-do_proxy_arp_processing (struct ether_arp *arphead,
-                        fte::ctx_t &ctx)
-{
+do_proxy_arp_processing(struct ether_arp *arphead,
+                        fte::ctx_t &ctx) {
     hal_ret_t ret = HAL_RET_NOOP;
     hal::l2seg_t *l2seg  = ctx.sl2seg();
-    ether_header_t *ethhdr;
-    cpu_to_p4plus_header_t send_cpu_hdr = {0};
-    p4plus_to_p4_header_t p4plus_hdr = {0};
-    const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
     uint16_t opcode = ntohs(arphead->ea_hdr.ar_op);
     ip_addr_t src_ip = {0};
     ip_addr_t dst_ip = {0};
-    uint8_t  *pkt;
-    uint32_t pkt_len;
-    vlan_header_t *vlan_hdr;
-    uint16_t vlan_tag;
-    uint16_t *vlan_tag_ptr = nullptr;
     ep_t *dep = nullptr;
+    hal_handle_t ep_handle = ctx.sep_handle();
+    ep_t *sep_entry;
+    struct arp_proxy_reply_ctx_t *fn_ctx;
+
+    sep_entry = find_ep_by_handle(ep_handle);
+    if (sep_entry == nullptr) {
+        return HAL_RET_EP_NOT_FOUND;
+    }
 
     if (opcode != ARPOP_REQUEST ||
             l2seg == nullptr || !l2seg->proxy_arp_enabled) {
@@ -314,45 +280,26 @@ do_proxy_arp_processing (struct ether_arp *arphead,
     memcpy(&(dst_ip.addr.v4_addr), arphead->arp_tpa,
                 sizeof(dst_ip.addr.v4_addr));
     dst_ip.addr.v4_addr = ntohl(dst_ip.addr.v4_addr);
-
     dep = find_ep_by_v4_key_in_l2segment(dst_ip.addr.v4_addr, l2seg);
     if (!dep || !is_ep_remote(dep)) {
         HAL_TRACE_INFO("Skipping Proxy as Destination EP not found or not remote.");
         goto out;
     }
 
-    ret = proxy_arp_build_cpu_p4_plus_header(ctx, send_cpu_hdr, p4plus_hdr);
-    if (ret != HAL_RET_OK) {
-        goto out;
-    }
+    fn_ctx = (struct arp_proxy_reply_ctx_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE,
+                    sizeof(struct arp_proxy_reply_ctx_t));
 
-    if (ctx.vlan_valid()) {
-        pkt_len = ARP_DOT1Q_PKT_SIZE;
-        vlan_hdr = GET_VLAN_HEADER(ctx.pkt(), cpu_hdr);
-        vlan_tag = ntohs(vlan_hdr->vlan_tag);
-        vlan_tag_ptr = &vlan_tag;
-    } else {
-        pkt_len = ARP_PKT_SIZE;
-    }
-
-    pkt = (uint8_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_SFW, pkt_len);
-    if (!pkt) {
-        HAL_TRACE_ERR("Memory allocation failed for packet!");
-        goto out;
-    }
-
-    ethhdr = GET_L2_HEADER(ctx.pkt(), cpu_hdr);
     memcpy(&(src_ip.addr.v4_addr), arphead->arp_spa,
                 sizeof(src_ip.addr.v4_addr));
     src_ip.addr.v4_addr = ntohl(src_ip.addr.v4_addr);
-    fte::utils::hal_build_arp_response_pkt(dep->l2_key.mac_addr,
-            &dst_ip, ethhdr->smac, &src_ip, vlan_tag_ptr, pkt);
 
-    HAL_TRACE_INFO("Queuing proxy ARP response.");
-    ctx.queue_txpkt(pkt, ARP_PKT_SIZE, &send_cpu_hdr,
-            &p4plus_hdr, hal::SERVICE_LIF_CPU, CPU_ASQ_QTYPE,
-            CPU_ASQ_QID, CPU_SCHED_RING_ASQ, types::WRING_TYPE_ASQ,
-            free_arp_proxy_reply_pkt);
+    memcpy(fn_ctx->src_mac,  dep->l2_key.mac_addr, sizeof(mac_addr_t));
+    fn_ctx->src_ip = dst_ip;
+    fn_ctx->dst_ip = src_ip;
+    fn_ctx->ep = sep_entry;
+
+    fte::fte_execute(0, send_proxy_arp_reply_request, fn_ctx);
+    HAL_FREE(hal::HAL_MEM_ALLOC_FTE, fn_ctx);
 
     ret = HAL_RET_OK;
 out:

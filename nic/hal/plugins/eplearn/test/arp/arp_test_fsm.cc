@@ -46,6 +46,7 @@ vrf_t *dummy_ten;
 uint64_t dummy_l2seg_hdl;
 #define MAX_ENDPOINTS 8
 #define ARP_ENTRY_TIMEOUT 5
+#define ARP_PROBE_TIMEOUT 3
 hal_handle_t ep_handles[MAX_ENDPOINTS];
 uint32_t mac_addr_base = 12345;
 uint8_t mac_addr_buffer[MAX_ENDPOINTS][ETH_ADDR_LEN + 1];
@@ -134,6 +135,7 @@ void arp_topo_setup()
    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
    l2seg_spec.mutable_wire_encap()->set_encap_value(11);
    l2seg_spec.mutable_eplearn_cfg()->mutable_arp()->set_entry_timeout(ARP_ENTRY_TIMEOUT);
+   l2seg_spec.mutable_eplearn_cfg()->mutable_arp()->set_probe_enabled(true);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
    hal::hal_cfg_db_close();
@@ -240,6 +242,7 @@ class arp_fsm_test : public hal_base_test {
         //Reduce the time to avoid thread locking.
         arp_trans_t::set_state_timeout(ARP_BOUND, 1 * TIME_MSECS_PER_MIN);
         arp_trans_t::set_state_timeout(ARP_INIT, 1 * TIME_MSECS_PER_MIN);
+        arp_trans_t::set_arp_probe_timeout(ARP_PROBE_TIMEOUT);
     }
 };
 
@@ -501,7 +504,7 @@ TEST_F(arp_fsm_test, arp6_entry_timeout) {
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL); */
 
-    sleep(ARP_ENTRY_TIMEOUT + 1);
+    sleep(ARP_ENTRY_TIMEOUT + ARP_PROBE_TIMEOUT + 1);
     ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 0);
     ASSERT_EQ(g_hal_state->ep_l3_entry_ht()->num_entries(), 0);
 }
@@ -613,7 +616,63 @@ TEST_F(arp_fsm_test, arp_entry_timeout) {
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
 
+    sleep(ARP_ENTRY_TIMEOUT + ARP_PROBE_TIMEOUT + 1);
+    entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry == NULL);
+    dummy_ep = find_ep_by_handle(ep_handles[1]);
+    ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
+}
+
+
+TEST_F(arp_fsm_test, arp_entry_timeout_with_probe) {
+    ip_addr_t ip = {0};
+    inet_pton(AF_INET, "1.1.1.1", &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    arp_packet_send(ep_handles[0], ARP::Flags::REQUEST, "1.1.1.1",
+                    GET_MAC_ADDR(0), "1.1.1.2");
+    arp_trans_key_t key;
+    ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &ip, &key);
+    arp_trans_t *entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+
     sleep(ARP_ENTRY_TIMEOUT + 1);
+
+    ASSERT_TRUE (entry->get_state() == ARP_PROBING);
+    /* Send ARP again */
+    ip = {0};
+    inet_pton(AF_INET, "1.1.1.1", &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    arp_packet_send(ep_handles[0], ARP::Flags::REQUEST, "1.1.1.1",
+                    GET_MAC_ADDR(0), "1.1.1.2");
+    dummy_ep = find_ep_by_handle(ep_handles[0]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &ip, &key);
+    entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+
+    sleep(ARP_ENTRY_TIMEOUT + 1);
+
+    ASSERT_TRUE (entry->get_state() == ARP_PROBING);
+    /* Send ARP REPLY again */
+    ip = {0};
+    inet_pton(AF_INET, "1.1.1.1", &(ip.addr.v4_addr));
+    ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
+    arp_packet_send(ep_handles[0], ARP::Flags::REQUEST, "1.1.1.1",
+                    GET_MAC_ADDR(0), "1.1.1.2");
+    dummy_ep = find_ep_by_handle(ep_handles[0]);
+    arp_trans_t::init_arp_trans_key(GET_MAC_ADDR(0), dummy_ep,
+            ARP_TRANS_IPV4, &ip, &key);
+    entry = reinterpret_cast<arp_trans_t *>(
+        arp_trans_t::arplearn_key_ht()->lookup(&key));
+    ASSERT_TRUE(entry != NULL);
+
+    sleep(ARP_ENTRY_TIMEOUT + ARP_PROBE_TIMEOUT + 1);
+
     entry = reinterpret_cast<arp_trans_t *>(
         arp_trans_t::arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry == NULL);

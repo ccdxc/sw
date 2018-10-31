@@ -284,6 +284,15 @@ public:
     bool allow_dynamic_pinning(void) const {
         return allow_dynamic_pinning_;
     }
+
+    void set_local_mac_address(mac_addr_t local_mac_address) {
+        memcpy(this->local_mac_address, local_mac_address, sizeof(mac_addr_t));
+    }
+
+    mac_addr_t* get_local_mac_address() {
+        return &this->local_mac_address;
+    }
+
     void set_max_data_threads (uint8_t val) { max_data_threads_ = val; }
     uint8_t max_data_threads (void) const { return max_data_threads_; }
 
@@ -369,6 +378,9 @@ private:
     //   1: If there is no pin config in lif or enic, HAL will
     //      dynamically pin enic to one of the uplinks. Only being used in HAL.
     bool                    allow_dynamic_pinning_;
+
+    // Mac address used for local probes to be sent out by hal.
+    mac_addr_t              local_mac_address;
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
@@ -621,8 +633,17 @@ public:
         oper_db_->set_allow_dynamic_pinning(allow);
     }
 
+
     bool allow_dynamic_pinning(void) const {
         return oper_db_->allow_dynamic_pinning();
+    }
+
+    void set_local_mac_address(mac_addr_t local_mac_address) {
+        oper_db_->set_local_mac_address(local_mac_address);
+    }
+
+    mac_addr_t* get_local_mac_address() {
+        return oper_db_->get_local_mac_address();
     }
 
     eventmgr *event_mgr(void) const { return oper_db_->event_mgr(); }

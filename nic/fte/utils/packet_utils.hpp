@@ -13,14 +13,21 @@
 namespace fte {
 namespace utils {
 
+typedef struct arp_pkt_data_s {
+    const hal::ep_t  *ep;
+    const ip_addr_t  *src_ip_addr;
+    const ip_addr_t  *dst_ip_addr;
+    const mac_addr_t *src_mac;
+}arp_pkt_data_t;
+
 void hal_build_arp_request_pkt(const mac_addr_t src_mac,
-        const ip_addr_t *ip_addr, const uint16_t *vlan_tag, uint8_t *pkt);
+        const ip_addr_t *src_ip_addr, const mac_addr_t dst_mac,
+        const ip_addr_t *dst_ip_addr, const uint16_t *vlan_tag, uint8_t *pkt);
 void hal_build_arp_response_pkt(const mac_addr_t src_mac,
         const ip_addr_t *src_ip_addr,
         const mac_addr_t dst_mac, const ip_addr_t *dst_ip_addr,
         const uint16_t *vlan_tag, uint8_t *pkt);
-hal_ret_t hal_inject_arp_request_pkt(const hal::l2seg_t *segment,
-        mac_addr_t src_mac);
+hal_ret_t hal_inject_arp_request_pkt(const arp_pkt_data_t *pkt_data);
 hal_ret_t hal_inject_arp_response_pkt(const hal::l2seg_t *segment,
         const mac_addr_t src_mac, const ip_addr_t *src_ip_addr,
         const mac_addr_t dst_mac, const ip_addr_t *dst_ip_addr);

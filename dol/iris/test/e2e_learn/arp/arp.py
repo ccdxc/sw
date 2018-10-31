@@ -38,7 +38,7 @@ def TestCaseStepVerify(tc, step):
     src_ep.Get()
     dst_ep.Get()
     
-    if (step.step_id in [2]):
+    if (step.step_id in [5,6,7]):
         if ( (not src_ep.IsRemote() and len(src_ep.ipaddrs)) or \
               (not dst_ep.IsRemote() and len(dst_ep.ipaddrs))):
             logger.error("Endpoint has been configured with IP address still")
@@ -52,6 +52,8 @@ def TestCaseStepVerify(tc, step):
             logger.error("Endpoint has not been configured with IP address")
             return False
         
+    tc.config.src_endpoints[0].ipaddrs = src_ipaddrs
+    tc.config.dst_endpoints[0].ipaddrs = dst_ipaddrs
     return True
 
 def TestCaseStepTeardown(tc, step):

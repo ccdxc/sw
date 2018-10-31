@@ -21,6 +21,7 @@ class NicObject(base.ConfigObjectBase):
     def Init(self, mode, allow_dyn_pin):
         self.device_mode = mode
         self.allow_dyn_pin = allow_dyn_pin
+        self.local_mac_address = resmgr.NicMacAllocator.get()
         self.GID("Nic01")
         self.Show()
         return
@@ -32,6 +33,7 @@ class NicObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.device.device_mode = self.device_mode
         req_spec.device.allow_dynamic_pinning = self.allow_dyn_pin
+        req_spec.device.local_mac_address = self.local_mac_address.getnum()
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

@@ -44,6 +44,7 @@ namespace hal {
 typedef struct eplearn_arp_cfg_s {
     bool     enabled;
     uint32_t entry_timeout;
+    bool     probe_enabled;
 } __PACK__ eplearn_arp_cfg_t;
 
 

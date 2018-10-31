@@ -29,8 +29,9 @@ enum DeviceMode {
 
 // Global config object for NIC
 message DeviceSpec {
-  DeviceMode        device_mode = 1;            // one of the operating modes
-  bool              allow_dynamic_pinning = 2;  // Allows HAL to dynamic pin Enics to uplinks in host-pin mode
+  DeviceMode        device_mode            = 1;  // one of the operating modes
+  bool              allow_dynamic_pinning  = 2;  // Allows HAL to dynamic pin Enics to uplinks in host-pin mode
+  fixed64           local_mac_address      = 3;  // Local Mac address used for probing
 }
 
 message DeviceRequest {
