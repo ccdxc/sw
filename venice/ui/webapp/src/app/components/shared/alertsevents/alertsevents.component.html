@@ -20,6 +20,7 @@
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
           <app-tableheader title="Events" [count]="filteredEvents.length" [total]="events.length" [icon]="eventsIcon" width="250px">
+            <div fxFlex></div>
             <!-- All events are currently informational, so we do not display severity filters or search filter -->
             <!-- <div class="alertsevents-search" fxFlex="fxFlex" fxLayoutAlign="start center" > -->
               <!-- Find Event by:  -->
@@ -28,6 +29,9 @@
                 <!-- <input matInput [formControl]="eventSearchFormControl" placeholder="Leader, Service, ... " maxlength="256" autocomplete="off"> -->
               <!-- </mat-form-field> -->
             <!-- </div> -->
+            <div *ngIf="sourceNode" class="alertsevents-filter-sourcenode">
+              Filtering by {{sourceNode}}
+            </div>
             <div class="global-button global-alert-neutral alertsevents-main-menu-number " 
                   (click)="onEventNumberClick($event, null)"
                   *ngIf="currentEventSeverityFilter != null">All</div>
@@ -96,6 +100,9 @@
           <ng-template pTemplate="caption">
             <app-tableheader title="Alerts" [count]="filteredAlerts.length" [total]="alerts.length" [icon]="alertsIcon" width="250px">
               <div fxFlex></div>
+              <div *ngIf="sourceNode" class="alertsevents-filter-sourcenode">
+                Filtering by {{sourceNode}}
+              </div>
               <!-- Checkboxes for Open, Ack, Resolved states -->
               <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
                 <ng-container *ngFor="let state of possibleFilterStates">

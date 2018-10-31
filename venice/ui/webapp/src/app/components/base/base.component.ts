@@ -6,6 +6,7 @@ import { CommonComponent } from '../../common.component';
 import { SortEvent, MessageService } from 'primeng/components/common/api';
 import { FormsModule, FormGroup, FormArray, Validators, FormGroupDirective } from '@angular/forms';
 import { environment } from '@env/environment';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 // declare var google: any;
 
@@ -22,7 +23,8 @@ export class BaseComponent extends CommonComponent implements OnInit {
   private _interval: any;
 
   constructor(protected _controllerService: ControllerService,
-    protected messageService: MessageService) {
+    protected messageService: MessageService,
+    protected uiconfigsService: UIConfigsService = null) {
     super();
   }
 
@@ -60,6 +62,11 @@ export class BaseComponent extends CommonComponent implements OnInit {
     };
   }
 
+  routeToHomepage() {
+    if (this.uiconfigsService != null) {
+      this.uiconfigsService.navigateToHomepage();
+    }
+  }
 
 
   /**

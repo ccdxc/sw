@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation, SimpleChanges, OnChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
@@ -37,7 +37,7 @@ import { MessageService } from 'primeng/primeng';
   styleUrls: ['./alertsevents.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class AlertseventsComponent extends BaseComponent implements OnInit, OnDestroy {
+export class AlertseventsComponent extends BaseComponent implements OnInit, OnDestroy, OnChanges {
   @ViewChild('alerttable') alertTurboTable: Table;
   @ViewChild('eventTable') eventTable: Table;
   @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
@@ -46,9 +46,15 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // If there are going to be two of these components alive at the same time,
   // this field is required for them to have independent queries.
   @Input() pollingServiceKey: string = 'alertsevents';
+  // If provided, will only show alerts and events
+  // where the source node matches
+  @Input() sourceNode: string;
 
   subscriptions: Subscription[] = [];
   severityEnum = EventsEvent_severity_uihint;
+
+  alertSubscription: Subscription;
+  eventsSubscription: Subscription;
 
   // EVENTS
   // Used for the table - when true there is a loading icon displayed
@@ -134,6 +140,9 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
 
   alertTrackBy = HttpEventUtility.trackBy;
 
+  // Query params to send for watch
+  alertQuery = {};
+
   constructor(protected _controllerService: ControllerService,
     protected _alerttableService: AlerttableService,
     protected uiconfigsService: UIConfigsService,
@@ -146,6 +155,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   }
 
   ngOnInit() {
+    this.genQueryBodies();
     // Disabling search to reduce scope for august release
     // Adding <any> to prevent typescript compilation from failing due to unreachable code
     if (<any>false) {
@@ -165,6 +175,25 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     this.getEvents();
   }
 
+  ngOnChanges(change: SimpleChanges) {
+    if (change.sourceNode) {
+      this.genQueryBodies();
+      this.getAlerts();
+      this.getEvents();
+    }
+  }
+
+  genQueryBodies() {
+    if (this.sourceNode != null) {
+      this.eventsPostBody = {
+        'field-selector': 'source.node-name=' + this.sourceNode
+      };
+      this.alertQuery = {
+        'field-selector': 'Status.Source.NodeName=' + this.sourceNode
+      };
+    }
+  }
+
   getClassName(): string {
     return this.constructor.name;
   }
@@ -177,8 +206,14 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
 
 
   getEvents() {
-    const subscription = this.eventsService.pollEvents(this.pollingServiceKey, this.eventsPostBody).subscribe(
+    if (this.eventsSubscription) {
+      this.eventsSubscription.unsubscribe();
+    }
+    this.eventsSubscription = this.eventsService.pollEvents(this.pollingServiceKey, this.eventsPostBody).subscribe(
       (data) => {
+        if (data == null) {
+          return;
+        }
         // Check that there is new data
         if (this.events.length === data.length) {
           // Both sets of data are empty
@@ -197,13 +232,16 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         this.filterEvents();
       }
     );
-    this.subscriptions.push(subscription);
   }
 
   getAlerts() {
+    this.filteredAlerts = [];
     this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
     this.alerts = this.alertsEventUtility.array;
-    const subscription = this.monitoringService.WatchAlert().subscribe(
+    if (this.alertSubscription) {
+      this.alertSubscription.unsubscribe();
+    }
+    this.alertSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
       response => {
         const body: any = response.body;
         this.alertsEventUtility.processEvents(body);
@@ -218,7 +256,6 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
       },
       this.restErrorHandler('Failed to get Alerts')
     );
-    this.subscriptions.push(subscription);
   }
 
   displayColumn(data, col): any {
@@ -402,6 +439,14 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         subscription.unsubscribe();
       }
     );
+
+    if (this.alertSubscription != null) {
+      this.alertSubscription.unsubscribe();
+    }
+    if (this.eventsSubscription != null) {
+      this.eventsSubscription.unsubscribe();
+    }
+
   }
 
 }

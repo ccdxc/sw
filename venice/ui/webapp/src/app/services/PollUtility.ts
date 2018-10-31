@@ -96,6 +96,7 @@ export class PollUtility {
     const bodyPoll = poll.body;
     if (!Utility.getLodash().isEqual(body, bodyPoll)) {
       // stop current poll and start again with new body.
+      poll.handler.next([]);
       this.terminatePolling(key, false);
       const pollingTimerSource = timer(initialDelay, interval);
       const pollingTimerSubscription =

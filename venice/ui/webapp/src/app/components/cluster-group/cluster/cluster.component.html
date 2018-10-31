@@ -31,7 +31,7 @@
       Nodes ({{nodes.length }})
     </div>
     <div *ngFor="let node of nodes" class="cluster-nodes-container-loop">
-      <div fxFlex="none" fxLayout="column"  class="cluster-node-container" [ngClass]="node == selectedNode ? 'cluster-node-seleced' : ''"   (click)="onNodeClick(node)">
+      <div routerLink="./{{node.meta.name}}" fxFlex="none" fxLayout="column"  class="cluster-node-container">
         <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" class="cluster-node-name">
           <div fxFlex="none" class="cluster-node-status"></div>
           <span class="cluster-node-name" fxFlex="none" >{{ node.meta.name }}</span>

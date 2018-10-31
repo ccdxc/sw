@@ -5,11 +5,10 @@ import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { IMonitoringAlertDestination, IApiStatus } from '@sdk/v1/models/generated/monitoring';
+import { IMonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { Table } from 'primeng/table';
 import { TabcontentComponent } from 'web-app-framework';
 import { MessageService } from 'primeng/primeng';
-import { BaseComponent } from '@app/components/base/base.component';
 
 
 @Component({

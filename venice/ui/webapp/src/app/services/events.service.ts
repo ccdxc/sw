@@ -52,12 +52,13 @@ export class EventsService extends EventGenService {
           items = [];
         }
         const poll = this.pollingUtility.pollingHandlerMap[key];
-        if (poll == null) {
-          return false;
+        if (poll == null || poll.handler == null) {
+          // observable was terminated, we do nothing
+          return;
         }
         if (poll.isFirstPoll) {
-          // Don't append data
-          this.pollingUtility.pollingHandlerMap[key].handler.next(respBody.items);
+          // Don't append data since its the first poll
+          poll.handler.next(respBody.items);
           poll.isFirstPoll = false;
           // modify body to look for changes after current mod-time
           // Search field-selector for the mod-time attribute, otherwise add it
@@ -72,7 +73,7 @@ export class EventsService extends EventGenService {
           if (items.length > 0) {
             const currArray = poll.handler.value;
             const res = items.concat(currArray);
-            this.pollingUtility.pollingHandlerMap[key].handler.next(res);
+            poll.handler.next(res);
             // Modify time selector to only get new data
             this.addModTimeSelector(items[0].meta['mod-time'], poll.body);
           }

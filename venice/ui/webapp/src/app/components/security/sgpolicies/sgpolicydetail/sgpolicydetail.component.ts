@@ -14,7 +14,7 @@ import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
-import { IApiStatus, ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 import { MessageService } from 'primeng/primeng';
 
@@ -139,10 +139,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     protected securityService: SecurityService,
     protected searchService: SearchService,
     private _route: ActivatedRoute,
-    private uiconfigsService: UIConfigsService,
+    protected uiconfigsService: UIConfigsService,
     protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService, messageService, uiconfigsService);
   }
 
 
@@ -159,7 +159,6 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         this._controllerService.setToolbarData({
           buttons: [],
           breadcrumb: [
-            { label: 'Security' },
             { label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' },
             { label: id }]
         });
@@ -419,7 +418,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           this.showMissingScreen = false;
           this.enableFormControls();
           // Set sgpolicyrules
-          this.selectedPolicy = new SecuritySGPolicy(this.sgPolicies[0]);
+          this.selectedPolicy = this.sgPolicies[0];
           this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
         } else {
           // Must have received a delete event.
@@ -455,10 +454,5 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     return retRules;
   }
 
-  /**
-   * Used by html
-   */
-  routeToHomepage() {
-    this.uiconfigsService.navigateToHomepage();
-  }
+
 }

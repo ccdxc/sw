@@ -68,7 +68,6 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { EventsService } from '@app/services/events.service';
 import { MessageService } from 'primeng/primeng';
 import { ToasterComponent, ToasterItemComponent } from './widgets/toaster/toaster.component';
-import { MAT_TOOLTIP_DEFAULT_OPTIONS } from '@angular/material';
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
 
 

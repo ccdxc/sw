@@ -12,6 +12,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { ClusterComponent } from './cluster.component';
 import { ClusterRoutingModule } from './cluster.route';
 import { SharedModule } from '@app/components/shared//shared.module';
+import { NodedetailComponent } from './nodedetail/nodedetail.component';
 
 @NgModule({
   imports: [
@@ -25,6 +26,6 @@ import { SharedModule } from '@app/components/shared//shared.module';
     ClusterRoutingModule,
     SharedModule
   ],
-  declarations: [ClusterComponent]
+  declarations: [ClusterComponent, NodedetailComponent]
 })
 export class ClusterModule { }

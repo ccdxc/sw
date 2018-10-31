@@ -61,14 +61,11 @@ $table-headerheight: 55px;
 
 .cluster-node-container {
     padding: 0px 5px 5px 5px;
+    outline: none;
     &:hover {
         background-color: #e7e7e3;
         cursor: pointer;
     }
-}
-
-.cluster-node-container.cluster-node-seleced {
-    background-color: #f0f0f0;
 }
 
 .cluster-node-star {

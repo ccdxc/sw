@@ -1,0 +1,44 @@
+@import 'global-mixins';
+
+.nodedetail-card-container {
+  overflow: scroll;
+  margin-right: 10px;
+}
+
+.nodedetail-alertsevents-container {
+  min-height: 600px;
+}
+
+.nodedetail-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index:10;
+}
+
+.nodedetail-overlay-content {
+  z-index: 20;
+}
+
+.nodedetail-deleted-node {
+  background: url("/assets/images/icons/cluster/nodes/icon-node-deleted.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.nodedetail-missing-node {
+  background: url("/assets/images/icons/cluster/nodes/icon-node-missing.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.nodedetail-overlay-text {
+  @include primary-font(45px, #676763, 600);
+  text-align: center;
+}
+
+.nodedetail-overlay-button {
+  font-size: 16px;
+  padding: 6px 20px;
+}

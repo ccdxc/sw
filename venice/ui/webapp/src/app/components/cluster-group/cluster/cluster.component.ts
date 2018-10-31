@@ -1,19 +1,18 @@
-import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { MetricsUtility } from '@app/common/MetricsUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
-import { AlertseventsComponent } from '@app/components/shared/alertsevents/alertsevents.component';
 import { HeroCardOptions, StatArrowDirection } from '@app/components/shared/herocard/herocard.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { MetricsqueryService, MetricsPollingOptions } from '@app/services/metricsquery.service';
+import { MetricsPollingOptions, MetricsqueryService } from '@app/services/metricsquery.service';
 import { ClusterCluster, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { IMetrics_queryQuerySpec, Metrics_queryQuerySpec, Metrics_queryQuerySpec_function } from '@sdk/v1/models/generated/metrics_query';
 import { IMetrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
-import { Table } from 'primeng/table';
-import { Subscription } from 'rxjs/Subscription';
 import { MessageService } from 'primeng/primeng';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
   selector: 'app-cluster',
@@ -22,8 +21,6 @@ import { MessageService } from 'primeng/primeng';
   styleUrls: ['./cluster.component.scss']
 })
 export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy {
-  @ViewChild('nodestable') nodesTable: Table;
-  @ViewChild(AlertseventsComponent) alertsEventsComponent: AlertseventsComponent;
 
   bodyicon: any = {
     margin: {
@@ -43,7 +40,6 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
 
   phaseEnum = new ClusterNode().status.getPropInfo('phase').enum;
 
-  chartVars = ['cpuChartData', 'memChartData', 'diskChartData'];
   clusterCardColor = '#b592e3';
 
   clusterIcon: Icon = {
@@ -57,16 +53,19 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   cpuChartData: HeroCardOptions = {
     title: 'CPU',
     firstStat: {
-      value: '65%',
-      description: 'CPU Usage'
+      value: null,
+      description: 'CPU Usage',
+      tooltip: 'Averaged over past 5m'
     },
     secondStat: {
-      value: 72.3,
-      description: 'Average'
+      value: null,
+      description: '24h Avg',
+      tooltip: 'Averaged over past 24h'
     },
     thirdStat: {
-      value: 'Node 12345',
-      description: 'Highest CPU Usage'
+      value: null,
+      description: 'Highest CPU Usage',
+      tooltip: 'Averaged over past 5m'
     },
     data: {
       x: [],
@@ -83,16 +82,19 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   memChartData: HeroCardOptions = {
     title: 'Memory',
     firstStat: {
-      value: '65%',
-      description: 'Memory Usage'
+      value: null,
+      description: 'Memory Usage',
+      tooltip: 'Averaged over past 5m'
     },
     secondStat: {
-      value: 72.3,
-      description: 'Avg'
+      value: null,
+      description: '24h Avg',
+      tooltip: 'Averaged over past 24h'
     },
     thirdStat: {
-      value: 'Node 12345',
-      description: 'Highest Memory Usage'
+      value: null,
+      description: 'Highest Memory Usage',
+      tooltip: 'Averaged over past 5m'
     },
     data: {
       x: [],
@@ -109,16 +111,19 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   diskChartData: HeroCardOptions = {
     title: 'Storage',
     firstStat: {
-      value: '65%',
-      description: 'Disk Usage'
+      value: null,
+      description: 'Disk Usage',
+      tooltip: 'Averaged over past 5m'
     },
     secondStat: {
-      value: 72.3,
-      description: 'Avg'
+      value: null,
+      description: '24h Avg',
+      tooltip: 'Averaged over past 24h'
     },
     thirdStat: {
-      value: 'Node 12345',
-      description: 'Highest Disk Usage'
+      value: null,
+      description: 'Highest Disk Usage',
+      tooltip: 'Averaged over past 5m'
     },
     data: {
       x: [],
@@ -221,99 +226,31 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   timeSeriesQuery() {
-    const timeSeriesQuery: IMetrics_queryQuerySpec = {
-      'kind': 'Node',
-      'meta': {
-        'tenant': Utility.getInstance().getTenant(),
-      },
-      function: Metrics_queryQuerySpec_function.MEAN,
-      'group-by-time': '5m',
-      // We don't specify the fields we need, as specifying more than one field
-      // while using the average function isn't supported by the backend.
-      // Instead we leave blank and get all fields
-      fields: [],
-      'start-time': 'now() - 24h' as any,
-      // Round down so we don't pick up an incomplete bucket
-      'end-time': Utility.roundDownTime(5).toISOString() as any,
-    };
-
-    const query = new Metrics_queryQuerySpec(timeSeriesQuery);
-
-    // Since we are averaging over 5 min buckets, we always query from the last 5 min window increment
-    const timeSeriesUpdate = (queryBody) => {
-      queryBody['start-time'] = queryBody['end-time'];
-      queryBody['end-time'] = Utility.roundDownTime(5).toISOString() as any;
-    };
-
-    // Drops any values that are older than 24 hours from the current time.
-    // We then add on the newer values.
-    const timeSeriesMerge = (currValue, newData) => {
-      const _ = Utility.getLodash();
-      const window = 24 * 60;
-      // If window is positive, we filter any items that
-      // have a timestamp less than Now - window
-      if (window !== -1) {
-        const moment = Utility.getMomentJS();
-        const windowStart = moment().subtract(window, 'minutes');
-        const filteredValues = _.dropWhile(currValue.results[0].series[0].values, (item) => {
-          // Assuming time is the first index.
-          return windowStart.diff(moment(item[0]), 'minutes') > 0;
-        });
-        currValue.results[0].series[0].values = _.cloneDeep(filteredValues);
-      }
-
-      // Checking if there is new data
-      if (this.hasData(newData)) {
-        const data = newData.results[0].series[0].values;
-        // Push on the new data
-        currValue.results[0].series[0].values.push(...data);
-      }
-      return currValue;
-    };
-
+    const timeSeriesQuery: Metrics_queryQuerySpec = MetricsUtility.timeSeriesQuery('Node');
     const pollOptions: MetricsPollingOptions = {
-      timeUpdater: timeSeriesUpdate,
-      mergeFunction: timeSeriesMerge
+      timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
+      mergeFunction: MetricsUtility.timeSeriesQueryMerge
     };
 
-    const sub = this.metricsqueryService.pollMetrics('clusterTimeSeriesData', query, pollOptions).subscribe(
+    const sub = this.metricsqueryService.pollMetrics('clusterTimeSeriesData', timeSeriesQuery, pollOptions).subscribe(
       (data) => {
         this.clusterTimeSeriesData = data;
-        this.genClusterCharts();
+        this.tryGenCharts();
       }
     );
     this.subscriptions.push(sub);
   }
 
   avgQuery() {
-    const avgQuery: IMetrics_queryQuerySpec = {
-      'kind': 'Node',
-      'meta': {
-        'tenant': Utility.getInstance().getTenant()
-      },
-      function: Metrics_queryQuerySpec_function.MEAN,
-      // We don't specify the fields we need, as specifying more than one field
-      // while using the average function isn't supported by the backend.
-      // Instead we leave blank and get all fields
-      fields: [],
-      'start-time': 'now() - 24h' as any,
-      'end-time': 'now()' as any,
-    };
-
-    const query = new Metrics_queryQuerySpec(avgQuery);
-    const avgTimeUpdate = (queryBody: IMetrics_queryQuerySpec) => {
-      queryBody['start-time'] = 'now() - 24h' as any;
-      queryBody['end-time'] = 'now()' as any;
-    };
-
+    const avgQuery: Metrics_queryQuerySpec = MetricsUtility.pastDayAverageQuery('Node');
     const pollOptions = {
-      timeUpdater: avgTimeUpdate,
+      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };
 
-    const sub = this.metricsqueryService.pollMetrics('clusterAvgData', query, pollOptions).subscribe(
+    const sub = this.metricsqueryService.pollMetrics('clusterAvgData', avgQuery, pollOptions).subscribe(
       (data) => {
         this.clusterAvgData = data;
-        this.genClusterCharts();
+        this.tryGenCharts();
       }
     );
     this.subscriptions.push(sub);
@@ -347,7 +284,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
       // since we round down to get the last 5 min bucket, there's a chance
       // that we can back null data, since no new metrics have been reported.
       // Data should have been filtered in metricsquery services's processData
-      if (!this.hasData(newData)) {
+      if (!MetricsUtility.hasData(newData)) {
         // no new data, keep old value
         return currData;
       }
@@ -362,36 +299,16 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     const sub = this.metricsqueryService.pollMetrics('clusterMaxNodeData', query, pollOptions).subscribe(
       (data) => {
         this.clusterMaxNodeData = data;
-        this.genClusterCharts();
+        this.tryGenCharts();
       }
     );
     this.subscriptions.push(sub);
   }
 
-  onNodeClick(node: ClusterNode) {
-    if (!node) {
-      return;
-    }
-    if (this.selectedNode === node) {
-      this.selectedNode = null;
-    } else {
-      this.selectedNode = node;
-    }
-  }
-
-  hasData(resp: IMetrics_queryQueryResponse) {
-    if (resp && resp.results.length !== 0 && resp.results[0].series.length !== 0 && resp.results[0].series[0].values.length !== 0) {
-      return true;
-    } else {
-      console.log(resp);
-      return false;
-    }
-  }
-
-  private genClusterCharts() {
-    if (this.hasData(this.clusterTimeSeriesData) &&
-      this.hasData(this.clusterAvgData) &&
-      this.hasData(this.clusterMaxNodeData)) {
+  private tryGenCharts() {
+    if (MetricsUtility.hasData(this.clusterTimeSeriesData) &&
+      MetricsUtility.hasData(this.clusterAvgData) &&
+      MetricsUtility.hasData(this.clusterMaxNodeData)) {
       this.genClusterChart('mean_CPUUsedPercent', this.cpuChartData);
       this.genClusterChart('mean_MemUsedPercent', this.memChartData);
       this.genClusterChart('mean_DiskUsedPercent', this.diskChartData);

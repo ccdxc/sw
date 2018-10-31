@@ -8,6 +8,7 @@ import { BaseComponent } from './base.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MessageService } from 'primeng/primeng';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 describe('BaseComponent', () => {
   let component: BaseComponent;
@@ -25,6 +26,7 @@ describe('BaseComponent', () => {
         LogService,
         LogPublishersService,
         MatIconRegistry,
+        UIConfigsService,
         MessageService
       ]
     })

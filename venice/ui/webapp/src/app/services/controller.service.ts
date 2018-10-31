@@ -116,7 +116,7 @@ export class ControllerService {
 
     // Cluster
     this.matIconRegistry.addSvgIcon('cluster', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/ico-cluster.svg'));
-    this.matIconRegistry.addSvgIcon('node', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/ico-node.svg'));
+    this.matIconRegistry.addSvgIcon('node', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/nodes/ico-node.svg'));
     this.matIconRegistry.addSvgIcon('memory', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-memory.svg'));
     this.matIconRegistry.addSvgIcon('cpu', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-cpu.svg'));
     this.matIconRegistry.addSvgIcon('storage', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/icon-storage.svg'));

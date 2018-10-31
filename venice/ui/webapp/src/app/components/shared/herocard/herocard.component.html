@@ -4,51 +4,52 @@
       (mouseenter)="hasHover = true"
       (mouseleave)="hasHover = false"
       class="herocard-container">
-  <div [@fade] *ngIf="isReady" class="herocard-background" fxLayout="row" fxLayoutAlign="start center">
-    <mat-icon fxFlex="none" *ngIf="backgroundIcon.svgIcon" [svgIcon]="backgroundIcon.svgIcon" class="herocard-background-icon">
+  <div [@fade] class="herocard-background" fxLayout="row" fxLayoutAlign="start center">
+    <mat-icon fxFlex="none" *ngIf="backgroundIcon && backgroundIcon.svgIcon" [style.color]="themeColor" [svgIcon]="backgroundIcon.svgIcon" class="herocard-background-icon">
     </mat-icon>
-    <mat-icon fxFlex="none" *ngIf="backgroundIcon.matIcon" class="herocard-background-mat-icon">
+    <mat-icon fxFlex="none" *ngIf="backgroundIcon && backgroundIcon.matIcon"
+    [style.color]="themeColor" class="herocard-background-mat-icon">
         {{backgroundIcon.matIcon}}
     </mat-icon>
   </div>
-  <div [@fade] *ngIf="isReady" class="herocard-foreground" fxLayout="column">
+  <div [@loaded]="isReady" class="herocard-foreground" fxLayout="column">
     <!-- Icon bar -->
     <app-dsbdwidgetheader fxFlex="45px" fxLayout="row" [title]="title" [iconFillColor]="themeColor" [lastUpdateTime]="lastUpdateTime" [timeRange]='timeRange' [icon]="icon"></app-dsbdwidgetheader>
-    <div fxFlex fxLayout="row" fxLayoutAlign="start start">
+    <div  fxFlex fxLayout="row" fxLayoutAlign="start start">
       <!-- First stat -->
-      <div fxFlex="40%" fxLayout="row" fxLayoutAlign="start start">
+      <div [@fade] *ngIf="isReady" fxFlex="40%" fxLayout="row" fxLayoutAlign="start start">
         <div fxFlex="28px"></div>
         <ng-container *ngIf="firstStat.value != null">
           <mat-icon *ngIf="statArrowDirection==='UP'" [style.color]="statColor" fxFlex="none" class="herocard-stat-arrow">arrow_upward</mat-icon>
           <mat-icon *ngIf="statArrowDirection==='DOWN'" [style.color]="statColor" fxFlex="none" class="herocard-stat-arrow">arrow_downward</mat-icon>
-          <div fxFlex fxLayout="column" class="herocard-first-stat">
+          <div fxFlex fxLayout="column" class="herocard-first-stat" [matTooltip]="firstStat.tooltip">
             <div fxFlex="nogrow" [style.color]="statColor" class="herocard-first-stat-value">{{ firstStat.value }}</div>
             <div fxFlex="nogrow" class="herocard-first-stat-description">{{ firstStat.description }}</div>
           </div>
         </ng-container>
       </div>
       <!-- Second stat -->
-      <div fxFlex="20%" fxLayout="row" fxLayoutAlign="start start">
+      <div [@fade] *ngIf="isReady" fxFlex="20%" fxLayout="row" fxLayoutAlign="start start">
         <div fxFlex fxLayout="column" class="herocard-second-stat">
-          <ng-container *ngIf="secondStat.value != null">
+          <div fxFlex fxLayout="column" *ngIf="secondStat.value != null" [matTooltip]="secondStat.tooltip">
             <div fxFlex="nogrow" [style.color]="themeColor" class="herocard-second-stat-value">{{ secondStat.value}}</div>
             <div fxFlex="nogrow" class="herocard-second-stat-description">{{ secondStat.description }}</div>
-        </ng-container>
+          </div>
         </div>
       </div>
       <!-- Third stat -->
-      <div fxFlex fxLayout="row" fxLayoutAlign="start start">
+      <div [@fade] *ngIf="isReady" fxFlex fxLayout="row" fxLayoutAlign="start start">
         <div fxFlex fxLayout="column" class="herocard-third-stat">
-          <ng-container *ngIf="thirdStat.value != null">
+          <div fxFlex fxLayout="column" *ngIf="thirdStat.value != null" [matTooltip]="thirdStat.tooltip">
             <div fxFlex [style.color]="themeColor" class="herocard-third-stat-value">{{ thirdStat.value }}</div>
             <div fxFlex class="herocard-third-stat-description">{{ thirdStat.description }}</div>
-          </ng-container>
+          </div>
         </div>
       </div>
     </div>
-    <div [@loaded]="isReady" fxFlex="75px" fxLayout="row" class="herocard-south">
-      <div fxFlex fxLayout="row" fxLayoutAlign="center center" 
-            *ngIf="isReady" class="herocard-chart">
+    <div fxFlex="75px" fxLayout="row" class="herocard-south">
+      <div [@fade] fxFlex fxLayout="row" fxLayoutAlign="center center" 
+            *ngIf="isReady && showGraph" class="herocard-chart">
         <pw-plotly-chart fxFlex="none"
           [data]="dataset"
           [options]="options"

@@ -6,6 +6,7 @@ import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
 export interface Stat {
   value: any;
   description: string;
+  tooltip?: string;
 }
 
 interface Data {
@@ -60,6 +61,7 @@ export class HerocardComponent implements OnInit, OnChanges {
   @Input() isReady: boolean = false;
 
 
+  showGraph: boolean = false;
   statArrowDirection: StatArrowDirection = StatArrowDirection.HIDDEN;
   layout = {
     showlegend: false,
@@ -115,6 +117,11 @@ export class HerocardComponent implements OnInit, OnChanges {
 
 
   private setupDataset() {
+    this.statArrowDirection = this.arrowDirection;
+    // If we only have one data point, we don't show the graph
+    if (this.data.x.length < 1) {
+      this.showGraph = false;
+    }
     this.dataset = [
       // passed in graph data
       {
@@ -139,6 +146,6 @@ export class HerocardComponent implements OnInit, OnChanges {
         }
       }
     ];
-    this.statArrowDirection = this.arrowDirection;
+    this.showGraph = true;
   }
 }
