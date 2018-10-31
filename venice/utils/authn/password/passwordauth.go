@@ -74,7 +74,7 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		log.Errorf("passwordauth: Error fetching user [%s], Err: %v", passwdcred.Username, err)
 		return nil, false, ErrInvalidCredential
 	}
-	if user.Spec.Type == auth.UserSpec_EXTERNAL.String() {
+	if user.Spec.Type == auth.UserSpec_External.String() {
 		log.Infof("skipping local auth for external user [%s|%s]", passwdcred.Tenant, passwdcred.Username)
 		return nil, false, ErrInvalidCredential
 	}

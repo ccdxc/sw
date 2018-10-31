@@ -31,7 +31,7 @@ var testUserObj = auth.User{
 		Fullname: "Test User",
 		Password: testPassword,
 		Email:    "testuser@pensandio.io",
-		Type:     auth.UserSpec_LOCAL.String(),
+		Type:     auth.UserSpec_Local.String(),
 	},
 	Status: auth.UserStatus{
 		Roles: testRoles,

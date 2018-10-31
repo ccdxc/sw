@@ -227,7 +227,7 @@ func TestAuthenticate(t *testing.T) {
 		}, fmt.Sprintf("[%v] Unsuccessful local user authentication", testtype))
 
 		Assert(t, autheduser.Name == testUser, fmt.Sprintf("[%v] User returned by authentication manager didn't match user being authenticated", testtype))
-		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_LOCAL.String(), fmt.Sprintf("[%v] User returned is not of type LOCAL", testtype))
+		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_Local.String(), fmt.Sprintf("[%v] User returned is not of type LOCAL", testtype))
 		AssertOk(t, err, fmt.Sprintf("[%v] Error authenticating user", testtype))
 
 		deleteAuthenticationPolicy(t)

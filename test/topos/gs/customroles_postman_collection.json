@@ -1,0 +1,300 @@
+{
+	"info": {
+		"name": "Custom Roles",
+		"_postman_id": "8bb01484-1c46-c4db-586c-356bfc897285",
+		"description": "It is collection to show case creating custom roles. It logs in as admin user and creates NetworkAdminRole and SecurityAdminRole. It then creates networkadmin and securityadmin users and assigns these roles to them respectively. Roles are assigned by creating role bindings NetworkAdminRoleBinding and SecurityAdminRoleBinding",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Super admin login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\": \"admin\",\n\t\"password\": \"password\",\n\t\"tenant\": \"default\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:10001/v1/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"v1",
+						"login"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "networkadmin-create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"kind\": \"User\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"networkadmin\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"fullname\": \"Network Admin\",\n        \"email\": \"testuser@pensando.io\",\n        \"password\": \"password\",\n        \"type\": \"Local\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"auth",
+						"v1",
+						"tenant",
+						"default",
+						"users"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "networkadmin-role-create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n            \"kind\": \"Role\",\n            \"api-version\": \"v1\",\n            \"meta\": {\n                \"name\": \"NetworkAdminRole\",\n                \"tenant\": \"default\"\n            },\n            \"spec\": {\n                \"permissions\": [\n                    {\n                        \"resource-tenant\": \"default\",\n                        \"resource-group\": \"network\",\n                        \"resource-kind\": \"_All_\",\n                        \"resource-namespace\": \"_All_\",\n                        \"actions\": [\n                            \"AllActions\"\n                        ]\n                    },\n                    {\n                        \"resource-tenant\": \"default\",\n                        \"resource-group\": \"workload\",\n                        \"resource-kind\": \"_All_\",\n                        \"resource-namespace\": \"_All_\",\n                        \"actions\": [\n                            \"AllActions\"\n                        ]\n                    },\n                    {\n                        \"resource-tenant\": \"default\",\n                        \"resource-group\": \"monitoring\",\n                        \"resource-kind\": \"MirrorSession\",\n                        \"resource-namespace\": \"_All_\",\n                        \"actions\": [\n                            \"AllActions\"\n                        ]\n                    },\n                    {\n                        \"resource-tenant\": \"default\",\n                        \"resource-kind\": \"Search\",\n                        \"actions\": [\n                            \"Read\"\n                        ]\n                    },\n                    {\n                        \"resource-tenant\": \"default\",\n                        \"resource-kind\": \"Event\",\n                        \"actions\": [\n                            \"Read\"\n                        ]\n                    }\n                ]\n            },\n            \"status\": {}\n        }"
+				},
+				"url": {
+					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/roles",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"auth",
+						"v1",
+						"tenant",
+						"default",
+						"roles"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "networkadmin-rolebinding-create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "        {\n            \"kind\": \"RoleBinding\",\n            \"api-version\": \"v1\",\n            \"meta\": {\n                \"name\": \"NetworkAdminRoleBinding\",\n                \"tenant\": \"default\"\n            },\n            \"spec\": {\n            \t\"users\": [\"networkadmin\"],\n\t\t\t\"role\":  \"NetworkAdminRole\"\n            }\n        }"
+				},
+				"url": {
+					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/role-bindings",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"auth",
+						"v1",
+						"tenant",
+						"default",
+						"role-bindings"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "securityadmin-create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"kind\": \"User\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"securityadmin\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"fullname\": \"Security Admin\",\n        \"email\": \"testuser@pensando.io\",\n        \"password\": \"password\",\n        \"type\": \"Local\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"auth",
+						"v1",
+						"tenant",
+						"default",
+						"users"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "securityadmin-role-create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"kind\": \"Role\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"SecurityAdminRole\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"permissions\": [\n            {\n                \"resource-tenant\": \"default\",\n                \"resource-group\": \"security\",\n                \"resource-kind\": \"_All_\",\n                \"resource-namespace\": \"_All_\",\n                \"actions\": [\n                    \"AllActions\"\n                ]\n            },\n            {\n                \"resource-group\": \"security\",\n                \"resource-kind\": \"App\",\n                \"resource-namespace\": \"_All_\",\n                \"actions\": [\n                    \"AllActions\"\n                ]\n            },\n            {\n                \"resource-tenant\": \"default\",\n                \"resource-kind\": \"Search\",\n                \"actions\": [\n                    \"Read\"\n                ]\n            },\n            {\n                \"resource-tenant\": \"default\",\n                \"resource-kind\": \"Event\",\n                \"actions\": [\n                    \"Read\"\n                ]\n            }\n        ]\n    },\n    \"status\": {}\n}"
+				},
+				"url": {
+					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/roles",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"auth",
+						"v1",
+						"tenant",
+						"default",
+						"roles"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "securityadmin-rolebinding-create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "        {\n            \"kind\": \"RoleBinding\",\n            \"api-version\": \"v1\",\n            \"meta\": {\n                \"name\": \"SecurityAdminRoleBinding\",\n                \"tenant\": \"default\"\n            },\n            \"spec\": {\n            \t\"users\": [\"securityadmin\"],\n\t\t\t\"role\":  \"SecurityAdminRole\"\n            }\n        }"
+				},
+				"url": {
+					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/role-bindings",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"auth",
+						"v1",
+						"tenant",
+						"default",
+						"role-bindings"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "networkadmin login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\": \"networkadmin\",\n\t\"password\": \"password\",\n\t\"tenant\": \"default\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:10001/v1/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"v1",
+						"login"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "network-list",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:10001/configs/network/v1/tenant/default/networks",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"network",
+						"v1",
+						"tenant",
+						"default",
+						"networks"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}

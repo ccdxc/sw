@@ -11,14 +11,14 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/login"
+	. "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/globals"
+	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/log"
-
-	. "github.com/pensando/sw/test/utils"
-	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -179,7 +179,7 @@ func TestUserPasswordRemoval(t *testing.T) {
 			Spec: auth.UserSpec{
 				Fullname: "Test User Update",
 				Email:    "testuser@pensandio.io",
-				Type:     auth.UserSpec_LOCAL.String(),
+				Type:     auth.UserSpec_Local.String(),
 				Password: testPassword,
 			},
 		})
@@ -197,7 +197,7 @@ func TestUserPasswordRemoval(t *testing.T) {
 			Spec: auth.UserSpec{
 				Fullname: "Test User2",
 				Email:    "testuser2@pensandio.io",
-				Type:     auth.UserSpec_LOCAL.String(),
+				Type:     auth.UserSpec_Local.String(),
 				Password: testPassword,
 			},
 		})
@@ -258,7 +258,7 @@ func TestAuthPolicy(t *testing.T) {
 		})
 		return err != nil, nil
 
-	}, "cannot create more than one auth policy")
+	}, "cannot create more than one auth policy", "100ms", "1s")
 	// test UPDATE AuthenticationPolicy
 	AssertEventually(t, func() (bool, interface{}) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Update(ctx, &auth.AuthenticationPolicy{
@@ -295,7 +295,7 @@ func TestAuthPolicy(t *testing.T) {
 	AssertConsistently(t, func() (bool, interface{}) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Delete(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy3"})
 		return err != nil, nil
-	}, "AuthenticationPolicy can't be deleted")
+	}, "AuthenticationPolicy can't be deleted", "100ms", "1s")
 }
 
 func TestUserStatus(t *testing.T) {
@@ -339,18 +339,18 @@ func TestUserStatus(t *testing.T) {
 	Assert(t, len(users[0].Status.Roles) == 1 && users[0].Status.Roles[0] == globals.AdminRole, "user should have admin role")
 	MustCreateRole(tinfo.apicl, "NetworkAdminRole", testTenant, login.NewPermission(
 		testTenant,
-		"network",
-		auth.Permission_Network.String(),
+		string(apiclient.GroupNetwork),
+		string(network.KindNetwork),
 		authz.ResourceNamespaceAll,
 		"",
-		auth.Permission_ALL_ACTIONS.String()),
+		auth.Permission_AllActions.String()),
 		login.NewPermission(
 			testTenant,
 			"auth",
-			auth.Permission_AllResourceKinds.String(),
+			authz.ResourceKindAll,
 			authz.ResourceNamespaceAll,
 			"",
-			auth.Permission_ALL_ACTIONS.String()))
+			auth.Permission_AllActions.String()))
 	defer MustDeleteRole(tinfo.apicl, "NetworkAdminRole", testTenant)
 	MustCreateRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant, "NetworkAdminRole", []string{testUser}, nil)
 	defer MustDeleteRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant)
@@ -425,7 +425,7 @@ func TestLdapLogin(t *testing.T) {
 		return err == nil, nil
 	}, "unable to fetch user")
 	defer MustDeleteUser(tinfo.apicl, config.LdapUser, testTenant)
-	Assert(t, user.Spec.Type == auth.UserSpec_EXTERNAL.String(), "unexpected user type: %s", user.Spec.Type)
+	Assert(t, user.Spec.Type == auth.UserSpec_External.String(), "unexpected user type: %s", user.Spec.Type)
 	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
 	logintime, err := user.Status.LastSuccessfulLogin.Time()
 	AssertOk(t, err, "error getting successful login time")
@@ -503,7 +503,7 @@ func TestUsernameConflict(t *testing.T) {
 	AssertOk(t, json.NewDecoder(resp.Body).Decode(&user), "unable to decode user from http response")
 	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_LDAP.String(),
 		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_LDAP.String(), user.Status.Authenticators[0]))
-	Assert(t, user.Spec.Type == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("expected external user type, got [%s]", user.Spec.Type))
+	Assert(t, user.Spec.Type == auth.UserSpec_External.String(), fmt.Sprintf("expected external user type, got [%s]", user.Spec.Type))
 }
 
 func TestLdapChecks(t *testing.T) {
@@ -646,7 +646,7 @@ func TestRadiusLogin(t *testing.T) {
 		return err == nil, nil
 	}, "unable to fetch user")
 	defer MustDeleteUser(tinfo.apicl, config.User, config.Tenant)
-	Assert(t, user.Spec.Type == auth.UserSpec_EXTERNAL.String(), "unexpected user type: %s", user.Spec.Type)
+	Assert(t, user.Spec.Type == auth.UserSpec_External.String(), "unexpected user type: %s", user.Spec.Type)
 	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
 	logintime, err := user.Status.LastSuccessfulLogin.Time()
 	AssertOk(t, err, "error getting successful login time")

@@ -7,7 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
 	. "github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authz"
@@ -43,23 +45,23 @@ func getUserPermissionTestData() (roleBindings []*auth.RoleBinding, roles []*aut
 	}
 	roles = []*auth.Role{
 		NewRole("NetworkAdmin", "testTenant",
-			NewPermission("testTenant", "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+			NewPermission("testTenant", string(apiclient.GroupNetwork), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
 		NewRole("SecurityAdmin", "testTenant",
-			NewPermission("testTenant", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+			NewPermission("testTenant", string(apiclient.GroupSecurity), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
 		NewRole("TenantAdmin", "testTenant2",
-			NewPermission("testTenant2", "Tenant", auth.Permission_Tenant.String(), ResourceNamespaceAll, "", auth.Permission_READ.String()+","+auth.Permission_UPDATE.String()),
-			NewPermission("testTenant2", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			NewPermission("testTenant2", "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			NewPermission("testTenant2", "User", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			NewPermission("testTenant2", "Monitoring", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			NewPermission("testTenant2", "", auth.Permission_APIEndpoint.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-			NewPermission("testTenant2", "Workload", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+			NewPermission("testTenant2", string(apiclient.GroupCluster), string(cluster.KindTenant), ResourceNamespaceAll, "", auth.Permission_Read.String()+","+auth.Permission_Update.String()),
+			NewPermission("testTenant2", string(apiclient.GroupSecurity), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+			NewPermission("testTenant2", string(apiclient.GroupNetwork), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+			NewPermission("testTenant2", string(apiclient.GroupAuth), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+			NewPermission("testTenant2", string(apiclient.GroupMonitoring), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+			NewPermission("testTenant2", "", auth.Permission_APIEndpoint.String(), ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+			NewPermission("testTenant2", string(apiclient.GroupWorkload), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
 	}
 	clusterRoleBindings = []*auth.RoleBinding{
 		NewClusterRoleBinding("SuperAdminRB", "SuperAdmin", "", "SuperAdmin"),
 	}
 	clusterRoles = []*auth.Role{
-		NewClusterRole("SuperAdmin", NewPermission(ResourceTenantAll, ResourceGroupAll, auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String())),
+		NewClusterRole("SuperAdmin", NewPermission(ResourceTenantAll, ResourceGroupAll, ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String())),
 	}
 	return
 }
@@ -92,29 +94,29 @@ func TestGetPermissions(t *testing.T) {
 			name: "network admin",
 			user: newUser("Sally", "testTenant", "NetworkAdmin"),
 			expectedPerms: []auth.Permission{
-				NewPermission("testTenant", "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", string(apiclient.GroupNetwork), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 			},
 		},
 		{
 			name: "security admin",
 			user: newUser("John", "testTenant", "SecurityAdmin"),
 			expectedPerms: []auth.Permission{
-				NewPermission("testTenant", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", string(apiclient.GroupSecurity), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 			},
 		},
 		{
 			name: "network and security admin",
 			user: newUser("Tim", "testTenant", "NetworkAdmin,SecurityAdmin"),
 			expectedPerms: []auth.Permission{
-				NewPermission("testTenant", "Network", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
-				NewPermission("testTenant", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", string(apiclient.GroupNetwork), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
+				NewPermission("testTenant", string(apiclient.GroupSecurity), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 			},
 		},
 		{
 			name: "security admin with role binding to an user",
 			user: newUser("Jill", "testTenant", ""),
 			expectedPerms: []auth.Permission{
-				NewPermission("testTenant", "Security", auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission("testTenant", string(apiclient.GroupSecurity), ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 			},
 		},
 	}
@@ -139,7 +141,7 @@ func TestGetClusterPermissions(t *testing.T) {
 			name: "super admin",
 			user: newClusterUser("Dorota", "SuperAdmin"),
 			expectedPerms: []auth.Permission{
-				NewPermission(ResourceTenantAll, ResourceGroupAll, auth.Permission_AllResourceKinds.String(), ResourceNamespaceAll, "", auth.Permission_ALL_ACTIONS.String()),
+				NewPermission(ResourceTenantAll, ResourceGroupAll, ResourceKindAll, ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 			},
 		},
 	}

@@ -7,13 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { AuthPermission_resource_kind,  AuthPermission_resource_kind_uihint  } from './enums';
 import { AuthPermission_actions,  AuthPermission_actions_uihint  } from './enums';
 
 export interface IAuthPermission {
     'resource-tenant'?: string;
     'resource-group'?: string;
-    'resource-kind'?: AuthPermission_resource_kind;
+    'resource-kind'?: string;
     'resource-namespace'?: string;
     'resource-names'?: Array<string>;
     'actions'?: Array<AuthPermission_actions>;
@@ -22,37 +21,45 @@ export interface IAuthPermission {
 
 export class AuthPermission extends BaseModel implements IAuthPermission {
     /** ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant
-    to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant. */
+    to which role object belongs. Exception are roles in "default" tenant. Role in "default" tenant can include permissions for resources in other tenants.
+    Specifying "_All_" will match all tenants. */
     'resource-tenant': string = null;
+    /** ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint.
+    Specifying "_All_" will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum. */
     'resource-group': string = null;
-    'resource-kind': AuthPermission_resource_kind = null;
+    /** ResourceKind is a resource kind for which permission is defined. It can be an API Server object kind or kinds defined in
+    ResrcKind enum. Specifying "_All_" will match all resource kinds. */
+    'resource-kind': string = null;
+    /** ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is "default". Specifying "_All_"
+    will match all namespaces. */
     'resource-namespace': string = null;
-    /** ResourceNames identify specific objects on which this permission applies. */
     'resource-names': Array<string> = null;
     'actions': Array<AuthPermission_actions> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'resource-tenant': {
-            description:  'ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant to which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant.',
+            default: 'default',
+            description:  'ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant to which role object belongs. Exception are roles in &quot;default&quot; tenant. Role in &quot;default&quot; tenant can include permissions for resources in other tenants. Specifying &quot;_All_&quot; will match all tenants.',
             type: 'string'
         },
         'resource-group': {
+            description:  'ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint. Specifying &quot;_All_&quot; will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum.',
             type: 'string'
         },
         'resource-kind': {
-            enum: AuthPermission_resource_kind_uihint,
-            default: 'AllResourceKinds',
+            description:  'ResourceKind is a resource kind for which permission is defined. It can be an API Server object kind or kinds defined in ResrcKind enum. Specifying &quot;_All_&quot; will match all resource kinds.',
             type: 'string'
         },
         'resource-namespace': {
+            default: 'default',
+            description:  'ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is &quot;default&quot;. Specifying &quot;_All_&quot; will match all namespaces.',
             type: 'string'
         },
         'resource-names': {
-            description:  'ResourceNames identify specific objects on which this permission applies.',
             type: 'Array<string>'
         },
         'actions': {
             enum: AuthPermission_actions_uihint,
-            default: 'ALL_ACTIONS',
+            default: 'AllActions',
             type: 'Array<string>'
         },
     }
@@ -99,7 +106,7 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         if (values && values['resource-kind'] != null) {
             this['resource-kind'] = values['resource-kind'];
         } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-kind')) {
-            this['resource-kind'] = <AuthPermission_resource_kind>  AuthPermission.propInfo['resource-kind'].default;
+            this['resource-kind'] = AuthPermission.propInfo['resource-kind'].default;
         }
         if (values && values['resource-namespace'] != null) {
             this['resource-namespace'] = values['resource-namespace'];
@@ -121,7 +128,7 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
             this._formGroup = new FormGroup({
                 'resource-tenant': new FormControl(this['resource-tenant']),
                 'resource-group': new FormControl(this['resource-group']),
-                'resource-kind': new FormControl(this['resource-kind'], [enumValidator(AuthPermission_resource_kind), ]),
+                'resource-kind': new FormControl(this['resource-kind']),
                 'resource-namespace': new FormControl(this['resource-namespace']),
                 'resource-names': new FormControl(this['resource-names']),
                 'actions': new FormControl(this['actions']),

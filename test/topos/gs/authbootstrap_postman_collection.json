@@ -1,11 +1,43 @@
 {
 	"info": {
 		"name": "Auth Bootstrap",
-		"_postman_id": "985b62ad-60ff-a138-e1c4-d96aeeec5cb0",
+		"_postman_id": "c821dc94-6803-aed6-8593-4d449fffecd6",
 		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "default-tenant-create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "        {\n            \"kind\": \"Tenant\",\n            \"api-version\": \"v1\",\n            \"meta\": {\n                \"name\": \"default\",\n                \"tenant\": \"default\"\n            },\n            \"spec\": {}\n        }"
+				},
+				"url": {
+					"raw": "http://localhost:10001/configs/cluster/v1/tenants",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"cluster",
+						"v1",
+						"tenants"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
 		{
 			"name": "authn-policy-create",
 			"request": {
@@ -39,7 +71,7 @@
 			"response": []
 		},
 		{
-			"name": "admin-user-create",
+			"name": "superadmin-user-create",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -50,7 +82,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"kind\": \"user\",\n\t\"meta\": {\n\t\t\"name\": \"admin\",\n\t\t\"tenant\": \"default\"\n\t},\n\t\"spec\": {\n\t\t\"fullname\": \"Admin\",\n\t\t\"email\": \"admin@acme.com\",\n\t\t\"password\": \"password\",\n\t\t\"type\": \"LOCAL\"\n\t},\n\t\"status\": {}\n}"
+					"raw": "{\n\t\"kind\": \"user\",\n\t\"meta\": {\n\t\t\"name\": \"admin\",\n\t\t\"tenant\": \"default\"\n\t},\n\t\"spec\": {\n\t\t\"fullname\": \"Admin\",\n\t\t\"email\": \"admin@acme.com\",\n\t\t\"password\": \"password\",\n\t\t\"type\": \"Local\"\n\t},\n\t\"status\": {}\n}"
 				},
 				"url": {
 					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/users",
@@ -68,6 +100,65 @@
 						"users"
 					]
 				}
+			},
+			"response": []
+		},
+		{
+			"name": "superadmin-rolebinding-create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "        {\n            \"kind\": \"RoleBinding\",\n            \"api-version\": \"v1\",\n            \"meta\": {\n                \"name\": \"AdminRoleBinding\",\n                \"tenant\": \"default\"\n            },\n            \"spec\": {\n            \t\"users\": [\"admin\"],\n\t\t\t\"role\":  \"AdminRole\"\n            }\n        }"
+				},
+				"url": {
+					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/role-bindings",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"auth",
+						"v1",
+						"tenant",
+						"default",
+						"role-bindings"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "authbootstrap-complete",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:10001/configs/cluster/v1/cluster/AuthBootstrapComplete",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"configs",
+						"cluster",
+						"v1",
+						"cluster",
+						"AuthBootstrapComplete"
+					]
+				},
+				"description": ""
 			},
 			"response": []
 		}

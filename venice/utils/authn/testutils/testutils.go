@@ -66,7 +66,7 @@ func getHTTPRequest(instance string, in interface{}, method, path string) (*http
 
 // Login sends a login request to API Gateway and returns a *http.Response
 func Login(apiGW string, in *auth.PasswordCredential) (*http.Response, error) {
-	path := "/v1/login/"
+	path := login.LoginURLPath
 	req, err := getHTTPRequest(apiGW, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func CreateTestUser(apicl apiclient.Services, username, password, tenant string)
 			Fullname: "Test User",
 			Password: password,
 			Email:    "testuser@pensandio.io",
-			Type:     auth.UserSpec_LOCAL.String(),
+			Type:     auth.UserSpec_Local.String(),
 		},
 	}
 
@@ -221,7 +221,7 @@ func MustDeleteAuthenticationPolicy(apicl apiclient.Services) {
 // CreateTenant creates a tenant
 func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error) {
 	tenant := &cluster.Tenant{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 		ObjectMeta: api.ObjectMeta{
 			Name: name,
 		},
@@ -319,7 +319,7 @@ func MustDeleteRole(apicl apiclient.Services, name, tenant string) {
 func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName string, users, groups []string) (*auth.RoleBinding, error) {
 	// TODO: use func from rbac utils
 	roleBinding := &auth.RoleBinding{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_RoleBinding.String()},
+		TypeMeta: api.TypeMeta{Kind: string(auth.KindRoleBinding)},
 		ObjectMeta: api.ObjectMeta{
 			Name:   name,
 			Tenant: tenant,
@@ -394,7 +394,7 @@ func MustSetAuthBootstrapFlag(apicl apiclient.Services) *cluster.Cluster {
 // CreateCluster creates a test cluster object
 func CreateCluster(apicl apiclient.Services) (*cluster.Cluster, error) {
 	clusterObj := &cluster.Cluster{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 		ObjectMeta: api.ObjectMeta{
 			Name: "Cluster",
 		},

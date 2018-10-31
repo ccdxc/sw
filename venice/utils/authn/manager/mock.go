@@ -64,7 +64,7 @@ func (ag *mockAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
 				Fullname: "Test User" + name,
 				Password: "",
 				Email:    name + "@pensando.io",
-				Type:     auth.UserSpec_LOCAL.String(),
+				Type:     auth.UserSpec_Local.String(),
 			},
 		}
 		return user, true

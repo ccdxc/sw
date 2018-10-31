@@ -7,17 +7,20 @@ import (
 	"net/http"
 	"strings"
 
+	k8serrors "k8s.io/apimachinery/pkg/util/errors"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 const (
 	// LoginURLPath is where handler for login POST request is registered
-	LoginURLPath = "/v1/login/"
+	LoginURLPath = "/v1/login"
 
 	// SessionID is cookie name storing JWT
 	SessionID = "sid"
@@ -109,7 +112,7 @@ func NewPermission(tenant, resourceGroup, resourceKind, resourceNamespace, resou
 // NewRole is a helper to create new role
 func NewRole(name, tenant string, permissions ...auth.Permission) *auth.Role {
 	return &auth.Role{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_Role.String()},
+		TypeMeta: api.TypeMeta{Kind: string(auth.KindRole)},
 		ObjectMeta: api.ObjectMeta{
 			Name:   name,
 			Tenant: tenant,
@@ -123,7 +126,7 @@ func NewRole(name, tenant string, permissions ...auth.Permission) *auth.Role {
 // NewRoleBinding is a helper to create new role binding
 func NewRoleBinding(name, tenant, roleName, users, groups string) *auth.RoleBinding {
 	return &auth.RoleBinding{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_RoleBinding.String()},
+		TypeMeta: api.TypeMeta{Kind: string(auth.KindRoleBinding)},
 		ObjectMeta: api.ObjectMeta{
 			Name:   name,
 			Tenant: tenant,
@@ -139,7 +142,7 @@ func NewRoleBinding(name, tenant, roleName, users, groups string) *auth.RoleBind
 // NewClusterRole is a helper to create a role in default tenant
 func NewClusterRole(name string, permissions ...auth.Permission) *auth.Role {
 	return &auth.Role{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_Role.String()},
+		TypeMeta: api.TypeMeta{Kind: string(auth.KindRole)},
 		ObjectMeta: api.ObjectMeta{
 			Name:   name,
 			Tenant: globals.DefaultTenant,
@@ -153,7 +156,7 @@ func NewClusterRole(name string, permissions ...auth.Permission) *auth.Role {
 // NewClusterRoleBinding is a helper to create a role binding in default tenant
 func NewClusterRoleBinding(name, roleName, users, groups string) *auth.RoleBinding {
 	return &auth.RoleBinding{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_RoleBinding.String()},
+		TypeMeta: api.TypeMeta{Kind: string(auth.KindRoleBinding)},
 		ObjectMeta: api.ObjectMeta{
 			Name:   name,
 			Tenant: globals.DefaultTenant,
@@ -186,6 +189,46 @@ func GetOperationsFromPermissions(permissions []auth.Permission) []authz.Operati
 		}
 	}
 	return operations
+}
+
+// ValidatePerm validates that resource kind and group is valid in permission
+func ValidatePerm(permission auth.Permission) error {
+	s := runtime.GetDefaultScheme()
+	switch permission.ResourceKind {
+	case "", authz.ResourceKindAll:
+		if permission.ResourceGroup != authz.ResourceGroupAll {
+			if _, ok := s.Kinds()[permission.ResourceGroup]; !ok {
+				return fmt.Errorf("invalid API group [%q]", permission.ResourceGroup)
+			}
+		}
+	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String():
+		if permission.ResourceGroup != "" {
+			return fmt.Errorf("invalid API group, should be empty instead of [%q]", permission.ResourceGroup)
+		}
+	case auth.Permission_APIEndpoint.String():
+		if permission.ResourceGroup != "" {
+			return fmt.Errorf("invalid API group, should be empty instead of [%q]", permission.ResourceGroup)
+		}
+		if len(permission.ResourceNames) == 0 {
+			return fmt.Errorf("missing API endpoint resource name")
+		}
+	default:
+		if s.Kind2APIGroup(permission.ResourceKind) != permission.ResourceGroup {
+			return fmt.Errorf("invalid resource kind [%q] and API group [%q]", permission.ResourceKind, permission.ResourceGroup)
+		}
+	}
+	return nil
+}
+
+// ValidatePerms validates that resource kind and group is valid in permissions
+func ValidatePerms(permissions []auth.Permission) error {
+	var errs []error
+	for _, perm := range permissions {
+		if err := ValidatePerm(perm); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return k8serrors.NewAggregate(errs)
 }
 
 // PrintOperations creates a string out of operations for logging

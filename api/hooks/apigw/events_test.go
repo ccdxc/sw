@@ -31,7 +31,7 @@ func TestEventsOperationsHook(t *testing.T) {
 				authz.NewOperation(authz.NewResource("",
 					"events", auth.Permission_Event.String(),
 					"", ""),
-					auth.Permission_READ.String()),
+					auth.Permission_Read.String()),
 			},
 			out: &events.Event{},
 			err: false,

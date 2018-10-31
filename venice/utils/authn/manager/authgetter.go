@@ -46,7 +46,7 @@ func (ug *defaultAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
 	val, err := ug.cache.FindObject("User", objMeta)
 	if err != nil {
 		ug.logger.Errorf("User [%+v] not found in AuthGetter cache, Err: %v", objMeta, err)
-		val, err = ug.addObj(auth.Permission_User, objMeta)
+		val, err = ug.addObj(auth.KindUser, objMeta)
 		if err != nil {
 			return nil, false
 		}
@@ -69,7 +69,7 @@ func (ug *defaultAuthGetter) GetAuthenticationPolicy() (*auth.AuthenticationPoli
 	val, err := ug.cache.FindObject("AuthenticationPolicy", objMeta)
 	if err != nil {
 		ug.logger.Errorf("AuthenticationPolicy [%+v] not found in AuthGetter cache, Err: %v", objMeta, err)
-		val, err = ug.addObj(auth.Permission_AuthenticationPolicy, objMeta)
+		val, err = ug.addObj(auth.KindAuthenticationPolicy, objMeta)
 		if err != nil {
 			return nil, err
 		}
@@ -158,7 +158,7 @@ func (ug *defaultAuthGetter) Start() {
 	ug.watcher.start()
 }
 
-func (ug *defaultAuthGetter) addObj(kind auth.Permission_ResrcKind, objMeta *api.ObjectMeta) (memdb.Object, error) {
+func (ug *defaultAuthGetter) addObj(kind auth.ObjKind, objMeta *api.ObjectMeta) (memdb.Object, error) {
 	if ug.stopped {
 		ug.logger.Errorf("Ignoring add of object %v as AuthGetter is in stopped state", *objMeta)
 	}
@@ -171,13 +171,13 @@ func (ug *defaultAuthGetter) addObj(kind auth.Permission_ResrcKind, objMeta *api
 	defer apicl.Close()
 	var val memdb.Object
 	switch kind {
-	case auth.Permission_User:
+	case auth.KindUser:
 		val, err = apicl.AuthV1().User().Get(context.Background(), objMeta)
 		if err != nil {
 			ug.logger.Errorf("Error getting user [%s|%s] from API server: %v", objMeta.Tenant, objMeta.Name, err)
 			return nil, err
 		}
-	case auth.Permission_AuthenticationPolicy:
+	case auth.KindAuthenticationPolicy:
 		val, err = apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), objMeta)
 		if err != nil {
 			ug.logger.Errorf("Error getting authentication policy [%s] from API server: %v", objMeta.Name, err)

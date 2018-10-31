@@ -445,7 +445,7 @@ venice-release: venice-image
 	ln -f nic/sim/naples/venice-sim.tar tools/docker-files/venice/venice-sim.tar
 	cp test/topos/gs/venice-conf.json nic/sim/naples/venice-conf.json
 	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .
-	cd test/topos/gs && tar -cvf venice_sim_addons.tar start.sh stop.sh testbed.json venice-conf.json authbootstrap_postman_collection.json login_postman_collection.json postman_collection.json
+	cd test/topos/gs && tar -cvf venice_sim_addons.tar start.sh stop.sh testbed.json venice-conf.json authbootstrap_postman_collection.json login_postman_collection.json postman_collection.json customroles_postman_collection.json
 
 # After testing venice-release upload the script assets with a command like below
 # cd test/topos/gs && asset-upload venice_sim_addons.tar v0.2 ./venice_sim_addons.tar

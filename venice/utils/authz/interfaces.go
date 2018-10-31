@@ -65,15 +65,15 @@ func NewOperation(resource Resource, action string) Operation {
 func getActionFromOper(in apiserver.APIOperType) string {
 	switch in {
 	case apiserver.CreateOper:
-		return auth.Permission_CREATE.String()
+		return auth.Permission_Create.String()
 	case apiserver.UpdateOper:
-		return auth.Permission_UPDATE.String()
+		return auth.Permission_Update.String()
 	case apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper:
-		return auth.Permission_READ.String()
+		return auth.Permission_Read.String()
 	case apiserver.DeleteOper:
-		return auth.Permission_DELETE.String()
+		return auth.Permission_Delete.String()
 	}
-	return auth.Permission_ALL_ACTIONS.String()
+	return auth.Permission_AllActions.String()
 }
 
 // NewAPIServerOperation returns an instance of Operation given the APIServer Oper type
@@ -126,9 +126,11 @@ func NewResource(tenant, group, resourceKind, namespace, name string) Resource {
 
 const (
 	// ResourceNamespaceAll is a keyword to match all namespaces
-	ResourceNamespaceAll = "all"
+	ResourceNamespaceAll = "_All_"
 	// ResourceGroupAll is a keyword to match all resource groups
-	ResourceGroupAll = "all"
+	ResourceGroupAll = "_All_"
 	// ResourceTenantAll is a keyword to match all tenants
-	ResourceTenantAll = "all"
+	ResourceTenantAll = "_All_"
+	// ResourceKindAll is a keyword to match all resource kinds
+	ResourceKindAll = "_All_"
 )

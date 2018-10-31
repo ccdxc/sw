@@ -8,12 +8,10 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
-	"github.com/pensando/sw/venice/utils/log"
-
 	"github.com/pensando/sw/venice/utils/bootstrapper"
+	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -46,7 +44,7 @@ func TestAuthBootstrapForCluster(t *testing.T) {
 		{
 			name: "non default tenant",
 			in: &cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testTenant",
 				},

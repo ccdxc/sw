@@ -340,9 +340,10 @@ func (m *Permission) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Actions {
-			m.Actions[k] = "ALL_ACTIONS"
+			m.Actions[k] = "AllActions"
 		}
-		m.ResourceKind = "AllResourceKinds"
+		m.ResourceNamespace = "default"
+		m.ResourceTenant = "default"
 	}
 	return ret
 }
@@ -638,7 +639,7 @@ func (m *UserSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = "LOCAL"
+		m.Type = "Local"
 	}
 	return ret
 }
@@ -1157,15 +1158,6 @@ func init() {
 			if _, ok := Permission_ActionType_value[v]; !ok {
 				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Actions", k)
 			}
-		}
-		return nil
-	})
-
-	validatorMapAuth["Permission"]["all"] = append(validatorMapAuth["Permission"]["all"], func(path string, i interface{}) error {
-		m := i.(*Permission)
-
-		if _, ok := Permission_ResrcKind_value[m.ResourceKind]; !ok {
-			return errors.New("Permission.ResourceKind did not match allowed strings")
 		}
 		return nil
 	})

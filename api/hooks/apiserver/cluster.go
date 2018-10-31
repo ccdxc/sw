@@ -127,10 +127,10 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 	adminRole := login.NewRole(globals.AdminRole, r.GetName(), login.NewPermission(
 		allowedTenant,
 		authz.ResourceGroupAll,
-		auth.Permission_AllResourceKinds.String(),
+		authz.ResourceKindAll,
 		authz.ResourceNamespaceAll,
 		"",
-		auth.Permission_ALL_ACTIONS.String()))
+		auth.Permission_AllActions.String()))
 	// set version
 	apiSrv := apisrvpkg.MustGetAPIServer()
 	adminRole.APIVersion = apiSrv.GetVersion()
@@ -160,10 +160,10 @@ func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Inter
 	adminRoleKey := login.NewRole(globals.AdminRole, r.GetName(), login.NewPermission(
 		allowedTenant,
 		authz.ResourceGroupAll,
-		auth.Permission_AllResourceKinds.String(),
+		authz.ResourceKindAll,
 		authz.ResourceNamespaceAll,
 		"",
-		auth.Permission_ALL_ACTIONS.String())).MakeKey("auth")
+		auth.Permission_AllActions.String())).MakeKey("auth")
 	if err := txn.Delete(adminRoleKey); err != nil {
 		cl.logger.Errorf("Error adding delete admin role to transaction, Err: %v", err)
 		return r, false, err

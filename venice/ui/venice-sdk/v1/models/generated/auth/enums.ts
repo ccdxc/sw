@@ -19,49 +19,14 @@ export enum AuthLdapServerStatus_result {
     'Bind_Failure' = "Bind_Failure",
 }
 
-export enum AuthPermission_resource_kind {
-    'AllResourceKinds' = "AllResourceKinds",
-    'APIEndpoint' = "APIEndpoint",
-    'Search' = "Search",
-    'Event' = "Event",
-    'Tenant' = "Tenant",
-    'Cluster' = "Cluster",
-    'Node' = "Node",
-    'Host' = "Host",
-    'SmartNIC' = "SmartNIC",
-    'Rollout' = "Rollout",
-    'Network' = "Network",
-    'Service' = "Service",
-    'LbPolicy' = "LbPolicy",
-    'Workload' = "Workload",
-    'Endpoint' = "Endpoint",
-    'SecurityGroup' = "SecurityGroup",
-    'SGPolicy' = "SGPolicy",
-    'App' = "App",
-    'TrafficEncryptionPolicy' = "TrafficEncryptionPolicy",
-    'Certificate' = "Certificate",
-    'Alert' = "Alert",
-    'AlertPolicy' = "AlertPolicy",
-    'AlertDestination' = "AlertDestination",
-    'EventPolicy' = "EventPolicy",
-    'StatsPolicy' = "StatsPolicy",
-    'FwlogPolicy' = "FwlogPolicy",
-    'FlowExportPolicy' = "FlowExportPolicy",
-    'MirrorSession' = "MirrorSession",
-    'MetricsQuery' = "MetricsQuery",
-    'User' = "User",
-    'AuthenticationPolicy' = "AuthenticationPolicy",
-    'Role' = "Role",
-    'RoleBinding' = "RoleBinding",
-}
-
 export enum AuthPermission_actions {
-    'ALL_ACTIONS' = "ALL_ACTIONS",
-    'CREATE' = "CREATE",
-    'READ' = "READ",
-    'UPDATE' = "UPDATE",
-    'DELETE' = "DELETE",
-    'COMMIT' = "COMMIT",
+    'AllActions' = "AllActions",
+    'Create' = "Create",
+    'Read' = "Read",
+    'Update' = "Update",
+    'Delete' = "Delete",
+    'Commit' = "Commit",
+    'Clear' = "Clear",
 }
 
 export enum AuthRadiusServer_auth_method {
@@ -76,8 +41,8 @@ export enum AuthRadiusServerStatus_result {
 }
 
 export enum AuthUserSpec_type {
-    'LOCAL' = "LOCAL",
-    'EXTERNAL' = "EXTERNAL",
+    'Local' = "Local",
+    'External' = "External",
 }
 
 export enum AuthUserStatus_authenticators {
@@ -91,54 +56,19 @@ export enum AuthAuthenticators_authenticator_order_uihint {
     'LOCAL' = "Local",
 }
 
-export enum AuthPermission_resource_kind_uihint {
-    'APIEndpoint' = "API Endpoint",
-    'Alert' = "Alert",
-    'AlertDestination' = "AlertDestination",
-    'AlertPolicy' = "AlertPolicy",
-    'AllResourceKinds' = "All Resource Kinds",
-    'App' = "App",
-    'AuthenticationPolicy' = "AuthenticationPolicy",
-    'Certificate' = "Certificate",
-    'Cluster' = "Cluster",
-    'Endpoint' = "Endpoint",
-    'Event' = "Events",
-    'EventPolicy' = "EventPolicy",
-    'FlowExportPolicy' = "FlowExportPolicy",
-    'FwlogPolicy' = "FwlogPolicy",
-    'Host' = "Host",
-    'LbPolicy' = "LBPolicy",
-    'MetricsQuery' = "MetricsQuery",
-    'MirrorSession' = "MirrorSession",
-    'Network' = "Network",
-    'Node' = "Node",
-    'Role' = "Role",
-    'RoleBinding' = "RoleBinding",
-    'Rollout' = "Rollout",
-    'SGPolicy' = "SGPolicy",
-    'Search' = "Search",
-    'SecurityGroup' = "SecurityGroup",
-    'Service' = "Service",
-    'SmartNIC' = "SmartNIC",
-    'StatsPolicy' = "StatsPolicy",
-    'Tenant' = "Tenant",
-    'TrafficEncryptionPolicy' = "EncryptionPolicy",
-    'User' = "User",
-    'Workload' = "Workload",
-}
-
 export enum AuthPermission_actions_uihint {
-    'ALL_ACTIONS' = "All Actions",
-    'COMMIT' = "Commit Config",
-    'CREATE' = "Create",
-    'DELETE' = "Delete",
-    'READ' = "Read",
-    'UPDATE' = "Update",
+    'AllActions' = "All Actions",
+    'Clear' = "Clear Config",
+    'Commit' = "Commit Config",
+    'Create' = "Create",
+    'Delete' = "Delete",
+    'Read' = "Read",
+    'Update' = "Update",
 }
 
 export enum AuthUserSpec_type_uihint {
-    'EXTERNAL' = "External",
-    'LOCAL' = "Local",
+    'External' = "External",
+    'Local' = "Local",
 }
 
 export enum AuthUserStatus_authenticators_uihint {
@@ -178,7 +108,6 @@ export class AllEnums {
 
     AuthAuthenticators_authenticator_order = AuthAuthenticators_authenticator_order;
     AuthLdapServerStatus_result = AuthLdapServerStatus_result;
-    AuthPermission_resource_kind = AuthPermission_resource_kind;
     AuthPermission_actions = AuthPermission_actions;
     AuthRadiusServer_auth_method = AuthRadiusServer_auth_method;
     AuthRadiusServerStatus_result = AuthRadiusServerStatus_result;
@@ -186,7 +115,6 @@ export class AllEnums {
     AuthUserStatus_authenticators = AuthUserStatus_authenticators;
 
     AuthAuthenticators_authenticator_order_uihint = AuthAuthenticators_authenticator_order_uihint;
-    AuthPermission_resource_kind_uihint = AuthPermission_resource_kind_uihint;
     AuthPermission_actions_uihint = AuthPermission_actions_uihint;
     AuthUserSpec_type_uihint = AuthUserSpec_type_uihint;
     AuthUserStatus_authenticators_uihint = AuthUserStatus_authenticators_uihint;

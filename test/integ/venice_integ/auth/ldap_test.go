@@ -176,7 +176,7 @@ func TestReferral(t *testing.T) {
 
 		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful ldap user authentication", testtype))
 		Assert(t, autheduser.Name == config.ReferralUser, fmt.Sprintf("[%v] User returned by ldap authenticator didn't match user being authenticated", testtype))
-		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("[%v] User created is not of type EXTERNAL", testtype))
+		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_External.String(), fmt.Sprintf("[%v] User created is not of type EXTERNAL", testtype))
 		returnedGroups := autheduser.Status.GetUserGroups()
 		sort.Strings(returnedGroups)
 		var expectedGroups []string

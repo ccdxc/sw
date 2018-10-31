@@ -343,14 +343,14 @@ func TestCreateDefaultRoles(t *testing.T) {
 			name: "create admin role for tenant",
 			oper: apiserver.CreateOper,
 			in: cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Tenant: "testTenant",
 					Name:   "testTenant",
 				},
 			},
 			out: cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Tenant: "testTenant",
 					Name:   "testTenant",
@@ -364,14 +364,14 @@ func TestCreateDefaultRoles(t *testing.T) {
 			name: "invalid operation type for create tenant",
 			oper: apiserver.DeleteOper,
 			in: cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Tenant: "testTenant",
 					Name:   "testTenant",
 				},
 			},
 			out: cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Tenant: "testTenant",
 					Name:   "testTenant",
@@ -435,14 +435,14 @@ func TestDeleteDefaultRoles(t *testing.T) {
 			name: "delete admin role for tenant",
 			oper: apiserver.DeleteOper,
 			in: cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Tenant: "testTenant",
 					Name:   "testTenant",
 				},
 			},
 			out: cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Tenant: "testTenant",
 					Name:   "testTenant",
@@ -456,14 +456,14 @@ func TestDeleteDefaultRoles(t *testing.T) {
 			name: "invalid operation type for delete tenant",
 			oper: apiserver.CreateOper,
 			in: cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Tenant: "testTenant",
 					Name:   "testTenant",
 				},
 			},
 			out: cluster.Tenant{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
 					Tenant: "testTenant",
 					Name:   "testTenant",
@@ -491,10 +491,10 @@ func TestDeleteDefaultRoles(t *testing.T) {
 	adminRole := login.NewRole(globals.AdminRole, "testTenant", login.NewPermission(
 		"testTenant",
 		authz.ResourceGroupAll,
-		auth.Permission_AllResourceKinds.String(),
+		authz.ResourceKindAll,
 		authz.ResourceNamespaceAll,
 		"",
-		auth.Permission_ALL_ACTIONS.String()))
+		auth.Permission_AllActions.String()))
 	adminRoleKey := adminRole.MakeKey("auth")
 	if err := kvs.Create(ctx, adminRoleKey, adminRole); err != nil {
 		t.Fatalf("unable to populate kvstore with admin role, Err: %v", err)
@@ -538,7 +538,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 			name: "unset bootstrap flag of already bootstrapped cluster",
 			oper: apiserver.UpdateOper,
 			in: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -547,7 +547,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 				},
 			},
 			existing: &cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -556,7 +556,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 				},
 			},
 			out: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -571,7 +571,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 			name: "set bootstrap flag of un-bootstrapped cluster",
 			oper: apiserver.UpdateOper,
 			in: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -580,7 +580,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 				},
 			},
 			existing: &cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -589,7 +589,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 				},
 			},
 			out: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -604,7 +604,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 			name: "set bootstrap flag through create cluster",
 			oper: apiserver.CreateOper,
 			in: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -613,7 +613,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 				},
 			},
 			out: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -628,7 +628,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 			name: "invalid operation type for check bootstrap hook",
 			oper: apiserver.DeleteOper,
 			in: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -637,7 +637,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 				},
 			},
 			out: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -662,7 +662,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 		t.Fatalf("unable to create kvstore %s", err)
 	}
 	cluster := &cluster.Cluster{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 		ObjectMeta: api.ObjectMeta{
 			Name: "testCluster",
 		},
@@ -711,7 +711,7 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 			name: "set bootstrap flag of un-bootstrapped cluster",
 			in:   cluster.ClusterAuthBootstrapRequest{},
 			existing: &cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name: "testCluster",
 				},
@@ -720,7 +720,7 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 				},
 			},
 			out: cluster.Cluster{
-				TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name:            "testCluster",
 					ResourceVersion: "2",
@@ -746,7 +746,7 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 		t.Fatalf("unable to create kvstore %s", err)
 	}
 	cluster := &cluster.Cluster{
-		TypeMeta: api.TypeMeta{Kind: auth.Permission_Cluster.String()},
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 		ObjectMeta: api.ObjectMeta{
 			Name: "testCluster",
 		},

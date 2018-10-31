@@ -32,7 +32,7 @@ func CreateExternalUser(username, tenant, fullname, email string, groups []strin
 		Spec: auth.UserSpec{
 			Fullname: fullname,
 			Email:    email,
-			Type:     auth.UserSpec_EXTERNAL.String(),
+			Type:     auth.UserSpec_External.String(),
 		},
 		Status: auth.UserStatus{
 			UserGroups:     groups,

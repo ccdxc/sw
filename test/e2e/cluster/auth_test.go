@@ -63,7 +63,7 @@ var _ = Describe("auth tests", func() {
 			Expect(user.Name).Should(Equal(ts.tu.Radius.User))
 			Expect(user.Tenant).Should(Equal(ts.tu.Radius.Tenant))
 			Expect(user.Status.UserGroups).Should(Equal(ts.tu.Radius.UserGroups))
-			Expect(user.Spec.Type).Should(Equal(auth.UserSpec_EXTERNAL.String()))
+			Expect(user.Spec.Type).Should(Equal(auth.UserSpec_External.String()))
 			logintime, err := user.Status.LastSuccessfulLogin.Time()
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(time.Now()).Should(BeTemporally("~", logintime, 15*time.Second))

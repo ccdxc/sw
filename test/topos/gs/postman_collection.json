@@ -10,7 +10,7 @@
 			"name": "Login",
 			"item": [
 				{
-					"name": "http://localhost:10001/v1/login/",
+					"name": "http://localhost:10001/v1/login",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -24,7 +24,7 @@
 							"raw": "{\n\t\"username\": \"admin\",\n\t\"password\": \"password\",\n\t\"tenant\": \"default\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:10001/v1/login/",
+							"raw": "http://localhost:10001/v1/login",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -32,8 +32,7 @@
 							"port": "10001",
 							"path": [
 								"v1",
-								"login",
-								""
+								"login"
 							]
 						},
 						"description": "Login by Admin"

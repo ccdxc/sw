@@ -113,7 +113,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 
 	router := mux.NewRouter()
 	router.Path(login.LoginURLPath).Methods("POST").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
+		w.Header().Set("Content-Type", "application/json")
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			s.logger.Errorf("failed to read body from login request: %v", err)
@@ -242,7 +242,7 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 	if storedUser, err = apicl.AuthV1().User().Get(context.Background(), user.GetObjectMeta()); err != nil {
 		status := apierrors.FromError(err)
 		//  Create user if it is external and not found
-		if user.Spec.Type == auth.UserSpec_EXTERNAL.String() && status.Code == http.StatusNotFound {
+		if user.Spec.Type == auth.UserSpec_External.String() && status.Code == http.StatusNotFound {
 			user, err = apicl.AuthV1().User().Create(context.Background(), user)
 			if err != nil {
 				s.logger.Errorf("Error creating external user [%s|%s], Err: %v", user.Tenant, user.Name, err)
@@ -261,7 +261,7 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 			return nil, ErrUsernameConflict
 		}
 
-		if user.Spec.Type == auth.UserSpec_LOCAL.String() { // update local user with retries as ResourceVersion could have changed
+		if user.Spec.Type == auth.UserSpec_Local.String() { // update local user with retries as ResourceVersion could have changed
 			result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
 				storedUser, err = apicl.AuthV1().User().Get(context.Background(), user.GetObjectMeta())
 				if err != nil {

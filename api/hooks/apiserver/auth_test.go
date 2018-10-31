@@ -8,10 +8,13 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/authn/password"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -44,7 +47,7 @@ func runPasswordHook(oper apiserver.APIOperType, userType auth.UserSpec_UserType
 }
 
 func TestWithCreateOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_LOCAL, testPassword)
+	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_Local, testPassword)
 
 	Assert(t, ok, "hook to hash password failed for create")
 	AssertOk(t, err, "Error hashing password in create pre-commit hook")
@@ -59,7 +62,7 @@ func TestWithCreateOperation(t *testing.T) {
 }
 
 func TestWithUpdateOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.UpdateOper, auth.UserSpec_LOCAL, testPassword)
+	i, ok, err := runPasswordHook(apiserver.UpdateOper, auth.UserSpec_Local, testPassword)
 
 	Assert(t, ok, "hook to hash password failed for create")
 	AssertOk(t, err, "Error hashing password in create pre-commit hook")
@@ -73,7 +76,7 @@ func TestWithUpdateOperation(t *testing.T) {
 }
 
 func TestForExternalUser(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_EXTERNAL, "")
+	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_External, "")
 
 	Assert(t, ok, "hook to hash password failed for external user")
 	AssertOk(t, err, "Error hashing password in create pre-commit hook for external user")
@@ -81,7 +84,7 @@ func TestForExternalUser(t *testing.T) {
 }
 
 func TestWithDeleteOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.DeleteOper, auth.UserSpec_LOCAL, testPassword)
+	i, ok, err := runPasswordHook(apiserver.DeleteOper, auth.UserSpec_Local, testPassword)
 
 	Assert(t, ok, "hook to hash password failed for delete")
 	AssertOk(t, err, "Error returned for delete operation")
@@ -89,7 +92,7 @@ func TestWithDeleteOperation(t *testing.T) {
 }
 
 func TestWithEmptyPasswordForUpdateOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.UpdateOper, auth.UserSpec_LOCAL, "")
+	i, ok, err := runPasswordHook(apiserver.UpdateOper, auth.UserSpec_Local, "")
 
 	Assert(t, !ok, "hook to hash password succeeded for empty password in update operation")
 	Assert(t, err != nil, "No error returned for empty password in update operation")
@@ -97,7 +100,7 @@ func TestWithEmptyPasswordForUpdateOperation(t *testing.T) {
 }
 
 func TestWithEmptyPasswordForCreateOperation(t *testing.T) {
-	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_LOCAL, "")
+	i, ok, err := runPasswordHook(apiserver.CreateOper, auth.UserSpec_Local, "")
 
 	Assert(t, !ok, "hook to hash password succeeded for empty password in create operation")
 	Assert(t, err != nil, "No error returned for empty password in create operation")
@@ -136,7 +139,7 @@ func TestWithUserTypeNotSpecified(t *testing.T) {
 	i, ok, err := r.hashPassword(context.Background(), nil, nil, "", apiserver.CreateOper, false, user)
 	user = i.(auth.User)
 	Assert(t, ok, "hook to hash password failed when user type not specified")
-	Assert(t, user.Spec.Type == auth.UserSpec_LOCAL.String(), "user type should default to local")
+	Assert(t, user.Spec.Type == auth.UserSpec_Local.String(), "user type should default to local")
 	AssertOk(t, err, "Error returned when user type not specified")
 }
 
@@ -308,22 +311,22 @@ func TestValidateRolePerms(t *testing.T) {
 			in: *login.NewRole("NetworkAdminRole",
 				"testTenant",
 				login.NewPermission("testTenant",
-					"network",
-					auth.Permission_Network.String(),
+					string(apiclient.GroupNetwork),
+					string(network.KindNetwork),
 					"",
 					"",
-					auth.Permission_ALL_ACTIONS.String())),
+					auth.Permission_AllActions.String())),
 			err: nil,
 		},
 		{
 			name: "valid cluster role",
 			in: *login.NewClusterRole("ClusterAdminRole",
 				login.NewPermission("testTenant",
-					"network",
-					auth.Permission_Network.String(),
+					string(apiclient.GroupNetwork),
+					string(network.KindNetwork),
 					"",
 					"",
-					auth.Permission_ALL_ACTIONS.String())),
+					auth.Permission_AllActions.String())),
 			err: nil,
 		},
 		{
@@ -331,12 +334,156 @@ func TestValidateRolePerms(t *testing.T) {
 			in: *login.NewRole("NetworkAdminRole",
 				"testTenant",
 				login.NewPermission("default",
-					"network",
-					auth.Permission_Network.String(),
+					string(apiclient.GroupNetwork),
+					string(network.KindNetwork),
 					"",
 					"",
-					auth.Permission_ALL_ACTIONS.String())),
+					auth.Permission_AllActions.String())),
 			err: []error{errInvalidRolePermissions},
+		},
+		{
+			name: "invalid resource kind in a resource group",
+			in: *login.NewRole("NetworkAdminRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					string(apiclient.GroupNetwork),
+					string(auth.KindUser),
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: []error{fmt.Errorf("invalid resource kind [%q] and API group [%q]", string(auth.KindUser), string(apiclient.GroupNetwork))},
+		},
+		{
+			name: "no resource group and empty kind",
+			in: *login.NewRole("AdminRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					"",
+					"",
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: []error{fmt.Errorf("invalid API group [%q]", "")},
+		},
+		{
+			name: "no resource group and all resource kinds",
+			in: *login.NewRole("AdminRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					"",
+					authz.ResourceKindAll,
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: []error{fmt.Errorf("invalid API group [%q]", "")},
+		},
+		{
+			name: "all resource group and all resource kinds",
+			in: *login.NewRole("AdminRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					authz.ResourceGroupAll,
+					authz.ResourceKindAll,
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: nil,
+		},
+		{
+			name: "all resource group and empty resource kinds",
+			in: *login.NewRole("AdminRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					authz.ResourceGroupAll,
+					"",
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: nil,
+		},
+		{
+			name: "role with search endpoint permission",
+			in: *login.NewRole("SearchRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					"",
+					auth.Permission_Search.String(),
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: nil,
+		},
+		{
+			name: "role with invalid search endpoint permission",
+			in: *login.NewRole("SearchRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					authz.ResourceGroupAll,
+					auth.Permission_Search.String(),
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: []error{fmt.Errorf("invalid API group, should be empty instead of [%q]", authz.ResourceGroupAll)},
+		},
+		{
+			name: "role with event endpoint permission",
+			in: *login.NewRole("EventRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					"",
+					auth.Permission_Event.String(),
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: nil,
+		},
+		{
+			name: "role with invalid event endpoint permission",
+			in: *login.NewRole("EventRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					string(apiclient.GroupMonitoring),
+					auth.Permission_Event.String(),
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: []error{fmt.Errorf("invalid API group, should be empty instead of [%q]", string(apiclient.GroupMonitoring))},
+		},
+		{
+			name: "role with api endpoint permission",
+			in: *login.NewRole("APIRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					"",
+					auth.Permission_APIEndpoint.String(),
+					"",
+					"/api/v1/search",
+					auth.Permission_AllActions.String())),
+			err: nil,
+		},
+		{
+			name: "role with api endpoint permission having no resource name",
+			in: *login.NewRole("APIRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					"",
+					auth.Permission_APIEndpoint.String(),
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: []error{fmt.Errorf("missing API endpoint resource name")},
+		},
+		{
+			name: "role with api endpoint permission having group name",
+			in: *login.NewRole("APIRole",
+				"testTenant",
+				login.NewPermission("testTenant",
+					string(apiclient.GroupMonitoring),
+					auth.Permission_APIEndpoint.String(),
+					"",
+					"",
+					auth.Permission_AllActions.String())),
+			err: []error{fmt.Errorf("invalid API group, should be empty instead of [%q]", string(apiclient.GroupMonitoring))},
 		},
 		{
 			name: "incorrect object type",

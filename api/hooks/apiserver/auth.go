@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -36,14 +37,14 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 		return i, false, errInvalidInputType
 	}
 
-	//Don't save password for external user
-	if r.Spec.GetType() == auth.UserSpec_EXTERNAL.String() {
+	// don't save password for external user
+	if r.Spec.GetType() == auth.UserSpec_External.String() {
 		r.Spec.Password = ""
 		return r, true, nil
 	}
 
-	//If user type is not external then assume local by default
-	r.Spec.Type = auth.UserSpec_LOCAL.String()
+	// if user type is not external then assume local by default
+	r.Spec.Type = auth.UserSpec_Local.String()
 
 	switch oper {
 	case apiserver.CreateOper, apiserver.UpdateOper:
@@ -125,24 +126,29 @@ func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, tx
 	return r, true, nil
 }
 
-// validateRolePerms is hook to validate that a role in non default tenant doesn't contain permissions to other tenants
+// validateRolePerms is hook to validate that resource kind and group is valid in permission and a role in non default tenant doesn't contain permissions to other tenants
 func (s *authHooks) validateRolePerms(i interface{}, ver string, ignStatus bool) []error {
 	s.logger.DebugLog("msg", "AuthHook called to validate role")
 	r, ok := i.(auth.Role)
 	if !ok {
 		return []error{errInvalidInputType}
 	}
-	// "default" tenant role can have permissions for objects in other tenants
-	if r.Tenant == globals.DefaultTenant {
-		return nil
-	}
+
+	var errs []error
 	for _, perm := range r.Spec.Permissions {
-		if perm.GetResourceTenant() != r.Tenant {
-			s.logger.Errorf("validation failed for role [%#v]", r)
-			return []error{errInvalidRolePermissions}
+		// "default" tenant role can have permissions for objects in other tenants
+		if r.Tenant != globals.DefaultTenant && perm.GetResourceTenant() != r.Tenant {
+			errs = append(errs, errInvalidRolePermissions)
+		}
+		// validate resource kind and group
+		if err := login.ValidatePerm(perm); err != nil {
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	if len(errs) != 0 {
+		s.logger.Errorf("validation failed for role [%#v], %s", r, errs)
+	}
+	return errs
 }
 
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {

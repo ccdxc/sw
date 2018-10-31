@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	. "github.com/pensando/sw/venice/utils/authz"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -20,43 +23,57 @@ func TestPermissionAllows(t *testing.T) {
 			name: "matching resource by kind for all namespaces",
 			permission: auth.Permission{
 				ResourceTenant:    "default",
-				ResourceGroup:     "Network",
-				ResourceKind:      auth.Permission_Network.String(),
+				ResourceGroup:     string(apiclient.GroupNetwork),
+				ResourceKind:      string(network.KindNetwork),
 				ResourceNamespace: ResourceNamespaceAll,
-				Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
+				Actions:           []string{auth.Permission_AllActions.String()},
 			},
 			operation: NewOperation(
-				NewResource("default", "Network", auth.Permission_Network.String(), "abc", "def"),
-				auth.Permission_READ.String()),
+				NewResource("default", string(apiclient.GroupNetwork), string(network.KindNetwork), "abc", "def"),
+				auth.Permission_Read.String()),
+			expected: true,
+		},
+		{
+			name: "matching resource by api group for all namespaces",
+			permission: auth.Permission{
+				ResourceTenant:    "default",
+				ResourceGroup:     string(apiclient.GroupAuth),
+				ResourceKind:      "",
+				ResourceNamespace: ResourceNamespaceAll,
+				Actions:           []string{auth.Permission_AllActions.String()},
+			},
+			operation: NewOperation(
+				NewResource("default", string(apiclient.GroupAuth), string(auth.KindUser), "abc", "def"),
+				auth.Permission_Read.String()),
 			expected: true,
 		},
 		{
 			name: "matching resource by kind and namespace",
 			permission: auth.Permission{
 				ResourceTenant:    "default",
-				ResourceGroup:     "Network",
-				ResourceKind:      auth.Permission_Network.String(),
+				ResourceGroup:     string(apiclient.GroupNetwork),
+				ResourceKind:      string(network.KindNetwork),
 				ResourceNamespace: "finance",
-				Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
+				Actions:           []string{auth.Permission_AllActions.String()},
 			},
 			operation: NewOperation(
-				NewResource("default", "Network", auth.Permission_Network.String(), "finance", "def"),
-				auth.Permission_READ.String()),
+				NewResource("default", string(apiclient.GroupNetwork), string(network.KindNetwork), "finance", "def"),
+				auth.Permission_Read.String()),
 			expected: true,
 		},
 		{
 			name: "matching resource by name",
 			permission: auth.Permission{
 				ResourceTenant:    "default",
-				ResourceGroup:     "Network",
-				ResourceKind:      auth.Permission_Network.String(),
+				ResourceGroup:     string(apiclient.GroupNetwork),
+				ResourceKind:      string(network.KindNetwork),
 				ResourceNamespace: "finance",
 				ResourceNames:     []string{"pensando"},
-				Actions:           []string{auth.Permission_READ.String(), auth.Permission_UPDATE.String()},
+				Actions:           []string{auth.Permission_Read.String(), auth.Permission_Update.String()},
 			},
 			operation: NewOperation(
-				NewResource("default", "Network", auth.Permission_Network.String(), "finance", "pensando"),
-				auth.Permission_READ.String()),
+				NewResource("default", string(apiclient.GroupNetwork), string(network.KindNetwork), "finance", "pensando"),
+				auth.Permission_Read.String()),
 			expected: true,
 		},
 		{
@@ -64,13 +81,13 @@ func TestPermissionAllows(t *testing.T) {
 			permission: auth.Permission{
 				ResourceTenant:    ResourceTenantAll,
 				ResourceGroup:     ResourceGroupAll,
-				ResourceKind:      auth.Permission_AllResourceKinds.String(),
+				ResourceKind:      ResourceKindAll,
 				ResourceNamespace: ResourceNamespaceAll,
-				Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
+				Actions:           []string{auth.Permission_AllActions.String()},
 			},
 			operation: NewOperation(
-				NewResource("default", "Network", auth.Permission_Network.String(), "finance", "pensando"),
-				auth.Permission_READ.String()),
+				NewResource("default", string(apiclient.GroupNetwork), string(network.KindNetwork), "finance", "pensando"),
+				auth.Permission_Read.String()),
 			expected: true,
 		},
 		{
@@ -81,40 +98,40 @@ func TestPermissionAllows(t *testing.T) {
 				ResourceKind:      auth.Permission_APIEndpoint.String(),
 				ResourceNamespace: "",
 				ResourceNames:     []string{"/api/v1/search"},
-				Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
+				Actions:           []string{auth.Permission_AllActions.String()},
 			},
 			operation: NewOperation(
 				NewResource("", "", auth.Permission_APIEndpoint.String(), "", "/api/v1/search"),
-				auth.Permission_READ.String()),
+				auth.Permission_Read.String()),
 			expected: true,
 		},
 		{
 			name: "doesn't match resource by name",
 			permission: auth.Permission{
 				ResourceTenant:    "default",
-				ResourceGroup:     "Network",
-				ResourceKind:      auth.Permission_Network.String(),
+				ResourceGroup:     string(apiclient.GroupNetwork),
+				ResourceKind:      string(network.KindNetwork),
 				ResourceNamespace: "finance",
 				ResourceNames:     []string{"pensando"},
-				Actions:           []string{auth.Permission_READ.String(), auth.Permission_UPDATE.String()},
+				Actions:           []string{auth.Permission_Read.String(), auth.Permission_Update.String()},
 			},
 			operation: NewOperation(
-				NewResource("default", "Network", auth.Permission_Network.String(), "finance", "xyz"),
-				auth.Permission_READ.String()),
+				NewResource("default", string(apiclient.GroupNetwork), string(network.KindNetwork), "finance", "xyz"),
+				auth.Permission_Read.String()),
 			expected: false,
 		},
 		{
 			name: "doesn't match action",
 			permission: auth.Permission{
 				ResourceTenant:    "default",
-				ResourceGroup:     "Network",
-				ResourceKind:      auth.Permission_Network.String(),
+				ResourceGroup:     string(apiclient.GroupNetwork),
+				ResourceKind:      string(network.KindNetwork),
 				ResourceNamespace: "finance",
-				Actions:           []string{auth.Permission_READ.String(), auth.Permission_UPDATE.String()},
+				Actions:           []string{auth.Permission_Read.String(), auth.Permission_Update.String()},
 			},
 			operation: NewOperation(
-				NewResource("default", "Network", auth.Permission_Network.String(), "finance", "xyz"),
-				auth.Permission_CREATE.String()),
+				NewResource("default", string(apiclient.GroupNetwork), string(network.KindNetwork), "finance", "xyz"),
+				auth.Permission_Create.String()),
 			expected: false,
 		},
 	}
@@ -133,23 +150,23 @@ func TestPermissionsAllow(t *testing.T) {
 		{
 			name: "operation allowed",
 			operation: NewOperation(
-				NewResource("default", "Network", auth.Permission_Network.String(), "finance", "xyz"),
-				auth.Permission_CREATE.String()),
+				NewResource("default", string(apiclient.GroupNetwork), string(network.KindNetwork), "finance", "xyz"),
+				auth.Permission_Create.String()),
 			permissions: []auth.Permission{
 				{
 					ResourceTenant:    "default",
-					ResourceGroup:     "Network",
-					ResourceKind:      auth.Permission_Network.String(),
+					ResourceGroup:     string(apiclient.GroupNetwork),
+					ResourceKind:      string(network.KindNetwork),
 					ResourceNamespace: "finance",
 					ResourceNames:     []string{"pensando"},
-					Actions:           []string{auth.Permission_READ.String(), auth.Permission_UPDATE.String()},
+					Actions:           []string{auth.Permission_Read.String(), auth.Permission_Update.String()},
 				},
 				{
 					ResourceTenant:    "default",
-					ResourceGroup:     "Network",
-					ResourceKind:      auth.Permission_Network.String(),
+					ResourceGroup:     string(apiclient.GroupNetwork),
+					ResourceKind:      string(network.KindNetwork),
 					ResourceNamespace: "finance",
-					Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
+					Actions:           []string{auth.Permission_AllActions.String()},
 				},
 			},
 			expected: true,
@@ -157,23 +174,23 @@ func TestPermissionsAllow(t *testing.T) {
 		{
 			name: "operation disallowed",
 			operation: NewOperation(
-				NewResource("default", "Network", auth.Permission_Network.String(), "finance", "xyz"),
-				auth.Permission_CREATE.String()),
+				NewResource("default", string(apiclient.GroupNetwork), string(network.KindNetwork), "finance", "xyz"),
+				auth.Permission_Create.String()),
 			permissions: []auth.Permission{
 				{
 					ResourceTenant:    "default",
-					ResourceGroup:     "Network",
-					ResourceKind:      auth.Permission_Network.String(),
+					ResourceGroup:     string(apiclient.GroupNetwork),
+					ResourceKind:      string(network.KindNetwork),
 					ResourceNamespace: "finance",
 					ResourceNames:     []string{"pensando"},
-					Actions:           []string{auth.Permission_READ.String(), auth.Permission_UPDATE.String()},
+					Actions:           []string{auth.Permission_Read.String(), auth.Permission_Update.String()},
 				},
 				{
 					ResourceTenant:    "default",
-					ResourceGroup:     "Security",
-					ResourceKind:      auth.Permission_SecurityGroup.String(),
+					ResourceGroup:     string(apiclient.GroupSecurity),
+					ResourceKind:      string(security.KindSecurityGroup),
 					ResourceNamespace: "finance",
-					Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
+					Actions:           []string{auth.Permission_AllActions.String()},
 				},
 			},
 			expected: false,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // TODO: Optimize. Benchmarking with 4 roles and 6 users per role in a tenant with 6 tenants in system I see ~2500ns for a permission check on mac
@@ -28,7 +29,7 @@ func permissionAllows(permission auth.Permission, operation authz.Operation) boo
 func actionMatches(permission auth.Permission, requestedAction string) bool {
 	allowedActions := permission.GetActions()
 	for _, action := range allowedActions {
-		if action == auth.Permission_ALL_ACTIONS.String() {
+		if action == auth.Permission_AllActions.String() {
 			return true
 		}
 		if action == requestedAction {
@@ -79,16 +80,16 @@ func resourceKindMatches(permission auth.Permission, requestedResourceKind strin
 		return resourceGroupContains(permission.GetResourceGroup(), requestedResourceKind)
 	}
 	// resource type is "all" in permission so it will match
-	if allowedResourceKind == auth.Permission_AllResourceKinds.String() {
+	if allowedResourceKind == authz.ResourceKindAll {
 		return true
 	}
 
 	return allowedResourceKind == requestedResourceKind
 }
 
-func resourceGroupContains(resourceGroup string, resourceType string) bool {
-	// TODO: implement logic here
-	return false
+func resourceGroupContains(resourceGroup string, requestedResourceKind string) bool {
+	s := runtime.GetDefaultScheme()
+	return resourceGroup == s.Kind2APIGroup(requestedResourceKind)
 }
 
 func resourceNameMatches(permission auth.Permission, requestedResourceName string) bool {

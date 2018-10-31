@@ -12,6 +12,8 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/network"
 	. "github.com/pensando/sw/test/utils"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -35,12 +37,12 @@ func TestAuthorization(t *testing.T) {
 	AssertConsistently(t, func() (bool, interface{}) {
 		_, err = tinfo.restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy"})
 		return err != nil, nil
-	}, "authorization error expected while retrieving authentication policy")
+	}, "authorization error expected while retrieving authentication policy", "100ms", "1s")
 	// retrieve tenant
 	AssertConsistently(t, func() (bool, interface{}) {
 		_, err := tinfo.restcl.ClusterV1().Tenant().Get(ctx, &api.ObjectMeta{Name: testTenant})
 		return err != nil, nil
-	}, "authorization error expected while retrieving tenant")
+	}, "authorization error expected while retrieving tenant", "100ms", "1s")
 	// retrieve role
 	var role *auth.Role
 	AssertEventually(t, func() (bool, interface{}) {
@@ -69,29 +71,29 @@ func TestAdminRole(t *testing.T) {
 		_, err := tinfo.restcl.AuthV1().Role().Delete(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: globals.DefaultTenant})
 		tinfo.l.Infof("admin role delete error: %v", err)
 		return err != nil, err
-	}, "admin role shouldn't be deleted")
+	}, "admin role shouldn't be deleted", "100ms", "1s")
 	AssertConsistently(t, func() (bool, interface{}) {
 		_, err := tinfo.restcl.AuthV1().Role().Create(superAdminCtx, login.NewRole(globals.AdminRole, globals.DefaultTenant, login.NewPermission(
 			authz.ResourceTenantAll,
 			authz.ResourceGroupAll,
-			auth.Permission_AllResourceKinds.String(),
+			authz.ResourceKindAll,
 			authz.ResourceNamespaceAll,
 			"",
-			auth.Permission_ALL_ACTIONS.String())))
+			auth.Permission_AllActions.String())))
 		tinfo.l.Infof("admin role create error: %v", err)
 		return err != nil, err
-	}, "admin role shouldn't be created")
+	}, "admin role shouldn't be created", "100ms", "1s")
 	AssertConsistently(t, func() (bool, interface{}) {
 		_, err := tinfo.restcl.AuthV1().Role().Update(superAdminCtx, login.NewRole(globals.AdminRole, globals.DefaultTenant, login.NewPermission(
 			authz.ResourceTenantAll,
 			authz.ResourceGroupAll,
-			auth.Permission_AllResourceKinds.String(),
+			authz.ResourceKindAll,
 			authz.ResourceNamespaceAll,
 			"",
-			auth.Permission_ALL_ACTIONS.String())))
+			auth.Permission_AllActions.String())))
 		tinfo.l.Infof("admin role update error: %v", err)
 		return err != nil, err
-	}, "admin role shouldn't be updated")
+	}, "admin role shouldn't be updated", "100ms", "1s")
 	MustCreateTenant(tinfo.apicl, testTenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := tinfo.restcl.AuthV1().Role().Get(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: testTenant})
@@ -123,31 +125,31 @@ func TestPrivilegeEscalation(t *testing.T) {
 		_, err := tinfo.restcl.AuthV1().Role().Update(ctx, login.NewRole(globals.AdminRole, testTenant, login.NewPermission(
 			authz.ResourceTenantAll,
 			authz.ResourceGroupAll,
-			auth.Permission_AllResourceKinds.String(),
+			authz.ResourceKindAll,
 			authz.ResourceNamespaceAll,
 			"",
-			auth.Permission_ALL_ACTIONS.String())))
+			auth.Permission_AllActions.String())))
 		tinfo.l.Infof("global admin role update error: %v", err)
 		return err != nil, err
-	}, "tenant admin should not be able to update tenant admin role to global admin role")
+	}, "tenant admin should not be able to update tenant admin role to global admin role", "100ms", "1s")
 
 	// create testUser2 as network admin with permissions to create RBAC objects also
 	MustCreateTestUser(tinfo.apicl, "testUser2", testPassword, testTenant)
 	defer MustDeleteUser(tinfo.apicl, "testUser2", testTenant)
 	MustCreateRole(tinfo.apicl, "NetworkAdminRole", testTenant, login.NewPermission(
 		testTenant,
-		"network",
-		auth.Permission_Network.String(),
+		string(apiclient.GroupNetwork),
+		string(network.KindNetwork),
 		authz.ResourceNamespaceAll,
 		"",
-		auth.Permission_ALL_ACTIONS.String()),
+		auth.Permission_AllActions.String()),
 		login.NewPermission(
 			testTenant,
-			"auth",
-			auth.Permission_AllResourceKinds.String(),
+			string(apiclient.GroupAuth),
+			authz.ResourceKindAll,
 			authz.ResourceNamespaceAll,
 			"",
-			auth.Permission_ALL_ACTIONS.String()))
+			auth.Permission_AllActions.String()))
 	defer MustDeleteRole(tinfo.apicl, "NetworkAdminRole", testTenant)
 	roleBinding := MustCreateRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant, "NetworkAdminRole", []string{"testUser2"}, nil)
 	defer MustDeleteRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant)
@@ -164,7 +166,31 @@ func TestPrivilegeEscalation(t *testing.T) {
 		_, err := tinfo.restcl.AuthV1().RoleBinding().Update(ctx, roleBinding)
 		tinfo.l.Infof("network admin role binding update error: %v", err)
 		return err != nil, err
-	}, "network admin should not be able to update its role binding to assign himself tenant admin role")
+	}, "network admin should not be able to update its role binding to assign himself tenant admin role", "100ms", "1s")
+	AssertConsistently(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().Role().Create(ctx, login.NewRole("NetworkGroupAdminRole", testTenant, login.NewPermission(
+			testTenant,
+			string(apiclient.GroupNetwork),
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String())))
+		tinfo.l.Infof("network group admin role create error: %v", err)
+		return err != nil, err
+	}, "network admin should not be able to create role with privileges to all kinds within network group", "100ms", "1s")
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().Role().Create(ctx, login.NewRole("LimitedNetworkRole", testTenant, login.NewPermission(
+			testTenant,
+			string(apiclient.GroupNetwork),
+			string(network.KindNetwork),
+			authz.ResourceNamespaceAll,
+			"testnetwork",
+			auth.Permission_Read.String())))
+		if err == nil {
+			MustDeleteRole(tinfo.apicl, "LimitedNetworkRole", testTenant)
+		}
+		return err == nil, err
+	}, "network admin should be able to create role with lesser privileges")
 }
 
 func TestBootstrapFlag(t *testing.T) {
@@ -178,7 +204,7 @@ func TestBootstrapFlag(t *testing.T) {
 		clusterObj, err := tinfo.restcl.ClusterV1().Cluster().AuthBootstrapComplete(context.TODO(), &cluster.ClusterAuthBootstrapRequest{})
 		tinfo.l.Infof("set bootstrap flag error: %v", err)
 		return err != nil, clusterObj
-	}, "bootstrap flag shouldn't be set till auth policy is created")
+	}, "bootstrap flag shouldn't be set till auth policy is created", "100ms", "1s")
 	// create auth policy
 	MustCreateAuthenticationPolicy(tinfo.restcl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false})
 	defer MustDeleteAuthenticationPolicy(tinfo.apicl)
@@ -186,7 +212,7 @@ func TestBootstrapFlag(t *testing.T) {
 		clusterObj, err := tinfo.restcl.ClusterV1().Cluster().AuthBootstrapComplete(context.TODO(), &cluster.ClusterAuthBootstrapRequest{})
 		tinfo.l.Infof("set bootstrap flag error: %v", err)
 		return err != nil, clusterObj
-	}, "bootstrap flag shouldn't be set till role binding is created")
+	}, "bootstrap flag shouldn't be set till role binding is created", "100ms", "1s")
 	MustCreateTestUser(tinfo.restcl, testUser, testPassword, globals.DefaultTenant)
 	defer MustDeleteUser(tinfo.apicl, testUser, globals.DefaultTenant)
 	MustCreateRoleBinding(tinfo.restcl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
@@ -222,4 +248,58 @@ func TestBootstrapFlag(t *testing.T) {
 	updatedClusterObj, err := tinfo.apicl.ClusterV1().Cluster().Update(context.TODO(), clusterObj)
 	AssertOk(t, err, "error updating cluster obj")
 	Assert(t, updatedClusterObj.Status.AuthBootstrapped, "bootstrap flag should be un-settable once set to true")
+}
+
+func TestAPIGroupAuthorization(t *testing.T) {
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
+
+	// create testUser2 as user admin with permissions to create RBAC objects
+	MustCreateTestUser(tinfo.apicl, "testUser2", testPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tinfo.apicl, "testUser2", globals.DefaultTenant)
+	MustCreateRole(tinfo.apicl, "UserAdminRole", globals.DefaultTenant,
+		login.NewPermission(
+			globals.DefaultTenant,
+			string(apiclient.GroupAuth),
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()))
+	defer MustDeleteRole(tinfo.apicl, "UserAdminRole", globals.DefaultTenant)
+	// login as user admin
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{
+		Username: "testUser2",
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	})
+	AssertOk(t, err, "error creating logged in context")
+	// retrieving role should result in authorization error at this point
+	AssertConsistently(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().Role().Get(ctx, &api.ObjectMeta{Name: "UserAdminRole", Tenant: globals.DefaultTenant})
+		return err != nil, nil
+	}, "authorization error expected while retrieving role", "100ms", "1s")
+	MustCreateRoleBinding(tinfo.apicl, "UserAdminRoleBinding", globals.DefaultTenant, "UserAdminRole", []string{"testUser2"}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, "UserAdminRoleBinding", globals.DefaultTenant)
+	// retrieving role should succeed now
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.AuthV1().Role().Get(ctx, &api.ObjectMeta{Name: "UserAdminRole", Tenant: globals.DefaultTenant})
+		return err == nil, nil
+	}, fmt.Sprintf("error while retrieving role: %v", err))
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.AuthV1().RoleBinding().Get(ctx, &api.ObjectMeta{Name: "UserAdminRoleBinding", Tenant: globals.DefaultTenant})
+		return err == nil, nil
+	}, fmt.Sprintf("error while retrieving role binding: %v", err))
+	// retrieving tenant should fail due to authorization error
+	AssertConsistently(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.ClusterV1().Tenant().Get(ctx, &api.ObjectMeta{Name: globals.DefaultTenant})
+		return err != nil, nil
+	}, "authorization error expected while retrieving tenant", "100ms", "1s")
 }

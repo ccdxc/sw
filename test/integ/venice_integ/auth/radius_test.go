@@ -200,7 +200,7 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			sort.Strings(userGroups)
 			sort.Strings(config.UserGroups)
 			Assert(t, reflect.DeepEqual(userGroups, config.UserGroups), fmt.Sprintf("[%v] Incorrect user group returned, expected [%v], got [%v]", test, config.UserGroups, userGroups))
-			Assert(t, autheduser.Spec.GetType() == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("[%v] User created is not of type EXTERNAL", test.name))
+			Assert(t, autheduser.Spec.GetType() == auth.UserSpec_External.String(), fmt.Sprintf("[%v] User created is not of type EXTERNAL", test.name))
 			AssertOk(t, err, fmt.Sprintf("[%v] Error authenticating user", test.name))
 		}
 	}

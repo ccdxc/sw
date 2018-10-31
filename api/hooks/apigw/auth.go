@@ -84,6 +84,9 @@ func (a *authHooks) privilegeEscalationCheck(ctx context.Context, in interface{}
 	operations, _ := apigwpkg.OperationsFromContext(ctx)
 	switch obj := in.(type) {
 	case *auth.Role:
+		if err := login.ValidatePerms(obj.Spec.Permissions); err != nil {
+			return ctx, in, err
+		}
 		operations = append(operations, login.GetOperationsFromPermissions(obj.Spec.Permissions)...)
 	case *auth.RoleBinding:
 		role, ok := a.permissionGetter.GetRole(obj.Spec.Role, obj.Tenant)

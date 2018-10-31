@@ -5269,97 +5269,28 @@
       "properties": {
         "resource-tenant": {
           "type": "string",
-          "description": "ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant\nto which role object belongs. For cluster roles, if specified will give permission for resource belonging to that tenant."
+          "default": "default",
+          "description": "ResourceTenant is the tenant to which resource belongs. For tenant scoped roles it will be automatically set to the tenant\nto which role object belongs. Exception are roles in \"default\" tenant. Role in \"default\" tenant can include permissions for resources in other tenants.\nSpecifying \"_All_\" will match all tenants."
         },
         "resource-group": {
           "type": "string",
-          "title": "ResourceGroup is grouping of resource types for which a permission is defined"
+          "description": "ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint.\nSpecifying \"_All_\" will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum."
         },
         "resource-kind": {
           "type": "string",
-          "enum": [
-            "AllResourceKinds",
-            "APIEndpoint",
-            "Search",
-            "Event",
-            "Tenant",
-            "Cluster",
-            "Node",
-            "Host",
-            "SmartNIC",
-            "Rollout",
-            "Network",
-            "Service",
-            "LbPolicy",
-            "Workload",
-            "Endpoint",
-            "SecurityGroup",
-            "SGPolicy",
-            "App",
-            "TrafficEncryptionPolicy",
-            "Certificate",
-            "Alert",
-            "AlertPolicy",
-            "AlertDestination",
-            "EventPolicy",
-            "StatsPolicy",
-            "FwlogPolicy",
-            "FlowExportPolicy",
-            "MirrorSession",
-            "MetricsQuery",
-            "User",
-            "AuthenticationPolicy",
-            "Role",
-            "RoleBinding"
-          ],
-          "default": "AllResourceKinds",
-          "x-ui-hints": {
-            "APIEndpoint": "API Endpoint",
-            "Alert": "Alert",
-            "AlertDestination": "AlertDestination",
-            "AlertPolicy": "AlertPolicy",
-            "AllResourceKinds": "All Resource Kinds",
-            "App": "App",
-            "AuthenticationPolicy": "AuthenticationPolicy",
-            "Certificate": "Certificate",
-            "Cluster": "Cluster",
-            "Endpoint": "Endpoint",
-            "Event": "Events",
-            "EventPolicy": "EventPolicy",
-            "FlowExportPolicy": "FlowExportPolicy",
-            "FwlogPolicy": "FwlogPolicy",
-            "Host": "Host",
-            "LbPolicy": "LBPolicy",
-            "MetricsQuery": "MetricsQuery",
-            "MirrorSession": "MirrorSession",
-            "Network": "Network",
-            "Node": "Node",
-            "Role": "Role",
-            "RoleBinding": "RoleBinding",
-            "Rollout": "Rollout",
-            "SGPolicy": "SGPolicy",
-            "Search": "Search",
-            "SecurityGroup": "SecurityGroup",
-            "Service": "Service",
-            "SmartNIC": "SmartNIC",
-            "StatsPolicy": "StatsPolicy",
-            "Tenant": "Tenant",
-            "TrafficEncryptionPolicy": "EncryptionPolicy",
-            "User": "User",
-            "Workload": "Workload"
-          },
-          "title": "ResourceKind is a resource kind for which permission is defined. It can be an API Server object or an arbitrary API endpoint"
+          "description": "ResourceKind is a resource kind for which permission is defined. It can be an API Server object kind or kinds defined in\nResrcKind enum. Specifying \"_All_\" will match all resource kinds."
         },
         "resource-namespace": {
           "type": "string",
-          "title": "ResourceNamespace is a namespace to which a resource (API Server object) belongs"
+          "default": "default",
+          "description": "ResourceNamespace is a namespace to which a resource (API Server object) belongs. Default value is \"default\". Specifying \"_All_\"\nwill match all namespaces."
         },
         "resource-names": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "ResourceNames identify specific objects on which this permission applies."
+          "title": "ResourceNames identify specific objects on which this permission applies. If resource name is not specified in permission then\nit implies all resources of the specified kind"
         },
         "actions": {
           "type": "array",
@@ -5367,21 +5298,23 @@
             "type": "string"
           },
           "enum": [
-            "ALL_ACTIONS",
-            "CREATE",
-            "READ",
-            "UPDATE",
-            "DELETE",
-            "COMMIT"
+            "AllActions",
+            "Create",
+            "Read",
+            "Update",
+            "Delete",
+            "Commit",
+            "Clear"
           ],
-          "default": "ALL_ACTIONS",
+          "default": "AllActions",
           "x-ui-hints": {
-            "ALL_ACTIONS": "All Actions",
-            "COMMIT": "Commit Config",
-            "CREATE": "Create",
-            "DELETE": "Delete",
-            "READ": "Read",
-            "UPDATE": "Update"
+            "AllActions": "All Actions",
+            "Clear": "Clear Config",
+            "Commit": "Commit Config",
+            "Create": "Create",
+            "Delete": "Delete",
+            "Read": "Read",
+            "Update": "Update"
           },
           "title": "Actions are actions on a resource that a permission allows"
         }
@@ -5671,13 +5604,13 @@
         "type": {
           "type": "string",
           "enum": [
-            "LOCAL",
-            "EXTERNAL"
+            "Local",
+            "External"
           ],
-          "default": "LOCAL",
+          "default": "Local",
           "x-ui-hints": {
-            "EXTERNAL": "External",
-            "LOCAL": "Local"
+            "External": "External",
+            "Local": "Local"
           }
         }
       },

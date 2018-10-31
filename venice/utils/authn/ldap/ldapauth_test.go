@@ -244,7 +244,7 @@ func TestAuthenticate(t *testing.T) {
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, ok, "Unsuccessful ldap user authentication")
 	Assert(t, autheduser.Name == testUser, "User returned by ldap authenticator didn't match user being authenticated")
-	Assert(t, autheduser.Spec.GetType() == auth.UserSpec_EXTERNAL.String(), "User created is not of type EXTERNAL")
+	Assert(t, autheduser.Spec.GetType() == auth.UserSpec_External.String(), "User created is not of type EXTERNAL")
 	Assert(t, autheduser.Status.GetUserGroups()[0] == networkAdminGroupDN,
 		fmt.Sprintf("Incorrect user group returned, expected [%s], got [%s]", networkAdminGroupDN, autheduser.Status.GetUserGroups()[0]))
 	AssertOk(t, err, "Error authenticating user")

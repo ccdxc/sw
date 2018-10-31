@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -95,10 +96,10 @@ func TestWatcher(t *testing.T) {
 			Permissions: []auth.Permission{
 				{
 					ResourceTenant:    "testTenant",
-					ResourceGroup:     "Network",
-					ResourceKind:      auth.Permission_Network.String(),
+					ResourceGroup:     string(apiclient.GroupNetwork),
+					ResourceKind:      string(network.KindNetwork),
 					ResourceNamespace: "finance",
-					Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
+					Actions:           []string{auth.Permission_AllActions.String()},
 				},
 			},
 		},
@@ -181,10 +182,10 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 			Permissions: []auth.Permission{
 				{
 					ResourceTenant:    "testTenant",
-					ResourceGroup:     "Network",
-					ResourceKind:      auth.Permission_Network.String(),
+					ResourceGroup:     string(apiclient.GroupNetwork),
+					ResourceKind:      string(network.KindNetwork),
 					ResourceNamespace: "finance",
-					Actions:           []string{auth.Permission_ALL_ACTIONS.String()},
+					Actions:           []string{auth.Permission_AllActions.String()},
 				},
 			},
 		},

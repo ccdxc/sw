@@ -39,7 +39,7 @@ export class AuthService extends AbstractService {
       }
     }
     // e.g 'http://192.168.30.11:9000/v1/login/';
-    return Utility.getRESTAPIServerAndPort() + environment.version_api_string + environment.login + '/';
+    return Utility.getRESTAPIServerAndPort() + environment.version_api_string + environment.login;
   }
 
   /**

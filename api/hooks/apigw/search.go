@@ -32,7 +32,7 @@ func (e *searchHooks) operations(ctx context.Context, in interface{}) (context.C
 	// get existing operations from context
 	operations, _ := apigwpkg.OperationsFromContext(ctx)
 	// append requested operation
-	operations = append(operations, authz.NewOperation(resource, auth.Permission_READ.String()))
+	operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
 
 	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
 	return nctx, in, nil
