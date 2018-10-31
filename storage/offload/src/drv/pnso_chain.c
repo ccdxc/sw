@@ -631,6 +631,7 @@ chn_create_chain(struct request_params *req_params)
 out_chain:
 	PPRINT_CHAIN(chain);
 	chn_destroy_chain(chain);
+	chain = NULL;
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return chain;
