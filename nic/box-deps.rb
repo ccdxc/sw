@@ -92,6 +92,7 @@ PACKAGES = %w[
   glib2-devel
   nmap
   libcap-devel
+  sudo
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"

@@ -21,6 +21,8 @@ if user != ""
   run "echo 'export PATH=/usr/local/go/bin:$PATH' >> /home/#{user}/.bash_profile"
   run "echo 'cd /sw/nic' >> /home/#{user}/.bash_profile"
 
+  run "echo '#{user} ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/#{user} && chmod 0440 /etc/sudoers.d/#{user}"
+
   run "localedef -i en_US -f UTF-8 en_US.UTF-8"
 end
 
