@@ -1,38 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { HeroCardOptions, StatArrowDirection } from '@app/components/shared/herocard/herocard.component';
+import { MetricsUtility } from '@app/common/MetricsUtility';
+import { IMetrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
 import { ControllerService } from '@app/services/controller.service';
 import { ActivatedRoute } from '@angular/router';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { MetricsqueryService, MetricsPollingOptions } from '@app/services/metricsquery.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from 'primeng/primeng';
-import { ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
-import { ClusterService } from '@app/services/generated/cluster.service';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { HeroCardOptions, StatArrowDirection } from '@app/components/shared/herocard/herocard.component';
-import { IMetrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
 import { Metrics_queryQuerySpec, IMetrics_queryQuerySpec, Metrics_queryQuerySpec_function } from '@sdk/v1/models/generated/metrics_query';
-import { MetricsUtility } from '@app/common/MetricsUtility';
-import { MetricsPollingOptions, MetricsqueryService } from '@app/services/metricsquery.service';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 
-/**
- * If a user navigates to a node that doesn't exist
- * Ex. /cluster/cluster/fakeNode
- * they will be shown a node does not exist overlay
- * If the node becomes created while they are on the page
- * it will immediately go away and show the node
- * If a node is deleted while a user is looking at it,
- * it will immediately show a node is deleted overlay.
- * Again, if the node becomes recreated the overlay will disappear
- */
 @Component({
-  selector: 'app-nodedetail',
-  templateUrl: './nodedetail.component.html',
-  styleUrls: ['./nodedetail.component.scss']
+  selector: 'app-naplesdetail',
+  templateUrl: './naplesdetail.component.html',
+  styleUrls: ['./naplesdetail.component.scss']
 })
-export class NodedetailComponent extends BaseComponent implements OnInit {
+export class NaplesdetailComponent extends BaseComponent implements OnInit {
   subscriptions = [];
 
   bodyicon: any = {
@@ -49,16 +39,16 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
       top: '10px',
       left: '10px'
     },
-    svgIcon: 'node'
+    svgIcon: 'naples'
   };
 
   // Id of the object the user has navigated to
   selectedId: string;
-  selectedObj: ClusterNode;
+  selectedObj: ClusterSmartNIC;
 
   //Holds all objects, should be only one item in the array
-  objList: ReadonlyArray<ClusterNode>;
-  objEventUtility: HttpEventUtility<ClusterNode>;
+  objList: ReadonlyArray<ClusterSmartNIC>;
+  objEventUtility: HttpEventUtility<ClusterSmartNIC>;
 
   // Whether we show a deletion overlay
   showDeletionScreen: boolean;
@@ -82,10 +72,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
   avgData: IMetrics_queryQueryResponse;
   clusterAvgData: IMetrics_queryQueryResponse;
 
-  alertseventsSelector: AlertsEventsSelector = {
-    eventSelector: 'source.node-name=' + this.selectedId,
-    alertSelector: 'Status.Source.NodeName=' + this.selectedId
-  }
+  alertseventsSelector: AlertsEventsSelector;
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
@@ -99,18 +86,18 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
 
   ngOnInit() {
     this.initializeData();
-    this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'NodedetailComponent', 'state': Eventtypes.COMPONENT_INIT });
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'NapledetailComponent', 'state': Eventtypes.COMPONENT_INIT });
     this._route.params
       .map(params => params['id'])
       .subscribe((id) => {
         this.selectedId = id;
         this.initializeData();
-        this.getNodedetails();
+        this.getNaplesDetails();
         this._controllerService.setToolbarData({
           buttons: [],
           breadcrumb: [
-            { label: 'Cluster', url: Utility.getBaseUIUrl() + 'cluster/cluster' },
-            { label: id, url: Utility.getBaseUIUrl() + 'cluster/cluster/' + id }]
+            { label: 'Naples', url: Utility.getBaseUIUrl() + 'cluster/naples' },
+            { label: id, url: Utility.getBaseUIUrl() + 'cluster/naples/' + id }]
         });
       });
   }
@@ -118,7 +105,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
   initializeData() {
     // Initializing variables so that state is cleared between routing of different
     // sgpolicies
-    // Ex. /cluster/node1-> /cluster/node2
+    // Ex. /cluster/naples/naples1-> /cluster/naples/naples2
     this.subscriptions.forEach(sub => {
       sub.unsubscribe();
     })
@@ -143,10 +130,12 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
     });
   }
 
-  getNodedetails() {
+  getNaplesDetails() {
     // We perform a get as well as a watch so that we can know if the object the user is
     // looking for exists or not.
-    const getSubscription = this.clusterService.GetNode(this.selectedId).subscribe(
+    // Adding ':' as a temporary workaround of ApiGw not being able to
+    // correctly parse smartNic names without it.
+    const getSubscription = this.clusterService.GetSmartNIC(this.selectedId + ':').subscribe(
       response => {
         // We do nothing, and wait for the callback of the watch to populate the view
       },
@@ -159,9 +148,10 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
         });
       }
     );
-    this.objEventUtility = new HttpEventUtility<ClusterNode>(ClusterNode);
+    this.subscriptions.push(getSubscription);
+    this.objEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.objList = this.objEventUtility.array;
-    const subscription = this.clusterService.WatchNode({ 'field-selector': 'ObjectMeta.Name=' + this.selectedId }).subscribe(
+    const subscription = this.clusterService.WatchSmartNIC({ 'field-selector': 'ObjectMeta.Name=' + this.selectedId }).subscribe(
       response => {
         const body: any = response.body;
         this.objEventUtility.processEvents(body);
@@ -169,22 +159,22 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
           // because of the name selector, we should
           // have only got one object
           console.error(
-            'Received more than one node. Expected '
+            'Received more than one naples object. Expected '
             + this.selectedId + ', received ' +
-            this.objList.map((node) => node.meta.name).join(', '));
+            this.objList.map((naples) => naples.meta.name).join(', '));
         }
-        if (this.objList.length > 0) {
+        if (this.selectedObj == null && this.objList.length > 0) {
           // In case object was deleted and then readded while we are on the same screen
           this.showDeletionScreen = false;
           // In case object wasn't created yet and then was added while we are on the same screen
           this.showMissingScreen = false;
           this.selectedObj = this.objList[0];
-          this.startMetricPolls();
           this.alertseventsSelector = {
-            eventSelector: 'source.node-name=' + this.selectedId,
-            alertSelector: 'Status.Source.NodeName=' + this.selectedId
+            eventSelector: 'object-ref.name=' + this.selectedId + ',object-ref.kind=SmartNIC',
+            alertSelector: 'Status.ObjectRef.Name=' + this.selectedId + ',' + 'Status.ObjectRef.Kind=SmartNIC'
           }
-        } else {
+          this.startMetricPolls();
+        } else if (this.objList.length == 0) {
           // Must have received a delete event.
           this.showDeletionScreen = true;
           this.heroCards.forEach(card => {
@@ -193,7 +183,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
           this.selectedObj = null;
         }
       },
-      this.restErrorHandler('Failed to get Node ' + this.selectedId)
+      this.restErrorHandler('Failed to get Naples ' + this.selectedId)
     );
     this.subscriptions.push(subscription);
   }
@@ -206,7 +196,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
 
   timeSeriesQuery() {
     const timeSeriesQuery: Metrics_queryQuerySpec =
-      MetricsUtility.timeSeriesQuery('Node', MetricsUtility.createNameSelector(this.selectedId));
+      MetricsUtility.timeSeriesQuery('SmartNIC', MetricsUtility.createNameSelector('naples-' + this.selectedId));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.timeSeriesQueryMerge
@@ -223,7 +213,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
 
   avgQuery() {
     const avgQuery: Metrics_queryQuerySpec =
-      MetricsUtility.pastDayAverageQuery('Node', MetricsUtility.createNameSelector(this.selectedId));
+      MetricsUtility.pastDayAverageQuery('SmartNIC', MetricsUtility.createNameSelector('naples-' + this.selectedId));
     const pollOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };
@@ -239,7 +229,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
 
   clusterAvgQuery() {
     const clusterAvgQuery: IMetrics_queryQuerySpec = {
-      'kind': 'Node',
+      'kind': 'SmartNIC',
       'meta': {
         'tenant': Utility.getInstance().getTenant()
       },

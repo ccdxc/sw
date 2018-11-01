@@ -12,13 +12,18 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { EventsEvent_severity, EventsEvent_severity_uihint, IApiListWatchOptions, IEventsEvent } from '@sdk/v1/models/generated/events';
-import { IApiStatus, MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
+import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchQuery_kinds, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { Table } from 'primeng/table';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import { Subscription } from 'rxjs/Subscription';
 import { MessageService } from 'primeng/primeng';
+
+export interface AlertsEventsSelector {
+  alertSelector: string,
+  eventSelector: string
+}
 
 /**
  * Renders two tabs that displays an alerts table and an events table.
@@ -48,7 +53,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   @Input() pollingServiceKey: string = 'alertsevents';
   // If provided, will only show alerts and events
   // where the source node matches
-  @Input() sourceNode: string;
+  @Input() selector: AlertsEventsSelector;
 
   subscriptions: Subscription[] = [];
   severityEnum = EventsEvent_severity_uihint;
@@ -176,7 +181,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   }
 
   ngOnChanges(change: SimpleChanges) {
-    if (change.sourceNode) {
+    if (change.selector) {
       this.genQueryBodies();
       this.getAlerts();
       this.getEvents();
@@ -184,12 +189,12 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   }
 
   genQueryBodies() {
-    if (this.sourceNode != null) {
+    if (this.selector != null) {
       this.eventsPostBody = {
-        'field-selector': 'source.node-name=' + this.sourceNode
+        "field-selector": this.selector.eventSelector
       };
       this.alertQuery = {
-        'field-selector': 'Status.Source.NodeName=' + this.sourceNode
+        'field-selector': this.selector.alertSelector
       };
     }
   }

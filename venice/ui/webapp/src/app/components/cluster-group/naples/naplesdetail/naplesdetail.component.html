@@ -1,0 +1,92 @@
+<app-pagebody [icon]="bodyicon" [header]="selectedId">
+  <div fxFlex="none" fxLayout="row">
+    <div fxFlex fxLayout="row wrap" class="naplesdetail-card-container">
+      <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
+      <ng-container *ngFor="let cardData of heroCards">
+        <app-herocard fxFlex="nogrow"
+                      [title]="cardData.title" 
+                      [firstStat]="cardData.firstStat" 
+                      [secondStat]="cardData.secondStat" 
+                      [thirdStat]="cardData.thirdStat" 
+                      [backgroundIcon]="cardData.backgroundIcon"
+                      [themeColor]="cardData.themeColor"
+                      [icon]="cardData.icon"
+                      [data]="cardData.data"
+                      [arrowDirection]="cardData.arrowDirection"
+                      [timeRange]="'Past 24 hours'"
+                      [isReady]="cardData.isReady"
+                      >
+        </app-herocard>
+      </ng-container>
+    </div>
+  </div>
+  <div fxFlex class="naplesdetail-alertsevents-container">
+    <app-shared-alertsevents [selector]="alertseventsSelector"></app-shared-alertsevents>
+  </div>
+  <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
+  <!-- Missing screen overlay displays when the policy does not exist-->
+  <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row" fxLayoutAlign="center stretch" class="naplesdetail-overlay">
+    <div fxFlex="50%" fxLayout="column" class="naplesdetail-overlay-content">
+        <div fxFlex='20%'></div>
+        <div *ngIf="showDeletionScreen" fxFlex='15%' class="naplesdetail-deleted-node"></div>
+        <div *ngIf="showMissingScreen" fxFlex='15%' class="naplesdetail-missing-node"></div>
+        <div *ngIf="showDeletionScreen" fxFlex="none" class="naplesdetail-overlay-text">
+          {{ selectedId }} has been deleted
+        </div>
+        <div *ngIf="showMissingScreen" fxFlex="none" class="naplesdetail-overlay-text">
+          {{ selectedId }} does not exist
+        </div>
+        <div fxFlex="5%"></div>
+        <div fxFlex="none" fxLayout="row" fxLayoutAlign="center stretch" fxLayoutGap="40px">
+          <button  fxFlex="none" class="global-button-primary naplesdetail-overlay-button" routerLink="../">Cluster Overview </button>
+          <button  fxFlex="none" class="global-button-primary naplesdetail-overlay-button" (click)="routeToHomepage()">HOMEPAGE</button>
+        </div>
+    </div>
+  </div>
+</app-pagebody>
+
+<ng-template #detailsTable>
+  <div fxFlex="none" fxLayout="column" class="naplesdetail-node-table-container" >
+    <div fxFlex="none" fxLayout="column" class="naplesdetail-details">
+      <!-- <div fxFlex="none" class="cluster-details-title"> Naples Detail </div> -->
+      <div fxFlex="none" fxLayout="row">
+        <!-- Field titles -->
+        <div fxFlex="50" fxLayout="column">
+          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>MAC Address:</div>
+          </div>
+          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>IP Address:</div>
+          </div>
+          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>Host Name:</div>
+          </div>
+          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>Phase</div>
+          </div>
+          <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div>Serial Number:</div>
+          </div>
+        </div>
+        <!-- Values -->
+        <div fxFlex="none" fxLayout="column">
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="naplesdetail-node-value">
+            <div class="naplesdetail-details-panel-virtual-ip">{{ selectedObj?.status['primary-mac'] }}</div>
+          </div>
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="naplesdetail-node-value">
+            <div class="naplesdetail-details-panel-virtual-ip">{{ selectedObj?.spec['ip-config'] ? selectedObj?.spec['ip-config']["ip-address"] : '' }}</div>
+          </div>
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="naplesdetail-node-value">
+            <div class="naplesdetail-details-panel-ntp-servers">{{ selectedObj?.spec['hostname'] }}</div>
+          </div>
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="naplesdetail-node-value">
+            <div class="naplesdetail-details-panel-last-leader-transition-time">{{ selectedObj?.status['admission-phase'] }}</div>
+          </div>
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="naplesdetail-node-value">
+            <div class="naplesdetail-panel-auto-admit-nics">{{ selectedObj?.status['serial-num'] }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

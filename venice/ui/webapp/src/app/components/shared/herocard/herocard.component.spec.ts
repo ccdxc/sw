@@ -7,6 +7,8 @@ import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgethead
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SpinnerComponent } from '../spinner/spinner.component';
+import { RouterTestingModule } from '@angular/router/testing';
+
 
 describe('HerocardComponent', () => {
   let component: HerocardComponent;
@@ -18,14 +20,14 @@ describe('HerocardComponent', () => {
         HerocardComponent,
         DsbdwidgetheaderComponent,
         PrettyDatePipe,
-        SpinnerComponent
+        SpinnerComponent,
       ],
       imports: [
         WidgetsModule,
         MaterialdesignModule,
         NoopAnimationsModule,
-
-      ]
+        RouterTestingModule
+      ],
     })
       .compileComponents();
   }));

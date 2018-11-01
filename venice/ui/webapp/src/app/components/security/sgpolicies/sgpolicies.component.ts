@@ -76,7 +76,7 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
     this.getSGPolicies();
     this._controllerService.setToolbarData({
       buttons: [],
-      breadcrumb: [{ label: 'Security', url: '' }, { label: 'Security Group Policies', url: '' }]
+      breadcrumb: [{ label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' }]
     });
   }
 

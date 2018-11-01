@@ -78,21 +78,25 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
       splitbuttons: [
         {
           text: 'Refresh',
-          icon: 'pi pi-refresh' ,
+          icon: 'pi pi-refresh',
           callback: (event, sbutton) => {
             console.log('dashboard toolbar splitbutton refresh');
           },
           items: [
-            {label: '5 days', icon: 'pi pi-cog', command: () => {
-              console.log('dashboard toolbar menuitem 5-days');
-          }},
-          {label: '10 days', icon: 'pi pi-times', command: () => {
-              console.log('dashboard toolbar menuitem 10-days');
-          }}
+            {              
+label: '5 days', icon: 'pi pi-cog', command: () => {
+                console.log('dashboard toolbar menuitem 5-days');
+              }
+            },
+            {
+              label: '10 days', icon: 'pi pi-times', command: () => {
+                console.log('dashboard toolbar menuitem 10-days');
+              }
+            }
           ]
         }
       ],
-      breadcrumb: [{ label: 'Dashboard - Currently using mock data', url: '' }]
+      breadcrumb: [{ label: 'Dashboard - Currently using mock data', url: Utility.getBaseUIUrl() + 'dashboard' }]
     });
 
     this.pinnedGridsterOptions = Object.assign({}, this.gridsterOptions);

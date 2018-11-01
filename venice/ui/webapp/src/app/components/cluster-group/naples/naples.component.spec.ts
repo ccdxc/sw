@@ -18,6 +18,7 @@ import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { MessageService } from 'primeng/primeng';
+import { MetricsqueryService } from '@app/services/metricsquery.service';
 
 @Component({
   template: ''
@@ -90,6 +91,7 @@ describe('NaplesComponent', () => {
         LogPublishersService,
         ClusterService,
         MatIconRegistry,
+        MetricsqueryService,
         MessageService
       ]
     })

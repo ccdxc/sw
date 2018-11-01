@@ -1,0 +1,73 @@
+@import 'global-mixins';
+
+.naplesdetail-card-container {
+  margin-right: 10px;
+}
+
+.naplesdetail-alertsevents-container {
+  min-height: 600px;
+}
+
+.naplesdetail-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index:10;
+}
+
+.naplesdetail-overlay-content {
+  z-index: 20;
+}
+
+.naplesdetail-deleted-node {
+  background: url("/assets/images/icons/cluster/naples/icon-naples-deleted.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.naplesdetail-missing-node {
+  background: url("/assets/images/icons/cluster/naples/icon-naples-missing.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.naplesdetail-overlay-text {
+  @include primary-font(45px, #676763, 600);
+  text-align: center;
+}
+
+.naplesdetail-overlay-button {
+  font-size: 16px;
+  padding: 6px 20px;
+}
+
+.naplesdetail-node-table-container {
+  margin: 10px;
+  padding: 5px 20px;
+  width: 450px;
+  border: solid 2px #dddddd;
+}
+
+.naplesdetail-node-fieldtitle {
+  @include primary-font(16px, #676763, 500);
+}
+
+.naplesdetail-node-value {
+  @include primary-font(16px);
+  margin-left: 5px;
+}
+
+
+.naplesdetail-details {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.naplesdetail-details-title {
+  @include primary-font(20px);
+}
+
+.naplesdetail-alertsevents-container {
+  min-height: 600px;
+}

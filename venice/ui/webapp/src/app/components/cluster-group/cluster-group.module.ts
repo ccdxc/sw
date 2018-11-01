@@ -13,12 +13,11 @@ import { SharedModule } from '@app/components/shared//shared.module';
 /**-----
  Venice Framework UI -  imports
  ------------------*/
- import { WidgetsModule } from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 
 import { ClusterGroupRoutingModule } from './cluster-group.route';
 
 import { ClusterGroupComponent } from './cluster-group.component';
-import { NaplesComponent } from './naples/naples.component';
 
 
 
@@ -36,11 +35,9 @@ import { NaplesComponent } from './naples/naples.component';
   ],
   declarations: [
     ClusterGroupComponent,
-    NaplesComponent,
   ],
   entryComponents: [
     ClusterGroupComponent,
-    NaplesComponent,
   ],
 })
 export class ClusterGroupModule { }

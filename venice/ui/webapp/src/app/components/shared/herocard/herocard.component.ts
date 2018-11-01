@@ -2,11 +2,13 @@ import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Animations } from '@app/animations';
 import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
+import { Router } from '@angular/router';
 
 export interface Stat {
   value: any;
   description: string;
   tooltip?: string;
+  url?: string;
 }
 
 interface Data {
@@ -101,7 +103,7 @@ export class HerocardComponent implements OnInit, OnChanges {
 
   dataset = [];
 
-  constructor() { }
+  constructor(private router: Router) { }
 
   ngOnChanges() {
     if (this.isReady) {
@@ -148,4 +150,23 @@ export class HerocardComponent implements OnInit, OnChanges {
     ];
     this.showGraph = true;
   }
+
+  firstStatClick() {
+    if (this.firstStat.value != null && this.firstStat.url != null) {
+      this.router.navigateByUrl(this.firstStat.url);
+    }
+  }
+
+  secondStatClick() {
+    if (this.secondStat.value != null && this.secondStat.url != null) {
+      this.router.navigateByUrl(this.secondStat.url);
+    }
+  }
+
+  thirdStatClick() {
+    if (this.thirdStat.value != null && this.thirdStat.url != null) {
+      this.router.navigateByUrl(this.thirdStat.url);
+    }
+  }
+
 }

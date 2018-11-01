@@ -1,10 +1,10 @@
 <div fxFlex fxLayout="row" class="dsbd-widgetheader">
     <div fxFlex="none" class="dsbd-widgetheader-mat-icon-container">
         <mat-icon *ngIf="icon.svgIcon" [ngStyle]="_iconStyles" [svgIcon]="icon.svgIcon" 
-                    [style.background-color]="iconFillColor" [style.border]="'2px solid ' + iconFillColor" class="dsbd-widgetheader-icon">
+                    [style.background-color]="iconFillColor" [style.color]="iconColor" [style.border]="'2px solid ' + iconFillColor" class="dsbd-widgetheader-icon">
         </mat-icon>
         <mat-icon *ngIf="icon.matIcon" [ngStyle]="_iconStyles" 
-                    [style.background-color]="iconFillColor" [style.border]="'2px solid ' + iconFillColor"
+                    [style.background-color]="iconFillColor" [style.color]="iconColor" [style.border]="'2px solid ' + iconFillColor"
                     class="dsbd-widgetheader-icon dsbd-widgetheader-icon-byname">
             {{icon.matIcon}}
         </mat-icon>

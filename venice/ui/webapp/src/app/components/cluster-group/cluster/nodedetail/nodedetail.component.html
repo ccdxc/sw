@@ -1,6 +1,6 @@
-<app-pagebody [icon]="bodyicon" [header]="selectedNodeId">
+<app-pagebody [icon]="bodyicon" [header]="selectedId">
   <div fxFlex="none" fxLayout="row">
-    <div fxFlex fxLayout="row" class="nodedetail-card-container">
+    <div fxFlex fxLayout="row wrap" class="nodedetail-card-container">
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title" 
@@ -20,7 +20,7 @@
     </div>
   </div>
   <div fxFlex class="nodedetail-alertsevents-container">
-    <app-shared-alertsevents [sourceNode]="selectedNodeId"></app-shared-alertsevents>
+      <app-shared-alertsevents [selector]="alertseventsSelector"></app-shared-alertsevents>
   </div>
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
   <!-- Missing screen overlay displays when the policy does not exist-->
@@ -30,10 +30,10 @@
         <div *ngIf="showDeletionScreen" fxFlex='15%' class="nodedetail-deleted-node"></div>
         <div *ngIf="showMissingScreen" fxFlex='15%' class="nodedetail-missing-node"></div>
         <div *ngIf="showDeletionScreen" fxFlex="none" class="nodedetail-overlay-text">
-          {{ selectedNodeId }} has been deleted
+          {{ selectedId }} has been deleted
         </div>
         <div *ngIf="showMissingScreen" fxFlex="none" class="nodedetail-overlay-text">
-          {{ selectedNodeId }} does not exist
+          {{ selectedId }} does not exist
         </div>
         <div fxFlex="5%"></div>
         <div fxFlex="none" fxLayout="row" fxLayoutAlign="center stretch" fxLayoutGap="40px">

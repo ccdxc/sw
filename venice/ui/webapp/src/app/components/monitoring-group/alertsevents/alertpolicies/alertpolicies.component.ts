@@ -7,6 +7,7 @@ import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus, Monito
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Subscription } from 'rxjs/Subscription';
 import { MessageService } from 'primeng/primeng';
+import { Utility } from '@app/common/Utility';
 
 @Component({
   selector: 'app-alertpolicies',
@@ -41,8 +42,8 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
       buttons: [
       ],
       breadcrumb: [
-        { label: 'Alerts & Events', url: '/#/monitoring/alertsevents' },
-        { label: 'Alert Policies', url: '/#/monitoring/alertsevents/alertpolicies' }
+        { label: 'Alerts & Events', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents' },
+        { label: 'Alert Policies', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents/alertpolicies' }
       ]
     });
   }

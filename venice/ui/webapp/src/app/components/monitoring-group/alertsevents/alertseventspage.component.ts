@@ -4,6 +4,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from 'primeng/primeng';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { Utility } from '@app/common/Utility';
 
 @Component({
   selector: 'app-alertsevents',
@@ -34,7 +35,7 @@ export class AlertseventspageComponent extends BaseComponent implements OnInit, 
 
     this._controllerService.setToolbarData({
       buttons: buttons,
-      breadcrumb: [{ label: 'Alerts & Events', url: '/#/monitoring/alertsevents' }]
+      breadcrumb: [{ label: 'Alerts & Events', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents' }]
     });
   }
 

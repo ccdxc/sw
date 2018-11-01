@@ -160,7 +160,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           buttons: [],
           breadcrumb: [
             { label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' },
-            { label: id }]
+            { label: id, url: Utility.getBaseUIUrl() + 'security/sgpolicies/' + id }]
         });
       });
 
@@ -176,6 +176,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     // Initializing variables so that state is cleared between routing of different
     // sgpolicies
     // Ex. /sgpolicies/policy1 -> /sgpolicies/policy2
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    })
+    this.subscriptions = [];
     this.sgPolicies = [];
     this.sgPolicyRules = [];
     this.showDeletionScreen = false;
@@ -396,6 +400,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         this.disableFormControls();
       }
     );
+    this.subscriptions.push(getSubscription);
     this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
     // const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId}).subscribe(

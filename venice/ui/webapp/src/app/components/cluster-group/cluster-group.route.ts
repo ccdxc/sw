@@ -20,7 +20,12 @@ const routes: Routes = [
   },
   {
     path: 'naples',
-    component: NaplesComponent,
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/cluster-group/naples/naples.module#NaplesModule'
+      }
+    ]
   },
 ];
 

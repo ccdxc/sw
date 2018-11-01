@@ -7,6 +7,9 @@
   
   .app-sidenav-item {
     color: map-get($sidenav, text);
+    i {
+      color: white;
+    }
   }
 
   .app-shell-header-logo-div {

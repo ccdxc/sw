@@ -17,6 +17,7 @@ export class DsbdwidgetheaderComponent implements OnInit, OnDestroy, OnChanges {
   _iconStyles: any;
 
   @Input() icon: Icon;
+  @Input() iconColor: string = '#FFF';
   @Input() iconFillColor: string = '#FFF';
   @Input() title: String;
   // lastUpdateTime will be displayed if its given, otherwise it will

@@ -34,6 +34,12 @@
   font-size: 10px;
 }
 
+// Last breadcrumb icon is bolded and is not shown as clickable
+.ui-breadcrumb ul li:last-child > a > span {
+  font-weight: 500;
+  cursor: auto;
+}
+
 .toolbar-splitbutton {
   @include primary-font(16px);
 }

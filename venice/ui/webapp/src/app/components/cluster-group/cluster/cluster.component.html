@@ -1,7 +1,7 @@
 <app-pagebody [icon]="bodyicon" header="Cluster Overview">
   <div fxFlex="none" fxLayout="row">
-    <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
-    <div fxFlex fxLayout="row" class="cluster-card-container">
+    <div fxFlex fxLayout="row wrap" class="cluster-card-container">
+      <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title" 

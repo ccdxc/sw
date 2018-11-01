@@ -22,7 +22,11 @@
         <ng-container *ngIf="firstStat.value != null">
           <mat-icon *ngIf="statArrowDirection==='UP'" [style.color]="statColor" fxFlex="none" class="herocard-stat-arrow">arrow_upward</mat-icon>
           <mat-icon *ngIf="statArrowDirection==='DOWN'" [style.color]="statColor" fxFlex="none" class="herocard-stat-arrow">arrow_downward</mat-icon>
-          <div fxFlex fxLayout="column" class="herocard-first-stat" [matTooltip]="firstStat.tooltip">
+          <div fxFlex fxLayout="column" class="herocard-first-stat" 
+                [matTooltip]="firstStat.tooltip"
+                [style.cursor]="firstStat.url != null ? 'pointer' : 'auto'" 
+                (click)="firstStatClick()"
+                >
             <div fxFlex="nogrow" [style.color]="statColor" class="herocard-first-stat-value">{{ firstStat.value }}</div>
             <div fxFlex="nogrow" class="herocard-first-stat-description">{{ firstStat.description }}</div>
           </div>
@@ -31,7 +35,11 @@
       <!-- Second stat -->
       <div [@fade] *ngIf="isReady" fxFlex="20%" fxLayout="row" fxLayoutAlign="start start">
         <div fxFlex fxLayout="column" class="herocard-second-stat">
-          <div fxFlex fxLayout="column" *ngIf="secondStat.value != null" [matTooltip]="secondStat.tooltip">
+          <div fxFlex fxLayout="column" *ngIf="secondStat.value != null" 
+                [matTooltip]="secondStat.tooltip" 
+                [style.cursor]="secondStat.url != null ? 'pointer' : 'auto'" 
+                (click)="secondStatClick()"
+                >
             <div fxFlex="nogrow" [style.color]="themeColor" class="herocard-second-stat-value">{{ secondStat.value}}</div>
             <div fxFlex="nogrow" class="herocard-second-stat-description">{{ secondStat.description }}</div>
           </div>
@@ -40,7 +48,11 @@
       <!-- Third stat -->
       <div [@fade] *ngIf="isReady" fxFlex fxLayout="row" fxLayoutAlign="start start">
         <div fxFlex fxLayout="column" class="herocard-third-stat">
-          <div fxFlex fxLayout="column" *ngIf="thirdStat.value != null" [matTooltip]="thirdStat.tooltip">
+          <div fxFlex fxLayout="column" *ngIf="thirdStat.value != null" 
+                [matTooltip]="thirdStat.tooltip" 
+                [style.cursor]="thirdStat.url != null ? 'pointer' : 'auto'" 
+                (click)="thirdStatClick()"
+                >
             <div fxFlex [style.color]="themeColor" class="herocard-third-stat-value">{{ thirdStat.value }}</div>
             <div fxFlex class="herocard-third-stat-description">{{ thirdStat.description }}</div>
           </div>
