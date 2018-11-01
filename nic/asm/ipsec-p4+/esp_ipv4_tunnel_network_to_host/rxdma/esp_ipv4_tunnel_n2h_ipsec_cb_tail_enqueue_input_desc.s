@@ -15,6 +15,8 @@ esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc:
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
  
 dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
+    add r2, r0, k.t0_s2s_in_desc_addr
+    blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma 
     phvwr p.dma_cmd_phv2mem_ipsec_int_dma_cmd_addr, k.t0_s2s_in_desc_addr
 
 dma_cmd_to_write_input_desc_aol:
@@ -23,12 +25,14 @@ dma_cmd_to_write_input_desc_aol:
     
 dma_cmd_to_write_output_desc_aol:
     add r1, k.ipsec_to_stage4_out_desc_addr, 64
+    blti  r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma 
     phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, r1 
 
 esp_ipv4_tunnel_n2h_post_to_cb_ring:
     and r3, d.cb_pindex, IPSEC_CB_RING_INDEX_MASK 
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.cb_ring_base_addr 
+    blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma 
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
     phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_phv_start_addr}, ((IPSEC_CB_RING_IN_DESC_END << 10) | IPSEC_CB_RING_IN_DESC_START)
 
@@ -41,4 +45,9 @@ dma_cmd_ring_doorbell:
     tblwr d.cb_pindex, r7
     phvwri          p.doorbell_cmd_dma_cmd_eop, 1
     phvwri.e        p.doorbell_cmd_dma_cmd_wr_fence, 1
-    nop 
+    nop
+
+esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma:
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwri.e p.p4_intr_global_drop, 1
+    nop
