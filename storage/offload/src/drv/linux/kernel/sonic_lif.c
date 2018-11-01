@@ -58,7 +58,6 @@ static void sonic_adminq_napi(struct napi_struct *napi)
 	int budget = NAPI_POLL_WEIGHT;
 	int work_done;
 
-	printf("sonic_adminq_napi\n");
 	work_done = sonic_napi(napi, budget, sonic_adminq_service, NULL);
 
 	if (work_done == budget)
@@ -978,7 +977,6 @@ int sonic_get_per_core_seq_sq(struct per_core_resource *pc_res,
 int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 		struct queue **q)
 {
-	int err = -EPERM;
 	struct per_core_resource *pc_res = NULL;
 
 	pc_res = sonic_get_per_core_res(lif);

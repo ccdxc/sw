@@ -2,8 +2,6 @@
 # Set OS_DIR to point to FreeBSD source code.
 # example OS_DIR=/home/anish/freebsd
 : ${OS_DIR:=/usr/src}
-#export OS_DIR=/home/anish/freebsd
-export OS_DIR=/usr/src
 
 if [ -z ${OS_DIR} ]
 then
