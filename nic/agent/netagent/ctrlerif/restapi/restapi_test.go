@@ -49,7 +49,7 @@ func setup() (*RestServer, error) {
 		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
-	nagent, err := state.NewNetAgent(dp, protos.AgentMode_CLASSIC, "", "dummy-node-uuid")
+	nagent, err := state.NewNetAgent(dp, protos.AgentMode_CLASSIC, "")
 	if err != nil {
 		log.Errorf("Could not create net agent")
 		return nil, err

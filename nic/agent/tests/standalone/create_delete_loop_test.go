@@ -82,7 +82,7 @@ var _ = Describe("Agent create delete loop tests", func() {
 				Fail(fmt.Sprintf("could not build agent binary, Out: %v Err: %v", out, err))
 			}
 
-			agentArgs = []string{"-hostif", "lo", "-logtofile", "/tmp/agent.log", "-rest-url", lis.ListenURL.String()}
+			agentArgs = []string{"-logtofile", "/tmp/agent.log", "-rest-url", lis.ListenURL.String()}
 
 			fmt.Println("Agent CLI: ", agentArgs)
 			// start as the agent binary needs to run in the background

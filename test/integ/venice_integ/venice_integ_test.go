@@ -188,7 +188,7 @@ func (it *veniceIntegSuite) launchCmd(c *C) {
 func (it *veniceIntegSuite) startNmd(c *C) {
 	for i := 0; i < it.numAgents; i++ {
 
-		hostID := fmt.Sprintf("44:44:44:44:%02x:%02x", i/256, i%256)
+		hostID := it.agents[i].NetworkAgent.NodeUUID
 		restURL := "localhost:0"
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
 		hostName := fmt.Sprintf("host%d", i)
@@ -421,7 +421,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		// Create netagent
-		agent, aerr := netagent.NewAgent(dp, n, fmt.Sprintf("44:44:44:44:00:%02d", i), globals.Npm, rc, state.AgentMode_MANAGED)
+		agent, aerr := netagent.NewAgent(dp, n, globals.Npm, rc, state.AgentMode_MANAGED)
 		c.Assert(aerr, IsNil)
 
 		tsdp, aerr := tshal.NewHalDatapath("mock")

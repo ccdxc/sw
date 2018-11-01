@@ -10,6 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pensando/sw/venice/utils/tsdb"
+
+	"github.com/pensando/sw/venice/utils/netutils"
+
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/revproxy"
@@ -22,16 +26,14 @@ import (
 	tstypes "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // Main function
 func main() {
 	// command line flags
 	var (
-		hostIf          = flag.String("hostif", "ntrunk0", "Host facing interface")
+		hostIf          = flag.String("hostif", "lo", "Host facing interface")
 		agentDbPath     = flag.String("agentdb", "/tmp/naples-netagent.db", "Agent Database file")
 		npmURL          = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
 		tpmURL          = flag.String("tpm", "master.local:"+globals.TpmRPCPort, "TPM RPC server URL")
@@ -64,6 +66,8 @@ func main() {
 			MaxAge:     7,
 		},
 	}
+	var err error
+	var hostIfMAC string
 
 	// Initialize logger config
 	log.SetConfig(logConfig)
@@ -71,12 +75,15 @@ func main() {
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
 
-	macAddr, err := netutils.GetIntfMac(*hostIf)
-	if err != nil {
-		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
-	}
+	// ToDo Remove this prior to fcs.
+	if len(*hostIf) > 0 {
+		macAddr, err := netutils.GetIntfMac(*hostIf)
+		if err != nil {
+			log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
+		}
 
-	naplesUUID := macAddr.String()
+		hostIfMAC = macAddr.String()
+	}
 
 	var dp types.NetDatapathAPI
 	// ToDo Remove mock hal datapath prior to FCS
@@ -94,14 +101,13 @@ func main() {
 	}
 	var agMode protos.AgentMode
 	var resolverClient resolver.Interface
+
 	if *mode == "managed" {
 		agMode = protos.AgentMode_MANAGED
-
 		// create a resolver
 		resolverClient = resolver.New(&resolver.Config{Name: "naples-netagent", Servers: strings.Split(*resolverURLs, ",")})
-		//
 		opt := tsdb.Options{
-			ClientName:     "naples-netagent-" + naplesUUID,
+			ClientName:     "naples-netagent",
 			ResolverClient: resolverClient,
 		}
 
@@ -114,7 +120,7 @@ func main() {
 	}
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, naplesUUID, *npmURL, resolverClient, agMode)
+	ag, err := netagent.NewAgent(dp, *agentDbPath, *npmURL, resolverClient, agMode)
 	if err != nil {
 		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 	}
@@ -159,14 +165,14 @@ func main() {
 		ag.RestServer = restServer
 	} else {
 
-		tsa, err := troubleshooting.NewTsAgent(tsdp, naplesUUID, *tpmURL, resolverClient, agMode, ag.NetworkAgent)
+		tsa, err := troubleshooting.NewTsAgent(tsdp, ag.NetworkAgent.NodeUUID, *tpmURL, resolverClient, agMode, ag.NetworkAgent)
 		if err != nil {
 			log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 		}
 		log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
 
 		// telemetry policy agent
-		tpa, err := tpa.NewPolicyAgent(naplesUUID, *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent)
+		tpa, err := tpa.NewPolicyAgent(ag.NetworkAgent.NodeUUID, *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent)
 		if err != nil {
 			log.Fatalf("Error creating telemetry policy agent, Err: %v", err)
 		}
@@ -178,6 +184,11 @@ func main() {
 			log.Errorf("Error creating the rest API server. Err: %v", err)
 		}
 		ag.RestServer = restServer
+	}
+
+	// TODO remove prior to fcs or once fru objects are writen and read from delphi
+	if len(hostIfMAC) > 0 {
+		ag.NetworkAgent.NodeUUID = hostIfMAC
 	}
 
 	log.Infof("%s is running {%+v}", globals.Netagent, ag)

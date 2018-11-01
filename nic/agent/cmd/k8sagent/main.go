@@ -80,7 +80,7 @@ func main() {
 	}
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, resolverClient, state.AgentMode_MANAGED)
+	ag, err := netagent.NewAgent(dp, *agentDbPath, *npmURL, resolverClient, state.AgentMode_MANAGED)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

@@ -44,7 +44,7 @@ func createNetAgent(t *testing.T) (*Nagent, *mockCtrler, *hal.Datapath) {
 	}
 
 	// create new network agent
-	nagent, err := NewNetAgent(dp, state.AgentMode_MANAGED, "", "some-unique-id")
+	nagent, err := NewNetAgent(dp, state.AgentMode_MANAGED, "")
 
 	if err != nil {
 		t.Fatalf("Error creating network agent. Err: %v", err)

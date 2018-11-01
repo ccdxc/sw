@@ -197,7 +197,7 @@ else
 fi
 
 echo "Starting netagent ..."
-"$NIC_DIR"/bin/netagent -hostif $NETAGENT_CTRL_INTF -logtofile $LOG_DIR/agent.log -resolver-urls "$CMD_URL":"$CMD_RESOLVER_PORT" $NPM_URL $MANAGED_MODE -datapath hal -disabletsa &
+"$NIC_DIR"/bin/netagent -logtofile $LOG_DIR/agent.log -resolver-urls "$CMD_URL":"$CMD_RESOLVER_PORT" $NPM_URL $MANAGED_MODE -datapath hal -disabletsa &
 
 if [[ $NETAGENT_CTRL_INTF != "lo" ]]; then
     echo "Starting nmd ..."

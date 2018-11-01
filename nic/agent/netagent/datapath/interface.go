@@ -278,7 +278,7 @@ func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.Por
 	}
 
 	// ToDo Remove the List Mock prior to FCS
-	lifs, ports, err := generateMockHwState()
+	lifs, ports, err := hd.generateMockHwState()
 	return lifs, ports, err
 }
 

@@ -17,8 +17,8 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	waitCh := make(chan error, it.numAgents*2)
 
 	// create a host for each agent
-	for i := range it.agents {
-		err := it.ctrler.Watchr.CreateHost(fmt.Sprintf("testHost-%d", i), fmt.Sprintf("00:01:02:03:04:%02d", i))
+	for _, ag := range it.agents {
+		err := it.ctrler.Watchr.CreateHost(fmt.Sprintf("testHost-%s", ag.nagent.NetworkAgent.NodeUUID), ag.nagent.NetworkAgent.NodeUUID)
 		AssertOk(c, err, "Error creating host")
 	}
 
@@ -41,8 +41,8 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	}
 
 	// create a workload on each host
-	for i := range it.agents {
-		err := it.ctrler.Watchr.CreateWorkload("default", "default", fmt.Sprintf("testWorkload%d", i), fmt.Sprintf("testHost-%d", i), fmt.Sprintf("00:01:01:01:01:%02d", i), uint32(100+i), 1)
+	for i, ag := range it.agents {
+		err := it.ctrler.Watchr.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID), fmt.Sprintf("testHost-%s", ag.nagent.NetworkAgent.NodeUUID), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
 		AssertOk(c, err, "Error creating workload")
 	}
 
@@ -63,8 +63,8 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 				return
 			}
 			foundLocal := false
-			for i, ag := range it.agents {
-				epname := fmt.Sprintf("testWorkload%d-00:01:01:01:01:%02d", i, i)
+			for _, ag := range it.agents {
+				epname := fmt.Sprintf("testWorkload-%s-%s", ag.nagent.NetworkAgent.NodeUUID, ag.nagent.NetworkAgent.NodeUUID)
 				eps, perr := ag.datapath.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
 				if perr != nil || len(eps.Request) != 1 {
 					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)
@@ -94,8 +94,8 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	}
 
 	// now delete the workloads
-	for i := range it.agents {
-		err := it.ctrler.Watchr.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload%d", i), fmt.Sprintf("testHost-%d", i), fmt.Sprintf("00:01:01:01:01:%02d", i), uint32(100+i), 1)
+	for i, ag := range it.agents {
+		err := it.ctrler.Watchr.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID), fmt.Sprintf("testHost-%s", ag.nagent.NetworkAgent.NodeUUID), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
 		AssertOk(c, err, "Error deleting workload")
 	}
 

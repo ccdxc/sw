@@ -1,6 +1,7 @@
 package datapath
 
 import (
+	"crypto/rand"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -168,7 +169,7 @@ func (hd *Datapath) convertAppProtocol(protocol string) halproto.IPProtocol {
 }
 
 // ToDo Remove Mock code prior to FCS. This is needed only for UT
-func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.PortInfoGetResponseMsg, error) {
+func (hd *Datapath) generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.PortInfoGetResponseMsg, error) {
 	mockLifs := &halproto.LifGetResponseMsg{
 		Response: []*halproto.LifGetResponse{
 			{
@@ -479,4 +480,19 @@ func (hd *Datapath) convertPortTypeFec(portType string) (halPortType halproto.Po
 		halPortType = halproto.PortType_PORT_TYPE_NONE
 	}
 	return
+}
+
+func (hd *Datapath) generateMockUUID() (string, error) {
+	b := make([]byte, 8)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	// This will ensure that we have unicast MAC
+	b[0] = (b[0] | 2) & 0xfe
+	fakeMAC := fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", b[0], b[1], b[2], b[3], b[4], b[5])
+
+	return fakeMAC, nil
+
 }

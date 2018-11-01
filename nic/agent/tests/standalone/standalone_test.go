@@ -40,9 +40,9 @@ var _ = Describe("Agent standalone tests", func() {
 
 			// Allow for testing with HAL in jobd
 			if os.Getenv("E2E_AGENT_DATAPATH") == "HAL" {
-				agentArgs = []string{"-hostif", "lo", "-logtofile", "/tmp/agent.log", "-datapath", "hal", "-rest-url", lis.ListenURL.String()}
+				agentArgs = []string{"-logtofile", "/tmp/agent.log", "-datapath", "hal", "-rest-url", lis.ListenURL.String()}
 			} else {
-				agentArgs = []string{"-hostif", "lo", "-logtofile", "/tmp/agent.log", "-rest-url", lis.ListenURL.String()}
+				agentArgs = []string{"-logtofile", "/tmp/agent.log", "-rest-url", lis.ListenURL.String()}
 			}
 
 			fmt.Println("Agent CLI: ", agentArgs)

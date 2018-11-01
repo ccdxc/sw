@@ -255,6 +255,7 @@ type NetDatapathAPI interface {
 	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // updates a tcp proxy policy in the datapath
 	DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // deletes a tcp proxy policy in the datapath
 	CreatePort(port *netproto.Port) error                                                                                                                            // Creates a port in the datapath
+	GetUUID() (string, error)                                                                                                                                        // GetUUID gets the FRU information for the NAPLES from HAL.
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

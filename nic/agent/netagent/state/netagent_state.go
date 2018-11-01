@@ -25,7 +25,7 @@ const uplinkOffset = 127
 type Nagent types.NetAgent
 
 // NewNetAgent creates a new network agent
-func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUID string) (*Nagent, error) {
+func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath string) (*Nagent, error) {
 	var na Nagent
 	var emdb emstore.Emstore
 	var err error
@@ -40,7 +40,7 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUI
 		return nil, err
 	}
 
-	na.init(emdb, nodeUUID, dp)
+	na.init(emdb, dp)
 
 	c := config.Agent{
 		ObjectMeta: api.ObjectMeta{
@@ -78,7 +78,7 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath, nodeUUI
 
 		}
 	}
-
+	err = na.GetUUID()
 	err = na.GetHwInterfaces()
 	if err != nil {
 		return nil, err
@@ -165,9 +165,8 @@ func (na *Nagent) validateMeta(kind string, oMeta api.ObjectMeta) error {
 	return nil
 }
 
-func (na *Nagent) init(emdb emstore.Emstore, nodeUUID string, dp types.NetDatapathAPI) {
+func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.Store = emdb
-	na.NodeUUID = nodeUUID
 	na.Datapath = dp
 	na.NetworkDB = make(map[string]*netproto.Network)
 	na.EndpointDB = make(map[string]*netproto.Endpoint)
@@ -190,4 +189,17 @@ func (na *Nagent) init(emdb emstore.Emstore, nodeUUID string, dp types.NetDatapa
 	na.TCPProxyPolicyDB = make(map[string]*netproto.TCPProxyPolicy)
 	na.PortDB = make(map[string]*netproto.Port)
 	na.Solver = dependencies.NewDepSolver()
+}
+
+// GetUUID gets the naples uuid from the datapath
+func (na *Nagent) GetUUID() error {
+
+	uuid, err := na.Datapath.GetUUID()
+	if err != nil {
+		log.Errorf("HAL System GetUUID failed. %v", err)
+		return fmt.Errorf("hal get fru uuid failed. %v", err)
+	}
+
+	na.NodeUUID = uuid
+	return nil
 }

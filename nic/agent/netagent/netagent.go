@@ -50,10 +50,10 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp types.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode) (*Agent, error) {
+func NewAgent(dp types.NetDatapathAPI, dbPath, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode) (*Agent, error) {
 	var ag Agent
 	// create a new network agent
-	nagent, err := state.NewNetAgent(dp, mode, dbPath, nodeUUID)
+	nagent, err := state.NewNetAgent(dp, mode, dbPath)
 
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)

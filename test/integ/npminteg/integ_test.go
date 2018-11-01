@@ -120,7 +120,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(it.datapathKind, fmt.Sprintf("00:01:02:03:04:%02d", i), globals.Npm, rc)
+		agent, err := CreateAgent(it.datapathKind, globals.Npm, rc)
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}

@@ -8,6 +8,9 @@ function cleanup {
 
 }
 set -e
+# This is needed only for integ tests with HAL. In other real e2e environment
+# it is set by start-hal-haps.sh by reading /mnt partition which has the primary mac for naples
+export SYSUUID="42:42:42:42:42:42"
 ./tools/start-model.sh > /dev/null &
 ./tools/start-hal.sh > /dev/null &
 ./agent/netagent/scripts/wait-for-hal.sh || cleanup $?

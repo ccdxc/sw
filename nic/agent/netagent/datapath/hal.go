@@ -72,6 +72,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		hal.IPSecclient = halproto.NewIpsecClient(hal.client.ClientConn)
 		hal.TCPProxyPolicyClient = halproto.NewTcpProxyClient(hal.client.ClientConn)
 		hal.PortClient = halproto.NewPortClient(hal.client.ClientConn)
+		hal.SystemClient = halproto.NewSystemClient(hal.client.ClientConn)
 		haldp.Hal = hal
 		return &haldp, nil
 	}
@@ -89,6 +90,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		MockIPSecClient:    halproto.NewMockIpsecClient(hal.mockCtrl),
 		MockTCPProxyClient: halproto.NewMockTcpProxyClient(hal.mockCtrl),
 		MockPortClient:     halproto.NewMockPortClient(hal.mockCtrl),
+		MockSystemClient:   halproto.NewMockSystemClient(hal.mockCtrl),
 	}
 
 	hal.Epclient = hal.MockClients.MockEpclient
@@ -103,6 +105,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 	hal.IPSecclient = hal.MockClients.MockIPSecClient
 	hal.TCPProxyPolicyClient = hal.MockClients.MockTCPProxyClient
 	hal.PortClient = hal.MockClients.MockPortClient
+	hal.SystemClient = hal.MockClients.MockSystemClient
 	haldp.Hal = hal
 	haldp.Hal.setExpectations()
 	return &haldp, nil
@@ -187,6 +190,8 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockPortClient.EXPECT().PortUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockPortClient.EXPECT().PortDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockPortClient.EXPECT().PortInfoGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+	hd.MockClients.MockSystemClient.EXPECT().SystemUuidGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 
 }
 

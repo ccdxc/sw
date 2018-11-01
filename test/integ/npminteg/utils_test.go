@@ -35,7 +35,7 @@ func (it *integTestSuite) pollTimeout() string {
 }
 
 // CreateAgent creates an instance of agent
-func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string, resolver resolver.Interface) (*Dpagent, error) {
+func CreateAgent(kind datapath.Kind, srvURL string, resolver resolver.Interface) (*Dpagent, error) {
 	// mock datapath
 	dp, err := datapath.NewHalDatapath(kind)
 	if err != nil {
@@ -49,7 +49,7 @@ func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string, resolver resolver.
 	}
 
 	// create new network agent
-	nagent, err := netagent.NewAgent(dp, "", nodeUUID, srvURL, resolver, state.AgentMode_MANAGED)
+	nagent, err := netagent.NewAgent(dp, "", srvURL, resolver, state.AgentMode_MANAGED)
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err

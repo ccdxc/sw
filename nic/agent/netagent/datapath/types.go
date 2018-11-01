@@ -29,6 +29,7 @@ type Hal struct {
 	IPSecclient          halproto.IpsecClient
 	PortClient           halproto.PortClient
 	TCPProxyPolicyClient halproto.TcpProxyClient
+	SystemClient         halproto.SystemClient
 }
 
 // MockClients stores references for mockclients to be used for setting expectations
@@ -45,6 +46,7 @@ type mockClients struct {
 	MockIPSecClient    *halproto.MockIpsecClient
 	MockTCPProxyClient *halproto.MockTcpProxyClient
 	MockPortClient     *halproto.MockPortClient
+	MockSystemClient   *halproto.MockSystemClient
 }
 
 // DB holds all the state information.

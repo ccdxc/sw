@@ -32,20 +32,20 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	}, "Network not found in agent", "100ms", "10s")
 
 	// create a workload on each NIC/host
-	for i := range it.agents {
+	for i, ag := range it.agents {
 		// workload params
 		wrloads[i] = workload.Workload{
 			TypeMeta: api.TypeMeta{Kind: "Workload"},
 			ObjectMeta: api.ObjectMeta{
-				Name:      fmt.Sprintf("testWorkload%d", i),
+				Name:      fmt.Sprintf("testWorkload-%s", ag.NetworkAgent.NodeUUID),
 				Namespace: "default",
 				Tenant:    "default",
 			},
 			Spec: workload.WorkloadSpec{
 				HostName: fmt.Sprintf("host%d", i),
 				Interfaces: map[string]workload.WorkloadIntfSpec{
-					fmt.Sprintf("00:01:02:03:04:%02d", i): workload.WorkloadIntfSpec{
-						MicroSegVlan: 100,
+					ag.NetworkAgent.NodeUUID: workload.WorkloadIntfSpec{
+						MicroSegVlan: uint32(i + 100),
 						ExternalVlan: 1,
 					},
 				},
@@ -68,8 +68,8 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 				return
 			}
 			foundLocal := false
-			for i := range it.agents {
-				epname := fmt.Sprintf("testWorkload%d-00:01:02:03:04:%02d", i, i)
+			for _, ag := range it.agents {
+				epname := fmt.Sprintf("testWorkload-%s-%s", ag.NetworkAgent.NodeUUID, ag.NetworkAgent.NodeUUID)
 				eps, perr := dp.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
 				if perr != nil || len(eps.Request) != 1 {
 					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)
@@ -80,20 +80,24 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, ag.NetworkAgent.NodeUUID, perr, ag.NetworkAgent.EndpointDB)
 					return
 				}
+
 				if sep.Spec.NodeUUID == ag.NetworkAgent.NodeUUID {
 					foundLocal = true
 				}
+
 			}
 			if !foundLocal {
 				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.NetworkAgent.NodeUUID)
 				return
 			}
+
 			waitCh <- nil
 		}(ag, it.datapaths[i])
 	}
 
 	// wait for all goroutines to complete
 	for i := 0; i < it.numAgents; i++ {
+
 		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
 	}
 
