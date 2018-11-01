@@ -814,6 +814,8 @@ submit_chain(struct request_params *req_params)
 	}
 
 	/* TODO-poll: bail out depending on req-mode */
+	PPRINT_CHAIN(chain);
+	chn_destroy_chain(chain);
 	return;
 out:
 	PPRINT_CHAIN(chain);
