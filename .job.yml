@@ -28,5 +28,7 @@ dependencies:
   dol: nic
   dol/test/networking : nic
   nic/agent: venice
+  nic/agent: test/ci_targets/e2e
   venice: test
+  venice: test/ci_targets/e2e
   test: test/ci_targets/e2e

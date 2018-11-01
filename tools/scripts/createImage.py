@@ -58,7 +58,7 @@ static_images = {
 
 # images which are compiled every time
 dynamic_images = [
-    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator", "vos", "citadel", "rollout"
+    "cmd", "apiserver", "apigw",  "npm",  "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator", "vos", "citadel", "rollout"
 ]
 
 # dictionary of module name(specified in venice/globals/modules.go )  to containerImage
@@ -96,14 +96,12 @@ for i in dynamic_images:
     if old_images != "":
         ExecuteCommand('''docker rmi -f ''' + ' '.join(old_images.split('\n')) )
 
-ExecuteCommand("docker save -o bin/tars/pen-netagent.tar pen-netagent:latest")
-
 # the datastructure that will be written to the file
 imageConfig = {}
 imageConfig['imageMap'] = imageMap
 
 # the order in which the services get upgraded. For now fill up with some random order.
-imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw', 'pen-vchub', 'pen-npm', 'pen-collector', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
+imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw',  'pen-npm', 'pen-collector', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
                                'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp', 'pen-influx', 'pen-elastic', 'pen-aggregator', "pen-vos", "pen-citadel"]
 
 # installInfo is used by the installer during installation of this image.

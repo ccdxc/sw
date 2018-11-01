@@ -44,7 +44,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./vendor/layeh.com/radius/cmd/radius-dict-gen \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator vos citadel rollout
+TO_DOCKERIZE := apigw apiserver npm cmd nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator vos citadel rollout
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
@@ -157,6 +157,7 @@ install:
 	@# For now the installer is a docker container.
 	@# In the future, this can be a shell script, rpm, curl script or whatever..
 	docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0" --rm --no-cache -t pen-install:latest -f tools/docker-files/install/Dockerfile tools/docker-files/install
+	docker save -o bin/tars/pen-netagent.tar pen-netagent:latest
 	docker save -o bin/tars/pen-install.tar pen-install:latest
 
 deploy:

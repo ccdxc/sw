@@ -184,38 +184,6 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
-	globals.VCHub: {
-		TypeMeta: api.TypeMeta{
-			Kind: "Module",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.VCHub,
-		},
-		Spec: protos.ModuleSpec{
-			Type:      protos.ModuleSpec_Deployment,
-			NumCopies: 1,
-			Submodules: []protos.ModuleSpec_Submodule{
-				{
-					Name: globals.VCHub,
-					Services: []protos.ModuleSpec_Submodule_Service{
-						{
-							Name: globals.VCHub,
-							Port: runtime.MustUint32(globals.VCHubAPIPort),
-						},
-					},
-					Args: []string{
-						// TODO: This should be removed when VCenter Object is implemented.
-						"-vcenter-list", "http://user:pass@192.168.30.10:8989/sdk",
-						"-resolver-urls", "$RESOLVER_URLS",
-					},
-				},
-			},
-			Volumes: []protos.ModuleSpec_Volume{
-				logVolume,
-				eventsVolume,
-			},
-		},
-	},
 	globals.Npm: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",

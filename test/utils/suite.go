@@ -469,7 +469,6 @@ func (tu *TestUtils) populateVeniceModules() {
 		globals.Cmd:       {true},
 		globals.APIGw:     {true},
 		globals.APIServer: {false},
-		globals.VCHub:     {false},
 		globals.EvtsMgr:   {true},
 		globals.EvtsProxy: {true},
 		globals.Citadel:   {false},
