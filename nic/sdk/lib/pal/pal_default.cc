@@ -66,6 +66,14 @@ pal_default_virtual_addr_to_physical_addr(uint64_t virtual_addr,
     return PAL_RET_OK;
 }
 
+static bool
+pal_default_is_qsfp_port_present(int port_no)
+{
+    
+    SDK_TRACE_DEBUG("PAL default is_qsfp_port_present.");
+    return false;
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -79,6 +87,8 @@ pal_default_init_rwvectors (void)
                             pal_default_physical_addr_to_virtual_addr;
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
                             pal_default_virtual_addr_to_physical_addr;
+    gl_pal_info.rwvecs.is_qsfp_port_present =
+                            pal_default_is_qsfp_port_present;
 
     return PAL_RET_OK;
 }

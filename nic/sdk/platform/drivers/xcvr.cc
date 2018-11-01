@@ -5,6 +5,7 @@
 #include "platform/drivers/xcvr.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"
 #include "platform/drivers/xcvr_sfp.hpp"
+#include "lib/pal/pal.hpp"
 
 namespace sdk {
 namespace platform {
@@ -14,15 +15,15 @@ xcvr_t g_xcvr[XCVR_MAX_PORTS];
 static bool
 xcvr_state_change (int port) {
     // Detect xcvr and set state
-    if (1) {
+    if (sdk::lib::pal_is_qsfp_port_present(port + 1)) {
         if (xcvr_state(port) == XCVR_REMOVED) {
-            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port, xcvr_state(port), XCVR_INSERTED);
+            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port + 1, xcvr_state(port), XCVR_INSERTED);
             xcvr_set_state(port, XCVR_INSERTED);
             return true;
         }
     } else {
         if (xcvr_state(port) != XCVR_REMOVED) {
-            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port, xcvr_state(port), XCVR_REMOVED);
+            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port + 1, xcvr_state(port), XCVR_REMOVED);
             xcvr_set_state(port, XCVR_REMOVED);
             return true;
         }
@@ -97,9 +98,9 @@ xcvr_poll_timer (void)
                 if (!xcvr_sprom_read_count_inc(port)) {
                     // Reached max read attempts
                     xcvr_set_state(port, XCVR_SPROM_READ_ERR);
-                    SDK_TRACE_DEBUG("Xcvr port %d sprom read failed after 10 retries", port);
+                    SDK_TRACE_DEBUG("Xcvr port %d sprom read failed after 10 retries", port + 1);
                 } else {
-                    SDK_TRACE_DEBUG("Xcvr port %d sprom read error", port);
+                    SDK_TRACE_DEBUG("Xcvr port %d sprom read error", port + 1);
                 }
                 break;
             }
