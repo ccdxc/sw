@@ -32,7 +32,7 @@
  *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *	- address cpdc_fill_per_block_desc_ex()
- *	- currently poll is attempted atmost 16 times, and this is temporary
+ *	- currently poll is attempted atmost 1024 times, and this is temporary
  *	only. From the poll-branch, where request mode flag is used to determine
  *	and relax/limit the iterations will need to be brought-in
  *
@@ -54,7 +54,8 @@ cpdc_poll(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	while (attempt < 16) {
+	/* TODO-poll: remove with a timer based timeout */
+	while (attempt < 1024) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 		if (!err)
 			break;

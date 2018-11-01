@@ -375,7 +375,8 @@ crypto_poll(const struct service_info *svc_info)
 	status_desc = svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
 
-	while (attempt < 16) {
+	/* TODO-poll: remove with a timer based timeout */
+	while (attempt < 1024) {
 		cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
 			CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 
