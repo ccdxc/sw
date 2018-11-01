@@ -39,7 +39,7 @@ MODULE_LICENSE("GPL");
 #ifndef __FreeBSD__
 MODULE_VERSION(DRV_VERSION);
 #else
-MODULE_VERSION(DRV_VERSION, 1);
+MODULE_VERSION(sonic, 1);
 #endif
 
 unsigned int devcmd_timeout = 30;

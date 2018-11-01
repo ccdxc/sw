@@ -6,7 +6,6 @@
 KMOD=pencake
 SRCS= \
 src/test/pnso_test_module.c \
-src/test/pnso_test_sysfs.c \
 src/test/pnso_test_util.c \
 src/test/pnso_test.c \
 src/common/pnso_pbuf.c \

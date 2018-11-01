@@ -55,6 +55,10 @@ MODULE_PARM_DESC(loglevel, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5
 
 static osal_thread_t g_main_thread;
 
+#ifdef __FreeBSD__ 
+MODULE_DEPEND(pencake, sonic, 1, 1, 1);
+#endif
+
 static int
 pnso_test_mod_init(void)
 {
@@ -63,7 +67,9 @@ pnso_test_mod_init(void)
 	rv = osal_log_init(loglevel);
 	if (rv)
 		goto done;
+#ifndef __FreeBSD__ 
 	rv = pnso_test_sysfs_init();
+#endif	
 
 done:	
 	return rv;
@@ -76,7 +82,9 @@ pnso_test_mod_fini(void)
 
 	osal_thread_stop(&g_main_thread);
 
+#ifndef __FreeBSD__ 
 	pnso_test_sysfs_finit();
+#endif
 
 	return PNSO_OK;
 }
@@ -84,7 +92,9 @@ pnso_test_mod_fini(void)
 static void
 status_output_func(const char *status, void *opaque)
 {
+#ifndef __FreeBSD__	
 	pnso_test_sysfs_write_status_data(status, strlen(status), opaque);
+#endif	
 	OSAL_LOG("%s", status);
 }
 
@@ -533,7 +543,11 @@ body(void *not_used)
 	while (!pnso_test_is_shutdown()) {
 		int ctl_state;
 
+#ifndef __FreeBSD__	
 		ctl_state = pnso_test_sysfs_read_ctl();
+#else
+		ctl_state = CTL_STATE_MAX;
+#endif		
 		switch (ctl_state) {
 		case CTL_STATE_START:
 		case CTL_STATE_REPEAT:
