@@ -7,6 +7,8 @@
 #include "nic/include/hal_state.hpp"
 #include "rule_match.hpp"
 #include "utils.hpp"
+#include "nic/fte/acl/acl_ctx.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 
 namespace hal {
 
@@ -107,7 +109,7 @@ rule_match_cleanup (rule_match_t *match)
 }
 
 //-----------------------------------------------------------------------------
-// Extraction routines
+// Spec Extraction routines
 //-----------------------------------------------------------------------------
 
 static inline hal_ret_t
@@ -368,18 +370,192 @@ end:
     return ret;
 }
 
-void
-rule_lib_init_config(acl_config_t *cfg)
+//-----------------------------------------------------------------------------
+// Rule ctr related routines
+//-----------------------------------------------------------------------------
+//
+
+hal_ret_t
+init_rule_ctr(rule_ctr_t *ctr)
 {
-    memcpy(cfg, &ip_acl_config_glbl, sizeof(acl_config_t));
+    memset(ctr, 0, sizeof(rule_ctr_t));
+    ctr->ht_ctxt.reset();
+    ref_init(&ctr->ref_count, [] (const ref_t *ref) {
+        rule_ctr_t *ctr = container_of(ref, rule_ctr_t, ref_count);
+
+        HAL_TRACE_DEBUG("Free rule ctr with pointer {:#x} key: {}", (uint64_t)ctr, ctr->rule_key);
+        g_hal_state->rule_ctr_slab()->free(ctr);
+    });
+    return HAL_RET_OK;
+}
+
+rule_ctr_t *
+alloc_init_rule_ctr(rule_cfg_t *cfg, rule_key_t rule_key)
+{
+    rule_ctr_t *ctr;
+
+    ctr = (rule_ctr_t *)cfg->rule_ctr_ht->lookup((void *) &rule_key);
+    if (ctr != NULL) {
+        HAL_TRACE_DEBUG("found rule ctr for rule key: {}", rule_key);
+        ref_inc(&ctr->ref_count);
+        return ctr;
+    }
+
+    ctr = (rule_ctr_t *) g_hal_state->rule_ctr_slab()->alloc();
+    if (ctr == NULL) {
+        return NULL;
+    }
+    init_rule_ctr(ctr);
+    ctr->rule_key = rule_key;
+    cfg->rule_ctr_ht->insert(ctr, &ctr->ht_ctxt);
+    return ctr;
+}
+
+void
+free_rule_ctr(rule_ctr_t *ctr)
+{
+    ref_dec(&((rule_ctr_t *) ctr)->ref_count);
+}
+
+hal_ret_t
+init_rule_data(rule_data_t *rule_data, void *usr_data, void *ctr)
+{
+    memset(rule_data, 0, sizeof(rule_data_t));
+    ref_init(&rule_data->ref_cnt, [] (const ref_t *ref) {
+        rule_data_t *data = container_of(ref, rule_data_t, ref_cnt);
+        nwsec_rule_t *rule = container_of((acl::ref_t *)data->user_data, nwsec_rule_t, ref_count);
+        
+        HAL_TRACE_DEBUG("Free rule data key: {}", rule->rule_id);
+        ref_dec((acl::ref_t *)data->ctr);
+        ref_dec((acl::ref_t *)data->user_data);
+        g_hal_state->rule_data_slab()->free(data);
+    });
+
+    ref_inc((const acl::ref_t *)usr_data);
+
+    rule_data->user_data = usr_data;
+    rule_data->ctr = ctr;
+    return HAL_RET_OK;
+}
+
+rule_data_t *
+alloc_init_rule_data(void *usr_data, void *ctr)
+{
+    rule_data_t *data;
+    data = (rule_data_t *) g_hal_state->rule_data_slab()->alloc();
+    if (data == NULL) {
+        return NULL;
+    }
+
+    init_rule_data(data, usr_data, ctr);
+    data->user_data = usr_data;
+    data->ctr = ctr;
+    return data;
+}
+
+void
+free_rule_data(rule_data_t *data)
+{
+    ref_dec(&((rule_data_t *) data)->ref_cnt);
+}
+    
+//-----------------------------------------------------------------------------
+// Rule Manipulation routines (rule add/del)
+//-----------------------------------------------------------------------------
+
+
+void *rule_ctr_get_key_func(void *entry)
+{
+    return (void *)&((rule_ctr_t *)entry)->rule_key;
+}
+
+uint32_t rule_ctr_compute_hash_func(void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(rule_key_t)) % ht_size;
+}
+
+bool  rule_ctr_compare_key_func(void *key1, void *key2) 
+{
+    return memcmp(key1, key2, sizeof(rule_key_t)) == 0;
+}
+void *rule_cfg_get_key_func(void *entry)
+{
+    return (void *)((rule_cfg_t *)entry)->name;
+}
+
+uint32_t rule_cfg_compute_hash_func(void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, strlen((char *)key)) % ht_size;
+}
+
+bool  rule_cfg_compare_key_func(void *key1, void *key2) 
+{
+    return strcmp((char *)key1, (char *)key2) == 0;
+}
+
+static ht *g_rule_cfg_ht = ht::factory(256, rule_cfg_get_key_func,
+									   rule_cfg_compute_hash_func,
+									   rule_cfg_compare_key_func,
+									   false /* not thread_safe */ );	
+void 
+rule_lib_delete(const char *name)
+{
+	rule_cfg_t 	*rcfg = NULL;
+	const acl_ctx_t  *acl_ctx = acl::acl_get(name);
+	if (acl_ctx) {
+        HAL_TRACE_DEBUG("deleted acl");
+    	acl::acl_delete(acl_ctx);	
+	}
+    // walk rule_data_ht and free them
+	rcfg = (rule_cfg_t *)g_rule_cfg_ht->remove((void *)name);
+	if (rcfg) {
+    	g_hal_state->rule_cfg_slab()->free(rcfg);
+	} else {
+        HAL_TRACE_ERR("Rule cfg not found");
+    }
     return;
 }
 
-const acl_ctx_t *
+const acl_ctx_t  *
 rule_lib_init(const char *name, acl_config_t *cfg)
 {
-    rule_lib_init_config(cfg);
-    return acl_create(name, (const acl_config_t *)cfg);
+    
+    rule_cfg_t  *rcfg = NULL;
+    rcfg = (rule_cfg_t *) g_hal_state->rule_cfg_slab()->alloc();
+    if (rcfg == NULL) {
+        return NULL;
+    }
+    memcpy(&rcfg->acl_cfg, &ip_acl_config_glbl, sizeof(acl_config_t));
+    memcpy(&rcfg->name, name, 64);
+    rcfg->acl_ctx = acl_create(name, (const acl_config_t *)&rcfg->acl_cfg);
+
+    rcfg->rule_ctr_ht = ht::factory(8192,
+                               rule_ctr_get_key_func,
+                               rule_ctr_compute_hash_func,
+                               rule_ctr_compare_key_func);
+    HAL_ASSERT_RETURN((rcfg->rule_ctr_ht != NULL), NULL);
+
+	// Rule cfg is not maintained as part of hal_state. rule lib data is not expected to persistent
+    // Each plugin has to recreate the rules.
+	g_rule_cfg_ht->insert((void *)rcfg, &rcfg->ht_ctxt);	
+
+    return rcfg->acl_ctx;
+}
+rule_cfg_t *
+rule_cfg_get(const char *name)
+{
+    rule_cfg_t *rule_cfg = (rule_cfg_t *)g_rule_cfg_ht->lookup((void *)name);
+    if (rule_cfg == NULL) {
+        return NULL;
+    }
+    return rule_cfg;
+}
+
+rule_ctr_t *
+rule_ctr_get(rule_cfg_t *rcfg, rule_key_t key)
+{
+    rule_ctr_t *ctr = (rule_ctr_t *) rcfg->rule_ctr_ht->lookup((void *) &key);
+    return ctr;
 }
 
 void
@@ -397,6 +573,7 @@ rule_lib_alloc()
     rule->data.category_mask = 0x01;
     ref_init(&rule->ref_count, [] (const ref_t * ref_count) {
         ipv4_rule_t *rule  = (ipv4_rule_t *)acl_rule_from_ref(ref_count);
+        HAL_TRACE_DEBUG(" decrement userdata");
         ref_dec((acl::ref_t *)rule->data.userdata);
         g_hal_state->ipv4_rule_slab()->free((void *)acl_rule_from_ref(ref_count));
     });
@@ -599,10 +776,11 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
 // As of today type of fields that are instantiated in acl_lib
 // (pkt_classify_lib) will be of type ipv4_rule_t across plugins that use
 // types.RuleMatch 
-// 
+// Todo: Take only the ctx name from user. (lseshan)
 hal_ret_t
-rule_match_rule_add (const acl_ctx_t **acl_ctx,
+rule_match_rule_add (const acl_ctx_t  **acl_ctx,
                      rule_match_t     *match,
+					 rule_key_t 	   rule_key,
                      int               rule_prio,
                      void             *ref_count)
 {
@@ -611,6 +789,18 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     addr_list_elem_t     src_addr_new = {0}, dst_addr_new = {0};
     sg_list_elem_t       src_sg_new = {0}, dst_sg_new = {0};
     mac_addr_list_elem_t mac_src_addr_new = {0}, mac_dst_addr_new = {0};
+    rule_data_t          *rule_data = NULL;
+	rule_cfg_t			 *rule_cfg = NULL;
+    rule_ctr_t           *rule_ctr = NULL;
+
+	rule_cfg = (rule_cfg_t *)g_rule_cfg_ht->lookup((void *) (*acl_ctx)->name());
+	if (rule_cfg == NULL) {
+		return HAL_RET_ERR;
+	}
+    rule_ctr = alloc_init_rule_ctr(rule_cfg, rule_key);
+
+    HAL_TRACE_DEBUG("alloc rule data with key : {}", rule_key);
+    rule_data = alloc_init_rule_data(ref_count, &rule_ctr->ref_count);
 
     /* Add dummy node at the head of each list if the list is empty. If the
        list is not empty then we shouldn't insert a wildcard match for that
@@ -625,7 +815,7 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     RULE_MATCH_DLLIST_CHECK_EMPTY_ADD(&match->dst_sg_list, &dst_sg_new.list_ctxt);
     
     /* Add the rule */
-    ret = rule_match_process_rule(acl_ctx, match, rule_prio, ref_count, true);
+    ret = rule_match_process_rule(acl_ctx, match, rule_prio, &rule_data->ref_cnt, true);
 
     /* Delete dummy nodes at the head of each list */
     RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&mac_src_addr_new.list_ctxt);
@@ -636,19 +826,74 @@ rule_match_rule_add (const acl_ctx_t **acl_ctx,
     RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&src_port_new.list_ctxt);
     RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&src_sg_new.list_ctxt);
     RULE_MATCH_DLLIST_CHECK_EMPTY_DEL(&dst_sg_new.list_ctxt);
+    ref_dec((acl::ref_t *)&rule_data->ref_cnt);
     return ret;
 }
 
 hal_ret_t
-rule_match_rule_del (const acl_ctx_t **acl_ctx,
-                     rule_match_t     *match,
-                     int               rule_prio,
-                     void             *ref_count)
+rule_match_rule_del (const acl_ctx_t   **acl_ctx, 
+					 rule_match_t 	    *match,
+                     rule_key_t          key,
+                     int                 rule_prio,
+                     void               *ref_count)
 {
     hal_ret_t            ret = HAL_RET_OK;
+    rule_data_t          *data = NULL;
+	rule_cfg_t			 *rule_cfg = NULL;
+
+
+	rule_cfg = (rule_cfg_t *)g_rule_cfg_ht->lookup((void *) (*acl_ctx)->name());
+    if (rule_cfg == NULL) {
+        return HAL_RET_ERR;
+    }
+
     ret = rule_match_process_rule(acl_ctx, match, rule_prio, ref_count, false);
     rule_match_cleanup(match);
+
+    data = (rule_data_t *) rule_cfg->rule_ctr_ht->remove(&key);
+    if (data) {
+        free_rule_data(data);
+    }
     return ret;
+}
+
+void *
+rule_classify(const acl_ctx_t *ctx, const uint8_t *key,
+              const acl_rule_t *rules[], uint32_t categories)
+{
+    hal_ret_t ret = acl_classify(ctx, key, rules, categories);
+    if (ret != HAL_RET_OK) {
+        return NULL;
+    }
+
+    if (*rules == NULL) {
+        return NULL;
+    }
+    return NULL;
+}
+
+acl::ref_t *
+get_rule_data(acl_rule_t * rule)
+{
+    acl::ref_t *rc;
+    rc = (acl::ref_t *) rule->data.userdata;
+    rule_data_t *rule_data = (hal::rule_data_t *) container_of(rc, rule_data_t, ref_cnt);
+
+    acl::ref_t *user_ref;
+
+    user_ref = (acl::ref_t *) rule_data->user_data;
+    return user_ref;
+}
+
+rule_ctr_t *
+get_rule_ctr(acl_rule_t *rule)
+{
+    acl::ref_t *rc;
+    rc = (acl::ref_t *) rule->data.userdata;
+    rule_data_t *rule_data = (hal::rule_data_t *) container_of(rc, rule_data_t, ref_cnt);
+
+    return (hal::rule_ctr_t *) RULE_MATCH_USER_DATA((acl::ref_t *)rule_data->ctr,
+                                    rule_ctr_t, ref_count);
 }
 
 //-----------------------------------------------------------------------------

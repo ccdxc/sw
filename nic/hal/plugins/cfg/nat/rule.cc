@@ -260,7 +260,7 @@ nat_cfg_rule_spec_build (nat_cfg_rule_t *rule, nat::NatRuleSpec *spec)
 hal_ret_t
 nat_cfg_rule_acl_build (nat_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
 {
-    return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, &rule->ref_count);
+    return rule_match_rule_add(acl_ctx, &rule->match, rule->key.rule_id, rule->prio, &rule->ref_count);
 }
 
 void

@@ -645,6 +645,7 @@ ipsec_cfg_rule_create_oper_handle (ipsec_cfg_rule_t *rule, const acl_ctx_t *acl_
 {
     return rule_match_rule_add(&acl_ctx,
                                &rule->match,
+                               rule->key.rule_id,
                                rule->prio,
                                (void *) &rule->ref_count);
 }

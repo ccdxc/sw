@@ -60,6 +60,7 @@ nwsec_spec_dump(void *spec)
     HAL_TRACE_DEBUG("{}", cfg.c_str());
 }
 
+
 nwsec_group_t *
 nwsec_group_lookup_key_or_handle(const kh::SecurityGroupKeyHandle& key_or_handle)
 {
@@ -1079,7 +1080,7 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
             HAL_TRACE_DEBUG("rule id is {}", rulelist->rule_id);
             dllist_for_each_safe(curr, next, &rulelist->head) {
                 nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
-                fn_ctx->ret = rule_match_rule_add(fn_ctx->acl_ctx, &rule->fw_rule_match, rule->priority, &rule->ref_count);
+                fn_ctx->ret = rule_match_rule_add(fn_ctx->acl_ctx, &rule->fw_rule_match, rule->rule_id, rule->priority, &rule->ref_count);
                 if (fn_ctx->ret != HAL_RET_OK) {
                     return true;
                 }
@@ -1458,7 +1459,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
     const char                  *ctx_name = NULL;
     SecurityPolicyKeyHandle kh = spec.policy_key_or_handle();
 
-    HAL_TRACE_DEBUG("---------------------- API End -------------------");
+    HAL_TRACE_DEBUG("---------------------- API Start-------------------");
     nwsec_spec_dump(&spec);
 
     ret = validate_nwsec_policy_update(spec, res);
@@ -1594,7 +1595,7 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
     cfg_op_ctxt_t    cfg_ctxt = { 0 };
     dhl_entry_t      dhl_entry = { 0 };
     const char       *ctx_name = NULL;
-    const acl_ctx_t  *acl_ctx = NULL;
+    //const acl_ctx_t  *acl_ctx = NULL;
     SecurityPolicyKeyHandle kh = req.policy_key_or_handle();
 
     ret = validate_nwsec_policy_delete(req, res);
@@ -1611,14 +1612,9 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
     }
 
     HAL_TRACE_DEBUG("deleting policy id:{}", policy->key.policy_id);
+
     ctx_name = nwsec_acl_ctx_name(policy->key.vrf_id);
-    acl_ctx = acl::acl_get(ctx_name);
-    if (acl_ctx == NULL) {
-        HAL_TRACE_ERR("Failed to get acl ctx for the policy: {}", policy->key.policy_id);
-        ret = HAL_RET_SECURITY_POLICY_NOT_FOUND;
-        goto end;
-    }
-    acl::acl_delete(acl_ctx);
+    rule_lib_delete(ctx_name);
 
     dhl_entry.handle = policy->hal_handle;
     dhl_entry.obj = policy;
@@ -1649,8 +1645,8 @@ end:
 }
 
 static hal_ret_t
-security_policy_rule_spec_build (nwsec_rule_t *rule,
-                                 nwsec::SecurityRule *spec)
+security_policy_rule_spec_build (nwsec_rule_t                          *rule,
+                                 nwsec::SecurityRule                   *spec)
 {
     hal_ret_t               ret = HAL_RET_OK;
     dllist_ctxt_t           *entry = NULL;
@@ -1674,28 +1670,44 @@ security_policy_rule_spec_build (nwsec_rule_t *rule,
 }
 
 static hal_ret_t
-security_policy_spec_build (nwsec_policy_t *policy,
-                            nwsec::SecurityPolicySpec *spec)
+security_policy_spec_build (nwsec_policy_t               *policy,
+                            nwsec::SecurityPolicySpec    *spec,
+                            nwsec::SecurityPolicyStats   *stats)
 {
     hal_ret_t               ret = HAL_RET_OK;
 
     spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(policy->key.policy_id);
     spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(policy->key.vrf_id);
 
+    const char *ctx_name = nwsec_acl_ctx_name(policy->key.vrf_id);
+    rule_cfg_t *rcfg = rule_cfg_get(ctx_name);
     struct fn_ctx_t {
-        nwsec::SecurityPolicySpec *spec;
-        hal_ret_t                  ret;
-    } fn_ctx = { spec, HAL_RET_OK };
+        nwsec::SecurityPolicySpec   *spec;
+        nwsec::SecurityPolicyStats  *stats; 
+        hal_ret_t                     ret;
+        rule_cfg_t                   *rcfg;
+    } fn_ctx = { spec, stats, HAL_RET_OK, rcfg };
 
     policy->rules_ht[policy->version]->walk_safe([](void *data, void *ctxt) -> bool {
-        dllist_ctxt_t *curr, *next;
-        nwsec::SecurityRule *spec_rule;
+        dllist_ctxt_t            *curr, *next;
+        nwsec::SecurityRule      *spec_rule;
+        nwsec::SecurityRuleStats *rule_stats; 
         fn_ctx_t *fn_ctx = (fn_ctx_t *)ctxt;
         nwsec_rulelist_t *rulelist = (nwsec_rulelist_t *)data;
         if (rulelist == NULL) {
             fn_ctx->ret = HAL_RET_ERR;
             return true;
         }
+        rule_stats = fn_ctx->stats->add_rule_stats();
+        rule_stats->set_rule_id(rulelist->rule_id);
+
+        rule_ctr_t *ctr = rule_ctr_get(fn_ctx->rcfg, rulelist->rule_id);
+        if (ctr) {
+            rule_stats->set_num_hits(ctr->other_hits);
+            rule_stats->set_num_tcp_hits(ctr->tcp_hits);
+            rule_stats->set_num_udp_hits(ctr->udp_hits);
+            rule_stats->set_num_icmp_hits(ctr->icmp_hits);
+        } 
 
         dllist_for_each_safe(curr, next, &rulelist->head) {
             nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
@@ -1731,7 +1743,7 @@ security_policy_get_ht_cb (void *ht_entry, void *ctxt)
 
     policy = (nwsec_policy_t *)hal_handle_get_obj(entry->handle_id);
     
-    ret = security_policy_spec_build(policy, response->mutable_spec());
+    ret = security_policy_spec_build(policy, response->mutable_spec(), response->mutable_pol_stats());
     if (ret == HAL_RET_OK) {
         HAL_TRACE_DEBUG("Policy HT get ok");
         response->set_api_status(types::API_STATUS_OK);
@@ -1763,7 +1775,7 @@ securitypolicy_get (nwsec::SecurityPolicyGetRequest& req,
         return HAL_RET_SECURITY_POLICY_NOT_FOUND;
     }
 
-    ret = security_policy_spec_build(policy, response->mutable_spec());
+    ret = security_policy_spec_build(policy, response->mutable_spec(), response->mutable_pol_stats());
     if (ret == HAL_RET_OK) {
         response->set_api_status(types::API_STATUS_OK);
         return ret;
@@ -1797,6 +1809,9 @@ securitypolicy_is_allow (vrf_id_t svrf_id, hal::ipv4_tuple *acl_key)
             rc = (acl::ref_t *) rule->data.userdata;
             nwsec_rule = (hal::nwsec_rule_t *)RULE_MATCH_USER_DATA(rc, nwsec_rule_t, ref_count);
             if (nwsec_rule->fw_rule_action.sec_action != nwsec::SECURITY_RULE_ACTION_ALLOW) {
+                if (acl_ctx) {
+                    acl_deref(acl_ctx);
+                }
                 return false;
             }
         }

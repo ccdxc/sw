@@ -202,4 +202,7 @@ hal_ret_t
 acl_classify(const acl_ctx_t *ctx, const uint8_t *key,
              const acl_rule_t *results[],  uint32_t categories);
 
+void
+print_ref_count(const acl_ctx_t *ctx);
+
 } // namespace acl

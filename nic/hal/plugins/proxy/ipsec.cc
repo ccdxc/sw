@@ -217,7 +217,7 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
 
     if (rule) {
         acl::ref_t *rc;
-        rc = (acl::ref_t *) rule->data.userdata;
+        rc = get_rule_data((acl_rule_t *) rule);
         rule_cfg = RULE_MATCH_USER_DATA(rc, ipsec_cfg_rule_t, ref_count);
         HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
             rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 

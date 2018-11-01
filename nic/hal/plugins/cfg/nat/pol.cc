@@ -134,13 +134,8 @@ nat_cfg_pol_rule_acl_cleanup (nat_cfg_pol_t *pol)
 static inline hal_ret_t
 nat_cfg_pol_acl_cleanup (nat_cfg_pol_t *pol)
 {
-    const acl_ctx_t *acl_ctx;
-
-    if ((acl_ctx = acl::acl_get(nat_acl_ctx_name(pol->key.vrf_id))) == NULL)
-        return HAL_RET_NAT_POLICY_NOT_FOUND;
-
-    nat_cfg_pol_rule_acl_cleanup(pol);
-    acl::acl_delete(acl_ctx);
+    //nat_cfg_pol_rule_acl_cleanup(pol);
+    rule_lib_delete(nat_acl_ctx_name(pol->key.vrf_id));
     return HAL_RET_OK;
 }
 

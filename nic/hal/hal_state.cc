@@ -575,6 +575,25 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                       true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_IPV4_RULE] != NULL), false);
 
+
+    slabs_[HAL_SLAB_RULE_CFG] =
+        slab::factory("rule_cfg", HAL_SLAB_RULE_CFG,
+                      sizeof(hal::rule_cfg_t), 1024,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RULE_CFG] != NULL), false);
+
+    slabs_[HAL_SLAB_RULE_DATA] =
+        slab::factory("rule_data", HAL_SLAB_RULE_DATA,
+                      sizeof(hal::rule_data_t), 1024,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RULE_DATA] != NULL), false);
+
+    slabs_[HAL_SLAB_RULE_CTR] =
+        slab::factory("rule_ctr", HAL_SLAB_RULE_CTR,
+                      sizeof(hal::rule_ctr_t), 1024,
+                      true, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_RULE_CTR] != NULL), false);
+
     slabs_[HAL_SLAB_PROXY] = slab::factory("proxy", HAL_SLAB_PROXY,
                                            sizeof(hal::proxy_t), HAL_MAX_PROXY,
                                            false, true, true);
@@ -941,6 +960,14 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
+    HAL_HT_CREATE("rule_cfg", rule_cfg_ht_,
+                  HAL_MAX_NW_SEC_GROUP_CFG >> 1,
+                  hal::rule_cfg_get_key_func,
+                  hal::rule_cfg_compute_hash_func,
+                  hal::rule_cfg_compare_key_func,
+                  true, mmgr);
+    HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
+
     // initialize NAT related data structures
     HAL_HT_CREATE("natpool", nat_pool_ht_,
                   HAL_MAX_NAT_POOLS >> 1,
@@ -1212,6 +1239,7 @@ hal_oper_db::hal_oper_db()
     nwsec_policy_ht_ = NULL;
     nat_policy_ht_ = NULL;
     nwsec_group_ht_ = NULL;
+    rule_cfg_ht_ = NULL;
     qos_class_ht_ = NULL;
     qos_cmap_pcp_bmp_ = NULL;
     qos_cmap_dscp_bmp_ = NULL;
@@ -1287,6 +1315,7 @@ hal_oper_db::~hal_oper_db()
     proxyrcb_id_ht_ ? ht::destroy(proxyrcb_id_ht_) : HAL_NOP;
     proxyccb_id_ht_ ? ht::destroy(proxyccb_id_ht_) : HAL_NOP;
     nwsec_policy_ht_ ? ht::destroy(nwsec_policy_ht_) : HAL_NOP;
+    rule_cfg_ht_ ? ht::destroy(rule_cfg_ht_) : HAL_NOP;
     nat_policy_ht_ ? ht::destroy(nat_policy_ht_) : HAL_NOP;
     nwsec_group_ht_ ? ht::destroy(nwsec_group_ht_) : HAL_NOP;
     nat_pool_ht_ ? ht::destroy(nat_pool_ht_) : HAL_NOP;

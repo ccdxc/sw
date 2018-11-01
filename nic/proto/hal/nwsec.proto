@@ -637,21 +637,28 @@ message SecurityPolicyGetRequestMsg {
   repeated SecurityPolicyGetRequest    request = 1; // batched get request
 }
 
-// SecurityPolicyStats - place holder
-message SecurityPolicyStats {
-  fixed64    num_hits              = 1;
-  fixed64    num_tcp_hits          = 2;
-  fixed64    num_udp_hits          = 3;
-  fixed64    num_icmp_hits         = 4;  
+// SecurityRuleStats 
+message SecurityRuleStats {
+  uint64     rule_id               = 1;
+  fixed64    num_hits              = 2;
+  fixed64    num_tcp_hits          = 3;
+  fixed64    num_udp_hits          = 4;
+  fixed64    num_icmp_hits         = 5;  
 }
 
-// SecurityPolicyGetResponse caputres all the information about a security policy
+
+// SecurityPolicyStats
+message SecurityPolicyStats {
+    repeated SecurityRuleStats  rule_stats = 1;  //repeated stats for rules
+}
+
+
 // only if api_status indicates success, other fields are valid
 message SecurityPolicyGetResponse {
-  types.ApiStatus       api_status  = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
-  SecurityPolicySpec    spec        = 2;  // SecurityPolicy configuration
-  SecurityPolicyStatus  status      = 3;  // operational state of the security policy
-  SecurityPolicyStats   stats       = 4;  // Stats related to security policy
+  types.ApiStatus                api_status  = 1 [(gogoproto.moretags) = "venice:api_status"]; // API status code
+  SecurityPolicySpec             spec        = 2;  // SecurityPolicy configuration
+  SecurityPolicyStatus           status      = 3;  // operational state of the security policy
+  SecurityPolicyStats            pol_stats   = 4;  // stats for each rule
 }
 
 // SecurityPolicyGetResponse Msg is batched response to SecurityPolicyGetRequestMsg

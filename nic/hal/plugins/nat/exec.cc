@@ -124,7 +124,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
 
         if (rule) {
             acl::ref_t *rc;
-            rc = (acl::ref_t *) rule->data.userdata;
+            rc = get_rule_data((acl_rule_t *)rule);
             nat_cfg = (const hal::nat_cfg_rule_t *) RULE_MATCH_USER_DATA(rc, hal::nat_cfg_rule_t, ref_count);
             // Handle for each NatAction: None, Static address, Dynamic address
             if (!src_addr_entry && nat_cfg->action.src_nat_action != ::nat::NAT_TYPE_NONE) {

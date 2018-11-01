@@ -61,12 +61,24 @@ acl_get(const char *name)
     return ctx;
 }
 
+void
+print_ref_count(const acl_ctx_t *ctx)
+{
+
+    int count = ctx->print_ref_count();
+    HAL_TRACE_DEBUG(" ref count is {}", count);
+}
+
 //------------------------------------------------------------------------
 // Release the ctx reference
 //------------------------------------------------------------------------
 void
 acl_deref(const acl_ctx_t *ctx)
 {
+#if ACL_DEBUG
+    HAL_TRACE_DEBUG("deref for point {:#x}", (uint64_t) ctx);
+#endif
+    print_ref_count(ctx);
     ctx->deref();
 }
 

@@ -16,7 +16,8 @@ public:
         ref_inc(&ref_count_);
         return this;
     }
-    void deref() const { ref_dec(&ref_count_); }
+    void deref() const { ref_dec(&ref_count_);  }
+    int  print_ref_count() const { return ref_count_.count; };
     const char *name() const { return name_; }
     sdk::lib::ht_ctxt_t *ht_ctxt() const { return (sdk::lib::ht_ctxt_t *)&ht_ctxt_; }
 

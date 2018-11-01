@@ -112,6 +112,9 @@ public:
     slab *nwsec_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_RULE]); }
     slab *nwsec_rulelist_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_RULE_LIST]); }
     slab *ipv4_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPV4_RULE]); }
+    slab *rule_cfg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RULE_CFG]); }
+    slab *rule_data_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RULE_DATA]); }
+    slab *rule_ctr_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_RULE_CTR]); }
     slab *nwsec_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY]); }
     slab *nwsec_policy_appid_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_APPID]); }
     slab *dos_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY]); }
@@ -207,6 +210,7 @@ public:
     ht *nwsec_policy_ht(void) const { return nwsec_policy_ht_; }
     ht *nat_policy_ht(void) const { return nat_policy_ht_; }
     ht *nwsec_group_ht(void) const { return nwsec_group_ht_; }
+    ht *rule_cfg_ht(void) const { return rule_cfg_ht_; }
     ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
     ht *l2seg_uplink_oif_ht(void) const { return l2seg_uplink_oif_ht_; }
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
@@ -316,6 +320,7 @@ private:
     ht    *nwsec_policy_ht_;
     ht    *nat_policy_ht_;
     ht    *nwsec_group_ht_;
+    ht    *rule_cfg_ht_;
     ht    *l2seg_id_ht_;
     ht    *l2seg_uplink_oif_ht_;
     ht    *ep_l2_ht_;
@@ -445,6 +450,9 @@ public:
     slab *nwsec_group_slab(void) const { return cfg_db_->nwsec_group_slab(); }
     slab *nwsec_rule_slab(void) const { return cfg_db_->nwsec_rule_slab(); }
     slab *ipv4_rule_slab(void) const { return cfg_db_->ipv4_rule_slab(); }
+    slab *rule_ctr_slab(void) const { return cfg_db_->rule_ctr_slab(); }
+    slab *rule_data_slab(void) const { return cfg_db_->rule_data_slab(); }
+    slab *rule_cfg_slab(void) const { return cfg_db_->rule_cfg_slab(); }
     slab *nwsec_rulelist_slab(void) const { return cfg_db_->nwsec_rulelist_slab(); }
     slab *nwsec_policy_slab(void) const { return cfg_db_->nwsec_policy_slab(); }
     slab *nwsec_policy_appid_slab(void) const { return cfg_db_->nwsec_policy_appid_slab(); }

@@ -349,7 +349,6 @@ typedef struct fw_action_s {
     //replaced by dllist_ctxt_t app_data
 } fw_action_t;
 
-typedef uint64_t rule_key_t;
 typedef struct nwsec_rule_s {
     rule_key_t            rule_id;
     rule_match_t          fw_rule_match;        // Rule match conditions

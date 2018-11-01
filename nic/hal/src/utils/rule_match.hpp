@@ -79,6 +79,32 @@ enum {
 
 ACL_RULE_DEF(ipv4_rule_t, NUM_FIELDS);
 
+typedef struct rule_cfg_s {
+    char                name[64];
+    const acl_ctx_t     *acl_ctx;
+    acl_config_t        acl_cfg;
+    ht_ctxt_t           ht_ctxt;
+    ht                 *rule_ctr_ht; // Hash table for counters keyed by: rule key
+} rule_cfg_t;
+
+typedef uint64_t rule_key_t;
+
+typedef struct rule_data_s {
+    void       *user_data;
+    void       *ctr;
+    acl::ref_t ref_cnt;
+} rule_data_t;
+
+typedef struct rule_ctr_s {
+    rule_key_t  rule_key;
+    uint64_t    tcp_hits;
+    uint64_t    udp_hits;
+    uint64_t    icmp_hits;
+    uint64_t    other_hits;
+    ht_ctxt_t   ht_ctxt;
+    acl::ref_t  ref_count;
+} rule_ctr_t;
+
 //------------------------------------------------------------------------------
 // The user data struct is defined as below. The ref_count MUST be the last
 // field in the user data struct: 
@@ -139,15 +165,32 @@ void rule_match_cleanup(rule_match_t *match);
 
 hal_ret_t rule_match_rule_add (const acl_ctx_t **acl_ctx,
                                rule_match_t     *match,
+                               rule_key_t       rule_key,
                                int              rule_prio,
                                void             *ref_count);
 hal_ret_t rule_match_rule_del (const acl_ctx_t **acl_ctx,
                                rule_match_t     *match,
+                               rule_key_t       rule_key,
                                int              rule_prio,
                                void             *ref_count);
 const acl_ctx_t *rule_lib_init(const char *name, acl_config_t *cfg);
 hal_ret_t rule_match_spec_build(rule_match_t *match,
                                 types::RuleMatch *spec);
+void *rule_cfg_get_key_func(void *entry);
+uint32_t rule_cfg_compute_hash_func(void *key, uint32_t ht_size);
+bool rule_cfg_compare_key_func(void *key1, void *key2);
+void rule_lib_delete(const char *name);
+rule_cfg_t *
+rule_cfg_get(const char *name);
+rule_ctr_t *
+rule_ctr_get(rule_cfg_t *cfg, rule_key_t key);
+
+acl::ref_t *
+get_rule_data(acl_rule_t *rule);
+rule_ctr_t *
+get_rule_ctr(acl_rule_t *rule);
+
+
 
 } // namespace hal
 

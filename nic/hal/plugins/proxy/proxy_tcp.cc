@@ -617,7 +617,7 @@ tcp_is_proxy_policy_enabled_for_flow(fte::ctx_t &ctx)
         return false;
     }
 
-    rc = (acl::ref_t *)rule->data.userdata;
+    rc = get_rule_data((acl_rule_t *) rule);
     rule_cfg = RULE_MATCH_USER_DATA(rc, tcp_proxy_cfg_rule_t, ref_count);
     if (rule_cfg->action.tcp_proxy_action ==
             tcp_proxy::TcpProxyActionType::TCP_PROXY_ACTION_TYPE_ENABLE) {
@@ -641,7 +641,7 @@ tcp_proxy_type_action(fte::ctx_t &ctx, proxy_flow_info_t *pfi)
         return HAL_RET_ERR;
     }
 
-    rc = (acl::ref_t *)rule->data.userdata;
+    rc = get_rule_data((acl_rule_t *) rule);
     rule_cfg = RULE_MATCH_USER_DATA(rc, tcp_proxy_cfg_rule_t, ref_count);
 
     if (rule_cfg->action.proxy_type  == types::PROXY_TYPE_TCP) {

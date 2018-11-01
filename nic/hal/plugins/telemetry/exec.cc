@@ -85,7 +85,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx)
 
     if (rule) {
         acl::ref_t *rc;
-        rc = (acl::ref_t *) rule->data.userdata;
+        rc = get_rule_data((acl_rule_t *)rule);
         frule = (const hal::flow_monitor_rule_t *) RULE_MATCH_USER_DATA(rc, hal::flow_monitor_rule_t, ref_count);
         if (frule->action.num_mirror_dest > 0) {
             mirror_flowupd.type = fte::FLOWUPD_MIRROR_INFO;

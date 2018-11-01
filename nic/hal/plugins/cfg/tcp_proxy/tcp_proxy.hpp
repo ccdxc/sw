@@ -724,7 +724,7 @@ tcp_proxy_cfg_pol_delete_rsp_build (tcp_proxy::TcpProxyRuleDeleteResponse *rsp, 
 static inline hal_ret_t
 tcp_proxy_cfg_rule_acl_build (tcp_proxy_cfg_rule_t *rule, const acl_ctx_t **acl_ctx)
 {
-    return rule_match_rule_add(acl_ctx, &rule->match, rule->prio, &rule->ref_count);
+    return rule_match_rule_add(acl_ctx, &rule->match, rule->key.rule_id, rule->prio, &rule->ref_count);
 }
 
 static inline void
@@ -784,15 +784,11 @@ tcp_proxy_cfg_pol_rule_acl_cleanup (tcp_proxy_cfg_pol_t *pol)
 static inline hal_ret_t
 tcp_proxy_cfg_pol_acl_cleanup (tcp_proxy_cfg_pol_t *pol)
 {
-    const acl_ctx_t *acl_ctx;
     char acl_name[ACL_NAMESIZE];
 
     tcp_proxy_acl_ctx_name(acl_name, pol->key.vrf_id);
-    if ((acl_ctx = acl::acl_get(acl_name)) == NULL)
-        return HAL_RET_TCP_PROXY_RULE_NOT_FOUND;
-
     tcp_proxy_cfg_pol_rule_acl_cleanup(pol);
-    acl::acl_delete(acl_ctx);
+    rule_lib_delete(acl_name);
     return HAL_RET_OK;
 }
 

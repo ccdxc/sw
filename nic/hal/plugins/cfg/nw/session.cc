@@ -2426,6 +2426,7 @@ session_eval_matching_session (session_match_t  *match)
             hal::flow_key_t *key = &session->iflow->config.key;
             hal::ipv4_tuple acl_key = {};
             //fte::extract_acl_key_from_flow_key(&acl_key, key);
+            //TODO (lseshan: taking lock for acl_ctx
             bool allow = securitypolicy_is_allow(key->svrf_id, &acl_key);
             if (!allow) {
                 HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);

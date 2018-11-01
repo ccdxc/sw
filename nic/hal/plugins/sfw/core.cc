@@ -172,10 +172,13 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
 
  end_match:
     if (rule != NULL) {
-        acl::ref_t *rc;
-        rc = (acl::ref_t *) rule->data.userdata;
-        nwsec_rule = (hal::nwsec_rule_t *) RULE_MATCH_USER_DATA(rc, nwsec_rule_t, ref_count);
+        acl::ref_t *user_ref = get_rule_data((acl_rule_t *)rule);
+        nwsec_rule = (hal::nwsec_rule_t *) RULE_MATCH_USER_DATA(user_ref, nwsec_rule_t, ref_count);
 
+        rule_ctr_t *rule_ctr = get_rule_ctr((acl_rule_t *)rule);
+        //Enhance to count other hits
+        rule_ctr->other_hits++;
+        
         if (!dllist_empty(&nwsec_rule->appid_list_head)) {
             net_sfw_match_app_redir(ctx, nwsec_rule, match_rslt);
         } else {
@@ -385,7 +388,9 @@ install_flow:
     }
 
     return PIPELINE_CONTINUE;
+
 }
+
 
 std::ostream& operator<<(std::ostream& os, const sfw_info_t& val) {
     os << "{alg_proto="<< val.alg_proto;

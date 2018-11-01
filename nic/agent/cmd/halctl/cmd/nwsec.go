@@ -157,7 +157,7 @@ func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 		return
 	}
 
-	// Print Security Profiles
+	// Print Security Policy
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)

@@ -227,6 +227,10 @@ protected:
         EXPECT_EQ(g_hal_state->nwsec_rule_slab()->num_in_use(), 0);
         EXPECT_EQ(g_hal_state->ipv4_rule_slab()->num_in_use(), 0);
         EXPECT_EQ(g_hal_state->nwsec_group_ht()->num_entries(), 0);
+        EXPECT_EQ(g_hal_state->rule_ctr_slab()->num_in_use(), 0);
+        EXPECT_EQ(g_hal_state->rule_data_slab()->num_in_use(), 0);
+        EXPECT_EQ(g_hal_state->rule_cfg_slab()->num_in_use(), 0);
+
     }
 
 
@@ -316,6 +320,8 @@ TEST_F(nwsec_policy_test, test1)
     acl_classify(acl_ctx, (const uint8_t *)&v4_tuple, (const acl_rule_t **)&rule, 0x01);
     EXPECT_NE(rule, nullptr);
 
+    HAL_TRACE_DEBUG(" create/classify packet pass");
+
     v4_tuple.ip_dst = 0xAABB0000;
     v4_tuple.port_dst = 1000;
     v4_tuple.port_src = 300;
@@ -364,6 +370,7 @@ TEST_F(nwsec_policy_test, test1)
     ret = hal::securitypolicy_delete(pol_del_req, &pol_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+
 #if 0
     svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
     hal::hal_wait();
@@ -440,7 +447,6 @@ TEST_F(nwsec_policy_test, test2)
 
     pol_spec.clear_rule();
     rule_spec = pol_spec.add_rule();
-
     // Update nwsec
     rule_spec->set_rule_id(10);
     rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_DENY);
@@ -505,6 +511,13 @@ TEST_F(nwsec_policy_test, test2)
     ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, nwsec_policy_test::server_eph, nwsec_policy_test::client_eph, tcp);
     EXPECT_EQ(ret, HAL_RET_OK);
 
+
+    tcp = Tins::TCP(103,104);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, nwsec_policy_test::server_eph, nwsec_policy_test::client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    HAL_TRACE_DEBUG("RET_OK");
+
     // Delete policy
     pol_del_req.mutable_policy_key_or_handle()->set_security_policy_handle(policy_handle);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -512,7 +525,7 @@ TEST_F(nwsec_policy_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-#if 0  
+#if 0
     svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
     hal::hal_wait();
 #endif
@@ -523,7 +536,6 @@ TEST_F(nwsec_policy_test, test2)
     //hal_test_utils_check_slab_leak(pre, post, &is_leak);
     //ASSERT_TRUE(is_leak == false);
 }
-
 
 TEST_F(nwsec_policy_test, test3)
 {

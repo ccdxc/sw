@@ -487,8 +487,8 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
 hal_ret_t
 flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp)
 {
-    uint32_t            rule_id;
     uint64_t            vrf_id;
+    rule_key_t          rule_id;
     hal_ret_t           ret = HAL_RET_OK;
     flow_monitor_rule_t *rule = NULL;
     const acl_ctx_t     *flowmon_acl_ctx = NULL;
@@ -527,7 +527,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         rsp->set_api_status(types::API_STATUS_ERR);
         goto end;
     }
-    ret = rule_match_rule_add(&flowmon_acl_ctx, &rule->rule_match, 0,
+    ret = rule_match_rule_add(&flowmon_acl_ctx, &rule->rule_match, rule_id, 0,
                               (void *)&rule->ref_count);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_ERR);
@@ -562,7 +562,7 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
 {
     hal_ret_t           ret;
     uint64_t            vrf_id;
-    uint32_t            rule_id;
+    rule_key_t          rule_id;
     flow_monitor_rule_t *rule;
     const acl_ctx_t     *flowmon_acl_ctx;
 
@@ -588,7 +588,7 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
         goto end;
     }
     rule = flow_mon_rules[rule_id];
-    ret = rule_match_rule_del(&flowmon_acl_ctx, &rule->rule_match, 0,
+    ret = rule_match_rule_del(&flowmon_acl_ctx, &rule->rule_match, 0, rule_id,
                               (void *)&rule->ref_count);
     flow_mon_rules[rule_id] = NULL;
     flow_monitor_rule_free(rule);
