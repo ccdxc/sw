@@ -23,6 +23,7 @@ func TestAgentServer(t *testing.T) {
 }
 
 func TestBringUpTeardown(t *testing.T) {
+	t.Skip("Test no longer needed post IOTA. TODO remove test code")
 	go func() {
 		server.StartServer(9988)
 	}()
@@ -41,6 +42,7 @@ func TestBringUpTeardown(t *testing.T) {
 }
 
 func TestRunCommand(t *testing.T) {
+	t.Skip("Test no longer needed post IOTA. TODO remove test code")
 	go func() {
 		server.StartServer(9988)
 	}()

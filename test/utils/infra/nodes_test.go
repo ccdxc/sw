@@ -161,6 +161,7 @@ func (noBody) Close() error                     { return nil }
 func (noBody) WriteTo(io.Writer) (int64, error) { return 0, nil }
 
 func TestNodesLoad(t *testing.T) {
+	t.Skip("Test no longer needed post IOTA. TODO remove test code")
 	Common.Run = Common.RunCmd
 	Common.SudoCmd = func(cmd string) string {
 		return cmd
