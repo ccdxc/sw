@@ -421,6 +421,12 @@ Eth::DevLinkDownHandler(uint32_t port_num)
 
     NIC_LOG_INFO("Link down for port_num {}", port_num);
 
+    if (!spec) {
+        NIC_LOG_ERR("Link Up for port_num {} - spec ptr null", port_num);
+        return;
+    } else {
+        NIC_LOG_INFO("Link Up for port_num {} rxq_count: {} txq_count: {}", port_num, spec->rxq_count, spec->txq_count);
+    }
     //Rx Disable for all queues.
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
         addr = GetQstateAddr(ETH_QTYPE_RX, qid);
@@ -449,6 +455,7 @@ Eth::DevLinkDownHandler(uint32_t port_num)
         invalidate_rxdma_cacheline(addr);
     }
 
+    // should below be moved to a new method so that it can be used by upgrade as well ?? 
     auto host_down_obj_ptr = make_shared<delphi::objects::EthDeviceHostDownStatusMsg>();
     host_down_obj_ptr->set_key(spec->dev_uuid);
     host_down_obj_ptr->set_port_num(port_num);
@@ -463,6 +470,13 @@ Eth::DevLinkUpHandler(uint32_t port_num)
     struct eth_tx_cfg_qstate tx_cfg = {0};
 
     NIC_LOG_INFO("Link Up for port_num {}", port_num);
+
+    if (!spec) {
+        NIC_LOG_ERR("Link Up for port_num {} - spec ptr null", port_num);
+        return;
+    } else {
+        NIC_LOG_INFO("Link Up for port_num {} rxq_count: {} txq_count: {}", port_num, spec->rxq_count, spec->txq_count);
+    }
 
     //Rx Disable for all queues.
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
@@ -495,6 +509,7 @@ Eth::DevLinkUpHandler(uint32_t port_num)
     auto host_up_obj_ptr = make_shared<delphi::objects::EthDeviceHostUpStatusMsg>();
     host_up_obj_ptr->set_key(spec->dev_uuid);
     host_up_obj_ptr->set_port_num(port_num);
+    NIC_LOG_INFO("Post Host Up to Delphi");
     nicmgr_svc_->sdk()->SetObject(host_up_obj_ptr);
 
 }

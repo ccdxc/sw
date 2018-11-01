@@ -99,13 +99,15 @@ error port_svc::update_port_status(PortStatusPtr port) {
 
     printf("Delphi setting port %u status to %u\n", port_id, oper_status);
 
-#if 0
+    if (!devmgr) {
+        printf("devmgr ptr is null\n");
+        return error::OK();
+    }
     if (oper_status == port::PortOperStatus::PORT_OPER_STATUS_UP) {
         devmgr->DevLinkUpHandler(port_id);
     } else if (oper_status == port::PortOperStatus::PORT_OPER_STATUS_DOWN) {
         devmgr->DevLinkDownHandler(port_id);
     }
-#endif
 
     return error::OK();
 }
