@@ -309,6 +309,13 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                       pi_p->port_num, ret);
     }
 
+    // Register for mac metrics
+    pi_p->mac_metrics = delphi::objects::MacMetrics::NewMacMetrics(pi_p->port_num);
+    if (pi_p->mac_metrics == NULL) {
+        HAL_TRACE_ERR("Failed to register for metrics port: {}",
+                      pi_p->port_num);
+    }
+
     return ret;
 }
 
@@ -953,6 +960,125 @@ port_disable (uint32_t port_num)
         port_disable(port_p);
     }
     return HAL_RET_OK;
+}
+
+static void
+port_metrics_update_helper (port_args_t *port_args,
+                            void        *ctxt,
+                            hal_ret_t   hal_ret)
+{
+    port_t                               *pi_p   = NULL;
+    static delphi::objects::macmetrics_t mac_metrics;
+
+    if (hal_ret != HAL_RET_OK) {
+        return;
+    }
+
+    pi_p = find_port_by_id(port_args->port_num);
+
+    if ((pi_p == NULL) || (pi_p->mac_metrics == NULL)) {
+        HAL_TRACE_ERR("Failed to find port/metrics object for port {}", 
+                      port_args->port_num);
+        return;
+    }
+
+    mac_metrics.frames_rx_ok = port_args->stats_data[port::MacStatsType::FRAMES_RX_OK];
+    mac_metrics.frames_rx_all = port_args->stats_data[port::MacStatsType::FRAMES_RX_ALL];
+    mac_metrics.frames_rx_bad_fcs = port_args->stats_data[port::MacStatsType::FRAMES_RX_BAD_FCS];
+    mac_metrics.frames_rx_bad_all = port_args->stats_data[port::MacStatsType::FRAMES_RX_BAD_ALL];
+    mac_metrics.octets_rx_ok = port_args->stats_data[port::MacStatsType::OCTETS_RX_OK];
+    mac_metrics.octets_rx_all = port_args->stats_data[port::MacStatsType::OCTETS_RX_ALL];
+    mac_metrics.frames_rx_unicast = port_args->stats_data[port::MacStatsType::FRAMES_RX_UNICAST];
+    mac_metrics.frames_rx_multicast = port_args->stats_data[port::MacStatsType::FRAMES_RX_MULTICAST];
+    mac_metrics.frames_rx_broadcast = port_args->stats_data[port::MacStatsType::FRAMES_RX_BROADCAST];
+    mac_metrics.frames_rx_pause = port_args->stats_data[port::MacStatsType::FRAMES_RX_PAUSE];
+    mac_metrics.frames_rx_bad_length = port_args->stats_data[port::MacStatsType::FRAMES_RX_BAD_LENGTH];
+    mac_metrics.frames_rx_undersized = port_args->stats_data[port::MacStatsType::FRAMES_RX_UNDERSIZED];
+    mac_metrics.frames_rx_oversized = port_args->stats_data[port::MacStatsType::FRAMES_RX_OVERSIZED];
+    mac_metrics.frames_rx_fragments = port_args->stats_data[port::MacStatsType::FRAMES_RX_FRAGMENTS];
+    mac_metrics.frames_rx_jabber = port_args->stats_data[port::MacStatsType::FRAMES_RX_JABBER];
+    mac_metrics.frames_rx_pripause = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRIPAUSE];
+    mac_metrics.frames_rx_stomped_crc = port_args->stats_data[port::MacStatsType::FRAMES_RX_STOMPED_CRC];
+    mac_metrics.frames_rx_too_long = port_args->stats_data[port::MacStatsType::FRAMES_RX_TOO_LONG];
+    mac_metrics.frames_rx_vlan_good = port_args->stats_data[port::MacStatsType::FRAMES_RX_VLAN_GOOD];
+    mac_metrics.frames_rx_dropped = port_args->stats_data[port::MacStatsType::FRAMES_RX_DROPPED];
+    mac_metrics.frames_rx_less_than_64b = port_args->stats_data[port::MacStatsType::FRAMES_RX_LESS_THAN_64B];
+    mac_metrics.frames_rx_64b = port_args->stats_data[port::MacStatsType::FRAMES_RX_64B];
+    mac_metrics.frames_rx_65b_127b = port_args->stats_data[port::MacStatsType::FRAMES_RX_65B_127B];
+    mac_metrics.frames_rx_128b_255b = port_args->stats_data[port::MacStatsType::FRAMES_RX_128B_255B];
+    mac_metrics.frames_rx_256b_511b = port_args->stats_data[port::MacStatsType::FRAMES_RX_256B_511B];
+    mac_metrics.frames_rx_512b_1023b = port_args->stats_data[port::MacStatsType::FRAMES_RX_512B_1023B];
+    mac_metrics.frames_rx_1024b_1518b = port_args->stats_data[port::MacStatsType::FRAMES_RX_1024B_1518B];
+    mac_metrics.frames_rx_1519b_2047b = port_args->stats_data[port::MacStatsType::FRAMES_RX_1519B_2047B];
+    mac_metrics.frames_rx_2048b_4095b = port_args->stats_data[port::MacStatsType::FRAMES_RX_2048B_4095B];
+    mac_metrics.frames_rx_4096b_8191b = port_args->stats_data[port::MacStatsType::FRAMES_RX_4096B_8191B];
+    mac_metrics.frames_rx_8192b_9215b = port_args->stats_data[port::MacStatsType::FRAMES_RX_8192B_9215B];
+    mac_metrics.frames_rx_other = port_args->stats_data[port::MacStatsType::FRAMES_RX_OTHER];
+    mac_metrics.frames_tx_ok = port_args->stats_data[port::MacStatsType::FRAMES_TX_OK];
+    mac_metrics.frames_tx_all = port_args->stats_data[port::MacStatsType::FRAMES_TX_ALL];
+    mac_metrics.frames_tx_bad = port_args->stats_data[port::MacStatsType::FRAMES_TX_BAD];
+    mac_metrics.octets_tx_ok = port_args->stats_data[port::MacStatsType::OCTETS_TX_OK];
+    mac_metrics.octets_tx_total = port_args->stats_data[port::MacStatsType::OCTETS_TX_TOTAL];
+    mac_metrics.frames_tx_unicast = port_args->stats_data[port::MacStatsType::FRAMES_TX_UNICAST];
+    mac_metrics.frames_tx_multicast = port_args->stats_data[port::MacStatsType::FRAMES_TX_MULTICAST];
+    mac_metrics.frames_tx_broadcast = port_args->stats_data[port::MacStatsType::FRAMES_TX_BROADCAST];
+    mac_metrics.frames_tx_pause = port_args->stats_data[port::MacStatsType::FRAMES_TX_PAUSE];
+    mac_metrics.frames_tx_pripause = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRIPAUSE];
+    mac_metrics.frames_tx_vlan = port_args->stats_data[port::MacStatsType::FRAMES_TX_VLAN];
+    mac_metrics.frames_tx_less_than_64b = port_args->stats_data[port::MacStatsType::FRAMES_TX_LESS_THAN_64B];
+    mac_metrics.frames_tx_64b = port_args->stats_data[port::MacStatsType::FRAMES_TX_64B];
+    mac_metrics.frames_tx_65b_127b = port_args->stats_data[port::MacStatsType::FRAMES_TX_65B_127B];
+    mac_metrics.frames_tx_128b_255b = port_args->stats_data[port::MacStatsType::FRAMES_TX_128B_255B];
+    mac_metrics.frames_tx_256b_511b = port_args->stats_data[port::MacStatsType::FRAMES_TX_256B_511B];
+    mac_metrics.frames_tx_512b_1023b = port_args->stats_data[port::MacStatsType::FRAMES_TX_512B_1023B];
+    mac_metrics.frames_tx_1024b_1518b = port_args->stats_data[port::MacStatsType::FRAMES_TX_1024B_1518B];
+    mac_metrics.frames_tx_1519b_2047b = port_args->stats_data[port::MacStatsType::FRAMES_TX_1519B_2047B];
+    mac_metrics.frames_tx_2048b_4095b = port_args->stats_data[port::MacStatsType::FRAMES_TX_2048B_4095B];
+    mac_metrics.frames_tx_4096b_8191b = port_args->stats_data[port::MacStatsType::FRAMES_TX_4096B_8191B];
+    mac_metrics.frames_tx_8192b_9215b = port_args->stats_data[port::MacStatsType::FRAMES_TX_8192B_9215B];
+    mac_metrics.frames_tx_other = port_args->stats_data[port::MacStatsType::FRAMES_TX_OTHER];
+    mac_metrics.frames_tx_pri_0 = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRI_0];
+    mac_metrics.frames_tx_pri_1 = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRI_1];
+    mac_metrics.frames_tx_pri_2 = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRI_2];
+    mac_metrics.frames_tx_pri_3 = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRI_3];
+    mac_metrics.frames_tx_pri_4 = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRI_4];
+    mac_metrics.frames_tx_pri_5 = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRI_5];
+    mac_metrics.frames_tx_pri_6 = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRI_6];
+    mac_metrics.frames_tx_pri_7 = port_args->stats_data[port::MacStatsType::FRAMES_TX_PRI_7];
+    mac_metrics.frames_rx_pri_0 = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRI_0];
+    mac_metrics.frames_rx_pri_1 = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRI_1];
+    mac_metrics.frames_rx_pri_2 = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRI_2];
+    mac_metrics.frames_rx_pri_3 = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRI_3];
+    mac_metrics.frames_rx_pri_4 = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRI_4];
+    mac_metrics.frames_rx_pri_5 = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRI_5];
+    mac_metrics.frames_rx_pri_6 = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRI_6];
+    mac_metrics.frames_rx_pri_7 = port_args->stats_data[port::MacStatsType::FRAMES_RX_PRI_7];
+    mac_metrics.tx_pripause_0_1us_count = port_args->stats_data[port::MacStatsType::TX_PRIPAUSE_0_1US_COUNT];
+    mac_metrics.tx_pripause_1_1us_count = port_args->stats_data[port::MacStatsType::TX_PRIPAUSE_1_1US_COUNT];
+    mac_metrics.tx_pripause_2_1us_count = port_args->stats_data[port::MacStatsType::TX_PRIPAUSE_2_1US_COUNT];
+    mac_metrics.tx_pripause_3_1us_count = port_args->stats_data[port::MacStatsType::TX_PRIPAUSE_3_1US_COUNT];
+    mac_metrics.tx_pripause_4_1us_count = port_args->stats_data[port::MacStatsType::TX_PRIPAUSE_4_1US_COUNT];
+    mac_metrics.tx_pripause_5_1us_count = port_args->stats_data[port::MacStatsType::TX_PRIPAUSE_5_1US_COUNT];
+    mac_metrics.tx_pripause_6_1us_count = port_args->stats_data[port::MacStatsType::TX_PRIPAUSE_6_1US_COUNT];
+    mac_metrics.tx_pripause_7_1us_count = port_args->stats_data[port::MacStatsType::TX_PRIPAUSE_7_1US_COUNT];
+    mac_metrics.rx_pripause_0_1us_count = port_args->stats_data[port::MacStatsType::RX_PRIPAUSE_0_1US_COUNT];
+    mac_metrics.rx_pripause_1_1us_count = port_args->stats_data[port::MacStatsType::RX_PRIPAUSE_1_1US_COUNT];
+    mac_metrics.rx_pripause_2_1us_count = port_args->stats_data[port::MacStatsType::RX_PRIPAUSE_2_1US_COUNT];
+    mac_metrics.rx_pripause_3_1us_count = port_args->stats_data[port::MacStatsType::RX_PRIPAUSE_3_1US_COUNT];
+    mac_metrics.rx_pripause_4_1us_count = port_args->stats_data[port::MacStatsType::RX_PRIPAUSE_4_1US_COUNT];
+    mac_metrics.rx_pripause_5_1us_count = port_args->stats_data[port::MacStatsType::RX_PRIPAUSE_5_1US_COUNT];
+    mac_metrics.rx_pripause_6_1us_count = port_args->stats_data[port::MacStatsType::RX_PRIPAUSE_6_1US_COUNT];
+    mac_metrics.rx_pripause_7_1us_count = port_args->stats_data[port::MacStatsType::RX_PRIPAUSE_7_1US_COUNT];
+    mac_metrics.rx_pause_1us_count = port_args->stats_data[port::MacStatsType::RX_PAUSE_1US_COUNT];
+    mac_metrics.frames_tx_truncated = port_args->stats_data[port::MacStatsType::FRAMES_TX_TRUNCATED];
+
+    pi_p->mac_metrics->Publish(&mac_metrics);
+}
+
+hal_ret_t
+port_metrics_update (void)
+{
+    return port_get_all(port_metrics_update_helper, NULL);
 }
 
 static void*

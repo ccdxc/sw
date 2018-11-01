@@ -11,6 +11,7 @@
 #include "linkmgr_svc.hpp"
 #include "linkmgr_debug_svc.hpp"
 #include "linkmgr_state.hpp"
+#include "gen/proto/hal_metrics.delphi.hpp"
 
 using hal::hal_handle_id_ht_entry_t;
 using hal::hal_handle_get_from_handle_id;
@@ -38,16 +39,18 @@ typedef struct linkmgr_cfg_s {
 } linkmgr_cfg_t;
 
 typedef struct port_s {
-    hal_spinlock_t   slock;           // lock to protect this structure
+    hal_spinlock_t                 slock;            // lock to protect this structure
 
-    port_num_t       port_num;        // uplink port number
+    port_num_t                     port_num;         // uplink port number
 
-    // operational state of port
-    hal_handle_t     hal_handle_id;   // HAL allocated handle
+                                                     // operational state of port
+    hal_handle_t                   hal_handle_id;    // HAL allocated handle
 
-    // PD state
-    void             *pd_p;           // all PD specific state
-} __PACK__ port_t;
+    delphi::objects::MacMetricsPtr mac_metrics;      // Delphi mac metrics
+
+                                                     // PD state
+    void                           *pd_p;            // all PD specific state
+} port_t;
 
 static inline void
 port_lock(port_t *pi_p, const char *fname, int lineno, const char *fxname)

@@ -6,6 +6,7 @@
 #include "nic/sdk/include/sdk/periodic.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
 
 namespace hal {
 
@@ -24,6 +25,12 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error in updating qos periodic stats, ret {}", ret);
     }
+
+    ret = linkmgr::port_metrics_update();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in updating port metrics, ret {}", ret);
+    }
+    
 }
 
 //------------------------------------------------------------------------------

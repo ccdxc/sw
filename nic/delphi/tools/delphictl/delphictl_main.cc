@@ -10,6 +10,7 @@
 #include "gen/proto/upgrade.delphi.hpp"
 #include "gen/proto/port.delphi.hpp"
 #include "gen/proto/interface.delphi.hpp"
+#include "gen/proto/hal_metrics.delphi.hpp"
 
 using namespace delphi;
 
