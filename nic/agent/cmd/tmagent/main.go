@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net"
 	"path/filepath"
 	"strings"
 	"time"
@@ -62,6 +63,7 @@ func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		primaryMAC      = flag.String("primary-mac", "", "Primary MAC address")
 		hostIf          = flag.String("hostif", "ntrunk0", "Host facing interface")
 		mode            = flag.String("mode", "classic", "specify the agent mode either classic or managed")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tmagent)), "Redirect logs to file")
@@ -91,9 +93,20 @@ func main() {
 	// Initialize logger config
 	log.SetConfig(logConfig)
 
-	macAddr, err := netutils.GetIntfMac(*hostIf)
-	if err != nil {
-		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
+	var macAddr net.HardwareAddr
+
+	if *primaryMAC != "" {
+		mac, err := net.ParseMAC(*primaryMAC)
+		if err != nil {
+			log.Fatalf("invalid primary-mac %v", *primaryMAC)
+		}
+		macAddr = mac
+	} else {
+		mac, err := netutils.GetIntfMac(*hostIf)
+		if err != nil {
+			log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
+		}
+		macAddr = mac
 	}
 
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))

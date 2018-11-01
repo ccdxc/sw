@@ -99,17 +99,19 @@ func main() {
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
 
-	// read the mac address of the host interface
-	macAddr, err := netutils.GetIntfMac(*hostIf)
-	if err != nil {
-		log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
-	}
+	var macAddr net.HardwareAddr
 
 	if *primaryMAC != "" {
-		var mac net.HardwareAddr
-		mac, err = net.ParseMAC(*primaryMAC)
+		mac, err := net.ParseMAC(*primaryMAC)
 		if err != nil {
 			log.Fatalf("Invalid MAC %v", *primaryMAC)
+		}
+		macAddr = mac
+	} else {
+		// read the mac address of the host interface
+		mac, err := netutils.GetIntfMac(*hostIf)
+		if err != nil {
+			log.Fatalf("Error getting host interface's mac addr. Err: %v", err)
 		}
 		macAddr = mac
 	}
@@ -122,7 +124,7 @@ func main() {
 		ClientName:     "netagent_" + macAddr.String(),
 		ResolverClient: resolverClient,
 	}
-	err = tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
+	err := tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
 	if err != nil {
 		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
 	}
