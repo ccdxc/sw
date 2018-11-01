@@ -14,8 +14,7 @@ esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex:
 
     phvwri p.{brq_req_write_dma_cmd_phv_end_addr...brq_req_write_dma_cmd_type}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 18) | (IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     phvwri p.p4_txdma_intr_dma_cmd_ptr, N2H_TXDMA1_DMA_COMMANDS_OFFSET
-    phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-
+    phvwri p.{dma_cmd_post_barco_ring_dma_cmd_phv_end_addr...dma_cmd_post_barco_ring_dma_cmd_type}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 18) | (IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
 
     phvwri p.{app_header_table0_valid...app_header_table1_valid}, 2
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 

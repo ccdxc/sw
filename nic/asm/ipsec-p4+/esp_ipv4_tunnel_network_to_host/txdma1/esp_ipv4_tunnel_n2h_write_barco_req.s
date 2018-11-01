@@ -24,7 +24,6 @@ esp_v4_tunnel_n2h_post_to_barco_ring:
     add r3, r3, d.barco_ring_base_addr
     blti  r3, CAPRI_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
-    phvwri p.{dma_cmd_post_barco_ring_dma_cmd_phv_end_addr...dma_cmd_post_barco_ring_dma_cmd_phv_start_addr}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 10) | IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START)
 
 esp_v4_tunnel_n2h_dma_cmd_incr_barco_pindex:
     add r7, d.barco_pindex, 1

@@ -19,9 +19,7 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     phvwr  p.eth_hdr_dma_cmd_size, r1 
    
     // Vlan Header
-    phvwri p.vrf_vlan_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwri p.vrf_vlan_hdr_dma_cmd_phv_start_addr, IPSEC_TXDMA2_VRF_VLAN_HEADER_START
-    phvwri p.vrf_vlan_hdr_dma_cmd_phv_end_addr, IPSEC_TXDMA2_VRF_VLAN_HEADER_END
+    phvwri p.{vrf_vlan_hdr_dma_cmd_phv_end_addr...vrf_vlan_hdr_dma_cmd_type}, ((IPSEC_TXDMA2_VRF_VLAN_HEADER_END << 17) | (IPSEC_TXDMA2_VRF_VLAN_HEADER_START << 7) | CAPRI_DMA_COMMAND_PHV_TO_PKT)
 
     // Decrypted payload 
     add r4, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE

@@ -11,8 +11,8 @@ struct phv_ p;
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2:
     phvwri p.app_header_table1_valid, 0
-    phvwri p.{brq_req_write_dma_cmd_phv_end_addr...brq_req_write_dma_cmd_phv_start_addr}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 10) | IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START)
-    phvwri p.{dma_cmd_post_barco_ring_dma_cmd_phv_end_addr...dma_cmd_post_barco_ring_dma_cmd_phv_start_addr}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 10) | IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START)
+    phvwri p.{brq_req_write_dma_cmd_phv_end_addr...brq_req_write_dma_cmd_type}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 18) | (IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri p.{dma_cmd_post_barco_ring_dma_cmd_phv_end_addr...dma_cmd_post_barco_ring_dma_cmd_type}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 18) | (IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
 
     add r2, d.in_desc, 96
     add r3, d.out_desc, 96

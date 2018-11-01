@@ -17,11 +17,6 @@ esp_ipv4_tunnel_n2h_txdma2_load_pad_size_l4_proto:
     and r1, d.pad_size, r2 
     phvwr p.txdma2_global_pad_size, r1 
 
-    phvwri p.p4_intr_global_tm_oport, TM_OPORT_P4INGRESS
-    phvwri p.p4_intr_global_tm_iport, TM_OPORT_DMA
-    phvwri p.p4_intr_global_lif, ARM_CPU_LIF
-    phvwri p.ipsec_to_stage4_dot1q_etype, DOT1Q_ETYPE
-
     phvwri p.{app_header_table0_valid...app_header_table1_valid}, 3
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_txdma2_build_decap_packet[33:6]
