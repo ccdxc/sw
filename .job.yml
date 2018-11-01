@@ -24,6 +24,7 @@ dependencies:
   test: nic
   test: platform
   nic: platform
+  platform: nic
   dol: nic
   dol/test/networking : nic
   nic/agent: venice
