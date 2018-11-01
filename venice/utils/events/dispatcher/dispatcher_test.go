@@ -91,7 +91,7 @@ func TestEventsDispatcher(t *testing.T) {
 	// run multiple iterations
 	iterations := 10
 	for i := 0; i < iterations; i++ {
-		for i := 0; i < 10; i++ { // all events will be deduped under the first (1st occurrence of an event in dedup interval) UUID
+		for i := 0; i < 10; i++ { // all events will be de-duped under the first (1st occurrence of an event in dedup interval) UUID
 			creationTime, _ := types.TimestampProto(time.Now())
 			timeNow := api.Timestamp{Timestamp: *creationTime}
 			NICDisconnectedEvt.ObjectMeta.CreationTime = timeNow
@@ -139,7 +139,7 @@ func TestEventsDispatcher(t *testing.T) {
 	Assert(t, strings.Contains(err.Error(), "dispatcher stopped, cannot process events"),
 		"expected failure")
 
-	// ensure the events are deduped
+	// ensure the events are de-duped
 	AssertEventually(t, func() (bool, interface{}) {
 		disconnectedEvt := mockWriter.GetEventByUUID(NICDisconnectedEvtUUID)
 		connectedEvt := mockWriter.GetEventByUUID(NICConnectedEvtUUID)
@@ -183,7 +183,7 @@ func TestEventsDispatcherShutdown(t *testing.T) {
 	// flushes and closes the writers gracefully
 	dispatcher.Shutdown()
 
-	// no-op; they are already stopped druing shutdown
+	// no-op; they are already stopped during shutdown
 	mockWriter1.Stop()
 	mockWriter2.Stop()
 
@@ -237,7 +237,7 @@ func TestEventsDispatcherFlush(t *testing.T) {
 		AssertOk(t, dispatcher.Action(NICConnectedEvt), "failed to send event")
 	}
 
-	// writer would have not received any deduped event becase the acitve internal is not hit
+	// writer would have not received any de-duped event because the active internal is not hit
 	temp := mockWriter.GetEventsByType("TestNICConnected")
 	Assert(t, temp == 0, "expected: 0 events, got:%v", temp)
 
@@ -247,7 +247,7 @@ func TestEventsDispatcherFlush(t *testing.T) {
 	// deduped events from the dispatcher will be flushed to all the writers
 	dispatcher.Shutdown()
 
-	// writer would have not received any deduped event becase the acitve internal is not hit
+	// writer would have not received any de-duped event because the active internal is not hit
 	AssertEventually(t, func() (bool, interface{}) {
 		disconnected := mockWriter.GetEventsByType("TestNICDisconnected")
 		connected := mockWriter.GetEventsByType("TestNICConnected")
@@ -260,10 +260,10 @@ func TestEventsDispatcherFlush(t *testing.T) {
 			disconnected, connected)
 	}, "writer did not receive all the events or flush operation failed", string("5ms"), string("5s"))
 
-	// thus the writers received the events before the distpatcher could hit active interval
+	// thus the writers received the events before the dispatcher could hit active interval
 }
 
-// TestEventsDispatcherRegisterWriter tests dispatcher's register writer funtionality
+// TestEventsDispatcherRegisterWriter tests dispatcher's register writer functionality
 func TestEventsDispatcherRegisterWriter(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
@@ -745,7 +745,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	defer dispatcher.UnregisterWriter(mockWriter.Name())
 
 	// to test whether the events are replayed during restart; lets reset the offset in the writer's offset file
-	// open the offset file and update the offset. so that the disatcher can replay events for this writer.
+	// open the offset file and update the offset. so that the dispatcher can replay events for this writer.
 	fh, err := os.OpenFile(path.Join(eventsStorePath, "offset", fmt.Sprintf("mock.%s", t.Name())),
 		os.O_RDWR, 0) // open file in read write mode
 	AssertOk(t, err, "failed to open offset file")
@@ -828,7 +828,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 
 	// send some events
 	evt := *dummyEvt
-	evtUUID := uuid.New().String() // all the consequetive duplicate events will be deduped under this event
+	evtUUID := uuid.New().String() // all the consecutive duplicate events will be de-duped under this event
 	evt.ObjectMeta.UUID = evtUUID
 	for i := 0; i < 100; i++ {
 		creationTime, _ := types.TimestampProto(time.Now())
@@ -856,7 +856,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	// sleep for a second; the existing events will be expired
 	time.Sleep(time.Second)
 
-	// any event sent now will be a new event in the cache and deduplication will start from there on
+	// any event sent now will be a new event in the cache and de-duplication will start from there on
 	newEvtUUID := uuid.New().String()
 	evt.ObjectMeta.UUID = newEvtUUID
 	for i := 0; i < 100; i++ {
@@ -888,7 +888,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 }
 
 // TestDispatcherWithDynamicWriterAndRestart tests the distribution of events to a new writer which got added
-// right before restart. The expectation is that the new writer should not receive any events that were previsouly recorded (before this writer's registraion).
+// right before restart. The expectation is that the new writer should not receive any events that were previously recorded (before this writer's registraion).
 func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
@@ -917,7 +917,7 @@ func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
 
 	// send some events
 	evt := *dummyEvt
-	evtUUID := uuid.New().String() // all the consequetive duplicate events will be deduped under this event
+	evtUUID := uuid.New().String() // all the consecutive duplicate events will be de-duped under this event
 	evt.ObjectMeta.UUID = evtUUID
 	for i := 0; i < 100; i++ {
 		creationTime, _ := types.TimestampProto(time.Now())
@@ -962,8 +962,8 @@ func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
 		Assert(t, mockWriters[i].GetTotalEvents() == 100, "expected: 100 events, got: %v", mockWriters[i].GetTotalEvents())
 	}
 
-	// start recodring some events and check the count
-	evtUUID = uuid.New().String() // all the consequetive duplicate events will be deduped under this event
+	// start recording some events and check the count
+	evtUUID = uuid.New().String() // all the consecutive duplicate events will be de-duped under this event
 	evt.ObjectMeta.UUID = evtUUID
 	for i := 0; i < 100; i++ {
 		creationTime, _ := types.TimestampProto(time.Now())
@@ -1011,7 +1011,7 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 
 	// send some events
 	evt := *dummyEvt
-	evtUUID := uuid.New().String() // all the consequetive duplicate events will be deduped under this event
+	evtUUID := uuid.New().String() // all the consecutive duplicate events will be de-duped under this event
 	evt.ObjectMeta.UUID = evtUUID
 	creationTime, _ := types.TimestampProto(time.Now())
 	timeNow := api.Timestamp{Timestamp: *creationTime}
@@ -1030,32 +1030,34 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 		}
 	}()
 
-	expTime := time.Now().Add(1 * time.Second) // after exipry
+	expTime := time.Now().Add(1 * time.Second) // after expiry
 	prevCount := uint32(0)
 
-	testTimeoutC := time.After(2 * time.Second)
+	testTimeoutC := time.After(time.Until(expTime.Add(1 * time.Second))) // 1s after expiry
 	for {
 		select {
 		case <-testTimeoutC:
 			t.Fatalf("test timedout waiting to exit from busy loop")
-		case <-time.After(15 * time.Millisecond): // for batch and processing at the writer
+
+		case <-time.After(time.Until(expTime.Add(100 * time.Millisecond))): // after expiry + buffer(100ms)
+			t.Logf("prevCount is %d after expiration time", prevCount)
 			evt := mockWriter.GetEventByUUID(evtUUID)
-			if evt == nil {
-				t.Log("evt is nil")
-				continue
-			}
+			Assert(t, evt != nil, "new event is nil after expiry")
+
+			// it is a new event when the count is < prevCount
+			Assert(t, evt.GetCount() > 0 && evt.GetCount() < prevCount,
+				"new event should have been created after expiry instead got event count: %v", evt.GetCount())
+
+			close(stopUpdatingEvents)
+			wg.Wait()
+			return
+
+		case <-time.After(15 * time.Millisecond): // after every batch interval
+			evt := mockWriter.GetEventByUUID(evtUUID)
+			Assert(t, evt != nil, "unexpected, event is nil")
 			if evt.GetCount() >= prevCount { // event updates
 				prevCount = evt.GetCount()
 				t.Logf("prevCount is %d when restarting the loop", prevCount)
-				continue
-			}
-
-			if time.Until(expTime).Seconds() < 0 { // expired
-				t.Logf("prevCount is %d After expiration time", prevCount)
-				Assert(t, evt.GetCount() > 0 && evt.GetCount() < 10, "new event should be created after expiry: %v", evt.GetCount())
-				close(stopUpdatingEvents)
-				wg.Wait()
-				return
 			}
 		}
 	}
