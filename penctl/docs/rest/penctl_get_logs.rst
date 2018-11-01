@@ -1,31 +1,36 @@
-.. _penctl_core_get:
+.. _penctl_get_logs:
 
-penctl core get
+penctl get logs
 ---------------
 
-Get a core from Naples
+Show logs from Naples
 
 Synopsis
 ~~~~~~~~
 
 
 
-------------------------
- Get a Core From Naples 
-------------------------
+------------------------------
+ Show Module Logs From Naples 
+------------------------------
 
 
 ::
 
-  penctl core get [flags]
+  penctl get logs [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help          help for get
-  -p, --path string   Path to copy files to
+  -h, --help            help for logs
+  -m, --module string   Module to show logs for
+			Valid modules are:
+				nmd
+				netagent
+				tmagent
+
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,5 +45,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl core <penctl_core.rst>`_ 	 - Cores on Naples
+* `penctl get <penctl_get.rst>`_ 	 - Get CLIs
 

@@ -28,7 +28,7 @@ var modeManagedCmd = &cobra.Command{
 }
 
 var modeManagedShowCmd = &cobra.Command{
-	Use:   "detail",
+	Use:   "mode info",
 	Short: "Show mode of operation of Naples",
 	Long:  "\n-------------------------------------------------------------------\n Show mode of operation of Naples - host-managed vs venice-managed \n-------------------------------------------------------------------\n",
 	Run:   modeManagedShowCmdHandler,
@@ -45,8 +45,8 @@ var defaultGW string
 var dnsServers []string
 
 func init() {
-	rootCmd.AddCommand(modeManagedCmd)
-	modeManagedCmd.AddCommand(modeManagedShowCmd)
+	setCmd.AddCommand(modeManagedCmd)
+	getCmd.AddCommand(modeManagedShowCmd)
 
 	modeManagedCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or hostnames")
 	modeManagedCmd.Flags().StringVarP(&mode, "mode", "m", "network", "host or network managed")

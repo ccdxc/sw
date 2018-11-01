@@ -1,4 +1,4 @@
-## penctl mode
+## penctl set mode
 
 Set Naples to Managed mode
 
@@ -12,7 +12,7 @@ Set Naples to Managed mode
 
 
 ```
-penctl mode [flags]
+penctl set mode [flags]
 ```
 
 ### Options
@@ -34,11 +34,9 @@ penctl mode [flags]
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -v, --verbose            verbose output
   -y, --yaml               display in yaml json
 ```
 
 ### SEE ALSO
-* [penctl](penctl.md)	 - Pensando CLIs
-* [penctl mode detail](penctl_mode_detail.md)	 - Show mode of operation of Naples
+* [penctl set](penctl_set.md)	 - Config CLIs
 

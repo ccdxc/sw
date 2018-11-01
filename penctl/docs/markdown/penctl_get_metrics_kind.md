@@ -1,4 +1,4 @@
-## penctl metrics kind
+## penctl get metrics kind
 
 Show Metrics from Naples On Non-Listed Kind
 
@@ -12,7 +12,7 @@ Show Metrics from Naples On Non-Listed Kind
 
 
 ```
-penctl metrics kind [flags]
+penctl get metrics kind [flags]
 ```
 
 ### Options
@@ -29,10 +29,9 @@ penctl metrics kind [flags]
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -v, --verbose            verbose output
   -y, --yaml               display in yaml json
 ```
 
 ### SEE ALSO
-* [penctl metrics](penctl_metrics.md)	 - Show metrics from Naples
+* [penctl get metrics](penctl_get_metrics.md)	 - Show metrics from Naples
 

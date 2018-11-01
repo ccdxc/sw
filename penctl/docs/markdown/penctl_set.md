@@ -1,30 +1,20 @@
-## penctl logs
+## penctl set
 
-Show logs from Naples
+Config CLIs
 
 ### Synopsis
 
 
 
-------------------------------
- Show Module Logs From Naples 
-------------------------------
+--------------------
+ Configuration CLIs 
+--------------------
 
-
-```
-penctl logs [flags]
-```
 
 ### Options
 
 ```
-  -h, --help            help for logs
-  -m, --module string   Module to show logs for
-			Valid modules are:
-				nmd
-				netagent
-				tmagent
-
+  -h, --help   help for set
 ```
 
 ### Options inherited from parent commands
@@ -33,10 +23,10 @@ penctl logs [flags]
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -v, --verbose            verbose output
   -y, --yaml               display in yaml json
 ```
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
+* [penctl set mode](penctl_set_mode.md)	 - Set Naples to Managed mode
 

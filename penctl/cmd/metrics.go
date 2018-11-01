@@ -15,5 +15,5 @@ var metricsShowCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(metricsShowCmd)
+	getCmd.AddCommand(metricsShowCmd)
 }

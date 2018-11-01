@@ -1,9 +1,9 @@
-.. _penctl_logs:
+.. _penctl_get_events:
 
-penctl logs
------------
+penctl get events
+-----------------
 
-Show logs from Naples
+Show events from Naples
 
 Synopsis
 ~~~~~~~~
@@ -11,26 +11,20 @@ Synopsis
 
 
 ------------------------------
- Show Module Logs From Naples 
+ Show Events From Naples 
 ------------------------------
 
 
 ::
 
-  penctl logs [flags]
+  penctl get events [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help            help for logs
-  -m, --module string   Module to show logs for
-			Valid modules are:
-				nmd
-				netagent
-				tmagent
-
+  -h, --help   help for events
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,11 +34,10 @@ Options inherited from parent commands
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -v, --verbose            verbose output
   -y, --yaml               display in yaml json
 
 SEE ALSO
 ~~~~~~~~
 
-* `penctl <penctl.rst>`_ 	 - Pensando CLIs
+* `penctl get <penctl_get.rst>`_ 	 - Get CLIs
 

@@ -75,7 +75,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	} else {
 		naplesIP, err = getNaplesIPFromIntf(val)
 	}
-	if cmd.Flags().Changed("debug") {
+	if cmd.Flags().Changed("localhost") {
 		naplesIP = "127.0.0.1"
 	} else if err != nil {
 		if verbose {

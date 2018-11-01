@@ -1,18 +1,18 @@
-.. _penctl_core:
+.. _penctl_get:
 
-penctl core
------------
+penctl get
+----------
 
-Cores on Naples
+Get CLIs
 
 Synopsis
 ~~~~~~~~
 
 
 
------------------
- Cores on Naples 
------------------
+----------
+ Get CLIs 
+----------
 
 
 Options
@@ -20,7 +20,7 @@ Options
 
 ::
 
-  -h, --help   help for core
+  -h, --help   help for get
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,7 +36,8 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
-* `penctl core delete <penctl_core_delete.rst>`_ 	 - Delete a core from Naples
-* `penctl core get <penctl_core_get.rst>`_ 	 - Get a core from Naples
-* `penctl core list <penctl_core_list.rst>`_ 	 - Show cores from Naples
+* `penctl get events <penctl_get_events.rst>`_ 	 - Show events from Naples
+* `penctl get logs <penctl_get_logs.rst>`_ 	 - Show logs from Naples
+* `penctl get metrics <penctl_get_metrics.rst>`_ 	 - Show metrics from Naples
+* `penctl get mode <penctl_get_mode.rst>`_ 	 - Show mode of operation of Naples
 

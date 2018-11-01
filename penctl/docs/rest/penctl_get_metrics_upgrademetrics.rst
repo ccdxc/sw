@@ -1,8 +1,12 @@
-## penctl metrics upgrademetrics
+.. _penctl_get_metrics_upgrademetrics:
+
+penctl get metrics upgrademetrics
+---------------------------------
 
 Show UpgradeMetrics from Naples
 
-### Synopsis
+Synopsis
+~~~~~~~~
 
 
 
@@ -11,27 +15,30 @@ Show UpgradeMetrics from Naples
 ---------------------------------
 
 
-```
-penctl metrics upgrademetrics [flags]
-```
+::
 
-### Options
+  penctl get metrics upgrademetrics [flags]
 
-```
+Options
+~~~~~~~
+
+::
+
   -h, --help          help for upgrademetrics
   -n, --name string   Name/Key for metrics object
-```
 
-### Options inherited from parent commands
+Options inherited from parent commands
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-```
+::
+
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -v, --verbose            verbose output
   -y, --yaml               display in yaml json
-```
 
-### SEE ALSO
-* [penctl metrics](penctl_metrics.md)	 - Show metrics from Naples
+SEE ALSO
+~~~~~~~~
+
+* `penctl get metrics <penctl_get_metrics.rst>`_ 	 - Show metrics from Naples
 

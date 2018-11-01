@@ -5,24 +5,32 @@
 
 .SH NAME
 .PP
-penctl\-core\-list \- Show cores from Naples
+penctl\-get\-logs \- Show logs from Naples
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl core list [flags]\fP
+\fBpenctl get logs [flags]\fP
 
 
 .SH DESCRIPTION
 .ti 0
 \l'\n(.lu'
 
-.SH Show Cores From Naples
+.SH Show Module Logs From Naples
 
 .SH OPTIONS
 .PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
-    help for list
+    help for logs
+
+.PP
+\fB\-m\fP, \fB\-\-module\fP=""
+    Module to show logs for
+            Valid modules are:
+                nmd
+                netagent
+                tmagent
 
 
 .SH OPTIONS INHERITED FROM PARENT COMMANDS
@@ -45,4 +53,4 @@ penctl\-core\-list \- Show cores from Naples
 
 .SH SEE ALSO
 .PP
-\fBpenctl\-core(3)\fP
+\fBpenctl\-get(3)\fP

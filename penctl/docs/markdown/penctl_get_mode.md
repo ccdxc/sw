@@ -1,12 +1,8 @@
-.. _penctl_mode_detail:
-
-penctl mode detail
-------------------
+## penctl get mode
 
 Show mode of operation of Naples
 
-Synopsis
-~~~~~~~~
+### Synopsis
 
 
 
@@ -15,30 +11,25 @@ Synopsis
 -------------------------------------------------------------------
 
 
-::
+```
+penctl get mode info [flags]
+```
 
-  penctl mode detail [flags]
+### Options
 
-Options
-~~~~~~~
+```
+  -h, --help   help for mode
+```
 
-::
+### Options inherited from parent commands
 
-  -h, --help   help for detail
-
-Options inherited from parent commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-::
-
+```
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -v, --verbose            verbose output
   -y, --yaml               display in yaml json
+```
 
-SEE ALSO
-~~~~~~~~
-
-* `penctl mode <penctl_mode.rst>`_ 	 - Set Naples to Managed mode
+### SEE ALSO
+* [penctl get](penctl_get.md)	 - Get CLIs
 

@@ -61,6 +61,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&intf, "interface", "e", "", "ethernet device of naples")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
+	rootCmd.PersistentFlags().MarkHidden("verbose")
 
 	rootCmd.GenBashCompletionFile("penctl.sh")
 }

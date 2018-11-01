@@ -1,4 +1,4 @@
-## penctl metrics
+## penctl get metrics
 
 Show metrics from Naples
 
@@ -23,12 +23,11 @@ Show metrics from Naples
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -v, --verbose            verbose output
   -y, --yaml               display in yaml json
 ```
 
 ### SEE ALSO
-* [penctl](penctl.md)	 - Pensando CLIs
-* [penctl metrics kind](penctl_metrics_kind.md)	 - Show Metrics from Naples On Non-Listed Kind
-* [penctl metrics upgrademetrics](penctl_metrics_upgrademetrics.md)	 - Show UpgradeMetrics from Naples
+* [penctl get](penctl_get.md)	 - Get CLIs
+* [penctl get metrics kind](penctl_get_metrics_kind.md)	 - Show Metrics from Naples On Non-Listed Kind
+* [penctl get metrics upgrademetrics](penctl_get_metrics_upgrademetrics.md)	 - Show UpgradeMetrics from Naples
 

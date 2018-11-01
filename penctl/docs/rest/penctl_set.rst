@@ -1,30 +1,26 @@
-.. _penctl_core_delete:
+.. _penctl_set:
 
-penctl core delete
-------------------
+penctl set
+----------
 
-Delete a core from Naples
+Config CLIs
 
 Synopsis
 ~~~~~~~~
 
 
 
----------------------------
- Delete a Core From Naples 
----------------------------
+--------------------
+ Configuration CLIs 
+--------------------
 
-
-::
-
-  penctl core delete [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for delete
+  -h, --help   help for set
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,5 +35,6 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl core <penctl_core.rst>`_ 	 - Cores on Naples
+* `penctl <penctl.rst>`_ 	 - Pensando CLIs
+* `penctl set mode <penctl_set_mode.rst>`_ 	 - Set Naples to Managed mode
 
