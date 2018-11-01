@@ -17,16 +17,17 @@ package: ${PKG_PREREQS}
     ifeq ($(ARCH),aarch64)
 		${MAKE} -j1 BUILD_ARCHES=aarch64 -C ${TOPDIR}/platform
 		${MAKE} package-clean
+		ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py
     else
         ifeq ($(PIPELINE),iris)
 			${MAKE} -j1 BUILD_ARCHES=x86_64 -C ${TOPDIR}/platform
         endif
 		${MAKE} package-clean
+		ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py \
 			--pipeline $(PIPELINE) --target sim --no-strip
     endif
-
 
 package-clean-debug-arm:
 	@rm -f  $(TOPDIR)/debug_aarch64_iris.tgz
@@ -49,10 +50,12 @@ package-zebu: package-clean ${PKG_PREREQS}
 
 package-arm-dev: package-clean ${PKG_PREREQS}
 	${MAKE} -j1 BUILD_ARCHES=aarch64 OPT=-g -C ${TOPDIR}/platform
+	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target arm-dev --no-strip
 
 package-haps-dbg: package-clean ${PKG_PREREQS}
 	${MAKE} -j1 BUILD_ARCHES=aarch64 OPT=-g -C ${TOPDIR}/platform
+	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target haps-dbg
 
 .PHONY: package-storage-offload
