@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = if_svc_test.gtest
+MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/if_svc_test.cc
 MODULE_SOLIBS   = ${NIC_HAL_GTEST_SOLIBS}

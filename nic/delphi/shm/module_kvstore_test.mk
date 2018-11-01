@@ -2,6 +2,7 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = delphi_kvstore_test.gtest
+MODULE_ARCH     = x86_64
 MODULE_ARLIBS   = delphishm delphiutils
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
 MODULE_SRCS     = ${MODULE_SRC_DIR}/kvstore_test.cc

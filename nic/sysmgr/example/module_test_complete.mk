@@ -2,6 +2,7 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = sysmgr_test_complete.bin
+MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = delphisdk sysmgr
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
 MODULE_ARLIBS   = sysmgrproto delphiproto

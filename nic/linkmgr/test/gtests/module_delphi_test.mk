@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = linkmgr_delphi_test.gtest
+MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris gft
 MODULE_SRCS   = ${MODULE_SRC_DIR}/linkmgr_delphi_test.cc
 MODULE_SOLIBS = linkmgr_test_utils bm_allocator linkmgrdelphi \

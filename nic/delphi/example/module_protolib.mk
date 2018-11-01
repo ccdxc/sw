@@ -2,6 +2,7 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = libdelphiexampleproto.a
+MODULE_ARCH     = x86_64
 MODULE_INCS     = /usr/local/include \
                   ${TOPDIR}/nic/hal/third-party/google/include \
                   ${TOPDIR}/hal/third-party/grpc/include
