@@ -84,7 +84,7 @@ create_qp:
 
     //          TODO: For now setting it to RTS, but later change it to INIT
     // state. modify_qp is supposed to set it to RTR and RTS.
-    phvwr       p.rqcb0.state, QP_STATE_RTS
+    phvwr       p.rqcb0.state, QP_STATE_RESET
 
         //TODO: RQ in HBM still need to be implemented
 
@@ -94,7 +94,7 @@ create_qp:
 
     //RQCB1
 
-    phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RTS 
+    phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RESET
     phvwrpair   p.rqcb1.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb1.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0] 
     phvwrpair   p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0], p.rqcb1.pd, K_PD
     phvwr       p.rqcb1.cq_id, K_RQ_CQ_ID

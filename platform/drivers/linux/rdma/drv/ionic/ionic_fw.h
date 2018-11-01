@@ -651,6 +651,7 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_CREATE_MR= 3,
 	IONIC_V1_ADMIN_DESTROY_MR = 6,
 	IONIC_V1_ADMIN_MODIFY_QP = 9,
+	IONIC_V1_ADMIN_DESTROY_QP = 11,
 	IONIC_V1_ADMIN_CREATE_AH = 13,
     
 	/* TODO: move ops up as they are assigned opcode numbers in fw */
@@ -659,7 +660,6 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_STATS_HDRS,
 	IONIC_V1_ADMIN_STATS_VALS,
 	IONIC_V1_ADMIN_DESTROY_CQ,
-	IONIC_V1_ADMIN_DESTROY_QP,
 	IONIC_V1_ADMIN_DESTROY_AH,
 
 	/* TODO: move ops up as they are assigned and implemented */

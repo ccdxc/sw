@@ -75,7 +75,7 @@ rdma_aq_tx_wqe_process:
         b           exit
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, query_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DESTROY_QP
-        b           exit
+        b           destroy_qp
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, destroy_qp), 1 //BD Slot
     .brcase     AQ_OP_TYPE_STATS_DUMP
         b           stats_dump
@@ -267,6 +267,30 @@ create_ah:
     b           prepare_feedback
     nop
 
+// TODO: This is just a hack for destroy qp.
+destroy_qp:
+
+    add         r2, r0, d.{id_ver}.wx
+    SQCB_ADDR_GET(r1, r2[23:0], K_SQCB_BASE_ADDR_HI)
+    // service is nearest byte aligned field to state
+    add         r3, r1, FIELD_OFFSET(sqcb0_t, service)
+    memwr.b     r3, 0x0
+
+    add         r1, r1, CB_UNIT_SIZE_BYTES
+    add         r3, r1, FIELD_OFFSET(sqcb1_t, rrq_in_progress)
+    memwr.b     r3, 0x0
+
+    RQCB_ADDR_GET(r1, r2[23:0], K_RQCB_BASE_ADDR_HI)
+    add         r3, r1, FIELD_OFFSET(rqcb0_t, state)
+    memwr.b     r3, 0x0
+
+    add         r1, r1, CB_UNIT_SIZE_BYTES
+    add         r3, r1, FIELD_OFFSET(rqcb1_t, state)
+    memwr.b     r3, 0x0
+
+    b           prepare_feedback
+    nop
+
 create_qp:
 
     // SQCB0:
@@ -292,7 +316,7 @@ create_qp:
 
     add         r2, d.{qp.sq_cq_id}.wx, r0
     phvwr       p.sqcb1.cq_id, r2[23:0]
-    phvwr       p.sqcb1.state, QP_STATE_RTS
+    phvwr       p.sqcb1.state, QP_STATE_RESET
     phvwr       p.sqcb1.pd, d.{qp.pd_id}.wx
     
     phvwr       p.sqcb1.service, d.type_state[3:0]
