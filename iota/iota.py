@@ -70,11 +70,12 @@ def Main():
     InitLogger()
     __start_server()
     __cleanup_testbed()
-    engine.Main()
-    return 0
+    ret = engine.Main()
+    return ret
 
 if __name__ == '__main__':
     status = Main()
     overall_timer.Stop()
-    print("\n\nOverall Runtime: " + overall_timer.TotalTime())
+    print("\n\nOverall Runtime  : " + overall_timer.TotalTime())
+    print("Overall Status   : %d" % status)
     sys.exit(status)

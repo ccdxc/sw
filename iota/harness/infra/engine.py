@@ -6,6 +6,7 @@ import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.testsuite as testsuite
 import iota.harness.infra.testbed as testbed
 import iota.harness.api as api
+import iota.harness.infra.types as types
 #import iota.harness.infra.store as store
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -34,7 +35,12 @@ def Main():
     # Parse all the testsuites
     suites = __discover_testsuites()
 
+    result = types.status.SUCCESS
     for s in suites:
         ts = testsuite.TestSuite(s)
-        ts.Main()
-    return
+        ret = ts.Main()
+        if ret != types.status.SUCCESS:
+            result = ret
+            if GlobalOptions.no_keep_going:
+                return ret
+    return result

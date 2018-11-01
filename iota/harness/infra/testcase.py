@@ -104,4 +104,5 @@ class Testcase:
         self.__timer.Start()
         self.status = self.__execute()
         self.__timer.Stop()
-        return types.status.SUCCESS
+        Logger.info("Testcase %s FINAL RESULT = %d" % (self.__spec.name, self.status))
+        return self.status

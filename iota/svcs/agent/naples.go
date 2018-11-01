@@ -27,6 +27,7 @@ const (
 	naplesPciDevicePrefix   = "Device"
 	mellanoxPciDevicePrefix = "Mellanox Technologies"
 	bareMetalWorkloadName   = "bareMetalWorkload"
+	naplesHwUUIDFile        = "/mnt/sysuuid"
 )
 
 var (
@@ -48,6 +49,8 @@ type dataNode struct {
 
 type naplesHwNode struct {
 	dataNode
+	naplesEntityKey string
+	hostEntityKey   string
 }
 
 type naplesSimNode struct {
@@ -340,12 +343,12 @@ func (dnode *dataNode) setupWorkload(wload workload, in *iota.Workload) (*iota.W
 	}
 	dnode.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
 
-    if err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), int(in.GetEncapVlan())); err != nil {
-        msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
-        dnode.logger.Error(msg)
-        resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
-        return resp, errors.New(msg)
-    }
+	if err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), int(in.GetEncapVlan())); err != nil {
+		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
+		dnode.logger.Error(msg)
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		return resp, errors.New(msg)
+	}
 
 	/* For SRIOV case, move the parent interface inside the workload so that it is not shared */
 	if in.GetInterfaceType() == iota.InterfaceType_INTERFACE_TYPE_SRIOV {
@@ -592,8 +595,10 @@ func (naples *naplesHwNode) addNodeEntities(in *iota.Node) error {
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_NAPLES {
 			/*It is like running in a vm as its accesible only by ssh */
 			wload = newWorkload(workloadTypeRemote, naples.logger)
+			naples.naplesEntityKey = entityEntry.GetName()
 		} else if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_HOST {
 			wload = newWorkload(workloadTypeBareMetal, naples.logger)
+			naples.hostEntityKey = entityEntry.GetName()
 		}
 		//in.GetNaplesConfig().
 		naplesCfg := in.GetNaplesConfig()
@@ -607,6 +612,26 @@ func (naples *naplesHwNode) addNodeEntities(in *iota.Node) error {
 		}
 	}
 	return nil
+}
+
+func (naples *naplesHwNode) getHwUUID(in *iota.Node) (uuid string, err error) {
+
+	naplesEntity, ok := naples.entityMap[naples.naplesEntityKey]
+	if !ok {
+		return "", errors.Errorf("Naples entity not added : %s", naples.naplesEntityKey)
+	}
+
+	cmd := []string{"cat", naplesHwUUIDFile}
+	cmdResp, _ := naplesEntity.RunCommand(cmd, 0, false, true)
+	naples.logger.Printf("naples hw uuid out %s", cmdResp.stdout)
+	naples.logger.Printf("naples hw uuid err %s", cmdResp.stderr)
+	naples.logger.Printf("naples hw uuid exit code %s", cmdResp.exitCode)
+
+	if cmdResp.exitCode != 0 {
+		return "", errors.Errorf("Running cat of %s failed : %s", naplesHwUUIDFile, cmdResp.stdout)
+	}
+
+	return strings.Trim(cmdResp.stdout, "\r\n"), nil
 }
 
 //Init initalize node type
@@ -635,7 +660,13 @@ func (naples *naplesHwNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 	}
 
-	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
+	nodeUUID, err := naples.getHwUUID(in)
+	if err != nil {
+		naples.logger.Errorf("Error in reading naples hw uuid : %s", err.Error())
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
+	}
+
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: nodeUUID,
 		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
 		NodeInfo: &iota.Node_NaplesConfig{NaplesConfig: in.GetNaplesConfig()}}, nil
 }

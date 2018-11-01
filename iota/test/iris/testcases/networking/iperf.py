@@ -17,7 +17,7 @@ def Trigger(tc):
    
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                            "iperf -s -t 300", background = True)
-    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
+    api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            "iperf -c %s" % w1.ip_address)
 
     trig_resp = api.Trigger(req)

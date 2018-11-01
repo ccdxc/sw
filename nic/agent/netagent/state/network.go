@@ -49,6 +49,8 @@ func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
 		log.Errorf("Could not allocate network id. {%+v}", err)
 		return err
 	}
+	// TODO: Fix it cleanly.
+	nt.Status.NetworkID += 16
 
 	uplinks := na.getUplinks()
 

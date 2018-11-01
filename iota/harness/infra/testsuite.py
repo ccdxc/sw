@@ -109,11 +109,14 @@ class TestSuite:
         return types.status.SUCCESS
 
     def __execute_testcases(self):
+        result = types.status.SUCCESS
         for tc in self.__tcs:
             ret = tc.Main()
-            if ret != types.status.SUCCESS and GlobalOptions.no_keep_going:
-                return ret
-        return types.status.SUCCESS
+            if ret != types.status.SUCCESS:
+                result = ret
+                if GlobalOptions.no_keep_going:
+                    return ret
+        return result
 
     def __print_summary(self):
         print("\nTestSuite Results: %s" % self.__spec.meta.name)
@@ -145,7 +148,8 @@ class TestSuite:
             return status
 
         self.result = self.__execute_testcases()
+        Logger.info("Testsuite %s FINAL STATUS = %d" % (self.Name(), self.result))
 
         self.__print_summary()
 
-        return types.status.SUCCESS
+        return self.result
