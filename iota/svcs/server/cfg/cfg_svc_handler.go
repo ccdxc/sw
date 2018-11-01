@@ -201,7 +201,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 			Fullname: "Admin",
 			Email:    "dev@pensando.io",
 			Password: "password",
-			Type:     "LOCAL",
+			Type:     "Local",
 		},
 	}
 
