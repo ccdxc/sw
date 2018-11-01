@@ -8,7 +8,7 @@
             "exit_func" : "classic_exit",
             "auto_load" : "true",
             "deps"      : ["pensando.io/nw"],
-            "features"  : ["fwding"]
+            "features"  : ["fwding", "qos"]
         },
         {
             "name"      : "lif",
@@ -24,6 +24,15 @@
             "lib"       : "libcfg_plugin_nw.so",
             "auto_load" : "true",
             "deps"      : ["pensando.io/lif"]
+        },
+        {
+            "name"      : "aclqos",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_aclqos.so",
+            "init_func" : "aclqos_init",
+            "exit_func" : "aclqos_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
         },
         {
             "name"      : "mcast",
