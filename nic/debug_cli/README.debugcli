@@ -1,0 +1,17 @@
+From host:
+scp /home/lseshan/debug_cli_to_copy/locale.tar root@1.0.0.2:/tmp
+scp /home/lseshan/debug_cli_to_copy/localedef root@1.0.0.2:/tmp
+scp /home/lseshan/debug_cli_to_copy/locale root@1.0.0.2:/usr/bin
+
+From hw:
+Every time sysreset of  hardware:
+mkdir /usr/lib/locale
+mkdir /usr/share/i18n
+cd /usr/share/i18n/
+tar -xvf /tmp/locale.tar
+cd /tmp
+./localedef -i en_US -f UTF-8 en_US.UTF-8
+
+Run the cli:
+./p4ctl.sh
+

@@ -33,35 +33,35 @@ ${api_prefix}_table_types_enum = [
 ]
 
 //::    if pddict['p4plus']:
-@rawtable.group()
-@click.pass_context
-def ${pddict['p4program']}(ctx):
-    ctx.obj['p4program'] = ${pddict['p4program']}
-    pass
+#@rawtable.group()
+#@click.pass_context
+#def ${pddict['p4program']}(ctx):
+#    ctx.obj['p4program'] = ${pddict['p4program']}
+#    pass
 //::        for table in pddict['tables']:
 //::            if pddict['tables'][table]['is_raw']:
-@${pddict['p4program']}.group()
-@click.pass_context
-def ${table}(ctx):
-    ctx.obj['table_name'] ='${table}'
-    pass
+#@${pddict['p4program']}.group()
+#@click.pass_context
+#def ${table}(ctx):
+#    ctx.obj['table_name'] ='${table}'
+#    pass
 //::                actionid = 0
 //::                for action in pddict['tables'][table]['actions']:
 //::                    (actionname, actionfldlist) = action
-@${table}.group(invoke_without_command=True)
-@click.argument('hwaddr', metavar='<Hardware Address>')
-@click.pass_context
-def ${actionname}(ctx, hwaddr):
-    config = {}
-
-    config['table_name'] = ctx.obj['table_name']
-    config['action_name'] = '${actionname}'
-    config['actionid'] = ${actionid}
-    config['opn'] = ctx.obj['opn']
-    config['hwaddr'] = int(hwaddr, base=16)
-    config['actionfld'] = {}
-    ${pddict['cli-name']}_backend.populate_table(config)
-    pass
+#@${table}.group(invoke_without_command=True)
+#@click.argument('hwaddr', metavar='<Hardware Address>')
+#@click.pass_context
+#def ${actionname}(ctx, hwaddr):
+#    config = {}
+#
+#    config['table_name'] = ctx.obj['table_name']
+#    config['action_name'] = '${actionname}'
+#    config['actionid'] = ${actionid}
+#    config['opn'] = ctx.obj['opn']
+#    config['hwaddr'] = int(hwaddr, base=16)
+#    config['actionfld'] = {}
+#    ${pddict['cli-name']}_backend.populate_table(config)
+#    pass
 //::                    actionid += 1
 //::                #endfor
 //::            #endif

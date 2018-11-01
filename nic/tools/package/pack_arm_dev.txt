@@ -97,21 +97,7 @@ nic/sdk/third-party/avago/build/aarch64/lib/aapl/C/libAAPL.so       /nic/lib/
 nic/build/aarch64/iris/bin/fte_test                                 /nic/bin/
 nic/build/aarch64/iris/bin/network_test                             /nic/bin/
 
-# CLI
-# nic/gen/common/cli/cli_frontend.py                                /nic/cli/
-# nic/debug_cli/cli/debug_cli_iris.py                               /nic/cli/
-# nic/debug_cli/cli/cli.py                                          /nic/cli/
-# nic/debug_cli/cli/_cli.so                                         /nic/cli/
-# nic/build/iris/gen/datapath/p4/cli/iris_frontend.py               /nic/cli/
-# nic/build/iris/gen/datapath/p4/cli/iris_backend.py                /nic/cli/
-# nic/build/iris/gen/datapath/p4/cli/iris.py                        /nic/cli/
-# nic/build/iris/gen/datapath/p4/cli/_iris.so                       /nic/cli/
-# nic/gen/common_txdma_actions/cli/common_txdma_actions_frontend.py /nic/cli/
-# nic/gen/common_txdma_actions/cli/common_txdma_actions_backend.py  /nic/cli/
-# nic/gen/common_txdma_actions/cli/common_txdma_actions.py          /nic/cli/
-# nic/gen/common_txdma_actions/cli/_common_txdma_actions.so         /nic/cli/
-# nic/gen/common_rxdma_actions/cli/common_rxdma_actions_frontend.py /nic/cli/
-# nic/gen/common_rxdma_actions/cli/common_rxdma_actions_backend.py  /nic/cli/
-# nic/gen/common_rxdma_actions/cli/common_rxdma_actions.py          /nic/cli/
-# nic/gen/common_rxdma_actions/cli/_common_rxdma_actions.so         /nic/cli/
+#p4ctl binary
+nic/debug_cli/images/aarch64/iris/p4ctl                            /nic/bin
+
 
