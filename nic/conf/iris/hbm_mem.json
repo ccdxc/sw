@@ -1,5 +1,46 @@
 {
     "regions": [
+        {   
+            "_comment" : "cache coherent",
+            "name": "cpu-dr",
+            "size_kb": 128, 
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-pr",
+            "size_kb": 128,
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-descriptor",
+            "size_kb": 2048,
+            "cc": "true"            
+            
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-page",
+            "size_kb": 32768,
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "arq-rx",
+            "size_kb": 64,
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "ascq",
+            "size_kb": 64,
+            "cc": "true"
+        },
+        {
+            "name": "asq",
+            "size_kb": 64
+        },
         {
             "name": "lif2qstate_map",
             "size_kb": 98304,
@@ -137,34 +178,6 @@
         {
             "name": "crypto-hbm-mem",
             "size_kb": 512
-        },
-        {
-            "name": "arq-rx",
-            "size_kb": 64
-        },
-        {
-            "name": "asq",
-            "size_kb": 64
-        },
-        {
-            "name": "ascq",
-            "size_kb": 64
-        },
-        {
-            "name": "cpu-dr",
-            "size_kb": 128
-        },
-        {
-            "name": "cpu-pr",
-            "size_kb": 128
-        },
-        {
-            "name": "cpu-descriptor",
-            "size_kb": 2048
-        },
-        {
-            "name": "cpu-page",
-            "size_kb": 32768
         },
         {
             "name": "descriptor-tx",
