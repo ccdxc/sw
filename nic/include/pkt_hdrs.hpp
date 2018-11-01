@@ -138,5 +138,16 @@ typedef struct ipsec_esp_header_s {
     uint32_t seqno;
 } __PACK__ ipsec_esp_header_t;
 
+typedef struct tcp_ts_option_s {
+    uint8_t   pad1;
+    uint8_t   pad2;
+    uint8_t   kind;
+    uint8_t   length;
+    uint32_t  ts_value;
+    uint32_t  echo_ts;
+} __PACK__ tcp_ts_option_t;
+
+#define TCP_TS_OPTION_LEN 12 
+
 #endif    // __PKT_HDRS_HPP__
 

@@ -236,17 +236,23 @@ typedef struct flow_pgm_attrs_s {
     uint8_t                   export_id4;          // Export Id4
 } __PACK__ flow_pgm_attrs_t;
 
+typedef struct flow_stats_s {
+    uint64_t              num_tcp_tickles_sent;   // Number of TCP tickles sent for this
+    uint8_t               num_tcp_rst_sent;       // Number of TCP reset sent as a result of aging
+} __PACK__ flow_stats_t;
+
 // flow state
 struct flow_s {
-    hal_spinlock_t    slock;               // lock to protect this structure
-    bool              is_aug_flow;         // is an augment flow
+    hal_spinlock_t        slock;               // lock to protect this structure
+    bool                  is_aug_flow;         // is an augment flow
 
-    flow_cfg_t        config;              // flow config
-    flow_pgm_attrs_t  pgm_attrs;           // table program attributes
-    flow_t            *reverse_flow;       // reverse flow data
-    flow_t            *assoc_flow;         // valid only if flow has an associated flow
-    session_t         *session;            // session this flow belongs to, if any
-    FlowTCPState      state;               // run-time state of the flow
+    flow_cfg_t            config;              // flow config
+    flow_pgm_attrs_t      pgm_attrs;           // table program attributes
+    flow_t               *reverse_flow;       // reverse flow data
+    flow_t               *assoc_flow;         // valid only if flow has an associated flow
+    session_t            *session;            // session this flow belongs to, if any
+    FlowTCPState          state;              // run-time state of the flow
+    flow_stats_t          stats;              // Flow level stats
 
     // PD state
     pd::pd_flow_t     *pd;                 // all PD specific state
@@ -367,7 +373,6 @@ struct session_s {
 
     // meta data maintained for session
     hal_handle_t        hal_handle;               // hal handle for this session
-    ht_ctxt_t           session_id_ht_ctxt;       // session id based hash table ctxt
     ht_ctxt_t           hal_handle_ht_ctxt;       // hal handle based hash table ctxt
     ht_ctxt_t           hal_iflow_ht_ctxt;        // hal iflow based hash table ctxt
     ht_ctxt_t           hal_rflow_ht_ctxt;        // hal rflow based hash table ctxt
@@ -380,7 +385,6 @@ struct session_s {
     dllist_ctxt_t       dif_session_lentry;       // destination interface's session list context
     dllist_ctxt_t       sl2seg_session_lentry;    // source L2 segment's session list context
     dllist_ctxt_t       dl2seg_session_lentry;    // destination L2 segment's session list context
-    dllist_ctxt_t       vrf_session_lentry;      // src vrf's session list context
     dllist_ctxt_t       feature_list_head;        // List of feature specific states
 } __PACK__;
 
@@ -391,6 +395,9 @@ typedef struct session_stats_ {
     uint64_t    icmp_sessions;
     uint64_t    drop_sessions;
     uint64_t    aged_sessions;
+    uint64_t    num_tcp_rst_sent;    // Number of TCP resets found as a result of SFW Reject
+    uint64_t    num_icmp_error_sent; // Number of ICMP errors sent as a result of SFW Reject
+    uint64_t    num_cxnsetup_timeout; // Number of sessions that timed out at connection setup
 } session_stats_t;
 
 // max. number of session supported  (TODO: we can take this from cfg file)
@@ -444,6 +451,8 @@ hal_ret_t system_fte_txrx_stats_get (SystemResponse *rsp);
 hal_ret_t system_session_summary_get (SystemResponse *rsp);
 hal_ret_t session_delete (session::SessionDeleteRequest& spec,
                       session::SessionDeleteResponseMsg *rsp);
+void incr_global_session_tcp_rst_stats (void);
+void incr_global_session_icmp_error_stats (void);
 
 }    // namespace hal
 

@@ -1016,6 +1016,9 @@ func sessionSummaryStatsShow(stats *halproto.Stats) {
 	fmt.Printf("%25s%25d\n", "ICMP", sessstats.GetIcmpSessions())
 	fmt.Printf("%25s%25d\n", "DROP", sessstats.GetDropSessions())
 	fmt.Printf("%25s%25d\n", "AGED", sessstats.GetAgedSessions())
+	fmt.Printf("%25s%25d\n", "Num TCP connection timeout", sessstats.GetNumConnectionTimeoutSessions())
+	fmt.Printf("%25s%25d\n", "TCP Reset on SFW Reject", sessstats.GetAgedSessions())
+	fmt.Printf("%25s%25d\n", "ICMP Errors on SFW Reject", sessstats.GetAgedSessions())
 }
 
 func apiStatsShowHeader() {

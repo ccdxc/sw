@@ -1391,6 +1391,7 @@ nwsec_prof_process_get (nwsec_profile_t *sec_prof,
     spec->set_tcp_rtt_estimate_en(sec_prof->tcp_rtt_estimate_en);
     spec->set_session_idle_timeout(sec_prof->session_idle_timeout);
     spec->set_tcp_cnxn_setup_timeout(sec_prof->tcp_cnxn_setup_timeout);
+    spec->set_tcp_half_closed_timeout(sec_prof->tcp_half_closed_timeout);
     spec->set_tcp_close_timeout(sec_prof->tcp_close_timeout);
     spec->set_tcp_drop_timeout(sec_prof->tcp_drop_timeout);
     spec->set_udp_drop_timeout(sec_prof->udp_drop_timeout);

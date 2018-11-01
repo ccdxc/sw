@@ -280,6 +280,12 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
         ctx.queue_txpkt(pkt, pkt_len, &cpu_hdr, &p4plus_hdr, hal::SERVICE_LIF_CPU,
                     CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, types::WRING_TYPE_ASQ,
                     net_sfw_free_reject_pkt);
+
+    if (ctx.key().proto == IP_PROTO_TCP) {
+        hal::incr_global_session_tcp_rst_stats();
+    } else if (ctx.key().proto == IP_PROTO_UDP) {
+        hal::incr_global_session_icmp_error_stats();
+    } 
 }
 
 pipeline_action_t

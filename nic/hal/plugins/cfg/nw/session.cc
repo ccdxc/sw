@@ -45,7 +45,10 @@ using sys::QInfo;
 
 using namespace sdk::lib;
 
-#define TCP_IPV4_PKT_SZ (sizeof(ether_header_t)+sizeof(ipv4_header_t)+sizeof(tcp_header_t))
+#define TCP_IPV4_DOT1Q_PKT_SZ (sizeof(ether_header_t)+sizeof(vlan_header_t)+\
+                              sizeof(ipv4_header_t)+sizeof(tcp_header_t)+TCP_TS_OPTION_LEN)
+#define TCP_IPV4_PKT_SZ (sizeof(ether_header_t)+\
+                         sizeof(ipv4_header_t)+sizeof(tcp_header_t))
 
 namespace hal {
 
@@ -57,7 +60,7 @@ session_stats_t  g_session_stats = {};
 #define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT       (15 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT    (15 * TIME_MSECS_PER_SEC)
-#define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT         (2 * TIME_MSECS_PER_SEC)
+#define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT         (15 * TIME_MSECS_PER_SEC)
 #define HAL_SESSION_AGE_SCAN_INTVL                 (250)
 #define HAL_FTE_STATS_TIMER_INTVL                  (10 * TIME_MSECS_PER_SEC)
 #define HAL_FTE_STATS_TIMER_INTVL_SECS             (10)
@@ -647,8 +650,6 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     response->mutable_status()->set_session_handle(session->hal_handle);
     response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf->vrf_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
-    response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
-    response->mutable_spec()->set_tcp_sack_perm_option(session->config.tcp_sack_perm_option);
 
     flow_to_flow_resp(session->iflow,
                       response->mutable_spec()->mutable_initiator_flow(),
@@ -673,13 +674,16 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
 }
 
 static void
-flow_state_to_flow_stats_response (flow_state_t *flow_state,
+flow_state_to_flow_stats_response (flow_stats_t *flow_stats, 
+                                   flow_state_t *flow_state,
                                    FlowStats *stats)
 {
     stats->set_flow_permitted_packets(flow_state->packets);
     stats->set_flow_permitted_bytes(flow_state->bytes);
     stats->set_flow_dropped_packets(flow_state->drop_packets);
     stats->set_flow_dropped_bytes(flow_state->drop_bytes);
+    stats->set_num_tcp_tickles_sent(flow_stats->num_tcp_tickles_sent);
+    stats->set_num_tcp_rst_sent(flow_stats->num_tcp_rst_sent);
     return;
 }
 
@@ -696,6 +700,9 @@ session_state_to_session_get_response (session_t *session,
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+
+    response->mutable_spec()->set_tcp_ts_option(session_state->tcp_ts_option);
+    response->mutable_spec()->set_tcp_sack_perm_option(session_state->tcp_sack_perm_option);
 
     // iflow_age
     create_ns = session_state->iflow_state.create_ts;
@@ -720,7 +727,7 @@ session_state_to_session_get_response (session_t *session,
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_tcp_state(session_state->iflow_state.state); 
 
-    flow_state_to_flow_stats_response(&session_state->iflow_state,
+    flow_state_to_flow_stats_response(&session->iflow->stats, &session_state->iflow_state,
          response->mutable_stats()->mutable_initiator_flow_stats());
 
     flow_state_to_connection_track_response(&session_state->iflow_state,
@@ -750,7 +757,7 @@ session_state_to_session_get_response (session_t *session,
         response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_tcp_state(session_state->rflow_state.state);
 
-        flow_state_to_flow_stats_response(&session_state->rflow_state,
+        flow_state_to_flow_stats_response(&session->rflow->stats, &session_state->rflow_state,
                 response->mutable_stats()->mutable_responder_flow_stats());
 
         flow_state_to_connection_track_response(&session_state->rflow_state,
@@ -766,7 +773,8 @@ session_state_to_session_get_response (session_t *session,
         response->mutable_spec()->mutable_peer_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
 
-        flow_state_to_flow_stats_response(&session_state->iflow_aug_state,
+        flow_state_to_flow_stats_response(&session->iflow->assoc_flow->stats, 
+                &session_state->iflow_aug_state,
                 response->mutable_stats()->mutable_peer_initiator_flow_stats());
 
         flow_state_to_connection_track_response(&session_state->iflow_aug_state,
@@ -782,7 +790,8 @@ session_state_to_session_get_response (session_t *session,
         response->mutable_spec()->mutable_peer_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
 
-        flow_state_to_flow_stats_response(&session_state->rflow_aug_state,
+        flow_state_to_flow_stats_response(&session->rflow->assoc_flow->stats, 
+                &session_state->rflow_aug_state,
                 response->mutable_stats()->mutable_peer_responder_flow_stats());
 
         flow_state_to_connection_track_response(&session_state->rflow_aug_state,
@@ -1064,7 +1073,6 @@ session_delete_list (dllist_ctxt_t *session_list, bool async)
         dllist_del(&entry->dllist_ctxt);
         g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
     }
-
 cleanup:
     dllist_for_each_safe(curr, next, session_list) {
         hal_handle_id_list_entry_t  *entry =
@@ -1106,6 +1114,7 @@ session_delete_all (SessionDeleteResponseMsg *rsp)
 
     hal_ret_t ret;
     ret = session_delete_list(&session_list);
+    if (ret != HAL_RET_OK) ret = HAL_RET_OK;
     rsp->add_response()->set_api_status(hal::hal_prepare_rsp(ret));
 
     return HAL_RET_OK;
@@ -1166,6 +1175,14 @@ flow_create_fte (const flow_cfg_t *cfg,
     }
 
     return flow;
+}
+
+void incr_global_session_tcp_rst_stats (void) {
+    HAL_ATOMIC_INC_UINT64(&g_session_stats.num_tcp_rst_sent, 1);
+}
+
+void incr_global_session_icmp_error_stats (void) {
+    HAL_ATOMIC_INC_UINT64(&g_session_stats.num_icmp_error_sent, 1);
 }
 
 inline void
@@ -1399,11 +1416,7 @@ session_delete(const session_args_t *args, session_t *session)
 
     HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
-    // Stop any timers that might be running
-    if (session->tcp_cxntrack_timer) {
-        sdk::lib::timer_delete(session->tcp_cxntrack_timer);
-        session->tcp_cxntrack_timer = NULL;
-    }
+    del_session_from_db(args->sep, args->dep, session);
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_delete_args_init(&pd_session_args);
@@ -1418,8 +1431,6 @@ session_delete(const session_args_t *args, session_t *session)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD session delete failure, err : {}", ret);
     }
-
-    del_session_from_db(args->sep, args->dep, session);
 
     update_global_session_stats(session, true);
 
@@ -1449,20 +1460,23 @@ typedef struct tcptkle_timer_ctx_ {
     dllist_ctxt_t       dllist_ctxt;
 } __PACK__ tcptkle_timer_ctx_t;
 
-static hal_ret_t
+static uint32_t
 build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
                   flow_state_t state,
                   pd::cpu_to_p4plus_header_t *cpu_header,
-                  uint8_t *pkt, bool setrst=false)
+                  uint8_t *pkt, uint8_t send_tcp_ts=0, bool setrst=false)
 {
-    ether_header_t                          *eth_hdr;
-    ipv4_header_t                           *ip_hdr;
-    tcp_header_t                            *tcp_hdr;
+    vlan_header_t                           *vlan_hdr = NULL;
+    ether_header_t                          *eth_hdr = NULL;
+    ipv4_header_t                           *ip_hdr = NULL;
+    tcp_header_t                            *tcp_hdr = NULL;
     hal_ret_t                                ret = HAL_RET_OK;
     ep_t                                    *sep = NULL, *dep = NULL;
     l2seg_t                                 *sl2seg = NULL;
     pd::pd_func_args_t                      pd_func_args = {0};
     hal::flow_key_t                         key = flow->config.key;
+    uint32_t                                offset = 0;
+    tcp_ts_option_t                         *tcp_ts = NULL;
 
     if (!pkt) {
         return HAL_RET_INVALID_ARG;
@@ -1471,12 +1485,12 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
     ret = ep_get_from_flow_key(&key, &sep, &dep);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Couldnt get SEP/DEP from session :{}", key);
-        return HAL_RET_ERR;
+        return 0;
     }
     sl2seg = hal::l2seg_lookup_by_handle(sep->l2seg_handle);
     if (sl2seg == NULL) {
         HAL_TRACE_ERR("Couldnt get source l2seg for session :{}", key);
-        return HAL_RET_ERR;
+        return 0;
     }
 
     if (key.dir == FLOW_DIR_FROM_UPLINK) {
@@ -1502,6 +1516,9 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
                 cpu_header->flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
             }
         }
+        eth_hdr = (ether_header_t *)(pkt);
+        eth_hdr->etype = htons((key.flow_type == FLOW_TYPE_V4)?ETH_TYPE_IPV4:ETH_TYPE_IPV6);
+        offset = sizeof(ether_header_t);
     } else { // FROM_DMA
         if_t   *sif = NULL;
 
@@ -1516,21 +1533,26 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
         pd_func_args.pd_if_get_hw_lif_id = &args;
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);
         cpu_header->src_lif = args.hw_lif_id;
+        vlan_hdr = (vlan_header_t *)(pkt);
+        vlan_hdr->tpid = htons(ETH_TYPE_DOT1Q);
+        vlan_hdr->vlan_tag = htons(sep->useg_vlan);
+        vlan_hdr->etype = htons((key.flow_type == FLOW_TYPE_V4)?ETH_TYPE_IPV4:ETH_TYPE_IPV6);
+        offset = sizeof(vlan_header_t);
+        eth_hdr = (ether_header_t *)vlan_hdr;
     }
 
 
-    // get the eth type
-    eth_hdr = (ether_header_t *)(pkt);
-    eth_hdr->etype = htons((key.flow_type == FLOW_TYPE_V4)?ETH_TYPE_IPV4:ETH_TYPE_IPV6);
     memcpy(eth_hdr->dmac, dep->l2_key.mac_addr, ETH_ADDR_LEN);
     memcpy(eth_hdr->smac, sep->l2_key.mac_addr, ETH_ADDR_LEN);
 
     // fix the IP header
     if (key.flow_type == FLOW_TYPE_V4) {
-        ip_hdr = (ipv4_header_t *)(pkt + sizeof(ether_header_t));
+        ip_hdr = (ipv4_header_t *)(pkt + offset);
         ip_hdr->version = 4;
         ip_hdr->ihl = sizeof(ipv4_header_t)/4;
-        ip_hdr->tot_len = htons((ip_hdr->ihl << 2) + TCP_HDR_MIN_LEN);
+        uint16_t len = (ip_hdr->ihl << 2) + TCP_HDR_MIN_LEN + \
+               ((send_tcp_ts)?TCP_TS_OPTION_LEN:0);
+        ip_hdr->tot_len = htons(len);
         ip_hdr->saddr = htonl(key.sip.v4_addr);
         ip_hdr->daddr = htonl(key.dip.v4_addr);
         ip_hdr->id = htons((uint16_t)0xBEAD);
@@ -1540,16 +1562,20 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
         ip_hdr->check = 0;    // let P4 datapath compute checksum
     } else {
         // no IPv6 support
-        return HAL_RET_INVALID_ARG;
+        return 0;
     }
+    offset += sizeof(ipv4_header_t);
 
     // fix the TCP header
-    tcp_hdr = (tcp_header_t *)(pkt + sizeof(ether_header_t) + sizeof(ipv4_header_t));
+    uint8_t tcp_option_len = 0;
+
+    tcp_hdr = (tcp_header_t *)(pkt + offset);
     tcp_hdr->sport = htons(key.sport);
     tcp_hdr->dport = htons(key.dport);
     tcp_hdr->seq = htonl((setrst)?state.tcp_seq_num:(state.tcp_seq_num-1));
     tcp_hdr->ack_seq = htonl(state.tcp_ack_num);
-    tcp_hdr->doff = 5;    // TCP header size in words
+    tcp_option_len = (send_tcp_ts)?(TCP_TS_OPTION_LEN/4):0; 
+    tcp_hdr->doff = (5 + tcp_option_len);    // TCP header size in words
     tcp_hdr->res1 = 0;
     tcp_hdr->cwr = 0;
     tcp_hdr->ece = 0;
@@ -1563,7 +1589,21 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
     tcp_hdr->check = 0;    // let P4 datapath compute checksum
     tcp_hdr->urg_ptr = 0;
 
-    return HAL_RET_OK;
+    offset += sizeof(tcp_header_t);
+
+    // Set TCP TS option if it was seen
+    if (send_tcp_ts) {
+        tcp_ts = (tcp_ts_option_t *)(pkt + offset);
+        tcp_ts->pad1 = 1;
+        tcp_ts->pad2 = 1;
+        tcp_ts->kind = 8;
+        tcp_ts->length = 10;
+        tcp_ts->ts_value = htonl(state.last_pkt_ts);
+        tcp_ts->echo_ts  = htonl(state.last_pkt_ts);
+        offset += TCP_TS_OPTION_LEN;
+    }
+
+    return offset;
 }
 
 static session_aged_ret_t
@@ -1616,6 +1656,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // If there is no timeout configured then we do not age the session
     session_timeout = session_aging_timeout(session, iflow, rflow);
     if (!session_timeout) {
+        HAL_TRACE_DEBUG("Session timeout is not configured");
         return retval;
     }
 
@@ -1709,9 +1750,11 @@ build_and_send_tcp_pkt (void *data)
     pd::cpu_to_p4plus_header_t   cpu_header = {};
     pd::p4plus_to_p4_header_t    p4plus_header = {};
     tcptkle_timer_ctx_t         *ctxt = (tcptkle_timer_ctx_t *)data;
-    uint8_t                      pkt[TCP_IPV4_PKT_SZ];
+    uint8_t                      pkt[TCP_IPV4_DOT1Q_PKT_SZ];
     hal_ret_t                    ret = HAL_RET_OK;
     session_t                   *session = NULL;
+    uint32_t                     sz = 0;
+    bool                         send_ts = 0;
 
     session = hal::find_session_by_handle(ctxt->session_handle);
     if (session == NULL) {
@@ -1724,25 +1767,29 @@ build_and_send_tcp_pkt (void *data)
     p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
     cpu_header.src_lif = hal::SERVICE_LIF_CPU;
     cpu_header.l2_offset = 0;
+    send_ts = ctxt->session_state.tcp_ts_option;
 
-    HAL_TRACE_DEBUG("Session {} Num tickles: {}", session->hal_handle, ctxt->num_tickles);
     if (ctxt->num_tickles <= MAX_TCP_TICKLES) {
         // Send tickles to one or both flows
         if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
             ctxt->aged_flow == SESSION_AGED_BOTH) {
-            build_tcp_packet(session->iflow, session->vrf_handle,
-                             ctxt->session_state.iflow_state, &cpu_header, pkt);
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
+            sz = build_tcp_packet(session->iflow, session->vrf_handle,
+                             ctxt->session_state.iflow_state, &cpu_header, pkt, 
+                             send_ts);
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+            HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
         if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
             ctxt->aged_flow == SESSION_AGED_BOTH) {
-            build_tcp_packet(session->rflow, session->vrf_handle,
-                             ctxt->session_state.rflow_state, &cpu_header, pkt);
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
+            sz = build_tcp_packet(session->rflow, session->vrf_handle,
+                             ctxt->session_state.rflow_state, &cpu_header, pkt,
+                             send_ts);
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+            HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_tickles_sent, 1);
         }
 
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {}",
-                         session->iflow->config.key);
+                         session->hal_handle);
         ctxt->num_tickles++;
         session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                               HAL_TIMER_ID_TCP_TICKLE_WAIT,
@@ -1753,14 +1800,18 @@ build_and_send_tcp_pkt (void *data)
     } else {
         // Send TCP RST to the flow if there is no response
         if (ctxt->aged_flow == SESSION_AGED_RFLOW) {
-            build_tcp_packet(session->iflow, session->vrf_handle,
-                              ctxt->session_state.iflow_state, &cpu_header, pkt, true);
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
+            sz = build_tcp_packet(session->iflow, session->vrf_handle,
+                              ctxt->session_state.iflow_state, &cpu_header, pkt, 
+                              send_ts, true);
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+            HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
         }
         if (ctxt->aged_flow == SESSION_AGED_IFLOW) {
-            build_tcp_packet(session->rflow, session->vrf_handle,
-                             ctxt->session_state.rflow_state, &cpu_header, pkt, true);
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
+            sz = build_tcp_packet(session->rflow, session->vrf_handle,
+                             ctxt->session_state.rflow_state, &cpu_header, pkt, 
+                             send_ts, true);
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+            HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
         }
 
         HAL_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1);
@@ -1829,6 +1880,11 @@ session_age_cb (void *entry, void *ctxt)
     session_aged_ret_t      retval = SESSION_AGED_NONE;
 
     (*args->num_sessions)++;
+
+    // In case session or handle is invalid, we dont want to look further
+    if (session == NULL || session->hal_handle == HAL_HANDLE_INVALID) {
+        return false;
+    }
  
     // Check if its a TCP flow with connection tracking enabled.
     // And connection tracking timer is not NULL. This means the session
@@ -1839,7 +1895,7 @@ session_age_cb (void *entry, void *ctxt)
         session->config.conn_track_en &&
         session->tcp_cxntrack_timer != NULL) {
         HAL_TRACE_DEBUG("Session connection tracking timer is on for {} -- bailing aging",
-                        session->iflow->config.key);
+                        session->hal_handle);
         return false;
     }
 
@@ -1965,7 +2021,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     clock_gettime(CLOCK_MONOTONIC, &ctime);
     sdk::timestamp_to_nsecs(&ctime, &args.ctime_ns);
 
-    //HAL_TRACE_DEBUG("timer id {}, bucket: {}", timer_id,  bucket);
+    //HAL_TRACE_DEBUG("Entering timer id {}, bucket: {}", timer_id,  bucket);
     while (num_sessions < HAL_SESSIONS_TO_SCAN_PER_INTVL &&
            bucket_no < g_hal_state->session_hal_handle_ht()->num_buckets()) {
         g_hal_state->session_hal_handle_ht()->walk_bucket_safe(bucket,
@@ -1973,13 +2029,13 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
         bucket_no++;
         bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
     }
-    //HAL_TRACE_DEBUG("Num sessions: {}", num_sessions); 
+    //HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {}", num_sessions, bucket, bucket_no); 
 
     //Check if there are pending requests that need to be queued to FTE threads
     for (fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
         if (args.num_ctx[fte_id]) {
 
-            //HAL_TRACE_DEBUG("Enqueuing tickles for fte: {}", fte_id);
+            HAL_TRACE_DEBUG("Enqueuing tickles for fte: {}", fte_id);
             ret = fte::fte_softq_enqueue(fte_id,
                                   process_hal_periodic_tkle,
                                   (void *)args.tctx_list[fte_id]);
@@ -2283,6 +2339,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
         state.rflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED) {
         // session is not in established state yet.
         // Cleanup the session
+        HAL_ATOMIC_INC_UINT64(&g_session_stats.num_cxnsetup_timeout, 1);
         ret = fte::session_delete_async(session);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete session {}",
@@ -2509,6 +2566,9 @@ system_session_summary_get(SystemResponse *rsp)
     session_stats->set_icmp_sessions(g_session_stats.icmp_sessions);
     session_stats->set_drop_sessions(g_session_stats.drop_sessions);
     session_stats->set_aged_sessions(g_session_stats.aged_sessions);
+    session_stats->set_num_tcp_reset_sent(g_session_stats.num_tcp_rst_sent);
+    session_stats->set_num_icmp_error_sent(g_session_stats.num_icmp_error_sent);
+    session_stats->set_num_connection_timeout_sessions(g_session_stats.num_cxnsetup_timeout);
 
     return HAL_RET_OK;
 }

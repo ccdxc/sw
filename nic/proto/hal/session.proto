@@ -359,6 +359,8 @@ message FlowStats {
   fixed64    flow_permitted_bytes        = 2;
   fixed64    flow_dropped_packets        = 3;
   fixed64    flow_dropped_bytes          = 4;
+  fixed64    num_tcp_tickles_sent        = 5; 
+  fixed64    num_tcp_rst_sent            = 6; 
 }
 
 // SessionStats captures statistics of all its constituent flows

@@ -185,13 +185,14 @@ do {                                                       \
 // TODO: we need atomic increment operations for ARM
 // gnu gcc builin functions aren't availabe for ARM, ARM has its own library
 //------------------------------------------------------------------------------
-#define HAL_ATOMIC_INC_UINT32(ptr, val)     __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
-#define HAL_ATOMIC_DEC_UINT32(ptr, val)     __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
-#define HAL_ATOMIC_STORE_UINT32(ptr, vptr)  __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
-#define HAL_ATOMIC_LOAD_UINT32(ptr, vptr)   __atomic_load(ptr, vptr, __ATOMIC_SEQ_CST)
-#define HAL_ATOMIC_INC_UINT64(ptr, val)     __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
-#define HAL_ATOMIC_DEC_UINT64(ptr, val)     __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
-#define HAL_ATOMIC_STORE_UINT64(ptr, vptr)  __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_INC_UINT32(ptr, val)      __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_DEC_UINT32(ptr, val)      __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_STORE_UINT32(ptr, vptr)   __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_LOAD_UINT32(ptr, vptr)    __atomic_load(ptr, vptr, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_LOAD_INC_UINT32(ptr, val) __atomic_fetch_add(ptr, val, __ATOMIC_SEQ_CST) 
+#define HAL_ATOMIC_INC_UINT64(ptr, val)      __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_DEC_UINT64(ptr, val)      __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_STORE_UINT64(ptr, vptr)   __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
 
 #define HAL_ARRAY_SIZE(arr)                (sizeof((arr))/sizeof((arr)[0]))
 

@@ -17,9 +17,15 @@ import (
 )
 
 var (
-	traceLevel string
-	secProfID  uint32
-	connTrack  string
+	traceLevel          string
+	secProfID           uint32
+	connTrack           string
+	tcpTimeout          uint32
+	udpTimeout          uint32
+	icmpTimeout         uint32
+	idleTimeout         uint32
+	tcpCxnsetupTimeout  uint32
+	tcpHalfcloseTimeout uint32
 )
 
 var debugCmd = &cobra.Command{
@@ -118,8 +124,13 @@ func init() {
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
 	secProfDebugCmd.Flags().Uint32Var(&secProfID, "id", 0, "Specify firewall security profile ID")
 	secProfDebugCmd.Flags().StringVar(&connTrack, "conntrack", "off", "Turn connection tracking on/off")
+	secProfDebugCmd.Flags().Uint32Var(&tcpTimeout, "tcp-timeout", 3600, "TCP session aging timeout in range 0-172800 (0 means no aging)")
+	secProfDebugCmd.Flags().Uint32Var(&udpTimeout, "udp-timeout", 30, "UDP session aging timeout in range 0-172800 (0 means no aging)")
+	secProfDebugCmd.Flags().Uint32Var(&icmpTimeout, "icmp-timeout", 6, "ICMP session aging timeout in range 0-172800 (0 means no aging)")
+	secProfDebugCmd.Flags().Uint32Var(&idleTimeout, "idle-timeout", 90, "Session aging timeout for non TCP/UDP/ICMP in range 0-172800 (0 means no aging)")
+	secProfDebugCmd.Flags().Uint32Var(&tcpCxnsetupTimeout, "tcp-cxnsetup-timeout", 30, "TCP Connection setup timeout for 3-way handshake in range 0-60 (0 means no timeout)")
+	secProfDebugCmd.Flags().Uint32Var(&tcpHalfcloseTimeout, "tcp-halfclose-timeout", 120, "TCP Half close timeout when FIN is received on one direction in range 0-172800 (0 means no timeout)")
 	secProfDebugCmd.MarkFlagRequired("id")
-	secProfDebugCmd.MarkFlagRequired("conntrack")
 }
 
 func sramDebugCmdHandler(cmd *cobra.Command, args []string) {
@@ -495,27 +506,91 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 	var reqMsg *halproto.SecurityProfileRequestMsg
 
 	if cmd.Flags().Changed("id") {
+		var secProf *halproto.SecurityProfileSpec
+
+		// Get security profile
+		var getReqMsg *halproto.SecurityProfileGetRequestMsg
+		var getReq *halproto.SecurityProfileGetRequest
+
+		getReq = &halproto.SecurityProfileGetRequest{
+			KeyOrHandle: &halproto.SecurityProfileKeyHandle{
+				KeyOrHandle: &halproto.SecurityProfileKeyHandle_ProfileId{
+					ProfileId: secProfID,
+				},
+			},
+		}
+
+		getReqMsg = &halproto.SecurityProfileGetRequestMsg{
+			Request: []*halproto.SecurityProfileGetRequest{getReq},
+		}
+
+		// HAL call
+		getRespMsg, err := client.SecurityProfileGet(context.Background(), getReqMsg)
+		if err != nil {
+			fmt.Printf("Get Security Profile for failed for id. %v\n", err)
+			return
+		}
+
+		for _, getResp := range getRespMsg.Response {
+			if getResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("HAL Returned non OK status for profile get %v\n", getResp.ApiStatus)
+				continue
+			}
+			secProf = getResp.GetSpec()
+		}
+
 		if cmd.Flags().Changed("conntrack") {
 			if isConnTrackValid(connTrack) != true {
 				fmt.Printf("Invalid argument\n")
 				return
 			}
-			var req *halproto.SecurityProfileSpec
-
 			// Set conn tracking
-			req = &halproto.SecurityProfileSpec{
-				KeyOrHandle: &halproto.SecurityProfileKeyHandle{
-					KeyOrHandle: &halproto.SecurityProfileKeyHandle_ProfileId{
-						ProfileId: secProfID,
-					},
-				},
-				CnxnTrackingEn: inputToConnTrack(connTrack),
+			secProf.CnxnTrackingEn = inputToConnTrack(connTrack)
+		}
+		if cmd.Flags().Changed("tcp-timeout") {
+			if isTimeoutValid("TCP", tcpTimeout) != true {
+				fmt.Printf("Invalid argument\n")
+				return
 			}
-			reqMsg = &halproto.SecurityProfileRequestMsg{
-				Request: []*halproto.SecurityProfileSpec{req},
+			secProf.TcpTimeout = tcpTimeout
+		}
+		if cmd.Flags().Changed("udp-timeout") {
+			if isTimeoutValid("UDP", udpTimeout) != true {
+				fmt.Printf("Invalid argument\n")
+				return
 			}
-		} else {
-			fmt.Printf("Argument required. Turn connection tracking on/off using '--conntrack on/off' flag\n")
+			secProf.UdpTimeout = udpTimeout
+		}
+		if cmd.Flags().Changed("icmp-timeout") {
+			if isTimeoutValid("ICMP", icmpTimeout) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.IcmpTimeout = icmpTimeout
+		}
+		if cmd.Flags().Changed("idle-timeout") {
+			if isTimeoutValid("SESSION-IDLE", idleTimeout) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.SessionIdleTimeout = idleTimeout
+		}
+		if cmd.Flags().Changed("tcp-cxnsetup-timeout") {
+			if isTimeoutValid("TCP-CXN-SETUP", tcpCxnsetupTimeout) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.TcpCnxnSetupTimeout = tcpCxnsetupTimeout
+		}
+		if cmd.Flags().Changed("tcp-halfclose-timeout") {
+			if isTimeoutValid("TCP-HALF-CLOSE", tcpHalfcloseTimeout) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.TcpHalfClosedTimeout = tcpHalfcloseTimeout
+		}
+		reqMsg = &halproto.SecurityProfileRequestMsg{
+			Request: []*halproto.SecurityProfileSpec{secProf},
 		}
 	} else {
 		fmt.Printf("Argument required. Set security profile ID using '--id ...' flag\n")
@@ -527,38 +602,6 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Printf("Set conn tracking failed. %v\n", err)
 		return
-	}
-
-	// Get security profile
-	var getReqMsg *halproto.SecurityProfileGetRequestMsg
-	var getReq *halproto.SecurityProfileGetRequest
-
-	getReq = &halproto.SecurityProfileGetRequest{
-		KeyOrHandle: &halproto.SecurityProfileKeyHandle{
-			KeyOrHandle: &halproto.SecurityProfileKeyHandle_ProfileId{
-				ProfileId: secProfID,
-			},
-		},
-	}
-
-	getReqMsg = &halproto.SecurityProfileGetRequestMsg{
-		Request: []*halproto.SecurityProfileGetRequest{getReq},
-	}
-
-	// HAL call
-	getRespMsg, err := client.SecurityProfileGet(context.Background(), getReqMsg)
-	if err != nil {
-		fmt.Printf("Get conn tracking failed. %v\n", err)
-		return
-	}
-
-	// Print Conn Tracking
-	for _, getResp := range getRespMsg.Response {
-		if getResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", getResp.ApiStatus)
-			continue
-		}
-		fmt.Printf("Connection Tracking is %s\n", getConnTrack(getResp))
 	}
 }
 
@@ -582,6 +625,37 @@ func inputToConnTrack(str string) bool {
 	}
 
 	return false
+}
+
+func isTimeoutValid(str string, val uint32) bool {
+	switch str {
+	case "TCP-IDLE":
+		if val > 172800 {
+			return false
+		}
+	case "TCP-CXN-SETUP":
+		if val > 60 {
+			return false
+		}
+	case "TCP-HALF-CLOSE":
+		if val > 172800 {
+			return false
+		}
+	case "UDP-IDLE":
+		if val > 172800 {
+			return false
+		}
+	case "SESSION-IDLE":
+		if val > 172800 {
+			return false
+		}
+	case "ICMP-IDLE":
+		if val > 172800 {
+			return false
+		}
+	}
+
+	return true
 }
 
 func getConnTrack(resp *halproto.SecurityProfileGetResponse) string {

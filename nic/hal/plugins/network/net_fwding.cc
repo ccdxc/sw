@@ -150,16 +150,15 @@ update_fwding_info(fte::ctx_t&ctx)
 		// else if (ctx.sep() && ctx.sep()->pinned_if_handle != HAL_HANDLE_INVALID)
 	// dif = hal::find_if_by_handle(ctx.sep()->pinned_if_handle);
 	// HAL_ASSERT_RETURN(dif, HAL_RET_IF_NOT_FOUND);
-
-		pinned_if = ep_get_pinned_uplink(ctx.sep());
-		if (pinned_if) {
-			dif = pinned_if;
-			if (ctx.dif() == NULL) {
-				flowupd.fwding.dif = dif;
-				flowupd.fwding.dl2seg = ctx.sl2seg();
-			}
-		}
-	}
+        pinned_if = ep_get_pinned_uplink(ctx.sep());
+        if (pinned_if) {
+            dif = pinned_if;
+            if (ctx.dif() == NULL) {
+                flowupd.fwding.dif = dif;
+                flowupd.fwding.dl2seg = ctx.sl2seg();
+             }
+        }
+    }
 
     if (dif == NULL) {
         ret = route_lookup(&ctx.get_key(), &flowupd.fwding.dep,

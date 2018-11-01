@@ -1,5 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
+#include <atomic>
 #include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/hal.hpp"
@@ -59,7 +60,7 @@ typedef struct asic_rw_entry_ {
 //------------------------------------------------------------------------------
 typedef struct asic_rw_queue_s {
     std::atomic<uint32_t>    nentries;    // no. of entries in the queue
-    uint16_t                 pindx;       // producer index
+    std::atomic<uint16_t>    pindx;       // producer index
     uint16_t                 cindx;       // consumer index
     asic_rw_entry_t          entries[HAL_ASIC_RW_Q_SIZE];    // entries
 } asic_rw_queue_t;
@@ -128,7 +129,15 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
                       "data {:#x}, len {}", curr_tid, addr, data, len)
         return HAL_RET_HW_PROG_ERR;
     }
-    pindx = g_asic_rw_workq[curr_tid].pindx;
+
+    // move the producer index to next slot.
+    // consumer is unaware of the blocking/non-blocking call and always
+    // moves to the next slot.
+    pindx = g_asic_rw_workq[curr_tid].pindx.load();
+    while(!g_asic_rw_workq[curr_tid].pindx.compare_exchange_weak(pindx, 
+                                       (pindx+1)%HAL_ASIC_RW_Q_SIZE,
+                                       std::memory_order_release,
+                                       std::memory_order_relaxed));
 
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
     rw_entry->opn = opn;
@@ -138,20 +147,12 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
     rw_entry->data = data;
     rw_entry->done.store(false);
 
-    g_asic_rw_workq[curr_tid].nentries++;
+    g_asic_rw_workq[curr_tid].nentries.fetch_add(1, std::memory_order_relaxed);
 
     while (rw_entry->done.load() == false) {
         if (curr_thread->can_yield()) {
             pthread_yield();
         }
-    }
-
-    // move the producer index to next slot.
-    // consumer is unaware of the blocking/non-blocking call and always
-    // moves to the next slot.
-    g_asic_rw_workq[curr_tid].pindx++;
-    if (g_asic_rw_workq[curr_tid].pindx >= HAL_ASIC_RW_Q_SIZE) {
-        g_asic_rw_workq[curr_tid].pindx = 0;
     }
 
     return rw_entry->status;
