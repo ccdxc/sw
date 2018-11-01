@@ -47,28 +47,34 @@ export class FieldselectorComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
   }
 
-  // /**
-  //  * Converts the value from field into arrays instead of strings and returns the value
-  //  */
-  // getValuesWithValueFormAsArray() {
-  //   return this.fieldRepeater ? this.filterEmptyValues(this.convertStringValuesToArray()) : [];
-  // }
-
   getValues() {
-    return this.fieldRepeater ? this.filterEmptyValues(this.fieldRepeater.getValues()) : [];
+    return this.fieldRepeater ? this.formatRepeaterData(this.fieldRepeater.getValues()) : [];
   }
 
   /**
-   * If the user has specified a value, we don't add
+   * If the user hasn't specified a value, we don't add
    * it into the values we return to the consumer.
+   * If a field is free form text, we split by comma to turn 
+   * it into an array of values
    */
-  filterEmptyValues(data) {
+  formatRepeaterData(data) {
     if (data == null) {
       return null;
     }
-    const retData = data.filter((item) => {
+    let retData = data.filter((item) => {
       return item[this.valueFormName] != null && item[this.valueFormName].length !== 0;
     });
+    // make sure the value field is an array
+    retData = retData.map((item) => {
+      if (item[this.valueFormName] instanceof Array) {
+        return item;
+      } else {
+        const arrVal = item[this.valueFormName].split(',');
+        item[this.valueFormName] = arrVal.map(val => {
+          return val.trim();
+        })
+      }
+    })
     return retData;
   }
 
