@@ -219,6 +219,49 @@ func (n *NMD) NaplesConfigHandler(r *http.Request) (interface{}, error) {
 	return resp, nil
 }
 
+// NaplesFileUploadHandler is the REST handler for Naples File Upload POST operation
+func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
+	// parse and validate file and post parameters
+	file, fileHeader, err := r.FormFile("uploadFile")
+	if err != nil {
+		renderError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+	uploadPath := r.FormValue("uploadPath")
+	if uploadPath == "" {
+		renderError(w, "Upload Path Not Specified\n", http.StatusBadRequest)
+		return
+	}
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		renderError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fileNameSlice := strings.Split(fileHeader.Filename, "/")
+
+	newPath := uploadPath + fileNameSlice[len(fileNameSlice)-1]
+
+	// write file
+	newFile, err := os.Create(newPath)
+	if err != nil {
+		renderError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer newFile.Close() // idempotent, okay to call twice
+	if _, err := newFile.Write(fileBytes); err != nil || newFile.Close() != nil {
+		renderError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte("File Copied Successfully\n"))
+}
+
+func renderError(w http.ResponseWriter, message string, statusCode int) {
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write([]byte(message))
+}
+
 // NaplesGetHandler is the REST handler for Naples Config GET operation
 func (n *NMD) NaplesGetHandler(r *http.Request) (interface{}, error) {
 
@@ -271,6 +314,7 @@ func (n *NMD) StartRestServer() error {
 	router := mux.NewRouter()
 	t1 := router.Methods("POST").Subrouter()
 	t1.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesConfigHandler))
+	t1.HandleFunc(UploadURL, NaplesFileUploadHandler)
 
 	t2 := router.Methods("GET").Subrouter()
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
@@ -340,6 +384,11 @@ func (n *NMD) GetNMDUrl() string {
 // GetNMDCmdExecURL returns the REST URL
 func (n *NMD) GetNMDCmdExecURL() string {
 	return "http://" + n.GetListenURL() + CmdEXECUrl
+}
+
+// GetGetNMDUploadURL returns the REST URL
+func (n *NMD) GetGetNMDUploadURL() string {
+	return "http://" + n.GetListenURL() + UploadURL
 }
 
 func (n *NMD) initTLSProvider() error {

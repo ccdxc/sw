@@ -5,25 +5,31 @@
 
 .SH NAME
 .PP
-penctl \- Pensando CLIs
+penctl\-put\-firmware \- Copy firmware image to Naples
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl [flags]\fP
+\fBpenctl put firmware [flags]\fP
 
 
 .SH DESCRIPTION
 .ti 0
 \l'\n(.lu'
 
-.SH Pensando Management CLIs
+.SH Copy Firmware Image To Naples
 
 .SH OPTIONS
 .PP
-\fB\-h\fP, \fB\-\-help\fP[=false]
-    help for penctl
+\fB\-f\fP, \fB\-\-file\fP=""
+    Firmware file location/name
 
+.PP
+\fB\-h\fP, \fB\-\-help\fP[=false]
+    help for firmware
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
 .PP
 \fB\-e\fP, \fB\-\-interface\fP=""
     ethernet device of naples
@@ -43,4 +49,4 @@ penctl \- Pensando CLIs
 
 .SH SEE ALSO
 .PP
-\fBpenctl\-core(3)\fP, \fBpenctl\-execute(3)\fP, \fBpenctl\-get(3)\fP, \fBpenctl\-put(3)\fP, \fBpenctl\-set(3)\fP, \fBpenctl\-ssh(3)\fP
+\fBpenctl\-put(3)\fP

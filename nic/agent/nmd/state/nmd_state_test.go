@@ -10,9 +10,12 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -969,6 +972,240 @@ func TestNaplesCmdExec(t *testing.T) {
 		return true, nil
 	}
 	AssertEventually(t, f1, "Failed to post exec cmd")
+
+	// stop NMD, don't clean up DB file
+	stopNMD(t, nm, false)
+}
+
+func mustOpen(f string) *os.File {
+	r, err := os.Open(f)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func TestNaplesFileUpload(t *testing.T) {
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
+	// create nmd
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+
+	f1 := func() (bool, interface{}) {
+		os.MkdirAll("/upload/", os.ModePerm)
+
+		d1 := []byte("hello\ngo\n")
+		err := ioutil.WriteFile("/upload/dat1", d1, 0644)
+
+		values := map[string]io.Reader{
+			"uploadFile": mustOpen("/upload/dat1"),
+			"uploadPath": strings.NewReader("/upload/"),
+		}
+		var b bytes.Buffer
+		w := multipart.NewWriter(&b)
+		for key, r := range values {
+			var fw io.Writer
+			var err error
+			if x, ok := r.(io.Closer); ok {
+				defer x.Close()
+			}
+			if x, ok := r.(*os.File); ok {
+				if fw, err = w.CreateFormFile(key, x.Name()); err != nil {
+					return false, err
+				}
+			} else {
+				if fw, err = w.CreateFormField(key); err != nil {
+					return false, err
+				}
+			}
+			if _, err = io.Copy(fw, r); err != nil {
+				return false, err
+			}
+
+		}
+		w.Close()
+		if err != nil {
+			log.Errorf("Failed to marshal data, err:%+v", err)
+			return false, nil
+		}
+		getReq, err := http.NewRequest("POST", nm.GetGetNMDUploadURL(), &b)
+		if err != nil {
+			log.Errorf("Failed to create new request, err:%+v", err)
+			return false, nil
+		}
+		getReq.Header.Set("Content-Type", w.FormDataContentType())
+
+		getResp, err := http.DefaultClient.Do(getReq)
+		if err != nil {
+			log.Errorf("Failed to get response, err:%+v", err)
+			return false, nil
+		}
+		defer getResp.Body.Close()
+		respBody, err := ioutil.ReadAll(getResp.Body)
+		if err != nil {
+			log.Errorf("Failed to read body bytes, err:%+v", err)
+			return false, nil
+		}
+		if strings.Compare(string(respBody), "File Copied Successfully\n") != 0 {
+			log.Errorf("respBody not as expected, got:%s", string(respBody))
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to upload file")
+
+	// stop NMD, don't clean up DB file
+	stopNMD(t, nm, false)
+}
+
+func TestNaplesFileUploadNoUploadFile(t *testing.T) {
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
+	// create nmd
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+
+	f1 := func() (bool, interface{}) {
+		os.MkdirAll("/upload/", os.ModePerm)
+
+		d1 := []byte("hello\ngo\n")
+		err := ioutil.WriteFile("/upload/dat1", d1, 0644)
+
+		values := map[string]io.Reader{
+			"uploadPath": strings.NewReader("/upload/"),
+		}
+		var b bytes.Buffer
+		w := multipart.NewWriter(&b)
+		for key, r := range values {
+			var fw io.Writer
+			var err error
+			if x, ok := r.(io.Closer); ok {
+				defer x.Close()
+			}
+			if x, ok := r.(*os.File); ok {
+				if fw, err = w.CreateFormFile(key, x.Name()); err != nil {
+					return false, err
+				}
+			} else {
+				if fw, err = w.CreateFormField(key); err != nil {
+					return false, err
+				}
+			}
+			if _, err = io.Copy(fw, r); err != nil {
+				return false, err
+			}
+
+		}
+		w.Close()
+		if err != nil {
+			log.Errorf("Failed to marshal data, err:%+v", err)
+			return false, nil
+		}
+		getReq, err := http.NewRequest("POST", nm.GetGetNMDUploadURL(), &b)
+		if err != nil {
+			log.Errorf("Failed to create new request, err:%+v", err)
+			return false, nil
+		}
+		getReq.Header.Set("Content-Type", w.FormDataContentType())
+
+		getResp, err := http.DefaultClient.Do(getReq)
+		if err != nil {
+			log.Errorf("Failed to get response, err:%+v", err)
+			return false, nil
+		}
+		defer getResp.Body.Close()
+		respBody, err := ioutil.ReadAll(getResp.Body)
+		if err != nil {
+			log.Errorf("Failed to read body bytes, err:%+v", err)
+			return false, nil
+		}
+		if strings.Compare(string(respBody), "http: no such file") != 0 {
+			log.Errorf("respBody not as expected, got:%s", string(respBody))
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to upload file")
+
+	// stop NMD, don't clean up DB file
+	stopNMD(t, nm, false)
+}
+
+func TestNaplesFileUploadNoUploadPath(t *testing.T) {
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
+	// create nmd
+	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+
+	f1 := func() (bool, interface{}) {
+		os.MkdirAll("/upload/", os.ModePerm)
+
+		d1 := []byte("hello\ngo\n")
+		err := ioutil.WriteFile("/upload/dat1", d1, 0644)
+
+		values := map[string]io.Reader{
+			"uploadFile": mustOpen("/upload/dat1"),
+		}
+		var b bytes.Buffer
+		w := multipart.NewWriter(&b)
+		for key, r := range values {
+			var fw io.Writer
+			var err error
+			if x, ok := r.(io.Closer); ok {
+				defer x.Close()
+			}
+			if x, ok := r.(*os.File); ok {
+				if fw, err = w.CreateFormFile(key, x.Name()); err != nil {
+					return false, err
+				}
+			} else {
+				if fw, err = w.CreateFormField(key); err != nil {
+					return false, err
+				}
+			}
+			if _, err = io.Copy(fw, r); err != nil {
+				return false, err
+			}
+
+		}
+		w.Close()
+		if err != nil {
+			log.Errorf("Failed to marshal data, err:%+v", err)
+			return false, nil
+		}
+		getReq, err := http.NewRequest("POST", nm.GetGetNMDUploadURL(), &b)
+		if err != nil {
+			log.Errorf("Failed to create new request, err:%+v", err)
+			return false, nil
+		}
+		getReq.Header.Set("Content-Type", w.FormDataContentType())
+
+		getResp, err := http.DefaultClient.Do(getReq)
+		if err != nil {
+			log.Errorf("Failed to get response, err:%+v", err)
+			return false, nil
+		}
+		defer getResp.Body.Close()
+		respBody, err := ioutil.ReadAll(getResp.Body)
+		if err != nil {
+			log.Errorf("Failed to read body bytes, err:%+v", err)
+			return false, nil
+		}
+		if strings.Compare(string(respBody), "Upload Path Not Specified\n") != 0 {
+			log.Errorf("respBody not as expected, got:%s", string(respBody))
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to upload file")
 
 	// stop NMD, don't clean up DB file
 	stopNMD(t, nm, false)

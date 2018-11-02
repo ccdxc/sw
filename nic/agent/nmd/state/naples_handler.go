@@ -17,14 +17,16 @@ import (
 )
 
 const (
-	// ConfigURL in URL to configure a nic in classic mode
+	// ConfigURL is URL to configure a nic in classic mode
 	ConfigURL = "/api/v1/naples/"
-	// MonitoringURL in URL to fetch logs and other diags from nic in classic mode
+	// MonitoringURL is URL to fetch logs and other diags from nic in classic mode
 	MonitoringURL = "/monitoring/v1/naples/"
-	// CoresURL in URL to fetch cores from nic in classic mode
+	// CoresURL is URL to fetch cores from nic in classic mode
 	CoresURL = "/cores/v1/naples/"
-	// CmdEXECUrl in URL to fetch output from running executables on Naples in classic mode
+	// CmdEXECUrl is URL to fetch output from running executables on Naples in classic mode
 	CmdEXECUrl = "/cmd/v1/naples/"
+	// UploadURL is the URL to help with file upload
+	UploadURL = "/upload/"
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped

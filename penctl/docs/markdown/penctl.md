@@ -25,6 +25,7 @@ Pensando CLIs
 * [penctl core](penctl_core.md)	 - Cores on Naples
 * [penctl execute](penctl_execute.md)	 - Execute Binary
 * [penctl get](penctl_get.md)	 - Get CLIs
+* [penctl put](penctl_put.md)	 - Put CLIs
 * [penctl set](penctl_set.md)	 - Config CLIs
 * [penctl ssh](penctl_ssh.md)	 - SSH Commands to Naples
 

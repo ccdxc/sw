@@ -9,11 +9,61 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"os"
 
 	"github.com/ghodss/yaml"
 )
+
+func restPostForm(port string, url string, values map[string]io.Reader) ([]byte, error) {
+	url = "http://" + naplesIP + ":" + port + "/" + url
+
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	for key, r := range values {
+		var fw io.Writer
+		var err error
+		if x, ok := r.(io.Closer); ok {
+			defer x.Close()
+		}
+		if x, ok := r.(*os.File); ok {
+			if fw, err = w.CreateFormFile(key, x.Name()); err != nil {
+				return nil, err
+			}
+		} else {
+			if fw, err = w.CreateFormField(key); err != nil {
+				return nil, err
+			}
+		}
+		if _, err = io.Copy(fw, r); err != nil {
+			return nil, err
+		}
+
+	}
+	w.Close()
+
+	req, err := http.NewRequest("POST", url, &b)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if verbose {
+		fmt.Println("Status: ", res.Status)
+		fmt.Println("Header: ", res.Header)
+	}
+	bodyBytes, _ := ioutil.ReadAll(res.Body)
+
+	return bodyBytes, nil
+}
 
 func restPost(v interface{}, port string, url string) error {
 	payloadBytes, err := json.Marshal(v)

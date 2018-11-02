@@ -32,6 +32,7 @@ SEE ALSO
 * `penctl core <penctl_core.rst>`_ 	 - Cores on Naples
 * `penctl execute <penctl_execute.rst>`_ 	 - Execute Binary
 * `penctl get <penctl_get.rst>`_ 	 - Get CLIs
+* `penctl put <penctl_put.rst>`_ 	 - Put CLIs
 * `penctl set <penctl_set.rst>`_ 	 - Config CLIs
 * `penctl ssh <penctl_ssh.rst>`_ 	 - SSH Commands to Naples
 
