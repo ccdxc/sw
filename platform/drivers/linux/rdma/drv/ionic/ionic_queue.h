@@ -45,8 +45,7 @@
  * @dma:	Dma address of the buffer.
  * @ptr:	Buffer virtual address.
  * @prod:	Driver position in the queue.
- * @cons:	Device position in the queue, for to-device queues.
- *              Current color of the queue, for from-device queues.
+ * @cons:	Device position in the queue.
  * @mask:	Capacity of the queue, subtracting the hole.
  *		This value is eqal to ((1 << depth_log2) - 1).
  * @depth_log2: Log base two size depth of the queue.
@@ -132,32 +131,8 @@ static inline bool ionic_queue_full(struct ionic_queue *q)
 	return q->mask == ionic_queue_length(q);
 }
 
-/** ionic_queue_color_init - Initialize the color to one.
- * @q:		Queue structure.
- *
- * This should be called after ionic_queue_init() for from-device queue.
- */
-static inline void ionic_queue_color_init(struct ionic_queue *q)
-{
-	/* the cons field is used for color */
-	q->cons = true;
-}
-
-/** ionic_queue_color - Get the current color or phase of the queue.
- * @q:		Queue structure.
- *
- * This is only valid for from-device queues (events, completions).
- *
- * Return: color.
- */
-static inline bool ionic_queue_color(struct ionic_queue *q)
-{
-	/* the cons field is used for color */
-	return q->cons;
-}
-
-/** ionic_queue_color_wrap - Flip the color if prod is wrapped.
- * @idx:	Queue index just after advancing.
+/** ionic_color_wrap - Flip the color if prod is wrapped.
+ * @prod:	Queue index just after advancing.
  * @color:	Queue color just prior to advancing the index.
  *
  * Return: color after advancing the index.
@@ -166,16 +141,6 @@ static inline bool ionic_color_wrap(u16 prod, bool color)
 {
 	/* logical xor color with (prod == 0) */
 	return color != (prod == 0);
-}
-
-/** ionic_queue_color_wrap - Swap the queue color if wrapped.
- * @q:		Queue structure.
- *
- * This should be called after ionic_queue_produce() for from-device queue.
- */
-static inline void ionic_queue_color_wrap(struct ionic_queue *q)
-{
-	q->cons = ionic_color_wrap(q->prod, q->cons);
 }
 
 /** ionic_queue_at - Get the element at the given index.

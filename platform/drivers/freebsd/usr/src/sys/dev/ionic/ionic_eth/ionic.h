@@ -21,6 +21,7 @@
 
 #include "ionic_dev.h"
 #include "ionic_api.h"
+#include "ionic_kpicompat.h"
 
 //#define ADMINQ
 
@@ -87,30 +88,9 @@
 #define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
 #endif
 
-#ifndef print_hex_dump_debug
-#define print_hex_dump_debug(...) 			\
-		print_hex_dump(NULL, __VA_ARGS__);
-#endif
-
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
 #define DRV_VERSION		"0.1"
-
-/* XXX : should go to linux/completion.h */
-#define	INIT_COMPLETION_ONSTACK(c) \
-	((c).done = 0)
-#define	COMPLETION_INITIALIZER(c) \
-        { .done = 0 }
-#define	COMPLETION_INITIALIZER_ONSTACK(c) \
-        { .done = 0 }
-
-
-/* XXX: should go to linux/kernel.h */
-#define	IS_ALIGNED(x, y)	(((x) & (y - 1)) == 0)
-#define	PAGE_ALIGNED(x)	IS_ALIGNED((unsigned long)x, PAGE_SIZE)
-
-/* XXX: should go to linux/notifier.h */
-#define notifier_from_errno(v) NOTIFY_DONE
 
 /* END */
 

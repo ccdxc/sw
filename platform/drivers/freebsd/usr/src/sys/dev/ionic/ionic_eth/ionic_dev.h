@@ -69,6 +69,7 @@ struct dev_cmd_db
 };
 
 #define IONIC_BARS_MAX 6
+#define IONIC_PCI_BAR_DBELL 1
 
 struct ionic_dev_bar
 {
@@ -314,6 +315,7 @@ void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr);
 void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);
 
 char *ionic_dev_asic_name(u8 asic_type);
+int ionic_db_page_num(struct ionic_dev *idev, int lif_id, int pid);
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 					unsigned long index);

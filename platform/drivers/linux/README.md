@@ -18,8 +18,9 @@ rm -r drivers-linux	#purge old version
 tar xaf drivers-linux.tar.xz
 ./setup_apt.sh		#first time, for build dependencies
 ./build.sh
-. env.sh
+. env.sh		#source env.sh (not executable)
 insmod drivers/eth/ionic/ionic.ko
+modprobe ib_uverbs
 insmod drivers/rdma/drv/ionic/ionic_rdma.ko
 ```
 

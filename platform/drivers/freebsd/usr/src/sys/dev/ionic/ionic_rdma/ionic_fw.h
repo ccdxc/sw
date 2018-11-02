@@ -117,13 +117,37 @@ enum ionic_qp_flags {
 	IONIC_QPF_MW_BIND		= BIT(4),
 
 	/* bits that determine other qp behavior */
+	IONIC_QPF_SQ_DRAINING		= BIT(11),
 	IONIC_QPF_SQD_NOTIFY		= BIT(12),
 	IONIC_QPF_SQ_CMB		= BIT(13),
 	IONIC_QPF_RQ_CMB		= BIT(14),
 	IONIC_QPF_PRIVILEGED		= BIT(15),
 };
 
-static inline int to_ionic_qp_flags(int access, bool sq_is_cmb, bool rq_is_cmb,
+static inline int from_ionic_qp_flags(int flags)
+{
+	int access_flags = 0;
+
+	if (flags & IONIC_QPF_LOCAL_WRITE)
+		access_flags |= IB_ACCESS_LOCAL_WRITE;
+
+	if (flags & IONIC_QPF_REMOTE_WRITE)
+		access_flags |= IB_ACCESS_REMOTE_WRITE;
+
+	if (flags & IONIC_QPF_REMOTE_READ)
+		access_flags |= IB_ACCESS_REMOTE_READ;
+
+	if (flags & IONIC_QPF_REMOTE_ATOMIC)
+		access_flags |= IB_ACCESS_REMOTE_ATOMIC;
+
+	if (flags & IONIC_QPF_MW_BIND)
+		access_flags |= IB_ACCESS_MW_BIND;
+
+	return access_flags;
+}
+
+static inline int to_ionic_qp_flags(int access, bool sqd_notify,
+				    bool sq_is_cmb, bool rq_is_cmb,
 				    bool privileged)
 {
 	int flags = 0;
@@ -131,11 +155,11 @@ static inline int to_ionic_qp_flags(int access, bool sq_is_cmb, bool rq_is_cmb,
 	if (access & IB_ACCESS_LOCAL_WRITE)
 		flags |= IONIC_QPF_LOCAL_WRITE;
 
-	if (access & IB_ACCESS_REMOTE_READ)
-		flags |= IONIC_QPF_REMOTE_READ;
-
 	if (access & IB_ACCESS_REMOTE_WRITE)
 		flags |= IONIC_QPF_REMOTE_WRITE;
+
+	if (access & IB_ACCESS_REMOTE_READ)
+		flags |= IONIC_QPF_REMOTE_READ;
 
 	if (access & IB_ACCESS_REMOTE_ATOMIC)
 		flags |= IONIC_QPF_REMOTE_ATOMIC;
@@ -154,6 +178,7 @@ static inline int to_ionic_qp_flags(int access, bool sq_is_cmb, bool rq_is_cmb,
 
 	return flags;
 }
+
 /* cqe non-admin status indicated in status_length field when err bit is set */
 enum ionic_status {
 	IONIC_STS_OK,
@@ -249,6 +274,28 @@ enum ionic_qp_state {
 	IONIC_QPS_ERR,
 };
 
+static inline int from_ionic_qp_state(enum ionic_qp_state state)
+{
+	switch (state) {
+	case IONIC_QPS_RESET:
+		return IB_QPS_RESET;
+	case IONIC_QPS_INIT:
+		return IB_QPS_INIT;
+	case IONIC_QPS_RTR:
+		return IB_QPS_RTR;
+	case IONIC_QPS_RTS:
+		return IB_QPS_RTS;
+	case IONIC_QPS_SQD:
+		return IB_QPS_SQD;
+	case IONIC_QPS_SQE:
+		return IB_QPS_SQE;
+	case IONIC_QPS_ERR:
+		return IB_QPS_ERR;
+	default:
+		return -EINVAL;
+	}
+}
+
 static inline int to_ionic_qp_state(enum ib_qp_state state)
 {
 	switch (state) {
@@ -284,7 +331,8 @@ static inline int to_ionic_qp_modify_state(enum ib_qp_state to_state,
 struct ionic_v1_cqe {
 	union {
 		struct {
-			__u8		rsvd[20];
+			__le16		cmd_idx;
+			__u8		rsvd[18];
 			__le16		old_sq_cindex;
 			__le16		old_rq_cq_cindex;
 		} admin;
@@ -602,6 +650,10 @@ struct ionic_v1_admin_wqe {
 			__le32		rsq_index;
 			__le64		dma_addr;
 		} mod_qp;
+		struct {
+			__u8		rsvd[48];
+			__le64		dma_addr;
+		} query;
 	};
 };
 
@@ -645,13 +697,15 @@ struct ionic_v1_admin_query_qp {
 enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_NOOP,
     IONIC_V1_ADMIN_DEBUG = 12,
+
+	IONIC_V1_ADMIN_CREATE_CQ= 1,
+	IONIC_V1_ADMIN_CREATE_QP= 2,
+	IONIC_V1_ADMIN_CREATE_MR= 3,
+	IONIC_V1_ADMIN_DESTROY_MR = 6,
+	IONIC_V1_ADMIN_MODIFY_QP = 9,
+    
 	/* TODO: move ops up as they are assigned opcode numbers in fw */
 	IONIC_V1_ADMIN_IMPL_BY_DRIVER = 50,
-	IONIC_V1_ADMIN_CREATE_CQ,    // = 1,
-	IONIC_V1_ADMIN_CREATE_QP,    // = 2,
-	IONIC_V1_ADMIN_CREATE_MR,    // = 3,
-	IONIC_V1_ADMIN_DESTROY_MR,   // = 6,
-	IONIC_V1_ADMIN_MODIFY_QP,    // = 9,
     
 	IONIC_V1_ADMIN_STATS_HDRS,
 	IONIC_V1_ADMIN_STATS_VALS,
@@ -659,11 +713,11 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_DESTROY_QP,
 	IONIC_V1_ADMIN_CREATE_AH,
 	IONIC_V1_ADMIN_DESTROY_AH,
+	IONIC_V1_ADMIN_QUERY_QP,
 
 	/* TODO: move ops up as they are assigned and implemented */
 	IONIC_V1_ADMIN_NOT_IMPLEMENTED = 100,
 	IONIC_V1_ADMIN_RESIZE_CQ,
-	IONIC_V1_ADMIN_QUERY_QP,
 };
 
 /* admin queue v1 cqe status */

@@ -93,11 +93,15 @@ static int ionic_map_bars(struct ionic *ionic)
 			continue;
 		bars[j].bus_addr = pci_resource_start(pdev, i);
 		bars[j].len = pci_resource_len(pdev, i);
-		bars[j].vaddr = ioremap(bars[j].bus_addr, bars[j].len);
-		if (!bars[j].vaddr) {
-			dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
-			return -ENODEV;
+
+		if (j == 0) {
+			bars[j].vaddr = ioremap(bars[j].bus_addr, bars[j].len);
+			if (!bars[j].vaddr) {
+				dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
+				return -ENODEV;
+			}
 		}
+
 		ionic->num_bars++;
 		j++;
 	}
@@ -113,6 +117,26 @@ static void ionic_unmap_bars(struct ionic *ionic)
 	for (i = 0; i < IONIC_BARS_MAX; i++)
 		if (bars[i].vaddr)
 			iounmap(bars[i].vaddr);
+}
+
+phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
+{
+	phys_addr_t addr = ionic->bars[IONIC_PCI_BAR_DBELL].bus_addr;
+	phys_addr_t offset = (phys_addr_t)page_num << PAGE_SHIFT;
+
+	return addr + offset;
+}
+
+void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
+{
+	phys_addr_t addr = ionic_bus_phys_dbpage(ionic, page_num);
+
+	return ioremap(addr, PAGE_SIZE);
+}
+
+void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
+{
+	iounmap(page);
 }
 
 static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)

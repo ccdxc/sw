@@ -8,6 +8,8 @@
 : ${FP:=freeport.patch}
 : ${FP_PATH:=../linux}
 
+rm -f "$FP" "$FP.rej"
+
 FP_SRC=(
 # changes in rdma driver should be ported automacically if possible
 "$FP_PATH/rdma"

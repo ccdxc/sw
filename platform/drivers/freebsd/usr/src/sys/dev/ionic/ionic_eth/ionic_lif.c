@@ -552,7 +552,7 @@ static int ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 			struct adminq **padminq)
 {
 	struct adminq *adminq;
-	int irq, error = ENOMEM; 
+	int irq, error = ENOMEM;
 	uint32_t cmd_ring_size, comp_ring_size, total_size;
 
 	*padminq = NULL;
@@ -567,7 +567,7 @@ static int ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 	adminq->lif = lif;
 	adminq->index = qnum;
 	adminq->num_descs = num_descs;
-	adminq->pid = pid;
+	adminq->pid = lif->kern_pid;
 	adminq->done_color = 1;
 
 	mtx_init(&adminq->mtx, adminq->name, NULL, MTX_DEF);
@@ -976,18 +976,8 @@ static void ionic_adminq_free(struct lif *lif, struct adminq *adminq)
 }
 
 
-static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
-{
-	unsigned int ndbpgs_per_lif = lif->ionic->ident->dev.ndbpgs_per_lif;
-
-	BUG_ON(ndbpgs_per_lif < page + 1);
-
-	return lif->index * ndbpgs_per_lif + page;
-}
-
 static int ionic_qcqs_alloc(struct lif *lif)
 {
-	unsigned int pid;
 	unsigned int i;
 	int err = -ENOMEM;
 
@@ -999,22 +989,23 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	if (!lif->rxqs)
 		return -ENOMEM;
 
-	pid = ionic_pid_get(lif, 0);
-
 	/* XXX: we are tight on name description */
-	err = ionic_adminq_alloc(lif, 0, adminq_descs, pid, &lif->adminqcq);
+	err = ionic_adminq_alloc(lif, 0, adminq_descs, lif->kern_pid,
+				 &lif->adminqcq);
 	if (err)
 		return err;
 
 
 	for (i = 0; i < lif->ntxqs; i++) {
-		err = ionic_txque_alloc(lif, i, ntxq_descs, pid, &lif->txqs[i]);
+		err = ionic_txque_alloc(lif, i, ntxq_descs, lif->kern_pid,
+					&lif->txqs[i]);
 		if (err)
 			goto err_out_free_adminqcq;
 	}
 
 	for (i = 0; i < lif->nrxqs; i++) {
-		err = ionic_rxque_alloc(lif, i, nrxq_descs, pid, &lif->rxqs[i]);
+		err = ionic_rxque_alloc(lif, i, nrxq_descs, lif->kern_pid,
+					&lif->rxqs[i]);
 		if (err)
 			goto err_out_free_txqs;
 	}
@@ -1055,7 +1046,7 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	struct device *dev = ionic->dev;
 //	struct net_device *netdev;
 	struct lif *lif;
-	int err;
+	int err, dbpage_num;
 
 	lif = kzalloc(sizeof(*lif), GFP_KERNEL);
 	if (!lif) {
@@ -1079,14 +1070,46 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	IONIC_ADMIN_LOCK_INIT(lif);
 	lif->adminq_wq = create_workqueue(lif->name);
 
+	mutex_init(&lif->dbid_inuse_lock);
+	lif->dbid_count = lif->ionic->ident->dev.ndbpgs_per_lif;
+	if (!lif->dbid_count) {
+		dev_err(dev, "No doorbell pages, aborting\n");
+		err = -EINVAL;
+		goto err_out_free_netdev;
+	}
+
+	lif->dbid_inuse = kzalloc(BITS_TO_LONGS(lif->dbid_count) * sizeof(long),
+				  GFP_KERNEL);
+	if (!lif->dbid_inuse) {
+		dev_err(dev, "Failed alloc doorbell id bitmap, aborting\n");
+		err = -ENOMEM;
+		goto err_out_free_netdev;
+	}
+
+	/* first doorbell id reserved for kernel (dbid aka pid == zero) */
+	set_bit(0, lif->dbid_inuse);
+	lif->kern_pid = 0;
+
+	dbpage_num = ionic_db_page_num(&ionic->idev, index, 0);
+	lif->kern_dbpage = ionic_bus_map_dbpage(ionic, dbpage_num);
+	if (!lif->kern_dbpage) {
+		dev_err(dev, "Cannot map dbpage, aborting\n");
+		err = -ENOMEM;
+		goto err_out_free_dbid;
+	}
+
 	err = ionic_qcqs_alloc(lif);
 	if (err)
-		goto err_out_free_netdev;
+		goto err_out_unmap_dbell;
 
 	list_add_tail(&lif->list, &ionic->lifs);
 
 	return 0;
 
+err_out_unmap_dbell:
+	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
+err_out_free_dbid:
+	kfree(lif->dbid_inuse);
 err_out_free_netdev:
 	ionic_lif_netdev_free(lif);
 	kfree(lif);
@@ -1122,6 +1145,8 @@ void ionic_lifs_free(struct ionic *ionic)
 		destroy_workqueue(lif->adminq_wq);
 		ionic_qcqs_free(lif);
 		ionic_lif_netdev_free(lif);
+		ionic_bus_unmap_dbpage(lif->ionic, lif->kern_dbpage);
+		kfree(lif->dbid_inuse);
 		kfree(lif);
 	}
 }
@@ -1351,8 +1376,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	adminq->qid = comp.qid;
 	adminq->qtype = comp.qtype;
-	adminq->db  = (void *)adminq->lif->ionic->idev.db_pages + (adminq->pid * PAGE_SIZE);
-	adminq->db += adminq->qtype;
+	adminq->db = adminq->lif->kern_dbpage + adminq->qtype;
 
 	snprintf(adminq->intr.name, sizeof(adminq->intr.name), "%s", adminq->name);
 
@@ -1510,8 +1534,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct txque *txq)
 
 	txq->qid = ctx.comp.txq_init.qid;
 	txq->qtype = ctx.comp.txq_init.qtype;
-	txq->db  = (void *)txq->lif->ionic->idev.db_pages + (txq->pid * PAGE_SIZE);
-	txq->db += txq->qtype;
+	txq->db = lif->kern_dbpage + txq->qtype;
 
 	snprintf(txq->intr.name, sizeof(txq->intr.name), "%s", txq->name);
 
@@ -1809,8 +1832,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct rxque *rxq)
 	rxq->qtype = ctx.comp.rxq_init.qtype;
 
 	/* XXX: move to be part of ring doorbell */
-	rxq->db  = (void *)rxq->lif->ionic->idev.db_pages + (rxq->pid * PAGE_SIZE);
-	rxq->db += rxq->qtype;
+	rxq->db = lif->kern_dbpage + rxq->qtype;
 	IONIC_QUE_INFO(rxq, "doorbell: %p\n", rxq->db);
 
 	snprintf(rxq->intr.name, sizeof(rxq->intr.name), "%s", rxq->name);

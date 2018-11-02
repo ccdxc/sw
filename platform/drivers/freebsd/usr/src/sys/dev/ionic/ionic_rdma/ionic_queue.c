@@ -31,6 +31,7 @@
  */
 
 #include <linux/dma-mapping.h>
+#include <ionic_kpicompat.h>
 
 #include "ionic_queue.h"
 

@@ -30,46 +30,15 @@
  * SOFTWARE.
  */
 
-#ifndef IONIC_DBG_H
-#define IONIC_DBG_H
+#ifndef IONIC_IBVCOMPAT_H
+#define IONIC_IBVCOMPAT_H
 
-#include <stdio.h>
-#include "ionic.h"
+#include <infiniband/verbs.h>
 
-#ifndef IONIC_DEBUG
-#define IONIC_DEBUG true
-#endif
-
-extern FILE *IONIC_DEBUG_FILE;
-
-#define IONIC_DEFAULT_DEBUG_FILE stderr
-
-#define _ionic_dbg(file, fmt, args...)					\
-	fprintf(file, "%s:%d: " fmt "\n",				\
-		__func__, __LINE__, ##args)
-
-#define ionic_dbg(ctx, fmt, args...) do {				\
-	if ((IONIC_DEBUG) && unlikely(ctx->dbg_file))			\
-		_ionic_dbg(ctx->dbg_file, fmt, ##args);			\
-} while (0)
-
-#define ionic_err(fmt, args...)						\
-	_ionic_dbg(IONIC_DEBUG_FILE, fmt, ##args)
-
-static inline void ionic_dbg_xdump(struct ionic_ctx *ctx, const char *str,
-				   const void *ptr, size_t size)
-{
-	const uint8_t *ptr8 = ptr;
-	int i;
-
-	if (!(IONIC_DEBUG) || likely(!ctx->dbg_file))
-		return;
-
-	for (i = 0; i < size; i += 8)
-		_ionic_dbg(ctx->dbg_file,
-			   "%s: %02x %02x %02x %02x %02x %02x %02x %02x", str,
-			   ptr8[i + 0], ptr8[i + 1], ptr8[i + 2], ptr8[i + 3],
-			   ptr8[i + 4], ptr8[i + 5], ptr8[i + 6], ptr8[i + 7]);
-}
+#undef verbs_set_ctx_op
+#define verbs_set_ctx_op(_vctx, op, ptr) ({ \
+	struct verbs_context *__vctx = _vctx; \
+	if (__vctx && (__vctx->sz >= sizeof(*__vctx) - offsetof(struct verbs_context, op))) \
+		__vctx->op = ptr; })
 
 #endif

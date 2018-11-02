@@ -165,6 +165,10 @@ char *ionic_dev_asic_name(u8 asic_type)
 	}
 }
 
+int ionic_db_page_num(struct ionic_dev *dev, int lif_id, int pid)
+{
+	return lif_id * dev->ident->dev.ndbpgs_per_lif + pid;
+}
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index)

@@ -40,14 +40,16 @@
 #define IONIC_DEBUG true
 #endif
 
-#define IONIC_DEBUG_FILE stderr
+extern FILE *IONIC_DEBUG_FILE;
+
+#define IONIC_DEFAULT_DEBUG_FILE stderr
 
 #define _ionic_dbg(file, fmt, args...)					\
 	fprintf(file, "%s:%d: " fmt "\n",				\
 		__func__, __LINE__, ##args)
 
 #define ionic_dbg(ctx, fmt, args...) do {				\
-	if ((IONIC_DEBUG) && ctx->dbg_file)				\
+	if ((IONIC_DEBUG) && unlikely(ctx->dbg_file))			\
 		_ionic_dbg(ctx->dbg_file, fmt, ##args);			\
 } while (0)
 
@@ -60,7 +62,7 @@ static inline void ionic_dbg_xdump(struct ionic_ctx *ctx, const char *str,
 	const uint8_t *ptr8 = ptr;
 	int i;
 
-	if (!(IONIC_DEBUG) || !ctx->dbg_file)
+	if (!(IONIC_DEBUG) || likely(!ctx->dbg_file))
 		return;
 
 	for (i = 0; i < size; i += 8)

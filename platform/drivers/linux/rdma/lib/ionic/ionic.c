@@ -31,6 +31,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "ionic.h"
 #include "ionic_dbg.h"
@@ -38,6 +39,39 @@
 
 extern const struct verbs_context_ops fallback_ctx_ops;
 extern const struct verbs_context_ops ionic_ctx_ops;
+
+FILE *IONIC_DEBUG_FILE;
+
+static void ionic_debug_file_close(void)
+{
+	fclose(IONIC_DEBUG_FILE);
+}
+
+static void ionic_debug_file_open(void)
+{
+	const char *name = getenv("IONIC_DEBUG_FILE");
+
+	if (!name) {
+		IONIC_DEBUG_FILE = IONIC_DEFAULT_DEBUG_FILE;
+		return;
+	}
+
+	IONIC_DEBUG_FILE = fopen(name, "w");
+
+	if (!IONIC_DEBUG_FILE) {
+		perror("ionic debug file: ");
+		return;
+	}
+
+	atexit(ionic_debug_file_close);
+}
+
+static void ionic_debug_file_init(void)
+{
+	static pthread_once_t once = PTHREAD_ONCE_INIT;
+
+	pthread_once(&once, ionic_debug_file_open);
+}
 
 static int ionic_env_val(const char *name)
 {
@@ -47,6 +81,11 @@ static int ionic_env_val(const char *name)
 		return 0;
 
 	return atoi(env);
+}
+
+static int ionic_env_xxx_v0(void)
+{
+	return ionic_env_val("IONIC_XXX_V0");
 }
 
 static int ionic_env_fallback(void)
@@ -70,6 +109,14 @@ static int ionic_env_stats(void)
 	return ionic_env_val("IONIC_STATS");
 }
 
+static int ionic_env_lats(void)
+{
+	if (!(IONIC_LATS))
+		return 0;
+
+	return ionic_env_val("IONIC_LATS");
+}
+
 static int ionic_env_lockfree(void)
 {
 	return ionic_env_val("IONIC_LOCKFREE");
@@ -82,6 +129,8 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	struct uionic_ctx req = {};
 	struct uionic_ctx_resp resp = {};
 	int rc, version, compat;
+
+	ionic_debug_file_init();
 
 	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx,
 					   RDMA_DRIVER_UNKNOWN);
@@ -160,13 +209,29 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 	}
 
+	ctx->xxx_try_v1 = !ionic_env_xxx_v0();
 	ctx->lockfree = ionic_env_lockfree();
 
 	if (ionic_env_debug())
 		ctx->dbg_file = IONIC_DEBUG_FILE;
 
-	if (ionic_env_stats())
+	rc = ionic_env_stats();
+	if (rc) {
 		ctx->stats = calloc(1, sizeof(*ctx->stats));
+
+		if (ctx->stats && rc > 1)
+			ctx->stats->histogram = 1;
+	}
+
+	rc = ionic_env_lats();
+	if (rc) {
+		ctx->lats = calloc(1, sizeof(*ctx->lats));
+
+		if (ctx->lats && rc > 1)
+			ctx->lats->histogram = 1;
+
+		ionic_lat_init(ctx->lats);
+	}
 
 	return &ctx->vctx;
 
@@ -190,6 +255,10 @@ static void ionic_free_context(struct ibv_context *ibctx)
 
 	ionic_stats_print(IONIC_DEBUG_FILE, ctx->stats);
 	free(ctx->stats);
+
+	ionic_lats_print(IONIC_DEBUG_FILE, ctx->lats);
+	free(ctx->lats);
+
 	free(ctx);
 }
 

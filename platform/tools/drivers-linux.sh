@@ -20,6 +20,7 @@
 # #Setup environment (PATH), load drivers:
 # . env.sh
 # insmod drivers/eth/ionic/ionic.ko
+# modprobe ib_uverbs
 # insmod drivers/rdma/drv/ionic/ionic_rdma.ko
 #
 # #Network setup script presumed to be installed separately:
@@ -61,7 +62,8 @@ report_version() {
 }
 
 # Always start clean
-rm -r "$GEN_DIR"
+rm -rf "$GEN_DIR"
+mkdir -p "$GEN_DIR"
 
 # Initialize gen dir with packaged scripts like build.sh
 rsync -r --delete --delete-excluded \

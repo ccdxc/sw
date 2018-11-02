@@ -58,6 +58,8 @@
 #define IONIC_META_LAST ((void *)1ul)
 #define IONIC_META_POSTED ((void *)2ul)
 
+#define IONIC_CQ_GRACE		100
+
 struct ionic_aq;
 struct ionic_cq;
 struct ionic_eq;
@@ -74,6 +76,7 @@ struct ionic_mmap_info {
 	unsigned long offset;
 	unsigned long size;
 	unsigned long pfn;
+	bool writecombine;
 };
 
 struct ionic_ibdev {
@@ -256,9 +259,12 @@ struct ionic_cq {
 
 	spinlock_t		lock; /* for polling */
 	struct list_head	poll_sq;
+	bool			flush;
 	struct list_head	flush_sq;
 	struct list_head	flush_rq;
 	struct ionic_queue	q;
+	bool			color;
+	int			reserve;
 	u16			arm_any_prod;
 	u16			arm_sol_prod;
 
@@ -314,22 +320,24 @@ struct ionic_qp {
 	spinlock_t		sq_lock; /* for posting and polling */
 	bool			sq_flush;
 	struct ionic_queue	sq;
+	void		__iomem *sq_cmb_ptr;
 	struct ionic_sq_meta	*sq_meta;
 	u16			*sq_msn_idx;
+
+	u16			sq_old_prod;
 	u16			sq_msn_prod;
 	u16			sq_msn_cons;
 	u16			sq_npg_cons;
-
-	void			__iomem *sq_cmb_ptr;
 	u16			sq_cmb_prod;
 
 	spinlock_t		rq_lock; /* for posting and polling */
 	bool			rq_flush;
 	struct ionic_queue	rq;
+	void		__iomem *rq_cmb_ptr;
 	struct ionic_rq_meta	*rq_meta;
 	struct ionic_rq_meta	*rq_meta_head;
 
-	void			__iomem *rq_cmb_ptr;
+	u16			rq_old_prod;
 	u16			rq_cmb_prod;
 
 	/* infrequently accessed, keep at end */

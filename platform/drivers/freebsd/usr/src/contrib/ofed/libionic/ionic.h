@@ -42,6 +42,8 @@
 #include <infiniband/driver.h>
 #include <infiniband/udma_barrier.h>
 
+#include "ionic_ibvcompat.h"
+
 #include "ionic-abi.h"
 
 #include "ionic_memory.h"
@@ -56,9 +58,12 @@
 #define IONIC_META_LAST ((void *)1ul)
 #define IONIC_META_POSTED ((void *)2ul)
 
+#define IONIC_CQ_GRACE 100
+
 struct ionic_ctx {
 	struct ibv_context	ibctx;
 
+	bool			xxx_try_v1;
 	bool			fallback;
 	bool			lockfree;
 	uint32_t		pg_shift;
@@ -80,6 +85,7 @@ struct ionic_ctx {
 
 	FILE			*dbg_file;
 	struct ionic_stats	*stats;
+	struct ionic_latencies	*lats;
 };
 
 struct ionic_cq {
@@ -89,9 +95,12 @@ struct ionic_cq {
 
 	pthread_spinlock_t	lock;
 	struct list_head	poll_sq;
+	bool			flush;
 	struct list_head	flush_sq;
 	struct list_head	flush_rq;
 	struct ionic_queue	q;
+	bool			color;
+	int			reserve;
 	uint16_t		arm_any_prod;
 	uint16_t		arm_sol_prod;
 };
@@ -132,22 +141,24 @@ struct ionic_qp {
 	pthread_spinlock_t	sq_lock;
 	bool			sq_flush;
 	struct ionic_queue	sq;
+	void			*sq_cmb_ptr;
 	struct ionic_sq_meta	*sq_meta;
 	uint16_t		*sq_msn_idx;
+
+	uint16_t		sq_old_prod;
 	uint16_t		sq_msn_prod;
 	uint16_t		sq_msn_cons;
 	uint16_t		sq_npg_cons;
-
-	void			*sq_cmb_ptr;
 	uint16_t		sq_cmb_prod;
 
 	pthread_spinlock_t	rq_lock;
 	bool			rq_flush;
 	struct ionic_queue	rq;
+	void			*rq_cmb_ptr;
 	struct ionic_rq_meta	*rq_meta;
 	struct ionic_rq_meta	*rq_meta_head;
 
-	void			*rq_cmb_ptr;
+	uint16_t		rq_old_prod;
 	uint16_t		rq_cmb_prod;
 };
 

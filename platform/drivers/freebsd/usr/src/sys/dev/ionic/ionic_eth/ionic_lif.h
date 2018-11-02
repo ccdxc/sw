@@ -259,40 +259,47 @@ struct lif {
 	u8 dev_addr[ETHER_ADDR_LEN] __aligned(sizeof(int));
 
 	struct ionic *ionic;
-	
+
 	struct ifmedia          media;
 	bool registered;
 
 	unsigned int index;
-	
+
+	unsigned int kern_pid;
+	struct doorbell __iomem *kern_dbpage;
+
 	struct workqueue_struct *adminq_wq;
 	struct mtx adminq_lock;
 	struct adminq *adminqcq;
-	
+
 	struct txque **txqs;
 	struct rxque **rxqs;
-	
+
 	unsigned int neqs;
 	unsigned int ntxqs;
 	unsigned int nrxqs;
-	
+
 	unsigned int rx_mode;
 
 	int rx_mbuf_size;		/* Rx mbuf size pool. */
 	uint16_t max_frame_size; /* MTU size. */
-	
+
 	u32 hw_features;	/* Features enabled in hardware, e.g. checksum, TSO etc. */
-	
+
 	union stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
-	
+
 	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
 	u8 *rss_ind_tbl;
 	dma_addr_t rss_ind_tbl_pa;
-	
+
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
-	
+
+	struct mutex dbid_inuse_lock;
+	unsigned long *dbid_inuse;
+	unsigned int dbid_count;
+
 	void *api_private;
 
 	struct sysctl_oid *sysctl_ifnet;

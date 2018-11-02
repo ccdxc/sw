@@ -128,32 +128,52 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_cmb);
 
-void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
-			   phys_addr_t *phys_dbpage_base,
-			   u32 __iomem **intr_ctrl)
+void ionic_api_kernel_dbpage(struct lif *lif, u32 __iomem **intr_ctrl,
+			     u32 *dbid, u64 __iomem **dbpage,
+			     phys_addr_t *xxx_dbpage_phys)
 {
-	/* XXX dbpage of the eth driver, first page for now */
-	/* XXX kernel should only ioremap one dbpage, not the whole BAR */
-	*dbid = 0;
-	*dbpage = (void *)lif->ionic->idev.db_pages;
+	int dbpage_num;
 
-	*phys_dbpage_base = lif->ionic->idev.phy_db_pages;
+	*intr_ctrl = (void __iomem *)lif->ionic->idev.intr_ctrl;
 
-	*intr_ctrl = (void *)lif->ionic->idev.intr_ctrl;
+	*dbid = lif->kern_pid;
+	*dbpage = (void __iomem *)lif->kern_dbpage;
+
+	/* XXX remove when rdma drops xxx_kdbid workaround */
+	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, 0);
+	*xxx_dbpage_phys = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_dbpages);
+EXPORT_SYMBOL_GPL(ionic_api_kernel_dbpage);
 
-int ionic_api_get_dbid(struct lif *lif)
+int ionic_api_get_dbid(struct lif *lif, u32 *dbid, phys_addr_t *addr)
 {
-	/* XXX second dbid for rdma driver, eth will use dbid zero.
-	 * TODO: actual allocator here. */
-	return 1;
+	int id, dbpage_num;
+
+	mutex_lock(&lif->dbid_inuse_lock);
+
+	id = find_first_zero_bit(lif->dbid_inuse, lif->dbid_count);
+
+	if (id == lif->dbid_count) {
+		mutex_unlock(&lif->dbid_inuse_lock);
+		return -ENOMEM;
+	}
+
+	set_bit(id, lif->dbid_inuse);
+
+	mutex_unlock(&lif->dbid_inuse_lock);
+
+	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, id);
+
+	*dbid = id;
+	*addr = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_dbid);
 
 void ionic_api_put_dbid(struct lif *lif, int dbid)
 {
-	/* TODO: actual allocator here. */
+	clear_bit(dbid, lif->dbid_inuse);
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 

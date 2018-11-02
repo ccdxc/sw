@@ -1,5 +1,4 @@
-# $FreeBSD: todo version tag $
-.PATH:	${SRCTOP}/sys/dev/ionic/ionic_rdma
+.PATH:	${.CURDIR}/../../dev/ionic/ionic_rdma
 
 KMOD=ionic_rdma
 SRCS= \
@@ -11,7 +10,8 @@ device_if.h bus_if.h vnode_if.h pci_if.h \
 CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/ofed/include/uapi
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
-CFLAGS+= -I${SRCTOP}/sys/dev/ionic/ionic_eth
+CFLAGS+= -I${.CURDIR}/../../ofed/include/uapi
+CFLAGS+= -I${.CURDIR}/../../dev/ionic/ionic_eth
 CFLAGS+= -DCONFIG_INFINIBAND_USER_MEM
 CFLAGS+= -DINET -DINET6
 CFLAGS+= -DFREEBSD -DHAPS

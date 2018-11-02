@@ -24,6 +24,7 @@ KCPPFLAGS=-DHAPS make -j12 -C drivers
 #
 
 cd rdma-core
+EXTRA_CMAKE_FLAGS='-DCMAKE_BUILD_TYPE=RelWithDebInfo' \
 ./build.sh || exit
 cd -
 
