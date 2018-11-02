@@ -4,3 +4,4 @@
 !.gitignore
 !75k_rules.json
 !1k_rules.json
+!policy_gen.go
