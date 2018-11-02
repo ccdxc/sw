@@ -33,13 +33,13 @@ import "mirror.proto";
 //=========================================================================================
 //  stats policy
 //=========================================================================================
-message StatsStatus {
+message StatsPolicyStatus {
 
 }
 
 // compaction method will be selected by Venice based on the mesaurement/table
 // collection interval will be selected by Venice based on workloads
-message StatsSpec {
+message StatsPolicySpec {
      // Compaction Interval is the down sampling interval in minutes, hours or days
      // this would be mapped to GROUP BY TIME() in influxdb CQ
      // example: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host
@@ -61,10 +61,10 @@ message StatsPolicy {
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
-    StatsSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    StatsPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
 
     // Status contains the current state of the policy.
-    StatsStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    StatsPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 
@@ -73,7 +73,7 @@ message StatsPolicy {
 //  firewall log policy
 //=========================================================================================
 
-message FwlogStatus {
+message FwlogPolicyStatus {
 }
 
 enum FwlogFilter {
@@ -105,7 +105,7 @@ message FwlogExport {
 }
 
 // Venice collects fwlog irrespective of the export config
-message FwlogSpec {
+message FwlogPolicySpec {
     // RetentionTime defines for how long to keep the fwlog before it is deleted
     string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty"];
 
@@ -121,17 +121,17 @@ message FwlogPolicy {
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
-    FwlogSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    FwlogPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
 
     // Status contains the current state of the policy.
-    FwlogStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    FwlogPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 
 //========================================================================================
 //  flow export policy
 //========================================================================================
-message FlowExportStatus {
+message FlowExportPolicyStatus {
 }
 
 message FlowExportTarget {
@@ -151,7 +151,7 @@ message FlowExportTarget {
     repeated ExportConfig Exports = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
 }
 
-message FlowExportSpec {
+message FlowExportPolicySpec {
     repeated FlowExportTarget Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
 }
 
@@ -160,8 +160,8 @@ message FlowExportPolicy {
     api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
-    FlowExportSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    FlowExportPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
 
     // Status contains the current state of the export policy.
-    FlowExportStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+    FlowExportPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }

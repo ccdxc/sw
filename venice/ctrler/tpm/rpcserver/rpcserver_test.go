@@ -171,7 +171,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		"fwlog-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-1"},
-			Spec: monitoring.FwlogSpec{
+			Spec: monitoring.FwlogPolicySpec{
 				Filter: []string{
 					monitoring.FwlogFilter_FWLOG_ACCEPT.String(),
 					monitoring.FwlogFilter_FWLOG_DENY.String(),
@@ -197,7 +197,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		"fwlog-2": {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-2"},
-			Spec: monitoring.FwlogSpec{
+			Spec: monitoring.FwlogPolicySpec{
 				Filter: []string{
 					monitoring.FwlogFilter_FWLOG_ACCEPT.String(),
 					monitoring.FwlogFilter_FWLOG_DENY.String(),
@@ -314,7 +314,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 		"flow-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "flow-1"},
-			Spec: monitoring.FlowExportSpec{
+			Spec: monitoring.FlowExportPolicySpec{
 				Targets: []monitoring.FlowExportTarget{
 					{
 						Interval: "60s",
@@ -332,7 +332,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 		"flow-2": {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "flow-2"},
-			Spec: monitoring.FlowExportSpec{
+			Spec: monitoring.FlowExportPolicySpec{
 				Targets: []monitoring.FlowExportTarget{
 					{
 						Interval: "100s",

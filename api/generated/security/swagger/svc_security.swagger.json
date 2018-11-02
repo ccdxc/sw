@@ -6732,14 +6732,14 @@
           "items": {
             "type": "string"
           },
-          "title": "inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+          "title": "inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses\ncli-tags: id=from-ip"
         },
         "to-ip-addresses": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+          "title": "outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses\ncli-tags: id=to-ip"
         },
         "from-security-groups": {
           "type": "array",

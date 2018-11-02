@@ -8,15 +8,15 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { StagingCommitRequest, IStagingCommitRequest } from './staging-commit-request.model';
-import { StagingCommitResponse, IStagingCommitResponse } from './staging-commit-response.model';
+import { StagingCommitActionSpec, IStagingCommitActionSpec } from './staging-commit-action-spec.model';
+import { StagingCommitActionStatus, IStagingCommitActionStatus } from './staging-commit-action-status.model';
 
 export interface IStagingCommitAction {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'spec'?: IStagingCommitRequest;
-    'status'?: IStagingCommitResponse;
+    'spec'?: IStagingCommitActionSpec;
+    'status'?: IStagingCommitActionStatus;
 }
 
 
@@ -24,8 +24,8 @@ export class StagingCommitAction extends BaseModel implements IStagingCommitActi
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    'spec': StagingCommitRequest = null;
-    'status': StagingCommitResponse = null;
+    'spec': StagingCommitActionSpec = null;
+    'status': StagingCommitActionStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -64,8 +64,8 @@ export class StagingCommitAction extends BaseModel implements IStagingCommitActi
     constructor(values?: any) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['spec'] = new StagingCommitRequest();
-        this['status'] = new StagingCommitResponse();
+        this['spec'] = new StagingCommitActionSpec();
+        this['status'] = new StagingCommitActionStatus();
         this.setValues(values);
     }
 

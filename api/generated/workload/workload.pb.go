@@ -56,8 +56,10 @@ func (m *Workload) GetStatus() WorkloadStatus {
 // Spec of a Workload interface
 type WorkloadIntfSpec struct {
 	// Micro-segmentation vlan assigned for this interface
+	// cli-help: Vlan identifying host unique vlan id
 	MicroSegVlan uint32 `protobuf:"varint,1,opt,name=MicroSegVlan,json=micro-seg-vlan,omitempty,proto3" json:"micro-seg-vlan,omitempty"`
 	// External vlan assigned for this interface
+	// cli-help: External vlan associated with the workload
 	ExternalVlan uint32 `protobuf:"varint,2,opt,name=ExternalVlan,json=external-vlan,omitempty,proto3" json:"external-vlan,omitempty"`
 }
 
@@ -110,6 +112,7 @@ func (m *WorkloadIntfStatus) GetEndpoint() string {
 // Spec part of Workload object
 type WorkloadSpec struct {
 	// Hostname of the server where the workload is running.
+	// cli-help: Host name where the workload runs
 	HostName string `protobuf:"bytes,1,opt,name=HostName,json=host-name,omitempty,proto3" json:"host-name,omitempty"`
 	// Spec of all interfaces in the Workload identified by Primary MAC
 	Interfaces map[string]WorkloadIntfSpec `protobuf:"bytes,2,rep,name=Interfaces,json=interfaces,omitempty" json:"interfaces,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`

@@ -22,7 +22,8 @@ import (
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/apigen/annotations"
+	cgen "github.com/pensando/sw/venice/ncli/gen"
+	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
@@ -1514,11 +1515,12 @@ type Field struct {
 
 // cliInfo captures all the parameters related to CLI
 type cliInfo struct {
-	tag  string
-	path string
-	ins  string
-	skip bool
-	help string
+	tag     string
+	cliType string
+	path    string
+	ins     string
+	skip    bool
+	help    string
 }
 
 // Struct represents the schema details of a field
@@ -1743,6 +1745,32 @@ func isScalarType(in string) bool {
 	return false
 }
 
+func getCLIType(fld *Field) string {
+	if fld.Map || fld.Slice {
+		return "StringSlice"
+	}
+
+	m := map[string]string{
+		"TYPE_INT64":    "Int",
+		"TYPE_INT32":    "Int",
+		"TYPE_UINT64":   "Uint",
+		"TYPE_FIXED64":  "Uint",
+		"TYPE_FIXED32":  "Uint",
+		"TYPE_BOOL":     "Bool",
+		"TYPE_FLOAT":    "String",
+		"TYPE_DOUBLE":   "String",
+		"TYPE_STRING":   "String",
+		"TYPE_BYTES":    "String",
+		"TYPE_UINT32":   "String",
+		"TYPE_ENUM":     "String",
+		"TYPE_SFIXED32": "String",
+		"TYPE_SFIXED64": "String",
+		"TYPE_SINT32":   "String",
+		"TYPE_SINT64":   "String",
+	}
+	return m[fld.Type]
+}
+
 // getCLITags updates the CLITags for the give Struct. It recurses through all fields and their
 //   types in the message.
 func getCLITags(strct Struct, path, prefix string, msgMap map[string]Struct, m map[string]cliInfo) error {
@@ -1751,6 +1779,10 @@ func getCLITags(strct Struct, path, prefix string, msgMap map[string]Struct, m m
 	}
 	for _, k := range strct.keys {
 		fld := strct.Fields[k]
+		fpath := path + fld.Name
+		if fld.Map || fld.Slice {
+			fpath = fpath + "[]"
+		}
 		if isScalarType(fld.Type) {
 			fpath := path + fld.Name
 			tag := prefix + fld.CLITag.tag
@@ -1760,12 +1792,9 @@ func getCLITags(strct Struct, path, prefix string, msgMap map[string]Struct, m m
 				glog.V(1).Infof("Duplicate tag [%v] at [%s] Will CRASH&BURN", fld.CLITag, fpath)
 			}
 			fld.CLITag.path = fpath
+			fld.CLITag.cliType = getCLIType(&fld)
 			m[tag] = fld.CLITag
 			continue
-		}
-		fpath := path + fld.Name
-		if fld.Map || fld.Slice {
-			fpath = fpath + "[]"
 		}
 		fldPrefix := prefix
 		if fld.CLITag.ins != "" {
@@ -1925,8 +1954,8 @@ func getMsgMap(file *descriptor.File) (string, error) {
 
 		for _, k1 := range s.keys {
 			f := s.Fields[k1]
-			ret = ret + fmt.Sprintf("\n\"%s\":%vField{Name: \"%s\", CLITag: %vCLIInfo{Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"}, JSONTag: \"%s\", Pointer: %v, Slice:%v, Map:%v, Inline: %v, FromInline: %v, KeyType: \"%v\", Type: \"%s\"},\n",
-				f.Name, pkg, f.Name, pkg, f.CLITag.path, f.CLITag.skip, f.CLITag.ins, f.CLITag.help, f.JSONTag, f.Pointer, f.Slice, f.Map, f.Inline, f.FromInline, f.KeyType, f.Type)
+			ret = ret + fmt.Sprintf("\n\"%s\":%vField{Name: \"%s\", CLITag: %vCLIInfo{ID: \"%s\", Path: \"%s\", Skip: %v, Insert: \"%s\", Help:\"%s\"}, JSONTag: \"%s\", Pointer: %v, Slice:%v, Map:%v, Inline: %v, FromInline: %v, KeyType: \"%v\", Type: \"%s\"},\n",
+				f.Name, pkg, f.Name, pkg, f.CLITag.tag, f.CLITag.path, f.CLITag.skip, f.CLITag.ins, f.CLITag.help, f.JSONTag, f.Pointer, f.Slice, f.Map, f.Inline, f.FromInline, f.KeyType, f.Type)
 		}
 		ret = ret + "}, \n"
 		if len(s.CLITags) > 0 {
@@ -1945,6 +1974,59 @@ func getMsgMap(file *descriptor.File) (string, error) {
 		ret = ret + "},"
 	}
 	return ret, nil
+}
+
+func getCLIFlagMap(file *descriptor.File) map[string][]cgen.CliFlag {
+	cliFlagMap := make(map[string][]cgen.CliFlag)
+
+	msgs, _, err := genMsgMap(file)
+	if err != nil {
+		return cliFlagMap
+	}
+	for msgName, s := range msgs {
+		cliFlags := []cgen.CliFlag{}
+
+		clikeys := []string{}
+		for k1 := range s.CLITags {
+			clikeys = append(clikeys, k1)
+		}
+		sort.Strings(clikeys)
+		for _, clikey := range clikeys {
+			cliTag := s.CLITags[clikey]
+			// cli flags are only needed for Spec fields
+			if !strings.HasPrefix(cliTag.path, "Spec.") {
+				continue
+			}
+			cf := cgen.CliFlag{ID: cliTag.tag, Type: cliTag.cliType, Help: cliTag.help, Skip: cliTag.skip, Insert: cliTag.ins}
+
+			// when the field is part of a slice or map
+			if strings.Contains(cliTag.path, "[]") {
+				cf.Type = "StringSlice"
+			}
+			cliFlags = append(cliFlags, cf)
+		}
+
+		if len(cliFlags) > 0 {
+			cliFlagMap[msgName] = cliFlags
+		}
+	}
+	return cliFlagMap
+}
+
+type svcObj struct {
+	Svc     string
+	ObjName string
+}
+
+func splitSvcObj(svcObjStr string) svcObj {
+	ret := svcObj{ObjName: fmt.Sprintf("Error: invalid svc-obj '%s'", svcObjStr)}
+	subStrs := strings.Split(svcObjStr, ".")
+	if len(subStrs) != 2 {
+		return ret
+	}
+	ret.Svc = subStrs[0]
+	ret.ObjName = subStrs[1]
+	return ret
 }
 
 func isAPIServerServed(file *descriptor.File) (bool, error) {
@@ -2186,6 +2268,8 @@ func init() {
 	reg.RegisterFunc("ToLower", strings.ToLower)
 	reg.RegisterFunc("isActionMethod", isActionMethod)
 	reg.RegisterFunc("getActionTarget", getActionTarget)
+	reg.RegisterFunc("getCLIFlagMap", getCLIFlagMap)
+	reg.RegisterFunc("splitSvcObj", splitSvcObj)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

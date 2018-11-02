@@ -12223,10 +12223,10 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/monitoringFlowExportSpec"
+          "$ref": "#/definitions/monitoringFlowExportPolicySpec"
         },
         "status": {
-          "$ref": "#/definitions/monitoringFlowExportStatus",
+          "$ref": "#/definitions/monitoringFlowExportPolicyStatus",
           "description": "Status contains the current state of the export policy."
         }
       }
@@ -12253,7 +12253,7 @@
       },
       "title": "FlowExportPolicyList is a container object for list of FlowExportPolicy objects"
     },
-    "monitoringFlowExportSpec": {
+    "monitoringFlowExportPolicySpec": {
       "type": "object",
       "properties": {
         "targets": {
@@ -12264,7 +12264,7 @@
         }
       }
     },
-    "monitoringFlowExportStatus": {
+    "monitoringFlowExportPolicyStatus": {
       "type": "object",
       "title": "========================================================================================\n flow export policy\n========================================================================================"
     },
@@ -12360,10 +12360,10 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/monitoringFwlogSpec"
+          "$ref": "#/definitions/monitoringFwlogPolicySpec"
         },
         "status": {
-          "$ref": "#/definitions/monitoringFwlogStatus",
+          "$ref": "#/definitions/monitoringFwlogPolicyStatus",
           "description": "Status contains the current state of the policy."
         }
       }
@@ -12390,7 +12390,7 @@
       },
       "title": "FwlogPolicyList is a container object for list of FwlogPolicy objects"
     },
-    "monitoringFwlogSpec": {
+    "monitoringFwlogPolicySpec": {
       "type": "object",
       "properties": {
         "retention-time": {
@@ -12427,7 +12427,7 @@
       },
       "title": "Venice collects fwlog irrespective of the export config"
     },
-    "monitoringFwlogStatus": {
+    "monitoringFwlogPolicyStatus": {
       "type": "object"
     },
     "monitoringMatchRule": {
@@ -12754,10 +12754,10 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/monitoringStatsSpec"
+          "$ref": "#/definitions/monitoringStatsPolicySpec"
         },
         "status": {
-          "$ref": "#/definitions/monitoringStatsStatus",
+          "$ref": "#/definitions/monitoringStatsPolicyStatus",
           "description": "Status contains the current state of the policy."
         }
       }
@@ -12784,7 +12784,7 @@
       },
       "title": "StatsPolicyList is a container object for list of StatsPolicy objects"
     },
-    "monitoringStatsSpec": {
+    "monitoringStatsPolicySpec": {
       "type": "object",
       "properties": {
         "compaction-interval ": {
@@ -12802,7 +12802,7 @@
       },
       "title": "compaction method will be selected by Venice based on the mesaurement/table\ncollection interval will be selected by Venice based on workloads"
     },
-    "monitoringStatsStatus": {
+    "monitoringStatsPolicyStatus": {
       "type": "object",
       "description": "=========================================================================================\n stats policy\n=========================================================================================",
       "title": "telemetry policies:\n-------------------------------------------------------------------------------\npolicy name         |  intended for        |     description                 |\n-------------------------------------------------------------------------------\nstats               |  sys admins          |    for all stats other than     |\n                    |                      |    fwlog/netflow.               |\n                    |                      |    includes retention,compaction|\n-------------------------------------------------------------------------------\nfwlog               |  security admins     |    firewall log policy          |\n                    |                      |    includes retention,          |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------\n                    |                      |                                 |\nflowexport          |  network admins      |    netflow export policy        |\n                    |                      |    includes interval,           |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------"

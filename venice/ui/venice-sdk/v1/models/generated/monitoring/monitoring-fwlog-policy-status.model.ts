@@ -8,25 +8,25 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface IMonitoringFlowExportStatus {
+export interface IMonitoringFwlogPolicyStatus {
 }
 
 
-export class MonitoringFlowExportStatus extends BaseModel implements IMonitoringFlowExportStatus {
+export class MonitoringFwlogPolicyStatus extends BaseModel implements IMonitoringFwlogPolicyStatus {
     public static propInfo: { [prop: string]: PropInfoItem } = {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return MonitoringFlowExportStatus.propInfo[propName];
+        return MonitoringFwlogPolicyStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (MonitoringFlowExportStatus.propInfo[prop] != null &&
-                        MonitoringFlowExportStatus.propInfo[prop].default != null &&
-                        MonitoringFlowExportStatus.propInfo[prop].default != '');
+        return (MonitoringFwlogPolicyStatus.propInfo[prop] != null &&
+                        MonitoringFwlogPolicyStatus.propInfo[prop].default != null &&
+                        MonitoringFwlogPolicyStatus.propInfo[prop].default != '');
     }
 
     /**

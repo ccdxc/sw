@@ -198,8 +198,10 @@ type SGRule struct {
 	// SGRule action, either PERMIT, DENY or REJECT
 	Action string `protobuf:"bytes,2,opt,name=Action,json=action,omitempty,proto3" json:"action,omitempty"`
 	// inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+	// cli-tags: id=from-ip
 	FromIPAddresses []string `protobuf:"bytes,3,rep,name=FromIPAddresses,json=from-ip-addresses,omitempty" json:"from-ip-addresses,omitempty"`
 	// outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+	// cli-tags: id=to-ip
 	ToIPAddresses []string `protobuf:"bytes,4,rep,name=ToIPAddresses,json=to-ip-addresses,omitempty" json:"to-ip-addresses,omitempty"`
 	// inbound rule from a given security group
 	FromSecurityGroups []string `protobuf:"bytes,5,rep,name=FromSecurityGroups,json=from-security-groups,omitempty" json:"from-security-groups,omitempty"`

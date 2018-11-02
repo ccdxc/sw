@@ -84,13 +84,13 @@ func (m *FlowExportPolicy) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *FlowExportSpec) Clone(into interface{}) (interface{}, error) {
-	var out *FlowExportSpec
+func (m *FlowExportPolicySpec) Clone(into interface{}) (interface{}, error) {
+	var out *FlowExportPolicySpec
 	var ok bool
 	if into == nil {
-		out = &FlowExportSpec{}
+		out = &FlowExportPolicySpec{}
 	} else {
-		out, ok = into.(*FlowExportSpec)
+		out, ok = into.(*FlowExportPolicySpec)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -100,7 +100,7 @@ func (m *FlowExportSpec) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *FlowExportSpec) Defaults(ver string) bool {
+func (m *FlowExportPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Targets {
 		i := m.Targets[k]
@@ -110,13 +110,13 @@ func (m *FlowExportSpec) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *FlowExportStatus) Clone(into interface{}) (interface{}, error) {
-	var out *FlowExportStatus
+func (m *FlowExportPolicyStatus) Clone(into interface{}) (interface{}, error) {
+	var out *FlowExportPolicyStatus
 	var ok bool
 	if into == nil {
-		out = &FlowExportStatus{}
+		out = &FlowExportPolicyStatus{}
 	} else {
-		out, ok = into.(*FlowExportStatus)
+		out, ok = into.(*FlowExportPolicyStatus)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -126,7 +126,7 @@ func (m *FlowExportStatus) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *FlowExportStatus) Defaults(ver string) bool {
+func (m *FlowExportPolicyStatus) Defaults(ver string) bool {
 	return false
 }
 
@@ -213,13 +213,13 @@ func (m *FwlogPolicy) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *FwlogSpec) Clone(into interface{}) (interface{}, error) {
-	var out *FwlogSpec
+func (m *FwlogPolicySpec) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogPolicySpec
 	var ok bool
 	if into == nil {
-		out = &FwlogSpec{}
+		out = &FwlogPolicySpec{}
 	} else {
-		out, ok = into.(*FwlogSpec)
+		out, ok = into.(*FwlogPolicySpec)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -229,7 +229,7 @@ func (m *FwlogSpec) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *FwlogSpec) Defaults(ver string) bool {
+func (m *FwlogPolicySpec) Defaults(ver string) bool {
 	var ret bool
 	for k := range m.Exports {
 		if m.Exports[k] != nil {
@@ -248,13 +248,13 @@ func (m *FwlogSpec) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *FwlogStatus) Clone(into interface{}) (interface{}, error) {
-	var out *FwlogStatus
+func (m *FwlogPolicyStatus) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogPolicyStatus
 	var ok bool
 	if into == nil {
-		out = &FwlogStatus{}
+		out = &FwlogPolicyStatus{}
 	} else {
-		out, ok = into.(*FwlogStatus)
+		out, ok = into.(*FwlogPolicyStatus)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -264,7 +264,7 @@ func (m *FwlogStatus) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *FwlogStatus) Defaults(ver string) bool {
+func (m *FwlogPolicyStatus) Defaults(ver string) bool {
 	return false
 }
 
@@ -292,13 +292,13 @@ func (m *StatsPolicy) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *StatsSpec) Clone(into interface{}) (interface{}, error) {
-	var out *StatsSpec
+func (m *StatsPolicySpec) Clone(into interface{}) (interface{}, error) {
+	var out *StatsPolicySpec
 	var ok bool
 	if into == nil {
-		out = &StatsSpec{}
+		out = &StatsPolicySpec{}
 	} else {
-		out, ok = into.(*StatsSpec)
+		out, ok = into.(*StatsPolicySpec)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -308,18 +308,18 @@ func (m *StatsSpec) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *StatsSpec) Defaults(ver string) bool {
+func (m *StatsPolicySpec) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *StatsStatus) Clone(into interface{}) (interface{}, error) {
-	var out *StatsStatus
+func (m *StatsPolicyStatus) Clone(into interface{}) (interface{}, error) {
+	var out *StatsPolicyStatus
 	var ok bool
 	if into == nil {
-		out = &StatsStatus{}
+		out = &StatsPolicyStatus{}
 	} else {
-		out, ok = into.(*StatsStatus)
+		out, ok = into.(*StatsPolicyStatus)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -329,7 +329,7 @@ func (m *StatsStatus) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *StatsStatus) Defaults(ver string) bool {
+func (m *StatsPolicyStatus) Defaults(ver string) bool {
 	return false
 }
 
@@ -356,7 +356,7 @@ func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
-func (m *FlowExportSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Targets {
 		dlmtr := "."
@@ -371,7 +371,7 @@ func (m *FlowExportSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *FlowExportStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -463,7 +463,7 @@ func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *FwlogSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Exports {
 		dlmtr := "."
@@ -475,13 +475,13 @@ func (m *FwlogSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
-	if vs, ok := validatorMapTelemetry["FwlogSpec"][ver]; ok {
+	if vs, ok := validatorMapTelemetry["FwlogPolicySpec"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapTelemetry["FwlogSpec"]["all"]; ok {
+	} else if vs, ok := validatorMapTelemetry["FwlogPolicySpec"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -491,7 +491,7 @@ func (m *FwlogSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *FwlogStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -508,12 +508,12 @@ func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *StatsSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StatsPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *StatsStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StatsPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -561,9 +561,9 @@ func init() {
 		return nil
 	})
 
-	validatorMapTelemetry["FwlogSpec"] = make(map[string][]func(string, interface{}) error)
-	validatorMapTelemetry["FwlogSpec"]["all"] = append(validatorMapTelemetry["FwlogSpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*FwlogSpec)
+	validatorMapTelemetry["FwlogPolicySpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapTelemetry["FwlogPolicySpec"]["all"] = append(validatorMapTelemetry["FwlogPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogPolicySpec)
 
 		for k, v := range m.Filter {
 			if _, ok := FwlogFilter_value[v]; !ok {

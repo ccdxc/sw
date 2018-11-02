@@ -11,12 +11,12 @@ export enum StagingBufferStatus_validation_result {
     'FAILED' = "FAILED",
 }
 
-export enum StagingClearResponse_status {
+export enum StagingClearActionStatus_status {
     'SUCCESS' = "SUCCESS",
     'FAILED' = "FAILED",
 }
 
-export enum StagingCommitResponse_status {
+export enum StagingCommitActionStatus_status {
     'SUCCESS' = "SUCCESS",
     'FAILED' = "FAILED",
 }
@@ -59,8 +59,8 @@ export class AllEnums {
     }
 
     StagingBufferStatus_validation_result = StagingBufferStatus_validation_result;
-    StagingClearResponse_status = StagingClearResponse_status;
-    StagingCommitResponse_status = StagingCommitResponse_status;
+    StagingClearActionStatus_status = StagingClearActionStatus_status;
+    StagingCommitActionStatus_status = StagingCommitActionStatus_status;
 
     StagingBufferStatus_validation_result_uihint = StagingBufferStatus_validation_result_uihint;
 }

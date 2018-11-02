@@ -11,11 +11,11 @@ The following Messages are defined.
   BufferSpec
   BufferStatus
   ClearAction
-  ClearRequest
-  ClearResponse
+  ClearActionSpec
+  ClearActionStatus
   CommitAction
-  CommitRequest
-  CommitResponse
+  CommitActionSpec
+  CommitActionStatus
   Item
   ItemId
   ValidationError

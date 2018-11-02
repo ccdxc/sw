@@ -606,7 +606,7 @@ func (c *Config) generateFlowExportPolicy(o *Object, manifestFile string) (*Obje
 				Namespace: namespace,
 				Name:      name,
 			},
-			Spec: monitoring.FlowExportSpec{
+			Spec: monitoring.FlowExportPolicySpec{
 				Targets: []monitoring.FlowExportTarget{
 					{
 						Interval: "15s",

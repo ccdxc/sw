@@ -7,20 +7,20 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { StagingClearResponse_status,  } from './enums';
+import { StagingClearActionStatus_status,  } from './enums';
 
-export interface IStagingClearResponse {
-    'status'?: StagingClearResponse_status;
+export interface IStagingClearActionStatus {
+    'status'?: StagingClearActionStatus_status;
     'reason'?: string;
 }
 
 
-export class StagingClearResponse extends BaseModel implements IStagingClearResponse {
-    'status': StagingClearResponse_status = null;
+export class StagingClearActionStatus extends BaseModel implements IStagingClearActionStatus {
+    'status': StagingClearActionStatus_status = null;
     'reason': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'status': {
-            enum: StagingClearResponse_status,
+            enum: StagingClearActionStatus_status,
             default: 'SUCCESS',
             type: 'string'
         },
@@ -30,16 +30,16 @@ export class StagingClearResponse extends BaseModel implements IStagingClearResp
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return StagingClearResponse.propInfo[propName];
+        return StagingClearActionStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (StagingClearResponse.propInfo[prop] != null &&
-                        StagingClearResponse.propInfo[prop].default != null &&
-                        StagingClearResponse.propInfo[prop].default != '');
+        return (StagingClearActionStatus.propInfo[prop] != null &&
+                        StagingClearActionStatus.propInfo[prop].default != null &&
+                        StagingClearActionStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -58,13 +58,13 @@ export class StagingClearResponse extends BaseModel implements IStagingClearResp
     setValues(values: any, fillDefaults = true): void {
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (fillDefaults && StagingClearResponse.hasDefaultValue('status')) {
-            this['status'] = <StagingClearResponse_status>  StagingClearResponse.propInfo['status'].default;
+        } else if (fillDefaults && StagingClearActionStatus.hasDefaultValue('status')) {
+            this['status'] = <StagingClearActionStatus_status>  StagingClearActionStatus.propInfo['status'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
-        } else if (fillDefaults && StagingClearResponse.hasDefaultValue('reason')) {
-            this['reason'] = StagingClearResponse.propInfo['reason'].default;
+        } else if (fillDefaults && StagingClearActionStatus.hasDefaultValue('reason')) {
+            this['reason'] = StagingClearActionStatus.propInfo['reason'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -73,7 +73,7 @@ export class StagingClearResponse extends BaseModel implements IStagingClearResp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'status': new FormControl(this['status'], [enumValidator(StagingClearResponse_status), ]),
+                'status': new FormControl(this['status'], [enumValidator(StagingClearActionStatus_status), ]),
                 'reason': new FormControl(this['reason']),
             });
         }

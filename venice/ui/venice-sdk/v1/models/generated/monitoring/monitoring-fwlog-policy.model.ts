@@ -8,15 +8,15 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { MonitoringFwlogSpec, IMonitoringFwlogSpec } from './monitoring-fwlog-spec.model';
-import { MonitoringFwlogStatus, IMonitoringFwlogStatus } from './monitoring-fwlog-status.model';
+import { MonitoringFwlogPolicySpec, IMonitoringFwlogPolicySpec } from './monitoring-fwlog-policy-spec.model';
+import { MonitoringFwlogPolicyStatus, IMonitoringFwlogPolicyStatus } from './monitoring-fwlog-policy-status.model';
 
 export interface IMonitoringFwlogPolicy {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'spec'?: IMonitoringFwlogSpec;
-    'status'?: IMonitoringFwlogStatus;
+    'spec'?: IMonitoringFwlogPolicySpec;
+    'status'?: IMonitoringFwlogPolicyStatus;
 }
 
 
@@ -24,9 +24,9 @@ export class MonitoringFwlogPolicy extends BaseModel implements IMonitoringFwlog
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    'spec': MonitoringFwlogSpec = null;
+    'spec': MonitoringFwlogPolicySpec = null;
     /** Status contains the current state of the policy. */
-    'status': MonitoringFwlogStatus = null;
+    'status': MonitoringFwlogPolicyStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -66,8 +66,8 @@ export class MonitoringFwlogPolicy extends BaseModel implements IMonitoringFwlog
     constructor(values?: any) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['spec'] = new MonitoringFwlogSpec();
-        this['status'] = new MonitoringFwlogStatus();
+        this['spec'] = new MonitoringFwlogPolicySpec();
+        this['status'] = new MonitoringFwlogPolicyStatus();
         this.setValues(values);
     }
 

@@ -1564,7 +1564,7 @@
           },
           {
             "name": "spec.host-name",
-            "description": "Hostname of the server where the workload is running.",
+            "description": "Hostname of the server where the workload is running.\ncli-help: Host name where the workload runs. should be a valid host address, IP address or hostname",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2701,7 +2701,7 @@
           },
           {
             "name": "spec.host-name",
-            "description": "Hostname of the server where the workload is running.",
+            "description": "Hostname of the server where the workload is running.\ncli-help: Host name where the workload runs. should be a valid host address, IP address or hostname",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3302,7 +3302,7 @@
           "minimum": 1,
           "maximum": 4095,
           "description": "value should be between 1 and 4095\n",
-          "title": "Micro-segmentation vlan assigned for this interface"
+          "title": "Micro-segmentation vlan assigned for this interface\ncli-help: Vlan identifying host unique vlan id"
         },
         "external-vlan": {
           "type": "integer",
@@ -3310,7 +3310,7 @@
           "minimum": 1,
           "maximum": 4095,
           "description": "value should be between 1 and 4095\n",
-          "title": "External vlan assigned for this interface"
+          "title": "External vlan assigned for this interface\ncli-help: External vlan associated with the workload"
         }
       },
       "title": "Spec of a Workload interface"
@@ -3360,7 +3360,8 @@
         "host-name": {
           "type": "string",
           "example": "10.1.1.1, ff02::5, localhost, example.domain.com ",
-          "description": "Hostname of the server where the workload is running."
+          "description": "should be a valid host address, IP address or hostname\n",
+          "title": "Hostname of the server where the workload is running.\ncli-help: Host name where the workload runs"
         },
         "interfaces": {
           "type": "object",

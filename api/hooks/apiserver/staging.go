@@ -141,10 +141,10 @@ func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, t
 	nctx := SetStagingBufferInGrpcMD(ctx, buf.Name)
 	err = ov.Commit(nctx, nil)
 	if err != nil {
-		buf.Status.Status = staging.CommitResponse_FAILED.String()
+		buf.Status.Status = staging.CommitActionStatus_FAILED.String()
 		buf.Status.Reason = err.Error()
 	} else {
-		buf.Status.Status = staging.CommitResponse_SUCCESS.String()
+		buf.Status.Status = staging.CommitActionStatus_SUCCESS.String()
 	}
 	return buf, false, nil
 }
@@ -172,10 +172,10 @@ func (h *stagingHooks) clearAction(ctx context.Context, kv kvstore.Interface, tx
 	nctx := SetStagingBufferInGrpcMD(ctx, buf.Name)
 	err = ov.ClearBuffer(nctx, items)
 	if err != nil {
-		buf.Status.Status = staging.ClearResponse_FAILED.String()
+		buf.Status.Status = staging.ClearActionStatus_FAILED.String()
 		buf.Status.Reason = err.Error()
 	} else {
-		buf.Status.Status = staging.ClearResponse_SUCCESS.String()
+		buf.Status.Status = staging.ClearActionStatus_SUCCESS.String()
 	}
 	return buf, false, nil
 }

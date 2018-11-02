@@ -237,10 +237,10 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			}
 		}),
 
-		"monitoring.FlowExportSpec":   apisrvpkg.NewMessage("monitoring.FlowExportSpec"),
-		"monitoring.FlowExportStatus": apisrvpkg.NewMessage("monitoring.FlowExportStatus"),
-		"monitoring.FlowExportTarget": apisrvpkg.NewMessage("monitoring.FlowExportTarget"),
-		"monitoring.FwlogExport":      apisrvpkg.NewMessage("monitoring.FwlogExport"),
+		"monitoring.FlowExportPolicySpec":   apisrvpkg.NewMessage("monitoring.FlowExportPolicySpec"),
+		"monitoring.FlowExportPolicyStatus": apisrvpkg.NewMessage("monitoring.FlowExportPolicyStatus"),
+		"monitoring.FlowExportTarget":       apisrvpkg.NewMessage("monitoring.FlowExportTarget"),
+		"monitoring.FwlogExport":            apisrvpkg.NewMessage("monitoring.FwlogExport"),
 		"monitoring.FwlogPolicy": apisrvpkg.NewMessage("monitoring.FwlogPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := monitoring.FwlogPolicy{}
@@ -435,8 +435,8 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			}
 		}),
 
-		"monitoring.FwlogSpec":   apisrvpkg.NewMessage("monitoring.FwlogSpec"),
-		"monitoring.FwlogStatus": apisrvpkg.NewMessage("monitoring.FwlogStatus"),
+		"monitoring.FwlogPolicySpec":   apisrvpkg.NewMessage("monitoring.FwlogPolicySpec"),
+		"monitoring.FwlogPolicyStatus": apisrvpkg.NewMessage("monitoring.FwlogPolicyStatus"),
 		"monitoring.StatsPolicy": apisrvpkg.NewMessage("monitoring.StatsPolicy").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := monitoring.StatsPolicy{}
@@ -631,8 +631,8 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			}
 		}),
 
-		"monitoring.StatsSpec":   apisrvpkg.NewMessage("monitoring.StatsSpec"),
-		"monitoring.StatsStatus": apisrvpkg.NewMessage("monitoring.StatsStatus"),
+		"monitoring.StatsPolicySpec":   apisrvpkg.NewMessage("monitoring.StatsPolicySpec"),
+		"monitoring.StatsPolicyStatus": apisrvpkg.NewMessage("monitoring.StatsPolicyStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

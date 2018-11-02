@@ -51,71 +51,71 @@ func DecodeGrpcRespFlowExportPolicy(ctx context.Context, response interface{}) (
 	return response, nil
 }
 
-func encodeHTTPFlowExportSpec(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPFlowExportPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPFlowExportSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req FlowExportSpec
+func decodeHTTPFlowExportPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FlowExportPolicySpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqFlowExportSpec encodes GRPC request
-func EncodeGrpcReqFlowExportSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FlowExportSpec)
+// EncodeGrpcReqFlowExportPolicySpec encodes GRPC request
+func EncodeGrpcReqFlowExportPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportPolicySpec)
 	return req, nil
 }
 
-// DecodeGrpcReqFlowExportSpec decodes GRPC request
-func DecodeGrpcReqFlowExportSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FlowExportSpec)
+// DecodeGrpcReqFlowExportPolicySpec decodes GRPC request
+func DecodeGrpcReqFlowExportPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportPolicySpec)
 	return req, nil
 }
 
-// EncodeGrpcRespFlowExportSpec encodes GRC response
-func EncodeGrpcRespFlowExportSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFlowExportPolicySpec encodes GRC response
+func EncodeGrpcRespFlowExportPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespFlowExportSpec decodes GRPC response
-func DecodeGrpcRespFlowExportSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFlowExportPolicySpec decodes GRPC response
+func DecodeGrpcRespFlowExportPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPFlowExportStatus(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPFlowExportPolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPFlowExportStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req FlowExportStatus
+func decodeHTTPFlowExportPolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FlowExportPolicyStatus
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqFlowExportStatus encodes GRPC request
-func EncodeGrpcReqFlowExportStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FlowExportStatus)
+// EncodeGrpcReqFlowExportPolicyStatus encodes GRPC request
+func EncodeGrpcReqFlowExportPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportPolicyStatus)
 	return req, nil
 }
 
-// DecodeGrpcReqFlowExportStatus decodes GRPC request
-func DecodeGrpcReqFlowExportStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FlowExportStatus)
+// DecodeGrpcReqFlowExportPolicyStatus decodes GRPC request
+func DecodeGrpcReqFlowExportPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FlowExportPolicyStatus)
 	return req, nil
 }
 
-// EncodeGrpcRespFlowExportStatus encodes GRC response
-func EncodeGrpcRespFlowExportStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFlowExportPolicyStatus encodes GRC response
+func EncodeGrpcRespFlowExportPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespFlowExportStatus decodes GRPC response
-func DecodeGrpcRespFlowExportStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFlowExportPolicyStatus decodes GRPC response
+func DecodeGrpcRespFlowExportPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -221,71 +221,71 @@ func DecodeGrpcRespFwlogPolicy(ctx context.Context, response interface{}) (inter
 	return response, nil
 }
 
-func encodeHTTPFwlogSpec(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPFwlogPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPFwlogSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req FwlogSpec
+func decodeHTTPFwlogPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogPolicySpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqFwlogSpec encodes GRPC request
-func EncodeGrpcReqFwlogSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FwlogSpec)
+// EncodeGrpcReqFwlogPolicySpec encodes GRPC request
+func EncodeGrpcReqFwlogPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogPolicySpec)
 	return req, nil
 }
 
-// DecodeGrpcReqFwlogSpec decodes GRPC request
-func DecodeGrpcReqFwlogSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FwlogSpec)
+// DecodeGrpcReqFwlogPolicySpec decodes GRPC request
+func DecodeGrpcReqFwlogPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogPolicySpec)
 	return req, nil
 }
 
-// EncodeGrpcRespFwlogSpec encodes GRC response
-func EncodeGrpcRespFwlogSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFwlogPolicySpec encodes GRC response
+func EncodeGrpcRespFwlogPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespFwlogSpec decodes GRPC response
-func DecodeGrpcRespFwlogSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFwlogPolicySpec decodes GRPC response
+func DecodeGrpcRespFwlogPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPFwlogStatus(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPFwlogPolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPFwlogStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req FwlogStatus
+func decodeHTTPFwlogPolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogPolicyStatus
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqFwlogStatus encodes GRPC request
-func EncodeGrpcReqFwlogStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FwlogStatus)
+// EncodeGrpcReqFwlogPolicyStatus encodes GRPC request
+func EncodeGrpcReqFwlogPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogPolicyStatus)
 	return req, nil
 }
 
-// DecodeGrpcReqFwlogStatus decodes GRPC request
-func DecodeGrpcReqFwlogStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FwlogStatus)
+// DecodeGrpcReqFwlogPolicyStatus decodes GRPC request
+func DecodeGrpcReqFwlogPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogPolicyStatus)
 	return req, nil
 }
 
-// EncodeGrpcRespFwlogStatus encodes GRC response
-func EncodeGrpcRespFwlogStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespFwlogPolicyStatus encodes GRC response
+func EncodeGrpcRespFwlogPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespFwlogStatus decodes GRPC response
-func DecodeGrpcRespFwlogStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespFwlogPolicyStatus decodes GRPC response
+func DecodeGrpcRespFwlogPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -323,70 +323,70 @@ func DecodeGrpcRespStatsPolicy(ctx context.Context, response interface{}) (inter
 	return response, nil
 }
 
-func encodeHTTPStatsSpec(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPStatsPolicySpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPStatsSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req StatsSpec
+func decodeHTTPStatsPolicySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StatsPolicySpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqStatsSpec encodes GRPC request
-func EncodeGrpcReqStatsSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*StatsSpec)
+// EncodeGrpcReqStatsPolicySpec encodes GRPC request
+func EncodeGrpcReqStatsPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsPolicySpec)
 	return req, nil
 }
 
-// DecodeGrpcReqStatsSpec decodes GRPC request
-func DecodeGrpcReqStatsSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*StatsSpec)
+// DecodeGrpcReqStatsPolicySpec decodes GRPC request
+func DecodeGrpcReqStatsPolicySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsPolicySpec)
 	return req, nil
 }
 
-// EncodeGrpcRespStatsSpec encodes GRC response
-func EncodeGrpcRespStatsSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespStatsPolicySpec encodes GRC response
+func EncodeGrpcRespStatsPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespStatsSpec decodes GRPC response
-func DecodeGrpcRespStatsSpec(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespStatsPolicySpec decodes GRPC response
+func DecodeGrpcRespStatsPolicySpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPStatsStatus(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPStatsPolicyStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPStatsStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req StatsStatus
+func decodeHTTPStatsPolicyStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req StatsPolicyStatus
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqStatsStatus encodes GRPC request
-func EncodeGrpcReqStatsStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*StatsStatus)
+// EncodeGrpcReqStatsPolicyStatus encodes GRPC request
+func EncodeGrpcReqStatsPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsPolicyStatus)
 	return req, nil
 }
 
-// DecodeGrpcReqStatsStatus decodes GRPC request
-func DecodeGrpcReqStatsStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*StatsStatus)
+// DecodeGrpcReqStatsPolicyStatus decodes GRPC request
+func DecodeGrpcReqStatsPolicyStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*StatsPolicyStatus)
 	return req, nil
 }
 
-// EncodeGrpcRespStatsStatus encodes GRC response
-func EncodeGrpcRespStatsStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespStatsPolicyStatus encodes GRC response
+func EncodeGrpcRespStatsPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespStatsStatus decodes GRPC response
-func DecodeGrpcRespStatsStatus(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespStatsPolicyStatus decodes GRPC response
+func DecodeGrpcRespStatsPolicyStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

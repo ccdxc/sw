@@ -1561,7 +1561,7 @@ func TestStaging(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to commit staging buffer (%s)", err)
 		}
-		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+		if cresp.Status.Status != staging.CommitActionStatus_SUCCESS.String() {
 			t.Fatalf("commit operation failed %v", cresp.Status)
 		}
 		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
@@ -1620,7 +1620,7 @@ func TestStaging(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to commit staging buffer (%s)", err)
 		}
-		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+		if cresp.Status.Status != staging.CommitActionStatus_SUCCESS.String() {
 			t.Fatalf("commit operation failed %v", cresp.Status)
 		}
 		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
@@ -1681,7 +1681,7 @@ func TestStaging(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to commit staging buffer (%s)", err)
 		}
-		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+		if cresp.Status.Status != staging.CommitActionStatus_SUCCESS.String() {
 			t.Fatalf("commit operation failed %v", cresp.Status)
 		}
 		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
@@ -1741,7 +1741,7 @@ func TestStaging(t *testing.T) {
 		if err != nil {
 			t.Fatalf("commit operation failed (%s)", err)
 		}
-		if cresp.Status.Status == staging.CommitResponse_SUCCESS.String() {
+		if cresp.Status.Status == staging.CommitActionStatus_SUCCESS.String() {
 			t.Fatalf("commit operation succeeded, expected to fail")
 		}
 		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
@@ -1795,7 +1795,7 @@ func TestStaging(t *testing.T) {
 		if err != nil {
 			t.Fatalf("commit operation failed (%s)", err)
 		}
-		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+		if cresp.Status.Status != staging.CommitActionStatus_SUCCESS.String() {
 			t.Fatalf("commit operation expected to succeeded got (%v)", cresp.Status)
 		}
 		cobj, err = restcl.BookstoreV1().Customer().Get(ctx, &copts)
@@ -1842,7 +1842,7 @@ func TestStaging(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to commit staging buffer (%s)", err)
 		}
-		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+		if cresp.Status.Status != staging.CommitActionStatus_SUCCESS.String() {
 			t.Fatalf("commit operation failed %v", cresp.Status)
 		}
 		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)

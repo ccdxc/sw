@@ -1547,15 +1547,15 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/stagingClearRequest"
+          "$ref": "#/definitions/stagingClearActionSpec"
         },
         "status": {
-          "$ref": "#/definitions/stagingClearResponse"
+          "$ref": "#/definitions/stagingClearActionStatus"
         }
       },
       "description": "ClearAction deletes objects from the staging buffer. A list of items to be cleared is specified\n in the Spec. If there are no items are specified then all items are deleted from the staging.\n buffer."
     },
-    "stagingClearRequest": {
+    "stagingClearActionSpec": {
       "type": "object",
       "properties": {
         "items": {
@@ -1567,7 +1567,7 @@
         }
       }
     },
-    "stagingClearResponse": {
+    "stagingClearActionStatus": {
       "type": "object",
       "properties": {
         "status": {
@@ -1596,18 +1596,18 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/stagingCommitRequest"
+          "$ref": "#/definitions/stagingCommitActionSpec"
         },
         "status": {
-          "$ref": "#/definitions/stagingCommitResponse"
+          "$ref": "#/definitions/stagingCommitActionStatus"
         }
       },
       "description": "CommitAction commits the changes in the staging buffer. All staged entries\n are verified and if verification is successful they are commited."
     },
-    "stagingCommitRequest": {
+    "stagingCommitActionSpec": {
       "type": "object"
     },
-    "stagingCommitResponse": {
+    "stagingCommitActionStatus": {
       "type": "object",
       "properties": {
         "status": {

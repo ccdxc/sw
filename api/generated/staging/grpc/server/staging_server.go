@@ -433,8 +433,8 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 		}),
 
-		"staging.ClearRequest":  apisrvpkg.NewMessage("staging.ClearRequest"),
-		"staging.ClearResponse": apisrvpkg.NewMessage("staging.ClearResponse"),
+		"staging.ClearActionSpec":   apisrvpkg.NewMessage("staging.ClearActionSpec"),
+		"staging.ClearActionStatus": apisrvpkg.NewMessage("staging.ClearActionStatus"),
 		"staging.CommitAction": apisrvpkg.NewMessage("staging.CommitAction").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := staging.CommitAction{}
@@ -629,11 +629,11 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 		}),
 
-		"staging.CommitRequest":   apisrvpkg.NewMessage("staging.CommitRequest"),
-		"staging.CommitResponse":  apisrvpkg.NewMessage("staging.CommitResponse"),
-		"staging.Item":            apisrvpkg.NewMessage("staging.Item"),
-		"staging.ItemId":          apisrvpkg.NewMessage("staging.ItemId"),
-		"staging.ValidationError": apisrvpkg.NewMessage("staging.ValidationError"),
+		"staging.CommitActionSpec":   apisrvpkg.NewMessage("staging.CommitActionSpec"),
+		"staging.CommitActionStatus": apisrvpkg.NewMessage("staging.CommitActionStatus"),
+		"staging.Item":               apisrvpkg.NewMessage("staging.Item"),
+		"staging.ItemId":             apisrvpkg.NewMessage("staging.ItemId"),
+		"staging.ValidationError":    apisrvpkg.NewMessage("staging.ValidationError"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

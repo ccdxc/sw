@@ -7,20 +7,20 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { StagingCommitResponse_status,  } from './enums';
+import { StagingCommitActionStatus_status,  } from './enums';
 
-export interface IStagingCommitResponse {
-    'status'?: StagingCommitResponse_status;
+export interface IStagingCommitActionStatus {
+    'status'?: StagingCommitActionStatus_status;
     'reason'?: string;
 }
 
 
-export class StagingCommitResponse extends BaseModel implements IStagingCommitResponse {
-    'status': StagingCommitResponse_status = null;
+export class StagingCommitActionStatus extends BaseModel implements IStagingCommitActionStatus {
+    'status': StagingCommitActionStatus_status = null;
     'reason': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'status': {
-            enum: StagingCommitResponse_status,
+            enum: StagingCommitActionStatus_status,
             default: 'SUCCESS',
             type: 'string'
         },
@@ -30,16 +30,16 @@ export class StagingCommitResponse extends BaseModel implements IStagingCommitRe
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return StagingCommitResponse.propInfo[propName];
+        return StagingCommitActionStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (StagingCommitResponse.propInfo[prop] != null &&
-                        StagingCommitResponse.propInfo[prop].default != null &&
-                        StagingCommitResponse.propInfo[prop].default != '');
+        return (StagingCommitActionStatus.propInfo[prop] != null &&
+                        StagingCommitActionStatus.propInfo[prop].default != null &&
+                        StagingCommitActionStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -58,13 +58,13 @@ export class StagingCommitResponse extends BaseModel implements IStagingCommitRe
     setValues(values: any, fillDefaults = true): void {
         if (values && values['status'] != null) {
             this['status'] = values['status'];
-        } else if (fillDefaults && StagingCommitResponse.hasDefaultValue('status')) {
-            this['status'] = <StagingCommitResponse_status>  StagingCommitResponse.propInfo['status'].default;
+        } else if (fillDefaults && StagingCommitActionStatus.hasDefaultValue('status')) {
+            this['status'] = <StagingCommitActionStatus_status>  StagingCommitActionStatus.propInfo['status'].default;
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
-        } else if (fillDefaults && StagingCommitResponse.hasDefaultValue('reason')) {
-            this['reason'] = StagingCommitResponse.propInfo['reason'].default;
+        } else if (fillDefaults && StagingCommitActionStatus.hasDefaultValue('reason')) {
+            this['reason'] = StagingCommitActionStatus.propInfo['reason'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -73,7 +73,7 @@ export class StagingCommitResponse extends BaseModel implements IStagingCommitRe
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'status': new FormControl(this['status'], [enumValidator(StagingCommitResponse_status), ]),
+                'status': new FormControl(this['status'], [enumValidator(StagingCommitActionStatus_status), ]),
                 'reason': new FormControl(this['reason']),
             });
         }

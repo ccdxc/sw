@@ -2722,14 +2722,14 @@ func TestGetMsgMap(t *testing.T) {
 		},
 	}
 	cliExp := map[string]cliInfo{
-		"field1":          {tag: "field1", path: "field1", ins: "", skip: false, help: ""},
-		"field2":          {tag: "field2", path: "field2", ins: "", skip: false, help: ""},
-		"inline-field1":   {tag: "field1", path: "Struct2Spec.field1", ins: "test", skip: true, help: "Test string"},
-		"inline-TestKey":  {tag: "TestKey", path: "Struct2Spec.field2", ins: "", skip: false, help: ""},
-		"spec-field1":     {tag: "field1", path: "Spec.field1", ins: "test", skip: true, help: "Test string"},
-		"spec-TestKey":    {tag: "TestKey", path: "Spec.field2", ins: "", skip: false, help: ""},
-		"status-field1":   {tag: "field1", path: "Status.field1", ins: "test", skip: false, help: "Test Status string"},
-		"status-TestKey2": {tag: "TestKey2", path: "Status.field2", ins: "test1", skip: false, help: ""},
+		"field1":          {tag: "field1", cliType: "String", path: "field1", ins: "", skip: false, help: ""},
+		"field2":          {tag: "field2", cliType: "String", path: "field2", ins: "", skip: false, help: ""},
+		"inline-field1":   {tag: "field1", cliType: "String", path: "Struct2Spec.field1", ins: "test", skip: true, help: "Test string"},
+		"inline-TestKey":  {tag: "TestKey", cliType: "String", path: "Struct2Spec.field2", ins: "", skip: false, help: ""},
+		"spec-field1":     {tag: "field1", cliType: "String", path: "Spec.field1", ins: "test", skip: true, help: "Test string"},
+		"spec-TestKey":    {tag: "TestKey", cliType: "String", path: "Spec.field2", ins: "", skip: false, help: ""},
+		"status-field1":   {tag: "field1", cliType: "String", path: "Status.field1", ins: "test", skip: false, help: "Test Status string"},
+		"status-TestKey2": {tag: "TestKey2", cliType: "String", path: "Status.field2", ins: "test1", skip: false, help: ""},
 	}
 	if len(msgs) != len(exp) {
 		t.Fatalf("expecting %v messages got %v", len(exp), len(msgs))
@@ -2768,6 +2768,15 @@ func TestGetMsgMap(t *testing.T) {
 				t.Fatalf("field [%v] does not match got [%+v] want [%+v]", k, v, cliExp[k])
 			}
 		}
+	}
+
+	cliFlagMap := getCLIFlagMap(file)
+	if len(cliFlagMap) != 1 {
+		t.Fatalf("expecting only 1 cli flag map %+v", cliFlagMap)
+	} else if cf, ok := cliFlagMap["example.Struct2"]; !ok {
+		t.Fatalf("cli flags not found %+v", cliFlagMap)
+	} else if len(cf) != 1 && cf[0].ID != "TestKey" && cf[0].Type != "String" {
+		t.Fatalf("invalid cli flag %+v", cliFlagMap)
 	}
 }
 
@@ -3138,5 +3147,14 @@ func TestGetMsgKindsSchema(t *testing.T) {
 		} else {
 			t.Errorf("unknown message [%v]", *msg.Name)
 		}
+	}
+}
+
+func TestSplitSvcObj(t *testing.T) {
+	if svcObj := splitSvcObj("example.msg1"); svcObj.Svc != "example" && svcObj.ObjName != "msg1" {
+		t.Fatalf("unable to find svc and obj %+v", svcObj)
+	}
+	if svcObj := splitSvcObj("examplemsg1"); svcObj.Svc != "" {
+		t.Fatalf("able to find svc and obj %+v", svcObj)
 	}
 }

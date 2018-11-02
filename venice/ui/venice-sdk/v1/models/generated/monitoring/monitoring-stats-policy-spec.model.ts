@@ -8,14 +8,14 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface IMonitoringStatsSpec {
+export interface IMonitoringStatsPolicySpec {
     'compaction-interval '?: string;
     'retention-time'?: string;
     'downsample-retention-time'?: string;
 }
 
 
-export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSpec {
+export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringStatsPolicySpec {
     'compaction-interval ': string = null;
     'retention-time': string = null;
     'downsample-retention-time': string = null;
@@ -32,16 +32,16 @@ export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSp
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return MonitoringStatsSpec.propInfo[propName];
+        return MonitoringStatsPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (MonitoringStatsSpec.propInfo[prop] != null &&
-                        MonitoringStatsSpec.propInfo[prop].default != null &&
-                        MonitoringStatsSpec.propInfo[prop].default != '');
+        return (MonitoringStatsPolicySpec.propInfo[prop] != null &&
+                        MonitoringStatsPolicySpec.propInfo[prop].default != null &&
+                        MonitoringStatsPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -60,18 +60,18 @@ export class MonitoringStatsSpec extends BaseModel implements IMonitoringStatsSp
     setValues(values: any, fillDefaults = true): void {
         if (values && values['compaction-interval '] != null) {
             this['compaction-interval '] = values['compaction-interval '];
-        } else if (fillDefaults && MonitoringStatsSpec.hasDefaultValue('compaction-interval ')) {
-            this['compaction-interval '] = MonitoringStatsSpec.propInfo['compaction-interval '].default;
+        } else if (fillDefaults && MonitoringStatsPolicySpec.hasDefaultValue('compaction-interval ')) {
+            this['compaction-interval '] = MonitoringStatsPolicySpec.propInfo['compaction-interval '].default;
         }
         if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
-        } else if (fillDefaults && MonitoringStatsSpec.hasDefaultValue('retention-time')) {
-            this['retention-time'] = MonitoringStatsSpec.propInfo['retention-time'].default;
+        } else if (fillDefaults && MonitoringStatsPolicySpec.hasDefaultValue('retention-time')) {
+            this['retention-time'] = MonitoringStatsPolicySpec.propInfo['retention-time'].default;
         }
         if (values && values['downsample-retention-time'] != null) {
             this['downsample-retention-time'] = values['downsample-retention-time'];
-        } else if (fillDefaults && MonitoringStatsSpec.hasDefaultValue('downsample-retention-time')) {
-            this['downsample-retention-time'] = MonitoringStatsSpec.propInfo['downsample-retention-time'].default;
+        } else if (fillDefaults && MonitoringStatsPolicySpec.hasDefaultValue('downsample-retention-time')) {
+            this['downsample-retention-time'] = MonitoringStatsPolicySpec.propInfo['downsample-retention-time'].default;
         }
         this.setFormGroupValuesToBeModelValues();
     }

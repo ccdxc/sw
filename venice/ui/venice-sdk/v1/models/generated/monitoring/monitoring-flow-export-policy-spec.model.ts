@@ -7,26 +7,32 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { MonitoringFlowExportTarget, IMonitoringFlowExportTarget } from './monitoring-flow-export-target.model';
 
-export interface IMonitoringFwlogStatus {
+export interface IMonitoringFlowExportPolicySpec {
+    'targets'?: Array<IMonitoringFlowExportTarget>;
 }
 
 
-export class MonitoringFwlogStatus extends BaseModel implements IMonitoringFwlogStatus {
+export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonitoringFlowExportPolicySpec {
+    'targets': Array<MonitoringFlowExportTarget> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'targets': {
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return MonitoringFwlogStatus.propInfo[propName];
+        return MonitoringFlowExportPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (MonitoringFwlogStatus.propInfo[prop] != null &&
-                        MonitoringFwlogStatus.propInfo[prop].default != null &&
-                        MonitoringFwlogStatus.propInfo[prop].default != '');
+        return (MonitoringFlowExportPolicySpec.propInfo[prop] != null &&
+                        MonitoringFlowExportPolicySpec.propInfo[prop].default != null &&
+                        MonitoringFlowExportPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -35,6 +41,7 @@ export class MonitoringFwlogStatus extends BaseModel implements IMonitoringFwlog
     */
     constructor(values?: any) {
         super();
+        this['targets'] = new Array<MonitoringFlowExportTarget>();
         this.setValues(values);
     }
 
@@ -43,6 +50,9 @@ export class MonitoringFwlogStatus extends BaseModel implements IMonitoringFwlog
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values) {
+            this.fillModelArray<MonitoringFlowExportTarget>(this, 'targets', values['targets'], MonitoringFlowExportTarget);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -50,7 +60,10 @@ export class MonitoringFwlogStatus extends BaseModel implements IMonitoringFwlog
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'targets': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<MonitoringFlowExportTarget>('targets', this['targets'], MonitoringFlowExportTarget);
         }
         return this._formGroup;
     }
@@ -61,6 +74,7 @@ export class MonitoringFwlogStatus extends BaseModel implements IMonitoringFwlog
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this.fillModelArray<MonitoringFlowExportTarget>(this, 'targets', this['targets'], MonitoringFlowExportTarget);
         }
     }
 }

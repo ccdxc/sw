@@ -7,32 +7,26 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { StagingItemId, IStagingItemId } from './staging-item-id.model';
 
-export interface IStagingClearRequest {
-    'items'?: Array<IStagingItemId>;
+export interface IMonitoringStatsPolicyStatus {
 }
 
 
-export class StagingClearRequest extends BaseModel implements IStagingClearRequest {
-    'items': Array<StagingItemId> = null;
+export class MonitoringStatsPolicyStatus extends BaseModel implements IMonitoringStatsPolicyStatus {
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'items': {
-            type: 'object'
-        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return StagingClearRequest.propInfo[propName];
+        return MonitoringStatsPolicyStatus.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (StagingClearRequest.propInfo[prop] != null &&
-                        StagingClearRequest.propInfo[prop].default != null &&
-                        StagingClearRequest.propInfo[prop].default != '');
+        return (MonitoringStatsPolicyStatus.propInfo[prop] != null &&
+                        MonitoringStatsPolicyStatus.propInfo[prop].default != null &&
+                        MonitoringStatsPolicyStatus.propInfo[prop].default != '');
     }
 
     /**
@@ -41,7 +35,6 @@ export class StagingClearRequest extends BaseModel implements IStagingClearReque
     */
     constructor(values?: any) {
         super();
-        this['items'] = new Array<StagingItemId>();
         this.setValues(values);
     }
 
@@ -50,9 +43,6 @@ export class StagingClearRequest extends BaseModel implements IStagingClearReque
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values) {
-            this.fillModelArray<StagingItemId>(this, 'items', values['items'], StagingItemId);
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -60,10 +50,7 @@ export class StagingClearRequest extends BaseModel implements IStagingClearReque
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'items': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<StagingItemId>('items', this['items'], StagingItemId);
         }
         return this._formGroup;
     }
@@ -74,7 +61,6 @@ export class StagingClearRequest extends BaseModel implements IStagingClearReque
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<StagingItemId>(this, 'items', this['items'], StagingItemId);
         }
     }
 }

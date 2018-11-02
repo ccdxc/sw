@@ -157,13 +157,13 @@ func (m *ClearAction) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *ClearRequest) Clone(into interface{}) (interface{}, error) {
-	var out *ClearRequest
+func (m *ClearActionSpec) Clone(into interface{}) (interface{}, error) {
+	var out *ClearActionSpec
 	var ok bool
 	if into == nil {
-		out = &ClearRequest{}
+		out = &ClearActionSpec{}
 	} else {
-		out, ok = into.(*ClearRequest)
+		out, ok = into.(*ClearActionSpec)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -173,18 +173,18 @@ func (m *ClearRequest) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *ClearRequest) Defaults(ver string) bool {
+func (m *ClearActionSpec) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *ClearResponse) Clone(into interface{}) (interface{}, error) {
-	var out *ClearResponse
+func (m *ClearActionStatus) Clone(into interface{}) (interface{}, error) {
+	var out *ClearActionStatus
 	var ok bool
 	if into == nil {
-		out = &ClearResponse{}
+		out = &ClearActionStatus{}
 	} else {
-		out, ok = into.(*ClearResponse)
+		out, ok = into.(*ClearActionStatus)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -194,7 +194,7 @@ func (m *ClearResponse) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *ClearResponse) Defaults(ver string) bool {
+func (m *ClearActionStatus) Defaults(ver string) bool {
 	var ret bool
 	ret = true
 	switch ver {
@@ -230,13 +230,13 @@ func (m *CommitAction) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *CommitRequest) Clone(into interface{}) (interface{}, error) {
-	var out *CommitRequest
+func (m *CommitActionSpec) Clone(into interface{}) (interface{}, error) {
+	var out *CommitActionSpec
 	var ok bool
 	if into == nil {
-		out = &CommitRequest{}
+		out = &CommitActionSpec{}
 	} else {
-		out, ok = into.(*CommitRequest)
+		out, ok = into.(*CommitActionSpec)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -246,18 +246,18 @@ func (m *CommitRequest) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *CommitRequest) Defaults(ver string) bool {
+func (m *CommitActionSpec) Defaults(ver string) bool {
 	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *CommitResponse) Clone(into interface{}) (interface{}, error) {
-	var out *CommitResponse
+func (m *CommitActionStatus) Clone(into interface{}) (interface{}, error) {
+	var out *CommitActionStatus
 	var ok bool
 	if into == nil {
-		out = &CommitResponse{}
+		out = &CommitActionStatus{}
 	} else {
-		out, ok = into.(*CommitResponse)
+		out, ok = into.(*CommitActionStatus)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -267,7 +267,7 @@ func (m *CommitResponse) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *CommitResponse) Defaults(ver string) bool {
+func (m *CommitActionStatus) Defaults(ver string) bool {
 	var ret bool
 	ret = true
 	switch ver {
@@ -411,20 +411,20 @@ func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *ClearRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClearActionSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *ClearResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClearActionStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapStaging["ClearResponse"][ver]; ok {
+	if vs, ok := validatorMapStaging["ClearActionStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapStaging["ClearResponse"]["all"]; ok {
+	} else if vs, ok := validatorMapStaging["ClearActionStatus"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -457,20 +457,20 @@ func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *CommitRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CommitActionSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
-func (m *CommitResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CommitActionStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if vs, ok := validatorMapStaging["CommitResponse"][ver]; ok {
+	if vs, ok := validatorMapStaging["CommitActionStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
 			}
 		}
-	} else if vs, ok := validatorMapStaging["CommitResponse"]["all"]; ok {
+	} else if vs, ok := validatorMapStaging["CommitActionStatus"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -517,22 +517,22 @@ func init() {
 		return nil
 	})
 
-	validatorMapStaging["ClearResponse"] = make(map[string][]func(string, interface{}) error)
-	validatorMapStaging["ClearResponse"]["all"] = append(validatorMapStaging["ClearResponse"]["all"], func(path string, i interface{}) error {
-		m := i.(*ClearResponse)
+	validatorMapStaging["ClearActionStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapStaging["ClearActionStatus"]["all"] = append(validatorMapStaging["ClearActionStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*ClearActionStatus)
 
-		if _, ok := ClearResponse_ClearStatus_value[m.Status]; !ok {
-			return errors.New("ClearResponse.Status did not match allowed strings")
+		if _, ok := ClearActionStatus_ClearStatus_value[m.Status]; !ok {
+			return errors.New("ClearActionStatus.Status did not match allowed strings")
 		}
 		return nil
 	})
 
-	validatorMapStaging["CommitResponse"] = make(map[string][]func(string, interface{}) error)
-	validatorMapStaging["CommitResponse"]["all"] = append(validatorMapStaging["CommitResponse"]["all"], func(path string, i interface{}) error {
-		m := i.(*CommitResponse)
+	validatorMapStaging["CommitActionStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapStaging["CommitActionStatus"]["all"] = append(validatorMapStaging["CommitActionStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*CommitActionStatus)
 
-		if _, ok := CommitResponse_CommitStatus_value[m.Status]; !ok {
-			return errors.New("CommitResponse.Status did not match allowed strings")
+		if _, ok := CommitActionStatus_CommitStatus_value[m.Status]; !ok {
+			return errors.New("CommitActionStatus.Status did not match allowed strings")
 		}
 		return nil
 	})

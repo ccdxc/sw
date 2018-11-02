@@ -31,9 +31,11 @@ message SGRule {
                                              (gogoproto.nullable) =  true, (gogoproto.jsontag) = "action,omitempty"];
 
     // inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+    // cli-tags: id=from-ip
     repeated string FromIPAddresses     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "from-ip-addresses,omitempty"];
 
     // outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses
+    // cli-tags: id=to-ip
     repeated string ToIPAddresses       = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "to-ip-addresses,omitempty"];
 
     // inbound rule from a given security group

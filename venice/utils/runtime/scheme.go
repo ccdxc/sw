@@ -109,7 +109,10 @@ func (s *Scheme) AddSchema(in map[string]*api.Struct) {
 
 // GetSchema returns the type schema for kind specified in in
 func (s *Scheme) GetSchema(in string) *api.Struct {
-	return s.Types[in]
+	if val, ok := s.Types[in]; ok {
+		return val
+	}
+	return nil
 }
 
 // Kinds returns all the known Kinds grouped by API Group.

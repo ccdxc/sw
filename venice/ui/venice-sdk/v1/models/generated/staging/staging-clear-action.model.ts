@@ -8,15 +8,15 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { StagingClearRequest, IStagingClearRequest } from './staging-clear-request.model';
-import { StagingClearResponse, IStagingClearResponse } from './staging-clear-response.model';
+import { StagingClearActionSpec, IStagingClearActionSpec } from './staging-clear-action-spec.model';
+import { StagingClearActionStatus, IStagingClearActionStatus } from './staging-clear-action-status.model';
 
 export interface IStagingClearAction {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'spec'?: IStagingClearRequest;
-    'status'?: IStagingClearResponse;
+    'spec'?: IStagingClearActionSpec;
+    'status'?: IStagingClearActionStatus;
 }
 
 
@@ -24,8 +24,8 @@ export class StagingClearAction extends BaseModel implements IStagingClearAction
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    'spec': StagingClearRequest = null;
-    'status': StagingClearResponse = null;
+    'spec': StagingClearActionSpec = null;
+    'status': StagingClearActionStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -64,8 +64,8 @@ export class StagingClearAction extends BaseModel implements IStagingClearAction
     constructor(values?: any) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['spec'] = new StagingClearRequest();
-        this['status'] = new StagingClearResponse();
+        this['spec'] = new StagingClearActionSpec();
+        this['status'] = new StagingClearActionStatus();
         this.setValues(values);
     }
 

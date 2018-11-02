@@ -7,26 +7,26 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringFwlogSpec_filter,  MonitoringFwlogSpec_filter_uihint  } from './enums';
+import { MonitoringFwlogPolicySpec_filter,  MonitoringFwlogPolicySpec_filter_uihint  } from './enums';
 import { MonitoringFwlogExport, IMonitoringFwlogExport } from './monitoring-fwlog-export.model';
 
-export interface IMonitoringFwlogSpec {
+export interface IMonitoringFwlogPolicySpec {
     'retention-time'?: string;
-    'filter'?: Array<MonitoringFwlogSpec_filter>;
+    'filter'?: Array<MonitoringFwlogPolicySpec_filter>;
     'exports'?: Array<IMonitoringFwlogExport>;
 }
 
 
-export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSpec {
+export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringFwlogPolicySpec {
     'retention-time': string = null;
-    'filter': Array<MonitoringFwlogSpec_filter> = null;
+    'filter': Array<MonitoringFwlogPolicySpec_filter> = null;
     'exports': Array<MonitoringFwlogExport> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'retention-time': {
             type: 'string'
         },
         'filter': {
-            enum: MonitoringFwlogSpec_filter_uihint,
+            enum: MonitoringFwlogPolicySpec_filter_uihint,
             default: 'FWLOG_ALL',
             type: 'Array<string>'
         },
@@ -36,16 +36,16 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return MonitoringFwlogSpec.propInfo[propName];
+        return MonitoringFwlogPolicySpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (MonitoringFwlogSpec.propInfo[prop] != null &&
-                        MonitoringFwlogSpec.propInfo[prop].default != null &&
-                        MonitoringFwlogSpec.propInfo[prop].default != '');
+        return (MonitoringFwlogPolicySpec.propInfo[prop] != null &&
+                        MonitoringFwlogPolicySpec.propInfo[prop].default != null &&
+                        MonitoringFwlogPolicySpec.propInfo[prop].default != '');
     }
 
     /**
@@ -54,7 +54,7 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
     */
     constructor(values?: any) {
         super();
-        this['filter'] = new Array<MonitoringFwlogSpec_filter>();
+        this['filter'] = new Array<MonitoringFwlogPolicySpec_filter>();
         this['exports'] = new Array<MonitoringFwlogExport>();
         this.setValues(values);
     }
@@ -66,8 +66,8 @@ export class MonitoringFwlogSpec extends BaseModel implements IMonitoringFwlogSp
     setValues(values: any, fillDefaults = true): void {
         if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
-        } else if (fillDefaults && MonitoringFwlogSpec.hasDefaultValue('retention-time')) {
-            this['retention-time'] = MonitoringFwlogSpec.propInfo['retention-time'].default;
+        } else if (fillDefaults && MonitoringFwlogPolicySpec.hasDefaultValue('retention-time')) {
+            this['retention-time'] = MonitoringFwlogPolicySpec.propInfo['retention-time'].default;
         }
         if (values && values['filter'] != null) {
             this['filter'] = values['filter'];

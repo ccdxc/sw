@@ -68,7 +68,7 @@ export enum MonitoringFwlogExport_export_filter {
     'FWLOG_DENY' = "FWLOG_DENY",
 }
 
-export enum MonitoringFwlogSpec_filter {
+export enum MonitoringFwlogPolicySpec_filter {
     'FWLOG_ALL' = "FWLOG_ALL",
     'FWLOG_ACCEPT' = "FWLOG_ACCEPT",
     'FWLOG_REJECT' = "FWLOG_REJECT",
@@ -179,7 +179,7 @@ export enum MonitoringFwlogExport_export_filter_uihint {
     'FWLOG_REJECT' = "Reject",
 }
 
-export enum MonitoringFwlogSpec_filter_uihint {
+export enum MonitoringFwlogPolicySpec_filter_uihint {
     'FWLOG_ACCEPT' = "Accept",
     'FWLOG_ALL' = "All",
     'FWLOG_DENY' = "Deny",
@@ -266,7 +266,7 @@ export class AllEnums {
     MonitoringFlowExportTarget_format = MonitoringFlowExportTarget_format;
     MonitoringFwlogExport_format = MonitoringFwlogExport_format;
     MonitoringFwlogExport_export_filter = MonitoringFwlogExport_export_filter;
-    MonitoringFwlogSpec_filter = MonitoringFwlogSpec_filter;
+    MonitoringFwlogPolicySpec_filter = MonitoringFwlogPolicySpec_filter;
     MonitoringMatchedRequirement_operator = MonitoringMatchedRequirement_operator;
     MonitoringMirrorCollector_type = MonitoringMirrorCollector_type;
     MonitoringMirrorSessionSpec_packet_filters = MonitoringMirrorSessionSpec_packet_filters;
@@ -284,7 +284,7 @@ export class AllEnums {
     MonitoringExternalCred_auth_type_uihint = MonitoringExternalCred_auth_type_uihint;
     MonitoringFwlogExport_format_uihint = MonitoringFwlogExport_format_uihint;
     MonitoringFwlogExport_export_filter_uihint = MonitoringFwlogExport_export_filter_uihint;
-    MonitoringFwlogSpec_filter_uihint = MonitoringFwlogSpec_filter_uihint;
+    MonitoringFwlogPolicySpec_filter_uihint = MonitoringFwlogPolicySpec_filter_uihint;
     MonitoringMatchedRequirement_operator_uihint = MonitoringMatchedRequirement_operator_uihint;
     MonitoringMirrorCollector_type_uihint = MonitoringMirrorCollector_type_uihint;
     MonitoringMirrorSessionSpec_packet_filters_uihint = MonitoringMirrorSessionSpec_packet_filters_uihint;

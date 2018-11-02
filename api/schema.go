@@ -7,6 +7,7 @@ import (
 
 // CLIInfo is a container for all CLI Related tags and info
 type CLIInfo struct {
+	ID     string
 	Path   string
 	Skip   bool
 	Insert string

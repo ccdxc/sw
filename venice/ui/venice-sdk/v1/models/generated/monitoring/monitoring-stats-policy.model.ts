@@ -8,15 +8,15 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { MonitoringStatsSpec, IMonitoringStatsSpec } from './monitoring-stats-spec.model';
-import { MonitoringStatsStatus, IMonitoringStatsStatus } from './monitoring-stats-status.model';
+import { MonitoringStatsPolicySpec, IMonitoringStatsPolicySpec } from './monitoring-stats-policy-spec.model';
+import { MonitoringStatsPolicyStatus, IMonitoringStatsPolicyStatus } from './monitoring-stats-policy-status.model';
 
 export interface IMonitoringStatsPolicy {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'spec'?: IMonitoringStatsSpec;
-    'status'?: IMonitoringStatsStatus;
+    'spec'?: IMonitoringStatsPolicySpec;
+    'status'?: IMonitoringStatsPolicyStatus;
 }
 
 
@@ -24,9 +24,9 @@ export class MonitoringStatsPolicy extends BaseModel implements IMonitoringStats
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    'spec': MonitoringStatsSpec = null;
+    'spec': MonitoringStatsPolicySpec = null;
     /** Status contains the current state of the policy. */
-    'status': MonitoringStatsStatus = null;
+    'status': MonitoringStatsPolicyStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -66,8 +66,8 @@ export class MonitoringStatsPolicy extends BaseModel implements IMonitoringStats
     constructor(values?: any) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['spec'] = new MonitoringStatsSpec();
-        this['status'] = new MonitoringStatsStatus();
+        this['spec'] = new MonitoringStatsPolicySpec();
+        this['status'] = new MonitoringStatsPolicyStatus();
         this.setValues(values);
     }
 

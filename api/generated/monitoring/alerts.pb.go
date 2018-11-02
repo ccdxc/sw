@@ -68,16 +68,16 @@
 		StatsPolicyList
 		TroubleshootingSessionList
 		FlowExportPolicy
-		FlowExportSpec
-		FlowExportStatus
+		FlowExportPolicySpec
+		FlowExportPolicyStatus
 		FlowExportTarget
 		FwlogExport
 		FwlogPolicy
-		FwlogSpec
-		FwlogStatus
+		FwlogPolicySpec
+		FwlogPolicyStatus
 		StatsPolicy
-		StatsSpec
-		StatsStatus
+		StatsPolicySpec
+		StatsPolicyStatus
 		PingPktStats
 		PingStats
 		TimeWindow

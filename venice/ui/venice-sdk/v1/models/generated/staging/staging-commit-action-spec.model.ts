@@ -7,32 +7,26 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringFlowExportTarget, IMonitoringFlowExportTarget } from './monitoring-flow-export-target.model';
 
-export interface IMonitoringFlowExportSpec {
-    'targets'?: Array<IMonitoringFlowExportTarget>;
+export interface IStagingCommitActionSpec {
 }
 
 
-export class MonitoringFlowExportSpec extends BaseModel implements IMonitoringFlowExportSpec {
-    'targets': Array<MonitoringFlowExportTarget> = null;
+export class StagingCommitActionSpec extends BaseModel implements IStagingCommitActionSpec {
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'targets': {
-            type: 'object'
-        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return MonitoringFlowExportSpec.propInfo[propName];
+        return StagingCommitActionSpec.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (MonitoringFlowExportSpec.propInfo[prop] != null &&
-                        MonitoringFlowExportSpec.propInfo[prop].default != null &&
-                        MonitoringFlowExportSpec.propInfo[prop].default != '');
+        return (StagingCommitActionSpec.propInfo[prop] != null &&
+                        StagingCommitActionSpec.propInfo[prop].default != null &&
+                        StagingCommitActionSpec.propInfo[prop].default != '');
     }
 
     /**
@@ -41,7 +35,6 @@ export class MonitoringFlowExportSpec extends BaseModel implements IMonitoringFl
     */
     constructor(values?: any) {
         super();
-        this['targets'] = new Array<MonitoringFlowExportTarget>();
         this.setValues(values);
     }
 
@@ -50,9 +43,6 @@ export class MonitoringFlowExportSpec extends BaseModel implements IMonitoringFl
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values) {
-            this.fillModelArray<MonitoringFlowExportTarget>(this, 'targets', values['targets'], MonitoringFlowExportTarget);
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -60,10 +50,7 @@ export class MonitoringFlowExportSpec extends BaseModel implements IMonitoringFl
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'targets': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<MonitoringFlowExportTarget>('targets', this['targets'], MonitoringFlowExportTarget);
         }
         return this._formGroup;
     }
@@ -74,7 +61,6 @@ export class MonitoringFlowExportSpec extends BaseModel implements IMonitoringFl
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this.fillModelArray<MonitoringFlowExportTarget>(this, 'targets', this['targets'], MonitoringFlowExportTarget);
         }
     }
 }

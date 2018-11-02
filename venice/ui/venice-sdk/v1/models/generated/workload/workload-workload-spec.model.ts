@@ -15,12 +15,13 @@ export interface IWorkloadWorkloadSpec {
 
 
 export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkloadSpec {
-    /** Hostname of the server where the workload is running. */
+    /** should be a valid host address, IP address or hostname
+     */
     'host-name': string = null;
     'interfaces': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'host-name': {
-            description:  'Hostname of the server where the workload is running.',
+            description:  'should be a valid host address, IP address or hostname ',
             hint:  '10.1.1.1, ff02::5, localhost, example.domain.com ',
             type: 'string'
         },

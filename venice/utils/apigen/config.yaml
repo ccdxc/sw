@@ -47,3 +47,8 @@ templates:
     once: true
   - template: "schema.tmpl"
     outputpath: "{FILE}_schema.go"
+  - template: "cli.tmpl"
+    outputpath: "cli/{FILE}_cli.go"
+  - template: "cliutils.tmpl"
+    outputpath: "../exports/cliutils/utils.go"
+    once: true

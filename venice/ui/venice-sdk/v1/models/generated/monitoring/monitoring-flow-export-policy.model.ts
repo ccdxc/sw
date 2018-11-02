@@ -8,15 +8,15 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { MonitoringFlowExportSpec, IMonitoringFlowExportSpec } from './monitoring-flow-export-spec.model';
-import { MonitoringFlowExportStatus, IMonitoringFlowExportStatus } from './monitoring-flow-export-status.model';
+import { MonitoringFlowExportPolicySpec, IMonitoringFlowExportPolicySpec } from './monitoring-flow-export-policy-spec.model';
+import { MonitoringFlowExportPolicyStatus, IMonitoringFlowExportPolicyStatus } from './monitoring-flow-export-policy-status.model';
 
 export interface IMonitoringFlowExportPolicy {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'spec'?: IMonitoringFlowExportSpec;
-    'status'?: IMonitoringFlowExportStatus;
+    'spec'?: IMonitoringFlowExportPolicySpec;
+    'status'?: IMonitoringFlowExportPolicyStatus;
 }
 
 
@@ -24,9 +24,9 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
-    'spec': MonitoringFlowExportSpec = null;
+    'spec': MonitoringFlowExportPolicySpec = null;
     /** Status contains the current state of the export policy. */
-    'status': MonitoringFlowExportStatus = null;
+    'status': MonitoringFlowExportPolicyStatus = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
             type: 'string'
@@ -66,8 +66,8 @@ export class MonitoringFlowExportPolicy extends BaseModel implements IMonitoring
     constructor(values?: any) {
         super();
         this['meta'] = new ApiObjectMeta();
-        this['spec'] = new MonitoringFlowExportSpec();
-        this['status'] = new MonitoringFlowExportStatus();
+        this['spec'] = new MonitoringFlowExportPolicySpec();
+        this['status'] = new MonitoringFlowExportPolicyStatus();
         this.setValues(values);
     }
 

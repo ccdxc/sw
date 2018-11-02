@@ -153,71 +153,71 @@ func DecodeGrpcRespClearAction(ctx context.Context, response interface{}) (inter
 	return response, nil
 }
 
-func encodeHTTPClearRequest(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPClearActionSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPClearRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req ClearRequest
+func decodeHTTPClearActionSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ClearActionSpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqClearRequest encodes GRPC request
-func EncodeGrpcReqClearRequest(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ClearRequest)
+// EncodeGrpcReqClearActionSpec encodes GRPC request
+func EncodeGrpcReqClearActionSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ClearActionSpec)
 	return req, nil
 }
 
-// DecodeGrpcReqClearRequest decodes GRPC request
-func DecodeGrpcReqClearRequest(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ClearRequest)
+// DecodeGrpcReqClearActionSpec decodes GRPC request
+func DecodeGrpcReqClearActionSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ClearActionSpec)
 	return req, nil
 }
 
-// EncodeGrpcRespClearRequest encodes GRC response
-func EncodeGrpcRespClearRequest(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespClearActionSpec encodes GRC response
+func EncodeGrpcRespClearActionSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespClearRequest decodes GRPC response
-func DecodeGrpcRespClearRequest(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespClearActionSpec decodes GRPC response
+func DecodeGrpcRespClearActionSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPClearResponse(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPClearActionStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPClearResponse(_ context.Context, r *http.Request) (interface{}, error) {
-	var req ClearResponse
+func decodeHTTPClearActionStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ClearActionStatus
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqClearResponse encodes GRPC request
-func EncodeGrpcReqClearResponse(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ClearResponse)
+// EncodeGrpcReqClearActionStatus encodes GRPC request
+func EncodeGrpcReqClearActionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ClearActionStatus)
 	return req, nil
 }
 
-// DecodeGrpcReqClearResponse decodes GRPC request
-func DecodeGrpcReqClearResponse(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*ClearResponse)
+// DecodeGrpcReqClearActionStatus decodes GRPC request
+func DecodeGrpcReqClearActionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ClearActionStatus)
 	return req, nil
 }
 
-// EncodeGrpcRespClearResponse encodes GRC response
-func EncodeGrpcRespClearResponse(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespClearActionStatus encodes GRC response
+func EncodeGrpcRespClearActionStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespClearResponse decodes GRPC response
-func DecodeGrpcRespClearResponse(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespClearActionStatus decodes GRPC response
+func DecodeGrpcRespClearActionStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
@@ -255,71 +255,71 @@ func DecodeGrpcRespCommitAction(ctx context.Context, response interface{}) (inte
 	return response, nil
 }
 
-func encodeHTTPCommitRequest(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPCommitActionSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPCommitRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req CommitRequest
+func decodeHTTPCommitActionSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req CommitActionSpec
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqCommitRequest encodes GRPC request
-func EncodeGrpcReqCommitRequest(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*CommitRequest)
+// EncodeGrpcReqCommitActionSpec encodes GRPC request
+func EncodeGrpcReqCommitActionSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CommitActionSpec)
 	return req, nil
 }
 
-// DecodeGrpcReqCommitRequest decodes GRPC request
-func DecodeGrpcReqCommitRequest(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*CommitRequest)
+// DecodeGrpcReqCommitActionSpec decodes GRPC request
+func DecodeGrpcReqCommitActionSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CommitActionSpec)
 	return req, nil
 }
 
-// EncodeGrpcRespCommitRequest encodes GRC response
-func EncodeGrpcRespCommitRequest(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespCommitActionSpec encodes GRC response
+func EncodeGrpcRespCommitActionSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespCommitRequest decodes GRPC response
-func DecodeGrpcRespCommitRequest(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespCommitActionSpec decodes GRPC response
+func DecodeGrpcRespCommitActionSpec(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-func encodeHTTPCommitResponse(ctx context.Context, req *http.Request, request interface{}) error {
+func encodeHTTPCommitActionStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
 
-func decodeHTTPCommitResponse(_ context.Context, r *http.Request) (interface{}, error) {
-	var req CommitResponse
+func decodeHTTPCommitActionStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req CommitActionStatus
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
 	return req, nil
 }
 
-// EncodeGrpcReqCommitResponse encodes GRPC request
-func EncodeGrpcReqCommitResponse(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*CommitResponse)
+// EncodeGrpcReqCommitActionStatus encodes GRPC request
+func EncodeGrpcReqCommitActionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CommitActionStatus)
 	return req, nil
 }
 
-// DecodeGrpcReqCommitResponse decodes GRPC request
-func DecodeGrpcReqCommitResponse(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*CommitResponse)
+// DecodeGrpcReqCommitActionStatus decodes GRPC request
+func DecodeGrpcReqCommitActionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CommitActionStatus)
 	return req, nil
 }
 
-// EncodeGrpcRespCommitResponse encodes GRC response
-func EncodeGrpcRespCommitResponse(ctx context.Context, response interface{}) (interface{}, error) {
+// EncodeGrpcRespCommitActionStatus encodes GRC response
+func EncodeGrpcRespCommitActionStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
-// DecodeGrpcRespCommitResponse decodes GRPC response
-func DecodeGrpcRespCommitResponse(ctx context.Context, response interface{}) (interface{}, error) {
+// DecodeGrpcRespCommitActionStatus decodes GRPC response
+func DecodeGrpcRespCommitActionStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

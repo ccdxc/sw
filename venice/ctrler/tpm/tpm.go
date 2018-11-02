@@ -278,13 +278,13 @@ func (pm *PolicyManager) processExportPolicy(eventType kvstore.WatchEventType, p
 }
 
 // DefaultStatsSpec default stats policy spec
-var DefaultStatsSpec = telemetry.StatsSpec{
+var DefaultStatsSpec = telemetry.StatsPolicySpec{
 	RetentionTime:           "48hrs",
 	DownSampleRetentionTime: "7days",
 }
 
 // DefaultFwlogSpec default firewall log policy spec
-var DefaultFwlogSpec = telemetry.FwlogSpec{
+var DefaultFwlogSpec = telemetry.FwlogPolicySpec{
 	RetentionTime: " 48hrs",
 }
 
