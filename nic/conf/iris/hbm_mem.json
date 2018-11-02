@@ -38,8 +38,16 @@
             "cc": "true"
         },
         {
+            "_comment" : "cache coherent",
             "name": "asq",
-            "size_kb": 64
+            "size_kb": 64,
+            "cc"     : "true"
+        },
+        {
+            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB including this region",
+            "name" : "unused cache coherent",
+            "size_kb" : 30272,
+            "cc"      : "true"
         },
         {
             "name": "lif2qstate_map",
