@@ -8,6 +8,7 @@ SOURCES = \
 	cli.cc \
 	server.cc \
 	logger.cc \
+	delphic.cc \
 	$(NULL)
 
 LCXXFLAGS = \
@@ -23,6 +24,9 @@ LCXXFLAGS = \
 	-I $(TOPDIR)/src/lib/pciemgr/include \
 	-I $(TOPDIR)/src/lib/pciemgrutils/include \
 	-I $(TOPDIR)/src/lib/pciemgr_if/include \
+	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris \
+	-I $(TOPDIR)/../nic/hal/third-party/google/include \
+	-I $(TOPDIR)/.. \
 	$(NULL)
 
 LIBRARIES = \
@@ -47,6 +51,8 @@ LCXXFLAGS += \
 LLDFLAGS = \
 	-L$(TOPDIR)/src/third-party/lib/edit/$(BUILD_ARCH) \
 	-L$(TOPDIR)/src/third-party/lib/ncurses/$(BUILD_ARCH) \
+	-L$(TOPDIR)/../nic/hal/third-parth/google/${BUILD_ARCH}/lib \
+	-L$(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/lib \
 	$(NULL)
 
 SYSTEM_LIBRARIES = \
@@ -54,6 +60,10 @@ SYSTEM_LIBRARIES = \
 	-lncurses \
 	-L$(TOPDIR)/../nic/third-party/libev/$(BUILD_ARCH)/lib -lev \
 	-lm \
+	-lpthread \
+	-ldelphisdk \
+	$(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib/libprotobuf.so.14 \
+	-lsysmgr \
 	$(NULL)
 
 TOPDIR = ../../../..

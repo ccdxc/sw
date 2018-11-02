@@ -3,23 +3,24 @@
 #
 
 PROGRAM = nicmgrd
-SOURCES = nicmgrd.cc nicmgr_client_reg.cc
+SOURCES = nicmgrd.cc nicmgr_client_reg.cc delphic.cc
 
 LCFLAGS = \
 	-I ../include \
 	-I $(TOPDIR) \
 	-I $(TOPDIR)/.. \
 	-I $(TOPDIR)/src/lib/pal/include \
+	-I $(TOPDIR)/src/lib/evutils/include \
 	-I $(TOPDIR)/src/lib/pcieport/include \
 	-I $(TOPDIR)/src/lib/pciemgr/include \
+	-I $(TOPDIR)/src/lib/pciemgr_if/include \
 	-I $(TOPDIR)/src/lib/pciemgrutils/include \
 	-I $(TOPDIR)/src/lib/pciehdevices/include \
 	-I $(TOPDIR)/src/lib/nicmgr/include \
-        -I $(TOPDIR)/../nic/delphi/sdk/ \
-        -I $(TOPDIR)/src/lib/delphi \
-        -I $(TOPDIR)/src/lib/upgrade \
-        -I $(TOPDIR)/src/lib/sysmgr \
-        -I $(TOPDIR)/../nic/upgrade_manager/export/upgcsdk/ \
+	-I $(TOPDIR)/../nic/delphi/sdk/ \
+	-I $(TOPDIR)/src/lib/upgrade \
+	-I $(TOPDIR)/src/lib/sysmgr \
+	-I $(TOPDIR)/../nic/upgrade_manager/export/upgcsdk/ \
 	-I $(TOPDIR)/src/app/nicmgrd/src/ \
 	-I $(TOPDIR)/include/common/drivers/linux/eth/ionic/ \
 	-I $(TOPDIR)/drivers/linux/eth/ionic/ \
@@ -91,27 +92,28 @@ SYSTEM_LIBRARIES = \
 	-lht \
 	-ldelphisdk \
 	-lcommonproto \
-        -lnicmgrproto \
-        -lupgrade_app \
-        -lupgradeutils \
-        -lupgrade \
-        -lsysmgr \
+	-lnicmgrproto \
+	-lupgrade_app \
+	-lupgradeutils \
+	-lupgrade \
+	-lsysmgr \
 	-lev \
 	$(NULL)
 
 LIBRARIES += \
 	-lnicmgr \
-        -lnicmgr_delphi_client \
-        -lnicmgr_sysmgr \
-        -lnicmgr_upgrade \
+	-lnicmgr_sysmgr \
+	-lnicmgr_upgrade \
 	-lhal_api \
 	-lhal_api_trace \
 	-lpal \
 	-lmisc \
 	-lpciehdevices \
 	-lpciemgr \
+	-lpciemgr_if \
 	-lpciemgrutils \
 	-lintrutils \
+	-levutils \
 	-lcfgspace \
 	-lpcieport \
 	-lpcietlp \

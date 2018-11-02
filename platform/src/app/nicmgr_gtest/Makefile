@@ -9,6 +9,11 @@ SOURCES = nicmgr_test.cc
 GTEST_ROOT = $(TOPDIR)/../nic/sdk/third-party/googletest-release-1.8.0/googletest
 LCFLAGS = \
     -I $(TOPDIR)/src/lib/nicmgr/include \
+    -I $(TOPDIR)/.. \
+    -I $(TOPDIR)/src/app/nicmgrd/src \
+    -I $(TOPDIR)/../nic/upgrade_manager/export/upgcsdk/ \
+    -I $(TOPDIR)/../nic/delphi/sdk/ \
+    -I $(TOPDIR)/src/lib/upgrade \
     -I $(GTEST_ROOT)/include \
     -I $(TOPDIR)/src/lib/hal_api/include \
     -I $(TOPDIR)/src/lib/hal_api/trace \
@@ -18,13 +23,19 @@ LCFLAGS = \
     -I $(TOPDIR)/src/lib/pcieport/include \
     -I $(TOPDIR)/src/lib/cfgspace/include \
     -I $(TOPDIR)/src/lib/pciemgr/include \
+    -I $(TOPDIR)/src/lib/pciemgr_if/include \
     -I $(TOPDIR)/src/lib/pciemgrutils/include \
     -I $(TOPDIR)/src/lib/pciehdevices/include \
     -I $(TOPDIR)/drivers/linux/eth/ionic \
     -I $(TOPDIR)/../nic/include \
+    -I $(TOPDIR)/../nic/third-party/libev/include \
+    -I $(TOPDIR)/../nic/build/${BUILD_ARCHES}/iris  \
+    -I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris  \
+    -I $(TOPDIR)/src/lib/sysmgr \
     -I $(TOPDIR)/../nic/sdk \
     -I $(TOPDIR)/../nic/sdk/include \
     -I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/proto \
+    -I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/proto/nicmgr \
     -I $(TOPDIR)/../nic/third-party/boost/include \
     -I $(TOPDIR)/../nic/hal/third-party/spdlog/include/ \
     -I $(TOPDIR)/../nic/hal/third-party/google/include \
@@ -94,8 +105,10 @@ LIBRARIES += \
     -lpal \
     -lmisc \
     -lpciehdevices \
-	-lpciemgr \
-	-lpciemgrutils \
+    -lpciemgr \
+    -lpciemgr_if \
+    -lpciemgrutils \
+    -levutils \
     -lintrutils \
     -lcfgspace \
     -lpcieport \

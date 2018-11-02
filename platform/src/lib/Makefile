@@ -17,7 +17,6 @@ SUBDIRS = \
 	pciemgr_if \
 	pcieport \
 	pcietlp \
-	delphi \
 	sysmgr \
 	upgrade \
 	$(NULL)

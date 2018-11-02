@@ -14,15 +14,15 @@ LCFLAGS = \
 	-I $(TOPDIR)/include/common \
 	-I $(TOPDIR)/src/third-party/lib/gmp/include \
 	-I $(TOPDIR)/src/lib/pal/include \
-	-I $(TOPDIR)/src/lib/pcieport/include \
 	-I $(TOPDIR)/src/lib/pciemgr/include \
+	-I $(TOPDIR)/src/lib/pciemgr_if/include \
 	-I $(TOPDIR)/src/lib/pciemgrutils/include \
 	-I $(TOPDIR)/src/lib/pciehdevices/include \
 	-I $(TOPDIR)/src/lib/intrutils/include \
-	-I $(TOPDIR)/src/lib/delphi \
 	-I $(TOPDIR)/src/lib/upgrade \
 	-I $(TOPDIR)/src/lib/sysmgr \
     -I $(TOPDIR)/../nic/delphi/sdk/ \
+	-I $(TOPDIR)/src/app/nicmgrd/src/ \
     -I $(TOPDIR)/../nic/upgrade_manager/export/upgcsdk/ \
 	-I $(TOPDIR)/include/common/drivers/linux/eth/ionic/ \
 	-I $(TOPDIR)/drivers/linux/eth/ionic/ \
@@ -79,45 +79,6 @@ LCFLAGS = \
 	$(NULL)
 
 LCXXFLAGS = $(LCFLAGS)
-
-LIBRARIES = \
-	-lmisc \
-	-lpciemgr \
-	-lpciemgrutils \
-	-lpciehdevices \
-	-lintrutils \
-	-lcfgspace \
-	-lpcieport \
-	-lpcietlp \
-	-lnicmgrproto \
-	$(NULL)
-
-LLDFLAGS = \
-	-L $(TOPDIR)/../nic/obj \
-	-L $(TOPDIR)/../nic/conf/sdk \
-	-L $(TOPDIR)/../nic/hal/third-party/grpc/$(BUILD_ARCH)/lib \
-	-L $(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib \
-	-L $(TOPDIR)/../nic/build/$(BUILD_ARCH)/iris/lib \
-	$(NULL)
-
-SYSTEM_LIBRARIES = \
-	-lpthread \
-	-lgrpc \
-	-lgrpc++ \
-	-lgrpc_unsecure \
-	-lgrpc++_unsecure \
-	$(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib/libprotobuf.so.14 \
-	-lhalproto \
-	-lindexer \
-	-llogger \
-	-lcommonproto\
-	$(NULL)
-
-ifeq ($(BUILD_ARCH), "x86_64")
-	SYSTEM_LIBRARIES += -lpal
-else
-	LIBRARIES += -lpal
-endif
 
 TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc

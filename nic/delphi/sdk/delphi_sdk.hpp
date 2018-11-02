@@ -60,6 +60,9 @@ public:
     // Stop the sdk  (mainly for test purposes)
     error Stop();
 
+    // Connect connects to delphi hub
+    error Connect();
+
 private:
     DelphiClientPtr    client_;      // delphi client
     ev::default_loop   loop_;        // libev event loop

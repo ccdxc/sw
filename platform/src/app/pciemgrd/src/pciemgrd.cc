@@ -25,6 +25,7 @@
 #include "pciehw_dev.h"
 #include "pcieport.h"
 #include "pciemgrd_impl.hpp"
+#include "delphic.h"
 
 static pciemgrenv_t pciemgrenv;
 
@@ -181,9 +182,12 @@ main(int argc, char *argv[])
         exit(1);
     }
 
+
     if (interactive) {
         cli_loop();
     } else {
+        // connect to delphi
+        delphi_client_start();
         server_loop();
     }
 

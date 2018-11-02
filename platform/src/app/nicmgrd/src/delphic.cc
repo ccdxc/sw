@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include <nicmgr_delphi_client.hpp>
+#include <delphic.hpp>
 #include <nicmgr_upgrade.hpp>
 #include <dev.hpp>
 #include <eth_dev.hpp>
@@ -28,6 +28,7 @@ namespace nicmgr {
 
 // port reactors
 port_svc_ptr_t g_port_rctr;
+shared_ptr<NicMgrService> g_nicmgr_svc;
 
 // NicMgr delphi service
 NicMgrService::NicMgrService(delphi::SdkPtr sk) {
@@ -43,6 +44,7 @@ void NicMgrService::OnMountComplete() {
     NIC_LOG_DEBUG("On mount complete got called");
 
     this->sysmgr_->init_done();
+
     // walk all port status objects and handle them
     vector <delphi::objects::PortStatusPtr> list =
         delphi::objects::PortStatus::List(sdk_);

@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nicmgr_upgrade.hpp"
-#include "nicmgr_delphi_client.hpp"
+#include "delphic.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/include/base.hpp"
 #include "dev.hpp"

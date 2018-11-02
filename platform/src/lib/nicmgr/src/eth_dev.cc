@@ -20,12 +20,13 @@
 #include "ethlif.hpp"
 #include "rdma_dev.hpp"
 #include "nic/p4/common/defines.h"
+#include "pciemgr_if.hpp"
 
 #include "metrics.delphi.hpp"
 #include "nicmgr.pb.h"
 #include "nicmgr_status_msgs.pb.h"
 #include "nicmgr_status_msgs.delphi.hpp"
-#include "nicmgr_delphi_client.hpp"
+#include "delphic.hpp"
 
 using namespace nicmgr;
 using namespace nicmgr_status_msgs;
@@ -353,7 +354,8 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
         pciehdev_set_priv(pdev, (void *)this);
 
         // Add device to PCI topology
-        int ret = pciehdev_add(pdev);
+        extern class pciemgr *pciemgr;
+        int ret = pciemgr->add_device(pdev);
         if (ret != 0) {
             NIC_LOG_ERR("lif{}: Failed to add Eth PCI device to topology",
                 info.hw_lif_id);
@@ -398,7 +400,8 @@ Eth::DevcmdPoll()
     dev_cmd_db_t    db_clear = {0};
 
 #ifdef __aarch64__
-    if (spec->host_dev) {
+    // XXX disable host_dev check until pciemgrd handler installed
+    if (0 && spec->host_dev) {
         return;
     }
 #endif
@@ -459,7 +462,7 @@ Eth::DevLinkDownHandler(uint32_t port_num)
     auto host_down_obj_ptr = make_shared<delphi::objects::EthDeviceHostDownStatusMsg>();
     host_down_obj_ptr->set_key(spec->dev_uuid);
     host_down_obj_ptr->set_port_num(port_num);
-    nicmgr_svc_->sdk()->SetObject(host_down_obj_ptr);
+    g_nicmgr_svc->sdk()->SetObject(host_down_obj_ptr);
 }
 
 void
@@ -510,7 +513,7 @@ Eth::DevLinkUpHandler(uint32_t port_num)
     host_up_obj_ptr->set_key(spec->dev_uuid);
     host_up_obj_ptr->set_port_num(port_num);
     NIC_LOG_INFO("Post Host Up to Delphi");
-    nicmgr_svc_->sdk()->SetObject(host_up_obj_ptr);
+    g_nicmgr_svc->sdk()->SetObject(host_up_obj_ptr);
 
 }
 
@@ -539,7 +542,7 @@ void Eth::DevObjSave() {
         auto mac_addresses = eth_dev_obj_ptr->add_mac_addrs();
         mac_addresses->set_mac_addr(mac_addr);
     }
-    nicmgr_svc_->sdk()->SetObject(eth_dev_obj_ptr);
+    g_nicmgr_svc->sdk()->SetObject(eth_dev_obj_ptr);
 }
 
 void

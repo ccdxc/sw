@@ -6,6 +6,7 @@ GENLIB=$TOPDIR/gen/x86_64/lib
 N=$GENLIB
 N=${N}:$TOPDIR/../fake_root_target/x86_64/platform/lib
 N=${N}:$TOPDIR/../nic/third-party/libev/x86_64/lib
+N=${N}:$TOPDIR/../nic/build/x86_64/iris/lib
 export LD_LIBRARY_PATH=${N}
 
 PROG=$TOPDIR/gen/x86_64/bin/$1

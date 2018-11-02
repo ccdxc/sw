@@ -27,6 +27,11 @@ int Sdk::MainLoop() {
     return 0;
 }
 
+// Connect connects to delphi hub
+error Sdk::Connect() {
+    return client_->Connect();
+}
+
 // RegisterService registers the service with delphi client
 error Sdk::RegisterService(ServicePtr service) {
     return client_->RegisterService(service);

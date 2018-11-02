@@ -1,12 +1,19 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
-
+#include "pciemgr_if.hpp"
 #include "dev.hpp"
 #include "eth_dev.hpp"
+#include "delphic.hpp"
 
 using namespace std;
 
+class pciemgr *pciemgr;
+
 enum ForwardingMode g_fwd_mode = FWD_MODE_CLASSIC_NIC;
+
+namespace nicmgr {
+shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
+}
 
 class nicmgr_test : public ::testing::Test {
 protected:
@@ -46,6 +53,8 @@ TEST_F(nicmgr_test, test1)
 {
     DeviceManager *devmgr = new DeviceManager(g_fwd_mode, PLATFORM_NONE);
     EXPECT_TRUE(devmgr != NULL);
+
+    pciemgr = new class pciemgr("nicmgr_test");
 
     // load config
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {

@@ -21,6 +21,7 @@
 #include "accel_dev.hpp"
 #include "pd_client.hpp"
 #include "hal_client.hpp"
+#include "pciemgr_if.hpp"
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
 #include "capri_hbm.hpp"
@@ -310,7 +311,8 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     pciehdev_set_priv(pdev, (void *)this);
 
     // Add device to PCI topology
-    int ret = pciehdev_add(pdev);
+    extern class pciemgr *pciemgr;
+    int ret = pciemgr->add_device(pdev);
     if (ret != 0) {
         NIC_LOG_ERR("lif{}: Failed to add Accel_PF PCI device to topology", info.hw_lif_id);
         return;

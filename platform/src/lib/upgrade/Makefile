@@ -13,6 +13,7 @@ LCFLAGS = \
 	-I $(TOPDIR)/src/lib/nicmgr/include \
     -I $(TOPDIR)/../nic/delphi/sdk/ \
     -I $(TOPDIR)/../nic/upgrade_manager/export/upgcsdk/ \
+    -I $(TOPDIR)/src/app/nicmgrd/src/ \
     -I $(TOPDIR)/src/lib/pal/include \
     -I $(TOPDIR)/src/lib/misc/include \
     -I $(TOPDIR)/src/lib/pcieport/include \
@@ -21,7 +22,6 @@ LCFLAGS = \
     -I $(TOPDIR)/src/lib/pciehdevices/include \
     -I $(TOPDIR)/src/lib/intrutils/include \
     -I $(TOPDIR)/src/lib/nicmgr/include \
-    -I $(TOPDIR)/src/lib/delphi \
     -I $(TOPDIR)/src/lib/upgrade \
     -I $(TOPDIR)/src/lib/sysmgr \
     -I $(TOPDIR)/src/lib/misc/include \

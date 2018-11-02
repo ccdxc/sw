@@ -12,12 +12,14 @@ const vector<Spec> SPECS = {
 const vector<Spec> SPECS = {
    Spec("delphi",  NO_WATCHDOG | NON_CRITICAL,
 	"/nic/bin/delphi_hub", {}),
+   Spec("pciemgrd", NO_WATCHDOG | NON_CRITICAL,
+    "/platform/bin/pciemgrd -d", {"delphi"}),
    Spec("hal", NO_WATCHDOG | NON_CRITICAL,
 	"/bin/sh /nic/tools/start-hal-haps.sh", {
 	 "delphi"}),
    Spec("nicmgrd", NO_WATCHDOG | NON_CRITICAL,
 	"/bin/sh /platform/tools/start-nicmgr-haps.sh", {
-	 "delphi", "hal"}),
+	  "delphi", "hal"}),
    Spec("netagent", NO_WATCHDOG | NON_CRITICAL,
 	"/nic/bin/netagent -datapath hal "
 	"-logtofile /agent.log -hostif lo &", {"delphi", "hal"}),

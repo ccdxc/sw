@@ -60,8 +60,10 @@ typedef std::shared_ptr<port_svc> port_svc_ptr_t;
 
 // init_port_reactors creates a port reactor
 Status init_port_reactors(delphi::SdkPtr sdk);
-shared_ptr<NicMgrService> nicmgr_svc_;
 
+extern shared_ptr<NicMgrService> g_nicmgr_svc;
 }    // namespace nicmgr
+
+void *nicmgr_delphi_client_entry(void *ctxt);
 
 #endif
