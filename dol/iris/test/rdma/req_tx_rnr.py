@@ -191,8 +191,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_retry_ctr', 7):
             return False
 
-        # verify rnr_timeout is set
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'rnr_timeout', tc.pvtdata.sq_post_qstate, 'rnr_timeout'):
+        # verify rnr_timeout is cleared
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_timeout', 0):
             return False
 
     elif step.step_id == 3:

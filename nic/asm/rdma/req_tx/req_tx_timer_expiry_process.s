@@ -54,9 +54,10 @@ rnr_timeout:
                    CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_rnr), 1 //BD Slot
 
     b              process_expiry
+    tblwr          d.rnr_timeout, 0 // Branch Delay Slot
  
 check_local_ack_timeout:
-    seq            c1, d.local_ack_timeout, 0 //BD Slot
+    seq            c1, d.local_ack_timeout, 0
     bcf            [c1], spurious_expiry
 
 local_ack_timeout:
