@@ -33,9 +33,23 @@ class TestSuite:
         Logger.info("Starting Testsuite: %s" % self.Name())
         self.__resolve_testcases()
         self.__resolve_teardown()
-        self.__parse_setup()
         self.__valid = True
+        self.__aborted = False
         return
+
+    def Abort(self):
+        self.__aborted = True
+        self.__curr_tc.Abort()
+        return
+
+    def GetTestbedType(self):
+        if self.__spec.meta.mode.lower() == 'hardware':
+            return types.tbtype.HARDWARE
+        elif self.__spec.meta.mode.lower() == 'simulation':
+            return types.tbtype.SIMULATION
+        elif self.__spec.meta.mode.lower() == 'hybrid':
+            return types.tbtype.HYBRID
+        return types.tbtype.ANY
 
     def GetImages(self):
         return self.__spec.images
@@ -111,22 +125,15 @@ class TestSuite:
     def __execute_testcases(self):
         result = types.status.SUCCESS
         for tc in self.__tcs:
+            self.__curr_tc = tc
             ret = tc.Main()
             if ret != types.status.SUCCESS:
                 result = ret
                 if GlobalOptions.no_keep_going:
                     return ret
+            if self.__aborted:
+                return types.status.FAILURE
         return result
-
-    def __print_summary(self):
-        print("\nTestSuite Results: %s" % self.__spec.meta.name)
-        print(types.HEADER_SUMMARY)
-        print(types.FORMAT_TESTCASE_SUMMARY %\
-              ("Testcase", "Result", "Duration"))
-        print(types.HEADER_SUMMARY)
-        for tc in self.__tcs:
-            tc.PrintResultSummary()
-        return types.status.SUCCESS
 
     def Name(self):
         return self.__spec.meta.name
@@ -138,8 +145,19 @@ class TestSuite:
         if not self.__valid:
            return types.status.SUCCESS
 
+        if self.GetTestbedType() != types.tbtype.ANY and\
+           self.GetTestbedType() != store.GetTestbed().GetTestbedType():
+           Logger.info("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
+           self.__valid = False
+           return types.status.SUCCESS
+
         # Initialize Testbed for this testsuite
+        Logger.SetTestsuite(self.Name())
         status = store.GetTestbed().InitForTestsuite(self)
+        if status != types.status.SUCCESS:
+            return status
+
+        status = self.__parse_setup()
         if status != types.status.SUCCESS:
             return status
 
@@ -150,6 +168,17 @@ class TestSuite:
         self.result = self.__execute_testcases()
         Logger.info("Testsuite %s FINAL STATUS = %d" % (self.Name(), self.result))
 
-        self.__print_summary()
-
         return self.result
+
+    def PrintSummary(self):
+        if not self.__valid:
+           return types.status.SUCCESS
+        print("\nTestSuite: %s" % self.__spec.meta.name)
+        print(types.HEADER_SUMMARY)
+        print(types.FORMAT_TESTCASE_SUMMARY %\
+              ("Testcase", "Result", "Duration"))
+        print(types.HEADER_SUMMARY)
+        for tc in self.__tcs:
+            tc.PrintResultSummary()
+        print("")
+        return types.status.SUCCESS

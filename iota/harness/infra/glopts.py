@@ -36,6 +36,9 @@ parser.add_argument('--only-firmware-upgrade', dest='only_firmware_upgrade',
                     action='store_true', help='Only Do Firmware Upgrade and Stop.')
 GlobalOptions = parser.parse_args()
 
+GlobalOptions.default_username = "vm"
+GlobalOptions.default_password = "vm"
+
 def __validate():
     if GlobalOptions.debug:
         print("========================================================")

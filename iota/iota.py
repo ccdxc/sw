@@ -40,16 +40,6 @@ def InitLogger():
         Logger.SetLoggingLevel(types.loglevel.INFO)
     return
 
-def __cleanup_testbed():
-    Logger.info("Cleaning up Testbed, Logfile = cleanup.log")
-    cmd = "./scripts/cleanup_testbed.py --testbed %s" % glopts.GlobalOptions.testbed_json
-    if glopts.GlobalOptions.rerun:
-        cmd = cmd + " --rerun"
-    if os.system("%s > cleanup.log 2>&1" % cmd) != 0:
-        Logger.info("Cleanup testbed failed.")
-        sys.exit(1)
-    return
-
 def __start_server():
     global gl_server_process
     gl_server_process = procs.IotaProcess("%s/iota/bin/server/iota_server" % topdir,
@@ -69,7 +59,6 @@ def Main():
     atexit.register(__exit_cleanup)
     InitLogger()
     __start_server()
-    __cleanup_testbed()
     ret = engine.Main()
     return ret
 

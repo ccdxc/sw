@@ -1,20 +1,17 @@
 meta:
-    name        : hw_smarthp_ctr
-    description : Hardware Test Suite
+    name        : networking
+    description : Networking Test Suite
     mode        : hardware
     cfgmode     : netagent
-    nicmode     : hostpin
+    nicmode     : classic
 
 packages:
     - iota.test.iris
 
 images:
-#    naples: /sw/nic/naples_fw.tar
-#    venice: /sw/bin/venice.tgz
-#    drivers: /sw/platform/drivers.tgz
 
 setup:
-    topology: test/iris/topologies/1Naples_1Mellanox_CTR/1Naples_1Mellanox.topology
+    topology: test/iris/topologies/2Naples_BM/2Naples.topology
     config  : 
         - step : config.netagent.hw_push_config
 

@@ -290,8 +290,8 @@ class HostManagement:
             self.run("rmmod ionic", ignore_result = True)
             self.run("rmmod ionic_rdma", ignore_result = True)
             self.run("cd %s/drivers-linux/ && insmod drivers/eth/ionic/ionic.ko" % HOST_NAPLES_DRIVERS_DIR)
-            #self.run("modprobe ib_uverbs")
-            #self.run("cd %s/drivers-linux/ && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1" % HOST_NAPLES_DRIVERS_DIR)
+            self.run("modprobe ib_uverbs")
+            self.run("cd %s/drivers-linux/ && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1" % HOST_NAPLES_DRIVERS_DIR)
 
         if GlobalOptions.drivers_sonic_pkg:
             # Install SONIC driver package.

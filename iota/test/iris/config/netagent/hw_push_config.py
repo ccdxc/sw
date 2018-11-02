@@ -41,6 +41,10 @@ def __read_jsons():
     
     global gl_nw_json_obj
     gl_nw_json_obj = __read_one_json('networks.json')
+    for obj in gl_nw_json_obj.networks:
+        vlan = api.Testbed_AllocateVlan()
+        api.Logger.info("Network Object: %s, Allocated Vlan = %d" % (obj.meta.name, vlan))
+        setattr(obj.spec, "vlan-id", vlan)
 
     global gl_sg_json_obj
     gl_sg_json_obj = __read_one_json('sgpolicy.json')

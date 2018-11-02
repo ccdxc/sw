@@ -5,7 +5,8 @@ import os
 
 def Setup(tc):
     topdir = api.GetTopDir()
-    fullpath = topdir + '/' + tc.args.drivers
+    fullpath = topdir + '/' + tc.args.package
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):

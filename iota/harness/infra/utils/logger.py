@@ -69,8 +69,8 @@ class _Logger:
         self.indent_enable  = False
         self.level          = level
         self.logfile        = logfile
-        self.modname        = None
-        self.tcid           = None
+        self.tsname         = None
+        self.tcname         = None
 
         if stdout:
             global StdoutLoggerSink
@@ -86,14 +86,15 @@ class _Logger:
         return
 
     def __get_timestamp(self):
-        return "[%s] " % str(datetime.datetime.now())
+        a = datetime.datetime.now()
+        return "[%02d:%02d:%02d.%06d] " % (a.hour, a.minute, a.second, a.microsecond)
 
     def __get_log_prefix(self, level=None):
         prefix = self.__get_timestamp()
-        if self.modname:
-            prefix += "[%s]" % self.modname
-        if self.tcid:
-            prefix += "[%s]" % self.tcid
+        if self.tsname:
+            prefix += "[TS:%s]" % self.tsname
+        if self.tcname:
+            prefix += "[TC:%s]" % self.tcname
         if level:
             prefix += "[%s]" % prefixes[level]
         else:
@@ -159,12 +160,14 @@ class _Logger:
     def SetLoggingLevel(self, level):
         self.level = level
 
-    def SetModule(self, modname):
-        self.modname = modname
+    def SetTestsuite(self, tsname):
+        self.tsname = tsname
+        # Reset the tcname everytime tsname changes.
+        self.tcname = None
         return
 
-    def SetTestcase(self, tcid):
-        self.tcid = tcid
+    def SetTestcase(self, tcname):
+        self.tcname = tcname
         return
 
     def GetLogPrefix(self):

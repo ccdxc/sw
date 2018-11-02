@@ -13,7 +13,7 @@
         "spec": {
           "ipv4-subnet": "10.255.0.0/24",
           "ipv4-gateway": "10.255.0.1",
-          "vlan-id": 2000
+          "vlan-id": -1
         },
         "status": {}
       }

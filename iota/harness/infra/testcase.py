@@ -47,6 +47,8 @@ class Testcase:
 
         self.__timer = timeprofiler.TimeProfiler()
         self.__data = TestcaseData(getattr(spec, 'args', None))
+        self.__aborted = False
+        self.status = types.status.UNAVAIL
         return
 
     def __resolve_testcase(self):
@@ -83,6 +85,9 @@ class Testcase:
         verify_result = loader.RunCallback(self.__tc, 'Verify', True, self.__data)
         if verify_result != types.status.SUCCESS:
             final_result = verify_result
+        
+        if self.__aborted:
+            return types.status.FAILURE
 
         teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, self.__data)
         if teardown_result != types.status.SUCCESS:
@@ -92,17 +97,24 @@ class Testcase:
         return final_result
 
     def PrintResultSummary(self):
-        result = "Pass" if self.status == types.status.SUCCESS else "Fail"
         print(types.FORMAT_TESTCASE_SUMMARY %\
-              (self.__spec.name, result, self.__timer.TotalTime()))
+              (self.__spec.name, types.status.str(self.status).title(), self.__timer.TotalTime()))
         for v in self.__verifs:
             v.PrintResultSummary()
 
+    def Name(self):
+        return self.__spec.name
+
+    def Abort(self):
+        self.__aborted = True
+        return
+
     def Main(self):
-        Logger.info("Starting Testcase: %s" % self.__spec.name)
+        Logger.SetTestcase(self.Name())
+        Logger.info("Starting Testcase: %s" % self.Name())
         self.__status = types.result.PASS
         self.__timer.Start()
         self.status = self.__execute()
         self.__timer.Stop()
-        Logger.info("Testcase %s FINAL RESULT = %d" % (self.__spec.name, self.status))
+        Logger.info("Testcase %s FINAL RESULT = %d" % (self.Name(), self.status))
         return self.status

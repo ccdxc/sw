@@ -1,5 +1,5 @@
 meta:
-    name        : hw_classic_storage
+    name        : storage
     description : Storage Hardware Test Suite
     mode        : hardware
     cfgmode     : netagent
@@ -9,10 +9,9 @@ packages:
     - iota.test.iris
 
 images:
-    naples  : /home/vikasd/shared/piraman/naples_fw.tar
 
 setup:
-    topology: test/iris/topologies/1Naples_1Mellanox_CTR/1Naples_1Mellanox.topology
+    topology: test/iris/topologies/2Naples_BM/2Naples.topology
     config  : 
         - step : config.netagent.hw_push_config
 
@@ -24,7 +23,7 @@ testcases:
     -   name    : Compile_Sonic_Drivers
         testcase: testcases.storage.compile_drivers
         args    :
-            drivers : storage/gen/storage-offload.tar.xz
+            package: storage/gen/storage-offload.tar.xz
 
     -   name    : Insmod_Sonic
         testcase: testcases.storage.insmod

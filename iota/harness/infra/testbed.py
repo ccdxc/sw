@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import subprocess
+import copy
 
 import iota.harness.api as api
 import iota.harness.infra.types as types
@@ -22,9 +23,12 @@ class _Testbed:
         self.prev_ts = None     # Previous Testsute
         self.__node_ips = []
         
-        self.__ipidx = 0
         self.__read_warmd_json()
+        self.__derive_testbed_type()
         return
+
+    def GetTestbedType(self):
+        return self.__type
 
     def GetCurrentTestsuite(self):
         return self.curr_ts
@@ -34,6 +38,28 @@ class _Testbed:
 
     def GetProvisionPassword(self):
         return self.tbspec.Provision.Password
+
+    def __derive_testbed_type(self):
+        self.__bm_count = 0
+        self.__vm_count = 0
+        for instance in self.tbspec.Instances:
+            if instance.Type == "bm":
+                self.__bm_count += 1
+            elif instance.Type == "vm":
+                self.__vm_count += 1
+            else:
+                assert(0)
+        if self.__bm_count:
+            if self.__vm_count:
+                self.__type = types.tbtype.HYBRID 
+                Logger.info("Testbed Type = HYBRID")
+            else: 
+                self.__type = types.tbtype.HARDWARE
+                Logger.info("Testbed Type = HARDWARE")
+        else:
+            Logger.info("Testbed Type = SIMULATION")
+            self.__type == types.tbtype.SIMULATION
+        return
 
     def __read_warmd_json(self):
         self.tbspec = parser.JsonParse(GlobalOptions.testbed_json)
@@ -48,9 +74,7 @@ class _Testbed:
     
     def __prepare_TestBedMsg(self, ts):
         msg = topo_pb2.TestBedMsg()
-        if not ts:
-            return msg
-        if not GlobalOptions.rerun:
+        if ts and not GlobalOptions.rerun:
             images = ts.GetImages()
             nap_img = getattr(images, 'naples', None)
             if nap_img:
@@ -61,8 +85,7 @@ class _Testbed:
 
         msg.username = self.tbspec.Provision.Username
         msg.password = self.tbspec.Provision.Password
-        # TBD: Get a unique ID for the testbed.
-        msg.testbed_id = 1 #int(self.tbspec.DataNetworks.DataSwitch.Port)
+        msg.testbed_id = self.__tbid
 
         for instance in self.tbspec.Instances:
             node_msg = msg.nodes.add()
@@ -81,7 +104,17 @@ class _Testbed:
         if resp is None:
             Logger.error("Failed to cleanup testbed: ")
             return types.status.FAILURE
-        self.data_vlans = None
+        return types.status.SUCCESS
+
+    def __cleanup_testbed_script(self):
+        logfile = "%s_cleanup.log" % self.curr_ts.Name()
+        Logger.info("Cleaning up Testbed, Logfile = %s" % logfile)
+        cmd = "./scripts/cleanup_testbed.py --testbed %s" % GlobalOptions.testbed_json
+        if GlobalOptions.rerun:
+            cmd = cmd + " --rerun"
+        if os.system("%s > %s 2>&1" % (cmd, logfile)) != 0:
+            Logger.info("Cleanup testbed failed.")
+            return types.status.FAILURE
         return types.status.SUCCESS
 
     def __get_instance_nic_type(self, instance):
@@ -104,7 +137,7 @@ class _Testbed:
             cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
             cmd.extend(["--mode", "%s" % api.GetNicMode()])
             cmd.extend(["--drivers-ionic-pkg", "%s/platform/gen/drivers-linux.tar.xz" % GlobalOptions.topdir])
-            #cmd.extend(["--drivers-sonic-pkg", "%s/storage/gen/storage-offload.tar.xz" % GlobalOptions.topdir])
+            cmd.extend(["--drivers-sonic-pkg", "%s/storage/gen/storage-offload.tar.xz" % GlobalOptions.topdir])
             logfile = "%s-recovery.log" % instance.Name
             logfiles.append(logfile)
             Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
@@ -135,13 +168,18 @@ class _Testbed:
 
 
     def __init_testbed(self):
+        self.__tbid = getattr(self.tbspec, 'TestbedID', 1)
+        self.__node_ip_pool = iter(self.__node_ips)
+        self.__vlan_base = int(self.__tbid)
+        self.__vlan_pool = iter(range(self.__vlan_base * 100,
+                                      self.__vlan_base * 100 + 10))
+
         self.__recover_testbed()
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         resp = api.InitTestbed(msg)
         if resp is None:
             Logger.error("Failed to initialize testbed: ")
             return types.status.FAILURE
-        self.data_vlans = resp.allocated_vlans
         return types.status.SUCCESS
 
     def InitForTestsuite(self, ts):
@@ -151,23 +189,27 @@ class _Testbed:
         #if status != types.status.SUCCESS:
         #    return status
 
+        status = self.__cleanup_testbed_script()
+        if status != types.status.SUCCESS:
+            return status
+
         status = self.__init_testbed()
         return status
 
     def ReserveNodeIpAddress(self):
-        if len(self.__node_ips) and self.__ipidx < len(self.__node_ips):
-            node_ip = self.__node_ips[self.__ipidx]
-            self.__ipidx += 1
-        else:
+        try:
+            node_ip = next(self.__node_ip_pool)
+        except:
             Logger.error("No Nodes available in Testbed.")
             assert(0)
+            node_ip = None
         return node_ip
 
     def GetDataVlans(self):
-        resp = []
-        for v in self.data_vlans:
-            resp.append(v)
-        return resp
+        return copy.deepcopy(self.__vlans)
+
+    def AllocateVlan(self):
+        return next(self.__vlan_pool)
 
 __testbed = _Testbed()
 store.SetTestbed(__testbed)

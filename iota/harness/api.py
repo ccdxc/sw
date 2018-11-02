@@ -162,6 +162,12 @@ def GetWorkloadTypeForNode(node_name):
 def GetWorkloadImageForNode(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadImageForNode(node_name)
 
+def Testbed_AllocateVlan():
+    return store.GetTestbed().AllocateVlan()
+
+def Abort():
+    return store.GetTestbed().GetCurrentTestsuite().Abort()
+
 def PrintCommandResults(cmd):
     Logger.header('COMMAND')
     Logger.info("%s (Exit Code = %d)" % (cmd.command, cmd.exit_code))

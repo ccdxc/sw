@@ -33,14 +33,20 @@ def Main():
     api.Init()
 
     # Parse all the testsuites
-    suites = __discover_testsuites()
+    ts_specs = __discover_testsuites()
 
+    testsuites = []
     result = types.status.SUCCESS
-    for s in suites:
-        ts = testsuite.TestSuite(s)
+    for ts_spec in ts_specs:
+        ts = testsuite.TestSuite(ts_spec)
+        testsuites.append(ts)
         ret = ts.Main()
         if ret != types.status.SUCCESS:
             result = ret
             if GlobalOptions.no_keep_going:
-                return ret
+                break
+
+    for ts in testsuites:
+        ts.PrintSummary()
+
     return result

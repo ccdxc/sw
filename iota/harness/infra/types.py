@@ -6,6 +6,7 @@ __status = [
     'FAILURE',
     'INVALID_ARG',
     'RETRY',
+    'UNAVAIL',
 ]
 status = utils.List2Enum(__status)
 
@@ -26,6 +27,15 @@ __result = [
     'FAIL',
 ]
 result = utils.List2Enum(__result)
+
+__tbtype = [
+    'ANY',
+    'SIMULATION',
+    'HARDWARE',
+    'HYBRID'
+]
+tbtype = utils.List2Enum(__tbtype)
+
 
 HEADER_SUMMARY = "=" * 90
 FORMAT_TESTCASE_SUMMARY = "%-72s %-7s %-8s"
