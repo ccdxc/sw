@@ -232,7 +232,6 @@ chn_poll_all_services(struct service_chain *chain)
 		svc_ops = &svc_info->si_ops;
 		err = svc_ops->poll(svc_info);
 		if (err) {
-			PPRINT_CHAIN(chain);
 			OSAL_LOG_ERROR("poll failed! svc_type: %d desc 0x" PRIx64 " status_desc: 0x" PRIx64 " err: %d",
 					svc_info->si_type,
 					(uint64_t) svc_info->si_desc,
@@ -258,7 +257,6 @@ chn_read_write_result(struct service_chain *chain)
 
 	OSAL_ASSERT(chain);
 	OSAL_ASSERT(chain->sc_entry);
-	PPRINT_CHAIN(chain);
 
 	/* update status of individual service(s) */
 	sc_entry = chain->sc_entry;
@@ -470,8 +468,8 @@ chn_destroy_chain(struct service_chain *chain)
 		return;
 
 	OSAL_LOG_DEBUG("enter ...");
-	OSAL_LOG_DEBUG("chain: 0x" PRIx64 " num_services: %d ", (uint64_t)chain,
-			chain->sc_num_services);
+
+	PPRINT_CHAIN(chain);
 
 	pcr = chain->sc_pcr;
 	OSAL_ASSERT(pcr);
@@ -622,14 +620,12 @@ chn_create_chain(struct request_params *req_params)
 	err = svc_info->si_ops.chain(centry);
 	if (err)
 		goto out_chain;
-	PPRINT_CHAIN(chain);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return chain;
 
 out_chain:
-	PPRINT_CHAIN(chain);
 	chn_destroy_chain(chain);
 	chain = NULL;
 out:
