@@ -156,9 +156,6 @@ struct eth_devspec {
     Uplink   *uplink;
     uint64_t lif_id;
     uint32_t hw_lif_id;
-    // uint64_t vrf_id;
-    // uint64_t enic_id;
-    // uint64_t native_l2seg_id;
     // RES
     uint32_t rxq_count;
     uint32_t txq_count;

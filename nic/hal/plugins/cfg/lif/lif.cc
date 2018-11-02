@@ -320,12 +320,15 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
     // Program if
     // - Its not hw
     // - Service lif
+#if 0
     if ((g_hal_cfg.platform != HAL_PLATFORM_HAPS &&
         g_hal_cfg.platform != HAL_PLATFORM_HW &&
          g_hal_cfg.qemu != true) ||
         (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END)) {
         // make sure that when you are creating with hw_lif_id the lif is alloced
         // already, otherwise this call may return an error
+#endif
+    if (lif->qstate_pgm_in_hal) {
         if ((ec = lif_manager()->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
             HAL_TRACE_ERR("Failed to initialize LIFQState: err_code : {}", ec);
             return HAL_RET_INVALID_ARG;
@@ -497,11 +500,23 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("{}:create add cb {}",
                     __FUNCTION__, lif->lif_id);
 
+    /*
+     * Who creates LIFs:
+     * 1. DOL
+     *   - Qstate programming has to be done in HAL.qstate_pgm_in_hal:true
+     * 2. NIC Mgr (In HW & HAPs)
+     *    NIC Mgr allocates hw_lif_id and does qstate programming.
+     *    Only for those lifs, qstate_pgm_in_hal:false.
+     * 3. HAL
+     *    Service LIFs are created inside HAL, so qsate programmins
+     *    is also done in HAL. qstate_pgm_in_hal:true
+     */
     // allocate a hw lif id
     if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
         hw_lif_id = lif_hal_info->hw_lif_id;
         // Check that only service lifs are already allocated
         if (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END) {
+            lif->qstate_pgm_in_hal = true;
             // make sure hw_lif_id is already allocated.
             LIFQState *qstate = lif_manager()->GetLIFQState(hw_lif_id);
             if (qstate == nullptr) {
@@ -519,6 +534,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
             ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
+        lif->qstate_pgm_in_hal = true;
         lif_info.with_hw_lif_id = 1;
         lif_info.hw_lif_id = hw_lif_id;
     }
