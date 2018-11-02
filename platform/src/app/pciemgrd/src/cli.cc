@@ -46,6 +46,19 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
             printf("pciehdev_eth_new failed\n");
             return NULL;
         }
+    } else if (strcmp(type, "mgmt") == 0) {
+        if (namearg == NULL) {
+            static int mgmt_instance;
+            snprintf(lname, sizeof(lname), "mgmt%d", mgmt_instance++);
+            name = lname;
+        } else {
+            name = namearg;
+        }
+        pdev = pciehdev_mgmteth_new(name, pres);
+        if (pdev == NULL) {
+            printf("pciehdev_mgmteth_new failed\n");
+            return NULL;
+        }
     } else if (strcmp(type, "ethvf") == 0) {
         pdev = NULL; // XXX
     } else if (strcmp(type, "nvme") == 0) {

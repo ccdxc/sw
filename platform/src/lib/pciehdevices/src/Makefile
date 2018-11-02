@@ -6,6 +6,7 @@ LIBRARY = libpciehdevices.a libpciehdevices.so
 SOURCES = \
 	bars.c \
 	eth.c \
+	mgmteth.c \
 	nvme.c \
 	accel.c \
 	virtio.c \

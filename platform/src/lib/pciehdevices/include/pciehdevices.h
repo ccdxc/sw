@@ -38,6 +38,9 @@ typedef struct pciehdevice_resources_s {
 pciehdev_t *pciehdev_eth_new(const char *name,
                              const pciehdevice_resources_t *pres);
 
+pciehdev_t *pciehdev_mgmteth_new(const char *name,
+                                 const pciehdevice_resources_t *pres);
+
 pciehdev_t *pciehdev_nvme_new(const char *name,
                               const pciehdevice_resources_t *pres);
 
