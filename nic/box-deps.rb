@@ -21,6 +21,7 @@ PIP2_PACKAGES = %w[
   cmd2
   bitstring
   tftpy
+  pexpect
 ]
 
 PIP3_PACKAGES = %w[
@@ -42,6 +43,7 @@ PIP3_PACKAGES = %w[
   pipenv
   pyyaml
   docker
+  pexpect
 ]
 
 PACKAGES = %w[
@@ -93,6 +95,8 @@ PACKAGES = %w[
   nmap
   libcap-devel
   sudo
+  telnet
+  sshpass
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -279,7 +283,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.27"
+tag "pensando/nic:1.28"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
