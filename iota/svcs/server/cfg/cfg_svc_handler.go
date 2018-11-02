@@ -137,7 +137,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 	authPolicyURL := fmt.Sprintf("%s/configs/auth/v1/authn-policy", veniceAPIGw)
 	userURL := fmt.Sprintf("%s/configs/auth/v1/tenant/default/users", veniceAPIGw)
 	roleBindingURL := fmt.Sprintf("%s/configs/auth/v1/tenant/default/role-bindings", veniceAPIGw)
-	loginURL := fmt.Sprintf("%s/v1/login/", veniceAPIGw)
+	loginURL := fmt.Sprintf("%s/v1/login", veniceAPIGw)
 
 	log.Infof("CFG SVC | DEBUG | ConfigureAuth. Received Request Msg: %v", req)
 	tenant := cluster.Tenant{
