@@ -1253,7 +1253,6 @@ typedef struct rqcb1_s {
     uint64_t    curr_wqe_ptr;
     uint8_t     rsq_pindex;
     uint32_t    bt_in_progress : 8;
-    uint32_t    cq_id : 24;
     uint32_t    header_template_size : 8;
     uint32_t    msn : 24;
     uint32_t    rsvd3 : 8;
@@ -1262,7 +1261,13 @@ typedef struct rqcb1_s {
     uint8_t     rsvd2 : 7;
     uint8_t     in_progress : 1;
     uint8_t     rsvd1 : 7;
-    uint8_t     disable_speculation : 1;
+    uint8_t     busy: 1;
+    uint8_t     work_not_done_recirc_cnt: 8;
+    uint8_t     nxt_to_go_token_id : 8;
+    uint8_t     token_id : 8;
+    uint32_t    header_template_addr;
+    uint32_t    pd;
+    uint32_t    cq_id : 24;
     uint8_t     rsvd0 : 2;
     uint8_t     priv_oper_enable: 1;
     uint8_t     nak_prune: 1;
@@ -1270,15 +1275,6 @@ typedef struct rqcb1_s {
     uint8_t     immdt_as_dbell : 1;
     uint8_t     cache : 1;
     uint8_t     srq_enabled : 1;
-    uint8_t     rsvd4: 8;
-    uint8_t     nxt_to_go_token_id : 8;
-    uint8_t     token_id : 8;
-    uint32_t    header_template_addr;
-    uint32_t    pd;
-    union {
-        uint32_t    rsq_base_addr;
-        uint32_t    q_key;
-    };
     uint32_t    log_pmtu : 5;
     uint32_t    serv_type : 3;
     uint32_t    log_rsq_size : 5;
@@ -1290,6 +1286,10 @@ typedef struct rqcb1_s {
     union {
         uint32_t    pt_base_addr;
         uint32_t    hbm_rq_base_addr;
+    };
+    union {
+        uint32_t    rsq_base_addr;
+        uint32_t    q_key;
     };
     uint8_t   pc;
 } PACKED rqcb1_t;

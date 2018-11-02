@@ -105,6 +105,12 @@ struct rqcb0_t {
 //Rx only cb
 struct rqcb1_t {
     pc: 8;
+
+    union {
+        rsq_base_addr: 32;  //Ronly
+        q_key: 32;          //Ronly
+    };
+
     union {
         pt_base_addr: 32;       //Ronly
         hbm_rq_base_addr: 32;   //Ronly
@@ -119,10 +125,15 @@ struct rqcb1_t {
     serv_type: 3;           //Ronly
     log_pmtu: 5;            //Ronly
     
-    union {
-        rsq_base_addr: 32;  //Ronly
-        q_key: 32;          //Ronly
-    };
+    srq_enabled: 1;         //Ronly
+    cache: 1;               //Ronly
+    immdt_as_dbell: 1;      //Ronly
+    rq_in_hbm: 1;           //Ronly
+    nak_prune: 1;           //rw by S0
+    priv_oper_enable: 1;    //Ronly
+    rsvd0: 2;
+
+    cq_id: 24;              //Ronly
 
     pd: 32;                 //Ronly
 
@@ -131,13 +142,6 @@ struct rqcb1_t {
     token_id: 8;            //rw by S0
     nxt_to_go_token_id: 8;  // written by S4, read by S0
     work_not_done_recirc_cnt: 8; //rw by S0
-    srq_enabled: 1;         //Ronly
-    cache: 1;               //Ronly
-    immdt_as_dbell: 1;      //Ronly
-    rq_in_hbm: 1;           //Ronly
-    nak_prune: 1;           //rw by S0
-    priv_oper_enable: 1;    //Ronly
-    rsvd0: 2;
 
     busy: 1; // set to 1 by S0, to 0 by S3
     rsvd1: 7;
@@ -152,7 +156,6 @@ struct rqcb1_t {
     msn:24;                 //rw by S0 ?
     header_template_size: 8;    //Ronly
 
-    cq_id: 24;                  //Ronly
     bt_in_progress: 8;  // set to 1 by rxdma, to 0 by txdma
 
     rsq_pindex: 8;  // written by S0

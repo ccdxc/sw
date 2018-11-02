@@ -587,7 +587,10 @@ e_psn:
     // Invoke rqcb1
     add         r5, r2, (CB_UNIT_SIZE_BYTES) //BD Slot
     add         r5, r5, FIELD_OFFSET(rqcb1_t, e_psn)
-    memwr.w     r5, d.{mod_qp.rq_psn}.wx
+    add         r4, d.{mod_qp.rq_psn}.wx, r0
+    memwr.h     r5, r4[23:8]
+    add         r5, r5, 2
+    memwr.b     r5, r4[7:0]
 
 q_key:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_QKEY], 1, mod_qp_done

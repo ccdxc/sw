@@ -4,6 +4,13 @@
 // we still need to retain these structures due to the special nature of wqe/pt 
 // functions which deal with Table 0 and/or Table 1.
 // TBD: either auto-generate this structure from P4 or migrate to regular phvwr
+
+struct resp_rx_to_stage_launch_rqpt_info_t {
+    cqcb_base_addr_hi       :   24;
+    log_num_cq_entries      :    4;
+    pad                     :  100;
+};
+ 
 struct resp_rx_to_stage_wb1_info_t {
     curr_wqe_ptr            :   64;
     my_token_id             :    8;

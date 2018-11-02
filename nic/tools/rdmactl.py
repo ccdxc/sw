@@ -450,6 +450,9 @@ class RdmaRQCB1state(Packet):
     fields_desc = [
         # RQCB1
         ByteField("pc_offset", 0),
+
+        XIntField("rsq_base_addr/q_key", 0),
+    
         XIntField("pt_base_addr/rq_hbm_base_addr", 0),
         
         BitField("log_rq_page_size", 0xc, 5),
@@ -461,15 +464,6 @@ class RdmaRQCB1state(Packet):
         BitField("serv_type", 0, 3),
         BitField("log_pmtu", 0xa, 5),
         
-        XIntField("rsq_base_addr", 0),
-    
-        IntField("pd", 0),
-
-        XIntField("header_template_addr", 0),
-
-        ByteField("token_id", 0),
-        ByteField("nxt_to_go_token_id", 0),
-        ByteField("work_not_done_recirc_cnt", 0),                                            
         BitField("srq_enabled", 0, 1),
         BitField("cache", 0, 1),
         BitField("immdt_as_dbell", 0, 1),
@@ -477,6 +471,16 @@ class RdmaRQCB1state(Packet):
         BitField("nak_prune", 0, 1),
         BitField("priv_oper_enable", 0, 1),
         BitField("rqcb1_rsvd0", 0, 2),
+
+        X3BytesField("cq_id", 0),
+
+        IntField("pd", 0),
+
+        XIntField("header_template_addr", 0),
+
+        ByteField("token_id", 0),
+        ByteField("nxt_to_go_token_id", 0),
+        ByteField("work_not_done_recirc_cnt", 0),
 
         BitField("busy", 0, 1),
         BitField("rqcb1_rsvd1", 0, 7),
@@ -493,7 +497,6 @@ class RdmaRQCB1state(Packet):
         X3BytesField("msn", 0),
         ByteField("header_template_size", 0),
 
-        X3BytesField("cq_id", 0),
         ByteField("rqcb1_bt_in_progress", 0),
 
         ByteField("rsq_pindex", 0),
