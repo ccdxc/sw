@@ -11,9 +11,10 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 
+	log "github.com/sirupsen/logrus"
+
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	Common "github.com/pensando/sw/iota/svcs/common"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -149,7 +150,7 @@ var runArpCmd = func(app workload, ip string, intf string) error {
 	cmdResp, _ := app.RunCommand(arpCmd, 0, false, false)
 	if cmdResp.exitCode != 0 {
 		errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.stdout)
-        return nil
+		return nil
 	}
 	return nil
 }

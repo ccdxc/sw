@@ -14,5 +14,5 @@ type TestNode struct {
 	TriggerResp  []*iota.TriggerMsg
 	WorkloadInfo iota.WorkloadMsg
 	WorkloadResp iota.WorkloadMsg
-    Os iota.TestBedNodeOs
+	Os           iota.TestBedNodeOs
 }

@@ -15,8 +15,8 @@ const (
 	// IotaAgentPort is the default IOTA Agent Port
 	IotaAgentPort = 60001
 
-    // IotaAgentBinaryName is the name of of the IOTA Agent Binary
-    IotaAgentBinaryName = "iota_agent"
+	// IotaAgentBinaryName is the name of of the IOTA Agent Binary
+	IotaAgentBinaryName = "iota_agent"
 
 	// IotaAgentBinaryNameLinux is the name of of the IOTA Agent Binary for Linux
 	IotaAgentBinaryNameLinux = "linux/" + IotaAgentBinaryName
@@ -62,8 +62,8 @@ const (
 var (
 	// IotaAgentBinaryPathLinux captures the location of the build IOTA Agent Binary for Linux
 	IotaAgentBinaryPathLinux = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/agent/%s", os.Getenv("GOPATH"), IotaAgentBinaryNameLinux)
-	
-    // IotaAgentBinaryPathFreebsd captures the location of the build IOTA Agent Binary for Freebsd
+
+	// IotaAgentBinaryPathFreebsd captures the location of the build IOTA Agent Binary for Freebsd
 	IotaAgentBinaryPathFreebsd = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/agent/%s", os.Getenv("GOPATH"), IotaAgentBinaryNameFreebsd)
 
 	// DstIotaAgentBinary captures the location of agent on the remote nodes

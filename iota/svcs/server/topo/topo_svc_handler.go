@@ -81,7 +81,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 					IpAddress: node.IpAddress,
 					Name:      nodeName,
 				},
-                Os: node.Os,
+				Os: node.Os,
 			}
 
 			ts.Nodes = append(ts.Nodes, &n)
@@ -92,7 +92,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 
 			pool.Go(func() error {
 				n := n
-    			return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
+				return n.InitNode(ts.SSHConfig, common.DstIotaAgentDir, commonCopyArtifacts)
 			})
 		}
 		return pool.Wait()
@@ -110,6 +110,13 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 // CleanUpTestBed cleans up a testbed
 func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | CleanUpTestBed. Received Request Msg: %v", req)
+	if len(req.Username) == 0 || len(req.Password) == 0 {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Request must include a user name and password")
+		return req, nil
+	}
+	ts.TestBedInfo.Username = req.Username
+	ts.TestBedInfo.Password = req.Password
 
 	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
 	// Run clean up
@@ -132,7 +139,7 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 	}
 	err := cleanupTestBed(context.Background())
 	if err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | Init Test Bed Call Failed. %v", err)
+		log.Errorf("TOPO SVC | CleanupTestBed | Cleanup Test Bed Call Failed. %v", err)
 		return nil, err
 	}
 

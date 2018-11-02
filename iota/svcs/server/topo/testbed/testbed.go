@@ -5,16 +5,16 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
+	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/copier"
 	"github.com/pensando/sw/iota/svcs/common/runner"
 	"github.com/pensando/sw/venice/utils/log"
-	iota "github.com/pensando/sw/iota/protos/gogen"
 )
 
 // InitNode initializes an iota test node. It copies over IOTA Agent binary and starts it on the remote node
 func (n *TestNode) InitNode(c *ssh.ClientConfig, dstDir string, commonArtifacts []string) error {
-    var agentBinary string
+	var agentBinary string
 	// Copy Common Artifacts to the remote node
 	if err := n.CopyTo(c, dstDir, commonArtifacts); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Failed to copy common artifacts, to TestNode: %v, at IPAddress: %v", n.Node.Name, n.Node.IpAddress)
@@ -22,14 +22,14 @@ func (n *TestNode) InitNode(c *ssh.ClientConfig, dstDir string, commonArtifacts 
 	}
 
 	// Copy Agent Binary to the remote node
-    if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD {
-        agentBinary = constants.IotaAgentBinaryPathFreebsd
-    } else {
-        agentBinary = constants.IotaAgentBinaryPathLinux
-    }
+	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD {
+		agentBinary = constants.IotaAgentBinaryPathFreebsd
+	} else {
+		agentBinary = constants.IotaAgentBinaryPathLinux
+	}
 
 	log.Infof("TOPO SVC | InitTestBed | Running init for TestNode: %v, IPAddress: %v AgentBinary: %v", n.Node.Name, n.Node.IpAddress, agentBinary)
-	if err := n.CopyTo(c, dstDir, []string { agentBinary } ); err != nil {
+	if err := n.CopyTo(c, dstDir, []string{agentBinary}); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Failed to copy agent binary: %v, to TestNode: %v, at IPAddress: %v", agentBinary, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
