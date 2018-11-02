@@ -10,6 +10,7 @@ import iota.harness.api as api
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.store as store
+import iota.harness.infra.resmgr as resmgr
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
@@ -170,10 +171,7 @@ class _Testbed:
     def __init_testbed(self):
         self.__tbid = getattr(self.tbspec, 'TestbedID', 1)
         self.__node_ip_pool = iter(self.__node_ips)
-        self.__vlan_base = int(self.__tbid)
-        self.__vlan_pool = iter(range(self.__vlan_base * 100,
-                                      self.__vlan_base * 100 + 10))
-
+        self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__tbid, api.GetNicMode())
         self.__recover_testbed()
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         resp = api.InitTestbed(msg)
@@ -209,7 +207,7 @@ class _Testbed:
         return copy.deepcopy(self.__vlans)
 
     def AllocateVlan(self):
-        return next(self.__vlan_pool)
+        return self.__vlan_allocator.Alloc()
 
 __testbed = _Testbed()
 store.SetTestbed(__testbed)

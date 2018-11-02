@@ -27,3 +27,21 @@ class IpAddressStep(object):
 
 ControlIpAllocator = IpAddressStep("172.16.100.1", "0.0.0.1")
 WorkloadIpAllocator = IpAddressStep("192.168.100.1", "0.0.0.1")
+
+TESTBED_NUM_VLANS         = 100
+TESTBED_NUM_VLANS_HOSTPIN = 50
+TESTBED_NUM_VLANS_CLASSIC = 50
+class TestbedVlanAllocator(object):
+    def __init__(self, tbid, mode):
+        self.__start = int(tbid) * TESTBED_NUM_VLANS
+        self.__count = TESTBED_NUM_VLANS_CLASSIC
+
+        if mode == 'hostpin':
+            self.__start += TESTBED_NUM_VLANS_HOSTPIN
+            self.__count = TESTBED_NUM_VLANS_HOSTPIN
+
+        self.__pool = iter(range(self.__start, self.__start + self.__count))
+        return
+
+    def Alloc(self):
+        return next(self.__pool)
