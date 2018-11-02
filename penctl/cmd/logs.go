@@ -18,7 +18,7 @@ var logsShowCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Show logs from Naples",
 	Long:  "\n------------------------------\n Show Module Logs From Naples \n------------------------------\n",
-	Run:   logsShowCmdHandler,
+	RunE:  logsShowCmdHandler,
 	Args:  logsShowCmdArgsValidator,
 }
 
@@ -35,7 +35,7 @@ func init() {
 	logsShowCmd.MarkFlagRequired("module")
 }
 
-func logsShowCmdHandler(cmd *cobra.Command, args []string) {
+func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	var moduleVal string
 	switch module {
 	case strings.TrimPrefix(globals.Nmd, "pen-"):
@@ -46,7 +46,10 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) {
 		moduleVal = globals.Tmagent
 	}
 	moduleVal += ".log"
-	resp, _ := restGet(revProxyPort, "monitoring/v1/naples/logs/"+moduleVal)
+	resp, err := restGet(revProxyPort, "monitoring/v1/naples/logs/"+moduleVal)
+	if err != nil {
+		return err
+	}
 	fmt.Println(string(resp))
 	if jsonFormat {
 		fmt.Println("JSON not supported for this command")
@@ -54,6 +57,7 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) {
 	if yamlFormat {
 		fmt.Println("YAML not supported for this command")
 	}
+	return nil
 }
 
 func logsShowCmdArgsValidator(cmd *cobra.Command, args []string) error {
