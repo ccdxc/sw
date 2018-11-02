@@ -196,7 +196,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
 
   timeSeriesQuery() {
     const timeSeriesQuery: Metrics_queryQuerySpec =
-      MetricsUtility.timeSeriesQuery('SmartNIC', MetricsUtility.createNameSelector('naples-' + this.selectedId));
+      MetricsUtility.timeSeriesQuery('SmartNIC', MetricsUtility.createNameSelector(this.selectedId));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.timeSeriesQueryMerge
@@ -213,7 +213,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
 
   avgQuery() {
     const avgQuery: Metrics_queryQuerySpec =
-      MetricsUtility.pastDayAverageQuery('SmartNIC', MetricsUtility.createNameSelector('naples-' + this.selectedId));
+      MetricsUtility.pastDayAverageQuery('SmartNIC', MetricsUtility.createNameSelector(this.selectedId));
     const pollOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };

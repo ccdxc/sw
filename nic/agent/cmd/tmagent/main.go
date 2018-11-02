@@ -52,7 +52,7 @@ func reportMetrics(nodeUUID string, rc resolver.Interface) error {
 			Kind: "SmartNIC",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: fmt.Sprintf("naples-%s", nodeUUID),
+			Name: nodeUUID,
 		},
 	}
 

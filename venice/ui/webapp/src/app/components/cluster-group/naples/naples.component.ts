@@ -226,11 +226,11 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
 
     // Max Naples
     const maxNaples = MetricsUtility.maxObjUtility(this.maxObjData, fieldName);
-    // Removing SmartNIC-naples- prefix from the name and adding value
     if (maxNaples.max === -1) {
       heroCard.thirdStat.value = null;
     } else {
-      const thirdStatName = maxNaples.name.substring(16)
+      // Removing SmartNIC- prefix from the name and adding value
+      const thirdStatName = maxNaples.name.substring(this.telemetryKind.length + 1)
       let thirdStat = thirdStatName;
       if (thirdStat.length > 10) {
         thirdStat = thirdStat.substring(0, 11) + '...';
