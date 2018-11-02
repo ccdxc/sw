@@ -404,7 +404,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     this.sgPoliciesEventUtility = new HttpEventUtility<SecuritySGPolicy>(SecuritySGPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
     // const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId}).subscribe(
-    const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'ObjectMeta.Name=' + this.selectedPolicyId }).subscribe(
+    const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId }).subscribe(
       response => {
         const body: any = response.body;
         this.sgPoliciesEventUtility.processEvents(body);

@@ -134,7 +134,7 @@ describe('SgpolicydetailComponent', () => {
   function verifyServiceCalls(policyName) {
     expect(sgPolicyWatchSpy).toHaveBeenCalled();
     const calledObj = sgPolicyWatchSpy.calls.mostRecent().args[0];
-    expect(_.isEqual({ 'field-selector': 'ObjectMeta.Name=' + policyName }, calledObj)).toBeTruthy('Incorrect selector for ' + policyName);
+    expect(_.isEqual({ 'field-selector': 'meta.name=' + policyName }, calledObj)).toBeTruthy('Incorrect selector for ' + policyName);
 
     expect(sgPolicyGetSpy).toHaveBeenCalled();
     expect(sgPolicyGetSpy).toHaveBeenCalledWith(policyName);

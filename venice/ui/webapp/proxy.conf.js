@@ -2,7 +2,7 @@
 const PROXY_CONFIG =
   {
     "/login": {
-      "target": "http://192.168.69.189:10001/v1/login/",
+      "target": "http://192.168.69.189:10001/v1/login",
         "secure": false,
           "pathRewrite": {
         "^/login": ""

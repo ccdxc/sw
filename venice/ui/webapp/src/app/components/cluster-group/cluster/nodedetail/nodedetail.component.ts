@@ -84,7 +84,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
 
   alertseventsSelector: AlertsEventsSelector = {
     eventSelector: 'source.node-name=' + this.selectedId,
-    alertSelector: 'Status.Source.NodeName=' + this.selectedId
+    alertSelector: 'status.source.node-name=' + this.selectedId
   }
 
   constructor(protected _controllerService: ControllerService,
@@ -161,7 +161,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
     );
     this.objEventUtility = new HttpEventUtility<ClusterNode>(ClusterNode);
     this.objList = this.objEventUtility.array;
-    const subscription = this.clusterService.WatchNode({ 'field-selector': 'ObjectMeta.Name=' + this.selectedId }).subscribe(
+    const subscription = this.clusterService.WatchNode({ 'field-selector': 'meta.name=' + this.selectedId }).subscribe(
       response => {
         const body: any = response.body;
         this.objEventUtility.processEvents(body);
@@ -182,7 +182,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
           this.startMetricPolls();
           this.alertseventsSelector = {
             eventSelector: 'source.node-name=' + this.selectedId,
-            alertSelector: 'Status.Source.NodeName=' + this.selectedId
+            alertSelector: 'status.source.node-name=' + this.selectedId,
           }
         } else {
           // Must have received a delete event.

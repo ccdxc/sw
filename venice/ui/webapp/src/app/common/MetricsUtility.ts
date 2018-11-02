@@ -130,9 +130,7 @@ export class MetricsUtility {
     // We then add on the newer values.
     const _ = Utility.getLodash();
     const window = 24 * 60;
-    // If window is positive, we filter any items that
-    // have a timestamp less than Now - window
-    if (window !== -1) {
+    if (MetricsUtility.hasData(currData)) {
       const moment = Utility.getMomentJS();
       const windowStart = moment().subtract(window, 'minutes');
       const filteredValues = _.dropWhile(currData.results[0].series[0].values, (item) => {
@@ -145,8 +143,12 @@ export class MetricsUtility {
     // Checking if there is new data
     if (MetricsUtility.hasData(newData)) {
       const data = newData.results[0].series[0].values;
-      // Push on the new data
-      currData.results[0].series[0].values.push(...data);
+      if (MetricsUtility.hasData(currData)) {
+        // Push on the new data
+        currData.results[0].series[0].values.push(...data);
+      } else {
+        return newData;
+      }
     }
     return currData;
   }

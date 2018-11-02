@@ -151,7 +151,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
     this.subscriptions.push(getSubscription);
     this.objEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
     this.objList = this.objEventUtility.array;
-    const subscription = this.clusterService.WatchSmartNIC({ 'field-selector': 'ObjectMeta.Name=' + this.selectedId }).subscribe(
+    const subscription = this.clusterService.WatchSmartNIC({ 'field-selector': 'meta.name=' + this.selectedId }).subscribe(
       response => {
         const body: any = response.body;
         this.objEventUtility.processEvents(body);
@@ -171,7 +171,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
           this.selectedObj = this.objList[0];
           this.alertseventsSelector = {
             eventSelector: 'object-ref.name=' + this.selectedId + ',object-ref.kind=SmartNIC',
-            alertSelector: 'Status.ObjectRef.Name=' + this.selectedId + ',' + 'Status.ObjectRef.Kind=SmartNIC'
+            alertSelector: 'status.object-ref.name=' + this.selectedId + ',status.object-ref.kind=SmartNIC',
           }
           this.startMetricPolls();
         } else if (this.objList.length == 0) {
