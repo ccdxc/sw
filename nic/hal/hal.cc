@@ -26,6 +26,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/utils/agent_api/agent_api.hpp"
 #include "nic/hal/core/heartbeat/heartbeat.hpp"
+#include "nic/hal/src/stats/stats.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/delphi/utils/log.hpp"
 
@@ -283,9 +284,11 @@ hal_init (hal_cfg_t *hal_cfg)
     // linkmgr init
     hal_linkmgr_init(hal_cfg);
 
-
     // start monitoring HAL heartbeat
     hal::hb::heartbeat_init();
+
+    // initialize stats module
+    hal_stats_init(hal_cfg);
 
     // install signal handlers
     hal_sig_init(hal_sig_handler);

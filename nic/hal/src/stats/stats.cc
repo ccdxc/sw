@@ -37,7 +37,7 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 // stats module initialization callback
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_stats_init_cb (hal_cfg_t *hal_cfg)
+hal_stats_init (hal_cfg_t *hal_cfg)
 {
 
     // no stats functionality in sim and rtl mode
@@ -69,7 +69,7 @@ hal_stats_init_cb (hal_cfg_t *hal_cfg)
 // stats module cleanup callback
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_stats_cleanup_cb (void)
+hal_stats_cleanup (void)
 {
     return HAL_RET_OK;
 }

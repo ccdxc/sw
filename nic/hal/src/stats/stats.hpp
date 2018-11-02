@@ -10,8 +10,8 @@
 
 namespace hal {
 
-hal_ret_t hal_stats_init_cb(hal_cfg_t *hal_cfg);
-hal_ret_t hal_stats_cleanup_cb(void);
+hal_ret_t hal_stats_init(hal_cfg_t *hal_cfg);
+hal_ret_t hal_stats_cleanup(void);
 
 }    // namespace
 
