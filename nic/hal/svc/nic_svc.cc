@@ -2,7 +2,7 @@
 
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/svc/nic_svc.hpp"
 #include "nic/hal/plugins/cfg/nw/nic.hpp"

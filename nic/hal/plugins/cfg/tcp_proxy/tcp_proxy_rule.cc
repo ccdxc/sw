@@ -74,7 +74,7 @@ tcp_proxy_cfg_pol_dump (tcp_proxy::TcpProxyRuleSpec& spec)
 {
     std::string pol_str;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)
         return;
 
     google::protobuf::util::MessageToJsonString(spec, &pol_str);
@@ -88,7 +88,7 @@ tcp_proxy_cfg_pol_get_dump (tcp_proxy::TcpProxyRuleSpec& spec)
 {
     std::string pol_str;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)
         return;
 
     google::protobuf::util::MessageToJsonString(spec, &pol_str);

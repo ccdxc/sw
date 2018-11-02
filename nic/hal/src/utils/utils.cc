@@ -741,7 +741,7 @@ proto_msg_dump (Message& msg)
 {
     std::string    msg_str;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+    if (utils::hal_trace_level() < ::utils::trace_debug) {
         return;
     }
     google::protobuf::util::MessageToJsonString(msg, &msg_str);

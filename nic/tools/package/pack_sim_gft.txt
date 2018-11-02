@@ -10,6 +10,7 @@ nic/build/x86_64/gft/lib/libp4pd_common_p4plus_rxdma.so         /nic/lib/
 nic/build/x86_64/gft/lib/libhal_mock.so                         /nic/lib/
 nic/build/x86_64/gft/lib/libmodel_client.so                     /nic/lib/
 nic/build/x86_64/gft/lib/libhalproto.so                         /nic/lib/
+nic/build/x86_64/gft/lib/libhaltrace.so                         /nic/lib/
 nic/build/x86_64/gft/lib/libcapri_csrint.so                     /nic/lib/
 nic/build/x86_64/gft/lib/libcapri_csr_cpu_hal.so                /nic/lib/
 nic/build/x86_64/gft/lib/libprint.so                            /nic/lib/

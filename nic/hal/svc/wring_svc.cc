@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/hal/svc/wring_svc.hpp"
 #include "nic/hal/src/internal/wring.hpp"
 

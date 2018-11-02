@@ -4,7 +4,7 @@
 
 #include "nic/hal/iris/upgrade/upgrade.hpp"
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 

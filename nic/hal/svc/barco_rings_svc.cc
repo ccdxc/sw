@@ -1,5 +1,5 @@
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/hal/svc/barco_rings_svc.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 

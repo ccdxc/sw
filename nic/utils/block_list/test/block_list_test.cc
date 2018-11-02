@@ -22,7 +22,7 @@ protected:
 
 bool cb(void *elem, void *data) {
     hal_handle_t *hdl = (hal_handle_t *)elem;
-    HAL_TRACE_DEBUG("handle_id: {}", *hdl);
+    printf("handle_id: %lu\n", *hdl);
     return true;
 }
 
@@ -53,12 +53,12 @@ TEST_F(block_list_test, test1) {
     // test_block_list->iterate(cb);
     for (auto it = test_block_list->begin(); it != test_block_list->end(); ++it) {
         p_hdl_id = (hal_handle_t *)*it;
-        HAL_TRACE_DEBUG("HAL handle: {}", *p_hdl_id);
+        printf("HAL handle: %lu\n", *p_hdl_id);
     }
 
     for (const void *ptr : *test_block_list) {
         p_hdl_id = (hal_handle_t *)ptr;
-        HAL_TRACE_DEBUG("HAL handle: {}", *p_hdl_id);
+        printf("HAL handle: %lu\n", *p_hdl_id);
     }
 
     // Deleting 9
@@ -66,16 +66,16 @@ TEST_F(block_list_test, test1) {
     while (it != test_block_list->end()) {
         p_hdl_id = (hal_handle_t *)*it;
         if (*p_hdl_id == 9) {
-            HAL_TRACE_DEBUG("Delete 9: ");
+            printf("Delete 9: \n");
             test_block_list->erase(it);
         } else {
             ++it;
         }
     }
-    HAL_TRACE_DEBUG("After Delete: ");
+    printf("After Delete: \n");
     for (const void *ptr : *test_block_list) {
         p_hdl_id = (hal_handle_t *)ptr;
-        HAL_TRACE_DEBUG("HAL handle: {}", *p_hdl_id);
+        printf("HAL handle: %lu\n", *p_hdl_id);
     }
 
     // Deleting 18
@@ -83,16 +83,16 @@ TEST_F(block_list_test, test1) {
     while (it1 != test_block_list->end()) {
         p_hdl_id = (hal_handle_t *)*it1;
         if (*p_hdl_id == 18) {
-            HAL_TRACE_DEBUG("Delete 18: ");
+            printf("Delete 18: \n");
             test_block_list->erase(it1);
         } else {
             ++it1;
         }
     }
-    HAL_TRACE_DEBUG("After Delete: ");
+    printf("After Delete: \n");
     for (const void *ptr : *test_block_list) {
         p_hdl_id = (hal_handle_t *)ptr;
-        HAL_TRACE_DEBUG("HAL handle: {}", *p_hdl_id);
+        printf("HAL handle: %lu\n", *p_hdl_id);
     }
 
     for (uint32_t i = 0; i < 20; i++) {
@@ -100,7 +100,7 @@ TEST_F(block_list_test, test1) {
         if (hdl_id == 9 || hdl_id == 18) {
             continue;
         }
-        HAL_TRACE_DEBUG("Trying to remove: {}", hdl_id);
+        printf("Trying to remove: %lu\n", hdl_id);
         ret = test_block_list->remove(&hdl_id);
         ASSERT_TRUE(ret == HAL_RET_OK);
         test_block_list->iterate(cb);
@@ -125,7 +125,7 @@ TEST_F(block_list_test, test2) {
     test_block_list->iterate(cb);
     hdl_id = 0;
     for (uint32_t i = 0; i < 20; i++) {
-        HAL_TRACE_DEBUG("Trying to remove: {}", hdl_id);
+        printf("Trying to remove: %lu\n", hdl_id);
         ret = test_block_list->remove(&hdl_id);
         ASSERT_TRUE(ret == HAL_RET_OK);
         test_block_list->iterate(cb);
@@ -150,7 +150,7 @@ TEST_F(block_list_test, test3) {
     test_block_list->iterate(cb);
     hdl_id = 0;
     for (uint32_t i = 0; i < 25; i++) {
-        HAL_TRACE_DEBUG("Trying to remove: {}", hdl_id);
+        printf("Trying to remove: %lu\n", hdl_id);
         ret = test_block_list->remove(&hdl_id);
         ASSERT_TRUE(ret == HAL_RET_OK);
         test_block_list->iterate(cb);
@@ -166,7 +166,7 @@ TEST_F(block_list_test, test3) {
 
     hdl_id = 0;
     for (uint32_t i = 0; i < 50; i++) {
-        HAL_TRACE_DEBUG("Trying to remove: {}", hdl_id);
+        printf("Trying to remove: %lu\n", hdl_id);
         ret = test_block_list->remove(&hdl_id);
         ASSERT_TRUE(ret == HAL_RET_OK);
         test_block_list->iterate(cb);

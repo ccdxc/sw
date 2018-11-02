@@ -5,8 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
-
+#include "nic/hal/hal_trace.hpp"
 #include "linkmgr_debug_svc.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_debug.hpp"

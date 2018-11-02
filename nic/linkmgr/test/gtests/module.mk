@@ -7,7 +7,7 @@ MODULE_SRCS   = ${MODULE_SRC_DIR}/port_test.cc
 MODULE_SOLIBS = linkmgr_test_utils bm_allocator \
                 hal_lib agent_api linkmgr_src block_list \
                 list shmmgr slab ht timerfd periodic halproto \
-                linkmgr_src sdklinkmgr \
+                linkmgr_src sdklinkmgr haltrace \
                 linkmgr_libsrc linkmgrcsr  \
                 capri_csrint \
                 logger thread twheel sdkpal catalog utils mtrack trace

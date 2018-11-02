@@ -27,6 +27,7 @@
 #include "nic/utils/agent_api/agent_api.hpp"
 #include "nic/hal/core/heartbeat/heartbeat.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
+#include "nic/delphi/utils/log.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -172,6 +173,7 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
     int                 thread_prio, sched_policy;
     sdk::lib::thread    *hal_thread;
 
+    //delphi::SetLogger(std::shared_ptr<logger>(utils::hal_logger()));
     sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
     thread_prio = sched_get_priority_max(sched_policy);
     hal_thread = hal_thread_create(std::string("delphic").c_str(),

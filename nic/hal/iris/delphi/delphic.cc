@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdio.h>
 #include "nic/include/base.hpp"
-#include "nic/utils/trace/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/hal/iris/delphi/delphic.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"

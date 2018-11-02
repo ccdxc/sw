@@ -1,6 +1,7 @@
 #ifndef __HAL_TEST_UTILS_HPP__
 #define __HAL_TEST_UTILS_HPP__
-#include "nic/include/trace.hpp"
+
+#include "nic/hal/hal_trace.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/base.hpp"
 #include "nic/utils/mtrack/mtrack.hpp"
@@ -43,4 +44,5 @@ void hal_test_preserve_state(void);
 void hal_test_restore_state(void);
 }
 }
+
 #endif // __HAL_TEST_UTILS_HPP__

@@ -52,7 +52,7 @@ nwsec_spec_dump(void *spec)
 {
     std::string cfg;
     Message *msg = (Message *) spec;
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
         return;
     }
     google::protobuf::util::MessageToJsonString(*msg, &cfg);

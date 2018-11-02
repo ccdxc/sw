@@ -97,7 +97,7 @@ ipsec_sa_encrypt_spec_dump (IpsecSAEncrypt& spec)
 {
     std::string    ipsec_sa_encrypt_cfg_str;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return;
     }
 

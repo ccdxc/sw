@@ -24,6 +24,7 @@
 #include <string>
 #include <unistd.h>
 #include <getopt.h>
+#include <limits.h>
 #include "nic/hal/hal.hpp"
 
 #include "nic/hal/svc/debug_svc.hpp"
@@ -259,6 +260,8 @@ main (int argc, char **argv)
     // listen on the given address (no authentication)
     g_grpc_server_addr = std::string("0.0.0.0:") + hal::g_hal_cfg.grpc_port;
     hal::g_hal_cfg.server_builder = server_builder = new ServerBuilder();
+    server_builder->SetMaxReceiveMessageSize(UINT_MAX);
+    server_builder->SetMaxSendMessageSize(UINT_MAX);
     server_builder->AddListeningPort(g_grpc_server_addr,
                                      grpc::InsecureServerCredentials());
 

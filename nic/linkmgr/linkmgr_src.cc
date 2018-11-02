@@ -27,8 +27,8 @@ using sdk::linkmgr::linkmgr_thread_id_t;
 
 namespace linkmgr {
 
-class linkmgr_state *g_linkmgr_state;
-hal::utils::log     *linkmgr_logger;
+class linkmgr_state    *g_linkmgr_state;
+::utils::log           *linkmgr_logger;
 
 sdk::lib::thread *
 current_thread (void)
@@ -85,13 +85,13 @@ svc_reg (ServerBuilder *server_builder,
 //------------------------------------------------------------------------------
 // logger init for linkmgr
 //------------------------------------------------------------------------------
-hal::utils::log *
+::utils::log *
 linkmgr_logger_init (void)
 {
-    std::string         logfile;
-    char                *logdir;
-    struct stat         st = { 0 };
-    hal::utils::log     *logger;
+    std::string     logfile;
+    char            *logdir;
+    struct stat     st = { 0 };
+    ::utils::log    *logger;
 
     logdir = std::getenv("HAL_LOG_DIR");
     if (!logdir) {
@@ -121,12 +121,12 @@ linkmgr_logger_init (void)
     }
 
     logger =
-        hal::utils::log::factory("linkmgr", 0x1, hal::utils::log_mode_sync,
-                                 false, logfile.c_str(),
-                                 TRACE_FILE_SIZE_DEFAULT,
-                                 1 /* number of files */,
-                                 hal::utils::trace_debug,
-                                 hal::utils::log_none);
+        ::utils::log::factory("linkmgr", 0x1, ::utils::log_mode_sync,
+                              false, logfile.c_str(),
+                              TRACE_FILE_SIZE_DEFAULT,
+                              1 /* number of files */,
+                              ::utils::trace_debug,
+                              ::utils::log_none);
     HAL_ASSERT(logger != NULL);
 
     return logger;

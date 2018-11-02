@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug/debug.hpp"

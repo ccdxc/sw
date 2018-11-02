@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"

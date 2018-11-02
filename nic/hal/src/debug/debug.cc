@@ -242,13 +242,13 @@ hal_ret_t
 trace_update (TraceSpec& spec, TraceResponse *rsp)
 {
     if (spec.trace_level() == debug::TRACE_LEVEL_ERROR) {
-        hal::utils::g_trace_logger->set_trace_level(hal::utils::trace_err);
+        utils::g_trace_logger->set_trace_level(::utils::trace_err);
         rsp->set_trace_level(debug::TRACE_LEVEL_ERROR);
     } else if (spec.trace_level() == debug::TRACE_LEVEL_DEBUG) {
-        hal::utils::g_trace_logger->set_trace_level(hal::utils::trace_debug);
+        utils::g_trace_logger->set_trace_level(::utils::trace_debug);
         rsp->set_trace_level(debug::TRACE_LEVEL_DEBUG);
     } else {
-        hal::utils::g_trace_logger->set_trace_level(hal::utils::trace_none);
+        utils::g_trace_logger->set_trace_level(::utils::trace_none);
         rsp->set_trace_level(debug::TRACE_LEVEL_NONE);
     }
     rsp->set_api_status(types::API_STATUS_OK);
@@ -266,11 +266,11 @@ trace_get (TraceResponseMsg *rsp)
     if (!response) {
         return HAL_RET_OOM;
     }
-    if (hal::utils::g_trace_logger) {
+    if (utils::g_trace_logger) {
         response->set_api_status(types::API_STATUS_OK);
-        if (hal::utils::g_trace_logger->trace_level() == hal::utils::trace_err) {
+        if (utils::g_trace_logger->trace_level() == ::utils::trace_err) {
             response->set_trace_level(debug::TRACE_LEVEL_ERROR);
-        } else if (hal::utils::g_trace_logger->trace_level() == hal::utils::trace_debug) {
+        } else if (utils::g_trace_logger->trace_level() == ::utils::trace_debug) {
             response->set_trace_level(debug::TRACE_LEVEL_DEBUG);
         } else {
             response->set_trace_level(debug::TRACE_LEVEL_NONE);
@@ -289,8 +289,8 @@ trace_get (TraceResponseMsg *rsp)
 hal_ret_t
 flush_logs (FlushLogsResponse *rsp)
 {
-    if (hal::utils::hal_logger()) {
-        hal::utils::hal_logger()->flush();
+    if (utils::hal_logger()) {
+        utils::hal_logger()->flush();
         rsp->set_api_status(types::API_STATUS_OK);
     } else {
         rsp->set_api_status(types::API_STATUS_ERR);

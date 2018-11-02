@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libasicpd.so
-#MODULE_PIPELINE = iris gft
-MODULE_SOLIBS   = haltrace
+MODULE_TARGET   = libhaltrace.so
+MODULE_SRCS     = ${MODULE_SRC_DIR}/hal_trace.cc
+MODULE_SOLIBS   = trace
 include ${MKDEFS}/post.mk

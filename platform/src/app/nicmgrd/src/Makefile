@@ -88,6 +88,7 @@ SYSTEM_LIBRARIES = \
 	-lsdkpal \
 	-lsdkplatformutils \
 	-lrt \
+	-lhaltrace \
 	-ldirectmap \
 	-lht \
 	-ldelphisdk \

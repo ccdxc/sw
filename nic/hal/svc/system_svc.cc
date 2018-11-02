@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_cfg_db.hpp"

@@ -3,7 +3,7 @@
 #include "nic/hal/pd/utils/met/repl_list.hpp"
 #include "nic/hal/pd/utils/met/repl_entry.hpp"
 #include "nic/hal/pd/utils/met/met.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 
 using hal::pd::utils::ReplTableEntry;
 using hal::pd::utils::ReplEntryHw;

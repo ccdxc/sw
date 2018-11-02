@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 
 #define __IN__

@@ -4,7 +4,7 @@ MODULE_TARGET = linkmgr.bin
 MODULE_PIPELINE = iris gft
 MODULE_SRCS   = ${MODULE_SRC_DIR}/main.cc
 MODULE_SOLIBS = linkmgr_src sdklinkmgr linkmgr_libsrc hal_lib \
-                linkmgrcsr linkmgrdelphi capri_csrint \
+                linkmgrcsr linkmgrdelphi capri_csrint haltrace \
                 trace logger thread catalog sdkpal halproto mtrack ht \
                 sdklinkmgr timerfd twheel periodic utils slab shmmgr list
 MODULE_LDLIBS = pthread z dl m rt Judy ev :libprotobuf.so.14 sknobs \

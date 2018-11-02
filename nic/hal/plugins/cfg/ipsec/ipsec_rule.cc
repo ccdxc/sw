@@ -74,7 +74,7 @@ ipsec_cfg_pol_dump (ipsec::IpsecRuleSpec& spec)
 {
     std::string pol_str;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)
         return;
 
     google::protobuf::util::MessageToJsonString(spec, &pol_str);

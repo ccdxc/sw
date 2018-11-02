@@ -137,7 +137,7 @@ network_dump (NetworkSpec& spec)
 {
     std::string    nw_cfg;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
         return;
     }
     google::protobuf::util::MessageToJsonString(spec, &nw_cfg);

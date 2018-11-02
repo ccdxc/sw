@@ -1,13 +1,10 @@
 #include <cstring>
-// #include <ctime>
-// #include <cstdlib>
-
 #include "nic/hal/pd/utils/flow/flow.hpp"
 #include "nic/hal/pd/utils/flow/flow_entry.hpp"
 #include "nic/hal/pd/utils/flow/flow_table_entry.hpp"
 #include "nic/hal/pd/utils/flow/flow_spine_entry.hpp"
 #include "nic/hal/pd/utils/flow/flow_hint_group.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 
 using hal::pd::utils::FlowEntry;
 using hal::pd::utils::FlowTableEntry;

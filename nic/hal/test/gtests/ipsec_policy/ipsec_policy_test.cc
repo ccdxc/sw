@@ -315,7 +315,7 @@ ipsec_sa_encrypt_test_spec_dump (IpsecSAEncryptGetResponseMsg& rsp)
 {
     std::string    ipsec_sa_encrypt_cfg_str;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return;
     }
 
@@ -330,7 +330,7 @@ ipsec_sa_decrypt_test_spec_dump (IpsecSADecryptGetResponseMsg& rsp)
 {
     std::string    ipsec_sa_decrypt_cfg_str;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return;
     }
 

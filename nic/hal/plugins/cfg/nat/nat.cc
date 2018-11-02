@@ -652,7 +652,7 @@ nat_pool_delete_req_dump (NatPoolDeleteRequest& req)
 {
     std::string    del_req;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return;
     }
     google::protobuf::util::MessageToJsonString(req, &del_req);
@@ -1113,7 +1113,7 @@ nat_mapping_spec_dump (NatMappingSpec& spec)
 {
     std::string    nat_mapping_cfg;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return;
     }
 
@@ -1464,7 +1464,7 @@ nat_mapping_delete_req_dump (NatMappingDeleteRequest& req)
 {
     std::string    del_req;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return;
     }
     google::protobuf::util::MessageToJsonString(req, &del_req);

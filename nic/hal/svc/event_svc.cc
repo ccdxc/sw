@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/internal/event.hpp"

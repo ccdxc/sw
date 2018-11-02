@@ -415,13 +415,13 @@ asic_port_cfg (uint32_t port_num,
 //------------------------------------------------------------------------------
 // logger init for asic rw
 //------------------------------------------------------------------------------
-hal::utils::log *
+::utils::log *
 asic_rw_logger_init (void)
 {
-    std::string         logfile;
-    char                *logdir;
-    struct stat         st = { 0 };
-    hal::utils::log     *asic_rw_logger;
+    std::string     logfile;
+    char            *logdir;
+    struct stat     st = { 0 };
+    ::utils::log    *asic_rw_logger;
 
     logdir = std::getenv("HAL_LOG_DIR");
     if (!logdir) {
@@ -451,12 +451,12 @@ asic_rw_logger_init (void)
     }
 
     asic_rw_logger =
-        hal::utils::log::factory("asicrw", 0x1, hal::utils::log_mode_sync,
+        ::utils::log::factory("asicrw", 0x1, ::utils::log_mode_sync,
                                  false, logfile.c_str(),
                                  TRACE_FILE_SIZE_DEFAULT,
                                  TRACE_NUM_FILES_DEFAULT,
-                                 hal::utils::trace_debug,
-                                 hal::utils::log_none);
+                                 ::utils::trace_debug,
+                                 ::utils::log_none);
     HAL_ASSERT(asic_rw_logger != NULL);
 
     return asic_rw_logger;
@@ -475,7 +475,7 @@ asic_rw_loop (void *ctxt)
     pal_ret_t           rv        = PAL_RET_OK;
     asic_rw_entry_t     *rw_entry = NULL;
     sdk::lib::thread    *curr_thread = (sdk::lib::thread *)ctxt;
-    hal::utils::log     *asic_rw_logger;
+    ::utils::log        *asic_rw_logger;
 
     asic_rw_logger = asic_rw_logger_init();
     while (TRUE) {

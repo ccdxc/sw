@@ -150,7 +150,7 @@ acl_spec_dump (AclSpec& spec)
     std::string buf;
     google::protobuf::util::JsonPrintOptions options;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return HAL_RET_OK;
     }
 

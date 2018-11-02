@@ -1599,7 +1599,7 @@ int main(int argc, char **argv) {
                            logfile.c_str(),
                            TRACE_FILE_SIZE_DEFAULT,
                            TRACE_NUM_FILES_DEFAULT,
-                           hal::utils::trace_debug);
+                           ::utils::trace_debug);
 
     HAL_TRACE_DEBUG("Starting Main ... ");
 

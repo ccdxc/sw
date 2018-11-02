@@ -276,7 +276,7 @@ mirrorsession_spec_dump (MirrorSessionSpec& spec)
 {
     std::string    cfg;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
         return;
     }
     google::protobuf::util::MessageToJsonString(spec, &cfg);
@@ -289,7 +289,7 @@ collector_spec_dump (CollectorSpec& spec)
 {
     std::string    cfg;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
         return;
     }
     google::protobuf::util::MessageToJsonString(spec, &cfg);
@@ -302,7 +302,7 @@ flowmonrule_spec_dump (FlowMonitorRuleSpec& spec)
 {
     std::string    cfg;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
         return;
     }
     google::protobuf::util::MessageToJsonString(spec, &cfg);
@@ -315,7 +315,7 @@ dropmonrule_spec_dump (DropMonitorRuleSpec& spec)
 {
     std::string    cfg;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
         return;
     }
     google::protobuf::util::MessageToJsonString(spec, &cfg);

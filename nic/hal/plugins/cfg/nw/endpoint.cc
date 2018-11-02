@@ -390,7 +390,7 @@ endpoint_dump (EndpointSpec& spec)
 {
     std::string    ep_cfg;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
         return;
     }
     google::protobuf::util::MessageToJsonString(spec, &ep_cfg);

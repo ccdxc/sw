@@ -51,7 +51,7 @@ ipsec_sa_decrypt_spec_dump (IpsecSADecrypt& spec)
 {
     std::string    ipsec_sa_decrypt_cfg_str;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return;
     }
 

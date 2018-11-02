@@ -589,7 +589,7 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
 
     flow_data.flow_index = flow_pd->flow_stats_hw_id;
     flow_data.export_en = export_en;
-    if (hal::utils::hal_trace_level() >= hal::utils::trace_debug) {
+    if (hal::utils::hal_trace_level() >= ::utils::trace_debug) {
         fmt::MemoryWriter src_buf, dst_buf;
         for (uint32_t i = 0; i < 16; i++) {
             src_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_src[i]);

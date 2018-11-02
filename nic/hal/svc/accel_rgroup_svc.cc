@@ -1,5 +1,5 @@
 #include "nic/include/base.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 #include "nic/hal/svc/accel_rgroup_svc.hpp"
 #include "nic/hal/src/internal/accel_rgroup.hpp"
 

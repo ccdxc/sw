@@ -675,7 +675,7 @@ security_profile_spec_dump (SecurityProfileSpec& spec)
     hal_ret_t           ret = HAL_RET_OK;
     fmt::MemoryWriter   buf;
 
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
+    if (hal::utils::hal_trace_level() < ::utils::trace_debug)  {
         return HAL_RET_OK;
     }
 

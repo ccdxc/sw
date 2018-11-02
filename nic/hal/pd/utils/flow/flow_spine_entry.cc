@@ -3,7 +3,7 @@
 #include "nic/hal/pd/utils/flow/flow_spine_entry.hpp"
 #include "nic/hal/pd/utils/flow/flow_table_entry.hpp"
 #include "nic/hal/pd/utils/flow/flow_hint_group.hpp"
-#include "nic/include/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 
 using hal::pd::utils::FlowHintGroup;
 using hal::pd::utils::FlowSpineEntry;

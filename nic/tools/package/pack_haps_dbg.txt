@@ -26,6 +26,7 @@ nic/build/aarch64/iris/lib/libhalproto.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libhal_src.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libhal_svc_gen.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libhal_svc.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libhaltrace.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libhash.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libhbmhash.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libheartbeat.so                           /nic/lib/

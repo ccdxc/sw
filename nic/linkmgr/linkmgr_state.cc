@@ -2,7 +2,7 @@
 #include "linkmgr_src.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_cfg_db.hpp"
-#include "nic/utils/trace/trace.hpp"
+#include "nic/hal/hal_trace.hpp"
 
 using hal::hal_slab_t;
 using hal::cfg_db_ctxt_t;

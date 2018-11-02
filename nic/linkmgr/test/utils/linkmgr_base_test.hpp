@@ -12,8 +12,6 @@
 using sdk::SDK_RET_OK;
 using boost::property_tree::ptree;
 using sdk::types::platform_type_t;
-using hal::utils::trace_init;
-using hal::utils::trace_debug;
 
 namespace linkmgr {
     extern hal_ret_t linkmgr_parse_cfg(const char *cfgfile,
@@ -61,10 +59,11 @@ linkmgr_initialize (const char c_file[])
     linkmgr::linkmgr_cfg_t       linkmgr_cfg;
 
     // Initialize the logger
-    trace_init("linkmgr_gtest", sdk::lib::thread::control_cores_mask(),
-               true, "linkmgr_gtest.log",
-               TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
-               trace_debug);
+    hal::utils::trace_init("linkmgr_gtest",
+                           sdk::lib::thread::control_cores_mask(),
+                           true, "linkmgr_gtest.log",
+                           TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
+                           ::utils::trace_debug);
     sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
 
     sdk::lib::thread::control_cores_mask_set(0x1);

@@ -4,41 +4,7 @@
 #include "nic/include/hal_mem.hpp"
 #include "nic/utils/trace/trace.hpp"
 
-namespace hal {
 namespace utils {
-
-// HAL specific globals
-log *g_trace_logger;
-log *g_syslog_logger;
-uint64_t g_cpu_mask;
-
-// wrapper APIs to get logger and syslogger
-logger *
-hal_logger (void)
-{
-    if (g_trace_logger) {
-        return g_trace_logger->logger();
-    }
-    return NULL;
-}
-
-logger *
-hal_syslogger (void)
-{
-    if (g_syslog_logger) {
-        return g_syslog_logger->logger();
-    }
-    return NULL;
-}
-
-trace_level_e
-hal_trace_level (void)
-{
-    if (g_trace_logger) {
-        return g_trace_logger->trace_level();
-    }
-    return trace_none;
-}
 
 // logger class static constants
 const size_t log::k_async_qsize_ = 64 * 1024;    // must be power of 2
@@ -95,6 +61,7 @@ log::syslog_level_to_spdlog_level(syslog_level_e level) {
 void
 log::set_cpu_affinity(void)
 {
+#if 0
     cpu_set_t   cpus;
     uint64_t    cpu_mask = g_cpu_mask;
 
@@ -105,6 +72,7 @@ log::set_cpu_affinity(void)
     }
     pthread_t current_thread = pthread_self();
     pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpus);
+#endif
 }
 
 bool
@@ -114,9 +82,11 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
           trace_level_e trace_level, syslog_level_e syslog_level) {
     std::function<void()> worker_thread_cb = set_cpu_affinity;
 
+#if 0
     if (!g_cpu_mask) {
         g_cpu_mask = cpu_mask;
     }
+#endif
     syslogger_ = syslogger;
     trace_level_ = trace_level;
     log_level_ = syslog_level;
@@ -157,7 +127,7 @@ log::factory(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
         return NULL;
     }
 
-    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_LOGGER, sizeof(log));
+    mem = calloc(1, sizeof(log));
     if (!mem) {
         return NULL;
     }
@@ -167,7 +137,7 @@ log::factory(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
                          file_size, max_files,
                          trace_level, syslog_level) == false) {
         new_logger->~log();
-        HAL_FREE(HAL_MEM_ALLOC_LIB_LOGGER, new_logger);
+        free(new_logger);
         return NULL;
     }
     return new_logger;
@@ -183,7 +153,7 @@ log::destroy(log *logger_obj) {
         return;
     }
     logger_obj->~log();
-    HAL_FREE(HAL_MEM_ALLOC_LIB_LOGGER, logger_obj);
+    free(logger_obj);
 }
 
 void
@@ -212,33 +182,4 @@ log::logger(void) {
     return logger_;
 }
 
-// wrapper HAL tracer init function
-void
-trace_init (const char *name, uint64_t cores_mask, bool sync_mode,
-            const char *trace_file, size_t file_size, size_t num_files,
-            trace_level_e trace_level)
-{
-    if ((name == NULL) || (trace_file == NULL)) {
-        return;
-    }
-    g_trace_logger = log::factory(name, cores_mask,
-                                  sync_mode ? log_mode_sync : log_mode_async,
-                                  false, trace_file,
-                                  file_size, num_files,
-                                  trace_debug, log_none);
-}
-
-void
-trace_deinit (void)
-{
-    if (g_trace_logger) {
-        // TODO destory spdlog instance in g_trace_logger?
-        log::destroy(g_trace_logger);
-    }
-
-    g_trace_logger = NULL;
-    return;
-}
-
 }    // utils
-}    // namespace hal
