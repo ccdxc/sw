@@ -88,7 +88,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         // the below may have to use a different range for the reverse direction
 
         ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ,
-                                     ipsec_sa_pd->ipsec_sa->sa_id,
+                                     (ipsec_sa_pd->ipsec_sa->sa_id) + 4,
                                      &ipsec_cb_ring_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
@@ -109,7 +109,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex = 0;
 
         ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ_BARCO,
-                                     ipsec_sa_pd->ipsec_sa->sa_id,
+                                     (ipsec_sa_pd->ipsec_sa->sa_id) + 4,
                                      &ipsec_barco_ring_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);

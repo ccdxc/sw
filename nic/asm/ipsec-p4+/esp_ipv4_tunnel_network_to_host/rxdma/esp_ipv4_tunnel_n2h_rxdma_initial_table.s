@@ -10,10 +10,16 @@ struct phv_ p;
 .align
 .param esp_ipv4_tunnel_n2h_rxmda_ring_full_error
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
-    sub r1, d.{rxdma_ring_cindex}.hx, 1
-    seq c5, d.{rxdma_ring_pindex}.hx, r1
+    add r1, d.cb_pindex, 1
+    and r1, r1, IPSEC_CB_RING_INDEX_MASK
+    seq c5, d.cb_cindex, r1
+
     bcf [c5], esp_ipv4_tunnel_n2h_rxdma_initial_table_drop_pkt
     seq c1, d.is_v6, 1
+    phvwr p.ipsec_global_cb_pindex, d.cb_pindex
+    add r7, d.cb_pindex, 1
+    andi r7, r7, IPSEC_CB_RING_INDEX_MASK
+    tblwr d.cb_pindex, r7
 
     phvwr p.ipsec_int_header_spi, k.{p42p4plus_hdr_spi_sbit0_ebit15...p42p4plus_hdr_spi_sbit16_ebit31}
     //payload_start sent by p4 as outer-IP+base-esp(8 bytes)

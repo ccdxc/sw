@@ -91,7 +91,8 @@ header_type ipsec_rxdma_global_t {
         packet_length  : 16; 
         ipsec_cb_index : 16;
         icv_size       : 8;
-        rxdma_pad22    : 48; 
+        cb_pindex      : 16;
+        rxdma_pad22    : 32; 
     }
 }
 
@@ -224,6 +225,7 @@ metadata n2h_stats_header_t ipsec_stats_scratch;
     modify_field(ipsec_global_scratch.ipsec_cb_index, ipsec_global.ipsec_cb_index); \
     modify_field(ipsec_global_scratch.packet_length, ipsec_global.packet_length); \
     modify_field(ipsec_global_scratch.icv_size, ipsec_global.icv_size); \
+    modify_field(ipsec_global_scratch.cb_pindex, ipsec_global.cb_pindex); \
     modify_field(ipsec_global_scratch.rxdma_pad22, ipsec_global.rxdma_pad22); \
 
 #define IPSEC_TO_STAGE3_SCRATCH \

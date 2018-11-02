@@ -50,6 +50,10 @@
             "cc"      : "true"
         },
         {
+             "name": "stats",
+             "size_kb": 2
+        },
+        {
             "name": "lif2qstate_map",
             "size_kb": 98304,
             "cache": "p4plus-all"
@@ -61,11 +65,13 @@
         },
         {
             "name": "ipsec-cb",
-            "size_kb": 64
+            "size_kb": 128,
+            "cache": "p4plus-all"
         },
         {
             "name": "ipsec_cb_barco",
-            "size_kb": 1024
+            "size_kb": 2048,
+            "cache": "p4plus-all"
         },
         {
             "name": "nmdr-tx",

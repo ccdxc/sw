@@ -16,7 +16,7 @@ ipsec_esp_v4_tunnel_n2h_good_pkt:
     phvwri p.app_header_table0_valid, 1
 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore[33:6]
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 3
+    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
     phvwr p.ipsec_global_icv_size, d.icv_size

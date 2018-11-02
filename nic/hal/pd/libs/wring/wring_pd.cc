@@ -137,7 +137,7 @@ wring_pd_meta_init() {
 
 
     g_meta[types::WRING_TYPE_IPSECCBQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB, 256, DEFAULT_WRING_SLOT_SIZE,
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB, 1024, DEFAULT_WRING_SLOT_SIZE,
                                   "", 0, 0, 0, NULL, NULL, false, 1, 0};
     g_meta[types::WRING_TYPE_IPSECCBQ_BARCO] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB_BARCO, 1024, 128,
