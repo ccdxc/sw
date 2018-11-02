@@ -19,6 +19,7 @@ SUBDIRS = \
 	pcietlp \
 	sysmgr \
 	upgrade \
+	mnet \
 	$(NULL)
 
 TOPDIR = ../..
