@@ -216,9 +216,9 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
     HAL_TRACE_DEBUG("ipsec: Got lport as {} for lif {}", args.lport_id, 1004);
 
     if (rule) {
-        acl::ref_t *rc;
-        rc = get_rule_data((acl_rule_t *) rule);
-        rule_cfg = RULE_MATCH_USER_DATA(rc, ipsec_cfg_rule_t, ref_count);
+        acl::ref_t *user_ref = get_rule_data((acl_rule_t *) rule);
+        rule_cfg = (ipsec_cfg_rule_t *)RULE_MATCH_USER_DATA(user_ref, ipsec_cfg_rule_t, ref_count);
+
         HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
             rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
             rule_cfg->action.sa_action_dec_handle);
@@ -289,9 +289,9 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
     HAL_TRACE_DEBUG("ipsec: Got lport as {} for lif {}", args.lport_id, IPSEC_SVC_LIF);
 
     if (rule) {
-        acl::ref_t *rc;
-        rc = (acl::ref_t *) rule->data.userdata;
-        rule_cfg = RULE_MATCH_USER_DATA(rc, ipsec_cfg_rule_t, ref_count);
+        acl::ref_t *user_ref = get_rule_data((acl_rule_t *) rule);
+        rule_cfg = (ipsec_cfg_rule_t *)RULE_MATCH_USER_DATA(user_ref, ipsec_cfg_rule_t, ref_count);
+
         HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
             rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
             rule_cfg->action.sa_action_dec_handle);
@@ -380,9 +380,9 @@ ipsec_process_rflow(fte::ctx_t&ctx)
         //rule = ipsec_lookup_rules(ipsec_info->vrf, ctx);
         rule = ipsec_lookup_rules(ctx.get_key().dvrf_id, ctx);
         if (rule) {
-            acl::ref_t *rc;
-            rc = (acl::ref_t *) rule->data.userdata;
-            rule_cfg = RULE_MATCH_USER_DATA(rc, ipsec_cfg_rule_t, ref_count);
+            acl::ref_t *user_ref = get_rule_data((acl_rule_t *) rule);
+            rule_cfg = (ipsec_cfg_rule_t *)RULE_MATCH_USER_DATA(user_ref, ipsec_cfg_rule_t, ref_count);
+
             flowupd = {type: fte::FLOWUPD_FWDING_INFO};
             HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
                 rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
