@@ -23,11 +23,11 @@
 #include <stdlib.h>
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include "gen/hal/svc/session_svc_gen.hpp"
 
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
 #include "nic/hal/svc/rdma_svc.hpp"
-#include "nic/hal/svc/session_svc.hpp"
 #include "nic/hal/svc/wring_svc.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"

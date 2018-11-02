@@ -2,7 +2,7 @@
 
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"
-#include "nic/hal/svc/session_svc.hpp"
+#include "gen/hal/svc/session_svc_gen.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 #include "nic/include/pkt_hdrs.hpp"

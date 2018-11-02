@@ -9,8 +9,9 @@
 //::
 //::  file_name_prefix = fileName.replace('_pb2.py', '')
 //::  hdr_file = file_name_prefix + '_svc_gen.hpp'
-//::  plugin_files = ["ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl", "dos", "l4lb", "tcp_proxy", "tls_proxy_cb2"]
+//::  plugin_files = ["session", "ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl", "dos", "l4lb", "tcp_proxy", "tls_proxy_cb2"]
 //::  new_plugin_files = {"nwsec":"sfw"}
+//::  session_file = {"session"}
 //::
 #include "gen/hal/svc/${hdr_file}"
 //::
@@ -119,11 +120,13 @@
 //::    plugin_name = new_plugin_files[includeFileName]
 #include "nic/hal/plugins/${plugin_name}/cfg/${includeFileName}.hpp"
 //:: else:
-//::
 #include "nic/hal/src/${src_dir_name}/${includeFileName}.hpp"
-//::
 //:: #endif
 //::
+//:: if file_name_prefix in session_file:
+#include "nic/include/fte.hpp"
+//:: #endif
+//::  
 //:: enumC = int(enumCount)
 //:: for service in fileModule.DESCRIPTOR.services_by_name.items():
 //::     pkg = fileModule.DESCRIPTOR.package.lower()
@@ -146,7 +149,7 @@ using ${pkg}::${service[0]};
 //::         #endfor
 //::         hal_name = convert_to_snake_case(method[0], fileName, input_name, output_name)
 //::         if hal_name is None:
-//::            print ('Error for: input: ' + input_name + 'outpu: ' + output_name)
+//::            print ('Error for: input: ' + input_name + ' output: ' + output_name)
 //::         #endif
 //::         hal_name_upper = hal_name.upper();
 //::         if 'Get' in method[0]:
@@ -178,11 +181,18 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
 //::             if repeated_field == True:
 //::
         auto response = rsp->add_response();
+//::                if file_name_prefix in session_file and 'Get' not in method[0]:
+        fte::${hal_name}(request, response);
+//::                else:
         hal::${hal_name}(request, response);
-//::
+//::                #endif
 //::             else:
 //::
+//::                if file_name_prefix in session_file and 'Get' not in method[0]:
+        fte::${hal_name}(request, response);
+//::                else:
         hal::${hal_name}(request, rsp);
+//::                #endif
 //::
 //::             #endif
 //::

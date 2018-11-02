@@ -14,6 +14,7 @@
 #include "gen/proto/session.pb.h"
 #include "gen/proto/nw.pb.h"
 #include "gen/proto/ipsec.pb.h"
+#include "gen/hal/svc/session_svc_gen.hpp"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
@@ -23,7 +24,6 @@
 
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
-#include "nic/hal/svc/session_svc.hpp"
 #include "nic/hal/svc/wring_svc.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"

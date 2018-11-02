@@ -44,7 +44,7 @@
 #include "gen/hal/svc/nw_svc_gen.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
-#include "nic/hal/svc/session_svc.hpp"
+#include "gen/hal/svc/session_svc_gen.hpp"
 #include "gen/hal/svc/telemetry_svc_gen.hpp"
 #include "gen/hal/svc/tls_proxy_cb2_svc_gen.hpp"
 #include "gen/hal/svc/tls_proxy_cb_svc_gen.hpp"

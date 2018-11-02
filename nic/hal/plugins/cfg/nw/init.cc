@@ -5,7 +5,7 @@
 #include "gen/hal/svc/nw_svc_gen.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
-#include "nic/hal/svc/session_svc.hpp"
+#include "gen/hal/svc/session_svc_gen.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

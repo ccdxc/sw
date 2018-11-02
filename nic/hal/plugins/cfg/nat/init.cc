@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "gen/hal/svc/nat_svc_gen.hpp"
-#include "nic/hal/svc/session_svc.hpp"
+#include "gen/hal/svc/session_svc_gen.hpp"
 #include "nic/hal/plugins/cfg/nat/nat.hpp"
 #include "nic/utils/nat/addr_db.hpp"
 

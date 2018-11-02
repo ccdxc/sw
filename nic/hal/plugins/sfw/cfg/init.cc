@@ -2,7 +2,7 @@
 
 #include "nwsec.hpp"
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
-#include "nic/hal/svc/session_svc.hpp"
+#include "gen/hal/svc/session_svc_gen.hpp"
 #include "gen/proto/nwsec.pb.h"
 
 using grpc::Server;
