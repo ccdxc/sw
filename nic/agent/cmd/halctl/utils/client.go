@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"os"
 
 	"github.com/pensando/sw/venice/utils/log"
@@ -22,7 +23,10 @@ func CreateNewGRPCClient() (*rpckit.RPCClient, error) {
 	srvURL := halGRPCDefaultBaseURL + ":" + halPort
 	// create a grpc client
 	// ToDo Use TLS Provider
-	rpcClient, err := rpckit.NewRPCClient("halctl", srvURL, rpckit.WithTLSProvider(nil))
+	var rpcopts []rpckit.Option
+	rpcopts = append(rpcopts, rpckit.WithTLSProvider(nil))
+	rpcopts = append(rpcopts, rpckit.WithMaxMsgSize(math.MaxUint32))
+	rpcClient, err := rpckit.NewRPCClient("halctl", srvURL, rpcopts...)
 	if err != nil {
 		log.Errorf("Creating gRPC Client failed. Server URL: %s", srvURL)
 		return nil, err
