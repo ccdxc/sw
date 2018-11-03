@@ -1,5 +1,5 @@
-#include "sdk/pal.hpp"
-#include "sdk/thread.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/include/sdk/thread.hpp"
 #include "asicerrord.h"
 
 extern struct asic_registers capri_registers[];

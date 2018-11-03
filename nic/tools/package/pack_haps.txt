@@ -166,6 +166,8 @@ platform/src/third-party/lib/ncurses/aarch64/*.so                   /platform/li
 platform/src/app/nicmgrd/etc/*.json                                 /platform/etc/nicmgrd/
 platform/gen/aarch64/src/app/capview/builddb/capviewdb.bin          /platform/etc/
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                      /platform/
+nic/build/aarch64/iris/bin/asicerrord.bin                           /platform/bin/
+
 
 nic/tools/start-hal-haps.sh                                         /nic/tools/
 nic/tools/sysinit.sh                                                /nic/tools/

@@ -11,18 +11,18 @@
 #include <stdint.h>
 #include <math.h>
 #include "logger.h"
-#include "cap_addr_define.h"
-#include "cap_dpp_c_hdr.h"
-#include "cap_dpr_c_hdr.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_wa_c_hdr.h"
-#include "cap_te_c_hdr.h"
-#include "cap_mpu_c_hdr.h"
-#include "cap_hens_c_hdr.h"
-#include "cap_mpns_c_hdr.h"
-#include "cap_pbc_c_hdr.h"
-#include "cap_pbm_c_hdr.h"
-#include "cap_mc_c_hdr.h"
+#include "nic/asic/capri/design/common/cap_addr_define.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_dpp_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_dpr_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_te_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_mpu_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_hens_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_mpns_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_pbc_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_pbm_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_mc_c_hdr.h"
 
 #define DPP0_INT_CREDIT CAP_ADDR_BASE_DPP_DPP_0_OFFSET + CAP_DPP_CSR_INT_CREDIT_INTREG_BYTE_ADDRESS
 #define DPP1_INT_CREDIT CAP_ADDR_BASE_DPP_DPP_1_OFFSET + CAP_DPP_CSR_INT_CREDIT_INTREG_BYTE_ADDRESS

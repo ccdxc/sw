@@ -72,6 +72,8 @@ nic/build/aarch64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/aarch64/iris/bin/halctl                     /nic/bin/
 nic/build/aarch64/iris/bin/hal_scale_test             /nic/bin/
 
+nic/build/aarch64/iris/bin/asicerrord.bin                           /platform/bin/
+
 # push configs to agent
 nic/obj/aarch64/agent/heimdall                        /nic/bin/
 nic/e2etests/go/agent/configs/golden/golden_cfg.yml   /nic/conf/

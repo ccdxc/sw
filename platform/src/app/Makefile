@@ -13,7 +13,6 @@ SUBDIRS = \
 	pcieutil \
 	regio \
 	nicmgrd \
-	asicerrord \
 	nicmgr_gtest \
 	cpldapp \
 	$(NULL)

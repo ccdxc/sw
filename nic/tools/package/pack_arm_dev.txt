@@ -81,6 +81,8 @@ nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14             /nic/lib/
 
 nic/build/aarch64/iris/lib/*.so                                      /nic/lib/
 
+nic/build/aarch64/iris/bin/asicerrord.bin                           /platform/bin/
+
 # linkmgr
 nic/build/aarch64/iris/bin/port_client                              /nic/bin
 nic/build/aarch64/iris/lib/liblinkmgrcsr.so                         /nic/lib/
