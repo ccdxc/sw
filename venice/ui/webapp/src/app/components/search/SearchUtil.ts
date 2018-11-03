@@ -184,8 +184,21 @@ export class SearchUtil {
     return '';
   }
 
-
-
+  /**
+   * ':' is reserved character is search. We want to encode the search to make back-end-search work in MAC string
+   *  //inputstr.replace(':', '\:');   // 02:42:c0:a8:1c:02 to 02\:42\:c0\:a8\:1c\:02
+   * @param value
+   */
+  public static searchEncodeText(value: string): string {
+    if (value == null) {
+      return value;
+    }
+    let inputstr = value.trim();
+    if (inputstr.indexOf(':') >= 0) {
+      inputstr = encodeURIComponent(inputstr);
+    }
+    return inputstr;
+  }
 
   /**
      * This API reformats input string (string middle space,etc ', ' -> ',')
@@ -236,14 +249,23 @@ export class SearchUtil {
       const listStr = list[i];
       if (listStr && listStr.trim().length > 0) {
         const strs = listStr.split(':');
+        const searchGrammarItem: SearchGrammarItem = {};
         if (strs.length === 2) {
-          const searchGrammarItem: SearchGrammarItem = {};
           searchGrammarItem.type = strs[0];
           searchGrammarItem.value = strs[1];
           outputArray.push(searchGrammarItem);
           searchSpec[strs[0]] = (searchSpec[strs[0]] === undefined) ? strs[1] : searchSpec[strs[0]] + ',' + strs[1];
         } else {
-          texts.push(listStr);
+          if (this.hasOperatorInString(listStr)) {
+              // case like  is:SmartNIC has:meta.name=~44:44:44:44:00:02
+              searchGrammarItem.type = strs[0];
+              const idx = listStr.indexOf(':'); // has: <- ":"
+              const strs2 = listStr.substr(idx + 1); // get meta.name=~44:44:44:44:00:02
+              outputArray.push(searchGrammarItem);
+              searchSpec[strs[0]] = (searchSpec[strs[0]] === undefined) ? strs2 : searchSpec[strs[0]] + ',' + strs2;
+          } else {
+            texts.push(listStr);
+          }
         }
       }
     }
@@ -275,6 +297,17 @@ export class SearchUtil {
     compileSearchInputStringResult.freeformtext = texts;
     compileSearchInputStringResult.error = SearchUtil.catchInvalidCategoryOrKind(searchSpec);
     return compileSearchInputStringResult;
+  }
+
+  public static hasOperatorInString(inputstring: string): boolean {
+    const operators = SearchUtil.SEARCH_FIELD_OPERATORS;
+    for (let i = 0; i < operators.length; i++) {
+      const op = operators[i];
+      if (inputstring.indexOf(op.operator) >= 0) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

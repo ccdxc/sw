@@ -313,7 +313,7 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   getSearchInputErrors(): string[] {
     if (this._controllerService.LoginUserInfo) {
       const data: SearchResultPayload = this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA];
-      if (data) {
+      if (data && data.searchstring) {
         const searchInput = data.searchstring;
         const compiled = SearchUtil.compileSearchInputString(searchInput);
         if (compiled.error) {

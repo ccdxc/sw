@@ -14,6 +14,8 @@ import { Utility } from '@app/common/Utility';
  *
  * When user wants to save LDAP, test BIND or test LDAP server connection, LdapComponent emits event to parent and let parent handles the REST calls.
  *
+ * "LDAPEditMode" is used to control switching view/edit UI.  When it is non-edit mode, mat-slider widget will be disabled.
+ *
  */
 @Component({
   selector: 'app-ldap',
@@ -51,6 +53,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
 
   ngOnInit() {
     this.updateLDAPObject();
+    this.setLDAPEditMode(false); // set LDAPEditMode to false, UI will disable LDAD-enabled slider widget
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -68,7 +71,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   toggleEdit() {
-    this.LDAPEditMode = !this.LDAPEditMode;
+    this.setLDAPEditMode (!this.LDAPEditMode);
     if (this.LDAPEditMode) {
       this.verifyCertToggleFormArray = new FormArray([]);
       // Add a blank server if there is none
@@ -84,6 +87,20 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
         this.checkServerTlsDisabling(server, index);
       });
     }
+    this.setLDAPEnableControl();
+  }
+
+  setLDAPEnableControl( ) {
+    if (this.LDAPEditMode) {
+      this.LDAPObject.$formGroup.controls['enabled'].enable();
+    } else {
+      this.LDAPObject.$formGroup.controls['enabled'].disable();
+    }
+  }
+
+  setLDAPEditMode (isInEditMode) {
+    this.LDAPEditMode = isInEditMode;
+    this.setLDAPEnableControl();
   }
 
   // For all servers, if start-tls is disabled, we disable the other tls fields
@@ -131,7 +148,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   cancelEdit() {
-    this.LDAPEditMode = false;
+    this.setLDAPEditMode(false); // restore LDAPEditMode to false
     if (this.inCreateMode) {
       // create form is canceling,
       // Remove the data we added
@@ -143,18 +160,15 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
 
   saveLDAP() {
     this.updateLDAPData();
-    this.invokeSaveLDAP.emit(false); // emit event to parent to update LDAP
     // POST DATA
-    this.LDAPEditMode = false;
-    // Reset the LDAPObject with the passed in data
-    this.updateLDAPObject();
+    this.invokeSaveLDAP.emit(false); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
   }
 
   createLDAP() {
     this.invokeSaveLDAP.emit(true);  // emit event to parent to create LDAP
     this.LDAPData = new AuthLdap();
     this.inCreateMode = true;
-    this.LDAPEditMode = true;
+    this.setLDAPEditMode(true);
   }
 
   onCheckLdapConnection($event) {

@@ -348,7 +348,8 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    * @param searched
    */
   protected buildTextSearchPayload(searched: string) {
-    const texts = (typeof searched === 'string') ? [searched] : searched;
+    // encode special characters like MAC string 02:42:c0:a8:1c:02
+    const texts = (typeof searched === 'string') ? [SearchUtil.searchEncodeText(searched)] : SearchUtil.searchEncodeText(searched);
     return {
       'max-results': 50,
       'query': {
@@ -414,6 +415,11 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     return payload;
   }
 
+  /**
+   * Generate text search criteria
+   * @param obj
+   * encode special characters like MAC string 02:42:c0:a8:1c:02
+   */
   private generateSearchTexts(obj: SearchGrammarItem): any {
     // obj.value is "node1,default"
     if (typeof obj.value === 'string') {
@@ -422,7 +428,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
       const newList = [];
       texts.filter((str1) => {
         const myObj = {};
-        myObj['text'] = [str1];
+        myObj['text'] = [SearchUtil.searchEncodeText(str1)];
         newList.push(myObj);
       });
       return newList;
@@ -435,7 +441,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
         strList.length = 0;
         const texts = str1.split(',');
         texts.filter((str2) => {
-          strList.push(str2);
+          strList.push(SearchUtil.searchEncodeText(str2));
         });
         const myObj = {};
         myObj['text'] = Utility.getLodash().cloneDeep(strList);

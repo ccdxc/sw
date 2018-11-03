@@ -42,6 +42,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
   ngOnInit() {
     this.updateRadiusObject();
+    this.setRadiusEditMode(false); // set radiusEditMode to false, UI will disable  Radius-enabled slider widget
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -59,13 +60,26 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   toggleEdit() {
-    this.radiusEditMode = !this.radiusEditMode;
+    this.setRadiusEditMode (!this.radiusEditMode);
     if (this.radiusEditMode) {
       if (this.radiusObject.servers.length === 0) {
         const servers = this.radiusObject.$formGroup.get('servers') as FormArray;
         servers.insert(0, new AuthRadiusServer().$formGroup);
       }
     }
+  }
+
+  setRadiusEnableControl( ) {
+    if (this.radiusEditMode) {
+      this.radiusObject.$formGroup.controls['enabled'].enable();
+    } else {
+      this.radiusObject.$formGroup.controls['enabled'].disable();
+    }
+  }
+
+  setRadiusEditMode (isInEditMode) {
+    this.radiusEditMode = isInEditMode;
+    this.setRadiusEnableControl();
   }
 
   addServer() {
@@ -81,7 +95,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   cancelEdit() {
-    this.radiusEditMode = false;
+    this.setRadiusEditMode(false);
     if (this.inCreateMode) {
       // create from is canceling,
       this.radiusData = null;
@@ -92,16 +106,13 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
   saveRadius() {
     this.updateRadiusData();
-    this.invokeSaveRadius.emit(false); // emit event to parent to update LDAP
     // POST DATA
-    this.radiusEditMode = false;
-    // Reset the radiusObject with the passed in data
-    this.updateRadiusObject();
+    this.invokeSaveRadius.emit(false); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.
   }
 
   createRadius() {
     this.radiusData = new AuthRadius();
     this.inCreateMode = true;
-    this.radiusEditMode = true;
+    this.setRadiusEditMode(true);
   }
 }
