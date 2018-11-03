@@ -10,6 +10,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 
 namespace hal {
 void *
@@ -104,6 +105,28 @@ cpucb_spec_to_cb(CpuCbSpec& spec, cpucb_t& cpucb)
     cpucb.cb_id = spec.key_or_handle().cpucb_id();
     cpucb.debug_dol = spec.debug_dol();
     cpucb_set_default_params(cpucb);
+}
+
+hal_ret_t
+cpucb_get_by_id(cpucb_id_t cpucb_id, cpucb_t &cpucb, lif_id_t lif_id)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    pd::pd_cpucb_get_args_t pd_cpucb_args;
+    pd::pd_func_args_t      pd_func_args = {0};
+    
+    cpucb_init(&cpucb);
+    cpucb.cb_id = cpucb_id;
+    pd::pd_cpucb_get_args_init(&pd_cpucb_args);
+    pd_cpucb_args.cpucb = &cpucb;
+
+    pd_func_args.pd_cpucb_get = &pd_cpucb_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPUCB_GET, &pd_func_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD CPUCB: Failed to get, err: {}", ret);
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
 }
 //------------------------------------------------------------------------------
 // process a CPU CB create request
@@ -203,8 +226,6 @@ cpucb_get (CpuCbGetRequest& req, CpuCbGetResponseMsg *resp)
     hal_ret_t              ret = HAL_RET_OK;
     cpucb_t                rcpucb;
     cpucb_t*               cpucb;
-    pd::pd_cpucb_get_args_t    pd_cpucb_args;
-    pd::pd_func_args_t          pd_func_args = {0};
     CpuCbGetResponse *rsp = resp->add_response();
 
     auto kh = req.key_or_handle();
@@ -214,31 +235,18 @@ cpucb_get (CpuCbGetRequest& req, CpuCbGetResponseMsg *resp)
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_CPU_CB_NOT_FOUND;
     }
-
-    cpucb_init(&rcpucb);
-    rcpucb.cb_id = cpucb->cb_id;
-    pd::pd_cpucb_get_args_init(&pd_cpucb_args);
-    pd_cpucb_args.cpucb = &rcpucb;
-
-    pd_func_args.pd_cpucb_get = &pd_cpucb_args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CPUCB_GET, &pd_func_args);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD CPUCB: Failed to get, err: {}", ret);
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_HW_FAIL;
+    // When we move to multiple CPU lif, pass the lif
+    ret = cpucb_get_by_id(cpucb->cb_id, rcpucb);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("cpucb id: {} not found in pd", cpucb->cb_id);
+        return HAL_RET_CPU_CB_NOT_FOUND;
     }
-
+    
     // fill config spec of this CPU CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_cpucb_id(rcpucb.cb_id);
 
     // fill operational state of this CPU CB
     rsp->mutable_status()->set_cpucb_handle(cpucb->hal_handle);
-    rsp->mutable_spec()->set_descr_addr_oob_count(cpucb->descr_addr_oob_count);
-    rsp->mutable_spec()->set_total_tx_pkts(cpucb->total_tx_pkts);
-    rsp->mutable_spec()->set_total_rx_pkts(cpucb->total_rx_pkts);
-    rsp->mutable_spec()->set_rx_qfull_drop_errors(cpucb->rx_qfull_drop_errors);
-    rsp->mutable_spec()->set_tx_sem_full_drops(cpucb->tx_sem_full_drops);  
-    rsp->mutable_spec()->set_ascq_free_requests(cpucb->ascq_free_requests);  
     // fill stats of this CPU CB
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
@@ -278,5 +286,27 @@ cpucb_delete (cpucb::CpuCbDeleteRequest& req, cpucb::CpuCbDeleteResponse *rsp)
 
     return HAL_RET_OK;
 }
+
+hal_ret_t
+cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    cpucb_t   cpucb;
+    intf::CpuLifStats *cpu_stats = rsp->mutable_stats()->mutable_cpu_lif_stats();
+    for(int i = 0; i < types::CpucbId_ARRAYSIZE; i++) {
+        ret = cpucb_get_by_id( i, cpucb, lif_id);
+        if (ret == HAL_RET_OK) {
+            intf::CpuQueueStats *qstats = cpu_stats->add_cpu_queue_stats();
+            qstats->set_cpucb_id((types::CpucbId)i);
+            qstats->set_num_tx_packets(0);
+            qstats->set_num_rx_packets(0);  
+            qstats->set_rx_qfull_drop_errors(0);
+            qstats->set_tx_sem_full_drops(0);
+            qstats->set_tx_free_requests(0);
+        }
+    }
+    return ret;
+}
+
 
 }    // namespace hal

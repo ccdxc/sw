@@ -366,7 +366,7 @@ proxy_create_cpucb(uint8_t cpucb_id)
 {
     hal_ret_t               ret = HAL_RET_OK;
     cpucb::CpuCbSpec        spec;
-    cpucb::CpuCbResponse   rsp;
+    cpucb::CpuCbResponse    rsp;
 
     spec.mutable_key_or_handle()->set_cpucb_id(cpucb_id);
     ret = cpucb_create(spec, &rsp);

@@ -19,6 +19,7 @@
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#include "nic/hal/src/internal/cpucb.hpp"
 
 using hal::pd::pd_if_create_args_t;
 using hal::pd::pd_if_lif_update_args_t;
@@ -1802,14 +1803,22 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
         entry->set_addr(lif_manager()->GetLIFQStateAddr(hw_lif_id, ent.type, 0));
     }
 
-    // Getting PD information
-    args.lif = lif;
-    args.rsp = rsp;
-    pd_func_args.pd_lif_stats_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_STATS_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to do PD stats get for lif: {}. ret : {}",
-                      lif->lif_id, ret);
+    if (lif->lif_id == hal::SERVICE_LIF_CPU) {
+        ret = cpucb_get_stats(lif->lif_id, rsp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("cpucb pd stats get failed");
+        }
+    } else {
+
+        // Getting PD information
+        args.lif = lif;
+        args.rsp = rsp;
+        pd_func_args.pd_lif_stats_get = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_STATS_GET, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to do PD stats get for lif: {}. ret : {}",
+                          lif->lif_id, ret);
+        }
     }
 
     rsp->set_api_status(types::API_STATUS_OK);

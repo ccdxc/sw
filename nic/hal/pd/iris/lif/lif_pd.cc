@@ -1113,7 +1113,7 @@ pd_lif_stats_get (pd_func_args_t *pd_func_args)
     LifGetResponse          *rsp = args->rsp;
 
     ret = lif_pd_populate_rx_policer_stats(
-                        rsp->mutable_stats()->mutable_rx_stats()->mutable_policer_stats(),
+                        rsp->mutable_stats()->mutable_data_lif_stats()->mutable_rx_stats()->mutable_policer_stats(),
                         pd_lif);
 
     return ret;

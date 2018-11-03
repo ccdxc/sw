@@ -30,11 +30,6 @@ message CpuCbSpec {
   CpuCbKeyHandle        key_or_handle              = 1;    // cpu_cb being created/updated
   uint32                debug_dol                  = 2;
   uint64                descr_addr_oob_count       = 3;
-  uint64                total_tx_pkts              = 4;
-  uint64                total_rx_pkts              = 5;
-  uint64                rx_qfull_drop_errors       = 6;
-  uint64                tx_sem_full_drops          = 7;
-  uint64                ascq_free_requests         = 8;
 }
 
 // CpuCbRequestMsg is batched add or modify cpucb request

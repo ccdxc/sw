@@ -12,6 +12,64 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+// MockisLifStats_Lifs is a mock of isLifStats_Lifs interface
+type MockisLifStats_Lifs struct {
+	ctrl     *gomock.Controller
+	recorder *MockisLifStats_LifsMockRecorder
+}
+
+// MockisLifStats_LifsMockRecorder is the mock recorder for MockisLifStats_Lifs
+type MockisLifStats_LifsMockRecorder struct {
+	mock *MockisLifStats_Lifs
+}
+
+// NewMockisLifStats_Lifs creates a new mock instance
+func NewMockisLifStats_Lifs(ctrl *gomock.Controller) *MockisLifStats_Lifs {
+	mock := &MockisLifStats_Lifs{ctrl: ctrl}
+	mock.recorder = &MockisLifStats_LifsMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisLifStats_Lifs) EXPECT() *MockisLifStats_LifsMockRecorder {
+	return m.recorder
+}
+
+// isLifStats_Lifs mocks base method
+func (m *MockisLifStats_Lifs) isLifStats_Lifs() {
+	m.ctrl.Call(m, "isLifStats_Lifs")
+}
+
+// isLifStats_Lifs indicates an expected call of isLifStats_Lifs
+func (mr *MockisLifStats_LifsMockRecorder) isLifStats_Lifs() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isLifStats_Lifs", reflect.TypeOf((*MockisLifStats_Lifs)(nil).isLifStats_Lifs))
+}
+
+// MarshalTo mocks base method
+func (m *MockisLifStats_Lifs) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisLifStats_LifsMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisLifStats_Lifs)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisLifStats_Lifs) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisLifStats_LifsMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisLifStats_Lifs)(nil).Size))
+}
+
 // MockisIfEnicInfo_EnicTypeInfo is a mock of isIfEnicInfo_EnicTypeInfo interface
 type MockisIfEnicInfo_EnicTypeInfo struct {
 	ctrl     *gomock.Controller

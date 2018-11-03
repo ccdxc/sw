@@ -820,13 +820,13 @@ public:
 
         std::cout << "Lif Rx policer stats" << std::endl;
         std::cout << "permitted_packets " <<
-            get_rsp.stats().rx_stats().policer_stats().permitted_packets() << std::endl;
+            get_rsp.stats().data_lif_stats().rx_stats().policer_stats().permitted_packets() << std::endl;
         std::cout << "permitted_bytes " <<
-            get_rsp.stats().rx_stats().policer_stats().permitted_bytes() << std::endl;
+            get_rsp.stats().data_lif_stats().rx_stats().policer_stats().permitted_bytes() << std::endl;
         std::cout << "dropped_packets " <<
-            get_rsp.stats().rx_stats().policer_stats().dropped_packets() << std::endl;
+            get_rsp.stats().data_lif_stats().rx_stats().policer_stats().dropped_packets() << std::endl;
         std::cout << "dropped_bytes " <<
-            get_rsp.stats().rx_stats().policer_stats().dropped_bytes() << std::endl;
+            get_rsp.stats().data_lif_stats().rx_stats().policer_stats().dropped_bytes() << std::endl;
 
         spec = req_msg.add_request();
         *spec = get_rsp.spec();

@@ -12,6 +12,8 @@
 #include "gen/proto/cpucb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -112,6 +114,10 @@ extern bool cpucb_compare_key_func(void *key1, void *key2);
 extern void *cpucb_get_handle_key_func(void *entry);
 extern uint32_t cpucb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool cpucb_compare_handle_key_func(void *key1, void *key2);
+
+hal_ret_t cpucb_get_by_id (cpucb_id_t cpucb_id, cpucb_t &cpucb, lif_id_t lif_id = hal::SERVICE_LIF_CPU);
+hal_ret_t
+cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp);
 
 hal_ret_t cpucb_create(cpucb::CpuCbSpec& spec,
                        cpucb::CpuCbResponse *rsp);

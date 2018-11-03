@@ -313,10 +313,31 @@ message LifRxStats {
   uint64           frames_to_max       = 21;
   qos.PolicerStats policer_stats       = 22;    // Policer stats
 }
+
+message DataLifStats {
+  LifTxStats tx_stats = 1;
+  LifRxStats rx_stats = 2;
+}
+
+message CpuQueueStats {
+  types.CpucbId     cpucb_id              = 1;
+  fixed32           num_tx_packets        = 2;    // Tx Packets from this interface
+  fixed32           num_rx_packets        = 3;    // Rx Packets to this interface
+  uint64            rx_qfull_drop_errors  = 4;
+  uint64            tx_sem_full_drops     = 5;
+  uint64            tx_free_requests      = 6; 
+}
+
+message CpuLifStats {
+  repeated CpuQueueStats cpu_queue_stats = 1;
+}
+
 // LifStats captures all the statistics of given LIF
 message LifStats {
-  LifTxStats    tx_stats = 1;
-  LifRxStats    rx_stats = 2;
+  oneof Lifs {   
+    DataLifStats  data_lif_stats  = 1;
+    CpuLifStats   cpu_lif_stats   = 2;
+  }
 }
 
 // LifGetRequest is used to get information about a LIF
