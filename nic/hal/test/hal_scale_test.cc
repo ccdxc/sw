@@ -91,7 +91,7 @@ bool         g_dup_session = false;
 uint64_t     g_num_l2segments = 10;
 uint64_t     g_encap_value = 100;
 uint64_t     g_num_uplinks = 8;
-uint32_t     g_num_sessions = 10;
+uint32_t     g_num_sessions = 0;
 uint32_t     g_batch_size = 1;
 
 enum {
@@ -832,7 +832,8 @@ setup_sim_config (hal_client& hclient, uint64_t vrf_id, uint64_t l2seg_id,
                                                src_port, dst_port,
                                                ::session::FlowAction::FLOW_ACTION_ALLOW,
                                                send);
-                        if (session_count == g_num_sessions) {
+                        if (g_num_sessions &&
+                            (session_count == g_num_sessions)) {
                             goto done;
                         }
                     }
@@ -847,9 +848,9 @@ done:
     sdk::timestamp_to_nsecs(&end_ts, &end_ns);
     float time = (float(end_ns - start_ns)) /1000000000;
 
-    std::cout << "Time to create " << g_num_sessions << " sessions is "
+    std::cout << "Time to create " << session_count << " sessions is "
               << time << " secs" << std::endl;
-    std::cout << "Session/sec is " << g_num_sessions/time << std::endl;
+    std::cout << "Session/sec is " << session_count/time << std::endl;
 
     return 0;
 }
@@ -912,9 +913,10 @@ setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
     int          i, j, src_port, dst_port;
     uint32_t     src_ip, dst_ip;
 
-    std::cout << "sip : " << sip << ", num_sip : " << num_sip << std::endl
-              << "dip : " << dip << ", num_dip : " << num_dip << std::endl
-              << "sport_lo : " << sport_lo << ", sport_hi : " << sport_hi
+    std::cout << "vrf_id : " << vrf_id
+              << ", sip : " << sip << ", num_sip : " << num_sip
+              << ", dip : " << dip << ", num_dip : " << num_dip
+              << ", sport lo : " << sport_lo << ", sport hi : " << sport_hi
               << ", dport : " << dport << std::endl;
 
     clock_gettime(CLOCK_MONOTONIC, &start_ts);
@@ -927,6 +929,8 @@ setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
                     if (batch_count == g_batch_size) {
                         send = true;
                         batch_count = 0;
+                        std::cout << "Created " << session_count + 1
+                                  << " sessions" << std::endl;
                     }
                     session_count++;
                     //std::cout <<"Creating session id: " << session_count << ", sip : "
@@ -938,18 +942,23 @@ setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
                                            src_port, dst_port,
                                            ::session::FlowAction::FLOW_ACTION_ALLOW,
                                            send);
+                    if (g_num_sessions && (session_count == g_num_sessions)) {
+                        goto done;
+                    }
                 }
             }
         }
     }
 
+done:
+
     clock_gettime(CLOCK_MONOTONIC, &end_ts);
     sdk::timestamp_to_nsecs(&end_ts, &end_ns);
     float time = (float(end_ns - start_ns)) /1000000000;
 
-    std::cout << "Time to create " << g_num_sessions << " sessions is "
+    std::cout << "Time to create " << session_count << " sessions is "
               << time << " secs" << std::endl;
-    std::cout << "Session/sec is " << g_num_sessions/time << std::endl;
+    std::cout << "Session/sec is " << session_count/time << std::endl;
 
     return 0;
 }
@@ -958,7 +967,8 @@ setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
 // Supported arguments:
 // --target(-t) sim | hw : Specify target (default is hw)
 // --mode(-m) seq | random : Specify mode of selecting src and dest IP addresses (default is random)
-// --num-sessions(-n) <num> : Specify number of sessions to create (default is 10)
+// --num-sessions(-n) <num> : Specify number of sessions to create (default is
+// base on ranges)
 // --batch-size(-b) <size> : Specify number of session creates in one grpc message (default is 1)
 // --no-cleanup(-c) : No cleanup of created objects
 // --duplicate-sessions(-e) : Create duplicate sessions
@@ -971,7 +981,7 @@ setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
 // --dport(-p) <port> : Specify destination port
 // Sample: ./hal_scale_test  --target sim  --num-sessions 100  --batch-size 10  --no-cleanup
 // Sample: ./hal_scale_test  --target hw  --num-sessions 100  --batch-size 10 --sip 10.5.7.4 --num-sip 5
-//                           --dip 10.4.7.4 --num-dip 5 --sport-low 5000 --sport-high 5050 --dport 6000      
+//                           --dip 10.4.7.4 --num-dip 5 --sport-low 5000 --sport-high 5050 --dport 6000
 //---------------------------------------------------------------------------------------------------------
 int
 main (int argc, char** argv)
@@ -988,6 +998,7 @@ main (int argc, char** argv)
        { "num-sessions",        required_argument,  NULL, 'n' },
        { "batch-size",          required_argument,  NULL, 'b' },
        { "target",              required_argument,  NULL, 't' },
+       { "vrf",                 required_argument,  NULL, 'v' },
        { "no-cleanup",          no_argument,        NULL, 'c' },
        { "duplicate-sessions",  no_argument,        NULL, 'e' },
        { "sip",                 required_argument,  NULL, 's' },
@@ -1002,7 +1013,7 @@ main (int argc, char** argv)
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":cxem:n:b:s:d:l:h:p:t:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":cxem:n:b:s:d:l:h:p:t:v:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'm':
             if (!strcmp(optarg, "seq")) {
@@ -1073,9 +1084,13 @@ main (int argc, char** argv)
                 return 0;
             }
             break;
+        case 'v':
+            vrf_id = atoi(optarg);
+            break;
         case 'x':
             std::cout << "hal_scale_test Usage:\n"
                           "--target(-t) sim | hw : Specify target (default is hw)\n"
+                          "--vrf(-v) : Specifcy vrf id\n"
                           "--mode(-m) seq | random : Specify mode of selecting src and dest IP addresses (default is random)\n"
                           "--num-sessions(-n) <num> : Specify number of sessions to create (default is 10)\n"
                           "--batch-size(-b) <size> : Specify number of session creates in one grpc message (default is 1)\n"
@@ -1104,15 +1119,14 @@ main (int argc, char** argv)
     hal_client hclient(grpc::CreateChannel(svc_endpoint,
                                            grpc::InsecureChannelCredentials()));
 
-    std::cout << "mode is " << (g_random ? "random" : "sequential") << std::endl
-              << "number of Sessions to be created is " << g_num_sessions << std::endl
-              << "batch size is " << g_batch_size << std::endl;
+    std::cout << "Mode is " << (g_random ? "random" : "sequential") << std::endl
+              << "Number of sessions to be created is " << g_num_sessions << std::endl
+              << "Batch size is " << g_batch_size << std::endl;
 
     if (target == SIM) {
         setup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id, sip, dip);
     } else {
         // heimdall would have pushed the config already, just setup sessions
-        vrf_id = 4;    // TODO: fix this to match heimdall !!
         setup_hw_config(hclient, vrf_id, sip, num_sip, dip, num_dip, sport_lo, sport_hi, dport);
     }
 
@@ -1121,6 +1135,6 @@ main (int argc, char** argv)
     } else if (target == SIM) {
         cleanup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id);
     }
- 
+
     return 0;
 }
