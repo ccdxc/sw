@@ -32,11 +32,10 @@
  *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *	- address cpdc_fill_per_block_desc_ex()
- *	- currently poll is attempted atmost 1024 times, and this is temporary
- *	only. From the poll-branch, where request mode flag is used to determine
- *	and relax/limit the iterations will need to be brought-in
  *
  */
+#define CPDC_POLL_LOOP_TIMEOUT (5 * OSAL_NSEC_PER_USEC)
+
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {
@@ -47,23 +46,28 @@ pnso_error_t
 cpdc_poll(const struct service_info *svc_info)
 {
 	pnso_error_t err;
-
 	volatile struct cpdc_status_desc *status_desc;
-	uint32_t attempt = 0;
+	uint64_t elapsed_ts, start_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	/* TODO-poll: remove with a timer based timeout */
-	while (attempt < 1024) {
+	start_ts = osal_get_clock_nsec();
+
+	while (1) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 		if (!err)
 			break;
 
-		attempt++;
-		OSAL_LOG_DEBUG("attempt: %d service: %s status_desc: 0x" PRIx64,
-				attempt, svc_get_type_str(svc_info->si_type),
-				(uint64_t) status_desc);
+		elapsed_ts = osal_get_clock_nsec() - start_ts;
+		if (elapsed_ts >= CPDC_POLL_LOOP_TIMEOUT) {
+			err = ETIMEDOUT;
+			OSAL_LOG_DEBUG("poll-time limit reached! service: %s status_desc: 0x" PRIx64 "err: %d",
+					svc_get_type_str(svc_info->si_type),
+					(uint64_t) status_desc, err);
+			break;
+		}
+
 		osal_yield();
 	}
 

@@ -26,6 +26,7 @@
 #include "osal_setup.h"
 #include "osal_sys.h"
 #include "osal_random.h"
+#include "osal_time.h"
 
 #ifdef __FreeBSD__
 #define PRIx64	"%lx"
