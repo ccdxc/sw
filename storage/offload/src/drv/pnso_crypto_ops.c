@@ -10,8 +10,9 @@
 
 #include "sonic_api_int.h"
 
-#include "pnso_mpool.h"
 #include "pnso_pbuf.h"
+#include "pnso_svc.h"
+#include "pnso_mpool.h"
 #include "pnso_chain.h"
 #include "pnso_crypto.h"
 #include "pnso_crypto_cmn.h"
@@ -29,6 +30,8 @@ static enum crypto_algo_cmd_lo   crypto_algo_cmd_lo_tbl[PNSO_CRYPTO_TYPE_MAX] = 
 	[PNSO_CRYPTO_TYPE_XTS] = CRYPTO_ALGO_CMD_LO_AES_XTS,
 	[PNSO_CRYPTO_TYPE_GCM] = CRYPTO_ALGO_CMD_LO_AES_GCM,
 };
+
+#define CRYPTO_POLL_LOOP_TIMEOUT (5 * OSAL_NSEC_PER_USEC)
 
 static pnso_error_t
 crypto_validate_input(struct service_info *svc_info,
@@ -363,20 +366,16 @@ static pnso_error_t
 crypto_poll(const struct service_info *svc_info)
 {
 	pnso_error_t err;
-
 	volatile struct crypto_status_desc *status_desc;
 	uint64_t cpl_data;
-	uint32_t attempt = 0;
+	uint64_t elapsed_ts, start_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	OSAL_ASSERT(svc_info);
-
 	status_desc = svc_info->si_status_desc;
-	OSAL_ASSERT(status_desc);
+	start_ts = osal_get_clock_nsec();
 
-	/* TODO-poll: remove with a timer based timeout */
-	while (attempt < 1024) {
+	while (1) {
 		cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
 			CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 
@@ -384,10 +383,15 @@ crypto_poll(const struct service_info *svc_info)
 		if (!err)
 			break;
 
-		attempt++;
-		OSAL_LOG_DEBUG("attempt: %d svc_type: %d status_desc: 0x" PRIx64,
-				attempt, svc_info->si_type,
-				(uint64_t) status_desc);
+		elapsed_ts = osal_get_clock_nsec() - start_ts;
+		if (elapsed_ts >= CRYPTO_POLL_LOOP_TIMEOUT) {
+			err = ETIMEDOUT;
+			OSAL_LOG_DEBUG("poll-time limit reached! service: %s status_desc: 0x" PRIx64 "err: %d",
+					svc_get_type_str(svc_info->si_type),
+					(uint64_t) status_desc, err);
+			break;
+		}
+
 		osal_yield();
 	}
 
