@@ -1329,9 +1329,9 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     if (session && ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session create failure, err={}", ret);
         session_cleanup(session);
+    } else {
+        update_global_session_stats(session);
     }
-
-    update_global_session_stats(session);
 
     return ret;
 }
