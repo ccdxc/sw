@@ -670,7 +670,7 @@ chn_execute_chain(struct service_chain *chain)
 	struct chain_entry *sc_entry;
 	struct chain_entry *ce_first, *ce_last;
 	struct service_ops *svc_ops;
-	PAS_INIT_HW_PERF();
+	PAS_DECL_HW_PERF();
 
 	OSAL_LOG_DEBUG("enter ...");
 

@@ -834,6 +834,7 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	struct request_params req_params;
 	uint32_t req_flags = 0;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
+	PAS_DECL_PERF();
 
 	OSAL_LOG_DEBUG("enter...");
 	PAS_START_PERF();
@@ -950,6 +951,7 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 	struct request_params req_params;
 	uint32_t req_flags = 0;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
+	PAS_DECL_PERF();
 
 	OSAL_LOG_DEBUG("enter...");
 	PAS_START_PERF();
