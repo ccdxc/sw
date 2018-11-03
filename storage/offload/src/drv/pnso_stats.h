@@ -62,56 +62,6 @@ struct pnso_api_stats {
 	uint64_t pas_total_hw_latency;
 };
 
-#ifdef NO_PAS_STATS
-#define PAS_INC_NUM_REQUESTS(pcr)
-#define PAS_INC_NUM_SERVICES(pcr)
-#define PAS_INC_NUM_CHAINS(pcr)
-#define PAS_INC_NUM_BATCHES(pcr)
-
-#define PAS_INC_NUM_REQUEST_FAILURES(pcr)
-#define PAS_INC_NUM_SERVICE_FAILURES(pcr)
-#define PAS_INC_NUM_CHAIN_FAILURES(pcr)
-#define PAS_INC_NUM_BATCH_FAILURES(pcr)
-
-#define PAS_INC_NUM_ENC_REQUESTS(pcr)
-#define PAS_INC_NUM_DEC_REQUESTS(pcr)
-#define PAS_INC_NUM_CP_REQUESTS(pcr)
-#define PAS_INC_NUM_DC_REQUESTS(pcr)
-#define PAS_INC_NUM_HASH_REQUESTS(pcr)
-#define PAS_INC_NUM_CHKSUM_REQUESTS(pcr)
-
-#define PAS_INC_NUM_ENC_REQUEST_FAILURES(pcr)
-#define PAS_INC_NUM_DEC_REQUEST_FAILURES(pcr)
-#define PAS_INC_NUM_CP_REQUEST_FAILURES(pcr)
-#define PAS_INC_NUM_DC_REQUEST_FAILURES(pcr)
-#define PAS_INC_NUM_HASH_REQUEST_FAILURES(pcr)
-#define PAS_INC_NUM_CHKSUM_REQUEST_FAILURES(pcr)
-
-#define PAS_INC_NUM_ENC_BYTES(pcr, bytes)
-#define PAS_INC_NUM_DEC_BYTES(pcr, bytes)
-
-#define PAS_INC_NUM_CP_BYTES_IN(pcr, bytes)
-#define PAS_INC_NUM_CP_BYTES_OUT(pcr, bytes)
-
-#define PAS_INC_NUM_DC_BYTES_IN(pcr, bytes)
-#define PAS_INC_NUM_DC_BYTES_OUT(pcr, bytes)
-
-#define PAS_INC_NUM_HASH_BYTES_IN(pcr, bytes)
-#define PAS_INC_NUM_HASHES(pcr, count)
-
-#define PAS_INC_NUM_CHKSUM_BYTES_IN(pcr, bytes)
-#define PAS_INC_NUM_CHKSUMS(pcr, count)
-
-#define PAS_DECL_PERF()
-#define PAS_START_PERF()
-#define PAS_END_PERF(pcr)
-
-#define PAS_DECL_HW_PERF()
-#define PAS_START_HW_PERF()
-#define PAS_END_HW_PERF(pcr)
-
-#define PAS_SHOW_STATS(pcr)
-#else
 #define PAS_INC_NUM_REQUESTS(pcr)					\
 	(pcr->pnso_api_stats.pas_num_requests += 1)
 #define PAS_INC_NUM_SERVICES(pcr)					\
@@ -198,7 +148,6 @@ struct pnso_api_stats {
 		ktime_us_delta(ktime_get(), h))
 
 #define PAS_SHOW_STATS(pcr)	pas_show_stats(&pcr->pnso_api_stats);
-#endif
 
 void pas_init(struct pnso_api_stats *stats);
 
