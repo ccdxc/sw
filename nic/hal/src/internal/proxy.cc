@@ -936,7 +936,7 @@ proxy_get_flow_info(types::ProxyType proxy_type,
 
     proxy = find_proxy_by_type(proxy_type);
     if (proxy == NULL) {
-        HAL_TRACE_DEBUG("proxy {} not found", proxy_type);
+        //HAL_TRACE_DEBUG("proxy {} not found", proxy_type);
         return NULL;
     }
 

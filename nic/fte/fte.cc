@@ -307,10 +307,10 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
         default:
             rc = feature->exec_handler(ctx);
         };
-        HAL_TRACE_DEBUG("feature={} pipeline={} event={} action={}",
-                        feature->name, pipeline->name, ctx.pipeline_event(), rc);
-
         if (rc != PIPELINE_CONTINUE) {
+            HAL_TRACE_DEBUG("feature={} pipeline={} event={} action={}",
+                            feature->name, pipeline->name, ctx.pipeline_event(),
+                            rc);
             break;
         }
     }

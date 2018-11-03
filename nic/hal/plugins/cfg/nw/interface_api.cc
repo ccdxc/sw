@@ -45,6 +45,9 @@ lif_get_tx_qos_class (lif_t *pi_lif)
 {
     hal_handle_t qos_class_handle;
 
+    if (!pi_lif) {
+        return NULL;
+    }
     qos_class_handle = pi_lif->qos_info.tx_qos_class_handle;
     return find_qos_class_by_handle(qos_class_handle);
 }
@@ -54,6 +57,9 @@ lif_get_rx_qos_class (lif_t *pi_lif)
 {
     hal_handle_t qos_class_handle;
 
+    if (!pi_lif) {
+        return NULL;
+    }
     qos_class_handle = pi_lif->qos_info.rx_qos_class_handle;
     return find_qos_class_by_handle(qos_class_handle);
 }
