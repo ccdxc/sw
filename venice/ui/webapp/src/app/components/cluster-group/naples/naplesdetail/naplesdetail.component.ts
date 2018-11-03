@@ -60,7 +60,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
 
   memChartData: HeroCardOptions = MetricsUtility.detailLevelMemHeroCard(this.cardColor, this.cardIcon);
 
-  diskChartData: HeroCardOptions = MetricsUtility.detailLevelMemHeroCard(this.cardColor, this.cardIcon);
+  diskChartData: HeroCardOptions = MetricsUtility.detailLevelDiskHeroCard(this.cardColor, this.cardIcon);
 
   heroCards = [
     this.cpuChartData,

@@ -1,5 +1,6 @@
 <app-pagebody [icon]="bodyicon" header="Naples Overview">
-  <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container">
+  <div fxFlex="none" fxLayout="row">
+    <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container">
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title" 
@@ -17,7 +18,10 @@
         </app-herocard>
       </ng-container>
     </div>
-  <ng-container *ngTemplateOutlet="DataTable" ></ng-container>
+  </div>
+  <div fxFlex class="naples-table-container">
+    <ng-container *ngTemplateOutlet="DataTable" ></ng-container>
+  </div>
 </app-pagebody>
 
 <ng-template #DataTable>

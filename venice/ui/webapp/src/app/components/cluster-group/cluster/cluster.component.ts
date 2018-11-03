@@ -234,10 +234,10 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
 
     // Max Node
     const maxNode = MetricsUtility.maxObjUtility(this.maxObjData, fieldName);
-    if (maxNode.max === -1) {
+    if (maxNode == null || maxNode.max === -1) {
       heroCard.thirdStat.value = null;
     } else {
-    // Removing Node- prefix from the name and adding value
+      // Removing Node- prefix from the name and adding value
       const thirdStatName = maxNode.name.substring(this.telemetryKind.length + 1)
       let thirdStat = thirdStatName;
       if (thirdStat.length > 10) {
