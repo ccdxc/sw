@@ -24,6 +24,6 @@ class Spec {
         const int flags;
 };
 
-extern const vector<Spec> SPECS;
+extern vector<Spec> specs_from_json(const char *filename);
 
 #endif

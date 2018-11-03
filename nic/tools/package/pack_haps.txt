@@ -4,6 +4,7 @@ nic/conf/init_bins/                                                 /nic/conf/in
 nic/conf/openssl/                                                   /nic/conf/openssl/
 nic/conf/bullseye/                                                  /nic/conf/bullseye/
 nic/conf/iris/hbm_mem.json                                          /nic/conf/iris/
+nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
 nic/build/aarch64/iris/bin/p4asm/                                   /nic/conf/iris/asm_bin/
 nic/build/aarch64/iris/bin/p4pasm/                                  /nic/conf/iris/p4plus_bin/
 nic/build/aarch64/iris/pgm_bin/                                     /nic/conf/iris/pgm_bin/

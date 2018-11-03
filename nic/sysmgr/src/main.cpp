@@ -284,8 +284,13 @@ void *delphi_thread_run(void *ctx)
     return NULL;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc < 2) {
+       fprintf(stderr, "Please use %s <CONFIG_FILE>\n`", argv[0]);
+       return -1;
+    }
+   
     int rc = setpgid(0, 0);
     if (rc == -1) 
     {
@@ -294,8 +299,9 @@ int main()
     }
     redirect_stds("sysmgr", getpid());
 
-    Scheduler scheduler(SPECS);
-
+    auto spec = specs_from_json(argv[1]);
+    Scheduler scheduler(spec);
+    
     install_sigchld_handler();
     signal(SIGQUIT, sigquit_handler);
     signal(SIGTERM, sigterm_handler);

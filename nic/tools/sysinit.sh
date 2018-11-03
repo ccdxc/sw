@@ -37,7 +37,7 @@ fi
 # start sysmgr
 rm -f *.log
 rm -f agent.log* /tmp/*.db
-$NIC_DIR/bin/sysmgr &
+$NIC_DIR/bin/sysmgr /nic/conf/sysmgr.json &
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Sysmgr failed to start!" && exit 1
 
 # start HAL

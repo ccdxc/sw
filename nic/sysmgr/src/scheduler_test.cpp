@@ -255,7 +255,8 @@ TEST(Scheduler, NoWatchdogTest)
 TEST(Specs, NoDuplicateNames)
 {
     set<string> service_names;
-    for (auto &sp : SPECS)
+    auto specs = specs_from_json("/sw/nic/sysmgr/src/naples.json");
+    for (auto &sp : specs)
     {
         ASSERT_EQ(service_names.count(sp.name), 0);
         service_names.insert(sp.name);
@@ -265,12 +266,13 @@ TEST(Specs, NoDuplicateNames)
 TEST(Specs, DependenciesExist)
 {
     set<string> service_names;
-    for (auto &sp : SPECS)
+    auto specs = specs_from_json("/sw/nic/sysmgr/src/naples.json");
+    for (auto &sp : specs)
     {
         service_names.insert(sp.name);
     }
 
-    for (auto &sp : SPECS)
+    for (auto &sp : specs)
     {
         for (auto dep : sp.dependencies)
         {
@@ -281,7 +283,8 @@ TEST(Specs, DependenciesExist)
 
 TEST(Specs, NoCircularDependencies)
 {
-    auto sched = Scheduler(SPECS);
+    auto specs = specs_from_json("/sw/nic/sysmgr/src/naples.json");
+    auto sched = Scheduler(specs);
 
     for (;;)
     {
