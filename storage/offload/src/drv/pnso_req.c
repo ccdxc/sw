@@ -834,15 +834,10 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	struct request_params req_params;
 	uint32_t req_flags = 0;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
-	spinlock_t mlock;
-
-	PAS_START_PERF();
-	PAS_INC_NUM_REQUESTS(pcr);
 
 	OSAL_LOG_DEBUG("enter...");
-
-	spin_lock_init(&mlock);
-	spin_lock_irq(&mlock);
+	PAS_START_PERF();
+	PAS_INC_NUM_REQUESTS(pcr);
 
 	REQ_PPRINT_REQUEST(svc_req);
 	REQ_PPRINT_RESULT(svc_res);
@@ -885,20 +880,13 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	submit_chain(&req_params);
 
 	REQ_PPRINT_RESULT(svc_res);
-
-	OSAL_LOG_DEBUG("exit!");
-
-	spin_unlock_irq(&mlock);
 	PAS_END_PERF(pcr);
-
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 out:
-	OSAL_LOG_DEBUG("exit! err: %d", err);
-
 	PAS_INC_NUM_REQUEST_FAILURES(pcr);
-	spin_unlock_irq(&mlock);
 	PAS_END_PERF(pcr);
-
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_submit_request);
@@ -962,14 +950,9 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 	struct request_params req_params;
 	uint32_t req_flags = 0;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
-	spinlock_t mlock;
-
-	PAS_START_PERF();
 
 	OSAL_LOG_DEBUG("enter...");
-
-	spin_lock_init(&mlock);
-	spin_lock_irq(&mlock);
+	PAS_START_PERF();
 
 	err = get_request_mode(cb, cb_ctx, pnso_poll_fn,
 			pnso_poll_ctx, &req_flags);
@@ -993,10 +976,8 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 	if (!cb)
 		bat_destroy_batch();
 
-	spin_unlock_irq(&mlock);
-	PAS_END_PERF(pcr);
-
 	err = PNSO_OK;
+	PAS_END_PERF(pcr);
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 
@@ -1005,10 +986,7 @@ out:
 	bat_destroy_batch();
 
 	PAS_INC_NUM_BATCH_FAILURES(pcr);
-
-	spin_unlock_irq(&mlock);
 	PAS_END_PERF(pcr);
-
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
