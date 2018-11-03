@@ -1,5 +1,7 @@
 #!/bin/sh
 
+SYSCONFIG=/sysconfig/config0
+
 export NIC_DIR='/nic'
 export PLATFORM_DIR='/platform'
 export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
@@ -15,21 +17,21 @@ rm -f /nicmgr.log*
 ulimit -c unlimited
 
 export SYSUUID=""
-if [ -r /mnt/sysuuid ]; then
-    export SYSUUID=`cat /mnt/sysuuid`
+if [ -r $SYSCONFIG/sysuuid ]; then
+    export SYSUUID=`cat $SYSCONFIG/sysuuid`
 fi
 
 sleep 30
 
 if [[ "$FWD_MODE" != "classic" ]]; then
-    if [ -r /mnt/eth-smart.json ]; then
-        ARGS="-s -c /mnt/eth-smart.json -p haps"
+    if [ -r $SYSCONFIG/eth-smart.json ]; then
+        ARGS="-s -c $SYSCONFIG/eth-smart.json -p haps"
     else
         ARGS="-s -c $NICMGR_CONFIG_PATH/eth-smart.json -p haps"
     fi
 else
-    if [ -r /mnt/device.json ]; then
-        ARGS="-c /mnt/device.json -p haps"
+    if [ -r $SYSCONFIG/device.json ]; then
+        ARGS="-c $SYSCONFIG/device.json -p haps"
     else
         ARGS="-c $NICMGR_CONFIG_PATH/device.json -p haps"
     fi

@@ -218,10 +218,10 @@ pcieport_run_script(const char *name, const int port)
     char path[80];
 
 #ifdef __aarch64__
-    snprintf(path, sizeof(path), "/mnt/%s", name);
+    snprintf(path, sizeof(path), "/sysconfig/config0/%s", name);
     if (access(path, X_OK) == 0) pcieport_system(path);
 
-    snprintf(path, sizeof(path), "/mnt/%s-%d", name, port);
+    snprintf(path, sizeof(path), "/sysconfig/config0/%s-%d", name, port);
     if (access(path, X_OK) == 0) pcieport_system(path);
 
     snprintf(path, sizeof(path), "/tmp/%s", name);

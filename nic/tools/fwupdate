@@ -1,0 +1,915 @@
+#!/bin/sh
+
+#
+# FIRMWARE UPDATE UTILITY
+#
+# *** DOES NOT SUPPORT LIVE UPDATE ***
+#
+
+R=""
+if [ `arch` != aarch64 ]; then
+    export PATH=`pwd`/bin:$PATH
+    R=`pwd`/data
+fi
+
+# mmc partition uuids are all uppercase
+IMAGE_A_PARTUUID=D4E53BE5-7DC1-4199-914C-48EDFEA92C5E
+IMAGE_B_PARTUUID=E2FD6D28-3300-4979-8062-B8AB599F3898
+
+# mtd partition names
+# The image partitions are similar to their fwnames, but don't rely on that
+MTDPART_UBOOT=boot0
+MTDPART_MAINFWA=mainfwa
+MTDPART_MAINFWB=mainfwb
+MTDPART_GOLDFW=goldfw
+MTDPART_DIAGFW=diagfw
+MTDPART_FWSEL=fwsel
+
+usage()
+{
+cat << EOF >&2
+usage: fwupdate [--from-legacy] action [options]
+  --from-legacy     - Install to a card with pre-emmc mtd partitions
+  --to-legacy       - Install old image back to pre-emmc mode
+
+  action:
+    -i "fwnames"    - Install package (requires -p and fwnames)
+    -v              - Verify package file (required -p)
+    -r              - Show running image name
+    -s fwname       - Set startup image name
+    -l              - List installed images
+
+  options:
+    -p pkgfile      - Package filename
+    -I              - Ignore images missing from package
+    -D              - Dry-run
+
+  fwnames:
+    altfw           - Alternate (non-running) main firmware (for -i)
+    mainfwa         - Main firmware slot A (for -i or -s)
+    mainfwb         - Main firmware slot B (for -i or -s)
+    goldfw          - Golden recovery image (for -i or -s)
+    diagfw          - Diag firmware (for -i or -s)
+    uboot           - U-Boot boot loader (for -i)
+    all             - Synonym for "altfw goldfw diagfw uboot". Implies -I
+EOF
+exit 1
+}
+
+fatal()
+{
+    echo "FATAL: $1" >&2
+    exit 1
+}
+
+# Globals
+PKG=""
+DRY_RUN=""
+INSTALL_IMAGES=""
+IGNORE_MISSING=0
+WANT_STARTUP=""
+FROM_LEGACY=0
+TO_LEGACY=0
+D=""
+
+# Legacy support
+fwobj_to_fwtype=fwobj_to_fwtype
+fwtype_to_files=fwtype_to_files
+file_to_target=file_to_target
+
+main()
+{
+    local action need_pkg opt
+
+    action=NONE
+    need_pkg=0
+    if [ "X-$1" = "X---from-legacy" ]; then
+        FROM_LEGACY=1
+        MTDPART_MAINFWB=altfw
+        MTDPART_UBOOT=uboot
+        shift
+    elif [ "X-$1" = "X---to-legacy" ]; then
+        TO_LEGACY=1
+        fwobj_to_fwtype=legacy_fwobj_to_fwtype
+        fwtype_to_files=legacy_fwtype_to_files
+        file_to_target=legacy_file_to_target
+        shift
+    fi
+    while getopts "i:vrs:lp:DI" opt; do
+        case "$opt" in
+        i) action=INSTALL; need_pkg=1; INSTALL_IMAGES=$OPTARG; ;;
+        v) action=VERIFY; need_pkg=1; ;;
+        r) action=GET_RUNNING_FW; ;;
+        s) action=SET_STARTUP_FW; WANT_STARTUP=$OPTARG; ;;
+        l) action=LIST_FW; ;;
+        p) PKG=$OPTARG; ;;
+        D) DRY_RUN=dry_run; ;;
+        I) IGNORE_MISSING=1; ;;
+        *) usage; ;;
+        esac
+    done
+
+    if [ $need_pkg -ne 0 ]; then
+        [ -z "$PKG" ] && usage
+        D=/tmp/update$$
+        mkdir -p $D
+        MANIFEST=$D/MANIFEST
+    fi
+
+    finish() {
+        if [ "$D" != "" ]; then
+            rm -rf $D
+        fi
+    }
+    trap finish EXIT
+
+    terminate() {
+        echo ""
+        echo "ABORTED" >&2
+        finish
+        exit 1
+    }
+    trap terminate INT QUIT
+
+    set -e -u
+
+    if [ $need_pkg -ne 0 ]; then
+        tar xfO $PKG MANIFEST > $MANIFEST
+        #MANIFEST=MANIFEST.test
+    fi
+
+    if [ $action != VERIFY ]; then
+        RUNNING_FW=`get_kernel_fwname`
+        ALT_FW=`alt_fw_of $RUNNING_FW`
+    fi
+
+    case "$action" in
+    NONE)
+        echo "===> Nothing to do"
+        ;;
+
+    VERIFY)
+        verify_package
+        ;;
+
+    INSTALL)
+        install_images
+        ;;
+
+    GET_RUNNING_FW)
+        echo $RUNNING_FW
+        ;;
+
+    SET_STARTUP_FW)
+        set_startup_image
+        ;;
+
+    LIST_FW)
+        list_firmware
+        ;;
+    *)
+        ;;
+    esac
+}
+
+dry_run()
+{
+    echo "(no action)"
+}
+
+alt_fw_of()
+{
+    local fwname=$1
+
+    case "$fwname" in
+    mainfwa)
+        echo mainfwb
+        ;;
+    mainfwb|goldfw|diagfw)
+        echo mainfwa
+        ;;
+    *)
+        fatal "alt_fw_of: Unknown fwname $fwname"
+        ;;
+    esac
+}
+
+# find_mmcpart_bypartuuid D4E53BE5-7DC1-4199-914C-48EDFEA92C5E
+find_mmcpart_bypartuuid()
+{
+    local uuid=$1 i partno s
+
+    for i in $R/sys/class/block/mmcblk0p*; do
+        partno=`cat $i/partition`
+        s=`sgdisk -i $partno /dev/mmcblk0 | grep Partition.unique.GUID | tr '[a-z]' '[A-Z]' | awk '{ print $NF }'`
+        if [ "$s" = "$uuid" ]; then
+            s=`sgdisk -i $partno /dev/mmcblk0 | grep Partition.size | awk '{ print $3 }'`
+            echo $R/dev/mmcblk0p$partno $(($s * 512))
+            return
+        fi
+    done
+    fatal "find_mmcpart_bypartuuid: uuid $uuid not found"
+}
+
+# find_mtdpart_byname goldfw
+find_mtdpart_byname()
+{
+    local s dev devsz ersz
+
+    s=`grep "\"$1\"" $R/proc/mtd` || true
+    if [ -z "$s" ]; then
+        fatal "find_mtdpart_byname: $1 not found"
+    fi
+    dev=`echo $s | awk -F: '{ print $1 }'`
+    devsz=`echo $s | awk '{ print $2 }'`
+    ersz=`echo $s | awk '{ print $3 }'`
+    echo $R/dev/$dev $((0x$devsz)) $((0x$ersz))
+}
+
+# get_kernel_fwname
+get_kernel_fwname()
+{
+    local cmd s
+
+    cmd=`cat $R/proc/cmdline`
+    s=`expr "$cmd" : '.*FW_NAME=\([a-z]*\)'` || true
+    if [ -z "$s" ]; then
+        if [ $FROM_LEGACY -eq 0 ]; then
+            fatal "get_kernel_fwname: FW_NAME not found in /proc/cmdline"
+        else
+            s=goldfw
+        fi
+    fi
+    echo $s
+}
+
+# get_root_mount_uuid
+# NOT USED
+get_root_mount_uuid()
+{
+    local devid partno dev s
+
+    devid=`grep '/dev/root' $R/proc/1/mountinfo | awk '{ print $3 }'`
+    if [ -z "$devid" ]; then
+        fatal "get_root_mount_uuid: can't find root mountinfo"
+    fi
+    partno=`cat $R/sys/dev/block/$devid/partition`
+    dev=/dev/mmcblk0p$partno
+    s=`sgdisk -i $partno /dev/mmcblk0 | grep Partition.unique.GUID | tr '[a-z]' '[A-Z]' | awk '{ print $NF }'`
+    if [ -z "$s" ]; then
+        fatal "get_root_mount_uuid: can't find root partition info"
+    fi
+    echo $s
+}
+
+# partuuid_to_image D4E53BE5-7DC1-4199-914C-48EDFEA92C5E
+# NOT USED
+partuuid_to_fwname()
+{
+    local uuid=$1
+
+    if [ $uuid = $IMAGE_A_PARTUUID ]; then
+        echo mainfwa
+    elif [ $uuid = $IMAGE_B_PARTUUID ]; then
+        echo mainfwb
+    else
+        fatal "partuuid_to_fwname: unknown uuid $uuid"
+    fi
+}
+
+# Get root= partition
+# NOT USED
+get_boot_part()
+{
+    local cmd s
+
+    cmd=`cat $R/proc/cmdline`
+    s=`expr "$cmd" : '.*root=PARTUUID=\([0-9a-zA-Z-]*\)' | tr '[a-z]' '[A-Z]'`
+    if [ -z "$s" ]; then
+        fatal "get_boot_part: can't find root PARTUUID"
+    fi
+    echo $s
+}
+
+to_blocks()
+{
+    local size=$1 blksz=$2
+    echo $((($size + $blksz - 1) / $blksz))
+}
+
+mani_keys()
+{
+    local cmd="$1 | keys | join(\" \") | tostring"
+
+    jq -r "$cmd" $MANIFEST
+}
+
+mani_numkeys()
+{
+    local cmd="$1 | keys | length"
+
+    jq -r "$cmd" $MANIFEST
+}
+
+mani_opt_value()
+{
+    local cmd="$1 | tostring"
+
+    jq -r "$cmd" $MANIFEST
+}
+
+mani_value()
+{
+    local cmd s
+
+    cmd="$1 | tostring"
+    s=`jq -r "$cmd" $MANIFEST`
+    if [ "$s" = "null" ]; then
+        fatal "mani_value: $1 not found"
+    fi
+    echo $s
+}
+
+# Given a fwname and fileobj, returns the device and partition name
+file_to_target()
+{
+    local fwname=$1 fileobj=$2 dev="" part="" offs=0
+
+    case "$fwname" in
+    uboot)
+        case "$fileobj" in
+        image)
+            dev=mtd
+            part=$MTDPART_UBOOT
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    mainfwa)
+        case "$fileobj" in
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_MAINFWA
+            if [ $FROM_LEGACY -eq 1 ]; then
+                fatal "mainfwa not supported"
+            fi
+            ;;
+        system_image)
+            dev=mmc
+            part=$IMAGE_A_PARTUUID
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    mainfwb)
+        case "$fileobj" in
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_MAINFWB
+            if [ $FROM_LEGACY -eq 1 ]; then
+                offs=14680064
+            fi
+            ;;
+        system_image)
+            dev=mmc
+            part=$IMAGE_B_PARTUUID
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    goldfw)
+        case "$fileobj" in
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_GOLDFW
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    diagfw)
+        case "$fileobj" in
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_DIAGFW
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    *)
+        ;;
+    esac
+    if [ -z "$dev" -o -z "$part" ]; then
+        fatal "file_to_target: Unknown file object $fwname $fileobj"
+    fi
+    echo "$dev $part $offs"
+}
+
+# Given a fwname and fileobj, returns the device and partition name
+legacy_file_to_target()
+{
+    local fwname=$1 fileobj=$2 dev="" part="" offs=0
+
+    case "$fwname" in
+    uboot)
+        case "$fileobj" in
+        image)
+            dev=mtd
+            part=$MTDPART_UBOOT
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    mainfwa)
+        case "$fileobj" in
+        kernel)
+            dev=mtd
+            part=$MTDPART_DIAGFW
+            offs=65536
+            ;;
+        device_tree)
+            dev=mtd
+            part=$MTDPART_DIAGFW
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    goldfw)
+        case "$fileobj" in
+        kernel)
+            dev=mtd
+            part=$MTDPART_GOLDFW
+            ;;
+        device_tree)
+            dev=mtd
+            part=$MTDPART_DIAGFW
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    *)
+        ;;
+    esac
+    if [ -z "$dev" -o -z "$part" ]; then
+        fatal "file_to_target: Unknown file object $fwname $fileobj"
+    fi
+    echo "$dev $part $offs"
+}
+
+check_hash_algo()
+{
+    local algo=$1
+    case "$algo" in
+    sha256|sha512|md5) return 0; ;;
+    *) fatal "hash_hash_algo: unsupported algo $algo"; ;;
+    esac
+}
+
+hash()
+{
+    local algo=$1
+    case "$algo" in
+    md5)    md5sum | awk '{ print $1 }'; ;;
+    sha256) sha256sum | awk '{ print $1 }'; ;;
+    sha512) sha512sum | awk '{ print $1 }'; ;;
+    *) fatal "hash: invalid algo $algo"; ;;
+    esac
+}
+
+# Install a file to an mtd device
+# install_mtd /dev/mtd1 65536 0 kernel.itb 3210112 sha...
+install_mtd()
+{
+    local dev=$1 ersz=$2 offs=$3 path=$4 size=$5 hash=$6 algo=$7
+    local blks got_hash seek
+
+    echo "Writing $path to $dev offset $offs ($size bytes)..."
+    seek=`to_blocks $offs $ersz`
+    blks=`to_blocks $size $ersz`
+    echo -n "Erasing..."
+    flash_erase -q $dev $offs $blks
+    echo " OK"
+    echo -n "Writing..."
+    tar xfO $PKG $path | dd of=$dev bs=$ersz seek=$seek status=none
+    echo " OK"
+    echo -n "Verifying..."
+    got_hash=`dd if=$dev bs=$ersz skip=$seek count=$blks status=none | head -c $size | hash $algo`
+    if [ "$got_hash" != "$hash" ]; then
+        echo " FAILED"
+        fatal "install_mtd: Verify failed"
+    fi
+    echo " OK"
+}
+
+# Install a file to an mmc device
+# install_mmc /dev/mmcblk0p3 rootfs.squashfs 80244736 sha...
+install_mmc()
+{
+    local dev=$1 path=$2 size=$3 hash=$4 algo=$5
+    local dblks got_hash
+
+    echo "Writing $path to $dev ($size bytes)..."
+    echo -n "Writing..."
+    tar xfO $PKG $path | dd of=$dev status=none
+    echo " OK"
+    echo -n "Verifying..."
+    dblks=`to_blocks $size 512`
+    got_hash=`dd if=$dev bs=512 count=$dblks status=none | head -c $size | hash $algo`
+    if [ "$got_hash" != "$hash" ]; then
+        echo " FAILED"
+        fatal "install_mmc: Verify failed"
+    fi
+    echo "OK"
+}
+
+# Return the component files of a firmware type, in the order they are
+# installed (mtd last).  The last object will be the one invalidated before
+# the others are installed, and thus validates the whole install.
+fwtype_to_files()
+{
+    fwtype=$1
+    case "$fwtype" in
+    uboot)      echo "image"; ;;
+    syslinux)   echo "system_image kernel_fit"; ;;
+    linux)      echo "kernel_fit"; ;;
+    *)          fatal "fwtype_to_files: unknown fwtype $fwtype"; ;;
+    esac
+}
+
+fwobj_to_fwtype()
+{
+    fwobj=$1
+    case "$fwobj" in
+    boot)       echo "uboot"; ;;
+    main)       echo "syslinux"; ;;
+    gold)       echo "linux"; ;;
+    diags)      echo "linux"; ;;
+    *)          fatal "fwobj_to_fwtype: unknown fwobj $fwobj"
+    esac
+}
+
+legacy_fwtype_to_files()
+{
+    fwtype=$1
+    case "$fwtype" in
+    uboot)      echo "image"; ;;
+    linux)      echo "device_tree kernel"; ;;
+    *)          fatal "legecy_fwtype_to_files: unknown fwtype $fwtype"; ;;
+    esac
+}
+
+legacy_fwobj_to_fwtype()
+{
+    fwobj=$1
+    case "$fwobj" in
+    boot)       echo "uboot"; ;;
+    main)       echo "linux"; ;;
+    gold)       echo "linux"; ;;
+    diags)      echo "linux"; ;;
+    *)          fatal "legacy_fwobj_to_fwtype: unknown fwobj $fwobj"
+    esac
+}
+
+verify_package()
+{
+    local fwobj want_type want_files remainder found i fileobj
+    local fileobj path algo want_hash got_hash
+
+    echo "===> Verifying package"
+    if [ `mani_numkeys .firmware` -eq 0 ]; then
+        fatal "verify_package: No firmware content"
+    fi
+    for fwobj in `mani_keys .firmware`; do
+        #
+        # File collection verification
+        #
+        want_type=`$fwobj_to_fwtype $fwobj`
+        want_files=`$fwtype_to_files $want_type`
+        if [ `mani_value .firmware.$fwobj.type` != $want_type ]; then
+            fatal "verify_package: $fwobj: invalid image type"
+        fi
+        for fileobj in `mani_keys ".firmware.$fwobj.files"`; do
+            remainder=""
+            found=0
+            for i in $want_files; do
+                if [ "$i" = "$fileobj" ]; then
+                    found=1
+                else
+                    remainder="$remainder $i"
+                fi
+            done
+            if [ ! $found ]; then
+                fatal "verify_package: $fwobj: unexpected file type $fileobj"
+            fi
+            want_files=$remainder
+        done
+        if [ ! -z "$want_files" ]; then
+            fatal "verify_package: $fwobj: expected file type $want_files not found"
+        fi
+
+        #
+        # File data verification
+        #
+        for fileobj in `mani_keys ".firmware.$fwobj.files"`; do
+            path=`mani_opt_value ".firmware.$fwobj.files.$fileobj.name"`
+            if [ "$path" = "null" ]; then
+                fatal "verify_package: $fwobj: required file data not found"
+            fi
+            echo -n "Verifying package file: $path..."
+            algo=`mani_opt_value ".firmware.$fwobj.files.$fileobj.verify.algorithm"`
+            if [ "$algo" = "null" ]; then
+                fatal "verify_package: $path: required hash algorithm not found"
+            fi
+            check_hash_algo "$algo"
+            want_hash=`mani_opt_value ".firmware.$fwobj.files.$fileobj.verify.hash"`
+            if [ "$want_hash" = "null" ]; then
+                fatal "verify_package: $path: required hash value not found"
+            fi
+            got_hash=`tar xfO $PKG $path | hash $algo`
+            if [ "$got_hash" != "$want_hash" ]; then
+                echo " FAILED"
+                fatal "verify_package: $path: verifcation failed"
+            fi
+            echo " OK"
+        done
+    done
+    echo "Package file OK"
+}
+
+do_install_file()
+{
+    local fwname=$1 fwobj=$2 fileobj=$3 path=$4 hash=$5 algo=$6
+    local size dev part offs devsz ersz s
+
+    size=`tar tvf $PKG $path | awk '{ print $3 }'`
+    echo "===> Install $fwname $fileobj $path ($size bytes)"
+    s=`$file_to_target $fwname $fileobj`; set -- $s; dev=$1; part=$2; offs=$3
+    case "$dev" in
+    mtd)
+        s=`find_mtdpart_byname $part`; set -- $s; dev=$1; devsz=$2; ersz=$3
+        if [ $size -gt $devsz ]; then
+            fatal "Image too big for partition"
+        fi
+        $DRY_RUN install_mtd $dev $ersz $offs $path $size $hash $algo
+        ;;
+    mmc)
+        s=`find_mmcpart_bypartuuid $part`; set -- $s; dev=$1; devsz=$2
+        if [ $size -gt $devsz ]; then
+            fatal "Image too big for partition"
+        fi
+        $DRY_RUN install_mmc $dev $path $size $hash $algo
+        ;;
+    *)
+        fatal "do_install_file: Invalid install device $dev"
+        ;;
+    esac
+}
+
+invalidate_mtd()
+{
+    local dev=$1 offs=$2
+
+    echo -n "Invalidating $dev..."
+    flash_erase -q $dev $offs 1
+    echo " OK"
+}
+
+invalidate_mmc()
+{
+    local dev=$1
+
+    echo -n "===> Invalidating $dev..."
+    dd if=/dev/zero of=$dev bs=512 count=1 status=none
+    echo " OK"
+}
+
+# Invalidate the existing fwname
+invalidate_fwname()
+{
+    local fwname=$1 fwtype=$2 files last_fileobj dev ersz part offs s
+
+    files=`$fwtype_to_files $fwtype`
+    last_fileobj=`echo $files | awk '{ print $NF }'`
+    s=`$file_to_target $fwname $last_fileobj`; set -- $s; dev=$1; part=$2; offs=$3
+    case "$dev" in
+    mtd)
+        s=`find_mtdpart_byname $part`; set -- $s; dev=$1; ersz=$3
+        $DRY_RUN invalidate_mtd $dev $offs
+        ;;
+    mmc)
+        s=`find_mmcpart_bypartuuid $part`; set -- $s; dev=$1
+        $DRY_RUN invalidate_mmc $dev
+        ;;
+    *)
+        fatal "Invalid install device $dev"
+        ;;
+    esac
+}
+
+# Install a single fileobj into fwname
+install_fwobj()
+{
+    local fwobj=$1 fwname=$2 fwtype fileobj path algo hash
+
+    fwtype=`mani_opt_value ".firmware.$fwobj.type"`
+    if [ "$fwtype" = "null" ]; then
+        if [ $IGNORE_MISSING -eq 0 ]; then
+            fatal "image $fwobj not found"
+        fi
+        return
+    fi
+    echo "===> Installing $fwname"
+    invalidate_fwname $fwname $fwtype
+    for fileobj in `$fwtype_to_files $fwtype`; do
+        path=`mani_value ".firmware.$fwobj.files.$fileobj.name"`
+        algo=`mani_value ".firmware.$fwobj.files.$fileobj.verify.algorithm"`
+        check_hash_algo "$algo"
+        hash=`mani_value ".firmware.$fwobj.files.$fileobj.verify.hash"`
+        do_install_file $fwname $fwobj $fileobj $path $hash $algo
+    done
+}
+
+fwname_to_fwobj()
+{
+    case "$1" in
+    mainfwa)    echo main;  ;;
+    mainfwb)    echo main;  ;;
+    goldfw)     echo gold;  ;;
+    diagfw)     echo diags; ;;
+    uboot)      echo boot;  ;;
+    *)          fatal "fwname_to_fwobj: unknown fwname $1"
+    esac
+}
+
+check_install_list()
+{
+    local fwname
+
+    for fwname in $INSTALL_IMAGES; do
+        case $fwname in
+        mainfwa|mainfwb)
+            if [ $RUNNING_FW = $fwname ]; then
+                fatal "check_install_list: Cannot install over running firmware"
+            fi
+            ;;
+        altfw|goldfw|diagfw|uboot)
+            ;;
+        all)
+            INSTALL_IMAGES="altfw goldfw diagfw uboot"
+            IGNORE_MISSING=1
+            ;;
+        *)
+            fatal "check_install_list: Unknown firmware name $fwname"
+            ;;
+        esac
+    done
+}
+
+do_install_images()
+{
+    local fwname fwobj
+
+    # Iterate over the desired images
+    for fwname in $INSTALL_IMAGES; do
+        if [ $fwname = "altfw" ]; then
+            fwname=$ALT_FW
+        fi
+        fwobj=`fwname_to_fwobj $fwname`
+        install_fwobj $fwobj $fwname
+    done
+}
+
+install_images()
+{
+    if [ $FROM_LEGACY -eq 1 ]; then
+        INSTALL_IMAGES="mainfwb goldfw uboot"
+        IGNORE_MISSING=1
+    elif [ $TO_LEGACY -eq 1 ]; then
+        INSTALL_IMAGES="mainfwa goldfw uboot"
+        IGNORE_MISSING=1
+    else
+        # Check the install list to make sure its ok
+        check_install_list
+    fi
+
+    # Verify the package
+    verify_package
+
+    # First-time install
+    if [ $FROM_LEGACY -eq 1 ]; then
+        setup_partitions
+    fi
+
+    if [ "$DRY_RUN" = "" ]; then
+        # First do a dry-run install
+        echo "===> Dry-Run Install"
+        DRY_RUN=dry_run
+        do_install_images
+        ALT_FW=`alt_fw_of $RUNNING_FW`
+        DRY_RUN=""
+        echo "===> Real Install"
+        SKIP_PKGVERIFY=1
+    fi
+    do_install_images
+}
+
+do_set_startup_image()
+{
+    local fwname=$1 dev devsz s
+
+    fwname_to_fwobj $fwname
+    echo "===> Setting startup firmware to $fwname"
+    s=`find_mtdpart_byname $MTDPART_FWSEL`; set -- $s; dev=$1
+    flash_erase -q $dev 0 1
+    echo -n $fwname | dd of=$dev status=none
+    echo "OK"
+}
+
+set_startup_image()
+{
+    local fwname
+
+    fwname=$WANT_STARTUP
+    case "$fwname" in
+    mainfwa|mainfwb|goldfw|diagfw)
+        ;;
+    altfw)
+        fwname=$ALT_FW
+        ;;
+    *)
+        fatal "set_startup_image: Unknown image name $fwname"
+        ;;
+    esac
+    $DRY_RUN do_set_startup_image $fwname
+}
+
+# TODO
+do_list_firmware()
+{
+    local fwname=$1 fwobj fwtype files dev part s
+
+    fwobj=`fwname_to_fwobj $fwname`
+    fwtype=`$fwobj_to_fwtype $fwobj`
+    files=`$fwtype_to_files $fwtype`
+    last_fileobj=`echo $files | awk '{ print $NF }'`
+    s=`$file_to_target $fwname $last_fileobj`; set -- $s; dev=$1; part=$2
+    echo "dev=$dev, part=$part"
+}
+
+list_firmware()
+{
+    local fwname
+
+    for fwname in uboot mainfwa mainfwb goldfw diagfw; do
+        #do_list_firmware $fwname
+        echo $fwname
+    done
+}
+
+do_setup_partitions()
+{
+    set +e
+    echo "Writing new partition table"
+    sgdisk -Z /dev/mmcblk0 >/dev/null 2>&1
+    partprobe >/dev/null 2>&1
+    sgdisk -n  1:+0:+32M  -t  1:ef02 -u  1:DDCB67EF-E6CD-4AB8-BF67-C08DBD5A7471 -c  1:"Kernel Image A" \
+           -n  2:+0:+32M  -t  2:ef02 -u  2:4703283B-DFA1-4376-B589-08E8FFE84B80 -c  2:"Kernel Image B" \
+           -n  3:+0:+1G   -t  3:8300 -u  3:D4E53BE5-7DC1-4199-914C-48EDFEA92C5E -c  3:"System Image A" \
+           -n  4:+0:+1G   -t  4:8300 -u  4:E2FD6D28-3300-4979-8062-B8AB599F3898 -c  4:"System Image B" \
+           -n  5:+0:+1G   -t  5:8300 -u  5:2167CFC4-39B0-4138-8F30-7A474A50A220 -c  5:"Update Filesystem" \
+           -n  6:+0:+16M  -t  6:8300 -u  6:7B1C657D-A19D-49A7-83B7-F75CC9E5567D -c  6:"Config0 Filesystem" \
+           -n  7:+0:+16M  -t  7:8300 -u  7:C7289808-0214-4E13-B014-9FFD4D351614 -c  7:"Config1 Filesystem" \
+           -n  8:+0:+256M -t  8:8300 -u  8:F593C2F9-B18C-4943-8E3C-11128EE48E5D -c  8:"OBFL Filesystem" \
+           -n  9:+0:+128M -t  9:ef02 -u  9:716C78BC-CB0E-48D5-B8CC-2D4AF139DA28 -c  9:"Reserved" \
+           -n 10:+0:0     -t 10:8300 -u 10:6ED62003-DD8D-44B8-9538-0A2B7C7E628F -c 10:"Data Filesystem" \
+           /dev/mmcblk0 >/dev/null
+    while true; do
+        partprobe
+        if [ -e $R/dev/mmcblk0p8 ]; then
+            break
+        fi
+        sleep 1
+    done
+    for p in 5 6 7 8 10; do
+        d=/dev/mmcblk0p$p
+        echo "Creating EXT4 filesystem on $d"
+        mkfs.ext4 $d >/dev/null 2>&1
+    done
+    echo "Done"
+    set -e
+}
+
+setup_partitions()
+{
+    echo "===> Setting up /dev/mmcblk0 for the first time"
+    $DRY_RUN do_setup_partitions
+}
+
+main "$@"
