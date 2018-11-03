@@ -60,6 +60,9 @@ class TestSuite:
     def GetNicMode(self):
         return self.__spec.meta.nicmode
 
+    def IsConfigOnly(self):
+       return getattr(self.__spec.meta, "cfgonly", False)
+
     def __resolve_testcases(self):
         for tc_spec in self.__spec.testcases:
             tc_spec.packages = self.__spec.packages

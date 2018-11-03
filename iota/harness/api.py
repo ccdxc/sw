@@ -199,6 +199,9 @@ def IsSimulation():
 def GetNicMode():
     return store.GetTestbed().GetCurrentTestsuite().GetNicMode()
 
+def IsConfigOnly():
+    return store.GetTestbed().GetCurrentTestsuite().IsConfigOnly()
+
 def GetTopDir():
     return GlobalOptions.topdir
 
