@@ -165,7 +165,7 @@ ctx_t::lookup_flow_objs()
         HAL_TRACE_DEBUG("Looking up vrf for id: {}", key_.svrf_id);
         svrf_ = hal::vrf_lookup_by_id(key_.svrf_id);
         if (svrf_ == NULL) {
-            HAL_TRACE_ERR("fte: vrf not found, key {}", key_);
+            HAL_TRACE_ERR("fte: vrf not found for id:{}", key_.svrf_id);
             return HAL_RET_VRF_NOT_FOUND;
         }
 
@@ -193,7 +193,7 @@ ctx_t::lookup_flow_objs()
         sif_ = hal::find_if_by_handle(sep_->if_handle);
         HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
     } else {
-        HAL_TRACE_ERR("fte: src ep unknown, key={}", key_);
+        HAL_TRACE_ERR("fte: src ep unknown");
         //If we already found sl2seg_ during key lookup for flow miss
         //then we use that to derive the source ep
         if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
@@ -202,7 +202,7 @@ ctx_t::lookup_flow_objs()
             sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
             if (sep_) {
                 sep_handle_ = sep_->hal_handle;
-                HAL_TRACE_INFO("fte: src ep found by L2 lookup, key={}", key_);
+                HAL_TRACE_INFO("fte: src ep found by L2 lookup seg_id:{} smac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->smac));
                 sif_ = hal::find_if_by_handle(sep_->if_handle);
                 HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
             }
@@ -217,14 +217,14 @@ ctx_t::lookup_flow_objs()
             HAL_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
     } else {
-        HAL_TRACE_INFO("fte: dest ep unknown, key={}", key_);
+        HAL_TRACE_INFO("fte: dest ep unknown");
         if (!hal::is_forwarding_mode_host_pinned() &&
                 sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
             ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
             dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
             if (dep_) {
-                HAL_TRACE_INFO("fte: dst ep found by L2 lookup, key={}", key_);
-	 	dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
+                HAL_TRACE_INFO("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
+	 	        dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
             }
         }
     }

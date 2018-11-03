@@ -195,7 +195,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     HAL_TRACE_DEBUG("fte: rxpkt cpu_rxhdr={}",
                     hex_str((uint8_t*)cpu_rxhdr, sizeof(*cpu_rxhdr)));
 
-    HAL_TRACE_DEBUG("fte: rxpkt len={} pkt={}", pkt_len, hex_str(pkt, pkt_len));
+    HAL_TRACE_DEBUG("fte: rxpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
 
     HAL_TRACE_DEBUG("fte: rxpkt slif={} lif={} qtype={} qid={} vrf={} "
                     "pad={} lkp_dir={} lkp_inst={} lkp_type={} flags={} "
