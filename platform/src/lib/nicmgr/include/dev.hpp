@@ -146,16 +146,31 @@ enum DeviceType
  */
 
 /**
+ * ETH Device type
+ */
+typedef enum EthDevType_s {
+    ETH_UNKNOWN,
+    ETH_HOST,
+    ETH_HOST_MGMT,
+    ETH_MNIC_OOB_MGMT,
+    ETH_MNIC_INTERNAL_MGMT,
+    ETH_MNIC_INBAND_MGMT,
+} EthDevType;
+
+const char *eth_dev_type_to_str(EthDevType type);
+
+/**
  * Eth Device Spec
  */
 struct eth_devspec {
     // Delphi Object Key
     uint64_t dev_uuid;
     // FWD
-    uint32_t uplink_id;
-    Uplink   *uplink;
-    uint64_t lif_id;
-    uint32_t hw_lif_id;
+    EthDevType eth_type;
+    uint32_t   uplink_id;
+    Uplink     *uplink;
+    uint64_t   lif_id;
+    uint32_t   hw_lif_id;
     // RES
     uint32_t rxq_count;
     uint32_t txq_count;

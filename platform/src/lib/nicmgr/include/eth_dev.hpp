@@ -139,10 +139,12 @@ public:
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
         void *resp, void *resp_data);
     int GenerateQstateInfoJson(pt::ptree &lifs);
+    bool isMnic();
 
 private:
     /* Static members */
     static sdk::lib::indexer *fltr_allocator;
+    static sdk::lib::indexer *mnic_allocator;
     /* Members */
     string name;
     struct eth_devspec *spec;
@@ -156,6 +158,8 @@ private:
     uint64_t lif_handle;    // TODO: Support multiple LIFs per ETH device
     // Coses
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
+    // Mnic Info
+    uint32_t mnic_id;
     // Rss config
     uint16_t rss_type;
     uint8_t  rss_key[RSS_HASH_KEY_SIZE]; // 40B
@@ -202,6 +206,8 @@ private:
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
     friend ostream &operator<<(ostream&, const Eth&);
+    const char*opcode_to_str(enum cmd_opcode opcode);
+
 };
 
 #endif

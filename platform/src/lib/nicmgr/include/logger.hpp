@@ -11,8 +11,12 @@ namespace logger {
     void init(bool log_to_console=false);
     std::shared_ptr<spdlog::logger> logger(void);
     std::shared_ptr<spdlog::logger> syslogger(void);
+    void nicmgr_api_trace(const char *trace);
 }
 }
+
+#define NIC_HEADER_TRACE(arg_str) \
+    utils::logger::nicmgr_api_trace(arg_str);
 
 // Syslog Macros
 #define NIC_SYSLOG_CRIT(args...) \

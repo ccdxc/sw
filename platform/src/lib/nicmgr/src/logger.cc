@@ -75,5 +75,23 @@ syslogger(void)
     return _syslogger;
 }
 
+#define NUM_DASHES 20
+void
+nicmgr_api_trace (const char *trace)
+{
+    fmt::MemoryWriter   buf;
+
+    if (!trace) return;
+
+    for (int i = 0; i < NUM_DASHES; i++) {
+        buf.write("{}", "-");
+    }
+    buf.write(" {} ", trace);
+    for (int i = 0; i < NUM_DASHES; i++) {
+        buf.write("{}", "-");
+    }
+    NIC_LOG_INFO("{}", buf.c_str());
+}
+
 }   // namespace logger
 }   // namespace utils

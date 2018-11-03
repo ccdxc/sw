@@ -69,7 +69,7 @@ Lif::Lif(EthLif * eth_lif)
 
     eth_lif_ = eth_lif;
 
-    HAL_TRACE_DEBUG("Creating Lif: prom: {}, oob: {}",
+    HAL_TRACE_DEBUG("Creating Lif: prom: {}, oob: {}, rdma_en: {}",
                     lif_info->receive_promiscuous,
                     eth_lif_->IsOOBMnic(),
                     lif_info->enable_rdma);
@@ -176,7 +176,7 @@ Lif::TriggerHalUpdate()
     intf::LifResponse          rsp;
     intf::LifRequestMsg        req_msg;
     intf::LifResponseMsg       rsp_msg;
-    hal_lif_info_t                 *lif_info = eth_lif_->GetLifInfo();
+    hal_lif_info_t             *lif_info = eth_lif_->GetLifInfo();
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
@@ -198,12 +198,12 @@ Lif::TriggerHalUpdate()
             HAL_TRACE_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, lif_info->hw_lif_id, handle_);
         } else {
-            HAL_TRACE_ERR("Failed to create Lif for hw_lif_id: {}. err: {}",
-                          lif_info->hw_lif_id, rsp.api_status());
+            HAL_TRACE_ERR("Failed to create Lif for id: {}. err: {}",
+                          id_, rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to create Lif for hw_lif_id: {}. err: {}:{}",
-                      lif_info->hw_lif_id, status.error_code(), status.error_message());
+        HAL_TRACE_ERR("Failed to create Lif for id: {}. err: {}:{}",
+                      id_, status.error_code(), status.error_message());
     }
 
     // Store spec

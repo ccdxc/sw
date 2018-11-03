@@ -26,6 +26,7 @@
 
 #include "logger.hpp"
 #include "hal_client.hpp"
+#include "nicmgr_utils.hpp"
 
 using namespace kh;
 using namespace types;
@@ -757,13 +758,24 @@ HalClient::LifCreate(uint64_t lif_id,
     hal_lif_info.enable_rdma = lif_info->enable_rdma;
     memcpy(hal_lif_info.queue_info, queue_info, sizeof(hal_lif_info.queue_info));
 
+    NIC_LOG_INFO("Creating with Lif: id: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
+                 hal_lif_info.id,
+                 hal_lif_info.pinned_uplink ? hal_lif_info.pinned_uplink->GetId() : 0,
+                 hal_lif_info.hw_lif_id,
+                 hal_lif_info.enable_rdma);
+
+    // Nicmgr should always allocate hw_lif_id and pass to HAL
+    NIC_ASSERT(hal_lif_info.hw_lif_id != 0);
+
     EthLif *eth_lif = EthLif::Factory(&hal_lif_info);
     lif_info->hw_lif_id = eth_lif->GetLif()->GetHwLifId();
 
     eth_lif_map[lif_id] = eth_lif;
 
-    NIC_FUNC_INFO("Lif Created with id: {}, hw_lif_id: {}",
-                  lif_id, lif_info->hw_lif_id);
+    // Passed hw_lif_id should be same as HAL returned
+    NIC_ASSERT(hal_lif_info.hw_lif_id == lif_info->hw_lif_id);
+
+    NIC_LOG_INFO("lif-{} Created with id: {}", lif_info->hw_lif_id, lif_id);
 
     return 0;
 }

@@ -51,7 +51,7 @@ int32_t LIFManagerBase::LIFRangeAlloc(int32_t start, uint32_t count) {
 
     for (uint32_t i = 0; i < count; i++) {
         // Accessing an entry will allocate it.
-        NIC_LOG_INFO("Populating allocated_lifs for hw_lif_id: {}", base+i);
+        NIC_LOG_INFO("Allocating hw_lif_id: {}", base+i);
         alloced_lifs_[base + i].lif_id = base + i;
     }
 
