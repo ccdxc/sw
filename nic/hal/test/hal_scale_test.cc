@@ -311,7 +311,6 @@ public:
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
 
         if (send) {
-            std::cout << "Batch Size " << req_msg.request_size() << std::endl;
             status = session_stub_->SessionCreate(&context, req_msg, &rsp_msg);
             req_msg.Clear();
             if (status.ok()) {
@@ -903,7 +902,8 @@ cleanup_sim_config (hal_client& hclient, uint64_t vrf_id, uint64_t l2seg_id,
 static int
 setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
                  uint32_t num_sip, uint32_t dip, uint32_t num_dip,
-                 uint16_t sport_lo, uint16_t sport_hi, uint16_t dport)
+                 uint16_t sport_lo, uint16_t sport_hi,
+                 uint16_t dport_lo, uint16_t dport_hi)
 {
     SessionRequestMsg req_msg;
     timespec_t   start_ts, end_ts;
@@ -917,12 +917,13 @@ setup_hw_config (hal_client& hclient, uint64_t vrf_id, uint32_t sip,
               << ", sip : " << sip << ", num_sip : " << num_sip
               << ", dip : " << dip << ", num_dip : " << num_dip
               << ", sport lo : " << sport_lo << ", sport hi : " << sport_hi
-              << ", dport : " << dport << std::endl;
+              << ", dport lo : " << dport_lo << ", dport hi : " << dport_hi
+              << std::endl;
 
     clock_gettime(CLOCK_MONOTONIC, &start_ts);
     sdk::timestamp_to_nsecs(&start_ts, &start_ns);
     for (src_port = sport_lo; src_port < sport_hi; src_port ++) {
-        for (dst_port = dport; dst_port <= dport; dst_port ++) {
+        for (dst_port = dport_lo; dst_port <= dport_hi; dst_port ++) {
             for (src_ip = sip, i = 0; i < num_sip; src_ip ++, i ++) {
                 for (dst_ip = dip, j = 0; j < num_dip; dst_ip ++, j ++) {
                     batch_count++;
@@ -972,16 +973,19 @@ done:
 // --batch-size(-b) <size> : Specify number of session creates in one grpc message (default is 1)
 // --no-cleanup(-c) : No cleanup of created objects
 // --duplicate-sessions(-e) : Create duplicate sessions
+// --vrf(-v) : Specifcy vrf id
 // --sip(-s) <ip> : Specify source IP address
 // --num-sip(-S) <num> : Specify number of source IP address
 // --dip(-d) <ip> : Specify destination IP address
 // --num-dip(-D) <num> : Specify number of destination IP address
 // --sport-low(-l) <port> : Specify low source port
 // --sport-high(-h) <port> : Specify high source port
-// --dport(-p) <port> : Specify destination port
+// --dport-low (-p) <port> : Specify low destination port
+// --dport-high (-q) <port> : Specify high destination port
 // Sample: ./hal_scale_test  --target sim  --num-sessions 100  --batch-size 10  --no-cleanup
 // Sample: ./hal_scale_test  --target hw  --num-sessions 100  --batch-size 10 --sip 10.5.7.4 --num-sip 5
-//                           --dip 10.4.7.4 --num-dip 5 --sport-low 5000 --sport-high 5050 --dport 6000
+//                           --dip 10.4.7.4 --num-dip 5 --sport-low 5000 --sport-high 5050
+//                           --dport-low 100 --dport-high 2000
 //---------------------------------------------------------------------------------------------------------
 int
 main (int argc, char** argv)
@@ -990,7 +994,7 @@ main (int argc, char** argv)
     std::string  svc_endpoint = hal_svc_endpoint_;
     int          oc;
     uint32_t     target = HW, sip = 0, dip = 0;
-    uint16_t     sport_lo = 0, sport_hi = 0, dport = 0;
+    uint16_t     sport_lo = 0, sport_hi = 0, dport_lo = 0, dport_hi = 0;
     uint32_t     num_sip = 1, num_dip = 1;
 
     struct option longopts[] = {
@@ -1007,7 +1011,8 @@ main (int argc, char** argv)
        { "num-dip",             required_argument,  NULL, 'D' },
        { "sport-low",           required_argument,  NULL, 'l' },
        { "sport-high",          required_argument,  NULL, 'h' },
-       { "dport",               required_argument,  NULL, 'p' },
+       { "dport-low",           required_argument,  NULL, 'p' },
+       { "dport-high",          required_argument,  NULL, 'q' },
        { "help",                no_argument,        NULL, 'x' },
        { 0,                     0,                  0,     0  }
     };
@@ -1072,7 +1077,10 @@ main (int argc, char** argv)
             sport_hi = atoi(optarg);
             break;
         case 'p':
-            dport = atoi(optarg);
+            dport_lo = atoi(optarg);
+            break;
+        case 'q':
+            dport_hi = atoi(optarg);
             break;
         case 't':
             if (!strcmp(optarg, "sim")) {
@@ -1102,7 +1110,8 @@ main (int argc, char** argv)
                           "--num-dip(-D) <num> : Specify number of destination IP address\n"
                           "--sport-low(-l) <port> : Specify low source port\n"
                           "--sport-high(-h) <port> : Specify high source port\n"
-                          "--dport(-p) <port> : Specify destination port\n"
+                          "--dport-low(-p) <port> : Specify low destination port\n"
+                          "--dport-high(-q) <port> : Specify high destination port\n"
                           "Sample: ./hal_scale_test --target sim --num-sessions 100 --batch-size 10 --no-cleanup\n";
             return 0;
             break;
@@ -1127,7 +1136,8 @@ main (int argc, char** argv)
         setup_sim_config(hclient, vrf_id, l2seg_id, sg_id, if_id, nw_id, sip, dip);
     } else {
         // heimdall would have pushed the config already, just setup sessions
-        setup_hw_config(hclient, vrf_id, sip, num_sip, dip, num_dip, sport_lo, sport_hi, dport);
+        setup_hw_config(hclient, vrf_id, sip, num_sip, dip, num_dip,
+                        sport_lo, sport_hi, dport_lo, dport_hi);
     }
 
     if (g_no_cleanup) {
