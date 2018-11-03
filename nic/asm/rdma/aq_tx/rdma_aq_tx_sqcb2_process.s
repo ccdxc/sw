@@ -51,7 +51,8 @@ tx_psn:
     nop
 
     tblwr       d.tx_psn, K_TX_PSN
-    sub         r3, d.rexmit_psn, 1
+    //Initialize exp_rsp_psn to be 1 less than rexmit_psn
+    sub         r3, K_TX_PSN, 1
     tblwr       d.exp_rsp_psn, r3
     tblwr       d.rexmit_psn, K_TX_PSN
 

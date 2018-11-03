@@ -3,6 +3,7 @@
 #include "capri.h"
 
 #define MAX_RQ_RINGS                6
+#define MAX_RQ_HOST_RINGS           1
 
 #define RQ_RING_ID                  0
 #define RSQ_RING_ID                 1

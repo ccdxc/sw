@@ -80,7 +80,7 @@ exit:
 
 create_qp: 
 
-    phvwr       p.{rqcb0.intrinsic.host_rings, rqcb0.intrinsic.total_rings}, (MAX_RQ_RINGS<<4|MAX_RQ_RINGS)
+    phvwr       p.{rqcb0.intrinsic.total_rings, rqcb0.intrinsic.host_rings}, (MAX_RQ_RINGS<<4|MAX_RQ_HOST_RINGS)
 
     //          TODO: For now setting it to RTS, but later change it to INIT
     // state. modify_qp is supposed to set it to RTR and RTS.

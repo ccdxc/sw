@@ -172,7 +172,7 @@ dereg_mr:
     
 create_cq:
 
-    phvwr   p.{cqcb.intrinsic.host_rings, cqcb.intrinsic.total_rings}, (MAX_CQ_RINGS<<4|MAX_CQ_DOORBELL_RINGS)
+    phvwr   p.{cqcb.intrinsic.total_rings, cqcb.intrinsic.host_rings}, (MAX_CQ_RINGS<<4|MAX_CQ_RINGS)
 
    //TODO: Need to find a way to initiali pt_pa and pt_next_pa
 
@@ -295,7 +295,7 @@ create_qp:
 
     // SQCB0:
     
-    phvwr       p.{sqcb0.intrinsic.host_rings, sqcb0.intrinsic.total_rings}, (MAX_SQ_HOST_RINGS<<4|MAX_SQ_DOORBELL_RINGS)
+    phvwr       p.{sqcb0.intrinsic.total_rings, sqcb0.intrinsic.host_rings}, (MAX_SQ_DOORBELL_RINGS<<4|MAX_SQ_HOST_RINGS)
     phvwr       p.sqcb0.log_num_wqes, d.qp.sq_depth_log2[4:0]
     
 
