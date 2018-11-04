@@ -29,7 +29,7 @@
 /*
  * TODO:
  *	- add additional UTs for read/write status/result, as needed
- *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
+ *	- handle PNSO_CP_DFLAG_BYPASS_ONFAIL fully
  *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *	- address cpdc_fill_per_block_desc_ex()
  *

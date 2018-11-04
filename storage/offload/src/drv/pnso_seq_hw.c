@@ -30,7 +30,6 @@
  *	related chains, focus for now is comp+hash bring-up.
  *	- revisit layer violations
  *	- storage_seq_p4pd. vs utils.h
- *	- use cip_block_size to set  ccp_pad_boundary_shift
  *
  */
 #ifdef NDEBUG
@@ -749,6 +748,110 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
+
+	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
+			ring_id, index, (uint64_t) cp_desc,
+			(uint64_t) status_desc);
+
+	PPRINT_SEQUENCER_INFO(seq_info);
+
+	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+}
+
+static pnso_error_t
+setup_cp_pad_chain_params(struct service_info *svc_info,
+		struct cpdc_desc *cp_desc,
+		struct cpdc_status_desc *status_desc)
+{
+	pnso_error_t err = EINVAL;
+	struct cpdc_chain_params *chain_params;
+	struct sequencer_info *seq_info;
+	struct sequencer_spec *seq_spec;
+	uint32_t ring_id, index;
+	uint16_t qtype;
+	uint8_t *seq_status_desc;
+
+	struct accel_ring *ring;
+	struct lif *lif;
+	struct queue *q, *status_q;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	chain_params = &svc_info->si_cpdc_chain;
+	seq_spec = &chain_params->ccp_seq_spec;
+
+	seq_info = &svc_info->si_seq_info;
+	ring_id = seq_info->sqi_ring_id;
+	qtype = seq_info->sqi_qtype;
+	seq_info->sqi_index = 0;
+	PPRINT_SEQUENCER_INFO(seq_info);
+
+	ring = sonic_get_accel_ring(ring_id);
+	if (!ring) {
+		OSAL_ASSERT(ring);
+		goto out;
+	}
+
+	lif = sonic_get_lif();
+	if (!lif) {
+		OSAL_ASSERT(lif);
+		goto out;
+	}
+
+	err = sonic_get_seq_sq(lif, qtype, &q);
+	if (err) {
+		OSAL_ASSERT(err);
+		goto out;
+	}
+
+	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &status_q);
+	if (err) {
+		OSAL_ASSERT(err);
+		goto out;
+	}
+
+	seq_status_desc = (uint8_t *) sonic_q_consume_entry(status_q, &index);
+	if (!seq_status_desc) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
+				err);
+		OSAL_ASSERT(seq_status_desc);
+		goto out;
+	}
+	seq_info->sqi_index = index;
+	seq_info->sqi_status_desc = seq_status_desc;
+
+	seq_spec->sqs_seq_q = q;
+	seq_spec->sqs_seq_status_q = status_q;
+	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for comp+hash */
+
+	cp_desc->cd_db_addr = sonic_get_lif_local_dbaddr();
+	cp_desc->cd_db_data = sonic_q_ringdb_data(status_q, index);
+	cp_desc->u.cd_bits.cc_db_on = 1;
+
+	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
+	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 0;
+	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
+	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
+	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
+	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
+
+	chain_params->ccp_status_addr_0 =
+		sonic_virt_to_phy((void *) status_desc);
+	chain_params->ccp_pad_buf_addr = pad_buffer;
+	chain_params->ccp_pad_boundary_shift =
+		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
+
+	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
+
+	fill_cpdc_seq_status_desc(chain_params, seq_info->sqi_status_desc);
+	PPRINT_CPDC_CHAIN_PARAMS(chain_params);
 
 	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			ring_id, index, (uint64_t) cp_desc,

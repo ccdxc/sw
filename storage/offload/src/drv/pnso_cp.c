@@ -49,14 +49,6 @@ clear_list_bits_in_desc(struct cpdc_desc *desc)
 	desc->u.cd_bits.cc_dst_is_list = 0;
 }
 
-static inline void
-pad_buffer_with_zeroes(uint16_t flags, struct pnso_buffer_list *buf_list)
-{
-	if (is_dflag_zero_pad_enabled(flags)) {
-		/* TODO-cp: handle padding */
-	}
-}
-
 static void
 fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 		struct cpdc_sgl *dst_sgl, struct cpdc_status_desc *status_desc,
@@ -129,7 +121,9 @@ compress_setup(struct service_info *svc_info,
 			svc_info->si_dst_sgl.sgl, status_desc,
 			svc_info->si_src_blist.len, threshold_len);
 	clear_insert_header(flags, cp_desc);
-	pad_buffer_with_zeroes(flags, svc_params->sp_src_blist);
+
+	if (is_dflag_zero_pad_enabled(flags))
+		setup_cp_pad_chain_params(svc_info, cp_desc, status_desc);
 
 	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
 	svc_info->si_desc_flags = flags;
@@ -180,7 +174,6 @@ compress_chain(struct chain_entry *centry)
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
-	/* TODO-chain: revisit to chain other services (ex: encrypt) */
 	err = seq_setup_cp_chain_params(centry, svc_info, cp_desc, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup cp in chain! err: %d", err);
