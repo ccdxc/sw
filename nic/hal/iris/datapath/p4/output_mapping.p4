@@ -36,11 +36,48 @@ action redirect_to_cpu(dst_lif, egress_mirror_en,
     modify_field(scratch_metadata.flag, egress_mirror_en);
 }
 
+// All the logic for this action is same as set_tm_oport action with
+// addotional functionality of enforcing a src_lport of the packet with
+// the src_lport that is programmed as part of this action data.
+// This is used for supporting mnic functionality where packets from
+// a mgmt nic are allowed to talk to go only to MNIC on ARM and rest
+// of the traffic will be dropped like if two Mgmt NICs try to talk
+// between them.
+action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
+                    p4plus_app_id, rdma_enabled, dst_lif,
+                    encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
+                    egress_port1, egress_port2, egress_port3, egress_port4,
+                    egress_port5, egress_port6, egress_port7, egress_port8,
+                    mnic_enforce_src_lport) {
+
+    if (mnic_enforce_src_lport != 0 and control_metadata.src_lport != mnic_enforce_src_lport) {
+            drop_packet ();
+    }
+   
+    set_tm_oport(vlan_strip, nports, egress_mirror_en,
+                    p4plus_app_id, rdma_enabled, dst_lif,
+                    encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
+                    egress_port1, egress_port2, egress_port3, egress_port4,
+                    egress_port5, egress_port6, egress_port7, egress_port8, 
+                    mnic_enforce_src_lport);
+
+    // dummy ops to keep compiler happy
+    modify_field(control_metadata.src_lport, mnic_enforce_src_lport);
+}
+
+// When ever a new parameter is added to this set_tm_oport add to the
+// set_tm_oport_enforce_src_lport funciton also. We use the same
+// assembly code for both and we want the D structures generated
+// with different action name still have the fields at the same offset.
+// When using the set_tm_oport action, we should always set the
+// mnic_enforce_src_lport to zero.
 action set_tm_oport(vlan_strip, nports, egress_mirror_en,
                     p4plus_app_id, rdma_enabled, dst_lif,
                     encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                     egress_port1, egress_port2, egress_port3, egress_port4,
-                    egress_port5, egress_port6, egress_port7, egress_port8) {
+                    egress_port5, egress_port6, egress_port7, egress_port8,
+                    mnic_enforce_src_lport) {
+
     if (nports == 1) {
         modify_field(capri_intrinsic.tm_oport, egress_port1);
     } else {
@@ -103,6 +140,7 @@ table output_mapping {
     actions {
         output_mapping_drop;
         set_tm_oport;
+        set_tm_oport_enforce_src_lport;
         redirect_to_cpu;
         redirect_to_remote;
     }

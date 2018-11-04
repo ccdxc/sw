@@ -16,6 +16,16 @@ output_mapping_drop:
   phvwr         p.control_metadata_egress_drop_reason[EGRESS_DROP_OUTPUT_MAPPING], 1
 
 .align
+set_tm_oport_enforce_src_lport:
+  sne         c1, d.u.set_tm_oport_enforce_src_lport_d.mnic_enforce_src_lport, r0
+  sne.c1      c1, d.u.set_tm_oport_enforce_src_lport_d.mnic_enforce_src_lport, k.control_metadata_src_lport
+  b.!c1       set_tm_oport
+  b.c1        output_mapping_drop
+  nop
+  
+
+
+.align
 set_tm_oport:
   K_DBG_WR(0x100)
   DBG_WR(0x10a, 0x10a)
