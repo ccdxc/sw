@@ -15,7 +15,6 @@
 #include <sys/time.h>
 #include <editline/readline.h>
 
-#include "pci_ids.h"
 #include "misc.h"
 #include "bdf.h"
 #include "pal.h"
@@ -447,7 +446,7 @@ static void
 cmd_poll(int argc, char *argv[])
 {
     pciemgrenv_t *pme = pciemgrenv_get();
-    sighandler_t osigint, osigterm, osigquit;
+    sighandler_t osigint, osigterm;
     useconds_t polltm_us = 10000;
     int opt, poll_port, poll_cnt, npolls;
     u_int64_t tm_start, tm_stop, tm_port;
@@ -472,7 +471,6 @@ cmd_poll(int argc, char *argv[])
 
     osigint  = signal(SIGINT,  polling_sighand);
     osigterm = signal(SIGTERM, polling_sighand);
-    osigquit = signal(SIGQUIT, polling_sighand);
 
     printf("Polling enabled every %dus (%d times), ^C to exit...\n",
            polltm_us, poll_cnt);
@@ -504,7 +502,6 @@ cmd_poll(int argc, char *argv[])
 
     signal(SIGINT,  osigint);
     signal(SIGTERM, osigterm);
-    signal(SIGQUIT, osigquit);
 }
 
 static int exit_request;
@@ -643,12 +640,20 @@ sighand(int s)
     longjmp(prompt_env, 1);
 }
 
-void
+int
 cli_loop(void)
 {
     pciemgrenv_t *pme = pciemgrenv_get();
     char *line, prompt[32], *av[16];
-    int port, ac;
+    int r, port, ac;
+
+    if ((r = open_hostports()) < 0) {
+        goto error_out;
+    }
+    if ((r = pciehdev_open(&pme->params)) < 0) {
+        printf("pciehdev_open failed: %d\n", r);
+        goto close_port_error_out;
+    }
 
     /*
      * In interactive mode, pre-initialize all the active ports
@@ -656,16 +661,16 @@ cli_loop(void)
      */
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
-            if (pciehdev_initialize(port) < 0) {
-                printf("pciehdev_initialize failed\n");
-                exit(1);
+            if ((r = pciehdev_initialize(port)) < 0) {
+                printf("pciehdev_initialize %d failed: %d\n", port, r);
+                goto close_dev_error_out;
             }
         }
     }
 
     if (setjmp(prompt_env) == 0) {
         signal(SIGINT, sighand);
-        signal(SIGQUIT, sighand);
+        signal(SIGTERM, sighand);
     }
     strncpy0(prompt, "pciemgr> ", sizeof(prompt));
     while (!exit_request && (line = readline(prompt)) != NULL) {
@@ -678,4 +683,11 @@ cli_loop(void)
         }
         free(line);
     }
+
+ close_dev_error_out:
+    pciehdev_close();
+ close_port_error_out:
+    close_hostports();
+ error_out:
+    return r;
 }

@@ -13,19 +13,12 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
-#include <editline/readline.h>
 
 #include "pci_ids.h"
-#include "misc.h"
-#include "bdf.h"
 #include "pal.h"
-#include "pciehdevices.h"
-#include "pciemgrutils.h"
-#include "pciehw.h"
-#include "pciehw_dev.h"
+#include "pciesys.h"
 #include "pcieport.h"
 #include "pciemgrd_impl.hpp"
-#include "delphic.h"
 
 static pciemgrenv_t pciemgrenv;
 
@@ -75,25 +68,72 @@ parse_linkspec(const char *s, u_int8_t *genp, u_int8_t *widthp)
 }
 
 int
+open_hostports(void)
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+    pciehdev_params_t *p = &pme->params;
+    int r, port;
+
+    /*
+     * Open and configure all the ports we are going to manage.
+     */
+    r = 0;
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            if ((r = pcieport_open(port)) < 0) {
+                pciesys_logerror("pcieport_open %d failed: %d\n", port, r);
+                goto error_out;
+            }
+            if ((r = pcieport_hostconfig(port, p)) < 0) {
+                pciesys_logerror("pcieport_hostconfig %d failed\n", port);
+                goto close_error_out;
+            }
+        }
+    }
+    return r;
+
+ close_error_out:
+    pcieport_close(port);
+ error_out:
+    for (port--; port >= 0; port--) {
+        pcieport_close(port);
+    }
+    return r;
+}
+
+void
+close_hostports(void)
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+    int port;
+
+    /* close all the ports we opened */
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            pcieport_close(port);
+        }
+    }
+}
+
+int
 main(int argc, char *argv[])
 {
     pciemgrenv_t *pme = pciemgrenv_get();
-    pciehdev_params_t p;
-    int r, opt, port, interactive;
+    pciehdev_params_t *p = &pme->params;
+    int r, opt;
 
-    interactive = 1;
+    pme->interactive = 1;
 
-    memset(&p, 0, sizeof(p));
-    p.fake_bios_scan = 1;
-    p.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
+    p->fake_bios_scan = 1;
+    p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
 
     /*
      * For x86_64 we want to FORCE_INIT to reinitialize hw/shmem on startup.
      */
 #ifdef __aarch64__
-    p.initmode = FORCE_INIT;
+    p->initmode = FORCE_INIT;
 #else
-    p.initmode = FORCE_INIT;
+    p->initmode = FORCE_INIT;
 #endif
 
     /*
@@ -104,56 +144,59 @@ main(int argc, char *argv[])
      * at 00:00.0 so our first virtual device is bus 1 at 01:00.0.
      */
 #ifdef __aarch64__
-    p.first_bus = 0;
+    p->first_bus = 0;
 #else
-    p.first_bus = 1;
+    p->first_bus = 1;
 #endif
 
     /* on asic single port, on haps 2 ports enabled */
     pme->enabled_ports = pal_is_asic() ? 0x1 : 0x5;
-    while ((opt = getopt(argc, argv, "b:Cde:FiI:P:V:D:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:Cde:FGiI:P:V:D:")) != -1) {
         switch (opt) {
         case 'b':
-            p.first_bus = strtoul(optarg, NULL, 0);
+            p->first_bus = strtoul(optarg, NULL, 0);
             break;
         case 'C':
-            p.compliance = 1;
+            p->compliance = 1;
             break;
         case 'd':
-            interactive = 0;
+            pme->interactive = 0;
             break;
         case 'e':
             pme->enabled_ports = strtoul(optarg, NULL, 0);
             break;
         case 'F':
-            p.fake_bios_scan = 0;
+            p->fake_bios_scan = 0;
+            break;
+        case 'G':
+            pme->gold = 1;
             break;
         case 'i':
-            interactive = 1;
+            pme->interactive = 1;
             break;
         case 'I':
             if (strcmp(optarg, "inherit_only") == 0) {
-                p.initmode = INHERIT_ONLY;
+                p->initmode = INHERIT_ONLY;
             } else if (strcmp(optarg, "inherit_ok") == 0) {
-                p.initmode = INHERIT_OK;
+                p->initmode = INHERIT_OK;
             } else if (strcmp(optarg, "force_init") == 0) {
-                p.initmode = FORCE_INIT;
+                p->initmode = FORCE_INIT;
             } else {
                 printf("bad -I arg: inherit|inherit_ok|force_init\n");
                 exit(1);
             }
             break;
         case 'P':
-            if (!parse_linkspec(optarg, &p.cap_gen, &p.cap_width)) {
+            if (!parse_linkspec(optarg, &p->cap_gen, &p->cap_width)) {
                 printf("bad pcie spec: want gen%%dx%%d, got %s\n", optarg);
                 exit(1);
             }
             break;
         case 'V':
-            p.subvendorid = strtoul(optarg, NULL, 0);
+            p->subvendorid = strtoul(optarg, NULL, 0);
             break;
         case 'D':
-            p.subdeviceid = strtoul(optarg, NULL, 0);
+            p->subdeviceid = strtoul(optarg, NULL, 0);
             break;
         case '?':
         default:
@@ -162,41 +205,17 @@ main(int argc, char *argv[])
         }
     }
 
-    /*
-     * Open and configure all the ports we are going to manage.
-     */
-    for (port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->enabled_ports & (1 << port)) {
-            if ((r = pcieport_open(port)) < 0) {
-                printf("pcieport_open %d failed: %d\n", port, r);
-                exit(1);
-            }
-            if (pcieport_hostconfig(port, &p) < 0) {
-                printf("pcieport_hostconfig %d failed\n", port);
-                exit(1);
-            }
-        }
-    }
-    if (pciehdev_open(&p) < 0) {
-        printf("pciehdev_open failed\n");
-        exit(1);
-    }
-
-
-    if (interactive) {
-        cli_loop();
+#ifdef PCIEMGRD_GOLD
+    r = gold_loop();
+#else
+    if (pme->gold) {
+        r = gold_loop();
+    } else if (pme->interactive) {
+        r = cli_loop();
     } else {
-        // connect to delphi
-        delphi_client_start();
-        server_loop();
+        r = server_loop();
     }
+#endif
 
-    pciehdev_close();
-    /* close all the ports we opened */
-    for (port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->enabled_ports & (1 << port)) {
-            pcieport_close(port);
-        }
-    }
-    exit(0);
+    exit(r < 0 ? 1 : 0);
 }

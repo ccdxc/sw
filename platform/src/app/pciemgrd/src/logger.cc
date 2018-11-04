@@ -11,7 +11,6 @@
 
 #include "spdlog/spdlog.h"
 #include "pciesys.h"
-#include "pcieport.h"
 #include "pciemgrd_impl.hpp"
 
 static std::shared_ptr<spdlog::logger> spdlogger;

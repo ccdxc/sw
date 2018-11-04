@@ -16,8 +16,9 @@
 #include "pciehdev_impl.h"
 #include "pciehcfg_impl.h"
 #include "pciehbar_impl.h"
-#include "pmserver.h"
 #include "pciemgrd_impl.hpp"
+#include "pmserver.h"
+#include "delphic.h"
 
 static void
 do_open(pmmsg_t *m)
@@ -58,6 +59,7 @@ do_finalize(pmmsg_t *m)
     // log some info about the final config
     pciehw_dev_show();
     pciehw_bar_show();
+    pciesys_loginfo("finalize: port %d ready\n", port);
 }
 
 static size_t
@@ -272,23 +274,43 @@ server_evhandler(const pciehdev_eventdata_t *evd)
     pciemgrs_msgfree(m);
 }
 
-void
+int
 server_loop(void)
 {
+    pciemgrenv_t *pme = pciemgrenv_get();
     evutil_timer timer;
+    int r = 0;
 
     logger_init();
+    pciesys_loginfo("pciemgrd started\n");
 
-    if (pciehdev_register_event_handler(server_evhandler) < 0) {
-        pciesys_logerror("pciehdev_register_event_handler failed\n");
-        return;
+    if ((r = open_hostports()) < 0) {
+        goto error_out;
     }
+    if ((r = pciehdev_open(&pme->params)) < 0) {
+        pciesys_logerror("pciehdev_open failed: %d\n", r);
+        goto close_port_error_out;
+    }
+
+    if ((r = pciehdev_register_event_handler(server_evhandler)) < 0) {
+        pciesys_logerror("pciehdev_register_event_handler failed %d\n", r);
+        goto close_dev_error_out;
+    }
+
+    // connect to delphi
+    delphi_client_start();
 
     pciemgrs_open(NULL, pciemgr_msg_cb);
     evutil_timer_start(&timer, server_poll, NULL, 0.1, 0.1);
-    pciesys_loginfo("pciemgrd started\n");
+    pciesys_loginfo("pciemgrd ready\n");
     evutil_run();
-    /* NOTREACHED */
     pciemgrs_close();
-    pciesys_loginfo("pciemgrd exit\n");
+
+ close_dev_error_out:
+    pciehdev_close();
+ close_port_error_out:
+    close_hostports();
+ error_out:
+    pciesys_loginfo("pciemgrd exit %d\n", r);
+    return r;
 }
