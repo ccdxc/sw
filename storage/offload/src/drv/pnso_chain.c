@@ -641,7 +641,6 @@ chn_create_chain(struct request_params *req_params)
 		}
 	}
 
-
 	/* init services in the chain  */
 	for (i = 0; i < chain->sc_num_services; i++) {
 		centry = (struct chain_entry *)
@@ -792,8 +791,11 @@ chn_execute_chain(struct service_chain *chain)
 		goto out;
 	}
 
-	if (chain->sc_req_cb) {
-		OSAL_LOG_DEBUG("in poll mode ... invoking caller's cb");
+	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
+		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
+		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
+				chain->sc_flags);
+		PAS_END_HW_PERF(pcr);
 		goto out;
 	}
 
