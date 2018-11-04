@@ -765,7 +765,7 @@ out:
 }
 
 static pnso_error_t
-setup_cp_pad_chain_params(struct service_info *svc_info,
+hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		struct cpdc_desc *cp_desc,
 		struct cpdc_status_desc *status_desc)
 {
@@ -1029,6 +1029,7 @@ const struct sequencer_ops hw_seq_ops = {
 	.setup_desc = hw_setup_desc,
 	.ring_db = hw_ring_db,
 	.setup_cp_chain_params = hw_setup_cp_chain_params,
+	.setup_cp_pad_chain_params = hw_setup_cp_pad_chain_params,
 	.setup_hash_chain_params = hw_setup_hash_chain_params,
 	.setup_cpdc_chain_desc = hw_setup_cpdc_chain_desc,
 	.cleanup_cpdc_chain = hw_cleanup_cpdc_chain,

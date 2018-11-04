@@ -22,7 +22,7 @@ pnso_error_t seq_setup_cp_chain_params(struct chain_entry *centry,
 	struct service_info *svc_info,
 	struct cpdc_desc *cp_desc, struct cpdc_status_desc *status_desc);
 
-pnso_error_t setup_cp_pad_chain_params(struct service_info *svc_info,
+pnso_error_t seq_setup_cp_pad_chain_params(struct service_info *svc_info,
 	struct cpdc_desc *cp_desc, struct cpdc_status_desc *status_desc);
 
 pnso_error_t seq_setup_hash_chain_params(struct cpdc_chain_params *chain_params,

@@ -122,8 +122,15 @@ compress_setup(struct service_info *svc_info,
 			svc_info->si_src_blist.len, threshold_len);
 	clear_insert_header(flags, cp_desc);
 
-	if (is_dflag_zero_pad_enabled(flags))
-		setup_cp_pad_chain_params(svc_info, cp_desc, status_desc);
+	if (is_dflag_zero_pad_enabled(flags)) {
+		err = seq_setup_cp_pad_chain_params(svc_info, cp_desc,
+				status_desc);
+		if (err) {
+			OSAL_LOG_ERROR("failed to setup cp/pad params! err: %d",
+					err);
+			goto out_status_desc;
+		}
+	}
 
 	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
 	svc_info->si_desc_flags = flags;
