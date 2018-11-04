@@ -126,7 +126,7 @@
 //:: if file_name_prefix in session_file:
 #include "nic/include/fte.hpp"
 //:: #endif
-//::  
+//::
 //:: enumC = int(enumCount)
 //:: for service in fileModule.DESCRIPTOR.services_by_name.items():
 //::     pkg = fileModule.DESCRIPTOR.package.lower()
@@ -167,9 +167,14 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
     uint32_t    i, nreqs = req->request_size();
 
     HAL_TRACE_DEBUG("Rcvd ${method[0]}");
-    if (nreqs == 0) {
-        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
-    }
+//::
+//::             if file_name_prefix not in session_file or 'Get' not in method[0]:
+//::
+     if (nreqs == 0) {
+         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+     }
+//::
+//::             #endif
 //::    write_api_stats_enum(enumC, hal_name)
 //::    enumC = enumC + 3
 
