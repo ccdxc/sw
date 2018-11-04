@@ -22,18 +22,18 @@ class TestSuite:
 
         if GlobalOptions.testsuite and GlobalOptions.testsuite != self.Name():
             Logger.info("Skipping Testsuite: %s because of command-line filters." % self.Name())
-            self.__valid = False
+            self.__enabled = False
             return
 
         #if GlobalOptions.mode != self.Mode():
         #    Logger.info("Skipping Testsuite: %s because of mode: %s" % (self.Name(), self.Mode()))
-        #    self.__valid = False
+        #    self.__enabled = False
         #    return
 
         Logger.info("Starting Testsuite: %s" % self.Name())
         self.__resolve_testcases()
         self.__resolve_teardown()
-        self.__valid = True
+        self.__enabled = getattr(self.__spec.meta, 'enable', True)
         self.__aborted = False
         return
 
@@ -145,13 +145,13 @@ class TestSuite:
         return self.__spec.meta.mode
 
     def Main(self):
-        if not self.__valid:
+        if not self.__enabled:
            return types.status.SUCCESS
 
         if self.GetTestbedType() != types.tbtype.ANY and\
            self.GetTestbedType() != store.GetTestbed().GetTestbedType():
            Logger.info("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
-           self.__valid = False
+           self.__enabled = False
            return types.status.SUCCESS
 
         # Initialize Testbed for this testsuite
@@ -174,7 +174,7 @@ class TestSuite:
         return self.result
 
     def PrintSummary(self):
-        if not self.__valid:
+        if not self.__enabled:
            return types.status.SUCCESS
         print("\nTestSuite: %s" % self.__spec.meta.name)
         print(types.HEADER_SUMMARY)

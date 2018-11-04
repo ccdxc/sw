@@ -1,5 +1,5 @@
 #!/bin/sh
-
+SYSCONFIG=/sysconfig/config0
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export NIC_DIR=`dirname $ABS_TOOLS_DIR`
@@ -19,8 +19,8 @@ rm -f /hal.log* $HAL_LOG_FILE
 ulimit -c unlimited
 
 export SYSUUID=""
-if [ -r /mnt/sysuuid ]; then
-    export SYSUUID=`cat /mnt/sysuuid`
+if [ -r $SYSCONFIG/sysuuid ]; then
+    export SYSUUID=`cat $SYSCONFIG/sysuuid`
 fi
 
 if [[ "$FWD_MODE" != "classic" ]]; then

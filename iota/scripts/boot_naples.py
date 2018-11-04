@@ -52,11 +52,39 @@ parser.add_argument('--cimc-password', dest='cimc_password',
                     default="N0isystem$", help='CIMC Password.')
 parser.add_argument('--debug', dest='debug',
                     action='store_true', help='Enable Debug Mode')
+parser.add_argument('--uuid', dest='uuid',
+                    default="", help='Node UUID (Base MAC Address).')
+parser.add_argument('--reboot-only', dest='reboot_only',
+                    action='store_true', help='Only reboot the host and recover.')
 
 GlobalOptions = parser.parse_args()
 
 GlobalOptions.console_port = int(GlobalOptions.console_port)
 GlobalOptions.timeout = int(GlobalOptions.timeout)
+
+def CimcReset():
+    session = requests.Session()
+    session.auth = (GlobalOptions.cimc_username, GlobalOptions.cimc_password)
+    resp = session.get("https://%s/redfish/v1/Systems" % GlobalOptions.cimc_ip, verify=False)
+    obj = resp.json()
+    print("Login Response =", obj)
+    sysurl = "https://%s%s/Actions/System.Reset" % (GlobalOptions.cimc_ip, obj['Members'][0]['@odata.id'])
+    print("SysURL = ", sysurl)
+
+    ret = os.system("curl -vv %s -d \'{\"ResetType\":\"On\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
+    assert(ret == 0)
+    time.sleep(5)
+
+    ret = os.system("curl -vv %s -d \'{\"ResetType\":\"ForceOff\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
+    assert(ret == 0)
+    time.sleep(5)
+
+    ret = os.system("curl -vv %s -d \'{\"ResetType\":\"On\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
+    assert(ret == 0)
+    time.sleep(5)
+    return
+
+
 
 class NaplesManagement:
     def __init__(self):
@@ -126,28 +154,6 @@ class NaplesManagement:
         self.hdl.sendline("/nic/tools/sysreset.sh")
         return
 
-    def __cimc_reset_restapi(self):
-        session = requests.Session()
-        session.auth = (GlobalOptions.cimc_username, GlobalOptions.cimc_password)
-        resp = session.get("https://%s/redfish/v1/Systems" % GlobalOptions.cimc_ip, verify=False)
-        obj = resp.json()
-        print("Login Response =", obj)
-        sysurl = "https://%s%s/Actions/System.Reset" % (GlobalOptions.cimc_ip, obj['Members'][0]['@odata.id'])
-        print("SysURL = ", sysurl)
-
-        ret = os.system("curl -vv %s -d \'{\"ResetType\":\"On\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
-        assert(ret == 0)
-        time.sleep(5)
-
-        ret = os.system("curl -vv %s -d \'{\"ResetType\":\"ForceOff\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
-        assert(ret == 0)
-        time.sleep(5)
-
-        ret = os.system("curl -vv %s -d \'{\"ResetType\":\"On\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
-        assert(ret == 0)
-        time.sleep(5)
-        return
-
     def __get_capri_prompt(self):
         match_idx = self.hdl.expect_exact(["capri login:", "#", "Capri#"], timeout = 120)
         if match_idx == 2:
@@ -155,32 +161,34 @@ class NaplesManagement:
         if match_idx == 0:
             self.__login()
         #self.__reset()
-        self.__umount_mnt()
-        self.__cimc_reset_restapi()
-        match_idx = self.hdl.expect(["Autoboot in 2 seconds; Press CTRL-B to stop",
+        CimcReset()
+        match_idx = self.hdl.expect(["Autoboot in 0 seconds",
                                       pexpect.TIMEOUT], timeout = 120)
         if match_idx == 1:
             print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
-            self.__cimc_reset_restapi()
-            self.hdl.expect_exact("Autoboot in 2 seconds; Press CTRL-B to stop", timeout = 120)
-        self.hdl.sendcontrol('B')
+            CimcReset()
+            self.hdl.expect_exact("Autoboot in 0 seconds", timeout = 120)
+        self.hdl.sendcontrol('C')
         self.hdl.expect_exact("Capri#")
         return
 
     def boot_altfw(self):
         self.__get_capri_prompt()
-        self.hdl.sendline("bootalt")
+        self.hdl.sendline("boot goldfw")
         self.hdl.expect_exact("capri login:", timeout = 120)
         self.__login()
         return
 
     def install_fw(self):
         self.hdl.sendline("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
-        self.hdl.expect_exact("Removing package directory /tmp/sysupdate", timeout = 600)
-        self.hdl.sendline("echo %s > /mnt/app-start.conf && sync" % GlobalOptions.mode)
-        #self.hdl.sendline("echo off > /mnt/app-start.conf && sync")
+        self.hdl.expect_exact("===> Setting startup firmware", timeout = 600)
+        #self.hdl.sendline("echo off > /sysconfig/config0/app-start.conf && sync")
+        
+        self.hdl.sendline("echo %s > /sysconfig/config0/app-start.conf && sync" % GlobalOptions.mode)
         self.hdl.expect_exact("#")
-        self.__umount_mnt()
+        
+        self.hdl.sendline("echo %s > /sysconfig/config0/sysuuid" % GlobalOptions.uuid)
+        self.hdl.expect_exact("#")
         idx = 0
         while idx == 0:
             self.__reset()
@@ -306,30 +314,32 @@ class HostManagement:
         return
 
 def Main():
-    nap = NaplesManagement()
-    
-    nap.connect()
-    nap.boot_altfw()
+    if not GlobalOptions.reboot_only:
+        nap = NaplesManagement()
+        nap.connect()
+        nap.boot_altfw()
     
     host = HostManagement()
-    host.run("rm -rf %s" % HOST_NAPLES_DIR)
-    host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
-    host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
-    host.copyin("/home/haps/memtun/memtun", HOST_NAPLES_DIR)
-    host.copyin("scripts/linux/start_memtun.sh", HOST_NAPLES_DIR)
+    if not GlobalOptions.reboot_only:
+        host.run("rm -rf %s" % HOST_NAPLES_DIR)
+        host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
+        host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
+        host.copyin("/home/haps/memtun/memtun", HOST_NAPLES_DIR)
+        host.copyin("scripts/linux/start_memtun.sh", HOST_NAPLES_DIR)
     host.reboot()
     host.init()
 
-    # Copy the firmare
-    host.copyin(GlobalOptions.image, 
-                host_dir = HOST_NAPLES_IMAGES_DIR,
-                naples_dir = "/tmp")
-    
-    # Install the firmware
-    nap.install_fw()
-    host.reboot()
-    host.init()
-    
+    if not GlobalOptions.reboot_only:
+        # Copy the firmare
+        host.copyin(GlobalOptions.image, 
+                    host_dir = HOST_NAPLES_IMAGES_DIR,
+                    naples_dir = "/tmp")
+        
+        # Install the firmware
+        nap.install_fw()
+        host.reboot()
+        host.init()
+        
     # Install the drivers.
     host.install_drivers()
     return

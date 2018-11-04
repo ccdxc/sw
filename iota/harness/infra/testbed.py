@@ -23,7 +23,8 @@ class _Testbed:
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
         self.__node_ips = []
-        
+       
+        self.__fw_upgrade_done = False
         self.__read_warmd_json()
         self.__derive_testbed_type()
         return
@@ -139,7 +140,12 @@ class _Testbed:
             cmd.extend(["--mode", "%s" % api.GetNicMode()])
             cmd.extend(["--drivers-ionic-pkg", "%s/platform/gen/drivers-linux.tar.xz" % GlobalOptions.topdir])
             cmd.extend(["--drivers-sonic-pkg", "%s/storage/gen/storage-offload.tar.xz" % GlobalOptions.topdir])
-            logfile = "%s-recovery.log" % instance.Name
+            cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
+            if self.__fw_upgrade_done:
+                cmd.extend(["--reboot-only"])
+                logfile = "%s-reboot.log" % instance.Name
+            else:
+                logfile = "%s-firmware-upgrade.log" % instance.Name
             logfiles.append(logfile)
             Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
             Logger.info("Command = ", cmd)
@@ -162,6 +168,7 @@ class _Testbed:
                 os.system("cat %s" % logfile)
             sys.exit(result)
 
+        self.__fw_upgrade_done = True
         if GlobalOptions.only_firmware_upgrade:
             Logger.info("Stopping after firmware upgrade based on cmdline options.")
             sys.exit(0)

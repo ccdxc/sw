@@ -27,7 +27,7 @@ const (
 	naplesPciDevicePrefix   = "Device"
 	mellanoxPciDevicePrefix = "Mellanox Technologies"
 	bareMetalWorkloadName   = "bareMetalWorkload"
-	naplesHwUUIDFile        = "/mnt/sysuuid"
+	naplesHwUUIDFile        = "/sysconfig/config0/sysuuid"
 )
 
 var (
