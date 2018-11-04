@@ -52,7 +52,7 @@ def __read_jsons():
 def __config():
     agent_api.ConfigureNetworks(gl_nw_json_obj.networks)
     agent_api.ConfigureEndpoints(gl_ep_json_obj.endpoints)
-    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolices)
+    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies)
     return api.types.status.SUCCESS
 
 

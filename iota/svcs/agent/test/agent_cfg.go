@@ -85,7 +85,7 @@ type EndpointsInfo struct {
 type SgPoliciesInfo struct {
 	ContentType string        `json:"content-type"`
 	API         string        `json:"api"`
-	SgPoliices  []interface{} `json:"sgpolices"`
+	SgPolicies  []interface{} `json:"sgpolicies"`
 }
 
 func (ns NamespacesInfo) _GetAgentObjects() []interface{} {
@@ -112,15 +112,15 @@ func (nw *NetworksInfo) _GetAgentObjects() []interface{} {
 	return interfaceSlice
 }
 func (sg SgPoliciesInfo) _GetAgentObjects() []interface{} {
-	var interfaceSlice = make([]interface{}, len(sg.SgPoliices))
-	for i, d := range sg.SgPoliices {
+	var interfaceSlice = make([]interface{}, len(sg.SgPolicies))
+	for i, d := range sg.SgPolicies {
 		interfaceSlice[i] = d
 	}
 	return interfaceSlice
 }
 
 func (sg *SgPoliciesInfo) _GetAgentDelObjects() []interface{} {
-	var interfaceSlice = make([]interface{}, len(sg.SgPoliices))
+	var interfaceSlice = make([]interface{}, len(sg.SgPolicies))
 	return interfaceSlice
 }
 

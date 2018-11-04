@@ -39,7 +39,7 @@ def ReadJsons():
 def PushConfig():
     agent_api.ConfigureNetworks(gl_nw_json_obj.networks)
     agent_api.ConfigureEndpoints(gl_ep_json_obj.endpoints)
-    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolices)
+    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies)
     return api.types.status.SUCCESS
 
 
@@ -72,10 +72,10 @@ def DeleteEndpoints():
 
 
 def AddSgPolicies():
-    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolices, oper = agent_api.CfgOper.ADD)
+    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies, oper = agent_api.CfgOper.ADD)
     return api.types.status.SUCCESS
 
 
 def DeleteSgPolicies():
-    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolices, oper = agent_api.CfgOper.DELETE)
+    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
     return api.types.status.SUCCESS
