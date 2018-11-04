@@ -33,6 +33,7 @@ class TestSuite:
         Logger.info("Starting Testsuite: %s" % self.Name())
         self.__resolve_testcases()
         self.__resolve_teardown()
+        self.__expand_iterators()
         self.__enabled = getattr(self.__spec.meta, 'enable', True)
         self.__aborted = False
         return
@@ -80,6 +81,9 @@ class TestSuite:
             Logger.debug("Resolving teardown module: %s" % s.step)
             s.step = loader.Import(s.step, self.__spec.packages)
         return types.status.SUCCESS
+
+    def __expand_iterators(self):
+        return
 
     def __parse_setup_topology(self):
         topospec = getattr(self.__spec.setup, 'topology', None)

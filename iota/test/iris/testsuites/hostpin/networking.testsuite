@@ -1,5 +1,5 @@
 meta:
-    name        : networking_hostpin
+    name        : hostpin::networking
     description : Hardware Test Suite
     mode        : hardware
     cfgmode     : netagent

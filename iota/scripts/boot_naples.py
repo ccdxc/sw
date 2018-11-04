@@ -54,8 +54,8 @@ parser.add_argument('--debug', dest='debug',
                     action='store_true', help='Enable Debug Mode')
 parser.add_argument('--uuid', dest='uuid',
                     default="", help='Node UUID (Base MAC Address).')
-parser.add_argument('--reboot-only', dest='reboot_only',
-                    action='store_true', help='Only reboot the host and recover.')
+parser.add_argument('--mode-change', dest='mode_change',
+                    action='store_true', help='Only change mode and reboot.')
 
 GlobalOptions = parser.parse_args()
 
@@ -90,8 +90,8 @@ class NaplesManagement:
     def __init__(self):
         return
 
-    def __login(self):
-        time.sleep(3)
+    def login(self):
+        time.sleep(10)
         self.hdl.sendline(GlobalOptions.username)
         self.hdl.expect("Password:")
         self.hdl.sendline(GlobalOptions.password)
@@ -137,6 +137,9 @@ class NaplesManagement:
             else:
                 self.__clearline()
         self.hdl.sendline("")
+        match_idx = self.hdl.expect_exact(["capri login:", "#"], timeout = 120)
+        if match_idx == 0:
+            self.login()
         return
    
     def __umount_mnt(self):
@@ -151,16 +154,21 @@ class NaplesManagement:
         return
 
     def __reset(self):
+        self.hdl.sendline("sync")
+        self.hdl.expect_exact("#")
+        self.hdl.sendline("sync")
+        self.hdl.expect_exact("#")
+        self.hdl.sendline("sync")
+        self.hdl.expect_exact("#")
         self.hdl.sendline("/nic/tools/sysreset.sh")
         return
 
     def __get_capri_prompt(self):
-        match_idx = self.hdl.expect_exact(["capri login:", "#", "Capri#"], timeout = 120)
-        if match_idx == 2:
-            return
-        if match_idx == 0:
-            self.__login()
-        #self.__reset()
+        #match_idx = self.hdl.expect_exact(["capri login:", "#", "Capri#"], timeout = 120)
+        #if match_idx == 2:
+        #    return
+        #if match_idx == 0:
+        #    self.login()
         CimcReset()
         match_idx = self.hdl.expect(["Autoboot in 0 seconds",
                                       pexpect.TIMEOUT], timeout = 120)
@@ -176,24 +184,34 @@ class NaplesManagement:
         self.__get_capri_prompt()
         self.hdl.sendline("boot goldfw")
         self.hdl.expect_exact("capri login:", timeout = 120)
-        self.__login()
+        self.login()
         return
 
-    def install_fw(self):
-        self.hdl.sendline("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
-        self.hdl.expect_exact("===> Setting startup firmware", timeout = 600)
-        #self.hdl.sendline("echo off > /sysconfig/config0/app-start.conf && sync")
-        
+    def set_mode(self):
         self.hdl.sendline("echo %s > /sysconfig/config0/app-start.conf && sync" % GlobalOptions.mode)
         self.hdl.expect_exact("#")
         
         self.hdl.sendline("echo %s > /sysconfig/config0/sysuuid" % GlobalOptions.uuid)
         self.hdl.expect_exact("#")
-        idx = 0
-        while idx == 0:
-            self.__reset()
-            idx = self.hdl.expect_exact(["#", "capri login:"], timeout = 120)
-        self.__login()
+        return
+
+    def reboot(self):
+        self.__reset()
+        self.hdl.expect_exact(["capri login:"], timeout = 120)
+        time.sleep(10)
+        self.hdl.sendline("")
+        self.hdl.expect_exact(["capri login:"], timeout = 120)
+        self.login()
+        return
+
+
+    def install_fw(self):
+        self.hdl.sendline("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
+        self.hdl.expect_exact("===> Setting startup firmware", timeout = 600)
+        #self.hdl.sendline("echo off > /sysconfig/config0/app-start.conf && sync")
+        self.reboot()
+        self.set_mode()
+        self.reboot()
         #self.hdl.sendline("/nic/tools/sysinit.sh %s hw" % GlobalOptions.mode)
         #self.hdl.expect_exact("All processes brought up, please check ...", timeout = 600)
         return
@@ -313,36 +331,48 @@ class HostManagement:
             self.run("cd %s/storage-offload/ && insmod pencake.ko repeat=1" % HOST_NAPLES_DRIVERS_DIR)
         return
 
+def ChangeNicMode():
+    nap = NaplesManagement()
+    nap.connect()
+    nap.set_mode()
+    nap.reboot()
+
+    host = HostManagement()
+    host.reboot()
+    host.init()
+    host.install_drivers()
+    return
+
 def Main():
-    if not GlobalOptions.reboot_only:
-        nap = NaplesManagement()
-        nap.connect()
-        nap.boot_altfw()
+    nap = NaplesManagement()
+    nap.connect()
+    nap.boot_altfw()
     
     host = HostManagement()
-    if not GlobalOptions.reboot_only:
-        host.run("rm -rf %s" % HOST_NAPLES_DIR)
-        host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
-        host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
-        host.copyin("/home/haps/memtun/memtun", HOST_NAPLES_DIR)
-        host.copyin("scripts/linux/start_memtun.sh", HOST_NAPLES_DIR)
+    host.run("rm -rf %s" % HOST_NAPLES_DIR)
+    host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
+    host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
+    host.copyin("/home/haps/memtun/memtun", HOST_NAPLES_DIR)
+    host.copyin("scripts/linux/start_memtun.sh", HOST_NAPLES_DIR)
     host.reboot()
     host.init()
 
-    if not GlobalOptions.reboot_only:
-        # Copy the firmare
-        host.copyin(GlobalOptions.image, 
-                    host_dir = HOST_NAPLES_IMAGES_DIR,
-                    naples_dir = "/tmp")
-        
-        # Install the firmware
-        nap.install_fw()
-        host.reboot()
-        host.init()
+    # Copy the firmare
+    host.copyin(GlobalOptions.image, 
+                host_dir = HOST_NAPLES_IMAGES_DIR,
+                naples_dir = "/tmp")
+    
+    # Install the firmware
+    nap.install_fw()
+    host.reboot()
+    host.init()
         
     # Install the drivers.
     host.install_drivers()
     return
 
 if __name__ == '__main__':
-    Main()
+    if not GlobalOptions.mode_change:
+        Main()
+    else:
+        ChangeNicMode()

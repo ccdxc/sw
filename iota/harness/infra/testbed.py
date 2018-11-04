@@ -142,8 +142,8 @@ class _Testbed:
             cmd.extend(["--drivers-sonic-pkg", "%s/storage/gen/storage-offload.tar.xz" % GlobalOptions.topdir])
             cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
             if self.__fw_upgrade_done:
-                cmd.extend(["--reboot-only"])
-                logfile = "%s-reboot.log" % instance.Name
+                cmd.extend(["--mode-change"])
+                logfile = "%s-mode-change.log" % instance.Name
             else:
                 logfile = "%s-firmware-upgrade.log" % instance.Name
             logfiles.append(logfile)
