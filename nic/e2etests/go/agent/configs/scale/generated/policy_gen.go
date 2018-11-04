@@ -78,7 +78,7 @@ func main() {
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "500k_rules",
+			Name:      "scale-rules",
 		},
 		Spec: netproto.SGPolicySpec{
 			AttachTenant: true,
