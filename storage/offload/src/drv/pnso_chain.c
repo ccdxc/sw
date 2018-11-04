@@ -128,6 +128,9 @@ chn_pprint_chain(const struct service_chain *chain)
 	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_req_id", chain->sc_req_id);
 	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_num_services",
 			chain->sc_num_services);
+	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_flags", chain->sc_flags);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_pcr",
+			(uint64_t) chain->sc_pcr);
 
 	i = 0;
 	sc_entry = chain->sc_entry;
@@ -157,10 +160,6 @@ chn_pprint_chain(const struct service_chain *chain)
 			(uint64_t) chain->sc_req_cb);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_cb_ctx",
 			(uint64_t) chain->sc_req_cb_ctx);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_poll_fn",
-			(uint64_t) chain->sc_req_poll_fn);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req_poll_ctx",
-			(uint64_t) chain->sc_req_poll_ctx);
 }
 
 struct service_chain *
@@ -253,7 +252,6 @@ pnso_error_t
 chn_poller(void *pnso_poll_ctx)
 {
 	pnso_error_t err;
-	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct service_chain *chain = (struct service_chain *) pnso_poll_ctx;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -265,11 +263,12 @@ chn_poller(void *pnso_poll_ctx)
 		return err;
 	}
 	PPRINT_CHAIN(chain);
-	OSAL_ASSERT(pcr == chain->sc_pcr);
+	OSAL_LOG_DEBUG("poller pcr: 0x" PRIx64,
+			(uint64_t) putil_get_per_core_resource());
 
 	err = chn_poll_all_services(chain);
 	if (err)
-		OSAL_LOG_ERROR("poll failed! chain: 0x" PRIx64 "err: %d",
+		OSAL_LOG_ERROR("poll failed! chain: 0x" PRIx64 " err: %d",
 				(uint64_t) chain, err);
 
 	chn_read_write_result(chain);
@@ -277,7 +276,7 @@ chn_poller(void *pnso_poll_ctx)
 	chn_update_overall_result(chain);
 
 	if (chain->sc_req_cb) {
-		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "res: 0x" PRIx64 "err: %d",
+		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
 				(uint64_t) chain->sc_req_cb_ctx,
 				(uint64_t) chain->sc_res, err);
 
@@ -607,21 +606,18 @@ chn_create_chain(struct request_params *req_params)
 	else if (req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC)
 		chain->sc_flags |= CHAIN_CFLAG_MODE_ASYNC;
 
-	if (((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) ||
-			(chain->sc_flags & CHAIN_CFLAG_MODE_POLL)) &&
-			(req_params->rp_flags & REQUEST_RFLAG_TYPE_CHAIN)) {
+	if ((req_params->rp_flags & REQUEST_RFLAG_TYPE_CHAIN) &&
+			((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) ||
+			(chain->sc_flags & CHAIN_CFLAG_MODE_POLL))) {
 		chain->sc_req_cb = req_params->rp_cb;
 		chain->sc_req_cb_ctx = req_params->rp_cb_ctx;
 
-		/* for bottom-half polling */
-		*chain->sc_req_poll_fn = chn_poller;
-		chain->sc_req_poll_ctx = (void *) chain;
-
-		/* for caller polling */
-		*req_params->rp_poll_fn = chn_poller;
-		req_params->rp_poll_ctx = (void *) chain;
+		if (chain->sc_flags & CHAIN_CFLAG_MODE_POLL) {
+			/* for caller to poll */
+			*req_params->rp_poll_fn = chn_poller;
+			*req_params->rp_poll_ctx = (void *) chain;
+		}
 	}
-
 
 	/* init services in the chain  */
 	for (i = 0; i < chain->sc_num_services; i++) {
@@ -764,25 +760,29 @@ chn_execute_chain(struct service_chain *chain)
 	/* ring 'first' service door bell */
 	sc_entry = ce_first;
 	err = ce_first->ce_svc_info.si_ops.ring_db(&sc_entry->ce_svc_info);
+	PAS_START_HW_PERF();
 	if (err) {
 		OSAL_LOG_ERROR("failed to ring service door bell! svc_type: %d err: %d",
 			       ce_first->ce_svc_info.si_type, err);
+		PAS_END_HW_PERF(pcr);
 		goto out;
 	}
-	PAS_START_HW_PERF();
 
-	if (chain->sc_req_cb) {
-		OSAL_LOG_DEBUG("in poll mode ... invoking caller's cb");
+	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
+		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
+		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
+				chain->sc_flags);
+		PAS_END_HW_PERF(pcr);
 		goto out;
 	}
 
 	/* wait for 'last' service completion */
 	sc_entry = ce_last;
 	err = ce_last->ce_svc_info.si_ops.poll(&sc_entry->ce_svc_info);
+	PAS_END_HW_PERF(pcr);
 	if (err)
 		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
 			       ce_last->ce_svc_info.si_type, err);
-	PAS_END_HW_PERF(pcr);
 
 	/* update status of individual service(s) */
 	sc_entry = chain->sc_entry;
@@ -805,10 +805,8 @@ chn_execute_chain(struct service_chain *chain)
 
 	/* update over all status of the chain */
 	chn_update_overall_result(chain);
-out:
-	/* TODO-chain: revisit this on error handling path */
-	chn_notify_caller(chain);
 
+out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }

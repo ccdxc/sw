@@ -265,8 +265,6 @@ struct service_chain {
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
 	void *sc_req_cb_ctx;		/* caller supplied cb context */
-	pnso_poll_fn_t *sc_req_poll_fn;	/* poller to run in caller's thread */
-	void *sc_req_poll_ctx;		/* request context for poller */
 };
 
 struct service_chain *chn_create_chain(struct request_params *req_params);

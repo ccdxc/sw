@@ -773,10 +773,14 @@ init_request_params(uint16_t req_flags, struct pnso_service_request *svc_req,
 
 	req_params->rp_svc_req = svc_req;
 	req_params->rp_svc_res = svc_res;
-	req_params->rp_cb = cb;
-	req_params->rp_cb_ctx = cb_ctx;
-	req_params->rp_poll_fn = pnso_poll_fn;
-	req_params->rp_poll_ctx = pnso_poll_ctx;
+
+	if (!(req_flags & REQUEST_RFLAG_MODE_SYNC)) {
+		req_params->rp_cb = cb;
+		req_params->rp_cb_ctx = cb_ctx;
+
+		req_params->rp_poll_fn = pnso_poll_fn;
+		req_params->rp_poll_ctx = pnso_poll_ctx;
+	}
 }
 
 static pnso_error_t
@@ -803,7 +807,7 @@ get_request_mode(completion_cb_t cb, void *cb_ctx,
 	return err;
 }
 
-static void
+static pnso_error_t
 submit_chain(struct request_params *req_params)
 {
 	pnso_error_t err;
@@ -823,15 +827,21 @@ submit_chain(struct request_params *req_params)
 	if (err) {
 		OSAL_LOG_ERROR("failed to complete request/chain! err: %d",
 				err);
-		PAS_INC_NUM_CHAIN_FAILURES(pcr);
+		goto out_chain;
+	}
+
+	if ((chain->sc_flags & CHAIN_CFLAG_MODE_POLL) ||
+		(chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC)) {
+		OSAL_LOG_DEBUG("in non-sync mode ... sc_flags: %d",
+				chain->sc_flags);
 		goto out;
 	}
 
-	/* TODO-poll: bail out depending on req-mode */
+out_chain:
 	chn_destroy_chain(chain);
-	return;
+	PAS_INC_NUM_CHAIN_FAILURES(pcr);
 out:
-	chn_destroy_chain(chain);
+	return err;
 }
 
 pnso_error_t
@@ -889,7 +899,9 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	init_request_params(req_flags, svc_req, svc_res, cb, cb_ctx,
 			pnso_poll_fn, pnso_poll_ctx, &req_params);
 
-	submit_chain(&req_params);
+	err = submit_chain(&req_params);
+	if (err)
+		goto out;
 
 	REQ_PPRINT_RESULT(svc_res);
 	PAS_END_PERF(pcr);

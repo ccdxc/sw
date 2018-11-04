@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-// #include "pnso_api.h"
-
 struct request_params {
 	uint16_t rp_flags;	/* mode/type/state flags (rflags) */
 
@@ -23,8 +21,9 @@ struct request_params {
 
 	completion_cb_t rp_cb;
 	void *rp_cb_ctx;
+
 	pnso_poll_fn_t *rp_poll_fn;
-	void *rp_poll_ctx;
+	void **rp_poll_ctx;
 };
 
 #define REQUEST_RFLAG_MODE_SYNC		(1 << 0)
