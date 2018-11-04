@@ -172,7 +172,6 @@ void mpool_put_object(struct mem_pool *mpool, void *object);
 /**
  * mpool_get_pad_size() - returns the number of padding-bytes for the specified
  * object and alignment size.
- * object and align size.
  * @object_size:	[in]	specifies size of the object in bytes.
  * @align_size:		[in]	specifies the alignment size.
  *
@@ -182,6 +181,22 @@ void mpool_put_object(struct mem_pool *mpool, void *object);
  */
 uint32_t mpool_get_pad_size(uint32_t object_size, uint32_t align_size);
 
+/**
+ * mpool_get_index_by_object() - returns index of the requested object within
+ * the specified pool.  NOTE: This routine is only supported for CHAIN or
+ * BATCH INFO type pools.
+ * @mpool:	[in]	specifies the pointer to the mpool.
+ * @object:	[in]	specifies the pointer to the object.
+ * @index:	[out]	specifies the index of the object within the pool.
+ *
+ * Return Value:
+ *	PNSO_OK	- on success
+ *	EINVAL	- on invalid input parameters (ex: mpool type, mpool, object
+ *			out of range)
+ *
+ */
+pnso_error_t mpool_get_index_by_object(struct mem_pool *mpool,
+		void *object, uint32_t *index);
 /**
  * mpool_pprint() - prints details of the pool.
  * @mpool:	[in]	specifies the pointer to the mpool.
