@@ -127,23 +127,24 @@ message LifSpec {
   kh.LifKeyHandle            key_or_handle               = 2 [(gogoproto.moretags) = "venice:key"];
   kh.InterfaceKeyHandle      pinned_uplink_if_key_handle = 3 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}" ];
   IfStatus                   admin_status                = 4;    // admin status of the interface
-  repeated LifQStateMapEntry lif_qstate_map              = 5;    // LIF -> Qstate map.
-  bool                       vlan_strip_en               = 6;    // LIF vlan strip enable
-  bool                       vlan_insert_en              = 7;    // Ingress vlan tag in p4plus_to_p4 hdr
-  bool                       enable_rdma                 = 8;    // RDMA: enable RDMA on LIF
-  bool                       is_management               = 9 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
-  PktFilter                  packet_filter               = 10;   // Packet filters
-  uint32                     hw_lif_id                   = 11;   // hw lif id. Zero will make Hal allocate it
-  uint32                     rdma_max_keys               = 12;   // RDMA: max key entries
-  uint32                     rdma_max_ahs                = 13;
-  uint32                     rdma_max_pt_entries         = 14;   // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate                  = 15;   // Initialize Qstate
-  LifRssSpec                 rss                         = 16;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer                  = 17;   // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer                  = 18;   // QOS Policer for rx traffic
-  kh.QosClassKeyHandle       rx_qos_class                = 19;   // QOS class-of-service for Rx traffic.
-  kh.QosClassKeyHandle       tx_qos_class                = 20;   // QOS class-of-service for Tx traffic.
-  uint32                     rdma_barmap_size            = 21;   // RDMA: barmap size in bytes, rounded to power of 2
+  types.LifType              type                        = 5;    // LIF type
+  repeated LifQStateMapEntry lif_qstate_map              = 6;    // LIF -> Qstate map.
+  bool                       vlan_strip_en               = 7;    // LIF vlan strip enable
+  bool                       vlan_insert_en              = 8;    // Ingress vlan tag in p4plus_to_p4 hdr
+  bool                       enable_rdma                 = 9;    // RDMA: enable RDMA on LIF
+  bool                       is_management               = 10 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
+  PktFilter                  packet_filter               = 11;   // Packet filters
+  uint32                     hw_lif_id                   = 12;   // hw lif id. Zero will make Hal allocate it
+  uint32                     rdma_max_keys               = 13;   // RDMA: max key entries
+  uint32                     rdma_max_ahs                = 14;
+  uint32                     rdma_max_pt_entries         = 15;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate                  = 16;   // Initialize Qstate
+  LifRssSpec                 rss                         = 17;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer                  = 18;   // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 19;   // QOS Policer for rx traffic
+  kh.QosClassKeyHandle       rx_qos_class                = 20;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle       tx_qos_class                = 21;   // QOS class-of-service for Tx traffic.
+  uint32                     rdma_barmap_size            = 22;   // RDMA: barmap size in bytes, rounded to power of 2
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -325,7 +326,7 @@ message CpuQueueStats {
   fixed32           num_rx_packets        = 3;    // Rx Packets to this interface
   uint64            rx_qfull_drop_errors  = 4;
   uint64            tx_sem_full_drops     = 5;
-  uint64            tx_free_requests      = 6; 
+  uint64            tx_free_requests      = 6;
 }
 
 message CpuLifStats {
@@ -334,7 +335,7 @@ message CpuLifStats {
 
 // LifStats captures all the statistics of given LIF
 message LifStats {
-  oneof Lifs {   
+  oneof Lifs {
     DataLifStats  data_lif_stats  = 1;
     CpuLifStats   cpu_lif_stats   = 2;
   }

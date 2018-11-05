@@ -42,6 +42,7 @@ typedef struct hal_queue_info_s {
 typedef struct hal_lif_info_s {
     uint32_t id;
     uint32_t hw_lif_id;
+    types::LifType type;
     Uplink *pinned_uplink;
     bool is_management;
     bool vlan_strip_en;

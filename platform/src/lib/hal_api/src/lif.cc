@@ -76,6 +76,7 @@ Lif::Lif(EthLif * eth_lif)
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
+    req->set_type(lif_info->type);
     req->set_hw_lif_id(lif_info->hw_lif_id);
     req->mutable_pinned_uplink_if_key_handle()->
         set_interface_id(lif_info->pinned_uplink ? lif_info->pinned_uplink->GetId() : 0);
@@ -87,7 +88,7 @@ Lif::Lif(EthLif * eth_lif)
     req->set_is_management(eth_lif_->IsOOBMnic());
     req->set_admin_status(::intf::IF_STATUS_UP);
     req->set_enable_rdma(lif_info->enable_rdma);
-    
+
     // Populate qstate map
     for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
         auto & qinfo = lif_info->queue_info[i];
@@ -180,6 +181,7 @@ Lif::TriggerHalUpdate()
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
+    req->set_type(lif_info->type);
     req->set_hw_lif_id(lif_info->hw_lif_id);
     req->mutable_pinned_uplink_if_key_handle()->set_interface_id(lif_info->pinned_uplink->GetId());
     req->mutable_packet_filter()->set_receive_broadcast(lif_info->receive_broadcast);
@@ -190,7 +192,7 @@ Lif::TriggerHalUpdate()
     req->set_is_management(eth_lif_->IsOOBMnic());
     req->set_admin_status(::intf::IF_STATUS_UP);
     req->set_enable_rdma(lif_info->enable_rdma);
-    
+
     status = hal->lif_update(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);

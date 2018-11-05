@@ -28,6 +28,13 @@
 
 namespace pt = boost::property_tree;
 
+// Doorbell address
+#define UPD_BITS_POSITION   (17)
+#define LIF_BITS_POSITION   (6)
+
+#define DOORBELL_ADDR(lif_num) \
+    ((0x8400000) | (0xb << UPD_BITS_POSITION) |  (lif_num << LIF_BITS_POSITION))
+
 /**
  * ETH Qtype Enum
  */
@@ -140,6 +147,8 @@ public:
         void *resp, void *resp_data);
     int GenerateQstateInfoJson(pt::ptree &lifs);
     bool isMnic();
+    bool isHostManagement();
+    bool isHost();
 
 private:
     /* Static members */
@@ -160,6 +169,7 @@ private:
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}
     // Mnic Info
     uint32_t mnic_id;
+    static uint32_t intr_base;
     // Rss config
     uint16_t rss_type;
     uint8_t  rss_key[RSS_HASH_KEY_SIZE]; // 40B
@@ -207,6 +217,7 @@ private:
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
     friend ostream &operator<<(ostream&, const Eth&);
     const char*opcode_to_str(enum cmd_opcode opcode);
+    types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
 
 };
 

@@ -1383,6 +1383,7 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
 #define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
+#define om_tmoport_enforce data.output_mapping_action_u.output_mapping_set_tm_oport_enforce_src_lport
 hal_ret_t
 pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                     pd_if_update_args_t *args,
@@ -1396,6 +1397,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     output_mapping_actiondata   data;
     directmap                   *dm_omap            = NULL;
     pd_lif_t                    *pd_lif             = NULL;
+    lif_t                       *lif                = NULL;
     uint32_t                    access_vlan_classic = 0;
     if_t                        *hal_if = (if_t *)pd_enicif->pi_if;
     bool                        set_drop            = false;
@@ -1408,6 +1410,10 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         pd_lif = (pd_lif_t *)lif_get_pd_lif(args->new_lif);
     } else {
         pd_lif = pd_enicif_get_pd_lif(pd_enicif);
+    }
+
+    if (pd_lif) {
+        lif = (lif_t *)pd_lif->pi_lif;
     }
 
     if (args && args->egress_en_change) {
@@ -1444,21 +1450,43 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         //      packets to that EP will be sent only to promiscous lifs.
         data.actionid = OUTPUT_MAPPING_OUTPUT_MAPPING_DROP_ID;
     } else {
-        data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
-        om_tmoport.nports              = 1;
-        om_tmoport.egress_mirror_en    = 1;
-        om_tmoport.egress_port1        = tm_oport;
-        om_tmoport.p4plus_app_id       = p4plus_app_id;
-        om_tmoport.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;
-        om_tmoport.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
-                                                                      pd_lif->pi_lif) : false;
-        om_tmoport.encap_vlan_id_valid = 1;
-        om_tmoport.encap_vlan_id       = if_get_encap_vlan((if_t *)
-                                                           pd_enicif->pi_if);
-        om_tmoport.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
-                                                                           pd_lif->pi_lif,
-                                                                           lif_upd) : false;
-        om_tmoport.access_vlan_id      = access_vlan_classic;
+
+        if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC &&
+            (lif && lif->type == types::LIF_TYPE_HOST_MANAGEMENT)) {
+            data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ENFORCE_SRC_LPORT_ID;
+            om_tmoport_enforce.mnic_enforce_src_lport =
+                pd_lif_get_enic_lport(g_hal_state->mnic_internal_mgmt_lif_id());
+            om_tmoport_enforce.nports              = 1;
+            om_tmoport_enforce.egress_mirror_en    = 1;
+            om_tmoport_enforce.egress_port1        = tm_oport;
+            om_tmoport_enforce.p4plus_app_id       = p4plus_app_id;
+            om_tmoport_enforce.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;
+            om_tmoport_enforce.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
+                                                                          pd_lif->pi_lif) : false;
+            om_tmoport_enforce.encap_vlan_id_valid = 1;
+            om_tmoport_enforce.encap_vlan_id       = if_get_encap_vlan((if_t *)
+                                                               pd_enicif->pi_if);
+            om_tmoport_enforce.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
+                                                                               pd_lif->pi_lif,
+                                                                               lif_upd) : false;
+            om_tmoport_enforce.access_vlan_id      = access_vlan_classic;
+        } else {
+            data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
+            om_tmoport.nports              = 1;
+            om_tmoport.egress_mirror_en    = 1;
+            om_tmoport.egress_port1        = tm_oport;
+            om_tmoport.p4plus_app_id       = p4plus_app_id;
+            om_tmoport.dst_lif             = pd_lif ? pd_lif->hw_lif_id : 0;
+            om_tmoport.rdma_enabled        = pd_lif ? lif_get_enable_rdma((lif_t *)
+                                                                          pd_lif->pi_lif) : false;
+            om_tmoport.encap_vlan_id_valid = 1;
+            om_tmoport.encap_vlan_id       = if_get_encap_vlan((if_t *)
+                                                               pd_enicif->pi_if);
+            om_tmoport.vlan_strip          = pd_lif ? pd_enicif_get_vlan_strip((lif_t *)
+                                                                               pd_lif->pi_lif,
+                                                                               lif_upd) : false;
+            om_tmoport.access_vlan_id      = access_vlan_classic;
+        }
     }
 
     HAL_TRACE_DEBUG("Action: {}", data.actionid);

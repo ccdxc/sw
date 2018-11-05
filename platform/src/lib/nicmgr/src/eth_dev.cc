@@ -27,6 +27,8 @@
 #include "nicmgr_status_msgs.pb.h"
 #include "nicmgr_status_msgs.delphi.hpp"
 #include "delphic.hpp"
+#include "intrutils.h"
+#include "mnet.h"
 
 using namespace nicmgr;
 using namespace nicmgr_status_msgs;
@@ -78,6 +80,7 @@ const char rdma_qstate_64[32]     = { 0 };
 
 sdk::lib::indexer *Eth::fltr_allocator = sdk::lib::indexer::factory(4096);
 sdk::lib::indexer *Eth::mnic_allocator = sdk::lib::indexer::factory(32, true /*thread_safe*/, true /*skip_zero*/);
+uint32_t Eth::intr_base = 0;
 
 struct queue_info Eth::qinfo [NUM_QUEUE_TYPES] = {
     [ETH_QTYPE_RX] = {
@@ -148,12 +151,11 @@ struct queue_info Eth::qinfo [NUM_QUEUE_TYPES] = {
 Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
          void *dev_spec, PdClient *pd_client)
 {
-    // uint64_t lif_handle, enic_handle;
-    vector<uint64_t> l2seg_ids;
-    uint64_t    hbm_addr;
-    uint32_t    hbm_size;
-    uint8_t     cosA = 1;
-    uint8_t     cosB = 0;
+    uint64_t                hbm_addr;
+    uint32_t                hbm_size;
+    uint8_t                 cosA = 1;
+    uint8_t                 cosB = 0;
+    struct mnet_req_resp_t  mnet_req_resp;
 
     hal = hal_client;
     hal_common_client = hal_common_client;
@@ -161,6 +163,7 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     pd = pd_client;
 
     memset(&pci_resources, 0, sizeof(pci_resources));
+    memset(&mnet_req_resp, 0, sizeof(mnet_req_resp));
 
     // Create LIF
     qinfo[ETH_QTYPE_RX].entries = (uint32_t)log2(spec->rxq_count);
@@ -175,6 +178,7 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     info.lif_id = spec->lif_id;
     info.hw_lif_id = spec->hw_lif_id;
     info.enable_rdma = spec->enable_rdma;
+    info.lif_type = ConvertDevTypeToLifType(spec->eth_type);
     uint64_t ret = hal->LifCreate(spec->lif_id,
                                   spec->uplink,
                                   qinfo,
@@ -264,7 +268,60 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
         }
     }
 
-    if (spec->host_dev) {
+    if (isMnic()) {
+        mnet_req_resp.req.devcmd_pa = pci_resources.devcmdpa;
+        mnet_req_resp.req.devcmd_db_pa = pci_resources.devcmddbpa;
+        mnet_req_resp.req.doorbell_pa = DOORBELL_ADDR(info.hw_lif_id);
+        mnet_req_resp.req.drvcfg_pa = intr_drvcfg_addr(Eth::intr_base);
+        mnet_req_resp.req.msixcfg_pa = intr_msixcfg_addr(Eth::intr_base);
+        mnet_req_resp.req.iface_type = MNIC_TYPE_ETH;
+        strcpy(mnet_req_resp.req.iface_name, spec->if_name.c_str());
+
+        NIC_LOG_INFO("lif-{}: Mnet devcmd_pa: {:#x}, devcmd_db_pa: {:#x}, "
+                     "doorbell_pa: {:#x}, drvcfg_pa: {:#x}, msixcfg_pa: {:#x}, "
+                     "iface_type: {}, iface_name: {}, intr_base: {}",
+                     info.hw_lif_id,
+                     mnet_req_resp.req.devcmd_pa,
+                     mnet_req_resp.req.devcmd_db_pa,
+                     mnet_req_resp.req.doorbell_pa,
+                     mnet_req_resp.req.drvcfg_pa,
+                     mnet_req_resp.req.msixcfg_pa,
+                     mnet_req_resp.req.iface_type,
+                     mnet_req_resp.req.iface_name,
+                     Eth::intr_base);
+
+#if 0
+        int rs = create_mnet(&mnet_req_resp);
+        if (rs) {
+            NIC_LOG_ERR("lif-{}: Failed to create mnet. ret: {}",
+                        info.hw_lif_id, rs);
+            return;
+        }
+#endif
+
+        Eth::intr_base += spec->intr_count;
+    } else if (isHostManagement()) {
+        NIC_LOG_INFO("lif-{}: name: {} Host Management device call to pcie",
+                     info.hw_lif_id, spec->if_name);
+        // Create PCI device
+        pdev = pciehdev_mgmteth_new(spec->if_name.c_str(), &pci_resources);
+        if (pdev == NULL) {
+            NIC_LOG_ERR("lif-{}: Failed to create Eth PCI device",
+                info.hw_lif_id);
+            return;
+        }
+        pciehdev_set_priv(pdev, (void *)this);
+
+        // Add device to PCI topology
+        extern class pciemgr *pciemgr;
+        int ret = pciemgr->add_device(pdev);
+        if (ret != 0) {
+            NIC_LOG_ERR("lif-{}: Failed to add Host mgmt PCI device to topology",
+                info.hw_lif_id);
+            return;
+        }
+    // } else if (spec->host_dev) {
+    } else if (isHost()) {
         // Create PCI device
         pdev = pciehdev_eth_new(name.c_str(), &pci_resources);
         if (pdev == NULL) {
@@ -291,6 +348,18 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     rss_type = LifRssType::RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
     memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
+}
+
+bool
+Eth::isHost()
+{
+    return (spec->eth_type == ETH_HOST);
+}
+
+bool
+Eth::isHostManagement()
+{
+    return (spec->eth_type == ETH_HOST_MGMT);
 }
 
 bool
@@ -1914,4 +1983,17 @@ Eth::GenerateQstateInfoJson(pt::ptree &lifs)
     qstates.clear();
     lif.clear();
     return 0;
+}
+
+types::LifType
+Eth::ConvertDevTypeToLifType(EthDevType dev_type)
+{
+    switch(dev_type) {
+        case ETH_HOST: return types::LIF_TYPE_HOST;
+        case ETH_HOST_MGMT: return types::LIF_TYPE_HOST_MANAGEMENT;
+        case ETH_MNIC_OOB_MGMT: return types::LIF_TYPE_MNIC_OOB_MANAGEMENT;
+        case ETH_MNIC_INTERNAL_MGMT: return types::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
+        case ETH_MNIC_INBAND_MGMT: return types::LIF_TYPE_MNIC_INBAND_MANAGEMENT;
+        default: return types::LIF_TYPE_NONE;
+    }
 }

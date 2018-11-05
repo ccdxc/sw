@@ -21,6 +21,7 @@ LCFLAGS = \
 	-I $(TOPDIR)/src/lib/intrutils/include \
 	-I $(TOPDIR)/src/lib/upgrade \
 	-I $(TOPDIR)/src/lib/sysmgr \
+	-I $(TOPDIR)/src/lib/mnet/include \
     -I $(TOPDIR)/../nic/delphi/sdk/ \
 	-I $(TOPDIR)/src/app/nicmgrd/src/ \
     -I $(TOPDIR)/../nic/upgrade_manager/export/upgcsdk/ \

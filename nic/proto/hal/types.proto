@@ -205,6 +205,16 @@ message L4PortRange {
 
 message Empty {}
 
+// Types of lif
+enum LifType {
+  LIF_TYPE_NONE                     = 0;
+  LIF_TYPE_HOST                     = 1;
+  LIF_TYPE_HOST_MANAGEMENT          = 2;
+  LIF_TYPE_MNIC_OOB_MANAGEMENT      = 3;
+  LIF_TYPE_MNIC_INTERNAL_MANAGEMENT = 4;
+  LIF_TYPE_MNIC_INBAND_MANAGEMENT   = 5;
+}
+
 // Types of Work Ring
 enum WRingType {
   WRING_TYPE_NONE             = 0;

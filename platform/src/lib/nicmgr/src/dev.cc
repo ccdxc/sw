@@ -158,7 +158,6 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
     pd = PdClient::factory(platform);
     assert(pd);
 
-    NIC_HEADER_TRACE("Service Lif creation");
     // Create nicmgr service lif
     nicmgr_req_qstate_t qstate_req = { 0 };
     nicmgr_resp_qstate_t qstate_resp = { 0 };
@@ -188,6 +187,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
         throw runtime_error("Failed to reserve LIFs");
     }
 
+    NIC_HEADER_TRACE("Service Lif creation");
     /*
      * Allocate sw_lif_id for nicmgr LIF
      */
@@ -298,7 +298,6 @@ DeviceManager::~DeviceManager()
 int
 DeviceManager::LoadConfig(string path)
 {
-    boost::property_tree::read_json(path, spec);
     struct eth_devspec *eth_spec;
     struct accel_devspec *accel_spec;
     uint32_t intr_base = 0;
@@ -307,6 +306,8 @@ DeviceManager::LoadConfig(string path)
 
     NIC_HEADER_TRACE("Loading Config");
     NIC_LOG_INFO("Json: {}", path);
+
+    boost::property_tree::read_json(path, spec);
 
     if (!system_uuid || !strcmp(system_uuid, "")) {
         sys_mac_base = 0x00DEADBEEF00llu;
@@ -382,9 +383,11 @@ DeviceManager::LoadConfig(string path)
             } else {
                 eth_spec->eth_type = ETH_UNKNOWN;
             }
+            eth_spec->if_name = val.get<string>("name");
             eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type", "Unknown"));
-            NIC_LOG_INFO("Creating mnic device with type: {}, lif_id: {}, hw_lif_id: {},"
+            NIC_LOG_INFO("Creating mnic device with name: {} type: {}, lif_id: {}, hw_lif_id: {},"
                          "pinned_uplink: {}",
+                         eth_spec->if_name,
                          eth_dev_type_to_str(eth_spec->eth_type),
                          eth_spec->lif_id,
                          eth_spec->hw_lif_id,
@@ -459,8 +462,10 @@ DeviceManager::LoadConfig(string path)
             } else {
                 eth_spec->eth_type = ETH_UNKNOWN;
             }
-            NIC_LOG_INFO("Creating eth device with type: {}, lif_id: {}, hw_lif_id: {}, "
+            eth_spec->if_name = val.get<string>("name");
+            NIC_LOG_INFO("Creating eth device with name: {}, type: {}, lif_id: {}, hw_lif_id: {}, "
                          "pinned_uplink: {}",
+                         eth_spec->if_name,
                          eth_dev_type_to_str(eth_spec->eth_type),
                          eth_spec->lif_id,
                          eth_spec->hw_lif_id,

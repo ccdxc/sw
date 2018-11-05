@@ -1,4 +1,4 @@
-PROGRAM = mnet_test 
+PROGRAM = mnet_test
 SOURCES = mnet_test.c
 LCFLAGS = -I ../include
 LIBRARIES = -lmnet

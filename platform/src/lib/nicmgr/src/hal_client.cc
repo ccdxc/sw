@@ -753,13 +753,15 @@ HalClient::LifCreate(uint64_t lif_id,
     hal_lif_info_t  hal_lif_info = {0};
 
     hal_lif_info.id = lif_id;
+    hal_lif_info.type = lif_info->lif_type;
     hal_lif_info.pinned_uplink = uplink;
     hal_lif_info.hw_lif_id = lif_info->hw_lif_id;
     hal_lif_info.enable_rdma = lif_info->enable_rdma;
     memcpy(hal_lif_info.queue_info, queue_info, sizeof(hal_lif_info.queue_info));
 
-    NIC_LOG_INFO("Creating with Lif: id: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
+    NIC_LOG_INFO("Creating with Lif: id: {}, type: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
                  hal_lif_info.id,
+                 hal_lif_info.type,
                  hal_lif_info.pinned_uplink ? hal_lif_info.pinned_uplink->GetId() : 0,
                  hal_lif_info.hw_lif_id,
                  hal_lif_info.enable_rdma);

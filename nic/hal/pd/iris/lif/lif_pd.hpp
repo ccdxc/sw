@@ -46,6 +46,7 @@ hal_ret_t pd_lif_make_clone(lif_t *ten, lif_t *clone);
 hal_ret_t pd_lif_handle_promiscous_filter_change (lif_t *lif,
                                                   pd_lif_update_args_t *args,
                                                   bool skip_hw_pgm);
+uint32_t pd_lif_get_enic_lport(lif_id_t lif_id);
 
 }   // namespace pd
 }   // namespace hal

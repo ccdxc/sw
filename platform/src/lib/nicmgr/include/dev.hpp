@@ -166,11 +166,12 @@ struct eth_devspec {
     // Delphi Object Key
     uint64_t dev_uuid;
     // FWD
-    EthDevType eth_type;
-    uint32_t   uplink_id;
-    Uplink     *uplink;
-    uint64_t   lif_id;
-    uint32_t   hw_lif_id;
+    EthDevType  eth_type;
+    std::string if_name;
+    uint32_t    uplink_id;
+    Uplink      *uplink;
+    uint64_t    lif_id;
+    uint32_t    hw_lif_id;
     // RES
     uint32_t rxq_count;
     uint32_t txq_count;

@@ -73,6 +73,7 @@ typedef struct lif_queue_info_s {
 typedef struct lif_s {
     hal_spinlock_t      slock;           // lock to protect this structure
     lif_id_t            lif_id;          // lif id assigned
+    types::LifType      type;            // lif type
     intf::IfStatus      admin_status;    // admin status
     bool                vlan_strip_en;   // vlan strip enable
     bool                vlan_insert_en;  // if en, ingress vlan is in p4plus_to_p4 dr

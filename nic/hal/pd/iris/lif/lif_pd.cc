@@ -464,6 +464,27 @@ pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_update_args_t *args)
     return lif->vlan_strip_en;
 }
 
+uint32_t
+pd_lif_get_enic_lport(lif_id_t lif_id)
+{
+    lif_t           *lif = NULL;
+    if_t            *hal_if = NULL;
+    dllist_ctxt_t   *lnode = NULL;
+    hal_handle_id_list_entry_t  *entry  = NULL;
+
+    lif = find_lif_by_id(lif_id);
+    if (lif) {
+        HAL_ASSERT(dllist_count(&lif->if_list_head) == 1);
+        dllist_for_each(lnode, &lif->if_list_head) {
+            entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+            hal_if = find_if_by_handle(entry->handle_id);
+            return if_get_lport_id(hal_if);
+        }
+    }
+
+    return 0;
+}
+
 //-----------------------------------------------------------------------------
 // Handles promiscous filter change
 //-----------------------------------------------------------------------------

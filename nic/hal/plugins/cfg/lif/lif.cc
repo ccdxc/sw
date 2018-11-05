@@ -643,6 +643,13 @@ lif_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
+    // Set mnic internal management
+    if (lif->type == types::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT) {
+        HAL_TRACE_DEBUG("Setting MNIC internal management id to: {}",
+                        lif->lif_id);
+        g_hal_state->set_mnic_internal_mgmt_lif_id(lif->lif_id);
+    }
+
 end:
     return ret;
 }
@@ -772,6 +779,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     // consume the config
     lif->lif_id              = spec.key_or_handle().lif_id();
+    lif->type                = spec.type();
     lif->admin_status        = spec.admin_status();
     lif->hal_handle          = hal_alloc_handle();
     lif->vlan_strip_en       = spec.vlan_strip_en();

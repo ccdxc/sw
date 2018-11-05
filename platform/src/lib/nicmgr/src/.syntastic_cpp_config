@@ -15,6 +15,7 @@
 -I ../../../../src/lib/delphi
 -I ../../../../src/lib/upgrade
 -I ../../../../src/lib/sysmgr
+-I ../../../../src/lib/mnet/include
 -I ../../../../src/lib/pciemgr_if/include
 -I ../../../../src/app/nicmgrd/src
 -I ../../../../include/common/drivers/linux/eth/ionic/

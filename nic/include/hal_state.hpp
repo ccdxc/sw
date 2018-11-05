@@ -263,6 +263,11 @@ public:
     void set_app_redir_if_id(if_id_t id) {
         app_redir_if_id_ = id;
     }
+
+    lif_id_t mnic_internal_mgmt_lif_id(void) const { return mnic_internal_mgmt_lif_id_; }
+    void set_mnic_internal_mgmt_lif_id(lif_id_t id) {
+        mnic_internal_mgmt_lif_id_ = id;
+    }
     void set_forwarding_mode(hal_forwarding_mode_t mode) {
         forwarding_mode_ = mode;
     }
@@ -367,6 +372,7 @@ private:
     hal_forwarding_mode_t   forwarding_mode_;
     hal_uplink_flood_mode_t uplink_flood_mode_;
     if_id_t                 app_redir_if_id_;
+    lif_id_t                mnic_internal_mgmt_lif_id_;
     uint8_t                 max_data_threads_;
     hal_handle_t            default_securityprof_hdl_;
     fte_span_t              *fte_span_;
@@ -444,7 +450,7 @@ public:
     slab *nwsec_profile_slab(void) const { return cfg_db_->nwsec_profile_slab(); }
     ht *nwsec_profile_id_ht(void) const { return oper_db_->nwsec_profile_id_ht(); }
 
-    
+
     slab *cpu_pkt_slab(void) const { return cfg_db_->cpu_pkt_slab(); }
     // get APIs for security Policy related state
     slab *nwsec_group_slab(void) const { return cfg_db_->nwsec_group_slab(); }
@@ -557,8 +563,11 @@ public:
     slab *rawrcb_slab(void) const { return cfg_db_->rawrcb_slab(); }
     ht *rawrcb_id_ht(void) const { return oper_db_->rawrcb_id_ht(); }
     if_id_t app_redir_if_id(void) const { return oper_db_->app_redir_if_id(); }
-
     void set_app_redir_if_id(if_id_t id) {
+        oper_db_->set_app_redir_if_id(id);
+    }
+    lif_id_t mnic_internal_mgmt_lif_id(void) const { return oper_db_->mnic_internal_mgmt_lif_id(); }
+    void set_mnic_internal_mgmt_lif_id(lif_id_t id) {
         oper_db_->set_app_redir_if_id(id);
     }
 

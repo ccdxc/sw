@@ -118,6 +118,7 @@ LIBRARIES += \
 	-lcfgspace \
 	-lpcieport \
 	-lpcietlp \
+	-lmnet \
 	$(NULL)
 
 ifeq ($(BUILD_ARCH), x86_64)
