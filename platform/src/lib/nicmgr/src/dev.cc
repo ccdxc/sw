@@ -31,7 +31,7 @@ namespace pt = boost::property_tree;
 sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
 
 #define LIF_ID_BASE     (100)
-sdk::lib::indexer *lif_allocator = sdk::lib::indexer::factory(1024);
+sdk::lib::indexer *lif_allocator = sdk::lib::indexer::factory(1024, true, true);
 
 uint64_t
 mac_to_int(std::string const& s)
@@ -116,17 +116,14 @@ DeviceManager::lifs_reservation(platform_t platform)
         return 0;
     }
 
-    /*
-     * Note that hal->LifCreate() starts its hw_lif_id range from 0,
-     * so the loop needs to go past HAL_HW_LIF_ID_MAX.
-     */
-    for (uint32_t i = 0; i <= HAL_HW_LIF_ID_MAX; i++) {
+    for (uint32_t i = 1; i <= HAL_HW_LIF_ID_MAX; i++) {
         if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to allocate reserved lif_id");
             return -1;
         }
         memset(&linfo, 0, sizeof(linfo));
         linfo.lif_id = lif_id;
+        linfo.hw_lif_id = i;
         if (hal->LifCreate(lif_id,  NULL, empty_qinfo, &linfo)) {
             NIC_LOG_ERR("Failed to reserve LIF {} thru HAL LifCreate", lif_id);
             return -1;
@@ -143,6 +140,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
     hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
     uint8_t     cosA = 1;
     uint8_t     cosB = 0;
+    uint64_t    hw_lif_id;
     uint32_t    lif_id;
 
     utils::logger::init(dol_integ);
@@ -196,24 +194,27 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
     }
     memset(&info, 0, sizeof(info));
     info.lif_id = lif_id;
+    hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
     if (dol_integ) {
 
         /*
          * For DOL integration, allocate nicmgr LIF fully with HAL, i.e.,
-         * complete with qstate initialization by the HAL>
+         * complete with qstate initialization by the HAL. Since HAL has
+         * so far kept in lock step with nicmgr regarding hw_lif_id's,
+         * the next id that HAL returns should match.
          */
+        info.hw_lif_id = 0;
         if (hal->LifCreate(info.lif_id, qinfo, &info,
                            0, false, 0, 0, 0, 0) == 0) {
             throw runtime_error("Failed to create HAL nicmgr LIF");
         }
+        if (hw_lif_id != info.hw_lif_id) {
+            NIC_LOG_ERR("nicmgr hw_lif_id {} mismatches with HAL hw_lif_id: {}",
+                        hw_lif_id, info.hw_lif_id);
+            throw runtime_error("HAL nicmgr hw_lif_id mismatch");
+        }
     } else {
-
-        /*
-         * HAL in non-HW platforms (x86) will fail LifCreate() with
-         * non-zero hw_lif_id. One good thing is such a call isn't
-         * needed on thos platforms.
-         */
-        info.hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
+        info.hw_lif_id = hw_lif_id;
         if (platform_is_hw(platform)) {
             if (hal->LifCreate(info.lif_id,  NULL, qinfo, &info)) {
                 throw runtime_error("Failed to create HAL nicmgr LIF");

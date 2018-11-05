@@ -239,6 +239,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     qinfo[STORAGE_SEQ_QTYPE_SQ].entries = log_2(spec->seq_queue_count);
     spec->seq_created_count = 1 << qinfo[STORAGE_SEQ_QTYPE_SQ].entries;
     info.lif_id = spec->lif_id;
+    info.hw_lif_id = spec->hw_lif_id;
     if (dol_integ) {
         if (hal->lif_map.find(spec->lif_id) != hal->lif_map.end()) {
             if (hal->LifDelete(spec->lif_id)) {
@@ -247,23 +248,26 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
             }
         }
 
+        /*
+         * For DOL integration, allocate accel LIF fully with HAL, i.e.,
+         * complete with qstate initialization by the HAL. Since HAL has
+         * so far kept in lock step with nicmgr regarding hw_lif_id's,
+         * the next id that HAL returns should match.
+         */
         info.hw_lif_id = 0;
         uint64_t lif_handle = hal->LifCreate(info.lif_id, qinfo, &info,
-                                             0, false, 0, 0, 0, info.hw_lif_id);
+                                             0, false, 0, 0, 0, 0);
         if (lif_handle == 0) {
             NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.lif_id);
             return;
         }
-        spec->hw_lif_id = info.hw_lif_id;
+        if (spec->hw_lif_id != info.hw_lif_id) {
+            NIC_LOG_ERR("Accel hw_lif_id {} mismatches with HAL hw_lif_id: {}",
+                        spec->hw_lif_id, info.hw_lif_id);
+            throw runtime_error("HAL nicmgr hw_lif_id mismatch");
+        }
 
     } else {
-
-        /*
-         * HAL in non-HW platforms (x86) will fail LifCreate() with
-         * non-zero hw_lif_id. One good thing is such a call isn't
-         * needed on thos platforms.
-         */
-        info.hw_lif_id = spec->hw_lif_id;
         if (platform_is_hw(pd->platform_)) {
             uint64_t ret = hal->LifCreate(spec->lif_id,  NULL, qinfo, &info);
             if (ret != 0) {

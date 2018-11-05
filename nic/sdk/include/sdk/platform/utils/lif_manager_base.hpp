@@ -56,6 +56,7 @@ class LIFManagerBase {
   //    - A positive LIF number if the allocation suceeded.
   //    - -errno in case of failure.
   int32_t LIFRangeAlloc(int32_t start, uint32_t count);
+  int32_t LIFRangeMarkAlloced(int32_t start, uint32_t count);
 
   // Delete a LIF. Also deletes any associated QState and disables LIF->QState
   // map entries. Also frees internal states.

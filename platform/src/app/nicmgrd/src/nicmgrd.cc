@@ -53,7 +53,7 @@ nicmgrd_poll(void *arg)
 static void
 loop()
 {
-    if (!dol_integ) {
+    if (platform_is_hw(platform)) {
         pciemgr = new class pciemgr("nicmgrd");
         pciemgr->initialize();
     }
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
     osigusr1 = signal(SIGUSR1, sigusr1_handler);
 
     //nicmgr_do_client_registration();
-    if (!dol_integ) {
+    if (platform_is_hw(platform)) {
         nicmgr_delphi_client_entry(NULL);
     }
     loop();
