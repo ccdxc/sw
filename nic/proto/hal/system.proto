@@ -322,6 +322,7 @@ message SessionSummaryStats {
   uint64      num_tcp_reset_sent = 7;              // Number of TCP resets sent as part of SFW reject
   uint64      num_icmp_error_sent = 8;             // Number of ICMP errors sent as part of SFW reject
   uint64      num_connection_timeout_sessions = 9; // Number of TCP sessions that timedout before going to established state
+  uint64      num_session_create_errors = 10;       // # of session create errors
 }
 
 message QCtr {

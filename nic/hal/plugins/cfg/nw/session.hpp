@@ -395,9 +395,10 @@ typedef struct session_stats_ {
     uint64_t    icmp_sessions;
     uint64_t    drop_sessions;
     uint64_t    aged_sessions;
-    uint64_t    num_tcp_rst_sent;    // Number of TCP resets found as a result of SFW Reject
-    uint64_t    num_icmp_error_sent; // Number of ICMP errors sent as a result of SFW Reject
-    uint64_t    num_cxnsetup_timeout; // Number of sessions that timed out at connection setup
+    uint64_t    num_tcp_rst_sent;          // no. of TCP resets found as a result of SFW Reject
+    uint64_t    num_icmp_error_sent;       // no. of ICMP errors sent as a result of SFW Reject
+    uint64_t    num_cxnsetup_timeout;      // no. of sessions that timed out at connection setup
+    uint64_t    num_session_create_err;    // no. of session create errors
 } session_stats_t;
 
 // max. number of session supported  (TODO: we can take this from cfg file)

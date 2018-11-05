@@ -1204,7 +1204,6 @@ update_global_session_stats (session_t *session, bool decr=false)
         } else if (key.proto == types::IPPROTO_ICMP) {
             HAL_ATOMIC_INC_UINT64(&g_session_stats.icmp_sessions, (decr)?(-1):1);
         }
-
     }
 }
 
@@ -1329,6 +1328,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     if (session && ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session create failure, err={}", ret);
         session_cleanup(session);
+        HAL_ATOMIC_INC_UINT64(&g_session_stats.num_session_create_err, 1);
     } else {
         update_global_session_stats(session);
     }
@@ -2570,6 +2570,7 @@ system_session_summary_get(SystemResponse *rsp)
     session_stats->set_num_tcp_reset_sent(g_session_stats.num_tcp_rst_sent);
     session_stats->set_num_icmp_error_sent(g_session_stats.num_icmp_error_sent);
     session_stats->set_num_connection_timeout_sessions(g_session_stats.num_cxnsetup_timeout);
+    session_stats->set_num_session_create_errors(g_session_stats.num_session_create_err);
 
     return HAL_RET_OK;
 }
