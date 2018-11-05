@@ -49,6 +49,7 @@ QEMU_ENV   = {"WITH_QEMU": "1"}
 NETAGENT_CTRL_INTF   = {"NETAGENT_CTRL_INTF": ""}
 VENICE_IPS = {"VENICE_IPS" : ""}
 NMD_HOSTNAME = {"NMD_HOSTNAME" : ""}
+NAPLES_UUID = {"SYSUUID" : ""}
 
 # Move it out to a configu
 _APP_IMAGES = [
@@ -360,6 +361,13 @@ def __bringup_naples_container(args):
     if args.control_intf:
         NETAGENT_CTRL_INTF = {"NETAGENT_CTRL_INTF" : args.control_intf}
         NAPLES_ENV.update(NETAGENT_CTRL_INTF)
+    if args.sys_uuid:
+        NAPLES_UUID = {"SYSUUID" : args.sys_uuid}
+    else:
+        with open("/sys/class/net/" + args.control_intf + "/address", 'r') as myfile:
+            NAPLES_UUID = {"SYSUUID" : myfile.read().replace('\n', '')}
+        
+    NAPLES_ENV.update(NAPLES_UUID)
 
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
                                                name=args.sim_name,
@@ -423,6 +431,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--name', dest='sim_name', default=DEF_NAPLES_SIM_NAME,
                         help='Naples sim name to be used.')
+    parser.add_argument('--sysuuid', dest='sys_uuid', default=None,
+                        help='System uuid to be used for naples')
     parser.add_argument('--network-driver', dest='nw_driver', default="macvlan",
                         choices=["macvlan"], help='Network Driver for docker network')
     parser.add_argument('--control-intf', dest='control_intf', default=None,

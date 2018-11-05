@@ -60,7 +60,7 @@ class _Testbed:
                 Logger.info("Testbed Type = HARDWARE")
         else:
             Logger.info("Testbed Type = SIMULATION")
-            self.__type == types.tbtype.SIMULATION
+            self.__type = types.tbtype.SIMULATION
         return
 
     def __read_warmd_json(self):

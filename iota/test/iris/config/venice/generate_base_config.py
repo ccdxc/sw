@@ -9,8 +9,10 @@ def __init_config():
     req.entry_point_type = cfg_svc_pb2.VENICE_REST
     for venice_ip in api.GetVeniceMgmtIpAddresses():
         req.endpoints.append("%s:9000" % venice_ip)
-    for data_vlan in api.GetDataVlans():
-        req.vlans.append(data_vlan)
+
+    # Temp change: Send only 10 vlans
+    for v in range(10):
+        req.vlans.append(api.Testbed_AllocateVlan())
     resp = api.InitCfgService(req)
     if resp == None:
         return api.types.status.FAILURE
