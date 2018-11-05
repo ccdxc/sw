@@ -10,6 +10,7 @@ namespace utils {
 const size_t log::k_async_qsize_ = 64 * 1024;    // must be power of 2
 const spdlog::async_overflow_policy log::k_async_overflow_policy_ = spdlog::async_overflow_policy::discard_log_msg;
 const std::chrono::milliseconds log::k_flush_intvl_ms_ = std::chrono::milliseconds(10);
+uint64_t    g_logger_cpu_mask = 0;
 
 // logger class methods
 spdlog::level::level_enum
@@ -61,9 +62,8 @@ log::syslog_level_to_spdlog_level(syslog_level_e level) {
 void
 log::set_cpu_affinity(void)
 {
-#if 0
     cpu_set_t   cpus;
-    uint64_t    cpu_mask = g_cpu_mask;
+    uint64_t    cpu_mask = g_logger_cpu_mask;
 
     CPU_ZERO(&cpus);
     while (cpu_mask != 0) {
@@ -72,7 +72,6 @@ log::set_cpu_affinity(void)
     }
     pthread_t current_thread = pthread_self();
     pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpus);
-#endif
 }
 
 bool
@@ -82,11 +81,16 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
           trace_level_e trace_level, syslog_level_e syslog_level) {
     std::function<void()> worker_thread_cb = set_cpu_affinity;
 
-#if 0
-    if (!g_cpu_mask) {
-        g_cpu_mask = cpu_mask;
+    // first time when *any* logger is created, save the cpu mask and use it
+    // for all other logger instances as well
+    if (!g_logger_cpu_mask) {
+        if (!cpu_mask) {
+            g_logger_cpu_mask = 0x1;
+        } else {
+            g_logger_cpu_mask = cpu_mask;
+        }
+        g_logger_cpu_mask = cpu_mask;
     }
-#endif
     syslogger_ = syslogger;
     trace_level_ = trace_level;
     log_level_ = syslog_level;

@@ -106,7 +106,6 @@ public:
     spdlog::logger *logger(void);
 
 private:
-    uint64_t                                      cpu_mask_;                   // CPU this logger is tied to
     bool                                          syslogger_;                  // true, if this is for syslogs
     trace_level_e                                 trace_level_;                // trace level, if this is for traces
     syslog_level_e                                log_level_;                  // syslog level, if this is for syslogs
