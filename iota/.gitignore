@@ -4,3 +4,4 @@ protos/*pygen*
 bin/
 images/raw.tar.gz
 *.log
+logs
