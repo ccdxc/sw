@@ -921,6 +921,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                               tinfo.tabledepth, ctinfo.tabledepth,
                               tinfo.key_struct_size,
                               sizeof(p4pd_flow_hash_data_t), P4_FLOW_NUM_HINTS_PER_ENTRY,
+                              8 /* Max recircs */,
                               static_cast<HbmHash::HashPoly>(tinfo.hash_type),
                               HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN, table_health_monitor);
             HAL_ASSERT(flow_table_ != NULL);

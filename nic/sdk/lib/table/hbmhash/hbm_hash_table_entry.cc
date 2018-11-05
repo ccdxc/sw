@@ -71,8 +71,8 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
 {
     sdk_ret_t           rs = SDK_RET_OK;
     uint32_t            hint_bits = 0;
-    HbmHashHintGroup       *fh_grp = NULL;
-    HbmHashSpineEntry      *fse = NULL;
+    HbmHashHintGroup    *fh_grp = NULL;
+    HbmHashSpineEntry   *fse = NULL;
     bool                is_new_fse = FALSE;
     std::map<uint32_t, HbmHashHintGroup*>::iterator itr;
 
@@ -91,7 +91,12 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
             return SDK_RET_DUPLICATE_INS;
         }
 
-        fse = get_spine_entry_for_hg(fh_grp, &is_new_fse);
+        rs = get_spine_entry_for_hg(fh_grp, h_entry, &is_new_fse, &fse);
+        if (rs != SDK_RET_OK) {
+            SDK_TRACE_DEBUG("Failed to get spine entry. ret: %d", rs);
+            return rs;
+        }
+
         rs = h_entry->insert(fh_grp, fse);
         if (rs != SDK_RET_OK) {
             if (is_new_fse) {
@@ -104,7 +109,12 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
         // Hint Group doesnt exist
         SDK_TRACE_DEBUG("New HG Entry ...");
         // Check if we can put this new HG in the existing Spine Entry
-        fse = get_spine_entry_for_new_hg(&is_new_fse);
+        rs = get_spine_entry_for_new_hg(&is_new_fse, h_entry, &fse);
+        if (rs != SDK_RET_OK) {
+            SDK_TRACE_DEBUG("Failed to create spine entry. ret: %d",
+                            rs);
+            return rs;
+        }
         //   - Create Hint Group
         // fh_grp = new HbmHashHintGroup(hint_bits, NULL);
         fh_grp = HbmHashHintGroup::factory(hint_bits, NULL);
@@ -191,16 +201,32 @@ HbmHashTableEntry::get_num_hbm_hash_hgs()
 // ---------------------------------------------------------------------------
 // Get Spine entry for new Hint Group
 // ---------------------------------------------------------------------------
-HbmHashSpineEntry *
-HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new)
+sdk_ret_t
+HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new,
+                                              HbmHashEntry *h_entry,
+                                              HbmHashSpineEntry **spine_entry)
 {
-    HbmHashSpineEntry  *sp_entry = spine_entry_;
-    HbmHashSpineEntry  *new_sp_entry = NULL;
-    uint32_t        fse_fhct_index = 0;
+    sdk_ret_t           ret = SDK_RET_OK;
+    HbmHashSpineEntry   *sp_entry = spine_entry_;
+    HbmHashSpineEntry   *new_sp_entry = NULL;
+    uint32_t            fse_fhct_index = 0;
+
+    *spine_entry = NULL;
+
+    /*
+     * Recirc Calculation:
+     * Case 1: No spine entry
+     *  #recircs = 0
+     * Case 2: Last spine entry with hg able to accomodate
+     *  #recircs = #steps to spine entry + 1(attached entry)
+     * Case 3: Last spine entry with hg not able to accomodate
+     * #recircs = #steps to spine entry + 1(New spine entry) + 1(attached entry)
+     */
 
     // Get to the last spine entry.
     while (sp_entry && sp_entry->get_next() != NULL) {
         sp_entry = sp_entry->get_next();
+        h_entry->inc_recircs();
     }
 
     if (!sp_entry ||
@@ -208,7 +234,22 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new)
             hbm_hash_->get_num_hints_per_entry())) {
         SDK_TRACE_DEBUG("New Spine Entry ...");
         *is_new = TRUE;
-        // new_sp_entry = new HbmHashSpineEntry(this);
+
+        if (sp_entry) {
+            // Case 3:
+            // For new spine
+            h_entry->inc_recircs();
+            // For attached entry on the new spine
+            h_entry->inc_recircs();
+        }
+
+        if (h_entry->get_recircs() == hbm_hash_->max_recircs()) {
+            ret = SDK_RET_HBM_HASH_MAX_RECIRC_EXCEED;
+            SDK_TRACE_ERR("Unable to install flow. #recircs "
+                            "exceeds max recircs: %d. ret: %d",
+                            hbm_hash_->max_recircs(), ret);
+            return ret;
+        }
         new_sp_entry = HbmHashSpineEntry::factory(this);
         if (!sp_entry) {
             // Spine Entry will go in HBM Hash Table
@@ -223,25 +264,44 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new)
             new_sp_entry->set_fhct_index(fse_fhct_index);
         }
         num_spine_entries_++;
-        return new_sp_entry;
+        *spine_entry = new_sp_entry;
+        return ret;
+    } else {
+        if (sp_entry) {
+            // Case 2:
+            h_entry->inc_recircs();
+            if (h_entry->get_recircs() == hbm_hash_->max_recircs()) {
+                ret = SDK_RET_HBM_HASH_MAX_RECIRC_EXCEED;
+                SDK_TRACE_ERR("Unable to install flow. #recircs "
+                              "exceeds max recircs: %d. ret: %d",
+                              hbm_hash_->max_recircs(), ret);
+                return ret;
+            }
+        }
     }
 
     SDK_TRACE_DEBUG("Spine Entry exist...");
-    return sp_entry;
+    *spine_entry = sp_entry;
+    return ret;
 }
 
 // ---------------------------------------------------------------------------
 // Get Spine entry for Hint Group
 // ---------------------------------------------------------------------------
-HbmHashSpineEntry *
-HbmHashTableEntry::get_spine_entry_for_hg(HbmHashHintGroup *hg, bool *is_new)
+sdk_ret_t
+HbmHashTableEntry::get_spine_entry_for_hg(HbmHashHintGroup *hg,
+                                          HbmHashEntry *h_entry,
+                                          bool *is_new,
+                                          HbmHashSpineEntry **spine_entry)
 {
-    HbmHashSpineEntry *sp_entry = hg->get_fs_entry();
-    if (sp_entry) {
+    sdk_ret_t ret = SDK_RET_OK;
+    *spine_entry = hg->get_fs_entry();
+    if (*spine_entry) {
         *is_new = FALSE;
-        return sp_entry;
+        return SDK_RET_OK;
     } else {
-        return get_spine_entry_for_new_hg(is_new);
+        ret = get_spine_entry_for_new_hg(is_new, h_entry, spine_entry);
+        return ret;
     }
 }
 

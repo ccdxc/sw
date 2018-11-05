@@ -41,6 +41,7 @@ HbmHash::factory(std::string table_name, uint32_t table_id,
                  uint32_t key_len,
                  uint32_t data_len,
                  uint32_t num_hints_per_entry,
+                 uint32_t max_recircs,
                  HbmHash::HashPoly hash_poly,
                  uint32_t mtrack_id,
                  bool entry_trace_en,
@@ -58,7 +59,7 @@ HbmHash::factory(std::string table_name, uint32_t table_id,
     hbmhash = new (mem) HbmHash(table_name, table_id,
                                 collision_table_id, hash_capacity,
                                 coll_capacity, key_len,
-                                data_len, num_hints_per_entry,
+                                data_len, num_hints_per_entry, max_recircs,
                                 hash_poly, entry_trace_en,
                                 health_monitor_func);
 
@@ -112,6 +113,7 @@ HbmHash::HbmHash(std::string table_name,
                  uint32_t key_len,
                  uint32_t data_len,
                  uint32_t num_hints_per_entry,
+                 uint32_t max_recircs,
                  HbmHash::HashPoly hash_poly,
                  bool entry_trace_en,
                  table_health_monitor_func_t health_monitor_func)
@@ -122,6 +124,7 @@ HbmHash::HbmHash(std::string table_name,
     key_len_                    = key_len;
     data_len_                   = data_len;
     num_hints_per_entry_        = num_hints_per_entry;
+    max_recircs_                = max_recircs;
     hwkey_len_                  = 0;
     hwdata_len_                 = 0;
     hash_capacity_              = 0;
@@ -365,12 +368,20 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
 
     if (rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL) {
         // insert into entry indexer map ... For retrieval
-        entry_map_[fe_idx] = entry;
+        // entry_map_[fe_idx] = entry;
+        insert_entry(fe_idx, entry);
         entry->set_global_index(fe_idx);
         *index = fe_idx;
+
+        SDK_TRACE_ERR("#Recircs: %d", entry->get_recircs());
+        if (entry->get_recircs() >= 2) {
+            char            buff[4096] = {0};
+            entry->entry_to_str(buff, 4096);
+            SDK_TRACE_ERR("Flow: {}", buff);
+        }
     } else {
         // insert failed
-        SDK_TRACE_DEBUG("Insert FAIL ...");
+        SDK_TRACE_DEBUG("Insert FAIL ...rs: %d", rs);
 
         // delete entry
         HbmHashEntry::destroy(entry);
@@ -456,7 +467,8 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
 
     if (rs == SDK_RET_OK || rs == SDK_RET_HBM_HASH_COLL) {
         // insert into flow entry indexer map ... For retrieval
-        entry_map_[fe_idx] = entry;
+        // entry_map_[fe_idx] = entry;
+        insert_entry(fe_idx, entry);
         entry->set_global_index(fe_idx);
         *index = fe_idx;
     } else {
@@ -545,7 +557,6 @@ HbmHash::remove(uint32_t index)
                 // Free up the Table Entry.
                 HbmHashTableEntry::destroy(bucket);
             }
-
         }
     } else {
         // Entry doesn't exist
@@ -946,6 +957,7 @@ HbmHash::remove_entry(uint32_t index)
     HbmHashEntry   *data = NULL;
     data = entry_map_[index];
     entry_map_[index] = NULL;
+    entry_count_--;
     return data;
 }
 

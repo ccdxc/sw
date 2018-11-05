@@ -329,6 +329,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                   tinfo.tabledepth, ctinfo.tabledepth,
                                   tinfo.key_struct_size,
                                   sizeof(gft_flow_hash_data_t), 10,    // no. of hints
+                                  8, // Max # of recircs
                                   static_cast<HbmHash::HashPoly>(tinfo.hash_type),
                                   HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN);
                 HAL_ASSERT(flow_table_ != NULL);
@@ -342,6 +343,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                   tinfo.tabledepth, ctinfo.tabledepth,
                                   tinfo.key_struct_size,
                                   sizeof(gft_flow_hash_data_t), 10,    // no. of hints
+                                  8, // Max # of recircs
                                   static_cast<HbmHash::HashPoly>(tinfo.hash_type),
                                   HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN);
                 HAL_ASSERT(tx_flow_table_ != NULL);

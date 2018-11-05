@@ -110,6 +110,7 @@ private:
     uint32_t            key_len_;                   // key len
     uint32_t            data_len_;                  // data len
     uint32_t            entire_data_len_;           // entire data len
+    uint32_t            max_recircs_;                // max. recircs
     HashPoly            hash_poly_;                 // hash polynomial
     crcFast             *crc_;                      // crc Table for fast comput.
 
@@ -172,6 +173,7 @@ private:
             uint32_t data_len,                 // 20
             // uint32_t hbm_hash_table_entry_len,          // 512
             uint32_t num_hints_per_entry = 6,
+            uint32_t max_recircs = 8,
             HbmHash::HashPoly hash_poly = HASH_POLY0,
             bool entry_trace_en = false,
             table_health_monitor_func_t health_monitor_func = NULL);
@@ -193,6 +195,7 @@ public:
                             uint32_t collision_table_id, uint32_t hash_capacity,
                             uint32_t coll_capacity, uint32_t key_len,
                             uint32_t data_len, uint32_t num_hints_per_entry = 6,
+                            uint32_t max_recircs = 8,
                             HbmHash::HashPoly hash_poly = HASH_POLY0,
                             uint32_t mtrack_id = SDK_MEM_ALLOC_FLOW,
                             bool entry_trace_en = false,
@@ -205,6 +208,7 @@ public:
     const char *table_name(void) { return table_name_.c_str(); }
     uint32_t table_capacity(void) { return hash_capacity_; }
     uint32_t coll_table_capacity(void) { return coll_capacity_; }
+    uint32_t max_recircs(void) { return max_recircs_; }
     uint32_t table_num_entries_in_use(void);
     uint32_t coll_table_num_entries_in_use(void);
     uint32_t table_num_inserts(void);

@@ -14,6 +14,7 @@ export HAL_CONFIG_PATH=${TOPDIR}/conf
 
 #CMD_OPTS="COVFILE\=${COVFILE}"
 PRELOADS=${BUILD_DIR}/lib/libp4pd_mock.so
+HBMHASH_PRELOADS=${BUILD_DIR}/lib/libhbmhashp4pd_mock.so
 set -e
 # PI gtests
 export PATH=${PATH}:${BUILD_DIR}/bin
@@ -73,7 +74,7 @@ block_list_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/block_list_test.xml"
 fsm_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fsm_test.xml"
 
 LD_PRELOAD=${PRELOADS} acl_tcam_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/acl_tcam_test.xml"
-#LD_PRELOAD=${PRELOADS} flow_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/flow.xml"
+LD_PRELOAD=${HBMHASH_PRELOADS} hbmhash_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/hbmhash_test.xml"
 LD_PRELOAD=${PRELOADS} met_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/met_test.xml"
 LD_PRELOAD=${PRELOADS} rw_tbl_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/rw_tbl_test.xml"
 LD_PRELOAD=${PRELOADS} tnnl_rw_tbl_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/tnnl_rw_tbl_test.xml"

@@ -78,6 +78,7 @@ HbmHashEntry::HbmHashEntry(void *key, uint32_t key_len,
     is_anchor_entry_ = FALSE;
     spine_entry_ = NULL;
     hct_index_ = 0;
+    num_recircs_ = 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -174,6 +175,22 @@ HbmHashEntry::insert(HbmHashHintGroup *hg, HbmHashSpineEntry *fse)
         // Install FEntry in FHCT.
         // Re-Install last entry in the HG to point to the above entry.
         SDK_TRACE_DEBUG("Insert:HG Chain Entry ...");
+
+        /*
+         * 1 recirc of attached entry is already incremented.
+         * To add to the end of list, the following is the
+         * number of recircs.
+         */
+        inc_recircs(hg->get_num_hbm_hash_entries() - 1);
+        if (get_recircs() == fse->get_ht_entry()->
+            get_hbm_hash()->max_recircs()) {
+            SDK_TRACE_ERR("Unable to install flow. #recircs "
+                          "exceeds max recircs: %d. ret: %d",
+                          fse->get_ht_entry()->
+                          get_hbm_hash()->max_recircs());
+            rs = SDK_RET_HBM_HASH_MAX_RECIRC_EXCEED;
+            return rs;
+        }
 
         // Allocate an entry in HBM Hash Coll. Table.
         rs = alloc_collision_index(fse, &hct_index_);

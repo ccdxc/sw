@@ -41,6 +41,7 @@ private:
     HbmHashHintGroup    *hint_group_;       // HBM Hash hint group
     uint32_t            gl_index_;          // global index
     void                *hwkey_;            // hw key
+    uint32_t            num_recircs_;       // num. of recircs
 
     // Location Information:
     bool                is_anchor_entry_;   // is anchor
@@ -101,6 +102,11 @@ public:
     void set_spine_entry(HbmHashSpineEntry *spe);
     void set_fhct_index(uint32_t fhct_index);
     void set_hw_key(void *hwkey);
+    void inc_recircs() { num_recircs_++; }
+    void inc_recircs(uint32_t x) { num_recircs_ += x; }
+    void dec_recircs() { num_recircs_--; }
+    uint32_t get_recircs() { return num_recircs_; }
+
 
 };
 

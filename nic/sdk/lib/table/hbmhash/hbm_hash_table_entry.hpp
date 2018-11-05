@@ -53,8 +53,14 @@ public:
     sdk_ret_t remove(HbmHashEntry *h_entry);
 
     uint32_t get_num_hbm_hash_hgs();
-    HbmHashSpineEntry *get_spine_entry_for_new_hg(bool *is_new);
-    HbmHashSpineEntry *get_spine_entry_for_hg(HbmHashHintGroup *hg, bool *is_new);
+    // HbmHashSpineEntry *get_spine_entry_for_new_hg(bool *is_new,
+    sdk_ret_t get_spine_entry_for_new_hg(bool *is_new,
+                                         HbmHashEntry *h_entry,
+                                         HbmHashSpineEntry **spine_entry);
+    sdk_ret_t get_spine_entry_for_hg(HbmHashHintGroup *hg,
+                                     HbmHashEntry *h_entry,
+                                     bool *is_new,
+                                     HbmHashSpineEntry **spine_entry);
     HbmHashSpineEntry *get_last_spine_entry();
     HbmHashEntry *get_last_hbm_hash_entry();
     void add_hg(uint32_t hint_bits, HbmHashHintGroup *hg);
