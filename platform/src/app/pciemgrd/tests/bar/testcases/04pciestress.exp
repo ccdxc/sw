@@ -15,9 +15,9 @@ pciestress0:
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
 |3210987654321098765432109876543210987654321098765432109876543210|
-|............11111111111111111111111111111111111111..............|
+|............11111111111111111111111111111111111111rr............|
 +----------------------------------------------------------------+
-vfe(V4) 11 vfs(V3) 12 prt_size(V2) 12 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
+vfe(V4) 11 vfs(V3) 14 prt_size(V2) 12 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
 BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
 0   32   mem   rwl   16K   0x3ffffffffc000 0:02:00.0 0  
     PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
@@ -28,20 +28,20 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
 |3210987654321098765432109876543210987654321098765432109876543210|
-|............111111111111111111111111111111111111111111111.......|
+|............111111111111111111111111111111111111111111111rr.....|
 +----------------------------------------------------------------+
-vfe(V4) 4 vfs(V3) 5 prt_size(V2) 5 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
+vfe(V4) 4 vfs(V3) 7 prt_size(V2) 5 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
 BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
 2   33   mem   rwl   128   0x3ffffffffff80 0:02:00.0 0  
     PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     5    res   --p-  32    0x3ffffffffff80 0x13f000000
     6    res   -n--  32    0x3ffffffffffa0 0x13f000000
     7    res   i---  32    0x3ffffffffffc0 0x13f000000
-    8    res   ----  32    0x3ffffffffffe0 0x13f000000
+    8    res   ----  0     0x3ffffffffffe0 0x000000000
 
 idx  id type rw p:bb:dd.f baraddr     vf    lif   prt   pid  qtype prtb:prtc
-32    0 mem  rw 0:02:00.0 0xfffffffffc000 11:12  0:0  14:12  0:0   0:0     1:4   
-33    0 io   rw 0:02:00.0 0xfffffffffff80  4:5   0:0   5:5   0:0   0:0     5:4   
+32    0 mem  rw 0:02:00.0 0xfffffffffc000 11:14  0:0  14:12  0:0   0:0     1:4   
+33    0 io   rw 0:02:00.0 0xfffffffffff80  4:7   0:0   5:5   0:0   0:0     5:4   
 idx  x                y                pmr
-32   0fffffffffc00009 00000000000001f0 80020003 00c31800 00004000 00000000
-33   0fffffffffff8029 00000000000001d0 800a000b 00514a00 00004000 00000000
+32   0fffffffffc00009 00000000000001f0 80020003 00c39800 00004000 00000000
+33   0fffffffffff8029 00000000000001d0 800a000b 0051ca00 00004000 00000000

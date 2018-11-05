@@ -36,6 +36,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
                 pbar.size,
                 sz,     /* prtsize */
                 PMT_BARF_RW);
+    pmt_bar_setr_prt(&preg.pmt, 12, 2);
 
     /* direct access */
     prt_res_enc(&prt, pa, 0x1000, PRT_RESF_PMVDIS);
@@ -66,6 +67,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
                 pbar.size,
                 0x20, /* prtsize */
                 PMT_BARF_RW);
+    pmt_bar_setr_prt(&preg.pmt, 5, 2);
 
     /* direct access */
     prt_res_enc(&prt, pa, 0x20, PRT_RESF_PMVDIS);
@@ -76,8 +78,8 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     /* indirect access */
     prt_res_enc(&prt, pa, 0x20, PRT_RESF_INDIRECT);
     pciehbarreg_add_prt(&preg, &prt);
-    /* direct access */
-    prt_res_enc(&prt, pa, 0x20, PRT_RESF_NONE);
+    /* pad prt */
+    prt_res_enc(&prt, 0, 0, PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);
 
     pciehbar_add_reg(&pbar, &preg);
