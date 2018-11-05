@@ -260,7 +260,6 @@ struct testcase_context {
 	 * testcase_context owns these batch contexts,
 	 * but they are distributed evenly between the worker_contexts
 	 */
-	struct batch_context batch_ctx_pool[TEST_MAX_BATCH_COUNT_TOTAL];
 	struct worker_queue *batch_ctx_freelist;
 
 	/* queue for polling batch_ctx, local to ctl thread */

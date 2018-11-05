@@ -2096,19 +2096,19 @@ static uint32_t validation_stats_to_yaml(const struct test_validation *validatio
 	if (validation->type  >= VALIDATION_TYPE_MAX)
 		return 0;
 
-	len += safe_strcpy(dst+len, "    { ", max_len-len);
+	len += safe_strcpy(dst+len, "    { \"", max_len-len);
 	len += safe_strcpy_tolower(dst+len, validation_type_to_name_list[validation->type], max_len-len);
-	len += safe_strcpy(dst+len, ": {\n", max_len-len);
+	len += safe_strcpy(dst+len, "\": {\n", max_len-len);
 
-	len += safe_strcpy(dst+len, "        idx: ", max_len-len);
+	len += safe_strcpy(dst+len, "        \"idx\": ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, validation->node.idx);
 	len += safe_strcpy(dst+len, ",\n", max_len-len);
 
-	len += safe_strcpy(dst+len, "        success: ", max_len-len);
+	len += safe_strcpy(dst+len, "        \"success\": ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, validation->rt_success_count);
 	len += safe_strcpy(dst+len, ",\n", max_len-len);
 
-	len += safe_strcpy(dst+len, "        failure: ", max_len-len);
+	len += safe_strcpy(dst+len, "        \"failure\": ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, validation->rt_failure_count);
 
 	len += safe_strcpy(dst+len, "\n    }},\n", max_len-len);
@@ -2134,21 +2134,21 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 	if (!dst)
 		return ENOMEM;
 
-	len += safe_strcpy(dst+len, "{tests: [{ test: {\n  idx: ", max_len-len);
+	len += safe_strcpy(dst+len, "{\"tests\": [{ \"test\": {\n  \"idx\": ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, testcase->node.idx);
 	len += safe_strcpy(dst+len, ",\n", max_len-len);
 	if (testcase->name[0]) {
-		len += safe_strcpy(dst+len, "  name: \"", max_len-len);
+		len += safe_strcpy(dst+len, "  \"name\": \"", max_len-len);
 		len += safe_strcpy(dst+len, testcase->name, max_len-len);
 		len += safe_strcpy(dst+len, "\",\n", max_len-len);
 	}
-	len += safe_strcpy(dst+len, "  stats: {\n", max_len-len);
+	len += safe_strcpy(dst+len, "  \"stats\": {\n", max_len-len);
 	for (i = 0; i < stat_count; i++) {
 		if (len >= max_len-1)
 			goto nomem;
-		len += safe_strcpy(dst+len, "    ", max_len-len);
+		len += safe_strcpy(dst+len, "    \"", max_len-len);
 		len += safe_strcpy(dst+len, stats_names[i], TEST_MAX_STAT_NAME_LEN);
-		len += safe_strcpy(dst+len, ": ", max_len-len);
+		len += safe_strcpy(dst+len, "\": ", max_len-len);
 		len += safe_itoa(dst+len, max_len-len, stats[i]);
 		if (i < stat_count-1) {
 			len += safe_strcpy(dst+len, ",\n", max_len-len);
@@ -2164,7 +2164,7 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 		struct test_node *node;
 
 		len += safe_strcpy(dst+len, "  },\n", max_len-len);
-		len += safe_strcpy(dst+len, "  validations: [\n", max_len-len);
+		len += safe_strcpy(dst+len, "  \"validations\": [\n", max_len-len);
 		FOR_EACH_NODE(testcase->validations) {
 			if (len+TEST_MAX_VALIDATION_STAT_LEN >= max_len-1)
 				goto nomem;

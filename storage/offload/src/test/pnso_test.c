@@ -1938,6 +1938,7 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	struct worker_context *worker_ctx;
 	int i, max_core_count, core_id;
 	uint32_t worker_count = 0;
+	uint64_t cpu_mask;
 
 	test_ctx = (struct testcase_context *) TEST_ALLOC(sizeof(*test_ctx));
 	if (!test_ctx) {
@@ -1950,11 +1951,23 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	osal_atomic_init(&test_ctx->stats_lock, 0);
 	test_ctx->output_file_tbl = test_get_output_file_table();
 
-	max_core_count = osal_get_core_count();
+	max_core_count = 0;
+	cpu_mask = desc->cpu_mask & ((1 << osal_get_core_count()) - 1);
+	while (cpu_mask) {
+		if (cpu_mask & 1)
+			max_core_count++;
+		cpu_mask >>= 1;
+	}
 	if (max_core_count > TEST_MAX_CORE_COUNT) {
 		max_core_count = TEST_MAX_CORE_COUNT;
-	} else if (max_core_count < 1) {
-		max_core_count = 1;
+	}
+	if (max_core_count > osal_get_core_count()) {
+		max_core_count = osal_get_core_count();
+	}
+	if (max_core_count <= 0) {
+		PNSO_LOG_ERROR("Cannot run testcase %u with 0 cores\n",
+			       testcase->node.idx);
+		goto error;
 	}
 
 	/* Allocate freelist and fill it with batch_ctx entries */
@@ -1966,7 +1979,9 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	if (!test_ctx->poll_q) {
 		goto error;
 	}
-	for (core_id = 0; core_id < max_core_count; core_id++) {
+	for (core_id = 0;
+	     core_id < osal_get_core_count() && worker_count < max_core_count;
+	     core_id++) {
 		if ((desc->cpu_mask & (1 << core_id)) == 0) {
 			continue;
 		}
