@@ -272,6 +272,13 @@ pcieport_config_host(pcieport_t *p)
 
             pcieport_select_pcie_refclk(host_clock);
             pcieport_serdes_init();
+            /*
+             * Make pp_cfg_pp_pcsd_control.sris_en_grp_X follow
+             * pp_port_c_cfg_c_mac_k_gen.sris_mode.  When
+             * sris_mode=0 (default) we set sris_en_grp_X to 0.
+             * Saves about 20ns rx latency.
+             */
+            pcieport_pcsd_control_sris(p->sris);
             done_once = 1;
         }
         pcieport_set_pcs_reset(p, 1);

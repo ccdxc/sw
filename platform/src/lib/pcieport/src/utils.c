@@ -283,6 +283,7 @@ pcieport_rx_credit_bfr(const int port, const int base, const int limit)
             u_int32_t rst_rxfifo##P:1
             FIELDS(0); FIELDS(1); FIELDS(2); FIELDS(3);
             FIELDS(4); FIELDS(5); FIELDS(6); FIELDS(7);
+#undef FIELDS
         } __attribute__((packed));
         u_int32_t w[6];
     } r;
@@ -334,6 +335,38 @@ pcieport_rx_credit_bfr(const int port, const int base, const int limit)
 
     /* write config with update=0 */
     pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
+}
+
+void
+pcieport_pcsd_control_sris(const int sris_en)
+{
+    const int sris_en_grp = sris_en ? 0x3 : 0;
+
+    union {
+        struct {
+#define FIELDS(P) \
+            u_int32_t fts_align_grp_##P:2; \
+            u_int32_t sris_en_grp_##P:2; \
+            u_int32_t rx8b10b_realign_grp_##P:2
+            FIELDS(0); FIELDS(1); FIELDS(2); FIELDS(3);
+            FIELDS(4); FIELDS(5); FIELDS(6); FIELDS(7);
+#undef FIELDS
+        } __attribute__((packed));
+        u_int32_t w[2];
+    } r;
+
+    pal_reg_rd32w(PP_(CFG_PP_PCSD_CONTROL), r.w, 2);
+
+    r.sris_en_grp_0 = sris_en_grp;
+    r.sris_en_grp_1 = sris_en_grp;
+    r.sris_en_grp_2 = sris_en_grp;
+    r.sris_en_grp_3 = sris_en_grp;
+    r.sris_en_grp_4 = sris_en_grp;
+    r.sris_en_grp_5 = sris_en_grp;
+    r.sris_en_grp_6 = sris_en_grp;
+    r.sris_en_grp_7 = sris_en_grp;
+
+    pal_reg_wr32w(PP_(CFG_PP_PCSD_CONTROL), r.w, 2);
 }
 
 u_int16_t

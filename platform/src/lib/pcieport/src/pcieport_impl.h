@@ -95,6 +95,7 @@ void pcieport_set_ltssm_en(pcieport_t *p, const int on);
 void pcieport_set_aer_common_en(pcieport_t *p, const int on);
 void pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq);
 void pcieport_rx_credit_bfr(const int port, const int base, const int limit);
+void pcieport_pcsd_control_sris(const int sris_en);
 u_int16_t pcieport_get_phystatus(pcieport_t *p);
 u_int32_t pcieport_get_sta_rst(pcieport_t *p);
 int pcieport_get_perstn(pcieport_t *p);
