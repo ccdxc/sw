@@ -855,7 +855,9 @@ static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_re
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
 	struct worker_context *worker_ctx;
 
-	batch_ctx->stats.agg_stats.total_latency = osal_get_clock_nsec() - batch_ctx->start_time;
+	if (batch_ctx->req_rc == PNSO_OK)
+		batch_ctx->stats.agg_stats.total_latency =
+			osal_get_clock_nsec() - batch_ctx->start_time;
 
 	osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
 
@@ -868,7 +870,9 @@ static void batch_completion_poll_cb(void *cb_ctx, struct pnso_service_result *s
 {
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
 
-	batch_ctx->stats.agg_stats.total_latency = osal_get_clock_nsec() - batch_ctx->start_time;
+	if (batch_ctx->req_rc == PNSO_OK)
+		batch_ctx->stats.agg_stats.total_latency =
+			osal_get_clock_nsec() - batch_ctx->start_time;
 
 	osal_atomic_fetch_add(&batch_ctx->cb_count, 1);
 }
@@ -1178,7 +1182,9 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 	err = test_submit_request(req_ctx, testcase->sync_mode,
 				  (batch_count > 1),
 				  (batch_iter == batch_count - 1));
-	req_ctx->res_rc = err;
+	req_ctx->req_rc = err;
+	if (err)
+		batch_ctx->req_rc = err;
 
 	return err;
 }
@@ -1231,6 +1237,10 @@ static void calculate_completion_stats(struct batch_context *batch_ctx)
 	struct pnso_service_status *svc_status;
 	struct testcase_io_stats *stats = &batch_ctx->stats.io_stats[1];
 
+	/* submission failed, so no completion stats */
+	if (batch_ctx->req_rc != PNSO_OK)
+		return;
+
 	stats->batches += 1;
 	for (i = 0; i < batch_ctx->req_count; i++) {
 		req_ctx = batch_ctx->req_ctxs[i];
@@ -1271,14 +1281,16 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 	uint64_t tmp;
 
 	ts1->elapsed_time = elapsed_time;
-	ts1->agg_stats.total_latency += ts2->agg_stats.total_latency;
-	if (ts1->agg_stats.min_latency == 0 ||
-	    ts1->agg_stats.min_latency > ts2->agg_stats.total_latency) {
-		ts1->agg_stats.min_latency = ts2->agg_stats.total_latency;
-	}
-	if (ts1->agg_stats.max_latency == 0 ||
-	    ts1->agg_stats.max_latency < ts2->agg_stats.total_latency) {
-		ts1->agg_stats.max_latency = ts2->agg_stats.total_latency;
+	if (ts2->agg_stats.total_latency) {
+		ts1->agg_stats.total_latency += ts2->agg_stats.total_latency;
+		if (ts1->agg_stats.min_latency == 0 ||
+		    ts1->agg_stats.min_latency > ts2->agg_stats.total_latency) {
+			ts1->agg_stats.min_latency = ts2->agg_stats.total_latency;
+		}
+		if (ts1->agg_stats.max_latency == 0 ||
+		    ts1->agg_stats.max_latency < ts2->agg_stats.total_latency) {
+			ts1->agg_stats.max_latency = ts2->agg_stats.total_latency;
+		}
 	}
 	for (i = 0; i < 2; i++) {
 		ts1->io_stats[i].svcs += ts2->io_stats[i].svcs;
@@ -1364,6 +1376,11 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 	char path1[TEST_MAX_FULL_PATH_LEN] = "";
 	char path2[TEST_MAX_FULL_PATH_LEN] = "";
 	int cmp = 0;
+
+	if (ctx->req_rc != PNSO_OK) {
+		err = ctx->req_rc;
+		goto done;
+	}
 
 	if (validation->svc_chain_idx) {
 		ctx->vars[TEST_VAR_CHAIN] = validation->svc_chain_idx;
@@ -1487,6 +1504,11 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 
+	if (batch_ctx->req_rc != PNSO_OK) {
+		err = batch_ctx->req_rc;
+		goto done;
+	}
+
 	if (req_ctx->svc_res.num_services < validation->svc_count) {
 		err = EINVAL;
 		goto done;
@@ -1534,9 +1556,10 @@ static pnso_error_t run_req_validation(struct request_context *req_ctx)
 	testcase = req_ctx->batch_ctx->test_ctx->testcase;
 
 	/* Output at least the first result of each worker */
-	if (!testcase->turbo ||
-	    req_ctx->batch_ctx->batch_id <
-	    req_ctx->batch_ctx->test_ctx->worker_count) {
+	if (req_ctx->batch_ctx->req_rc == PNSO_OK &&
+	    (!testcase->turbo ||
+	     req_ctx->batch_ctx->batch_id <
+	     req_ctx->batch_ctx->test_ctx->worker_count)) {
 		output_results(req_ctx, req_ctx->svc_chain);
 	}
 
@@ -1628,7 +1651,7 @@ static void init_req_context(struct request_context *req_ctx,
 	memset(req_ctx->req_svcs, 0, sizeof(req_ctx->req_svcs));
 	memset(&req_ctx->svc_res, 0, sizeof(req_ctx->svc_res));
 	memset(req_ctx->res_statuses, 0, sizeof(req_ctx->res_statuses));
-	req_ctx->res_rc = 0;
+	req_ctx->req_rc = 0;
 	copy_vars(batch_ctx->vars, req_ctx->vars);
 	req_ctx->vars[TEST_VAR_CHAIN] = svc_chain->node.idx;
 }
@@ -1802,6 +1825,7 @@ static void init_batch_context(struct batch_context *ctx,
 	osal_atomic_set(&ctx->cb_count, 0);
 	ctx->worker_id = work_ctx->worker_id;
 	ctx->batch_id = batch_id;
+	ctx->req_rc = 0;
 	ctx->poll_fn = NULL;
 	ctx->poll_ctx = NULL;
 	ctx->start_time = osal_get_clock_nsec();
@@ -2382,7 +2406,7 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc)
 #endif
 	test_free_output_file_table();
 
-	return PNSO_OK;
+	return err;
 }
 
 #define UNIT_TEST_BUFLIST_PATTERN "abcdefghijklmnopqrstuvwxyz01345"

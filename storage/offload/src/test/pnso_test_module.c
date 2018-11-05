@@ -594,7 +594,7 @@ done:
 	pnso_test_desc_free(cfg);
 
 	pnso_test_set_shutdown_complete();
-	return err;
+	return 0;
 }
 
 static int

@@ -118,7 +118,7 @@ struct request_context {
 	/* Initial values inherited from parent */
 	uint32_t vars[TEST_VAR_MAX];
 
-	pnso_error_t res_rc;
+	pnso_error_t req_rc;
 };
 
 struct testcase_io_stats {
@@ -162,6 +162,7 @@ struct batch_context {
 	uint32_t batch_id;
 	uint32_t worker_id;
 	osal_atomic_int_t cb_count;
+	pnso_error_t req_rc;
 
 	pnso_poll_fn_t poll_fn;
 	void *poll_ctx;
