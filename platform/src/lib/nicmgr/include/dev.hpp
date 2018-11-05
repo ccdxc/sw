@@ -237,7 +237,8 @@ public:
  */
 class DeviceManager {
 public:
-    DeviceManager(enum ForwardingMode fwd_mode, platform_t platform);
+    DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
+                  bool dol_integ);
     ~DeviceManager();
     int LoadConfig(std::string path);
     Device *AddDevice(enum DeviceType type, void *dev_spec);

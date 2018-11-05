@@ -135,16 +135,17 @@ DeviceManager::lifs_reservation(platform_t platform)
     return 0;
 }
 
-DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform)
+DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
+                             bool dol_integ) :
+    dol_integ(dol_integ)
 {
     hal = new HalClient(fwd_mode);
     hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
     uint8_t     cosA = 1;
     uint8_t     cosB = 0;
-    const char  *dol_integ_str;
     uint32_t    lif_id;
 
-    utils::logger::init();
+    utils::logger::init(dol_integ);
 
     NIC_HEADER_TRACE("Initializing DeviceManager");
 
@@ -195,9 +196,6 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform)
     }
     memset(&info, 0, sizeof(info));
     info.lif_id = lif_id;
-
-    dol_integ_str = std::getenv("DOL");
-    dol_integ = dol_integ_str ? !!atoi(dol_integ_str) : false;
     if (dol_integ) {
 
         /*
@@ -310,7 +308,7 @@ DeviceManager::LoadConfig(string path)
     NIC_HEADER_TRACE("Loading Config");
     NIC_LOG_INFO("Json: {}", path);
 
-    if (!strcmp(system_uuid, "")) {
+    if (!system_uuid || !strcmp(system_uuid, "")) {
         sys_mac_base = 0x00DEADBEEF00llu;
     } else {
         sys_mac_base = mac_to_int(system_uuid);

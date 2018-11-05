@@ -30,6 +30,7 @@ pciemgr *pciemgr;
 static string config_file;
 enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
 platform_t platform = PLATFORM_NONE;
+static bool dol_integ;
 extern void nicmgr_do_client_registration(void);
 
 static void
@@ -52,13 +53,17 @@ nicmgrd_poll(void *arg)
 static void
 loop()
 {
-    pciemgr = new class pciemgr("nicmgrd");
-    pciemgr->initialize();
+    if (!dol_integ) {
+        pciemgr = new class pciemgr("nicmgrd");
+        pciemgr->initialize();
+    }
 
-    devmgr = new DeviceManager(fwd_mode, platform);
+    devmgr = new DeviceManager(fwd_mode, platform, dol_integ);
     devmgr->LoadConfig(config_file);
 
-    pciemgr->finalize();
+    if (pciemgr) {
+        pciemgr->finalize();
+    }
 
 #if 0
     // Register for PCI events
@@ -75,13 +80,19 @@ loop()
 
     evutil_run();
     /* NOTREACHED */
-    delete pciemgr;
+    if (pciemgr) {
+        delete pciemgr;
+    }
 }
 
 int main(int argc, char *argv[])
 {
     int opt;
     sighandler_t osigusr1;
+    const char  *dol_integ_str;
+
+    dol_integ_str = std::getenv("DOL");
+    dol_integ = dol_integ_str ? !!atoi(dol_integ_str) : false;
 
     while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
@@ -119,7 +130,9 @@ int main(int argc, char *argv[])
     osigusr1 = signal(SIGUSR1, sigusr1_handler);
 
     //nicmgr_do_client_registration();
-    nicmgr_delphi_client_entry(NULL);
+    if (!dol_integ) {
+        nicmgr_delphi_client_entry(NULL);
+    }
     loop();
 
     signal(SIGUSR1, osigusr1);

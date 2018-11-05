@@ -51,7 +51,7 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
 
 TEST_F(nicmgr_test, test1)
 {
-    DeviceManager *devmgr = new DeviceManager(g_fwd_mode, PLATFORM_NONE);
+    DeviceManager *devmgr = new DeviceManager(g_fwd_mode, PLATFORM_NONE, false);
     EXPECT_TRUE(devmgr != NULL);
 
     pciemgr = new class pciemgr("nicmgr_test");

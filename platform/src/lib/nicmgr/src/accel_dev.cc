@@ -312,10 +312,12 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     // Add device to PCI topology
     extern class pciemgr *pciemgr;
-    int ret = pciemgr->add_device(pdev);
-    if (ret != 0) {
-        NIC_LOG_ERR("lif{}: Failed to add Accel_PF PCI device to topology", info.hw_lif_id);
-        return;
+    if (pciemgr) {
+        int ret = pciemgr->add_device(pdev);
+        if (ret != 0) {
+            NIC_LOG_ERR("lif{}: Failed to add Accel_PF PCI device to topology", info.hw_lif_id);
+            return;
+        }
     }
 }
 
@@ -337,7 +339,8 @@ Accel_PF::GetQstateAddr(uint8_t qtype, uint32_t qid)
 void
 Accel_PF::DevcmdPoll()
 {
-#ifdef __x86_64__
+//#ifdef __x86_64__
+#if 1 // enabled per Brad regarding a recent pciemgr issue breaking devcmd
     dev_cmd_db_t    db;
     dev_cmd_db_t    db_clear = {0};
 
