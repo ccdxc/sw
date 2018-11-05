@@ -33,8 +33,8 @@ const (
 	// DstIotaAgentDir captures the top level dir where all the agent copies happen
 	DstIotaAgentDir = "/tmp/iota"
 
-	// DstIotaWorkloadsDir has all workload related data for each workload
-	DstIotaWorkloadsDir = DstIotaAgentDir + "/workloads"
+	// DstIotaEntitiesDir has all workload related data for each workload
+	DstIotaEntitiesDir = DstIotaAgentDir + "/entities"
 
 	//MakeClusterTimeout waits for 5 minutes for the cluster to be up
 	MakeClusterTimeout = time.Duration(time.Minute * 5)

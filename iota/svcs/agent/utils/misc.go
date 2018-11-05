@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -17,7 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -217,90 +215,6 @@ func (w *LogWriter) Write(b []byte) (int, error) {
 //SudoCmd sudo cmd constructor
 var SudoCmd = func(cmd string) string {
 	return "sudo " + cmd
-}
-
-//CreateSSHSession create session so that caller will run on his own
-func CreateSSHSession(SSHHandle *ssh.Client) (*ssh.Session, io.Reader, io.Reader, error) {
-	sshSession, err := SSHHandle.NewSession()
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,     // disable echoing
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
-	}
-
-	if err = sshSession.RequestPty("xterm", 80, 40, modes); err != nil {
-		return nil, nil, nil, err
-	}
-
-	sshOut, err := sshSession.StdoutPipe()
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	sshErr, err := sshSession.StderrPipe()
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	return sshSession, sshOut, sshErr, nil
-}
-
-//RunSSHCommand run command over SSH
-func RunSSHCommand(SSHHandle *ssh.Client, cmd string, sudo bool, bg bool, logger *log.Logger) (retCode int, stdout, stderr string) {
-	logger.Println("Running cmd " + cmd)
-	var stdoutBuf, stderrBuf bytes.Buffer
-
-	sshSession, sshOut, sshErr, err := CreateSSHSession(SSHHandle)
-	defer sshSession.Close()
-	if err != nil {
-		logger.Println("SSH session creation failed!")
-		return -1, "", ""
-	}
-
-	shout := io.MultiWriter(&stdoutBuf, (*LogWriter)(logger))
-	ssherr := io.MultiWriter(&stderrBuf, (*LogWriter)(logger))
-
-	go func() {
-		io.Copy(shout, sshOut)
-	}()
-	go func() {
-
-		io.Copy(ssherr, sshErr)
-	}()
-
-	if bg {
-		cmd = "nohup sh -c  \"" + cmd + " 2>&1 >/dev/null </dev/null & \""
-	} else {
-		cmd = "sh -c \"" + cmd + "\""
-	}
-
-	if sudo {
-		cmd = SudoCmd(cmd)
-	}
-
-	logger.Println("Running command : " + cmd)
-	if err = sshSession.Run(cmd); err != nil {
-		logger.Println("failed command : " + cmd)
-		switch v := err.(type) {
-		case *ssh.ExitError:
-			retCode = v.Waitmsg.ExitStatus()
-		default:
-			retCode = -1
-		}
-	} else {
-		logger.Println("sucess command : " + cmd)
-		retCode = 0
-	}
-
-	logger.Println(stdout)
-	logger.Println(stderr)
-	logger.Println("Return code : " + strconv.Itoa(retCode))
-
-	return retCode, stdoutBuf.String(), stderrBuf.String()
-
 }
 
 //GetIntfMatchingMac get interface matching mac

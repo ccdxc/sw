@@ -64,9 +64,22 @@ func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, dstDir string, files []string) 
 	copier := copier.NewCopier(cfg)
 	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
-	if err := copier.Copy(addr, dstDir, files); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | CopyTo node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+	if err := copier.CopyTo(addr, dstDir, files); err != nil {
+		log.Errorf("TOPO SVC | CopyTo node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 		return fmt.Errorf("CopyTo node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+	}
+
+	return nil
+}
+
+// CopyFrom copies a file to the node
+func (n *TestNode) CopyFrom(cfg *ssh.ClientConfig, dstDir string, files []string) error {
+	copier := copier.NewCopier(cfg)
+	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
+
+	if err := copier.CopyFrom(addr, dstDir, files); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | CopyFrom node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+		return fmt.Errorf("CopyFrom node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 	}
 
 	return nil

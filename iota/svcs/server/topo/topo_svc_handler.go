@@ -443,8 +443,8 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 	return resp, nil
 }
 
-// WorkloadCopy does copy of items to/from workload.
-func (ts *TopologyService) WorkloadCopy(ctx context.Context, req *iota.WorkloadCopyMsg) (*iota.WorkloadCopyMsg, error) {
+// WorkloadCopy does copy of items to/from entity.
+func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyMsg) (*iota.EntityCopyMsg, error) {
 
 	node, ok := ts.ProvisionedNodes[req.NodeName]
 	if !ok {
@@ -454,22 +454,36 @@ func (ts *TopologyService) WorkloadCopy(ctx context.Context, req *iota.WorkloadC
 		return nil, errors.New(errMsg)
 	}
 
-	if req.Direction == iota.WorkloadCopyDirection_DIR_IN {
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	if req.Direction == iota.CopyDirection_DIR_IN {
 
-		dstDir := common.DstIotaWorkloadsDir + "/" + req.GetWorkload() + "/"
+		dstDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/" + req.GetDestDir() + "/"
 		if err := node.CopyTo(ts.SSHConfig, dstDir, req.GetFiles()); err != nil {
-			log.Errorf("TOPO SVC | WorkloadCopy | Failed to copy files to workload:  %v on node : %v",
-				req.GetWorkload(), node.Node.Name)
+			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files to entity:  %v on node : %v",
+				req.GetEntityName(), node.Node.Name)
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+            req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to copy files to entity:  %v on node : %v",
+                                                   req.GetEntityName(), node.Node.Name)
 		}
-	} else if req.Direction == iota.WorkloadCopyDirection_DIR_OUT {
+	} else if req.Direction == iota.CopyDirection_DIR_OUT {
+		files := []string{}
+		srcDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/"
+		for _, file := range req.GetFiles() {
+			files = append(files, srcDir+file)
+		}
+
+		if err := node.CopyFrom(ts.SSHConfig, req.GetDestDir(), files); err != nil {
+			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files from entity:  %v on node : %v",
+				req.GetEntityName(), node.Node.Name)
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		}
 
 	} else {
-		errMsg := fmt.Sprintf("No direction specified for workload copy")
+		errMsg := fmt.Sprintf("No direction specified for entity copy")
 		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
 			ErrorMsg: errMsg}
 		return nil, errors.New(errMsg)
 	}
 
-	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }

@@ -91,7 +91,21 @@ def GetRemoteWorkloadPairs():
 def Trigger(req):
     global gl_topo_svc_stub
     Logger.debug("Trigger Message:")
-    return __rpc(req, gl_topo_svc_stub.Trigger)
+    resp = __rpc(req, gl_topo_svc_stub.Trigger)
+    if not resp: return resp
+    for idx in range(len(resp.commands)):
+        resp_cmd = resp.commands[idx]
+        req_cmd = req.commands[idx]
+        req_cmd.stdout = resp_cmd.stdout
+        req_cmd.stderr = resp_cmd.stderr
+        req_cmd.exit_code = resp_cmd.exit_code
+        req_cmd.timed_out = resp_cmd.timed_out
+    return resp
+
+def EntityCopy(req):
+    global gl_topo_svc_stub
+    Logger.debug("Entity Copy Message:")
+    return __rpc(req, gl_topo_svc_stub.EntityCopy)
 
 def PushConfig(req):
     global gl_cfg_svc_stub
@@ -206,6 +220,46 @@ def GetTopDir():
     return GlobalOptions.topdir
 
 # ================================
+# Wrappers for Copy APIs
+# ================================
+def CopyToHost(node_name, files, dest_dir):
+    req = topo_svc.EntityCopyMsg()
+    req.direction = topo_svc.DIR_IN
+    req.node_name = node_name
+    req.entity_name = "%s_host" % node_name
+    for f in files:
+        req.files.append(f)
+    req.dest_dir = dest_dir
+    return EntityCopy(req)
+
+def CopyFromHost(node_name, files, dest_dir):
+    req = topo_svc.EntityCopyMsg()
+    req.direction = topo_svc.CopyDirection.DIR_OUT
+    req.node_name = node_name
+    req.entity_name = "%s_host" % node_name
+    req.files = files
+    req.dest_dir = dest_dir
+    return EntityCopy(req)
+
+def CopyToNaples(node_name, files, dest_dir):
+    req = topo_svc.EntityCopyMsg()
+    req.direction = topo_svc.CopyDirection.DIR_IN
+    req.node_name = node_name
+    req.entity_name = "%s_naples" % node_name
+    req.files = files
+    req.dest_dir = dest_dir
+    return EntityCopy(req)
+
+def CopyFromNaples(node_name, files, dest_dir):
+    req = topo_svc.EntityCopyMsg()
+    req.direction = topo_svc.CopyDirection.DIR_OUT
+    req.node_name = node_name
+    req.entity_name = "%s_naples" % node_name
+    req.files = files
+    req.dest_dir = dest_dir
+    return EntityCopy(req)
+
+# ================================
 # Wrappers for Trigger APIs
 # ================================
 def Trigger_CreateExecuteCommandsRequest(serial = True):
@@ -214,13 +268,20 @@ def Trigger_CreateExecuteCommandsRequest(serial = True):
     req.trigger_mode = topo_svc.TRIGGER_SERIAL if serial else topo_svc.TRIGGER_PARALLEL
     return req
 
-def Trigger_AddCommand(req, node_name, workload_name, command, background = False):
+def Trigger_AddCommand(req, node_name, workload_name, command, background = False, rundir = ""):
     cmd = req.commands.add()
     cmd.mode = topo_svc.COMMAND_BACKGROUND if background else topo_svc.COMMAND_FOREGROUND
     cmd.entity_name = workload_name
     cmd.node_name = node_name
     cmd.command = command
+    cmd.running_dir = rundir
     return cmd
+
+def Trigger_AddHostCommand(req, node_name, command, background = False, rundir = ""):
+    return Trigger_AddCommand(req, node_name, "%s_host" % node_name, command, background, rundir)
+
+def Trigger_AddNaplesCommand(req, node_name, command, background = False, rundir = ""):
+    return Trigger_AddCommand(req, node_name, "%s_naples" % node_name, command, background, rundir)
 
 def Trigger_IsBackgroundCommand(cmd):
     return cmd.handle != ""

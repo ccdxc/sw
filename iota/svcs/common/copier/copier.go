@@ -24,8 +24,8 @@ func NewCopier(c *ssh.ClientConfig) *Copier {
 	return copier
 }
 
-// Copy copies the source files to the remote destination
-func (c *Copier) Copy(ipPort, dstDir string, files []string) error {
+// CopyTo copies the source files to the remote destination
+func (c *Copier) CopyTo(ipPort, dstDir string, files []string) error {
 	//fmt.Println("ANCALAGON: ", files)
 	client, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
 	if client == nil || err != nil {
@@ -82,6 +82,62 @@ func (c *Copier) Copy(ipPort, dstDir string, files []string) error {
 			return err
 		}
 		f.Close()
+	}
+
+	return nil
+
+}
+
+// CopyFrom copies the remote source files to the local destination
+func (c *Copier) CopyFrom(ipPort, dstDir string, files []string) error {
+
+	client, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
+	if client == nil || err != nil {
+		log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
+		return err
+	}
+	defer client.Close()
+
+	sftp, err := sftp.NewClient(client)
+	if sftp == nil || err != nil {
+		log.Errorf("Copier | CopyFrom node %v failed, Err: %v", ipPort, err)
+		return err
+	}
+	defer sftp.Close()
+
+	// check if dst dir exists
+	if _, err := os.Lstat(dstDir); err != nil {
+		err = os.Mkdir(dstDir, 0666)
+		if err != nil {
+			log.Errorf("Copier | CopyFrom failed to creating local directory. | Dir: %v,  Err: %v", dstDir, err)
+			return err
+		}
+	}
+	for _, srcFile := range files {
+
+		absSrcFile, err := sftp.Open(srcFile)
+		if err != nil {
+			log.Errorf("Copier | CopyFrom failed to open remote file . | file: %v,  Err: %v", srcFile, err)
+			return err
+		}
+		// Create the destination file
+		_, srcFileName := filepath.Split(srcFile)
+		dstFile := dstDir + "/" + srcFileName
+		absDstFile, err := os.Create(dstFile)
+		if err != nil {
+			log.Errorf("Copier | CopyFrom failed to create local file. | Dir: %v, file : %v,  Err: %v", dstDir, dstFile, err)
+			return err
+		}
+
+		log.Infof("Copier | CopyFrom initiating copy... | Src: %v, Dst: %v, Node: %v", srcFile, dstFile, ipPort)
+		if _, err := absSrcFile.WriteTo(absDstFile); err != nil {
+			log.Errorf("Copier | CopyFrom failed to copy local | Src: %v, Dst: %v, Node: %v", srcFile, dstFile, ipPort)
+			return err
+		}
+
+		absSrcFile.Chmod(0766)
+		absSrcFile.Close()
+		absDstFile.Close()
 	}
 
 	return nil

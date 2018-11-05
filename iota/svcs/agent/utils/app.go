@@ -23,6 +23,10 @@ var _DockerClient *client.Client
 //Container Stop timeout
 var _StopTimeout = (20)
 
+const (
+	baseDir = "/home/"
+)
+
 //Interface structure
 type Interface struct {
 	Name       string
@@ -37,10 +41,11 @@ type CommandHandle string
 
 //CommandResp returns command response context
 type CommandResp struct {
-	RetCode int32
-	Stdout  string
-	Stderr  string
-	Handle  CommandHandle
+	RetCode  int32
+	Stdout   string
+	Stderr   string
+	Timedout bool
+	Handle   CommandHandle
 }
 
 //NewInterface vlan interface create
@@ -303,6 +308,7 @@ type Container struct {
 	client        *client.Client
 	ctrID         string
 	pid           string
+	baseDir       string
 }
 
 //CleanUpContainer clean up container
@@ -327,11 +333,6 @@ func (ctr *Container) Stop() {
 func (ctr *Container) PrintAppInformation() {
 	fmt.Println("Container name : ", ctr.ContainerName)
 	ctr.NS.PrintAppInformation()
-}
-
-//StopCommand stop command
-func (ctr *Container) StopCommand(cmdHandle CommandHandle) {
-	//TODO
 }
 
 //GetName get name of the interface
@@ -417,12 +418,12 @@ func (ctr *Container) CheckProcessRunning(process string) bool {
 }
 
 //SetUpCommand setups command to run later.
-func (ctr *Container) SetUpCommand(cmd []string, timeout uint32, background bool, shell bool) (CommandHandle, error) {
+func (ctr *Container) SetUpCommand(cmd []string, dir string, background bool, shell bool) (CommandHandle, error) {
 
-	if shell {
-		cmd = []string{"sh", "-c", strings.Join(cmd, " ")}
-	}
+	cmd = []string{"cd", ctr.baseDir + "/" + dir, "&&", strings.Join(cmd, " ")}
+	cmd = []string{"sh", "-c", strings.Join(cmd, " ")}
 
+	fmt.Println("CMD ", strings.Join(cmd, " "))
 	resp, err := ctr.client.ContainerExecCreate(ctr.ctx, ctr.ContainerName, types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
@@ -438,8 +439,8 @@ func (ctr *Container) SetUpCommand(cmd []string, timeout uint32, background bool
 	return (CommandHandle)(resp.ID), nil
 }
 
-//StopBgCommand stop a command started
-func (ctr *Container) StopBgCommand(cmdHandle CommandHandle) error {
+//StopCommand stop a command started
+func (ctr *Container) StopCommand(cmdHandle CommandHandle) error {
 
 	for true {
 		cResp, err := ctr.client.ContainerExecInspect(ctr.ctx, (string)(cmdHandle))
@@ -459,9 +460,10 @@ func (ctr *Container) StopBgCommand(cmdHandle CommandHandle) error {
 }
 
 //RunCommand run command on the container
-func (ctr *Container) RunCommand(cmdHandle CommandHandle) (CommandResp, error) {
+func (ctr *Container) RunCommand(cmdHandle CommandHandle, timeout uint32) (CommandResp, error) {
 
 	var stdoutBuf, stderrBuf bytes.Buffer
+	var cTimeout <-chan time.Time
 	stdout := io.MultiWriter(&stdoutBuf)
 	stderr := io.MultiWriter(&stderrBuf)
 
@@ -478,6 +480,9 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle) (CommandResp, error) {
 		return CommandResp{RetCode: -1}, err
 	}
 
+	if timeout != 0 {
+		cTimeout = time.After(time.Second * time.Duration(timeout))
+	}
 	retCode := 0
 	for true {
 		cmdResp, _ := ctr.client.ContainerExecInspect(ctr.ctx, (string)(cmdHandle))
@@ -489,7 +494,14 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle) (CommandResp, error) {
 			}
 			return CommandResp{RetCode: ((int32)(retCode)), Stdout: stdoutBuf.String(), Stderr: stderrBuf.String()}, err
 		}
-		time.Sleep(100 & time.Millisecond)
+		select {
+		case <-cTimeout:
+			ctr.StopCommand(cmdHandle)
+			time.Sleep(1 * time.Second)
+			return CommandResp{RetCode: 127, Timedout: true, Stdout: stdoutBuf.String(), Stderr: stderrBuf.String()}, err
+		default:
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
 
 	/* It should never come here */
@@ -509,7 +521,7 @@ func bringUpAppContainer(name string, registry string, mountTarget string) (*str
 	if mountTarget == "" {
 		mountDir = os.Getenv("HOME") + "/" + name
 	} else {
-		mountDir = mountTarget + "/" + name
+		mountDir = mountTarget
 	}
 	os.Mkdir(mountDir, 0777)
 
@@ -525,11 +537,13 @@ func bringUpAppContainer(name string, registry string, mountTarget string) (*str
 			{
 				Type:   mount.TypeBind,
 				Source: mountDir,
-				Target: "/home/",
+				Target: baseDir,
 			},
-		}},
+		},
+		Privileged: true},
 		nil, name)
 	if err != nil {
+		fmt.Println(err.Error(), mountDir)
 		return nil, err
 	}
 
@@ -563,6 +577,7 @@ func NewContainer(name string,
 		_container.ctrID = *id
 	}
 
+	_container.baseDir = baseDir
 	//_container.ctrID = resp.ID
 	_container.ContainerName = name
 	inspectData, err := _DockerClient.ContainerInspect(_DockerCtx,

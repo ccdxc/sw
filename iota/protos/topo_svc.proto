@@ -43,8 +43,9 @@ service TopologyApi {
     // CheckClusterHealth returns the cluster health
     rpc CheckClusterHealth(NodeMsg) returns  (ClusterHealthMsg) {};
 
-    // WorkloadCopy copies files in/out from workload
-    rpc WorkloadCopy(WorkloadCopyMsg) returns  (WorkloadCopyMsg) {};
+    // EntityCopy copies files in/out from entities
+    rpc EntityCopy(EntityCopyMsg) returns  (EntityCopyMsg) {};
+
 }
 
 // Op defines topology operation
@@ -84,7 +85,6 @@ enum EntityType {
     ENTITY_TYPE_NONE      = 0;
     ENTITY_TYPE_HOST      = 1;
     ENTITY_TYPE_NAPLES    = 2;
-    ENTITY_TYPE_WORKLOAD  = 3;
 }
 
 message Entity {
@@ -284,30 +284,38 @@ enum CommandMode {
 }
 message Command {
     // Whether to run the command in foreground or background
-    CommandMode     mode            = 1;
+    CommandMode     mode               = 1;
 
     // Fully qualified command line that needs to be called
-    string          command         = 2;
+    string          command            = 2;
 
     // Node on which trigger needs to be executed
-    string          node_name       = 3;
+    string          node_name          = 3;
 
     // entity name to run command on
-    string          entity_name     = 4;
+    string          entity_name         = 4;
+
+    // foreground command timeout
+    uint32          foreground_timeout  = 5;
+
+    // running directory relative to entity dir to run command
+    string          running_dir         = 6;
 
     // ================ Output Parameters ===================
     // StdOut of the comamnd
-    string          stdout          = 5;
+    string          stdout              = 7;
 
     // StdErr of the command
-    string          stderr          = 6;
+    string          stderr              = 8;
 
     // Exit code of the command
-    int32          exit_code        = 7;
+    int32          exit_code            = 9;
 
     // command handle. Useful only for background commands
-    string          handle          = 8;
+    string          handle              = 10;
 
+    // Whehther command timed out
+    bool            timed_out           = 11;
 }
 
 // Captures the overall health of the e2e cluster
@@ -407,28 +415,29 @@ message TestBedNode {
     TestBedNodeOs os = 16;
 }
 
-// WorkloadCopyDirection defines direction whether to copy in or copy out
-enum WorkloadCopyDirection {
+// CopyDirection defines direction whether to copy in or copy out
+enum CopyDirection {
         DIR_NONE    = 0;
         DIR_IN      = 1;
         DIR_OUT     = 2;
 }
 
-// WorkloadCopyMsg takes care of copying to workload.
-// If copy in to workload, destination will be prefixed with workload directory on iota node.
-// if copy out from workload, files will be prefixed with workload directory on iota node.
-message WorkloadCopyMsg {
+
+// EntityCopyMsg takes care of copying to entity.
+// If copy in to entity, destination will be prefixed with entity directory on iota node.
+// if copy out from entity, files will be prefixed with entity directory on iota node.
+message EntityCopyMsg {
     // API Response for the copy operation
     IotaAPIResponse api_response    = 1;
 
     // Copy Direction.
-    WorkloadCopyDirection direction = 2;
+    CopyDirection direction         = 2;
 
     // Node to do copy operation
     string node_name                = 3;
 
     // workload context to do copy operation
-    string workload                 = 4;
+    string entity_name              = 4;
 
     // list of files that needs to be copied
     repeated string files           = 5;

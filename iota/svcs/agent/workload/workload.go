@@ -1,9 +1,8 @@
-package agent
+package workload
 
 import (
-	"bytes"
 	"fmt"
-	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -12,32 +11,47 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	log "github.com/sirupsen/logrus"
-
+	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
-	Common "github.com/pensando/sw/iota/svcs/common"
+
+	//Common "github.com/pensando/sw/iota/svcs/common"
 )
 
 const (
-	workloadTypeContainer = "container"
-	workloadTypeVM        = "vm"
-	workloadTypeBareMetal = "bare-metal"
-	workloadTypeRemote    = "remote"
-	bgCmdHandlePrefix     = "bg-cmd"
+	//WorkloadTypeContainer container workload
+	WorkloadTypeContainer = "container"
+	//WorkloadTypeVM vm workload
+	WorkloadTypeVM = "vm"
+	//WorkloadTypeBareMetal bare-metal workload
+	WorkloadTypeBareMetal = "bare-metal"
+	//WorkloadTypeRemote remote workload
+	WorkloadTypeRemote = "remote"
+	bgCmdHandlePrefix  = "bg-cmd"
 )
 
-var (
-	workloadDir = Common.DstIotaWorkloadsDir
-)
+//Workload interface
+type Workload interface {
+	Name() string
+	BringUp(args ...string) error
+	SetBaseDir(dir string) error
+	RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error)
+	StopCommand(commandHandle string) (*Cmd.CommandCtx, error)
+	AddInterface(name string, macAddress string, ipaddress string, vlan int) error
+	MoveInterface(name string) error
+	IsHealthy() bool
+	SendArpProbe(ip string, intf string, vlan int) error
+	TearDown()
+}
 
 type workload interface {
-	entity
 }
 
 type workloadBase struct {
 	name       string
-	bgCmds     map[string]*commandHandle
+	bgCmds     map[string]*Cmd.CommandInfo
 	logger     *log.Logger
 	bgCmdIndex uint32
+	baseDir    string
 }
 
 type remoteWorkload struct {
@@ -74,6 +88,13 @@ func (app *workloadBase) BringUp(args ...string) error {
 	return nil
 }
 
+func (app *workloadBase) SetBaseDir(dir string) error {
+	os.Mkdir(dir, 0765)
+	os.Chmod(dir, 0777)
+	app.baseDir = dir
+	return nil
+}
+
 func (app *workloadBase) AddVlanInterface(parentIntf string, parentMacAddress string, vlan int) (string, error) {
 	return "", nil
 }
@@ -90,11 +111,11 @@ func (app *workloadBase) AddInterface(name string, macAddress string, ipaddress 
 	return nil
 }
 
-func (app *workloadBase) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (*commandCtx, error) {
-	return nil, nil
+func (app *workloadBase) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
+	return nil, "", nil
 }
 
-func (app *workloadBase) StopCommand(commandHandle string) (*commandCtx, error) {
+func (app *workloadBase) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
 	return nil, nil
 }
 
@@ -111,10 +132,10 @@ func (app *containerWorkload) BringUp(args ...string) error {
 	image := args[1]
 	name := args[0]
 	if image != "" {
-		app.containerHandle, err = Utils.NewContainer(name, image, "", workloadDir)
+		app.containerHandle, err = Utils.NewContainer(name, image, "", app.baseDir)
 	} else {
 		/* Workload already spun up */
-		app.containerHandle, err = Utils.NewContainer(name, "", name, workloadDir)
+		app.containerHandle, err = Utils.NewContainer(name, "", name, app.baseDir)
 	}
 
 	if err != nil || app.containerHandle == nil {
@@ -122,7 +143,7 @@ func (app *containerWorkload) BringUp(args ...string) error {
 	}
 
 	app.name = name
-	app.bgCmds = make(map[string]*commandHandle)
+	app.bgCmds = make(map[string]*Cmd.CommandInfo)
 	return err
 }
 
@@ -145,12 +166,13 @@ func (app *containerWorkload) MoveInterface(name string) error {
 
 }
 
-var runArpCmd = func(app workload, ip string, intf string) error {
+//RunArpCmd runs arp command on workload
+var RunArpCmd = func(app Workload, ip string, intf string) error {
 	arpCmd := []string{"arping", "-c", "5", "-U", ip, "-I", intf}
-	cmdResp, _ := app.RunCommand(arpCmd, 0, false, false)
-	if cmdResp.exitCode != 0 {
-		errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.stdout)
-		return nil
+	cmdResp, _, _ := app.RunCommand(arpCmd, "", 0, false, false)
+	if cmdResp.ExitCode != 0 {
+		errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.Stdout)
+                return nil
 	}
 	return nil
 }
@@ -165,7 +187,7 @@ func (app *containerWorkload) SendArpProbe(ip string, intf string, vlan int) err
 		intf = vlanIntf(intf, vlan)
 	}
 
-	return runArpCmd(app, ip, intf)
+	return RunArpCmd(app, ip, intf)
 
 }
 
@@ -205,59 +227,60 @@ func (app *containerWorkload) AddInterface(name string, macAddress string, ipadd
 	return nil
 }
 
-func (app *containerWorkload) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (*commandCtx, error) {
+func (app *containerWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
 
-	cmdCtx := commandCtx{}
-	containerCmdHandle, err := app.containerHandle.SetUpCommand(cmd, timeout, background, shell)
+	cmdCtx := &Cmd.CommandCtx{}
+	containerCmdHandle, err := app.containerHandle.SetUpCommand(cmd, dir, background, shell)
 	if err != nil {
-		return nil, errors.Wrap(err, "Set up command failed")
+		return nil, "", errors.Wrap(err, "Set up command failed")
 	}
 
 	if !background {
-		cmdResp, _ := app.containerHandle.RunCommand(containerCmdHandle)
-		cmdCtx.done = true
-		cmdCtx.exitCode = cmdResp.RetCode
-		cmdCtx.stdout = cmdResp.Stdout
-		cmdCtx.stderr = cmdResp.Stderr
-		return &cmdCtx, nil
+		cmdResp, _ := app.containerHandle.RunCommand(containerCmdHandle, timeout)
+		cmdCtx.Done = true
+		cmdCtx.Stdout = cmdResp.Stdout
+		cmdCtx.Stderr = cmdResp.Stderr
+		cmdCtx.ExitCode = cmdResp.RetCode
+		cmdCtx.TimedOut = cmdResp.Timedout
+		return cmdCtx, "", nil
 	}
 
-	cmdHandle := commandHandle{ctx: &cmdCtx}
-	go func(ctx *commandCtx) {
-		cmdResp, _ := app.containerHandle.RunCommand(containerCmdHandle)
-		cmdCtx.done = true
-		ctx.exitCode = cmdResp.RetCode
-		ctx.stdout = cmdResp.Stdout
-		ctx.stderr = cmdResp.Stderr
-	}(&cmdCtx)
+	go func(ctx *Cmd.CommandCtx) {
+		cmdResp, _ := app.containerHandle.RunCommand(containerCmdHandle, 0)
+		cmdCtx.Done = true
+		cmdCtx.ExitCode = cmdResp.RetCode
+		cmdCtx.Stdout = cmdResp.Stdout
+		cmdCtx.Stderr = cmdResp.Stderr
+	}(cmdCtx)
 
-	cmdCtx.handleKey = fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
+	handleKey := fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
 	app.bgCmdIndex++
-	cmdHandle.handle = (string)(containerCmdHandle)
-	app.bgCmds[cmdCtx.handleKey] = &cmdHandle
+	cmdInfo := &Cmd.CommandInfo{Ctx: cmdCtx}
+	cmdInfo.Handle = (string)(containerCmdHandle)
+	app.bgCmds[handleKey] = cmdInfo
 
 	/* Give it couple of seconds to make sure command has started */
 	time.Sleep(2 * time.Second)
 
-	return &cmdCtx, nil
+	return cmdCtx, handleKey, nil
 }
 
-func (app *containerWorkload) StopCommand(commandHandle string) (*commandCtx, error) {
+func (app *containerWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
 
-	cmdCtx, ok := app.bgCmds[commandHandle]
+	cmdInfo, ok := app.bgCmds[commandHandle]
 	if !ok {
-		return &commandCtx{exitCode: -1, stdout: "", stderr: ""}, nil
+		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
 
-	if !cmdCtx.ctx.done {
-		app.containerHandle.StopBgCommand((Utils.CommandHandle)(cmdCtx.handle.(string)))
+	if !cmdInfo.Ctx.Done {
+		app.containerHandle.StopCommand((Utils.CommandHandle)(cmdInfo.Handle.(string)))
 	}
 
 	/* Give it 1 second to dump output */
 	time.Sleep(1 * time.Second)
 
 	delete(app.bgCmds, commandHandle)
-	return cmdCtx.ctx, nil
+	return cmdInfo.Ctx, nil
 }
 
 func (app *containerWorkload) IsHealthy() bool {
@@ -280,7 +303,7 @@ func (app *bareMetalWorkload) SendArpProbe(ip string, intf string, vlan int) err
 		intf = vlanIntf(intf, vlan)
 	}
 
-	return runArpCmd(app, ip, intf)
+	return RunArpCmd(app, ip, intf)
 
 }
 
@@ -318,80 +341,70 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 	return nil
 }
 
-func (app *bareMetalWorkload) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (*commandCtx, error) {
-	cmdCtx := commandCtx{}
-	retCode, stdout, _ := Utils.Run(cmd, (int)(timeout), background, shell, nil)
-	cmdCtx.exitCode = (int32)(retCode)
-	cmdCtx.stdout = stdout
-	cmdCtx.done = true
-	return &cmdCtx, nil
+func (app *bareMetalWorkload) BringUp(args ...string) error {
+	//app.name = name
+	app.bgCmds = make(map[string]*Cmd.CommandInfo)
+	return nil
 }
 
-func (app *bareMetalWorkload) StopCommand(commandHandle string) (*commandCtx, error) {
-	return nil, nil
+func (app *bareMetalWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
+	handleKey := ""
+
+	runDir := app.baseDir
+	if dir != "" {
+		runDir = runDir + "/" + dir
+	}
+
+	fmt.Println("base dir ", runDir, dir)
+
+	runCmd := []string{"cd", runDir, "&&"}
+	runCmd = append(runCmd, cmd...)
+
+	app.logger.Println("Running cmd ", strings.Join(runCmd, " "))
+	cmdInfo, _ := Cmd.ExecCmd(runCmd, (int)(timeout), background, shell, nil)
+
+	if background {
+		handleKey = fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
+		app.bgCmdIndex++
+		app.bgCmds[handleKey] = cmdInfo
+	}
+
+	return cmdInfo.Ctx, handleKey, nil
 }
 
-func (app *remoteWorkload) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (*commandCtx, error) {
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmdCtx := commandCtx{}
-	if !background {
-		var retCode int
-		retCode, cmdCtx.stdout, cmdCtx.stderr = Utils.RunSSHCommand(app.sshHandle, strings.Join(cmd, " "), false, false, app.logger)
-		cmdCtx.done = true
-		cmdCtx.exitCode = (int32)(retCode)
-		return &cmdCtx, nil
+func (app *bareMetalWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
+	cmdInfo, ok := app.bgCmds[commandHandle]
+	if !ok {
+		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
 
-	sshSession, sshOut, sshErr, err := Utils.CreateSSHSession(app.sshHandle)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error in sss session creation")
-	}
-
-	cmdHandle := commandHandle{ctx: &cmdCtx}
-	shout := io.MultiWriter(&stdoutBuf)
-	ssherr := io.MultiWriter(&stderrBuf)
-
-	go func(ctx *commandCtx) {
-		go func() {
-			io.Copy(shout, sshOut)
-		}()
-		go func() {
-
-			io.Copy(ssherr, sshErr)
-		}()
-
-		fullCmd := "sh -c \"" + strings.Join(cmd, " ") + "\""
-
-		app.logger.Println("Starting background cmd ", fullCmd)
-		err := sshSession.Start(fullCmd)
-		if err == nil {
-			err := sshSession.Wait()
-			defer sshSession.Close()
-			switch v := err.(type) {
-			case *ssh.ExitError:
-				ctx.exitCode = (int32)(v.Waitmsg.ExitStatus())
-			default:
-				ctx.exitCode = -1
-			}
-			ctx.stderr = stderrBuf.String()
-			ctx.stdout = stdoutBuf.String()
-		} else {
-			ctx.exitCode = 1
-			ctx.stderr = "Failed to start cmd : " + strings.Join(cmd, " ")
-		}
-
-		ctx.done = true
-		app.logger.Println("Command done", strings.Join(cmd, " "), stderrBuf.String(), stdoutBuf.String())
-	}(&cmdCtx)
-
-	cmdHandle.handle = sshSession
-	cmdCtx.handleKey = fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
-	app.bgCmdIndex++
-	app.bgCmds[cmdCtx.handleKey] = &cmdHandle
-
-	/* Give it couple of seconds to make sure command has started */
+	Cmd.StopExecCmd(cmdInfo)
 	time.Sleep(2 * time.Second)
-	return &cmdCtx, nil
+
+	return cmdInfo.Ctx, nil
+}
+
+func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
+
+	runCmd := strings.Join(cmd, " ")
+    //Ignore diretory for remote workload for now
+	/*if dir != "" {
+		runCmd = "cd " + app.baseDir + "/" + dir + " && " + strings.Join(cmd, " ")
+	} else {
+		runCmd = "cd " + app.baseDir + " && " + strings.Join(cmd, " ")
+	}*/
+
+	if !background {
+		cmdInfo, _ := Cmd.RunSSHCommand(app.sshHandle, runCmd, timeout, false, false, app.logger)
+		return cmdInfo.Ctx, "", nil
+	}
+
+	cmdInfo, _ := Cmd.StartSSHBgCommand(app.sshHandle, runCmd)
+	handleKey := fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
+	app.bgCmdIndex++
+	app.bgCmds[handleKey] = cmdInfo
+
+	return cmdInfo.Ctx, handleKey, nil
 }
 
 func (app *remoteWorkload) BringUp(args ...string) error {
@@ -416,55 +429,49 @@ func (app *remoteWorkload) BringUp(args ...string) error {
 	}
 
 	//app.name = name
-	app.bgCmds = make(map[string]*commandHandle)
+	app.bgCmds = make(map[string]*Cmd.CommandInfo)
 	return err
 }
 
-func (app *remoteWorkload) StopCommand(commandHandle string) (*commandCtx, error) {
+func (app *remoteWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, error) {
 
-	cmdCtx, ok := app.bgCmds[commandHandle]
+	cmdInfo, ok := app.bgCmds[commandHandle]
 	if !ok {
-		return &commandCtx{exitCode: -1, stdout: "", stderr: ""}, nil
+		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
 
-	if !cmdCtx.ctx.done {
-		app.logger.Println("Stopping cmd with handle : ", commandHandle)
-		sshSession := cmdCtx.handle.(*ssh.Session)
-		sshSession.Close()
-		/* Give it 1 second to dump output */
-		time.Sleep(1 * time.Second)
-	} else {
-		app.logger.Println("Command already done : ", commandHandle)
-	}
+	Cmd.StopSSHCmd(cmdInfo)
+
+	time.Sleep(2 * time.Second)
 
 	delete(app.bgCmds, commandHandle)
-	return cmdCtx.ctx, nil
+	return cmdInfo.Ctx, nil
 }
 
-func newContainerWorkload(logger *log.Logger) workload {
+func newContainerWorkload(logger *log.Logger) Workload {
 	return &containerWorkload{workloadBase: workloadBase{logger: logger}}
 }
 
-func newBareMetalWorkload(logger *log.Logger) workload {
+func newBareMetalWorkload(logger *log.Logger) Workload {
 	return &bareMetalWorkload{workloadBase: workloadBase{logger: logger}}
 }
 
-func newVMWorkload(logger *log.Logger) workload {
+func newVMWorkload(logger *log.Logger) Workload {
 	return &vmWorkload{workloadBase: workloadBase{logger: logger}}
 }
 
-func newRemoteWorkload(logger *log.Logger) workload {
+func newRemoteWorkload(logger *log.Logger) Workload {
 	return &remoteWorkload{workloadBase: workloadBase{logger: logger}}
 }
 
-var iotaWorkloads = map[string]func(logger *log.Logger) workload{
-	workloadTypeContainer: newContainerWorkload,
-	workloadTypeVM:        newVMWorkload,
-	workloadTypeBareMetal: newBareMetalWorkload,
-	workloadTypeRemote:    newRemoteWorkload,
+var iotaWorkloads = map[string]func(logger *log.Logger) Workload{
+	WorkloadTypeContainer: newContainerWorkload,
+	WorkloadTypeVM:        newVMWorkload,
+	WorkloadTypeBareMetal: newBareMetalWorkload,
+	WorkloadTypeRemote:    newRemoteWorkload,
 }
 
-func newWorkload(workloadType string, logger *log.Logger) workload {
+func NewWorkload(workloadType string, logger *log.Logger) Workload {
 	if _, ok := iotaWorkloads[workloadType]; ok {
 		return iotaWorkloads[workloadType](logger)
 	}

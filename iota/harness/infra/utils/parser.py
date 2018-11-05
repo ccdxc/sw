@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import yaml
 import json
+import pdb
 
 class Dict2Object(object):
     def __init__(self, d):
@@ -20,4 +21,11 @@ def JsonParse(filename):
     with open(filename, 'r') as f:
         obj = Dict2Object(json.load(f))
     f.close()
+    return obj
+
+def ParseJsonStream(stream):
+    try:
+        obj = json.parse(stream)
+    except:
+        obj = None
     return obj
