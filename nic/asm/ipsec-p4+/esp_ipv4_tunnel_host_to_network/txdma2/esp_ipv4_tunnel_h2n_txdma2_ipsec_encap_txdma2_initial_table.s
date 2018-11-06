@@ -17,7 +17,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwri.c1 p.p4_intr_global_drop, 1
 
     phvwri p.app_header_table0_valid, 1
-    phvwri p.{common_te0_phv_table_raw_table_size}, 2
+    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 10 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy[33:6] 
     phvwri p.common_te0_phv_table_addr, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE 
     and r1, d.barco_cindex, IPSEC_BARCO_RING_INDEX_MASK 
