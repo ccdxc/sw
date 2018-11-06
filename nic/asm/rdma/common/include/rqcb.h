@@ -232,7 +232,17 @@ struct rqcb4_t {
     num_atomic_resp_msgs: 16;
     num_pkts_in_cur_msg: 16;
     max_pkts_in_any_msg: 16;
-    pad: 288;
+
+    num_rnrs: 32;
+    num_seq_errs: 32;
+
+    last_psn: 24;
+    last_syndrome: 8;
+    last_msn: 24;
+    error_disable_qp: 1;
+    rsvd: 7;
+
+    pad: 160;
 };
 
 // resp_rx stats

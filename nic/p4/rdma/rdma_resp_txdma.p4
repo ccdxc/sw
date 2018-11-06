@@ -329,7 +329,10 @@ header_type resp_tx_s7_info_t {
 header_type resp_tx_to_stage_stats_info_t {
     fields {
         pyld_bytes                       :   16;
-        pad                              :  112;
+        last_psn                         :   24;   
+        last_syndrome                    :    8;
+        last_msn                         :   24;
+        pad                              :   56;
     }
 }
 
@@ -780,6 +783,9 @@ action resp_tx_stats_process () {
 
     // to stage
     modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
+    modify_field(to_s7_stats_info_scr.last_psn, to_s7_stats_info.last_psn);
+    modify_field(to_s7_stats_info_scr.last_syndrome, to_s7_stats_info.last_syndrome);
+    modify_field(to_s7_stats_info_scr.last_msn, to_s7_stats_info.last_msn);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage

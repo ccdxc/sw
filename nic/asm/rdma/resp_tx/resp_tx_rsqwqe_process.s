@@ -30,6 +30,8 @@ struct resp_tx_s2_t0_k k;
 
 #define K_SPEC_PSN  CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23)
 
+#define TO_S7_P     to_s7_stats_info
+
 %%
     .param      resp_tx_rsqrkey_process
     .param      resp_tx_dcqcn_enforce_process
@@ -47,6 +49,7 @@ process_atomic:
     bcf         [!c1], drop_phv
     add         BTH_OPCODE, RDMA_PKT_OPC_ATOMIC_ACK, CAPRI_KEY_FIELD(IN_P, serv_type), BTH_OPC_SVC_SHIFT //BD Slot
     phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, d.psn
+    phvwr       CAPRI_PHV_FIELD(TO_S7_P, last_psn), d.psn
 
    // phv_p->bth.pkey = 0xffff
    phvwr       p.bth.pkey, 0xffff  
@@ -190,6 +193,7 @@ next:
     phvwr       p.bth.pkey, 0xffff  
     
     phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, CURR_PSN
+    phvwr       CAPRI_PHV_FIELD(TO_S7_P, last_psn), CURR_PSN
 
     add         XFER_VA, d.read.va, BYTES_SENT
     phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_va), \

@@ -10,6 +10,7 @@ struct resp_tx_s1_t0_k k;
 
 #define TO_STAGE_T struct resp_tx_to_stage_t
 #define TO_S5_P to_s5_rqcb1_wb_info
+#define TO_S7_P to_s7_stats_info
 
 %%
     .param      resp_tx_dcqcn_enforce_process
@@ -47,8 +48,10 @@ prepare_aeth:
     // prepare aeth
     phvwrpair   p.aeth.syndrome, r6, p.aeth.msn, d.msn
     phvwr       p.bth.psn, d.ack_nak_psn
-
-    phvwr       CAPRI_PHV_FIELD(phv_global_common, _ack), 1
+    
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, last_syndrome), r6, \
+                CAPRI_PHV_FIELD(TO_S7_P, last_msn), d.msn
+    phvwr       CAPRI_PHV_FIELD(TO_S7_P, last_psn), d.ack_nak_psn
 
     // invoke MPU only dcqcn in table 1.
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)

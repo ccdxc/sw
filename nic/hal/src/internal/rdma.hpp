@@ -1324,7 +1324,15 @@ typedef struct rqcb3_s {
 } PACKED rqcb3_t;
 
 typedef struct rqcb4_s {
-    uint8_t     pad[36];
+    uint8_t     pad[20];
+
+    uint8_t     rsvd: 7;
+    uint8_t     error_disable_qp: 1;
+    uint32_t    last_msn: 24;
+    uint32_t    last_syndrome: 8;
+    uint32_t    last_psn: 24;
+    uint32_t    num_seq_errs;
+    uint32_t    num_rnrs;
     uint16_t    max_pkts_in_any_msg;
     uint16_t    num_pkts_in_cur_msg;
     uint16_t    num_atomic_resp_msgs;

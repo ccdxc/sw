@@ -84,6 +84,8 @@ incr_psn:
 
     
 add_ack_header:
+    phvwr       CAPRI_PHV_FIELD(phv_global_common, _ack), 1
+
     add         r2, RDMA_PKT_OPC_ACK, d.serv_type, BTH_OPC_SVC_SHIFT
     phvwrpair   p.bth.opcode, r2, p.bth.dst_qp, d.dst_qp
 

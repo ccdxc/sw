@@ -224,5 +224,6 @@ error_completion:
 
     CAPRI_SET_FIELD2(phv_global_common, _error_disable_qp, 1)
 
+    phvwr       CAPRI_PHV_FIELD(TO_S7_P, last_syndrome), AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     phvwr.e     p.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     CAPRI_SET_FIELD2(TO_S5_P, ack_nak_process, 1) // Exit Slot

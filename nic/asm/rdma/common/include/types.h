@@ -466,15 +466,14 @@ struct resp_tx_flags_t {
     _rsvd_flags:8;
 };
 
-#define RESP_TX_FLAG_ACK                0x0100
-#define RESP_TX_FLAG_ATOMIC_RESP        0x0200
-#define RESP_TX_FLAG_READ_RESP          0x0400
-#define RESP_TX_FLAG_LAST               0x0800
-#define RESP_TX_FLAG_MIDDLE             0x1000
-#define RESP_TX_FLAG_FIRST              0x2000
-#define RESP_TX_FLAG_ONLY               0x4000
-#define RESP_TX_FLAG_ERR_DIS_QP         0x8000
-
+#define RESP_TX_FLAG_ERR_DIS_QP         0x0001
+#define RESP_TX_FLAG_FIRST              0x0002
+#define RESP_TX_FLAG_MIDDLE             0x0004
+#define RESP_TX_FLAG_LAST               0x0008
+#define RESP_TX_FLAG_ONLY               0x0010
+#define RESP_TX_FLAG_ACK                0x0020
+#define RESP_TX_FLAG_READ_RESP          0x0040
+#define RESP_TX_FLAG_ATOMIC_RESP        0x0080
 
 #define ARE_ALL_FLAGS_SET(_c, _flags_r, _flags_test) \
     smeqh   _c, _flags_r, _flags_test, _flags_test
