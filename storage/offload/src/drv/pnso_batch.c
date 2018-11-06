@@ -318,6 +318,7 @@ deinit_batch(struct batch_info *batch_info)
 	}
 
 	put_mpool_batch_object(pcr, MPOOL_TYPE_BATCH_INFO, batch_info);
+	pcr->batch_info = NULL;
 }
 
 void
@@ -400,6 +401,13 @@ bat_poller(void *pnso_poll_ctx)
 				(uint64_t) batch_info, err);
 		goto out;
 	}
+
+	/*
+	 * on success, read/write result from first to last chain's - first
+	 * to last service - of the entire batch
+	 *
+	 */
+	read_write_result_all_chains(batch_info);
 
 	/*
 	 * on success, read/write result from first to last chain's - first
