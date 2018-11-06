@@ -18,18 +18,18 @@
                    "SwitchUsername"     : ""
                }           
             ],
-            "NodeMgmtIP"    : "",
-            "NodeCimcIP"    : "",
-            "NodeOs"        : "",
-            "NicConsoleIP"  : "",
-            "NicConsolePort": "",
-            "NicMgmtIP"     : "",
+            "NodeMgmtIP"    : "192.168.68.171",
+            "NodeCimcIP"    : "192.168.68.169",
+            "NodeOs"        : "linux",
+            "NicConsoleIP"  : "192.168.71.166",
+            "NicConsolePort": "2017",
+            "NicMgmtIP"     : "1.1.1.1",
             "Name"          : "",
             "Resource"      : {
                 "NICType"   :  "pensando"
             }
        },
-       {
+        {
             "Type": "bm",
             "DataNetworks": [
                 {
@@ -47,15 +47,15 @@
                    "SwitchUsername"     : ""
                }           
             ],
-            "NodeMgmtIP"    : "",
-            "NodeCimcIP"    : "",
-            "NodeOs"        : "",
-            "NicConsoleIP"  : "",
-            "NicConsolePort": "",
-            "NicMgmtIP"     : "",
+            "NodeMgmtIP"    : "192.168.68.171",
+            "NodeCimcIP"    : "192.168.68.169",
+            "NodeOs"        : "linux",
+            "NicConsoleIP"  : "192.168.71.166",
+            "NicConsolePort": "2017",
+            "NicMgmtIP"     : "1.1.1.1",
             "Name"          : "",
             "Resource"      : {
-                "NICType"   :  "mellanox"
+                "NICType"   :  "pensando"
             }
        }
   ],

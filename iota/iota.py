@@ -42,8 +42,12 @@ def InitLogger():
 
 def __start_server():
     global gl_server_process
-    gl_server_process = procs.IotaProcess("%s/iota/bin/server/iota_server" % topdir,
+    if glopts.GlobalOptions.dryrun:
+        gl_server_process = procs.IotaProcess("%s/iota/bin/server/iota_server --stubmode" % topdir,
                                           "%s/iota/server.log" % topdir)
+    else:
+        gl_server_process = procs.IotaProcess("%s/iota/bin/server/iota_server" % topdir,
+                                                  "%s/iota/server.log" % topdir)
     gl_server_process.Start()
     return
 

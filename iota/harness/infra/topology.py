@@ -2,6 +2,7 @@
 import os
 
 from iota.harness.infra.utils.logger import Logger as Logger
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 import iota.harness.infra.store as store
 import iota.harness.infra.resmgr as resmgr
@@ -125,6 +126,8 @@ class Node(object):
         elif self.IsNaples():
             self.__host_intfs = resp.naples_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
+        if GlobalOptions.dryrun and len(self.__host_intfs) == 0:
+            self.__host_intfs = ["dummy_intf0", "dummy_intf1"]
         return
 
 class Topology(object):

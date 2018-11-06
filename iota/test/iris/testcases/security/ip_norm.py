@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-
+import pdb
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
@@ -8,11 +8,9 @@ def __get_workload_pairs():
     pairs = []
     for w1 in api.GetWorkloads():
         for w2 in api.GetWorkloads():
-            if id(w1) == id(w2):
-                continue
-                if w1.uplink_vlan != w2.uplink_vlan:
+            if id(w1) == id(w2) or w1.uplink_vlan != w2.uplink_vlan:
                     continue
-                pairs.append((w1, w2))
+            pairs.append((w1, w2))
     return pairs
 
 def Setup(tc):

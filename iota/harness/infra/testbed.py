@@ -23,7 +23,7 @@ class _Testbed:
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
         self.__node_ips = []
-       
+
         self.__fw_upgrade_done = False
         self.__read_warmd_json()
         self.__derive_testbed_type()
@@ -53,9 +53,9 @@ class _Testbed:
                 assert(0)
         if self.__bm_count:
             if self.__vm_count:
-                self.__type = types.tbtype.HYBRID 
+                self.__type = types.tbtype.HYBRID
                 Logger.info("Testbed Type = HYBRID")
-            else: 
+            else:
                 self.__type = types.tbtype.HARDWARE
                 Logger.info("Testbed Type = HARDWARE")
         else:
@@ -73,7 +73,7 @@ class _Testbed:
         if path[0] == '/':
             return path
         return GlobalOptions.topdir + '/' + path
-    
+
     def __prepare_TestBedMsg(self, ts):
         msg = topo_pb2.TestBedMsg()
         if ts and not GlobalOptions.rerun:
@@ -194,10 +194,12 @@ class _Testbed:
         #if status != types.status.SUCCESS:
         #    return status
 
-        status = self.__cleanup_testbed_script()
-        if status != types.status.SUCCESS:
-            return status
-
+        if GlobalOptions.dryrun:
+            status = types.status.SUCCESS
+        else:
+            status = self.__cleanup_testbed_script()
+            if status != types.status.SUCCESS:
+                return status
         status = self.__init_testbed()
         return status
 

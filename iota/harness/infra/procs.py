@@ -11,7 +11,7 @@ class IotaProcess:
     def Start(self):
         Logger.info("Starting %s (Logfile = %s)" % (self.__cmd, self.__logfile))
         log = open(self.__logfile, "w")
-        self.__p = Popen(self.__cmd, stdout=log, stderr=log)
+        self.__p = Popen(self.__cmd, stdout=log, stderr=log, shell=True)
         return
 
     def Stop(self):

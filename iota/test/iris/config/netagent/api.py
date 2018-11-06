@@ -9,6 +9,8 @@ import copy
 
 from enum import Enum
 import iota.harness.api as api
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+
 
 
 class CfgOper(Enum):
@@ -54,9 +56,10 @@ def __rest_api_handler(rest_api_path, obj, oper = CfgOper.ADD):
         api.Logger.info("URL = ", url)
         api.Logger.info("JSON Data = ", json_data)
         headers = {'Content-type': 'application/json'}
-        response = method(url, data=json_data, headers=headers)
-        api.Logger.info("REST response = ", response.text)
-        assert(response.status_code == requests.codes.ok)
+        if not GlobalOptions.dryrun:
+            response = method(url, data=json_data, headers=headers)
+            api.Logger.info("REST response = ", response.text)
+            assert(response.status_code == requests.codes.ok)
     return
 
 
@@ -83,8 +86,9 @@ def __hw_rest_api_handler(rest_api_path, obj, cfgOper = CfgOper.ADD):
         cmd = ("sshpass -p %s ssh %s@%s curl -X %s -d @temp_config.json -H \"Content-Type:application/json\" %s" %
                         (api.GetTestbedPassword(), api.GetTestbedUsername(), agent_ip, oper, url))
         api.Logger.info("Cmd : %s" % cmd)
-        ret = os.system(cmd)
-        assert(ret == 0)
+        if not GlobalOptions.dryrun:
+            ret = os.system(cmd)
+            assert(ret == 0)
     os.system("rm -f temp_config.json")
     return
 

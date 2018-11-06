@@ -7,6 +7,8 @@ import grpc
 
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as agent_api
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+
 
 
 gl_ep_json_obj = None
@@ -37,9 +39,10 @@ def ReadJsons():
 
 
 def PushConfig():
-    agent_api.ConfigureNetworks(gl_nw_json_obj.networks)
-    agent_api.ConfigureEndpoints(gl_ep_json_obj.endpoints)
-    agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies)
+    if not GlobalOptions.dryrun:
+        agent_api.ConfigureNetworks(gl_nw_json_obj.networks)
+        agent_api.ConfigureEndpoints(gl_ep_json_obj.endpoints)
+        agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies)
     return api.types.status.SUCCESS
 
 
