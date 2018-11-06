@@ -1976,7 +1976,9 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	test_ctx->output_file_tbl = test_get_output_file_table();
 
 	max_core_count = 0;
-	cpu_mask = desc->cpu_mask & ((1 << osal_get_core_count()) - 1);
+	cpu_mask = desc->cpu_mask;
+	if (osal_get_core_count() < 64)
+		cpu_mask &= ((1 << osal_get_core_count()) - 1);
 	while (cpu_mask) {
 		if (cpu_mask & 1)
 			max_core_count++;
