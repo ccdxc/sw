@@ -111,7 +111,7 @@ eth_tx_opcode_tso##n:; \
     phvwrpair       p.eth_tx_app_hdr##n##_compute_l4_csum, 1, p.eth_tx_app_hdr##n##_compute_ip_csum, 1; \
     phvwrpair.c7    p.eth_tx_app_hdr##n##_compute_inner_l4_csum, 1, p.eth_tx_app_hdr##n##_compute_inner_ip_csum, 1; \
     bbeq            d.csum_l3_or_sot##n, 1, eth_tx_opcode_tso_sot##n; \
-    phvwri          p.{eth_tx_app_hdr##n##_update_tcp_seq_no...eth_tx_app_hdr##n##_update_ip_len}, 0x7; \
+    phvwri          p.{eth_tx_app_hdr##n##_update_tcp_seq_no...eth_tx_app_hdr##n##_update_ip_id}, 0x7; \
 eth_tx_opcode_tso_eot##n:; \
 eth_tx_opcode_tso_cont##n:; \
     GET_MSS(n, _r_t1) \
