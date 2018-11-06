@@ -1,6 +1,6 @@
 meta:
-    name        : firewall
-    description : Firewall Test Suite
+    name        : firewall::normalization
+    description : Testcases for policy only tests
     mode        : hardware
     cfgmode     : netagent
     nicmode     : hostpin
@@ -15,7 +15,7 @@ images:
 #    drivers: /sw/platform/drivers.tgz
 
 setup:
-    topology: test/iris/topologies/1Naples_BM/1Naples.topology
+    topology: test/iris/topologies/1Naples_1Mellanox_BM/1Naples_1Mellanox.topology
     
     config  : 
         - step : config.netagent.hw_push_config
@@ -26,10 +26,8 @@ common:
         #-   step    : verif.utils.verify_topology_health
 
 testcases:
-    -   name    : Policy Scale Add Del Loop
-        testcase: testcases.security.policy_scale_add_del_loop
-        args    :
-            count : 10
+    -   name    : IP normalization tests
+        testcase: testcases.security.ip_norm
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw

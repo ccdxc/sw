@@ -14,7 +14,7 @@ def Trigger(tc):
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
-   
+
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                            "iperf -s -t 300", background = True)
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
@@ -31,7 +31,7 @@ def Verify(tc):
         return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
-    
+
     api.Logger.info("Iperf Results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
