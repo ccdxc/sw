@@ -8,8 +8,6 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
-	//"encoding/json"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 )
@@ -223,7 +221,7 @@ type NetDatapathAPI interface {
 	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, port *netproto.Port, ns *netproto.Namespace) error                                            // creates an interface
 	UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                          // updates an interface
 	DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                          // deletes an interface
-	ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.PortInfoGetResponseMsg, error)                                                                          // Lists all the lifs and uplinks from the datapath state
+	ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error)                                                                                                // Lists all the lifs and uplinks from the datapath state
 	CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // creates a nat pool in the datapath
 	UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // updates a nat pool in the datapath
 	DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // deletes a nat pool in the datapath

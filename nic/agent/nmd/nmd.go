@@ -91,12 +91,9 @@ func NewAgent(platform state.PlatformAPI, upgmgr state.UpgMgrAPI,
 		delphiClient: delphiClient,
 	}
 
+	// run delphi event loop in the background
 	if delphiClient != nil {
-		err = delphiClient.Dial()
-		if err != nil {
-			log.Errorf("Could not connect to delphi hub. Err: %v", err)
-			return nil, err
-		}
+		go delphiClient.Run()
 	}
 
 	return &ag, nil

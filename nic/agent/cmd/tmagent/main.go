@@ -152,7 +152,9 @@ func main() {
 		log.Fatalf("delphi NewClient failed")
 	}
 	srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
-	delphiClient.Dial()
+
+	// run delphi thread in background
+	go delphiClient.Run()
 
 	// wait forever
 	select {}

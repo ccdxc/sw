@@ -31,7 +31,7 @@ func main() {
 		log.Fatalf("delphi NewClient failed")
 	}
 	srv.sysmgrClient = sysmgr.NewClient(delphiClient, "goexample")
-	delphiClient.Dial()
+	go delphiClient.Run()
 	forever := make(chan struct{})
 	_ = <-forever
 }

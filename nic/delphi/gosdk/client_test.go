@@ -3,8 +3,10 @@ package gosdk
 import (
 	"log"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 type service struct {
@@ -27,22 +29,25 @@ func (s *service) Name() string {
 	return s.name
 }
 
-func (s *service) OnInterfaceSpecCreate(obj *InterfaceSpec) {
+func (s *service) OnTestInterfaceSpecCreate(obj *TestInterfaceSpec) {
 	log.Printf("%s Created! %s\n", s.Name(), obj.GetMacAddress())
 	s.gotCreateNotify <- struct{}{}
 }
 
-func (s *service) OnInterfaceSpecDelete(obj *InterfaceSpec) {
+func (s *service) OnTestInterfaceSpecDelete(obj *TestInterfaceSpec) {
 	log.Printf("%s Updated! %s\n", s.Name(), obj.GetMacAddress())
 	s.gotDeleteNotify <- struct{}{}
 }
 
-func (s *service) OnInterfaceSpecUpdate(obj *InterfaceSpec) {
+func (s *service) OnTestInterfaceSpecUpdate(obj *TestInterfaceSpec) {
 	log.Printf("%s Deleted!\n", s.Name())
 	s.gotUpdateNotify <- struct{}{}
 }
 
 func TestClientBasic(t *testing.T) {
+	h := NewFakeHub()
+	h.Start()
+
 	s1 := &service{
 		mountDone:       make(chan struct{}),
 		gotCreateNotify: make(chan struct{}),
@@ -55,19 +60,12 @@ func TestClientBasic(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewClient(): %s", err)
 	}
-	// verify cant connect without the hub
-	err = c1.Dial()
-	if err == nil {
-		t.Errorf("Dial suceeded without the hub")
-	}
 
-	h := NewHub()
-	h.Start()
+	go c1.Run()
 
-	err = c1.Dial()
-	if err != nil {
-		t.Errorf("Dial(): %s", err)
-	}
+	AssertEventually(t, func() (bool, interface{}) {
+		return c1.IsConnected(), c1
+	}, "client did not connect")
 
 	c1.WatchMount(s1)
 
@@ -88,21 +86,22 @@ func TestClientBasic(t *testing.T) {
 	c2.MountKind("Interface", delphi.MountMode_ReadMode)
 	c2.MountKindKey("Interface", "Intf:20", delphi.MountMode_ReadMode)
 
-	err = c2.Dial()
-	if err != nil {
-		t.Errorf("Dial(): %s", err)
-	}
+	go c2.Run()
 
-	InterfaceSpecWatch(c1, s1)
-	InterfaceSpecWatch(c2, s2)
+	TestInterfaceSpecWatch(c1, s1)
+	TestInterfaceSpecWatch(c2, s2)
 
 	_ = <-s2.mountDone
 	log.Printf("### Client 2 Mount done")
 
-	spec := NewInterfaceSpec(c1)
+	spec := NewTestInterfaceSpec(c1)
 	spec.GetKey().SetIfidx(1)
 	spec.SetMacAddress("TestMacAddress")
 	log.Printf("### SPEC: %+v", spec)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return c2.IsConnected(), c2
+	}, "client did not connect")
 
 	//c1.SetObject(spec)
 	log.Printf("### Client 1 Set Object done")
@@ -123,12 +122,12 @@ func TestClientBasic(t *testing.T) {
 
 	key := NewIntfIndex(c2)
 	key.SetIfidx(1)
-	spec2 := GetInterfaceSpec(c2, key)
+	spec2 := GetTestInterfaceSpec(c2, key)
 	if spec2.GetMacAddress() != spec.GetMacAddress() {
 		t.Errorf(`spec2.GetMacAddress() != spec.GetMacAddress()`)
 	}
 
-	objs := c1.List("InterfaceSpec")
+	objs := c1.List("TestInterfaceSpec")
 	if len(objs) != 1 {
 		t.Errorf(`len(objs) != 1`)
 	}
@@ -152,4 +151,34 @@ func TestClientBasic(t *testing.T) {
 	c2.DumpSubtrees()
 
 	h.Stop()
+}
+
+// this tests if hub starts after client, client will retry for it..
+func TestClientRetry(t *testing.T) {
+	s1 := &service{
+		mountDone:       make(chan struct{}),
+		gotCreateNotify: make(chan struct{}),
+		gotUpdateNotify: make(chan struct{}),
+		gotDeleteNotify: make(chan struct{}),
+		name:            "test1",
+	}
+	c1, err := NewClient(s1)
+	AssertOk(t, err, "Error creating delphi client")
+
+	err = c1.WatchMount(s1)
+	AssertOk(t, err, "Error watching mount")
+
+	// try to connect in the background
+	go c1.Run()
+
+	time.Sleep(time.Millisecond * 10)
+
+	// start the delphi hub
+	h := NewFakeHub()
+	h.Start()
+	defer h.Stop()
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return c1.IsConnected(), c1
+	}, "client did not connect")
 }

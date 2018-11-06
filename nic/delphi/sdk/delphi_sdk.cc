@@ -28,6 +28,7 @@ int Sdk::MainLoop() {
 }
 
 // Connect connects to delphi hub
+// this is meant to be used by services that have their own libev event loop
 error Sdk::Connect() {
     return client_->Connect();
 }

@@ -42,10 +42,11 @@ func main() {
 	UpgReqMount(c1, delphi.MountMode_ReadWriteMode)
 	UpgRespMount(c1, delphi.MountMode_ReadMode)
 	UpgRespWatch(c1, s1)
-	err = c1.Dial()
-	if err != nil {
-		panic(err)
-	}
+
+	// run the event loop
+	c1.Run()
+
+	// create an object
 	u := NewUpgReq(c1)
 	u.SetKey(10)
 	u.SetUpgReqCmd(UpgReqType_UpgStart)

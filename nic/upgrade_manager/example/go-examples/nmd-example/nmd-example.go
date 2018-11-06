@@ -284,10 +284,7 @@ func main() {
 		panic(err)
 	}
 
-	err = c1.Dial()
-	if err != nil {
-		log.Fatalf("Could not connect to delphi hub. Err: %v", err)
-	}
+	go c1.Run()
 
 	err = upg.CanPerformNonDisruptiveUpgrade()
 	//err = upg.StartNonDisruptiveUpgrade()

@@ -319,7 +319,7 @@ func (d *FileDescriptor) goFileName() string {
 	if ext := path.Ext(name); ext == ".proto" || ext == ".protodevel" {
 		name = name[:len(name)-len(ext)]
 	}
-	name += ".pb.go"
+	name += ".delphi.go"
 
 	// Does the file have a "go_package" option?
 	// If it does, it may override the filename.

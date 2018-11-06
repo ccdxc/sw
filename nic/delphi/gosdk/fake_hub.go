@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 
-	delphi_messenger "github.com/pensando/sw/nic/delphi/messenger/proto"
+	messenger "github.com/pensando/sw/nic/delphi/messenger/proto"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
@@ -25,8 +25,8 @@ type hub struct {
 	clients  []net.Conn
 }
 
-// NewHub creates a new hub instance
-func NewHub() Hub {
+// NewFakeHub creates a new hub instance
+func NewFakeHub() Hub {
 	return &hub{
 		quit:    make(chan struct{}),
 		clients: make([]net.Conn, 0),
@@ -68,7 +68,7 @@ func (h *hub) runReceiver(conn net.Conn) {
 			panic(err)
 		}
 
-		var message delphi_messenger.Message
+		var message messenger.Message
 		err = proto.Unmarshal(body, &message)
 		if err != nil {
 			panic(err)
@@ -102,11 +102,11 @@ func (h *hub) runLoop() {
 	}
 }
 
-func (h *hub) handleMessage(conn net.Conn, message *delphi_messenger.Message) {
+func (h *hub) handleMessage(conn net.Conn, message *messenger.Message) {
 	switch message.GetType() {
-	case delphi_messenger.MessageType_MountReq:
+	case messenger.MessageType_MountReq:
 		h.sendMountResp(conn, message)
-	case delphi_messenger.MessageType_ChangeReq:
+	case messenger.MessageType_ChangeReq:
 		for _, c := range h.clients {
 			h.sendNotify(c, message)
 		}
@@ -114,8 +114,8 @@ func (h *hub) handleMessage(conn net.Conn, message *delphi_messenger.Message) {
 	}
 }
 
-func (h *hub) sendMountResp(conn net.Conn, msg *delphi_messenger.Message) {
-	var req delphi_messenger.MountReqMsg
+func (h *hub) sendMountResp(conn net.Conn, msg *messenger.Message) {
+	var req messenger.MountReqMsg
 	objects := msg.GetObjects()
 	if len(objects) != 1 {
 		panic("Unexpected number of objects")
@@ -125,7 +125,7 @@ func (h *hub) sendMountResp(conn net.Conn, msg *delphi_messenger.Message) {
 		panic(err)
 	}
 
-	mountRsp := delphi_messenger.MountRespMsg{
+	mountRsp := messenger.MountRespMsg{
 		ServiceID:   req.GetServiceID(),
 		ServiceName: req.GetServiceName(),
 	}
@@ -136,11 +136,11 @@ func (h *hub) sendMountResp(conn net.Conn, msg *delphi_messenger.Message) {
 	}
 
 	_, desc := descriptor.ForMessage(&mountRsp)
-	message := delphi_messenger.Message{
-		Type:      delphi_messenger.MessageType_MountResp,
+	message := messenger.Message{
+		Type:      messenger.MessageType_MountResp,
 		MessageId: 1,
-		Objects: []*delphi_messenger.ObjectData{
-			&delphi_messenger.ObjectData{
+		Objects: []*messenger.ObjectData{
+			&messenger.ObjectData{
 				Meta: &delphi.ObjectMeta{
 					Kind: *desc.Name,
 				},
@@ -160,9 +160,9 @@ func (h *hub) sendMountResp(conn net.Conn, msg *delphi_messenger.Message) {
 	}
 }
 
-func (h *hub) sendNotify(conn net.Conn, msg *delphi_messenger.Message) {
-	message := delphi_messenger.Message{
-		Type:      delphi_messenger.MessageType_Notify,
+func (h *hub) sendNotify(conn net.Conn, msg *messenger.Message) {
+	message := messenger.Message{
+		Type:      messenger.MessageType_Notify,
 		MessageId: 1,
 		Objects:   msg.GetObjects(),
 	}
@@ -179,8 +179,8 @@ func (h *hub) sendNotify(conn net.Conn, msg *delphi_messenger.Message) {
 }
 
 func (h *hub) sendStatus(conn net.Conn) {
-	message := delphi_messenger.Message{
-		Type:      delphi_messenger.MessageType_StatusResp,
+	message := messenger.Message{
+		Type:      messenger.MessageType_StatusResp,
 		MessageId: 1,
 		Objects:   nil,
 	}

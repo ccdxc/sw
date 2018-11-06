@@ -152,6 +152,9 @@ func isSingleton(msg *delphiMessage) bool {
 		if field.name == "Key" {
 			return false
 		}
+		if field.name == "key_or_handle" {
+			return false
+		}
 	}
 	return singleton
 }
@@ -295,7 +298,9 @@ func (g *Generator) delphiGenerateInterfaceDecl() {
 func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	var keyField *delphiField
 	for _, field := range msg.fields {
-		if field.name == "Key" {
+		if isDelphiObj(msg) && field.name == "Key" {
+			keyField = field
+		} else if isDelphiObj(msg) && field.name == "key_or_handle" {
 			keyField = field
 		}
 	}
@@ -401,12 +406,26 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 			"key " + intype + ") *" + msg.wrapper.name + " {")
 		g.P("  w := New" + msg.wrapper.name + "(sdkClient)")
 		if keyField.isWrapper {
-			g.P("  w.key = childNew" + keyField.typeName +
+			g.P("  w." + keyField.name + " = childNew" + keyField.typeName +
 				"WithValue(w, sdkClient, key)")
 		} else {
 			g.P("  w.SetKey(key)")
 		}
 		g.P("  return w")
+		g.P("}\n")
+	}
+
+	// New<NAME>FromMessage
+	if isDelphiObj(msg) {
+		g.P("func " + "New" + msg.wrapper.name + "FromMessage(sdkClient clientApi.Client, msg *" +
+			msg.name + ") *" + msg.wrapper.name + " {")
+		g.P("  obj := new" + msg.wrapper.name + "FromMessage (msg)")
+		g.P("  obj.sdkClient = sdkClient")
+		g.P("  obj.meta = &delphi.ObjectMeta{")
+		g.P("  Kind: \"" + msg.wrapper.name + "\",")
+		g.P("}\n")
+		g.P("  obj.bubbleSave()")
+		g.P("  return obj")
 		g.P("}\n")
 	}
 
@@ -484,13 +503,16 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	// GetProtoMsg
 	g.P("func (o *" + msg.wrapper.name + ") GetProtoMsg() *" + msg.name + "{")
 	g.In()
+	g.P("if o == nil {")
+	g.P("    return &" + msg.name + "{}")
+	g.P("}\n")
 	g.P("return &" + msg.name + "{")
 	g.In()
 	for _, field := range msg.fields {
 		if field.isWrapper {
-			g.P(field.name + ": o." + lowerFirst(field.name) + ".GetProtoMsg(),")
+			g.P(CamelCase(field.name) + ": o." + lowerFirst(field.name) + ".GetProtoMsg(),")
 		} else {
-			g.P(field.name + ": o." + lowerFirst(field.name) + ",")
+			g.P(CamelCase(field.name) + ": o." + lowerFirst(field.name) + ",")
 		}
 	}
 	g.Out()
@@ -512,7 +534,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 			g.P("}\n")
 		} else {
 			for _, field := range msg.fields {
-				if field.name == "Key" {
+				if field.name == "Key" || field.name == "key_or_handle" {
 					g.P("func (obj *" + msg.wrapper.name +
 						") GetKeyString() string {")
 					if field.isWrapper {
@@ -568,13 +590,16 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	// new<NAME>FromMessage
 	g.P("func " + "new" + msg.wrapper.name + "FromMessage (msg *" +
 		msg.name + ") *" + msg.wrapper.name + " {")
+	g.P("  if msg == nil {")
+	g.P("      return &" + msg.wrapper.name + "{}")
+	g.P("  }\n")
 	g.P("  return &" + msg.wrapper.name + "{")
 	for _, field := range msg.fields {
 		if field.isWrapper {
 			g.P(lowerFirst(field.name) + ": new" + field.typeName +
-				"FromMessage(msg." + field.name + "),")
+				"FromMessage(msg." + CamelCase(field.name) + "),")
 		} else {
-			g.P(lowerFirst(field.name) + ": msg." + field.name + ",")
+			g.P(lowerFirst(field.name) + ": msg." + CamelCase(field.name) + ",")
 		}
 	}
 	g.P("  }")

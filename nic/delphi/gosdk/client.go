@@ -2,7 +2,6 @@ package gosdk
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/pensando/sw/nic/delphi/gosdk/messenger"
 	delphi_messenger "github.com/pensando/sw/nic/delphi/messenger/proto"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // The main map holding the objects in the local copy of the databse.
@@ -35,6 +35,8 @@ type client struct {
 	subtrees       map[string]subtree
 	changeQueue    chan *change
 	globalLock     *sync.Mutex
+	stopChan       chan bool
+	isConnected    bool
 }
 
 // Mount a kind to get notifications and/or make changes to the objects. Must
@@ -64,22 +66,48 @@ func (c *client) MountKindKey(kind string, key string, mode delphi.MountMode) er
 	return nil
 }
 
-// Dial establishes connection to the HUB. Users must not `MountKind` after
-// they called `Dial``
-func (c *client) Dial() error {
-	err := c.mclient.Dial()
+// Run runs the main event loop in the background
+func (c *client) Run() {
+	err := c.connect()
 	if err != nil {
-		return err
+		log.Fatalf("Error connecting to hub. Err: %v", err)
 	}
 
+	// send mount request
 	err = c.mclient.SendMountReq(c.service.Name(), c.mounts)
 	if err != nil {
-		return err
+		log.Fatalf("Error sending mount request to hub. Err: %v", err)
 	}
 
-	go c.run()
+	// remember we are already connected
+	c.isConnected = true
+
+	// run the event loop in the background
+	c.loop()
+}
+
+// connect establishes connection to the HUB. Users must not `MountKind` after
+// they called `Run``
+func (c *client) connect() error {
+	var connected bool
+
+	// keep retrying to connect to delphi hib
+	for !connected {
+		err := c.mclient.Dial()
+		if err != nil {
+			log.Errorf("Error connecting to delphi hub. Retrying.. Err: %v", err)
+			time.Sleep(time.Second)
+		} else {
+			connected = true
+		}
+	}
 
 	return nil
+}
+
+// IsConnected returns true if client is connected to dlephi hub
+func (c *client) IsConnected() bool {
+	return c.isConnected
 }
 
 // SetObject notifies about changes to an object. The user doesn't need to
@@ -152,6 +180,7 @@ func (c *client) WatchMount(listener clientApi.MountListener) error {
 // Close the connection the the hub
 func (c *client) Close() {
 	c.mclient.Close()
+	close(c.stopChan)
 }
 
 // sendBatch is responsible for marshaling and sending over to the hub a
@@ -183,7 +212,7 @@ func (c *client) sendBatch(batch map[string]*change) error {
 
 // A loop that listens for local changes to the database and send the changes
 // over to the hub in given intervals
-func (c *client) run() {
+func (c *client) loop() {
 	pending := make(map[string]*change)
 	t := time.NewTimer(time.Millisecond * 5)
 	tRunning := true
@@ -199,6 +228,11 @@ func (c *client) run() {
 			pending[change.obj.GetKeyString()] = change
 			if tRunning == false {
 				t.Reset(time.Millisecond * 5)
+			}
+		case _, ok := <-c.stopChan:
+			if !ok {
+				log.Warnf("Stopping event loop")
+				return
 			}
 		}
 	}
@@ -228,7 +262,7 @@ func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
 	}
 }
 
-// This function gets called when there are local or remove changes to the
+// This function gets called when there are local or remote changes to the
 // database. It invokes the reactors
 func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerEvents bool) {
 	for _, obj := range objlist {
@@ -236,7 +270,7 @@ func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerE
 		baseObj, err := factory(c, obj.Data)
 		oldObj := c.GetObject(obj.Meta.Kind, obj.Meta.Key)
 		if err != nil {
-			panic(err)
+			log.Fatalf("Error unmarshalling object %+v. Err: %v", obj, err)
 		} else {
 			c.updateSubtree(obj.GetOp(), obj.GetMeta().GetKind(),
 				obj.GetMeta().GetKey(), baseObj)
@@ -287,7 +321,7 @@ func (c *client) List(kind string) []clientApi.BaseObject {
 	c.globalLock.Lock()
 	defer c.globalLock.Unlock()
 
-	objects := make([]clientApi.BaseObject, 0)
+	var objects []clientApi.BaseObject
 
 	subtr, ok := c.subtrees[kind]
 	if !ok {
@@ -319,6 +353,7 @@ func NewClient(service clientApi.Service) (clientApi.Client, error) {
 		changeQueue:    make(chan *change),
 		mountListeners: make([]clientApi.MountListener, 0),
 		globalLock:     &sync.Mutex{},
+		stopChan:       make(chan bool),
 	}
 
 	mc, err := messenger.NewClient(client)

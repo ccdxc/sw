@@ -9,7 +9,7 @@ It is generated from these files:
 
 It has these top-level messages:
 	IntfIndex_
-	InterfaceSpec_
+	TestInterfaceSpec_
 */
 package gosdk
 
@@ -48,32 +48,32 @@ func (m *IntfIndex_) GetIfidx() uint32 {
 }
 
 // spec part of the object
-type InterfaceSpec_ struct {
+type TestInterfaceSpec_ struct {
 	Meta       *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key        *IntfIndex_        `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
 	MacAddress string             `protobuf:"bytes,3,opt,name=MacAddress" json:"MacAddress,omitempty"`
 }
 
-func (m *InterfaceSpec_) Reset()                    { *m = InterfaceSpec_{} }
-func (m *InterfaceSpec_) String() string            { return proto.CompactTextString(m) }
-func (*InterfaceSpec_) ProtoMessage()               {}
-func (*InterfaceSpec_) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (m *TestInterfaceSpec_) Reset()                    { *m = TestInterfaceSpec_{} }
+func (m *TestInterfaceSpec_) String() string            { return proto.CompactTextString(m) }
+func (*TestInterfaceSpec_) ProtoMessage()               {}
+func (*TestInterfaceSpec_) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *InterfaceSpec_) GetMeta() *delphi.ObjectMeta {
+func (m *TestInterfaceSpec_) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
 		return m.Meta
 	}
 	return nil
 }
 
-func (m *InterfaceSpec_) GetKey() *IntfIndex_ {
+func (m *TestInterfaceSpec_) GetKey() *IntfIndex_ {
 	if m != nil {
 		return m.Key
 	}
 	return nil
 }
 
-func (m *InterfaceSpec_) GetMacAddress() string {
+func (m *TestInterfaceSpec_) GetMacAddress() string {
 	if m != nil {
 		return m.MacAddress
 	}
@@ -82,196 +82,6 @@ func (m *InterfaceSpec_) GetMacAddress() string {
 
 type delphiWrapper interface {
 	bubbleSave()
-}
-
-type InterfaceSpec struct {
-	sdkClient  clientApi.Client
-	parent     delphiWrapper
-	meta       *delphi.ObjectMeta
-	key        *IntfIndex
-	macAddress string
-}
-
-func (o *InterfaceSpec) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *InterfaceSpec) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *InterfaceSpec) GetKey() *IntfIndex {
-	return o.key
-}
-
-func (o *InterfaceSpec) GetMacAddress() string {
-	return o.macAddress
-}
-
-func (o *InterfaceSpec) SetMacAddress(val string) {
-	o.macAddress = val
-	o.bubbleSave()
-}
-
-func (o *InterfaceSpec) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *InterfaceSpec) save() {
-	if o.GetKeyString() != "" {
-		o.sdkClient.SetObject(o)
-	}
-}
-
-func (o *InterfaceSpec) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewInterfaceSpec(sdkClient clientApi.Client) *InterfaceSpec {
-	w := &InterfaceSpec{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "InterfaceSpec",
-	}
-	w.key = childNewIntfIndex(w, sdkClient)
-	return w
-}
-
-func NewInterfaceSpecWithKey(sdkClient clientApi.Client, key *IntfIndex) *InterfaceSpec {
-	w := NewInterfaceSpec(sdkClient)
-	w.key = childNewIntfIndexWithValue(w, sdkClient, key)
-	return w
-}
-
-func GetInterfaceSpec(sdkClient clientApi.Client, key *IntfIndex) *InterfaceSpec {
-	lookupKey := key.GetProtoMsg().String()
-	b := sdkClient.GetObject("InterfaceSpec", lookupKey)
-	if b == nil {
-		return nil
-	}
-	o, ok := b.(*InterfaceSpec)
-	if !ok {
-		panic("Couldn't cast to InterfaceSpec")
-	}
-	return o
-}
-
-func childNewInterfaceSpec(parent delphiWrapper, sdkClient clientApi.Client) *InterfaceSpec {
-	w := NewInterfaceSpec(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func childNewInterfaceSpecWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *InterfaceSpec) *InterfaceSpec {
-	w := childNewInterfaceSpec(parent, sdkClient)
-	w.key = childNewIntfIndexWithValue(w, sdkClient, value.key)
-	w.macAddress = value.macAddress
-	return w
-}
-
-func (o *InterfaceSpec) GetProtoMsg() *InterfaceSpec_ {
-	return &InterfaceSpec_{
-		Meta:       o.meta,
-		Key:        o.key.GetProtoMsg(),
-		MacAddress: o.macAddress,
-	}
-}
-
-func (o *InterfaceSpec) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *InterfaceSpec) GetKeyString() string {
-	return obj.key.GetProtoMsg().String()
-}
-
-func (obj *InterfaceSpec) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(InterfaceSpecReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnInterfaceSpecCreate(obj)
-			} else {
-				rctr.OnInterfaceSpecUpdate(obj)
-			}
-		} else {
-			rctr.OnInterfaceSpecDelete(obj)
-		}
-	}
-}
-
-type InterfaceSpecReactor interface {
-	OnInterfaceSpecCreate(obj *InterfaceSpec)
-	OnInterfaceSpecUpdate(obj *InterfaceSpec)
-	OnInterfaceSpecDelete(obj *InterfaceSpec)
-}
-
-func (obj *InterfaceSpec) GetPath() string {
-	return "InterfaceSpec" + "|" + obj.GetKeyString()
-}
-
-func newInterfaceSpecFromMessage(msg *InterfaceSpec_) *InterfaceSpec {
-	return &InterfaceSpec{
-		meta:       msg.Meta,
-		key:        newIntfIndexFromMessage(msg.Key),
-		macAddress: msg.MacAddress,
-	}
-}
-
-func interfaceSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
-	var msg InterfaceSpec_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newInterfaceSpecFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func InterfaceSpecMount(client clientApi.Client, mode delphi.MountMode) {
-	client.MountKind("InterfaceSpec", mode)
-}
-
-func InterfaceSpecMountKey(client clientApi.Client, key *IntfIndex, mode delphi.MountMode) {
-	keyString := key.GetProtoMsg().String()
-	client.MountKindKey("InterfaceSpec", keyString, mode)
-}
-
-func InterfaceSpecWatch(client clientApi.Client, reactor InterfaceSpecReactor) {
-	client.WatchKind("InterfaceSpec", reactor)
-}
-
-type InterfaceSpecIterator struct {
-	objects []clientApi.BaseObject
-	cur     int
-}
-
-func (i *InterfaceSpecIterator) Next() *InterfaceSpec {
-	if i.cur >= len(i.objects) {
-		return nil
-	}
-	obj, ok := i.objects[i.cur].(*InterfaceSpec)
-	if !ok {
-		panic("Cast error")
-	}
-	i.cur++
-	return obj
-}
-
-func InterfaceSpecList(client clientApi.Client) *InterfaceSpecIterator {
-	return &InterfaceSpecIterator{
-		objects: client.List("InterfaceSpec"),
-		cur:     0,
-	}
 }
 
 type IntfIndex struct {
@@ -334,27 +144,217 @@ func newIntfIndexFromMessage(msg *IntfIndex_) *IntfIndex {
 	}
 }
 
+type TestInterfaceSpec struct {
+	sdkClient  clientApi.Client
+	parent     delphiWrapper
+	meta       *delphi.ObjectMeta
+	key        *IntfIndex
+	macAddress string
+}
+
+func (o *TestInterfaceSpec) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *TestInterfaceSpec) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *TestInterfaceSpec) GetKey() *IntfIndex {
+	return o.key
+}
+
+func (o *TestInterfaceSpec) GetMacAddress() string {
+	return o.macAddress
+}
+
+func (o *TestInterfaceSpec) SetMacAddress(val string) {
+	o.macAddress = val
+	o.bubbleSave()
+}
+
+func (o *TestInterfaceSpec) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *TestInterfaceSpec) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *TestInterfaceSpec) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewTestInterfaceSpec(sdkClient clientApi.Client) *TestInterfaceSpec {
+	w := &TestInterfaceSpec{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "TestInterfaceSpec",
+	}
+	w.key = childNewIntfIndex(w, sdkClient)
+	return w
+}
+
+func NewTestInterfaceSpecWithKey(sdkClient clientApi.Client, key *IntfIndex) *TestInterfaceSpec {
+	w := NewTestInterfaceSpec(sdkClient)
+	w.key = childNewIntfIndexWithValue(w, sdkClient, key)
+	return w
+}
+
+func GetTestInterfaceSpec(sdkClient clientApi.Client, key *IntfIndex) *TestInterfaceSpec {
+	lookupKey := key.GetProtoMsg().String()
+	b := sdkClient.GetObject("TestInterfaceSpec", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*TestInterfaceSpec)
+	if !ok {
+		panic("Couldn't cast to TestInterfaceSpec")
+	}
+	return o
+}
+
+func childNewTestInterfaceSpec(parent delphiWrapper, sdkClient clientApi.Client) *TestInterfaceSpec {
+	w := NewTestInterfaceSpec(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewTestInterfaceSpecWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *TestInterfaceSpec) *TestInterfaceSpec {
+	w := childNewTestInterfaceSpec(parent, sdkClient)
+	w.key = childNewIntfIndexWithValue(w, sdkClient, value.key)
+	w.macAddress = value.macAddress
+	return w
+}
+
+func (o *TestInterfaceSpec) GetProtoMsg() *TestInterfaceSpec_ {
+	return &TestInterfaceSpec_{
+		Meta:       o.meta,
+		Key:        o.key.GetProtoMsg(),
+		MacAddress: o.macAddress,
+	}
+}
+
+func (o *TestInterfaceSpec) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *TestInterfaceSpec) GetKeyString() string {
+	return obj.key.GetProtoMsg().String()
+}
+
+func (obj *TestInterfaceSpec) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(TestInterfaceSpecReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnTestInterfaceSpecCreate(obj)
+			} else {
+				rctr.OnTestInterfaceSpecUpdate(obj)
+			}
+		} else {
+			rctr.OnTestInterfaceSpecDelete(obj)
+		}
+	}
+}
+
+type TestInterfaceSpecReactor interface {
+	OnTestInterfaceSpecCreate(obj *TestInterfaceSpec)
+	OnTestInterfaceSpecUpdate(obj *TestInterfaceSpec)
+	OnTestInterfaceSpecDelete(obj *TestInterfaceSpec)
+}
+
+func (obj *TestInterfaceSpec) GetPath() string {
+	return "TestInterfaceSpec" + "|" + obj.GetKeyString()
+}
+
+func newTestInterfaceSpecFromMessage(msg *TestInterfaceSpec_) *TestInterfaceSpec {
+	return &TestInterfaceSpec{
+		meta:       msg.Meta,
+		key:        newIntfIndexFromMessage(msg.Key),
+		macAddress: msg.MacAddress,
+	}
+}
+
+func testInterfaceSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg TestInterfaceSpec_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newTestInterfaceSpecFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func TestInterfaceSpecMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("TestInterfaceSpec", mode)
+}
+
+func TestInterfaceSpecMountKey(client clientApi.Client, key *IntfIndex, mode delphi.MountMode) {
+	keyString := key.GetProtoMsg().String()
+	client.MountKindKey("TestInterfaceSpec", keyString, mode)
+}
+
+func TestInterfaceSpecWatch(client clientApi.Client, reactor TestInterfaceSpecReactor) {
+	client.WatchKind("TestInterfaceSpec", reactor)
+}
+
+type TestInterfaceSpecIterator struct {
+	objects []clientApi.BaseObject
+	cur     int
+}
+
+func (i *TestInterfaceSpecIterator) Next() *TestInterfaceSpec {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*TestInterfaceSpec)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func TestInterfaceSpecList(client clientApi.Client) *TestInterfaceSpecIterator {
+	return &TestInterfaceSpecIterator{
+		objects: client.List("TestInterfaceSpec"),
+		cur:     0,
+	}
+}
+
 func init() {
 	proto.RegisterType((*IntfIndex_)(nil), "gosdk.IntfIndex_")
-	proto.RegisterType((*InterfaceSpec_)(nil), "gosdk.InterfaceSpec_")
-	clientApi.RegisterFactory("InterfaceSpec", interfaceSpecFactory)
+	proto.RegisterType((*TestInterfaceSpec_)(nil), "gosdk.TestInterfaceSpec_")
+	clientApi.RegisterFactory("TestInterfaceSpec", testInterfaceSpecFactory)
 }
 
 func init() { proto.RegisterFile("client_test.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 204 bytes of a gzipped FileDescriptorProto
+	// 197 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4c, 0xce, 0xc9, 0x4c,
 	0xcd, 0x2b, 0x89, 0x2f, 0x49, 0x2d, 0x2e, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4d,
-	0xcf, 0x2f, 0x4e, 0xc9, 0x96, 0x52, 0xc9, 0xcb, 0x4c, 0xd6, 0x4f, 0x49, 0xcd, 0x29, 0xc8, 0xc8,
-	0xd4, 0x07, 0x4b, 0xc0, 0x38, 0x10, 0x0a, 0xa2, 0x58, 0x49, 0x89, 0x8b, 0xcb, 0x33, 0xaf, 0x24,
-	0xcd, 0x33, 0x2f, 0x25, 0xb5, 0x22, 0x5e, 0x48, 0x84, 0x8b, 0xd5, 0x33, 0x2d, 0x33, 0xa5, 0x42,
-	0x82, 0x51, 0x81, 0x51, 0x83, 0x37, 0x08, 0xc2, 0x51, 0x6a, 0x66, 0xe4, 0xe2, 0xf3, 0xcc, 0x2b,
-	0x49, 0x2d, 0x4a, 0x4b, 0x4c, 0x4e, 0x0d, 0x2e, 0x48, 0x4d, 0x8e, 0x17, 0x52, 0xe3, 0x62, 0xf1,
-	0x4d, 0x2d, 0x49, 0x04, 0xab, 0xe3, 0x36, 0x12, 0xd2, 0x83, 0x9a, 0xe9, 0x9f, 0x94, 0x95, 0x9a,
-	0x5c, 0x02, 0x92, 0x09, 0x02, 0xcb, 0x0b, 0x29, 0x73, 0x31, 0x7b, 0xa7, 0x56, 0x4a, 0x30, 0x81,
-	0x95, 0x09, 0xea, 0x81, 0x5d, 0xa6, 0x87, 0xb0, 0x30, 0x08, 0x24, 0x2b, 0x24, 0xc7, 0xc5, 0xe5,
-	0x9b, 0x98, 0xec, 0x98, 0x92, 0x52, 0x94, 0x5a, 0x5c, 0x2c, 0xc1, 0xac, 0xc0, 0xa8, 0xc1, 0x19,
-	0x84, 0x24, 0x62, 0xc5, 0xd2, 0x30, 0x5d, 0x89, 0x31, 0x89, 0x0d, 0xec, 0x60, 0x63, 0x40, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0x50, 0xa9, 0x7a, 0x14, 0xf2, 0x00, 0x00, 0x00,
+	0xcf, 0x2f, 0x4e, 0xc9, 0x96, 0xe2, 0x49, 0x49, 0xcd, 0x29, 0xc8, 0xc8, 0x84, 0x08, 0x2a, 0x29,
+	0x71, 0x71, 0x79, 0xe6, 0x95, 0xa4, 0x79, 0xe6, 0xa5, 0xa4, 0x56, 0xc4, 0x0b, 0x89, 0x70, 0xb1,
+	0x7a, 0xa6, 0x65, 0xa6, 0x54, 0x48, 0x30, 0x2a, 0x30, 0x6a, 0xf0, 0x06, 0x41, 0x38, 0x4a, 0xed,
+	0x8c, 0x5c, 0x42, 0x21, 0xa9, 0xc5, 0x25, 0x9e, 0x79, 0x25, 0xa9, 0x45, 0x69, 0x89, 0xc9, 0xa9,
+	0xc1, 0x05, 0xa9, 0xc9, 0xf1, 0x42, 0x6a, 0x5c, 0x2c, 0xbe, 0xa9, 0x25, 0x89, 0x60, 0xb5, 0xdc,
+	0x46, 0x42, 0x7a, 0x50, 0x73, 0xfd, 0x93, 0xb2, 0x52, 0x93, 0x4b, 0x40, 0x32, 0x41, 0x60, 0x79,
+	0x21, 0x65, 0x2e, 0x66, 0xef, 0xd4, 0x4a, 0x09, 0x26, 0xb0, 0x32, 0x41, 0x3d, 0xb0, 0x2b, 0xf4,
+	0x10, 0x96, 0x06, 0x81, 0x64, 0x85, 0xe4, 0xb8, 0xb8, 0x7c, 0x13, 0x93, 0x1d, 0x53, 0x52, 0x8a,
+	0x52, 0x8b, 0x8b, 0x25, 0x98, 0x15, 0x18, 0x35, 0x38, 0x83, 0x90, 0x44, 0xac, 0x58, 0x1a, 0xa6,
+	0x2b, 0x31, 0x26, 0xb1, 0x81, 0x1d, 0x6d, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x70, 0xca, 0xab,
+	0xf2, 0xde, 0x00, 0x00, 0x00,
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -204,73 +203,24 @@ func (na *Nagent) GetHwInterfaces() error {
 	if err != nil {
 		return err
 	}
-	for _, lif := range lifs.Response {
-		id := lif.Spec.KeyOrHandle.GetLifId()
-		l := &netproto.Interface{
-			TypeMeta: api.TypeMeta{
-				Kind: "Interface",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      fmt.Sprintf("lif%d", id),
-			},
-			Spec: netproto.InterfaceSpec{
-				Type: "LIF",
-			},
-			Status: netproto.InterfaceStatus{
-				InterfaceID: lif.Spec.KeyOrHandle.GetLifId(),
-			},
-		}
-		key := na.Solver.ObjectKey(l.ObjectMeta, l.TypeMeta)
+	for _, lif := range lifs {
+		key := na.Solver.ObjectKey(lif.ObjectMeta, lif.TypeMeta)
 		na.Lock()
-		na.HwIfDB[key] = l
+		na.HwIfDB[key] = lif
 		na.Unlock()
 	}
 
-	var numLanes uint32
 	// Populate Agent state
-	for _, port := range ports.Response {
-		var portType, speed string
-		id := 1 + numLanes
-		numLanes += port.Spec.NumLanes
-		if port.Spec.PortType == halproto.PortType_PORT_TYPE_MGMT {
-			portType = "TYPE_MANAGEMENT"
-			speed = "SPEED_1G"
-		} else {
-			portType = "TYPE_ETHERNET"
-			speed = "SPEED_100G"
-		}
-		p := &netproto.Port{
-			TypeMeta: api.TypeMeta{
-				Kind: "Port",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      fmt.Sprintf("port%d", id),
-			},
-			Spec: netproto.PortSpec{
-				Speed:        speed,
-				BreakoutMode: "BREAKOUT_NONE",
-				AdminStatus:  "UP",
-				Type:         portType,
-				Lanes:        port.Spec.NumLanes,
-			},
-			Status: netproto.PortStatus{
-				PortID: uint64(id),
-			},
-		}
-
+	for _, port := range ports {
 		// Create Ports and Uplinks
-		err = na.createPortAndUplink(p)
+		err = na.createPortAndUplink(port)
 		if err != nil {
-			log.Errorf("could not create {%v} ports. %v", p, err)
+			log.Errorf("could not create {%v} ports. %v", port, err)
 			return err
 		}
-		key := na.Solver.ObjectKey(p.ObjectMeta, p.TypeMeta)
+		key := na.Solver.ObjectKey(port.ObjectMeta, port.TypeMeta)
 		na.Lock()
-		na.PortDB[key] = p
+		na.PortDB[key] = port
 		na.Unlock()
 	}
 

@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/revproxy"
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/tpa"
@@ -91,6 +92,11 @@ func main() {
 		dp, err = hal.NewHalDatapath("hal")
 		if err != nil {
 			log.Fatalf("Error creating hal datapath. Err: %v", err)
+		}
+	} else if *datapath == "delphi" {
+		dp, err = delphidp.NewDelphiDatapath()
+		if err != nil {
+			log.Fatalf("Error creating delphi datapath. Err: %v", err)
 		}
 	} else {
 		// Set expectations to allow mock testing

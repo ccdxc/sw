@@ -201,10 +201,7 @@ func main() {
 		panic(err)
 	}
 	_ = upg
-	err = c1.Dial()
-	if err != nil {
-		log.Fatalf("Could not connect to delphi hub. Err: %v", err)
-	}
+	go c1.Run()
 
 	timer := time.NewTimer(time.Second * 20)
 	<-timer.C

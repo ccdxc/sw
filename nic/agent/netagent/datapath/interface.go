@@ -3,7 +3,9 @@ package datapath
 import (
 	"context"
 	"errors"
+	"fmt"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -242,7 +244,13 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 }
 
 // ListInterfaces returns the lisg of lifs and uplinks from the datapath
-func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.PortInfoGetResponseMsg, error) {
+func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error) {
+	var lifResp []*netproto.Interface
+	var portResp []*netproto.Port
+	var lifs *halproto.LifGetResponseMsg
+	var ports *halproto.PortInfoGetResponseMsg
+	var err error
+
 	if hd.Kind == "hal" {
 		lifReq := &halproto.LifGetRequest{}
 		lifReqMsg := &halproto.LifGetRequestMsg{
@@ -252,7 +260,7 @@ func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.Por
 		}
 
 		// ToDo Add lif checks once nic mgr is integrated
-		lifs, err := hd.Hal.Ifclient.LifGet(context.Background(), lifReqMsg)
+		lifs, err = hd.Hal.Ifclient.LifGet(context.Background(), lifReqMsg)
 		if err != nil {
 			log.Errorf("Error getting lifs from the datapath. Err: %v", err)
 			return nil, nil, nil
@@ -263,7 +271,7 @@ func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.Por
 		portReqMsg := &halproto.PortInfoGetRequestMsg{
 			Request: []*halproto.PortInfoGetRequest{portReq},
 		}
-		ports, err := hd.Hal.PortClient.PortInfoGet(context.Background(), portReqMsg)
+		ports, err = hd.Hal.PortClient.PortInfoGet(context.Background(), portReqMsg)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -274,12 +282,74 @@ func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.Por
 				return nil, nil, ErrHALNotOK
 			}
 		}
-		return lifs, ports, err
+
+	} else {
+
+		// ToDo Remove the List Mock prior to FCS
+		lifs, ports, err = hd.generateMockHwState()
 	}
 
-	// ToDo Remove the List Mock prior to FCS
-	lifs, ports, err := hd.generateMockHwState()
-	return lifs, ports, err
+	for _, lif := range lifs.Response {
+		id := lif.Spec.KeyOrHandle.GetLifId()
+		l := &netproto.Interface{
+			TypeMeta: api.TypeMeta{
+				Kind: "Interface",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      fmt.Sprintf("lif%d", id),
+			},
+			Spec: netproto.InterfaceSpec{
+				Type: "LIF",
+			},
+			Status: netproto.InterfaceStatus{
+				InterfaceID: lif.Spec.KeyOrHandle.GetLifId(),
+			},
+		}
+
+		lifResp = append(lifResp, l)
+	}
+
+	var numLanes uint32
+	// Populate Agent state
+	for _, port := range ports.Response {
+		var portType, speed string
+		id := 1 + numLanes
+		numLanes += port.Spec.NumLanes
+		if port.Spec.PortType == halproto.PortType_PORT_TYPE_MGMT {
+			portType = "TYPE_MANAGEMENT"
+			speed = "SPEED_1G"
+		} else {
+			portType = "TYPE_ETHERNET"
+			speed = "SPEED_100G"
+		}
+		p := &netproto.Port{
+			TypeMeta: api.TypeMeta{
+				Kind: "Port",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      fmt.Sprintf("port%d", id),
+			},
+			Spec: netproto.PortSpec{
+				Speed:        speed,
+				BreakoutMode: "BREAKOUT_NONE",
+				AdminStatus:  "UP",
+				Type:         portType,
+				Lanes:        port.Spec.NumLanes,
+			},
+			Status: netproto.PortStatus{
+				PortID: uint64(id),
+			},
+		}
+
+		portResp = append(portResp, p)
+	}
+
+	// return resp
+	return lifResp, portResp, err
 }
 
 // CreatePort will create a Port Object in HAL

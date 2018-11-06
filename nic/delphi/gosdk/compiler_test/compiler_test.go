@@ -25,8 +25,10 @@ func (t *testClient) MountKindKey(kind string, key string, mode delphi.MountMode
 	return nil
 }
 
-func (t *testClient) Dial() error {
-	return nil
+func (t *testClient) Run() {
+}
+func (t *testClient) IsConnected() bool {
+	return true
 }
 
 func (t *testClient) SetObject(obj clientApi.BaseObject) error {

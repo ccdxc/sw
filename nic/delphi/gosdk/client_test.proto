@@ -1,7 +1,7 @@
 syntax = "proto3";
 package gosdk;
 
-import "nic/delphi/proto/delphi/delphi.proto";
+import "delphi.proto";
 
 // Interface id
 message IntfIndex {
@@ -9,7 +9,7 @@ message IntfIndex {
 }
 
 // spec part of the object
-message InterfaceSpec {
+message TestInterfaceSpec {
     option (delphi.update_event) = true;
     delphi.ObjectMeta      Meta         = 1;
     IntfIndex              Key          = 2;

@@ -21,7 +21,7 @@ public:
     // MountKind mounts all objects of a specific kind
     error MountKind(string kind, MountMode mode);
 
-    // MountKey mounts a specific object of kind, key 
+    // MountKey mounts a specific object of kind, key
     error MountKey(string kind, string key, MountMode mode);
 
     // WatchKind watches all objects of a kind
@@ -51,6 +51,9 @@ public:
     // QueueDelete queues object deletes to DB (thread safe and can be called from any thread)
     error QueueDelete(BaseObjectPtr objinfo);
 
+    // Connect connects to delphi hub (to be used by processes that have their own event loop)
+    error Connect();
+
     // MainLoop runs the main event loop
     int MainLoop();
 
@@ -59,9 +62,6 @@ public:
 
     // Stop the sdk  (mainly for test purposes)
     error Stop();
-
-    // Connect connects to delphi hub
-    error Connect();
 
 private:
     DelphiClientPtr    client_;      // delphi client
