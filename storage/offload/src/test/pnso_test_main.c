@@ -99,6 +99,8 @@ int main(int argc, char *argv[])
 	char last_opt = '\0';
 
 	osal_log_init(OSAL_LOG_LEVEL_NOTICE);
+	pnso_test_init_fns(pnso_submit_request, status_output_func,
+			   osal_alloc, osal_free, osal_realloc);
 
 	/* Parse cmdline parameters */
 	for (i = 1; i < argc; i++) {
@@ -170,9 +172,6 @@ int main(int argc, char *argv[])
 			exit(EINVAL);
 		}
 	}
-
-	pnso_test_init_fns(pnso_submit_request, status_output_func,
-			   osal_alloc, osal_free, osal_realloc);
 
 	cfg = pnso_test_desc_alloc();
 	if (!cfg) {
