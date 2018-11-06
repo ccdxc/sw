@@ -116,7 +116,24 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
     }
   }
 
-  private getErrorMessage(errPayload: any): string {
-    return 'Failed to login! ' + errPayload.message.status + ' ' + errPayload.message.statusText;
+  /**
+   * Get login error message
+   * @param errPayload
+   */
+  getErrorMessage(errPayload: any): string {
+    const msgFailtoLogin = 'Failed to login! ';
+    const msgConsultAdmin = 'Please consult system administrator';
+    if (!errPayload) {
+      return msgFailtoLogin + 'for unknown reason. ' +  msgConsultAdmin;
+    }
+    if (errPayload.message && errPayload.message.status === 0 ) {
+        // This handles case where user is not connected in nework and using the browser cached Venice-UI. Give user-friendly message
+        return msgFailtoLogin  + ' Please refresh browser and ensure you have network connection';
+    } else  if (errPayload.message && errPayload.message.status === 401 ) {
+        // handle status =401 authentication failure.
+        return msgFailtoLogin + ' Incorrect credentials';
+    }
+    // Here, most likely, there is server error.
+    return msgFailtoLogin + 'Server error. ' + msgConsultAdmin;
   }
 }
