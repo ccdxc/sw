@@ -27,6 +27,7 @@
 
 using namespace std;
 
+#define LOG_LOCATION "/data/log/"
 #define MAX_EVENTS 10
 
 static auto died_pids = make_shared<Pipe<pid_t>>();
@@ -34,10 +35,37 @@ static auto started_pids = make_shared<Pipe<pid_t>>();
 static auto delphi_messages = make_shared<Pipe<int32_t>>();
 static auto heartbeats = make_shared<Pipe<pid_t>>();
 
+void mkdirs(const char *dir) {
+    char tmp[PATH_MAX];
+    char *p = NULL;
+    size_t len;
+
+    snprintf(tmp, sizeof(tmp), "%s", dir);
+    len = strlen(tmp);
+
+    if(tmp[len - 1] == '/')
+    {
+	tmp[len - 1] = 0;
+    }
+                
+    for(p = tmp + 1; *p; p++)
+    {
+	if(*p == '/')
+	{
+	    *p = 0;
+	    mkdir(tmp, S_IRWXU);
+	    INFO("Creating directory {}", tmp);
+	    *p = '/';
+	}
+    }
+    INFO("Creating directory {}", tmp);
+    mkdir(tmp, S_IRWXU);
+}
+
 void redirect(const string &filename, int fd)
 {
     int file_fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-
+   
     close(fd);
 
     dup2(file_fd, fd);
@@ -48,8 +76,8 @@ void redirect(const string &filename, int fd)
 // Redirect stdout and stderr
 void redirect_stds(const string &name, pid_t pid)
 {
-    redirect(name + "." + to_string(pid) + ".out" + ".log", 1);
-    redirect(name + "." + to_string(pid) + ".err" + ".log", 2);
+    redirect(LOG_LOCATION + name + "." + to_string(pid) + ".out" + ".log", 1);
+    redirect(LOG_LOCATION + name + "." + to_string(pid) + ".err" + ".log", 2);
 }
 
 void exec_command(const string &command)
@@ -286,6 +314,7 @@ void *delphi_thread_run(void *ctx)
 
 int main(int argc, char *argv[])
 {
+    mkdirs(LOG_LOCATION);
     if (argc < 2) {
        fprintf(stderr, "Please use %s <CONFIG_FILE>\n`", argv[0]);
        return -1;

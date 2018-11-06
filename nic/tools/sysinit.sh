@@ -10,7 +10,8 @@ export LD_LIBRARY_PATH=$NIC_DIR/lib:$PLATFORM_DIR/lib
 ulimit -c unlimited
 
 # Set core file pattern
-echo 'core.%e.%p' > /proc/sys/kernel/core_pattern
+mkdir -p /data/core
+echo '/data/core/core.%e.%p' > /proc/sys/kernel/core_pattern
 
 cd /
 ifconfig lo up

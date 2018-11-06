@@ -23,4 +23,9 @@
     "command": "/nic/bin/netagent -datapath hal -logtofile /agent.log -hostif lo",
     "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "asicerrord",
+    "command": "/platform/bin/asicerrord",
+    "dependencies": ["delphi", "nicmgrd"],
+    "flags": ["no_watchdog", "non_critical"]
 }]
