@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <sys/param.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_intr_c_hdr.h"
@@ -98,7 +99,6 @@ intr_pba_addr(const int lif)
 u_int32_t
 intr_pba_size(const int intrc)
 {
-    assert(intrc <= 64);
     return intrc > 0 ? INTR_PBA_STRIDE : 0;
 }
 
@@ -128,7 +128,7 @@ intr_pba_cfg(const int lif, const int intrb, const size_t intrc)
         u_int32_t w[1];
     } __attribute__((packed)) v = {
         .start = intrb,
-        .count = intrc - 1,
+        .count = MIN(intrc, 64) - 1,
     };
 
     pal_reg_wr32(pa, v.w[0]);
