@@ -5,8 +5,8 @@
 namespace hal {
 namespace utils {
 
-logger *hal_logger(void);
-logger *hal_syslogger(void);
+std::shared_ptr<logger> hal_logger(void);
+std::shared_ptr<logger> hal_syslogger(void);
 ::utils::trace_level_e hal_trace_level(void);
 extern ::utils::log *g_trace_logger;
 extern ::utils::log *g_syslog_logger;

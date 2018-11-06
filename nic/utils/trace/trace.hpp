@@ -103,13 +103,13 @@ public:
     void set_syslog_level(syslog_level_e level);
     syslog_level_e syslog_level(void) const { return log_level_; }
     void flush(void);
-    spdlog::logger *logger(void);
+    std::shared_ptr<spdlog::logger> logger(void);
 
 private:
     bool                                          syslogger_;                  // true, if this is for syslogs
     trace_level_e                                 trace_level_;                // trace level, if this is for traces
     syslog_level_e                                log_level_;                  // syslog level, if this is for syslogs
-    spdlog::logger                                *logger_;                    // logger instance
+    std::shared_ptr<spdlog::logger>               logger_;                     // logger instance
     static const size_t                           k_async_qsize_;              // async queue size
     static const spdlog::async_overflow_policy    k_async_overflow_policy_;    // overflow policy
     static const std::chrono::milliseconds        k_flush_intvl_ms_;           // flush interval

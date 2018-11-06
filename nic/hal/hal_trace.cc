@@ -13,7 +13,7 @@ namespace utils {
 uint64_t g_cpu_mask;
 
 // wrapper APIs to get logger and syslogger
-logger *
+std::shared_ptr<logger>
 hal_logger (void)
 {
     if (g_trace_logger) {
@@ -22,7 +22,7 @@ hal_logger (void)
     return NULL;
 }
 
-logger *
+std::shared_ptr<logger>
 hal_syslogger (void)
 {
     if (g_syslog_logger) {

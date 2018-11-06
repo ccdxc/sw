@@ -10,7 +10,7 @@
 #define NETAGENT_IF_ID_UPLINK_MAX          256    // netagent uplink interface id range max
 #define IF_ID_ENIC_MIN                     257    // enic interface id range min
 
-// lif id ranges
+// lif hw id ranges
 #define HAL_LIF_ID_UPLINK_MIN              1      // uplink lif id range min
 #define HAL_LIF_ID_UPLINK_MAX              32     // uplink lif id range max
 #define HAL_LIF_ID_SVC_LIF_MIN             33     // service lif id range min

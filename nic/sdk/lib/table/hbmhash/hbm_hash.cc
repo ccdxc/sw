@@ -373,11 +373,11 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
         entry->set_global_index(fe_idx);
         *index = fe_idx;
 
-        SDK_TRACE_ERR("#Recircs: %d", entry->get_recircs());
+        //SDK_TRACE_ERR("#Recircs: %d", entry->get_recircs());
         if (entry->get_recircs() >= 2) {
             char            buff[4096] = {0};
             entry->entry_to_str(buff, 4096);
-            SDK_TRACE_ERR("Flow: {}", buff);
+            SDK_TRACE_ERR("Recirc count >= 2, flow key : {}", buff);
         }
     } else {
         // insert failed

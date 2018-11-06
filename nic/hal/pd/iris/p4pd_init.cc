@@ -254,8 +254,7 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
                       "idx : {}, err : {}", idx, ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, "
-                  "idx : {}, ret: {}", idx, ret);
+    HAL_TRACE_DEBUG("Input mapping tunneled tcam write, idx : {}", idx);
 
     // no-op entry for IPv6 native packets
     memset(&key, 0, sizeof(key));

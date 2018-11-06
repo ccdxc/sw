@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <errno.h>
 #include <netinet/in.h>
@@ -45,6 +46,18 @@ namespace hal {
 extern bool      gl_super_user;
 
 //------------------------------------------------------------------------------
+// handler invoked during normal termnination of HAL (e.g., gtests)
+//------------------------------------------------------------------------------
+static void
+hal_atexit_handler (void)
+{
+    HAL_TRACE_DEBUG("Flushing logs before exiting ...");
+    if (utils::hal_logger()) {
+        utils::hal_logger()->flush();
+    }
+}
+
+//------------------------------------------------------------------------------
 // initialize all the signal handlers
 //------------------------------------------------------------------------------
 static void
@@ -55,13 +68,13 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
         utils::hal_logger()->flush();
     }
 
-    if (!getenv("DISABLE_FTE")) {
-        ipc_logger::deinit();
-    }
-
     switch (sig) {
     case SIGINT:
     case SIGTERM:
+    case SIGQUIT:
+        if (!getenv("DISABLE_FTE")) {
+            ipc_logger::deinit();
+        }
         HAL_GCOV_FLUSH();
         raise(SIGKILL);
         break;
@@ -72,7 +85,6 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
         break;
 
     case SIGHUP:
-    case SIGQUIT:
     case SIGCHLD:
     case SIGURG:
     default:
@@ -105,7 +117,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     ini_file = hal_cfg->cfg_path + "/" + std::string(inifile);
     std::ifstream in(ini_file.c_str());
     if (access(ini_file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "HAL ini file %s doesn't exist or not accessible,"
+        fprintf(stderr, "HAL ini file %s doesn't exist or not accessible, "
                 "picking smart-switch mode\n",
                 ini_file.c_str());
         hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
@@ -174,7 +186,7 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
     int                 thread_prio, sched_policy;
     sdk::lib::thread    *hal_thread;
 
-    //delphi::SetLogger(std::shared_ptr<logger>(utils::hal_logger()));
+    delphi::SetLogger(std::shared_ptr<logger>(utils::hal_logger()));
     sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
     thread_prio = sched_get_priority_max(sched_policy);
     hal_thread = hal_thread_create(std::string("delphic").c_str(),
@@ -292,6 +304,9 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // install signal handlers
     hal_sig_init(hal_sig_handler);
+
+    // install atexit() handler
+    atexit(hal_atexit_handler);
 
     return ret;
 }

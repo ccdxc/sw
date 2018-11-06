@@ -99,10 +99,10 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
                                worker_thread_cb, k_flush_intvl_ms_, NULL);
     }
     if (syslogger) {
-        logger_ = spdlog::syslog_logger(name, name, LOG_PID).get();
+        logger_ = spdlog::syslog_logger(name, name, LOG_PID);
     } else {
-        logger_ = spdlog::rotating_logger_mt(name, trace_file_name,
-                                             file_size, max_files).get();
+        logger_ = spdlog::rotating_logger_mt(name, trace_file_name, file_size,
+                                             max_files);
     }
     if (logger_) {
         logger_->set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
@@ -181,7 +181,7 @@ log::flush(void) {
     logger_->flush();
 }
 
-spdlog::logger *
+std::shared_ptr<spdlog::logger>
 log::logger(void) {
     return logger_;
 }
