@@ -302,8 +302,8 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_device_bar bars[],
 
 	idev->dev_cmd = bar->virtaddr + BAR0_DEV_CMD_REGS_OFFSET;
 	idev->dev_cmd_db = bar->virtaddr + BAR0_DEV_CMD_DB_OFFSET;
-	idev->intr_ctrl = bar->virtaddr + BAR0_INTR_CTRL_OFFSET;
 	idev->intr_status = bar->virtaddr + BAR0_INTR_STATUS_OFFSET;
+	idev->intr_ctrl = bar->virtaddr + BAR0_INTR_CTRL_OFFSET;
 
 	sig = readl(&idev->dev_cmd->signature);
 	if (sig != DEV_CMD_SIGNATURE) {

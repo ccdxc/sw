@@ -34,8 +34,8 @@
 
 #define BAR0_DEV_CMD_REGS_OFFSET	0x0000
 #define BAR0_DEV_CMD_DB_OFFSET		0x1000
-#define BAR0_INTR_CTRL_OFFSET		0x2000
-#define BAR0_INTR_STATUS_OFFSET		0x3000
+#define BAR0_INTR_STATUS_OFFSET		0x2000
+#define BAR0_INTR_CTRL_OFFSET		0x3000
 
 #define DEV_CMD_DONE			0x00000001
 
@@ -57,8 +57,8 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 
 	idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
 	idev->dev_cmd_db = bar->vaddr + BAR0_DEV_CMD_DB_OFFSET;
-	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 	idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
+	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 #ifdef HAPS
 	idev->ident = bar->vaddr + 0x800;
 #endif

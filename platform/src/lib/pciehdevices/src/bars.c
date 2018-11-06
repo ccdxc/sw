@@ -70,7 +70,24 @@ add_common_resource_bar(pciehbars_t *pbars,
     pciehbar_add_reg(&pbar, &preg);
 
     /*****************
-     * +0x2000 Interrupt Control regs */
+     * +0x2000 Interrupt Status reg */
+    memset(&preg, 0, sizeof(preg));
+    preg.baroff = 0x2000;
+    pmt_bar_enc(&preg.pmt,
+                pres->port,
+                PMT_TYPE_MEM,
+                0x8,    /* pmtsize */
+                0x8,    /* prtsize */
+                PMT_BARF_RD);
+    prt_res_enc(&prt,
+                intr_pba_addr(pres->lif),
+                intr_pba_size(pres->intrc),
+                PRT_RESF_NONE);
+    pciehbarreg_add_prt(&preg, &prt);
+    pciehbar_add_reg(&pbar, &preg);
+
+    /*****************
+     * +0x3000 Interrupt Control regs */
     {
         const u_int64_t pmtsize= roundup_power2(intr_drvcfg_size(pres->intrc));
         const u_int32_t stride = roundup_power2(intr_drvcfg_size(1));
@@ -78,7 +95,7 @@ add_common_resource_bar(pciehbars_t *pbars,
         const int vfbitc = (ffs(pmtsize) - 1) - vfbitb;
 
         memset(&preg, 0, sizeof(preg));
-        preg.baroff = 0x2000;
+        preg.baroff = 0x3000;
         pmt_bar_enc(&preg.pmt,
                     pres->port,
                     PMT_TYPE_MEM,
@@ -94,23 +111,6 @@ add_common_resource_bar(pciehbars_t *pbars,
         pciehbarreg_add_prt(&preg, &prt);
         pciehbar_add_reg(&pbar, &preg);
     }
-
-    /*****************
-     * +0x3000 Interrupt Status reg */
-    memset(&preg, 0, sizeof(preg));
-    preg.baroff = 0x3000;
-    pmt_bar_enc(&preg.pmt,
-                pres->port,
-                PMT_TYPE_MEM,
-                0x8,    /* pmtsize */
-                0x8,    /* prtsize */
-                PMT_BARF_RD);
-    prt_res_enc(&prt,
-                intr_pba_addr(pres->lif),
-                intr_pba_size(pres->intrc),
-                PRT_RESF_NONE);
-    pciehbarreg_add_prt(&preg, &prt);
-    pciehbar_add_reg(&pbar, &preg);
 
     /*****************
      * +0x4000 <reserved>

@@ -422,9 +422,9 @@ typedef struct barreg_handler_s {
 static barreg_handler_t invalid_reg = { bar_invalid_rd, bar_invalid_wr };
 static barreg_handler_t devcmd_reg = { bar_devcmd_rd, bar_devcmd_wr };
 static barreg_handler_t devcmddb_reg = { bar_devcmddb_rd, bar_devcmddb_wr };
-static barreg_handler_t intrctrl_reg = { bar_intrctrl_rd, bar_intrctrl_wr };
 static barreg_handler_t intrstatus_reg = { bar_intrstatus_rd,
                                            bar_intrstatus_wr };
+static barreg_handler_t intrctrl_reg = { bar_intrctrl_rd, bar_intrctrl_wr };
 static barreg_handler_t msixtbl_reg = { bar_msixtbl_rd, bar_msixtbl_wr };
 static barreg_handler_t msixpba_reg = { bar_msixpba_rd, bar_msixpba_wr };
 static barreg_handler_t db_reg = { bar_db_rd, bar_db_wr };
@@ -446,8 +446,8 @@ static bar_handler_t bar0_handler = {
     .regs = {
         &devcmd_reg,
         &devcmddb_reg,
-        &intrctrl_reg,
         &intrstatus_reg,
+        &intrctrl_reg,
         &invalid_reg,
         &invalid_reg,
         &msixtbl_reg,
