@@ -300,13 +300,16 @@ void inst_t::start(sdk::lib::thread *curr_thread)
 
     ctx_mem_init();
     while (true) {
-        if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
+        if (hal_cfg->platform == hal::HAL_PLATFORM_HW) {
+            //usleep(1000) //asicrw crash that was causing this should 
+                           // been resolved by other changes to asicrw
+        } else if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
             usleep(1000000/30);
         } else if (hal_cfg->platform == hal::HAL_PLATFORM_RTL) {
             usleep(1000000 * 3);
         } else if (hal_cfg->platform == hal::HAL_PLATFORM_HAPS) {
             usleep(1000000/10);
-        } else {
+        } else { /* HAL_PLATFORM_MOCK */
             usleep(1000);
         }
         process_arq();
