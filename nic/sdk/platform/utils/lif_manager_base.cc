@@ -2,11 +2,14 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
 #include <errno.h>
 #include <assert.h>
+#include "nic/sdk/include/sdk/platform/utils/lif_manager_base.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
 
-namespace hal {
+namespace sdk {
+namespace platform {
+namespace utils {
 
 LIFManagerBase::LIFManagerBase() :
     lif_allocator_(kNumMaxLIFs) {}
@@ -29,9 +32,9 @@ int32_t LIFManagerBase::LIFRangeAlloc(int32_t start, uint32_t count) {
       return -ENOSPC;
   }
 
-
   for (uint32_t i = 0; i < count; i++) {
     // Accessing an entry will allocate it.
+    SDK_TRACE_PRINT("Allocating hw_lif_id: {}", base+i);
     alloced_lifs_[base + i].lif_id = base + i;
   }
 
@@ -194,4 +197,7 @@ int32_t LIFManagerBase::WriteQState(
     (qid * qstate->type[type].qsize);
   return WriteQStateImpl(q_addr, buf, bufsize);
 }
-}  // namespace hal
+
+} // namespace utils
+} // namespace platform
+} // namespace sdk

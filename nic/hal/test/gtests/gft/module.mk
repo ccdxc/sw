@@ -9,8 +9,8 @@ MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon core fte_mock agent_api \
                   bm_allocator bitmap trace mtrack \
-                  pdcapri p4pd_utils p4pd asicpd \
-                  hal_mock hal_lib haltrace \
+                  pdcapri sdkcapri p4pd_utils p4pd \
+                  asicpd hal_mock hal_lib haltrace \
                   ${NIC_LINKMGR_SOLIBS}
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                   ${NIC_THIRDPARTY_SSL_LDLIBS} \

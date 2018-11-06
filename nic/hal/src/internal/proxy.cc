@@ -11,7 +11,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/app_redir_shared.h"
-#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"

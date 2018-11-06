@@ -18,6 +18,7 @@ nic/build/x86_64/apollo/lib/libslab.so                          /nic/lib/
 nic/build/x86_64/apollo/lib/libshmmgr.so                        /nic/lib/
 nic/build/x86_64/apollo/lib/libmmgr.so                          /nic/lib/
 nic/build/x86_64/apollo/lib/libsdkpal.so                        /nic/lib/
+nic/build/x86_64/apollo/lib/libsdkcapri.so                      /nic/lib/
 nic/build/x86_64/apollo/lib/libht.so                            /nic/lib/
 nic/build/x86_64/apollo/lib/libindexer.so                       /nic/lib/
 nic/build/x86_64/apollo/lib/liblogger.so                        /nic/lib/

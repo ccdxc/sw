@@ -6,7 +6,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_qstate.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
@@ -16,6 +15,9 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/hal/pd/capri/capri_quiesce.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_qstate.hpp"
+
+using namespace sdk::platform::capri;
 
 namespace hal {
 namespace pd {
@@ -64,7 +66,7 @@ hal_ret_t
 pd_get_pc_offset (pd_func_args_t *pd_func_args)
 {
     pd_get_pc_offset_args_t *args = pd_func_args->pd_get_pc_offset;
-    int32_t ret = get_pc_offset(args->handle, args->prog_name,
+    int32_t ret = get_pc_offset(args->pinfo, args->prog_name,
                                 args->label, args->offset);
 
     HAL_ASSERT(ret == 0);
@@ -80,19 +82,6 @@ pd_capri_hbm_read_mem (pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
-static p4plus_cache_action_t
-capri_hbm_cache_pipe_to_action (mpartition_cache_pipe_t cache_pipe)
-{
-    if (cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_RXDMA) {
-        return (P4PLUS_CACHE_INVALIDATE_RXDMA);
-    } else if (cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_TXDMA) {
-        return (P4PLUS_CACHE_INVALIDATE_TXDMA);
-    } else if (cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_ALL) {
-        return (P4PLUS_CACHE_INVALIDATE_BOTH);
-    }
-    return (P4PLUS_CACHE_ACTION_NONE);
-}
-
 hal_ret_t
 pd_capri_hbm_write_mem (pd_func_args_t *pd_func_args)
 {
@@ -104,7 +93,14 @@ pd_capri_hbm_write_mem (pd_func_args_t *pd_func_args)
     reg = get_hbm_region_by_address(args->addr);
     HAL_ASSERT(reg != NULL);
 
-    action = capri_hbm_cache_pipe_to_action(reg->cache_pipe);
+    if (reg->cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_RXDMA) {
+        action = P4PLUS_CACHE_INVALIDATE_RXDMA;
+    } else if (reg->cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_TXDMA) {
+        action = P4PLUS_CACHE_INVALIDATE_TXDMA;
+    } else if (reg->cache_pipe == sdk::platform::utils::MPARTITION_CACHE_PIPE_P4PLUS_ALL) {
+        action = P4PLUS_CACHE_INVALIDATE_BOTH;
+    }
+
     if (action != P4PLUS_CACHE_ACTION_NONE) {
         p4plus_invalidate_cache(args->addr, args->size, action);
     }

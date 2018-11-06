@@ -1,7 +1,9 @@
-#include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <errno.h>
+
+using namespace sdk::platform::utils;
 
 static uint8_t fail_buf[64];  // Any I/O here will fail
 static uint8_t pass_buf[512];
@@ -48,7 +50,7 @@ class MockLIFManager : public LIFManagerBase {
 TEST(LIFManagerTest, TestALL)
 {
   hal::MockLIFManager lm;
-  hal::LIFQStateParams params;
+  LIFQStateParams params;
 
   bzero(&params, sizeof(params));
   ASSERT_TRUE(lm.LIFRangeAlloc(1, 1) == 1);
@@ -69,7 +71,7 @@ TEST(LIFManagerTest, TestALL)
   params.type[3].entries = 10;
   ASSERT_TRUE(lm.InitLIFQState(2044, &params, 0) == 0);
 
-  hal::LIFQState *qstate = lm.get_qs(2044);
+  LIFQState *qstate = lm.get_qs(2044);
   ASSERT_TRUE(qstate != nullptr);
   ASSERT_TRUE(qstate->allocation_size == 0x30300);
   ASSERT_TRUE(qstate->type[0].hbm_offset == 0x0);

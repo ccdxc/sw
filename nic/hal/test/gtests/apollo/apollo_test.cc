@@ -9,12 +9,12 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
+#include "nic/sdk/include/sdk/platform/utils/lif_manager_base.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_qstate.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_qstate.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
@@ -35,6 +35,8 @@
 
 hal_ret_t capri_default_config_init(capri_cfg_t *cfg);
 using boost::property_tree::ptree;
+using namespace sdk::platform::utils;
+using namespace sdk::platform::capri;
 
 #define JRXDMA_PRGM     "rxdma_program"
 #define JTXDMA_PRGM     "txdma_program"
@@ -233,7 +235,7 @@ sort_mpu_programs(std::vector <std::string> &programs) {
 
 static void
 init_service_lif() {
-    hal::LIFQState qstate = { 0 };
+    LIFQState qstate = { 0 };
     qstate.lif_id = APOLLO_SERVICE_LIF;
     qstate.hbm_address = get_start_offset(JLIFQSTATE);
     qstate.params_in.type[0].entries = 1;

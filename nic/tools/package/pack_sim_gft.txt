@@ -19,6 +19,7 @@ nic/build/x86_64/gft/lib/libslab.so                             /nic/lib/
 nic/build/x86_64/gft/lib/libshmmgr.so                           /nic/lib/
 nic/build/x86_64/gft/lib/libmmgr.so                             /nic/lib/
 nic/build/x86_64/gft/lib/libsdkpal.so                           /nic/lib/
+nic/build/x86_64/gft/lib/libsdkcapri.so                         /nic/lib/
 nic/build/x86_64/gft/lib/libht.so                               /nic/lib/
 nic/build/x86_64/gft/lib/libindexer.so                          /nic/lib/
 nic/build/x86_64/gft/lib/liblogger.so                           /nic/lib/

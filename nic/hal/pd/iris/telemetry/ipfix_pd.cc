@@ -6,7 +6,7 @@
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"

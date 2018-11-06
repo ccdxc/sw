@@ -23,7 +23,7 @@ COMMON_ARLIB_FLAGS      :=
 COMMON_SOLIB_FLAGS      := -shared
 
 COMMON_DEPS             := $(wildcard ${MKINFRA}/*) ${TOP_MAKEFILE}
-COMMON_INCS__           := ${TOPDIR} ${SDKDIR} ${BLD_ARCH_DIR} ${THIRD_PARTY_INCLUDES}
+COMMON_INCS__           := ${TOPDIR} ${SDKDIR} ${BLD_ARCH_DIR} ${THIRD_PARTY_INCLUDES} ${NIC_CSR_INCS}
 COMMON_INCS             := $(addprefix -I,${COMMON_INCS__})
 
 RPATH_PREFIX            := -Wl,-rpath,

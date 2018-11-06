@@ -22,9 +22,13 @@
 #include "rdma_dev.hpp"
 #include "nic/p4/common/defines.h"
 
+using namespace sdk::platform::capri;
+using namespace sdk::platform::utils;
+
 #define ENTRY_TRACE_EN      true
 
 const static char *kRdmaHBMLabel = "rdma";
+const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 const static uint32_t kRdmaAllocUnit = 4096;
 
 const static char *kRdmaHBMBarLabel = "rdma-hbm-bar";
@@ -312,14 +316,14 @@ PdClient* PdClient::factory(platform_t platform)
     assert(ret == 0);
 
     NIC_LOG_INFO("Initializing HBM Memory Partitions from: {}...");
-    pdc->mp_ = sdk::platform::utils::mpartition::factory((pdc->hal_cfg_path_ +
-                                                          "/iris/hbm_mem.json").c_str(),
-                                                          CAPRI_HBM_BASE);
+    pdc->mp_ = mpartition::factory((pdc->hal_cfg_path_ +
+                                    "/iris/hbm_mem.json").c_str(),
+                                    CAPRI_HBM_BASE);
     assert(pdc->mp_);
 
     NIC_LOG_INFO("Initializing Program Info ...");
-    pdc->pinfo_ = sdk::platform::program_info::factory((pdc->hal_cfg_path_ +
-                                                        "/gen/mpu_prog_info.json").c_str());
+    pdc->pinfo_ = program_info::factory((pdc->hal_cfg_path_ +
+                                        "/gen/mpu_prog_info.json").c_str());
     assert(pdc->pinfo_);
 
     switch (pdc->platform_){
@@ -349,7 +353,7 @@ PdClient* PdClient::factory(platform_t platform)
     assert(ret == 0);
 
     NIC_LOG_INFO("Initializing NIC LIF Mgr ...");
-    pdc->lm_ = NicLIFManager::factory(pdc->mp_, pdc->pinfo_);
+    pdc->lm_ = LIFManager::factory(pdc->mp_, pdc->pinfo_, kLif2QstateHBMLabel);
     assert(pdc->lm_);
 
     pdc->rdma_manager_init();

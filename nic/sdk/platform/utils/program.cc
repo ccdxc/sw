@@ -1,6 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#include "platform/utils/program.hpp"
+#include "nic/sdk/include/sdk/platform/utils/program.hpp"
 
 #define JSON_KEY_PROGRAMS        "programs"
 #define JSON_KEY_SYMBOLS         "symbols"
@@ -13,6 +13,7 @@ namespace pt = boost::property_tree;
 
 namespace sdk {
 namespace platform {
+namespace utils {
 
 bool
 program_info::init(const char *program_info_file, shmmgr *mmgr)
@@ -166,5 +167,6 @@ program_info::symbol_address(const char *program, char *symbol) const
     return it->second.addr;
 }
 
+}    // namespace utils
 }    // namespace platform
 }    // namespace sdk

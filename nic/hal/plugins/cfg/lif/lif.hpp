@@ -13,7 +13,7 @@
 #include "nic/include/bitmap.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
-#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 
 #include "gen/proto/interface.pb.h"
 
@@ -162,7 +162,7 @@ lif_unlock (lif_t *lif, const char *fname,
     HAL_SPINLOCK_UNLOCK(&lif->slock);
 }
 
-extern LIFManager *lif_manager();
+extern sdk::platform::capri::LIFManager *lif_manager();
 
 extern void *lif_id_get_key_func(void *entry);
 extern uint32_t lif_id_compute_hash_func(void *key, uint32_t ht_size);

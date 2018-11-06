@@ -1,15 +1,19 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
-#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_cfg.hpp"
+#include "nic/include/capri_common.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+
+using namespace sdk::platform::capri;
+using namespace sdk::platform::utils;
 
 namespace hal {
 
@@ -27,11 +31,15 @@ namespace nw {
 extern "C" hal_ret_t
 lif_init (hal_cfg_t *hal_cfg)
 {
-    g_lif_manager = new LIFManager();
+    program_info *pinfo = program_info::factory((hal_cfg->cfg_path +
+                                                "/gen/mpu_prog_info.json").c_str());
+    mpartition *mp = mpartition::factory((hal_cfg->cfg_path +
+                                         "/iris/hbm_mem.json").c_str(),
+                                         CAPRI_HBM_BASE);
 
-    // Allocate LIF 0, so that we don't use it later
-    int32_t hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
-    HAL_TRACE_DEBUG("Allocated hw_lif_id:{}", hw_lif_id);
+    HAL_ASSERT(pinfo && mp);
+
+    g_lif_manager = LIFManager::factory(mp, pinfo, "lif2qstate_map");
 
     // Proxy Init
     if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {

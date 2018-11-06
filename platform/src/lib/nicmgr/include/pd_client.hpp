@@ -2,12 +2,12 @@
 * Copyright (c) 2018, Pensando Systems Inc.
 */
 
-#ifndef __PD_STATE_HPP__
-#define __PD_STATE_HPP__
+#ifndef __PD_CLIENT_HPP__
+#define __PD_CLIENT_HPP__
 
 #include "hal_client.hpp"
-#include "lif_manager.hpp"
-#include "include/sdk/platform/utils/mpartition.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/include/sdk/directmap.hpp"
 #include "common_rxdma_actions_p4pd.h"
 #include "common_txdma_actions_p4pd.h"
@@ -34,9 +34,9 @@ public:
     string hal_cfg_path_;
     string gen_dir_path_;
     platform_t platform_;
-    class sdk::platform::program_info *pinfo_;
-    class sdk::platform::utils::mpartition *mp_;
-    class NicLIFManager *lm_;
+    sdk::platform::utils::program_info *pinfo_;
+    sdk::platform::utils::mpartition *mp_;
+    sdk::platform::capri::LIFManager *lm_;
     directmap    **p4plus_rxdma_dm_tables_;
     directmap    **p4plus_txdma_dm_tables_;
 
@@ -140,4 +140,4 @@ private:
 };
 
 
-#endif //__PD_STATE_HPP__
+#endif //__PD_CLIENT_HPP__

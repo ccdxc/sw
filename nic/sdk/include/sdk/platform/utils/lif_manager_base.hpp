@@ -12,7 +12,9 @@
 #include <mutex>
 #include <strings.h>
 
-namespace hal {
+namespace sdk {
+namespace platform {
+namespace utils {
 
 const static uint32_t kNumQTypes = 8;
 const static uint32_t kMaxQStateSize = 4096;
@@ -123,13 +125,15 @@ class LIFManagerBase {
 
 
   std::mutex lk_;
-  BMAllocator lif_allocator_;
+  hal::BMAllocator lif_allocator_;
   std::map<uint32_t, LIFQState> alloced_lifs_;
 
   // Test only
   friend class MockLIFManager;
 };
 
-}  // namespace hal
+}   // namespace utils
+}   // namespace platform
+}   // namespace sdk
 
 #endif  // _LIF_MANAGER_BASE_HPP_

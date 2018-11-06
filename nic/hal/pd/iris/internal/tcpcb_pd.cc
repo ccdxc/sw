@@ -15,7 +15,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"

@@ -1,5 +1,8 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
+#ifndef __SDK_PLATFORM_PQSTATE_HPP__
+#define __SDK_PLATFORM_PQSTATE_HPP__
+
 #include <string>
 #include <map>
 #include "include/sdk/base.hpp"
@@ -53,3 +56,5 @@ namespace utils {
 }    // namespace utils
 }    // namespace platform
 }    // namespace sdk
+
+#endif // __SDK_PLATFORM_PQSTATE_HPP__

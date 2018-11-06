@@ -70,6 +70,7 @@ SYSTEM_LIBRARIES = \
     -lcapri_csrint \
     -lpdcapri \
     -lsdkpal \
+    -lsdkcapri \
     -lsdkplatformutils \
     -lcapri_csr_cpu_hal \
     -lmpuobj \

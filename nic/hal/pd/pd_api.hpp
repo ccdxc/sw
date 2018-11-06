@@ -33,7 +33,8 @@
 #include "nic/hal/src/internal/accel_rgroup.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
-#include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "nic/sdk/include/sdk/platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "gen/proto/crypto_apis.grpc.pb.h"
@@ -2497,7 +2498,7 @@ typedef struct pd_get_size_kb_args_s {
 } __PACK__ pd_get_size_kb_args_t;
 
 typedef struct pd_push_qstate_to_capri_args_s {
-    hal::LIFQState *qstate;
+    LIFQState *qstate;
     uint32_t       cos;
 } __PACK__ pd_push_qstate_to_capri_args_t;
 
@@ -2512,6 +2513,7 @@ typedef struct pd_read_qstate_args_s {
 } __PACK__ pd_read_qstate_args_t;
 
 typedef struct pd_get_pc_offset_args_s {
+    sdk::platform::utils::program_info * pinfo;
     const char *handle;
     const char *prog_name;
     const char *label;

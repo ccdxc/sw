@@ -86,6 +86,7 @@ SYSTEM_LIBRARIES = \
 	-lpdcapri \
 	-lmpuobj \
 	-lsdkpal \
+	-lsdkcapri \
 	-lsdkplatformutils \
 	-lrt \
 	-lhaltrace \

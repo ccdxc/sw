@@ -1,5 +1,8 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
+#ifndef __SDK_PLATFORM_PROGRAM_HPP__
+#define __SDK_PLATFORM_PROGRAM_HPP__
+
 #include <string>
 #include <map>
 #include "include/sdk/base.hpp"
@@ -13,6 +16,7 @@
 
 namespace sdk {
 namespace platform {
+namespace utils {
 
 typedef struct prog_info_s {
     hbm_addr_t    base_addr;
@@ -44,5 +48,8 @@ private:
     bool init(const char *program_info_file, shmmgr *mmgr = NULL);
 };
 
+}    // namespace utils
 }    // namespace platform
 }    // namespace sdk
+
+#endif // __SDK_PLATFORM_PROGRAM_HPP__

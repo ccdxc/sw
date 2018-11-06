@@ -1,8 +1,14 @@
 // Functions related to Capri LIF 2 Qstate programming.
+#include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/include/asic_pd.hpp"
-#include "capri_qstate.hpp"
+
+using namespace sdk::platform::utils;
+
+namespace sdk {
+namespace platform {
+namespace capri {
 
 template <typename T>
 void set_qstate_entry(LIFQState *qstate, T *entry, int cos) {
@@ -139,7 +145,7 @@ int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
     return 0;
 }
 
-int32_t get_pc_offset(sdk::platform::program_info *pinfo,
+int32_t get_pc_offset(program_info *pinfo,
                       const char *prog_name,
                       const char *label,
                       uint8_t *offset) {
@@ -159,3 +165,7 @@ int32_t get_pc_offset(sdk::platform::program_info *pinfo,
     *offset = (uint8_t) (off >> 6);
     return 0;
 }
+
+} // namespace capri
+} // namespace platform
+} // namespace sdk

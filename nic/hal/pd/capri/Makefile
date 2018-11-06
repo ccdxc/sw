@@ -41,7 +41,6 @@ SOURCES = \
 		  capri_hbm.cc \
 		  capri_tm_rw.cc \
 		  capri_repl.cc \
-		  capri_qstate.cc \
 		  capri_barco_crypto.cc \
 		  capri_txs_scheduler.cc \
 		  $(NULL)
