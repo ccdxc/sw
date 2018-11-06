@@ -385,9 +385,12 @@ header_type resp_rx_rsq_backtrack_adjust_info_t {
 header_type resp_rx_to_stage_stats_info_t {
     fields {
         pyld_bytes                       :   16;
-        incr_recirc_drop                 :    1;
         incr_mem_window_inv              :    1;
-        pad                              :  110;
+        incr_recirc_drop                 :    1;
+        dup_wr_send                      :    1;
+        dup_rd_atomic_bt                 :    1;
+        dup_rd_atomic_drop               :    1;
+        pad                              :  107;
     }
 }
 
@@ -1606,8 +1609,11 @@ action resp_rx_stats_process () {
 
     // to stage
     modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
-    modify_field(to_s7_stats_info_scr.incr_recirc_drop, to_s7_stats_info.incr_recirc_drop);
     modify_field(to_s7_stats_info_scr.incr_mem_window_inv, to_s7_stats_info.incr_mem_window_inv);
+    modify_field(to_s7_stats_info_scr.incr_recirc_drop, to_s7_stats_info.incr_recirc_drop);
+    modify_field(to_s7_stats_info_scr.dup_wr_send, to_s7_stats_info.dup_wr_send);
+    modify_field(to_s7_stats_info_scr.dup_rd_atomic_bt, to_s7_stats_info.dup_rd_atomic_bt);
+    modify_field(to_s7_stats_info_scr.dup_rd_atomic_drop, to_s7_stats_info.dup_rd_atomic_drop);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage

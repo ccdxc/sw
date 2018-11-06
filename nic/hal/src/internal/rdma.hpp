@@ -1344,7 +1344,10 @@ typedef struct rqcb4_s {
 } rqcb4_t;
 
 typedef struct rqcb5_s {
-    uint8_t     rsvd[24];
+    uint8_t     rsvd[18];
+    uint16_t    num_dup_rd_atomic_drop_pkts;
+    uint16_t    num_dup_rd_atomic_bt_pkts;
+    uint16_t    num_dup_wr_send_pkts;
     uint16_t    num_mem_window_inv;
     uint16_t    num_recirc_drop_pkts;
     uint16_t    max_pkts_in_any_msg;

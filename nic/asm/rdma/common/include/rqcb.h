@@ -263,7 +263,10 @@ struct rqcb5_t {
     max_pkts_in_any_msg : 16;
     num_recirc_drop_pkts: 16;
     num_mem_window_inv: 16;
-    pad: 192;
+    num_dup_wr_send_pkts: 16;
+    num_dup_rd_atomic_bt_pkts: 16;
+    num_dup_rd_atomic_drop_pkts: 16;
+    pad: 144;
 };
 
 struct rqcb_t {
