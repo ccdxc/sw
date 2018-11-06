@@ -197,9 +197,15 @@ class NaplesManagement:
 
     def reboot(self):
         self.__reset()
-        self.hdl.expect_exact(["capri login:"], timeout = 120)
-        time.sleep(10)
-        self.hdl.sendline("")
+        idx = 0
+        while idx == 0:
+            idx = self.hdl.expect_exact(["capri login:", pexpect.TIMEOUT], timeout = 120)
+            if idx == 0:
+                time.sleep(10)
+                self.hdl.sendline("")
+                break
+            else:
+                self.hdl.sendline("")
         self.hdl.expect_exact(["capri login:"], timeout = 120)
         self.login()
         return
@@ -352,7 +358,7 @@ def Main():
     host.run("rm -rf %s" % HOST_NAPLES_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
-    host.copyin("/home/haps/memtun/memtun", HOST_NAPLES_DIR)
+    host.copyin("../platform/hosttools/x86_64/linux/memtun", HOST_NAPLES_DIR)
     host.copyin("scripts/linux/start_memtun.sh", HOST_NAPLES_DIR)
     host.reboot()
     host.init()

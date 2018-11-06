@@ -18,6 +18,7 @@ SSHCMD = "sshpass -p docker scp -r -o StrictHostKeyChecking=no root@"
 
 logdirs = [
     "/tmp/iota/*",
+    "/naples/memtun.log",
 ]
 
 def run_commands(cmdlist, node_name):

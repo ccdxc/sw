@@ -4,6 +4,7 @@ meta:
     mode        : hardware
     cfgmode     : netagent
     nicmode     : hostpin
+    enable      : False
 
 packages:
     - iota.test.iris
