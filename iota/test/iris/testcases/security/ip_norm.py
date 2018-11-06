@@ -27,7 +27,7 @@ def Trigger(tc):
         w2 = pair[1]
         cmd_cookie = "%s(%s) --> %s(%s)" % \
                 (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
-        api.Logger.info("Injecting IP pkt with rsvd flag set from %s" % (cmd_cookie))
+        api.Logger.info("Injecting IP pkt with DF flag set from %s" % (cmd_cookie))
         tc.cmd_cookies.append(cmd_cookie)
         api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                                "hping3 -c 1 -0 --dontfrag %s" % w2.ip_address)
@@ -35,8 +35,8 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    api.Logger.Info("Validating ...")
     if tc.resp is None:
-        api.Logger.Info("Validating ...")
         return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS

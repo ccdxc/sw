@@ -3,7 +3,7 @@
    {
       "kind": "SGPolicy",
       "meta": {
-         "name": "500k_rules",
+         "name": "2k_rules",
          "tenant": "default",
          "namespace": "default",
          "generation-id": "",
