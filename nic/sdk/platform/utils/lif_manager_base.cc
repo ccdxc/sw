@@ -41,6 +41,25 @@ int32_t LIFManagerBase::LIFRangeAlloc(int32_t start, uint32_t count) {
   return base;
 }
 
+int32_t LIFManagerBase::LIFRangeMarkAlloced(int32_t start, uint32_t count) {
+    if ((start < 0) || (count == 0))
+        return -EINVAL;
+
+    if ((start + count) >= kNumMaxLIFs)
+        return -EINVAL;
+
+    std::lock_guard<std::mutex> lk(lk_);
+    int32_t base;
+
+    // Ok if range was already mark allocated
+    base = lif_allocator_.CheckAndReserve(start, count);
+    if (base < 0) {
+        base = start;
+    }
+
+    return base;
+}
+
 void LIFManagerBase::DeleteLIF(int32_t hw_lif_id) {
   if ((uint32_t)hw_lif_id >= kNumMaxLIFs)
     return;

@@ -525,6 +525,14 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                 ret = HAL_RET_INVALID_ARG;
                 goto end;
             }
+        } else {
+            hw_lif_id = lif_manager()->LIFRangeMarkAlloced(hw_lif_id, 1);
+            if ((((int32_t)hw_lif_id) < 0) || (hw_lif_id != lif_hal_info->hw_lif_id)) {
+                HAL_TRACE_ERR("Failed to mark lif allocated, info hw_lif_id : {} "
+                              "hw_lif_id: {}", lif_hal_info->hw_lif_id, hw_lif_id);
+                ret = HAL_RET_ERR;
+                goto end;
+            }
         }
         memcpy(&lif_info, lif_hal_info, sizeof(lif_info));
         dont_zero_qstate_mem = lif_hal_info->dont_zero_qstate_mem;

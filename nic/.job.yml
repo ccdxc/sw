@@ -13,8 +13,7 @@ targets:
   storage/perf          : ["make", "jobd/storage/perf"]
   storage/nvme          : ["make", "jobd/storage/nvme"]
   #storage/nvme_perf    : ["make", "jobd/storage/nvme_perf"]
-  #Test failing 100% times, Tuyen/Ajeer  looking into, will enablewith fix
-  #storage/nicmgr        : ["make", "jobd/storage/nicmgr"]
+  storage/nicmgr        : ["make", "jobd/storage/nicmgr"]
   #Test running into locking issues - disabling for now
   #storage/combined     : ["make", "jobd/storage/combined"]
 
