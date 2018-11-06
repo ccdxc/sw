@@ -5,7 +5,7 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export NIC_DIR=`dirname $ABS_TOOLS_DIR`
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export HAL_LOG_DIR=/data/
+export HAL_LOG_DIR=/data/log/
 export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
 
@@ -13,7 +13,7 @@ export HAL_PBC_INIT_CONFIG="2x100_hbm"
 #export FWD_MODE="$1"
 #export PLATFORM="$2"
 
-export DISABLE_AGING=1
+#export DISABLE_AGING=1
 
 # Remove logs
 rm -f /hal.log* $HAL_LOG_FILE
