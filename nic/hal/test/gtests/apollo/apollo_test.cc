@@ -470,7 +470,7 @@ mappings_init(void) {
 }
 
 static void
-flow_hash_init() {
+flow_tx_hash_init() {
     flow_swkey_t key;
     flow_actiondata data;
     flow_flow_hash_t *flow_hash_info = &data.flow_action_u.flow_flow_hash;
@@ -493,7 +493,7 @@ flow_hash_init() {
 }
 
 static void
-flow_info_init() {
+flow_tx_info_init() {
     flow_info_actiondata data;
     flow_info_flow_info_t *flow_info =
         &data.flow_info_action_u.flow_info_flow_info;
@@ -511,9 +511,52 @@ flow_info_init() {
 }
 
 static void
+flow_rx_hash_init() {
+    flow_swkey_t key;
+    flow_actiondata data;
+    flow_flow_hash_t *flow_hash_info = &data.flow_action_u.flow_flow_hash;
+    uint32_t tbl_id = P4TBL_ID_FLOW;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
+    memcpy(key.key_metadata_src, &g_layer1_dip, 4);
+    memcpy(key.key_metadata_dst, &g_layer1_sip, 4);
+    key.key_metadata_proto = g_layer1_proto;
+    key.key_metadata_sport = g_layer1_dport;
+    key.key_metadata_dport = g_layer1_sport;
+    data.actionid = FLOW_FLOW_HASH_ID;
+    flow_hash_info->entry_valid = true;
+    flow_hash_info->flow_index = g_flow_index + 1;
+
+    entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+}
+
+static void
+flow_rx_info_init() {
+    flow_info_actiondata data;
+    flow_info_flow_info_t *flow_info =
+        &data.flow_info_action_u.flow_info_flow_info;
+    uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
+    uint64_t flow_stats_addr;
+
+    memset(&data, 0, sizeof(data));
+    data.actionid = FLOW_INFO_FLOW_INFO_ID;
+    flow_stats_addr = get_start_offset(JFLOWSTATSBASE) + (g_flow_index+1) * 64;
+    flow_stats_addr -= ((uint64_t)1 << 31);
+    memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
+           sizeof(flow_info->flow_stats_addr));
+
+    entry_write(tbl_id, g_flow_index+1, NULL, NULL, &data, false, 0);
+}
+
+static void
 flow_init(void) {
-    flow_hash_init();
-    flow_info_init();
+    flow_tx_hash_init();
+    flow_tx_info_init();
+    flow_rx_hash_init();
+    flow_rx_info_init();
 }
 
 static void
@@ -578,16 +621,17 @@ rewrite_init(void) {
 
 static void
 trie_mem_init(void) {
-    uint64_t data = -1;
+    uint64_t data[8];
 
+    memset(data, 0xFF, sizeof(data));
     uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
     for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i += sizeof(data)) {
-        hal::pd::asic_mem_write(lpm_hbm_addr+i, (uint8_t*)&data, sizeof(data));
+        hal::pd::asic_mem_write(lpm_hbm_addr+i, (uint8_t*)data, sizeof(data));
     }
 
     uint64_t slacl_hbm_addr = get_start_offset(JSLACLBASE);
     for (uint32_t i = 0; i < SLACL_LPM_MEM_SIZE; i += sizeof(data)) {
-        hal::pd::asic_mem_write(slacl_hbm_addr+i, (uint8_t*)&data, sizeof(data));
+        hal::pd::asic_mem_write(slacl_hbm_addr+i, (uint8_t*)data, sizeof(data));
     }
 }
 
@@ -695,10 +739,20 @@ TEST_F(apollo_test, test1) {
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
 
+    cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     const char *hal_conf_file = "conf/apollo/hal.json";
+    hal::hal_platform_t platform = hal::HAL_PLATFORM_SIM;
+    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
+
     if (getenv("HAL_PLATFORM_RTL")) {
         hal_conf_file = "conf/apollo/hal_rtl.json";
+        platform = hal::HAL_PLATFORM_RTL;
+    } else if (getenv("HAL_PLATFORM_HW")) {
+        hal_conf_file = "conf/apollo/hal_hw.json";
+        platform= hal::HAL_PLATFORM_HW;
+        catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog_hw.json");
     }
+    ASSERT_TRUE(catalog != NULL);
 
     printf("Connecting to ASIC SIM\n");
     hal::hal_sdk_init();
@@ -715,11 +769,20 @@ TEST_F(apollo_test, test1) {
     ret = capri_load_config((char *)"conf/apollo/txdma_bin");
     ASSERT_EQ(ret, HAL_RET_OK);
 
-    cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     cfg.pgm_name = "apollo";
     cfg.llc_cache = true;
     cfg.p4_cache = true;
     cfg.p4plus_cache = true;
+    if (getenv("LLC_CACHE_DISABLED")) {
+        cfg.llc_cache = false;
+    }
+    if (getenv("P4_CACHE_DISABLED")) {
+        cfg.p4_cache = false;
+    }
+    if (getenv("P4PLUS_CACHE_DISABLE")) {
+        cfg.p4plus_cache = false;
+    }
+
     printf("Parsing HBM config\n");
     ret = capri_hbm_parse(&cfg);
     ASSERT_EQ(ret, HAL_RET_OK);
@@ -748,22 +811,6 @@ TEST_F(apollo_test, test1) {
     ptree hal_conf;
     read_json(json_cfg, hal_conf);
     capri_list_program_addr(hal_conf.get<std::string>("asic.loader_info_file").c_str());
-    hal::hal_platform_t platform = hal::HAL_PLATFORM_SIM;
-    try {
-        std::string mode = hal_conf.get<std::string>("mode");
-        if (mode == "sim") {
-            platform = hal::HAL_PLATFORM_SIM;
-        } else if (mode == "hw") {
-            platform = hal::HAL_PLATFORM_HW;
-        } else if (mode == "rtl") {
-            platform = hal::HAL_PLATFORM_RTL;
-        } else if (mode == "haps") {
-            platform = hal::HAL_PLATFORM_HAPS;
-        } else if (mode == "mock") {
-            platform = hal::HAL_PLATFORM_MOCK;
-        }
-    } catch (std::exception const& e) {
-    }
 
     hal::hal_cfg_t hal_cfg = { 0 };
     hal_cfg.platform = platform;
@@ -792,8 +839,6 @@ TEST_F(apollo_test, test1) {
     ret = hal::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_EQ(ret, HAL_RET_OK);
 
-    catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
-    ASSERT_TRUE(catalog != NULL);
     if (!catalog->qos_sw_init_enabled()) {
         default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
         if (default_config_dir) {

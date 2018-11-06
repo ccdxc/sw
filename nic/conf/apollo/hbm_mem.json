@@ -26,35 +26,43 @@
         },
         {
             "name": "local_ip_mapping",
-            "size_kb": 131072
+            "size_kb": 131072,
+            "cache": "p4ig"
         },
         {
             "name": "flow",
-            "size_kb": 1048576
+            "size_kb": 1048576,
+            "cache": "p4ig"
         },
         {
             "name": "flow_info",
-            "size_kb": 524288
+            "size_kb": 524288,
+            "cache": "p4ig"
         },
         {
             "name": "flow_stats",
-            "size_kb": 524288
+            "size_kb": 524288,
+            "cache": "p4ig"
         },
         {
             "name": "remote_vnic_mapping_tx",
-            "size_kb": 131072
+            "size_kb": 131072,
+            "cache": "p4eg"
         },
         {
             "name": "nat",
-            "size_kb": 131072
+            "size_kb": 131072,
+            "cache": "p4eg"
         },
         {
             "name": "slacl",
-            "size_kb": 264
+            "size_kb": 264,
+            "cache": "p4plus-rxdma"
         },
         {
             "name": "lpm",
-            "size_kb": 18
+            "size_kb": 18,
+            "cache": "p4plus-txdma"
         },
         {
             "name": "udp_flow_overflow0",

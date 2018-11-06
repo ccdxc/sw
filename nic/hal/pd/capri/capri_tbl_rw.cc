@@ -27,6 +27,8 @@
 #include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
 #include "nic/asic/capri/model/cap_te/cap_te_csr.h"
 #include "nic/asic/ip/verif/pcpp/cpp_int_helper.h"
+#include "nic/asic/capri/verif/apis/cap_pics_api.h"
+#include "nic/asic/capri/verif/apis/cap_pict_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/csr/cpu_hal_if.h"
 #include "nic/hal/pd/capri/capri_loader.h"
@@ -94,7 +96,7 @@ typedef int capri_error_t;
  *
  */
 
-#define CAPRI_SRAM_BLOCK_COUNT      (10)
+#define CAPRI_SRAM_BLOCK_COUNT      (8)
 #define CAPRI_SRAM_BLOCK_WIDTH      (128) // bits
 #define CAPRI_SRAM_WORD_WIDTH       (16)  // bits; is also unit of allocation.
 #define CAPRI_SRAM_WORDS_PER_BLOCK  (8)
@@ -705,30 +707,14 @@ capri_mpu_icache_invalidate (void)
 static void
 capri_tcam_memory_init (hal::hal_cfg_t *hal_cfg)
 {
-    cap_pict_csr_t *pict_csr = NULL;
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-
     if (!hal_cfg ||
         ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
          (hal_cfg->platform != hal::HAL_PLATFORM_HW))) {
         return;
     }
 
-    pict_csr = &cap0.tsi.pict;
-    for (int i = 0 ; i < CAPRI_TCAM_ROWS * CAPRI_TCAM_BLOCK_COUNT; i++) {
-        pict_csr->dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)0);
-        pict_csr->dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)0);
-        pict_csr->dhs_tcam_xy.entry[i].valid((pu_cpp_int<1>)0);
-        pict_csr->dhs_tcam_xy.entry[i].write();
-    }
-
-    pict_csr = &cap0.tse.pict;
-    for (int i = 0 ; i < CAPRI_TCAM_ROWS * CAPRI_TCAM_BLOCK_COUNT; i++) {
-        pict_csr->dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)0);
-        pict_csr->dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)0);
-        pict_csr->dhs_tcam_xy.entry[i].valid((pu_cpp_int<1>)0);
-        pict_csr->dhs_tcam_xy.entry[i].write();
-    }
+    cap_pict_zero_init_tcam(0, 0, 8);
+    cap_pict_zero_init_tcam(0, 1, 4);
 }
 
 void
@@ -769,27 +755,18 @@ capri_p4_shadow_init (void)
 }
 
 static void
-capri_p4_zero_srams (hal::hal_cfg_t *hal_cfg)
+capri_sram_memory_init (hal::hal_cfg_t *hal_cfg)
 {
-    cap_pics_csr_t *pics_csr;
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-
     if (!hal_cfg ||
         ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
          (hal_cfg->platform != hal::HAL_PLATFORM_HW))) {
         return;
     }
 
-    pics_csr = &cap0.ssi.pics;
-    for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
-        pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
-        pics_csr->dhs_sram.entry[i].write();
-    }
-    pics_csr = &cap0.sse.pics;
-    for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
-        pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
-        pics_csr->dhs_sram.entry[i].write();
-    }
+    cap_pics_zero_init_sram(0, 0, 3);
+    cap_pics_zero_init_sram(0, 1, 8);
+    cap_pics_zero_init_sram(0, 2, 8);
+    cap_pics_zero_init_sram(0, 3, 3);
 }
 
 void
@@ -820,30 +797,6 @@ capri_p4plus_shadow_init (void)
     }
 
     return CAPRI_OK;
-}
-
-static void
-capri_p4plus_zero_srams (hal::hal_cfg_t *hal_cfg)
-{
-    cap_pics_csr_t *pics_csr;
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-
-    if (!hal_cfg ||
-        ((hal_cfg->platform != hal::HAL_PLATFORM_HAPS) &&
-         (hal_cfg->platform != hal::HAL_PLATFORM_HW))) {
-        return;
-    }
-
-    pics_csr = &cap0.rpc.pics;
-    for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
-        pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
-        pics_csr->dhs_sram.entry[i].write();
-    }
-    pics_csr = &cap0.tpc.pics;
-    for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
-        pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
-        pics_csr->dhs_sram.entry[i].write();
-    }
 }
 
 int
@@ -889,9 +842,8 @@ capri_table_rw_init (hal::hal_cfg_t *hal_cfg)
     /* Initialize tcam memories */
     capri_tcam_memory_init(hal_cfg);
 
-    /* Zero all sram memories in P4 pipeline */
-    capri_p4_zero_srams(hal_cfg);
-    capri_p4plus_zero_srams(hal_cfg);
+    /* Initialize sram memories */
+    capri_sram_memory_init(hal_cfg);
 
     return (CAPRI_OK);
 }

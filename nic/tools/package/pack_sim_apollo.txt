@@ -1,6 +1,8 @@
 nic/conf/init_bins                                              /nic/conf/init_bins/
 nic/conf/apollo                                                 /nic/conf/apollo/
 nic/conf/catalog.json                                           /nic/conf/
+nic/conf/catalog_hw.json                                        /nic/conf/
+nic/conf/serdes.json                                            /nic/conf/
 
 nic/build/x86_64/apollo/bin/apollo_test                         /nic/bin/
 
