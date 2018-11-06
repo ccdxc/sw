@@ -40,6 +40,7 @@ import (
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/gzipserver"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -322,8 +323,8 @@ func (a *apiGw) Run(config apigw.Config) {
 	// Http Connection
 	m := http.NewServeMux()
 
-	// Register UI
-	m.Handle("/", http.FileServer(http.Dir("/dist")))
+	// Register UI to serve GZIP compressed files if available
+	m.Handle("/", gzipserver.GzipFileServer(http.Dir("/dist")))
 
 	// Register Staging
 	stagingPrefix := "/" + globals.StagingURIPrefix + "/"

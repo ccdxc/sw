@@ -237,6 +237,8 @@ fixtures:
 	    echo "+++ building ui sources" ; \
 		echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
 		docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
+		echo rm -r tools/docker-files/apigw/dist ;\
+		rm -r tools/docker-files/apigw/dist ;\
 		echo cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 		cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 	fi
@@ -424,7 +426,7 @@ ui:
 	npm version;
 	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm run replaceShrinkwrap;
 	$(MAKE) ui-venice-sdk
-	cd venice/ui/webapp && ng build --prod && npm run svgo
+	cd venice/ui/webapp && ng build --prod && npm run svgo && ./gzipDist.sh
 
 ui-autogen:
 	printf "\n+++++++++++++++++ Generating ui-autogen +++++++++++++++++\n";
