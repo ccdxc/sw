@@ -1,8 +1,8 @@
 default: penctl
 
 penctl:
-	go install
-	GOOS=freebsd go build -o $(GOPATH)/src/github.com/pensando/sw/penctl/bin/penctl github.com/pensando/sw/penctl
+	go build -o ../nic/build/x86_64/iris/bin/penctl.linux github.com/pensando/sw/penctl
+	GOOS=freebsd go build -o ../nic/build/x86_64/iris/bin/penctl.freebsd github.com/pensando/sw/penctl
 
 clean:
 	rm -rf $(GOPATH)/src/github.com/pensando/sw/penctl/bin/

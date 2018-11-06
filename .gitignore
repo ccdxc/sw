@@ -42,6 +42,8 @@ fake_root_target
 hal.tar
 hal.tgz
 plugins.tar
+asicrw.log.*
+nic/hash_coll.csv
 
 # Remove binaries in vendor
 vendor/**/*.png

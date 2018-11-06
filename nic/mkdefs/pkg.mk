@@ -14,6 +14,7 @@ package-clean:
 	@rm -f  $(NICDIR)/nic.tar
 
 package: ${PKG_PREREQS}
+	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target host
     ifeq ($(ARCH),aarch64)
 		${MAKE} -j1 BUILD_ARCHES=aarch64 -C ${TOPDIR}/platform
 		${MAKE} package-clean
