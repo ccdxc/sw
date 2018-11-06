@@ -21,7 +21,8 @@ typedef pnso_error_t (*test_set_fn)(struct test_desc *root,
 				    const char *val);
 
 struct test_yaml_node_desc {
-	const char *parent_name;
+	//const char *parent_name;
+	struct test_yaml_node_desc *parent;
 	const char *name;
 
 	/* Called when node is first started */
@@ -32,6 +33,10 @@ struct test_yaml_node_desc {
 
 	/* Passed to function */
 	void *opaque;
+
+	struct test_yaml_node_desc *siblings;
+	struct test_yaml_node_desc *children;
+	int depth;
 };
 
 struct test_node *test_node_alloc(size_t size, node_type_t type);

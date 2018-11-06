@@ -1,7 +1,6 @@
-alias: '1block=2048'
-alias: '2block=4096'
-alias: '4block=8192'
-alias: '8block=16384'
-alias: '16block=32768'
-global_params:
-  block_size: 2048
+alias_group1:
+  - alias: '1block=2048'
+  - alias: '2block=4096'
+  - alias: '4block=8192'
+  - alias: '8block=16384'
+  - alias: '16block=32768'

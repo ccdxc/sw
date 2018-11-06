@@ -1,26 +1,30 @@
-alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'
-alias: 'iter_high=100'
-alias: 'iter_low=1'
+alias_group3:
+  - alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'
+  - alias: 'iter_high=100'
+  - alias: 'iter_low=1'
 global_params:
   per_core_qdepth: 32
   cpu_mask: 1
-cp_hdr_format:
-  idx: 1
-  cp_hdr_field:
-    type: indata_chksum
-    offset: 0
-    len: 4
-    val: 0
-  cp_hdr_field:
-    type: outdata_length
-    offset: 4
-    len: 2
-    val: 0
-  cp_hdr_field:
-    type: algo
-    offset: 6
-    len: 2
-    val: 1
+  block_size: '$1block'
+cp_hdr_formats:
+  - format:
+      idx: 1
+      cp_hdr_fields:
+        - field:
+            type: indata_chksum
+            offset: 0
+            len: 4
+            val: 0
+        - field:
+            type: outdata_length
+            offset: 4
+            len: 2
+            val: 0
+        - field:
+            type: algo
+            offset: 6
+            len: 2
+            val: 1
 cp_hdr_mapping:
   - entry:
       pnso_algo: 1

@@ -59,7 +59,7 @@ static struct test_desc default_desc = {
 		.block_size = 4096 },
 	.output_file_prefix = "sim_",
 	.output_file_suffix = ".bin",
-	.cpu_mask = 0xffffFFFF
+	.cpu_mask = 1
 };
 
 /* testcase defaults */
@@ -115,6 +115,8 @@ static struct test_node *default_nodes_by_type[NODE_MAX] = {
 	NULL, /* NODE_FILE */
 };
 
+static void test_init_parser(void);
+
 void pnso_test_init_fns(pnso_submit_req_fn_t submit,
 			pnso_output_fn_t status_output,
 			pnso_alloc_fn_t alloc,
@@ -128,6 +130,8 @@ void pnso_test_init_fns(pnso_submit_req_fn_t submit,
 	g_hooks.realloc = realloc;
 
 	//yaml_init_allocators(alloc, dealloc, realloc);
+
+	test_init_parser();
 }
 
 static void free_crypto_key(struct test_crypto_key *key)
@@ -1634,196 +1638,291 @@ static pnso_error_t test_create_cp_hdr_field(struct test_desc *root,
 	return PNSO_OK;
 }
 
-/* TODO: split into separate lists for each grouping */
-/* Master list of YAML node hierarchy, and associated start/set functions */
-static struct test_yaml_node_desc node_descs[] = {
-	{ NULL,            "alias",           NULL, test_set_alias, NULL },
-	{ NULL,            "global_params",   NULL, NULL, NULL },
-	{ "global_params", "per_core_qdepth", NULL, test_set_per_core_qdepth, NULL },
-	{ "global_params", "block_size",      NULL, test_set_block_size, NULL },
-	{ "global_params", "cpu_mask",        NULL, test_set_cpu_mask, NULL },
-	{ "global_params", "limit_rate",      NULL, test_set_limit_rate, NULL },
-	{ "global_params", "status_interval", NULL, test_set_status_interval, NULL },
-	{ "global_params", "output_file_prefix", NULL, test_set_outfile_prefix, NULL },
-	{ "global_params", "output_file_suffix", NULL, test_set_outfile_suffix, NULL },
-	{ "global_params", "store_output_files", NULL, test_set_store_output_files, NULL },
+#define ROOT_NODE_DESC(name) \
+static struct test_yaml_node_desc name##_node_desc = { \
+	NULL , #name, NULL, NULL, NULL, NULL, NULL, 0 };
+#define CHILD_NODE_DESC(parent, name, create_fn, set_fn, opaque) \
+static struct test_yaml_node_desc parent##_##name##_node_desc = { \
+	& parent##_node_desc, #name, create_fn, set_fn, opaque, NULL, NULL, 1 };
 
-	{ NULL,            "crypto_keys",     NULL, NULL, NULL },
-	{ "crypto_keys",   "key",             test_create_crypto_key, NULL, NULL },
-	{ "key",           "idx",             NULL, test_set_idx, NULL },
-	{ "key",           "key1",            NULL, test_set_key1_data, NULL },
-	{ "key",           "key2",            NULL, test_set_key2_data, NULL },
+#define ROOT_NODE_DESC_LIST \
+ROOT_NODE_DESC(alias_group1) \
+ROOT_NODE_DESC(alias_group2) \
+ROOT_NODE_DESC(alias_group3) \
+ROOT_NODE_DESC(alias_group4) \
+ROOT_NODE_DESC(alias_group5) \
+ROOT_NODE_DESC(global_params) \
+ROOT_NODE_DESC(crypto_keys) \
+ROOT_NODE_DESC(svc_chains) \
+ROOT_NODE_DESC(tests) \
+ROOT_NODE_DESC(cp_hdr_formats) \
+ROOT_NODE_DESC(cp_hdr_mapping)
 
-//	{ NULL,            "iv_addrs",        NULL, NULL, NULL },
-//	{ "iv_addrs",      "iv_addr",         test_create_iv_addr, NULL, NULL },
-//	{ "iv_addr",       "idx",             NULL, test_set_iv_idx, NULL },
-//	{ "iv_addr",       "data",            NULL, test_set_iv_data, NULL }, 
-//	{ "iv_addr",       "iv_size",         NULL, test_set_iv_size, NULL }, 
+#define CHILD_NODE_DESC_LIST \
+CHILD_NODE_DESC(alias_group1, alias, NULL, test_set_alias, NULL) \
+CHILD_NODE_DESC(alias_group2, alias, NULL, test_set_alias, NULL) \
+CHILD_NODE_DESC(alias_group3, alias, NULL, test_set_alias, NULL) \
+CHILD_NODE_DESC(alias_group4, alias, NULL, test_set_alias, NULL) \
+CHILD_NODE_DESC(alias_group5, alias, NULL, test_set_alias, NULL) \
+\
+CHILD_NODE_DESC(global_params, per_core_qdepth,    NULL, test_set_per_core_qdepth, NULL) \
+CHILD_NODE_DESC(global_params, block_size,         NULL, test_set_block_size, NULL) \
+CHILD_NODE_DESC(global_params, cpu_mask,           NULL, test_set_cpu_mask, NULL) \
+CHILD_NODE_DESC(global_params, limit_rate,         NULL, test_set_limit_rate, NULL) \
+CHILD_NODE_DESC(global_params, status_interval,    NULL, test_set_status_interval, NULL) \
+CHILD_NODE_DESC(global_params, output_file_prefix, NULL, test_set_outfile_prefix, NULL) \
+CHILD_NODE_DESC(global_params, output_file_suffix, NULL, test_set_outfile_suffix, NULL) \
+CHILD_NODE_DESC(global_params, store_output_files, NULL, test_set_store_output_files, NULL) \
+\
+CHILD_NODE_DESC(crypto_keys, key, test_create_crypto_key, NULL, NULL) \
+CHILD_NODE_DESC(crypto_keys_key, idx,  NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(crypto_keys_key, key1, NULL, test_set_key1_data, NULL) \
+CHILD_NODE_DESC(crypto_keys_key, key2, NULL, test_set_key2_data, NULL) \
+\
+CHILD_NODE_DESC(svc_chains, svc_chain, test_create_svc_chain, NULL, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, idx,   NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, name,  NULL, test_set_svc_chain_name, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, input, NULL, NULL, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, ops,   NULL, NULL, NULL) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_input, random,         NULL, test_set_input_random, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, random_len,     NULL, test_set_input_random_len, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, offset,         NULL, test_set_input_offset, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, len,            NULL, test_set_input_len, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, file,           NULL, test_set_input_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, pattern,        NULL, test_set_input_pattern, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, min_block_size, NULL, test_set_input_min_block, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, max_block_size, NULL, test_set_input_max_block, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_input, block_count,    NULL, test_set_input_block_count, NULL) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_ops, compress,   test_create_op, NULL, (void*)PNSO_SVC_TYPE_COMPRESS) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops, decompress, test_create_op, NULL, (void*)PNSO_SVC_TYPE_DECOMPRESS) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops, hash,       test_create_op, NULL, (void*)PNSO_SVC_TYPE_HASH) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops, chksum,     test_create_op, NULL, (void*)PNSO_SVC_TYPE_CHKSUM) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops, encrypt,    test_create_op, NULL, (void*)PNSO_SVC_TYPE_ENCRYPT) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops, decrypt,    test_create_op, NULL, (void*)PNSO_SVC_TYPE_DECRYPT) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops, decompact,  test_create_op, NULL, (void*)PNSO_SVC_TYPE_DECOMPACT) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, flags,           NULL, test_set_op_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, algo_type,       NULL, test_set_op_algo_type, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, hdr_fmt_idx,     NULL, test_set_compress_hdr_fmt_idx, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, hdr_algo,        NULL, test_set_compress_hdr_algo, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, threshold,       NULL, test_set_compress_threshold_len, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, threshold_delta, NULL, test_set_compress_threshold_delta, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, output_file,     NULL, test_set_output_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_compress, output_flags,    NULL, test_set_output_flags, NULL) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, flags,        NULL, test_set_op_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, algo_type,    NULL, test_set_op_algo_type, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, hdr_fmt_idx,  NULL, test_set_decompress_hdr_fmt_idx, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, output_file,  NULL, test_set_output_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompress, output_flags, NULL, test_set_output_flags, NULL) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, algo_type,    NULL, test_set_op_algo_type, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, key_idx,      NULL, test_set_crypto_key_idx, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, iv_data,      NULL, test_set_crypto_iv_data, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, output_file,  NULL, test_set_output_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_encrypt, output_flags, NULL, test_set_output_flags, NULL) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, algo_type,    NULL, test_set_op_algo_type, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, key_idx,      NULL, test_set_crypto_key_idx, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, iv_data,      NULL, test_set_crypto_iv_data, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, output_file,  NULL, test_set_output_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decrypt, output_flags, NULL, test_set_output_flags, NULL) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, flags,        NULL, test_set_op_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, algo_type,    NULL, test_set_op_algo_type, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, output_file,  NULL, test_set_output_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_hash, output_flags, NULL, test_set_output_flags, NULL) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, flags,        NULL, test_set_op_flags, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, algo_type,    NULL, test_set_op_algo_type, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, output_file,  NULL, test_set_output_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_chksum, output_flags, NULL, test_set_output_flags, NULL) \
+\
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompact, vvbn,         NULL, test_set_decompact_vvbn, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompact, output_file,  NULL, test_set_output_file, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain_ops_decompact, output_flags, NULL, test_set_output_flags, NULL) \
+\
+CHILD_NODE_DESC(tests, test,            test_create_testcase, NULL, NULL) \
+CHILD_NODE_DESC(tests_test, idx,         NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(tests_test, name,        NULL, test_set_testcase_name, NULL) \
+CHILD_NODE_DESC(tests_test, mode,        NULL, test_set_testcase_sync_mode, NULL) \
+CHILD_NODE_DESC(tests_test, turbo,       NULL, test_set_testcase_turbo, NULL) \
+CHILD_NODE_DESC(tests_test, repeat,      NULL, test_set_testcase_repeat, NULL) \
+CHILD_NODE_DESC(tests_test, batch_depth, NULL, test_set_testcase_batch_depth, NULL) \
+CHILD_NODE_DESC(tests_test, svc_chains,  NULL, test_set_testcase_svc_chains, NULL) \
+CHILD_NODE_DESC(tests_test, validations, NULL, NULL, NULL) \
+\
+CHILD_NODE_DESC(tests_test_validations, data_compare,    test_create_validation, NULL, (void*)VALIDATION_DATA_COMPARE) \
+CHILD_NODE_DESC(tests_test_validations, size_compare,    test_create_validation, NULL, (void*)VALIDATION_SIZE_COMPARE) \
+CHILD_NODE_DESC(tests_test_validations, retcode_compare, test_create_validation, NULL, (void*)VALIDATION_RETCODE_COMPARE) \
+\
+CHILD_NODE_DESC(tests_test_validations_data_compare, idx,          NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_compare, type,         NULL, test_set_compare_type, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_compare, file1,        NULL, test_set_validation_file1, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_compare, file2,        NULL, test_set_validation_file2, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_compare, pattern,      NULL, test_set_validation_pattern, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_compare, offset,       NULL, test_set_validation_data_offset, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_compare, len,          NULL, test_set_validation_data_len, NULL) \
+\
+CHILD_NODE_DESC(tests_test_validations_size_compare, idx,          NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(tests_test_validations_size_compare, type,         NULL, test_set_compare_type, NULL) \
+CHILD_NODE_DESC(tests_test_validations_size_compare, file1,        NULL, test_set_validation_file1, NULL) \
+CHILD_NODE_DESC(tests_test_validations_size_compare, file2,        NULL, test_set_validation_file2, NULL) \
+CHILD_NODE_DESC(tests_test_validations_size_compare, val,          NULL, test_set_validation_data_len, NULL) \
+\
+CHILD_NODE_DESC(tests_test_validations_retcode_compare, idx,          NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(tests_test_validations_retcode_compare, type,         NULL, test_set_compare_type, NULL) \
+CHILD_NODE_DESC(tests_test_validations_retcode_compare, svc_chain,    NULL, test_set_validation_svc_chain, NULL) \
+CHILD_NODE_DESC(tests_test_validations_retcode_compare, retcode,      NULL, test_set_validation_retcode, NULL) \
+CHILD_NODE_DESC(tests_test_validations_retcode_compare, svc_retcodes, NULL, test_set_validation_svc_retcodes, NULL) \
+\
+CHILD_NODE_DESC(cp_hdr_formats, format,        test_create_cp_hdr_format, NULL, NULL) \
+CHILD_NODE_DESC(cp_hdr_formats_format, idx,           NULL,  test_set_idx, NULL) \
+CHILD_NODE_DESC(cp_hdr_formats_format, cp_hdr_fields, NULL, NULL, NULL) \
+\
+CHILD_NODE_DESC(cp_hdr_formats_format_cp_hdr_fields,  field, test_create_cp_hdr_field, NULL, NULL) \
+CHILD_NODE_DESC(cp_hdr_formats_format_cp_hdr_fields_field, type,   NULL, test_set_cp_hdr_type, NULL) \
+CHILD_NODE_DESC(cp_hdr_formats_format_cp_hdr_fields_field, offset, NULL, test_set_cp_hdr_offset, NULL) \
+CHILD_NODE_DESC(cp_hdr_formats_format_cp_hdr_fields_field, len,    NULL, test_set_cp_hdr_length, NULL) \
+CHILD_NODE_DESC(cp_hdr_formats_format_cp_hdr_fields_field, val,    NULL, test_set_cp_hdr_val, NULL) \
+\
+CHILD_NODE_DESC(cp_hdr_mapping, entry, test_create_cp_hdr_mapping, NULL, NULL) \
+CHILD_NODE_DESC(cp_hdr_mapping_entry, pnso_algo, NULL, test_set_cp_hdr_pnso_algo, NULL) \
+CHILD_NODE_DESC(cp_hdr_mapping_entry, hdr_algo,  NULL, test_set_cp_hdr_algo, NULL) \
 
-	{ NULL,            "svc_chains",      NULL, NULL, NULL },
-	{ "svc_chains",    "svc_chain" ,      test_create_svc_chain, NULL, NULL },
-	{ "svc_chain",     "idx",             NULL, test_set_idx, NULL },
-	{ "svc_chain",     "name",            NULL, test_set_svc_chain_name, NULL },
-	{ "svc_chain",     "input",           NULL, NULL, NULL },
-	{ "svc_chain",     "ops",             NULL, NULL, NULL },
+/* Actual node definition */
+ROOT_NODE_DESC_LIST
+CHILD_NODE_DESC_LIST
 
-	{ "input",         "random",          NULL, test_set_input_random, NULL },
-	{ "input",         "random_len",      NULL, test_set_input_random_len, NULL },
-	{ "input",         "offset",          NULL, test_set_input_offset, NULL },
-	{ "input",         "len",             NULL, test_set_input_len, NULL },
-	{ "input",         "file",            NULL, test_set_input_file, NULL },
-	{ "input",         "pattern",         NULL, test_set_input_pattern, NULL },
-	{ "input",         "min_block_size",  NULL, test_set_input_min_block, NULL },
-	{ "input",         "max_block_size",  NULL, test_set_input_max_block, NULL },
-	{ "input",         "block_count",     NULL, test_set_input_block_count, NULL },
+#undef ROOT_NODE_DESC
+#define ROOT_NODE_DESC(name) & name##_node_desc,
+#undef CHILD_NODE_DESC
+#define CHILD_NODE_DESC(parent, name, create_fn, set_fn, opaque) & parent##_##name##_node_desc,
 
-	{ "ops",           "compress",        test_create_op, NULL, (void*)PNSO_SVC_TYPE_COMPRESS},
-	{ "ops",           "decompress",      test_create_op, NULL, (void*)PNSO_SVC_TYPE_DECOMPRESS },
-	{ "ops",           "hash",            test_create_op, NULL, (void*)PNSO_SVC_TYPE_HASH },
-	{ "ops",           "chksum",          test_create_op, NULL, (void*)PNSO_SVC_TYPE_CHKSUM },
-	{ "ops",           "encrypt",         test_create_op, NULL, (void*)PNSO_SVC_TYPE_ENCRYPT },
-	{ "ops",           "decrypt",         test_create_op, NULL, (void*)PNSO_SVC_TYPE_DECRYPT },
-	{ "ops",           "decompact",       test_create_op, NULL, (void*)PNSO_SVC_TYPE_DECOMPACT },
 
-	{ "compress",      "flags",           NULL, test_set_op_flags, NULL },
-	{ "compress",      "algo_type",       NULL, test_set_op_algo_type, NULL },
-	{ "compress",      "hdr_fmt_idx",     NULL, test_set_compress_hdr_fmt_idx, NULL },
-	{ "compress",      "hdr_algo",        NULL, test_set_compress_hdr_algo, NULL },
-	{ "compress",      "threshold",       NULL, test_set_compress_threshold_len, NULL },
-	{ "compress",      "threshold_delta", NULL, test_set_compress_threshold_delta, NULL },
-	{ "compress",      "output_file",     NULL, test_set_output_file, NULL },
-	{ "compress",      "output_flags",    NULL, test_set_output_flags, NULL },
-
-	{ "decompress",    "flags",           NULL, test_set_op_flags, NULL },
-	{ "decompress",    "algo_type",       NULL, test_set_op_algo_type, NULL },
-	{ "decompress",    "hdr_fmt_idx",     NULL, test_set_decompress_hdr_fmt_idx, NULL },
-	{ "decompress",    "output_file",     NULL, test_set_output_file, NULL },
-	{ "decompress",    "output_flags",    NULL, test_set_output_flags, NULL },
-
-	{ "encrypt",       "algo_type",       NULL, test_set_op_algo_type, NULL },
-	{ "encrypt",       "key_idx",         NULL, test_set_crypto_key_idx, NULL },
-	{ "encrypt",       "iv_data",         NULL, test_set_crypto_iv_data, NULL },
-	{ "encrypt",       "output_file",     NULL, test_set_output_file, NULL },
-	{ "encrypt",       "output_flags",    NULL, test_set_output_flags, NULL },
-
-	{ "decrypt",       "algo_type",       NULL, test_set_op_algo_type, NULL },
-	{ "decrypt",       "key_idx",         NULL, test_set_crypto_key_idx, NULL },
-	{ "decrypt",       "iv_data",         NULL, test_set_crypto_iv_data, NULL },
-	{ "decrypt",       "output_file",     NULL, test_set_output_file, NULL },
-	{ "decrypt",       "output_flags",    NULL, test_set_output_flags, NULL },
-
-	{ "hash",          "flags",           NULL, test_set_op_flags, NULL },
-	{ "hash",          "algo_type",       NULL, test_set_op_algo_type, NULL },
-	{ "hash",          "output_file",     NULL, test_set_output_file, NULL },
-	{ "hash",          "output_flags",    NULL, test_set_output_flags, NULL },
-
-	{ "chksum",        "flags",           NULL, test_set_op_flags, NULL },
-	{ "chksum",        "algo_type",       NULL, test_set_op_algo_type, NULL },
-	{ "chksum",        "output_file",     NULL, test_set_output_file, NULL },
-	{ "chksum",        "output_flags",    NULL, test_set_output_flags, NULL },
-
-	{ "decompact",     "vvbn",            NULL, test_set_decompact_vvbn, NULL },
-	{ "decompact",     "output_file",     NULL, test_set_output_file, NULL },
-	{ "decompact",     "output_flags",    NULL, test_set_output_flags, NULL },
-
-	{ NULL,            "tests",           NULL, NULL, NULL },
-	{ "tests",         "test",            test_create_testcase, NULL, NULL },
-	{ "test",          "idx",             NULL, test_set_idx, NULL },
-	{ "test",          "name",            NULL, test_set_testcase_name, NULL },
-	{ "test",          "mode",            NULL, test_set_testcase_sync_mode, NULL },
-	{ "test",          "turbo",           NULL, test_set_testcase_turbo, NULL },
-	{ "test",          "repeat",          NULL, test_set_testcase_repeat, NULL },
-	{ "test",          "batch_depth",     NULL, test_set_testcase_batch_depth, NULL },
-	{ "test",          "svc_chains",      NULL, test_set_testcase_svc_chains, NULL },
-	{ "test",          "validations",     NULL, NULL, NULL },
-
-	{ "validations",   "data_compare",    test_create_validation, NULL, (void*)VALIDATION_DATA_COMPARE },
-	{ "data_compare",  "idx",             NULL, test_set_idx, NULL },
-	{ "data_compare",  "type",            NULL, test_set_compare_type, NULL },
-	{ "data_compare",  "file1",           NULL, test_set_validation_file1, NULL },
-	{ "data_compare",  "file2",           NULL, test_set_validation_file2, NULL },
-	{ "data_compare",  "pattern",         NULL, test_set_validation_pattern, NULL },
-	{ "data_compare",  "offset",          NULL, test_set_validation_data_offset, NULL },
-	{ "data_compare",  "len",             NULL, test_set_validation_data_len, NULL },
-
-	{ "validations",   "size_compare",    test_create_validation, NULL, (void*)VALIDATION_SIZE_COMPARE },
-	{ "size_compare",  "idx",             NULL, test_set_idx, NULL },
-	{ "size_compare",  "type",            NULL, test_set_compare_type, NULL },
-	{ "size_compare",  "file1",           NULL, test_set_validation_file1, NULL },
-	{ "size_compare",  "file2",           NULL, test_set_validation_file2, NULL },
-	{ "size_compare",  "val",             NULL, test_set_validation_data_len, NULL },
-
-	{ "validations",   "retcode_compare", test_create_validation, NULL, (void*)VALIDATION_RETCODE_COMPARE },
-	{ "retcode_compare", "idx",           NULL, test_set_idx, NULL },
-	{ "retcode_compare", "type",          NULL, test_set_compare_type, NULL },
-	{ "retcode_compare", "svc_chain",     NULL, test_set_validation_svc_chain, NULL },
-	{ "retcode_compare", "retcode",       NULL, test_set_validation_retcode, NULL },
-	{ "retcode_compare", "svc_retcodes",  NULL, test_set_validation_svc_retcodes, NULL },
-
-	{ NULL,            "cp_hdr_format",   test_create_cp_hdr_format, NULL, NULL },
-	{ "cp_hdr_format", "idx",             NULL, test_set_idx, NULL },
-	{ "cp_hdr_format", "cp_hdr_field",    test_create_cp_hdr_field, NULL, NULL },
-	{ "cp_hdr_field",  "type",            NULL, test_set_cp_hdr_type, NULL },
-	{ "cp_hdr_field",  "offset",          NULL, test_set_cp_hdr_offset, NULL },
-	{ "cp_hdr_field",  "len",             NULL, test_set_cp_hdr_length, NULL },
-	{ "cp_hdr_field",  "val",             NULL, test_set_cp_hdr_val, NULL },
-
-	{ NULL,            "cp_hdr_mapping",  NULL, NULL, NULL },
-	{ "cp_hdr_mapping","entry",           test_create_cp_hdr_mapping, NULL, NULL },
-	{ "entry",         "pnso_algo",       NULL, test_set_cp_hdr_pnso_algo, NULL },
-	{ "entry",         "hdr_algo",        NULL, test_set_cp_hdr_algo, NULL },
+/* Master list of root YAML node pointers */
+static struct test_yaml_node_desc *root_node_descs[] = {
+	ROOT_NODE_DESC_LIST
 
 	/* Must be last */
-	{ NULL, NULL, NULL, NULL, NULL }
+	NULL
 };
 
-static void dump_yaml_desc_children(const char *parent_name, uint32_t indent_len)
-{
-	uint32_t i;
-	struct test_yaml_node_desc *yaml_desc;
-	char indent[16];
+static struct test_yaml_node_desc *child_node_descs[] = {
+	CHILD_NODE_DESC_LIST
 
-	indent_len = indent_len < 16 ? indent_len : 15;
+	/* Must be last */
+	NULL
+};
+
+static void test_init_parser(void)
+{
+	size_t i;
+	struct test_yaml_node_desc *yaml_desc;
+
+	/* Initialize child and sibling pointers at start time */
+
+	/* Clear any previous init */
+	for (i = 0; ; i++) {
+		yaml_desc = root_node_descs[i];
+		if (!yaml_desc)
+			break;
+		yaml_desc->siblings = NULL;
+		yaml_desc->children = NULL;
+	}
+	for (i = 0; ; i++) {
+		yaml_desc = child_node_descs[i];
+		if (!yaml_desc)
+			break;
+		yaml_desc->siblings = NULL;
+		yaml_desc->children = NULL;
+	}
+
+	/* Initialize children and siblings */
+	for (i = 0; ; i++) {
+		yaml_desc = child_node_descs[i];
+		if (!yaml_desc)
+			break;
+		yaml_desc->siblings = yaml_desc->parent->children;
+		yaml_desc->parent->children = yaml_desc;
+	}
+}
+
+static void dump_yaml_desc_children(struct test_yaml_node_desc *parent, uint32_t indent_len)
+{
+	struct test_yaml_node_desc *yaml_desc;
+	char indent[32];
+
+	indent_len = indent_len < sizeof(indent) ? indent_len : sizeof(indent)-1;
 	memset(indent, ' ', indent_len);
 	indent[indent_len] = '\0';
 
-	for (i = 0; ; i++) {
-		yaml_desc = &node_descs[i];
-		if (!yaml_desc->name) {
-			break;
-		}
-
-		if (safe_strcmp(parent_name, yaml_desc->parent_name) == 0) {
-			PNSO_LOG("%s%s\n", indent, yaml_desc->name);
-			dump_yaml_desc_children(yaml_desc->name, indent_len+2);
-		}
+	for (yaml_desc = parent->children; yaml_desc; yaml_desc = yaml_desc->siblings) {
+		PNSO_LOG("%s%s\n", indent, yaml_desc->name);
+		if (yaml_desc->children)
+			dump_yaml_desc_children(yaml_desc, indent_len+2);
 	}
 }
 
 void test_dump_yaml_desc_tree(void)
 {
-	dump_yaml_desc_children(NULL, 2);
+	size_t i;
+	struct test_yaml_node_desc *yaml_desc;
+
+	for (i = 0; ; i++) {
+		yaml_desc = root_node_descs[i];
+		if (!yaml_desc)
+			break;
+		PNSO_LOG("  %s\n", yaml_desc->name);
+		if (yaml_desc->children)
+			dump_yaml_desc_children(yaml_desc, 4);
+	}
 }
 
-static struct test_yaml_node_desc *lookup_yaml_node_desc(const char *parent_name,
+static struct test_yaml_node_desc *lookup_yaml_root_node_desc(const char *name)
+{
+	size_t i;
+	struct test_yaml_node_desc *node_desc;
+
+	for (i = 0; ; i++) {
+		node_desc = root_node_descs[i];
+		if (!node_desc)
+			break;
+		if (0 == safe_strcmp(node_desc->name, name)) {
+			PNSO_LOG_TRACE("Lookup YAML root desc SUCCESS, root.%s\n",
+				       name);
+			return node_desc;
+		}
+	}
+	PNSO_LOG_WARN("Lookup YAML node desc FAIL, root.%s\n",
+		      name);
+
+	return NULL;
+}
+
+static struct test_yaml_node_desc *lookup_yaml_node_desc(struct test_yaml_node_desc *parent,
 							 const char *name)
 {
 	struct test_yaml_node_desc *node_desc;
 
 	/* TODO: alphabetize node_descs and use binary search */
 
-	for (node_desc = node_descs; node_desc->name != NULL; node_desc++) {
-		if (0 == safe_strcmp(node_desc->name, name) &&
-		    0 == safe_strcmp(node_desc->parent_name, parent_name)) {
+	if (!parent)
+		return lookup_yaml_root_node_desc(name);
+
+	for (node_desc = parent->children; node_desc; node_desc = node_desc->siblings) {
+		if (0 == safe_strcmp(node_desc->name, name)) {
 			/* Found */
 			PNSO_LOG_TRACE("Lookup YAML node desc SUCCESS, %s.%s\n",
-				       parent_name, name);
+				       parent->name, name);
 			return node_desc;
 		}
 	}
 
 	PNSO_LOG_WARN("Lookup YAML node desc FAIL, %s.%s\n",
-		      parent_name, name);
+		      parent->name, name);
 
 	return NULL;
 }
@@ -1869,12 +1968,10 @@ static pnso_error_t parse_yaml_scalar1(yaml_parser_t *parser,
 		struct test_yaml_node_desc **parent_yaml_desc)
 {
 	pnso_error_t err = PNSO_OK;
-	const char *parent_name = *parent_yaml_desc ?
-					(*parent_yaml_desc)->name : NULL;
 	struct test_yaml_node_desc *yaml_node_desc;
 
 	/* Create a new node if necessary */
-	yaml_node_desc = lookup_yaml_node_desc(parent_name,
+	yaml_node_desc = lookup_yaml_node_desc(*parent_yaml_desc,
 					  (const char*)event->data.scalar.value);
 	if (yaml_node_desc) {
 		*parent_yaml_desc = yaml_node_desc;

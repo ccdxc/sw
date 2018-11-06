@@ -1,4 +1,5 @@
-alias: 'hash_algo=sha2_256'
+alias_group5:
+  - alias: 'hash_algo=sha2_256'
 svc_chains:
   - svc_chain:
       idx: 1

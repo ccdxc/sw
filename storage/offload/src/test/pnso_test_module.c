@@ -99,15 +99,16 @@ status_output_func(const char *status, void *opaque)
 }
 
 static const unsigned char default_alias_yaml[] =
-"alias: 'default_cpu_mask=1'\n"
-"alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'\n"
-"alias: 'iv1=000102030405060708090a0b0c0d0e0f'\n"
-"alias: 'default_repeat=1'\n"
-"alias: 'default_batch=1'\n"
-"alias: 'default_mode=sync'\n"
-"alias: 'default_turbo=1'\n"
-"alias: 'default_rate=0'\n"
-"alias: 'default_status_interval=0'\n"
+"alias_group1:\n"
+"  - alias: 'default_cpu_mask=1'\n"
+"  - alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'\n"
+"  - alias: 'iv1=000102030405060708090a0b0c0d0e0f'\n"
+"  - alias: 'default_repeat=1'\n"
+"  - alias: 'default_batch=1'\n"
+"  - alias: 'default_mode=sync'\n"
+"  - alias: 'default_turbo=1'\n"
+"  - alias: 'default_rate=0'\n"
+"  - alias: 'default_status_interval=0'\n"
 "\n";
 
 static const unsigned char default_global_yaml[] = 
@@ -117,23 +118,25 @@ static const unsigned char default_global_yaml[] =
 "  cpu_mask: '$default_cpu_mask'\n"
 "  limit_rate: '$default_rate'\n"
 "  status_interval: '$default_status_interval'\n"
-"cp_hdr_format:\n"
-"  idx: 1\n"
-"  cp_hdr_field:\n"
-"    type: indata_chksum\n"
-"    offset: 0\n"
-"    len: 4\n"
-"    val: 0\n"
-"  cp_hdr_field:\n"
-"    type: outdata_length\n"
-"    offset: 4\n"
-"    len: 2\n"
-"    val: 0\n"
-"  cp_hdr_field:\n"
-"    type: algo\n"
-"    offset: 6\n"
-"    len: 2\n"
-"    val: 1\n"
+"cp_hdr_formats:\n"
+"  - format:\n"
+"      idx: 1\n"
+"      cp_hdr_fields:\n"
+"        - field:\n"
+"            type: indata_chksum\n"
+"            offset: 0\n"
+"            len: 4\n"
+"            val: 0\n"
+"        - field:\n"
+"            type: outdata_length\n"
+"            offset: 4\n"
+"            len: 2\n"
+"            val: 0\n"
+"        - field:\n"
+"            type: algo\n"
+"            offset: 6\n"
+"            len: 2\n"
+"            val: 1\n"
 "cp_hdr_mapping:\n"
 "  - entry:\n"
 "      pnso_algo: 1\n"
@@ -376,7 +379,7 @@ static uint32_t generate_alias_yaml(char *dst, const char *name, long val_num, c
 {
 	uint32_t len = 0;
 
-	len += safe_strcpy(dst+len, "alias: '", MAX_ALIAS_STR_LEN-len);
+	len += safe_strcpy(dst+len, "alias_group2:\n  - alias: '", MAX_ALIAS_STR_LEN-len);
 	len += safe_strcpy(dst+len, name, MAX_ALIAS_STR_LEN-len);
 	len += safe_strcpy(dst+len, "=", MAX_ALIAS_STR_LEN-len);
 	if (val_str) {

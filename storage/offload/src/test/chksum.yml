@@ -1,4 +1,5 @@
-alias: 'chksum_algo=crc32c'
+alias_group5:
+  - alias: 'chksum_algo=crc32c'
 svc_chains:
   - svc_chain:
       idx: 1
