@@ -37,6 +37,10 @@ typedef struct pal_rwvectors_s {
     pal_ret_t   (*mem_set)(const uint64_t pa, uint8_t c,
                            const uint32_t sz, uint32_t flags);
     bool        (*is_qsfp_port_present)(int port_no);
+    pal_ret_t   (*qsfp_set_port)(int port_no);
+    pal_ret_t   (*qsfp_reset_port)(int port_no);
+    pal_ret_t   (*qsfp_set_low_power_mode)(int port_no);
+    pal_ret_t   (*qsfp_reset_low_power_mode)(int port_no);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
@@ -105,6 +109,30 @@ static inline bool
 pal_is_qsfp_port_present(int port_no)
 {
     return gl_pal_info.rwvecs.is_qsfp_port_present(port_no);
+}
+
+static inline pal_ret_t
+pal_qsfp_set_port(int port_no)
+{
+    return gl_pal_info.rwvecs.qsfp_set_port(port_no);
+}
+
+static inline pal_ret_t
+pal_qsfp_reset_port(int port_no)
+{
+    return gl_pal_info.rwvecs.qsfp_reset_port(port_no);
+}
+
+static inline pal_ret_t
+pal_qsfp_set_low_power_mode(int port_no)
+{
+    return gl_pal_info.rwvecs.qsfp_set_low_power_mode(port_no);
+}
+
+static inline pal_ret_t
+pal_qsfp_reset_low_power_mode(int port_no)
+{
+    return gl_pal_info.rwvecs.qsfp_reset_low_power_mode(port_no);
 }
 
 }    // namespace lib

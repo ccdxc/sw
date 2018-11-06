@@ -74,6 +74,38 @@ pal_default_is_qsfp_port_present(int port_no)
     return false;
 }
 
+static pal_ret_t
+pal_default_qsfp_set_port(int port_no)
+{
+
+    SDK_TRACE_DEBUG("PAL default qsfp_set_port %lx", port_no);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_default_qsfp_reset_port(int port_no)
+{
+
+    SDK_TRACE_DEBUG("PAL default qsfp_reset_port %lx", port_no);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_default_qsfp_set_low_power_mode(int port_no)
+{
+
+    SDK_TRACE_DEBUG("PAL default qsfp_set_low_power_mode %lx", port_no);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_default_qsfp_reset_low_power_mode(int port_no)
+{
+
+    SDK_TRACE_DEBUG("PAL default qsfp_set_low_power_mode %lx", port_no);
+    return PAL_RET_OK;
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -89,6 +121,12 @@ pal_default_init_rwvectors (void)
                             pal_default_virtual_addr_to_physical_addr;
     gl_pal_info.rwvecs.is_qsfp_port_present =
                             pal_default_is_qsfp_port_present;
+    gl_pal_info.rwvecs.qsfp_set_port = pal_default_qsfp_set_port;
+    gl_pal_info.rwvecs.qsfp_reset_port = pal_default_qsfp_reset_port;
+    gl_pal_info.rwvecs.qsfp_set_low_power_mode =
+                                         pal_default_qsfp_set_low_power_mode;
+    gl_pal_info.rwvecs.qsfp_reset_low_power_mode =
+                                         pal_default_qsfp_reset_low_power_mode;
 
     return PAL_RET_OK;
 }
