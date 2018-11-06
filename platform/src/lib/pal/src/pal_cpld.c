@@ -25,12 +25,12 @@ pal_qsfp_reset_port(int port)
 }
 
 int
-pal_qfsp_set_low_power_mode(int port) {
+pal_qsfp_set_low_power_mode(int port) {
     return -1;
 }
 
 int
-pal_qfsp_reset_low_power_mode(int port) {
+pal_qsfp_reset_low_power_mode(int port) {
     return -1;
 }
 
@@ -172,7 +172,7 @@ pal_qsfp_reset_port(int port)
 
 /* Register: 0x2, bit 2 is qsfp port 1, bit 3 is qsfp port 2 */
 int
-pal_qfsp_set_low_power_mode(int port)
+pal_qsfp_set_low_power_mode(int port)
 {
     int bit = 0;
 
@@ -188,7 +188,7 @@ pal_qfsp_set_low_power_mode(int port)
 }
 
 int
-pal_qfsp_reset_low_power_mode(int port)
+pal_qsfp_reset_low_power_mode(int port)
 {
     int bit = 0;
 
