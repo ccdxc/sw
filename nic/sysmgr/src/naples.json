@@ -28,4 +28,14 @@
     "command": "/platform/bin/asicerrord",
     "dependencies": ["delphi", "nicmgrd"],
     "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "nmd",
+    "command": "/nic/bin/nmd -log-to-file /nmd.log -hostif lo",
+    "dependencies": ["delphi"],
+    "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "tmagent",
+    "command": "/nic/bin/tmagent -logtofile /tmagent.log -hostif lo",
+    "dependencies": ["delphi"],
+    "flags": ["no_watchdog", "non_critical"]
 }]
