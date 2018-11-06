@@ -49,9 +49,9 @@ static char mode[MAX_PARAM_STRING_LEN] = "";
 module_param_string(mode, mode, sizeof(mode), 0444);
 MODULE_PARM_DESC(mode, "mode is sync, async, or poll");
 
-static unsigned int loglevel = OSAL_LOG_LEVEL_NOTICE;
-module_param(loglevel, uint, 0444);
-MODULE_PARM_DESC(loglevel, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5=NOTICE,6=INFO,7=DBG");
+static unsigned int log_level = OSAL_LOG_LEVEL_NOTICE;
+module_param(log_level, uint, 0444);
+MODULE_PARM_DESC(log_level, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5=NOTICE,6=INFO,7=DBG");
 
 static osal_thread_t g_main_thread;
 
@@ -64,7 +64,7 @@ pnso_test_mod_init(void)
 {
 	int rv;
 
-	rv = osal_log_init(loglevel);
+	rv = osal_log_init(log_level);
 	if (rv)
 		goto done;
 #ifndef __FreeBSD__ 
@@ -529,7 +529,7 @@ body(void *not_used)
 		}
 	}
 
-	if (loglevel >= OSAL_LOG_LEVEL_DEBUG)
+	if (log_level >= OSAL_LOG_LEVEL_DEBUG)
 		test_dump_desc(cfg);
 	pnso_run_unit_tests(cfg);
 
