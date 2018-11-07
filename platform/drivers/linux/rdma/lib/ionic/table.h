@@ -60,23 +60,6 @@ struct tbl_root {
 	struct tbl_node		*free_node;
 };
 
-/** tbl_empty - Check if the table is empty.
- * @tbl:	Table root.
- *
- * Return: Table is empty.
- */
-static inline bool tbl_empty(struct tbl_root *tbl)
-{
-	uint32_t node_i;
-
-	for (node_i = 0; node_i < TBL_ROOT_CAPACITY; ++node_i) {
-		if (tbl->node[node_i])
-			return false;
-	}
-
-	return true;
-}
-
 /** tbl_init - Initialize a table.
  * @tbl:	Table root.
  */
@@ -95,11 +78,38 @@ static inline void tbl_init(struct tbl_root *tbl)
 /** tbl_init - Destroy the table, which should be empty.
  * @tbl:	Table root.
  */
-static inline void tbl_destroy(struct tbl_root *tbl)
+static inline int tbl_destroy(struct tbl_root *tbl)
 {
-	assert(tbl_empty(tbl));
+	uint32_t node_i;
+	int rc = 0;
+
+	/* The table should be empty.  If not empty, it means the context is
+	 * being destroyed, but there are qps still in the table that have not
+	 * been destroyed.
+	 *
+	 * The interface is such that freeing the context must succeed, so here
+	 * will make a best effort to free table resources.  Any qps that were
+	 * not destroyed, however will still refer to the context after it is
+	 * freed.  Those qps must not be used, not even for ibv_destroy_qp, or
+	 * the application will likely crash.
+	 *
+	 * This best-effort freeing of resources replaces an assert.  The
+	 * assert was seen in perftest, which will destroy the context even if
+	 * there is an error destroying a qp or other resource.
+	 */
+	for (node_i = 0; node_i < TBL_ROOT_CAPACITY; ++node_i) {
+		if (tbl->node[node_i]) {
+			/* Indicate to the caller that the table was not empty,
+			 * but still make a best effort to free the table.
+			 */
+			rc = -EBUSY;
+			free(tbl->node[node_i]);
+		}
+	}
 
 	free(tbl->free_node);
+
+	return rc;
 }
 
 /** tbl_lookup - Lookup value for key in the table.

@@ -577,6 +577,30 @@ static void ionic_clean_cq(struct ionic_cq *cq, uint32_t qpid)
 	}
 }
 
+static void ionic_reserve_sync_cq(struct ionic_ctx *ctx, struct ionic_cq *cq)
+{
+	if (!ionic_queue_empty(&cq->q)) {
+		cq->reserve += ionic_queue_length(&cq->q);
+		cq->q.cons = cq->q.prod;
+
+		ionic_dbg(ctx, "dbell qtype %d val %#lx",
+			  ctx->cq_qtype, ionic_queue_dbell_val(&cq->q));
+		ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
+				 ionic_queue_dbell_val(&cq->q));
+
+		ionic_stat_incr(ctx->stats, ring_cq_dbell);
+	}
+}
+
+static void ionic_reserve_cq(struct ionic_ctx *ctx, struct ionic_cq *cq,
+			     int spend)
+{
+	cq->reserve -= spend;
+
+	if (cq->reserve <= 0)
+		ionic_reserve_sync_cq(ctx, cq);
+}
+
 static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
@@ -756,6 +780,10 @@ cq_next:
 	}
 
 out:
+	/* in case reserve was depleted (more work posted than cq depth) */
+	if (cq->reserve <= 0)
+		ionic_reserve_sync_cq(ctx, cq);
+
 	old_prod = (cq->q.prod - old_prod) & cq->q.mask;
 	ionic_stat_add(ctx->stats, poll_cq_cqe, old_prod);
 	ionic_stat_incr_idx_fls(ctx->stats, poll_cq_ncqe, old_prod);
@@ -773,39 +801,6 @@ out:
 	}
 
 	return npolled ?: rc;
-}
-
-static void ionic_reserve_cq(struct ionic_ctx *ctx, struct ionic_cq *cq,
-			     int spend)
-{
-	cq->reserve -= spend;
-
-	if (cq->reserve <= 0 && !ionic_queue_empty(&cq->q)) {
-		cq->reserve += ionic_queue_length(&cq->q);
-		cq->q.cons = cq->q.prod;
-
-		ionic_dbg(ctx, "dbell qtype %d val %#lx",
-			  ctx->cq_qtype, ionic_queue_dbell_val(&cq->q));
-		ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
-				 ionic_queue_dbell_val(&cq->q));
-
-		ionic_stat_incr(ctx->stats, ring_cq_dbell);
-	}
-}
-
-static void ionic_reserve_sync_cq(struct ionic_ctx *ctx, struct ionic_cq *cq)
-{
-	if (!ionic_queue_empty(&cq->q)) {
-		cq->reserve += ionic_queue_length(&cq->q);
-		cq->q.cons = cq->q.prod;
-
-		ionic_dbg(ctx, "dbell qtype %d val %#lx",
-			  ctx->cq_qtype, ionic_queue_dbell_val(&cq->q));
-		ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
-				 ionic_queue_dbell_val(&cq->q));
-
-		ionic_stat_incr(ctx->stats, ring_cq_dbell);
-	}
 }
 
 static int ionic_req_notify_cq(struct ibv_cq *ibcq, int solicited_only)

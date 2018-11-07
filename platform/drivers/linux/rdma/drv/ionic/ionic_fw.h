@@ -612,7 +612,7 @@ struct ionic_v1_admin_wqe {
 		} cq;
 		struct {
 			__le32		pd_id;
-			__le32		priv_flags;
+			__be32		priv_flags;
 			__le32		sq_cq_id;
 			__u8		sq_depth_log2;
 			__u8		sq_stride_log2;
@@ -632,7 +632,7 @@ struct ionic_v1_admin_wqe {
 		} qp;
 		struct {
 			__be32		attr_mask;
-			__le32		access_flags;
+			__be32		access_flags;
 			__le32		rq_psn;
 			__le32		sq_psn;
 			__le32		qkey_dest_qpn;

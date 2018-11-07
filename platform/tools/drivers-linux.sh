@@ -13,7 +13,7 @@
 #
 # #Unpack and build on the host
 # ssh root@some-host
-# tar xaf drivers-linux.sh
+# tar xaf drivers-linux.tar.xz
 # cd drivers-linux
 # ./build.sh
 #

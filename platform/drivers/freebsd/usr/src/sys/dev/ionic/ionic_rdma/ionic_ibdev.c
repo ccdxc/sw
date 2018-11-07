@@ -69,11 +69,8 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define ionic_set_ecn(tos) (((tos) | 2u) & ~1u)
 
 /* XXX remove this section for release */
-static bool ionic_xxx_haps = false;
-module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
-MODULE_PARM_DESC(xxx_haps, "XXX Misc workarounds for HAPS.");
 static bool ionic_xxx_pgtbl = true;
-module_param_named(xxx_pgtbl, ionic_xxx_pgtbl, bool, 0444);
+module_param_named(xxx_pgtbl, ionic_xxx_pgtbl, bool, 0644);
 MODULE_PARM_DESC(xxx_pgtbl, "XXX Allocate pgtbl even for contiguous buffers that don't need it.");
 static bool ionic_xxx_pgidx = true;
 module_param_named(xxx_pgidx, ionic_xxx_pgidx, bool, 0444);
@@ -82,19 +79,19 @@ static bool ionic_xxx_limits = false;
 module_param_named(xxx_limits, ionic_xxx_limits, bool, 0444);
 MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
 static bool ionic_xxx_kdbid = false;
-module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0444);
+module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0644);
 MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
 static bool ionic_xxx_udp = true;
-module_param_named(xxx_udp, ionic_xxx_udp, bool, 0444);
+module_param_named(xxx_udp, ionic_xxx_udp, bool, 0644);
 MODULE_PARM_DESC(xxx_udp, "XXX Makeshift udp header in template.");
 static bool ionic_xxx_noop = false;
 module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
 MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
 static bool ionic_xxx_notify = false;
-module_param_named(xxx_notify, ionic_xxx_notify, bool, 0444);
+module_param_named(xxx_notify, ionic_xxx_notify, bool, 0644);
 MODULE_PARM_DESC(xxx_notify, "XXX Workaround for inoperable EQ (kernel space).");
 static bool ionic_xxx_aq_idx = false;
-module_param_named(xxx_aq_idx, ionic_xxx_aq_idx, bool, 0444);
+module_param_named(xxx_aq_idx, ionic_xxx_aq_idx, bool, 0644);
 MODULE_PARM_DESC(xxx_aq_idx, "XXX Check aq cindex matches polling completion.");
 /* XXX remove above section for release */
 
@@ -3154,6 +3151,26 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	return 0;
 }
 
+static void ionic_reserve_sync_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
+{
+	if (!ionic_queue_empty(&cq->q)) {
+		cq->reserve += ionic_queue_length(&cq->q);
+		cq->q.cons = cq->q.prod;
+
+		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
+				 ionic_queue_dbell_val(&cq->q));
+	}
+}
+
+static void ionic_reserve_cq(struct ionic_ibdev *dev, struct ionic_cq *cq,
+			     int spend)
+{
+	cq->reserve -= spend;
+
+	if (cq->reserve <= 0)
+		ionic_reserve_sync_cq(dev, cq);
+}
+
 static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibcq->device);
@@ -3322,34 +3339,13 @@ cq_next:
 	}
 
 out:
+	/* in case reserve was depleted (more work posted than cq depth) */
+	if (cq->reserve <= 0)
+		ionic_reserve_sync_cq(dev, cq);
+
 	spin_unlock_irqrestore(&cq->lock, irqflags);
 
 	return npolled ?: rc;
-}
-
-static void ionic_reserve_cq(struct ionic_ibdev *dev, struct ionic_cq *cq,
-			     int spend)
-{
-	cq->reserve -= spend;
-
-	if (cq->reserve <= 0 && !ionic_queue_empty(&cq->q)) {
-		cq->reserve += ionic_queue_length(&cq->q);
-		cq->q.cons = cq->q.prod;
-
-		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
-				 ionic_queue_dbell_val(&cq->q));
-	}
-}
-
-static void ionic_reserve_sync_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
-{
-	if (!ionic_queue_empty(&cq->q)) {
-		cq->reserve += ionic_queue_length(&cq->q);
-		cq->q.cons = cq->q.prod;
-
-		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
-				 ionic_queue_dbell_val(&cq->q));
-	}
 }
 
 static int ionic_req_notify_cq(struct ib_cq *ibcq,
@@ -3521,7 +3517,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 			.id_ver = cpu_to_le32(qp->qpid | ver),
 			.qp = {
 				.pd_id = cpu_to_le32(pd->pdid),
-				.priv_flags = cpu_to_le32(flags),
+				.priv_flags = cpu_to_be32(flags),
 			}
 		}
 	};
@@ -3710,7 +3706,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 			.id_ver = cpu_to_le32(qp->qpid),
 			.mod_qp = {
 				.attr_mask = cpu_to_be32(mask),
-				.access_flags = cpu_to_le32(flags),
+				.access_flags = cpu_to_be32(flags),
 				.rq_psn = attr->rq_psn,
 				.sq_psn = attr->sq_psn,
 				.pmtu = (attr->path_mtu + 7), /* XXX add 7 on device */
@@ -6172,9 +6168,6 @@ static int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev)
 		},
 	};
 
-	if (ionic_xxx_haps)
-		return 0;
-
 	return ionic_rdma_devcmd(dev, &admin);
 }
 
@@ -6447,7 +6440,8 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev, int eq_count)
 	for (eq_i = 0; eq_i < eq_count; ++eq_i) {
 		eq = ionic_create_eq(dev, eq_i);
 		if (IS_ERR(eq)) {
-			if (!ionic_xxx_haps && !eq_i) {
+			/* need at least one eq */
+			if (!eq_i) {
 				rc = PTR_ERR(eq);
 				goto out;
 			}
@@ -6461,13 +6455,6 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev, int eq_count)
 
 		dev->eq_vec[eq_i] = eq;
 	}
-
-	/* XXX makeshift will be removed */
-	if (!eq_i) /* adminq arms the cq, requires eq */
-		dev->rdma_version = 0;
-	if (dev->rdma_version < 1)
-		goto out;
-	/* XXX (above) makeshift will be removed */
 
 	dev->admincq = ionic_create_rdma_admincq(dev, 0);
 	if (IS_ERR(dev->admincq)) {
@@ -6816,11 +6803,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->phys_port_cnt = 1;
 	ibdev->num_comp_vectors = dev->eq_count;
 
-	if (!ibdev->num_comp_vectors) {
-		pr_debug("ionic: fake num_comp_vectors but no eq\n");
-		ibdev->num_comp_vectors = 1;
-	}
-
+	/* XXX init node_guid */
 	//addrconf_ifid_eui48((u8 *)&ibdev->node_guid, ndev);
 
 	ibdev->uverbs_abi_ver = IONIC_ABI_VERSION;

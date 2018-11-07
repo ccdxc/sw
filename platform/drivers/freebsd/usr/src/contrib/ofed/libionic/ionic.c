@@ -237,8 +237,12 @@ static void ionic_uninit_context(struct verbs_device *vdev,
 				 struct ibv_context *ibctx)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
+	int rc;
 
-	tbl_destroy(&ctx->qp_tbl);
+	rc = tbl_destroy(&ctx->qp_tbl);
+	if (rc)
+		ionic_err("context freed before destroying resources");
+
 	pthread_mutex_destroy(&ctx->mut);
 
 	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
