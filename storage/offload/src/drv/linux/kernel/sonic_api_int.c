@@ -222,6 +222,21 @@ sonic_get_crypto_key_idx(uint32_t user_key_idx)
 	return ident->dev.lif_tbl[0].hw_key_idx_base + user_key_idx;
 }
 
+uint64_t
+sonic_get_intr_assert_addr(uint32_t intr_idx)
+{
+	identity_t *ident = sonic_get_identity();
+	return ident->dev.intr_assert_addr + 
+		((uint64_t)intr_idx * ident->dev.intr_assert_stride);
+}
+
+uint32_t
+sonic_get_intr_assert_data(void))
+{
+	identity_t *ident = sonic_get_identity();
+	return ident->dev.intr_assert_data;
+}
+
 #ifdef NDEBUG
 #define DBG_CHK_RING_ID(r)	PNSO_OK
 #else

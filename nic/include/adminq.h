@@ -49,6 +49,8 @@ typedef struct admin_qstate {
 
 static_assert (sizeof(struct admin_qstate) == 128, "");
 
+#define ADMIN_QSTATE_SIZE_SHFT  7       /* log2(sizeof(admin_qstate_t)) */
+
 struct nicmgr_sta_qstate {
     uint8_t     rsvd1:7;
     uint8_t     color:1;

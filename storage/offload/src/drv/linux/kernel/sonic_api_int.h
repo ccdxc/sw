@@ -31,6 +31,8 @@ void sonic_rmem_write(uint64_t pgaddr, const void *src, size_t size);
 uint16_t sonic_get_lif_id(void);
 uint64_t sonic_get_lif_local_dbaddr(void);
 uint32_t sonic_get_crypto_key_idx(uint32_t user_key_idx);
+uint64_t sonic_get_intr_assert_addr(uint32_t intr_idx);
+uint32_t sonic_get_intr_assert_data(void));
 accel_ring_t *sonic_get_accel_ring(uint32_t accel_ring_id);
 
 uint64_t sonic_hostpa_to_devpa(uint64_t hostpa);

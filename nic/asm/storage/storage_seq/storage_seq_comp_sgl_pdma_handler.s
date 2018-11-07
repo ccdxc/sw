@@ -28,11 +28,17 @@ struct phv_ p;
 #define r_sgl_rem_len               r_src_len   // SGL tuple remaining length
  
 /*
+ * Registers reuse, post all transfers
+ */
+#define r_qstate_addr               r_last_dma_cmd_ptr  // for SEQ_METRICS_TABLE_COMMIT
+
+/*
  * Local vars (due to registers shortage)
  */
 #define l_dma_desc_count            d.pad0      // count of descriptors consumed
  
 %%
+   SEQ_METRICS_PARAMS()
 
 storage_seq_comp_sgl_pdma_xfer:
 
@@ -140,10 +146,14 @@ dma_ptr_final_check:
    // did not overlap with descriptors used by storage_seq_barco_chain_action.
    CAPRI_FLIT_DMA_PTR_FINAL_CHECK(dma_m2m_4, 4, dma_m2m_14, 14,
                                   pdma_xfer_error)
+   SEQ_METRICS_SET(sgl_pdma_xfers)
+   
 exit:
-   CLEAR_TABLE1_e
+   // Relaunch stats commit for table 1
+   SEQ_METRICS0_TABLE1_COMMIT_e(SEQ_KIVEC8_SRC_QADDR)
 
 pdma_xfer_error:
+   SEQ_METRICS_SET(sgl_pdma_errs)
    SEQ_COMP_SGL_PDMA_XFER_ERROR_TRAP()
    b            exit
    nop

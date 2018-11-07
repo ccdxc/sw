@@ -70,7 +70,7 @@ xts_error:
    // if next_db_en and !stop_chain_on_error then ring_db
    seq          c5, SEQ_KIVEC5XTS_NEXT_DB_EN, 1
    bbeq.c5      SEQ_KIVEC5XTS_STOP_CHAIN_ON_ERROR, 0, possible_barco_push
-   nop
+   SEQ_METRICS_SET(hw_op_errs)                          // delay slot
 
    // cancel any barco push prep
    SEQ_XTS_NEXT_DB_CANCEL(dma_p2m_19)
@@ -83,5 +83,5 @@ xts_error:
    PCI_SET_INTERRUPT_ADDR_DMA(SEQ_KIVEC5XTS_INTR_ADDR,
                               dma_p2m_19)
    b            all_dma_complete
-   nop
+   SEQ_METRICS_SET(interrupts_raised)                   // delay slot
 

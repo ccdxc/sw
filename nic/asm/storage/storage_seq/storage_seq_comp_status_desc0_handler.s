@@ -21,6 +21,7 @@ struct phv_ p;
    .param storage_seq_comp_status_handler
 
 storage_seq_comp_status_desc0_handler_start:
+   phvwr        p.seq_kivec7_src_qaddr, SEQ_KIVEC1_SRC_QADDR
 
    // Order of evaluation of next doorbell and interrupts
    // 1. If next_db_en is set => ring the next doorbell and don't raise interrupt
@@ -41,7 +42,7 @@ storage_seq_comp_status_desc0_handler_start:
 
    // if doorbell is actually a Barco push action, handle accordingly
    bbeq		d.next_db_action_barco_push, 0, next_db_ring
-   nop
+   SEQ_METRICS_SET(next_db_rung)                        // delay slot
                 
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
                             d.barco_pndx_addr, dma_p2m_19)
@@ -66,6 +67,7 @@ status_dma_setup:
                             r3, dma_m2m_0)
    DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_addr1, 
                             r3, dma_m2m_1)
+   SEQ_METRICS_SET(status_pdma_xfers)
    
 tbl_load:
    // Setup the start and end DMA pointers
@@ -81,7 +83,7 @@ intr_check:
    // Raise interrupt based on addr/data provided in descriptor
    PCI_SET_INTERRUPT_ADDR_DMA(d.intr_addr, dma_p2m_19)
    b            status_dma_setup
-   nop
+   SEQ_METRICS_SET(interrupts_raised)                  // delay slot
 
 next_db_ring:
                             

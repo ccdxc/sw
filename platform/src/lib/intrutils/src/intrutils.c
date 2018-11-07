@@ -45,6 +45,7 @@
 #define INTR_ASSERT_OFFSET      CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET
 #define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
 #define INTR_ASSERT_STRIDE      0x4
+#define INTR_ASSERT_DATA        0x01000000
 
 #define INTR_COALESCE_OFFSET    CAP_INTR_CSR_DHS_INTR_COALESCE_BYTE_OFFSET
 #define INTR_COALESCE_BASE      (INTR_BASE + INTR_COALESCE_OFFSET)
@@ -88,6 +89,18 @@ u_int64_t
 intr_assert_addr(const int intr)
 {
     return INTR_ASSERT_BASE + (intr * INTR_ASSERT_STRIDE);
+}
+
+u_int32_t
+intr_assert_stride(void)
+{
+    return INTR_ASSERT_STRIDE;
+}
+
+u_int32_t
+intr_assert_data(void)
+{
+    return INTR_ASSERT_DATA;
 }
 
 u_int64_t

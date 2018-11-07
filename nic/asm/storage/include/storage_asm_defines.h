@@ -212,8 +212,6 @@
     k.seq_kivec3_pad_len
 #define SEQ_KIVEC3_LAST_BLK_LEN                 \
     k.{seq_kivec3_last_blk_len}
-#define SEQ_KIVEC3_PAD_BOUNDARY_SHIFT           \
-    k.{seq_kivec3_pad_boundary_shift_sbit0_ebit2...seq_kivec3_pad_boundary_shift_sbit3_ebit4}
 #define SEQ_KIVEC3_NUM_BLKS                     \
     k.seq_kivec3_num_blks
 #define SEQ_KIVEC3_SGL_TUPLE_NO                 \
@@ -309,16 +307,80 @@
     k.seq_kivec6_aol_src_vec_addr
 #define SEQ_KIVEC6_AOL_DST_VEC_ADDR             \
     k.seq_kivec6_aol_dst_vec_addr
+#define SEQ_KIVEC6_SRC_QADDR                    \
+    k.seq_kivec6_src_qaddr
     
+#define SEQ_KIVEC7_SRC_QADDR                    \
+    k.{seq_kivec7_src_qaddr_sbit0_ebit31...seq_kivec7_src_qaddr_sbit32_ebit33}
+
 #define SEQ_KIVEC7XTS_COMP_DESC_ADDR            \
-    k.seq_kivec7xts_comp_desc_addr
+    k.{seq_kivec7xts_comp_desc_addr_sbit0_ebit31...seq_kivec7xts_comp_desc_addr_sbit40_ebit63}
 #define SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR         \
     k.seq_kivec7xts_comp_sgl_src_addr
+#define SEQ_KIVEC7XTS_SRC_QADDR                 \
+    k.seq_kivec7xts_src_qaddr
 
 #define SEQ_KIVEC8_ALT_BUF_ADDR                 \
     k.seq_kivec8_alt_buf_addr
 #define SEQ_KIVEC8_ALT_BUF_ADDR_EN              \
     k.seq_kivec8_alt_buf_addr_en
+#define SEQ_KIVEC8_SRC_QADDR                    \
+    k.{seq_kivec8_src_qaddr_sbit0_ebit6...seq_kivec8_src_qaddr_sbit31_ebit33}
+
+#define SEQ_KIVEC9_METRICS0_RANGE               \
+    k.{seq_kivec9_metrics0_start...seq_kivec9_metrics0_end}
+#define SEQ_KIVEC9_INTERRUPTS_RAISED            \
+    k.seq_kivec9_interrupts_raised
+#define SEQ_KIVEC9_NEXT_DB_RUNG                 \
+    k.seq_kivec9_next_db_rung
+#define SEQ_KIVEC9_DESCS_PROCESSED              \
+    k.seq_kivec9_descs_processed
+#define SEQ_KIVEC9_DESCS_ABORTED                \
+    k.{seq_kivec9_descs_aborted_sbit0_ebit3...seq_kivec9_descs_aborted_sbit12_ebit15}
+#define SEQ_KIVEC9_STATUS_PDMA_XFERS            \
+    k.seq_kivec9_status_pdma_xfers
+#define SEQ_KIVEC9_HW_DESC_XFERS                \
+    k.{seq_kivec9_hw_desc_xfers_sbit0_ebit2...seq_kivec9_hw_desc_xfers_sbit11_ebit15}
+#define SEQ_KIVEC9_HW_BATCH_ERRS                \
+    k.seq_kivec9_hw_batch_errs
+#define SEQ_KIVEC9_HW_OP_ERRS                   \
+    k.seq_kivec9_hw_op_errs
+    
+#define SEQ_KIVEC9_METRICS1_RANGE               \
+    k.{seq_kivec9_metrics1_start...seq_kivec9_metrics1_end}
+#define SEQ_KIVEC9_AOL_PAD_REQS                 \
+    k.seq_kivec9_aol_pad_reqs
+#define SEQ_KIVEC9_SGL_PAD_REQS                 \
+    k.seq_kivec9_sgl_pad_reqs
+#define SEQ_KIVEC9_SGL_PDMA_XFERS               \
+    k.seq_kivec9_sgl_pdma_xfers
+#define SEQ_KIVEC9_SGL_PDMA_ERRS                \
+    k.seq_kivec9_sgl_pdma_errs
+#define SEQ_KIVEC9_SGL_PAD_ONLY_XFERS           \
+    k.seq_kivec9_sgl_pad_only_xfers
+#define SEQ_KIVEC9_SGL_PAD_ONLY_ERRS            \
+    k.seq_kivec9_sgl_pad_only_errs
+#define SEQ_KIVEC9_ALT_DESCS_TAKEN              \
+    k.seq_kivec9_alt_descs_taken
+#define SEQ_KIVEC9_ALT_BUFS_TAKEN               \
+    k.seq_kivec9_alt_bufs_taken
+    
+#define SEQ_KIVEC9_METRICS2_RANGE               \
+    k.{seq_kivec9_metrics2_start...seq_kivec9_metrics2_end}
+#define SEQ_KIVEC9_LEN_UPDATES                  \
+    k.seq_kivec9_len_updates
+
+/*
+ * MPU stages
+ */
+#define STAGE_0                                 0
+#define STAGE_1                                 1
+#define STAGE_2                                 2
+#define STAGE_3                                 3
+#define STAGE_4                                 4
+#define STAGE_5                                 5
+#define STAGE_6                                 6
+#define STAGE_7                                 7
     
 /*
  * Debug flags
@@ -328,15 +390,23 @@
 #define DMA_CMD_MEM2MEM_SIZE_DEBUG              1
 
 /*
- * Comp status sequencer qstate size
+ * Qstate size definitions
  */
-#define SEQ_COMP_STATUS_QSTATE_SIZE_BYTE        64
- 
-/*
- * XTS status sequencer qstate size
- */
-#define SEQ_XTS_STATUS_QSTATE_SIZE_BYTE         64
- 
+#define CAPRI_QSTATE_SINGLE_SIZE                64
+
+#define SEQ_QSTATE_SINGLE_SIZE                  CAPRI_QSTATE_SINGLE_SIZE
+
+#define SEQ_QSTATE_METRICS0_SIZE                CAPRI_QSTATE_SINGLE_SIZE
+#define SEQ_QSTATE_METRICS1_SIZE                CAPRI_QSTATE_SINGLE_SIZE
+#define SEQ_QSTATE_METRICS2_SIZE                CAPRI_QSTATE_SINGLE_SIZE
+
+#define SEQ_QSTATE_METRICS0_OFFSET              \
+    (SEQ_QSTATE_SINGLE_SIZE)
+#define SEQ_QSTATE_METRICS1_OFFSET              \
+    (SEQ_QSTATE_METRICS0_OFFSET + SEQ_QSTATE_METRICS0_SIZE)
+#define SEQ_QSTATE_METRICS2_OFFSET              \
+    (SEQ_QSTATE_METRICS1_OFFSET + SEQ_QSTATE_METRICS1_SIZE)
+
 /*
  * Barco SGL rearranged to little-endian layout
  */
@@ -542,6 +612,41 @@ struct capri_dma_cmd_mem2mem_t {
   phvwr     p.common_te1_phv_table_pc, _pc;                             \
   phvwr     p.common_te1_phv_table_addr, _table_addr;                   \
 
+#define LOAD_TABLE1_FOR_ADDR34_e(_table_addr, _load_size, _pc)          \
+  phvwri    p.app_header_table1_valid, 1;                               \
+  phvwrpair p.common_te1_phv_table_lock_en, 1,                          \
+        p.common_te1_phv_table_raw_table_size, _load_size;              \
+  phvwr.e   p.common_te1_phv_table_pc, _pc;                             \
+  phvwr     p.common_te1_phv_table_addr, _table_addr;                   \
+
+#define LOAD_TABLE2_FOR_ADDR34(_table_addr, _load_size, _pc)            \
+  phvwri    p.app_header_table2_valid, 1;                               \
+  phvwrpair p.common_te2_phv_table_lock_en, 1,                          \
+        p.common_te2_phv_table_raw_table_size, _load_size;              \
+  phvwr     p.common_te2_phv_table_pc, _pc;                             \
+  phvwr     p.common_te2_phv_table_addr, _table_addr;                   \
+
+#define LOAD_TABLE2_FOR_ADDR34_e(_table_addr, _load_size, _pc)          \
+  phvwri    p.app_header_table2_valid, 1;                               \
+  phvwrpair p.common_te2_phv_table_lock_en, 1,                          \
+        p.common_te2_phv_table_raw_table_size, _load_size;              \
+  phvwr.e   p.common_te2_phv_table_pc, _pc;                             \
+  phvwr     p.common_te2_phv_table_addr, _table_addr;                   \
+
+#define LOAD_TABLE3_FOR_ADDR34(_table_addr, _load_size, _pc)            \
+  phvwri    p.app_header_table3_valid, 1;                               \
+  phvwrpair p.common_te3_phv_table_lock_en, 1,                          \
+        p.common_te3_phv_table_raw_table_size, _load_size;              \
+  phvwr     p.common_te3_phv_table_pc, _pc;                             \
+  phvwr     p.common_te3_phv_table_addr, _table_addr;                   \
+
+#define LOAD_TABLE3_FOR_ADDR34_e(_table_addr, _load_size, _pc)          \
+  phvwri    p.app_header_table3_valid, 1;                               \
+  phvwrpair p.common_te3_phv_table_lock_en, 1,                          \
+        p.common_te3_phv_table_raw_table_size, _load_size;              \
+  phvwr.e   p.common_te3_phv_table_pc, _pc;                             \
+  phvwr     p.common_te3_phv_table_addr, _table_addr;                   \
+
 #define LOAD_TABLE2_FOR_ADDR64(_table_addr, _load_size, _pc)            \
   phvwri    p.app_header_table2_valid, 1;                               \
   phvwrpair p.common_te2_phv_table_lock_en, 1,                          \
@@ -587,6 +692,10 @@ struct capri_dma_cmd_mem2mem_t {
   addi      r1, r0, _pc[33:6];                                          \
   LOAD_TABLE1_FOR_ADDR34(_table_addr, _load_size, r1)                   \
 
+#define LOAD_TABLE1_FOR_ADDR34_PC_IMM_e(_table_addr, _load_size, _pc)   \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE1_FOR_ADDR34_e(_table_addr, _load_size, r1)                 \
+
 #define LOAD_TABLE2_FOR_ADDR_PC_IMM(_table_addr, _load_size, _pc)       \
   addi      r1, r0, _pc[33:6];                                          \
   LOAD_TABLE2_FOR_ADDR64(_table_addr, _load_size, r1)                   \
@@ -594,6 +703,22 @@ struct capri_dma_cmd_mem2mem_t {
 #define LOAD_TABLE2_FOR_ADDR_PC_IMM_e(_table_addr, _load_size, _pc)     \
   addi      r1, r0, _pc[33:6];                                          \
   LOAD_TABLE2_FOR_ADDR64_e(_table_addr, _load_size, r1)                 \
+
+#define LOAD_TABLE2_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)     \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE2_FOR_ADDR34(_table_addr, _load_size, r1)                   \
+
+#define LOAD_TABLE2_FOR_ADDR34_PC_IMM_e(_table_addr, _load_size, _pc)   \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE2_FOR_ADDR34_e(_table_addr, _load_size, r1)                 \
+
+#define LOAD_TABLE3_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)     \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE3_FOR_ADDR34(_table_addr, _load_size, r1)                   \
+
+#define LOAD_TABLE3_FOR_ADDR34_PC_IMM_e(_table_addr, _load_size, _pc)   \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE3_FOR_ADDR34_e(_table_addr, _load_size, r1)                 \
 
 // Special API to load table1 without setting the header valid bits
 // pc is an immediate value
@@ -902,24 +1027,26 @@ struct capri_dma_cmd_mem2mem_t {
 // Cancel a previously set Comp next doorbell ring command.
 // Since such a command is likely an EOP, NOP cannot be used
 // so work around that using a harmless PHV2MEM commmand.
-// Note: SEQ_KIVEC5_INT_ADDR would have been filled with 
+// Note: SEQ_KIVEC5_INTR_ADDR would have been filled with 
 // 34-bit qstate address.
 #define SEQ_COMP_NEXT_DB_CANCEL(_dma_cmd_X)                             \
    add      r_src_qaddr, SEQ_KIVEC5_INTR_ADDR[33:0],                    \
-            SEQ_COMP_STATUS_QSTATE_SIZE_BYTE - 1;                       \
+            SEQ_QSTATE_SINGLE_SIZE - 1;                                 \
    DMA_PHV2MEM_SETUP_ADDR34(null_byte_len, null_byte_len,               \
                             r_src_qaddr, _dma_cmd_X)                    \
+   SEQ_METRICS_CLR(next_db_rung)                                        \
 
 // Cancel a previously set XTS next doorbell ring command.
 // Since such a command is likely an EOP, NOP cannot be used
 // so work around that using a harmless PHV2MEM commmand.
-// Note: SEQ_KIVEC5XTS_INT_ADDR would have been filled with 
+// Note: SEQ_KIVEC5XTS_INTR_ADDR would have been filled with 
 // 34-bit qstate address.
 #define SEQ_XTS_NEXT_DB_CANCEL(_dma_cmd_X)                              \
    add      r_src_qaddr, SEQ_KIVEC5XTS_INTR_ADDR[33:0],                 \
-            SEQ_XTS_STATUS_QSTATE_SIZE_BYTE - 1;                        \
+            SEQ_QSTATE_SINGLE_SIZE - 1;                                 \
    DMA_PHV2MEM_SETUP_ADDR34(null_byte_len, null_byte_len,               \
                             r_src_qaddr, _dma_cmd_X)                    \
+   SEQ_METRICS_CLR(next_db_rung)                                        \
 
 // Setup the doorbell data. Write back the data in little endian format
 #define DOORBELL_DATA_SETUP_REG(_reg, _index, _ring, _qid, _pid)        \
@@ -1407,6 +1534,59 @@ _inner_label1:;                                                         \
    DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, _prp_entry, r3, 0, 0,      \
                      _dst_dma_cmd)                                      \
    add      _xfer_len, _xfer_len, r3;                                   \
+
+/*
+ * Set a PHV metrics field to a value
+ */
+#define SEQ_METRICS_VAL_SET(_metrics, _val)                             \
+   phvwr    p.seq_kivec9_##_metrics, _val;                              \
+   
+#define SEQ_METRICS_SET(_metrics)                                       \
+   SEQ_METRICS_VAL_SET(_metrics, 1)                                     \
+
+#define SEQ_METRICS_CLR(_metrics)                                       \
+   SEQ_METRICS_VAL_SET(_metrics, 0)                                     \
+
+/*
+ * Metrics commit functions
+ */ 
+#define SEQ_METRICS_PARAMS()                                            \
+   .param storage_seq_metrics0_commit;                                  \
+   .param storage_seq_metrics1_commit;                                  \
+   .param storage_seq_metrics2_commit;                                  \
+
+/*
+ * Launch commit phase for table based metrics
+ */ 
+#define SEQ_METRICS0_TABLE1_COMMIT(_qstate_addr)                        \
+   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS0_OFFSET;        \
+   LOAD_TABLE1_FOR_ADDR34_PC_IMM(r_qstate_addr,                         \
+        STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics0_commit)     \
+
+#define SEQ_METRICS0_TABLE1_COMMIT_e(_qstate_addr)                      \
+   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS0_OFFSET;        \
+   LOAD_TABLE1_FOR_ADDR34_PC_IMM_e(r_qstate_addr,                       \
+        STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics0_commit)     \
+
+#define SEQ_METRICS1_TABLE2_COMMIT(_qstate_addr)                        \
+   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS1_OFFSET;        \
+   LOAD_TABLE2_FOR_ADDR34_PC_IMM(r_qstate_addr,                         \
+        STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics1_commit)     \
+
+#define SEQ_METRICS1_TABLE2_COMMIT_e(_qstate_addr)                      \
+   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS1_OFFSET;        \
+   LOAD_TABLE2_FOR_ADDR34_PC_IMM_e(r_qstate_addr,                       \
+        STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics1_commit)     \
+
+#define SEQ_METRICS2_TABLE3_COMMIT(_qstate_addr)                        \
+   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS2_OFFSET;        \
+   LOAD_TABLE3_FOR_ADDR34_PC_IMM(r_qstate_addr,                         \
+        STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics2_commit)     \
+
+#define SEQ_METRICS2_TABLE3_COMMIT_e(_qstate_addr)                      \
+   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS2_OFFSET;        \
+   LOAD_TABLE3_FOR_ADDR34_PC_IMM_e(r_qstate_addr,                       \
+        STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics2_commit)     \
 
 /*
  * Compression SGL PDMA transfer length error

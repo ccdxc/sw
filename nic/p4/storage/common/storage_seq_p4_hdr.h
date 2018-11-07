@@ -8,7 +8,7 @@
 #include "storage_p4_hdr.h"
 
 
-// Generic Sequencer Queue State. Total size can be 64 bytes at most.
+// Sequencer Queue State. Total size can be 64 bytes at most.
 header_type seq_q_state_t {
   fields {
     //pc_offset     : 8;    // Program counter (relative offset)
@@ -31,13 +31,55 @@ header_type seq_q_state_t {
     enable          : 8;    // operational enable
     abort           : 8;    // discard all outstanding descriptors
     desc1_next_pc_valid: 8;
-    pad             : 208;
+    qgroup          : 8;    // user assigned queue group
+    core_id         : 16;   // user assigned host core ID
+    pad             : 184;
                             // 
     // When canceling a doorbell push DMA command that is also the last (EOP)
     // in the DMA command set, NOP can't be used due to the EOP. The
     // workaround is to convert the doorbell push into a PHV2MEM into
     // the location below.
     eop_p2m_rsvd    : 8;    // reserved for PHV2MEM eop cmd cancel write
+  }
+}
+
+// Sequencer Queue State metrics.
+header_type seq_q_state_metrics0_t {
+  fields {
+
+    // CAUTION: order of fields must match seq_kivec9_t
+    interrupts_raised   : 64;
+    next_db_rung        : 64;
+    descs_processed     : 64;
+    descs_aborted       : 64;
+    status_pdma_xfers   : 64;
+    hw_desc_xfers       : 64;
+    hw_batch_errs       : 64;
+    hw_op_errs          : 64;
+  }
+}
+
+header_type seq_q_state_metrics1_t {
+  fields {
+
+    // CAUTION: order of fields must match seq_kivec9_t
+    aol_pad_reqs        : 64;
+    sgl_pad_reqs        : 64;
+    sgl_pdma_xfers      : 64;
+    sgl_pdma_errs       : 64;
+    sgl_pad_only_xfers  : 64;
+    sgl_pad_only_errs   : 64;
+    alt_descs_taken     : 64;
+    alt_bufs_taken      : 64;
+  }
+}
+
+header_type seq_q_state_metrics2_t {
+  fields {
+
+    // CAUTION: order of fields must match seq_kivec9_t
+    len_updates         : 64;
+    pad                 : 448;
   }
 }
 
@@ -410,7 +452,6 @@ header_type seq_kivec3_t {
     pad_len             : 16;
     last_blk_len        : 16;
     num_blks            : 5;
-    pad_boundary_shift  : 5;
     sgl_tuple_no        : 2;
   }
 }
@@ -489,6 +530,14 @@ header_type seq_kivec6_t {
   fields {
     aol_src_vec_addr   : 64;
     aol_dst_vec_addr   : 64;
+    src_qaddr          : 32;   // Source queue state address
+  }
+}
+
+// kivec7: header union with stage_2_stage for table 2 (160 bits max)
+header_type seq_kivec7_t {
+  fields {
+      src_qaddr        : 34;   // Source queue state address
   }
 }
 
@@ -498,6 +547,7 @@ header_type seq_kivec7xts_t {
   fields {
       comp_desc_addr   : 64;
       comp_sgl_src_addr: 64;
+      src_qaddr        : 32;   // Source queue state address
   }
 }
 
@@ -506,6 +556,42 @@ header_type seq_kivec8_t {
   fields {
     alt_buf_addr       : 64;
     alt_buf_addr_en    : 1;
+    src_qaddr          : 34;   // Source queue state address
+  }
+}
+
+// kivec9: header union with to_stage_7 (128 bits max)
+header_type seq_kivec9_t {
+  fields {
+
+    // CAUTION: order of fields must match seq_q_state_metrics0_t
+    metrics0_start     : 1;
+    interrupts_raised  : 1;
+    next_db_rung       : 1;
+    descs_processed    : 1;
+    descs_aborted      : 16;
+    status_pdma_xfers  : 1;
+    hw_desc_xfers      : 16;
+    hw_batch_errs      : 1;
+    hw_op_errs         : 1;
+    metrics0_end       : 1;
+
+    // CAUTION: order of fields must match seq_q_state_metrics1_t
+    metrics1_start     : 1;
+    aol_pad_reqs       : 1;
+    sgl_pad_reqs       : 1;
+    sgl_pdma_xfers     : 1;
+    sgl_pdma_errs      : 1;
+    sgl_pad_only_xfers : 1;
+    sgl_pad_only_errs  : 1;
+    alt_descs_taken    : 1;
+    alt_bufs_taken     : 1;
+    metrics1_end       : 1;
+
+    // CAUTION: order of fields must match seq_q_state_metrics2_t
+    metrics2_start     : 1;
+    len_updates        : 1;
+    metrics2_end       : 1;
   }
 }
 
@@ -562,7 +648,6 @@ header_type seq_kivec8_t {
   modify_field(scratch.pad_len, kivec.pad_len);                         \
   modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
   modify_field(scratch.num_blks, kivec.num_blks);                       \
-  modify_field(scratch.pad_boundary_shift, kivec.pad_boundary_shift);   \
   modify_field(scratch.sgl_tuple_no, kivec.sgl_tuple_no);               \
 
 #define SEQ_KIVEC3XTS_USE(scratch, kivec)                               \
@@ -617,15 +702,49 @@ header_type seq_kivec8_t {
 #define SEQ_KIVEC6_USE(scratch, kivec)                                  \
   modify_field(scratch.aol_src_vec_addr, kivec.aol_src_vec_addr);       \
   modify_field(scratch.aol_dst_vec_addr, kivec.aol_dst_vec_addr);       \
+  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
+
+#define SEQ_KIVEC7_USE(scratch, kivec)                                  \
+  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
 
 #define SEQ_KIVEC7XTS_USE(scratch, kivec)                               \
   modify_field(scratch.comp_desc_addr, kivec.comp_desc_addr);           \
   modify_field(scratch.comp_sgl_src_addr, kivec.comp_sgl_src_addr);     \
+  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
 
 #define SEQ_KIVEC8_USE(scratch, kivec)                                  \
   modify_field(scratch.alt_buf_addr, kivec.alt_buf_addr);               \
   modify_field(scratch.alt_buf_addr_en, kivec.alt_buf_addr_en);         \
+  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
   
+#define SEQ_KIVEC9_USE(scratch, kivec)                                  \
+  modify_field(scratch.metrics0_start, kivec.metrics0_start);           \
+  modify_field(scratch.interrupts_raised, kivec.interrupts_raised);     \
+  modify_field(scratch.next_db_rung, kivec.next_db_rung);               \
+  modify_field(scratch.descs_processed, kivec.descs_processed);         \
+  modify_field(scratch.descs_aborted, kivec.descs_aborted);             \
+  modify_field(scratch.status_pdma_xfers, kivec.status_pdma_xfers);     \
+  modify_field(scratch.hw_desc_xfers, kivec.hw_desc_xfers);             \
+  modify_field(scratch.hw_batch_errs, kivec.hw_batch_errs);             \
+  modify_field(scratch.hw_op_errs, kivec.hw_op_errs);                   \
+  modify_field(scratch.metrics0_end, kivec.metrics0_end);               \
+  modify_field(scratch.metrics1_start, kivec.metrics1_start);           \
+  modify_field(scratch.aol_pad_reqs, kivec.aol_pad_reqs);               \
+  modify_field(scratch.sgl_pad_reqs, kivec.sgl_pad_reqs);               \
+  modify_field(scratch.sgl_pdma_xfers, kivec.sgl_pdma_xfers);           \
+  modify_field(scratch.sgl_pdma_errs, kivec.sgl_pdma_errs);             \
+  modify_field(scratch.sgl_pad_only_xfers, kivec.sgl_pad_only_xfers);   \
+  modify_field(scratch.sgl_pad_only_errs, kivec.sgl_pad_only_errs);     \
+  modify_field(scratch.alt_descs_taken, kivec.alt_descs_taken);         \
+  modify_field(scratch.alt_bufs_taken, kivec.alt_bufs_taken);           \
+  modify_field(scratch.metrics1_end, kivec.metrics1_end);               \
+  modify_field(scratch.metrics2_start, kivec.metrics2_start);           \
+  modify_field(scratch.len_updates, kivec.len_updates);                 \
+  modify_field(scratch.metrics2_end, kivec.metrics2_end);               \
+  
+#define SEQ_KIVEC10_USE(scratch, kivec)                                 \
+  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
+
 // Macros for ASM param addresses (hardcoded in P4)
 #define seq_barco_chain_action_start	    0x82000000
 #define seq_comp_status_handler_start       0x82010000

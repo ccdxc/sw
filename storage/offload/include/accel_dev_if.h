@@ -147,6 +147,7 @@ enum os_type {
  * @hw_host_prefix: prefix for making a host address
  * @hw_host_mask: mask for making a host address
  * @hw_key_idx_base: crypto key index base
+ * @num_crypto_keys_max: max # of crypto keys supported
  */
 typedef struct identify_lif {
     uint64_t        hw_lif_id;
@@ -154,6 +155,7 @@ typedef struct identify_lif {
     uint64_t        hw_host_prefix;
     uint64_t        hw_host_mask;
     uint32_t        hw_key_idx_base;
+    uint32_t        num_crypto_keys_max;
 } identify_lif_t;
 
 /**
@@ -204,6 +206,8 @@ typedef struct identify_cpl {
  *                        Scale user-supplied interrupt coalescing
  *                        value in usecs to device units using:
  *                           device units = usecs * mult / div
+ *     @intr_assert_addr: Interrupt assertion data
+ *     @intr_assert_addr: Interrupt assertion address
  *     @cm_base_pa:       Controller memory base physical address
  */
 typedef union identity {
@@ -228,6 +232,9 @@ typedef union identity {
 		uint32_t        num_intrs;
 		uint32_t        intr_coal_mult;
 		uint32_t        intr_coal_div;
+		uint32_t        intr_assert_stride;
+		uint32_t        intr_assert_data;
+		uint64_t        intr_assert_addr;
 		uint64_t        cm_base_pa;
 		accel_ring_t    accel_ring_tbl[ACCEL_RING_ID_MAX];
 		identify_lif_t  lif_tbl[0];
@@ -327,6 +334,7 @@ enum txq_type {
  *              descriptors.  Values of wring_size <2 and >16 are
  *              reserved.
  * @wring_base: Work Queue ring base address.
+ * @core_id:    informational CPU core_id
  * @dol_req_devcmd_done: for DOL use only.
  */
 typedef struct seq_queue_init_cmd {
@@ -341,6 +349,7 @@ typedef struct seq_queue_init_cmd {
 	uint8_t                 entry_size;
 	uint8_t                 wring_size;
 	dma_addr_t              wring_base;
+	uint16_t                core_id;
 	uint8_t                 dol_req_devcmd_done;
 } seq_queue_init_cmd_t;
 

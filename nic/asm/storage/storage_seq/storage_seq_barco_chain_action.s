@@ -17,10 +17,11 @@ struct phv_ p;
 
 /*
  * Registers usage
+ * CAUTION: r1 is also implicitly used by LOAD_TABLEx_FOR_ADDR_PC_IMM()
  */
-#define r_pi                        r1  // producer index
-#define r_ring_addr                 r2  // ring address (dst of xfer)
-#define r_avail_slots               r3  // number of ring slots before wrap around
+#define r_ring_addr                 r1  // ring address (dst of xfer)
+#define r_avail_slots               r2  // number of ring slots before wrap around
+#define r_pi                        r3  // producer index
 #define r_xfers0_len                r4  // transfer length before wrap around
 #define r_xfers1_len                r5  // transfer length after wrap around
 #define r_num_xfers0                r6  // # of descs to transfer before wrap around
@@ -29,6 +30,7 @@ struct phv_ p;
 %%
 
 storage_seq_barco_chain_action:
+    CLEAR_TABLE0
 
     // Note that d.p_ndx is a shadow copy of the HW ring producer index.
     add         r_pi, d.p_ndx, r0
@@ -55,6 +57,7 @@ if1:
     
     // The extra wrapped around transfer goes to the start of the barco ring
     add         r_ring_addr, SEQ_KIVEC4_BARCO_RING_ADDR, r0     // delay slot
+    SEQ_METRICS_SET(hw_batch_errs)
     DMA_CMD_MEM2MEM_SIZE_ERROR_TRAP()
 endif1:
 
@@ -71,6 +74,7 @@ if2:
     sle         c1, r_xfers0_len, DMA_CMD_MEM2MEM_SIZE_MAX
     bcf         [c1], endif2
     add         r_desc_addr, SEQ_KIVEC4_BARCO_DESC_ADDR, r0     // delay slot
+    SEQ_METRICS_SET(hw_batch_errs)
     DMA_CMD_MEM2MEM_SIZE_ERROR_TRAP()
 endif2:
 
@@ -78,10 +82,10 @@ endif2:
                                       r_xfers0_len, dma_m2m_14)
     DMA_MEM2MEM_NO_LIF_SETUP_REG_ADDR(CAPRI_DMA_M2M_TYPE_DST, r_ring_addr,
                                       r_xfers0_len, dma_m2m_15)
+    SEQ_METRICS_VAL_SET(hw_desc_xfers, SEQ_KIVEC4_BARCO_NUM_DESCS)
     mincr       r_pi, SEQ_KIVEC4_BARCO_RING_SIZE, SEQ_KIVEC4_BARCO_NUM_DESCS
     
     // Need to word swap before writing back as the p_ndx is little endian
-    phvwr	p.barco_doorbell_data_p_ndx, r_pi.wx
     tblwr.f.e   d.p_ndx, r_pi
-    CLEAR_TABLE0 // delay slot
+    phvwr	p.barco_doorbell_data_p_ndx, r_pi.wx            // delay slot
 

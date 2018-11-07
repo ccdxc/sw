@@ -14,12 +14,16 @@ struct phv_ p;
 /*
  * Registers usage:
  */
+#define r_qstate_addr               r7  // for SEQ_METRICS_TABLE_COMMIT
 
 %%
+    SEQ_METRICS_PARAMS()
 
 storage_seq_xts_status_desc1_handler:
 
-    CLEAR_TABLE1
+    // Relaunch metrics commit for table 1
+    SEQ_METRICS0_TABLE1_COMMIT(SEQ_KIVEC8_SRC_QADDR)
+    
     phvwrpair   p.{seq_kivec5xts_data_len...seq_kivec5xts_blk_boundary_shift}, \
                 d.{data_len...blk_boundary_shift}, \
                 p.{seq_kivec5xts_stop_chain_on_error...seq_kivec5xts_desc_vec_push_en}, \

@@ -36,6 +36,9 @@ SRC_FILES := \
 	storage_seq_xts_status_desc0_handler.s \
 	storage_seq_xts_status_desc1_handler.s \
 	storage_seq_xts_status_handler.s \
+	storage_seq_metrics0_commit.s \
+	storage_seq_metrics1_commit.s \
+	storage_seq_metrics2_commit.s \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

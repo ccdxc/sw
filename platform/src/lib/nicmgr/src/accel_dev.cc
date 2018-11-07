@@ -27,6 +27,9 @@
 #include "capri_hbm.hpp"
 #include "capri_barco_crypto.hpp"
 
+#include "accel_metrics.pb.h"
+#include "accel_metrics.delphi.hpp"
+
 // Amount of time to wait for sequencer queues to be quiesced
 #define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    5000000
 #define ACCEL_DEV_RING_OP_QUIESCE_TIME_US       1000000
@@ -54,13 +57,13 @@ string string_format( const std::string& format, Args ... args )
 /*
  * blank_qstate, used only during LIF creation and device reset.
  */
-const uint8_t   blank_qstate[128] = { 0 };
+const uint8_t   blank_qstate[STORAGE_SEQ_CB_SIZE] = { 0 };
 const uint8_t   blank_page[ACCEL_DEV_PAGE_SIZE] = { 0 };
 
 struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
     [STORAGE_SEQ_QTYPE_SQ] = {
         .type_num = STORAGE_SEQ_QTYPE_SQ,
-        .size = 1,      // qstate size (6 - 5 = 1, i.e., 64 bytes)
+        .size = HW_CB_MULTIPLE(STORAGE_SEQ_CB_SIZE_SHFT),
         .entries = 6,   // modified at runtime
         .purpose = ::intf::LIF_QUEUE_PURPOSE_STORAGE,
         .prog = "txdma_stage0.bin",
@@ -69,7 +72,7 @@ struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
     },
     [STORAGE_SEQ_QTYPE_UNUSED] = {
         .type_num = STORAGE_SEQ_QTYPE_UNUSED,
-        .size = 2,
+        .size = HW_CB_MIN_MULTIPLE,
         .entries = 0,
         .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
         .prog = "txdma_stage0.bin",
@@ -78,7 +81,7 @@ struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
     },
     [STORAGE_SEQ_QTYPE_ADMIN] = {
         .type_num = STORAGE_SEQ_QTYPE_ADMIN,
-        .size = 2,
+        .size = HW_CB_MULTIPLE(ADMIN_QSTATE_SIZE_SHFT),
         .entries = 0,
         .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
         .prog = "txdma_stage0.bin",
@@ -178,12 +181,14 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     num_keys_max = std::min(hbm_size / (CMD_CRYPTO_KEY_PART_SIZE *
                                         CMD_CRYPTO_KEY_PART_MAX),
                             (uint32_t)CRYPTO_KEY_COUNT_MAX);
-    crypto_key_idx_base = num_keys_max / 2;
-    NIC_LOG_INFO("Key region size {} bytes crypto_key_idx_base {}",
-                 hbm_size, crypto_key_idx_base);
-    if (crypto_key_idx_base < ACCEL_DEV_NUM_CRYPTO_KEYS_MIN) {
-        NIC_LOG_ERR("crypto_key_idx_base {} too small, expected at least {}",
-                    crypto_key_idx_base, ACCEL_DEV_NUM_CRYPTO_KEYS_MIN);
+    num_crypto_keys_max = num_keys_max / 2;
+    crypto_key_idx_base = num_crypto_keys_max;
+    NIC_LOG_INFO("Key region size {} bytes crypto_key_idx_base {} "
+                 "num_crypto_keys_max {}", hbm_size, crypto_key_idx_base,
+                 num_crypto_keys_max);
+    if (num_crypto_keys_max < ACCEL_DEV_NUM_CRYPTO_KEYS_MIN) {
+        NIC_LOG_ERR("num_crypto_keys_max {} too small, expected at least {}",
+                    num_crypto_keys_max, ACCEL_DEV_NUM_CRYPTO_KEYS_MIN);
         return;
     }
 
@@ -283,6 +288,12 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                  info.lif_id, info.hw_lif_id, spec->seq_created_count);
     name = string_format("accel{}", spec->lif_id);
 
+    // Establish sequencer queues metrics with Delphi
+    if (SeqQueueMetricsInit()) {
+        NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
+        return;
+    }
+
     // Configure PCI resources
     pci_resources.lif_valid = 1;
     pci_resources.lif = info.hw_lif_id;
@@ -323,6 +334,31 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
             return;
         }
     }
+}
+
+int
+Accel_PF::SeqQueueMetricsInit(void)
+{
+    accel_metrics::AccelSeqQueueKey     key;
+    uint64_t                            qmetrics_addr;
+    uint32_t                            qid;
+
+    key.Clear();
+    key.set_lif_id(info.hw_lif_id);
+    for (qid = 0; qid < spec->seq_created_count; qid++) {
+        key.set_qid(qid);
+        qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
+                        offsetof(storage_seq_qstate_t, metrics);
+        auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
+                        NewDpAccelSeqQueueMetrics(key, qmetrics_addr);
+        if (!qmetrics) {
+            NIC_LOG_ERR("Failed qmetrics registration with delphi for "
+                        "lif {} qid {}", info.hw_lif_id, qid);
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 uint64_t
@@ -526,10 +562,14 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     rsp->dev.lif_tbl[0].hw_host_mask = ACCEL_PHYS_ADDR_HOST_SET(ACCEL_PHYS_ADDR_HOST_MASK) |
                                        ACCEL_PHYS_ADDR_LIF_SET(ACCEL_PHYS_ADDR_LIF_MASK);
     rsp->dev.lif_tbl[0].hw_key_idx_base = crypto_key_idx_base;
+    rsp->dev.lif_tbl[0].num_crypto_keys_max = num_crypto_keys_max;
     rsp->dev.db_pages_per_lif = 1;
     rsp->dev.admin_queues_per_lif = spec->adminq_count;
     rsp->dev.seq_queues_per_lif = spec->seq_created_count;
     rsp->dev.num_intrs = spec->intr_count;
+    rsp->dev.intr_assert_stride = intr_assert_stride();
+    rsp->dev.intr_assert_data = intr_assert_data();
+    rsp->dev.intr_assert_addr = intr_assert_addr(0);
     rsp->dev.cm_base_pa = pci_resources.cmbpa;
     memcpy(rsp->dev.accel_ring_tbl, spec->accel_ring_tbl,
            sizeof(rsp->dev.accel_ring_tbl));
@@ -770,9 +810,10 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
         seq_qstate.wring_base |= ACCEL_PHYS_ADDR_LIF_SET(info.hw_lif_id);
     }
 
-    NIC_LOG_INFO("lif{}: qid {} qgroup {} wring_base {:#x} wring_size {} entry_size {}",
-           info.hw_lif_id, qid, cmd->qgroup, seq_qstate.wring_base, cmd->wring_size,
-           cmd->entry_size);
+    NIC_LOG_INFO("lif{}: qid {} qgroup {} core_id {} wring_base {:#x} "
+                 "wring_size {} entry_size {}", info.hw_lif_id, qid,
+                 cmd->qgroup, cmd->core_id, seq_qstate.wring_base,
+                 cmd->wring_size, cmd->entry_size);
 
     seq_qstate.wring_base = htonll(seq_qstate.wring_base);
     seq_qstate.wring_size = htons(cmd->wring_size);
@@ -794,6 +835,9 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
         seq_qstate.desc1_next_pc = htonl(next_pc_addr >> 6);
         seq_qstate.desc1_next_pc_valid = true;
     }
+
+    seq_qstate.qgroup = cmd->qgroup;
+    seq_qstate.core_id = cmd->core_id;
 
     WRITE_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
     invalidate_txdma_cacheline(qstate_addr);
