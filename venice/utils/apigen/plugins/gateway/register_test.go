@@ -2640,10 +2640,10 @@ func TestGetMsgMap(t *testing.T) {
 		location:<path:4 path:1 path:2 path:2 leading_comments:"cli-tags: ins=spec">
 		location:<path:4 path:1 path:2 path:3 leading_comments:"cli-tags: ins=status">
 		location:<path:4 path:2 leading_comments:"Struct2Spec comments" >
-		location:<path:4 path:2 path:2 path:0 leading_comments:"cli-tags: verbose-only=true ins=test\cli-help: Test string">
+		location:<path:4 path:2 path:2 path:0 leading_comments:"cli-tags: verbose-only=true ins=test\ncli-help: Test string">
 		location:<path:4 path:2 path:2 path:1 leading_comments:"cli-tags: id=TestKey" >
 		location:<path:4 path:3 leading_comments:"Struct2Status comments" >
-		location:<path:4 path:3 path:2 path:0 leading_comments:"cli-tags: verbose-only=false ins=test\cli-help: Test Status string">
+		location:<path:4 path:3 path:2 path:0 leading_comments:"cli-tags: verbose-only=false ins=test\ncli-help: Test Status string">
 		location:<path:4 path:3 path:2 path:1 leading_comments:"cli-tags: ins=test1 id=TestKey2" >
 		>
 		`,
