@@ -121,7 +121,7 @@ func coreDeleteCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		naplesCfg := state.NaplesConfigResp{}
 		json.Unmarshal(resp, &naplesCfg)
-		if tabularFormat {
+		if tabularFormat && naplesCfg.ErrorMsg != "" {
 			fmt.Println("Error: ", naplesCfg.ErrorMsg)
 		}
 	}

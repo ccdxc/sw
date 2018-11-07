@@ -69,13 +69,13 @@ const (
 	FilebeatElasticClientAuthDir = "/usr/share/filebeat/auth"
 
 	// Log direcory
-	LogDir = "/var/log/pensando"
+	LogDir = "/data/log"
 
 	// Events directory
-	EventsDir = "/var/lib/pensando/events"
+	EventsDir = "/data/event"
 
 	// Cores directory
-	CoresDir = "/var/cores/"
+	CoresDir = "/data/core/"
 
 	//Reverse Proxy Router Port
 	RevProxyPort = "8888"
