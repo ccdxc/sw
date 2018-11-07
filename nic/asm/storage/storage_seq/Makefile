@@ -30,12 +30,14 @@ SRC_FILES := \
 	storage_seq_comp_status_desc0_handler.s \
 	storage_seq_comp_status_desc1_handler.s \
 	storage_seq_comp_status_handler.s \
+	storage_seq_comp_db_intr_override.s \
 	storage_seq_q_state_pop.s \
 	storage_seq_xts_comp_len_update.s \
 	storage_seq_xts_sgl_pdma_handler.s \
 	storage_seq_xts_status_desc0_handler.s \
 	storage_seq_xts_status_desc1_handler.s \
 	storage_seq_xts_status_handler.s \
+	storage_seq_xts_db_intr_override.s \
 	storage_seq_metrics0_commit.s \
 	storage_seq_metrics1_commit.s \
 	storage_seq_metrics2_commit.s \

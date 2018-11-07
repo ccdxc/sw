@@ -237,12 +237,12 @@
 #define SEQ_KIVEC4_PAD_BOUNDARY_SHIFT           \
     k.seq_kivec4_pad_boundary_shift
 
-#define SEQ_KIVEC5_INTR_ADDR                    \
-    k.{seq_kivec5_intr_addr_sbit0_ebit7...seq_kivec5_intr_addr_sbit40_ebit63}
+#define SEQ_KIVEC5_SRC_QADDR                    \
+    k.{seq_kivec5_src_qaddr_sbit0_ebit7...seq_kivec5_src_qaddr_sbit32_ebit33}
 #define SEQ_KIVEC5_DATA_LEN                     \
-    k.{seq_kivec5_data_len_sbit0_ebit5...seq_kivec5_data_len_sbit14_ebit15}
+    k.{seq_kivec5_data_len_sbit0_ebit3...seq_kivec5_data_len_sbit12_ebit15}
 #define SEQ_KIVEC5_PAD_BUF_ADDR                  \
-    k.{seq_kivec5_pad_buf_addr_sbit0_ebit7...seq_kivec5_pad_buf_addr_sbit32_ebit33}
+    k.{seq_kivec5_pad_buf_addr_sbit0_ebit5...seq_kivec5_pad_buf_addr_sbit30_ebit33}
 #define SEQ_KIVEC5_STATUS_DMA_EN                \
     k.seq_kivec5_status_dma_en
 #define SEQ_KIVEC5_DATA_LEN_FROM_DESC           \
@@ -272,10 +272,10 @@
 #define SEQ_KIVEC5_DESC_VEC_PUSH_EN             \
     k.seq_kivec5_desc_vec_push_en
 
-#define SEQ_KIVEC5XTS_INTR_ADDR                 \
-    k.{seq_kivec5xts_intr_addr_sbit0_ebit7...seq_kivec5xts_intr_addr_sbit40_ebit63}
+#define SEQ_KIVEC5XTS_SRC_QADDR                 \
+    k.{seq_kivec5xts_src_qaddr_sbit0_ebit7...seq_kivec5xts_src_qaddr_sbit32_ebit33}
 #define SEQ_KIVEC5XTS_DATA_LEN                  \
-    k.{seq_kivec5xts_data_len_sbit0_ebit7...seq_kivec5xts_data_len_sbit8_ebit15}
+    k.{seq_kivec5xts_data_len_sbit0_ebit5...seq_kivec5xts_data_len_sbit14_ebit15}
 #define SEQ_KIVEC5XTS_BLK_BOUNDARY_SHIFT        \
     k.seq_kivec5xts_blk_boundary_shift
 #define SEQ_KIVEC5XTS_STATUS_DMA_EN             \
@@ -307,25 +307,16 @@
     k.seq_kivec6_aol_src_vec_addr
 #define SEQ_KIVEC6_AOL_DST_VEC_ADDR             \
     k.seq_kivec6_aol_dst_vec_addr
-#define SEQ_KIVEC6_SRC_QADDR                    \
-    k.seq_kivec6_src_qaddr
     
-#define SEQ_KIVEC7_SRC_QADDR                    \
-    k.{seq_kivec7_src_qaddr_sbit0_ebit31...seq_kivec7_src_qaddr_sbit32_ebit33}
-
 #define SEQ_KIVEC7XTS_COMP_DESC_ADDR            \
-    k.{seq_kivec7xts_comp_desc_addr_sbit0_ebit31...seq_kivec7xts_comp_desc_addr_sbit40_ebit63}
+    k.seq_kivec7xts_comp_desc_addr
 #define SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR         \
     k.seq_kivec7xts_comp_sgl_src_addr
-#define SEQ_KIVEC7XTS_SRC_QADDR                 \
-    k.seq_kivec7xts_src_qaddr
 
 #define SEQ_KIVEC8_ALT_BUF_ADDR                 \
     k.seq_kivec8_alt_buf_addr
 #define SEQ_KIVEC8_ALT_BUF_ADDR_EN              \
     k.seq_kivec8_alt_buf_addr_en
-#define SEQ_KIVEC8_SRC_QADDR                    \
-    k.{seq_kivec8_src_qaddr_sbit0_ebit6...seq_kivec8_src_qaddr_sbit31_ebit33}
 
 #define SEQ_KIVEC9_METRICS0_RANGE               \
     k.{seq_kivec9_metrics0_start...seq_kivec9_metrics0_end}
@@ -370,18 +361,24 @@
 #define SEQ_KIVEC9_LEN_UPDATES                  \
     k.seq_kivec9_len_updates
 
+#define SEQ_KIVEC10_INTR_ADDR                   \
+    k.seq_kivec10_intr_addr
+    
 /*
  * MPU stages
  */
-#define STAGE_0                                 0
-#define STAGE_1                                 1
-#define STAGE_2                                 2
-#define STAGE_3                                 3
-#define STAGE_4                                 4
-#define STAGE_5                                 5
-#define STAGE_6                                 6
-#define STAGE_7                                 7
-    
+#define CAPRI_STAGE_0                           0
+#define CAPRI_STAGE_1                           1
+#define CAPRI_STAGE_2                           2
+#define CAPRI_STAGE_3                           3
+#define CAPRI_STAGE_4                           4
+#define CAPRI_STAGE_5                           5
+#define CAPRI_STAGE_6                           6
+#define CAPRI_STAGE_7                           7
+
+#define SEQ_INTR_OVERRIDE_STAGE                 CAPRI_STAGE_4
+#define SEQ_METRICS_STAGE                       CAPRI_STAGE_5
+
 /*
  * Debug flags
  */
@@ -661,6 +658,20 @@ struct capri_dma_cmd_mem2mem_t {
   phvwrpair p.common_te2_phv_table_pc, _pc,                             \
         p.common_te2_phv_table_addr, _table_addr;                       \
 
+#define LOAD_TABLE3_FOR_ADDR64(_table_addr, _load_size, _pc)            \
+  phvwri    p.app_header_table3_valid, 1;                               \
+  phvwrpair p.common_te3_phv_table_lock_en, 1,                          \
+        p.common_te3_phv_table_raw_table_size, _load_size;              \
+  phvwrpair p.common_te3_phv_table_pc, _pc,                             \
+        p.common_te3_phv_table_addr, _table_addr;                       \
+
+#define LOAD_TABLE3_FOR_ADDR64_e(_table_addr, _load_size, _pc)          \
+  phvwri    p.app_header_table3_valid, 1;                               \
+  phvwrpair.e p.common_te3_phv_table_lock_en, 1,                        \
+        p.common_te3_phv_table_raw_table_size, _load_size;              \
+  phvwrpair p.common_te3_phv_table_pc, _pc,                             \
+        p.common_te3_phv_table_addr, _table_addr;                       \
+
 // Load a table based on absolute address,
 // where phvwrpair is unusable because
 //    _pc is a param resolved by the loader, OR
@@ -711,6 +722,14 @@ struct capri_dma_cmd_mem2mem_t {
 #define LOAD_TABLE2_FOR_ADDR34_PC_IMM_e(_table_addr, _load_size, _pc)   \
   addi      r1, r0, _pc[33:6];                                          \
   LOAD_TABLE2_FOR_ADDR34_e(_table_addr, _load_size, r1)                 \
+
+#define LOAD_TABLE3_FOR_ADDR_PC_IMM(_table_addr, _load_size, _pc)       \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE3_FOR_ADDR64(_table_addr, _load_size, r1)                   \
+
+#define LOAD_TABLE3_FOR_ADDR_PC_IMM_e(_table_addr, _load_size, _pc)     \
+  addi      r1, r0, _pc[33:6];                                          \
+  LOAD_TABLE3_FOR_ADDR64_e(_table_addr, _load_size, r1)                 \
 
 #define LOAD_TABLE3_FOR_ADDR34_PC_IMM(_table_addr, _load_size, _pc)     \
   addi      r1, r0, _pc[33:6];                                          \
@@ -1030,7 +1049,7 @@ struct capri_dma_cmd_mem2mem_t {
 // Note: SEQ_KIVEC5_INTR_ADDR would have been filled with 
 // 34-bit qstate address.
 #define SEQ_COMP_NEXT_DB_CANCEL(_dma_cmd_X)                             \
-   add      r_src_qaddr, SEQ_KIVEC5_INTR_ADDR[33:0],                    \
+   add      r_src_qaddr, SEQ_KIVEC5_SRC_QADDR      ,                    \
             SEQ_QSTATE_SINGLE_SIZE - 1;                                 \
    DMA_PHV2MEM_SETUP_ADDR34(null_byte_len, null_byte_len,               \
                             r_src_qaddr, _dma_cmd_X)                    \
@@ -1042,7 +1061,7 @@ struct capri_dma_cmd_mem2mem_t {
 // Note: SEQ_KIVEC5XTS_INTR_ADDR would have been filled with 
 // 34-bit qstate address.
 #define SEQ_XTS_NEXT_DB_CANCEL(_dma_cmd_X)                              \
-   add      r_src_qaddr, SEQ_KIVEC5XTS_INTR_ADDR[33:0],                 \
+   add      r_src_qaddr, SEQ_KIVEC5XTS_SRC_QADDR,                       \
             SEQ_QSTATE_SINGLE_SIZE - 1;                                 \
    DMA_PHV2MEM_SETUP_ADDR34(null_byte_len, null_byte_len,               \
                             r_src_qaddr, _dma_cmd_X)                    \
@@ -1217,11 +1236,14 @@ struct capri_dma_cmd_mem2mem_t {
 
 // Ring the sequencer doorbell based on the data provided in the 
 // d-vector. Fence the interrupt with previous DMA writes.
-#define SEQUENCER_DOORBELL_RING(_dma_cmd_ptr)                           \
+#define SEQUENCER_DOORBELL_RING_NO_FENCE(_dma_cmd_ptr)                  \
    phvwr    p.seq_doorbell_data_data, d.next_db_data;                   \
    add      r7, r0, d.next_db_addr;                                     \
    DMA_PHV2MEM_SETUP(seq_doorbell_data_data, seq_doorbell_data_data,    \
                      r7, _dma_cmd_ptr)                                  \
+
+#define SEQUENCER_DOORBELL_RING(_dma_cmd_ptr)                           \
+   SEQUENCER_DOORBELL_RING_NO_FENCE(_dma_cmd_ptr)                       \
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)                                      \
 
 // Set the data to be pushed across the PCI layer to be the p_ndx. Issue
@@ -1547,45 +1569,50 @@ _inner_label1:;                                                         \
 #define SEQ_METRICS_CLR(_metrics)                                       \
    SEQ_METRICS_VAL_SET(_metrics, 0)                                     \
 
-/*
- * Metrics commit functions
- */ 
 #define SEQ_METRICS_PARAMS()                                            \
    .param storage_seq_metrics0_commit;                                  \
    .param storage_seq_metrics1_commit;                                  \
    .param storage_seq_metrics2_commit;                                  \
 
+#define SEQ_METRICS_TBLADD_c(_cf, _metrics, _key)                       \
+    sne        _cf, _key, r0;                                           \
+    tbladd._cf d._metrics, _key;                                        \
+
+#define SEQ_METRICS_TBLADD_c_e(_cf, _metrics, _key)                     \
+    sne.e      _cf, _key, r0;                                           \
+    tbladd._cf d._metrics, _key;                                        \
+
 /*
  * Launch commit phase for table based metrics
  */ 
-#define SEQ_METRICS0_TABLE1_COMMIT(_qstate_addr)                        \
-   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS0_OFFSET;        \
-   LOAD_TABLE1_FOR_ADDR34_PC_IMM(r_qstate_addr,                         \
+#define SEQ_METRICS0_TABLE1_COMMIT(_src_qaddr)                          \
+   add  r_src_qaddr, _src_qaddr, SEQ_QSTATE_METRICS0_OFFSET;            \
+   LOAD_TABLE1_FOR_ADDR_PC_IMM(r_src_qaddr,                             \
         STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics0_commit)     \
 
-#define SEQ_METRICS0_TABLE1_COMMIT_e(_qstate_addr)                      \
-   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS0_OFFSET;        \
-   LOAD_TABLE1_FOR_ADDR34_PC_IMM_e(r_qstate_addr,                       \
+#define SEQ_METRICS0_TABLE1_COMMIT_e(_src_qaddr)                        \
+   add  r_src_qaddr, _src_qaddr, SEQ_QSTATE_METRICS0_OFFSET;            \
+   LOAD_TABLE1_FOR_ADDR_PC_IMM_e(r_src_qaddr,                           \
         STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics0_commit)     \
 
-#define SEQ_METRICS1_TABLE2_COMMIT(_qstate_addr)                        \
-   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS1_OFFSET;        \
-   LOAD_TABLE2_FOR_ADDR34_PC_IMM(r_qstate_addr,                         \
+#define SEQ_METRICS1_TABLE2_COMMIT(_src_qaddr)                          \
+   add  r_src_qaddr, _src_qaddr, SEQ_QSTATE_METRICS1_OFFSET;            \
+   LOAD_TABLE2_FOR_ADDR_PC_IMM(r_src_qaddr,                             \
         STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics1_commit)     \
 
-#define SEQ_METRICS1_TABLE2_COMMIT_e(_qstate_addr)                      \
-   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS1_OFFSET;        \
-   LOAD_TABLE2_FOR_ADDR34_PC_IMM_e(r_qstate_addr,                       \
+#define SEQ_METRICS1_TABLE2_COMMIT_e(_src_qaddr)                        \
+   add  r_src_qaddr, _src_qaddr, SEQ_QSTATE_METRICS1_OFFSET;            \
+   LOAD_TABLE2_FOR_ADDR_PC_IMM_e(r_src_qaddr,                           \
         STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics1_commit)     \
 
-#define SEQ_METRICS2_TABLE3_COMMIT(_qstate_addr)                        \
-   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS2_OFFSET;        \
-   LOAD_TABLE3_FOR_ADDR34_PC_IMM(r_qstate_addr,                         \
+#define SEQ_METRICS2_TABLE3_COMMIT(_src_qaddr)                          \
+   add  r_src_qaddr, _src_qaddr, SEQ_QSTATE_METRICS2_OFFSET;            \
+   LOAD_TABLE3_FOR_ADDR_PC_IMM(r_src_qaddr,                             \
         STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics2_commit)     \
 
-#define SEQ_METRICS2_TABLE3_COMMIT_e(_qstate_addr)                      \
-   add  r_qstate_addr, _qstate_addr, SEQ_QSTATE_METRICS2_OFFSET;        \
-   LOAD_TABLE3_FOR_ADDR34_PC_IMM_e(r_qstate_addr,                       \
+#define SEQ_METRICS2_TABLE3_COMMIT_e(_src_qaddr)                        \
+   add  r_src_qaddr, _src_qaddr, SEQ_QSTATE_METRICS2_OFFSET;            \
+   LOAD_TABLE3_FOR_ADDR_PC_IMM_e(r_src_qaddr,                           \
         STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics2_commit)     \
 
 /*

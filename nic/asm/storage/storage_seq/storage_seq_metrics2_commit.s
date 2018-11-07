@@ -7,8 +7,8 @@
 #include "INGRESS_p.h"
 
 
-struct s7_tbl3_k k;
-struct s7_tbl3_seq_metrics2_commit_d d;
+struct s5_tbl3_k k;
+struct s5_tbl3_seq_metrics2_commit_d d;
 struct phv_ p;
 
 /*
@@ -20,15 +20,14 @@ struct phv_ p;
 
 storage_seq_metrics2_commit:
 
-    // Bubble to common stage 7 (table already locked) for atomic updates
+    // bubble up to common stage 7 (table already locked) for atomic updates
     mfspr       r_stage, spr_mpuid
-    slt         c1, r_stage[4:2], STAGE_7
+    slt         c1, r_stage[4:2], SEQ_METRICS_STAGE
     nop.c1.e
     seq         c2, SEQ_KIVEC9_METRICS2_RANGE, r0       // delay slot
     nop.c2.e
     CLEAR_TABLE3                                        // delay slot
     
-    tbladd.e    d.len_updates, SEQ_KIVEC9_LEN_UPDATES
-    nop
+    SEQ_METRICS_TBLADD_c_e(c3, len_updates, SEQ_KIVEC9_LEN_UPDATES)
 
 

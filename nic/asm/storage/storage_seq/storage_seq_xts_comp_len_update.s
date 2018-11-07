@@ -34,7 +34,7 @@ struct phv_ p;
 /*
  * Registers reuse, post update
  */
-#define r_qstate_addr               r_last_blk_len  // for SEQ_METRICS_TABLE_COMMIT
+#define r_src_qaddr                 r_last_blk_len  // for SEQ_METRICS_TABLE_COMMIT
  
 %%
     SEQ_METRICS_PARAMS()
@@ -173,7 +173,7 @@ endsw0:
 endif1:
 
     // Relaunch stats commit for table 2
-    SEQ_METRICS1_TABLE2_COMMIT(SEQ_KIVEC7XTS_SRC_QADDR)
+    SEQ_METRICS1_TABLE2_COMMIT(SEQ_KIVEC5XTS_SRC_QADDR)
     
     wrfence.e
     SEQ_METRICS_SET(len_updates)                        // delay slot

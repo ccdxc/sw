@@ -30,7 +30,7 @@ struct phv_ p;
 /*
  * Registers reuse, post all transfers
  */
-#define r_qstate_addr               r_last_dma_cmd_ptr  // for SEQ_METRICS_TABLE_COMMIT
+#define r_src_qaddr                 r_last_dma_cmd_ptr  // for SEQ_METRICS_TABLE_COMMIT
 
 /*
  * Local vars (due to registers shortage)
@@ -150,7 +150,7 @@ dma_ptr_final_check:
    
 exit:
    // Relaunch stats commit for table 1
-   SEQ_METRICS0_TABLE1_COMMIT_e(SEQ_KIVEC8_SRC_QADDR)
+   SEQ_METRICS0_TABLE1_COMMIT_e(SEQ_KIVEC5_SRC_QADDR)
 
 pdma_xfer_error:
    SEQ_METRICS_SET(sgl_pdma_errs)

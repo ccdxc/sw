@@ -38,6 +38,7 @@ crypto_validate_input(struct service_info *svc_info,
 		      const struct service_params *svc_params)
 {
 	struct pnso_crypto_desc	*pnso_crypto_desc;
+	uint32_t num_keys_max;
 
 	if (!svc_info || !svc_params) {
 		OSAL_LOG_ERROR("null svc_info or svc_params specified");
@@ -64,6 +65,13 @@ crypto_validate_input(struct service_info *svc_info,
 
 	if (!pnso_crypto_desc->iv_addr) {
 		OSAL_LOG_ERROR("null iv_addr specified");
+		return EINVAL;
+	}
+
+	if (!sonic_validate_crypto_key_idx(pnso_crypto_desc->key_desc_idx,
+					   &num_keys_max)) {
+		OSAL_LOG_ERROR("crypto key index %u exceeds max value %u",
+			       pnso_crypto_desc->key_desc_idx, num_keys_max);
 		return EINVAL;
 	}
 

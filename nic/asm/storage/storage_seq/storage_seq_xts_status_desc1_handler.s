@@ -14,7 +14,7 @@ struct phv_ p;
 /*
  * Registers usage:
  */
-#define r_qstate_addr               r7  // for SEQ_METRICS_TABLE_COMMIT
+#define r_src_qaddr                 r7  // for SEQ_METRICS_TABLE_COMMIT
 
 %%
     SEQ_METRICS_PARAMS()
@@ -22,7 +22,7 @@ struct phv_ p;
 storage_seq_xts_status_desc1_handler:
 
     // Relaunch metrics commit for table 1
-    SEQ_METRICS0_TABLE1_COMMIT(SEQ_KIVEC8_SRC_QADDR)
+    SEQ_METRICS0_TABLE1_COMMIT(SEQ_KIVEC5XTS_SRC_QADDR)
     
     phvwrpair   p.{seq_kivec5xts_data_len...seq_kivec5xts_blk_boundary_shift}, \
                 d.{data_len...blk_boundary_shift}, \

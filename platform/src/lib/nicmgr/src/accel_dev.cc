@@ -965,6 +965,10 @@ Accel_PF::_DevcmdCryptoKeyUpdate(void *req, void *req_data,
                               crypto_key_type_tbl[cmd->key_type],
                               &key_accum->key_data[0][0],
                               key_accum->num_key_parts * CMD_CRYPTO_KEY_PART_SIZE);
+        /*
+         * Wipe and erase accumulator
+         */
+        memset(key_accum, 0, sizeof(*key_accum));
         crypto_key_accum_del(cmd->key_index);
         if (ret_val) {
             NIC_LOG_ERR("lif {}: failed to update crypto key for key_index {}",

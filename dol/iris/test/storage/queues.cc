@@ -55,6 +55,7 @@ const static uint32_t	SeqNumAdminQs	 = 0; // log2(number of admin queues)
 
 
 const static uint32_t	kDefaultQstateEntrySize = 6; // Default qstate is 64 bytes
+const static uint32_t	kSeqQstateEntrySize      = STORAGE_SEQ_CB_SIZE_SHFT;
 const static uint32_t	kDefaultEntrySize	 = 6; // Default desc size is 64 bytes
 const static uint32_t	kSeqCompStatusSQEntrySize = 7; // Seq compression status SQ is 128 bytes
 const static uint32_t	kSeqXtsStatusSQEntrySize = 7; // Seq XTS status SQ is 128 bytes
@@ -418,8 +419,8 @@ int seq_queue_setup(queues_t *q_ptr, uint32_t qid,
                                                 entry_size);
 
   } else {
-      ret = qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, qid, pgm_bin, 
-                                         total_rings, host_rings, 
+      ret = qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, qgroup, qid,
+                                         pgm_bin, total_rings, host_rings, 
                                          num_entries, q_ptr->mem->pa(),
                                          entry_size, desc1_pgm_bin);
   }
@@ -643,7 +644,7 @@ int lifs_setup() {
 
   if (!run_nicmgr_tests) {
       bzero(&seq_lif_params, sizeof(seq_lif_params));
-      lif_params_init(&seq_lif_params, SQ_TYPE, kDefaultQstateEntrySize, SeqNumSQs);
+      lif_params_init(&seq_lif_params, SQ_TYPE, kSeqQstateEntrySize, SeqNumSQs);
       seq_lif_params.sw_lif_id = STORAGE_SEQ_SW_LIF_ID;
 
       if (hal_if::create_lif(&seq_lif_params, &seq_lif) < 0) {

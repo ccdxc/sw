@@ -17,7 +17,7 @@ struct phv_ p;
 #define r_last_blk_no               r3  // last block number
 #define r_last_aol_p                r4  // pointer to last AOL descriptor
 #define r_aol_field_p               r5  // pointer to an AOL field
-#define r_qstate_addr               r7  // for SEQ_METRICS_TABLE_COMMIT
+#define r_src_qaddr                 r7  // for SEQ_METRICS_TABLE_COMMIT
 
 %%
     SEQ_METRICS_PARAMS()
@@ -57,7 +57,7 @@ storage_seq_comp_aol_pad_handler:
     memwr.dx    r_aol_field_p, r0
 
     // Relaunch stats commit for table 3
-    SEQ_METRICS2_TABLE3_COMMIT(SEQ_KIVEC6_SRC_QADDR)
+    SEQ_METRICS2_TABLE3_COMMIT(SEQ_KIVEC5_SRC_QADDR)
 
     wrfence.e
     SEQ_METRICS_SET(aol_pad_reqs)                       // delay slot

@@ -481,7 +481,7 @@ header_type seq_kivec4_t {
 // kivec5: header union with global (128 bits max)
 header_type seq_kivec5_t {
   fields {
-    intr_addr           : 64;
+    src_qaddr           : 34;   // must be in same field position as seq_kivec5xts_t
     pad_buf_addr        : 34;   // pad buffer in HBM
     data_len            : 16;   // Length of compression data (either from descriptor or 
                                 // from the compression status)
@@ -507,7 +507,7 @@ header_type seq_kivec5_t {
 // used by XTS status handler
 header_type seq_kivec5xts_t {
   fields {
-    intr_addr           : 64;
+    src_qaddr           : 34;   // must be in same field position as seq_kivec5_t
     data_len            : 16;
     blk_boundary_shift  : 5;
     status_dma_en       : 1;
@@ -530,14 +530,6 @@ header_type seq_kivec6_t {
   fields {
     aol_src_vec_addr   : 64;
     aol_dst_vec_addr   : 64;
-    src_qaddr          : 32;   // Source queue state address
-  }
-}
-
-// kivec7: header union with stage_2_stage for table 2 (160 bits max)
-header_type seq_kivec7_t {
-  fields {
-      src_qaddr        : 34;   // Source queue state address
   }
 }
 
@@ -547,7 +539,6 @@ header_type seq_kivec7xts_t {
   fields {
       comp_desc_addr   : 64;
       comp_sgl_src_addr: 64;
-      src_qaddr        : 32;   // Source queue state address
   }
 }
 
@@ -556,11 +547,10 @@ header_type seq_kivec8_t {
   fields {
     alt_buf_addr       : 64;
     alt_buf_addr_en    : 1;
-    src_qaddr          : 34;   // Source queue state address
   }
 }
 
-// kivec9: header union with to_stage_7 (128 bits max)
+// kivec9: header union with to_stage_5 (128 bits max)
 header_type seq_kivec9_t {
   fields {
 
@@ -592,6 +582,13 @@ header_type seq_kivec9_t {
     metrics2_start     : 1;
     len_updates        : 1;
     metrics2_end       : 1;
+  }
+}
+
+// kivec10: header union with to_stage_4 (128 bits max)
+header_type seq_kivec10_t {
+  fields {
+      intr_addr        : 64;   // Interrupt assert address
   }
 }
 
@@ -664,7 +661,7 @@ header_type seq_kivec9_t {
   modify_field(scratch.pad_boundary_shift, kivec.pad_boundary_shift);   \
 
 #define SEQ_KIVEC5_USE(scratch, kivec)                                  \
-  modify_field(scratch.intr_addr, kivec.intr_addr);                     \
+  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
   modify_field(scratch.pad_buf_addr, kivec.pad_buf_addr);               \
   modify_field(scratch.data_len, kivec.data_len);                       \
   modify_field(scratch.status_dma_en, kivec.status_dma_en);             \
@@ -683,7 +680,7 @@ header_type seq_kivec9_t {
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
-  modify_field(scratch.intr_addr, kivec.intr_addr);                     \
+  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
   modify_field(scratch.data_len, kivec.data_len);                       \
   modify_field(scratch.blk_boundary_shift, kivec.blk_boundary_shift);   \
   modify_field(scratch.status_dma_en, kivec.status_dma_en);             \
@@ -702,20 +699,14 @@ header_type seq_kivec9_t {
 #define SEQ_KIVEC6_USE(scratch, kivec)                                  \
   modify_field(scratch.aol_src_vec_addr, kivec.aol_src_vec_addr);       \
   modify_field(scratch.aol_dst_vec_addr, kivec.aol_dst_vec_addr);       \
-  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
-
-#define SEQ_KIVEC7_USE(scratch, kivec)                                  \
-  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
 
 #define SEQ_KIVEC7XTS_USE(scratch, kivec)                               \
   modify_field(scratch.comp_desc_addr, kivec.comp_desc_addr);           \
   modify_field(scratch.comp_sgl_src_addr, kivec.comp_sgl_src_addr);     \
-  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
 
 #define SEQ_KIVEC8_USE(scratch, kivec)                                  \
   modify_field(scratch.alt_buf_addr, kivec.alt_buf_addr);               \
   modify_field(scratch.alt_buf_addr_en, kivec.alt_buf_addr_en);         \
-  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
   
 #define SEQ_KIVEC9_USE(scratch, kivec)                                  \
   modify_field(scratch.metrics0_start, kivec.metrics0_start);           \
@@ -743,7 +734,7 @@ header_type seq_kivec9_t {
   modify_field(scratch.metrics2_end, kivec.metrics2_end);               \
   
 #define SEQ_KIVEC10_USE(scratch, kivec)                                 \
-  modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
+  modify_field(scratch.intr_addr, kivec.intr_addr);                     \
 
 // Macros for ASM param addresses (hardcoded in P4)
 #define seq_barco_chain_action_start	    0x82000000

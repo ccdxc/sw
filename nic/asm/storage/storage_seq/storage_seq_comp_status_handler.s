@@ -44,6 +44,7 @@ struct phv_ p;
     .param storage_seq_comp_aol_pad_handler
     .param storage_seq_comp_sgl_pdma_xfer
     .param storage_seq_comp_sgl_pad_only_xfer
+    .param storage_seq_comp_db_intr_override
 
 storage_seq_comp_status_handler:
     
@@ -263,18 +264,10 @@ comp_error:
     bbeq.c5     SEQ_KIVEC5_STOP_CHAIN_ON_ERROR, 0, possible_chain_alt_desc
     SEQ_METRICS_SET(hw_op_errs)                        // delay slot
 
-    // cancel any barco push prep
-    SEQ_COMP_NEXT_DB_CANCEL(dma_p2m_19)
-   
-    // else if intr_en then complete any status DMA and 
-    // override doorbell to raising an interrupt
-    bbeq        SEQ_KIVEC5_INTR_EN, 0, all_dma_complete
-    nop
-
-    PCI_SET_INTERRUPT_ADDR_DMA(SEQ_KIVEC5_INTR_ADDR,
-                               dma_p2m_19)
+    // override doorbell to raising an interrupt if possible
+    LOAD_TABLE_NO_LKUP_PC_IMM(1, storage_seq_comp_db_intr_override)
     b           all_dma_complete
-    SEQ_METRICS_SET(interrupts_raised)                 // delay slot
+    nop
 
 possible_chain_alt_desc:
 

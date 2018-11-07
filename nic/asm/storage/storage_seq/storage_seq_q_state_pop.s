@@ -22,7 +22,7 @@ struct phv_ p;
 #define r_qdesc_size                r4  // queue descriptor size
 #define r_qdesc0                    r5  // desc0 pointer
 #define r_qdesc1                    r6  // desc1 pointer
-#define r_qstate_addr               r7  // for SEQ_PHV_STAT_TABLE2/3_COMMIT()
+#define r_src_qaddr                 r7  // for SEQ_PHV_STAT_TABLE2/3_COMMIT()
 
 /*
  * Registers reuse, post descriptors loading and stat tables update/commit
@@ -61,14 +61,7 @@ storage_seq_q_state_pop_start:
    bbeq         d.abort[0], 1, abort
    add          r_pi, r0, d.p_ndx       // delay slot     
    bbeq         d.enable[0], 0, drop_n_exit
-
-   // Store fields needed in the K+I vector into the PHV
-   phvwrpair	p.seq_kivec1_src_lif, STAGE0_KIVEC_LIF, \
-        	p.seq_kivec1_src_qtype, STAGE0_KIVEC_QTYPE // delay slot
-   phvwrpair	p.seq_kivec1_src_qid, STAGE0_KIVEC_QID, \
-   	        p.seq_kivec1_src_qaddr, STAGE0_KIVEC_QADDR
-   phvwr        p.seq_kivec6_src_qaddr, STAGE0_KIVEC_QADDR
-   phvwr        p.seq_kivec8_src_qaddr, STAGE0_KIVEC_QADDR
+   phvwr	p.seq_kivec5_src_qaddr, STAGE0_KIVEC_QADDR // delay slot
    
    // Set the table and program address for the next stage to process
    // the popped entry

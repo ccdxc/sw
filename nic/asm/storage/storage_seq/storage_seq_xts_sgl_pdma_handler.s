@@ -23,7 +23,7 @@ struct phv_ p;
 /*
  * Registers reuse, post source transfer completion
  */
-#define r_qstate_addr               r_sgl_len  // for SEQ_METRICS_TABLE_COMMIT
+#define r_src_qaddr                 r_sgl_len  // for SEQ_METRICS_TABLE_COMMIT
  
 %%
    SEQ_METRICS_PARAMS()
@@ -71,7 +71,7 @@ storage_seq_xts_sgl_pdma_xfer:
    
 exit:
    // Relaunch stats commit for table 1
-   SEQ_METRICS0_TABLE1_COMMIT_e(SEQ_KIVEC8_SRC_QADDR)
+   SEQ_METRICS0_TABLE1_COMMIT_e(SEQ_KIVEC5XTS_SRC_QADDR)
 
 pdma_xfer_error:
    SEQ_METRICS_SET(sgl_pdma_errs)

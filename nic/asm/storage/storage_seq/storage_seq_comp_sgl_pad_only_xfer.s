@@ -21,7 +21,7 @@ struct phv_ p;
  */
 #define r_pad_len                   r3  // padding length
 #define r_pad_dest                  r4  // pointer to destination to apply padding
-#define r_qstate_addr               r7  // for SEQ_METRICS_TABLE_COMMIT
+#define r_src_qaddr                 r7  // for SEQ_METRICS_TABLE_COMMIT
 
 %%
     SEQ_METRICS_PARAMS()
@@ -48,5 +48,5 @@ storage_seq_comp_sgl_pad_only_xfer:
 exit:
 
     // Relaunch stats commit for table 2
-    SEQ_METRICS1_TABLE2_COMMIT_e(SEQ_KIVEC7_SRC_QADDR)
+    SEQ_METRICS1_TABLE2_COMMIT_e(SEQ_KIVEC5_SRC_QADDR)
 

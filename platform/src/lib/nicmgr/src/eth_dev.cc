@@ -333,11 +333,13 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
 
         // Add device to PCI topology
         extern class pciemgr *pciemgr;
-        int ret = pciemgr->add_device(pdev);
-        if (ret != 0) {
-            NIC_LOG_ERR("lif-{}: Failed to add Eth PCI device to topology",
-                info.hw_lif_id);
-            return;
+        if (pciemgr) {
+            int ret = pciemgr->add_device(pdev);
+            if (ret != 0) {
+                NIC_LOG_ERR("lif-{}: Failed to add Eth PCI device to topology",
+                    info.hw_lif_id);
+                return;
+            }
         }
     } else {
         NIC_LOG_INFO("lif-{}: Skipped creating PCI device, pcie_port {}",

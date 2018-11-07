@@ -215,6 +215,14 @@ sonic_get_lif_local_dbaddr(void)
 	return ident->dev.lif_tbl[0].hw_lif_local_dbaddr;
 }
 
+bool
+sonic_validate_crypto_key_idx(uint32_t user_key_idx, uint32_t *ret_keys_max)
+{
+	identity_t *ident = sonic_get_identity();
+	*ret_keys_max = ident->dev.lif_tbl[0].num_crypto_keys_max;
+	return user_key_idx < *ret_keys_max;
+}
+
 uint32_t
 sonic_get_crypto_key_idx(uint32_t user_key_idx)
 {
@@ -231,7 +239,7 @@ sonic_get_intr_assert_addr(uint32_t intr_idx)
 }
 
 uint32_t
-sonic_get_intr_assert_data(void))
+sonic_get_intr_assert_data(void)
 {
 	identity_t *ident = sonic_get_identity();
 	return ident->dev.intr_assert_data;
