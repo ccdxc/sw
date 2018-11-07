@@ -30,6 +30,9 @@ if [ "x" == "x$OS_DIR" ] ; then
 	OS_DIR=/usr/src
 fi
 
+# if OS_DIR was relative, make it absolute here
+OS_DIR=$(readlink -f "$OS_DIR")
+
 make_ext() {
 	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" \
 		"-C$1" clean cleandepend || exit
@@ -40,3 +43,9 @@ make_ext() {
 make_ext sys/modules/ionic
 make_ext sys/modules/ionic_rdma
 make_ext contrib/ofed/libionic
+
+cd perftest
+patch -p1 < ../perftest-freebsd.patch || exit
+./configure || exit
+make -j12 || exit
+cd -

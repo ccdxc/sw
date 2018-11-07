@@ -1,0 +1,21 @@
+diff -ur perftest-orig/src/perftest_resources.c perftest/src/perftest_resources.c
+--- perftest-orig/src/perftest_resources.c	2018-11-07 06:57:14.131424000 -0800
++++ perftest/src/perftest_resources.c	2018-11-07 06:59:55.928922000 -0800
+@@ -2642,7 +2642,7 @@
+ 				ctx->exp_wr[i*user_param->post_list + j].exp_opcode = exp_opcode_imm_array[user_param->imm_type];
+
+ 				if (user_param->imm_type == SEND_INV)
+-					ctx->exp_wr[i*user_param->post_list + j].invalidate_rkey = rem_dest[xrc_offset + i].rkey;
++					ctx->exp_wr[i*user_param->post_list + j].imm_data = htobe32(rem_dest[xrc_offset + i].rkey);
+ 				else
+ 					ctx->exp_wr[i*user_param->post_list + j].imm_data = htobe32(user_param->imm_data);
+ 			}
+@@ -2817,7 +2817,7 @@
+ 				ctx->wr[i*user_param->post_list + j].opcode = opcode_imm_array[user_param->imm_type];
+
+ 				if (user_param->imm_type == SEND_INV)
+-					ctx->wr[i*user_param->post_list + j].invalidate_rkey = rem_dest[xrc_offset + i].rkey;
++					ctx->wr[i*user_param->post_list + j].imm_data = htobe32(rem_dest[xrc_offset + i].rkey);
+ 				else
+ 					ctx->wr[i*user_param->post_list + j].imm_data = htobe32(user_param->imm_data);
+ 			}

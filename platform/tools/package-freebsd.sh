@@ -1,10 +1,12 @@
 #!/bin/bash
 
 TOP=$(readlink -f "$(dirname "$0")/../..")
+RDMA="$TOP/platform/src/third-party/rdma"
 
 # Sources for generation
 : ${DRIVERS_SRC:="$TOP/platform/drivers/freebsd/usr/src"}
 : ${SONIC_DRIVERS_SRC:="$TOP/storage/offload"}
+: ${PERFTEST_SRC:="$RDMA/perftest"}
 
 # Products generated
 : ${GEN_DIR:="$TOP/platform/gen/pensando-freebsd"}
@@ -57,6 +59,30 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="Module.symvers" \
   --exclude=".tmp_versions/" \
   "$SONIC_DRIVERS_SRC/" "$SONIC_GEN_DIR/"
+
+# Copy perftest sources to gen dir
+rsync -r --delete --delete-excluded \
+  --exclude=".git/" \
+  --exclude="*.a" \
+  --exclude="*.o" \
+  --exclude="ib_send_bw" \
+  --exclude="ib_send_lat" \
+  --exclude="ib_write_bw" \
+  --exclude="ib_write_lat" \
+  --exclude="ib_read_bw" \
+  --exclude="ib_read_lat" \
+  --exclude="ib_atomic_bw" \
+  --exclude="ib_atomic_lat" \
+  --exclude="raw_ethernet_burst_lat" \
+  --exclude="raw_ethernet_bw" \
+  --exclude="raw_ethernet_fs_rate" \
+  --exclude="raw_ethernet_lat" \
+  --exclude="src/.deps/" \
+  --exclude="src/.dirstamp" \
+  --exclude="libtool" \
+  --exclude="stamp-h1" \
+  --exclude="m4/" \
+  "$PERFTEST_SRC/" "$GEN_DIR/perftest"
 
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
