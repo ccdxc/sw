@@ -231,6 +231,11 @@ public:
     virtual enum DevcmdStatus CmdHandler(
         void *req, void *req_data,
         void *resp, void *resp_data) = 0;
+    enum DeviceType GetType() { return type; }
+    void SetType(enum DeviceType type) { this->type = type;}
+private:
+    enum DeviceType type;
+
 };
 
 /**
@@ -253,6 +258,7 @@ public:
     void DevLinkUpHandler(uint32_t port_num);
 
     Device *GetDevice(uint64_t id);
+    void CreateMnets();
 
 private:
     int lifs_reservation(platform_t platform);
@@ -260,7 +266,6 @@ private:
     boost::property_tree::ptree spec;
     std::map<uint64_t, Device*> devices; // lif -> device
     std::map<uint64_t, Uplink*> uplinks; // uplink_id -> Uplink
-
 
     // Service Lif Info
     struct lif_info info;

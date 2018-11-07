@@ -386,12 +386,13 @@ DeviceManager::LoadConfig(string path)
             }
             eth_spec->if_name = val.get<string>("name");
             NIC_LOG_INFO("Creating mnic device with name: {} type: {}, lif_id: {}, hw_lif_id: {},"
-                         "pinned_uplink: {}",
+                         "pinned_uplink: {} intr_count: {}",
                          eth_spec->if_name,
                          eth_dev_type_to_str(eth_spec->eth_type),
                          eth_spec->lif_id,
                          eth_spec->hw_lif_id,
-                         eth_spec->uplink_id);
+                         eth_spec->uplink_id,
+                         eth_spec->intr_count);
             AddDevice(ETH, (void *)eth_spec);
         }
     }
@@ -541,10 +542,12 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         return NULL;
     case ETH:
         eth_dev = new Eth(hal, hal_common_client, dev_spec, pd);
+        eth_dev->SetType(type);
         devices[eth_dev->info.hw_lif_id] = (Device *)eth_dev;
         return (Device *)eth_dev;
     case ACCEL:
         accel_dev = new Accel_PF(hal, dev_spec, &info, pd, dol_integ);
+        accel_dev->SetType(type);
         devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
         return (Device *)accel_dev;
     case NVME:
@@ -559,6 +562,24 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 
     return NULL;
 }
+
+void
+DeviceManager::CreateMnets()
+{
+    Device *dev = NULL;
+    Eth *eth_dev = NULL;
+
+    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
+        dev = (Device *)(it->second);
+        if (dev->GetType() == ETH) {
+            eth_dev = (Eth *)dev;
+            if (eth_dev->isMnic()) {
+                eth_dev->CreateMnet();
+            }
+        }
+    }
+}
+
 
 #ifdef __aarch64__
 void

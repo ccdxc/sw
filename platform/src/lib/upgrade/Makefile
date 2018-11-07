@@ -2,8 +2,8 @@
 # Copyright (c) 2018, Pensando Systems Inc.
 #
 
-LIBRARY= libnicmgr_upgrade.so 
-SOURCES = upgrade.cc 
+LIBRARY= libnicmgr_upgrade.so
+SOURCES = upgrade.cc
 
 LCFLAGS = \
 	-I ../include \
@@ -11,22 +11,23 @@ LCFLAGS = \
 	-I $(TOPDIR)/.. \
 	-I $(TOPDIR)/include/common \
 	-I $(TOPDIR)/src/lib/nicmgr/include \
-    -I $(TOPDIR)/../nic/delphi/sdk/ \
-    -I $(TOPDIR)/../nic/upgrade_manager/export/upgcsdk/ \
-    -I $(TOPDIR)/src/app/nicmgrd/src/ \
-    -I $(TOPDIR)/src/lib/pal/include \
-    -I $(TOPDIR)/src/lib/misc/include \
-    -I $(TOPDIR)/src/lib/pcieport/include \
+	-I $(TOPDIR)/../nic/delphi/sdk/ \
+	-I $(TOPDIR)/../nic/upgrade_manager/export/upgcsdk/ \
+	-I $(TOPDIR)/src/app/nicmgrd/src/ \
+	-I $(TOPDIR)/src/lib/pal/include \
+	-I $(TOPDIR)/src/lib/misc/include \
+	-I $(TOPDIR)/src/lib/pcieport/include \
 	-I $(TOPDIR)/src/lib/pciemgr/include \
 	-I $(TOPDIR)/src/lib/pciemgrutils/include \
-    -I $(TOPDIR)/src/lib/pciehdevices/include \
-    -I $(TOPDIR)/src/lib/intrutils/include \
-    -I $(TOPDIR)/src/lib/nicmgr/include \
-    -I $(TOPDIR)/src/lib/upgrade \
-    -I $(TOPDIR)/src/lib/sysmgr \
-    -I $(TOPDIR)/src/lib/misc/include \
-    -I $(TOPDIR)/include/common/drivers/linux/eth/ionic/ \
-    -I $(TOPDIR)/drivers/linux/eth/ionic/ \
+	-I $(TOPDIR)/src/lib/pciehdevices/include \
+	-I $(TOPDIR)/src/lib/intrutils/include \
+	-I $(TOPDIR)/src/lib/nicmgr/include \
+	-I $(TOPDIR)/src/lib/upgrade \
+	-I $(TOPDIR)/src/lib/sysmgr \
+	-I $(TOPDIR)/src/lib/mnet/include \
+	-I $(TOPDIR)/src/lib/misc/include \
+	-I $(TOPDIR)/include/common/drivers/linux/eth/ionic/ \
+	-I $(TOPDIR)/drivers/linux/eth/ionic/ \
 	-I $(TOPDIR)/../nic/include/ \
 	-I $(TOPDIR)/../nic/third-party/libev/include \
 	-I $(TOPDIR)/../nic/sdk/include \

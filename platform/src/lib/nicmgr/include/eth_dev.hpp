@@ -11,6 +11,7 @@
 #include "eth_common.h"
 #include "sdk/indexer.hpp"
 #include "hal_types.hpp"
+#include "mnet.h"
 
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)
@@ -149,6 +150,7 @@ public:
     bool isMnic();
     bool isHostManagement();
     bool isHost();
+    void CreateMnet();
 
 private:
     /* Static members */
@@ -157,6 +159,8 @@ private:
     /* Members */
     string name;
     struct eth_devspec *spec;
+    /* Mnet Info */
+    struct mnet_req_resp_t mnet_req_resp;
     // Hardware Info
     static struct queue_info qinfo[NUM_QUEUE_TYPES];
     // PD Info

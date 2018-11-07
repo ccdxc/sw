@@ -9,7 +9,6 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-//#include <sys/stat.h>
 #include <sys/ioctl.h>
 
 #include "mnet.h"
@@ -35,7 +34,7 @@ create_mnet(struct mnet_req_resp_t *mnet_info)
         fprintf(stderr, "Error: %s %s\n", "MNET_CREATE_DEV", strerror(errno));
         return ret;
     }
-
+    
     close(fd);
 
     return 0;

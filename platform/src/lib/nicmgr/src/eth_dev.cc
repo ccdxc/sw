@@ -28,7 +28,6 @@
 #include "nicmgr_status_msgs.delphi.hpp"
 #include "delphic.hpp"
 #include "intrutils.h"
-#include "mnet.h"
 
 using namespace nicmgr;
 using namespace nicmgr_status_msgs;
@@ -155,7 +154,6 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     uint32_t                hbm_size;
     uint8_t                 cosA = 1;
     uint8_t                 cosB = 0;
-    struct mnet_req_resp_t  mnet_req_resp;
 
     hal = hal_client;
     hal_common_client = hal_common_client;
@@ -279,7 +277,7 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
 
         NIC_LOG_INFO("lif-{}: Mnet devcmd_pa: {:#x}, devcmd_db_pa: {:#x}, "
                      "doorbell_pa: {:#x}, drvcfg_pa: {:#x}, msixcfg_pa: {:#x}, "
-                     "iface_type: {}, iface_name: {}, intr_base: {}",
+                     "iface_type: {}, iface_name: {}, intr_base: {}, intr_count: {}",
                      info.hw_lif_id,
                      mnet_req_resp.req.devcmd_pa,
                      mnet_req_resp.req.devcmd_db_pa,
@@ -288,16 +286,8 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
                      mnet_req_resp.req.msixcfg_pa,
                      mnet_req_resp.req.iface_type,
                      mnet_req_resp.req.iface_name,
-                     Eth::intr_base);
-
-#if 0
-        int rs = create_mnet(&mnet_req_resp);
-        if (rs) {
-            NIC_LOG_ERR("lif-{}: Failed to create mnet. ret: {}",
-                        info.hw_lif_id, rs);
-            return;
-        }
-#endif
+                     Eth::intr_base,
+                     spec->intr_count);
 
         Eth::intr_base += spec->intr_count;
     } else if (isHostManagement()) {
@@ -350,6 +340,19 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     rss_type = LifRssType::RSS_TYPE_NONE;
     memset(rss_key, 0x00, RSS_HASH_KEY_SIZE);
     memset(rss_indir, 0x00, RSS_IND_TBL_SIZE);
+}
+
+void
+Eth::CreateMnet()
+{
+    NIC_LOG_INFO("lif-{}: Calling Mnet lib.", info.hw_lif_id);
+    int rs = create_mnet(&mnet_req_resp);
+    if (rs) {
+        NIC_LOG_ERR("lif-{}: Failed to create mnet. ret: {}",
+                    info.hw_lif_id, rs);
+        return;
+    }
+
 }
 
 bool
