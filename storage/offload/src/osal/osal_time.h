@@ -21,10 +21,6 @@ extern "C" {
 
 static inline uint64_t osal_get_clock_nsec(void)
 {
-//	struct timespec ts;
-
-//	getrawmonotonic(&ts);
-//	return (uint64_t) timespec_to_ns(&ts);
 	return (uint64_t) ktime_get_ns();
 }
 

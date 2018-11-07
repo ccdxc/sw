@@ -34,7 +34,7 @@
  *	- address cpdc_fill_per_block_desc_ex()
  *
  */
-#define CPDC_POLL_LOOP_TIMEOUT (5 * OSAL_NSEC_PER_USEC)
+#define CPDC_POLL_LOOP_TIMEOUT (500 * OSAL_NSEC_PER_USEC)
 
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
@@ -67,8 +67,6 @@ cpdc_poll(const struct service_info *svc_info)
 					(uint64_t) status_desc, err);
 			break;
 		}
-
-		osal_yield();
 	}
 
 	OSAL_LOG_DEBUG("exit! err: %d", err);
