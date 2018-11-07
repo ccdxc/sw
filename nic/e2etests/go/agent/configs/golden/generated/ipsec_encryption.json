@@ -16,7 +16,7 @@
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       "local-gateway-ip": "10.7.6.4",
-      "remote-gateway-ip": "10.7.6.2",
+      "remote-gateway-ip": "10.7.6.3",
       "spi": 1,
       "tep-namespace": "scale-vrf-2"
     },
@@ -39,7 +39,7 @@
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
       "local-gateway-ip": "10.7.6.4",
-      "remote-gateway-ip": "10.7.6.2",
+      "remote-gateway-ip": "10.7.6.3",
       "spi": 2,
       "tep-namespace": "scale-vrf-2"
     },
@@ -62,7 +62,7 @@
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "local-gateway-ip": "10.7.6.4",
-      "remote-gateway-ip": "10.7.6.2",
+      "remote-gateway-ip": "10.7.6.3",
       "spi": 3,
       "tep-namespace": "scale-vrf-2"
     },
@@ -85,7 +85,7 @@
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
       "local-gateway-ip": "10.7.6.4",
-      "remote-gateway-ip": "10.7.6.2",
+      "remote-gateway-ip": "10.7.6.3",
       "spi": 4,
       "tep-namespace": "scale-vrf-2"
     },

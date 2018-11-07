@@ -75,11 +75,11 @@
         },
         {
             "name": "nmdr-tx",
-            "size_kb": 128
+            "size_kb": 2048 
         },
         {
             "name": "nmdr-rx",
-            "size_kb": 128
+            "size_kb": 2048 
         },
         {
             "name": "ipsec-nmdr-tx",
@@ -107,11 +107,11 @@
         },
         {
             "name": "nmpr-small-tx",
-            "size_kb": 128
+            "size_kb": 2048 
         },
         {
             "name": "nmpr-small-rx",
-            "size_kb": 128
+            "size_kb": 2048 
         },
         {
             "name": "nmpr-big-tx",
@@ -199,6 +199,22 @@
         },
         {
             "name": "descriptor-rx",
+            "size_kb": 2048
+        },
+        {
+            "name": "ipsec-descriptor-tx",
+            "size_kb": 2048
+        },
+        {
+            "name": "ipsec-descriptor-rx",
+            "size_kb": 2048
+        },
+        {
+            "name": "ipsec-big-descriptor-tx",
+            "size_kb": 2048
+        },
+        {
+            "name": "ipsec-big-descriptor-rx",
             "size_kb": 2048
         },
         {

@@ -417,13 +417,13 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore.bin";
     symbols[i].num_params = 5;
     symbols[i].params[0].name = IPSEC_RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSEC_NMDR_RX);
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
     symbols[i].params[1].name = IPSEC_TNMDR_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_IPSEC_NMDR_TX);
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     symbols[i].params[2].name = IPSEC_RNMPR_TABLE_BASE;
-    symbols[i].params[2].val = get_start_offset(CAPRI_HBM_REG_IPSEC_NMPR_RX);
+    symbols[i].params[2].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
     symbols[i].params[3].name = IPSEC_TNMPR_TABLE_BASE;
-    symbols[i].params[3].val = get_start_offset(CAPRI_HBM_REG_IPSEC_NMPR_TX);
+    symbols[i].params[3].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_TX);
     symbols[i].params[4].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
     symbols[i].params[4].val = get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
     i++;
