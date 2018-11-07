@@ -80,6 +80,15 @@ func NewStore() Store {
 	return ret
 }
 
+// String returns a human readable string of the queue (not in heap order)
+func (h *delPendingHeap) String() string {
+	var keys []string
+	for _, v := range h.l {
+		keys = append(keys, v.key)
+	}
+	return fmt.Sprintf("Len: %d keys: [%v]", h.Len(), keys)
+}
+
 // Len returns the len of the pendingDelete heap
 func (h *delPendingHeap) Len() int {
 	return len(h.l)
@@ -87,7 +96,7 @@ func (h *delPendingHeap) Len() int {
 
 // Less implements the sort.Interface
 func (h *delPendingHeap) Less(i, j int) bool {
-	return h.l[j].lastUpd.Before(h.l[i].lastUpd)
+	return h.l[i].lastUpd.Before(h.l[j].lastUpd)
 }
 
 // Swap implements the sort.Interface
@@ -120,11 +129,10 @@ func (h *delPendingHeap) Pop() interface{} {
 
 // Peek peeks at the top of the heap without popping it
 func (h *delPendingHeap) Peek() *cacheObj {
-	l := len(h.l)
-	if l == 0 {
+	if len(h.l) == 0 {
 		return nil
 	}
-	return h.l[l-1]
+	return h.l[0]
 }
 
 // Set updates the cache for the key with obj while making sure revision moves

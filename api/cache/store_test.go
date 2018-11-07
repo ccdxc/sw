@@ -262,6 +262,7 @@ func TestDelayedDelete(t *testing.T) {
 	t.Logf("  ->Insert an object")
 	key1 := "/venice/books/book/Example1"
 	key2 := "/venice/books/book/Example2"
+	key3 := "/venice/books/book/Example3"
 	prefix1 := patricia.Prefix(key1)
 	prefix2 := patricia.Prefix(key2)
 	b1 := testObj{}
@@ -272,6 +273,10 @@ func TestDelayedDelete(t *testing.T) {
 	b2.ResourceVersion = "10"
 	b2.Name = "Example2"
 	s.Set(key2, 11, &b2, nil)
+	b3 := testObj{}
+	b3.ResourceVersion = "10"
+	b3.Name = "Example3"
+	s.Set(key3, 12, &b3, nil)
 
 	t.Logf("  ->Delete one object and verify it is in delQ")
 	s.Delete(key1, 0, nil)
@@ -345,6 +350,15 @@ func TestDelayedDelete(t *testing.T) {
 	if !reflect.DeepEqual(s.delPending.Peek(), cobj) {
 		t.Fatalf("objects in delqueue and trie do not match[%v]/[%v]", s.delPending.Peek(), s.objs.Get(prefix2))
 	}
+	// tweak the time on the elements
+	for i := range s.delPending.l {
+		s.delPending.l[i].lastUpd = s.delPending.l[i].lastUpd.Add(-(time.Second * 2))
+	}
+	t.Logf("  ->Delete third object and verify it is in delQ behind (1)")
+	s.Delete(key3, 0, nil)
+	if s.delPending.Len() != 3 {
+		t.Fatalf("expecting 3 element in del pending queue got %d [%+v]", s.delPending.Len(), s.delPending.l)
+	}
 
 	// Validate Ids
 	for i := range s.delPending.l {
@@ -354,9 +368,12 @@ func TestDelayedDelete(t *testing.T) {
 	}
 
 	t.Logf("  ->Run purge with duration encompassing items in the delpending items")
-	s.PurgeDeleted(0)
-	if s.delPending.Len() != 0 {
-		t.Fatalf("expecting 2 element in del pending queue got %d [%+v]", s.delPending.Len(), s.delPending.l)
+	s.PurgeDeleted(time.Second * 1)
+	if s.delPending.Len() != 1 {
+		t.Fatalf("expecting 1 element in del pending queue got %d [%+v]", s.delPending.Len(), s.delPending.l)
 	}
 
+	if s.delPending.l[0].key != key3 {
+		t.Fatalf("wrong object [%v]", s.delPending.l[0])
+	}
 }
