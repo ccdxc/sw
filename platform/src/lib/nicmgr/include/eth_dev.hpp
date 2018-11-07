@@ -160,7 +160,7 @@ private:
     string name;
     struct eth_devspec *spec;
     /* Mnet Info */
-    struct mnet_req_resp_t mnet_req_resp;
+    struct mnet_dev_create_req_t mnet_req;
     // Hardware Info
     static struct queue_info qinfo[NUM_QUEUE_TYPES];
     // PD Info

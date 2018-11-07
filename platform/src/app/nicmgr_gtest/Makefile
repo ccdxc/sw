@@ -20,6 +20,7 @@ LCFLAGS = \
     -I $(TOPDIR)/include/common \
     -I $(TOPDIR)/src/lib/pal/include \
     -I $(TOPDIR)/src/lib/misc/include \
+    -I $(TOPDIR)/src/lib/mnet/include \
     -I $(TOPDIR)/src/lib/pcieport/include \
     -I $(TOPDIR)/src/lib/cfgspace/include \
     -I $(TOPDIR)/src/lib/pciemgr/include \
@@ -113,6 +114,7 @@ LIBRARIES += \
     -lcfgspace \
     -lpcieport \
     -lpcietlp \
+	-lmnet \
     $(NULL)
 
 ifeq ($(BUILD_ARCH), x86_64)

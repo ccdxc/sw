@@ -161,7 +161,7 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     pd = pd_client;
 
     memset(&pci_resources, 0, sizeof(pci_resources));
-    memset(&mnet_req_resp, 0, sizeof(mnet_req_resp));
+    memset(&mnet_req, 0, sizeof(mnet_dev_create_req_t));
 
     // Create LIF
     qinfo[ETH_QTYPE_RX].entries = (uint32_t)log2(spec->rxq_count);
@@ -267,27 +267,30 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
     }
 
     if (isMnic()) {
-        mnet_req_resp.req.devcmd_pa = pci_resources.devcmdpa;
-        mnet_req_resp.req.devcmd_db_pa = pci_resources.devcmddbpa;
-        mnet_req_resp.req.doorbell_pa = DOORBELL_ADDR(info.hw_lif_id);
-        mnet_req_resp.req.drvcfg_pa = intr_drvcfg_addr(Eth::intr_base);
-        mnet_req_resp.req.msixcfg_pa = intr_msixcfg_addr(Eth::intr_base);
-        mnet_req_resp.req.iface_type = MNIC_TYPE_ETH;
-        strcpy(mnet_req_resp.req.iface_name, spec->if_name.c_str());
+        mnet_req.devcmd_pa = pci_resources.devcmdpa;
+        mnet_req.devcmd_db_pa = pci_resources.devcmddbpa;
+        mnet_req.doorbell_pa = DOORBELL_ADDR(info.hw_lif_id);
+        mnet_req.drvcfg_pa = intr_drvcfg_addr(Eth::intr_base);
+        mnet_req.msixcfg_pa = intr_msixcfg_addr(Eth::intr_base);
+        strcpy(mnet_req.iface_name, spec->if_name.c_str());
 
         NIC_LOG_INFO("lif-{}: Mnet devcmd_pa: {:#x}, devcmd_db_pa: {:#x}, "
                      "doorbell_pa: {:#x}, drvcfg_pa: {:#x}, msixcfg_pa: {:#x}, "
-                     "iface_type: {}, iface_name: {}, intr_base: {}, intr_count: {}",
+                     "iface_name: {}, intr_base: {}, intr_count: {}",
                      info.hw_lif_id,
-                     mnet_req_resp.req.devcmd_pa,
-                     mnet_req_resp.req.devcmd_db_pa,
-                     mnet_req_resp.req.doorbell_pa,
-                     mnet_req_resp.req.drvcfg_pa,
-                     mnet_req_resp.req.msixcfg_pa,
-                     mnet_req_resp.req.iface_type,
-                     mnet_req_resp.req.iface_name,
+                     mnet_req.devcmd_pa,
+                     mnet_req.devcmd_db_pa,
+                     mnet_req.doorbell_pa,
+                     mnet_req.drvcfg_pa,
+                     mnet_req.msixcfg_pa,
+                     mnet_req.iface_name,
                      Eth::intr_base,
                      spec->intr_count);
+
+        for (uint32_t fw_cfg_entry = Eth::intr_base; fw_cfg_entry < (Eth::intr_base + spec->intr_count); fw_cfg_entry++) {
+            intr_fwcfg(fw_cfg_entry, info.hw_lif_id, 0, 0, 0, 0);
+            intr_fwcfg_local(fw_cfg_entry, 1);
+        }
 
         Eth::intr_base += spec->intr_count;
     } else if (isHostManagement()) {
@@ -346,7 +349,7 @@ void
 Eth::CreateMnet()
 {
     NIC_LOG_INFO("lif-{}: Calling Mnet lib.", info.hw_lif_id);
-    int rs = create_mnet(&mnet_req_resp);
+    int rs = create_mnet(&mnet_req);
     if (rs) {
         NIC_LOG_ERR("lif-{}: Failed to create mnet. ret: {}",
                     info.hw_lif_id, rs);

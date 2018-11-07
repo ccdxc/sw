@@ -14,7 +14,7 @@
 #include "mnet.h"
 
 int
-create_mnet(struct mnet_req_resp_t *mnet_info)
+create_mnet(struct mnet_dev_create_req_t *req)
 {
     int ret, fd;
     char* dev_node = MNET_DEVICE_FILE;
@@ -27,14 +27,14 @@ create_mnet(struct mnet_req_resp_t *mnet_info)
         return fd;
     }
 
-    ret = ioctl(fd, MNET_CREATE_DEV, mnet_info);
+    ret = ioctl(fd, MNET_CREATE_DEV, req);
 
     if (ret)
     {
         fprintf(stderr, "Error: %s %s\n", "MNET_CREATE_DEV", strerror(errno));
         return ret;
     }
-    
+
     close(fd);
 
     return 0;
