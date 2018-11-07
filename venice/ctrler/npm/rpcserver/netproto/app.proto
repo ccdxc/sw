@@ -1,0 +1,141 @@
+// app object
+
+syntax = "proto3";
+
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ---------------------------- App API ----------------------------
+// app controller api
+service AppApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "App",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Prefix: "api/apps"
+    };
+
+    rpc GetApp (api.ObjectMeta) returns (App) {};
+    rpc ListApps (api.ObjectMeta) returns (AppList) {};
+    rpc WatchApps (api.ObjectMeta) returns (stream AppEventList) {};
+}
+
+// app object
+message App {
+    api.TypeMeta    TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    AppSpec         Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    AppStatus       Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// app spec
+message AppSpec {
+    // List of proto/port
+    repeated string Protocol    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "protocol,omitempty"];
+    // ALG configuration if specified
+    ALG             ALG         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
+}
+
+message ALG {
+    DNS     DNS     = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "dns,omitempty"];
+    SIP     SIP     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sip,omitempty"];
+    RPC     SUNRPC  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "sunrpc,omitempty"];
+    FTP     FTP     = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ftp,omitempty"];
+    RPC     MSRPC   = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "msrpc,omitempty"];
+    TFTP    TFTP    = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tftp,omitempty"];
+    RTSP    RTSP    = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rtsp,omitempty"];
+}
+
+// DNS ALG configuration
+message DNS {
+    // Drop DNS Packets for multiple questions
+    bool DropMultiQuestionPackets   = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop-multi-question-packets,omitempty"];
+
+    // Drop packets whose domain name > 255
+    bool DropLargeDomainPackets     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop-large-domain-packets,omitempty"];
+
+    // Drop packets whose labels length > 63
+    bool DropLongLabelPackets       = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop-long-label-packets,omitempty"];
+
+    // Drop packets for num zones > 1
+    bool DropMultiZonePackets       = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop-multi-zone-packets,omitempty"];
+
+    // Maximum allowed message length
+    uint32 MaxMessageLength         = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "max-msg-length,omitempty"];
+
+    // Timeout for query response in seconds, minutes, eg 1m, 45s
+    string QueryResponseTimeout     = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "query-response-timeout,omitempty"];
+}
+
+// SIP ALG configuration
+message SIP {
+    // Maximum timeout for a call to remain active without any media
+    string MediaInactivityTimeout   = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "media-inactivity-timeout,omitempty"];
+
+    // Maximum length of call in hours, minutes, seconds, eg 1h, 15m, 45s
+    string MaxCallDuration          = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "max-call-duration,omitempty"];
+
+    // Timeout for INVITE transaction in minutes, seconds, eg 1m, 45s
+    string CTimeout                 = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "c-timeout,omitempty"];
+
+    // Timeout for T1 Interval in minutes, seconds, eg 1m, 45s
+    string T1Timeout                = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "t1-timeout,omitempty"];
+
+    // Timeout for T4 interval in minutes, seconds, eg 1m, 45s
+    string T4Timeout                = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "t4-timeout,omitempty"];
+
+    // DSCP traffic classification. 0 - 63
+    uint32 DSCPCodePoint            = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "dscp-code-point,omitempty"];
+
+}
+
+// RPC ALG configuration for MSRPC and SunRPC
+message RPC {
+    // RPC Program identifier
+    uint32 ProgramID        = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "program-id,omitempty"];
+    // Defines timeout in hours, minutes, eg 24h, 300m
+    string MapEntryTimeout  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "map-entry-timeout"];
+}
+
+// FTP ALG configuration
+message FTP {
+    // Allow FTP packets with mismatched IP header address and payload
+    bool AllowMismatchIPAddresses       = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "allow-mismatch-ip-addresses,omitempty"];
+
+}
+
+// TFTP ALG configuration
+message TFTP {
+
+}
+
+// RTSP ALG configuration
+message RTSP {
+
+}
+
+// app status
+message AppStatus {
+    uint64 AppID         = 3[(gogoproto.jsontag)="app-id,omitempty"];  // App identifier
+}
+
+// list of apps
+message AppList {
+    repeated App apps = 1;
+}
+
+// app watch event
+message AppEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    App             App         = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "app,omitempty"];
+}
+
+message AppEventList {
+    repeated AppEvent appEvents = 1;
+}
