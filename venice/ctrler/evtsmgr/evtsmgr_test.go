@@ -126,7 +126,10 @@ func TestEventsManagerInstantiation(t *testing.T) {
 
 	// invalid elastic URL
 	_, err = elastic.NewClient("", mockResolver, logger.WithContext("submodule", "elastic"))
-	tu.Assert(t, strings.Contains(err.Error(), "no such host") || strings.Contains(err.Error(), "no Elasticsearch node available"), "expected failure, EventsManager init succeeded, err: %v", err)
+	tu.Assert(t, strings.Contains(err.Error(), "no such host") ||
+		strings.Contains(err.Error(), "no Elasticsearch node available") ||
+		strings.Contains(err.Error(), "context deadline exceeded"),
+		"expected failure, init succeeded, err: %v", err)
 }
 
 // TestEventsElasticTemplate tests events template creation in elasticsearch
