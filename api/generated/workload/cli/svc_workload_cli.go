@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/workload"
 	loginctx "github.com/pensando/sw/api/login/context"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 func restGetEndpoint(hostname, tenant, token string, obj interface{}) error {

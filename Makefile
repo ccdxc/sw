@@ -83,7 +83,6 @@ checks: goimports-src golint-src govet-src
 # gen does all the autogeneration. viz venice cli, proto sources. Ensure that any new autogen target is added to TO_GEN above
 gen:
 	@for c in ${TO_GEN}; do printf "\n+++++++++++++++++ Generating $${c} +++++++++++++++++\n"; PATH=$$PATH make -C $${c} || exit 1; done
-	$(MAKE) -C ${PWD}/venice/cli/gen
 
 # goimports-src formats the source and orders imports
 # Target directories is needed only for goipmorts where it doesn't accept package names.

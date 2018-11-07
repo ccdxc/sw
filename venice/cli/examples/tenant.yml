@@ -1,9 +1,0 @@
-# please edit and/or delete the lines in this sample
-kind: tenant            # kind of this object
-meta:
-  name: default         # name of this object
-  labels:	        # arbitrary user defined tags 'key: value' 
-    tier: bronze
-spec:
-  admin-user: joe        # administrator (user name ) of this tenant
-

@@ -8,7 +8,7 @@ package cli
 
 import (
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 // CreateEventPolicyFlags specifies flags for EventPolicy create operation

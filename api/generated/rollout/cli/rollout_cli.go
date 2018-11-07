@@ -8,7 +8,7 @@ package cli
 
 import (
 	"github.com/pensando/sw/api/generated/rollout"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 // CreateRolloutFlags specifies flags for Rollout create operation

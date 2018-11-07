@@ -1,6 +1,7 @@
 package vcli
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -13,6 +14,11 @@ const (
 	tokenFile = "token"
 )
 
+type tokenInfo struct {
+	Token  string `json:"token"`
+	Server string `json:"server"`
+}
+
 func getCfgDir() string {
 	usr, err := user.Current()
 	if err != nil {
@@ -22,7 +28,7 @@ func getCfgDir() string {
 	return path.Join(usr.HomeDir, ".pensando")
 }
 
-func saveToken(token string) {
+func saveToken(token, server string) {
 	cfgDir := getCfgDir()
 	if _, err := os.Stat(cfgDir); os.IsNotExist(err) {
 		err = os.Mkdir(cfgDir, 0700)
@@ -31,22 +37,42 @@ func saveToken(token string) {
 		}
 	}
 
-	if err := ioutil.WriteFile(path.Join(cfgDir, tokenFile), []byte(token), 0700); err != nil {
+	ti := &tokenInfo{Token: token, Server: server}
+	jData, err := json.MarshalIndent(ti, "", "  ")
+	if err != nil {
+		log.Fatalf("unable to marshal structure %+v, error '%s'", ti, err)
+	}
+
+	if err := ioutil.WriteFile(path.Join(cfgDir, tokenFile), jData, 0600); err != nil {
 		log.Fatalf("Failed to save token: %v", err)
 	}
 }
 
-func getToken() string {
+func getTokenInfo() *tokenInfo {
+	ti := &tokenInfo{}
 	cfgFile := path.Join(getCfgDir(), tokenFile)
 	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
-		return ""
+		return ti
 	}
 
-	token, err := ioutil.ReadFile(cfgFile)
+	jData, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
 		log.Fatalf("Failed to read token: %v", err)
 	}
-	return string(token)
+	if err := json.Unmarshal(jData, ti); err != nil {
+		log.Fatalf("Unmarshal error '%s' data '%s'", err, jData)
+	}
+	return ti
+}
+
+func getLoginToken() string {
+	ti := getTokenInfo()
+	return ti.Token
+}
+
+func getLoginServer() string {
+	ti := getTokenInfo()
+	return ti.Server
 }
 
 func clearToken() {

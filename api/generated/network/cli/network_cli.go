@@ -8,7 +8,7 @@ package cli
 
 import (
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 // CreateNetworkFlags specifies flags for Network create operation

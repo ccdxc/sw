@@ -1,8 +1,0 @@
-{
-	"kind": "node",
-	"meta": {
-		"name": "mgmt3",
-		"labels": { "os":"linux", "storage":"ssd", "dc":"sjc-lab22" }
-	},
-	"spec": {}
-}

@@ -3,14 +3,107 @@ package vcli
 import (
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/urfave/cli"
 )
 
-// BashCompleter provides bash completion for the commands
-func BashCompleter(c *cli.Context, cmds []cli.Command, flags []cli.Flag) {
+func bashEditCompleter(c *cli.Context) {
+	bashCompleter(c, editCommands, []cli.Flag{})
+}
+
+func bashCreateCompleter(c *cli.Context) {
+	bashCompleter(c, createCommands, []cli.Flag{})
+}
+
+func bashUpdateCompleter(c *cli.Context) {
+	bashCompleter(c, updateCommands, []cli.Flag{})
+}
+
+func bashPatchCompleter(c *cli.Context) {
+	bashCompleter(c, patchCommands, []cli.Flag{})
+}
+
+func bashDeleteCompleter(c *cli.Context) {
+	bashCompleter(c, deleteCommands, []cli.Flag{})
+}
+
+func bashReadCompleter(c *cli.Context) {
+	bashCompleter(c, readCommands, []cli.Flag{})
+}
+
+func bashLabelCompleter(c *cli.Context) {
+	bashCompleter(c, labelCommands, []cli.Flag{})
+}
+
+func bashExampleCompleter(c *cli.Context) {
+	bashCompleter(c, exampleCommands, []cli.Flag{})
+}
+
+func bashDefinitionCompleter(c *cli.Context) {
+	bashCompleter(c, definitionCommands, []cli.Flag{})
+}
+
+func bashTreeCompleter(c *cli.Context) {
+	bashCompleter(c, readCommands, []cli.Flag{})
+}
+
+func bashSnapshotCompleter(c *cli.Context) {
+	bashCompleter(c, []cli.Command{}, snapshotFlags)
+}
+
+func bashEditObjCompleter(c *cli.Context) {
+	bashCompleter(c, []cli.Command{}, editFlags)
+	bashObjNameCompleter(c)
+}
+
+func bashUpdateObjCompleter(c *cli.Context) {
+	cFlags := getSubCommandFlags("create", c.Command.Name)
+	bashCompleter(c, updateCommands, cFlags)
+	bashCompleter(c, []cli.Command{}, updateFlags)
+	bashObjNameCompleter(c)
+}
+
+func bashPatchObjCompleter(c *cli.Context) {
+	cFlags := getSubCommandFlags("create", c.Command.Name)
+	bashCompleter(c, patchCommands, cFlags)
+	bashObjNameCompleter(c)
+}
+
+func bashCreateObjCompleter(c *cli.Context) {
+	cFlags := getSubCommandFlags("create", c.Command.Name)
+	bashCompleter(c, []cli.Command{}, cFlags)
+}
+
+func bashReadObjCompleter(c *cli.Context) {
+	bashCompleter(c, []cli.Command{}, readFlags)
+	bashObjNameCompleter(c)
+}
+
+func bashDeleteObjCompleter(c *cli.Context) {
+	bashCompleter(c, []cli.Command{}, deleteFlags)
+	bashObjNameCompleter(c)
+}
+
+func bashLabelObjCompleter(c *cli.Context) {
+	bashCompleter(c, []cli.Command{}, readFlags)
+	bashObjNameCompleter(c)
+}
+
+func bashExampleObjCompleter(c *cli.Context) {
+	bashCompleter(c, []cli.Command{}, exampleFlags)
+	bashObjNameCompleter(c)
+}
+
+func bashDefinitionObjCompleter(c *cli.Context) {
+	bashCompleter(c, []cli.Command{}, definitionFlags)
+	bashObjNameCompleter(c)
+}
+
+// bash completion for the specified sub-commands and cli flags
+func bashCompleter(c *cli.Context, cmds []cli.Command, flags []cli.Flag) {
 	if retStr, found := getLastFlagSuggestion(c, flags); found {
 		fmt.Printf("%s ", retStr)
 		return
@@ -41,6 +134,46 @@ func BashCompleter(c *cli.Context, cmds []cli.Command, flags []cli.Flag) {
 	}
 }
 
+// provides names of objects fetching their values from the backend
+func bashObjNameCompleter(c *cli.Context) {
+
+	ctx := func(c *cli.Context, cmd string) *context {
+		ctx := &context{cli: c, tenant: defaultTenant}
+		ctx.cmd = cmd
+		ctx.subcmd = c.Command.Name
+		ctx.server = getLoginServer()
+		ctx.token = getLoginToken()
+
+		if err := populateGenCtx(ctx); err != nil {
+			fmt.Printf("error populating generated context (subcmd %s): %s", ctx.subcmd, err)
+			return nil
+		}
+
+		if len(c.Args()) > 0 {
+			namesRe := c.Args()[len(c.Args())-1]
+			var err error
+			ctx.re, err = regexp.Compile(namesRe)
+			if err != nil {
+				fmt.Printf("Unable to compile regular expression err '%s'", err)
+				return nil
+			}
+		}
+
+		return ctx
+	}(c, "read")
+
+	names := getFilteredNames(ctx)
+
+	if len(names) > 40 {
+		fmt.Printf("too-many-objects! ")
+		return
+	}
+
+	for _, name := range names {
+		fmt.Printf("%s ", name)
+	}
+}
+
 // flagMeta keeps meatdata associated with each CLI flag useful to keep misc information about various flags
 type flagMeta struct {
 	kind  string
@@ -50,7 +183,7 @@ type flagMeta struct {
 
 // getLastFlagSuggestion provides suggestion on partial last flag argument
 // more specifically it suggests whether to enter a value or key:value (for maps)
-// node that maps are specified using ':' separator
+// note that maps are specified using separator identified in 'kvSplitter' constant
 func getLastFlagSuggestion(c *cli.Context, flags []cli.Flag) (string, bool) {
 	retStr := ""
 	osArgs := c.App.Metadata["osArgs"].([]string)
@@ -67,7 +200,7 @@ func getLastFlagSuggestion(c *cli.Context, flags []cli.Flag) (string, bool) {
 				case "string":
 					retStr = fmt.Sprintf("{value} ")
 				case "slice":
-					retStr = fmt.Sprintf("{key:value} ")
+					retStr = fmt.Sprintf("{key%svalue} ", kvSplitter)
 				}
 				return retStr, true
 			}

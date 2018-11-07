@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
 	loginctx "github.com/pensando/sw/api/login/context"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 // CreateBookFlags specifies flags for Book create operation

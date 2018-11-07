@@ -2,45 +2,613 @@ package vcli
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
-	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
-	"fmt"
+	log "github.com/sirupsen/logrus"
 
-	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
-	"github.com/pensando/sw/venice/cli/api"
-	"github.com/pensando/sw/venice/cli/testserver/tserver"
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/cli/mock"
 )
 
 const (
 	veniceCmd   = "venice "
-	fmtOutput   = false
 	snapshotDir = "snap3443"
 )
 
 var (
-	testServerAddr = ""
-	testServerOpt  = ""
+	loginOnce   sync.Once
+	logInitOnce sync.Once
+	tinfo       *mock.Info
 )
 
-var once sync.Once
+func veniceLogin() {
+	loginOnce.Do(func() {
+		cmdStr := veniceCmd + "--server http://localhost:" + tinfo.VenicePort + " " + "login -u " + tinfo.UserCred.Username + " -p " + tinfo.UserCred.Password
+		cmdArgs := strings.Split(cmdStr, " ")
+		InvokeCLI(cmdArgs, false)
+	})
+}
+
+func TestMain(m *testing.M) {
+	tinfo = mock.Start()
+	rcode := m.Run()
+	tinfo.Stop()
+	os.Exit(rcode)
+}
+
+func TestLogin(t *testing.T) {
+	veniceLogin()
+}
+
+func TestCreate(t *testing.T) {
+	veniceLogin()
+
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --external-vlan 00:f0:0d:f0:0d:d0=66 --micro-seg-vlan 00:de:ed:de:ed:d0=2222 --micro-seg-vlan 00:f0:0d:f0:0d:d0=3333 TestCreateVm")
+
+	out := veniceCLI("read workload -j TestCreateVm")
+	obj := &workload.Workload{}
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+	if obj.Kind != "Workload" || obj.ObjectMeta.Name != "TestCreateVm" {
+		t.Fatalf("invalid object returned %+v", obj)
+	}
+	if obj.Spec.HostName != "dc12_rack3_bm4" {
+		t.Fatalf("invalid hostname in obj: %+v", obj)
+	}
+	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
+		map[string]workload.WorkloadIntfSpec{
+			"00:de:ed:de:ed:d0": workload.WorkloadIntfSpec{ExternalVlan: 55, MicroSegVlan: 2222},
+			"00:f0:0d:f0:0d:d0": workload.WorkloadIntfSpec{ExternalVlan: 66, MicroSegVlan: 3333}}) {
+		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	veniceLogin()
+
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --external-vlan 00:f0:0d:f0:0d:d0=66 --micro-seg-vlan 00:de:ed:de:ed:d0=2222 --micro-seg-vlan 00:f0:0d:f0:0d:d0=3333 TestUpdateVm")
+	out := veniceCLI("update workload --host-name dc12_rack4_bm4 --external-vlan 00:de:ed:de:ed:d0=44 --external-vlan 00:f0:0d:f0:0d:d0=22 --micro-seg-vlan 00:de:ed:de:ed:d0=1111 --micro-seg-vlan 00:f0:0d:f0:0d:d0=2222 TestUpdateVm")
+
+	out = veniceCLI("read workload -j TestUpdateVm")
+	obj := &workload.Workload{}
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+	if obj.Kind != "Workload" || obj.ObjectMeta.Name != "TestUpdateVm" {
+		t.Fatalf("invalid object returned %+v", obj)
+	}
+	if obj.Spec.HostName != "dc12_rack4_bm4" {
+		t.Fatalf("invalid hostname in obj: %+v", obj)
+	}
+	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
+		map[string]workload.WorkloadIntfSpec{
+			"00:de:ed:de:ed:d0": workload.WorkloadIntfSpec{ExternalVlan: 44, MicroSegVlan: 1111},
+			"00:f0:0d:f0:0d:d0": workload.WorkloadIntfSpec{ExternalVlan: 22, MicroSegVlan: 2222}}) {
+		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
+	}
+}
+
+func TestPatch(t *testing.T) {
+	veniceLogin()
+
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --external-vlan 00:f0:0d:f0:0d:d0=66 --micro-seg-vlan 00:de:ed:de:ed:d0=2222 --micro-seg-vlan 00:f0:0d:f0:0d:d0=3333 TestPatchVm")
+
+	out := veniceCLI("read workload -j TestPatchVm")
+	obj := &workload.Workload{}
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+
+	veniceCLI("patch workload --host-name dc12_rack4_bm4 TestPatchVm")
+	out = veniceCLI("read workload -j TestPatchVm")
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+	if obj.Kind != "Workload" || obj.ObjectMeta.Name != "TestPatchVm" {
+		t.Fatalf("invalid object returned %+v", obj)
+	}
+	if obj.Spec.HostName != "dc12_rack4_bm4" {
+		t.Fatalf("invalid hostname in obj: %+v", obj)
+	}
+	if len(obj.Spec.Interfaces) != 2 || !reflect.DeepEqual(obj.Spec.Interfaces,
+		map[string]workload.WorkloadIntfSpec{
+			"00:de:ed:de:ed:d0": workload.WorkloadIntfSpec{ExternalVlan: 55, MicroSegVlan: 2222},
+			"00:f0:0d:f0:0d:d0": workload.WorkloadIntfSpec{ExternalVlan: 66, MicroSegVlan: 3333}}) {
+		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
+	}
+
+	veniceCLI("patch workload --external-vlan 00:f0:0d:f0:0d:d0=77 TestPatchVm")
+	out = veniceCLI("read workload -j TestPatchVm")
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+	if obj.Spec.Interfaces["00:f0:0d:f0:0d:d0"].ExternalVlan != 77 {
+		t.Fatalf("invalid Interfaces update: %+v", obj.Spec.Interfaces)
+	}
+}
+
+func TestRead(t *testing.T) {
+	veniceLogin()
+
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key1=val1 --label key2=val2 --external-vlan 00:de:ed:de:ed:d0=55 --external-vlan 00:f0:0d:f0:0d:d0=66 --micro-seg-vlan 00:de:ed:de:ed:d0=2222 --micro-seg-vlan 00:f0:0d:f0:0d:d0=3333 TestReadVm1")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key2=val2 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2223 TestReadVm2")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key1=val1 --label key3=val3 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2224 TestReadVm3")
+	out := veniceCLI("read workload")
+	if !matchLineFields(out, []string{"dc12_rack3_bm4", "TestReadVm1"}) {
+		t.Fatalf("error finding a specific record: %s", out)
+	}
+	if !matchLineFields(out, []string{"TestReadVm2", "00:de:ed:de:ed:d0=55", "dc12_rack3_bm4", "00:de:ed:de:ed:d0=2223"}) {
+		t.Fatalf("error finding a specific record: %s", out)
+	}
+
+	out = veniceCLI("read workload -q")
+	if !matchLines(out, []string{"TestReadVm1", "TestReadVm2", "TestReadVm3"}) {
+		t.Fatalf("error matching lines: %s", out)
+	}
+
+	out = veniceCLI("read workload --label key1=val1")
+	if !matchLineFields(out, []string{"TestReadVm1", "dc12_rack3_bm4"}) {
+		t.Fatalf("error matching lines: %s", out)
+	}
+	if !matchLineFields(out, []string{"TestReadVm3", "dc12_rack3_bm4"}) {
+		t.Fatalf("error matching lines: %s", out)
+	}
+}
+
+func TestDelete(t *testing.T) {
+	veniceLogin()
+
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2223 TestDeleteVm1")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=77 --micro-seg-vlan 00:de:ed:de:ed:d0=2224 TestDeleteVm2")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=88 --micro-seg-vlan 00:de:ed:de:ed:d0=2225 TestDeleteVm3")
+	out := veniceCLI("delete workload TestDeleteVm1")
+	fmt.Printf("out = \n%s\n", out)
+	out = veniceCLI("read workload -j TestDeleteVm1")
+	obj := &workload.Workload{}
+	if err := lookForJSON(out, obj); err == nil {
+		t.Fatalf("found the record post delete: %s", out)
+	}
+
+	out = veniceCLI("delete workload TestDeleteVm2,TestDeleteVm3")
+	fmt.Printf("out = \n%s\n", out)
+	out = veniceCLI("read workload TestDeleteVm3")
+	if err := lookForJSON(out, obj); err == nil {
+		t.Fatalf("found the record post delete: %s", out)
+	}
+}
+
+/* FIXME: Commenting out this test as it depends on the environment program sed that is a bit unpredictable in CI runs
+ *
+func TestEdit(t *testing.T) {
+	veniceLogin()
+
+	veniceCLI("create workload --label key1=val1 --label key2=val2 --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2223 TestEditVm")
+	// change the editor to cat and replace
+	oldEditor := os.Getenv("VENICE_EDITOR")
+	os.Setenv("VENICE_EDITOR", "sed -i s/55/77/g")
+	out := veniceCLI("edit workload TestEditVm")
+
+	obj := &workload.Workload{}
+	out = veniceCLI("read workload -j TestEditVm")
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+
+	// make sure that the resource version has been updated, and label is also updated
+	if obj.Kind != "Workload" || obj.ObjectMeta.Name != "TestEditVm" || obj.Labels["key2"] != "val2" {
+		t.Fatalf("invalid object returned %+v", obj)
+	}
+	if obj.Spec.HostName != "dc12_rack3_bm4" {
+		t.Fatalf("invalid hostname in obj: %+v", obj)
+	}
+	if len(obj.Spec.Interfaces) != 1 || !reflect.DeepEqual(obj.Spec.Interfaces,
+		map[string]workload.WorkloadIntfSpec{
+			"00:de:ed:de:ed:d0": workload.WorkloadIntfSpec{ExternalVlan: 77, MicroSegVlan: 2223}}) {
+		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
+	}
+
+	// restore the editor
+	os.Setenv("VENICE_EDITOR", oldEditor)
+}
+*/
+
+func TestUpdateFromFile(t *testing.T) {
+	veniceLogin()
+
+	obj := &workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "TestUpdateFromFileVm",
+			Labels: map[string]string{"key1": "val1", "key2": "val2"},
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "node021",
+			Interfaces: map[string]workload.WorkloadIntfSpec{
+				"11:11:11:11:11:11": {ExternalVlan: 11, MicroSegVlan: 1000},
+				"22:22:22:22:22:22": {ExternalVlan: 22, MicroSegVlan: 2000},
+				"33:33:33:33:33:33": {ExternalVlan: 33, MicroSegVlan: 3000},
+			},
+		},
+	}
+
+	// marshal and save the object in a file
+	b, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatalf("Unable to marshal workload object %+v", obj)
+	}
+	ioutil.WriteFile("tmp-3772.json", b, 0644)
+	defer os.RemoveAll("tmp-3772.json")
+	veniceCLI("create workload -f tmp-3772.json")
+
+	// read back the object to confirm if all matches our expectation
+	out := veniceCLI("read workload -j TestUpdateFromFileVm")
+	obj = &workload.Workload{}
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+
+	if obj.Kind != "Workload" || obj.ObjectMeta.Name != "TestUpdateFromFileVm" ||
+		obj.Labels["key1"] != "val1" || obj.Labels["key2"] != "val2" {
+		t.Fatalf("invalid object returned %+v", obj)
+	}
+	if obj.Spec.HostName != "node021" {
+		t.Fatalf("invalid hostname in obj: %+v", obj)
+	}
+	if len(obj.Spec.Interfaces) != 3 || !reflect.DeepEqual(obj.Spec.Interfaces,
+		map[string]workload.WorkloadIntfSpec{
+			"11:11:11:11:11:11": workload.WorkloadIntfSpec{ExternalVlan: 11, MicroSegVlan: 1000},
+			"22:22:22:22:22:22": workload.WorkloadIntfSpec{ExternalVlan: 22, MicroSegVlan: 2000},
+			"33:33:33:33:33:33": workload.WorkloadIntfSpec{ExternalVlan: 33, MicroSegVlan: 3000}}) {
+		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
+	}
+}
+
+func TestLabel(t *testing.T) {
+	veniceLogin()
+
+	veniceCLI("create workload --label key1=val1 --host-name r2d2 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2223 TestLabelVm")
+
+	out := veniceCLI("label workload --update-label key1=val2 TestLabelVm")
+
+	obj := &workload.Workload{}
+	out = veniceCLI("read workload -j TestLabelVm")
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+
+	// make sure that the resource version has been updated, and label is also updated
+	if obj.Kind != "Workload" || obj.ObjectMeta.Name != "TestLabelVm" || obj.Labels["key1"] != "val2" {
+		t.Fatalf("invalid object returned %+v", obj)
+	}
+	if obj.Spec.HostName != "r2d2" {
+		t.Fatalf("invalid hostname in obj: %+v", obj)
+	}
+	if len(obj.Spec.Interfaces) != 1 || !reflect.DeepEqual(obj.Spec.Interfaces,
+		map[string]workload.WorkloadIntfSpec{
+			"00:de:ed:de:ed:d0": workload.WorkloadIntfSpec{ExternalVlan: 55, MicroSegVlan: 2223}}) {
+		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
+	}
+}
+
+func TestShowVersion(t *testing.T) {
+	veniceLogin()
+
+	out := veniceCLI("version")
+	fmt.Printf("\n%s\n", out)
+}
+
+func TestExample(t *testing.T) {
+	veniceLogin()
+
+	out := veniceCLI("example workload")
+	fmt.Printf("\n%s\n", out)
+}
+
+func TestDefinition(t *testing.T) {
+	veniceLogin()
+
+	out := veniceCLI("definition workload")
+	fmt.Printf("\n%s\n", out)
+}
+
+func TestTree(t *testing.T) {
+	veniceLogin()
+
+	out := veniceCLI("tree")
+	fmt.Printf("\n%s\n", out)
+}
+
+func TestSnapshot(t *testing.T) {
+	veniceLogin()
+
+	out := veniceCLI("snapshot --id " + snapshotDir)
+	if !strings.Contains(out, "Successful - stored") {
+		t.Fatalf("unable to store snapshot: %s\n", out)
+	}
+	os.RemoveAll(snapshotDir)
+}
+
+func TestBashCompletion(t *testing.T) {
+	veniceLogin()
+
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --external-vlan 00:f0:0d:f0:0d:d0=66 --micro-seg-vlan 00:de:ed:de:ed:d0=2222 --micro-seg-vlan 00:f0:0d:f0:0d:d0=3333 TestBashCompletionVm1")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2223 TestBashCompletionVm2")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2224 TestBashCompletionContainer3")
+
+	out := veniceCLI("read workload --gbc")
+	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2", "TestBashCompletionContainer3"}) {
+		t.Fatalf("error matching vm names for command completion: %s", out)
+	}
+
+	// test name completion
+	out = veniceCLI("read workload TestBashCompletionVm --gbc")
+	if matchLineFields(out, []string{"TestBashCompletionContainer3"}) {
+		t.Fatalf("matched unexpected workloads for command completion: %s", out)
+	}
+
+	out = veniceCLI("create workload --gbc")
+	if !matchLineFields(out, []string{"--host-name", "--micro-seg-vlan", "--external-vlan"}) {
+		t.Fatalf("error matching create command options: %s", out)
+	}
+
+	// test string value completion
+	out = veniceCLI("patch workload --host-name --gbc")
+	if !matchLineFields(out, []string{"{value}"}) {
+		t.Fatalf("error matching value in field specific bash completer: %s", out)
+	}
+
+	// test map value completion
+	out = veniceCLI("read workload --label --gbc")
+	if !matchLineFields(out, []string{"{key=value}"}) {
+		t.Fatalf("error matching value in field specific bash completer: %s", out)
+	}
+
+	// test an option doesn't repeat itself
+	out = veniceCLI("patch workload --host-name blah --gbc")
+	if matchLineFields(out, []string{"host-name"}) {
+		t.Fatalf("host-name reappeared for command completion: %s", out)
+	}
+
+	// maps and string slices must be allowed to repeat
+	out = veniceCLI("update workload --label key2=val22 TestBashCompletionVm2 --gbc")
+	if !matchLineFields(out, []string{"--label"}) {
+		t.Fatalf("error matching map value more than once: %s", out)
+	}
+
+	out = veniceCLI("delete workload --gbc")
+	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2", "TestBashCompletionContainer3"}) {
+		t.Fatalf("error matching vm names for command completion: %s", out)
+	}
+
+	out = veniceCLI("label workload --gbc")
+	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2", "TestBashCompletionContainer3"}) {
+		t.Fatalf("error matching vm names for command completion: %s", out)
+	}
+
+	out = veniceCLI("example workload --gbc")
+	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2", "TestBashCompletionContainer3"}) {
+		t.Fatalf("error matching vm names for command completion: %s", out)
+	}
+
+	out = veniceCLI("definition workload --gbc")
+	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2", "TestBashCompletionContainer3"}) {
+		t.Fatalf("error matching vm names for command completion: %s", out)
+	}
+
+	out = veniceCLI("edit workload --gbc")
+	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2", "TestBashCompletionContainer3"}) {
+		t.Fatalf("error matching vm names for command completion: %s", out)
+	}
+
+	out = veniceCLI("snapshot --gbc")
+	if !matchLineFields(out, []string{"--restore"}) {
+		t.Fatalf("error matching snapshot command completion: %s", out)
+	}
+
+	out = veniceCLI("update workload --gbc")
+	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2", "TestBashCompletionContainer3"}) {
+		t.Fatalf("error matching vm names for command completion: %s", out)
+	}
+
+	// regex for name completion
+	out = veniceCLI("read workload Test.*CompletionVm --gbc")
+	if !matchLineFields(out, []string{"TestBashCompletionVm1", "TestBashCompletionVm2"}) {
+		t.Fatalf("error mathcing vm names for command completion: %s", out)
+	}
+
+	// invalid regex should fail
+	out = veniceCLI("read workload Test.{*CompletionVm --gbc")
+	if matchLineFields(out, []string{"TestBashCompletionVm1"}) {
+		t.Fatalf("matched unexpected workloads for command completion: %s", out)
+	}
+
+	out = veniceCLI("--gbc")
+	if !matchLineFields(out, []string{"read", "create", "update"}) {
+		t.Fatalf("unable to validate main command completion: %s", out)
+	}
+
+	// bool flag in command completion
+	veniceCLI("update alertdestination --default --gbc")
+}
+
+func TestTopLevelBashCompletion(t *testing.T) {
+	veniceLogin()
+
+	out := veniceCLI("edit --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("create --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("update --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("patch --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("delete --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("read --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("label --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("example --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("definition --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("tree --gbc")
+	if !matchLineFields(out, []string{"sgpolicy", "workload", "securitygroup"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+
+	out = veniceCLI("create -f --gbc")
+	if !matchLineFields(out, []string{"sgpolicy"}) {
+		t.Fatalf("unable to validate command completion: %s", out)
+	}
+}
+
+func TestCreateYml(t *testing.T) {
+	ymlBytes := `#
+kind: workload
+meta:
+  labels:
+    key1: val1
+    key2: val2
+  name: TestCreateYmlVm
+spec:
+  host-name: bm576
+  interfaces:
+    "11:11:11:11:11:11":
+      external-vlan: 11
+      micro-seg-vlan: 1000
+    "22:22:22:22:22:22":
+      external-vlan: 22
+      micro-seg-vlan: 2000
+    "33:33:33:33:33:33":
+      external-vlan: 33
+      micro-seg-vlan: 3000
+
+`
+	fileName := "/tmp/tmp3343.yml"
+	ioutil.WriteFile(fileName, []byte(ymlBytes), 0644)
+	defer os.Remove(fileName)
+
+	out := veniceCLI("create workload -f /tmp/tmp3343.yml")
+
+	// read back the object to confirm if all matches our expectation
+	out = veniceCLI("read workload -j TestCreateYmlVm")
+	obj := &workload.Workload{}
+	if err := lookForJSON(out, obj); err != nil {
+		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
+	}
+	if obj.Kind != "Workload" || obj.ObjectMeta.Name != "TestCreateYmlVm" ||
+		obj.Labels["key1"] != "val1" || obj.Labels["key2"] != "val2" {
+		t.Fatalf("invalid object returned %+v", obj)
+	}
+	if obj.Spec.HostName != "bm576" {
+		t.Fatalf("invalid hostname in obj: %+v", obj)
+	}
+	if len(obj.Spec.Interfaces) != 3 || !reflect.DeepEqual(obj.Spec.Interfaces,
+		map[string]workload.WorkloadIntfSpec{
+			"11:11:11:11:11:11": workload.WorkloadIntfSpec{ExternalVlan: 11, MicroSegVlan: 1000},
+			"22:22:22:22:22:22": workload.WorkloadIntfSpec{ExternalVlan: 22, MicroSegVlan: 2000},
+			"33:33:33:33:33:33": workload.WorkloadIntfSpec{ExternalVlan: 33, MicroSegVlan: 3000}}) {
+		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
+	}
+}
+
+func TestFailureCases(t *testing.T) {
+	// pass non existing dir for a create file operation
+	out := veniceCLI("create workload -f /junk")
+	if !strings.Contains(out, "File does not exist") {
+		t.Fatalf("succeeded create workload for a non existing file: %s", out)
+	}
+
+	// null filename for a create file operation
+	out = veniceCLI("create workload -f ")
+	if !strings.Contains(out, "Null file name") {
+		t.Fatalf("succeeded create workload for a non existing file %s", out)
+	}
+
+	ymlBytes := `#
+	some junk`
+	fileName := "/tmp/tmp3343.yml"
+	ioutil.WriteFile(fileName, []byte(ymlBytes), 0644)
+	defer os.Remove(fileName)
+
+	// invalid yml file contents
+	veniceCLI("create workload -f /tmp/tmp3343.yml")
+
+	// patch non existing workload
+	out = veniceCLI("patch workload foo --host-name blah")
+	if !strings.Contains(out, "Status:(404)") {
+		t.Fatalf("succeeded on non-existing object --%s--\n", out)
+	}
+
+	// delete non existing workload
+	out = veniceCLI("delete workload foo")
+	if !strings.Contains(out, "Status:(404)") {
+		t.Fatalf("succeeded on non-existing object --%s--\n", out)
+	}
+
+	// update non existing workload
+	out = veniceCLI("update workload foo")
+	if !strings.Contains(out, "Status:(404)") {
+		t.Fatalf("succeeded on non-existing object --%s--\n", out)
+	}
+}
+
+func TestConfigCommandCompletion(t *testing.T) {
+	out := veniceCLI("auto-completion")
+	fmt.Printf("--%s--\n", out)
+}
+
+func TestLogout(t *testing.T) {
+	veniceLogin()
+
+	out := veniceCLI("logout")
+	if !strings.Contains(out, "Logout successful") {
+		t.Fatalf("logout failure")
+	}
+}
 
 func veniceCLI(cmdStr string) string {
-	cmdStr = veniceCmd + testServerOpt + cmdStr
+	cmdStr = veniceCmd + "--server http://localhost:" + tinfo.VenicePort + " " + cmdStr
 	cmdArgs := strings.Split(cmdStr, " ")
+	fmt.Printf(">>> issuing cmd: '%s'\n", cmdStr)
 
-	once.Do(func() {
+	logInitOnce.Do(func() {
 		// InvokeCLI below changes the os.Stdout temporarily to a os.Pipe() and calls backend server functions in martini context and reverts back.
 		// These backend server functions can call log().
 		// If the defaultLogger.LogToStdout is true, then on the first invocation of Log(), the current os.Stdout is Dup2 to os.Stderr
@@ -52,1558 +620,4 @@ func veniceCLI(cmdStr string) string {
 	})
 	stdOut := InvokeCLI(cmdArgs, true)
 	return stdOut
-}
-
-func TestMain(m *testing.M) {
-	var err error
-
-	testServerAddr = tserver.Start()
-	testServerOpt = "--server http://" + testServerAddr + " "
-
-	// initiaize cluster with default cluster
-	cluster := &cluster.Cluster{}
-	cluster.Kind = "cluster"
-	cluster.Name = "dc-az-cluster1"
-
-	count := 5
-	url := "http://" + testServerAddr + "/v1/cluster/cluster"
-	for {
-		var response map[string]string
-		err = netutils.HTTPPost(url, cluster, &response)
-		if err == nil {
-			break
-		}
-		// server may not be ready yet. retry..
-		count--
-		if count <= 0 {
-			fmt.Printf("error creating default cluster: %v\n", err)
-			return
-		}
-		fmt.Println("server not ready yet. Retrying.")
-		time.Sleep(10 * time.Millisecond)
-
-	}
-	m.Run()
-	os.RemoveAll(snapshotDir)
-}
-
-func TestClusterCreate(t *testing.T) {
-	out := veniceCLI("update cluster --label type:vcenter --label allowed:qa --label dc:sjc-lab22 --virtual-ip 158.21.34.44 --quorum-nodes mgmt1 --quorum-nodes mgmt2 --quorum-nodes mgmt3 --ntp-servers ntp-svr1 --ntp-servers ntp-svr2 --dns-subdomain internal.pensando.io dc-az-cluster1")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update: garbled output '%s'", out)
-	}
-	out = veniceCLI("read cluster dc-az-cluster1")
-	cluster := &cluster.Cluster{}
-	if err := json.Unmarshal([]byte(out), cluster); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if cluster.Labels["type"] != "vcenter" ||
-		len(cluster.Spec.NTPServers) != 2 || len(cluster.Spec.QuorumNodes) != 3 ||
-		cluster.Spec.NTPServers[0] != "ntp-svr1" || cluster.Spec.NTPServers[1] != "ntp-svr2" ||
-		cluster.Spec.QuorumNodes[0] != "mgmt1" || cluster.Spec.QuorumNodes[1] != "mgmt2" || cluster.Spec.QuorumNodes[2] != "mgmt3" {
-		t.Fatalf("Create operation failed: %+v \n, out = %s", cluster, out)
-	}
-
-	out = veniceCLI("read cluster dc-az --gbc")
-	if !strings.Contains(out, "dc-az-cluster1") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update cluster dc-az --gbc")
-}
-
-func TestClusterUpdate(t *testing.T) {
-	out := veniceCLI("update cluster --virtual-ip 151.21.43.44 dc-az-cluster1")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read cluster dc-az-cluster1")
-	cluster := &cluster.Cluster{}
-	if err := json.Unmarshal([]byte(out), cluster); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if len(cluster.Spec.NTPServers) != 2 ||
-		cluster.Spec.NTPServers[0] != "ntp-svr1" || cluster.Spec.NTPServers[1] != "ntp-svr2" ||
-		cluster.Labels["type"] != "vcenter" || cluster.Spec.VirtualIP != "151.21.43.44" {
-		t.Fatalf("Update operation failed: %+v\n", cluster)
-	}
-}
-
-func TestSmartNICCreate(t *testing.T) {
-	addSnic := func(t *testing.T, snic *cluster.SmartNIC) error {
-		url := "http://" + testServerAddr + "/v1/cluster/smartnics"
-		if err := httpPost(url, snic); err != nil {
-			t.Fatalf("error posting smart nic: %+v", snic)
-			return err
-		}
-		return nil
-	}
-
-	snic := &cluster.SmartNIC{}
-	snic.Kind = "smartnic"
-
-	snic.Name = "naples1"
-	snic.Status.PrimaryMAC = "0029.ef38.8a01"
-	snic.Spec.Hostname = "vm221"
-	addSnic(t, snic)
-
-	/*
-		out := veniceCLI("read smartNIC naples2")
-		snic = &cluster.SmartNIC{}
-		if err := json.Unmarshal([]byte(out), snic); err != nil {
-			t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-		}
-		if snic.Spec.Phase != cluster.SmartNICSpec_UNKNOWN.String() {
-			t.Fatalf("Read operation failed: %+v \n", snic)
-		}
-	*/
-
-	snic.Name = "naples2"
-	snic.Status.PrimaryMAC = "0029.ef38.8a02"
-	snic.Spec.Hostname = "vm222"
-	addSnic(t, snic)
-
-	snic.Name = "naples3"
-	snic.Status.PrimaryMAC = "0029.ef38.8a03"
-	snic.Spec.Hostname = "vm223"
-	addSnic(t, snic)
-
-}
-
-func TestNodeCreate(t *testing.T) {
-	out := veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 vm233"))
-
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update: garbled output '%s'", out)
-	}
-
-	veniceCLI("label node --update-label foo:bar vm233")
-
-	out = veniceCLI("read node vm233")
-	node := &cluster.Node{}
-	if err := json.Unmarshal([]byte(out), node); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if node.Labels["foo"] != "bar" || node.Labels["vCenter"] != "vc2" {
-		t.Fatalf("Create operation failed: %+v \n", node)
-	}
-
-	out = veniceCLI("read node")
-	node = &cluster.Node{}
-	if err := json.Unmarshal([]byte(out), node); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if node.Labels["vCenter"] != "vc2" {
-		t.Fatalf("Single read read failed: %+v \n", node)
-	}
-
-	out = veniceCLI("read node vm2 --gbc")
-	if !strings.Contains(out, "vm233") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update node vm2 --gbc")
-}
-
-func TestSmartNICUpdate(t *testing.T) {
-	/*
-		out := veniceCLI(fmt.Sprintf("update smartNIC --phase %s naples2", cluster.SmartNICSpec_ADMITTED.String()))
-
-		if !fmtOutput && strings.TrimSpace(out) != "" {
-			t.Fatalf("Update: garbled output '%s'", out)
-		}
-			out = veniceCLI("read smartNIC naples2")
-			snic := &cluster.SmartNIC{}
-			if err := json.Unmarshal([]byte(out), snic); err != nil {
-				t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-			}
-			if snic.Spec.Phase != cluster.SmartNICSpec_ADMITTED.String() {
-				t.Fatalf("Update operation failed: %+v \n", snic)
-			}
-	*/
-}
-
-func TestTenantCreate(t *testing.T) {
-	out := veniceCLI("create tenant newco --admin-user newco-admin")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read tenant newco")
-	tenant := &cluster.Tenant{}
-	if err := json.Unmarshal([]byte(out), tenant); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if tenant.ResourceVersion != "1" || tenant.Spec.AdminUser != "newco-admin" {
-		t.Fatalf("Create operation failed: %+v \n", tenant)
-	}
-
-	out = veniceCLI("read tenant new --gbc")
-	if !strings.Contains(out, "newco") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update tenant new --gbc")
-}
-
-func TestTenantUpdate(t *testing.T) {
-	out := veniceCLI("update tenant newco --admin-user newco-adm")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read tenant newco")
-	tenant := &cluster.Tenant{}
-	if err := json.Unmarshal([]byte(out), tenant); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if tenant.ResourceVersion != "2" || tenant.Spec.AdminUser != "newco-adm" {
-		t.Fatalf("Create operation failed: %+v \n", tenant)
-	}
-}
-
-func TestNetworkCreate(t *testing.T) {
-	out := veniceCLI("create network lab22-net145 --ipv4-subnet 145.1.1.0/24 --ipv4-gateway 145.1.1.254 --type vlan --ipv6-subnet 2001:db8::0/64 --ipv6-gateway 2001:db8::1 --vlan-id 345")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read network lab22-net145")
-	net := &network.Network{}
-	if err := json.Unmarshal([]byte(out), net); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if net.ResourceVersion != "1" || net.Spec.IPv4Subnet != "145.1.1.0/24" || net.Spec.IPv4Gateway != "145.1.1.254" ||
-		net.Spec.Type != "vlan" || net.Spec.IPv6Subnet != "2001:db8::0/64" || net.Spec.IPv6Gateway != "2001:db8::1" ||
-		net.Spec.VlanID != 345 {
-		t.Fatalf("Create operation failed: %+v \n", net)
-	}
-
-	out = veniceCLI("read network lab2 --gbc")
-	if !strings.Contains(out, "lab22-net145") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update network lab2 --gbc")
-}
-
-func TestNetworkUpdate(t *testing.T) {
-	out := veniceCLI("update network lab22-net145 --type vxlan")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read network lab22-net145")
-	net := &network.Network{}
-	if err := json.Unmarshal([]byte(out), net); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if net.ResourceVersion != "2" || net.Spec.IPv4Subnet != "145.1.1.0/24" || net.Spec.IPv4Gateway != "145.1.1.254" ||
-		net.Spec.Type != "vxlan" || net.Spec.IPv6Subnet != "2001:db8::0/64" || net.Spec.IPv6Gateway != "2001:db8::1" {
-		t.Fatalf("Create operation failed: %+v \n", net)
-	}
-}
-
-func TestSecurityGroupCreate(t *testing.T) {
-	out := veniceCLI("create securityGroup sg10 --workload-selector key1=val1,key2=val2 --match-prefixes 12.1.1.0/22")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read securityGroup sg10")
-	sg := &security.SecurityGroup{}
-	if err := json.Unmarshal([]byte(out), sg); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sg.ResourceVersion != "1" || len(sg.Spec.WorkloadSelector.Requirements) != 2 || len(sg.Spec.MatchPrefixes) != 1 ||
-		sg.Spec.WorkloadSelector.Print() != "key1=val1,key2=val2" || sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
-		t.Fatalf("Create operation failed: %+v \n", sg)
-	}
-
-	out = veniceCLI("read securityGroup sg --gbc")
-	if !strings.Contains(out, "sg10") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update securityGroup sg --gbc")
-}
-
-func TestSecurityGroupUpdate(t *testing.T) {
-	out := veniceCLI("update securityGroup sg10 --workload-selector key3=val3")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read securityGroup sg10")
-	sg := &security.SecurityGroup{}
-	if err := json.Unmarshal([]byte(out), sg); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sg.ResourceVersion != "2" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || len(sg.Spec.MatchPrefixes) != 1 ||
-		sg.Spec.WorkloadSelector.Print() != "key3=val3" || sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
-		t.Fatalf("Create operation failed: %+v \n", sg)
-	}
-}
-
-func TestSecurityGroupPolicyCreate(t *testing.T) {
-	out := veniceCLI("create securityGroup sg20 --workload-selector key5=val5")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create sg for sgpolicy: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("create sgpolicy sg10-ingress --ports tcp/8440 --peer-group sg20 --action permit --attach-groups sg10")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create sgpolicy: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp := &security.SGPolicy{}
-	if err := json.Unmarshal([]byte(out), sgp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sgp.ResourceVersion != "1" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
-		sgp.Spec.AttachGroups[0] != "sg10" ||
-		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit" {
-		t.Fatalf("Create operation failed: %+v \n", sgp)
-	}
-
-	out = veniceCLI("read sgpolicy sg10 --gbc")
-	if !strings.Contains(out, "sg10-ingress") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update sgpolicy sg10 --gbc")
-}
-
-func TestSecurityGroupPolicyUpdate(t *testing.T) {
-	out := veniceCLI("update sgpolicy sg10-ingress --attach-groups sg30")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update sgpolicy: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp := &security.SGPolicy{}
-	if err := json.Unmarshal([]byte(out), sgp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sgp.ResourceVersion != "2" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
-		sgp.Spec.AttachGroups[0] != "sg30" ||
-		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit" {
-		t.Fatalf("Create operation failed: %+v \n", sgp)
-	}
-
-	out = veniceCLI("update sgpolicy sg10-ingress --ports tcp/4550 --peer-group sg20 --action permit --ports tcp/8440 --peer-group sg10 --action permit")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update sgpolicy: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read sgpolicy sg10-ingress")
-	sgp = &security.SGPolicy{}
-	if err := json.Unmarshal([]byte(out), sgp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sgp.ResourceVersion != "3" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 2 ||
-		sgp.Spec.AttachGroups[0] != "sg30" ||
-		sgp.Spec.Rules[0].Apps[0] != "tcp/4550" || sgp.Spec.Rules[0].Action != "permit" ||
-		sgp.Spec.Rules[1].Apps[0] != "tcp/8440" || sgp.Spec.Rules[1].Action != "permit" {
-		t.Fatalf("Update operation failed: %+v \n", sgp)
-	}
-}
-
-func TestServiceCreate(t *testing.T) {
-	out := veniceCLI("create service uService122 --virtual-ip 12.1.1.122 --ports 8080 --workload-labels tier:frontend --lb-policy dev-lb-policy")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read service uService122")
-	svc := &network.Service{}
-	if err := json.Unmarshal([]byte(out), svc); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if svc.ResourceVersion != "1" || svc.Spec.VirtualIp != "12.1.1.122" || len(svc.Spec.WorkloadSelector) != 1 ||
-		svc.Spec.WorkloadSelector[0] != "tier:frontend" || svc.Spec.Ports != "8080" || svc.Spec.LBPolicy != "dev-lb-policy" {
-		t.Fatalf("Create operation failed: %+v \n", svc)
-	}
-
-	out = veniceCLI("read service uS --gbc")
-	if !strings.Contains(out, "uService122") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update service uS --gbc")
-}
-
-func TestServiceUpdate(t *testing.T) {
-	out := veniceCLI("update service uService122 --virtual-ip 12.1.1.123 --lb-policy prod-lb-policy")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("Update: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read service uService122")
-	svc := &network.Service{}
-	if err := json.Unmarshal([]byte(out), svc); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if svc.ResourceVersion != "2" || svc.Spec.VirtualIp != "12.1.1.123" || len(svc.Spec.WorkloadSelector) != 1 ||
-		svc.Spec.WorkloadSelector[0] != "tier:frontend" || svc.Spec.Ports != "8080" || svc.Spec.LBPolicy != "prod-lb-policy" {
-		t.Fatalf("Update operation failed: %+v \n", svc)
-	}
-}
-
-func TestLbPolicyCreate(t *testing.T) {
-	out := veniceCLI("create lbPolicy --algorithm round-robin --probe-port-or-url /healthStatus --session-affinity yes --type l4 --interval 5 --max-timeouts 25 dev-lb-policy")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read lbPolicy dev-lb-policy")
-	lbp := &network.LbPolicy{}
-	if err := json.Unmarshal([]byte(out), lbp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if lbp.ResourceVersion != "1" || lbp.Spec.HealthCheck.ProbePortOrUrl != "/healthStatus" ||
-		lbp.Spec.SessionAffinity != "yes" || lbp.Spec.Type != "l4" || lbp.Spec.Algorithm != "round-robin" ||
-		lbp.Spec.HealthCheck.Interval != 5 || lbp.Spec.HealthCheck.MaxTimeouts != 25 {
-		t.Fatalf("Create operation failed: %+v \n", lbp)
-	}
-
-	out = veniceCLI("read lbPolicy dev- --gbc")
-	if !strings.Contains(out, "dev-lb-policy") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update lbPolicy dev- --gbc")
-}
-
-func TestLbPolicyUpdate(t *testing.T) {
-	out := veniceCLI("update lbPolicy --algorithm least-latency dev-lb-policy")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("Update: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read lbPolicy dev-lb-policy")
-	lbp := &network.LbPolicy{}
-	if err := json.Unmarshal([]byte(out), lbp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if lbp.ResourceVersion != "2" || lbp.Spec.HealthCheck.ProbePortOrUrl != "/healthStatus" ||
-		lbp.Spec.SessionAffinity != "yes" || lbp.Spec.Type != "l4" || lbp.Spec.Algorithm != "least-latency" {
-		t.Fatalf("Update operation failed: %+v \n", lbp)
-	}
-}
-
-func TestEndpointCreate(t *testing.T) {
-	out := veniceCLI("create endpoint --label dc=lab-22 --label tier:frontend vm23")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create endpoint: garbled output '%s'", out)
-	}
-	veniceCLI("label endpoint --update-label dmz=yes vm23")
-	out = veniceCLI("read endpoint vm23")
-	ep := &workload.Endpoint{}
-	if err := json.Unmarshal([]byte(out), ep); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	lv1, ok1 := ep.Labels["dmz"]
-	lv2, ok2 := ep.Labels["dc"]
-	lv3, ok3 := ep.Labels["tier"]
-	if ep.ResourceVersion != "2" || len(ep.Labels) != 3 ||
-		!ok1 || lv1 != "yes" || !ok2 || lv2 != "lab-22" || !ok3 || lv3 != "frontend" {
-		t.Fatalf("Create endpoint failed: %+v \n", ep)
-	}
-
-	out = veniceCLI("read endpoint -y vm23")
-	if !strings.Contains(out, "dc: lab-22") || !strings.Contains(out, "tier: frontend") {
-		t.Fatalf("Yaml read failed: %s \n", out)
-	}
-
-	out = veniceCLI("read endpoint vm --gbc")
-	if !strings.Contains(out, "vm23") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update endpoint vm --gbc")
-}
-
-func TestEndpointUpdate(t *testing.T) {
-	out := veniceCLI("update endpoint vm23 --label dmz:no --label dc:lab-22 --label tier:frontend")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read endpoint vm23")
-	ep := &workload.Endpoint{}
-	if err := json.Unmarshal([]byte(out), ep); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	lv1, ok1 := ep.Labels["dmz"]
-	lv2, ok2 := ep.Labels["dc"]
-	lv3, ok3 := ep.Labels["tier"]
-	if ep.ResourceVersion != "3" || len(ep.Labels) != 3 ||
-		!ok1 || lv1 != "no" || !ok2 || lv2 != "lab-22" || !ok3 || lv3 != "frontend" {
-		t.Fatalf("Update endpoint failed: %+v \n", ep)
-	}
-}
-
-func TestUserCreate(t *testing.T) {
-	out := veniceCLI("create user bot-bot --label dept:qa --label bot:yes --roles network-admin --roles security-admin")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read user bot-bot")
-	user := &api.User{}
-	if err := json.Unmarshal([]byte(out), user); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	lv1, ok1 := user.Labels["dept"]
-	lv2, ok2 := user.Labels["bot"]
-	if user.ResourceVersion != "1" || len(user.Labels) != 2 ||
-		!ok1 || lv1 != "qa" || !ok2 || lv2 != "yes" ||
-		len(user.Spec.Roles) != 2 || user.Spec.Roles[0] != "network-admin" || user.Spec.Roles[1] != "security-admin" {
-		t.Fatalf("Create user failed: %+v \n", user)
-	}
-
-	out = veniceCLI("read user bot --gbc")
-	if !strings.Contains(out, "bot-bot") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update user bot --gbc")
-}
-
-func TestUserUpdate(t *testing.T) {
-	out := veniceCLI("update user bot-bot --roles full-access")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read user bot-bot")
-	user := &api.User{}
-	if err := json.Unmarshal([]byte(out), user); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	lv1, ok1 := user.Labels["dept"]
-	lv2, ok2 := user.Labels["bot"]
-	if user.ResourceVersion != "2" || len(user.Labels) != 2 ||
-		!ok1 || lv1 != "qa" || !ok2 || lv2 != "yes" ||
-		len(user.Spec.Roles) != 1 || user.Spec.Roles[0] != "full-access" {
-		t.Fatalf("Update user failed: %+v \n", user)
-	}
-}
-
-func TestRoleCreate(t *testing.T) {
-	out := veniceCLI("create role network-admin --permissions network-objs-rw --permissions policy-objs-rw")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("Create endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read role network-admin")
-	role := &api.Role{}
-	if err := json.Unmarshal([]byte(out), role); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	if role.ResourceVersion != "1" || len(role.Spec.Permissions) != 2 ||
-		role.Spec.Permissions[0] != "network-objs-rw" || role.Spec.Permissions[1] != "policy-objs-rw" {
-		t.Fatalf("Create role failed: %+v \n", role)
-	}
-
-	out = veniceCLI("read role net --gbc")
-	if !strings.Contains(out, "network-admin") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update role net --gbc")
-}
-
-func TestRoleUpdate(t *testing.T) {
-	out := veniceCLI("update role network-admin --permissions security-objs-rw")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("Create endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read role network-admin")
-	role := &api.Role{}
-	if err := json.Unmarshal([]byte(out), role); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	if role.ResourceVersion != "2" || len(role.Spec.Permissions) != 1 ||
-		role.Spec.Permissions[0] != "security-objs-rw" {
-		t.Fatalf("Update role failed: %+v \n", role)
-	}
-}
-
-func TestPermissionCreate(t *testing.T) {
-	out := veniceCLI("create permission --objectSelector sgpolicy:* --action rw network-objs-rw")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("Create endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read permission network-objs-rw")
-	permission := &api.Permission{}
-	if err := json.Unmarshal([]byte(out), permission); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	lv1, ok1 := permission.Spec.ObjectSelector["sgpolicy"]
-	if permission.ResourceVersion != "1" || len(permission.Spec.ObjectSelector) != 1 ||
-		!ok1 || lv1 != "*" || permission.Spec.Action != "rw" {
-		t.Fatalf("Create permission failed: %+v \n", permission)
-	}
-
-	out = veniceCLI("read permission net --gbc")
-	if !strings.Contains(out, "network-objs-rw") {
-		t.Fatalf("Command completion for specific object failed: %s \n", out)
-	}
-	veniceCLI("update permission net --gbc")
-}
-
-func TestPermissionUpdate(t *testing.T) {
-	out := veniceCLI("update permission --objectSelector network:* network-objs-rw")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read permission network-objs-rw")
-	permission := &api.Permission{}
-	if err := json.Unmarshal([]byte(out), permission); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	lv1, ok1 := permission.Spec.ObjectSelector["network"]
-	if permission.ResourceVersion != "2" || len(permission.Spec.ObjectSelector) != 1 ||
-		!ok1 || lv1 != "*" || permission.Spec.Action != "rw" {
-		t.Fatalf("Update permission failed: %+v \n", permission)
-	}
-}
-
-func TestCommandCompletion(t *testing.T) {
-	out := veniceCLI("--help")
-	if !strings.Contains(out, "Pensando Venice CLI") {
-		t.Fatalf("help not working: invalid output '%s'", out)
-	}
-	out = veniceCLI("--version")
-	if !strings.Contains(out, "version v0.1-alpha") {
-		t.Fatalf("version not working: invalid output '%s'", out)
-	}
-	out = veniceCLI("read --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create node --gbc")
-	if !strings.Contains(out, "--label --dry-run --file") {
-		t.Fatalf("node command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update node --gbc")
-	if !strings.Contains(out, "--label --dry-run --file") {
-		t.Fatalf("node command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete node --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression") {
-		t.Fatalf("node command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --host-name --mac-address --mgmt-ip --phase {smartNIC}") {
-		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("update smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --host-name --mac-address --mgmt-ip --phase") {
-		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("delete smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression") {
-		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create endpoint --gbc")
-	if !strings.Contains(out, "--label --dry-run --file {endpoint}") {
-		t.Fatalf("endpoint command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update endpoint --gbc")
-	if !strings.Contains(out, "--label --dry-run --file") {
-		t.Fatalf("endpoint command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create tenant --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --admin-user {tenant}") {
-		t.Fatalf("tenant command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update tenant --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --admin-user") {
-		t.Fatalf("tenant command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create securityGroup --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-selector {securityGroup}") {
-		t.Fatalf("security-group command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update securityGroup blah-sg --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-selector") {
-		t.Fatalf("security-group command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update securityGroup blah-sg --match-prefixes 1.1.1.3/32 --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-selector") {
-		t.Fatalf("security-group command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("delete securityGroup blah-sg --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression") {
-		t.Fatalf("security-group command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create user --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --roles {user}") {
-		t.Fatalf("user command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update user --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --roles") {
-		t.Fatalf("user command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete user --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression") {
-		t.Fatalf("user command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create role --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --permissions {role}") {
-		t.Fatalf("role command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update role --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --permissions") {
-		t.Fatalf("role command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete role --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression") {
-		t.Fatalf("role command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create permission --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --action --objectSelector --validUntil {permission}") {
-		t.Fatalf("permission command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update permission --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --action --objectSelector --validUntil") {
-		t.Fatalf("permission command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete permission --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression") {
-		t.Fatalf("permission command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create service --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --client-authentication --lb-policy --ports --tls-client-allowed-peer-id --tls-client-certificates-selector --tls-client-trust-roots --tls-server-allowed-peer-id --tls-server-certificates --tls-server-trust-roots --virtual-ip --workload-labels {service}") {
-		t.Fatalf("service command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update service --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --client-authentication --lb-policy --ports --tls-client-allowed-peer-id --tls-client-certificates-selector --tls-client-trust-roots --tls-server-allowed-peer-id --tls-server-certificates --tls-server-trust-roots --virtual-ip --workload-labels uService122") {
-		t.Fatalf("service command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete service --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression uService122") {
-		t.Fatalf("service command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create sgpolicy --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --action --app-user --app-user-group --apps --attach-groups --peer-group --ports {sgpolicy}") {
-		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update sgpolicy --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --action --app-user --app-user-group --apps --attach-groups --peer-group --ports") {
-		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete sgpolicy --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression") {
-		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create lbPolicy --gbc")
-	if !strings.Contains(out, "--algorithm") {
-		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update lbPolicy --gbc")
-	if !strings.Contains(out, "--algorithm") {
-		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete lbPolicy --gbc")
-	if !strings.Contains(out, "--label --dry-run --regular-expression") {
-		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("create network lab22-net145 --ipv4-subnet 145.1.1.0/24 --ipv4-gateway 145.1.1.254 --type vlan --ipv6-subnet 2001:db8::0/64 --ipv6-gateway 2001:db8::1 --vlan-id 345 --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --vxlan-vni") {
-		t.Fatalf("command completion with filled params failed: %s", out)
-	}
-
-	out = veniceCLI("create lbPolicy --algorithm round-robin --probe-port-or-url /healthStatus --session-affinity yes --type l4 --interval 5 --max-timeouts 25 dev-lb-policy --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --declare-healthy-count --probes-per-interval") {
-		t.Fatalf("command completion with partially filled params failed: %s", out)
-	}
-
-	veniceCLI("create upload --gbc")
-	out = veniceCLI("create -h")
-	if !strings.Contains(out, "create command [command options] [arguments...]") {
-		t.Fatalf("create help command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("update -h")
-	if !strings.Contains(out, "update command [command options] [arguments...]") {
-		t.Fatalf("update help command completion: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete -h")
-	if !strings.Contains(out, "delete command [command options] [arguments...]") {
-		t.Fatalf("delete help command completion: invalid output '%s'", out)
-	}
-
-	out = veniceCLI("update --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-	out = veniceCLI("delete --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-	out = veniceCLI("edit --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-	out = veniceCLI("label --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-	out = veniceCLI("example --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-	out = veniceCLI("definition --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-	out = veniceCLI("tree --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-	out = veniceCLI("snapshot --gbc")
-	if !strings.Contains(out, "cluster endpoint") {
-		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
-	}
-}
-
-func TestCreateFromFile(t *testing.T) {
-	ymlBytes := `#
-kind: sgpolicy
-meta:
-  Name: test-sgpolicy
-spec:
-  attach-groups:
-  - sg10
-  in-rules:
-  - action: permit
-    peer-group: sg20
-    ports: tcp/8440
-
-`
-	fileName := "/tmp/tmp3343.yml"
-	ioutil.WriteFile(fileName, []byte(ymlBytes), 0644)
-	defer os.Remove(fileName)
-
-	out := veniceCLI("create upload " + fileName)
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create sgpolicy from file: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp := &security.SGPolicy{}
-	if err := json.Unmarshal([]byte(out), sgp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sgp.ResourceVersion != "1" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
-		sgp.Spec.AttachGroups[0] != "sg10" ||
-		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit" {
-		t.Fatalf("Create operation failed: %+v \n", sgp)
-	}
-
-	jsonBytes := `
-	{
-	  "Kind": "sgpolicy",
-	  "meta": {
-	    "Name": "test-sgpolicy"
-	  },
-	  "spec": {
-	    "attach-groups": [
-	        "sg10"
-	      ],
-	    "in-rules": [
-	      {
-	        "action": "permit,log",
-	        "peer-group": "sg20",
-	        "ports" : "tcp/8440"
-	      }
-	    ]
-	  }
-	}
-	`
-
-	fileName = "/tmp/tmp3343.json"
-	if err := ioutil.WriteFile(fileName, []byte(jsonBytes), 0644); err != nil {
-		t.Fatalf("error writing to file %s: %s", fileName, err)
-	}
-
-	defer os.Remove(fileName)
-
-	out = veniceCLI("create upload " + fileName)
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create sgpolicy from file: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp = &security.SGPolicy{}
-	if err := json.Unmarshal([]byte(out), sgp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sgp.ResourceVersion != "2" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
-		sgp.Spec.AttachGroups[0] != "sg10" ||
-		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit,log" {
-		t.Fatalf("Create operation failed: %+v \n", sgp)
-	}
-
-	dir, err := ioutil.TempDir("", "test")
-	if err != nil {
-		t.Fatalf("create dir failed: %s", err)
-	}
-	defer os.RemoveAll(dir)
-
-	jsonBytes = `
-	{
-	  "Kind": "sgpolicy",
-	  "meta": {
-	    "Name": "test-sgpolicy"
-	  },
-	  "spec": {
-	    "attach-groups": [
-	        "sg30"
-	      ],
-	    "in-rules": [
-	      {
-	        "action": "permit,log",
-	        "peer-group": "sg20",
-	        "ports" : "tcp/8440"
-	      }
-	    ]
-	  }
-	}
-	`
-	fileName = filepath.Join(dir, "tmp3343.json")
-	if err := ioutil.WriteFile(fileName, []byte(jsonBytes), 0644); err != nil {
-		t.Fatalf("error writing to file %s: %s", fileName, err)
-	}
-
-	out = veniceCLI("create upload " + dir)
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create sgpolicy from file: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read sgpolicy test-sgpolicy")
-	sgp = &security.SGPolicy{}
-	if err := json.Unmarshal([]byte(out), sgp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sgp.ResourceVersion != "3" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 1 ||
-		sgp.Spec.AttachGroups[0] != "sg30" ||
-		sgp.Spec.Rules[0].Apps[0] != "tcp/8440" || sgp.Spec.Rules[0].Action != "permit,log" {
-		t.Fatalf("Create operation failed: %+v \n", sgp)
-	}
-
-	out = veniceCLI("create upload nonexistentfile")
-	if !fmtOutput && !strings.Contains(out, "File does not exist") {
-		t.Fatalf("unable to see error from upload on non existent file: %s", out)
-	}
-
-	ymlBytes = `#
-{kind: sgpolicy
-meta:
-  Name: test-sgpolicy
-spec:
-  attach-groups:
-  - sg10
-  in-rules:
-  - action: permit
-    peer-group: sg20
-    ports: tcp/8440
-
-`
-	fileName = "/tmp/tmp3343.yml"
-	ioutil.WriteFile(fileName, []byte(ymlBytes), 0644)
-	defer os.Remove(fileName)
-
-	out = veniceCLI("create upload " + fileName)
-	if !fmtOutput && !strings.Contains(out, "Error converting yaml to json") {
-		t.Fatalf("Failed to error on invalid yaml to json conversion: %s", out)
-	}
-
-	veniceCLI("create network uploaded")
-	url := "http://" + testServerAddr + api.Objs["network"].URL + "/uploaded"
-	out = veniceCLI("create upload " + url)
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("create objects from URL failed '%s'", out)
-	}
-
-	out = veniceCLI("create upload http://localhost:/invalid-url")
-	if !fmtOutput && !strings.Contains(out, "Error fetching URL") {
-		t.Fatalf("unable to verify invalid URL '%s'", out)
-	}
-}
-
-func TestEditCommand(t *testing.T) {
-	veniceCLI("create securityGroup editsg --label one:two --label three:four --workload-selector tier=frontend")
-
-	// change the editor to cat command
-	oldEditor := os.Getenv("VENICE_EDITOR")
-	os.Setenv("VENICE_EDITOR", "cat")
-	veniceCLI("edit securityGroup editsg")
-
-	// make sure that the resource version has been updated
-	out := veniceCLI("read securityGroup editsg")
-	sg := &security.SecurityGroup{}
-	if err := json.Unmarshal([]byte(out), sg); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sg.ResourceVersion != "2" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || sg.Spec.WorkloadSelector.Print() != "tier=frontend" ||
-		len(sg.Labels) != 2 || sg.Labels["one"] != "two" || sg.Labels["three"] != "four" {
-		t.Fatalf("Edit operation failed: %+v \n", sg)
-	}
-
-	sg.Labels["five"] = "six"
-	b, err := json.Marshal(sg)
-	if err != nil {
-		t.Fatalf("Unable to marshal sg object %+v", sg)
-	}
-	ioutil.WriteFile("tmp-3772.json", b, 0644)
-	defer os.RemoveAll("tmp-3772.json")
-	veniceCLI("update securityGroup -f tmp-3772.json")
-
-	out = veniceCLI("read securityGroup editsg")
-	sg = &security.SecurityGroup{}
-	if err = json.Unmarshal([]byte(out), sg); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sg.ResourceVersion != "3" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || sg.Spec.WorkloadSelector.Print() != "tier=frontend" ||
-		len(sg.Labels) != 3 || sg.Labels["one"] != "two" || sg.Labels["three"] != "four" ||
-		sg.Labels["five"] != "six" {
-		t.Fatalf("Edit operation failed: %+v \n", sg)
-	}
-
-	// edit from pre-baked file
-	veniceCLI("edit user")
-	out = veniceCLI("read user joe")
-	user := &api.User{}
-	if err = json.Unmarshal([]byte(out), user); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if user.Labels["dept"] != "eng" {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	// resotre the old editor, if any
-	os.Setenv("VENICE_EDITOR", oldEditor)
-}
-
-func TestTree(t *testing.T) {
-	out := veniceCLI("tree")
-	if !strings.Contains(out, "+node") {
-		t.Fatalf("unable to find node within the tree")
-	}
-	if !strings.Contains(out, "vm233") {
-		t.Fatalf("unable to find specific node within the tree")
-	}
-}
-
-func TestExample(t *testing.T) {
-	out := veniceCLI("example network")
-	if !strings.Contains(out, "IPv4Subnet: string") {
-		t.Fatalf("example verb output invalid: %s", out)
-	}
-	out = veniceCLI("read user --example")
-	if !strings.Contains(out, "read all users") {
-		t.Fatalf("example flag in read command invalid: %s", out)
-	}
-}
-
-func getEmptyMap(fields []string) map[string]bool {
-	fmap := make(map[string]bool)
-	for _, field := range fields {
-		fmap[field] = false
-	}
-
-	return fmap
-}
-
-func isMapFull(fmap map[string]bool) bool {
-	for _, v := range fmap {
-		if v == false {
-			return false
-		}
-	}
-	return true
-}
-
-func matchLineFields(out string, fields []string) bool {
-	lines := strings.Split(out, "\n")
-	for _, line := range lines {
-		words := strings.Split(line, " ")
-		fmap := getEmptyMap(fields)
-		for _, word := range words {
-			if _, ok := fmap[word]; ok {
-				fmap[word] = true
-			}
-		}
-		if isMapFull(fmap) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func TestList(t *testing.T) {
-	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 test1"))
-	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 test2"))
-
-	out := veniceCLI("read node")
-	if !matchLineFields(out, []string{"test1", "vCenter:vc2"}) {
-		t.Fatalf("Invalid list:\n%s", out)
-	}
-
-	veniceCLI("create tenant test1 --admin-user test1-admin")
-	veniceCLI("create tenant test2 --admin-user test2-admin")
-	out = veniceCLI("read tenant")
-	if !matchLineFields(out, []string{"test1", "test1-admin"}) {
-		t.Fatalf("Invalid list:\n%s", out)
-	}
-
-	veniceCLI("create network test1 --label dhcp:yes --ipv4-subnet 13.1.1.0/24 --ipv4-gateway 13.1.1.254 --type vlan")
-	veniceCLI("create network test2 --label dhcp:no --label level:prod --ipv4-subnet 13.1.2.0/24 --ipv4-gateway 13.1.2.254 --type vlan")
-	veniceCLI("create network test3 --label dhcp:no --ipv4-subnet 13.1.3.0/24 --ipv4-gateway 13.1.3.254 --type vlan")
-	out = veniceCLI("read network")
-	if !matchLineFields(out, []string{"test2", "dhcp:no", "13.1.2.0/24", "13.1.2.254", "vlan"}) {
-		t.Fatalf("Invalid list:\n%s", out)
-	}
-	if !matchLineFields(out, []string{"level:prod"}) {
-		t.Fatalf("Invalid list:\n%s", out)
-	}
-}
-
-func TestDeleteList(t *testing.T) {
-	veniceCLI("create securityGroup test1 --label key1:label1 --label key2:label2 --workload-selector tier=frontend")
-	veniceCLI("create securityGroup test2 --label key3:label3 --label key2:label2 --workload-selector tier=backend")
-	veniceCLI("create securityGroup test3 --label key1:label1 --label key4:label4 --workload-selector tier=app")
-
-	veniceCLI("delete securityGroup --label key2:label2")
-	out := veniceCLI("read securityGroup")
-	if matchLineFields(out, []string{"key2:label2"}) {
-		t.Fatalf("Unable to delete by label:\n%s", out)
-	}
-}
-
-func TestMultiRead(t *testing.T) {
-	// read naples that were created during bootup
-	out := veniceCLI("read smartNIC")
-	if !matchLineFields(out, []string{"naples1", "vm221", "0029.ef38.8a01"}) ||
-		!matchLineFields(out, []string{"naples2", "vm222", "0029.ef38.8a02"}) ||
-		!matchLineFields(out, []string{"naples3", "vm223", "0029.ef38.8a03"}) {
-		t.Fatalf("Unable to read smartNIC objects\n%s", out)
-	}
-
-	veniceCLI("create endpoint --label dmz:yes --label dc:lab-22 --label tier:frontend testep-vm23")
-	veniceCLI("create endpoint --label dmz:no --label dc:lab-22 --label tier:frontend testep-vm24")
-	veniceCLI("create endpoint --label dmz:no --label dc:lab-22 --label tier:frontend blah-vm25")
-	veniceCLI("create endpoint --label dmz:yes --label dc:lab-22 --label tier:frontend blah-vm26")
-
-	out = veniceCLI("read endpoint -q")
-	if !matchLineFields(out, []string{"testep-vm23"}) || !matchLineFields(out, []string{"testep-vm24"}) ||
-		!matchLineFields(out, []string{"blah-vm25"}) || !matchLineFields(out, []string{"blah-vm26"}) {
-		t.Fatalf("Unable to read objects in quiet mode:\n%s", out)
-	}
-
-	out = veniceCLI("read endpoint --label dmz:no")
-	if matchLineFields(out, []string{"dmz:yes"}) {
-		t.Fatalf("Unable to filter reads based on labels:\n%s", out)
-	}
-
-	out = veniceCLI("read endpoint --re testep*")
-	if matchLineFields(out, []string{"blah-vm25"}) || matchLineFields(out, []string{"blah-vm26"}) {
-		t.Fatalf("Unable to match regular expression based reads:\n%s", out)
-	}
-
-	out = veniceCLI("read endpoint testep-vm23,blah-vm25")
-	if matchLineFields(out, []string{"testep-vm24"}) || matchLineFields(out, []string{"blah-vm26"}) {
-		t.Fatalf("Unable to read multiple records based on names:\n%s", out)
-	}
-
-	veniceCLI("create lbPolicy mr-lbp1")
-	veniceCLI("create lbPolicy mr-lbp2")
-	out = veniceCLI("read lbPolicy")
-	if !matchLineFields(out, []string{"mr-lbp1"}) {
-		t.Fatalf("unable to read record in multi-reads: %s", out)
-	}
-
-	veniceCLI("create sgpolicy mr-sgp1")
-	veniceCLI("create sgpolicy mr-sgp2")
-	out = veniceCLI("read sgpolicy")
-	if !matchLineFields(out, []string{"mr-sgp1"}) {
-		t.Fatalf("unable to read record in multi-reads: %s", out)
-	}
-
-	veniceCLI("create user mr-user1 --roles mr-role1")
-	veniceCLI("create user mr-user2 --roles mr-role2")
-	out = veniceCLI("read user")
-	if !matchLineFields(out, []string{"mr-user1"}) {
-		t.Fatalf("unable to read record in multi-reads: %s", out)
-	}
-
-	veniceCLI("create role mr-role1 --permissions mr-perm1")
-	veniceCLI("create role mr-role2 --permissions mr-perm2")
-	out = veniceCLI("read role")
-	if !matchLineFields(out, []string{"mr-perm1"}) {
-		t.Fatalf("unable to read record in multi-reads: %s", out)
-	}
-
-	veniceCLI("create permission mr-perm1")
-	veniceCLI("create permission mr-perm2")
-	out = veniceCLI("read permission")
-	if !matchLineFields(out, []string{"mr-perm2"}) {
-		t.Fatalf("unable to read record in multi-reads: %s", out)
-	}
-}
-
-func TestLabelCommand(t *testing.T) {
-	veniceCLI("create service testsvc1 --virtual-ip 155.12.12.1 --ports 8001 --workload-labels tier:frontend")
-	veniceCLI("create service testsvc2 --label auth:ldap --virtual-ip 155.12.12.2 --ports 8002 --workload-labels tier:app")
-	veniceCLI("create service testsvc3 --label auth:ldap --virtual-ip 155.12.12.3 --ports 8003 --workload-labels tier:db")
-	veniceCLI("create service testsvc4 --virtual-ip 155.12.12.4 --ports 8004 --workload-labels tier:db")
-
-	veniceCLI("label service --update-label dmz:yes testsvc1")
-	out := veniceCLI("read service")
-	if !matchLineFields(out, []string{"testsvc1", "155.12.12.1", "8001", "tier:frontend", "dmz:yes"}) {
-		t.Fatalf("Unable to label objects:\n%s", out)
-	}
-	veniceCLI("label service --update-label -auth:ldap testsvc2")
-	out = veniceCLI("read service")
-	if matchLineFields(out, []string{"testsvc2", "auth:ldap"}) {
-		t.Fatalf("Unable to un-label objects:\n%s", out)
-	}
-
-	veniceCLI("label service --label auth:ldap --update-label auth:passwd")
-	out = veniceCLI("read service")
-	if matchLineFields(out, []string{"testsvc2", "auth:ldap"}) || matchLineFields(out, []string{"testsvc3", "auth:ldap"}) {
-		t.Fatalf("Unable to label multiple objects:\n%s", out)
-	}
-}
-
-func TestShowVersion(t *testing.T) {
-	out := veniceCLI("version")
-	if !strings.Contains(out, "Client Version") || !strings.Contains(out, "Server Version") {
-		t.Fatalf("Version command output invalid: %s", out)
-	}
-}
-
-func TestSnapshot(t *testing.T) {
-
-	// create some objects
-	veniceCLI("create tenant snap-tenant --admin-user snap-admin")
-	veniceCLI("create lbPolicy --algorithm llatency --probe-port-or-url /healthStatus --session-affinity yes --type l4 --interval 5 --max-timeouts 25 snap-lbpolicy")
-	//veniceCLI("create node --label vCenter:vc2 --roles 1 snap-node")
-	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 snap-node"))
-
-	// take a snapshot
-	out := veniceCLI("snapshot -f " + snapshotDir)
-	//	defer os.RemoveAll(snapshotDir)
-	if !strings.Contains(out, "Successful - stored snapshot") {
-		t.Fatalf("unable to store snapshot: %s", out)
-	}
-
-	// read the snapshot objects to confirm they look as per configuration
-	b, err := ioutil.ReadFile(snapshotDir + "/tenants/snap-tenant.json")
-	if err != nil {
-		t.Fatalf("Error reading file contents: %s", err)
-	}
-	tenant := &cluster.Tenant{}
-	if err = json.Unmarshal([]byte(b), tenant); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if tenant.Spec.AdminUser != "snap-admin" {
-		t.Fatalf("Unable to decode object: %+v", tenant)
-	}
-
-	b, err = ioutil.ReadFile(snapshotDir + "/lbPolicys/snap-lbpolicy.json")
-	if err != nil {
-		t.Fatalf("Error reading file contents: %s", err)
-	}
-	lbp := &network.LbPolicy{}
-	if err = json.Unmarshal([]byte(b), lbp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if lbp.Spec.HealthCheck.ProbePortOrUrl != "/healthStatus" || lbp.Spec.HealthCheck.Interval != 5 ||
-		lbp.Spec.SessionAffinity != "yes" || lbp.Spec.Type != "l4" || lbp.Spec.Algorithm != "llatency" {
-		t.Fatalf("Unable to decode object: %+v", tenant)
-	}
-
-	b, err = ioutil.ReadFile(snapshotDir + "/nodes/snap-node.json")
-	if err != nil {
-		t.Fatalf("Error reading file contents: %s", err)
-	}
-	node := &cluster.Node{}
-	if err = json.Unmarshal([]byte(b), node); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if node.Labels["vCenter"] != "vc2" {
-		t.Fatalf("Unable to decode object: %+v \n", node)
-	}
-
-	// modify some objects and write them back
-	node.Labels["vCenter"] = "modified-vc1"
-	b, err = json.Marshal(node)
-	if err != nil {
-		t.Fatalf("Unable to marshal node object %+v", node)
-	}
-	ioutil.WriteFile(snapshotDir+"/nodes/snap-node.json", b, 0644)
-
-	// restore from snapshot
-	out = veniceCLI("snapshot --restore --id " + snapshotDir)
-	if strings.TrimSpace(out) != "" {
-		t.Fatalf("snapshot restore returned some junk: %s", out)
-	}
-
-	// now read the objects and confirm if modified objects work as expected
-	out = veniceCLI("read node snap-node")
-	node = &cluster.Node{}
-	if err := json.Unmarshal([]byte(out), node); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if node.Labels["vCenter"] != "modified-vc1" {
-		t.Fatalf("Restore object different from expectation: %+v \n", node)
-	}
-	os.RemoveAll(snapshotDir)
-}
-
-func TestDefinition(t *testing.T) {
-	out := veniceCLI("definition securityGroup")
-	if !strings.Contains(out, "MatchPrefixes: []string") {
-		t.Fatalf("Unable to read multiple records based on names:\n%s", out)
-	}
-
-	out = veniceCLI("read securityGroup --show-definition")
-	if !strings.Contains(out, "MatchPrefixes: []string") {
-		t.Fatalf("Unable to read multiple records based on names:\n%s", out)
-	}
-}
-
-func TestSecurityGroupDelete(t *testing.T) {
-	out := veniceCLI("delete securityGroup sg10")
-	sg := &security.SecurityGroup{}
-	if err := json.Unmarshal([]byte(out), sg); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sg.ResourceVersion != "3" || len(sg.Spec.WorkloadSelector.Requirements) != 1 || len(sg.Spec.MatchPrefixes) != 1 ||
-		sg.Spec.WorkloadSelector.Print() != "key3=val3" || sg.Spec.MatchPrefixes[0] != "12.1.1.0/22" {
-		t.Fatalf("Delete operation failed: %+v \n", sg)
-	}
-}
-
-func TestSecurityGroupPolicyDelete(t *testing.T) {
-	out := veniceCLI("delete sgpolicy sg10-ingress")
-	sgp := &security.SGPolicy{}
-	if err := json.Unmarshal([]byte(out), sgp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if sgp.ResourceVersion != "4" || len(sgp.Spec.AttachGroups) != 1 || len(sgp.Spec.Rules) != 2 ||
-		sgp.Spec.AttachGroups[0] != "sg30" ||
-		sgp.Spec.Rules[0].Apps[0] != "tcp/4550" || sgp.Spec.Rules[0].Action != "permit" ||
-		sgp.Spec.Rules[1].Apps[0] != "tcp/8440" || sgp.Spec.Rules[1].Action != "permit" {
-		t.Fatalf("Delete operation failed: %+v \n", sgp)
-	}
-
-	out = veniceCLI("read sgpolicy sg10-ingress")
-	if strings.TrimSpace(out) != "" {
-		t.Fatalf("read object after delete: %s", out)
-	}
-}
-
-func TestServiceDelete(t *testing.T) {
-	out := veniceCLI("delete service uService122")
-	svc := &network.Service{}
-	if err := json.Unmarshal([]byte(out), svc); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if svc.ResourceVersion != "3" || svc.Spec.VirtualIp != "12.1.1.123" || len(svc.Spec.WorkloadSelector) != 1 ||
-		svc.Spec.WorkloadSelector[0] != "tier:frontend" || svc.Spec.Ports != "8080" || svc.Spec.LBPolicy != "prod-lb-policy" {
-		t.Fatalf("Delete operation failed: %+v \n", svc)
-	}
-
-	out = veniceCLI("read service uService122")
-	if strings.TrimSpace(out) != "" {
-		t.Fatalf("read object after delete: %s", out)
-	}
-}
-
-func TestLbPolicyDelete(t *testing.T) {
-	out := veniceCLI("delete lbPolicy dev-lb-policy")
-	lbp := &network.LbPolicy{}
-	if err := json.Unmarshal([]byte(out), lbp); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if lbp.ResourceVersion != "3" || lbp.Spec.HealthCheck.ProbePortOrUrl != "/healthStatus" ||
-		lbp.Spec.SessionAffinity != "yes" || lbp.Spec.Type != "l4" || lbp.Spec.Algorithm != "least-latency" {
-		t.Fatalf("Update operation failed: %+v \n", lbp)
-	}
-
-	out = veniceCLI("read lbPolicy dev-lb-policy")
-	if strings.TrimSpace(out) != "" {
-		t.Fatalf("read object after delete: %s", out)
-	}
-}
-
-func TestEndpointDelete(t *testing.T) {
-	out := veniceCLI("delete endpoint vm23")
-	ep := &workload.Endpoint{}
-	if err := json.Unmarshal([]byte(out), ep); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-
-	lv1, ok1 := ep.Labels["dmz"]
-	lv2, ok2 := ep.Labels["dc"]
-	lv3, ok3 := ep.Labels["tier"]
-	if ep.ResourceVersion != "4" || len(ep.Labels) != 3 ||
-		!ok1 || lv1 != "no" || !ok2 || lv2 != "lab-22" || !ok3 || lv3 != "frontend" {
-		t.Fatalf("Update endpoint failed: %+v \n", ep)
-	}
-
-	out = veniceCLI("delete endpoint non-existent")
-	if !fmtOutput && !strings.Contains(out, "Error deleting endpoint") {
-		t.Fatalf("Unable to get error on non existent object: %s\n", out)
-	}
-}
-
-func TestPermissionDelete(t *testing.T) {
-	out := veniceCLI("delete permission network-objs-rw")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("delete permission: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read permission network-objs-rw")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("delete permission: garbled output '%s'", out)
-	}
-}
-
-func TestRoleDelete(t *testing.T) {
-	out := veniceCLI("delete role network-admin")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read role network-admin")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update endpoint: garbled output '%s'", out)
-	}
-}
-
-func TestUserDelete(t *testing.T) {
-	out := veniceCLI("delete user bot-bot")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update endpoint: garbled output '%s'", out)
-	}
-
-	out = veniceCLI("read user bot-bot")
-	if !fmtOutput && strings.TrimSpace(out) != "" {
-		t.Fatalf("update endpoint: garbled output '%s'", out)
-	}
-}
-
-func TestNetworkDelete(t *testing.T) {
-	out := veniceCLI("delete network lab22-net145")
-	net := &network.Network{}
-	if err := json.Unmarshal([]byte(out), net); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if net.ResourceVersion != "3" || net.Spec.IPv4Subnet != "145.1.1.0/24" || net.Spec.IPv4Gateway != "145.1.1.254" ||
-		net.Spec.Type != "vxlan" || net.Spec.IPv6Subnet != "2001:db8::0/64" || net.Spec.IPv6Gateway != "2001:db8::1" {
-		t.Fatalf("Delete operation failed: %+v \n", net)
-	}
-
-	out = veniceCLI("read network lab22-net145")
-	if strings.TrimSpace(out) != "" {
-		t.Fatalf("read object after delete: %s", out)
-	}
-}
-
-func TestTenantDelete(t *testing.T) {
-	out := veniceCLI("delete tenant newco")
-	net := &cluster.Tenant{}
-	if err := json.Unmarshal([]byte(out), net); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if net.ResourceVersion != "3" || net.Spec.AdminUser != "newco-adm" {
-		t.Fatalf("Delete operation failed: %+v \n", net)
-	}
-
-	out = veniceCLI("read tenant newco")
-	if strings.TrimSpace(out) != "" {
-		t.Fatalf("read object after delete: %s", out)
-	}
-}
-
-func TestNodeDelete(t *testing.T) {
-	out := veniceCLI("delete node vm233")
-
-	node := &cluster.Node{}
-	if err := json.Unmarshal([]byte(out), node); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if node.Labels["vCenter"] != "vc2" {
-		t.Fatalf("node delete operation failed: %+v \n", node)
-	}
-
-	out = veniceCLI("read node vm233")
-	if strings.TrimSpace(out) != "" {
-		t.Fatalf("read object after delete: %s", out)
-	}
-}
-
-func TestClusterDelete(t *testing.T) {
-	out := veniceCLI("delete cluster dc-az-cluster1")
-
-	cluster := &cluster.Cluster{}
-	if err := json.Unmarshal([]byte(out), cluster); err != nil {
-		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
-	}
-	if len(cluster.Spec.NTPServers) != 2 ||
-		cluster.Spec.NTPServers[0] != "ntp-svr1" || cluster.Spec.NTPServers[1] != "ntp-svr2" ||
-		cluster.Labels["type"] != "vcenter" || cluster.Spec.VirtualIP != "151.21.43.44" {
-		t.Fatalf("Update operation failed: %+v\n", cluster)
-	}
-
-	out = veniceCLI("read cluster dc-az-cluster1")
-	if strings.TrimSpace(out) != "" {
-		t.Fatalf("read object after delete: %s", out)
-	}
-}
-
-func TestGetOpenConnections(t *testing.T) {
-	cmd := exec.Command("netstat", "-l")
-	cout, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("error running netstat output: %s", err)
-	}
-	t.Logf("%s\n", cout)
-}
-
-func TestLogin(t *testing.T) {
-	veniceCLI("create user foo")
-	veniceCLI("login -u foo -p bar")
-	if tok := getToken(); tok != tserver.DummyToken {
-		t.Fatalf("Failed to save token to file, found %v", tok)
-	}
-	veniceCLI("logout")
-	if tok := getToken(); tok != "" {
-		t.Fatalf("Failed to clear token, found %v", tok)
-	}
 }

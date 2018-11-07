@@ -8,7 +8,7 @@ package cli
 
 import (
 	"github.com/pensando/sw/api/generated/staging"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 // CreateBufferFlags specifies flags for Buffer create operation

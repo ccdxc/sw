@@ -1,8 +1,0 @@
-{
-	"kind": "node",
-	"meta": {
-		"name": "node7",
-		"labels": { "os":"esx", "storage":"hdd", "dc":"sjc-lab22" }
-	},
-	"spec": {}
-}

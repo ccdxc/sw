@@ -1,7 +1,0 @@
-{
-	"kind": "securityGroup",
-	"meta": {
-		"name": "any"
-	},
-	"spec": { "match-prefixes" : [ "*/*" ] }
-}

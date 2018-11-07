@@ -1,9 +1,0 @@
-{
-	"kind": "tenant",
-	"meta": {
-		"name": "default"
-	},
-	"spec": {
-		"admin-user" : "default-admin"
-	}
-}

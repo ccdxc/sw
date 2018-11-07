@@ -8,7 +8,7 @@ package cli
 
 import (
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 // CreateClusterFlags specifies flags for Cluster create operation

@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	loginctx "github.com/pensando/sw/api/login/context"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 func restGetCluster(hostname, tenant, token string, obj interface{}) error {

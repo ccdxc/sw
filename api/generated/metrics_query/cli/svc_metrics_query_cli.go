@@ -7,7 +7,7 @@ Input file: svc_metrics_query.proto
 package cli
 
 import (
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 func init() {

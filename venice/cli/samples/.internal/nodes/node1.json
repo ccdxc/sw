@@ -1,8 +1,0 @@
-{
-	"kind": "node",
-	"meta": {
-		"name": "node1",
-		"labels": { "os":"linux", "storage":"ssd", "dc":"sjc-lab22" }
-	},
-	"spec": {}
-}

@@ -21,8 +21,8 @@ import (
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
+	cgen "github.com/pensando/sw/venice/cli/gen"
 	"github.com/pensando/sw/venice/globals"
-	cgen "github.com/pensando/sw/venice/ncli/gen"
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"

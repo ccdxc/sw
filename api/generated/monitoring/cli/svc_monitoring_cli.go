@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
 	loginctx "github.com/pensando/sw/api/login/context"
-	"github.com/pensando/sw/venice/ncli/gen"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 func restGetEventPolicy(hostname, tenant, token string, obj interface{}) error {

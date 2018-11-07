@@ -2,13 +2,16 @@ package vcli
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"sort"
 
-	"github.com/pensando/sw/venice/globals"
-
 	"github.com/urfave/cli"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/cli/gen"
 )
 
 // CLI features
@@ -40,8 +43,54 @@ import (
 // - add help tour
 // - auth (user login, etc.)
 
-var (
-	defaultServer = "http://" + globals.Localhost + ":19001"
+// context structure is internal to CLI module that is passed along various functions
+// to keep the context about a specific CLI command; it stores digested information
+type context struct {
+	cli               *cli.Context
+	tenant            string
+	cmd               string
+	subcmd            string
+	token             string
+	server            string
+	labels            map[string]string
+	dumpStruct        bool
+	dumpYml           bool
+	names             []string
+	quiet             bool
+	debug             bool
+	re                *regexp.Regexp
+	structInfo        *api.Struct
+	listStructInfo    *api.Struct
+	genInfo           *gen.Info
+	removeObjOperFunc gen.RemoveObjOperFunc
+	restGetFunc       gen.RestGetFunc
+	restDeleteFunc    gen.RestFunc
+	restPostFunc      gen.RestFunc
+	restPutFunc       gen.RestFunc
+}
+
+const (
+	defaultServer = "http://localhost:19001"
+	helpTmpl      = `NAME:
+{{.Name}} - {{.Usage}}
+USAGE:
+  {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+  {{if len .Authors}}
+AUTHOR:
+  {{range .Authors}}{{ . }}{{end}}
+  {{end}}{{if .Commands}}
+COMMANDS:
+{{range .Commands}}{{if not .HideHelp}}  {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+GLOBAL OPTIONS:
+  {{range .VisibleFlags}}{{.}}
+  {{end}}{{end}}{{if .Copyright }}
+COPYRIGHT:
+  {{.Copyright}}
+  {{end}}{{if .Version}}
+VERSION:
+  {{.Version}}
+{{end}}
+`
 )
 
 type byName []cli.Command
@@ -63,27 +112,6 @@ var penServerFlags = []cli.Flag{
 		EnvVar: "PENSERVER",
 	},
 }
-
-const helpTmpl = `NAME:
-{{.Name}} - {{.Usage}}
-USAGE:
-  {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
-  {{if len .Authors}}
-AUTHOR:
-  {{range .Authors}}{{ . }}{{end}}
-  {{end}}{{if .Commands}}
-COMMANDS:
-{{range .Commands}}{{if not .HideHelp}}  {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
-GLOBAL OPTIONS:
-  {{range .VisibleFlags}}{{.}}
-  {{end}}{{end}}{{if .Copyright }}
-COPYRIGHT:
-  {{.Copyright}}
-  {{end}}{{if .Version}}
-VERSION:
-  {{.Version}}
-{{end}}
-`
 
 // InvokeCLI invokes pensando CLI programmatically, which is used by
 // the main routine but also by unit tests, during unit tests we capture the stdout
@@ -112,6 +140,9 @@ func InvokeCLI(osArgs []string, bot bool) string {
 
 	cli.AppHelpTemplate = helpTmpl
 	sort.Sort(byName(Commands))
+	if err := generateCommands(); err != nil {
+		return fmt.Sprintf("error '%s' generating commands", err)
+	}
 	app.Commands = Commands
 	app.Metadata = make(map[string]interface{})
 	app.Metadata["osArgs"] = osArgs
@@ -136,5 +167,5 @@ func InvokeCLI(osArgs []string, bot bool) string {
 
 // bash command line completer for top level commands
 func bashMainCompleter(c *cli.Context) {
-	BashCompleter(c, Commands, penServerFlags)
+	bashCompleter(c, Commands, penServerFlags)
 }
