@@ -148,7 +148,7 @@ pnso_deinit(void)
 	num_pc_res = sonic_get_num_per_core_res(lif);
 	for (i = 0; i < num_pc_res; i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
-		pas_show_stats(&pcr->pnso_api_stats);
+		pas_show_stats(&pcr->api_stats);
 		pc_res_deinit(pcr);
 	}
 
@@ -185,7 +185,7 @@ pc_res_init(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	if (err)
 		goto out;
 
-	pas_init(&pcr->pnso_api_stats);
+	pas_init(&pcr->api_stats);
 
 out:
 	return err;

@@ -315,7 +315,7 @@ struct per_core_resource {
 
 	struct mem_pool *mpools[MPOOL_TYPE_MAX];
 	struct batch_info *batch_info;
-	struct pnso_api_stats pnso_api_stats;
+	struct pnso_api_stats api_stats;
 };
 
 struct res {
