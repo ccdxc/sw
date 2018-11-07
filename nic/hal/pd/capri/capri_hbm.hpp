@@ -120,6 +120,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_NMDPR_OBJS_SMALL_RX   "small-rx-objs"
 #define CAPRI_HBM_REG_NMDPR_OBJS_BIG_TX     "big-tx-objs"
 #define CAPRI_HBM_REG_NMDPR_OBJS_BIG_RX     "big-rx-objs"
+#define CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS "ipsec-global-drop-stats"
+
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512
@@ -147,11 +149,15 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 #define TNMDPR_SMALL_TABLE_BASE "hbm_tnmdpr_small_table_base"
 #define TNMDPR_BIG_TABLE_BASE   "hbm_tnmdpr_big_table_base"
 
+
 #define RNMDR_TLS_GC_TABLE_BASE "hbm_rnmdr_tls_gc_table_base"
 
 #define IPSEC_CB_BASE "ipsec_cb_base"
 #define IPSEC_PAD_BYTES_HBM_TABLE_BASE "ipsec_pad_table_base"
 #define IPSEC_IP_HDR_BASE "ipsec_ip_hdr_base"
+#define IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N "ipsec_global_drop_h2n_counters"
+#define IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H "ipsec_global_drop_n2h_counters"
+
 
 #define TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE "tls_pad_table_base"
 #define TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE "tls_barco_gcm0_pi_table_base"

@@ -11,6 +11,7 @@ struct phv_ p;
 %%
         .param esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc 
         .param IPSEC_CB_BASE
+        .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 
 esp_ipv4_tunnel_n2h_update_input_desc_aol:
@@ -26,12 +27,13 @@ esp_ipv4_tunnel_n2h_update_input_desc_aol:
 
 dma_cmd_to_move_input_pkt_to_mem:
     add r2, r0, k.t0_s2s_in_page_addr
-    blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma
+    blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma_in_page
+
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, k.t0_s2s_in_page_addr
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_iv_salt_off
  
     sub r3, r3, k.ipsec_to_stage3_iv_size 
-    blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma
+    blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma_in_page
     phvwr p.dma_cmd_pkt2mem2_dma_cmd_addr, r3 
     add r5, k.ipsec_to_stage3_payload_size, k.ipsec_to_stage3_iv_size
     add r5, r5, k.ipsec_global_icv_size
@@ -42,9 +44,10 @@ dma_cmd_to_write_salt_after_seq_no:
     phvwr.e p.dma_cmd_iv_salt_dma_cmd_addr, r1
     nop
 
-esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma:
+esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma_in_page:
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_IN_DESC_OFFSET, 1)
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     phvwri.e p.p4_intr_global_drop, 1
     nop
-
 

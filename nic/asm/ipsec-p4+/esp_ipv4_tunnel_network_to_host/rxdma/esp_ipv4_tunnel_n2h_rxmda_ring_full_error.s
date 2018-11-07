@@ -12,5 +12,5 @@ struct phv_ p;
 esp_ipv4_tunnel_n2h_rxmda_ring_full_error:
     tbladd.f d.n2h_rx_drops, 1
     phvwri p.p4_intr_global_drop, 1
-    phvwri.e p.app_header_table1_valid, 0
+    phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop 

@@ -9,6 +9,8 @@ struct phv_ p;
 %%
         .param          IPSEC_PAD_BYTES_HBM_TABLE_BASE
         .param          esp_ipv4_tunnel_h2n_rxmda_ring_full_error
+        .param          esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore
+        .param          IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .align 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     add r1, d.cb_pindex, 1
@@ -36,8 +38,6 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     slt c2, r5, 2
     add.c2 r5, r5, d.block_size 
     subi r5, r5, 2
-    smeqb c4, d.flags, IPSEC_FLAGS_EXTRA_PAD, IPSEC_FLAGS_EXTRA_PAD
-    addi.c4 r5, r5, 64
     phvwrpair p.ipsec_to_stage3_pad_size, r5, p.ipsec_to_stage3_iv_size, d.iv_size
     addui r6, r0, hiword(IPSEC_PAD_BYTES_HBM_TABLE_BASE)
     addi r6, r6, loword(IPSEC_PAD_BYTES_HBM_TABLE_BASE)
@@ -46,7 +46,9 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwrpair p.ipsec_int_header_pad_size, r5, p.ipsec_int_header_l4_protocol, k.p42p4plus_hdr_l4_protocol
     add  r1, r0, k.p42p4plus_hdr_ipsec_payload_end
     add.c1 r1, r1, IPV6_HDR_SIZE 
-    phvwr p.ipsec_to_stage3_packet_len, r1 
+    phvwr p.ipsec_to_stage3_packet_len, r1
+    addi r5, r0, INDESC_SEMAPHORE_ADDR
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore, r5, TABLE_SIZE_64_BITS) 
     phvwr.e p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     nop
 

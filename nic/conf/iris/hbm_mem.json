@@ -50,7 +50,7 @@
             "cc"      : "true"
         },
         {
-             "name": "stats",
+             "name": "ipsec-global-drop-stats",
              "size_kb": 2
         },
         {

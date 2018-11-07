@@ -8,6 +8,7 @@ struct phv_ p;
 
 %%
         .align
+        .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
 esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int:
     phvwri p.app_header_table2_valid, 0
     //seq c1, d.{status_addr}.dx, 0
@@ -23,8 +24,7 @@ esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int:
 
 esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int_phv_drop:
     phvwri p.p4_intr_global_drop, 1
-    phvwri.f p.{app_header_table0_valid...app_header_table3_valid}, 0
-    nop.e
+    phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop
      
     

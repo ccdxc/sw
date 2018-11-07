@@ -470,6 +470,10 @@
 
 #define BRQ_QPCB_BASE                  0xba00ba90
 
+#define IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N  ipsec_global_drop_h2n_counters
+#define IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H  ipsec_global_drop_n2h_counters
+
+
 #define ARQRX_BASE                     hbm_arqrx_base
 #define ARQTX_BASE                     hbm_arqtx_base
 #define CAPRI_CPU_HASH_MASK            cpu_hash_mask

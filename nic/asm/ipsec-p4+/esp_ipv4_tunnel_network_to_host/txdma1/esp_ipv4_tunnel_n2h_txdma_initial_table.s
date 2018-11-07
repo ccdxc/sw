@@ -12,10 +12,12 @@ struct phv_ p;
         .param esp_v4_tunnel_n2h_load_part2
         .param IPSEC_CB_BASE
         .param  TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE
+        .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 esp_ipv4_tunnel_n2h_txdma_initial_table:
-    sub r1, d.{barco_ring_cindex}.hx, 1
-    seq c5, d.{barco_ring_pindex}.hx, r1
+    add r1, d.{barco_ring_pindex}.hx, 1
+    and r1, r1, IPSEC_BARCO_RING_INDEX_MASK
+    seq c5, d.{barco_ring_cindex}.hx, r1
     bcf [c5], esp_ipv4_tunnel_n2h_txdma_initial_table_drop_pkt
     seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
     b.c1 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing
@@ -55,11 +57,15 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
 
 
 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing:
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_OFFSET, 1)
     nop.e
     nop
 
 esp_ipv4_tunnel_n2h_txdma_initial_table_drop_pkt:
     phvwri p.p4_intr_global_drop, 1
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_DROP_OFFSET, 1)
     nop.e
     nop
     

@@ -9,10 +9,11 @@ struct phv_ p;
 
 %%
         .param esp_v4_tunnel_n2h_txdma1_update_cb
+        .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 esp_v4_tunnel_n2h_write_barco_req:
     add r2, r0, k.ipsec_to_stage3_barco_req_addr
-    blti  r2, CAPRI_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma
+    blti  r2, CAPRI_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_req
     phvwr p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage3_barco_req_addr 
     seq c1, k.ipsec_to_stage3_new_key, 1
     phvwr.c1 p.barco_req_key_desc_index, d.{new_key_index}.wx
@@ -22,7 +23,7 @@ esp_v4_tunnel_n2h_post_to_barco_ring:
     and r3, d.barco_pindex, IPSEC_BARCO_RING_INDEX_MASK
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr
-    blti  r3, CAPRI_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma
+    blti  r3, CAPRI_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_cb
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
 
 esp_v4_tunnel_n2h_dma_cmd_incr_barco_pindex:
@@ -41,7 +42,16 @@ esp_v4_tunnel_n2h_dma_cmd_incr_barco_pindex:
     phvwr.e p.barco_req_doorbell_data, r3.dx
     nop
 
-esp_v4_tunnel_n2h_write_barco_req_illegal_dma:
+esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_req:
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_BARCO_REQ_OFFSET, 1)    
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
+    phvwri.e p.p4_intr_global_drop, 1
+    nop
+
+esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_cb:
+    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_BARCO_CB_OFFSET, 1)    
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     phvwri.e p.p4_intr_global_drop, 1
     nop

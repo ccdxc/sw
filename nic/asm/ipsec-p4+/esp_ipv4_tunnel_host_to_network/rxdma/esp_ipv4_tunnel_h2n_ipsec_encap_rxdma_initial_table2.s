@@ -11,15 +11,12 @@ struct phv_ p;
         .param          esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore
         .param          esp_ipv4_tunnel_h2n_allocate_input_page_semaphore
         .param          esp_ipv4_tunnel_h2n_allocate_output_page_semaphore
+        .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
+
         .align
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table2:
     tbladd d.esn_lo, 1
     tbladd.f d.iv, 1
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore[33:6] 
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
-    phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
-
 
     smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
     phvwr.c3 p.ipsec_to_stage2_is_random, 1
