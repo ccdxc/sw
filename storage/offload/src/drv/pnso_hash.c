@@ -36,17 +36,13 @@ fill_hash_desc(uint32_t algo_type, uint32_t buf_len,
 	desc->u.cd_bits.cc_enabled = 0;
 	desc->u.cd_bits.cc_src_is_list = flat_buf ? 0 : 1;
 	desc->u.cd_bits.cc_hash_enabled = 1;
-	switch (algo_type) {
-	case PNSO_HASH_TYPE_SHA2_512:
-		desc->u.cd_bits.cc_hash_type = 0;
-		break;
-	case PNSO_HASH_TYPE_SHA2_256:
-		desc->u.cd_bits.cc_hash_type = 1;
-		break;
-	default:
-		OSAL_ASSERT(0);
-		break;
-	}
+
+	/*
+	 * due to PNSO_HASH_TYPE_NONE, subtract by 1 to align with
+	 * HW/SW constants
+	 *
+	 */
+	desc->u.cd_bits.cc_hash_type = algo_type - 1;
 
 	desc->cd_datain_len = buf_len;
 	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
