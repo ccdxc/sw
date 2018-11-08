@@ -85,3 +85,11 @@ def SetVeniceAuthToken(auth_token):
     
 def GetVeniceAuthToken():
     return __gl_venice_auth_token
+
+def Cleanup():
+    global __gl_workloads
+    global __gl_venice_configs
+    global __gl_venice_auth_token
+    __gl_workloads = {}
+    __gl_venice_configs = None
+    __gl_venice_auth_token = None

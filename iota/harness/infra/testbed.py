@@ -200,6 +200,8 @@ class _Testbed:
             status = self.__cleanup_testbed_script()
             if status != types.status.SUCCESS:
                 return status
+
+        store.Cleanup()
         status = self.__init_testbed()
         return status
 
