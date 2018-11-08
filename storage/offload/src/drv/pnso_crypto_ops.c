@@ -432,6 +432,13 @@ crypto_write_result(struct service_info *svc_info)
 		return EINVAL;
 	}
 
+	if (svc_info->si_type == PNSO_SVC_TYPE_ENCRYPT)
+		PAS_INC_NUM_ENC_BYTES(svc_info->si_pcr,
+				svc_info->si_src_blist.len);
+	else
+		PAS_INC_NUM_DEC_BYTES(svc_info->si_pcr,
+				svc_info->si_src_blist.len);
+
 	return PNSO_OK;
 }
 
