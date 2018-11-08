@@ -424,12 +424,12 @@ static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
 	desc->E = done;
 	desc->mss = mss;
 
-	skb_tx_timestamp(skb);
-
-	if (done)
+	if (done) {
+		skb_tx_timestamp(skb);
 		ionic_q_post(q, !skb->xmit_more, ionic_tx_clean, skb);
-	else
+	} else {
 		ionic_q_post(q, false, ionic_tx_clean, NULL);
+	}
 }
 
 static struct txq_desc *ionic_tx_tso_next(struct queue *q,
@@ -465,6 +465,8 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 		(skb_shinfo(skb)->gso_type & SKB_GSO_UDP_TUNNEL_CSUM);
 	bool has_vlan = !!skb_vlan_tag_present(skb);
 	bool start, done;
+	u64 total_pkts = 0;
+	u64 total_bytes = 0;
 	u16 vlan_tci = skb_vlan_tag_get(skb);
 
 	/* Preload inner-most TCP csum field with IP pseudo hdr
@@ -506,6 +508,8 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 		done = (nfrags == 0 && left == 0);
 		ionic_tx_tso_post(q, desc, skb, hdrlen, mss, vlan_tci,
 				  has_vlan, outer_csum, start, done);
+		total_pkts++;
+		total_bytes += start ? len : len + hdrlen;
 		desc = ionic_tx_tso_next(q, &elem);
 		start = false;
 		seglen = mss;
@@ -539,6 +543,8 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 				ionic_tx_tso_post(q, desc, skb, hdrlen, mss,
 						  vlan_tci, has_vlan,
 						  outer_csum, start, done);
+				total_pkts++;
+				total_bytes += start ? len : len + hdrlen;
 				desc = ionic_tx_tso_next(q, &elem);
 				start = false;
 			} else {
@@ -558,12 +564,16 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 				ionic_tx_tso_post(q, desc, skb, hdrlen, mss,
 						  vlan_tci, has_vlan,
 						  outer_csum, start, done);
+				total_pkts++;
+				total_bytes += start ? len : len + hdrlen;
 				desc = ionic_tx_tso_next(q, &elem);
 				start = false;
 			}
 		}
 	}
 
+	stats->pkts += total_pkts;
+	stats->bytes += total_bytes;
 	stats->tso++;
 
 	return 0;
@@ -658,6 +668,7 @@ static int ionic_tx_skb_frags(struct queue *q, struct sk_buff *skb)
 
 static int ionic_tx(struct queue *q, struct sk_buff *skb)
 {
+	struct tx_stats *stats = q_to_tx_stats(q);
 	int err;
 
 	if (skb->ip_summed == CHECKSUM_PARTIAL)
@@ -673,6 +684,9 @@ static int ionic_tx(struct queue *q, struct sk_buff *skb)
 
 	skb_tx_timestamp(skb);
 	ionic_q_post(q, !skb->xmit_more, ionic_tx_clean, skb);
+
+	stats->pkts++;
+	stats->bytes += skb->len;
 
 	return 0;
 }
@@ -707,7 +721,6 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	struct lif *lif = netdev_priv(netdev);
 	struct queue *q = lif_to_txq(lif, queue_index);
 	struct tx_stats *stats = q_to_tx_stats(q);
-	unsigned int len = skb->len;
 	int ndescs;
 	int err;
 
@@ -732,11 +745,9 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 		err = ionic_tx_tso(q, skb);
 	else
 		err = ionic_tx(q, skb);
+
 	if (err)
 		goto err_out_drop;
-
-	stats->pkts++;
-	stats->bytes += len;
 
 	return NETDEV_TX_OK;
 
