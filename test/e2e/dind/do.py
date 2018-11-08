@@ -173,6 +173,9 @@ class NaplesNode(Node):
         self.runCmd("""killall -q netagent""", ignore_error=True)
         self.runCmd("""killall -q tmagent""", ignore_error=True)
         self.runCmd("""killall -q nmd""", ignore_error=True)
+        self.runCmd("""killall -q nevtsproxy""", ignore_error=True)
+        self.runCmd("""rm /tmp/nmd.db""", ignore_error=True)
+        self.runCmd("""rm /tmp/naples-netagent.db""", ignore_error=True)
         pass
     def restartCluster(self):
         self.stopCluster()

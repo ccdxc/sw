@@ -315,10 +315,6 @@ func OnStart() {
 	}
 	// Now that CA has started, Recorderclients can talk RPC to eventsProxy
 	env.Recorder.StartExport()
-	// Launch go routine to monitor health updates of smartNIC objects and update status
-	go func() {
-		env.NICService.MonitorHealth()
-	}()
 
 	env.QuorumNodes = cluster.QuorumNodes
 	quorumMember, _ := isQuorumMember(cluster)

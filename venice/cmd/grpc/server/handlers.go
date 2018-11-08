@@ -387,6 +387,14 @@ func RegisterSmartNICRegistrationServer(smgr *cache.Statemgr) {
 
 		// Update NIC service
 		env.NICService = nicServer
+		// Launch go routine to monitor health updates of smartNIC objects and update status
+		if cluster, err := utils.GetCluster(); err == nil && cluster != nil {
+			// only start here if cmd is getting restarted and is already part of cluster.
+			// If its not yet part of cluster, then MonitorHealth() is done as part of ClusterCreateOP/ClusterJoin
+			go func() {
+				env.NICService.MonitorHealth()
+			}()
+		}
 
 		// Register smartNIC gRPC server
 		log.Debugf("Registering SmartNIC RPCserver")
