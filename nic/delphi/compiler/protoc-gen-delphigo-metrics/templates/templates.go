@@ -17,12 +17,18 @@ import (
 {{range $msgs}}
   {{if (HasSuffix .GetName "Metrics")}}
 type {{.GetName}} struct {
+	{{if (.HasExtOption "delphi.singleton")}}
+	key 	        int
+	{{end}}
 	{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
     {{if (eq .GetName "Key") }}
 	{{ if .TypeIsMessage }}
-	Key       {{.GetGolangTypeName}}
+           {{if (HasSuffix .GetGolangTypeName "Key")}}
+	key       {{.GetGolangTypeName}}
+           {{else}} {{ ThrowError "Key field type doesnt have Key suffix" $fileName $msgName }}
+           {{end}}
 	{{else}}
-	Key       {{.GetGolangTypeName}}
+	key       {{.GetGolangTypeName}}
 	{{end}}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
 	{{.GetName}} gometrics.Counter
@@ -33,6 +39,18 @@ type {{.GetName}} struct {
 	// private state
 	metrics gometrics.Metrics
 }
+	
+{{if (.HasExtOption "delphi.singleton")}}
+func (mtr *{{$msgName}}) GetKey() int {
+        return 0
+}
+{{end}}
+{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+  {{if (eq .GetName "Key") }}
+func (mtr *{{$msgName}}) GetKey() {{.GetGolangTypeName}} {
+        return mtr.key
+}
+{{end}}{{end}}
 
 // Size returns the size of the metrics object
 func (mtr *{{.GetName}}) Size() int {
@@ -47,11 +65,17 @@ func (mtr *{{.GetName}}) Size() int {
 	return sz
 }
 
-// Unmarshall unmarshall the raw counters from shared memory
-func (mtr *{{.GetName}}) Unmarshall() error {
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *{{.GetName}}) Unmarshal() error {
 	var offset int
 	{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-    {{if (eq .GetName "Key") }}
+	{{if (eq .GetName "Key") }}
+	{{ if .TypeIsMessage }}
+	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
+	{{else}}
+	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
+	mtr.key = {{.GetGolangTypeName}}(val)
+	{{end}}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
 	mtr.{{.GetName}} = mtr.metrics.GetCounter(offset)
 	offset += mtr.{{.GetName}}.Size()
@@ -112,33 +136,72 @@ func (it *{{.GetName}}Iterator) HasNext() bool {
 func (it *{{.GetName}}Iterator) Next() *{{.GetName}} {
 	mtr := it.iter.Next()
 	tmtr := &{{.GetName}}{metrics: mtr}
-	tmtr.Unmarshall()
+	tmtr.Unmarshal()
 	return tmtr
 }
 
 // Find finds the metrics object by key
-func (it *{{.GetName}}Iterator) Find(key uint32) (*{{.GetName}}, error) {
+{{if (.HasExtOption "delphi.singleton")}}
+func (it *{{.GetName}}Iterator) Find() (*{{.GetName}}, error) {
+	var key int
+	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(0))))
+{{else}}
+{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+{{if (eq .GetName "Key") }}
+func (it *{{$msgName}}Iterator) Find(key {{.GetGolangTypeName}}) (*{{$msgName}}, error) {
+	{{ if .TypeIsMessage }}
+	buf, _ := json.Marshal(key)
+	mtr, err := it.iter.Find(string(buf))
+	{{else}}
 	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(key))))
+	{{end}}
+{{end}}{{end}}{{end}}
 	if err != nil {
 		return nil, err
 	}
-	tmtr := &{{.GetName}}{metrics: mtr}
-	tmtr.Unmarshall()
+	tmtr := &{{$msgName}}{metrics: mtr, key: key}
+	tmtr.Unmarshal()
 	return tmtr, nil
 }
 
 // Create creates the object in shared memory
-func (it *{{.GetName}}Iterator) Create(key uint32) (*{{.GetName}}, error) {
+{{if (.HasExtOption "delphi.singleton")}}
+func (it *{{.GetName}}Iterator) Create() (*{{.GetName}}, error) {
+	var key int
 	tmtr := &{{.GetName}}{}
+	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(0))), tmtr.Size())
+{{else}}
+{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+{{if (eq .GetName "Key") }}
+func (it *{{$msgName}}Iterator) Create(key {{.GetGolangTypeName}}) (*{{$msgName}}, error) {
+	tmtr := &{{$msgName}}{}
+	{{ if .TypeIsMessage }}
+	buf, _ := json.Marshal(key)
+	mtr := it.iter.Create(string(buf), tmtr.Size())
+	{{else}}
 	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
-	tmtr = &{{.GetName}}{metrics: mtr}
-	tmtr.Unmarshall()
+	{{end}}
+{{end}}{{end}}{{end}}
+	tmtr = &{{.GetName}}{metrics: mtr, key: key}
+	tmtr.Unmarshal()
 	return tmtr, nil
 }
 
 // Delete deletes the object from shared memory
-func (it *{{.GetName}}Iterator) Delete(key uint32) error {
+{{if (.HasExtOption "delphi.singleton")}}
+func (it *{{.GetName}}Iterator) Delete() error {
+	return it.iter.Delete(string(proto.EncodeVarint(uint64(0))))
+{{else}}
+{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+{{if (eq .GetName "Key") }}
+func (it *{{$msgName}}Iterator) Delete(key {{.GetGolangTypeName}}) error {
+	{{ if .TypeIsMessage }}
+	buf, _ := json.Marshal(key)
+	return it.iter.Delete(string(buf))
+	{{else}}
 	return it.iter.Delete(string(proto.EncodeVarint(uint64(key))))
+	{{end}}
+{{end}}{{end}}{{end}}
 }
 
 // New{{.GetName}}Iterator returns an iterator
@@ -154,6 +217,14 @@ func New{{.GetName}}Iterator() (*{{.GetName}}Iterator, error) {
 
 	return &{{.GetName}}Iterator{iter: iter}, nil
 }
+{{else}}
+  {{if (HasSuffix .GetName "Key")}}
+type {{.GetName}} struct {
+    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+	{{.GetName}}	{{.GetGolangTypeName}}
+    {{end}}
+}
+  {{end}}
 {{end}}
 {{end}}
 `

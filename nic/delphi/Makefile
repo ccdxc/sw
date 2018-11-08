@@ -18,10 +18,22 @@ MODULE_TEST_TARGETS = delphi_example_test delphi_hub_test delphi_server_test \
                       delphi_kvstore_test delphi_shm_test delphi_slab_test \
                       delphi_utils_test
 
+PROTO_GEN_TARGETS = sysmgr.proto nicmgr.proto gogo.proto hal.proto device.proto \
+                    common.proto upgrade.proto agent.proto delphi.proto \
+                    delphi_example.proto messenger.proto client.proto
+
+
 default: build
 
 build:
 	cd .. && make ${MODULE_PREREQS}
+
+deps:
+	@echo "+++ Building delphi dependencies..."
+	@cd .. && make libdelphisdk.so
+
+genproto:
+	cd .. && make ${PROTO_GEN_TARGETS}
 
 test: build
 	for tgt in $(MODULE_TEST_TARGETS); do \

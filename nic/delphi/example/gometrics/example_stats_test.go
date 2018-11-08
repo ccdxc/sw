@@ -1,12 +1,12 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-package example
+package gostats
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/pensando/sw/nic/build/x86_64/iris/gen/proto/goproto"
+	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -34,12 +34,14 @@ func TestMetricsSpecific(t *testing.T) {
 	fmt.Printf("Found metrics: %+v\n", tmtr)
 	Assert(t, (tmtr.RxPkts == 200), "Invalid counter value")
 	Assert(t, (tmtr.RxPktRate == 400.0), "Invalid gauge value")
+	Assert(t, (tmtr.GetKey() == 3000), "Invalid key value")
 
 	iter, err = goproto.NewExampleMetricsIterator()
 	count := 0
 	for iter.HasNext() {
 		mtr := iter.Next()
 		fmt.Printf("new TestMetrics: %+v\n", mtr)
+		Assert(t, (mtr.GetKey() == 3000), "Invalid key value")
 		count++
 	}
 	Assert(t, (count == 1), "Iterator found invalid objects", count)

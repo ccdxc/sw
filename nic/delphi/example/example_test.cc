@@ -84,6 +84,7 @@ TEST_F(ExampleTest, BasicTest) {
 TEST_F(ExampleTest, MetricsTest) {
     usleep(1000);
 
+    usleep(1000 * 300);
     // iterate over all interface stats
     int iter_count = 0;
     for (auto iter = delphi::objects::ExampleMetrics::Iterator(); iter.IsNotNil(); iter.Next()) {

@@ -3,8 +3,36 @@ package example;
 
 import "delphi.proto";
 
+// example with scalar key
 message ExampleMetrics {
     uint32                 Key          = 1;
+    delphi.Counter         RxPkts       = 2;
+    delphi.Counter         TxPkts       = 3;
+    delphi.Gauge           RxPktRate    = 4;
+    delphi.Gauge           TxPktRate    = 5;
+    delphi.Counter         RxErrors     = 6;
+    delphi.Counter         TxErrors     = 7;
+}
+
+// example key with nested fields
+message ExampleKey {
+    uint32    Ifidx = 1;
+}
+
+// example with nested key
+message NestedKeyExampleMetrics {
+    ExampleKey             Key          = 1;
+    delphi.Counter         RxPkts       = 2;
+    delphi.Counter         TxPkts       = 3;
+    delphi.Gauge           RxPktRate    = 4;
+    delphi.Gauge           TxPktRate    = 5;
+    delphi.Counter         RxErrors     = 6;
+    delphi.Counter         TxErrors     = 7;
+}
+
+// example with singleton
+message SingletonExampleMetrics {
+    option (delphi.singleton) = true;
     delphi.Counter         RxPkts       = 2;
     delphi.Counter         TxPkts       = 3;
     delphi.Gauge           RxPktRate    = 4;

@@ -11,7 +11,7 @@ import (
 )
 
 type TestMetrics struct {
-	Key       uint32
+	key       uint32
 	RxCounter Counter
 	TxCounter Counter
 	RxRate    Gauge
@@ -19,6 +19,10 @@ type TestMetrics struct {
 
 	// private state
 	metrics Metrics
+}
+
+func (mtr *TestMetrics) GetKey() uint32 {
+	return mtr.key
 }
 
 // Size returns the size of the metrics object
@@ -34,6 +38,8 @@ func (mtr *TestMetrics) Size() int {
 // Unmarshall unmarshall the raw counters from shared memory
 func (mtr *TestMetrics) Unmarshall() error {
 	var offset int
+	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
+	mtr.key = uint32(val)
 	mtr.RxCounter = mtr.metrics.GetCounter(offset)
 	offset += mtr.RxCounter.Size()
 	mtr.TxCounter = mtr.metrics.GetCounter(offset)
@@ -118,7 +124,7 @@ func (it *TestMetricsIterator) Find(key uint32) (*TestMetrics, error) {
 	if err != nil {
 		return nil, err
 	}
-	tmtr := &TestMetrics{metrics: mtr}
+	tmtr := &TestMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshall()
 	return tmtr, nil
 }
@@ -127,7 +133,7 @@ func (it *TestMetricsIterator) Find(key uint32) (*TestMetrics, error) {
 func (it *TestMetricsIterator) Create(key uint32) (*TestMetrics, error) {
 	tmtr := &TestMetrics{}
 	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
-	tmtr = &TestMetrics{metrics: mtr}
+	tmtr = &TestMetrics{metrics: mtr, key: key}
 	tmtr.Unmarshall()
 	return tmtr, nil
 }
@@ -229,16 +235,62 @@ func TestMetricsSpecific(t *testing.T) {
 	fmt.Printf("Found metrics: %+v\n", tmtr)
 	Assert(t, (tmtr.RxCounter == 200), "Invalid counter value")
 	Assert(t, (tmtr.RxRate == 400.0), "Invalid gauge value")
+	Assert(t, (tmtr.GetKey() == 3000), "Invalid key value")
 
 	iter, err = NewTestMetricsIterator()
 	count := 0
 	for iter.HasNext() {
 		mtr := iter.Next()
 		fmt.Printf("new TestMetrics: %+v\n", mtr)
+		Assert(t, (mtr.GetKey() == 3000), "Invalid key value")
 		count++
 	}
 	Assert(t, (count == 1), "Iterator found invalid objects", count)
 
+	// create second entry
+	tmtr2, err := iter.Create(4000)
+	AssertOk(t, err, "Error creating test metrics entry")
+
+	tmtr2, err = iter.Find(4000)
+	AssertOk(t, err, "Error creating test metrics entry")
+	Assert(t, (tmtr2.GetKey() == 4000), "Invalid key value")
+
+	// verify we could find both entries
+	count = 0
+	iter, err = NewTestMetricsIterator()
+	for iter.HasNext() {
+		mtr := iter.Next()
+		fmt.Printf("new TestMetrics: %+v\n", mtr)
+		Assert(t, ((mtr.GetKey() == 3000) || (mtr.GetKey() == 4000)), "Invalid key value")
+		count++
+	}
+	Assert(t, (count == 2), "Iterator found invalid objects", count)
+
 	// delete the metrics
-	iter.Delete(3000)
+	err = iter.Delete(3000)
+	AssertOk(t, err, "Error deleting test metrics entry")
+
+	_, err = iter.Find(3000)
+	Assert(t, (err != nil), "metrics entry still found after deleting")
+
+	tmtr2, err = iter.Find(4000)
+	AssertOk(t, err, "Error creating test metrics entry")
+	Assert(t, (tmtr2.GetKey() == 4000), "Invalid key value")
+
+	// make sure iterator can still find the other entry
+	count = 0
+	iter, err = NewTestMetricsIterator()
+	for iter.HasNext() {
+		mtr := iter.Next()
+		fmt.Printf("new TestMetrics: %+v\n", mtr)
+		Assert(t, (mtr.GetKey() == 4000), "Invalid key value")
+		count++
+	}
+	Assert(t, (count == 1), "Iterator found invalid objects", count)
+
+	err = iter.Delete(4000)
+	AssertOk(t, err, "Error deleting test metrics entry")
+
+	_, err = iter.Find(4000)
+	Assert(t, (err != nil), "metrics entry still found after deleting")
 }

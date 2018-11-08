@@ -5,12 +5,7 @@
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/delphi/sdk/delphi_metrics.hpp"
 #include "argh/argh.h"
-#include "gen/proto/example.delphi.hpp"
-#include "gen/proto/example_stats.delphi.hpp"
-#include "gen/proto/upgrade.delphi.hpp"
-#include "gen/proto/port.delphi.hpp"
-#include "gen/proto/interface.delphi.hpp"
-#include "gen/proto/hal_metrics.delphi.hpp"
+#include "gen/proto/delphi_objects.hpp"
 
 using namespace delphi;
 

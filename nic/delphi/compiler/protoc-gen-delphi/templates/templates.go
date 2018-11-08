@@ -134,7 +134,9 @@ public:
 REGISTER_KIND({{.GetName}});
 {{end}}
 {{else}}
-  {{if not (.HasField "Key")}} {{ ThrowError "metrics does not have Key field" $fileName .GetName }} {{end}}
+  {{if not (.HasField "Key")}} {{if not (.HasExtOption "delphi.singleton")}} {{ ThrowError "metrics does not have Key field" $fileName .GetName }} {{end}} {{end}}
+  {{if .HasField "Key" }} {{if (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}} {{end}}
+
 // forward declaration
 class {{.GetName}};
 typedef std::shared_ptr<{{.GetName}}> {{.GetName}}Ptr;
@@ -155,6 +157,9 @@ typedef struct {{.GetName | ToLower}}_ {
 class {{.GetName}} : public delphi::metrics::DelphiMetrics {
 private:
     char                          *shm_ptr_;
+	{{if (.HasExtOption "delphi.singleton")}}
+	uint32_t                            key_ = 0;
+	{{end}}
     {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
     {{if (eq .GetName "Key") }} {{if .IsRepeated }} {{ ThrowError "Key field can not be repeated" $fileName $msgName .GetName }} {{end}}
     {{ if .TypeIsMessage }} {{if or (eq .GetTypeName ".delphi.Counter") (eq .GetTypeName ".delphi.Gauge") }} {{ ThrowError "Key field type can not be counter or gauge" $fileName $msgName .GetName }} {{end}}
@@ -180,23 +185,36 @@ public:
     string DebugString();
     static {{.GetName}}Iterator Iterator();
     void * Raw() { return shm_ptr_; };
+	static delphi::error  CreateTable();
 
+	{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
+	{{$msgName}}(char *ptr);
+	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(vptr){ };
+    uint32_t GetKey() { return 0; };
+    static {{$msgName}}Ptr New{{$msgName}}();
+    static {{$msgName}}Ptr NewDp{{$msgName}}(uint64_t pal_addr);
+	static delphi::error Publish({{$msgName | ToLower}}_t *mptr);
+	static {{$msgName}}Ptr Find();
+	{{end}}
     {{$fields := .Fields}}{{range $fields}}
     {{if (eq .GetName "Key") }}
     {{ if .TypeIsMessage }}
     {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *ptr);
 	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{$pkgName}}::{{.GetCppTypeName}} *)kptr, vptr){ };
     {{$pkgName}}::{{.GetCppTypeName}} GetKey() { return key_; };
-    static {{$msgName}}Ptr  New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key);
-    static {{$msgName}}Ptr  NewDp{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
+    static {{$msgName}}Ptr New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key);
+    static {{$msgName}}Ptr NewDp{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
+	static delphi::error Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
+	static {{$msgName}}Ptr Find({{$pkgName}}::{{.GetCppTypeName}} key);
     {{else}}
     {{$msgName}}({{.GetCppTypeName}} key, char *ptr);
 	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, vptr){ };
     {{.GetCppTypeName}} GetKey() { return key_; };
-    static {{$msgName}}Ptr  New{{$msgName}}({{.GetCppTypeName}} key);
-    static {{$msgName}}Ptr  NewDp{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
+    static {{$msgName}}Ptr New{{$msgName}}({{.GetCppTypeName}} key);
+    static {{$msgName}}Ptr NewDp{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
+	static delphi::error Publish({{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
+	static {{$msgName}}Ptr Find({{.GetCppTypeName}} key);
     {{end}}
-    delphi::error  Publish({{$msgName | ToLower}}_t *mptr);
     {{end}}
 
     {{if (eq .GetTypeName ".delphi.Counter") }}
@@ -218,13 +236,17 @@ public:
         tbl_iter_.Next();
     }
     inline {{.GetName}}Ptr Get() {
-        {{$fields := .Fields}}{{range $fields}} {{if (eq .GetName "Key") }}
+		{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
+		return make_shared<{{$msgName}}>(tbl_iter_.Value());
+		{{end}}
+        {{$msgName := .GetName}}{{$fields := .Fields}}{{range $fields}} {{if (eq .GetName "Key") }}
 		{{ if .TypeIsMessage }}
         {{$pkgName}}::{{.GetCppTypeName}} *key = ({{$pkgName}}::{{.GetCppTypeName}} *)tbl_iter_.Key();
+		return make_shared<{{$msgName}}>(*key, tbl_iter_.Value());
 		{{else}}
 		{{.GetCppTypeName}} *key = ({{.GetCppTypeName}} *)tbl_iter_.Key();
+		return make_shared<{{$msgName}}>(*key, tbl_iter_.Value());
         {{end}} {{end}} {{end}}
-        return make_shared<{{.GetName}}>(*key, tbl_iter_.Value());
     }
     inline bool IsNil() {
         return tbl_iter_.IsNil();
@@ -331,6 +353,11 @@ vector<{{.GetName}}Ptr> {{.GetName}}::List(SdkPtr sdk) {
 {{end}}
 {{else}}
 // {{.GetName}} metrics constructor
+	{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
+{{$msgName}}::{{$msgName}}(char *ptr) {
+	shm_ptr_ = ptr;
+    key_ = 0;
+	{{end}}
     {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
     {{if (eq .GetName "Key") }}
 	{{ if .TypeIsMessage }}
@@ -369,15 +396,8 @@ int32_t {{.GetName}}::Size() {
     return sz;
 }
 
-// New{{.GetName}} creates a new metrics instance
-{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-{{if (eq .GetName "Key") }}
-{{ if .TypeIsMessage }}
-{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key) {
-{{else}}
-{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{.GetCppTypeName}} key) {
-{{end}} {{end}} {{end}}
-
+// CreateTable creates a table for metrics
+delphi::error  {{.GetName}}::CreateTable() {
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
     assert(shm != NULL);
@@ -385,39 +405,170 @@ int32_t {{.GetName}}::Size() {
     // create the table in shared memory
     static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{.GetName}}", DEFAULT_METRIC_TBL_SIZE);
 
+    return delphi::error::OK();
+}
+
+// New{{.GetName}} creates a new metrics instance
+{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}() {
+	uint32_t key = 0;
+	// get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // create the table in shared memory
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
+
     // create an entry in hash table
     char *shmptr = (char *)tbl->Create((char *)&key, sizeof(key), {{.GetName}}::Size());
 
     // return an instance of {{.GetName}}
-    return make_shared<{{.GetName}}>(key, shmptr);
+    return make_shared<{{.GetName}}>(shmptr);
 }
-
-// NewDp{{.GetName}} creates a new metrics instance in PAL memory
+{{end}}
 {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
 {{if (eq .GetName "Key") }}
 {{ if .TypeIsMessage }}
-{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr) {
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key) {
 {{else}}
-{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr) {
-{{end}} {{end}} {{end}}
-    // FIXME: need to implement this using PAL memory.
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{.GetCppTypeName}} key) {
+{{end}}
+
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // create the table in shared memory
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
+
+    // create an entry in hash table
+    char *shmptr = (char *)tbl->Create((char *)&key, sizeof(key), {{$msgName}}::Size());
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(key, shmptr);
+}
+{{end}} {{end}}
+{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
+// Publish publishes a metric atomically
+delphi::error {{$msgName}}::Publish({{$msgName | ToLower}}_t *mptr) {
+	// get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // get the table
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    assert(tbl != NULL);
+
+    // publish to hash table
+	uint32_t key = 0;
+    return tbl->Publish((char *)&key, sizeof(key), (char *)mptr, {{$msgName}}::Size());
+}
+
+// Find finds a metrics by key
+{{$msgName}}Ptr {{$msgName}}::Find() {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // find the key
+	uint32_t key = 0;
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
+    if (shmptr == NULL) {
+        return NULL;
+    }
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(shmptr);
+}
+
+// NewDp{{.GetName}} creates a new metrics instance in PAL memory
+{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}(uint64_t pal_addr) {
+	// FIXME: need to implement this using PAL memory.
+    // for now, just return a metrics object
+    return {{$msgName}}::New{{$msgName}}();
+}
+{{end}}
+{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+{{if (eq .GetName "Key") }}
+{{ if .TypeIsMessage }}
+// Publish publishes a metric atomically
+delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr) {
+	// get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // get the table
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    assert(tbl != NULL);
+
+    // publish to hash table
+    return tbl->Publish((char *)&key, sizeof(key), (char *)mptr, {{$msgName}}::Size());
+}
+
+// Find finds a metrics by key
+{{$msgName}}Ptr {{$msgName}}::Find({{$pkgName}}::{{.GetCppTypeName}} key) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // find the key
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
+    if (shmptr == NULL) {
+        return NULL;
+    }
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(key, shmptr);
+}
+
+// NewDp{{.GetName}} creates a new metrics instance in PAL memory
+{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr) {
+	// FIXME: need to implement this using PAL memory.
     // for now, just return a metrics object
     return {{$msgName}}::New{{$msgName}}(key);
 }
-
+{{else}}
 // Publish publishes a metric atomically
-delphi::error {{.GetName}}::Publish({{.GetName | ToLower}}_t *mptr) {
-    // FIXME: need to be implemented; for now, just a dummy writer
-    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-    {{if (eq .GetTypeName ".delphi.Counter") }}
-    {{.GetName}}_->Set(mptr->{{.GetName}});
-    {{else if (eq .GetTypeName ".delphi.Gauge") }}
-    {{.GetName}}_->Set(mptr->{{.GetName}});
-    {{end}}
-    {{end}}
+delphi::error {{$msgName}}::Publish({{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr) {
+	// get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
 
-    return delphi::error::OK();
+    // get the table
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    assert(tbl != NULL);
+
+    // publish to hash table
+    return tbl->Publish((char *)&key, sizeof(key), (char *)mptr, {{$msgName}}::Size());
 }
+
+// Find finds a metrics by key
+{{$msgName}}Ptr {{$msgName}}::Find({{.GetCppTypeName}} key) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // find the key
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
+    if (shmptr == NULL) {
+        return NULL;
+    }
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(key, shmptr);
+}
+
+// NewDp{{.GetName}} creates a new metrics instance in PAL memory
+{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr) {
+	// FIXME: need to implement this using PAL memory.
+    // for now, just return a metrics object
+    return {{$msgName}}::New{{$msgName}}(key);
+}
+{{end}} {{end}} {{end}}
+
 
 // Delete deletes the metric instance
 delphi::error {{.GetName}}::Delete() {

@@ -103,7 +103,7 @@ void MetricsCreateTable(const char *kind) {
 }
 
 DelphiMetrics_cgo MetricsCreateEntry(const char *kind, char *key, int keylen, int vallen) {
-    fprintf(stderr, "Cgo MetricsCreateEntry got called for kind %s, key: %s\n", kind, key);
+    fprintf(stderr, "Cgo MetricsCreateEntry got called for kind %s, key(%d): %s\n", kind, keylen, key);
 
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = delphi::metrics::DelphiMetrics::GetDelphiShm();

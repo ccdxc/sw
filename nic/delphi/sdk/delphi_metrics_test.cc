@@ -45,9 +45,11 @@ public:
     delphi::metrics::GaugePtr RxRate() { return rx_rate_; };
     delphi::metrics::GaugePtr TxRate() { return tx_rate_; };
     static int32_t Size();
+    static delphi::error  CreateTable();
     static TestMetricPtr  NewTestMetric(int32_t key);
     static TestMetricPtr  NewDpTestMetric(int32_t key, uint64_t pal_addr);
-    delphi::error  Publish(test_metric_t *mptr);
+    static delphi::error  Publish(int32_t key, test_metric_t *mptr);
+    static TestMetricPtr Find(int32_t key);
     delphi::error Delete();
     virtual string DebugString();
     static TestMetricsIterator Iterator();
@@ -104,6 +106,18 @@ int32_t TestMetric::Size() {
     return sz;
 }
 
+// CreateTable creates a table for metrics
+delphi::error  TestMetric::CreateTable() {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // create the table in shared memory
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("TestMetric", DEFAULT_METRIC_TBL_SIZE);
+
+    return delphi::error::OK();
+}
+
 // NewTestMetric creates a new test metric
 TestMetricPtr TestMetric::NewTestMetric(int32_t key) {
     // get the shared memory object
@@ -127,15 +141,35 @@ TestMetricPtr TestMetric::NewDpTestMetric(int32_t key, uint64_t pal_addr) {
     return TestMetric::NewTestMetric(key);
 }
 
-// Publish publishes a metric atomically
-delphi::error TestMetric::Publish(test_metric_t *mptr) {
-    // FIXME: need to be implemented; for now, just a dummy writer
-    rx_counter_->Set(mptr->rx_counter);
-    tx_counter_->Set(mptr->tx_counter);
-    rx_rate_->Set(mptr->rx_rate);
-    tx_rate_->Set(mptr->tx_rate);
+// Find finds a metrics by key
+TestMetricPtr TestMetric::Find(int32_t key) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
 
-    return delphi::error::OK();
+    // find the key
+    delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("TestMetric");
+    char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
+    if (shmptr == NULL) {
+        return NULL;
+    }
+
+    // return an instance of TestMetric
+    return make_shared<TestMetric>(key, shmptr);
+}
+
+// Publish publishes a metric atomically
+delphi::error TestMetric::Publish(int32_t key, test_metric_t *mptr) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // get the table
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("TestMetric");
+    assert(tbl != NULL);
+
+    // publish to hash table
+    return tbl->Publish((char *)&key, sizeof(key), (char *)mptr, TestMetric::Size());
 }
 
 // Delete deletes the metric instance
@@ -301,6 +335,7 @@ TEST_F(DelphiMetricTest, TestPublish) {
 
     // create a new metric
     int32_t key = 100;
+    /*
     TestMetricPtr tmptr = TestMetric::NewTestMetric(key);
     ASSERT_TRUE((tmptr != NULL)) << "Failed to create the metric";
     delphi::shm::TableMgrUptr tbl = srv_shm_->Kvstore()->Table("TestMetric");
@@ -308,6 +343,10 @@ TEST_F(DelphiMetricTest, TestPublish) {
     // verify default values are zero
     ASSERT_EQ(tmptr->RxCounter()->Get(), 0) << "invalid default value for counter";
     ASSERT_EQ(tmptr->RxRate()->Get(), 0) << "invalid default value for gauge";
+*/
+
+    // create the table
+    TestMetric::CreateTable();
 
     // publish new values
     test_metric_t stats = {
@@ -316,9 +355,13 @@ TEST_F(DelphiMetricTest, TestPublish) {
         rx_rate: 10.0,
         tx_rate: 10.0,
     };
-    tmptr->Publish(&stats);
+    TestMetric::Publish(key, &stats);
 
     // display metrics
+    delphi::shm::TableMgrUptr tbl = srv_shm_->Kvstore()->Table("TestMetric");
+    tbl->DumpEntry((char *)&key, sizeof(key));
+    TestMetricPtr tmptr = TestMetric::Find(key);
+    ASSERT_TRUE((tmptr != NULL)) << "key was not found in hash table";
     printf("Metrics: \n%s\n", tmptr->DebugString().c_str());
 
     // verify new values are set

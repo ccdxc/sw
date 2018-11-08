@@ -5,6 +5,6 @@ MODULE_TARGET   = liblinkmgrdelphi.so
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/linkmgr_delphi.cc
 MODULE_SOLIBS   = delphisdk
-MODULES_PREREQS = libhalproto.so
+MODULE_PREREQS = libhalproto.so
 include ${MKDEFS}/post.mk
 

@@ -10,6 +10,6 @@ MODULE_INCS         = ${MODULE_DIR} \
                       /usr/local/include
 MODULE_LDLIBS       = pthread
 MODULE_POSTGEN_MK   = module_protolib.mk
-MODULES_PREREQS = protoc-gen-delphi.gobin
+MODULE_PREREQS = protoc-gen-delphi.gobin
 MODULE_GEN_DIR = ${BLD_PROTOGEN_DIR}/common
 include ${MKDEFS}/post.mk

@@ -310,11 +310,7 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Register for mac metrics
-    pi_p->mac_metrics = delphi::objects::MacMetrics::NewMacMetrics(pi_p->port_num);
-    if (pi_p->mac_metrics == NULL) {
-        HAL_TRACE_ERR("Failed to register for metrics port: {}",
-                      pi_p->port_num);
-    }
+    delphi::objects::MacMetrics::CreateTable();
 
     return ret;
 }
@@ -976,7 +972,7 @@ port_metrics_update_helper (port_args_t *port_args,
 
     pi_p = find_port_by_id(port_args->port_num);
 
-    if ((pi_p == NULL) || (pi_p->mac_metrics == NULL)) {
+    if (pi_p == NULL) {
         HAL_TRACE_ERR("Failed to find port/metrics object for port {}", 
                       port_args->port_num);
         return;
@@ -1072,7 +1068,7 @@ port_metrics_update_helper (port_args_t *port_args,
     mac_metrics.rx_pause_1us_count = port_args->stats_data[port::MacStatsType::RX_PAUSE_1US_COUNT];
     mac_metrics.frames_tx_truncated = port_args->stats_data[port::MacStatsType::FRAMES_TX_TRUNCATED];
 
-    pi_p->mac_metrics->Publish(&mac_metrics);
+    delphi::objects::MacMetrics::Publish(pi_p->port_num, &mac_metrics);
 }
 
 hal_ret_t

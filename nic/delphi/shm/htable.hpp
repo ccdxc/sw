@@ -137,6 +137,7 @@ class TableMgr {
 public:
     TableMgr(htable_t *htable, DelphiShmPtr shm_ptr);
     void *Create(const char *key, int16_t keylen, int16_t val_len);   // create an entry for the key in hash table
+    error Publish(const char *key, int16_t keylen, const char *val, int16_t val_len); // atomically publish kev,val into hash table
     void *Find(const char *key, int16_t keylen);     // finds an entry by key
     error Release(void *val_ptr);                    // release a hash entry from use
     error Delete(const char *key, int16_t keylen);   // delete an entry
@@ -151,6 +152,7 @@ private:
 
     // private methods
     ht_entry_t * createHashEntry(const char *key, int16_t keylen, int16_t val_len);
+    error insertHashEntry(const char *key, int16_t keylen, ht_entry_t *entry);
     ht_entry_t * findEntry(const char *key, int16_t keylen);
     ht_entry_t * findMatchingEntry(int32_t offset, const char *key, int16_t keylen);
     error deleteMatchingEntry(int32_t *offset, const char *key, int16_t keylen);

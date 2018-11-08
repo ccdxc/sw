@@ -4,7 +4,7 @@ package gometrics
 
 // Metrics is the interface all meterics objects have to implement
 type Metrics interface {
-	// GetKey() string          // returns the key for the metrics
+	GetKey() string                      // returns the key for the metrics
 	String() string                      // return json string
 	GetCounter(offset int) Counter       // get a counter attribute
 	GetGauge(offset int) Gauge           // get gauge attribute

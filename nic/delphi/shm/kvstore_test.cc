@@ -201,6 +201,72 @@ TEST_F(KvstoreTest, HashCollisionTest) {
     tbl->DumpTable();
 }
 
+TEST_F(KvstoreTest, KvPublishTest) {
+    client_shm_->Kvstore()->DumpInfo();
+
+    // create a table
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);
+    ASSERT_TRUE(tbl != NULL) << "Failed to create table";
+
+    // create an entry in table
+    const char *key = "test_key";
+    const char *value = "test_value";
+    error err = tbl->Publish(key, strlen(key), value, (strlen(value) + 1));
+    ASSERT_TRUE(err.IsOK()) << "error publishing key";
+
+    // get the key
+    char *gptr = (char *)tbl->Find(key, strlen(key));
+    ASSERT_TRUE(gptr != NULL) << "find failed";
+    ASSERT_EQ(tbl->RefCount(gptr), 2) << "refcount for hash entry is incorrect";
+
+    // dump kvstore info
+    printf("------ after first publish and find -------\n");
+    client_shm_->DumpMeta();
+    tbl->DumpTable();
+
+    // publish a new value
+    const char *value2 = "test_value2";
+    err = tbl->Publish(key, strlen(key), value2, (strlen(value2) + 1));
+    ASSERT_TRUE(err.IsOK()) << "error publishing new value";
+
+    // dump kvstore info
+    printf("------ after second publish -------\n");
+    client_shm_->DumpMeta();
+    tbl->DumpTable();
+
+    char *gptr2 = (char *)tbl->Find(key, strlen(key));
+    ASSERT_TRUE(gptr != NULL) << "find failed after publishing new value";
+    printf("Refcounts: old: %d, new: %d\n", tbl->RefCount(gptr), tbl->RefCount(gptr2));
+    ASSERT_EQ(tbl->RefCount(gptr), 1) << "refcount for old hash entry is incorrect";
+    ASSERT_EQ(tbl->RefCount(gptr2), 2) << "refcount for new hash entry is incorrect";
+
+    // dump kvstore info
+    printf("------ after second publish and find -------\n");
+    client_shm_->DumpMeta();
+    tbl->DumpTable();
+
+    // delete the key
+    err = tbl->Delete(key, strlen(key));
+    ASSERT_EQ(err, error::OK()) << "Error deleting the key";
+    ASSERT_EQ(tbl->RefCount(gptr2), 1) << "refcount for new hash entry is incorrect";
+
+    // dump kvstore info
+    printf("------ after delete -------\n");
+    client_shm_->DumpMeta();
+    tbl->DumpTable();
+
+    // verify find returns error
+    char * gptr3 = (char *)tbl->Find(key, strlen(key));
+    ASSERT_TRUE(gptr3 == NULL) << "find suceeded after delete";
+
+    // release memory
+    tbl->Release(gptr);
+    tbl->Release(gptr2);
+    printf("------ after release -------\n");
+    client_shm_->DumpMeta();
+    tbl->DumpTable();
+}
+
 TEST_F(KvstoreTest, KvstoreBenchmark) {
     // create a table
     TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);

@@ -29,29 +29,12 @@ error TableMgr::atomicInsert(ht_bucket_t *bkt, ht_entry_t *entry) {
     return error::OK();
 }
 
-// Create creates an entry in the hash table for a key
-// its caller's responsibility to fill the value
-void * TableMgr::Create(const char *key, int16_t keylen, int16_t val_len) {
+// insertHashEntry inserts an entry into hash table
+error TableMgr::insertHashEntry(const char *key, int16_t keylen, ht_entry_t *entry) {
     // compute hash on the key
     uint32_t hash = fnv_hash(key, keylen);
     // calculate the hash bucket index
     int32_t idx = (int32_t)(hash % ht_->num_buckets);
-
-    // check if the key already exists
-    // FIXME: this is little inefficient(i.e, lookup twice)
-    void *val = Find(key, keylen);
-    if (val != NULL) {
-        return val;
-    }
-
-    // create hash entry
-    ht_entry_t *entry = createHashEntry(key, keylen, val_len);
-    if (entry == NULL) {
-        LogError("Error allocating memory");
-        return NULL;
-    }
-
-    LogDebug("Creating key {} in table {} at idx {}, offset 0x{}", key, ht_->tbl_name, idx, OFFSET_FROM_PTR(shm_ptr_->GetBase(), entry));
 
     // check if this is single level or multi level table
     if (!HTABLE_IS_TWO_LEVEL(ht_)) {
@@ -95,7 +78,68 @@ void * TableMgr::Create(const char *key, int16_t keylen, int16_t val_len) {
 
     ht_->num_entries++;
 
+    return error::OK();
+}
+
+// Create creates an entry in the hash table for a key
+// its caller's responsibility to fill the value
+void * TableMgr::Create(const char *key, int16_t keylen, int16_t val_len) {
+    // check if the key already exists
+    // FIXME: this is little inefficient(i.e, lookup twice)
+    void *val = this->Find(key, keylen);
+    if (val != NULL) {
+        this->Release(val); // so that we dont double ref count it
+        return val;
+    }
+
+    // create hash entry
+    ht_entry_t *entry = this->createHashEntry(key, keylen, val_len);
+    if (entry == NULL) {
+        LogError("Error allocating memory");
+        return NULL;
+    }
+
+    LogDebug("Creating key {} in table {}, offset 0x{}", key, ht_->tbl_name, OFFSET_FROM_PTR(shm_ptr_->GetBase(), entry));
+
+    // insert the hash entry into table
+    error err = this->insertHashEntry(key, keylen, entry);
+    assert(err.IsOK());
+
+
     return (void *)VAL_PTR_FROM_HASH_ENTRY(entry);
+}
+
+// Publish atomically publishes an entry into hash table
+error TableMgr::Publish(const char *key, int16_t keylen, const char *val, int16_t val_len) {
+    error err;
+
+    // check if the key already exists
+    void *oldVal = this->Find(key, keylen);
+    if (oldVal != NULL) {
+        this->Release(oldVal);
+        // FIXME: we should flip atomically to new value
+        err = this->Delete(key, keylen);
+        assert(err.IsOK());
+    }
+
+    // create hash entry
+    ht_entry_t *entry = this->createHashEntry(key, keylen, val_len);
+    if (entry == NULL) {
+        LogError("Error allocating memory");
+        return error::New("Error allocating memory");
+    }
+
+    // copy value
+    memcpy(VAL_PTR_FROM_HASH_ENTRY(entry), val, val_len);
+
+    LogDebug("Publishing key {} in table {}, offset 0x{}", key, ht_->tbl_name, OFFSET_FROM_PTR(shm_ptr_->GetBase(), entry));
+
+    // insert the hash entry into table
+    err = this->insertHashEntry(key, keylen, entry);
+    assert(err.IsOK());
+
+
+    return err;
 }
 
 // createHashEntry allocates memory for hash entry and initializes it
@@ -220,6 +264,8 @@ int32_t TableMgr::RefCount(void *val_ptr) {
 // Delete deletes an entry by key
 error TableMgr::Delete(const char *key, int16_t keylen) {
     error err;
+
+    LogDebug("Deleting key {} in table {}", key, ht_->tbl_name);
 
     // compute hash on the key
     uint32_t hash = fnv_hash(key, keylen);

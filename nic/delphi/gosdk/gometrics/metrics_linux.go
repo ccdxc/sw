@@ -104,6 +104,11 @@ func (m *delphiMetrics) String() string {
 	return retstr
 }
 
+// returns the key for the metrics
+func (m *delphiMetrics) GetKey() string {
+	return C.GoString(C.MetricsEntryKey(m.entry))
+}
+
 func (m *delphiMetrics) GetCounter(offset int) Counter {
 	return Counter(C.GetCounter(m.entry, C.int(offset)))
 }
