@@ -1,0 +1,5 @@
+# Ignore binaries in this directory
+*
+# Except this file
+!.gitignore
+
