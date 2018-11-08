@@ -7,7 +7,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/goproto"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 // ------------------------- Datapath APIs called from netagent ----------------------
@@ -26,45 +25,37 @@ func (dp *DelphiDatapath) CreateInterface(intf *netproto.Interface, lif *netprot
 		}
 
 		// build interface spec
-		spec := &goproto.InterfaceSpec_{
-			KeyOrHandle: &goproto.InterfaceKeyHandle_{
+		ifSpec := &goproto.InterfaceSpec{
+			KeyOrHandle: &goproto.InterfaceKeyHandle{
 				InterfaceId: intf.Status.InterfaceID,
 			},
 			IfType: goproto.IntfType_IF_TYPE_UPLINK,
-			IfUplinkInfo: &goproto.IfUplinkInfo_{
+			IfUplinkInfo: &goproto.IfUplinkInfo{
 				PortNum: uint32(portID),
 			},
 		}
 
 		// write it to delphi
-		ifSpec := goproto.NewInterfaceSpecFromMessage(dp.delphiClient, spec)
-		if ifSpec == nil {
-			log.Errorf("Error creating interface spec in delphi")
-			return errors.New("Error writing object to delphi")
-		}
+		dp.delphiClient.SetObject(ifSpec)
 
 	case "ENIC":
 		// build the spec
-		spec := &goproto.InterfaceSpec_{
-			KeyOrHandle: &goproto.InterfaceKeyHandle_{
+		ifSpec := &goproto.InterfaceSpec{
+			KeyOrHandle: &goproto.InterfaceKeyHandle{
 				InterfaceId: intf.Status.InterfaceID,
 			},
 			IfType: goproto.IntfType_IF_TYPE_ENIC,
 			// associate the lif id
-			IfEnicInfo: &goproto.IfEnicInfo_{
+			IfEnicInfo: &goproto.IfEnicInfo{
 				EnicType: goproto.IntfEnicType_IF_ENIC_TYPE_USEG,
-				LifKeyOrHandle: &goproto.LifKeyHandle_{
+				LifKeyOrHandle: &goproto.LifKeyHandle{
 					LifId: lif.Status.InterfaceID,
 				},
 			},
 		}
 
 		// write it to delphi
-		ifSpec := goproto.NewInterfaceSpecFromMessage(dp.delphiClient, spec)
-		if ifSpec == nil {
-			log.Errorf("Error creating interface spec in delphi")
-			return errors.New("Error writing object to delphi")
-		}
+		dp.delphiClient.SetObject(ifSpec)
 
 	default:
 		return errors.New("invalid interface type")
@@ -82,15 +73,19 @@ func (dp *DelphiDatapath) UpdateInterface(intf *netproto.Interface, ns *netproto
 func (dp *DelphiDatapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
 	switch intf.Spec.Type {
 	case "UPLINK_ETH", "UPLINK_MGMT":
-		ifKey := &goproto.InterfaceKeyHandle{}
-		ifKey.SetInterfaceId(intf.Status.InterfaceID)
-		ifSpec := goproto.NewInterfaceSpecWithKey(dp.delphiClient, ifKey)
+		ifSpec := &goproto.InterfaceSpec{
+			KeyOrHandle: &goproto.InterfaceKeyHandle{
+				InterfaceId: intf.Status.InterfaceID,
+			},
+		}
 		dp.delphiClient.DeleteObject(ifSpec)
 
 	case "ENIC":
-		ifKey := &goproto.InterfaceKeyHandle{}
-		ifKey.SetInterfaceId(intf.Status.InterfaceID)
-		ifSpec := goproto.NewInterfaceSpecWithKey(dp.delphiClient, ifKey)
+		ifSpec := &goproto.InterfaceSpec{
+			KeyOrHandle: &goproto.InterfaceKeyHandle{
+				InterfaceId: intf.Status.InterfaceID,
+			},
+		}
 		dp.delphiClient.DeleteObject(ifSpec)
 	default:
 		return errors.New("invalid interface type")
@@ -112,7 +107,7 @@ func (dp *DelphiDatapath) OnInterfaceStatusCreate(obj *goproto.InterfaceStatus) 
 }
 
 // OnInterfaceStatusUpdate event handler
-func (dp *DelphiDatapath) OnInterfaceStatusUpdate(obj *goproto.InterfaceStatus) {
+func (dp *DelphiDatapath) OnInterfaceStatusUpdate(old, obj *goproto.InterfaceStatus) {
 	dp.incrEventStats("OnInterfaceStatusUpdate")
 	return
 }

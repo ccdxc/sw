@@ -185,7 +185,7 @@ func (ctx *upgapprespctx) OnUpgAppRespCreate(obj *upgrade.UpgAppResp) {
 	ctx.invokeAgentHandler(obj)
 }
 
-func (ctx *upgapprespctx) OnUpgAppRespUpdate(obj *upgrade.UpgAppResp) {
+func (ctx *upgapprespctx) OnUpgAppRespUpdate(old, obj *upgrade.UpgAppResp) {
 	log.Infof("OnUpgAppRespUpdate called %d", obj.GetUpgAppRespVal())
 	ctx.invokeAgentHandler(obj)
 }

@@ -3,7 +3,6 @@ package compilertest
 import (
 	"testing"
 
-	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 
 	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -72,7 +71,7 @@ func (r *reactA) OnMessageACreate(obj *MessageA) {
 
 }
 
-func (r *reactA) OnMessageAUpdate(obj *MessageA) {
+func (r *reactA) OnMessageAUpdate(old *MessageA, obj *MessageA) {
 
 }
 
@@ -92,70 +91,55 @@ func TestMessageA(t *testing.T) {
 		t.Errorf("lastMountKindKeyKeyValue != 1 (%s)", lastMountKindKeyKeyValue)
 	}
 
-	a := NewMessageAWithKey(client, 11)
-	if a.GetKey() != 11 || a.key != 11 {
-		t.Fail()
+	a := MessageA{
+		Key:         11,
+		StringValue: "Empty",
 	}
-	a.SetKey(12)
-	if a.GetKey() != 12 || a.key != 12 {
-		t.Fail()
-	}
-	a.SetStringValue("testA")
-	if a.GetStringValue() != "testA" || a.stringValue != "testA" {
-		t.Fail()
-	}
-	if a.GetKeyString() != "12" {
+	a.Descriptor()   // just for coverage
+	a.ProtoMessage() // just for coverage
+
+	if a.GetMeta() != nil {
 		t.Fail()
 	}
 
-	msg, ok := a.GetMessage().(*MessageA_)
-	if !ok {
-		t.Errorf("Cast failed")
-	}
-	if msg.Key != 12 {
-		t.Errorf("Cast failed")
-	}
-	if msg.StringValue != "testA" {
-		t.Errorf("Was expecting \"testA\" got: %s", msg.StringValue)
+	if a.GetDelphiMeta() != nil {
+		t.Errorf(`a.GetDelphiMeta() != nil`)
 	}
 
-	meta := a.GetMeta()
-	meta.Key = a.GetKeyString()
-	if a.GetMeta().Key != "12" {
-		t.Errorf("meta.Key is %v", meta.Key)
+	if a.GetKey() != 11 {
+		t.Fail()
 	}
 
-	if a.GetPath() != "MessageA|12" {
-		t.Errorf(`a.GetPath() != "MessageA|12" -> %v`, a.GetPath())
+	if a.GetDelphiKey() != "11" {
+		t.Fail()
 	}
 
-	if msg.GetKey() != 12 {
-		t.Errorf(`msg.GetKey() != 12 -> %v`, msg.GetKey())
+	if a.String() != `Key:11 StringValue:"Empty" ` {
+		t.Fail()
 	}
 
-	if msg.GetMeta() == nil {
-		t.Errorf(`msg.GetMeta() == nil`)
+	if a.GetStringValue() != "Empty" {
+		t.Fail()
 	}
 
-	if msg.GetStringValue() != "testA" {
-		t.Errorf(`msg.GetStringValue() != "testA"`)
+	a.Key = 12
+	if a.GetDelphiKey() != "12" {
+		t.Fail()
 	}
 
-	if msg.String() != `Meta:<Kind:"MessageA" Key:"12" > Key:12 StringValue:"testA" ` {
-		t.Errorf(`msg.String() != Meta:<Kind:"MessageA" Key:"12" > Key:12 StringValue:"testA" `)
+	a.SetDelphiMeta(&delphi.ObjectMeta{
+		Key: a.GetDelphiKey(),
+	})
+	if a.GetDelphiPath() != "MessageA|12" {
+		t.Errorf(`a.GetPath() != "MessageA|12" -> %v`, a.GetDelphiPath())
 	}
 
-	_, desc := descriptor.ForMessage(msg)
-	if *desc.Name != "MessageA_" {
-		t.Errorf(`*desc.Name != "MessageA_"`)
-	}
-
-	data, err := proto.Marshal(msg)
+	data, err := proto.Marshal(&a)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
-	base, err := messageAFactory(client, data)
+	base, err := MessageAFactory(client, data)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -165,43 +149,19 @@ func TestMessageA(t *testing.T) {
 		t.Errorf("a2, ok := base.(*MessageA_)")
 	}
 
-	if a2.GetKey() != 12 {
+	if a2.Key != 12 {
 		t.Errorf(`a2.Key() == 12`)
 	}
 
-	r := new(reactA)
+	r := &reactA{}
 	rl := make([]clientApi.BaseReactor, 1)
 	rl[0] = r
 
-	a2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
-	a2.TriggerEvent(a2, delphi.ObjectOperation_SetOp, rl)
-	a2.TriggerEvent(a2, delphi.ObjectOperation_DeleteOp, rl)
+	a2.TriggerEvent(client, nil, delphi.ObjectOperation_SetOp, rl)
+	a2.TriggerEvent(client, a2, delphi.ObjectOperation_SetOp, rl)
+	a2.TriggerEvent(client, a2, delphi.ObjectOperation_DeleteOp, rl)
 
-	msg.Reset()
-	if msg.String() != "" {
-		t.Errorf(`msg.String() != ""`)
-	}
-
-	if GetMessageA(client, 0) != nil {
-		t.Errorf(`GetMessageA("", "") != nil`)
-	}
-
-	list = make([]clientApi.BaseObject, 0)
-	it := MessageAList(client)
-	if it == nil {
-		t.Errorf(`it == nil`)
-	}
-
-	if it.Next() != nil {
-		t.Errorf(`it.Next() != nil`)
-	}
-
-	list = append(list, a)
-	it = MessageAList(client)
-
-	if it.Next() == nil {
-		t.Errorf(`it.Next() == nil`)
-	}
+	a.Reset() // just for coverage
 }
 
 type reactB struct {
@@ -211,7 +171,7 @@ func (r *reactB) OnMessageBCreate(obj *MessageB) {
 
 }
 
-func (r *reactB) OnMessageBUpdate(obj *MessageB) {
+func (r *reactB) OnMessageBUpdate(old *MessageB, obj *MessageB) {
 
 }
 
@@ -224,448 +184,166 @@ func TestMessageB(t *testing.T) {
 	client := new(testClient)
 
 	MessageBMount(client, delphi.MountMode_ReadWriteMode)
-	MessageBMountKey(client, &MessageKey{value: 12}, delphi.MountMode_ReadWriteMode)
+	MessageBMountKey(client, &MessageKey{Value: 12},
+		delphi.MountMode_ReadWriteMode)
 	if lastMountKindKeyKeyValue != "Value:12 " {
 		t.Errorf("lastMountKindKeyKeyValue != \"Value:12 \" (%s)",
 			lastMountKindKeyKeyValue)
 	}
 
-	b := NewMessageBWithKey(client, &MessageKey{value: 12})
-	if b.GetKey().GetValue() != 12 {
-		t.Errorf("b.GetKey().GetValue() error (%v)", b.GetKey().GetValue())
+	b := MessageB{
+		Key: &MessageKey{
+			Value: 11,
+		},
+		StringValue: "Empty",
 	}
+	b.Descriptor()   // just for coverage
+	b.ProtoMessage() // just for coverage
 
-	if b.GetKeyString() != "Value:12 " {
-		t.Errorf("b.GetKeyString() error (%v)", b.GetKeyString())
-	}
-
-	if b.GetPath() != "MessageB|Value:12 " {
-		t.Errorf(`b.GetPath() != "MessageB|Value:12 " -> %v`, b.GetPath())
-	}
-}
-
-type reactC struct {
-}
-
-func (r *reactC) OnMessageCCreate(obj *MessageC) {
-
-}
-
-func (r *reactC) OnMessageCUpdate(obj *MessageC) {
-
-}
-
-func (r *reactC) OnMessageCDelete(obj *MessageC) {
-
-}
-
-// TestMessageC tests messages with array field of strings.
-func TestMessageC(t *testing.T) {
-	client := new(testClient)
-
-	MessageCMount(client, delphi.MountMode_ReadWriteMode)
-	MessageCMountKey(client, 12, delphi.MountMode_ReadWriteMode)
-	if lastMountKindKeyKeyValue != "12" {
-		t.Errorf("lastMountKindKeyKeyValue != 12 (%s)",
-			lastMountKindKeyKeyValue)
-	}
-
-	c := NewMessageC(client)
-	arrWrapper := c.GetStringValue()
-	if arrWrapper == nil {
-		t.Errorf("arr is nil")
-	}
-
-	arrWrapper.Append("testC")
-	v := arrWrapper.Get(0)
-	if v != "testC" {
-		t.Errorf("v should be \"testC\" it is: %s", v)
-	}
-
-	if arrWrapper.Length() != 1 {
-		t.Errorf(`arrWrapper.Length() != 1`)
-	}
-
-	msg, ok := c.GetMessage().(*MessageC_)
-	if !ok {
-		t.Errorf("Cast to *MessageC_ failed")
-	}
-	if msg.StringValue[0] != "testC" {
-		t.Errorf("msg.StringValue[0] is wrong (%s)", msg.StringValue[0])
-	}
-
-	arrWrapper.Append("should not be appended in msg1")
-	if len(msg.StringValue) != 1 {
-		t.Errorf("msg.StringValue lenght should be 1. is %d",
-			len(msg.StringValue))
-	}
-
-	c2 := newMessageCFromMessage(msg)
-	if c2.GetStringValue().Get(0) != "testC" {
-		t.Errorf(`c2.GetStringValue().Get(1) != "testC"`)
-	}
-
-	_ = append(msg.StringValue, "should not reflect in msg2")
-	msg2, _ := c.GetMessage().(*MessageC_)
-	if len(msg2.StringValue) != 2 {
-		t.Errorf(`len(msg2.StringValue) != 2 -> %d`, len(msg2.StringValue))
-	}
-}
-
-// TestMessageBExtra add extra tests to MessageB, thare are already tested as
-// part of MessageA to reach 75% coverage.
-func TestMessageBExtra(t *testing.T) {
-	client := new(testClient)
-
-	b := NewMessageB(client)
-	b.GetKey().SetValue(12)
-	if b.GetKey().GetValue() != 12 || b.key.value != 12 {
-		t.Fail()
-	}
-	b.SetStringValue("testB")
-	if b.GetStringValue() != "testB" || b.stringValue != "testB" {
-		t.Fail()
-	}
-	if b.GetKeyString() != "Value:12 " {
+	if b.GetMeta() != nil {
 		t.Fail()
 	}
 
-	msg, ok := b.GetMessage().(*MessageB_)
-	if !ok {
-		t.Errorf("Cast failed")
-	}
-	if msg.Key.Value != 12 {
-		t.Errorf(`msg.Key.Value != 12`)
-	}
-	if msg.StringValue != "testB" {
-		t.Errorf(`msg.StringValue != "testB"`)
+	if b.GetDelphiMeta() != nil {
+		t.Errorf(`b.GetDelphiMeta() != nil`)
 	}
 
-	meta := b.GetMeta()
-	meta.Key = b.GetKeyString()
-	if b.GetMeta().Key != "Value:12 " {
-		t.Errorf(`b.GetMeta().Key != "Value:12 "`)
+	if b.GetKey().GetValue() != 11 {
+		t.Fail()
 	}
 
-	if b.GetPath() != "MessageB|Value:12 " {
-		t.Errorf(`b.GetPath() != "MessageB|Value:12 "`)
+	if b.GetDelphiKey() != "Value:11 " {
+		t.Errorf(`b.GetDelphiKey() != "Value:11 " -> %s`, b.GetDelphiKey())
 	}
 
-	if msg.GetKey().GetValue() != 12 {
-		t.Errorf(`msg.GetKey() != 12 -> %v`, msg.GetKey())
+	if b.String() != `Key:<Value:11 > StringValue:"Empty" ` {
+		t.Errorf("b.String() != `Key:11 StringValue:\"Empty\" -> %s", b.String())
 	}
 
-	if msg.GetMeta() == nil {
-		t.Errorf(`msg.GetMeta() == nil`)
+	if b.GetStringValue() != "Empty" {
+		t.Errorf(`b.GetStringValue() != "Empty"`)
 	}
 
-	if msg.GetStringValue() != "testB" {
-		t.Errorf(`msg.GetStringValue() != "testB"`)
+	b.Key.Value = 12
+	if b.GetDelphiKey() != "Value:12 " {
+		t.Fail()
 	}
 
-	if msg.String() != `Meta:<Kind:"MessageB" Key:"Value:12 " > Key:<Value:12 > StringValue:"testB" ` {
-		t.Errorf(`msg.String() != Meta:<Kind:"MessageB" Key:"Value:12 " > Key:<Value:12 > StringValue:"testB" `)
+	b.SetDelphiMeta(&delphi.ObjectMeta{
+		Key: b.GetDelphiKey(),
+	})
+	if b.GetDelphiPath() != "MessageB|Value:12 " {
+		t.Errorf(`b.GetPath() != "MessageB|Value:12 " -> %v`, b.GetDelphiPath())
 	}
 
-	_, desc := descriptor.ForMessage(msg)
-	if *desc.Name != "MessageB_" {
-		t.Errorf(`*desc.Name != "MessageB_"`)
-	}
-
-	data, err := proto.Marshal(msg)
+	data, err := proto.Marshal(&b)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
-	base, err := messageBFactory(client, data)
+	base, err := MessageBFactory(client, data)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
 	b2, ok := base.(*MessageB)
 	if !ok {
-		t.Errorf("b2, ok := base.(*MessageB_)")
+		t.Errorf("b2, ok := base.(*MessageB)")
 	}
 
-	if b2.GetKey().GetValue() != 12 {
-		t.Errorf(`b2.Key().GetValue() == 12`)
+	if b2.Key.Value != 12 {
+		t.Errorf(`b2.Key.Value == 12`)
 	}
 
-	r := new(reactB)
+	r := &reactB{}
 	rl := make([]clientApi.BaseReactor, 1)
 	rl[0] = r
 
-	b2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
-	b2.TriggerEvent(b2, delphi.ObjectOperation_SetOp, rl)
-	b2.TriggerEvent(b2, delphi.ObjectOperation_DeleteOp, rl)
+	b2.TriggerEvent(client, nil, delphi.ObjectOperation_SetOp, rl)
+	b2.TriggerEvent(client, b2, delphi.ObjectOperation_SetOp, rl)
+	b2.TriggerEvent(client, b2, delphi.ObjectOperation_DeleteOp, rl)
 
-	msg.Key.Reset()
-	msg.Reset()
-	if msg.String() != "" {
-		t.Errorf(`msg.String() != ""`)
-	}
-
-	key := NewMessageKey(nil)
-	key.SetValue(1)
-	if GetMessageB(client, key) != nil {
-		t.Errorf(`GetMessageB("", "") != nil`)
-	}
-
-	list = make([]clientApi.BaseObject, 0)
-	it := MessageBList(client)
-	if it == nil {
-		t.Errorf(`it == nil`)
-	}
-
-	if it.Next() != nil {
-		t.Errorf(`it.Next() != nil`)
-	}
-
-	list = append(list, b)
-	it = MessageBList(client)
-
-	if it.Next() == nil {
-		t.Errorf(`it.Next() == nil`)
-	}
+	b.Reset() // just for coverage
+	key := &MessageKey{}
+	key.Descriptor()
+	key.ProtoMessage()
+	key.Reset()
 }
 
-// TestMessageCExtra add extra tests to MessageB, thare are already tested as
-// part of MessageA to reach 75% coverage.
-func TestMessageCExtra(t *testing.T) {
+type reactC struct {
+}
+
+func (r *reactC) OnMessageCCreate(obj *MessageC) {
+}
+
+func (r *reactC) OnMessageCUpdate(old *MessageC, obj *MessageC) {
+}
+
+func (r *reactC) OnMessageCDelete(obj *MessageC) {
+
+}
+
+// TestMessageC tests singleton
+func TestMessageC(t *testing.T) {
 	client := new(testClient)
 
-	c := NewMessageC(client)
-	c.SetKey(12)
-	if c.GetKey() != 12 || c.key != 12 {
+	MessageCMount(client, delphi.MountMode_ReadWriteMode)
+
+	c := MessageC{
+		StringValue: "Empty",
+	}
+	c.Descriptor()   // just for coverage
+	c.ProtoMessage() // just for coverage
+
+	if c.GetMeta() != nil {
 		t.Fail()
 	}
-	c.GetStringValue().Append("testC")
-	if c.GetStringValue().Get(0) != "testC" ||
-		c.stringValue.values[0] != "testC" {
-		t.Fail()
-	}
-	if c.GetKeyString() != "12" {
-		t.Fail()
+
+	if c.GetDelphiMeta() != nil {
+		t.Errorf(`c.GetDelphiMeta() != nil`)
 	}
 
-	msg, ok := c.GetMessage().(*MessageC_)
-	if !ok {
-		t.Errorf("Cast failed")
-	}
-	if msg.Key != 12 {
-		t.Errorf("Cast failed")
-	}
-	if msg.StringValue[0] != "testC" {
-		t.Errorf("Was expecting \"testC\" got: %s", msg.StringValue)
+	if c.GetDelphiKey() != "default" {
+		t.Errorf(`c.GetDelphiKey() != "default" -> %s`, c.GetDelphiKey())
 	}
 
-	meta := c.GetMeta()
-	meta.Key = c.GetKeyString()
-	if c.GetMeta().Key != "12" {
-		t.Errorf("meta.Key is %v", meta.Key)
+	if c.String() != `StringValue:"Empty" ` {
+		t.Errorf("b.String() != `StringValue:\"Empty\" -> %s", c.String())
 	}
 
-	if c.GetPath() != "MessageC|12" {
-		t.Errorf(`a.GetPath() != "MessageA|12" -> %v`, c.GetPath())
+	if c.GetStringValue() != "Empty" {
+		t.Errorf(`b.GetStringValue() != "Empty"`)
 	}
 
-	if msg.GetKey() != 12 {
-		t.Errorf(`msg.GetKey() != 12 -> %v`, msg.GetKey())
+	c.SetDelphiMeta(&delphi.ObjectMeta{
+		Key: c.GetDelphiKey(),
+	})
+	if c.GetDelphiPath() != "MessageC|default" {
+		t.Errorf(`b.GetPath() != "MessageC|default" -> %v`, c.GetDelphiPath())
 	}
 
-	if msg.GetMeta() == nil {
-		t.Errorf(`msg.GetMeta() == nil`)
-	}
-
-	if msg.GetStringValue()[0] != "testC" {
-		t.Errorf(`msg.GetStringValue() != "testA"`)
-	}
-
-	if msg.String() != `Meta:<Kind:"MessageC" Key:"12" > Key:12 StringValue:"testC" ` {
-		t.Errorf(`msg.String() != Meta:<Kind:"MessageC" Key:"12" > Key:12 StringValue:"testC" `)
-	}
-
-	_, desc := descriptor.ForMessage(msg)
-	if *desc.Name != "MessageC_" {
-		t.Errorf(`*desc.Name != "MessageC_"`)
-	}
-
-	data, err := proto.Marshal(msg)
+	data, err := proto.Marshal(&c)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
-	base, err := messageCFactory(client, data)
+	base, err := MessageCFactory(client, data)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
 	c2, ok := base.(*MessageC)
 	if !ok {
-		t.Errorf("b2, ok := base.(*MessageC_)")
+		t.Errorf("c2, ok := base.(*MessageC)")
 	}
 
-	if c2.GetKey() != 12 {
-		t.Errorf(`c2.Key().GetValue() == 12`)
-	}
-
-	r := new(reactC)
+	r := &reactC{}
 	rl := make([]clientApi.BaseReactor, 1)
 	rl[0] = r
 
-	c2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
-	c2.TriggerEvent(c2, delphi.ObjectOperation_SetOp, rl)
-	c2.TriggerEvent(c2, delphi.ObjectOperation_DeleteOp, rl)
+	c2.TriggerEvent(client, nil, delphi.ObjectOperation_SetOp, rl)
+	c2.TriggerEvent(client, c2, delphi.ObjectOperation_SetOp, rl)
+	c2.TriggerEvent(client, c2, delphi.ObjectOperation_DeleteOp, rl)
 
-	msg.Reset()
-	if msg.String() != "" {
-		t.Errorf(`msg.String() != ""`)
-	}
-
-	if GetMessageC(client, 1) != nil {
-		t.Errorf(`GetMessageC("", "") != nil`)
-	}
-
-	c3 := childNewMessageCWithValue(nil, client, c)
-	if c3.GetStringValue().Length() != 1 {
-		t.Errorf(`c3.GetKeyString().Length() != 1`)
-	}
-
-	list = make([]clientApi.BaseObject, 0)
-	it := MessageCList(client)
-	if it == nil {
-		t.Errorf(`it == nil`)
-	}
-
-	if it.Next() != nil {
-		t.Errorf(`it.Next() != nil`)
-	}
-	list = append(list, c)
-	it = MessageCList(client)
-
-	if it.Next() == nil {
-		t.Errorf(`it.Next() == nil`)
-	}
-}
-
-type reactD struct {
-}
-
-func (r *reactD) OnMessageDCreate(obj *MessageD) {
-
-}
-
-func (r *reactD) OnMessageDUpdate(obj *MessageD) {
-
-}
-
-func (r *reactD) OnMessageDDelete(obj *MessageD) {
-
-}
-
-// TestMessageA tests basic functionality, like setting and getting fields,
-// creating the message, and making sure the actual protobuf message matches
-// the values in the wrapper object
-func TestMessageD(t *testing.T) {
-	client := new(testClient)
-
-	MessageDMount(client, delphi.MountMode_ReadWriteMode)
-
-	d := NewMessageD(client)
-
-	d.SetStringValue("testD")
-	if d.GetStringValue() != "testD" || d.stringValue != "testD" {
-		t.Fail()
-	}
-	if d.GetKeyString() != "default" {
-		t.Fail()
-	}
-
-	msg, ok := d.GetMessage().(*MessageD_)
-	if !ok {
-		t.Errorf("Cast failed")
-	}
-	if msg.StringValue != "testD" {
-		t.Errorf("Was expecting \"testD\" got: %s", msg.StringValue)
-	}
-
-	meta := d.GetMeta()
-	meta.Key = d.GetKeyString()
-	if d.GetMeta().Key != "default" {
-		t.Errorf("meta.Key is %v", meta.Key)
-	}
-
-	if d.GetPath() != "MessageD|default" {
-		t.Errorf(`a.GetPath() != "MessageD|default" -> %v`, d.GetPath())
-	}
-
-	if msg.GetMeta() == nil {
-		t.Errorf(`msg.GetMeta() == nil`)
-	}
-
-	if msg.GetStringValue() != "testD" {
-		t.Errorf(`msg.GetStringValue() != "testD"`)
-	}
-
-	if msg.String() != `Meta:<Kind:"MessageD" Key:"default" > StringValue:"testD" ` {
-		t.Errorf(`msg.String() != Meta:<Kind:"MessageD" Key:"default" > StringValue:"testD" `)
-	}
-
-	_, desc := descriptor.ForMessage(msg)
-	if *desc.Name != "MessageD_" {
-		t.Errorf(`*desc.Name != "MessageD_"`)
-	}
-
-	data, err := proto.Marshal(msg)
-	if err != nil {
-		t.Errorf("%v", err)
-	}
-
-	base, err := messageDFactory(client, data)
-	if err != nil {
-		t.Errorf("%v", err)
-	}
-
-	d2, ok := base.(*MessageD)
-	if !ok {
-		t.Errorf("d2, ok := base.(*MessageD_)")
-	}
-
-	if d2.GetKeyString() != "default" {
-		t.Errorf(`d2.KeyString() == default`)
-	}
-
-	r := new(reactD)
-	rl := make([]clientApi.BaseReactor, 1)
-	rl[0] = r
-
-	d2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
-	d2.TriggerEvent(d2, delphi.ObjectOperation_SetOp, rl)
-	d2.TriggerEvent(d2, delphi.ObjectOperation_DeleteOp, rl)
-
-	msg.Reset()
-	if msg.String() != "" {
-		t.Errorf(`msg.String() != ""`)
-	}
-
-	if GetMessageD(client) != nil {
-		t.Errorf(`GetMessageD("", "") != nil`)
-	}
-
-	list = make([]clientApi.BaseObject, 0)
-	it := MessageDList(client)
-	if it == nil {
-		t.Errorf(`it == nil`)
-	}
-
-	if it.Next() != nil {
-		t.Errorf(`it.Next() != nil`)
-	}
-
-	list = append(list, d)
-	it = MessageDList(client)
-
-	if it.Next() == nil {
-		t.Errorf(`it.Next() == nil`)
-	}
+	c.Reset() // just for coverage
 }

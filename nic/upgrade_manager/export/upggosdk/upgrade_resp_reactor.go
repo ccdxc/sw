@@ -20,24 +20,24 @@ func (ctx *upgrespctx) invokeAgentHandler(obj *upgrade.UpgResp) {
 		ctx.agentHdlrs.UpgSuccessful()
 	case upgrade.UpgRespType_UpgRespFail:
 		log.Infof("upgrade failed!!")
-		for idx := 0; idx < obj.GetUpgRespFailStr().Length(); idx++ {
-			errStrList = append(errStrList, obj.GetUpgRespFailStr().Get(idx))
+		for _, str := range obj.GetUpgRespFailStr() {
+			errStrList = append(errStrList, str)
 		}
 		ctx.agentHdlrs.UpgFailed(&errStrList)
 	case upgrade.UpgRespType_UpgRespAbort:
 		log.Infof("upgrade aborted!!")
-		for idx := 0; idx < obj.GetUpgRespFailStr().Length(); idx++ {
-			errStrList = append(errStrList, obj.GetUpgRespFailStr().Get(idx))
+		for _, str := range obj.GetUpgRespFailStr() {
+			errStrList = append(errStrList, str)
 		}
 		ctx.agentHdlrs.UpgAborted(&errStrList)
 	case upgrade.UpgRespType_UpgRespUpgPossible:
-		log.Infof("%d length", obj.GetUpgRespFailStr().Length())
-		if obj.GetUpgRespFailStr().Length() == 0 {
+		log.Infof("%d length", len(obj.GetUpgRespFailStr()))
+		if len(obj.GetUpgRespFailStr()) == 0 {
 			log.Infof("upgrade possible")
 			ctx.agentHdlrs.UpgPossible(&upgCtx)
 		} else {
-			for idx := 0; idx < obj.GetUpgRespFailStr().Length(); idx++ {
-				errStrList = append(errStrList, obj.GetUpgRespFailStr().Get(idx))
+			for _, str := range obj.GetUpgRespFailStr() {
+				errStrList = append(errStrList, str)
 			}
 			log.Infof("upgrade not possible")
 			ctx.agentHdlrs.UpgNotPossible(&upgCtx, &errStrList)
@@ -49,8 +49,9 @@ func (ctx *upgrespctx) deleteUpgReqSpec() {
 	upgReq := upgrade.GetUpgReq(ctx.sdkClient)
 	if upgReq == nil {
 		log.Infof("upgReq not found")
+		return
 	}
-	upgReq.Delete()
+	ctx.sdkClient.DeleteObject(upgReq)
 	log.Infof("Upgrade Req Object deleted for next request")
 }
 
@@ -60,7 +61,7 @@ func (ctx *upgrespctx) OnUpgRespCreate(obj *upgrade.UpgResp) {
 	ctx.invokeAgentHandler(obj)
 }
 
-func (ctx *upgrespctx) OnUpgRespUpdate(obj *upgrade.UpgResp) {
+func (ctx *upgrespctx) OnUpgRespUpdate(old, obj *upgrade.UpgResp) {
 	log.Infof("OnUpgRespUpdate called %d", obj.GetUpgRespVal())
 	ctx.deleteUpgReqSpec()
 	ctx.invokeAgentHandler(obj)

@@ -71,8 +71,6 @@ func main() {
 		g.Error(err, "parsing input proto")
 	}
 
-	g.DelphiRename()
-
 	if len(g.Request.FileToGenerate) == 0 {
 		g.Fail("no files to generate")
 	}

@@ -20,15 +20,8 @@ message MessageB {
     string             StringValue = 3;
 }
 
-// Message with an array field
-message MessageC {
-    delphi.ObjectMeta  Meta  = 1;
-    uint32             Key = 2;
-    repeated string    StringValue = 3;
-}
-
 // Singleton message
-message MessageD {
+message MessageC {
     option (delphi.singleton) = true;
     delphi.ObjectMeta  Meta  = 1;
     string    StringValue = 3;

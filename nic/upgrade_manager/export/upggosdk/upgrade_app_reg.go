@@ -12,7 +12,10 @@ func registerUpgApp(client clientApi.Client, name string) {
 	app := upgrade.GetUpgApp(client, name)
 	if app == nil {
 		log.Infof("App %s not registered. Registering now.", name)
-		app = upgrade.NewUpgAppWithKey(client, name)
+		app = &upgrade.UpgApp{
+			Key: name,
+		}
+		client.SetObject(app)
 		if app == nil {
 			log.Infof("App %s not registered.", name)
 			return

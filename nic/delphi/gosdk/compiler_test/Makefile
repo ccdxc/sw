@@ -7,7 +7,7 @@ compiler_test.pb.go: compiler_test.proto
 		./compiler_test.proto -I /usr/src/github.com/pensando/sw -I .
 
 test: compiler_test.pb.go
-	go test -cover
+	go test -cover 
 
 clean:
 	rm -f compiler_test.pb.go

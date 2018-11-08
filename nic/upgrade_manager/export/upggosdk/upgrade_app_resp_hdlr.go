@@ -25,7 +25,10 @@ func createUpgAppResp(sdkClient clientApi.Client, name string) {
 	log.Infof("Creating UpgAppResp for %s", name)
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
-		upgAppResp = upgrade.NewUpgAppRespWithKey(sdkClient, name)
+		upgAppResp = &upgrade.UpgAppResp{
+			Key: name,
+		}
+		sdkClient.SetObject(upgAppResp)
 		if upgAppResp == nil {
 			log.Infof("application unable to create response object")
 		}
@@ -46,10 +49,11 @@ func updateUpgAppResp(respStateType upgrade.UpgStateRespType, appHdlrResp *HdlrR
 	if upgAppRespValToStr(respStateType) != "" {
 		log.Infof("%s", upgAppRespValToStr(respStateType))
 	}
-	upgAppResp.SetUpgAppRespVal(respStateType)
+	upgAppResp.UpgAppRespVal = respStateType
 	if appHdlrResp.Resp == Fail {
-		upgAppResp.SetUpgAppRespStr(appHdlrResp.ErrStr)
+		upgAppResp.UpgAppRespStr = appHdlrResp.ErrStr
 	}
+	sdkClient.SetObject(upgAppResp)
 	return
 }
 
@@ -57,7 +61,7 @@ func deleteUpgAppResp(name string, sdkClient clientApi.Client) {
 	log.Infof("deleteUpgAppResp called")
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp != nil {
-		upgAppResp.Delete()
+		sdkClient.DeleteObject(upgAppResp)
 	}
 }
 

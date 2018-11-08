@@ -23,7 +23,7 @@ func (s *service) OnUpgRespCreate(obj *UpgResp) {
 	log.Printf("OnUpgRespCreate called %d\n", obj.GetUpgRespVal())
 }
 
-func (s *service) OnUpgRespUpdate(obj *UpgResp) {
+func (s *service) OnUpgRespUpdate(old, obj *UpgResp) {
 	log.Printf("OnUpgRespUpdate called %d\n", obj.GetUpgRespVal())
 }
 
@@ -47,9 +47,11 @@ func main() {
 	c1.Run()
 
 	// create an object
-	u := NewUpgReq(c1)
-	u.SetKey(10)
-	u.SetUpgReqCmd(UpgReqType_UpgStart)
+	u := &UpgReq{
+		Key:       10,
+		UpgReqCmd: UpgReqType_UpgStart,
+	}
+	c1.SetObject(u)
 	a := make(chan struct{})
 	_ = <-a
 }

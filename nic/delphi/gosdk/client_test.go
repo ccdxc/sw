@@ -39,7 +39,7 @@ func (s *service) OnTestInterfaceSpecDelete(obj *TestInterfaceSpec) {
 	s.gotDeleteNotify <- struct{}{}
 }
 
-func (s *service) OnTestInterfaceSpecUpdate(obj *TestInterfaceSpec) {
+func (s *service) OnTestInterfaceSpecUpdate(old, obj *TestInterfaceSpec) {
 	log.Printf("%s Deleted!\n", s.Name())
 	s.gotUpdateNotify <- struct{}{}
 }
@@ -94,16 +94,14 @@ func TestClientBasic(t *testing.T) {
 	_ = <-s2.mountDone
 	log.Printf("### Client 2 Mount done")
 
-	spec := NewTestInterfaceSpec(c1)
-	spec.GetKey().SetIfidx(1)
-	spec.SetMacAddress("TestMacAddress")
+	spec := &TestInterfaceSpec{
+		Key: &IntfIndex{
+			Ifidx: 1,
+		},
+		MacAddress: "TestMacAddress",
+	}
+	c1.SetObject(spec)
 	log.Printf("### SPEC: %+v", spec)
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return c2.IsConnected(), c2
-	}, "client did not connect")
-
-	//c1.SetObject(spec)
 	log.Printf("### Client 1 Set Object done")
 
 	for i := 0; i < 2; i++ {
@@ -120,9 +118,7 @@ func TestClientBasic(t *testing.T) {
 	log.Printf("Client2 Data:\n")
 	c2.DumpSubtrees()
 
-	key := NewIntfIndex(c2)
-	key.SetIfidx(1)
-	spec2 := GetTestInterfaceSpec(c2, key)
+	spec2 := GetTestInterfaceSpec(c2, &IntfIndex{Ifidx: 1})
 	if spec2.GetMacAddress() != spec.GetMacAddress() {
 		t.Errorf(`spec2.GetMacAddress() != spec.GetMacAddress()`)
 	}
@@ -131,11 +127,11 @@ func TestClientBasic(t *testing.T) {
 	if len(objs) != 1 {
 		t.Errorf(`len(objs) != 1`)
 	}
-	if objs[0].GetMessage().String() != spec.GetMessage().String() {
+	if objs[0].GetDelphiMessage().String() != spec.GetDelphiMessage().String() {
 		t.Errorf(`objs[0] != spec`)
 	}
 
-	spec.Delete()
+	c2.DeleteObject(spec)
 
 	_ = <-s1.gotDeleteNotify
 	log.Printf("### Client 1 Got Delete Notify")

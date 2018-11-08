@@ -19,12 +19,15 @@ func RegisterFactory(kind string, factory Factory) {
 
 // BaseObject is the interfact that has to be implemented by Delphi objects
 type BaseObject interface {
-	GetMeta() *delphi.ObjectMeta
-	SetMeta(meta *delphi.ObjectMeta)
-	GetMessage() proto.Message
-	GetKeyString() string
-	GetPath() string
-	TriggerEvent(oldObj BaseObject, op delphi.ObjectOperation, rl []BaseReactor)
+	GetDelphiMessage() proto.Message
+	GetDelphiMeta() *delphi.ObjectMeta
+	SetDelphiMeta(meta *delphi.ObjectMeta)
+	GetDelphiKey() string
+	GetDelphiPath() string
+	GetDelphiKind() string
+	DelphiClone() BaseObject
+	TriggerEvent(sdkClient Client, oldObj BaseObject, op delphi.ObjectOperation,
+		rl []BaseReactor)
 }
 
 // BaseReactor is the reactor interfact that has to be implemented by Delphi

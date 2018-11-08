@@ -572,7 +572,6 @@ type Generator struct {
 	init             []string                   // Lines to emit in the init function.
 	indent           string
 	writeOutput      bool
-	delphi           *delphi
 }
 
 // New creates a new generator and allocates the request and response protobufs.
@@ -581,7 +580,6 @@ func New() *Generator {
 	g.Buffer = new(bytes.Buffer)
 	g.Request = new(plugin.CodeGeneratorRequest)
 	g.Response = new(plugin.CodeGeneratorResponse)
-	g.delphi = newDelphi()
 	return g
 }
 
@@ -1198,9 +1196,6 @@ func (g *Generator) generate(file *FileDescriptor) {
 	for _, ext := range g.file.ext {
 		g.generateExtension(ext)
 	}
-
-	g.delphiGenerate(file)
-
 	g.generateInitFunction()
 
 	// Run the plugins before the imports so we know which imports are necessary.
@@ -1212,7 +1207,6 @@ func (g *Generator) generate(file *FileDescriptor) {
 	rem := g.Buffer
 	g.Buffer = new(bytes.Buffer)
 	g.generateHeader()
-	g.delphiGenerateImports()
 	g.generateImports()
 	if !g.writeOutput {
 		return
@@ -1273,8 +1267,7 @@ func (g *Generator) generateHeader() {
 				if msg.parent != nil {
 					continue
 				}
-				x := CamelCaseSlice(msg.TypeName())
-				topMsgs = append(topMsgs, x)
+				topMsgs = append(topMsgs, CamelCaseSlice(msg.TypeName()))
 			}
 		}
 		g.P()
@@ -1329,6 +1322,7 @@ func (g *Generator) generateImports() {
 	g.P("import " + g.Pkg["proto"] + " " + strconv.Quote(g.ImportPrefix+"github.com/golang/protobuf/proto"))
 	g.P("import " + g.Pkg["fmt"] + ` "fmt"`)
 	g.P("import " + g.Pkg["math"] + ` "math"`)
+	g.P(`import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"`)
 	for i, s := range g.file.Dependency {
 		fd := g.fileByName(s)
 		// Do not import our own package.
@@ -1732,6 +1726,60 @@ var wellKnownTypes = map[string]bool{
 	"BytesValue":  true,
 }
 
+// isDelphiObject checks if a message is a delphi object, i.e. has "Meta" field
+func isDelphiObject(message *Descriptor) bool {
+	for _, field := range message.Field {
+		if *field.Name == "Meta" {
+			return true
+		}
+	}
+	return false
+}
+
+// hasKey returns true if a delphi message has a key, i.e. "Key" or
+// "key_or_handle" field
+func hasKey(message *Descriptor) bool {
+	for _, field := range message.Field {
+		if *field.Name == "Key" || *field.Name == "key_or_handle" {
+			return true
+		}
+	}
+	return false
+}
+
+// isKeyScalar returns true is the delphi key is scalar or string
+func isKeyScalar(message *Descriptor) bool {
+	for _, field := range message.Field {
+		if *field.Name == "Key" || *field.Name == "key_or_handle" {
+			return isScalar(field) || *field.Type == descriptor.FieldDescriptorProto_TYPE_STRING
+		}
+	}
+	panic("No key!")
+}
+
+// keyName returns the key field name, i.e. "Key" or "key_or_handle"
+func keyName(message *Descriptor) string {
+	for _, field := range message.Field {
+		if *field.Name == "Key" {
+			return "Key"
+		} else if *field.Name == "key_or_handle" {
+			return "KeyOrHandle"
+		}
+	}
+	panic("No key!")
+}
+
+// getKeyType returns the Go type of the delphi key field
+func getKeyType(message *Descriptor, g *Generator) string {
+	for _, field := range message.Field {
+		if *field.Name == "Key" || *field.Name == "key_or_handle" {
+			tp, _ := g.GoType(message, field)
+			return tp
+		}
+	}
+	panic("No key!")
+}
+
 // Generate the type and default constant definitions for this Descriptor.
 func (g *Generator) generateMessage(message *Descriptor) {
 	// The full type name
@@ -1890,6 +1938,188 @@ func (g *Generator) generateMessage(message *Descriptor) {
 	}
 	g.Out()
 	g.P("}")
+
+	// Delphi related code generation
+	if isDelphiObject(message) {
+		// GetDelphiMessage
+		g.P("func (m *", ccTypeName, ") GetDelphiMessage() proto.Message {")
+		g.P("return m")
+		g.P("}")
+		g.P()
+
+		// GetDelphiMeta
+		g.P("func (m* ", ccTypeName, ") GetDelphiMeta() *delphi.ObjectMeta {")
+		g.P("return m.Meta")
+		g.P("}")
+		g.P()
+
+		// GetDelphiMeta
+		g.P("func (m* ", ccTypeName, ") SetDelphiMeta(meta *delphi.ObjectMeta) {")
+		g.P("m.Meta = meta")
+		g.P("}")
+		g.P()
+
+		// GetDelphiKey
+		g.P("func (m* ", ccTypeName, ") GetDelphiKey() string {")
+		if hasKey(message) {
+			if isKeyScalar(message) {
+				g.P(`return fmt.Sprintf("%v", m.`, keyName(message), `)`)
+			} else {
+				g.P("return m.", keyName(message), ".String()")
+			}
+		} else {
+			g.P(`return "default"`)
+		}
+		g.P("}")
+		g.P()
+
+		// GetDelphiKind
+		g.P("func (m* ", ccTypeName, ") GetDelphiKind() string {")
+		g.P(fmt.Sprintf(`return "%s"`, *message.Name))
+		g.P("}")
+		g.P()
+
+		// GetDelphiPath
+		g.P("func (m* ", ccTypeName, ") GetDelphiPath() string {")
+		g.P(`return fmt.Sprintf("%s|%s", m.GetDelphiKind(), m.GetDelphiKey())`)
+		g.P("}")
+		g.P()
+
+		// DelphiClone
+		g.P("func (m* ", ccTypeName, ") DelphiClone() clientApi.BaseObject {")
+		g.P("obj, _ := proto.Clone(m).(*", ccTypeName, ")")
+		g.P("return obj")
+		g.P("}")
+		g.P()
+
+		// Mount
+		g.P(fmt.Sprintf(
+			`func %sMount(client clientApi.Client, mode delphi.MountMode) {`,
+			*message.Name))
+		g.P(fmt.Sprintf(`client.MountKind("%s", mode)`, *message.Name))
+		g.P("}")
+		g.P()
+
+		if hasKey(message) {
+			// MountKey
+			g.P(fmt.Sprintf(
+				`func %sMountKey(client clientApi.Client, key %s, mode delphi.MountMode) {`,
+				*message.Name, getKeyType(message, g)))
+			if isKeyScalar(message) {
+				g.P(fmt.Sprintf(`client.MountKindKey("%s", `+
+					`fmt.Sprintf("%%v", key), mode)`,
+					*message.Name))
+			} else {
+				g.P(fmt.Sprintf(`client.MountKindKey("%s", key.String(), mode)`,
+					*message.Name))
+			}
+			g.P("}")
+			g.P()
+
+			// Get
+			g.P("func Get", ccTypeName, "(client clientApi.Client, key ",
+				getKeyType(message, g), ") *", ccTypeName, " {")
+			if isKeyScalar(message) {
+				g.P("o := client.GetObject(\"", ccTypeName,
+					"\", fmt.Sprintf(\"%v\", key))")
+			} else {
+				g.P("o := client.GetObject(\"", ccTypeName, "\", key.String())")
+			}
+			g.P("if o == nil {")
+			g.P("return nil")
+			g.P("}")
+			g.P("obj, ok := o.(*", ccTypeName, ")")
+			g.P("if ok != true {")
+			g.P(" panic(\"Cast failed\")")
+			g.P("}")
+			g.P("return obj")
+			g.P("}")
+			g.P()
+		} else {
+			// Get
+			g.P("func Get", ccTypeName, "(client clientApi.Client) *", ccTypeName, " {")
+			g.P("o := client.GetObject(\"", ccTypeName, "\", \"default\")")
+			g.P("if o == nil {")
+			g.P("return nil")
+			g.P("}")
+			g.P("obj, ok := o.(*", ccTypeName, ")")
+			g.P("if ok != true {")
+			g.P(" panic(\"Cast failed\")")
+			g.P("}")
+			g.P("return obj")
+			g.P("}")
+			g.P()
+		}
+
+		// Factory
+		g.P(fmt.Sprintf(
+			`func %sFactory(sdkClient clientApi.Client, data []byte)`+
+				`(clientApi.BaseObject, error) {`, *message.Name))
+		g.P(fmt.Sprintf(`var msg %s`, *message.Name))
+		g.P("err := proto.Unmarshal(data, &msg)")
+		g.P("if err != nil {")
+		g.P("return nil, err")
+		g.P("}")
+		g.P("return &msg, nil")
+		g.P("}")
+		g.P()
+		g.init = append(g.init, "clientApi.RegisterFactory(\""+
+			*message.Name+"\", "+*message.Name+"Factory)")
+
+		// Watch
+		g.P("func ", ccTypeName, "Watch(client clientApi.Client, reactor ",
+			ccTypeName, "Reactor) {")
+		g.P("client.WatchKind(\"", ccTypeName, "\", reactor)")
+		g.P("}")
+
+		// List
+		g.P("func ", ccTypeName, "List(client clientApi.Client) []*",
+			ccTypeName, "{")
+		g.P("bobjs := client.List(\"", ccTypeName, "\")")
+		g.P("objs := make([]*", ccTypeName, ", 0)")
+		g.P("for _, bobj := range bobjs {")
+		g.P("obj, _ := bobj.(*", ccTypeName, ")")
+		g.P("objs = append(objs, obj)")
+		g.P("}")
+		g.P("return objs")
+		g.P("}")
+
+		// TriggerEvent
+		g.P("func (m* ", ccTypeName, ") TriggerEvent("+
+			"sdkClient clientApi.Client, "+
+			"old clientApi.BaseObject, "+
+			"op delphi.ObjectOperation, "+
+			"rl []clientApi.BaseReactor) {")
+		g.P("for _, r := range rl {")
+		g.P("rctr, ok := r.(" + ccTypeName + "Reactor)")
+		g.P("if ok == false {")
+		g.P(`panic("Not a Reactor")`)
+		g.P("}")
+		g.P("if op == delphi.ObjectOperation_SetOp {")
+		g.P("if old == nil {")
+		g.P("rctr.On" + ccTypeName + "Create(m)")
+		g.P("} else {")
+		g.P("oldObj, ok := old.(*" + ccTypeName + ")")
+		g.P("if ok == false {")
+		g.P(`panic("Not an ` + ccTypeName + ` object")`)
+		g.P("}")
+		g.P("rctr.On" + ccTypeName + "Update(oldObj, m)")
+		g.P("}")
+		g.P("} else {")
+		g.P("rctr.On" + ccTypeName + "Delete(m)")
+		g.P("}")
+		g.P("}")
+		g.P("}")
+		g.P()
+
+		// Reactor
+		g.P("type " + ccTypeName + "Reactor interface {")
+		g.P("On" + ccTypeName + "Create(obj *" + ccTypeName + ")")
+		g.P("On" + ccTypeName + "Update(old *" + ccTypeName +
+			", obj *" + ccTypeName + ")")
+		g.P("On" + ccTypeName + "Delete(obj *" + ccTypeName + ")")
+		g.P("}")
+	}
 
 	// Update g.Buffer to list valid oneof types.
 	// We do this down here, after we've disambiguated the oneof type names.

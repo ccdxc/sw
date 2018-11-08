@@ -114,11 +114,14 @@ func (c *client) IsConnected() bool {
 // call this explicitly. It is getting called automatically when there is a
 // change in any object.
 func (c *client) SetObject(obj clientApi.BaseObject) error {
-	meta := obj.GetMeta()
-	if meta.Handle == 0 {
-		meta.Key = obj.GetKeyString()
-		meta.Handle = c.newHandle()
-		meta.Path = obj.GetPath()
+	meta := obj.GetDelphiMeta()
+	if meta == nil {
+		obj.SetDelphiMeta(&delphi.ObjectMeta{
+			Kind:   obj.GetDelphiKind(),
+			Key:    obj.GetDelphiKey(),
+			Path:   obj.GetDelphiPath(),
+			Handle: c.newHandle(),
+		})
 	}
 
 	c.queueChange(&change{
@@ -155,8 +158,8 @@ func (c *client) DeleteObject(obj clientApi.BaseObject) error {
 func (c *client) queueChange(change *change) {
 	c.changeQueue <- change
 	// update subtree now so a back to back Set/Get will work
-	c.updateSubtree(change.op, change.obj.GetMeta().GetKind(),
-		change.obj.GetKeyString(), change.obj)
+	c.updateSubtree(change.op, change.obj.GetDelphiMeta().Kind,
+		change.obj.GetDelphiKey(), change.obj)
 }
 
 // WathcKind is used internally by the object to register reactors. Users
@@ -189,13 +192,13 @@ func (c *client) sendBatch(batch map[string]*change) error {
 	objlist := make([]*delphi_messenger.ObjectData, 0)
 
 	for _, chg := range batch {
-		data, err := proto.Marshal(chg.obj.GetMessage())
+		data, err := proto.Marshal(chg.obj.GetDelphiMessage())
 		if err != nil {
 			panic(err)
 		}
 		objlist = append(objlist,
 			&delphi_messenger.ObjectData{
-				Meta: chg.obj.GetMeta(),
+				Meta: chg.obj.GetDelphiMeta(),
 				Op:   chg.op,
 				Data: data,
 			},
@@ -225,7 +228,7 @@ func (c *client) loop() {
 				pending = make(map[string]*change)
 			}
 		case change := <-c.changeQueue:
-			pending[change.obj.GetKeyString()] = change
+			pending[change.obj.GetDelphiKey()] = change
 			if tRunning == false {
 				t.Reset(time.Millisecond * 5)
 			}
@@ -278,7 +281,7 @@ func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerE
 			if triggerEvents {
 				rl := c.watchers[obj.GetMeta().GetKind()]
 				if rl != nil {
-					baseObj.TriggerEvent(oldObj, obj.GetOp(), rl)
+					baseObj.TriggerEvent(c, oldObj, obj.GetOp(), rl)
 				}
 			}
 		}

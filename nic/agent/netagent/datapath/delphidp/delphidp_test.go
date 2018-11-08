@@ -92,11 +92,12 @@ func TestDelphiInterface(t *testing.T) {
 	}, "invalid number of interfaces")
 
 	// verify interface parameters match
-	ifKey := &goproto.InterfaceKeyHandle{}
-	ifKey.SetInterfaceId(intf.Status.InterfaceID)
+	ifKey := &goproto.InterfaceKeyHandle{
+		InterfaceId: intf.Status.InterfaceID,
+	}
 	ifSpec := goproto.GetInterfaceSpec(dp.delphiClient, ifKey)
 	Assert(t, ifSpec != nil, "Error getting interface spec", ifSpec)
-	Assert(t, ifSpec.Getif_type() == goproto.IntfType_IF_TYPE_ENIC, "invalid interface type")
+	Assert(t, ifSpec.IfType == goproto.IntfType_IF_TYPE_ENIC, "invalid interface type")
 
 	// delete the interface
 	err = dp.DeleteInterface(intf, nil)
@@ -111,7 +112,9 @@ func TestDelphiInterface(t *testing.T) {
 	Assert(t, ifSpec == nil, "Interface still found after deleting")
 
 	// create an interface status and verify we get the callback
-	intfStatus := goproto.NewInterfaceStatusWithKey(dp.delphiClient, ifKey)
+	intfStatus := &goproto.InterfaceStatus{
+		KeyOrHandle: ifKey,
+	}
 	dp.delphiClient.SetObject(intfStatus)
 	AssertEventually(t, func() (bool, interface{}) {
 		return (dp.eventStats["OnInterfaceStatusUpdate"] >= 1), dp.eventStats
@@ -185,11 +188,12 @@ func TestDelphiUplinkInterface(t *testing.T) {
 	}, "invalid number of interfaces")
 
 	// verify interface parameters match
-	ifKey := &goproto.InterfaceKeyHandle{}
-	ifKey.SetInterfaceId(intf.Status.InterfaceID)
+	ifKey := &goproto.InterfaceKeyHandle{
+		InterfaceId: intf.Status.InterfaceID,
+	}
 	ifSpec := goproto.GetInterfaceSpec(dp.delphiClient, ifKey)
 	Assert(t, ifSpec != nil, "Error getting interface spec", ifSpec)
-	Assert(t, ifSpec.Getif_type() == goproto.IntfType_IF_TYPE_UPLINK, "invalid interface type")
+	Assert(t, ifSpec.IfType == goproto.IntfType_IF_TYPE_UPLINK, "invalid interface type")
 
 	// delete the interface
 	err = dp.DeleteInterface(intf, nil)

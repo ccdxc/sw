@@ -26,6 +26,9 @@ func NewClient(delphiClient delphisdk.Client, name string) *Client {
 // InitDone should be called after application initialization is done. *Must
 // be called after the delphi client has been connected and mount completed
 func (c *Client) InitDone() {
-	obj := proto.NewSysmgrServiceStatusWithKey(c.delphiClient, c.name)
-	obj.SetPid((int32)(os.Getpid()))
+	obj := &proto.SysmgrServiceStatus{
+		Key: c.name,
+		Pid: (int32)(os.Getpid()),
+	}
+	c.delphiClient.SetObject(obj)
 }

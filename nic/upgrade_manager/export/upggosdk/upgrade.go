@@ -208,10 +208,11 @@ func (u *upgSdk) startUpgrade(upgType upgrade.UpgType) error {
 	}
 	upgreq := upgrade.GetUpgReq(u.sdkClient)
 	if upgreq == nil {
-		upgreq = upgrade.NewUpgReq(u.sdkClient)
+		upgreq = &upgrade.UpgReq{}
 	}
-	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgStart)
-	upgreq.SetUpgReqType(upgType)
+	upgreq.UpgReqCmd = upgrade.UpgReqType_UpgStart
+	upgreq.UpgReqType = upgType
+	u.sdkClient.SetObject(upgreq)
 	return nil
 }
 
@@ -229,10 +230,11 @@ func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType) error {
 	}
 	upgreq := upgrade.GetUpgReq(u.sdkClient)
 	if upgreq == nil {
-		upgreq = upgrade.NewUpgReq(u.sdkClient)
+		upgreq = &upgrade.UpgReq{}
 	}
-	upgreq.SetUpgReqCmd(upgrade.UpgReqType_IsUpgPossible)
-	upgreq.SetUpgReqType(upgType)
+	upgreq.UpgReqCmd = upgrade.UpgReqType_IsUpgPossible
+	upgreq.UpgReqType = upgType
+	u.sdkClient.SetObject(upgreq)
 	return nil
 }
 
@@ -244,7 +246,8 @@ func (u *upgSdk) AbortUpgrade() error {
 	if upgreq == nil {
 		return errors.New("No upgrade in progress")
 	}
-	upgreq.SetUpgReqCmd(upgrade.UpgReqType_UpgAbort)
+	upgreq.UpgReqCmd = upgrade.UpgReqType_UpgAbort
+	u.sdkClient.SetObject(upgreq)
 	return nil
 }
 
@@ -267,8 +270,8 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 	//Get list of all applications registered with upgrade manager
 	*retStr = append(*retStr, "======= List of applications registered with Upgrade Manager =======")
 	upgAppList := upgrade.UpgAppList(u.sdkClient)
-	for obj := upgAppList.Next(); obj != nil; obj = upgAppList.Next() {
-		str := "Application " + obj.GetKey() + " registered with Upgrade Manager"
+	for _, obj := range upgAppList {
+		str := "Application " + obj.Key + " registered with Upgrade Manager"
 		*retStr = append(*retStr, str)
 	}
 
@@ -293,7 +296,7 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 	//Check the status of individual applications
 	*retStr = append(*retStr, "======= Checking status of all applications =======")
 	upgAppRespList := upgrade.UpgAppRespList(u.sdkClient)
-	for obj := upgAppRespList.Next(); obj != nil; obj = upgAppRespList.Next() {
+	for _, obj := range upgAppRespList {
 		str := "Application " + obj.GetKey() + " has created response object"
 		*retStr = append(*retStr, str)
 
@@ -313,13 +316,13 @@ func (u *upgSdk) GetUpgradeStatus(retStr *[]string) error {
 		*retStr = append(*retStr, "Upgrade completed successfully.")
 	} else if upgresp.GetUpgRespVal() == upgrade.UpgRespType_UpgRespFail {
 		*retStr = append(*retStr, "Upgrade completed with failure.")
-		for idx := 0; idx < upgresp.GetUpgRespFailStr().Length(); idx++ {
-			*retStr = append(*retStr, upgresp.GetUpgRespFailStr().Get(idx))
+		for _, str := range upgresp.GetUpgRespFailStr() {
+			*retStr = append(*retStr, str)
 		}
 	} else if upgresp.GetUpgRespVal() == upgrade.UpgRespType_UpgRespAbort {
 		*retStr = append(*retStr, "Upgrade aborted.")
-		for idx := 0; idx < upgresp.GetUpgRespFailStr().Length(); idx++ {
-			*retStr = append(*retStr, upgresp.GetUpgRespFailStr().Get(idx))
+		for _, str := range upgresp.GetUpgRespFailStr() {
+			*retStr = append(*retStr, str)
 		}
 	}
 

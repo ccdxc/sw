@@ -104,7 +104,7 @@ func (ctx *upgstatereqctx) OnUpgStateReqCreate(obj *upgrade.UpgStateReq) {
 	}
 }
 
-func (ctx *upgstatereqctx) OnUpgStateReqUpdate(obj *upgrade.UpgStateReq) {
+func (ctx *upgstatereqctx) OnUpgStateReqUpdate(old, obj *upgrade.UpgStateReq) {
 	if obj.GetUpgReqState() != upgrade.UpgReqStateType_UpgStateTerminal {
 		log.Infof("===== Incoming Message =====")
 		err := ctx.getUpgCtx(obj)
