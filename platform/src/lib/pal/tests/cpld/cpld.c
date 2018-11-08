@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "cpld.h"
+#include "cpld_int.h"
 
 static void
 usage(void)

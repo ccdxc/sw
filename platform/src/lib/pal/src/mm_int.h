@@ -4,9 +4,10 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include "../include/pal_types.h"
 
-#ifndef _PAL_MM_H_
-#define _PAL_MM_H_
+#ifndef _PAL_MM_INT_H_
+#define _PAL_MM_INT_H_
 
 #define MAJORVERSION 1
 #define MINORVERSION 0
@@ -19,13 +20,6 @@
 #define MAXUUID 32 
 #define MINALLOC 4096
 #define MEMSTART 0xC0000000
-
-/* Keep the order as is. */
-typedef enum uuid_e {
-    NICMGR	= 	0,
-    HAL  	=	1,
-    PCIEMGR	=	2  
-} uuid_t;
 
 #define GET(region_addr) (*(u_int64_t*)region_addr)
 #define SIZEMASK (~((u_int64_t)(0xFFF)))
@@ -117,16 +111,7 @@ typedef enum pal_ret_e {
 
 void pal_mm_init(char *application_name);
 
-u_int64_t pal_mem_alloc_int(char *region_name, uint32_t size, u_int32_t alloc_flags); 
-
-void pal_mem_free_int(char *region_name); 
-
 pal_ret_t pal_pa_access_allowed(u_int64_t pa, u_int64_t sz);
 
-void *pal_mem_map_region_int(char *region_name);
-
-void pal_mem_unmap_region_int(char *region_name);
-
-u_int64_t pal_mem_region_pa_int(char *region_name);
-
 #endif
+

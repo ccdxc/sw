@@ -8,11 +8,11 @@ SOURCES = \
 	reg.c \
 	mem.c \
 	mmap_region.c \
-	pal_mm.c \
+	mm.c \
 	trace.c \
-	pal_cpld.c \
+	cpld.c \
 	i2c.c \
-	pali2c.c \
+	locks.c \
 	$(NULL)
 
 LCFLAGS += \
@@ -25,3 +25,4 @@ LCFLAGS += \
 
 TOPDIR = ../../../..
 include $(TOPDIR)/make/Makefile.inc
+

@@ -15,8 +15,8 @@
 #include <sys/mman.h>
 
 #include "pal.h"
-#include "pal_impl.h"
-#include "pal_mm.h"
+#include "mm_int.h"
+#include "internal.h"
 
 void *
 pal_mem_map(const u_int64_t pa, const size_t sz, u_int32_t flags)
@@ -63,8 +63,8 @@ pal_memcpy(void *dst, const void *src, size_t n)
             *d++ = *s++;
         }
     } else {
-   	/* TODO : Remove this.
- 	 * 
+        /* TODO : Remove this.
+         * 
          *        This is placed here to satisfy a hack within HAL which uses
          *        the pal_mem_wr interface to perform ZERO-ing of memory by
          *        passing src as NULL.
@@ -109,10 +109,10 @@ pal_mem_wr(const u_int64_t pa, const void *buf, const size_t sz, u_int32_t flags
 
     if (va != NULL) { 
         pal_memcpy(va, buf, sz);
-    	return sz;
+        return sz;
     } else {
-	printf("Application does not have permission to access this memory region.\n");
-	return 0;
+        printf("Application does not have permission to access this memory region.\n");
+        return 0;
     }
 }
 
@@ -137,34 +137,3 @@ pal_memset(const uint64_t pa, u_int8_t c, const size_t sz, u_int32_t flags)
     }
 }
 
-u_int64_t
-pal_mem_alloc(char *region_name,
-              uint32_t size,
-              u_int32_t alloc_flags)
-{
-    return pal_mem_alloc_int(region_name, size, alloc_flags);
-}
-
-void
-pal_mem_free(char *region_name)
-{
-    pal_mem_free_int(region_name);
-}
-
-void *
-pal_mem_map_region(char *region_name)
-{
-    return pal_mem_map_region_int(region_name);
-}
-
-void
-pal_mem_unmap_region(char *region_name)
-{
-    pal_mem_unmap_region_int(region_name);
-}
-
-u_int64_t
-pal_mem_region_pa(char *region_name)
-{
-    return pal_mem_region_pa_int(region_name);
-}

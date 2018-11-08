@@ -14,8 +14,8 @@
 #include <sys/mman.h>
 
 #include "pal.h"
-#include "pal_mm.h"
-#include "pal_impl.h"
+#include "mm_int.h"
+#include "internal.h"
 
 static pal_data_t pal_data;
 
@@ -71,3 +71,4 @@ pal_is_asic(void)
 {
     return pal_get_env() == PAL_ENV_ASIC;
 }
+

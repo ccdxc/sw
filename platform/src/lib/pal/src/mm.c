@@ -2,7 +2,7 @@
  * Copyright (c) 2018, Pensando Systems Inc.
  *
  * pal_mm.c : This file contains all the memory management functions
- * 	      for HBM.
+ *               for HBM.
  */
 
 #include <stdio.h>
@@ -16,10 +16,10 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/mman.h>
-#include "pal_impl.h"
-#include "pal_mm.h"
-#include "pal.h"
 #include <sys/types.h>
+#include "internal.h"
+#include "mm_int.h"
+#include "pal.h"
 
 static void
 print_region(pal_mem_region_t *region)
@@ -64,7 +64,7 @@ print_metadata(pal_mem_metadata_t *metadata)
 
     for (i = 0; i < MAXREGIONS; i++) {
         if (ISOCCUPIED(&metadata->regions[i])) {
-	    print_region(&metadata->regions[i]);
+            print_region(&metadata->regions[i]);
         }
     }
 
@@ -132,9 +132,9 @@ pal_mem_split(pal_mem_metadata_t *metadata, u_int16_t region_idx, u_int64_t spli
     for (i = 0; i < MAXREGIONS; i++) {
      
         if (!ISOCCUPIED(&metadata->regions[i])) {
-	    insert_idx = i;
-	    break;
-	}
+            insert_idx = i;
+            break;
+        }
     }
 
     if (insert_idx == MAXREGIONS) {
@@ -160,7 +160,7 @@ pal_mem_split(pal_mem_metadata_t *metadata, u_int16_t region_idx, u_int64_t spli
 }
 
 static void
-pal_merge_regions(pal_mem_metadata_t *metadata, u_int16_t idx1, u_int16_t idx2)
+pal_merge_regions_int(pal_mem_metadata_t *metadata, u_int16_t idx1, u_int16_t idx2)
 {
     assert(metadata->regions[idx1].arena_idx == metadata->regions[idx2].arena_idx);
     u_int64_t region2_size = GETREGIONSIZE(&(metadata->regions[idx2]));
@@ -179,18 +179,18 @@ pal_merge_regions(pal_mem_metadata_t *metadata, u_int16_t idx1, u_int16_t idx2)
 }
 
 static void
-pal_coalesce(pal_mem_metadata_t *metadata, u_int16_t arena_idx, u_int16_t idx)
+pal_coalesce_int(pal_mem_metadata_t *metadata, u_int16_t arena_idx, u_int16_t idx)
 {
     u_int16_t idx2 = metadata->arenas[arena_idx].free_region_idx;
 
     for (; idx2 != MAXREGIONS; idx2 = metadata->regions[idx2].next_idx) {
-	assert(idx2 != metadata->regions[idx2].next_idx);
-	assert(!ISALLOCATED(&metadata->regions[idx2]));
+        assert(idx2 != metadata->regions[idx2].next_idx);
+        assert(!ISALLOCATED(&metadata->regions[idx2]));
 
-	if ((metadata->regions[idx].start_addr + GETREGIONSIZE(&metadata->regions[idx]) ==
+        if ((metadata->regions[idx].start_addr + GETREGIONSIZE(&metadata->regions[idx]) ==
             (metadata->regions[idx2].start_addr))) {
-            pal_merge_regions(metadata, idx, idx2);
-	    break;
+            pal_merge_regions_int(metadata, idx, idx2);
+            break;
         }
     }
 }
@@ -217,34 +217,17 @@ pal_mm_init(char *application_name)
 
      strncpy(pd->app_uuid, application_name, MAXUUID);
 
+     if (!pal_wr_lock(MEMLOCK)) {
+         printf("Could not lock pal.lck\n");
+         return;
+     }
+
      /* Check if pal has already been init-ed */
      copy_int(buf, pr_ptov(mem_start, 8, FREEACCESS), 8);
 
      if (strncmp(buf, MAGIC, strlen(MAGIC)) == 0) {
-        pd->memlckfd = pal_lock_init(MEMLOCKFILE);
-
-	if (pd->memlckfd == -1) {
-	    printf("Could not open lockfile.\n");
-	    return;
-	}
-
         pd->init_done = 1;
-	return;
-     }
-
-     /* 
-      * This is the first time init is called for the library.
-      * Create the file to be used for locking.
-      */
-     pd->memlckfd = open(MEMLOCKFILE, O_RDWR | O_CREAT);
-     if (pd->memlckfd == -1) {
- 	printf("Failed to created the file lock.\n");
-	return;
-     }
-
-     if (!pal_wr_lock_int(pd->memlckfd)) {
-	printf("Could not lock pal.lck\n");
-	return;
+        return;
      }
 
      memset(&metadata, 0, sizeof(metadata));
@@ -280,16 +263,16 @@ pal_mm_init(char *application_name)
      metadata.arenas[2].top = metadata.arenas[2].start;
 
      for (i = 0; i < MAXREGIONS; i++) {
-	metadata.regions[i].next_idx = MAXREGIONS;
-	metadata.regions[i].prev_idx = MAXREGIONS;
-	metadata.regions[i].arena_idx = MAXREGIONS;
+        metadata.regions[i].next_idx = MAXREGIONS;
+        metadata.regions[i].prev_idx = MAXREGIONS;
+        metadata.regions[i].arena_idx = MAXREGIONS;
      }
      
      copy_int(pr_ptov(mem_start, sizeof(metadata), FREEACCESS),
          (const void*)&metadata, sizeof(metadata));
      pal_unmap_metadata();
-     if (pal_wr_unlock_int(pd->memlckfd) == LCK_FAIL) {
-	printf("Failed to unlock.\n");
+     if (pal_wr_unlock(MEMLOCK) == LCK_FAIL) {
+        printf("Failed to unlock.\n");
      }
      pd->init_done = 1;
 }
@@ -319,30 +302,30 @@ pal_mm_find_coherent_int(pal_mem_metadata_t *metadata,
         if (((metadata->arenas[i].flags & COHERENTFLAG) != 0) &&
               metadata->arenas[i].free_space >= size) {
 
-   	    cumulative_free_region = 0;
-	    *insert_idx = MAXREGIONS;
+               cumulative_free_region = 0;
+            *insert_idx = MAXREGIONS;
             /* walk the free list */
             for (j = metadata->arenas[i].free_region_idx;
                  j < MAXREGIONS;
                  j = metadata->regions[j].next_idx) {
-		    assert(j != metadata->regions[j].next_idx);
+                    assert(j != metadata->regions[j].next_idx);
                     if (GETREGIONSIZE(&metadata->regions[j]) >= size) {
                         *insert_idx = j;
                         break;
                     }
-		    
-		    cumulative_free_region += GETREGIONSIZE(&metadata->regions[j]);
+                    
+                    cumulative_free_region += GETREGIONSIZE(&metadata->regions[j]);
                 }
 
-	    /* After walking through all the regions in the free list
- 	     * the total of free blocks contributing to the hole
- 	     * was found to be smaller than the requested size, thus
- 	     * allowing for a new allocation in the arena_idx = i.
- 	     */	 
-	    if (metadata->arenas[i].free_space - cumulative_free_region >= size) {
-            	arena_idx = i;
-	    	break;
-	    }
+            /* After walking through all the regions in the free list
+              * the total of free blocks contributing to the hole
+              * was found to be smaller than the requested size, thus
+              * allowing for a new allocation in the arena_idx = i.
+              */         
+            if (metadata->arenas[i].free_space - cumulative_free_region >= size) {
+                    arena_idx = i;
+                    break;
+            }
         }
     }
 
@@ -368,7 +351,7 @@ pal_mm_find_non_coherent_int(pal_mem_metadata_t *metadata,
             for (j = metadata->arenas[i].free_region_idx;
                 j < MAXREGIONS;
                 j = metadata->regions[j].next_idx) {
-		    assert(j != metadata->regions[j].next_idx);
+                    assert(j != metadata->regions[j].next_idx);
                     if (GETREGIONSIZE(&metadata->regions[j]) >= size) {
                         *insert_idx = j;
                         break;
@@ -437,7 +420,7 @@ pal_mm_find_32bit(pal_mem_metadata_t *metadata,
 }
 
 void *
-pal_mem_map_region_int(char *region_name)
+pal_mem_map_region(char *region_name)
 {
     u_int16_t i = 0;
     void *va = NULL;
@@ -449,7 +432,7 @@ pal_mem_map_region_int(char *region_name)
         goto exit;
     }
 
-    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
+    if (pal_rd_lock(MEMLOCK) == LCK_FAIL) {
         return NULL;
     }
 
@@ -462,31 +445,31 @@ pal_mem_map_region_int(char *region_name)
                ISEXCL(&metadata->regions[i])) {
                 printf("Application[%s] does not have permission to act on this region[%s].\n",
                                  pd->app_uuid, metadata->regions[i].region_name);
-		goto exit;
+                goto exit;
             }
-	    break;
-	}
+            break;
+        }
     }
 
     if (i < MAXREGIONS) {
-	va = pr_ptov(metadata->regions[i].start_addr,
+        va = pr_ptov(metadata->regions[i].start_addr,
                      GETREGIONSIZE(&metadata->regions[i]),
                      FREEACCESS);
-	pr_mem_unmap(va);
+        pr_mem_unmap(va);
     } else {
-	printf("Could not find region\n");
+        printf("Could not find region\n");
     }
 
 exit:
     pal_unmap_metadata();
-    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
-	printf("Failed to unlock.\n");
+    if (pal_rd_unlock(MEMLOCK) == LCK_FAIL) {
+        printf("Failed to unlock.\n");
     }
     return va;
 }
 
 void
-pal_mem_unmap_region_int(char *region_name)
+pal_mem_unmap_region(char *region_name)
 {
     u_int16_t i = 0;
     pal_data_t *pd = pal_get_data();
@@ -498,7 +481,7 @@ pal_mem_unmap_region_int(char *region_name)
         goto exit;
     }
 
-    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
+    if (pal_rd_lock(MEMLOCK) == LCK_FAIL) {
         return;
     }
 
@@ -507,12 +490,12 @@ pal_mem_unmap_region_int(char *region_name)
     for (i = 0; i < MAXREGIONS; i++) {
         if (strcmp(metadata->regions[i].region_name, region_name) ==  0 &&
             ISOCCUPIED(&metadata->regions[i])) {
-		if (strncmp(metadata->regions[i].UUID, pd->app_uuid, MAXUUID) != 0 &&
-               	    ISEXCL(&metadata->regions[i])) {
+                if (strncmp(metadata->regions[i].UUID, pd->app_uuid, MAXUUID) != 0 &&
+                           ISEXCL(&metadata->regions[i])) {
                     printf("Application[%s] does not have permission to act on this region[%s].\n",
                                    pd->app_uuid, metadata->regions[i].region_name);
                    return;
-            	}
+                    }
 
                 break;
         }
@@ -529,14 +512,14 @@ pal_mem_unmap_region_int(char *region_name)
 
 exit:
     pal_unmap_metadata();
-    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
-	printf("Failed to unlock.");
+    if (pal_rd_unlock(MEMLOCK) == LCK_FAIL) {
+        printf("Failed to unlock.");
     }
     return;
 }
 
 u_int64_t
-pal_mem_alloc_int(char *region_name,
+pal_mem_alloc(char *region_name,
                   uint32_t size,
                   u_int32_t alloc_flags)
 {
@@ -547,20 +530,20 @@ pal_mem_alloc_int(char *region_name,
 
     pal_mem_metadata_t *metadata = NULL;
     pal_data_t *pd = pal_get_data();
-	
+        
     if (!pd->init_done) {
-	printf("PAL unitialized. Cannot alloc.\n");
-	return 0;
+        printf("PAL unitialized. Cannot alloc.\n");
+        return 0;
     }
 
-    if (pal_wr_lock_int(pd->memlckfd) == LCK_FAIL) {
-	return 0;
+    if (pal_wr_lock(MEMLOCK) == LCK_FAIL) {
+        return 0;
     }
     metadata = (pal_mem_metadata_t*) pal_map_metadata_int();
 
     if (size < MINALLOC) {
-	printf("Allocation failed. Allocation requests must atleast be %d", MINALLOC);
-	goto exit;
+        printf("Allocation failed. Allocation requests must atleast be %d", MINALLOC);
+        goto exit;
     }
 
     size = pal_get_aligned_size_int(size);
@@ -571,7 +554,7 @@ pal_mem_alloc_int(char *region_name,
             ISOCCUPIED(&metadata->regions[i]) &&
             ISALLOCATED(&metadata->regions[i])) {
                printf("Region name %s already exists.\n\n", region_name);
-	       goto exit;
+               goto exit;
           }
     }
 
@@ -583,12 +566,12 @@ pal_mem_alloc_int(char *region_name,
             arena_idx = pal_mm_find_non_coherent_int(metadata, size, &insert_idx);
         }
     } else {
-	arena_idx = pal_mm_find_32bit(metadata, size, &insert_idx);
+        arena_idx = pal_mm_find_32bit(metadata, size, &insert_idx);
     }
 
     if (arena_idx == MAXARENAS) {
-	printf("There is no arena available to satisfy the alloc request.\n");
-	goto exit;
+        printf("There is no arena available to satisfy the alloc request.\n");
+        goto exit;
     }
 
    /* Search for a region which is large enough to accomodate the request is 
@@ -603,19 +586,19 @@ pal_mem_alloc_int(char *region_name,
                insert_idx = i;
                metadata->regions[insert_idx].start_addr = metadata->arenas[arena_idx].top;
                metadata->arenas[arena_idx].top += size;
-    	       SETREGIONSIZE(&metadata->regions[insert_idx], size);
-	       break;
+                   SETREGIONSIZE(&metadata->regions[insert_idx], size);
+               break;
            }
        }
     } else {
         /* Writing as a separate if condition inside the else for readability */
-	if (GETREGIONSIZE(&metadata->regions[insert_idx]) - size > MINALLOC) {
-	     pal_mem_split(metadata, insert_idx, size);
+        if (GETREGIONSIZE(&metadata->regions[insert_idx]) - size > MINALLOC) {
+             pal_mem_split(metadata, insert_idx, size);
         } 
     }
 
     if (insert_idx == MAXREGIONS) {
-	goto exit;	
+        goto exit;        
     }
 
     strncpy(metadata->regions[insert_idx].UUID, pd->app_uuid, MAXUUID);
@@ -624,7 +607,7 @@ pal_mem_alloc_int(char *region_name,
     SETALLOCATED(&metadata->regions[insert_idx]);
 
     if ((alloc_flags & EXCLFLAG) != 0) {
-	SETEXCL(&metadata->regions[insert_idx]);
+        SETEXCL(&metadata->regions[insert_idx]);
     }
 
     if ((alloc_flags & COHERENTFLAG) != 0) {
@@ -635,7 +618,7 @@ pal_mem_alloc_int(char *region_name,
         metadata->regions[metadata->regions[insert_idx].prev_idx].next_idx =
          metadata->regions[insert_idx].next_idx;
     } else if (metadata->arenas[arena_idx].free_region_idx == insert_idx){
-	/* If it was already occupied, it must be part of a free list */
+        /* If it was already occupied, it must be part of a free list */
         metadata->arenas[arena_idx].free_region_idx =
          metadata->regions[insert_idx].next_idx;
     }
@@ -661,15 +644,15 @@ pal_mem_alloc_int(char *region_name,
 exit:
     pal_unmap_metadata();
 
-    if (pal_wr_unlock_int(pd->memlckfd) == LCK_FAIL) {
-	pal_mem_trace("Failed to unlock.\n");
+    if (pal_wr_unlock(MEMLOCK) == LCK_FAIL) {
+        pal_mem_trace("Failed to unlock.\n");
     }
 
     return ret;
 }
 
 void
-pal_mem_free_int(char *region_name)
+pal_mem_free(char *region_name)
 {
     u_int16_t arena_idx = 0;
     u_int16_t i = 0;
@@ -678,13 +661,13 @@ pal_mem_free_int(char *region_name)
     pal_data_t *pd = pal_get_data();
 
     if (!pd->init_done) {
-	printf("PAL has not been init-ed yet.\n");
-	goto exit;
+        printf("PAL has not been init-ed yet.\n");
+        goto exit;
     }
 
-    if (pal_wr_lock_int(pd->memlckfd) == LCK_FAIL) {
-	printf("Couldnot get write lock. Exiting.");
-	return;
+    if (pal_wr_lock(MEMLOCK) == LCK_FAIL) {
+        printf("Couldnot get write lock. Exiting.");
+        return;
     }
     metadata = (pal_mem_metadata_t*) pal_map_metadata_int();
 
@@ -693,48 +676,48 @@ pal_mem_free_int(char *region_name)
              ISOCCUPIED(&metadata->regions[i]) &&
              ISALLOCATED(&metadata->regions[i])) {
                 printf("Region name %s exists.\n", region_name);
-		arena_idx = metadata->regions[i].arena_idx;
-    		SETOCCUPIED(&metadata->regions[i]);
-    		SETFREE(&metadata->regions[i]);
+                arena_idx = metadata->regions[i].arena_idx;
+                    SETOCCUPIED(&metadata->regions[i]);
+                    SETFREE(&metadata->regions[i]);
 
- 		/* Memory has been reclaimed, so reset the memory region to be default == shareable */
-    		SETSHAREABLE(&metadata->regions[i]);
+                 /* Memory has been reclaimed, so reset the memory region to be default == shareable */
+                    SETSHAREABLE(&metadata->regions[i]);
 
-		assert(!ISALLOCATED(&metadata->regions[i]));
+                assert(!ISALLOCATED(&metadata->regions[i]));
 
-    		memset(metadata->regions[i].UUID, 0, MAXUUID);
-    		memset(metadata->regions[i].region_name, 0, MAXREGIONNAME);
+                    memset(metadata->regions[i].UUID, 0, MAXUUID);
+                    memset(metadata->regions[i].region_name, 0, MAXREGIONNAME);
 
-		if (metadata->regions[i].prev_idx != MAXREGIONS) {
-		    metadata->regions[metadata->regions[i].prev_idx].next_idx = metadata->regions[i].next_idx;
-		} else {
-		    metadata->arenas[arena_idx].allocated_region_idx = metadata->regions[i].next_idx;
-		}
+                if (metadata->regions[i].prev_idx != MAXREGIONS) {
+                    metadata->regions[metadata->regions[i].prev_idx].next_idx = metadata->regions[i].next_idx;
+                } else {
+                    metadata->arenas[arena_idx].allocated_region_idx = metadata->regions[i].next_idx;
+                }
 
                 if (metadata->regions[i].next_idx != MAXREGIONS) {
                     metadata->regions[metadata->regions[i].next_idx].prev_idx = metadata->regions[i].prev_idx;
                 }
 
-    		metadata->regions[i].prev_idx = MAXREGIONS;
-    		metadata->regions[i].next_idx = metadata->arenas[arena_idx].free_region_idx;
-		metadata->regions[metadata->arenas[arena_idx].free_region_idx].prev_idx = i;
-    		metadata->arenas[arena_idx].free_region_idx = i;
-    		metadata->arenas[arena_idx].free_space += GETREGIONSIZE(&metadata->regions[i]);
-                pal_coalesce(metadata, arena_idx, metadata->arenas[arena_idx].free_region_idx);
+                    metadata->regions[i].prev_idx = MAXREGIONS;
+                    metadata->regions[i].next_idx = metadata->arenas[arena_idx].free_region_idx;
+                    metadata->regions[metadata->arenas[arena_idx].free_region_idx].prev_idx = i;
+                    metadata->arenas[arena_idx].free_region_idx = i;
+                    metadata->arenas[arena_idx].free_space += GETREGIONSIZE(&metadata->regions[i]);
+                    pal_coalesce_int(metadata, arena_idx, metadata->arenas[arena_idx].free_region_idx);
 
-		break;
+                break;
           }
     }
 
     if (i == MAXREGIONS) {
-	printf("Region %s not found.\n", region_name);
+        printf("Region %s not found.\n", region_name);
     }
 
 exit:
     pal_unmap_metadata();
 
-    if (pal_wr_unlock_int(pd->memlckfd) == LCK_FAIL) {
-	pal_mem_trace("Failed to unlock.\n");
+    if (pal_wr_unlock(MEMLOCK) == LCK_FAIL) {
+        pal_mem_trace("Failed to unlock.\n");
     }
 }
 
@@ -746,7 +729,7 @@ pal_pa_access_allowed(u_int64_t pa, u_int64_t sz)
     u_int16_t i = 0;
     u_int8_t needs_check = 0;
 
-    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
+    if (pal_rd_lock(MEMLOCK) == LCK_FAIL) {
         return PAL_FAIL;
     }
 
@@ -758,7 +741,7 @@ pal_pa_access_allowed(u_int64_t pa, u_int64_t sz)
        /* TODO : Should a region be occupied for it to be range checked? */
        if (ISOCCUPIED(&metadata->regions[i])) { 
            /* Current region is the start region */ 
-	   print_region(&metadata->regions[i]);
+           print_region(&metadata->regions[i]);
 
            if (pa >= metadata->regions[i].start_addr &&
               pa < metadata->regions[i].start_addr + GETREGIONSIZE(&metadata->regions[i])) {
@@ -766,7 +749,7 @@ pal_pa_access_allowed(u_int64_t pa, u_int64_t sz)
            }
 
            /* Current region is the in-between region */
-	   if (!needs_check &&
+           if (!needs_check &&
               pa >= metadata->regions[i].start_addr &&
               (pa + sz) < metadata->regions[i].start_addr + GETREGIONSIZE(&metadata->regions[i])) {
                 needs_check = 1;
@@ -776,24 +759,24 @@ pal_pa_access_allowed(u_int64_t pa, u_int64_t sz)
            if (!needs_check &&
               (pa + sz) < metadata->regions[i].start_addr + GETREGIONSIZE(&metadata->regions[i]) &&
               (pa + sz) >= metadata->regions[i].start_addr) {
-	       needs_check = 1;	
-  	   }
+               needs_check = 1;        
+           }
 
            if (needs_check &&
-	       ISEXCL(&metadata->regions[i]) &&
+               ISEXCL(&metadata->regions[i]) &&
                strncmp(metadata->regions[i].UUID, pd->app_uuid, MAXUUID) != 0) {
                printf("Application[%s] does not have access permission for this region[%s].\n",
                          pd->app_uuid, metadata->regions[i].region_name);
                return PAL_FAIL;
-           }          	
+           }                  
        }
 
        needs_check = 0;
    }
 
    pal_unmap_metadata();
-   if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
-	pal_mem_trace("Failed to unlock.\n");
+   if (pal_rd_unlock(MEMLOCK) == LCK_FAIL) {
+        pal_mem_trace("Failed to unlock.\n");
    }
    return PAL_SUCCESS;
 }
@@ -801,7 +784,6 @@ pal_pa_access_allowed(u_int64_t pa, u_int64_t sz)
 void
 pal_print_application_regions(char *application_name)
 {
-    pal_data_t *pd = pal_get_data();
     pal_mem_metadata_t *metadata = NULL;
     u_int16_t i = 0;
     u_int64_t total_regions = 0;
@@ -809,7 +791,7 @@ pal_print_application_regions(char *application_name)
     u_int64_t total_shareable = 0;
     u_int64_t total_coherent_int = 0;
 
-    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
+    if (pal_rd_lock(MEMLOCK) == LCK_FAIL) {
         return;
     }
 
@@ -817,14 +799,14 @@ pal_print_application_regions(char *application_name)
     assert(metadata);
 
     for (i = 0; i < MAXREGIONS; i++) {
-	if (strncmp(metadata->regions[i].UUID, application_name, MAXUUID) == 0 &&
+        if (strncmp(metadata->regions[i].UUID, application_name, MAXUUID) == 0 &&
             ISALLOCATED(&metadata->regions[i])) {
-	    print_region(&metadata->regions[i]);
+            print_region(&metadata->regions[i]);
             total_regions++;
             total_allocated += GETREGIONSIZE(&metadata->regions[i]);
             
             if (ISSHAREABLE(&metadata->regions[i])) {
-		total_shareable += GETREGIONSIZE(&metadata->regions[i]);
+                total_shareable += GETREGIONSIZE(&metadata->regions[i]);
             }
 
             if (ISCOHERENT(&metadata->regions[i])) {
@@ -844,18 +826,17 @@ pal_print_application_regions(char *application_name)
     printf("\n======================================================================\n");
 
     pal_unmap_metadata();
-    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
-	pal_mem_trace("Failed to unlock.\n");
+    if (pal_rd_unlock(MEMLOCK) == LCK_FAIL) {
+        pal_mem_trace("Failed to unlock.\n");
     }
 }
 
 void
 pal_print_metadata(void) {
-    pal_data_t *pd = pal_get_data();
     pal_mem_metadata_t *metadata = NULL;
 
-    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
-	return;
+    if (pal_rd_lock(MEMLOCK) == LCK_FAIL) {
+        return;
     }
 
     metadata = pal_map_metadata_int();
@@ -863,13 +844,13 @@ pal_print_metadata(void) {
     print_metadata(metadata);
     pal_unmap_metadata();
 
-    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
+    if (pal_rd_unlock(MEMLOCK) == LCK_FAIL) {
         pal_mem_trace("Failed to unlock.\n");
     }
 }
 
 u_int64_t
-pal_mem_region_pa_int(char *region_name)
+pal_mem_region_pa(char *region_name)
 {
     u_int16_t i = 0;
     u_int64_t pa = 0;
@@ -881,8 +862,8 @@ pal_mem_region_pa_int(char *region_name)
         goto exit;
     }
 
-    if (pal_rd_lock_int(pd->memlckfd) == LCK_FAIL) {
-    	goto exit; 
+    if (pal_rd_lock(MEMLOCK) == LCK_FAIL) {
+            goto exit; 
     }
 
     metadata = (pal_mem_metadata_t*) pal_map_metadata_int();
@@ -906,8 +887,9 @@ pal_mem_region_pa_int(char *region_name)
 
 exit:
     pal_unmap_metadata();
-    if (pal_rd_unlock_int(pd->memlckfd) == LCK_FAIL) {
+    if (pal_rd_unlock(MEMLOCK) == LCK_FAIL) {
         printf("Failed to unlock.\n");
     }
     return pa; 
 }
+

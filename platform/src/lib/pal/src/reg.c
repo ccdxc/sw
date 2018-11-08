@@ -14,7 +14,7 @@
 #include <sys/mman.h>
 
 #include "pal.h"
-#include "pal_impl.h"
+#include "internal.h"
 
 u_int16_t
 pal_reg_rd16(const u_int64_t pa)
@@ -116,4 +116,5 @@ pal_reg_wr64_safe(const u_int64_t pa, const u_int64_t val)
 
     pal_reg_wr32w(pa, w, 2);
 }
+
 

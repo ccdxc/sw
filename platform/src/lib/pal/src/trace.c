@@ -14,7 +14,7 @@
 #include <sys/mman.h>
 
 #include "pal.h"
-#include "pal_impl.h"
+#include "internal.h"
 
 static void
 pr_trinit(pal_data_t *pd)
@@ -91,3 +91,4 @@ pal_mem_trace_control(const int on)
     }
     return was_on;
 }
+

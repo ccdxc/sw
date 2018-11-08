@@ -4,7 +4,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <assert.h>
-#include "pal_mm.h"
+#include "mm_int.h"
 
 int main() {
     u_int64_t top = 0;

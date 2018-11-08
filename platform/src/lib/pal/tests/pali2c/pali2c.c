@@ -18,6 +18,8 @@ int main(int argc, char *argv[])
     u_int8_t *fru_buffer = NULL;
     u_int8_t *qsfp_buffer = NULL;
     fru_buffer = malloc(FRU_SIZE);
+    int i = 0;
+
     if (fru_buffer == NULL) {
         printf("failed to allocate memory.\n");
         return FAIL;
@@ -27,7 +29,7 @@ int main(int argc, char *argv[])
     pal_fru_read(fru_buffer, FRU_SIZE, 1);
 
     printf("after read\n");
-    for (int i = 0; i < FRU_SIZE; i++)
+    for (i = 0; i < FRU_SIZE; i++)
         printf("%x", fru_buffer[i]);
     printf("\nreading done\n");
 
@@ -42,10 +44,11 @@ int main(int argc, char *argv[])
     pal_qsfp_read(qsfp_buffer, QSFP_READ_SIZE, 1, 1);
 
     printf("after read\n");
-    for (int i = 0; i < QSFP_READ_SIZE; i++)
+    for (i = 0; i < QSFP_READ_SIZE; i++)
         printf("%x", qsfp_buffer[i]);
     printf("\nreading done\n");
 
 
     return SUCCESS;
 }
+

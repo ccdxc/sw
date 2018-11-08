@@ -16,7 +16,7 @@
 #include <sys/stat.h>
 
 #include "pal.h"
-#include "pal_impl.h"
+#include "internal.h"
 
 #define PAL_REGSZ       (1 << 20)
 #define PAL_REGBASE     (~(PAL_REGSZ - 1))
@@ -199,3 +199,4 @@ pr_mem_unmap(void *va)
 
     free(pr);
 }
+
