@@ -31,7 +31,13 @@ struct phv_ p;
 #define r_sgl_tuple_no              r_num_blks      // SGL tuple number
 #define r_sgl_len_total             r_last_blk_no   // length total of all SGL tuple buffers
 
+/*
+ * Registers reuse, post update
+ */
+#define r_src_qaddr                 r_last_blk_len  // for SEQ_METRICS_TABLE_COMMIT
+ 
 %%
+    SEQ_METRICS_PARAMS()
 
 storage_seq_xts_comp_len_update:
 
@@ -166,6 +172,9 @@ endsw0:
     
 endif1:
 
-    wrfence.e
-    CLEAR_TABLE2 // delay slot
+    // Relaunch stats commit for table 2
+    SEQ_METRICS1_TABLE2_COMMIT(SEQ_KIVEC5XTS_SRC_QADDR)
     
+    wrfence.e
+    SEQ_METRICS_SET(len_updates)                        // delay slot
+

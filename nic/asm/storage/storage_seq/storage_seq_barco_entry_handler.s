@@ -43,6 +43,7 @@ storage_seq_barco_entry_handler:
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad,
                  dma_p2m_19_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
+   SEQ_METRICS_SET(next_db_rung)
 
    // Advance to a common stage for executing table lock read to get the
    // Barco ring pindex.

@@ -11,7 +11,9 @@ MODULE_PREREQS  = nicmgr.proto
 MODULE_SRCS     = ${BLD_PROTOGEN_DIR}/nicmgr/nicmgr.pb.cc \
                   ${BLD_PROTOGEN_DIR}/nicmgr/nicmgr.delphi.cc \
                   ${BLD_PROTOGEN_DIR}/nicmgr/metrics.pb.cc \
-                  ${BLD_PROTOGEN_DIR}/nicmgr/metrics.delphi.cc
+                  ${BLD_PROTOGEN_DIR}/nicmgr/metrics.delphi.cc \
+                  ${BLD_PROTOGEN_DIR}/nicmgr/accel_metrics.pb.cc \
+                  ${BLD_PROTOGEN_DIR}/nicmgr/accel_metrics.delphi.cc
 MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 MODULE_SOLIBS   = delphisdk
 include ${MKDEFS}/post.mk

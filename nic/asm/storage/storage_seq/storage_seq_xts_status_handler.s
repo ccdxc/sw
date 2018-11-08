@@ -21,6 +21,7 @@ struct phv_ p;
    .param storage_seq_barco_ring_pndx_read
    .param storage_seq_xts_comp_len_update
    .param storage_seq_xts_sgl_pdma_xfer
+   .param storage_seq_xts_db_intr_override
 
 storage_seq_xts_status_handler:
 
@@ -70,18 +71,10 @@ xts_error:
    // if next_db_en and !stop_chain_on_error then ring_db
    seq          c5, SEQ_KIVEC5XTS_NEXT_DB_EN, 1
    bbeq.c5      SEQ_KIVEC5XTS_STOP_CHAIN_ON_ERROR, 0, possible_barco_push
-   nop
+   SEQ_METRICS_SET(hw_op_errs)                          // delay slot
 
-   // cancel any barco push prep
-   SEQ_XTS_NEXT_DB_CANCEL(dma_p2m_19)
-   
-   // else if intr_en then complete any status DMA and 
-   // override doorbell to raising an interrupt
-   bbeq         SEQ_KIVEC5XTS_INTR_EN, 0, all_dma_complete
-   nop
-
-   PCI_SET_INTERRUPT_ADDR_DMA(SEQ_KIVEC5XTS_INTR_ADDR,
-                              dma_p2m_19)
+   // override doorbell to raising an interrupt if possible
+   LOAD_TABLE_NO_LKUP_PC_IMM(1, storage_seq_xts_db_intr_override)
    b            all_dma_complete
    nop
 

@@ -214,6 +214,7 @@ private:
 
     // Oher states
     uint32_t                    crypto_key_idx_base;
+    uint32_t                    num_crypto_keys_max;
     uint32_t                    seq_qid_init_high;  // highest seq qid initialized
 
     const struct lif_info       *nicmgr_lif_info;
@@ -236,6 +237,7 @@ private:
     enum DevcmdStatus _DevcmdCryptoKeyUpdate(void *req, void *req_data,
                                              void *resp, void *resp_data);
 
+    int SeqQueueMetricsInit(void);
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 
     int accel_ring_info_get_all(void);

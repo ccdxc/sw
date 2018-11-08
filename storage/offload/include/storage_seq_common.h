@@ -59,6 +59,19 @@ typedef enum {
 
 
 /**
+ * storage_seq_metrics_t - Storage Sequencer queue metrics
+ *   - Field types must meet delphi requirements
+ *   - HW control block size must be a power of 2. For example, if the total
+ *     number of metrics exceeds, say, 128 bytes, then the CB size must
+ *     be rounded up to the next power of 2, which is 256 bytes.
+ */
+typedef struct storage_seq_qmetrics {
+    uint64_t    metrics_0[8];
+    uint64_t    metrics_1[8];
+    uint64_t    metrics_2[8];
+}  __attribute__((packed)) storage_seq_qmetrics_t;
+
+/**
  * storage_seq_qstate_t - Storage Sequencer queue state
  */
 typedef struct storage_seq_qstate {
@@ -83,10 +96,29 @@ typedef struct storage_seq_qstate {
     uint8_t     enable;
     uint8_t     abort;
     uint8_t     desc1_next_pc_valid;
-    uint8_t     pad[26];
+    storage_seq_qgroup_t qgroup;
+    uint16_t    core_id;
+    uint8_t     pad[23];
     uint8_t     eop_p2m_rsvd;   // reserved for PHV2MEM eop cmd cancel write
+
+    storage_seq_qmetrics_t metrics;
+
 } __attribute__((packed)) storage_seq_qstate_t;
 
-static_assert (sizeof(storage_seq_qstate_t) == 64, "");
+/*
+ * HW control block (i.e., qstate) definitions
+ */
+#define HW_CB_SINGLE_SIZE                       64
+#define HW_CB_SINGLE_SHFT                       6
+
+#define HW_CB_MULTIPLE(cb_size_shft)            \
+    ((cb_size_shft) - HW_CB_SINGLE_SHFT + 1)
+
+#define HW_CB_MIN_MULTIPLE                      1
+
+#define STORAGE_SEQ_CB_SIZE                     256
+#define STORAGE_SEQ_CB_SIZE_SHFT                8       /* log2(STORAGE_SEQ_CB_SIZE) */
+
+static_assert (sizeof(storage_seq_qstate_t) == STORAGE_SEQ_CB_SIZE, "");
 
 #endif    // __STORAGE_SEQ_COMMON_H__

@@ -44,6 +44,7 @@ struct phv_ p;
     .param storage_seq_comp_aol_pad_handler
     .param storage_seq_comp_sgl_pdma_xfer
     .param storage_seq_comp_sgl_pad_only_xfer
+    .param storage_seq_comp_db_intr_override
 
 storage_seq_comp_status_handler:
     
@@ -109,6 +110,7 @@ possible_sgl_padding:
     // Given a vector of SGLs, each prefilled with exactly one block addr and len,
     // i.e., addr0/len0 specifies one block of data, find the last applicable SGL
     // and apply padding.
+    SEQ_METRICS_SET(sgl_pad_reqs)
    
     // Tell possible_sgl_pdma_xfer that padding is enabled
     beq         r_pad_len, r0, possible_sgl_pdma_xfer
@@ -260,18 +262,10 @@ comp_error:
     // If next_db_en and !stop_chain_on_error then ring_db
     seq         c5, SEQ_KIVEC5_NEXT_DB_EN, 1
     bbeq.c5     SEQ_KIVEC5_STOP_CHAIN_ON_ERROR, 0, possible_chain_alt_desc
-    nop
+    SEQ_METRICS_SET(hw_op_errs)                        // delay slot
 
-    // cancel any barco push prep
-    SEQ_COMP_NEXT_DB_CANCEL(dma_p2m_19)
-   
-    // else if intr_en then complete any status DMA and 
-    // override doorbell to raising an interrupt
-    bbeq        SEQ_KIVEC5_INTR_EN, 0, all_dma_complete
-    nop
-
-    PCI_SET_INTERRUPT_ADDR_DMA(SEQ_KIVEC5_INTR_ADDR,
-                               dma_p2m_19)
+    // override doorbell to raising an interrupt if possible
+    LOAD_TABLE_NO_LKUP_PC_IMM(1, storage_seq_comp_db_intr_override)
     b           all_dma_complete
     nop
 
@@ -285,6 +279,7 @@ possible_chain_alt_desc:
                 SEQ_KIVEC4_BARCO_DESC_SIZE      // delay slot
     add         r_alt_desc_addr, r_alt_desc_addr, SEQ_KIVEC4_BARCO_DESC_ADDR
     phvwr       p.seq_kivec4_barco_desc_addr, r_alt_desc_addr
+    SEQ_METRICS_SET(alt_descs_taken)
     
 possible_sgl_pdma_alt_src:
 
@@ -293,6 +288,7 @@ possible_sgl_pdma_alt_src:
 
     bbeq        SEQ_KIVEC5_SGL_PDMA_ALT_SRC_ON_ERROR, 0, possible_barco_push
     nop
+    SEQ_METRICS_SET(alt_bufs_taken)
     b           sgl_pdma_xfer_full
     phvwri      p.seq_kivec8_alt_buf_addr_en, 1         // delay slot
     
@@ -302,6 +298,7 @@ pdma_pad_only_error:
    // (the sgl_pad_en operation provides the necessary SGL
    // for the calculation and resulting PDMA transfer of the pad data)
    
+   SEQ_METRICS_SET(sgl_pad_only_errs)
    SEQ_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()
    b            possible_barco_push
    nop

@@ -20,6 +20,10 @@
 #define tx_table_s4_t1          s4_tbl1
 #define tx_table_s4_t2          s4_tbl2
 
+#define tx_table_s5_t1          s5_tbl1
+#define tx_table_s5_t2          s5_tbl2
+#define tx_table_s5_t3          s5_tbl3
+
 #define tx_table_s0_t0_action   seq_q_state_pop
 
 #define tx_table_s1_t0_action   seq_barco_entry_handler
@@ -42,6 +46,12 @@
 #define tx_table_s3_t3_action   seq_comp_aol_pad_handler
 
 #define tx_table_s4_t0_action   seq_barco_chain_action
+#define tx_table_s4_t1_action   seq_comp_db_intr_override
+#define tx_table_s4_t1_action1  seq_xts_db_intr_override
+
+#define tx_table_s5_t1_action   seq_metrics0_commit
+#define tx_table_s5_t2_action   seq_metrics1_commit
+#define tx_table_s5_t3_action   seq_metrics2_commit
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -86,6 +96,10 @@ metadata seq_kivec6_t seq_kivec6;
 metadata seq_kivec7xts_t seq_kivec7xts;
 @pragma pa_header_union ingress common_t1_s2s
 metadata seq_kivec8_t seq_kivec8;
+@pragma pa_header_union ingress to_stage_5
+metadata seq_kivec9_t seq_kivec9;
+@pragma pa_header_union ingress to_stage_4
+metadata seq_kivec10_t seq_kivec10;
 
 // Push/Pop doorbells
 @pragma dont_trim
@@ -303,6 +317,12 @@ metadata seq_kivec7xts_t seq_kivec7xts_scratch;
 metadata seq_kivec8_t seq_kivec8_scratch;
 
 @pragma scratch_metadata
+metadata seq_kivec9_t seq_kivec9_scratch;
+
+@pragma scratch_metadata
+metadata seq_kivec10_t seq_kivec10_scratch;
+
+@pragma scratch_metadata
 metadata seq_barco_entry_t seq_barco_entry_scratch;
 
 @pragma scratch_metadata
@@ -340,6 +360,15 @@ metadata barco_aol_t barco_aol_scratch;
 
 @pragma scratch_metadata
 metadata cp_desc_t cp_desc_scratch;
+
+@pragma scratch_metadata
+metadata seq_q_state_metrics0_t seq_metrics0;
+
+@pragma scratch_metadata
+metadata seq_q_state_metrics1_t seq_metrics1;
+
+@pragma scratch_metadata
+metadata seq_q_state_metrics2_t seq_metrics2;
 
 /*****************************************************************************
  * Storage Sequencer BEGIN
@@ -520,7 +549,6 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_kivec4.barco_pndx_size, seq_comp_status_desc0_scratch.barco_pndx_size);
   modify_field(seq_kivec4.barco_ring_size, seq_comp_status_desc0_scratch.barco_ring_size);
   modify_field(seq_kivec4.barco_num_descs, seq_comp_status_desc0_scratch.barco_num_descs);
-  modify_field(seq_kivec5.intr_addr, seq_comp_status_desc0_scratch.intr_addr);
   modify_field(seq_kivec5.status_dma_en, seq_comp_status_desc0_scratch.status_dma_en);
   modify_field(seq_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
   modify_field(seq_kivec5.intr_en, seq_comp_status_desc0_scratch.intr_en);
@@ -606,7 +634,6 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec5.pad_buf_addr, seq_comp_status_desc1_scratch.pad_buf_addr);
   modify_field(seq_kivec5.data_len, seq_comp_status_desc1_scratch.data_len);
-  modify_field(seq_kivec3.pad_boundary_shift, seq_comp_status_desc1_scratch.pad_boundary_shift);
   modify_field(seq_kivec4.pad_boundary_shift, seq_comp_status_desc1_scratch.pad_boundary_shift);
   modify_field(seq_kivec5.stop_chain_on_error, seq_comp_status_desc1_scratch.stop_chain_on_error);
   modify_field(seq_kivec5.data_len_from_desc, seq_comp_status_desc1_scratch.data_len_from_desc);
@@ -686,6 +713,17 @@ action seq_barco_chain_action(p_ndx) {
   // Doorbell has already been setup
 
   // Exit the pipeline here 
+}
+
+/*****************************************************************************
+ *  seq_comp_db_intr_override
+ *****************************************************************************/
+
+action seq_comp_db_intr_override() {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
+  SEQ_KIVEC10_USE(seq_kivec10_scratch, seq_kivec10)
 }
 
 /*****************************************************************************
@@ -819,19 +857,27 @@ action seq_comp_sgl_pad_only_xfer(addr0, len0, rsvd0,
   modify_field(barco_sgl_scratch.rsvd, rsvd);
 
   if (seq_kivec3.pad_len > 0) {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_2, dma_m2m_3, 
-                             seq_kivec5.pad_buf_addr, 0,
-                             barco_sgl_scratch.addr0 + 
-                               ((1 << seq_kivec3.pad_boundary_shift) - seq_kivec3.pad_len),
-                             0, seq_kivec3.pad_len,
-                             0, 0, 0)
-  }
-  if (barco_sgl_scratch.len1 > 0) {
-    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_2, dma_m2m_3, 
-                             barco_sgl_scratch.addr1, 0,
-                             barco_sgl_scratch.addr0 + barco_sgl_scratch.len0,
-                             0, barco_sgl_scratch.len1,
-                             0, 0, 0)
+    if (seq_kivec3.sgl_tuple_no == 0) {
+      DMA_COMMAND_MEM2MEM_FILL(dma_m2m_4, dma_m2m_5, 
+                               seq_kivec5.pad_buf_addr, 0,
+                               barco_sgl_scratch.addr0 +  seq_kivec3.last_blk_len,
+                               0, seq_kivec3.pad_len,
+                               0, 0, 0)
+    }
+    if (seq_kivec3.sgl_tuple_no == 1) {
+      DMA_COMMAND_MEM2MEM_FILL(dma_m2m_4, dma_m2m_5, 
+                               seq_kivec5.pad_buf_addr, 0,
+                               barco_sgl_scratch.addr1 +  seq_kivec3.last_blk_len,
+                               0, seq_kivec3.pad_len,
+                               0, 0, 0)
+    }
+    if (seq_kivec3.sgl_tuple_no == 2) {
+      DMA_COMMAND_MEM2MEM_FILL(dma_m2m_4, dma_m2m_5, 
+                               seq_kivec5.pad_buf_addr, 0,
+                               barco_sgl_scratch.addr2 +  seq_kivec3.last_blk_len,
+                               0, seq_kivec3.pad_len,
+                               0, 0, 0)
+    }
   }
 
   // Exit the pipeline here
@@ -897,7 +943,6 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_kivec4.barco_ring_size, seq_xts_status_desc0_scratch.barco_ring_size);
   modify_field(seq_kivec4.barco_num_descs, seq_xts_status_desc0_scratch.barco_num_descs);
   modify_field(seq_kivec7xts.comp_desc_addr, seq_xts_status_desc0_scratch.next_db_data);
-  modify_field(seq_kivec5xts.intr_addr, seq_xts_status_desc0_scratch.intr_addr);
   modify_field(seq_kivec5xts.status_dma_en, seq_xts_status_desc0_scratch.status_dma_en);
   modify_field(seq_kivec5xts.next_db_en, seq_xts_status_desc0_scratch.next_db_en);
   modify_field(seq_kivec5xts.intr_en, seq_xts_status_desc0_scratch.intr_en);
@@ -956,6 +1001,7 @@ action seq_xts_status_desc1_handler(comp_sgl_src_addr, sgl_pdma_dst_addr, decr_b
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC5XTS_USE(seq_kivec5xts_scratch, seq_kivec5xts)
+  SEQ_KIVEC8_USE(seq_kivec8_scratch, seq_kivec8)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_xts_status_desc1_scratch.comp_sgl_src_addr, comp_sgl_src_addr);
@@ -1016,6 +1062,7 @@ action seq_xts_sgl_pdma_xfer(addr0, len0, addr1, len1,
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC3XTS_USE(seq_kivec3xts_scratch, seq_kivec3xts)
   SEQ_KIVEC5XTS_USE(seq_kivec5xts_scratch, seq_kivec5xts)
+  SEQ_KIVEC8_USE(seq_kivec8_scratch, seq_kivec8)
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_xts_sgl_scratch.addr0, addr0);
@@ -1122,5 +1169,70 @@ action seq_xts_comp_len_update(cksum, data_len, version) {
   modify_field(seq_comp_hdr.cksum, cksum);
   modify_field(seq_comp_hdr.data_len, data_len);
   modify_field(seq_comp_hdr.version, version);
+}
+
+/*****************************************************************************
+ *  seq_xts_db_intr_override
+ *****************************************************************************/
+
+action seq_xts_db_intr_override() {
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  SEQ_KIVEC5XTS_USE(seq_kivec5xts_scratch, seq_kivec5xts)
+  SEQ_KIVEC10_USE(seq_kivec10_scratch, seq_kivec10)
+}
+
+/*****************************************************************************
+ *  seq_metrics0_commit : Update and commit metrics0 to qstate.
+ *****************************************************************************/
+@pragma little_endian interrupts_raised next_db_rung descs_processed descs_aborted status_pdma_xfers hw_desc_xfers hw_batch_errs hw_op_errs
+action seq_metrics0_commit(interrupts_raised, next_db_rung, descs_processed,
+                           descs_aborted, status_pdma_xfers, hw_desc_xfers,
+			   hw_batch_errs, hw_op_errs) {
+			   
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  SEQ_KIVEC9_USE(seq_kivec9_scratch, seq_kivec9)
+  
+  modify_field(seq_metrics0.interrupts_raised, interrupts_raised);
+  modify_field(seq_metrics0.next_db_rung, next_db_rung);
+  modify_field(seq_metrics0.descs_processed, descs_processed);
+  modify_field(seq_metrics0.descs_aborted, descs_aborted);
+  modify_field(seq_metrics0.status_pdma_xfers, status_pdma_xfers);
+  modify_field(seq_metrics0.hw_desc_xfers, hw_desc_xfers);
+  modify_field(seq_metrics0.hw_batch_errs, hw_batch_errs);
+  modify_field(seq_metrics0.hw_op_errs, hw_op_errs);
+}
+
+/*****************************************************************************
+ *  seq_metrics1_commit : Update and commit metrics1 to qstate.
+ *****************************************************************************/
+@pragma little_endian aol_pad_reqs sgl_pad_reqs sgl_pdma_xfers sgl_pdma_errs sgl_pad_only_xfers sgl_pad_only_errs alt_descs_taken alt_bufs_taken
+action seq_metrics1_commit(aol_pad_reqs, sgl_pad_reqs, sgl_pdma_xfers,
+                           sgl_pdma_errs, sgl_pad_only_xfers, sgl_pad_only_errs,
+			   alt_descs_taken, alt_bufs_taken) {
+			   
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  SEQ_KIVEC9_USE(seq_kivec9_scratch, seq_kivec9)
+  
+  modify_field(seq_metrics1.aol_pad_reqs, aol_pad_reqs);
+  modify_field(seq_metrics1.sgl_pad_reqs, sgl_pad_reqs);
+  modify_field(seq_metrics1.sgl_pdma_xfers, sgl_pdma_xfers);
+  modify_field(seq_metrics1.sgl_pdma_errs, sgl_pdma_errs);
+  modify_field(seq_metrics1.sgl_pad_only_xfers, sgl_pad_only_xfers);
+  modify_field(seq_metrics1.sgl_pad_only_errs, sgl_pad_only_errs);
+  modify_field(seq_metrics1.alt_descs_taken, alt_descs_taken);
+  modify_field(seq_metrics1.alt_bufs_taken, alt_bufs_taken);
+}
+
+/*****************************************************************************
+ *  seq_metrics2_commit : Update and commit metrics2 to qstate.
+ *****************************************************************************/
+@pragma little_endian len_updates
+action seq_metrics2_commit(len_updates) {
+			   
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  SEQ_KIVEC9_USE(seq_kivec9_scratch, seq_kivec9)
+  
+  modify_field(seq_metrics2.len_updates, len_updates);
 }
 

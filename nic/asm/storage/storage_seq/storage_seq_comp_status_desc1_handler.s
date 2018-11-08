@@ -14,17 +14,20 @@ struct phv_ p;
 /*
  * Registers usage:
  */
+#define r_src_qaddr                 r7  // for SEQ_METRICS_TABLE_COMMIT
 
 %%
+    SEQ_METRICS_PARAMS()
 
 storage_seq_comp_status_desc1_handler_start:
 
-    CLEAR_TABLE1
+    // Relaunch metrics commit for table 1
+    SEQ_METRICS0_TABLE1_COMMIT(SEQ_KIVEC5_SRC_QADDR)
+
     phvwrpair	p.seq_kivec5_data_len, d.data_len, \
                 p.{seq_kivec5_stop_chain_on_error...seq_kivec5_chain_alt_desc_on_error}, \
     	        d.{stop_chain_on_error...chain_alt_desc_on_error}
-    phvwrpair	p.seq_kivec3_comp_buf_addr, d.comp_buf_addr, \
-                p.seq_kivec3_pad_boundary_shift, d.pad_boundary_shift
+    phvwr	p.seq_kivec3_comp_buf_addr, d.comp_buf_addr
 
 if0:
     bbne        d.aol_pad_en, 1, else0

@@ -94,7 +94,8 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   return 0;
 }
 
-int setup_seq_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
+int setup_seq_q_state(int src_lif, int src_qtype,
+                      storage_seq_qgroup_t qgroup, int src_qid, char *pgm_bin,
                       uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
                       uint64_t base_addr, uint64_t entry_size,
                       char *desc1_pgm_bin) {
@@ -128,6 +129,7 @@ int setup_seq_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   q_state.entry_size = htons(entry_size);
   q_state.desc0_next_pc = htonl(next_pc);
   q_state.enable = true;
+  q_state.qgroup = qgroup;
 
   if (desc1_pgm_bin) {
     if (hal_if::get_pgm_base_addr(desc1_pgm_bin, &next_pc) < 0) {
@@ -141,7 +143,7 @@ int setup_seq_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
 
   //utils::dump(q_state);
 
-  if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, (uint8_t *)&q_state) < 0) {
+  if (hal_if::set_lif_qstate_size(src_lif, src_qtype, src_qid, (uint8_t *)&q_state, sizeof(q_state)) < 0) {
     printf("Failed to set lif_qstate addr \n");
     return -1;
   }

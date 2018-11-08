@@ -1090,6 +1090,7 @@ static int sonic_lif_seq_q_init(struct queue *q)
 			.wring_size = ilog2(q->num_descs),
 			.wring_base = (dma_addr_t)
 				sonic_hostpa_to_devpa((uint64_t) q->base_pa),
+			.core_id = q->pc_res->core_id,
 		},
 	};
 	int err;

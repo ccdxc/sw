@@ -17,6 +17,15 @@ struct s1_tbl_k k;
 struct s1_tbl_seq_comp_status_desc0_handler_d d;
 struct phv_ p;
 
+/*
+ * Registers usage
+ * CAUTION: r1 is also implicitly used by LOAD_TABLEx_FOR_ADDR_PC_IMM()
+ *          r7 is also implicitly used by SEQUENCER_DOORBELL_RING() and
+ *             PCI_SET_INTERRUPT_ADDR_DMA()
+ */
+#define r_status_src                r3  // source status address
+#define r_status_len                r4  // status transfer length
+
 %%
    .param storage_seq_comp_status_handler
 
@@ -29,19 +38,14 @@ storage_seq_comp_status_desc0_handler_start:
    // Note: if a compression error arises and status_dma_en is set,
    // interrupts (if set) will also be raised
    PCI_SET_INTERRUPT_DATA()
-   phvwrpair	p.seq_kivec5_intr_addr, d.intr_addr, \
-                p.{seq_kivec5_status_dma_en...seq_kivec5_next_db_action_barco_push}, \
+   phvwr        p.{seq_kivec5_status_dma_en...seq_kivec5_next_db_action_barco_push}, \
    	        d.{status_dma_en...next_db_action_barco_push}
-
-   // When interrupt is not enabled, use seq_kivec5_intr_addr to hold qstate
-   // address which might be needed when a Barco push gets canceled.
-   seq          c1, d.intr_en, 0
    bbeq         d.next_db_en, 0, intr_check
-   phvwr.c1     p.seq_kivec5_intr_addr[33:0], SEQ_KIVEC1_SRC_QADDR // delay slot
+   phvwr	p.seq_kivec10_intr_addr, d.intr_addr    // delay slot
 
    // if doorbell is actually a Barco push action, handle accordingly
    bbeq		d.next_db_action_barco_push, 0, next_db_ring
-   nop
+   SEQ_METRICS_SET(next_db_rung)                        // delay slot
                 
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
                             d.barco_pndx_addr, dma_p2m_19)
@@ -54,18 +58,19 @@ storage_seq_comp_status_desc0_handler_start:
                 d.{barco_pndx_shadow_addr...barco_num_descs}
    phvwr        p.seq_kivec4_barco_desc_addr, d.next_db_data
 
-status_dma_setup:
+possible_status_dma:
 
    // Set up status xfer if applicable
    bbeq         d.status_dma_en, 0, tbl_load
-   add          r3, r0, d.status_len    // delay slot
+   add          r_status_len, r0, d.status_len    // delay slot
    
    // Set up the status DMA:
-   add          r4, d.status_addr0, d.status_offset0
-   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4,
-                            r3, dma_m2m_0)
+   add          r_status_src, d.status_addr0, d.status_offset0
+   DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r_status_src,
+                            r_status_len, dma_m2m_0)
    DMA_MEM2MEM_NO_LIF_SETUP(CAPRI_DMA_M2M_TYPE_DST, d.status_addr1, 
-                            r3, dma_m2m_1)
+                            r_status_len, dma_m2m_1)
+   SEQ_METRICS_SET(status_pdma_xfers)
    
 tbl_load:
    // Setup the start and end DMA pointers
@@ -75,18 +80,29 @@ tbl_load:
 
 intr_check:
    // Check if interrupt is enabled
-   bbeq		d.intr_en, 0, status_dma_setup
+   bbeq		d.intr_en, 0, possible_status_dma
    nop
 
+intr_raise:
    // Raise interrupt based on addr/data provided in descriptor
    PCI_SET_INTERRUPT_ADDR_DMA(d.intr_addr, dma_p2m_19)
-   b            status_dma_setup
-   nop
+   b            possible_status_dma
+   SEQ_METRICS_SET(interrupts_raised)                  // delay slot
 
 next_db_ring:
                             
-   // Ring the sequencer doorbell based on addr/data provided in the descriptor
+   // Upon arrival at this label, d.next_db_en is true and d.next_db_action_barco_push
+   // is false, which means the TxDMA descriptors normally reserved for Barco push are
+   // free for use. Taking advantage of this, we should be able to generate both
+   // doorbell as well as interrupt.
+if0:   
+   bbeq		d.intr_en, 0, endif0
+   nop
+   SEQUENCER_DOORBELL_RING_NO_FENCE(dma_p2m_17)
+   b            intr_raise
+   nop
+endif0:   
    SEQUENCER_DOORBELL_RING(dma_p2m_19)
-   b            status_dma_setup
+   b            possible_status_dma
    nop
 
