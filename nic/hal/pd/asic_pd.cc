@@ -18,7 +18,7 @@ using sdk::lib::PAL_RET_OK;
 using sdk::types::platform_type_t;
 
 // asic model's cfg port socket descriptor
-static std::atomic<bool> g_asic_rw_ready_;
+static bool g_asic_rw_ready_;
 
 #define HAL_ASIC_RW_Q_SIZE                           128
 #define HAL_ASIC_RW_OPERATION_MEM_READ               0
@@ -46,7 +46,7 @@ typedef struct asic_rw_port_entry_ {
 //------------------------------------------------------------------------------
 typedef struct asic_rw_entry_ {
     uint8_t              opn;        // operation requested to perform
-    std::atomic<bool>    done;       // TRUE if thread performed operation
+    bool                 done;       // TRUE if thread performed operation
     hal_ret_t            status;     // result status of operation requested
     uint64_t             addr;       // address to write to or read from
     uint32_t             len;        // length of data to read or write
@@ -59,8 +59,8 @@ typedef struct asic_rw_entry_ {
 // read/write operations by HAL thread, thus avoiding locking altogether
 //------------------------------------------------------------------------------
 typedef struct asic_rw_queue_s {
-    std::atomic<uint32_t>    nentries;    // no. of entries in the queue
-    std::atomic<uint16_t>    pindx;       // producer index
+    uint32_t                 nentries;    // no. of entries in the queue
+    uint16_t                 pindx;       // producer index
     uint16_t                 cindx;       // consumer index
     asic_rw_entry_t          entries[HAL_ASIC_RW_Q_SIZE];    // entries
 } asic_rw_queue_t;
@@ -102,7 +102,7 @@ is_asic_rw_thread (void)
 bool
 is_asic_rw_ready (void)
 {
-    return g_asic_rw_ready_.load();
+    return HAL_ATOMIC_LOAD_BOOL(&g_asic_rw_ready_);
 }
 
 //------------------------------------------------------------------------------
@@ -133,11 +133,8 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
     // move the producer index to next slot.
     // consumer is unaware of the blocking/non-blocking call and always
     // moves to the next slot.
-    pindx = g_asic_rw_workq[curr_tid].pindx.load();
-    while(!g_asic_rw_workq[curr_tid].pindx.compare_exchange_weak(pindx, 
-                                       (pindx+1)%HAL_ASIC_RW_Q_SIZE,
-                                       std::memory_order_release,
-                                       std::memory_order_relaxed));
+    while(!HAL_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
+                                       (pindx+1)%HAL_ASIC_RW_Q_SIZE));
 
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
     rw_entry->opn = opn;
@@ -145,11 +142,11 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
     rw_entry->addr = addr;
     rw_entry->len = len;
     rw_entry->data = data;
-    rw_entry->done.store(false);
+    HAL_ATOMIC_STORE_BOOL(&rw_entry->done, false);
 
-    g_asic_rw_workq[curr_tid].nentries.fetch_add(1, std::memory_order_relaxed);
+    HAL_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
 
-    while (rw_entry->done.load() == false) {
+    while (HAL_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
         if (curr_thread->can_yield()) {
             pthread_yield();
         }
@@ -218,7 +215,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
                uint32_t len, asic_write_mode_t mode)
 {
     hal_ret_t          ret;
-    uint16_t           pindx;
+    uint16_t           pindx = 0;
     sdk::lib::thread   *curr_thread = hal::hal_get_current_thread();
     uint32_t           curr_tid = curr_thread->thread_id();
     asic_rw_entry_t    *rw_entry;
@@ -228,7 +225,9 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
                       "data {:#x}, len {}", curr_tid, addr, data, len)
         return HAL_RET_HW_PROG_ERR;
     }
-    pindx = g_asic_rw_workq[curr_tid].pindx;
+
+    while(!HAL_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
+                                       (pindx+1)%HAL_ASIC_RW_Q_SIZE));
 
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
     rw_entry->opn = opn;
@@ -236,12 +235,12 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
     rw_entry->addr = addr;
     rw_entry->len = len;
     rw_entry->data = data;
-    rw_entry->done.store(false);
+    HAL_ATOMIC_STORE_BOOL(&rw_entry->done, false);
 
-    g_asic_rw_workq[curr_tid].nentries++;
+    HAL_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
 
     if (mode == ASIC_WRITE_MODE_BLOCKING) {
-        while (rw_entry->done.load() == false) {
+        while (HAL_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
             if (curr_thread->can_yield()) {
                 pthread_yield();
             }
@@ -249,14 +248,6 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
         ret = rw_entry->status;
     } else {
         ret = HAL_RET_OK;
-    }
-
-    // move the producer index to next slot.
-    // consumer is unaware of the blocking/non-blocking call and always
-    // moves to the next slot.
-    g_asic_rw_workq[curr_tid].pindx++;
-    if (g_asic_rw_workq[curr_tid].pindx >= HAL_ASIC_RW_Q_SIZE) {
-        g_asic_rw_workq[curr_tid].pindx = 0;
     }
 
     return ret;
@@ -377,7 +368,9 @@ asic_port_cfg (uint32_t port_num,
         return HAL_RET_HW_PROG_ERR;
     }
 
-    pindx = g_asic_rw_workq[curr_tid].pindx;
+    while(!HAL_ATOMIC_COMPARE_EXCHANGE_WEAK(&g_asic_rw_workq[curr_tid].pindx, &pindx,
+                                       (pindx+1)%HAL_ASIC_RW_Q_SIZE));
+
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
 
     rw_entry->opn = (uint8_t)op;
@@ -390,24 +383,16 @@ asic_port_cfg (uint32_t port_num,
     port_entry->num_lanes = num_lanes;
     port_entry->val       = val;
 
-    rw_entry->done.store(false);
+    HAL_ATOMIC_STORE_BOOL(&rw_entry->done, false);
 
-    g_asic_rw_workq[curr_tid].nentries++;
+    HAL_ATOMIC_FETCH_ADD(&g_asic_rw_workq[curr_tid].nentries, 1);
 
-    while (rw_entry->done.load() == false) {
+    while (HAL_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
         if (curr_thread->can_yield()) {
             pthread_yield();
         }
     }
     ret = rw_entry->status;
-
-    // move the producer index to next slot.
-    // consumer is unaware of the blocking/non-blocking call and always
-    // moves to the next slot.
-    g_asic_rw_workq[curr_tid].pindx++;
-    if (g_asic_rw_workq[curr_tid].pindx >= HAL_ASIC_RW_Q_SIZE) {
-        g_asic_rw_workq[curr_tid].pindx = 0;
-    }
 
     return ret;
 }
@@ -536,14 +521,15 @@ asic_rw_loop (void *ctxt)
             // populate the results
             rw_entry->status =
                 IS_PAL_API_SUCCESS(rv) ? HAL_RET_OK : HAL_RET_ERR;
-            rw_entry->done.store(true);
+            HAL_ATOMIC_STORE_BOOL(&rw_entry->done, true);
 
             // advance to next entry in the queue
             g_asic_rw_workq[qid].cindx++;
             if (g_asic_rw_workq[qid].cindx >= HAL_ASIC_RW_Q_SIZE) {
                 g_asic_rw_workq[qid].cindx = 0;
             }
-            g_asic_rw_workq[qid].nentries--;
+
+            HAL_ATOMIC_FETCH_SUB(&g_asic_rw_workq[qid].nentries, 1);
             work_done = true;
         }
         curr_thread->punch_heartbeat();
@@ -629,7 +615,7 @@ asic_rw_start (void *ctxt)
     asic_rw_init(hal_cfg);
 
     // announce asic-rw thread as ready
-    g_asic_rw_ready_.store(true);
+    HAL_ATOMIC_STORE_BOOL(&g_asic_rw_ready_, true);
 
     // keep polling the queue and serve the read/write requests
     asic_rw_loop(ctxt);

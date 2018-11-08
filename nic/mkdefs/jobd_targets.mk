@@ -1,5 +1,9 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
-JOBD_PREREQS:= package
+.PHONY: jobd/runner/core_count_check
+jobd/runner/core_count_check:
+	${NICDIR}/tools/core_count_check.sh
+
+JOBD_PREREQS:= jobd/runner/core_count_check | package
 
 .PHONY: ${JOBD_PREREQS}
 jobd/codesync: all

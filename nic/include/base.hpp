@@ -189,10 +189,16 @@ do {                                                       \
 #define HAL_ATOMIC_DEC_UINT32(ptr, val)      __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
 #define HAL_ATOMIC_STORE_UINT32(ptr, vptr)   __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
 #define HAL_ATOMIC_LOAD_UINT32(ptr, vptr)    __atomic_load(ptr, vptr, __ATOMIC_SEQ_CST)
-#define HAL_ATOMIC_LOAD_INC_UINT32(ptr, val) __atomic_fetch_add(ptr, val, __ATOMIC_SEQ_CST) 
 #define HAL_ATOMIC_INC_UINT64(ptr, val)      __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
 #define HAL_ATOMIC_DEC_UINT64(ptr, val)      __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
 #define HAL_ATOMIC_STORE_UINT64(ptr, vptr)   __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_FETCH_ADD(ptr, val)       __atomic_fetch_add(ptr, val, __ATOMIC_RELAXED)
+#define HAL_ATOMIC_FETCH_SUB(ptr, val)       __atomic_fetch_sub(ptr, val, __ATOMIC_RELAXED)
+#define HAL_ATOMIC_LOAD_BOOL(ptr)            __atomic_load_n(ptr, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_STORE_BOOL(ptr, val)      __atomic_store_n(ptr, val, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_LOAD_UINT16(ptr)          __atomic_load_n(ptr, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_COMPARE_EXCHANGE_WEAK(ptr, vptr, val) \
+   __atomic_compare_exchange_n(ptr, vptr, val, true, __ATOMIC_RELEASE, __ATOMIC_RELAXED)
 
 #define HAL_ARRAY_SIZE(arr)                (sizeof((arr))/sizeof((arr)[0]))
 
