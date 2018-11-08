@@ -50,15 +50,19 @@ RDMA="$TOP/platform/src/third-party/rdma"
 # Package will identify version of sources
 report_version() {
   cd "$1"
-  echo -n 'HEAD: '
-  git log --oneline -n1 HEAD
-  echo -n '@{u}: '
-  git log --oneline -n1 @{u}
-  echo '### commits not upstream ###'
-  git log --oneline @{u}..
-  echo '### git status ###'
-  git status -uno
-  cd - > /dev/null
+  if ! git status &> /dev/null ; then
+    echo 'Unable to identify version from git'
+  else
+    echo -n 'HEAD: '
+    git log --oneline -n1 HEAD
+    echo -n '@{u}: '
+    git log --oneline -n1 @{u}
+    echo '### commits not upstream ###'
+    git log --oneline @{u}..
+    echo '### git status ###'
+    git status -uno
+    cd - > /dev/null
+  fi
 }
 
 # Always start clean
@@ -68,6 +72,11 @@ mkdir -p "$GEN_DIR"
 # Initialize gen dir with packaged scripts like build.sh
 rsync -r --delete --delete-excluded \
   "$SCRIPTS_SRC/" "$GEN_DIR"
+
+# Copy other useful scripts from elsewhere
+rsync -r --delete --delete-excluded \
+  "$TOP/nic/tools/rdmactl.py" \
+  "$GEN_DIR/"
 
 # Copy linux driver sources to gen dir
 report_version "$DRIVERS_SRC" > "$GEN_DIR/version.drivers"
