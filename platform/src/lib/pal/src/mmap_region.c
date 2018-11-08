@@ -21,8 +21,6 @@
 #define PAL_REGSZ       (1 << 20)
 #define PAL_REGBASE     (~(PAL_REGSZ - 1))
 
-static pal_mmap_region_t *pr_recent = NULL;
-
 static u_int64_t
 pr_align(const u_int64_t pa)
 {
@@ -162,17 +160,7 @@ pr_ptov(const u_int64_t pa, const u_int64_t sz, u_int8_t access)
 {
     pal_mmap_region_t *pr = NULL;
 
-    if (pr_recent != NULL &&
-        pr_recent-> mapped &&
-        pa >= pr_recent->pa &&
-        pa < pr_recent->pa + pr_recent->sz &&
-        pa + sz < pr_recent->pa + pr_recent->sz) { 
-        pr = pr_recent;
-    } else {
-        pr = pr_getpa(pa, sz, access);
-        /*Cache the recent pal_mmap_region_t result */
-        pr_recent = pr;
-    }
+    pr = pr_getpa(pa, sz, access);
 
     if (pr == NULL) {
         return NULL;
