@@ -37,7 +37,7 @@ func (agent *Service) init() {
 	agent.logger.Out = io.MultiWriter(file, os.Stdout)
 
 	if _, err := os.Stat(common.DstIotaEntitiesDir); err != nil || !os.IsNotExist(err) {
-	    agent.logger.Println("Creating directory for entities...")
+		agent.logger.Println("Creating directory for entities...")
 		os.Mkdir(common.DstIotaEntitiesDir, 0755)
 		//os.Chmod(common.DstIotaEntitiesDir, 0766)
 	}

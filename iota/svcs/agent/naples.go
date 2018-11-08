@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-    "time"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -626,7 +626,7 @@ func (naples *naplesHwNode) addNodeEntities(in *iota.Node) error {
 			naples.entityMap[entityEntry.GetName()] = wload
 		}
 	}
-    time.Sleep(1 * time.Second)
+	time.Sleep(1 * time.Second)
 	return nil
 }
 

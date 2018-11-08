@@ -2,7 +2,6 @@ package topo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 
@@ -101,10 +100,12 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	err = initTestBed(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Init Test Bed Call Failed. %v", err)
-		return nil, err
+		ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		ts.TestBedInfo.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitTestBed | Init Test Bed Call Failed. %s", err.Error())
+		return ts.TestBedInfo, nil
 	}
 	ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-	return ts.TestBedInfo, err
+	return ts.TestBedInfo, nil
 }
 
 // CleanUpTestBed cleans up a testbed
@@ -140,11 +141,12 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 	err := cleanupTestBed(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | CleanupTestBed | Cleanup Test Bed Call Failed. %v", err)
-		return nil, err
+		ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		ts.TestBedInfo.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC CleanupTestBed | Clean up Test Bed Call Failed. %s", err.Error())
+		return ts.TestBedInfo, nil
 	}
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-
 	return req, nil
 }
 
@@ -168,12 +170,16 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 
 		if err != nil {
 			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
-			return nil, err
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not create GRPC Connection to IOTA Agent. Err: %v", err)
+			return req, nil
 		}
 
 		if _, ok := ts.ProvisionedNodes[n.Name]; ok {
 			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v. Err: %v", n.Name, err)
-			return nil, err
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v. Err: %v", n.Name, err)
+			return req, nil
 		}
 
 		ts.ProvisionedNodes[n.Name] = &testbed.TestNode{
@@ -200,7 +206,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 		log.Errorf("TOPO SVC | AddNodes |AddNodes Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("AddNodes Returned the error. Err: %v", err)
-		return req, err
+		return req, nil
 	}
 
 	for idx, node := range newNodes {
@@ -292,11 +298,12 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 	err := addWorkloads(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
-		return nil, err
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
+		return req, nil
 	}
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-	// TODO return fully formed resp here
 	return req, nil
 }
 
@@ -357,7 +364,10 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 	defer resetTriggers()
 	if err != nil {
 		log.Errorf("TOPO SVC | Trigger | Trigger Call Failed. %v", err)
-		return nil, err
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | Trigger | Trigger Call Failed. %v", err)
+		return req, nil
+
 	}
 
 	triggerResp := &iota.TriggerMsg{TriggerMode: req.GetTriggerMode(),
@@ -384,8 +394,10 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 		node.TriggerInfo = append(node.TriggerInfo, triggerMsg)
 		node.TriggerResp = append(node.TriggerResp, triggerMsg)
 		if err := node.Trigger(0); err != nil {
-			req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}
-			return req, err
+
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | Trigger | RunSerialTrigger Call Failed. %v", err)
+			return req, nil
 		}
 		/* Only one command sent anyway */
 		req.Commands[cidx] = node.TriggerResp[0].GetCommands()[0]
@@ -451,7 +463,7 @@ func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyM
 		errMsg := fmt.Sprintf("Node %s  not provisioned", req.NodeName)
 		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
 			ErrorMsg: errMsg}
-		return nil, errors.New(errMsg)
+		return req, nil
 	}
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
@@ -461,9 +473,9 @@ func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyM
 		if err := node.CopyTo(ts.SSHConfig, dstDir, req.GetFiles()); err != nil {
 			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files to entity:  %v on node : %v",
 				req.GetEntityName(), node.Node.Name)
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-            req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to copy files to entity:  %v on node : %v",
-                                                   req.GetEntityName(), node.Node.Name)
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to copy files to entity:  %v on node : %v",
+				req.GetEntityName(), node.Node.Name)
 		}
 	} else if req.Direction == iota.CopyDirection_DIR_OUT {
 		files := []string{}
@@ -475,14 +487,14 @@ func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyM
 		if err := node.CopyFrom(ts.SSHConfig, req.GetDestDir(), files); err != nil {
 			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files from entity:  %v on node : %v",
 				req.GetEntityName(), node.Node.Name)
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 		}
 
 	} else {
 		errMsg := fmt.Sprintf("No direction specified for entity copy")
 		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
 			ErrorMsg: errMsg}
-		return nil, errors.New(errMsg)
+		return req, nil
 	}
 
 	return req, nil

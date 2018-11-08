@@ -11,9 +11,9 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	log "github.com/sirupsen/logrus"
+
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
-
 	//Common "github.com/pensando/sw/iota/svcs/common"
 )
 
@@ -172,7 +172,7 @@ var RunArpCmd = func(app Workload, ip string, intf string) error {
 	cmdResp, _, _ := app.RunCommand(arpCmd, "", 0, false, false)
 	if cmdResp.ExitCode != 0 {
 		errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.Stdout)
-                return nil
+		return nil
 	}
 	return nil
 }
@@ -387,7 +387,7 @@ func (app *bareMetalWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx
 func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
 
 	runCmd := strings.Join(cmd, " ")
-    //Ignore diretory for remote workload for now
+	//Ignore diretory for remote workload for now
 	/*if dir != "" {
 		runCmd = "cd " + app.baseDir + "/" + dir + " && " + strings.Join(cmd, " ")
 	} else {
