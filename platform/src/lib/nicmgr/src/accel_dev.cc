@@ -391,6 +391,27 @@ Accel_PF::DevcmdHandler()
     _PostDevcmdDone(status);
 }
 
+#define CASE(opcode) case opcode: return #opcode
+
+const char*
+Accel_PF::opcode_to_str(enum cmd_opcode opcode)
+{
+    switch(opcode) {
+        CASE(CMD_OPCODE_NOP);
+        CASE(CMD_OPCODE_RESET);
+        CASE(CMD_OPCODE_IDENTIFY);
+        CASE(CMD_OPCODE_LIF_INIT);
+        CASE(CMD_OPCODE_ADMINQ_INIT);
+        CASE(CMD_OPCODE_SEQ_QUEUE_INIT);
+        CASE(CMD_OPCODE_SEQ_QUEUE_ENABLE);
+        CASE(CMD_OPCODE_SEQ_QUEUE_DISABLE);
+        CASE(CMD_OPCODE_CRYPTO_KEY_UPDATE);
+        CASE(CMD_OPCODE_HANG_NOTIFY);
+        CASE(CMD_OPCODE_SEQ_QUEUE_DUMP);
+        default: return "DEVCMD_UNKNOWN";
+    }
+}
+
 enum DevcmdStatus
 Accel_PF::CmdHandler(void *req, void *req_data,
                      void *resp, void *resp_data)
@@ -399,10 +420,13 @@ Accel_PF::CmdHandler(void *req, void *req_data,
     dev_cmd_cpl_t   *cpl = (dev_cmd_cpl_t *)resp;
     enum DevcmdStatus status;
 
+    NIC_HEADER_TRACE("Dev Cmd");
+    NIC_LOG_INFO("lif-{}: Handling cmd: {}", info.hw_lif_id,
+                 opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
+
     switch (cmd->cmd.opcode) {
 
     case CMD_OPCODE_NOP:
-        NIC_LOG_INFO("lif{}: CMD_OPCODE_NOP", info.hw_lif_id);
         status = DEVCMD_SUCCESS;
         break;
 
@@ -431,7 +455,6 @@ Accel_PF::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_HANG_NOTIFY:
-        NIC_LOG_INFO("lif{}: CMD_OPCODE_HANG_NOTIFY", info.hw_lif_id);
         status = DEVCMD_SUCCESS;
         break;
 
@@ -444,7 +467,6 @@ Accel_PF::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_SEQ_QUEUE_DUMP:
-        NIC_LOG_INFO("lif{}: CMD_OPCODE_SEQ_QUEUE_DUMP", info.hw_lif_id);
         status = DEVCMD_SUCCESS;
         break;
 
@@ -483,6 +505,8 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
 {
     identity_t      *rsp = (identity_t *)resp_data;
     identify_cpl_t  *cpl = (identify_cpl_t *)resp;
+
+    NIC_LOG_INFO("lif-{}: CMD_OPCODE_IDENTIFY", info.hw_lif_id);
 
     memset(&devcmd->data[0], 0, sizeof(devcmd->data));
 
@@ -528,7 +552,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     uint8_t                 enable = 0;
     uint8_t                 abort = 1;
 
-    NIC_LOG_INFO("lif{}:", info.hw_lif_id);
+    NIC_LOG_INFO("lif-{}: CMD_OPCODE_RESET", info.hw_lif_id);
 
     // Disable all sequencer queues
     for (qid = 0; qid < spec->seq_created_count; qid++) {
@@ -614,8 +638,13 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     admin_qstate_t              admin_qstate;
     uint64_t                    addr;
 
-    NIC_LOG_INFO("lif{}: queue_index {} ring_base {:#x} ring_size {} intr_index {}",
-        info.hw_lif_id, cmd->index, cmd->ring_base,cmd->ring_size, cmd->intr_index);
+    NIC_LOG_INFO("lif{}: CMD_OPCODE_ADMINQ_INIT: "
+                 "queue_index {} ring_base {:#x} ring_size {} intr_index {}",
+                 info.hw_lif_id,
+                 cmd->index,
+                 cmd->ring_base,
+                 cmd->ring_size,
+                 cmd->intr_index);
 
     if (cmd->index >= spec->adminq_count) {
         NIC_LOG_ERR("lif{}: bad qid {}",
@@ -668,6 +697,8 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
 
     cpl->qid = spec->adminq_base + cmd->index;
     cpl->qtype = STORAGE_SEQ_QTYPE_ADMIN;
+    NIC_LOG_INFO("lif-{}: qid {} qtype {}", 
+                 info.hw_lif_id, cpl->qid, cpl->qtype);
 
     return (DEVCMD_SUCCESS);
 }
@@ -685,6 +716,10 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     const char              *desc0_pgm_name = nullptr;
     const char              *desc1_pgm_name = nullptr;
     enum DevcmdStatus       status = DEVCMD_ERROR;
+
+    NIC_LOG_INFO("lif-{} CMD_OPCODE_SEQ_QUEUE_INIT: "
+                 "qgroup {} index {}", 
+                 info.hw_lif_id, cmd->qgroup, cmd->index);
 
     switch (cmd->qgroup) {
 

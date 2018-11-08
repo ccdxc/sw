@@ -19,7 +19,7 @@ HalCommonClient *
 HalCommonClient::GetInstance()
 {
     if (!instance) {
-        HAL_TRACE_ERR("HalGRPCClient instance is not created!");
+        NIC_LOG_ERR("HalGRPCClient instance is not created!");
     }
 
     return instance;
@@ -28,18 +28,12 @@ HalCommonClient::GetInstance()
 HalCommonClient::HalCommonClient()
 {
 
-    // Initializing traces
-    iris_c::utils::logger_init(0x3, true);
-    HAL_TRACE_DEBUG("Logger Init....");
 
 }
 HalCommonClient::HalCommonClient(enum HalForwardingMode mode)
 {
     this->mode = mode;
 
-    // Initializing traces
-    iris_c::utils::logger_init(0x3, true);
-    HAL_TRACE_DEBUG("Logger Init....");
 #if 0
     iris_c::utils::trace_init("iris-c", 0x3, true,
                               "iris-c.log",

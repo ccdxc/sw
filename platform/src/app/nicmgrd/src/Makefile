@@ -107,7 +107,6 @@ LIBRARIES += \
 	-lnicmgr_sysmgr \
 	-lnicmgr_upgrade \
 	-lhal_api \
-	-lhal_api_trace \
 	-lpal \
 	-lmisc \
 	-lpciehdevices \

@@ -86,7 +86,6 @@ SYSTEM_LIBRARIES = \
 LIBRARIES += \
 		-lnicmgr \
 		-lhal_api \
-		-lhal_api_trace \
 		-lpal \
 		-lmisc \
 		-lpciehost \

@@ -20,6 +20,10 @@ static std::shared_ptr<spdlog::logger> _syslogger = NULL;
 void
 init(bool log_to_console)
 {
+    std::string logfile;
+    char        *logdir;
+    struct stat st = { 0 };
+
     spdlog::level::level_enum level = spdlog::level::trace;
     if (std::getenv("NICMGR_LOG_LEVEL") != NULL) {
         std::string level_str = std::getenv("NICMGR_LOG_LEVEL");
@@ -42,6 +46,33 @@ init(bool log_to_console)
         }
     }
 
+    logdir = std::getenv("NIC_LOG_DIR");
+    if (!logdir) {
+        // log in the current dir
+        logfile = LOG_FILENAME;
+    } else {
+        // check if this log dir exists
+        if (stat(logdir, &st) == -1) {
+            // doesn't exist, try to create
+            if (mkdir(logdir, 0755) < 0) {
+                fprintf(stderr,
+                        "Log directory %s/ doesn't exist, failed to create one\n",
+                        logdir);
+                return;
+            }
+        } else {
+            // log dir exists, check if we have write permissions
+            if (access(logdir, W_OK) < 0) {
+                // don't have permissions to create this directory
+                fprintf(stderr,
+                        "No permissions to create log file in %s\n",
+                        logdir);
+                return;
+            }
+        }
+        logfile = std::string(logdir) + "/" + LOG_FILENAME;
+    }
+
     spdlog::set_level(level);
     spdlog::set_pattern(LOG_PATTERN);
 
@@ -49,7 +80,7 @@ init(bool log_to_console)
     if (log_to_console) {
         sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
     }
-    sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(LOG_FILENAME,
+    sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile,
         LOG_MAX_FILESIZE, LOG_MAX_FILES));
 
     _logger = std::make_shared<spdlog::logger>("nicmgr", begin(sinks), end(sinks));

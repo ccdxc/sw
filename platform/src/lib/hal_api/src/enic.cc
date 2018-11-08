@@ -39,12 +39,12 @@ Enic::Enic(EthLif *ethlif)
     intf::InterfaceResponseMsg      rsp_msg;
 
     if (allocator->alloc(&id) != sdk::lib::indexer::SUCCESS) {
-        HAL_TRACE_ERR("Failed to allocate ENIC. Resource exhaustion");
+        NIC_LOG_ERR("Failed to allocate ENIC. Resource exhaustion");
         return;
     }
 
     id += HAL_NON_RSVD_IF_OFFSET;
-    HAL_TRACE_DEBUG("Enic create id: {}", id);
+    NIC_LOG_DEBUG("Enic create id: {}", id);
 
     this->ethlif = ethlif;
 
@@ -63,14 +63,14 @@ Enic::Enic(EthLif *ethlif)
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.status().if_handle();
-            HAL_TRACE_DEBUG("Created Enic id: {} for Lif: {} handle: {}",
+            NIC_LOG_DEBUG("Created Enic id: {} for Lif: {} handle: {}",
                             id, ethlif->GetLif()->GetId(), handle);
         } else {
-            HAL_TRACE_ERR("Failed to create Enic for Lif: {}. err: {}",
+            NIC_LOG_ERR("Failed to create Enic for Lif: {}. err: {}",
                           ethlif->GetLif()->GetId(), rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to create Enic for Lif: {}. err: {}:{}",
+        NIC_LOG_ERR("Failed to create Enic for Lif: {}. err: {}:{}",
                       ethlif->GetLif()->GetId(), status.error_code(), status.error_message());
     }
 
@@ -88,7 +88,7 @@ Enic::~Enic()
     intf::InterfaceDeleteRequestMsg       req_msg;
     intf::InterfaceDeleteResponseMsg      rsp_msg;
 
-    HAL_TRACE_DEBUG("Enic delete id: {}", id);
+    NIC_LOG_DEBUG("Enic delete id: {}", id);
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_interface_id(id);
@@ -96,14 +96,14 @@ Enic::~Enic()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            HAL_TRACE_DEBUG("Deleted Enic id: {} handle: {}",
+            NIC_LOG_DEBUG("Deleted Enic id: {} handle: {}",
                             id, handle);
         } else {
-            HAL_TRACE_ERR("Failed to delete Enic for id: {}. err: {}",
+            NIC_LOG_ERR("Failed to delete Enic for id: {}. err: {}",
                           id, rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to delete Enic for id: {}. err: {}:{}",
+        NIC_LOG_ERR("Failed to delete Enic for id: {}. err: {}:{}",
                       id, status.error_code(), status.error_message());
     }
 }
@@ -141,13 +141,13 @@ Enic::TriggerHalUpdate()
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.status().if_handle();
-            HAL_TRACE_DEBUG("Enic update succeeded id: {}, handle: {}",
+            NIC_LOG_DEBUG("Enic update succeeded id: {}, handle: {}",
                             id, handle);
         } else {
-            HAL_TRACE_ERR("Failed to update Enic: err: {}", rsp.api_status());
+            NIC_LOG_ERR("Failed to update Enic: err: {}", rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to update Enic: err: {}, err_msg: {}",
+        NIC_LOG_ERR("Failed to update Enic: err: {}, err_msg: {}",
                       status.error_code(),
                       status.error_message());
     }
@@ -166,7 +166,7 @@ Enic::AddVlan(vlan_t vlan)
 
     }
 
-    HAL_TRACE_DEBUG("Adding vlan {} on Enic {}", vlan, id);
+    NIC_LOG_DEBUG("Adding vlan {} on Enic {}", vlan, id);
 
     /*
      * Native vlan is added at the time of enic create. Native vlan
@@ -176,7 +176,7 @@ Enic::AddVlan(vlan_t vlan)
         // Check for the presence of new vlan
         it = l2seg_refs.find(vlan);
         if (it != l2seg_refs.end()) {
-            HAL_TRACE_WARN("Enic already has L2seg {} with Vlan: {}",
+            NIC_LOG_WARN("Enic already has L2seg {} with Vlan: {}",
                            it->second->l2seg->GetId(),
                            vlan);
             it->second->filter_ref_cnt++;
@@ -203,13 +203,13 @@ Enic::DelVlan(vlan_t vlan)
     l2seg_info_t *l2seg_info;
     HalL2Segment *l2seg = HalL2Segment::Lookup(ethlif->GetUplink()->GetVrf(), vlan);
 
-    HAL_TRACE_DEBUG("Deleting vlan {} on Enic {}", vlan, id);
+    NIC_LOG_DEBUG("Deleting vlan {} on Enic {}", vlan, id);
 
     if (vlan != NATIVE_VLAN_ID) {
         // Check for the presence of vlan
         it = l2seg_refs.find(vlan);
         if (it == l2seg_refs.end()) {
-            HAL_TRACE_ERR("Not able to find vlan: {}", l2seg->GetId());
+            NIC_LOG_ERR("Not able to find vlan: {}", l2seg->GetId());
             return;
         }
 

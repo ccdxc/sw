@@ -59,7 +59,7 @@ HalEndpoint::HalEndpoint(HalL2Segment *l2seg, mac_t mac, Enic *enic)
     endpoint::EndpointRequestMsg    req_msg;
     endpoint::EndpointResponseMsg   rsp_msg;
 
-    HAL_TRACE_DEBUG("EP create: l2seg: {}, mac: {}, enic: {}",
+    NIC_LOG_DEBUG("EP create: l2seg: {}, mac: {}, enic: {}",
                     l2seg->GetId(), macaddr2str(mac), enic->GetId());
 
     this->mac = mac;
@@ -75,15 +75,15 @@ HalEndpoint::HalEndpoint(HalL2Segment *l2seg, mac_t mac, Enic *enic)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            HAL_TRACE_ERR("Failed to create EP L2seg: {}, Mac: {}. err: {}",
+            NIC_LOG_ERR("Failed to create EP L2seg: {}, Mac: {}. err: {}",
                           l2seg->GetId(), macaddr2str(mac),
                           rsp.api_status());
         } else {
-            HAL_TRACE_DEBUG("Created EP L2seg: {}, Mac: {}", l2seg->GetId(), macaddr2str(mac));
+            NIC_LOG_DEBUG("Created EP L2seg: {}, Mac: {}", l2seg->GetId(), macaddr2str(mac));
             handle = rsp.endpoint_status().endpoint_handle();
         }
     } else {
-        HAL_TRACE_ERR("Failed to create EP L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
+        NIC_LOG_ERR("Failed to create EP L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
                       macaddr2str(mac), status.error_code(), status.error_message());
     }
 }
@@ -98,7 +98,7 @@ HalEndpoint::~HalEndpoint()
     endpoint::EndpointDeleteRequestMsg    req_msg;
     endpoint::EndpointDeleteResponseMsg   rsp_msg;
 
-    HAL_TRACE_DEBUG("EP delete: l2seg: {}, mac: {}, enic: {}",
+    NIC_LOG_DEBUG("EP delete: l2seg: {}, mac: {}, enic: {}",
                     l2seg->GetId(), macaddr2str(mac), enic->GetId());
 
     req = req_msg.add_request();
@@ -110,13 +110,13 @@ HalEndpoint::~HalEndpoint()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            HAL_TRACE_ERR("Failed to delete EP L2seg: {}, Mac: {}. err: {}", l2seg->GetId(), macaddr2str(mac),
+            NIC_LOG_ERR("Failed to delete EP L2seg: {}, Mac: {}. err: {}", l2seg->GetId(), macaddr2str(mac),
                           rsp.api_status());
         } else {
-            HAL_TRACE_DEBUG("Delete EP L2seg: {}, Mac: {}", l2seg->GetId(), macaddr2str(mac));
+            NIC_LOG_DEBUG("Delete EP L2seg: {}, Mac: {}", l2seg->GetId(), macaddr2str(mac));
         }
     } else {
-        HAL_TRACE_ERR("Failed to delete EP L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
+        NIC_LOG_ERR("Failed to delete EP L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
                       macaddr2str(mac), status.error_code(), status.error_message());
     }
 }

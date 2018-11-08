@@ -14,7 +14,7 @@
 #include "l2segment.grpc.pb.h"
 #include "multicast.grpc.pb.h"
 #include "rdma.grpc.pb.h"
-#include "trace.hpp"
+#include "logger.hpp"
 
 using grpc::Status;
 using vrf::VrfRequestMsg;

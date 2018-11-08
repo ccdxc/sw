@@ -40,7 +40,6 @@ SYSTEM_LIBRARIES = \
 
 LIBRARIES += \
     -lhal_api \
-    -lhal_api_trace \
     $(NULL)
 
 TOPDIR = ../../../../..

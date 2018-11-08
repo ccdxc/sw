@@ -4,6 +4,7 @@ SYSCONFIG=/sysconfig/config0
 
 export NIC_DIR='/nic'
 export PLATFORM_DIR='/platform'
+export NIC_LOG_DIR=/data/
 export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
 export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_LIBRARY_PATH
 export HAL_CONFIG_PATH=$NIC_DIR/conf/

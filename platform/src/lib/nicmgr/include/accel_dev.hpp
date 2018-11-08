@@ -253,6 +253,7 @@ private:
     int accel_ring_max_pendings_get(uint32_t& max_pendings);
 
     friend ostream &operator<<(ostream&, const Accel_PF&);
+    const char*opcode_to_str(enum cmd_opcode opcode);
 };
 
 #endif

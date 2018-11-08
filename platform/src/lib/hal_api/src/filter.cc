@@ -50,7 +50,7 @@ MacVlanFilter::MacVlanFilter(
     _vlan = vlan;
     this->eth_lif = eth_lif;
 
-    HAL_TRACE_DEBUG("Mac-Vlan entity creation. Type: {}, lif: {}, mac: {}, vlan: {}. ",
+    NIC_LOG_DEBUG("Mac-Vlan entity creation. Type: {}, lif: {}, mac: {}, vlan: {}. ",
                     _type,
                     eth_lif->GetLif()->GetId(),
                     macaddr2str(mac), vlan);
@@ -66,7 +66,7 @@ MacVlanFilter::MacVlanFilter(
         enic->AddVlan(vlan);
         l2seg = enic->GetL2seg(vlan);
         if (!l2seg) {
-            HAL_TRACE_ERR("l2seg should have been added in AddVlan. Please check.");
+            NIC_LOG_ERR("l2seg should have been added in AddVlan. Please check.");
             assert(0);
         }
         if (is_multicast(mac)) {
@@ -104,14 +104,14 @@ MacVlanFilter::MacVlanFilter(
             rsp = rsp_msg.response(0);
             if (rsp.api_status() == types::API_STATUS_OK) {
                 handle = rsp.filter_status().filter_handle();
-                HAL_TRACE_DEBUG("Created Filter mac: {} vlan: {}, handle: {}",
+                NIC_LOG_DEBUG("Created Filter mac: {} vlan: {}, handle: {}",
                                 mac, vlan, handle);
             } else {
-                HAL_TRACE_ERR("Failed to create Filter mac: {} vlan: {}. err: {}",
+                NIC_LOG_ERR("Failed to create Filter mac: {} vlan: {}. err: {}",
                               mac, vlan, rsp.api_status());
             }
         } else {
-            HAL_TRACE_ERR("Failed to create Filter mac: {} vlan: {}. err: {}:{}",
+            NIC_LOG_ERR("Failed to create Filter mac: {} vlan: {}. err: {}:{}",
                           mac, vlan, status.error_code(), status.error_message());
         }
 
@@ -133,7 +133,7 @@ MacVlanFilter::~MacVlanFilter()
     HalL2Segment                            *l2seg;
     HalEndpoint                             *ep;
 
-    HAL_TRACE_DEBUG("Mac-Vlan entity deletion. lif: {}, mac: {}, vlan: {}. ",
+    NIC_LOG_DEBUG("Mac-Vlan entity deletion. lif: {}, mac: {}, vlan: {}. ",
                     eth_lif->GetLif()->GetId(),
                     macaddr2str(_mac), _vlan);
 
@@ -182,14 +182,14 @@ MacVlanFilter::~MacVlanFilter()
         if (status.ok()) {
             rsp = rsp_msg.response(0);
             if (rsp.api_status() == types::API_STATUS_OK) {
-                HAL_TRACE_DEBUG("Delted Filter mac: {} vlan: {}, handle: {}",
+                NIC_LOG_DEBUG("Delted Filter mac: {} vlan: {}, handle: {}",
                                 _mac, _vlan, handle);
             } else {
-                HAL_TRACE_ERR("Failed to delete Filter mac: {} vlan: {}. err: {}",
+                NIC_LOG_ERR("Failed to delete Filter mac: {} vlan: {}. err: {}",
                               _mac, _vlan, rsp.api_status());
             }
         } else {
-            HAL_TRACE_ERR("Failed to delete Filter mac: {} vlan: {}. err: {}:{}",
+            NIC_LOG_ERR("Failed to delete Filter mac: {} vlan: {}. err: {}:{}",
                           _mac, _vlan, status.error_code(), status.error_message());
         }
     }

@@ -13,7 +13,7 @@ shared_ptr<HalCommonClient>
 HalGRPCClient::GetInstance()
 {
     if (!instance) {
-        HAL_TRACE_ERR("HalGRPCClient instance is not created!");
+        NIC_LOG_ERR("HalGRPCClient instance is not created!");
     }
 
     return instance;
@@ -63,7 +63,7 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
     channel = grpc::CreateChannel(svc_url, grpc::InsecureChannelCredentials());
 
     // cout << "[INFO] Waiting for HAL to be ready ..." << endl;
-    HAL_TRACE_DEBUG("Waiting for HAL to be ready at: {}", svc_url);
+    NIC_LOG_DEBUG("Waiting for HAL to be ready at: {}", svc_url);
     auto state = channel->GetState(true);
     while (state != GRPC_CHANNEL_READY) {
         // Wait for State change or deadline

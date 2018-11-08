@@ -102,7 +102,6 @@ SYSTEM_LIBRARIES += -lsdkpal
 LIBRARIES += \
     -lnicmgr \
     -lhal_api \
-    -lhal_api_trace \
     -lpal \
     -lmisc \
     -lpciehdevices \

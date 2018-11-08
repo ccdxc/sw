@@ -46,7 +46,7 @@ Lif::Lif(EthLif * eth_lif)
 
     if (lif_info->id == 0) {
         if (allocator->alloc(&id_) != sdk::lib::indexer::SUCCESS) {
-            HAL_TRACE_ERR("Failed to create Lif for hw_lif_id: {}. Index Exhaustion",
+            NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. Index Exhaustion",
                           lif_info->hw_lif_id);
             return;
         }
@@ -69,7 +69,7 @@ Lif::Lif(EthLif * eth_lif)
 
     eth_lif_ = eth_lif;
 
-    HAL_TRACE_DEBUG("Creating Lif: prom: {}, oob: {}, rdma_en: {}",
+    NIC_LOG_DEBUG("Creating Lif: prom: {}, oob: {}, rdma_en: {}",
                     lif_info->receive_promiscuous,
                     eth_lif_->IsOOBMnic(),
                     lif_info->enable_rdma);
@@ -92,10 +92,10 @@ Lif::Lif(EthLif * eth_lif)
     // Populate qstate map
     for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
         auto & qinfo = lif_info->queue_info[i];
-        HAL_TRACE_DEBUG("Processing queue type: {}, size: {}", i, qinfo.size);
+        NIC_LOG_DEBUG("Processing queue type: {}, size: {}", i, qinfo.size);
         if (qinfo.size < 1) continue;
 
-        HAL_TRACE_DEBUG("Queue type_num: {}, entries: {}, purpose: {}, prog: {}, label: {}",
+        NIC_LOG_DEBUG("Queue type_num: {}, entries: {}, purpose: {}, prog: {}, label: {}",
                         qinfo.type_num,
                         qinfo.entries, qinfo.purpose, qinfo.prog, qinfo.label);
 
@@ -124,14 +124,14 @@ Lif::Lif(EthLif * eth_lif)
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle_ = rsp.status().lif_handle();
             hw_lif_id_ = rsp.status().hw_lif_id();
-            HAL_TRACE_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, hw_lif_id_, handle_);
         } else {
-            HAL_TRACE_ERR("Failed to create Lif for hw_lif_id: {}. err: {}",
+            NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. err: {}",
                           hw_lif_id_, rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to create Lif for hw_lif_id: {}. err: {}:{}",
+        NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. err: {}:{}",
                       hw_lif_id_, status.error_code(), status.error_message());
     }
 
@@ -155,14 +155,14 @@ Lif::~Lif()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            HAL_TRACE_DEBUG("Deleted Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_DEBUG("Deleted Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, eth_lif_->GetLifInfo()->hw_lif_id, handle_);
         } else {
-            HAL_TRACE_ERR("Failed to delete Lif for id: {}. err: {}",
+            NIC_LOG_ERR("Failed to delete Lif for id: {}. err: {}",
                           id_, rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to delete Lif for id: {}. err: {}:{}",
+        NIC_LOG_ERR("Failed to delete Lif for id: {}. err: {}:{}",
                       id_, status.error_code(), status.error_message());
     }
 }
@@ -197,14 +197,14 @@ Lif::TriggerHalUpdate()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            HAL_TRACE_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, lif_info->hw_lif_id, handle_);
         } else {
-            HAL_TRACE_ERR("Failed to create Lif for id: {}. err: {}",
+            NIC_LOG_ERR("Failed to create Lif for id: {}. err: {}",
                           id_, rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to create Lif for id: {}. err: {}:{}",
+        NIC_LOG_ERR("Failed to create Lif for id: {}. err: {}:{}",
                       id_, status.error_code(), status.error_message());
     }
 

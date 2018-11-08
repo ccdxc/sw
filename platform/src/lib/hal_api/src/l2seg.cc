@@ -45,11 +45,11 @@ HalL2Segment::HalL2Segment(HalVrf *vrf, uint16_t vlan)
     l2segment::L2SegmentResponseMsg     rsp_msg;
 
     if (allocator->alloc(&id) != sdk::lib::indexer::SUCCESS) {
-        HAL_TRACE_ERR("Failed to allocate HalL2Segment");
+        NIC_LOG_ERR("Failed to allocate HalL2Segment");
         return;
     }
 
-    HAL_TRACE_DEBUG("L2seg create: vrf: {}, vlan: {}. id: {}",
+    NIC_LOG_DEBUG("L2seg create: vrf: {}, vlan: {}. id: {}",
                     vrf->GetId(), vlan, id);
 
     req = req_msg.add_request();
@@ -68,15 +68,15 @@ HalL2Segment::HalL2Segment(HalVrf *vrf, uint16_t vlan)
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.l2segment_status().l2segment_handle();
-            HAL_TRACE_DEBUG("L2 segment create succeeded id: {}, handle: {}",
+            NIC_LOG_DEBUG("L2 segment create succeeded id: {}, handle: {}",
                             id, handle);
             _vlan = vlan;
             this->vrf = vrf;
         } else {
-            HAL_TRACE_ERR("Failed to create l2segment: id: {} err: {}", id, rsp.api_status());
+            NIC_LOG_ERR("Failed to create l2segment: id: {} err: {}", id, rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to create l2segment: id: {}, err: {}, err_msg: {}", id,
+        NIC_LOG_ERR("Failed to create l2segment: id: {}, err: {}, err_msg: {}", id,
                       status.error_code(),
                       status.error_message());
     }
@@ -118,7 +118,7 @@ HalL2Segment::~HalL2Segment()
     l2segment::L2SegmentDeleteRequestMsg    req_msg;
     l2segment::L2SegmentDeleteResponseMsg   rsp_msg;
 
-    HAL_TRACE_DEBUG("L2seg delete : vrf: {}, vlan: {}. id: {}",
+    NIC_LOG_DEBUG("L2seg delete : vrf: {}, vlan: {}. id: {}",
                     vrf->GetId(), _vlan, id);
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_segment_id(id);
@@ -130,13 +130,13 @@ HalL2Segment::~HalL2Segment()
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             allocator->free(id);
-            HAL_TRACE_DEBUG("L2 segment delete succeeded id: {}, handle: {}",
+            NIC_LOG_DEBUG("L2 segment delete succeeded id: {}, handle: {}",
                             id, handle);
         } else {
-            HAL_TRACE_ERR("Failed to delete l2segment: err: {}", rsp.api_status());
+            NIC_LOG_ERR("Failed to delete l2segment: err: {}", rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to delete l2segment: err: {}, err_msg: {}",
+        NIC_LOG_ERR("Failed to delete l2segment: err: {}, err_msg: {}",
                       status.error_code(),
                       status.error_message());
     }
@@ -190,13 +190,13 @@ HalL2Segment::TriggerHalUpdate()
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.l2segment_status().l2segment_handle();
-            HAL_TRACE_DEBUG("L2 segment update succeeded id: {}, handle: {}",
+            NIC_LOG_DEBUG("L2 segment update succeeded id: {}, handle: {}",
                             id, handle);
         } else {
-            HAL_TRACE_ERR("Failed to update l2segment: err: {}", rsp.api_status());
+            NIC_LOG_ERR("Failed to update l2segment: err: {}", rsp.api_status());
         }
     } else {
-        HAL_TRACE_ERR("Failed to update l2segment: err: {}, err_msg: {}",
+        NIC_LOG_ERR("Failed to update l2segment: err: {}, err_msg: {}",
                       status.error_code(),
                       status.error_message());
     }
@@ -210,7 +210,7 @@ HalL2Segment::AddUplink (Uplink *uplink)
 {
     // Check for the presence of new uplink
     if (uplink_refs.find(uplink->GetId()) != uplink_refs.end()) {
-        HAL_TRACE_WARN("Duplicate uplink add : {}", uplink->GetId());
+        NIC_LOG_WARN("Duplicate uplink add : {}", uplink->GetId());
         return;
     }
 
@@ -229,7 +229,7 @@ HalL2Segment::DelUplink (Uplink *uplink)
 {
     // Check for the presence of uplink
     if (uplink_refs.find(uplink->GetId()) == uplink_refs.end()) {
-        HAL_TRACE_ERR("Not able to find uplink: {}", uplink->GetId());
+        NIC_LOG_ERR("Not able to find uplink: {}", uplink->GetId());
         return;
     }
 

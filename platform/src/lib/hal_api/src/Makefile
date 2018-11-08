@@ -28,7 +28,7 @@ LCFLAGS = \
           -I $(TOPDIR)/../nic/hal/third-party/google/include \
           -I $(TOPDIR)/../nic/hal/third-party/grpc/include \
           -I ../include \
-          -I ../trace \
+          -I ../../nicmgr/include \
           $(NULL)
 
           #-I $(TOPDIR)/../nic/hal/third-party/grpc/include/grpc++/impl/codegen

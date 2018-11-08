@@ -26,7 +26,7 @@ EthLif::Factory(hal_lif_info_t *info)
 
     if (info->hw_lif_id != 0) {
         if (ethlif_db.find(info->hw_lif_id) != ethlif_db.end()) {
-            HAL_TRACE_WARN("Duplicate Create of EthLif with id: {}",
+            NIC_LOG_WARN("Duplicate Create of EthLif with id: {}",
                            info->hw_lif_id);
             return NULL;
         }
@@ -50,7 +50,7 @@ EthLif::Factory(hal_lif_info_t *info)
 
         if (eth_lif->GetUplink()->GetNumLifs() == 1) {
 
-            HAL_TRACE_DEBUG("First lif id: {}, hw_id: {} on uplink {}",
+            NIC_LOG_DEBUG("First lif id: {}, hw_id: {} on uplink {}",
                             eth_lif->GetLif()->GetId(),
                             eth_lif->GetHwLifId(),
                             eth_lif->GetUplink()->GetId());
@@ -112,7 +112,7 @@ EthLif::Destroy(EthLif *eth_lif)
             eth_lif->GetUplink()->DecNumLifs();
 
             if (eth_lif->GetUplink()->GetNumLifs() == 0) {
-                HAL_TRACE_DEBUG("Last lif id: {}, hw_id: {} on uplink {}",
+                NIC_LOG_DEBUG("Last lif id: {}, hw_id: {} on uplink {}",
                                 eth_lif->GetLif()->GetId(),
                                 eth_lif->GetHwLifId(),
                                 eth_lif->GetUplink()->GetId());
@@ -193,13 +193,13 @@ EthLif::AddMac(mac_t mac)
     mac_vlan_t mac_vlan;
 
     api_trace("Adding Mac Filter");
-    HAL_TRACE_DEBUG("Adding Mac filter: {}", macaddr2str(mac));
+    NIC_LOG_DEBUG("Adding Mac filter: {}", macaddr2str(mac));
 
     if (mac_table_.find(mac) == mac_table_.end()) {
 
         // Check if max limit reached
         if (mac_table_.size() == info_.max_mac_filters) {
-            HAL_TRACE_ERR("Reached Max Mac filter limit of {} for lif: {}",
+            NIC_LOG_ERR("Reached Max Mac filter limit of {} for lif: {}",
                           info_.max_mac_filters,
                           GetHwLifId());
             return HAL_IRISC_RET_LIMIT_REACHED;
@@ -221,7 +221,7 @@ EthLif::AddMac(mac_t mac)
                     // No (MacVlan) filter. Creating (Mac, Vlan)
                     CreateMacVlanFilter(mac, *vlan_it);
                 } else {
-                    HAL_TRACE_DEBUG("(Mac,Vlan) filter present. No-op");
+                    NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
                 }
             }
         } else {
@@ -231,7 +231,7 @@ EthLif::AddMac(mac_t mac)
         // Store mac filter
         mac_table_.insert(mac);
     } else {
-        HAL_TRACE_WARN("Mac already registered: {}", mac);
+        NIC_LOG_WARN("Mac already registered: {}", mac);
     }
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -242,7 +242,7 @@ EthLif::DelMac(mac_t mac)
     mac_vlan_t mac_vlan_key, mac_key, vlan_key;
 
     api_trace("Deleting Mac Filter");
-    HAL_TRACE_DEBUG("Deleting Mac filter: {}", macaddr2str(mac));
+    NIC_LOG_DEBUG("Deleting Mac filter: {}", macaddr2str(mac));
 
     mac_key = make_tuple(mac, 0);
     if (mac_table_.find(mac) != mac_table_.end()) {
@@ -253,14 +253,14 @@ EthLif::DelMac(mac_t mac)
                 mac_vlan_key = make_tuple(mac, *vlan_it);
                 if (vlan_table_.find(*vlan_it) != vlan_table_.end() &&
                     mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
-                    HAL_TRACE_DEBUG("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
+                    NIC_LOG_DEBUG("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
                     // Mac, Vlan are present and (Mac,Vlan) is not
                     DeleteMacVlanFilter(mac, *vlan_it);
                 } else {
                     // Case:
                     //  Case 1: Vlan filter not present but (Mac,Vlan) is either present or not.
                     //  Case 2: Vlan filter is present along with (Mac,Vlan)
-                    HAL_TRACE_DEBUG("Mac Delete: No-op");
+                    NIC_LOG_DEBUG("Mac Delete: No-op");
                 }
             }
         } else {
@@ -270,7 +270,7 @@ EthLif::DelMac(mac_t mac)
         // Erase mac filter
         mac_table_.erase(mac);
     } else {
-        HAL_TRACE_ERR("Mac not registered: {}", mac);
+        NIC_LOG_ERR("Mac not registered: {}", mac);
     }
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -281,12 +281,12 @@ EthLif::AddVlan(vlan_t vlan)
     mac_vlan_t mac_vlan;
 
     api_trace("Adding Vlan Filter");
-    HAL_TRACE_DEBUG("Adding Vlan filter: {}", vlan);
+    NIC_LOG_DEBUG("Adding Vlan filter: {}", vlan);
 
     if (vlan_table_.find(vlan) == vlan_table_.end()) {
         // Check if max limit reached
         if (vlan_table_.size() == info_.max_vlan_filters) {
-            HAL_TRACE_ERR("Reached Max Vlan filter limit of {} for lif: {}",
+            NIC_LOG_ERR("Reached Max Vlan filter limit of {} for lif: {}",
                           info_.max_vlan_filters,
                           GetHwLifId());
             return HAL_IRISC_RET_LIMIT_REACHED;
@@ -308,7 +308,7 @@ EthLif::AddVlan(vlan_t vlan)
                     // No (MacVlan) filter. Creating (Mac, Vlan)
                     CreateMacVlanFilter(*it, vlan);
                 } else {
-                    HAL_TRACE_DEBUG("(Mac,Vlan) filter present. No-op");
+                    NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
                 }
             }
         } else {
@@ -318,7 +318,7 @@ EthLif::AddVlan(vlan_t vlan)
         // Store vlan filter
         vlan_table_.insert(vlan);
     } else {
-        HAL_TRACE_WARN("Vlan already registered: {}", vlan);
+        NIC_LOG_WARN("Vlan already registered: {}", vlan);
     }
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -329,7 +329,7 @@ EthLif::DelVlan(vlan_t vlan)
     mac_vlan_t mac_vlan_key;
 
     api_trace("Deleting Vlan Filter");
-    HAL_TRACE_DEBUG("Deleting Vlan filter: {}", vlan);
+    NIC_LOG_DEBUG("Deleting Vlan filter: {}", vlan);
 
     if (vlan_table_.find(vlan) != vlan_table_.end()) {
         if (hal->GetMode() == FWD_MODE_CLASSIC ||
@@ -338,14 +338,14 @@ EthLif::DelVlan(vlan_t vlan)
                 mac_vlan_key = make_tuple(*it, vlan);
                 if (mac_table_.find(*it) != mac_table_.end() &&
                     mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
-                    HAL_TRACE_DEBUG("Vlan Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
+                    NIC_LOG_DEBUG("Vlan Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
                     // Mac, Vlan are present and (Mac,Vlan) is not
                     DeleteMacVlanFilter(*it, vlan);
                 } else {
                     // Case:
                     //  Case 1: Mac filter not present but (Mac,Vlan) is either present or not.
                     //  Case 2: Mac filter is present along with (Mac,Vlan)
-                    HAL_TRACE_DEBUG("Vlan Delete: No-op");
+                    NIC_LOG_DEBUG("Vlan Delete: No-op");
                 }
             }
         } else {
@@ -355,7 +355,7 @@ EthLif::DelVlan(vlan_t vlan)
         // Erase mac filter
         vlan_table_.erase(vlan);
     } else {
-        HAL_TRACE_ERR("Vlan not registered: {}", vlan);
+        NIC_LOG_ERR("Vlan not registered: {}", vlan);
     }
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -366,12 +366,12 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
     mac_vlan_t key(mac, vlan);
 
     api_trace("Adding (Mac,Vlan) Filter");
-    HAL_TRACE_DEBUG("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
+    NIC_LOG_DEBUG("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     if (mac_vlan_table_.find(key) == mac_vlan_table_.end()) {
         // Check if max limit reached
         if (mac_vlan_table_.size() == info_.max_mac_vlan_filters) {
-            HAL_TRACE_ERR("Reached Max Mac-Vlan filter limit of {} for lif: {}",
+            NIC_LOG_ERR("Reached Max Mac-Vlan filter limit of {} for lif: {}",
                           info_.max_mac_vlan_filters,
                           GetHwLifId());
             return HAL_IRISC_RET_LIMIT_REACHED;
@@ -383,7 +383,7 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
                 vlan_table_.find(vlan) == vlan_table_.end()) {
                 CreateMacVlanFilter(mac, vlan);
             } else {
-                HAL_TRACE_DEBUG("Mac filter and Vlan filter preset. "
+                NIC_LOG_DEBUG("Mac filter and Vlan filter preset. "
                                 "No-op for (Mac,Vlan) filter");
             }
         } else {
@@ -393,7 +393,7 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
         // Store mac-vlan filter
         mac_vlan_table_.insert(key);
     } else {
-        HAL_TRACE_WARN("Mac-Vlan already registered: {}", mac);
+        NIC_LOG_WARN("Mac-Vlan already registered: {}", mac);
     }
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -404,7 +404,7 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
     mac_vlan_t mac_vlan_key;
 
     api_trace("Deleting (Mac,Vlan) Filter");
-    HAL_TRACE_DEBUG("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
+    NIC_LOG_DEBUG("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     mac_vlan_key = make_tuple(mac, vlan);
     if (mac_vlan_table_.find(mac_vlan_key) != mac_vlan_table_.end()) {
@@ -417,7 +417,7 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
                 DeleteMacVlanFilter(mac, vlan);
             } else {
                 // Mac filter and Vlan filter both exist
-                HAL_TRACE_DEBUG("Mac filter and Vlan filter present. "
+                NIC_LOG_DEBUG("Mac filter and Vlan filter present. "
                                 "No-op for (Mac,Vlan) filter");
             }
         } else {
@@ -426,7 +426,7 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
         // Erase mac-vlan filter
         mac_vlan_table_.erase(mac_vlan_key);
     } else {
-        HAL_TRACE_ERR("(Mac,Vlan) already not registered: mac: {}, vlan: {}",
+        NIC_LOG_ERR("(Mac,Vlan) already not registered: mac: {}, vlan: {}",
                       mac, vlan);
     }
     return HAL_IRISC_RET_SUCCESS;
@@ -437,12 +437,12 @@ EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
 {
     api_trace("Promiscuous Flag change");
     if (receive_promiscuous == info_.receive_promiscuous) {
-        HAL_TRACE_WARN("Prom flag: {}. No change in promiscuous flag. Nop",
+        NIC_LOG_WARN("Prom flag: {}. No change in promiscuous flag. Nop",
                        receive_promiscuous);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_promiscuous,
                     receive_promiscuous);
 
@@ -469,12 +469,12 @@ EthLif::UpdateReceiveBroadcast(bool receive_broadcast)
 {
     api_trace("Broadcast change");
     if (receive_broadcast == info_.receive_broadcast) {
-        HAL_TRACE_WARN("Prom flag: {}. No change in broadcast flag. Nop",
+        NIC_LOG_WARN("Prom flag: {}. No change in broadcast flag. Nop",
                        receive_broadcast);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_broadcast,
                     receive_broadcast);
 
@@ -491,12 +491,12 @@ EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
 {
     api_trace("AllHalMulticast change");
     if (receive_all_multicast == info_.receive_all_multicast) {
-        HAL_TRACE_WARN("Prom flag: {}. No change in all_multicast flag. Nop",
+        NIC_LOG_WARN("Prom flag: {}. No change in all_multicast flag. Nop",
                        receive_all_multicast);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_all_multicast,
                     receive_all_multicast);
 
@@ -513,12 +513,12 @@ EthLif::UpdateVlanStripEn(bool vlan_strip_en)
 {
     api_trace("Vlan Strip change");
     if (vlan_strip_en == info_.vlan_strip_en) {
-        HAL_TRACE_WARN("Prom flag: {}. No change in broadcast flag. Nop",
+        NIC_LOG_WARN("Prom flag: {}. No change in broadcast flag. Nop",
                        vlan_strip_en);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.vlan_strip_en,
                     vlan_strip_en);
 
@@ -535,12 +535,12 @@ EthLif::UpdateVlanInsertEn(bool vlan_insert_en)
 {
     api_trace("Vlan Insert change");
     if (vlan_insert_en == info_.vlan_insert_en) {
-        HAL_TRACE_WARN("Prom flag: {}. No change in broadcast flag. Nop",
+        NIC_LOG_WARN("Prom flag: {}. No change in broadcast flag. Nop",
                        vlan_insert_en);
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.vlan_insert_en,
                     vlan_insert_en);
 

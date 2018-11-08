@@ -36,7 +36,7 @@ HalVrf::HalVrf(types::VrfType type)
     vrf::VrfResponseMsg         rsp_msg;
 
     if (allocator->alloc(&id) != sdk::lib::indexer::SUCCESS) {
-        HAL_TRACE_ERR("Failed to allocate VRF");
+        NIC_LOG_ERR("Failed to allocate VRF");
         return;
     }
 
@@ -44,7 +44,7 @@ HalVrf::HalVrf(types::VrfType type)
 
     id += VRF_ID_BASE;
 
-    HAL_TRACE_DEBUG("HalVrf create id: {}", id);
+    NIC_LOG_DEBUG("HalVrf create id: {}", id);
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_vrf_id(id);
@@ -56,12 +56,12 @@ HalVrf::HalVrf(types::VrfType type)
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.vrf_status().vrf_handle();
-            HAL_TRACE_DEBUG("HalVrf Create: id: {}, handle: {}", id, handle);
+            NIC_LOG_DEBUG("HalVrf Create: id: {}, handle: {}", id, handle);
             cout << "[INFO] VRF create succeeded,"
                  << " id = " << id << " handle = " << handle
                  << endl;
         } else if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
-            HAL_TRACE_ERR("VRF already exists with id: {}", id);
+            NIC_LOG_ERR("VRF already exists with id: {}", id);
             allocator->free(id);
             id = 0;  // TODO: HAL should return this
             handle = rsp.vrf_status().vrf_handle();
@@ -85,7 +85,7 @@ HalVrf::~HalVrf()
     vrf::VrfDeleteRequestMsg        req_msg;
     vrf::VrfDeleteResponseMsg       rsp_msg;
 
-    HAL_TRACE_DEBUG("HalVrf delete id: {}", id);
+    NIC_LOG_DEBUG("HalVrf delete id: {}", id);
 
     req = req_msg.add_request();
     if (id == 0) {
