@@ -54,7 +54,7 @@ MODULE_PARM_DESC(core_count, "max number of cores to use for sonic driver (defau
 
 static unsigned int log_level = OSAL_LOG_LEVEL_WARNING;
 module_param(log_level, uint, 0444);
-MODULE_PARM_DESC(log_level, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5=NOTICE,6=INFO,7=DBG");
+MODULE_PARM_DESC(log_level, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN(default),5=NOTICE,6=INFO,7=DBG");
 
 int body(void);
 
