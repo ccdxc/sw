@@ -219,6 +219,11 @@ def IsConfigOnly():
 def GetTopDir():
     return GlobalOptions.topdir
 
+def IsApiResponseOk(resp):
+    if resp is None: return False
+    if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False
+    return True
+
 # ================================
 # Wrappers for Copy APIs
 # ================================
