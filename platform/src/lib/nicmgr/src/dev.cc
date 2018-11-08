@@ -385,7 +385,6 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->eth_type = ETH_UNKNOWN;
             }
             eth_spec->if_name = val.get<string>("name");
-            eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type", "Unknown"));
             NIC_LOG_INFO("Creating mnic device with name: {} type: {}, lif_id: {}, hw_lif_id: {},"
                          "pinned_uplink: {}",
                          eth_spec->if_name,
@@ -457,7 +456,6 @@ DeviceManager::LoadConfig(string path)
 
             eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
             eth_spec->host_dev = true;
-            // eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type", "Unknown"));
             if (val.get_optional<string>("type")) {
                 eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type"));
             } else {
