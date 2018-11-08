@@ -468,7 +468,6 @@ cpupkt_descr_to_headers (pd_descr_aol_t& descr,
     //uint8_t* buffer = (uint8_t* ) malloc(9216);
     uint8_t *buffer = (uint8_t *) g_hal_state->cpu_pkt_slab()->alloc();
 
-
     uint64_t pktaddr = descr.a0 + descr.o0;
 
     HAL_TRACE_DEBUG("read buffer of length {}", descr.l0 + descr.l1);

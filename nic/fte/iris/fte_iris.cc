@@ -536,7 +536,7 @@ ctx_t::update_flow_table()
         session_args.iflow_attrs[stage] = &iflow_attrs;
 
         if (iflow->valid_flow_state()) {
-            session_cfg.conn_track_en = true;
+            session_cfg.conn_track_en = 1;
             session_args.session_state = &session_state;
             session_state.iflow_state = iflow->flow_state();
         }
@@ -553,7 +553,7 @@ ctx_t::update_flow_table()
                         "is_eg_proxy_mirror={} ing_mirror_session={} eg_mirror_session={} "
                         "slif_en={} slif={} qos_class_en={} qos_class_id={} "
                         "is_proxy_en={} is_proxy_mcast={} export_en={} export_id1={} "
-                        "export_id2={} export_id3={} export_id4={}",
+                        "export_id2={} export_id3={} export_id4={} conn_track_en={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_attrs.vrf_hwid,
                         iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -566,7 +566,8 @@ ctx_t::update_flow_table()
                         iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif,
                         iflow_attrs.qos_class_en, iflow_attrs.qos_class_id, iflow_attrs.is_proxy_en,
                         iflow_attrs.is_proxy_mcast, iflow_attrs.export_en, iflow_attrs.export_id1,
-                        iflow_attrs.export_id2, iflow_attrs.export_id3, iflow_attrs.export_id4);
+                        iflow_attrs.export_id2, iflow_attrs.export_id3, iflow_attrs.export_id4,
+                        session_cfg.conn_track_en);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
@@ -851,7 +852,7 @@ ctx_t::update_for_snat(hal::flow_role_t role, const header_rewrite_info_t& heade
 void free_flow_miss_pkt(uint8_t * pkt)
 {
     HAL_TRACE_DEBUG("free flow miss packet");
-    hal::free_to_slab(hal::HAL_SLAB_CPU_PKT, pkt);
+    hal::free_to_slab(hal::HAL_SLAB_CPU_PKT, (pkt-sizeof(cpu_rxhdr_t)));
 }
 //------------------------------------------------------------------------------
 // Queues pkt for transmission on ASQ at the end of pipeline processing,
@@ -943,9 +944,16 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     hal_ret_t ret;
 
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
-    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() &&
-       !hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
-         queue_txpkt(pkt_, pkt_len_, NULL, NULL, hal::SERVICE_LIF_CPU, CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, types::WRING_TYPE_ASQ, free_flow_miss_pkt);
+    if (pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss()) {
+        if (!drop()) {
+       // This needs to be moved to plugin code
+       //!hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
+            queue_txpkt(pkt_, pkt_len_, NULL, NULL, hal::SERVICE_LIF_CPU, 
+                        CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, 
+                        types::WRING_TYPE_ASQ, free_flow_miss_pkt);
+         } else {
+             free_flow_miss_pkt(pkt_);
+         }
     }
 
     for (int i = 0; i < txpkt_cnt_; i++) {
@@ -995,8 +1003,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         // Issue a callback to free the packet
         if (pkt_info->cb) {
             HAL_TRACE_DEBUG(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
-            free_flow_miss_pkt((uint8_t *)cpu_rxhdr_);
-            //pkt_info->cb(pkt_info->pkt);
+            pkt_info->cb(pkt_info->pkt);
         }
     } 
     txpkt_cnt_ = 0;

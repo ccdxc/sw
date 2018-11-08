@@ -399,7 +399,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
         d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
     }
 #endif
-    d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
+    d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->conn_track_en;
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
     d.flow_info_action_u.flow_info_flow_info.flow_role = flow_attrs->role;
     d.flow_info_action_u.flow_info_flow_info.session_state_index =
@@ -864,18 +864,18 @@ pd_session_create (pd_func_args_t *pd_func_args)
     // HACK: Only for TCP proxy we are disabling connection tracking.
     //       Have to disable once we make TCP proxy work with connection tracking
     if (session_pd->iflow_aug_valid || session_pd->rflow_aug_valid) {
-        args->session->config.conn_track_en = false;
+        args->session->conn_track_en = 0;
     }
 
     // if connection tracking is on, add flow state entry for this session
-    if (args->session->config.conn_track_en) {
-        session_pd->conn_track_en = TRUE;
+    if (args->session->conn_track_en) {
+        session_pd->conn_track_en = 1;
         ret = p4pd_add_session_state_table_entry(session_pd, args->session_state, args->nwsec_prof);
         if (ret != HAL_RET_OK) {
             goto cleanup;
         }
     } else {
-        session_pd->conn_track_en = FALSE;
+        session_pd->conn_track_en = 0;
     }
 
     // add flow info table entries
@@ -1040,7 +1040,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
     }
     pd_session = args->session->pd;
 
-    if (args->session->config.conn_track_en) {
+    if (args->session->conn_track_en) {
         dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
         HAL_ASSERT(dm != NULL);
 
@@ -1085,7 +1085,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
     ret = pd_flow_get(&pd_func_args1);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Initiator Flow get failed session {}",
-                      args->session->config.session_id);
+                      args->session->hal_handle);
         return ret;
     }
 
@@ -1097,7 +1097,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
     ret = pd_flow_get(&pd_func_args1);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Responder Flow get failed session {}",
-                      args->session->config.session_id);
+                      args->session->hal_handle);
         return ret;
     }
 
@@ -1110,7 +1110,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
         ret = pd_flow_get(&pd_func_args1);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Initiator Aug Flow get failed session {}",
-                          args->session->config.session_id);
+                          args->session->hal_handle);
             return ret;
         }
     }
@@ -1124,7 +1124,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
         ret = pd_flow_get(&pd_func_args1);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Responder Aug Flow get failed session {}",
-                          args->session->config.session_id);
+                          args->session->hal_handle);
             return ret;
         }
     }

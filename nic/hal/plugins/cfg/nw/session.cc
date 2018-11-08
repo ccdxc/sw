@@ -60,7 +60,7 @@ session_stats_t  g_session_stats = {};
 #define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT       (15 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT    (15 * TIME_MSECS_PER_SEC)
-#define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT         (15 * TIME_MSECS_PER_SEC)
+#define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT         (3 * TIME_MSECS_PER_SEC)
 #define HAL_SESSION_AGE_SCAN_INTVL                 (250)
 #define HAL_FTE_STATS_TIMER_INTVL                  (10 * TIME_MSECS_PER_SEC)
 #define HAL_FTE_STATS_TIMER_INTVL_SECS             (10)
@@ -649,7 +649,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
 
     response->mutable_status()->set_session_handle(session->hal_handle);
     response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf->vrf_id);
-    response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
+    response->mutable_spec()->set_conn_track_en(session->conn_track_en);
 
     flow_to_flow_resp(session->iflow,
                       response->mutable_spec()->mutable_initiator_flow(),
@@ -1231,7 +1231,6 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     HAL_TRACE_DEBUG("Creating session {:p} with a rflow :{}", (void *)session, (args->valid_rflow) ? "valid" : "not valid");
 
     dllist_reset(&session->feature_list_head);
-    session->config = *args->session;
     session->vrf_handle = args->vrf->hal_handle;
     session->tcp_cxntrack_timer = NULL;
 
@@ -1293,6 +1292,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
         session->rflow->reverse_flow = session->iflow;
     }
     session->hal_handle = hal_alloc_handle();
+    session->conn_track_en = args->session->conn_track_en;
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_create_args_init(&pd_session_args);
@@ -1464,6 +1464,7 @@ static uint32_t
 build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
                   flow_state_t state,
                   pd::cpu_to_p4plus_header_t *cpu_header,
+                  pd::p4plus_to_p4_header_t *p4plus_header,
                   uint8_t *pkt, uint8_t send_tcp_ts=0, bool setrst=false)
 {
     vlan_header_t                           *vlan_hdr = NULL;
@@ -1481,6 +1482,17 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
     if (!pkt) {
         return HAL_RET_INVALID_ARG;
     }
+
+    bzero(cpu_header, sizeof(pd::cpu_to_p4plus_header_t));
+    bzero(pkt, TCP_IPV4_DOT1Q_PKT_SZ);
+    bzero(p4plus_header, sizeof(pd::p4plus_to_p4_header_t));
+
+    //Fill the P4 plus header
+    p4plus_header->p4plus_app_id = P4PLUS_APPTYPE_CPU;
+
+    // Fill in P4Plus and CPU header info
+    cpu_header->src_lif = hal::SERVICE_LIF_CPU;
+    cpu_header->l2_offset = 0;
 
     ret = ep_get_from_flow_key(&key, &sep, &dep);
     if (ret != HAL_RET_OK) {
@@ -1552,6 +1564,7 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
         ip_hdr->ihl = sizeof(ipv4_header_t)/4;
         uint16_t len = (ip_hdr->ihl << 2) + TCP_HDR_MIN_LEN + \
                ((send_tcp_ts)?TCP_TS_OPTION_LEN:0);
+        ip_hdr->tos = 0;
         ip_hdr->tot_len = htons(len);
         ip_hdr->saddr = htonl(key.sip.v4_addr);
         ip_hdr->daddr = htonl(key.dip.v4_addr);
@@ -1626,7 +1639,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // aging at that time as the timer would eventually fire and clean up the
     // session anyway.
     if (session->iflow->config.key.proto == IPPROTO_TCP &&
-        session->config.conn_track_en &&
+        session->conn_track_en &&
         session->tcp_cxntrack_timer != NULL) {
         HAL_TRACE_DEBUG("Session {} connection tracking timer is on -- bailing aging",
                         session->hal_handle);
@@ -1735,7 +1748,6 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
         ctx->aged_flow = ret;
         fte::fte_softq_enqueue(session->fte_id, /* queue it on the right FTE thread */
                                build_and_send_tcp_pkt, (void *)ctx);
-        HAL_TRACE_DEBUG("Enqueued tcp tickle send");
     }
 
     return;
@@ -1747,8 +1759,8 @@ cleanup:
 void
 build_and_send_tcp_pkt (void *data)
 {
-    pd::cpu_to_p4plus_header_t   cpu_header = {};
-    pd::p4plus_to_p4_header_t    p4plus_header = {};
+    pd::cpu_to_p4plus_header_t   cpu_header;
+    pd::p4plus_to_p4_header_t    p4plus_header;
     tcptkle_timer_ctx_t         *ctxt = (tcptkle_timer_ctx_t *)data;
     uint8_t                      pkt[TCP_IPV4_DOT1Q_PKT_SZ];
     hal_ret_t                    ret = HAL_RET_OK;
@@ -1763,10 +1775,7 @@ build_and_send_tcp_pkt (void *data)
         goto cleanup;
     }
 
-    // Fill in P4Plus and CPU header info
-    p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
-    cpu_header.src_lif = hal::SERVICE_LIF_CPU;
-    cpu_header.l2_offset = 0;
+    // Set the timestamp option if needed
     send_ts = ctxt->session_state.tcp_ts_option;
 
     if (ctxt->num_tickles <= MAX_TCP_TICKLES) {
@@ -1774,16 +1783,16 @@ build_and_send_tcp_pkt (void *data)
         if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
             ctxt->aged_flow == SESSION_AGED_BOTH) {
             sz = build_tcp_packet(session->iflow, session->vrf_handle,
-                             ctxt->session_state.iflow_state, &cpu_header, pkt, 
-                             send_ts);
+                             ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
+                             pkt, send_ts);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
         if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
             ctxt->aged_flow == SESSION_AGED_BOTH) {
             sz = build_tcp_packet(session->rflow, session->vrf_handle,
-                             ctxt->session_state.rflow_state, &cpu_header, pkt,
-                             send_ts);
+                             ctxt->session_state.rflow_state, &cpu_header, &p4plus_header, 
+                             pkt, send_ts);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_tickles_sent, 1);
         }
@@ -1799,18 +1808,21 @@ build_and_send_tcp_pkt (void *data)
         return;
     } else {
         // Send TCP RST to the flow if there is no response
-        if (ctxt->aged_flow == SESSION_AGED_RFLOW) {
+        if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
+            ctxt->aged_flow == SESSION_AGED_BOTH) {
             sz = build_tcp_packet(session->iflow, session->vrf_handle,
-                              ctxt->session_state.iflow_state, &cpu_header, pkt, 
-                              send_ts, true);
+                              ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
+                              pkt, send_ts, true);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
         }
-        if (ctxt->aged_flow == SESSION_AGED_IFLOW) {
+        if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
+            ctxt->aged_flow == SESSION_AGED_BOTH) {
             sz = build_tcp_packet(session->rflow, session->vrf_handle,
-                             ctxt->session_state.rflow_state, &cpu_header, pkt, 
-                             send_ts, true);
+                             ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
+                             pkt, send_ts, true);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+  
             HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
         }
 
@@ -1892,7 +1904,7 @@ session_age_cb (void *entry, void *ctxt)
     // aging at that time as the timer would eventually fire and clean up the
     // session anyway.
     if (session->iflow->config.key.proto == IPPROTO_TCP &&
-        session->config.conn_track_en &&
+        session->conn_track_en &&
         session->tcp_cxntrack_timer != NULL) {
         HAL_TRACE_DEBUG("Session connection tracking timer is on for {} -- bailing aging",
                         session->hal_handle);
@@ -2248,7 +2260,7 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
-                       session->config.session_id);
+                       session->hal_handle);
     }
 
     HAL_TRACE_DEBUG("IFlow State: {}", state.iflow_state.state);

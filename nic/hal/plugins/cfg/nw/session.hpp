@@ -237,8 +237,8 @@ typedef struct flow_pgm_attrs_s {
 } __PACK__ flow_pgm_attrs_t;
 
 typedef struct flow_stats_s {
-    uint64_t              num_tcp_tickles_sent;   // Number of TCP tickles sent for this
-    uint8_t               num_tcp_rst_sent;       // Number of TCP reset sent as a result of aging
+    uint8_t              num_tcp_tickles_sent;   // Number of TCP tickles sent for this
+    uint8_t              num_tcp_rst_sent;       // Number of TCP reset sent as a result of aging
 } __PACK__ flow_stats_t;
 
 // flow state
@@ -360,8 +360,8 @@ typedef struct session_args_s {
 //------------------------------------------------------------------------------
 struct session_s {
     hal_spinlock_t      slock;                    // lock to protect this structure
-    uint8_t             fte_id;                   // FTE that created this session
-    session_cfg_t       config;                   // session config
+    uint8_t             fte_id:4;                 // FTE that created this session
+    uint8_t             conn_track_en:1;          // enable connection tracking
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
     hal_handle_t        vrf_handle;               // src vrf handle
@@ -379,12 +379,8 @@ struct session_s {
     hal_handle_t        sep_handle;               // Source EP Handle
     hal_handle_t        dep_handle;               // Destination EP Handle
     /* TODO: SEP and DEP handles need to be removed */
-    //dllist_ctxt_t       sep_session_lentry;       // source EP's session list context
-    //dllist_ctxt_t       dep_session_lentry;       // destination EP's session list context
     dllist_ctxt_t       sif_session_lentry;       // source interface's session list context
     dllist_ctxt_t       dif_session_lentry;       // destination interface's session list context
-    dllist_ctxt_t       sl2seg_session_lentry;    // source L2 segment's session list context
-    dllist_ctxt_t       dl2seg_session_lentry;    // destination L2 segment's session list context
     dllist_ctxt_t       feature_list_head;        // List of feature specific states
 } __PACK__;
 
