@@ -18,7 +18,6 @@ func (cl *NetagentClient) NetworkList() ([]netproto.Network, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/networks/", &networkList)
 
 	return networkList, err
-
 }
 
 // NetworkPost creates Network object

@@ -18,7 +18,6 @@ func (cl *NetagentClient) NatBindingList() ([]netproto.NatBinding, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/nat/bindings/", &natbindingList)
 
 	return natbindingList, err
-
 }
 
 // NatBindingPost creates NatBinding object
@@ -56,7 +55,6 @@ func (cl *NetagentClient) NatPolicyList() ([]netproto.NatPolicy, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/nat/policies/", &natpolicyList)
 
 	return natpolicyList, err
-
 }
 
 // NatPolicyPost creates NatPolicy object
@@ -94,7 +92,6 @@ func (cl *NetagentClient) NatPoolList() ([]netproto.NatPool, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/nat/pools/", &natpoolList)
 
 	return natpoolList, err
-
 }
 
 // NatPoolPost creates NatPool object

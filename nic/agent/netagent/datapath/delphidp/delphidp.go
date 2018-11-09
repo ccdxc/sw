@@ -326,7 +326,17 @@ func (dp *DelphiDatapath) DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns 
 }
 
 // CreatePort creates port
-func (dp *DelphiDatapath) CreatePort(port *netproto.Port) error {
+func (dp *DelphiDatapath) CreatePort(port *netproto.Port) (*netproto.Port, error) {
+	return port, nil
+}
+
+// UpdatePort updates port
+func (dp *DelphiDatapath) UpdatePort(port *netproto.Port) (*netproto.Port, error) {
+	return port, nil
+}
+
+// DeletePort creates port
+func (dp *DelphiDatapath) DeletePort(port *netproto.Port) error {
 	return nil
 }
 

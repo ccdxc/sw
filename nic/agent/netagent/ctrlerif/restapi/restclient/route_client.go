@@ -18,7 +18,6 @@ func (cl *NetagentClient) RouteList() ([]netproto.Route, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/routes/", &routeList)
 
 	return routeList, err
-
 }
 
 // RoutePost creates Route object

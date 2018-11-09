@@ -45,13 +45,13 @@ import (
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/security/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "TCPProxyPolicy"}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/tcp/proxies/", &{{lower $crudObject}}{{title .}} )
+												{{else if strEq $crudObject "Port"}}
+                            err := netutils.HTTPGet("http://"+cl.agentURL+"/api/system/ports/", &{{lower $crudObject}}{{title .}} )
                         {{else}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}{{title .}} )
                         {{end}}
 
                         return {{lower $crudObject}}{{title .}}, err
-
-
                     }
                 {{else if strEq . "post"}}
                     // {{title $crudObject}}{{title .}} creates {{$crudObject}} object
@@ -64,30 +64,32 @@ import (
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/sgs/", &postData, &resp)
                         {{else if strEq $crudObject "Endpoint"}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/endpoints/", &{{lower .}}Data, &resp)
-                         {{else if (or (strEq $crudObject "Tenant") (strEq $crudObject "Namespace"))}}
+                        {{else if (or (strEq $crudObject "Tenant") (strEq $crudObject "Namespace"))}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "Interface"}}
-                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/interfaces/", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "NatPolicy"}}
-                              err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/policies/", &{{lower .}}Data, &resp)
-                          {{else if strEq $crudObject "SGPolicy"}}
-                               err := netutils.HTTPPost("http://"+cl.agentURL+"/api/security/policies/", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "NatPool"}}
-                           err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/pools/", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "IPSecPolicy"}}
-                              err := netutils.HTTPPost("http://"+cl.agentURL+"/api/ipsec/policies/", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "IPSecSAEncrypt"}}
-                           err := netutils.HTTPPost("http://"+cl.agentURL+"/api/ipsec/encryption/", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "IPSecSADecrypt"}}
-                           err := netutils.HTTPPost("http://"+cl.agentURL+"/api/ipsec/decryption/", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "Route"}}
-                        err := netutils.HTTPPost("http://"+cl.agentURL+"/api/routes/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "Interface"}}
+                            err := netutils.HTTPPost("http://"+cl.agentURL+"/api/interfaces/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "NatPolicy"}}
+                            err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/policies/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "SGPolicy"}}
+                            err := netutils.HTTPPost("http://"+cl.agentURL+"/api/security/policies/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "NatPool"}}
+                           	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/pools/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "IPSecPolicy"}}
+                            err := netutils.HTTPPost("http://"+cl.agentURL+"/api/ipsec/policies/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "IPSecSAEncrypt"}}
+                           	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/ipsec/encryption/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "IPSecSADecrypt"}}
+                           	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/ipsec/decryption/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "Route"}}
+                        		err := netutils.HTTPPost("http://"+cl.agentURL+"/api/routes/", &{{lower .}}Data, &resp)
                         {{else if strEq $crudObject "Tunnel"}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/tunnels/", &postData, &resp)
                         {{else if strEq $crudObject "TCPProxyPolicy"}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/tcp/proxies/", &postData, &resp)
-                         {{else if strEq $crudObject "NatBinding"}}
-                         err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/bindings/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "NatBinding"}}
+                         		err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/bindings/", &{{lower .}}Data, &resp)
+											  {{else if strEq $crudObject "Port"}}
+														err := netutils.HTTPPost("http://"+cl.agentURL+"/api/system/ports/", &{{lower .}}Data, &resp)
                         {{end}}
 
                         return err
@@ -97,38 +99,40 @@ import (
                         // {{title $crudObject}}{{title .}} updates {{$crudObject}} object
                         func (cl *NetagentClient) {{title $crudObject}}Update({{lower .}}Data netproto.{{title $crudObject}}) error {
                             var resp Response
-                            {{if strEq $crudObject "Network"}}
-                                err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "Namespace"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/namespaces/preCreatedTenant/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "NatPolicy"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/nat/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "IPSecPolicy"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/ipsec/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "IPSecSAEncrypt"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/ipsec/encryption/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "IPSecSADecrypt"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/ipsec/decryption/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                           {{else if strEq $crudObject "NatPool"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/nat/pools/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                           {{else if strEq $crudObject "Route"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/routes/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                               {{else if strEq $crudObject "TCPProxyPolicy"}}
+                            	{{if strEq $crudObject "Network"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "Namespace"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/namespaces/preCreatedTenant/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "NatPolicy"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/nat/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "IPSecPolicy"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/ipsec/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                          		{{else if strEq $crudObject "IPSecSAEncrypt"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/ipsec/encryption/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "IPSecSADecrypt"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/ipsec/decryption/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                           		{{else if strEq $crudObject "NatPool"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/nat/pools/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                           		{{else if strEq $crudObject "Route"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/routes/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                              {{else if strEq $crudObject "TCPProxyPolicy"}}
                                   err := netutils.HTTPPut("http://"+cl.agentURL+"/api/tcp/proxies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                           {{else if strEq $crudObject "NatBinding"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/nat/bindings/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "SecurityGroup"}}
-                                err := netutils.HTTPPut("http://"+cl.agentURL+"/api/sgs/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "Endpoint"}}
-                                err := netutils.HTTPPut("http://"+cl.agentURL+"/api/endpoints/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "Tenant"}}
-                                err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                           {{else if strEq $crudObject "SGPolicy"}}
-                               err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                             {{else if strEq $crudObject "Tunnel"}}
-                                 err := netutils.HTTPPut("http://"+cl.agentURL+"/api/tunnels/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
-                            {{else if strEq $crudObject "Interface"}}
-                                err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                           		{{else if strEq $crudObject "NatBinding"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/nat/bindings/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "SecurityGroup"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/sgs/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "Endpoint"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/endpoints/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "Tenant"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                           		{{else if strEq $crudObject "SGPolicy"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                             	{{else if strEq $crudObject "Tunnel"}}
+                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/tunnels/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "Interface"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+															{{else if strEq $crudObject "Port"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/system/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                             {{end}}
 
                             return err
@@ -137,41 +141,41 @@ import (
                     // {{title $crudObject}}{{title .}} deletes {{$crudObject}} object
                     func (cl *NetagentClient) {{title $crudObject}}{{title .}}({{lower .}}Data netproto.{{title $crudObject}}) error {
                         var resp Response
-                        {{if strEq $crudObject "Network"}}
-                            err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        {{else if strEq $crudObject "NatPool"}}
-                               err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/nat/pools/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        {{else if strEq $crudObject "Route"}}
-                        err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        {{else if strEq $crudObject "NatBinding"}}
-                               err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/nat/bindings/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        {{else if strEq $crudObject "NatPolicy"}}
-                               err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/nat/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                       {{else if strEq $crudObject "IPSecPolicy"}}
-                               err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/ipsec/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        {{else if strEq $crudObject "IPSecSAEncrypt"}}
-                               err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/ipsec/encryption/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                       {{else if strEq $crudObject "IPSecSADecrypt"}}
-                               err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/ipsec/decryption/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        {{else if strEq $crudObject "SecurityGroup"}}
-                            err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/sgs/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                        {{else if strEq $crudObject "Endpoint"}}
-                            err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/endpoints/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "Tenant"}}
-                             err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/tenants/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                          {{else if strEq $crudObject "Namespace"}}
-                             err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/namespaces/preCreatedTenant/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "SGPolicy"}}
-                              err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/security/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                         {{else if strEq $crudObject "Interface"}}
-                              err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/interfaces/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                          {{else if strEq $crudObject "Tunnel"}}
-                          err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-                          {{else if strEq $crudObject "TCPProxyPolicy"}}
-                                  err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/tcp/proxies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
-
+                        			{{if strEq $crudObject "Network"}}
+                            			err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "NatPool"}}
+                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/nat/pools/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "Route"}}
+                        					err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "NatBinding"}}
+                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/nat/bindings/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "NatPolicy"}}
+                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/nat/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                       				{{else if strEq $crudObject "IPSecPolicy"}}
+                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/ipsec/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "IPSecSAEncrypt"}}
+                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/ipsec/encryption/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                       				{{else if strEq $crudObject "IPSecSADecrypt"}}
+                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/ipsec/decryption/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "SecurityGroup"}}
+                            			err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/sgs/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "Endpoint"}}
+                            			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/endpoints/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "Tenant"}}
+                             			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/tenants/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "Namespace"}}
+                             			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/namespaces/preCreatedTenant/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "SGPolicy"}}
+                              		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/security/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "Interface"}}
+                              		err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/interfaces/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "Tunnel"}}
+                        					err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "TCPProxyPolicy"}}
+                              		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/tcp/proxies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+															{{else if strEq $crudObject "Port"}}
+                              		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/system/ports/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)					
                         {{end}}
-
                         return err
                     }
 

@@ -191,6 +191,11 @@ type CtrlerIntf interface {
 	ListTCPProxyPolicy() []*netproto.TCPProxyPolicy                           // lists TCP Proxy Policy
 	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error                  // updates an TCP Proxy Policy
 	DeleteTCPProxyPolicy(tcp, ns, name string) error                          // deletes an TCP Proxy Policy
+	CreatePort(tcp *netproto.Port) error                                      // creates an Port
+	FindPort(meta api.ObjectMeta) (*netproto.Port, error)                     // finds an Port
+	ListPort() []*netproto.Port                                               // lists Port
+	UpdatePort(port *netproto.Port) error                                     // updates an Port
+	DeletePort(port, ns, name string) error                                   // deletes an Port
 	GetHwInterfaces() error                                                   // Gets all the uplinks created on the hal by nic mgr
 }
 
@@ -252,7 +257,9 @@ type NetDatapathAPI interface {
 	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // creates a tcp proxy policy in the datapath
 	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // updates a tcp proxy policy in the datapath
 	DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // deletes a tcp proxy policy in the datapath
-	CreatePort(port *netproto.Port) error                                                                                                                            // Creates a port in the datapath
+	CreatePort(port *netproto.Port) (*netproto.Port, error)                                                                                                          // Creates a port in the datapath
+	UpdatePort(port *netproto.Port) (*netproto.Port, error)                                                                                                          // Creates a port in the datapath
+	DeletePort(port *netproto.Port) error                                                                                                                            // Creates a port in the datapat
 	GetUUID() (string, error)                                                                                                                                        // GetUUID gets the FRU information for the NAPLES from HAL.
 }
 

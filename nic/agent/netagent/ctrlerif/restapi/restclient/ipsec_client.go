@@ -18,7 +18,6 @@ func (cl *NetagentClient) IPSecPolicyList() ([]netproto.IPSecPolicy, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/ipsec/policies/", &ipsecpolicyList)
 
 	return ipsecpolicyList, err
-
 }
 
 // IPSecPolicyPost creates IPSecPolicy object
@@ -56,7 +55,6 @@ func (cl *NetagentClient) IPSecSADecryptList() ([]netproto.IPSecSADecrypt, error
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/ipsec/decryption/", &ipsecsadecryptList)
 
 	return ipsecsadecryptList, err
-
 }
 
 // IPSecSADecryptPost creates IPSecSADecrypt object
@@ -94,7 +92,6 @@ func (cl *NetagentClient) IPSecSAEncryptList() ([]netproto.IPSecSAEncrypt, error
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/ipsec/encryption/", &ipsecsaencryptList)
 
 	return ipsecsaencryptList, err
-
 }
 
 // IPSecSAEncryptPost creates IPSecSAEncrypt object

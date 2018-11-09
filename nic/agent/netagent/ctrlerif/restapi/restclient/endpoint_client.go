@@ -18,7 +18,6 @@ func (cl *NetagentClient) EndpointList() ([]netproto.Endpoint, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/endpoints/", &endpointList)
 
 	return endpointList, err
-
 }
 
 // EndpointPost creates Endpoint object

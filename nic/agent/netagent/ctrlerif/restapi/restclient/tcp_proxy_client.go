@@ -18,7 +18,6 @@ func (cl *NetagentClient) TCPProxyPolicyList() ([]netproto.TCPProxyPolicy, error
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/tcp/proxies/", &tcpproxypolicyList)
 
 	return tcpproxypolicyList, err
-
 }
 
 // TCPProxyPolicyPost creates TCPProxyPolicy object

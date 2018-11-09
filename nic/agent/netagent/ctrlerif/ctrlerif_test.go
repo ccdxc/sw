@@ -482,6 +482,31 @@ func (ag *fakeAgent) DeleteTCPProxyPolicy(tcp, namespace, name string) error {
 	return nil
 }
 
+// CreatePort creates a port. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreatePort(np *netproto.Port) error {
+	return nil
+}
+
+// FindPort finds a port. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindPort(meta api.ObjectMeta) (*netproto.Port, error) {
+	return nil, nil
+}
+
+// ListPort lists a port. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListPort() []*netproto.Port {
+	return nil
+}
+
+// UpdatePort updates a port. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdatePort(port *netproto.Port) error {
+	return nil
+}
+
+// DeletePort deletes a port. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeletePort(tn, ns, name string) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

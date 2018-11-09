@@ -18,7 +18,6 @@ func (cl *NetagentClient) NamespaceList() ([]netproto.Namespace, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/namespaces/", &namespaceList)
 
 	return namespaceList, err
-
 }
 
 // NamespacePost creates Namespace object

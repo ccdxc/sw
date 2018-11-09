@@ -18,7 +18,6 @@ func (cl *NetagentClient) TunnelList() ([]netproto.Tunnel, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/tunnels/", &tunnelList)
 
 	return tunnelList, err
-
 }
 
 // TunnelPost creates Tunnel object

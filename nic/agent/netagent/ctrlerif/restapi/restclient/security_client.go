@@ -18,7 +18,6 @@ func (cl *NetagentClient) SecurityGroupList() ([]netproto.SecurityGroup, error) 
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/sgs/", &securitygroupList)
 
 	return securitygroupList, err
-
 }
 
 // SecurityGroupPost creates SecurityGroup object

@@ -288,7 +288,7 @@ func (na *Nagent) createPortAndUplink(p *netproto.Port) error {
 
 	var uplinkType string
 
-	err := na.Datapath.CreatePort(p)
+	err := na.CreatePort(p)
 	if err != nil {
 		return err
 	}

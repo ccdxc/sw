@@ -193,6 +193,9 @@ func (s *StateDependencies) resolveObjectType(o interface{}) (api.TypeMeta, api.
 	case *netproto.TCPProxyPolicy:
 		tcp := o.(*netproto.TCPProxyPolicy)
 		return tcp.TypeMeta, tcp.ObjectMeta, nil
+	case *netproto.Port:
+		port := o.(*netproto.Port)
+		return port.TypeMeta, port.ObjectMeta, nil
 	default:
 		log.Errorf("Invalid object type %v", o)
 		err := fmt.Errorf("invalid object type. %v", o)
@@ -273,6 +276,9 @@ func (s *StateDependencies) composeKeySelfLink(m *meta) (key, selfLink string, e
 		return
 	case "tcpproxypolicy":
 		selfLink = fmt.Sprintf("/api/tcp/proxies/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
+		return
+	case "port":
+		selfLink = fmt.Sprintf("/api/system/ports/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	default:
 		log.Errorf("Invalid object type %v. Obj: %v", m.T, m.O)

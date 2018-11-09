@@ -18,7 +18,6 @@ func (cl *NetagentClient) InterfaceList() ([]netproto.Interface, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/interfaces/", &interfaceList)
 
 	return interfaceList, err
-
 }
 
 // InterfacePost creates Interface object

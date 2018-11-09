@@ -18,7 +18,6 @@ func (cl *NetagentClient) SGPolicyList() ([]netproto.SGPolicy, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/security/policies/", &sgpolicyList)
 
 	return sgpolicyList, err
-
 }
 
 // SGPolicyPost creates SGPolicy object

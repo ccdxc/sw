@@ -19,9 +19,10 @@ import "github.com/pensando/sw/api/meta.proto";
 // Port controller api
 service PortApi {
     // options for auto generating rest endpoints
+    // Allow only list and update methods
     option(venice.naplesRestService) = {
         Object: "Port",
-        Method: ["list", "post", "delete", "put"],
+        Method: ["list", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/ports"
     };
@@ -77,14 +78,14 @@ message PortSpec {
                                  (gogoproto.jsontag) = "speed,omitempty"];
 
     // Type of Port. Either TYPE_ETHERNET or TYPE_MANAGEMENT.
-    string Type             = 2 [(venice.check) = "StrEnum(PortStatus.PortType)",
+    string Type             = 2 [(venice.check) = "StrEnum(PortSpec.PortType)",
                                  (gogoproto.jsontag) = "type,omitempty"];
     // Port Breakout Mode
     string BreakoutMode     = 3  [(venice.check) = "StrEnum(PortSpec.PortBreakout",
                                   (gogoproto.jsontag) = "breakout-mode,omitempty"];
 
     // AdminStatus of the port.
-    string AdminStatus      = 4 [(venice.check) = "StrEnum(PortStatus.IFStatus)",
+    string AdminStatus      = 4 [(venice.check) = "StrEnum(PortSpec.IFStatus)",
                                  (gogoproto.jsontag) = "admin-status,omitempty"];
 
     // Number of Lanes on the port.

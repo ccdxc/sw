@@ -473,6 +473,28 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
+	port := netproto.Port{
+		TypeMeta: api.TypeMeta{Kind: "Port"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedPort",
+		},
+		Spec: netproto.PortSpec{
+			Speed:        "SPEED_100G",
+			Type:         "TYPE_ETHERNET",
+			AdminStatus:  "UP",
+			BreakoutMode: "BREAKOUT_NONE",
+			Lanes:        4,
+		},
+	}
+
+	err = nagent.CreatePort(&port)
+	if err != nil {
+		log.Errorf("Failed to create port. {%v}", enic)
+		return
+	}
+
 	return nil
 }
 

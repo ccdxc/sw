@@ -18,7 +18,6 @@ func (cl *NetagentClient) TenantList() ([]netproto.Tenant, error) {
 	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/tenants/", &tenantList)
 
 	return tenantList, err
-
 }
 
 // TenantPost creates Tenant object

@@ -220,7 +220,7 @@ func (hd *Datapath) generateMockHwState() (*halproto.LifGetResponseMsg, *halprot
 					NumLanes: 4,
 					KeyOrHandle: &halproto.PortKeyHandle{
 						KeyOrHandle: &halproto.PortKeyHandle_PortId{
-							PortId: 2,
+							PortId: 5,
 						},
 					},
 					BreakoutModes: []halproto.PortBreakoutMode{
@@ -237,7 +237,7 @@ func (hd *Datapath) generateMockHwState() (*halproto.LifGetResponseMsg, *halprot
 					NumLanes: 1,
 					KeyOrHandle: &halproto.PortKeyHandle{
 						KeyOrHandle: &halproto.PortKeyHandle_PortId{
-							PortId: 3,
+							PortId: 9,
 						},
 					},
 					BreakoutModes: []halproto.PortBreakoutMode{

@@ -28,6 +28,15 @@ if [ $OUT -ne 0 ];then
    cleanup $OUT
 fi
 
+echo "Running port flap tests"
+bash port-flap-test.sh
+OUT=$?
+if [ $OUT -ne 0 ];then
+   echo "Port Flap Test Failed!"
+   cleanup $OUT
+fi
+
+
 echo "Starting Traffic Tests..."
 
 echo "Starting Host-Host Traffic tests.."
