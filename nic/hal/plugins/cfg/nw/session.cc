@@ -1669,7 +1669,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // If there is no timeout configured then we do not age the session
     session_timeout = session_aging_timeout(session, iflow, rflow);
     if (!session_timeout) {
-        HAL_TRACE_DEBUG("Session timeout is not configured");
+        //HAL_TRACE_DEBUG("Session timeout is not configured");
         return retval;
     }
 
@@ -1914,7 +1914,7 @@ session_age_cb (void *entry, void *ctxt)
 
     retval = hal_has_session_aged(session, args->ctime_ns, &session_state);
     if (retval != SESSION_AGED_NONE) {
-	HAL_TRACE_DEBUG("Aged session: {}", session->iflow->config.key);
+	//HAL_TRACE_DEBUG("Aged session: {}", session->iflow->config.key);
         /*
          *  Send out TCP tickle if it is a TCP session and start a timer for 2
          *  seconds. We send 3 tickles (keepalives) before we send out TCP RST
@@ -1951,9 +1951,9 @@ session_age_cb (void *entry, void *ctxt)
                 args->num_ctx[session->fte_id] = 0;
             }
         } else {
-            HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
-                     session->hal_handle, args->num_del_sess[session->fte_id],
-                     (void *)args->session_list[session->fte_id]);
+            //HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
+            //         session->hal_handle, args->num_del_sess[session->fte_id],
+            //         (void *)args->session_list[session->fte_id]);
             // time to clean up the session, add handle to session list
             args->session_list[session->fte_id][args->num_del_sess[session->fte_id]++] = \
                                                                  session->hal_handle;
