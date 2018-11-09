@@ -5,3 +5,4 @@ nic/asic/capri/model/capsim-master/gen/x86_64/bin/*
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/*.so
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/*.a
 nic/asic/capri/model/capsim-master/gen/aarch64/bin/*
+nic/tools/asic/tcl.tar.gz
