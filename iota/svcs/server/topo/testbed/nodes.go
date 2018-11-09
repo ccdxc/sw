@@ -11,6 +11,7 @@ import (
 // AddNode adds a node to the topology
 func (n *TestNode) AddNode() error {
 	resp, err := n.AgentClient.AddNode(context.Background(), n.Node)
+	n.RespNode = resp
 	log.Infof("TOPO SVC | DEBUG | AddNode Agent . Received Response Msg: %v", resp)
 
 	if err != nil {
@@ -23,6 +24,5 @@ func (n *TestNode) AddNode() error {
 		return fmt.Errorf("adding node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.NodeStatus.ApiStatus)
 	}
 	n.Node.NodeUuid = resp.NodeUuid
-	n.RespNode = resp
 	return nil
 }

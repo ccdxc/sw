@@ -1,6 +1,6 @@
 ---
 targets:
-  iota/infra    : ["echo", "IOTA Infra Sanity"]
+  iota/infra    : ["sh", "-c", "cd /sw/iota && ./sanity.sh "]
 
 cache:
   name: "sw"

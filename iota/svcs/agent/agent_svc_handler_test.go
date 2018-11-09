@@ -905,4 +905,5 @@ func init() {
 	}
 
 	controlIntf = Utils.GetIntfsMatchingPrefix("e")[0]
+	naplesHwUUIDFile = "/mnt/sysuuid"
 }
