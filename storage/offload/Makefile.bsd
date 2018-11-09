@@ -40,10 +40,6 @@ SRCS= \
  src/common/pnso_pbuf.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
 
-ifdef ENABLE_PNSO_SONIC_TEST
-SRCS += src/drv/test/pnso_sonic_test.o
-endif
-
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
 INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel src/drv/test
 CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
