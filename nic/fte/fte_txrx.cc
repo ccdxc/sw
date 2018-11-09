@@ -301,7 +301,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
     ctx_mem_init();
     while (true) {
         if (hal_cfg->platform == hal::HAL_PLATFORM_HW) {
-            //usleep(1000) //asicrw crash that was causing this should 
+            usleep(1000); //asicrw crash that was causing this should 
                            // been resolved by other changes to asicrw
         } else if (hal_cfg->platform == hal::HAL_PLATFORM_SIM) {
             usleep(1000000/30);
