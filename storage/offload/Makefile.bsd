@@ -25,6 +25,7 @@ SRCS= \
  src/drv/pnso_seq.c \
  src/drv/pnso_seq_hw.c \
  src/drv/pnso_utils.c \
+ src/drv/pnso_stats.c \
  src/drv/linux/kernel/sonic_bus_pci.c \
  src/drv/linux/kernel/sonic_dev.c \
  src/drv/linux/kernel/sonic_lif.c \
