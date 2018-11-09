@@ -1,0 +1,174 @@
+meta:
+    name        : classic::driver-features
+    description : Driver features Test Suite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+
+packages:
+    - iota.test.iris
+
+images:
+
+setup:
+    topology: test/iris/topologies/2Naples_BM/2Naples.topology
+    config  :
+        - step : config.netagent.hw_push_config
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+
+testcases:
+    -   name    : SAMPLE_DRIVER_FEATURES_TX_RING_SIZE
+        testcase: testcases.drivers.features
+        ignore: False
+        iterators :
+            type               : nested
+            tx_ring_size       : [ '256']
+            mtu                : [ '1500']
+            pktsize            : [ 64]
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type         : remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_TX_RING_SIZE
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            tx_ring_size       : [ '256', '4k', '16k', '64k', '256']
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            proto              : [ 'udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type         : remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : DRIVER_FEATURES_RX_RING_SIZE
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            rx_ring_size       : [ '256', '4k', '16k', '64k', '256']
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type: remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_TX_QUEUE_SIZE
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            tx_queue_size      : [ '1', '2', '4', '8', '16']
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type: remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_RX_QUEUE_SIZE
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            rx_queue_size      : [ '1', '2', '4', '8', '16']
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type: remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_TX_CHECKSUM
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            tx_check_sum       : [ 'off', 'on']
+            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            mtu                : [ '1500', '2048', '4098', '8192']
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type: remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_RX_CHECKSUM
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            rx_check_sum       : [ 'off', 'on']
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type: remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_TSO
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            mtu                : [ '1500', '2048', '4098', '8192']
+            tso_offload        : [ 'off', 'on']
+            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type: remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_PKT_FILTER
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            mtu                : [ '1500', '2048', '4098', '8192']
+            filter_mcast       : [ 'off', 'on']
+            filter_all_mcast   : [ 'off', 'on']
+            filter_broadcast   : [ 'off', 'on']
+            filter_promiscuous : [ 'off', 'on']
+            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type: remote_only
+            capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

@@ -95,6 +95,9 @@ func (ts *StubTopologyService) EntityCopy(ctx context.Context, req *iota.EntityC
 func (ts *StubTopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | Trigger. Received Request Msg: %v", req)
 
+	for _, cmd := range req.Commands {
+		cmd.Handle = "dummy"
+	}
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }

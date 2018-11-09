@@ -2,6 +2,7 @@ __pycache__
 protos/*gogen*
 protos/*pygen*
 bin/
+test_data/
 images/raw.tar.gz
 *.log
 logs

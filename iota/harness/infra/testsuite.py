@@ -66,6 +66,9 @@ class TestSuite:
 
     def __resolve_testcases(self):
         for tc_spec in self.__spec.testcases:
+            if getattr(tc_spec, 'disable', False):
+                Logger.info("Skipping disabled test case %s" % tc_spec.name)
+                continue
             tc_spec.packages = self.__spec.packages
             if getattr(tc_spec, 'verifs', None):
                 tc_spec.verifs.extend(self.__spec.common.verifs)
@@ -106,7 +109,7 @@ class TestSuite:
         ret = self.__parse_setup_topology()
         if ret != types.status.SUCCESS:
             return ret
-        
+
         ret = self.__resolve_setup_config()
         if ret != types.status.SUCCESS:
             return ret
@@ -144,7 +147,7 @@ class TestSuite:
 
     def Name(self):
         return self.__spec.meta.name
-    
+
     def Mode(self):
         return self.__spec.meta.mode
 

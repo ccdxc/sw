@@ -3,7 +3,7 @@ import datetime
 import pdb
 import sys
 import inspect
-import threading 
+import threading
 
 import iota.harness.infra.types   as types
 
@@ -35,7 +35,7 @@ class LoggerSink:
             pfx = prefixes[level]
             if pfx in text: return True
         return False
-    
+
     def write(self, text):
         #pdb.set_trace()
         #text = text.replace('\n', ' ')
@@ -43,7 +43,7 @@ class LoggerSink:
         self.log(text)
         return
 
-    def log(self, text): 
+    def log(self, text):
         #if not self.__is_logger_print(text):
         #    return
         self.lock.acquire()
@@ -71,6 +71,7 @@ class _Logger:
         self.logfile        = logfile
         self.tsname         = None
         self.tcname         = None
+        self.tcid           = None
 
         if stdout:
             global StdoutLoggerSink
@@ -94,7 +95,7 @@ class _Logger:
         if self.tsname:
             prefix += "[TS:%s]" % self.tsname
         if self.tcname:
-            prefix += "[TC:%s]" % self.tcname
+            prefix += "[TC:%s:%s]" % (self.tcname, str(self.tcid))
         if level:
             prefix += "[%s]" % prefixes[level]
         else:
@@ -125,7 +126,7 @@ class _Logger:
             text = text + "  " * indent
         for a in args:
             text = text + str(a) + " "
-        
+
         text = text.replace('\n', ' ')
         text = text + "\n"
         return text
@@ -156,7 +157,7 @@ class _Logger:
 
     def log(self, level, *args, **kwargs):
         return self.__log(*args, **kwargs, level=level)
-   
+
     def SetLoggingLevel(self, level):
         self.level = level
 
@@ -164,10 +165,15 @@ class _Logger:
         self.tsname = tsname
         # Reset the tcname everytime tsname changes.
         self.tcname = None
+        self.tcid = None
         return
 
     def SetTestcase(self, tcname):
         self.tcname = tcname
+        return
+
+    def SetTestcaseID(self, tcid):
+        self.tcid = tcid
         return
 
     def GetLogPrefix(self):

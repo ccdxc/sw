@@ -10,10 +10,9 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 
-	log "github.com/sirupsen/logrus"
-
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
+	log "github.com/sirupsen/logrus"
 	//Common "github.com/pensando/sw/iota/svcs/common"
 )
 
@@ -377,6 +376,8 @@ func (app *bareMetalWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx
 	if !ok {
 		return &Cmd.CommandCtx{ExitCode: -1, Stdout: "", Stderr: "", Done: true}, nil
 	}
+
+	app.logger.Printf("Stopping bare meta Running cmd %v %v\n", cmdInfo.Ctx.Stdout, cmdInfo.Handle)
 
 	Cmd.StopExecCmd(cmdInfo)
 	time.Sleep(2 * time.Second)

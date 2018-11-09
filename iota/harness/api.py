@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 import grpc
 import pdb
+import os
+import sys
 from iota.harness.infra.utils.logger import Logger as Logger
 
 import iota.protos.pygen.types_pb2 as types_pb2
@@ -18,6 +20,10 @@ gl_iota_svc_channel = None
 gl_topo_svc_stub = None
 gl_cfg_svc_stub = None
 
+topdir = os.path.dirname(sys.argv[0])
+topdir = os.path.abspath(topdir)
+iota_test_data_dir = topdir + "/test_data"
+
 def Init():
     server = 'localhost:' + str(GlobalOptions.svcport)
     Logger.info("Creating GRPC Channel to IOTA Service %s" % server)
@@ -31,6 +37,8 @@ def Init():
 
     global gl_cfg_svc_stub
     gl_cfg_svc_stub = cfg_svc.ConfigMgmtApiStub(gl_iota_svc_channel)
+
+    os.system("mkdir -p %s" % iota_test_data_dir)
     return
 
 def __rpc(req, rpcfn):
@@ -188,7 +196,7 @@ def PrintCommandResults(cmd):
     def PrintOutputLines(name, output):
         lines = output.split('\n')
         if len(lines): Logger.header(name)
-        for line in lines: 
+        for line in lines:
             Logger.info(line)
     PrintOutputLines('STDOUT', cmd.stdout)
     PrintOutputLines('STDERR', cmd.stderr)
@@ -203,7 +211,7 @@ def GetVeniceConfigs():
 def SetVeniceAuthToken(auth_token):
     store.SetVeniceAuthToken(auth_token)
     return types.status.SUCCESS
-    
+
 def GetVeniceAuthToken():
     return store.GetVeniceAuthToken()
 
@@ -239,10 +247,11 @@ def CopyToHost(node_name, files, dest_dir):
 
 def CopyFromHost(node_name, files, dest_dir):
     req = topo_svc.EntityCopyMsg()
-    req.direction = topo_svc.CopyDirection.DIR_OUT
+    req.direction = topo_svc.DIR_OUT
     req.node_name = node_name
     req.entity_name = "%s_host" % node_name
-    req.files = files
+    for f in files:
+        req.files.append(f)
     req.dest_dir = dest_dir
     return EntityCopy(req)
 
@@ -315,3 +324,6 @@ def Trigger_AggregateCommandsResponse(trig_resp, term_resp):
             cmd.stderr = term_cmd.stderr
             cmd.exit_code = term_cmd.exit_code
     return trig_resp
+
+def GetTestDataDir():
+    return iota_test_data_dir

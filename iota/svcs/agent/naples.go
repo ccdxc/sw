@@ -67,6 +67,7 @@ type naplesQemuNode struct {
 }
 
 type mellanoxNode struct {
+	mlxEntityKey string
 	dataNode
 }
 
@@ -720,6 +721,31 @@ func (naples *naplesQemuNode) NodeType() iota.PersonalityType {
 	return iota.PersonalityType_PERSONALITY_NAPLES_SIM_WITH_QEMU
 }
 
+func (mlx *mellanoxNode) addNodeEntities(in *iota.Node) error {
+	for _, entityEntry := range in.GetEntities() {
+		var wload Workload.Workload
+		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_HOST {
+			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, mlx.logger)
+			mlx.mlxEntityKey = entityEntry.GetName()
+		}
+
+		wDir := Common.DstIotaEntitiesDir + "/" + entityEntry.GetName()
+		wload.SetBaseDir(wDir)
+		//in.GetNaplesConfig().
+		naplesCfg := in.GetNaplesConfig()
+		if err := wload.BringUp(naplesCfg.GetNaplesIpAddress(),
+			strconv.Itoa(sshPort), naplesCfg.GetNaplesUsername(), naplesCfg.GetNaplesPassword()); err != nil {
+			mlx.logger.Errorf("Naples Hw entity type add failed %v", err.Error())
+			return err
+		}
+		if wload != nil {
+			mlx.entityMap[entityEntry.GetName()] = wload
+		}
+	}
+	time.Sleep(1 * time.Second)
+	return nil
+}
+
 //Init initalize node type
 func (mlx *mellanoxNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 
@@ -739,6 +765,12 @@ func (mlx *mellanoxNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 		if err != nil {
 			mlx.logger.Errorf("Failed to bring interface %s up err : %s", intf, stdout)
 		}
+	}
+
+	/* Finally add entity type */
+	if err := mlx.addNodeEntities(in); err != nil {
+		mlx.logger.Error("Adding node entities failed")
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 	}
 
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",

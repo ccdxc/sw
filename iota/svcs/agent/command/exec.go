@@ -6,10 +6,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
+	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	"github.com/pkg/errors"
 )
 
@@ -23,8 +25,14 @@ func execCmd(cmdArgs []string, TimedOut int, background bool, shell bool,
 	cmdInfo := &CommandInfo{Ctx: &CommandCtx{}}
 	if shell {
 		fullCmd := strings.Join(cmdArgs, " ")
-		newCmdArgs := []string{"nohup", "sh", "-c", fullCmd}
-		process = exec.Command(newCmdArgs[0], newCmdArgs[1:]...)
+		if background {
+			newCmdArgs := []string{"sh", "-c", fullCmd}
+			process = exec.Command(newCmdArgs[0], newCmdArgs[1:]...)
+
+		} else {
+			newCmdArgs := []string{"nohup", "sh", "-c", fullCmd}
+			process = exec.Command(newCmdArgs[0], newCmdArgs[1:]...)
+		}
 	} else {
 		process = exec.Command(cmdArgs[0], cmdArgs[1:]...)
 	}
@@ -65,7 +73,6 @@ func execCmd(cmdArgs []string, TimedOut int, background bool, shell bool,
 				cmdInfo.Ctx.Done = true
 				cmdInfo.Ctx.ExitCode = 1
 				cmdInfo.Ctx.Stdout = stdoutBuf.String()
-				cmdInfo.Ctx.Stderr = stderrBuf.String()
 			}(cmdInfo)
 			done <- nil
 		} else {
@@ -112,11 +119,39 @@ func execCmd(cmdArgs []string, TimedOut int, background bool, shell bool,
 //ExecCmd Run shell command
 var ExecCmd = execCmd
 
+func getChildPids(ppid int) []int {
+	ret := []int{}
+	cmd := []string{"pstree", "-p", strconv.Itoa(ppid), "|", "perl", "-ne", "'print \"$1\\n\" while /\\((\\d+)\\)/g'"}
+	exitCode, stdoutStderr, err := Utils.Run(cmd, 0, false, true, nil)
+	if err == nil && exitCode == 0 {
+		pids := strings.Split(stdoutStderr, "\n")
+		for _, pid := range pids {
+			if ipid, err := strconv.Atoi(pid); err == nil {
+				ret = append(ret, ipid)
+			}
+		}
+	}
+
+	return ret
+}
+
 //StopExecCmd Stop bg process running
 func StopExecCmd(cmdInfo *CommandInfo) error {
 	process := cmdInfo.Handle.(*exec.Cmd)
 	if process != nil {
-		cmdInfo.Handle.(*exec.Cmd).Process.Kill()
+		pids := getChildPids(cmdInfo.Handle.(*exec.Cmd).Process.Pid)
+		if len(pids) != 0 {
+			pids = append(pids, cmdInfo.Handle.(*exec.Cmd).Process.Pid)
+			for _, pid := range pids {
+				if pid != 0 {
+					killCmd := []string{"kill", "-9", strconv.Itoa(pid)}
+					Utils.Run(killCmd, 0, false, true, nil)
+				}
+			}
+		} else {
+			cmdInfo.Handle.(*exec.Cmd).Process.Signal(syscall.SIGKILL)
+		}
+
 		time.Sleep(2 * time.Second)
 	}
 
