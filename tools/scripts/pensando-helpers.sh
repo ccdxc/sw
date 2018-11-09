@@ -181,7 +181,7 @@ clean_build_all() {
 setup_pcie() {
     if [[ `basename $PWD` != 'platform' ]]; then
         echo "Run this command from platform directory"
-        return -1 
+        return -1
     fi
 
     LD_LIBRARY_PATH=gen/x86_64/lib gen/x86_64/bin/setpci -s 01:00.0 secondary_bus=3
@@ -201,7 +201,7 @@ kill_model() {
 start_model_how() {
     if [[ `basename $PWD` != 'platform' ]]; then
         echo "Run this command from Platform directory"
-        return -1 
+        return -1
     fi
 
     kill_model
@@ -215,7 +215,7 @@ start_model_how() {
 }
 
 start_model_accel() {
-    start_model_how type=accel,bdf=03:00.0,lif=34,intr_base=0,devcmd_pa=0x118748000,devcmddb_pa=0x118749000
+    start_model_how type=accel,bdf=03:00.0,lif=66,intr_base=0,devcmd_pa=0x118748000,devcmddb_pa=0x118749000
 }
 
 start_model_eth() {
@@ -225,7 +225,7 @@ start_model_eth() {
 start_hal_hostpin() {
     if [[ `basename $PWD` != 'nic' ]]; then
         echo "Run this command from nic directory"
-        return -1 
+        return -1
     fi
 
     killall hal
@@ -238,7 +238,7 @@ start_hal_hostpin() {
 start_hal_classic() {
     if [[ `basename $PWD` != 'nic' ]]; then
         echo "Run this command from nic directory"
-        return -1 
+        return -1
     fi
 
     killall hal
@@ -252,7 +252,7 @@ start_hal_classic() {
 start_relay() {
     if [[ `basename $PWD` != 'nic' ]]; then
         echo "Run this command from nic directory"
-        return -1 
+        return -1
     fi
 
     sleep 10 && setup_tap &
@@ -312,7 +312,7 @@ setup_tap() {
 start_nicmgr_eth() {
     if [[ `basename $PWD` != 'platform' ]]; then
         echo "Run this command from platform directory"
-        return -1 
+        return -1
     fi
 
     HAL_CONFIG_PATH="$PWD/../nic/conf" \
@@ -324,7 +324,7 @@ start_nicmgr_eth() {
 start_nicmgr_eth_smart() {
     if [[ `basename $PWD` != 'platform' ]]; then
         echo "Run this command from platform directory"
-        return -1 
+        return -1
     fi
 
     HAL_CONFIG_PATH="../nic/conf" \
@@ -336,7 +336,7 @@ start_nicmgr_eth_smart() {
 start_nicmgr_accel() {
     if [[ `basename $PWD` != 'platform' ]]; then
         echo "Run this command from platform directory"
-        return -1 
+        return -1
     fi
 
     HAL_CONFIG_PATH="../nic/conf" \
@@ -348,7 +348,7 @@ start_nicmgr_accel() {
 start_qemu() {
     if [[ `basename $PWD` != 'platform' ]]; then
         echo "Run this command from platform directory"
-        return -1 
+        return -1
     fi
 
     setup_pcie

@@ -30,8 +30,8 @@ namespace pt = boost::property_tree;
 
 sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
 
-#define LIF_ID_BASE     (100)
-sdk::lib::indexer *lif_allocator = sdk::lib::indexer::factory(1024, true, true);
+//#define LIF_ID_BASE     0
+//sdk::lib::indexer *lif_allocator = sdk::lib::indexer::factory(1024, true, true);
 
 uint64_t
 mac_to_int(std::string const& s)
@@ -99,15 +99,16 @@ DeviceManager::lifs_reservation(platform_t platform)
 
     // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
     NIC_LOG_INFO("Reserving 1-{} hw_lif_ids for HAL(uplinks) to use. Nicmgr will start from {}.",
-                 HAL_HW_LIF_ID_MAX, HAL_HW_LIF_ID_MAX + 1);
-    ret = pd->lm_->LIFRangeAlloc(1, HAL_HW_LIF_ID_MAX);
+                 (HAL_LIF_ID_NICMGR_MIN - 1),
+                 HAL_LIF_ID_NICMGR_MIN);
+    ret = pd->lm_->LIFRangeAlloc(1, (HAL_LIF_ID_NICMGR_MIN - 1));
     if (ret <= 0) {
         NIC_LOG_ERR("Unable to reserve 1-32 lifs for uplinks");
         return -1;
     }
 
     /*
-     * Even though HAL_HW_LIF_ID_MAX IDs were reserved locally above,
+     * Even though (HAL_LIF_ID_NICMGR_MIN - 1)  IDs were reserved locally above,
      * HAL in DOL mode only does the same when platform is HW/HAPS.
      * So to ensure the nicmgr LIF is assigned the correct hw_lif_id,
      * we need to create a bunch of throw aways HAL LIFs in the DOL case.
@@ -116,14 +117,16 @@ DeviceManager::lifs_reservation(platform_t platform)
         return 0;
     }
 
-    for (uint32_t i = 1; i <= HAL_HW_LIF_ID_MAX; i++) {
+    for (uint32_t i = 1; i < HAL_LIF_ID_NICMGR_MIN; i++) {
+#if 0
         if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to allocate reserved lif_id");
             return -1;
         }
+#endif
         memset(&linfo, 0, sizeof(linfo));
-        linfo.lif_id = lif_id;
         linfo.hw_lif_id = i;
+        linfo.lif_id = info.hw_lif_id;
         if (hal->LifCreate(lif_id,  NULL, empty_qinfo, &linfo)) {
             NIC_LOG_ERR("Failed to reserve LIF {} thru HAL LifCreate", lif_id);
             return -1;
@@ -141,7 +144,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
     uint8_t     cosA = 1;
     uint8_t     cosB = 0;
     uint64_t    hw_lif_id;
-    uint32_t    lif_id;
+    // uint32_t    lif_id;
 
     utils::logger::init(dol_integ);
 
@@ -185,16 +188,19 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
         throw runtime_error("Failed to reserve LIFs");
     }
 
-    NIC_HEADER_TRACE("Service Lif creation");
+    NIC_HEADER_TRACE("Admin Lif creation");
+#if 0
     /*
      * Allocate sw_lif_id for nicmgr LIF
      */
     if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
         throw runtime_error("Failed to allocate nicmgr sw_lif_id");
     }
-    memset(&info, 0, sizeof(info));
     info.lif_id = lif_id;
+#endif
+    memset(&info, 0, sizeof(info));
     hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
+    info.lif_id = hw_lif_id;
     if (dol_integ) {
 
         /*
@@ -351,15 +357,16 @@ DeviceManager::LoadConfig(string path)
                 NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
                 return -1;
             }
-            eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
-            eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
-            eth_spec->txq_count = val.get<uint64_t>("txq_count");
-            eth_spec->eq_count = val.get<uint64_t>("eq_count");
+            eth_spec->dev_uuid     = val.get<uint64_t>("dev_uuid");
+            eth_spec->rxq_count    = val.get<uint64_t>("rxq_count");
+            eth_spec->txq_count    = val.get<uint64_t>("txq_count");
+            eth_spec->eq_count     = val.get<uint64_t>("eq_count");
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
-            eth_spec->intr_base = intr_base;
-            eth_spec->intr_count = val.get<uint64_t>("intr_count");
-            eth_spec->mac_addr = sys_mac_base++;
+            eth_spec->intr_base    = intr_base;
+            eth_spec->intr_count   = val.get<uint64_t>("intr_count");
+            eth_spec->mac_addr     = sys_mac_base++;
 
+#if 0
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
             if (eth_spec->lif_id == 0) {
                 if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
@@ -368,8 +375,10 @@ DeviceManager::LoadConfig(string path)
                 }
                 eth_spec->lif_id = LIF_ID_BASE + lif_id;
             }
+#endif
 
             eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
+            eth_spec->lif_id = eth_spec->hw_lif_id;
             if (val.get_optional<string>("network")) {
                 eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
                 eth_spec->uplink = uplinks[eth_spec->uplink_id];
@@ -438,6 +447,7 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->barmap_size = 1;
             }
 
+#if 0
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
             if (eth_spec->lif_id == 0) {
                 if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
@@ -446,9 +456,10 @@ DeviceManager::LoadConfig(string path)
                 }
                 eth_spec->lif_id = LIF_ID_BASE + lif_id;
             }
+#endif
 
             eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-            // eth_spec->vrf_id = val.get<uint64_t>("network.vrf", 0);
+            eth_spec->lif_id = eth_spec->hw_lif_id;
             eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
             eth_spec->uplink = uplinks[eth_spec->uplink_id];
             if (eth_spec->uplink == NULL) {
@@ -497,11 +508,14 @@ DeviceManager::LoadConfig(string path)
             if (dol_integ) {
                     accel_spec->lif_id = STORAGE_SEQ_SW_LIF_ID;
             } else {
+#if 0
                 if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
                     NIC_LOG_ERR("Failed to allocate accel_dev lif_id");
                     return -1;
                 }
                 accel_spec->lif_id =  LIF_ID_BASE + lif_id;
+#endif
+                accel_spec->lif_id = accel_spec->hw_lif_id;
             }
             accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
             accel_spec->adminq_count = val.get<uint32_t>("adminq_count");

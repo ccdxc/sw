@@ -16,6 +16,7 @@
 #define HAL_LIF_ID_SVC_LIF_MIN             33     // service lif id range min
 #define HAL_LIF_ID_SVC_LIF_MAX             64     // service lif id range max
 #define HAL_LIF_ID_NICMGR_MIN              65     // nicmgr lif id range min
+#define HAL_LIF_ID_NICMGR_ADMINQ           HAL_LIF_ID_NICMGR_MIN    // nicmgr's adminq
 
 // vrf id ranges
 #define NICMGR_VRF_ID_MIN                  1      // nicmgr vrf id range min

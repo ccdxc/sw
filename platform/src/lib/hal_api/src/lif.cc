@@ -41,7 +41,6 @@ Lif::Lif(EthLif * eth_lif)
     intf::LifRequestMsg        req_msg;
     intf::LifResponseMsg       rsp_msg;
     intf::LifQStateMapEntry    *lif_qstate_map_ent;
-    // intf::QStateSetReq         *qstate_req;
     hal_lif_info_t             *lif_info = eth_lif->GetLifInfo();
 
     if (lif_info->id == 0) {

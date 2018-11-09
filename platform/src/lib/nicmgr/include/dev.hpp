@@ -13,8 +13,9 @@
 #include "hal_common_client.hpp"
 #include "uplink.hpp"
 #include "hal_grpc_client.hpp"
+#include "globals.hpp"
 
-#define HAL_HW_LIF_ID_MAX 32
+#define HAL_HW_LIF_ID_MAX (HAL_LIF_ID_NICMGR_MIN - 1)
 
 #ifdef __x86_64__
 

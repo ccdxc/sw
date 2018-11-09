@@ -17,7 +17,7 @@ struct tx_table_s3_t0_nicmgr_commit_d d;
 
 #define NICMGR_DB_ADDR    (0x8800000 + \
                           (0x5 /* UPD = DB_IDX_UPD_CIDX_SET | DB_SCHED_UPD_EVAL */ << 17) + \
-                          (33 /* LIF */ << 6) + \
+                          (65 /* HAL_LIF_ID_NICMGR_ADMINQ *//* LIF */ << 6) + \
                           (0x1 /* QTYPE */ << 3))
 
 %%

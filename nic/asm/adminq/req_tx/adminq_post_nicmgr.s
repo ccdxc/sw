@@ -23,7 +23,7 @@ struct tx_table_s2_t0_adminq_post_nicmgr_d d;
 
 #define NICMGR_DB_ADDR    (0x8800000 + \
                           (0x4 /* UPD = DB_IDX_UPD_CIDX_SET | DB_SCHED_UPD_NOP */ << 17) + \
-                          (33 /* LIF */ << 6) + \
+                          (65 /* HAL_LIF_ID_NICMGR_ADMINQ */ /* LIF */ << 6) + \
                           (0x0 /* QTYPE */ << 3))
 
 
