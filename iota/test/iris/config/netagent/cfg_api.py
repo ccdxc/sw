@@ -14,6 +14,7 @@ from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 gl_ep_json_obj = None
 gl_nw_json_obj = None
 gl_sg_json_obj = None
+gl_port_json_obj = None
 
 
 def __read_one_json(filename):
@@ -35,6 +36,9 @@ def ReadJsons():
 
     global gl_sg_json_obj
     gl_sg_json_obj = __read_one_json('sgpolicy.json')
+
+    global gl_port_json_obj
+    gl_port_json_obj = __read_one_json('ports.json')
     return
 
 
@@ -81,4 +85,9 @@ def AddSgPolicies():
 
 def DeleteSgPolicies():
     agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies, oper = agent_api.CfgOper.DELETE)
+    return api.types.status.SUCCESS
+
+def FlapPorts():
+    agent_api.PortDown(gl_port_json_obj.ports, oper = agent_api.CfgOper.UPDATE)
+    agent_api.PortUp(gl_port_json_obj.ports, oper = agent_api.CfgOper.UPDATE)
     return api.types.status.SUCCESS

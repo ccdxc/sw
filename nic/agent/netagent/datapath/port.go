@@ -56,7 +56,7 @@ func (hd *Datapath) CreatePort(port *netproto.Port) (*netproto.Port, error) {
 // UpdatePort updates a port in the datapath
 func (hd *Datapath) UpdatePort(port *netproto.Port) (*netproto.Port, error) {
 	portSpeed, autoNegEnable := hd.convertPortSpeed(port.Spec.Speed)
-	portType, fecType := hd.convertPortTypeFec(port.Spec.Type)
+	_, fecType := hd.convertPortTypeFec(port.Spec.Type)
 
 	portUpdateReqMsg := &halproto.PortRequestMsg{
 		Request: []*halproto.PortSpec{
@@ -68,8 +68,6 @@ func (hd *Datapath) UpdatePort(port *netproto.Port) (*netproto.Port, error) {
 				},
 				AdminState:    halproto.PortAdminState_PORT_ADMIN_STATE_UP,
 				PortSpeed:     portSpeed,
-				PortType:      portType,
-				NumLanes:      port.Spec.Lanes,
 				AutoNegEnable: autoNegEnable,
 				FecType:       fecType,
 			},
@@ -86,7 +84,7 @@ func (hd *Datapath) UpdatePort(port *netproto.Port) (*netproto.Port, error) {
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
 			return port, ErrHALNotOK
 		}
-		port.Status.OperStatus = convertPortOperStatus(resp.Response[0].Status.OperStatus)
+		//port.Status.OperStatus = convertPortOperStatus(resp.Response[0].Status.OperStatus)
 	} else {
 		_, err := hd.Hal.PortClient.PortUpdate(context.Background(), portUpdateReqMsg)
 		if err != nil {

@@ -16,6 +16,7 @@ from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 class CfgOper(Enum):
     ADD    = 1
     DELETE = 2
+    UPDATE = 3
 
 
 AGENT_URLS = []
@@ -51,6 +52,9 @@ def __rest_api_handler(rest_api_path, obj, oper = CfgOper.ADD):
         elif oper == CfgOper.DELETE:
             url = __get_delete_url(obj, agent_url + rest_api_path)
             method = method.delete
+        elif oper == CfgOper.UPDATE:
+            url = __get_delete_url(obj, agent_url + rest_api_path)
+            method = method.put
         else:
             assert(0)
         api.Logger.info("URL = ", url)
@@ -79,6 +83,9 @@ def __hw_rest_api_handler(rest_api_path, obj, cfgOper = CfgOper.ADD):
         elif cfgOper == CfgOper.ADD:
             url = "http://1.0.0.2:9007/" + rest_api_path
             oper = "POST"
+        elif cfgOper == CfgOper.UPDATE:
+            url = "http://1.0.0.2:9007/" + rest_api_path
+            oper = "PUT"
         else:
             print (oper)
             assert(0)
@@ -138,3 +145,19 @@ def ConfigureEndpoints(objlist, oper = CfgOper.ADD):
         newOjList.append(epCopy)
     __config(newOjList, 'api/endpoints/', oper)
     return
+
+def PortUp(objlist, oper = CfgOper.UPDATE):
+    newObjList = []
+    for port in objlist:
+        portCopy = copy.deepcopy(port)
+        setattr(portCopy.spec, "admin-status", "UP")
+        newObjList.append(portCopy)
+    __config(newObjList, 'api/system/ports/', oper)
+
+def PortDown(objlist, oper = CfgOper.UPDATE):
+    newObjList = []
+    for port in objlist:
+        portCopy = copy.deepcopy(port)
+        setattr(portCopy.spec, "admin-status", "DOWN")
+        newObjList.append(portCopy)
+    __config(newObjList, 'api/system/ports/', oper)
