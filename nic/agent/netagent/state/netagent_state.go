@@ -201,5 +201,6 @@ func (na *Nagent) GetUUID() error {
 	}
 
 	na.NodeUUID = uuid
+	log.Infof("Got UUID:. %v", na.NodeUUID)
 	return nil
 }

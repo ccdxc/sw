@@ -176,7 +176,7 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
     exp_flow_key.dport = 22345;
     g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
                                          &exp_flow, true, 8, true);
-    sleep(10);
+    sleep(15);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 
     exp_flow_key.dport = 22346;

@@ -199,6 +199,7 @@ func main() {
 	}
 
 	log.Infof("%s is running {%+v}", globals.Netagent, ag)
+	log.Infof("%s is running {%+v}.  With UUID: %v", globals.Netagent, ag, ag.NetworkAgent.NodeUUID)
 
 	// wait forever
 	<-waitCh

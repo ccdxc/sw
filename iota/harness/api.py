@@ -235,6 +235,15 @@ def IsApiResponseOk(resp):
 # ================================
 # Wrappers for Copy APIs
 # ================================
+def CopyToWorkload(node_name, workload_name, files, dest_dir):
+    req = topo_svc.EntityCopyMsg()
+    req.direction = topo_svc.DIR_IN
+    req.node_name = node_name
+    req.entity_name = workload_name
+    for f in files:
+        req.files.append(f)
+    req.dest_dir = dest_dir
+    return EntityCopy(req)
 def CopyToHost(node_name, files, dest_dir):
     req = topo_svc.EntityCopyMsg()
     req.direction = topo_svc.DIR_IN
