@@ -38,8 +38,8 @@ make ARCH=aarch64 PLATFORM=hw
 #############################
 
 # Get buildroot container
-docker pull registry.test.pensando.io:5000/pensando/buildroot/f3d8bfd731:20181019.1304
-docker run -it  -v <path_to_pensando_sw>:/sw registry.test.pensando.io:5000/pensando/buildroot/f3d8bfd731:20181019.1304
+docker pull registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181103.0941
+docker run -it  -v <path_to_pensando_sw>:/sw registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181103.0941
 
 # Build images
 cd /buildroot
@@ -47,7 +47,7 @@ make -j `nproc` BR2_ROOTFS_OVERLAY="board/pensando/capri/rootfs-overlay /sw/fake
 
 or just run
 
-docker run --rm -v <path_to_pensando_sw>:/sw registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181026.2036 sh -c 'make BR2_ROOTFS_OVERLAY="board/pensando/capri/rootfs-overlay /sw/fake_root_target/aarch64" && cp /buildroot/output/images/naples_fw.tar  /sw/nic'
+docker run --rm -v <path_to_pensando_sw>:/sw registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181103.0941 sh -c 'make BR2_ROOTFS_OVERLAY="board/pensando/capri/rootfs-overlay /sw/fake_root_target/aarch64" && cp /buildroot/output/images/naples_fw.tar  /sw/nic'
 
 # Naples FW image
 cp output/images/naples_fw.tar /sw/nic/
@@ -62,7 +62,6 @@ cp output/images/naples_fw.tar /sw/nic/
 # ON naples host
 /home/haps/memtun/memtun 1.0.0.1 &  # Do this once after every server reboot
 
-scp /home/neel/naples/stat root@1.0.0.2:/bin/
 scp <path-to-naples_fw.tar> root@1.0.0.2:/tmp
 ssh root@1.0.0.2
 # Password: pen123
@@ -72,6 +71,10 @@ ssh root@1.0.0.2
 
 # reset Naples to boot new image
 /nic/tools/sysreset.sh
+
+#############################################
+# START PROCESSES ONLY IF NOT YET AUTOSTARTED
+#############################################
 
 # start processes in classic mode
 # /nic/tools/sysinit.sh classic hw

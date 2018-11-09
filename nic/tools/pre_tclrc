@@ -1,0 +1,2 @@
+source $::env(ASIC_SRC)/ip/cosim/tclsh/.tclrc.diag
+cap_top_intr_clear 0 none
