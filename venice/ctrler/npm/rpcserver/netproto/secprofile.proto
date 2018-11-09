@@ -1,0 +1,110 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for security group profile
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ---------------------------- SecurityProfile API ----------------------------
+// SecurityProfile controller api
+service SecurityProfileApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "SecurityProfile",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/security/profiles"
+    };
+
+    rpc GetSecurityProfile (api.ObjectMeta) returns (SecurityProfile) {};
+    rpc ListSecurityProfiles (api.ObjectMeta) returns (SecurityProfileList) {};
+    rpc WatchSecurityProfiles (api.ObjectMeta) returns (stream SecurityProfileEvent) {};
+}
+
+// SecurityProfile object
+message SecurityProfile {
+    api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    SecurityProfileSpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    SecurityProfileStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+
+// SecurityProfileSpec captures all the security profile configuration
+message SecurityProfileSpec {
+    // Timeouts for the security profile
+    Timeouts    Timeouts                    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "timeouts,omitempty"];
+
+    // Enable Connection Tracking
+    bool        EnableConnectionTracking    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-connection-tracking,omitempty"];
+
+    // Enable TCP Normalization
+    bool        EnableTCPNormalization      = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-tcp-normalization,omitempty"];
+
+    // Enable IP Normalization
+    bool        EnableIPNormalization       = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-ip-normalization,omitempty"];
+
+    // Enable ICMP Normalization
+    bool        EnableICMPNormalization     = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "enable-icmp-normalization,omitempty"];
+}
+
+
+// Timeouts for the security profile in seconds, minutes etc, 1m, 45s
+message Timeouts {
+    //SessionIdle Timeout.
+    string SessionIdle          = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "session-idle,omitempty"];
+
+    // TCP Timeout
+    string TCP                  = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp,omitempty"];
+
+    // TCP Drop Timeout
+    string TCPDrop              = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-drop,omitempty"];
+
+    // TCP Connection Setup Timeout
+    string TCPConnectionSetup   = 4  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-connection-setup,omitempty"];
+
+    // TCP Close timeout
+    string TCPClose             = 5  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-close,omitempty"];
+
+    // TCP Half Close timeout
+    string TCPHalfClose         = 6  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-half-close,omitempty"];
+
+    // Drop timeout for non tcp, udp and icmp
+    string Drop                 = 7  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop,omitempty"];
+
+    // UDP Timeout
+    string UDP                  = 8  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp,omitempty"];
+
+    // UDP Drop Timeout
+    string UDPDrop              = 9  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp-drop,omitempty"];
+
+    // ICMP Timeout
+    string ICMP                 = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp,omitempty"];
+
+    // ICMP Drop Timeout
+    string ICMPDrop             = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp-drop,omitempty"];
+}
+
+
+// SecurityProfileStatus captures the sg profile status
+message SecurityProfileStatus {
+    uint64 SecurityProfileID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+message SecurityProfileList {
+    repeated SecurityProfile sgpolicies  = 1;
+}
+
+// sg profile watch event
+message SecurityProfileEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    SecurityProfile        SecurityProfile    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sg-profile,omitempty"];
+}

@@ -18,6 +18,7 @@
 		security.proto
 		service.proto
 		sgpolicy.proto
+		secprofile.proto
 		tenant.proto
 		tunnel.proto
 		tcp_proxy.proto
@@ -124,6 +125,12 @@
 		SGPolicyStatus
 		SGPolicyList
 		SGPolicyEvent
+		SecurityProfile
+		SecurityProfileSpec
+		Timeouts
+		SecurityProfileStatus
+		SecurityProfileList
+		SecurityProfileEvent
 		TenantStatus
 		TenantSpec
 		Tenant

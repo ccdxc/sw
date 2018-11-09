@@ -1,13 +1,13 @@
 OutDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi
 
 # all the sources for which .pb.go is generated
-SRC := app.proto endpoint.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto route.proto security.proto service.proto sgpolicy.proto tenant.proto tunnel.proto tcp_proxy.proto
+SRC := app.proto endpoint.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto
 
 #these wont have _api.go generated
-FILTER_OUT_API := match.proto port.proto service.proto app.proto
+FILTER_OUT_API := match.proto port.proto service.proto app.proto secprofile.proto
 
 #additionally these wont have swagger spec generated
-FILTER_OUT_SWAGGER := interface.proto app.proto
+FILTER_OUT_SWAGGER := interface.proto app.proto secprofile.proto
 
 SRC1 :=  $(filter-out ${FILTER_OUT_API}, ${SRC})
 SRC2 :=  $(filter-out ${FILTER_OUT_SWAGGER}, ${SRC1})
@@ -16,7 +16,7 @@ DEST := $(SRC:%.proto=%.pb.go) $(SRC1:%.proto=$(OutDir)/%_api_test.go) $(SRC1:%.
 
 default: ${DEST}
 
-app.pb.% endpoint.pb.% interface.pb.% ipsec.pb.% match.pb.% namespace.pb.% nat.pb.% network.pb.% port.pb.% route.pb.% security.pb.% service.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% tcp_proxy.pb.%:  ${SRC}
+app.pb.% endpoint.pb.% interface.pb.% ipsec.pb.% match.pb.% namespace.pb.% nat.pb.% network.pb.% port.pb.% route.pb.% security.pb.% secprofile.pb.% service.pb.% sgpolicy.pb.% tenant.pb.% tunnel.pb.% tcp_proxy.pb.%:  ${SRC}
 	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
 	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
