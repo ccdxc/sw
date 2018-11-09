@@ -31,12 +31,14 @@ cat << EOF >&2
 usage: fwupdate [--from-legacy] action [options]
   --from-legacy     - Install to a card with pre-emmc mtd partitions
   --to-legacy       - Install old image back to pre-emmc mode
+  --init-emmc       - Setup emmc partitions (from goldfw or diagfw only)
 
   action:
     -i "fwnames"    - Install package (requires -p and fwnames)
     -v              - Verify package file (required -p)
     -r              - Show running image name
     -s fwname       - Set startup image name
+    -S              - Show startup image name
     -l              - List installed images
 
   options:
@@ -94,13 +96,17 @@ main()
         fwtype_to_files=legacy_fwtype_to_files
         file_to_target=legacy_file_to_target
         shift
+    elif [ "X-$1" = "X---init-emmc" ]; then
+        action=INIT_EMMC
+        shift
     fi
-    while getopts "i:vrs:lp:DI" opt; do
+    while getopts "i:vrs:Slp:DI" opt; do
         case "$opt" in
         i) action=INSTALL; need_pkg=1; INSTALL_IMAGES=$OPTARG; ;;
         v) action=VERIFY; need_pkg=1; ;;
         r) action=GET_RUNNING_FW; ;;
         s) action=SET_STARTUP_FW; WANT_STARTUP=$OPTARG; ;;
+        S) action=SHOW_STARTUP_FW ;;
         l) action=LIST_FW; ;;
         p) PKG=$OPTARG; ;;
         D) DRY_RUN=dry_run; ;;
@@ -111,15 +117,14 @@ main()
 
     if [ $need_pkg -ne 0 ]; then
         [ -z "$PKG" ] && usage
-        D=/tmp/update$$
-        mkdir -p $D
-        MANIFEST=$D/MANIFEST
     fi
+    D=/tmp/update$$
+    mkdir -p $D
+    MANIFEST=$D/MANIFEST
+    TMPFILE=$D/tmpfile
 
     finish() {
-        if [ "$D" != "" ]; then
-            rm -rf $D
-        fi
+        rm -rf $D
     }
     trap finish EXIT
 
@@ -148,6 +153,10 @@ main()
         echo "===> Nothing to do"
         ;;
 
+    INIT_EMMC)
+        init_emmc
+        ;;
+
     VERIFY)
         verify_package
         ;;
@@ -162,6 +171,10 @@ main()
 
     SET_STARTUP_FW)
         set_startup_image
+        ;;
+
+    SHOW_STARTUP_FW)
+        show_startup_image
         ;;
 
     LIST_FW)
@@ -850,27 +863,171 @@ set_startup_image()
     $DRY_RUN do_set_startup_image $fwname
 }
 
-# TODO
+show_startup_image()
+{
+    local dev s
+
+    s=`find_mtdpart_byname $MTDPART_FWSEL`; set -- $s; dev=$1
+    s=`dd if=$dev bs=8 count=1 status=none | tr -d '\377'`
+    case "$s" in
+    mainfwa|mainfwb|goldfw|diagfw)
+        ;;
+    *)
+        s=mainfwa
+    esac
+    echo $s
+}
+
+extract_meta()
+{
+    local infile=$1 offs=$2 outfile=$3
+    local FILE_META_MAGIC=0x55ffa330
+
+    set -- `dd if=$infile bs=1 skip=$offs count=8 status=none | od -t x4 | head -1`
+    magic=0x$2
+    if [ $magic != $FILE_META_MAGIC ]; then
+        return 1
+    fi
+    len=$((0x$3))
+    dd if=$infile bs=1 skip=$(($offs + 8)) count=$len status=none > $outfile
+}
+
+show_meta()
+{
+    local s="`jq -r .version $TMPFILE`"
+    if [ "$s" != null ]; then
+        cat << EOF
+            "version": "$s"
+EOF
+    else
+        cat << EOF
+            "build_date": "`jq -r .build_date $TMPFILE`",
+            "build_user": "`jq -r .build_user $TMPFILE`",
+            "base_version": "`jq -r .base_version $TMPFILE`",
+            "software_version": "`jq -r .software_version $TMPFILE`"
+EOF
+    fi
+}
+
+JPREF=""
+JFPREF=""
+do_list_uboot_image()
+{
+    local UBOOT_SIZE_MAGIC=0xfb89090a
+    local dev=$1 u_magic u_len
+    set -- `dd if=$dev bs=16 count=1 status=none | od -t x4 | head -1`
+    u_magic=0x$3
+    if [ $u_magic != $UBOOT_SIZE_MAGIC ]; then
+        return 0
+    fi
+    u_len=$((0x$4))
+    if extract_meta $dev $u_len $TMPFILE; then
+        cat << EOF
+        $JPREF "image": {
+            `show_meta`
+        }
+EOF
+    JPREF=,
+    fi
+}
+
+do_list_system_image()
+{
+    local SQUASHFS_MAGIC=0x73717368
+    local dev=$1 s_magic s_len
+    set -- `dd if=$dev bs=4 count=1 status=none | od -t x4 | head -1`
+    s_magic=0x$2
+    if [ $s_magic != $SQUASHFS_MAGIC ]; then
+        return 0
+    fi
+    set -- `dd if=$dev bs=8 skip=5 count=1 status=none | od -t x8 | head -1`
+    s_len=$(((0x$2 + 4095) & -4096))
+    if extract_meta $dev $s_len $TMPFILE; then
+        cat << EOF
+        $JPREF "system_image": {
+            `show_meta`
+        }
+EOF
+    JPREF=,
+    fi
+}
+
+do_list_kernel_fit()
+{
+    local KERNEL_ITB_MAGIC=0xd00dfeed
+    local dev=$1 v k_magic k_len
+    set -- `dd if=$dev bs=4 count=2 status=none | od -t x1 | head -1`
+    v=$(((0x$2 << 24) + (0x$3 << 16) + (0x$4 << 8) + 0x$5))
+    k_magic=`printf "0x%08x\n" $v`
+    if [ $k_magic != $KERNEL_ITB_MAGIC ]; then
+        return 0
+    fi
+    k_len=$(((0x$6 << 24) + (0x$7 << 16) + (0x$8 << 8) + 0x$9))
+    if extract_meta $dev $k_len $TMPFILE; then
+        cat << EOF
+        $JPREF "kernel_fit": {
+            `show_meta`
+        }
+EOF
+    JPREF=,
+    fi
+}
+
 do_list_firmware()
 {
-    local fwname=$1 fwobj fwtype files dev part s
+    local fwname=$1 fwobj fwtype files dev part f s
 
+    echo "    $JFPREF \"$fwname\": {"
     fwobj=`fwname_to_fwobj $fwname`
     fwtype=`$fwobj_to_fwtype $fwobj`
     files=`$fwtype_to_files $fwtype`
-    last_fileobj=`echo $files | awk '{ print $NF }'`
-    s=`$file_to_target $fwname $last_fileobj`; set -- $s; dev=$1; part=$2
-    echo "dev=$dev, part=$part"
+    for f in $files; do
+        s=`$file_to_target $fwname $f`; set -- $s; dev=$1; part=$2
+        case "$dev" in
+        mtd)
+            s=`find_mtdpart_byname $part`; set -- $s; dev=$1; devsz=$2; ersz=$3
+            ;;
+        mmc)
+            s=`find_mmcpart_bypartuuid $part`; set -- $s; dev=$1; devsz=$2
+            ;;
+        *)
+            fatal "do_list_firmware: unexpected dev $dev"
+            ;;
+        esac
+        case $f in
+        image)
+            if [ $fwtype != uboot ]; then
+                fatal "do_list_firmware: non-uboot image not supported"
+            fi
+            do_list_uboot_image $dev
+            ;;
+        system_image)
+            do_list_system_image $dev
+            ;;
+        kernel_fit)
+            do_list_kernel_fit $dev
+            ;;
+        *)
+            fatal "do_list_firmware: unexpected file $f"
+            ;;
+        esac
+    done
+    echo "    }"
+    JFPREF=","
 }
 
 list_firmware()
 {
     local fwname
 
+    (
+    echo "{"
     for fwname in uboot mainfwa mainfwb goldfw diagfw; do
-        #do_list_firmware $fwname
-        echo $fwname
+        JPREF=""
+        do_list_firmware $fwname
     done
+    echo "}"
+    ) | jq -r -M .
 }
 
 do_setup_partitions()
@@ -910,6 +1067,19 @@ setup_partitions()
 {
     echo "===> Setting up /dev/mmcblk0 for the first time"
     $DRY_RUN do_setup_partitions
+}
+
+init_emmc()
+{
+    case "$RUNNING_FW" in
+    goldfw|diagfw)
+        setup_partitions
+        ;;
+
+    *)
+        fatal "init_emmc: cannot init emmc while using it"
+        ;;
+    esac
 }
 
 main "$@"
