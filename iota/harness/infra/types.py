@@ -7,6 +7,7 @@ __status = [
     'INVALID_ARG',
     'RETRY',
     'UNAVAIL',
+    'IGNORED',
 ]
 status = utils.List2Enum(__status)
 

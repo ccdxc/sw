@@ -23,7 +23,7 @@ common:
 testcases:
     -   name    : SAMPLE_DRIVER_FEATURES_TX_RING_SIZE
         testcase: testcases.drivers.features
-        ignore: False
+        ignore  : True
         iterators :
             type               : nested
             tx_ring_size       : [ '256']

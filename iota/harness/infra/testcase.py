@@ -169,6 +169,7 @@ class Testcase:
         return types.status.SUCCESS
 
     def __execute(self):
+        ignored = getattr(self.__spec, "ignore", False)
         final_result = types.status.SUCCESS
         iter_id = 1
         for iter_data in self.__iters:
@@ -181,28 +182,30 @@ class Testcase:
                 Logger.error("Setup callback failed, Cannot continue, switching to Teardown")
                 loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 result = setup_result
-                continue
+            else:
+                    trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
+                    if trigger_result != types.status.SUCCESS:
+                    	result = trigger_result
 
-            trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
-            if trigger_result != types.status.SUCCESS:
-                result = trigger_result
+                    verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
+                    if verify_result != types.status.SUCCESS:
+                    	result = verify_result
 
-            verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
-            if verify_result != types.status.SUCCESS:
-                result = verify_result
+                    teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
+                    if teardown_result != types.status.SUCCESS:
+                    	Logger.error("Teardown callback failed.")
+                    	result = teardown_result
 
-            teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
-            if teardown_result != types.status.SUCCESS:
-                Logger.error("Teardown callback failed.")
-                result = teardown_result
+                    iter_data.SetStatus(result)
 
-            iter_data.SetStatus(result)
-
-            if self.__aborted:
-                return types.status.FAILURE
-
-            if result != types.status.SUCCESS and not getattr(self.__spec, "ignore", False):
-                final_result = result
+                    if self.__aborted:
+                    	return types.status.FAILURE
+ 
+            if result != types.status.SUCCESS:
+                if ignored:
+                    iter_data.SetStatus(types.status.IGNORED)
+                else:
+                    final_result = result
 
         return final_result
 
