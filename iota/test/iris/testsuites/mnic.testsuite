@@ -1,5 +1,6 @@
 meta:
     name        : mnic_sanity
+    enable      : False
     description : Mnic Sanity Test Suite
     mode        : hardware
     cfgmode     : netagent
@@ -22,12 +23,14 @@ common:
 testcases:
     -   name    : Make MNIC interface Up
         testcase: testcases.mnic.if_up
+        ignore: False
         verifs:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
     -   name    : Ping on MNIC OOB interface
         testcase: testcases.mnic.ping_oob
+        ignore: True
         args    :
             mtu: 1500
         verifs:
@@ -36,6 +39,7 @@ testcases:
 
     -   name    : Ping on MNIC Inband-0 interface
         testcase: testcases.mnic.ping_inb0
+        ignore: True
         args    :
             mtu: 1500
         verifs:
@@ -44,6 +48,7 @@ testcases:
 
     -   name    : Ping on MNIC Inband-1 interface
         testcase: testcases.mnic.ping_inb1
+        ignore: True
         args    :
             mtu: 1500
         verifs:
