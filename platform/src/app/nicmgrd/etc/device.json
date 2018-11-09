@@ -152,6 +152,9 @@
             "seq_queue_count" : 8192,
             "adminq_count" : 1,
             "intr_count" : 64,
+            "publish_interval" : {
+                "sec_fraction" : 4
+            },
             "pcie" : {
                 "port" : 0
             }

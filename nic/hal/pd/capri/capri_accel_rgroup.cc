@@ -398,6 +398,26 @@ accel_rgroup_indices_get(const char *rgroup_name,
 }
 
 /*
+ * Retrieve metrics for all rings in a group.
+ */
+hal_ret_t 
+accel_rgroup_metrics_get(const char *rgroup_name,
+                         uint32_t sub_ring,
+                         accel_rgroup_ring_metrics_cb_t cb_func,
+                         void *user_ctx)
+{
+    accel_rgroup_t  *rgroup;
+    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+
+    rgroup = accel_rgroup_find(rgroup_name);
+    if (rgroup) {
+        ret_val = rgroup->metrics_get(sub_ring, cb_func, user_ctx);
+    }
+
+    return ret_val;
+}
+
+/*
  * Add a ring by name to a ring group. The ring must have 
  * supported ring_ops.
  */
@@ -521,6 +541,20 @@ accel_rgroup_t::indices_get(uint32_t sub_ring,
 }
 
 /*
+ * Retrieve current ring metrics on all rings in a group.
+ */
+hal_ret_t 
+accel_rgroup_t::metrics_get(uint32_t sub_ring,
+                            accel_rgroup_ring_metrics_cb_t cb_func,
+                            void *user_ctx)
+{
+    hal_ret_t   ret_val = HAL_RET_OK;
+    FOR_EACH_RGROUP_RING_INVOKE(metrics_get, sub_ring, ret_val,
+                                cb_func, user_ctx);
+    return ret_val;
+}
+
+/*
  * All supported ring_ops methods begin here
  */
 hal_ret_t 
@@ -534,6 +568,7 @@ accel_ring_cp_t::reset_set(uint32_t ring_handle,
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(cp_cfg_glb, BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET, reset_sense);
+    soft_resets += reset_sense ? 1 : 0;
     return HAL_RET_OK;
 }
 
@@ -614,6 +649,26 @@ accel_ring_cp_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(cp_sta_q_cp_idx, indices.cndx);
 
     (*cb_func)(usr_ctx, indices);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+accel_ring_cp_t::metrics_get(uint32_t ring_handle,
+                             uint32_t sub_ring,
+                             accel_rgroup_ring_metrics_cb_t cb_func,
+                             void *usr_ctx)
+{
+    accel_rgroup_ring_metrics_t metrics = {0};
+
+    metrics.ring_handle = ring_handle;
+    metrics.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    metrics.soft_resets = soft_resets;
+    ACCEL_CFG_READ64(cp_sta_in_bcnt_w0,  cp_sta_in_bcnt_w1,  metrics.input_bytes);
+    ACCEL_CFG_READ64(cp_sta_out_bcnt_w0, cp_sta_out_bcnt_w1, metrics.output_bytes);
+
+    (*cb_func)(usr_ctx, metrics);
     return HAL_RET_OK;
 }
 
@@ -711,6 +766,26 @@ accel_ring_cp_hot_t::indices_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_cp_hot_t::metrics_get(uint32_t ring_handle,
+                                 uint32_t sub_ring,
+                                 accel_rgroup_ring_metrics_cb_t cb_func,
+                                 void *usr_ctx)
+{
+    accel_rgroup_ring_metrics_t metrics = {0};
+
+    /*
+     * CP hot ring does not have bytes metrics
+     */
+    metrics.ring_handle = ring_handle;
+    metrics.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    metrics.soft_resets = soft_resets;
+    (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_dc_t::reset_set(uint32_t ring_handle,
                            uint32_t sub_ring,
                            uint32_t *last_ring_handle,
@@ -721,6 +796,7 @@ accel_ring_dc_t::reset_set(uint32_t ring_handle,
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(dc_cfg_glb, BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET, reset_sense);
+    soft_resets += reset_sense ? 1 : 0;
     return HAL_RET_OK;
 }
 
@@ -801,6 +877,26 @@ accel_ring_dc_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(dc_sta_q_cp_idx, indices.cndx);
 
     (*cb_func)(usr_ctx, indices);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+accel_ring_dc_t::metrics_get(uint32_t ring_handle,
+                             uint32_t sub_ring,
+                             accel_rgroup_ring_metrics_cb_t cb_func,
+                             void *usr_ctx)
+{
+    accel_rgroup_ring_metrics_t metrics = {0};
+
+    metrics.ring_handle = ring_handle;
+    metrics.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    metrics.soft_resets = soft_resets;
+    ACCEL_CFG_READ64(dc_sta_in_bcnt_w0,  dc_sta_in_bcnt_w1,  metrics.input_bytes);
+    ACCEL_CFG_READ64(dc_sta_out_bcnt_w0, dc_sta_out_bcnt_w1, metrics.output_bytes);
+
+    (*cb_func)(usr_ctx, metrics);
     return HAL_RET_OK;
 }
 
@@ -898,6 +994,26 @@ accel_ring_dc_hot_t::indices_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_dc_hot_t::metrics_get(uint32_t ring_handle,
+                                 uint32_t sub_ring,
+                                 accel_rgroup_ring_metrics_cb_t cb_func,
+                                 void *usr_ctx)
+{
+    accel_rgroup_ring_metrics_t metrics = {0};
+
+    /*
+     * DC hot ring does not have bytes metrics
+     */
+    metrics.ring_handle = ring_handle;
+    metrics.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    metrics.soft_resets = soft_resets;
+    (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_xts0_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -908,6 +1024,7 @@ accel_ring_xts0_t::reset_set(uint32_t ring_handle,
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(xts_enc_soft_rst, 0xffffffff, reset_sense);
+    soft_resets += reset_sense ? 1 : 0;
     return HAL_RET_OK;
 }
 
@@ -991,6 +1108,26 @@ accel_ring_xts0_t::indices_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_xts0_t::metrics_get(uint32_t ring_handle,
+                               uint32_t sub_ring,
+                               accel_rgroup_ring_metrics_cb_t cb_func,
+                               void *usr_ctx)
+{
+    accel_rgroup_ring_metrics_t metrics = {0};
+
+    /*
+     * XTS does not have bytes metrics
+     */
+    metrics.ring_handle = ring_handle;
+    metrics.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    metrics.soft_resets = soft_resets;
+    (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_xts1_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -1001,6 +1138,7 @@ accel_ring_xts1_t::reset_set(uint32_t ring_handle,
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(xts_soft_rst, 0xffffffff, reset_sense);
+    soft_resets += reset_sense ? 1 : 0;
     return HAL_RET_OK;
 }
 
@@ -1084,6 +1222,26 @@ accel_ring_xts1_t::indices_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_xts1_t::metrics_get(uint32_t ring_handle,
+                               uint32_t sub_ring,
+                               accel_rgroup_ring_metrics_cb_t cb_func,
+                               void *usr_ctx)
+{
+    accel_rgroup_ring_metrics_t metrics = {0};
+
+    /*
+     * XTS does not have bytes metrics
+     */
+    metrics.ring_handle = ring_handle;
+    metrics.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    metrics.soft_resets = soft_resets;
+    (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_gcm0_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -1094,6 +1252,7 @@ accel_ring_gcm0_t::reset_set(uint32_t ring_handle,
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(gcm0_soft_rst, 0xffffffff, reset_sense);
+    soft_resets += reset_sense ? 1 : 0;
     return HAL_RET_OK;
 }
 
@@ -1158,6 +1317,26 @@ accel_ring_gcm0_t::info_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_gcm0_t::metrics_get(uint32_t ring_handle,
+                               uint32_t sub_ring,
+                               accel_rgroup_ring_metrics_cb_t cb_func,
+                               void *usr_ctx)
+{
+    accel_rgroup_ring_metrics_t metrics = {0};
+
+    /*
+     * GCM does not have bytes metrics
+     */
+    metrics.ring_handle = ring_handle;
+    metrics.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    metrics.soft_resets = soft_resets;
+    (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_gcm0_t::indices_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_indices_cb_t cb_func,
@@ -1187,6 +1366,7 @@ accel_ring_gcm1_t::reset_set(uint32_t ring_handle,
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(gcm1_soft_rst, 0xffffffff, reset_sense);
+    soft_resets += reset_sense ? 1 : 0;
     return HAL_RET_OK;
 }
 
@@ -1266,6 +1446,26 @@ accel_ring_gcm1_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(gcm1_consumer_idx, indices.cndx);
 
     (*cb_func)(usr_ctx, indices);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+accel_ring_gcm1_t::metrics_get(uint32_t ring_handle,
+                               uint32_t sub_ring,
+                               accel_rgroup_ring_metrics_cb_t cb_func,
+                               void *usr_ctx)
+{
+    accel_rgroup_ring_metrics_t metrics = {0};
+
+    /*
+     * GCM does not have bytes metrics
+     */
+    metrics.ring_handle = ring_handle;
+    metrics.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    metrics.soft_resets = soft_resets;
+    (*cb_func)(usr_ctx, metrics);
     return HAL_RET_OK;
 }
 

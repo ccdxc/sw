@@ -20,7 +20,7 @@ struct phv_ p;
 
 storage_seq_metrics1_commit:
 
-    // bubble up to common stage 7 (table already locked) for atomic updates
+    // bubble up to SEQ_METRICS_STAGE (table already locked) for atomic updates
     mfspr       r_stage, spr_mpuid
     slt         c1, r_stage[4:2], SEQ_METRICS_STAGE
     nop.c1.e

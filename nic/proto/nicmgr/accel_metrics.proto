@@ -46,11 +46,14 @@ message AccelHwRingKey {
     uint32         sub_rid                   = 2;     // Sub-ring id
 }
 
-message AccelHwRingMetrics {
-    AccelHwRingKey      Key                  = 1;
+message AccelHwRingInfo {
+    delphi.ObjectMeta   Meta                 = 1;
+    AccelHwRingKey      Key                  = 2;
 
-    delphi.Counter input_bytes               = 2;     // Total input bytes (not available on some rings)
-    delphi.Counter output_bytes              = 3;     // Total output bytes (not available on some rings)
-    delphi.Counter soft_resets               = 4;     // # soft resets executed
+    uint32              pindex               = 3;     // Producer index
+    uint32              cindex               = 4;     // Consumer index
+    uint64              input_bytes          = 5;     // Total input bytes (not available on some rings)
+    uint64              output_bytes         = 6;     // Total output bytes (not available on some rings)
+    uint64              soft_resets          = 7;     // # soft resets executed
 }
 

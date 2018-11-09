@@ -158,3 +158,20 @@ AccelRGroupServiceImpl::AccelRGroupIndicesGet(ServerContext *context,
     return Status::OK;
 }
 
+Status
+AccelRGroupServiceImpl::AccelRGroupMetricsGet(ServerContext *context,
+                                              const AccelRGroupMetricsGetRequestMsg *request,
+                                              AccelRGroupMetricsGetResponseMsg *response)
+{
+    uint32_t    nreqs = request->request_size();
+    uint32_t    i;
+
+    HAL_TRACE_DEBUG("{}: {} requests", __FUNCTION__, nreqs);
+    for (i = 0; i < nreqs; i++) {
+        auto rsp = response->add_response();
+        auto req = request->request(i);
+        hal::AccelRGroupMetricsGet(req, rsp);
+    }
+    return Status::OK;
+}
+

@@ -21,6 +21,9 @@ using delphi::objects::PortStatus;
 using delphi::objects::PortStatusPtr;
 using sdk::types::port_oper_status_t;
 
+using delphi::objects::AccelHwRingInfo;
+using delphi::objects::AccelHwRingInfoPtr;
+
 extern DeviceManager *devmgr;
 extern DeviceManager *devices[];
 
@@ -29,6 +32,9 @@ namespace nicmgr {
 // port reactors
 port_svc_ptr_t g_port_rctr;
 shared_ptr<NicMgrService> g_nicmgr_svc;
+
+// accelerator reactors
+accel_hw_ring_svc_ptr_t g_accel_hw_ring_rctr;
 
 // NicMgr delphi service
 NicMgrService::NicMgrService(delphi::SdkPtr sk) {
@@ -51,6 +57,14 @@ void NicMgrService::OnMountComplete() {
     for (vector<delphi::objects::PortStatusPtr>::iterator port=list.begin();
          port!=list.end(); ++port) {  
         g_port_rctr->update_port_status(*port);
+    }
+
+    // walk all accelerator objects and handle them
+    vector <delphi::objects::AccelHwRingInfoPtr> hw_ring_list =
+        delphi::objects::AccelHwRingInfo::List(sdk_);
+    for (vector<delphi::objects::AccelHwRingInfoPtr>::iterator ring=hw_ring_list.begin();
+         ring!=hw_ring_list.end(); ++ring) {  
+        g_accel_hw_ring_rctr->OnAccelHwRingInfoCreate(*ring);
     }
 }
 
@@ -111,6 +125,40 @@ error port_svc::update_port_status(PortStatusPtr port) {
         devmgr->DevLinkDownHandler(port_id);
     }
 
+    return error::OK();
+}
+
+// get_accel_hw_ring_reactor gets the accelerator HW ring reactor object
+accel_hw_ring_svc_ptr_t get_accel_hw_ring_reactor (void) {
+    return g_accel_hw_ring_rctr;
+}
+
+// init_accel_hw_ring_reactors creates an accelerator HW ring reactor
+Status init_accel_hw_ring_reactors (delphi::SdkPtr sdk) {
+    // create the PortStatus reactor
+    g_accel_hw_ring_rctr = std::make_shared<accel_hw_ring_svc>(sdk);
+
+    // mount objects
+    AccelHwRingInfo::Mount(sdk, delphi::ReadMode);
+
+    // Register PortStatus reactor
+    AccelHwRingInfo::Watch(sdk, g_accel_hw_ring_rctr);
+
+    return Status::OK;
+}
+
+error accel_hw_ring_svc::OnAccelHwRingInfoCreate(AccelHwRingInfoPtr ring) {
+    printf("Received %s\n", __FUNCTION__);
+    return error::OK();
+}
+
+error accel_hw_ring_svc::OnAccelHwRingInfoUpdate(AccelHwRingInfoPtr ring) {
+    printf("Received %s\n", __FUNCTION__);
+    return error::OK();
+}
+
+error accel_hw_ring_svc::OnAccelHwRingInfoDelete(AccelHwRingInfoPtr ring) {
+    printf("Received %s\n", __FUNCTION__);
     return error::OK();
 }
 

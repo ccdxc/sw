@@ -2765,6 +2765,13 @@ typedef struct pd_capri_accel_rgroup_indices_get_args_s {
     void *usr_ctx;
 } __PACK__ pd_capri_accel_rgroup_indices_get_args_t;
 
+typedef struct pd_capri_accel_rgroup_metrics_get_args_s {
+    const char *rgroup_name;
+    uint32_t sub_ring;
+    accel_rgroup_ring_metrics_cb_t cb_func;
+    void *usr_ctx;
+} __PACK__ pd_capri_accel_rgroup_metrics_get_args_t;
+
 // gft
 typedef struct pd_gft_exact_match_profile_args_s {
     gft_exact_match_profile_t       *exact_match_profile;
@@ -3162,19 +3169,20 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET,    270, "PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET")\
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INFO_GET,    271, "PD_FUNC_ID_ACCEL_RGROUP_INFO_GET")\
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET, 272, "PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET")\
-    ENTRY(PD_FUNC_ID_LIF_STATS_GET,            273, "PD_FUNC_ID_LIF_STATS_GET")            \
-    ENTRY(PD_FUNC_ID_FTE_SPAN_CREATE,          274, "PD_FUNC_ID_FTE_SPAN_CREATE")\
-    ENTRY(PD_FUNC_ID_FTE_SPAN_UPDATE,          275, "PD_FUNC_ID_FTE_SPAN_UPDATE")\
-    ENTRY(PD_FUNC_ID_FTE_SPAN_GET,             276, "PD_FUNC_ID_FTE_SPAN_GET")\
-    ENTRY(PD_FUNC_ID_FTE_SPAN_MEM_FREE,        277, "PD_FUNC_ID_FTE_SPAN_MEM_FREE")\
-    ENTRY(PD_FUNC_ID_FTE_SPAN_MAKE_CLONE,      278, "PD_FUNC_ID_FTE_SPAN_MAKE_CLONE")\
-    ENTRY(PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID,  279, "PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID")\
-    ENTRY(PD_FUNC_ID_CLOCK_DETAIL_GET,         280, "PD_FUNC_ID_CLOCK_DETAIL_GET")\
-    ENTRY(PD_FUNC_ID_EP_IPSG_CHANGE,           281, "PD_FUNC_ID_EP_IPSG_CHANGE")\
-    ENTRY(PD_FUNC_ID_PB_STATS_CLEAR,           282, "PD_FUNC_ID_PB_STATS_CLEAR")\
-    ENTRY(PD_FUNC_ID_DROP_STATS_CLEAR,         283, "PD_FUNC_ID_DROP_STATS_CLEAR")\
-    ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR,  284, "PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR")\
-    ENTRY(PD_FUNC_ID_MAX,                      285, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_METRICS_GET, 273, "PD_FUNC_ID_ACCEL_RGROUP_METRICS_GET")\
+    ENTRY(PD_FUNC_ID_LIF_STATS_GET,            274, "PD_FUNC_ID_LIF_STATS_GET")            \
+    ENTRY(PD_FUNC_ID_FTE_SPAN_CREATE,          275, "PD_FUNC_ID_FTE_SPAN_CREATE")\
+    ENTRY(PD_FUNC_ID_FTE_SPAN_UPDATE,          276, "PD_FUNC_ID_FTE_SPAN_UPDATE")\
+    ENTRY(PD_FUNC_ID_FTE_SPAN_GET,             277, "PD_FUNC_ID_FTE_SPAN_GET")\
+    ENTRY(PD_FUNC_ID_FTE_SPAN_MEM_FREE,        278, "PD_FUNC_ID_FTE_SPAN_MEM_FREE")\
+    ENTRY(PD_FUNC_ID_FTE_SPAN_MAKE_CLONE,      279, "PD_FUNC_ID_FTE_SPAN_MAKE_CLONE")\
+    ENTRY(PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID,  280, "PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID")\
+    ENTRY(PD_FUNC_ID_CLOCK_DETAIL_GET,         281, "PD_FUNC_ID_CLOCK_DETAIL_GET")\
+    ENTRY(PD_FUNC_ID_EP_IPSG_CHANGE,           282, "PD_FUNC_ID_EP_IPSG_CHANGE")\
+    ENTRY(PD_FUNC_ID_PB_STATS_CLEAR,           283, "PD_FUNC_ID_PB_STATS_CLEAR")\
+    ENTRY(PD_FUNC_ID_DROP_STATS_CLEAR,         284, "PD_FUNC_ID_DROP_STATS_CLEAR")\
+    ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR,  285, "PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR")\
+    ENTRY(PD_FUNC_ID_MAX,                      286, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3577,6 +3585,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_pndx_set);
         PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_info_get);
         PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_indices_get);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_metrics_get);
 
         // fte_span pd calls
         PD_UNION_ARGS_FIELD(pd_fte_span_create);
@@ -4003,6 +4012,7 @@ PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_enable_set);
 PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_pndx_set);
 PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_info_get);
 PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_indices_get);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_metrics_get);
 
 // fte_span pd calls
 PD_FUNCP_TYPEDEF(pd_fte_span_create);

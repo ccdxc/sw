@@ -4,6 +4,7 @@
 
 #include <map>
 #include <unordered_map>
+#include <ev++.h>
 
 #include "dev.hpp"
 #include "hal_client.hpp"
@@ -65,6 +66,12 @@ enum {
     ((uint64_t)(ACCEL_LIF_DBADDR_UPD) << DB_UPD_SHFT) | \
     DB_ADDR_BASE_LOCAL)
 
+/*
+ * Default publish interval fraction
+ * e.g., 4 means 1/4 of a second
+ */
+#define ACCEL_DEV_PUB_INTV_FRAC_DFLT    4       // 0.250 second
+
 /**
  * Accelerator Device Spec
  */
@@ -79,6 +86,7 @@ typedef struct accel_devspec {
     uint32_t adminq_count;
     uint32_t intr_base;
     uint32_t intr_count;
+    uint32_t pub_intv_frac; // publishing interval in fraction of second
     // PCIe
     uint8_t  pcie_port;
 
@@ -138,12 +146,20 @@ typedef struct dev_cmd_regs {
 
 #endif /* ACCEL_DEV_CMD_ENUMERATE */
 
+#ifndef _NICMGR_IF_HPP_
+
+#include "accel_metrics.pb.h"
+#include "accel_metrics.delphi.hpp"
+
 /**
  * Accelerator device ring group ring info
  */
 typedef struct {
+    delphi::objects::AccelHwRingInfoPtr obj_ptr;
     accel_rgroup_rinfo_rsp_t    info;
     accel_rgroup_rindices_rsp_t indices;
+    accel_rgroup_rmetrics_rsp_t metrics;
+    uint64_t                    soft_resets;
 } accel_rgroup_ring_t;
 
 /*
@@ -190,6 +206,7 @@ public:
     void DevcmdPoll();
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
+    void accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring);
 
     struct lif_info             info;
     dev_cmd_regs_t              *devcmd;
@@ -199,6 +216,8 @@ private:
     /* Members */
     string                      name;
     accel_devspec_t             *spec;
+    ev::timer                   sync_timer;     // timer to sync to hub
+
     // Hardware Info
     static struct queue_info    qinfo[NUM_QUEUE_TYPES];
 
@@ -250,11 +269,17 @@ private:
                               bool conditional);
     int accel_rgroup_rinfo_get(void);
     int accel_rgroup_rindices_get(void);
+    int accel_rgroup_rmetrics_get(void);
     uint32_t accel_ring_num_pendings_get(const accel_rgroup_ring_t& rgroup_ring);
     int accel_ring_max_pendings_get(uint32_t& max_pendings);
 
+    void periodic_sync(ev::timer &watcher, int revents);
+    void delphi_update(void);
+    
     friend ostream &operator<<(ostream&, const Accel_PF&);
     const char*opcode_to_str(enum cmd_opcode opcode);
 };
+
+#endif /* _NICMGR_IF_HPP_ */
 
 #endif

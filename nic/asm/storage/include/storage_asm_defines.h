@@ -1046,8 +1046,6 @@ struct capri_dma_cmd_mem2mem_t {
 // Cancel a previously set Comp next doorbell ring command.
 // Since such a command is likely an EOP, NOP cannot be used
 // so work around that using a harmless PHV2MEM commmand.
-// Note: SEQ_KIVEC5_INTR_ADDR would have been filled with 
-// 34-bit qstate address.
 #define SEQ_COMP_NEXT_DB_CANCEL(_dma_cmd_X)                             \
    add      r_src_qaddr, SEQ_KIVEC5_SRC_QADDR      ,                    \
             SEQ_QSTATE_SINGLE_SIZE - 1;                                 \
@@ -1058,8 +1056,6 @@ struct capri_dma_cmd_mem2mem_t {
 // Cancel a previously set XTS next doorbell ring command.
 // Since such a command is likely an EOP, NOP cannot be used
 // so work around that using a harmless PHV2MEM commmand.
-// Note: SEQ_KIVEC5XTS_INTR_ADDR would have been filled with 
-// 34-bit qstate address.
 #define SEQ_XTS_NEXT_DB_CANCEL(_dma_cmd_X)                              \
    add      r_src_qaddr, SEQ_KIVEC5XTS_SRC_QADDR,                       \
             SEQ_QSTATE_SINGLE_SIZE - 1;                                 \
