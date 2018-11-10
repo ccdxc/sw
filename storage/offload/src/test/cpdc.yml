@@ -36,12 +36,12 @@ tests:
             type: lt
             file1: '1_compressed.bin'
             val: '$1block'
-        #- data_compare:
-        #    idx: 3
-        #    file1: '1_compressed.bin'
-        #    pattern: 0x00
-        #    offset: 2048
-        #    len: 2048
+        - data_compare:
+            idx: 3
+            file1: '1_compressed.bin'
+            pattern: 0x00
+            offset: 2048
+            len: 2048
   - test:
       idx: 2
       svc_chains: 2
