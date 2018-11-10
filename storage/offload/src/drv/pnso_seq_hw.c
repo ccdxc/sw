@@ -686,7 +686,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	ring_id = seq_info->sqi_ring_id;
 	qtype = seq_info->sqi_qtype;
 	seq_info->sqi_index = 0;
-	PPRINT_SEQUENCER_INFO(seq_info);
 
 	lif = sonic_get_lif();
 	if (!lif) {
@@ -779,7 +778,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	ring_id = seq_info->sqi_ring_id;
 	qtype = seq_info->sqi_qtype;
 	seq_info->sqi_index = 0;
-	PPRINT_SEQUENCER_INFO(seq_info);
 
 	lif = sonic_get_lif();
 	if (!lif) {
