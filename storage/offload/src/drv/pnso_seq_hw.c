@@ -28,7 +28,7 @@
  * TODO-seq:
  *	- although chaining can be done generically for compression
  *	related chains, focus for now is comp+hash bring-up.
- *	- revisit layer violations, sonic_get_accel_ring/lif/seq_q() routines
+ *	- revisit layer violations
  *	- storage_seq_p4pd. vs utils.h
  *
  */
@@ -674,7 +674,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	uint16_t qtype;
 	uint8_t *seq_status_desc;
 
-	struct accel_ring *ring;
 	struct lif *lif;
 	struct queue *q, *status_q;
 
@@ -688,12 +687,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	qtype = seq_info->sqi_qtype;
 	seq_info->sqi_index = 0;
 	PPRINT_SEQUENCER_INFO(seq_info);
-
-	ring = sonic_get_accel_ring(ring_id);
-	if (!ring) {
-		OSAL_ASSERT(ring);
-		goto out;
-	}
 
 	lif = sonic_get_lif();
 	if (!lif) {
@@ -774,7 +767,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	uint16_t qtype;
 	uint8_t *seq_status_desc;
 
-	struct accel_ring *ring;
 	struct lif *lif;
 	struct queue *q, *status_q;
 
@@ -788,12 +780,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	qtype = seq_info->sqi_qtype;
 	seq_info->sqi_index = 0;
 	PPRINT_SEQUENCER_INFO(seq_info);
-
-	ring = sonic_get_accel_ring(ring_id);
-	if (!ring) {
-		OSAL_ASSERT(ring);
-		goto out;
-	}
 
 	lif = sonic_get_lif();
 	if (!lif) {
