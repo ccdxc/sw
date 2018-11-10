@@ -229,13 +229,6 @@ def IsConfigOnly():
 def GetTopDir():
     return GlobalOptions.topdir
 
-def SetTestsuiteAttr(attr, value):
-    store.GetTestbed().GetCurrentTestsuite().SetAttr(attr, value)
-    return
-
-def GetTestsuiteAttr(attr):
-    return store.GetTestbed().GetCurrentTestsuite().GetAttr(attr)
-
 def IsApiResponseOk(resp):
     if resp is None: return False
     if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False

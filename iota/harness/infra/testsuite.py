@@ -36,7 +36,6 @@ class TestSuite:
         self.__expand_iterators()
         self.__enabled = getattr(self.__spec.meta, 'enable', True)
         self.__aborted = False
-        self.__attrs = {}
         return
 
     def Abort(self):
@@ -193,10 +192,3 @@ class TestSuite:
             tc.PrintResultSummary()
         print("")
         return types.status.SUCCESS
-
-    def SetAttr(self, attr, value):
-        self.__attrs[attr] = value
-        return
-
-    def GetAttr(self, attr):
-        return self.__attrs[attr]
