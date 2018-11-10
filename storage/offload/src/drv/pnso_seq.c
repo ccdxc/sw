@@ -27,12 +27,11 @@ seq_ring_db(const struct service_info *svc_info)
 }
 
 pnso_error_t
-seq_setup_cp_chain_params(struct chain_entry *centry,
-			struct service_info *svc_info,
+seq_setup_cp_chain_params(struct service_info *svc_info,
 			struct cpdc_desc *cp_desc,
 			struct cpdc_status_desc *status_desc)
 {
-	return g_sequencer_ops->setup_cp_chain_params(centry, svc_info,
+	return g_sequencer_ops->setup_cp_chain_params(svc_info,
 			cp_desc, status_desc);
 }
 
@@ -56,11 +55,10 @@ seq_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 }
 
 void *
-seq_setup_cpdc_chain_desc(struct chain_entry *centry,
-		struct service_info *svc_info,
+seq_setup_cpdc_chain_desc(struct service_info *svc_info,
 		const void *src_desc, size_t desc_size)
 {
-	return g_sequencer_ops->setup_cpdc_chain_desc(centry, svc_info,
+	return g_sequencer_ops->setup_cpdc_chain_desc(svc_info,
 			src_desc, desc_size);
 }
 

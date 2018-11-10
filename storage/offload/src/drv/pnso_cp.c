@@ -181,7 +181,7 @@ compress_chain(struct chain_entry *centry)
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
-	err = seq_setup_cp_chain_params(centry, svc_info, cp_desc, status_desc);
+	err = seq_setup_cp_chain_params(svc_info, cp_desc, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup cp in chain! err: %d", err);
 		goto out;
@@ -199,8 +199,8 @@ compress_chain(struct chain_entry *centry)
 		OSAL_LOG_INFO("chaining of services after cp done!");
 	}
 
-	svc_info->si_seq_info.sqi_desc = seq_setup_cpdc_chain_desc(centry,
-			svc_info, cp_desc, sizeof(*cp_desc));
+	svc_info->si_seq_info.sqi_desc = seq_setup_cpdc_chain_desc(svc_info,
+			cp_desc, sizeof(*cp_desc));
 	if (!svc_info->si_seq_info.sqi_desc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);

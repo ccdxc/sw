@@ -662,13 +662,11 @@ out:
 }
 
 static pnso_error_t
-hw_setup_cp_chain_params(struct chain_entry *centry,
-		struct service_info *svc_info,
+hw_setup_cp_chain_params(struct service_info *svc_info,
 		struct cpdc_desc *cp_desc,
 		struct cpdc_status_desc *status_desc)
 {
 	pnso_error_t err = EINVAL;
-	struct service_chain *svc_chain;
 	struct cpdc_chain_params *chain_params;
 	struct sequencer_info *seq_info;
 	struct sequencer_spec *seq_spec;
@@ -682,7 +680,6 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	svc_chain = centry->ce_chain_head;
 	chain_params = &svc_info->si_cpdc_chain;
 	seq_spec = &chain_params->ccp_seq_spec;
 
@@ -924,19 +921,16 @@ out:
 }
 
 static void *
-hw_setup_cpdc_chain_desc(struct chain_entry *centry,
-		struct service_info *svc_info,
+hw_setup_cpdc_chain_desc(struct service_info *svc_info,
 		const void *src_desc, size_t desc_size)
 {
 	pnso_error_t err = EINVAL;
-	struct service_chain *svc_chain;
 	struct cpdc_chain_params *chain_params;
 	struct sequencer_info *seq_info;
 	struct sequencer_desc *seq_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	svc_chain = centry->ce_chain_head;
 	chain_params = &svc_info->si_cpdc_chain;
 	seq_info = &svc_info->si_seq_info;
 	PPRINT_SEQUENCER_INFO(seq_info);
