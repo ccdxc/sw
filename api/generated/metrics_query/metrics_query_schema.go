@@ -44,7 +44,7 @@ var typesMapMetrics_query = map[string]*api.Struct{
 	"metrics_query.QueryResult": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResult{}) },
 		Fields: map[string]api.Field{
-			"StatementId": api.Field{Name: "StatementId", CLITag: api.CLIInfo{ID: "statement_id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "statement_id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+			"StatementID": api.Field{Name: "StatementID", CLITag: api.CLIInfo{ID: "statement_id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "statement_id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
 			"Series": api.Field{Name: "Series", CLITag: api.CLIInfo{ID: "series", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "series", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.ResultSeries"},
 		},

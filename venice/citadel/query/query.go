@@ -121,7 +121,7 @@ func (q *Server) Query(c context.Context, qs *metrics_query.QuerySpec) (*metrics
 
 	for _, citadelResp := range citadelResults {
 		result := &metrics_query.QueryResult{
-			StatementId: int32(citadelResp.StatementID),
+			StatementID: int32(citadelResp.StatementID),
 			Series:      []*metrics_query.ResultSeries{},
 		}
 

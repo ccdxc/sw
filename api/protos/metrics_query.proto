@@ -82,7 +82,7 @@ message ResultSeries {
 
 // QueryResult contains tsdb series from citadel query
 message QueryResult {
-    int32 StatementId = 1 [(gogoproto.jsontag) = "statement_id"];
+    int32 StatementID = 1 [(gogoproto.jsontag) = "statement_id"];
     repeated ResultSeries Series = 2 [(gogoproto.jsontag) = "series,omitempty"];
 }
 
