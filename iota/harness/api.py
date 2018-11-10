@@ -16,6 +16,8 @@ import iota.harness.infra.utils.parser as parser
 
 from iota.harness.infra.glopts import GlobalOptions
 
+DEFAULT_COMMAND_TIMEOUT = 30
+
 gl_iota_svc_channel = None
 gl_topo_svc_stub = None
 gl_cfg_svc_stub = None
@@ -233,56 +235,6 @@ def IsApiResponseOk(resp):
     return True
 
 # ================================
-# Wrappers for Copy APIs
-# ================================
-def CopyToWorkload(node_name, workload_name, files, dest_dir):
-    req = topo_svc.EntityCopyMsg()
-    req.direction = topo_svc.DIR_IN
-    req.node_name = node_name
-    req.entity_name = workload_name
-    for f in files:
-        req.files.append(f)
-    req.dest_dir = dest_dir
-    return EntityCopy(req)
-def CopyToHost(node_name, files, dest_dir):
-    req = topo_svc.EntityCopyMsg()
-    req.direction = topo_svc.DIR_IN
-    req.node_name = node_name
-    req.entity_name = "%s_host" % node_name
-    for f in files:
-        req.files.append(f)
-    req.dest_dir = dest_dir
-    return EntityCopy(req)
-
-def CopyFromHost(node_name, files, dest_dir):
-    req = topo_svc.EntityCopyMsg()
-    req.direction = topo_svc.DIR_OUT
-    req.node_name = node_name
-    req.entity_name = "%s_host" % node_name
-    for f in files:
-        req.files.append(f)
-    req.dest_dir = dest_dir
-    return EntityCopy(req)
-
-def CopyToNaples(node_name, files, dest_dir):
-    req = topo_svc.EntityCopyMsg()
-    req.direction = topo_svc.CopyDirection.DIR_IN
-    req.node_name = node_name
-    req.entity_name = "%s_naples" % node_name
-    req.files = files
-    req.dest_dir = dest_dir
-    return EntityCopy(req)
-
-def CopyFromNaples(node_name, files, dest_dir):
-    req = topo_svc.EntityCopyMsg()
-    req.direction = topo_svc.CopyDirection.DIR_OUT
-    req.node_name = node_name
-    req.entity_name = "%s_naples" % node_name
-    req.files = files
-    req.dest_dir = dest_dir
-    return EntityCopy(req)
-
-# ================================
 # Wrappers for Trigger APIs
 # ================================
 def Trigger_CreateExecuteCommandsRequest(serial = True):
@@ -291,20 +243,31 @@ def Trigger_CreateExecuteCommandsRequest(serial = True):
     req.trigger_mode = topo_svc.TRIGGER_SERIAL if serial else topo_svc.TRIGGER_PARALLEL
     return req
 
-def Trigger_AddCommand(req, node_name, workload_name, command, background = False, rundir = ""):
+def Trigger_AddCommand(req, node_name, entity_name, command, 
+                       background = False, rundir = "", 
+                       timeout = DEFAULT_COMMAND_TIMEOUT):
     cmd = req.commands.add()
     cmd.mode = topo_svc.COMMAND_BACKGROUND if background else topo_svc.COMMAND_FOREGROUND
-    cmd.entity_name = workload_name
+    cmd.entity_name = entity_name
     cmd.node_name = node_name
     cmd.command = command
     cmd.running_dir = rundir
+    cmd.foreground_timeout = timeout
+    if __gl_rundir:
+        cmd.running_dir = __gl_rundir + '/' + rundir
     return cmd
 
-def Trigger_AddHostCommand(req, node_name, command, background = False, rundir = ""):
-    return Trigger_AddCommand(req, node_name, "%s_host" % node_name, command, background, rundir)
+def Trigger_AddHostCommand(req, node_name, command,
+                           background = False, rundir = "",
+                           timeout = DEFAULT_COMMAND_TIMEOUT):
+    return Trigger_AddCommand(req, node_name, "%s_host" % node_name, 
+                              command, background, rundir, timeout)
 
-def Trigger_AddNaplesCommand(req, node_name, command, background = False, rundir = ""):
-    return Trigger_AddCommand(req, node_name, "%s_naples" % node_name, command, background, rundir)
+def Trigger_AddNaplesCommand(req, node_name, command,
+                             background = False, rundir = "",
+                             timeout = DEFAULT_COMMAND_TIMEOUT):
+    return Trigger_AddCommand(req, node_name, "%s_naples" % node_name,
+                              command, background, rundir, timeout)
 
 def Trigger_IsBackgroundCommand(cmd):
     return cmd.handle != ""
@@ -334,5 +297,58 @@ def Trigger_AggregateCommandsResponse(trig_resp, term_resp):
             cmd.exit_code = term_cmd.exit_code
     return trig_resp
 
-def GetTestDataDir():
-    return iota_test_data_dir
+def Trigger_IsSuccess(resp):
+    if resp is None: return False
+    if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False
+    for cmd in resp.commands:
+        if cmd.exit_code != 0: return False
+    return True
+
+def IsApiResponseOk(resp):
+    if resp is None: return False
+    if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False
+    return True
+
+# ================================
+# Wrappers for Copy APIs
+# ================================
+__gl_rundir = None
+def ChangeDirectory(rundir):
+    global __gl_rundir
+    Logger.debug("Changing Directory to %s" % rundir)
+    __gl_rundir = rundir
+    return types.status.SUCCESS
+
+def __CopyCommon(direction, node_name, entity_name, files, dest_dir):
+    #if direction == topo_svc.DIR_IN:
+    #    ret = __CreateDir(node_name, entity_name, dest_dir)
+    #    if ret != types.status.SUCCESS:
+    #        return ret
+    req = topo_svc.EntityCopyMsg()
+    req.direction = direction
+    req.node_name = node_name
+    req.entity_name = entity_name
+    for f in files:
+        req.files.append(f)
+    req.dest_dir = __gl_rundir + '/' + dest_dir
+    return EntityCopy(req)
+   
+def CopyToWorkload(node_name, workload_name, files, dest_dir = ""):
+    return __CopyCommon(topo_svc.DIR_IN, node_name,
+                        workload_name, files, dest_dir)
+
+def CopyToHost(node_name, files, dest_dir = ""):
+    return __CopyCommon(topo_svc.DIR_IN, node_name,
+                        "%s_host" % node_name, files, dest_dir)
+
+def CopyFromHost(node_name, files, dest_dir):
+    return __CopyCommon(topo_svc.DIR_OUT, node_name,
+                        "%s_host" % node_name, files, dest_dir)
+
+def CopyToNaples(node_name, files, dest_dir):
+    return __CopyCommon(topo_svc.DIR_IN, node_name,
+                        "%s_naples" % node_name, files, dest_dir)
+
+def CopyFromNaples(node_name, files, dest_dir):
+    return __CopyCommon(topo_svc.DIR_OUT, node_name,
+                        "%s_naples" % node_name, files, dest_dir)

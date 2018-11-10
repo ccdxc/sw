@@ -24,8 +24,5 @@ def JsonParse(filename):
     return obj
 
 def ParseJsonStream(stream):
-    try:
-        obj = json.parse(stream)
-    except:
-        obj = None
+    obj = Dict2Object(json.loads(stream))
     return obj

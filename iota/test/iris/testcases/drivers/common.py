@@ -84,7 +84,7 @@ def start_pcap_capture(tc):
 def stop_pcap_capture(tc):
     api.Trigger_TerminateAllCommands(tc.pcap_trigger)
     nodes = api.GetWorkloadNodeHostnames()
-    tc_dir = tc.GetTcDir()
+    tc_dir = tc.GetLogsDir()
     for n in nodes:
         host_intfs = api.GetWorkloadNodeHostInterfaces(n)
         if len(host_intfs) == 0:

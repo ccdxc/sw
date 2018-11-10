@@ -1,0 +1,101 @@
+meta:
+    name        : storage
+    description : Storage Hardware Test Suite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+
+packages:
+    - iota.test.iris
+
+images:
+
+setup:
+    topology: test/iris/topologies/1Naples_BM/1Naples.topology
+    config  : 
+        - step : config.netagent.hw_push_config
+
+common:
+    verifs:
+        - step    : verif.utils.verify_dmesg
+
+aliases:
+    - &STORAGE_TEST_DIR storage/offload/src/test
+
+testcases:
+    -   name    : CompileInsmodSonicPencake
+        testcase: testcases.storage.compile_install_drivers
+        args    :
+            package: storage/gen/storage-offload.tar.xz
+
+    -   name    : CompressDecompress
+        testcase: testcases.storage.ymltest
+        args    :
+            dir : *STORAGE_TEST_DIR
+            wait: 2 # Wait in seconds.
+            cfg : [ 4k.yml, globals.yml ]
+            test: cpdc.yml
+
+    -   name    : CompressFail
+        testcase: testcases.storage.ymltest
+        args    :
+            dir     : *STORAGE_TEST_DIR
+            wait    : 5 # Wait in seconds.
+            cfg     : [ 4k.yml, globals.yml ]
+            test    : cp_fail.yml
+            failtest: True
+
+    -   name    : DecompressFail
+        testcase: testcases.storage.ymltest
+        args    :
+            dir     : *STORAGE_TEST_DIR
+            wait    : 5 # Wait in seconds.
+            cfg     : [ 4k.yml, globals.yml ]
+            test    : dc_fail.yml
+            failtest: True
+
+    -   name    : Hash
+        testcase: testcases.storage.ymltest
+        args    :
+            dir : *STORAGE_TEST_DIR
+            wait: 2 # Wait in seconds.
+            cfg : [ 4k.yml, globals.yml ]
+            test: hash.yml
+
+    -   name    : Checksum
+        testcase: testcases.storage.ymltest
+        args    :
+            dir : *STORAGE_TEST_DIR
+            wait: 2 # Wait in seconds.
+            cfg : [ 4k.yml, globals.yml ]
+            test: chksum.yml
+
+#    -   name    : Crypto
+#        testcase: testcases.storage.ymltest
+#        enable  : False
+#        args    :
+#            dir : *STORAGE_TEST_DIR
+#            wait: 5 # Wait in seconds.
+#            cfg : [ 4k.yml, globals.yml ]
+#            test: crypto1.yml
+#
+#    -   name    : CryptoFail
+#        testcase: testcases.storage.ymltest
+#        enable  : False
+#        args    :
+#            dir : *STORAGE_TEST_DIR
+#            wait: 5 # Wait in seconds.
+#            cfg : [ 4k.yml, globals.yml ]
+#            test: crypto_fail.yml
+#
+#    -   name    : Test3
+#        testcase: testcases.storage.ymltest
+#        enable  : False
+#        args    :
+#            dir : *STORAGE_TEST_DIR
+#            wait: 5 # Wait in seconds.
+#            cfg : [ 4k.yml, globals.yml ]
+#            test: test3.yml
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

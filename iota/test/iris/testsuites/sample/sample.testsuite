@@ -1,0 +1,40 @@
+meta:
+    name        : sample
+    description : Sample Test Suite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    enable      : False
+
+packages:
+    - iota.test.iris
+
+images:
+
+setup:
+    topology: test/iris/topologies/1Naples_BM/1Naples.topology
+    config  : 
+        - step : config.netagent.hw_push_config
+
+common:
+    verifs:
+#        - step    : verif.utils.verify_dmesg
+
+testcases:
+    -   name    : SimpleIterators
+        testcase: testcases.sample.iterators
+        iterators:
+            type    : simple
+            mtu     : [ 1500, 2048, 4096, 9000]
+            proto   : [ tcp, udp ]
+            ipaf    : [ ipv4, ipv6 ]
+
+    -   name    : NestedIterators
+        testcase: testcases.sample.iterators
+        iterators:
+            type    : nested
+            proto   : [ tcp, udp ]
+            ipaf    : [ ipv4, ipv6 ]
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

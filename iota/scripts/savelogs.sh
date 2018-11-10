@@ -1,6 +1,6 @@
 #! /bin/bash
-rm -f /sw/iota/iota_sanity_logs.tar.gz
-tar cvzf /sw/iota/iota_sanity_logs.tar.gz -P --ignore-failed-read \
-    /sw/iota/logs \
-    /sw/iota/core.* \
-    /sw/iota/*.log
+IOTADIR=$1/iota/
+TARBALL=$IOTADIR/iota_sanity_logs.tar.gz
+rm -f $TARBALL
+tar czf $TARBALL -P --ignore-failed-read \
+        $IOTADIR/logs $IOTADIR/*.log

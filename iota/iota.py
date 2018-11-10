@@ -44,10 +44,10 @@ def __start_server():
     global gl_server_process
     if glopts.GlobalOptions.dryrun:
         gl_server_process = procs.IotaProcess("%s/iota/bin/server/iota_server --stubmode" % topdir,
-                                          "%s/iota/server.log" % topdir)
+                                              "%s/iota/server.log" % topdir)
     else:
         gl_server_process = procs.IotaProcess("%s/iota/bin/server/iota_server" % topdir,
-                                                  "%s/iota/server.log" % topdir)
+                                              "%s/iota/server.log" % topdir)
     gl_server_process.Start()
     return
 
@@ -57,7 +57,7 @@ def __exit_cleanup():
     gl_server_process.Stop()
     Logger.info("ATEXIT: Saving logs to iota_sanity_logs.tar.gz")
     os.system("%s/iota/scripts/collect_logs.py --testbed %s" % (topdir, glopts.GlobalOptions.testbed_json))
-    os.system("%s/iota/scripts/savelogs.sh" % topdir)
+    os.system("%s/iota/scripts/savelogs.sh %s" % (topdir, topdir))
     return
 
 def Main():

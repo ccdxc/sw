@@ -52,35 +52,30 @@ class TestcaseDataIters:
         return self.__summary
 
 class TestcaseData:
-    def __init__(self, name, args):
+    def __init__(self, dirname, args):
         self.__status = types.result.PASS
         self.args = args
-        self.name = name
         self.iterators = TestcaseDataIters()
+        self.__logs_dir = "%s/iota/logs/tcdata/%s/" % (api.GetTopDir(), dirname)
+        os.system("mkdir -p %s" % self.__logs_dir)
         return
+
     def SetStatus(self, status):
         self.__status = status
         return
+
     def GetStatus(self):
         return self.__status
-    def Name(self):
-        return self.name
 
-    def _setup_tc_data(self, tc_id):
-        self.tc_id = tc_id
-        self.data_dir = api.GetTestDataDir() + "/" + self.name + "/" + self.GetTcID()
-        os.system("mkdir -p %s" % self.data_dir)
-
-    def GetTcID(self):
-        return self.name + "_" + str(self.tc_id)
-    def GetTcDir(self):
-        return self.data_dir
+    def GetLogsDir(self):
+        return self.__logs_dir
 
 class Testcase:
     def __init__(self, spec):
         self.__spec = spec
         self.__tc = None
         self.__verifs = []
+        self.__iterid = 0
         self.__resolve()
 
         self.__timer = timeprofiler.TimeProfiler()
@@ -92,7 +87,9 @@ class Testcase:
         return
 
     def __new_TestcaseData(self):
-        return TestcaseData(self.Name(), getattr(self.__spec, 'args', None))
+        self.__iterid += 1
+        return TestcaseData("%s/%d" % (self.Name(), self.__iterid), 
+                            getattr(self.__spec, 'args', None))
 
     def __setup_simple_iters(self, spec):
         min_len = 0
@@ -168,12 +165,30 @@ class Testcase:
             return ret
         return types.status.SUCCESS
 
+    def __mk_testcase_directory(self, newdir):
+        command = "mkdir -p %s && chmod 777 %s" % (newdir, newdir)
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        for nodename in api.GetNaplesHostnames():
+            api.Trigger_AddHostCommand(req, nodename, command)
+        for wl in api.GetWorkloads():
+            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, command)
+        resp = api.Trigger(req)
+        if not api.Trigger_IsSuccess(resp):
+            Logger.error("Failed to create destination directory %s" % newdir)
+            return types.status.FAILURE
+        return types.status.SUCCESS
+
     def __execute(self):
         ignored = getattr(self.__spec, "ignore", False)
+        ret = self.__mk_testcase_directory(self.__spec.name) 
+        if ret != types.status.SUCCESS:
+            return ret
+
+        api.ChangeDirectory(self.__spec.name)
+        
         final_result = types.status.SUCCESS
         iter_id = 1
         for iter_data in self.__iters:
-            iter_data._setup_tc_data(iter_id)
             Logger.SetTestcaseID(iter_id)
             iter_id = iter_id + 1
             result = types.status.SUCCESS
@@ -207,6 +222,7 @@ class Testcase:
                 else:
                     final_result = result
 
+        api.ChangeDirectory("")
         return final_result
 
     def PrintResultSummary(self):

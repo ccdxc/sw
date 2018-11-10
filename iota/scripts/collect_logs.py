@@ -38,7 +38,7 @@ def collect_logs(node_name):
 
 import iota.harness.infra.utils.parser as parser
 from multiprocessing.dummy import Pool as ThreadPool 
-os.system("yum install -y sshpass")
+#os.system("yum install -y sshpass")
 tbspec = parser.JsonParse(GlobalOptions.testbed_json)
 pool = ThreadPool(len(tbspec.Instances))
 nodes = []
