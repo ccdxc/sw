@@ -9,12 +9,32 @@
 #include <inttypes.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/mman.h>
+#include <execinfo.h>
 
 #include "pal.h"
 #include "internal.h"
+
+/* Obtain a backtrace and print it to stdout. */
+void
+print_trace (void)
+{
+    void *array[10];
+    size_t size;
+    char **strings;
+    size_t i;
+
+    size = backtrace (array, 10);
+    strings = backtrace_symbols (array, size);
+
+    printf ("Obtained %zd stack frames.\n", size);
+
+    for (i = 0; i < size; i++)
+        printf ("%s\n", strings[i]);
+
+    free (strings);
+}
 
 u_int16_t
 pal_reg_rd16(const u_int64_t pa)

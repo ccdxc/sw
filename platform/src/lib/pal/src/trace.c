@@ -9,7 +9,6 @@
 #include <inttypes.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/mman.h>
 

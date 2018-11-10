@@ -38,7 +38,6 @@ extern "C" {
 #endif
 #endif
 
-#include <sys/types.h>
 #include "pal_types.h"
 #include "pal_locks.h"
 #include "pal_i2c.h"
