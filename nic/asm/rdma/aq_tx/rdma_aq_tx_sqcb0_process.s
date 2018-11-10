@@ -18,6 +18,9 @@ struct aq_tx_s3_t1_k k;
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)    
 #define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout)
 #define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
+#define K_Q_KEY_VALID CAPRI_KEY_FIELD(IN_TO_S_P, q_key_valid)
+#define K_Q_KEY CAPRI_KEY_RANGE(IN_TO_S_P, q_key_sbit0_ebit4, q_key_sbit29_ebit31)
+
 %%
 
     .param      rdma_aq_tx_rqcb0_process
@@ -46,11 +49,17 @@ timeout:
     tblwr       d.local_ack_timeout, K_LOCAL_ACK_TIMEOUT
 
 pmtu:
-    bbne        CAPRI_KEY_FIELD(IN_P, pmtu_valid), 1, setup_sqcb_stages
+    bbne        CAPRI_KEY_FIELD(IN_P, pmtu_valid), 1, q_key
     nop
     
     tblwr       d.log_pmtu, CAPRI_KEY_FIELD(IN_P, pmtu_log2)
     
+q_key:
+    bbne        K_Q_KEY_VALID, 1, setup_sqcb_stages
+    nop
+
+    tblwr       d.q_key, K_Q_KEY
+
 setup_sqcb_stages: 
 
     CAPRI_RESET_TABLE_1_ARG()

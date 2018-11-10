@@ -54,6 +54,7 @@ completion_eq:
     //Writing Interrupt unconditionally... if needed, add a flag for this purpose
     phvwri          p.int_assert_data, CAPRI_INT_ASSERT_DATA
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_ASSERT_DATA_BEGIN, PHV_EQ_INT_ASSERT_DATA_END, d.int_assert_addr)
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
     CAPRI_SET_TABLE_1_VALID(0)
     seq.e             c1, K_CMD_EOP, 1
@@ -68,6 +69,7 @@ async_eq:
     //Writing Interrupt unconditionally... if needed, add a flag for this purpose
     phvwri          p.async_int_assert_data, CAPRI_INT_ASSERT_DATA
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_ASYNC_EQ_INT_ASSERT_DATA_BEGIN, PHV_ASYNC_EQ_INT_ASSERT_DATA_END, d.int_assert_addr)
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
     DMA_SET_END_OF_CMDS_E(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
     CAPRI_SET_TABLE_0_VALID(0)

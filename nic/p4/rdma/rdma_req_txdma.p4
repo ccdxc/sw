@@ -72,9 +72,9 @@
 #define tx_table_s3_t0_action2 req_tx_bktrack_sqsge_process_s3
 #define tx_table_s3_t0_action3 req_tx_bktrack_write_back_process_s3
 #define tx_table_s3_t0_action4 req_tx_sqlkey_invalidate_process_s3
-#define tx_table_s3_t1_action1 req_tx_load_ah_size_process
 #define tx_table_s3_t1_action4 req_tx_bktrack_sqcb2_write_back_process
 #define tx_table_s3_t2_action  req_tx_dcqcn_enforce_process_s3
+#define tx_table_s3_t3_action1 req_tx_load_ah_size_process
 
 #define tx_table_s4_t0_action  req_tx_sqlkey_process_t0
 #define tx_table_s4_t0_action1 req_tx_bktrack_sqwqe_process_s4

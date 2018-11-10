@@ -796,6 +796,7 @@ process_ud:
     // c2: send, c1: only
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
 
+    phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
     seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type
     seq         c3, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     // if it doesn't match serv_type OR not send OR not only, drop

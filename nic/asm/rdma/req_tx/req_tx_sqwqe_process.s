@@ -31,11 +31,11 @@ struct req_tx_s2_t0_k k;
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit0, remaining_payload_bytes_sbit9_ebit15)
 #define K_HEADER_TEMPLATE_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
+#define K_PRIVILEGED_QKEY K_HEADER_TEMPLATE_ADDR
 #define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit0, current_sge_offset_sbit25_ebit31)
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit7, ah_base_addr_page_id_sbit16_ebit21)
 #define K_FAST_REG_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, fast_reg_rsvd_lkey_enable)
-
 
 %%
     .param    req_tx_sqsge_process
@@ -144,7 +144,14 @@ send_or_write:
     bcf            [!c1], set_sge_arg
     seq            c2, d.base.inline_data_vld, 1 // Branch Delay Slot
 
-    phvwrpair DETH_Q_KEY, d.ud_send.q_key, DETH_SRC_QP, K_GLOBAL_QID
+    seq            c4, K_FAST_REG_ENABLE, 0x1
+    seq            c5, d.ud_send.q_key[31:31], 0x1
+    bcf            [c5 & !c4], ud_error
+    seq            c6, K_PRIVILEGED_QKEY[31:31], 0x1  // BD slot
+    bcf            [c5 & !c6], ud_error
+    cmov           r4, c5, K_PRIVILEGED_QKEY, d.ud_send.q_key // BD slot
+
+    phvwrpair DETH_Q_KEY, r4, DETH_SRC_QP, K_GLOBAL_QID
     phvwr BTH_DST_QP, d.ud_send.dst_qp
 
     // For UD, length should be less than pmtu
@@ -158,8 +165,8 @@ send_or_write:
     add            r6, r2, HDR_TEMPLATE_T_SIZE_BYTES
     srl            r2, r2, HDR_TEMP_ADDR_SHIFT
 
-    CAPRI_RESET_TABLE_1_ARG()
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_ah_size_process, r6)
+    CAPRI_RESET_TABLE_3_ARG()
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_load_ah_size_process, r6)
 
 set_sge_arg:
     bcf            [c2], inline_data

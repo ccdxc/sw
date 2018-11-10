@@ -11,7 +11,8 @@ struct rqcb1_t d;
 struct aq_tx_s4_t2_k k;
 
 #define IN_P t2_s2s_sqcb1_to_rqcb1_info
-    
+#define IN_TO_S_P to_s4_info
+
 %%
 
 .align
@@ -40,11 +41,17 @@ state:
     tblwr       d.state, CAPRI_KEY_FIELD(IN_P, state)
     
 pmtu:
-    bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, done
+    bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, q_key
     nop
     
     tblwr       d.log_pmtu, CAPRI_KEY_FIELD(IN_P, pmtu_log2)
-    
+
+q_key:
+    bbne        CAPRI_KEY_FIELD(IN_TO_S_P , q_key_valid), 1, done
+    nop
+
+    tblwr       d.q_key, CAPRI_KEY_FIELD(IN_TO_S_P, q_key)
+
 done:
     CAPRI_SET_TABLE_2_VALID(0)              
     nop.e

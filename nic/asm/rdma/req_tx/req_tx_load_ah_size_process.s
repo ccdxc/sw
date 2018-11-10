@@ -13,4 +13,4 @@ req_tx_load_ah_size_process:
 
     phvwr.e           CAPRI_PHV_FIELD(TO_S5_SQCB_WB_P, ah_size), d.size
 
-    CAPRI_SET_TABLE_1_VALID(0)
+    CAPRI_SET_TABLE_3_VALID(0)

@@ -317,6 +317,8 @@ action rdma_stage0_aq_feedback_action2 () {
     modify_field(rdma_aq_feedback_qp_scr.pd, rdma_aq_feedback_qp.pd);
     modify_field(rdma_aq_feedback_qp_scr.rq_dma_addr, rdma_aq_feedback_qp.rq_dma_addr);
     modify_field(rdma_aq_feedback_qp_scr.rq_cmb, rdma_aq_feedback_qp.rq_cmb);
+    modify_field(rdma_aq_feedback_qp_scr.qp_privileged, rdma_aq_feedback_qp.qp_privileged);
+    modify_field(rdma_aq_feedback_qp_scr.log_pmtu, rdma_aq_feedback_qp.log_pmtu);
 }
 
 /*

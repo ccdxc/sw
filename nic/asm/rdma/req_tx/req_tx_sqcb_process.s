@@ -119,6 +119,7 @@ process_send:
 poll_for_work:
 
         // header_template_addr is needed to load hdr_template_process in fast-path.
+        // For UD QPs, header_template_addr is shared with the q_key
         phvwrpair      CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr, \
                        CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable // BD-slot
 

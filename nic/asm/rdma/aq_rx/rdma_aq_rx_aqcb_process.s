@@ -18,8 +18,12 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_RQ_DMA_ADDR k.{rdma_aq_feedback_qp_rq_dma_addr_sbit0_ebit15...rdma_aq_feedback_qp_rq_dma_addr_sbit48_ebit63}
 #define K_RQ_CMB k.{rdma_aq_feedback_qp_rq_cmb}
 #define K_RQ_CQ_ID k.{rdma_aq_feedback_qp_rq_cq_id_sbit0_ebit7...rdma_aq_feedback_qp_rq_cq_id_sbit16_ebit23}
+#define K_RQ_PRIVILEGED k.{rdma_aq_feedback_qp_qp_privileged}
+#define K_LOG_PMTU k.{rdma_aq_feedback_qp_log_pmtu}
 
 #define K_RQ_ID k.{rdma_aq_feedback_qp_rq_id_sbit0_ebit15,rdma_aq_feedback_qp_rq_id_sbit16_ebit23}
+#define K_RQ_STRIDE_LOG2 k.{rdma_aq_feedback_qp_rq_stride_log2}
+#define K_RQ_DEPTH_LOG2 k.{rdma_aq_feedback_qp_rq_depth_log2}
     
 %%
 
@@ -67,7 +71,7 @@ aq_feedback:
 
     mfspr       r2, spr_tbladdr
     phvwr CAPRI_PHV_FIELD(TO_S6_INFO, aqcb_addr), r2[34:AQCB_ADDR_SHIFT]
-    
+
     //set dma_cmd_ptr in phv
     RXDMA_DMA_CMD_PTR_SET(AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_START_FLIT_CMD_ID) //Exit Slot
 
@@ -89,16 +93,16 @@ create_qp:
         //TODO: RQ in HBM still need to be implemented
 
     phvwr       p.rqcb0.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0]
-    phvwrpair   p.rqcb0.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb0.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
-    phvwr       p.rqcb0.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0]
+    phvwrpair   p.rqcb0.log_wqe_size, K_RQ_STRIDE_LOG2[4:0], p.rqcb0.log_num_wqes , K_RQ_DEPTH_LOG2[4:0]
+    phvwrpair   p.rqcb0.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0], p.rqcb0.log_pmtu, K_LOG_PMTU
 
     //RQCB1
 
     phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RESET
-    phvwrpair   p.rqcb1.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb1.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0] 
+    phvwrpair   p.rqcb1.log_wqe_size, K_RQ_STRIDE_LOG2[4:0], p.rqcb1.log_num_wqes , K_RQ_DEPTH_LOG2[4:0]
     phvwrpair   p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0], p.rqcb1.pd, K_PD
-    phvwr       p.rqcb1.cq_id, K_RQ_CQ_ID
-
+    phvwrpair   p.rqcb1.priv_oper_enable, K_RQ_PRIVILEGED, p.rqcb1.cq_id, K_RQ_CQ_ID
+    phvwr       p.rqcb1.log_pmtu, K_LOG_PMTU
 
     //RQCB2
     

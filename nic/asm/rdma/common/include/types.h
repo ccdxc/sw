@@ -1089,7 +1089,8 @@ union header_template_t {
 #define AH_ENTRY_T_SIZE_BYTES (HDR_TEMPLATE_T_SIZE_BYTES + 1)
 #define AT_ENTRY_SIZE_BYTES 136
 #define GRH_HDR_T_SIZE_BYTES (sizeof(struct ipv6hdr_t)/8)
- 
+#define PRIVILEGE_KEY_BASE 0x80000000
+
 #define ACK_SYNDROME        0x00
 #define RNR_SYNDROME        0x20
 #define RESV_SYNDROME       0x40
@@ -1167,10 +1168,12 @@ struct p4_to_p4plus_roce_header_t {
 };
 
 struct rdma_aq_feedback_create_qp_ext_t {
-    rq_dma_addr: 64;
-    rq_id      : 24;
-    rq_cmb     : 1;
-    rsvd       : 23;
+    rq_dma_addr  : 64;
+    rq_id        : 24;
+    rq_cmb       :  1;
+    qp_privileged:  1;
+    log_pmtu     :  5;
+    rsvd         : 17;
 };
         
 struct aq_p4_to_p4plus_roce_header_t {

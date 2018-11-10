@@ -130,13 +130,17 @@ header_type aq_tx_to_stage_sqcb_info_t {
         local_ack_timeout_valid          :    1;
         err_retry_count                  :    3;
         err_retry_count_valid            :    1;
-        pad                              :   69;
+        q_key                            :   32;
+        q_key_valid                      :    1;
+        pad                              :   36;
     }
 }
 
 header_type aq_tx_to_stage_rqcb_info_t {
     fields {
-        pad                              :   128;
+        q_key                            :    32;
+        q_key_valid                      :     1;
+        pad                              :    95;
     }
 }
 
@@ -355,6 +359,8 @@ action aq_tx_sqcb0_process () {
     modify_field(to_s3_info_scr.tx_psn_valid, to_s3_info.tx_psn_valid);
     modify_field(to_s3_info_scr.local_ack_timeout_valid, to_s3_info.local_ack_timeout_valid);
     modify_field(to_s3_info_scr.local_ack_timeout, to_s3_info.local_ack_timeout);
+    modify_field(to_s3_info_scr.q_key, to_s3_info.q_key);
+    modify_field(to_s3_info_scr.q_key_valid, to_s3_info.q_key_valid);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
@@ -385,6 +391,8 @@ action aq_tx_sqcb1_process () {
     modify_field(to_s3_info_scr.tx_psn_valid, to_s3_info.tx_psn_valid);
     modify_field(to_s3_info_scr.err_retry_count, to_s3_info.err_retry_count);
     modify_field(to_s3_info_scr.err_retry_count_valid, to_s3_info.err_retry_count_valid);
+    modify_field(to_s3_info_scr.q_key, to_s3_info.q_key);
+    modify_field(to_s3_info_scr.q_key_valid, to_s3_info.q_key_valid);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
@@ -418,6 +426,8 @@ action aq_tx_sqcb2_process () {
     modify_field(to_s3_info_scr.local_ack_timeout, to_s3_info.local_ack_timeout);
     modify_field(to_s3_info_scr.err_retry_count, to_s3_info.err_retry_count);
     modify_field(to_s3_info_scr.err_retry_count_valid, to_s3_info.err_retry_count_valid);
+    modify_field(to_s3_info_scr.q_key, to_s3_info.q_key);
+    modify_field(to_s3_info_scr.q_key_valid, to_s3_info.q_key_valid);
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
@@ -444,6 +454,8 @@ action aq_tx_rqcb0_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_info_scr.q_key, to_s4_info.q_key);
+    modify_field(to_s4_info_scr.q_key_valid, to_s4_info.q_key_valid);
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage
@@ -468,6 +480,8 @@ action aq_tx_rqcb1_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_info_scr.q_key, to_s4_info.q_key);
+    modify_field(to_s4_info_scr.q_key_valid, to_s4_info.q_key_valid);
     modify_field(to_s4_info_scr.pad, to_s4_info.pad);
     
     // stage to stage

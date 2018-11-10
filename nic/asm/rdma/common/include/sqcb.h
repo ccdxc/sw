@@ -72,7 +72,10 @@ struct sqcb0_t {
         pt_base_addr              : 32; // RO
         hbm_sq_base_addr          : 32; // RO
     };
-    header_template_addr          : 32; // RO
+    union {
+        header_template_addr      : 32; // RO
+        q_key                     : 32; // RO S0
+    };
     pd                            : 32; // RO
 
     poll_in_progress              : 1;  // WO S5, RW S0
@@ -180,10 +183,7 @@ struct sqcb1_t {
 struct sqcb2_t {
     dst_qp                         : 24; // RO S5
     header_template_size           : 8;  // RO S5
-    union {
-        header_template_addr       : 32; // RO S5
-        q_key                      : 32; // privileged q_key
-    };
+    header_template_addr           : 32; // RO S5
     rrq_base_addr                  : 32; // RO S5
     log_rrq_size                   : 5;  // RO S5
     log_sq_size                    : 5;  // RO S5

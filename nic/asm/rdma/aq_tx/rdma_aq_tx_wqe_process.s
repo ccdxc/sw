@@ -23,6 +23,8 @@ struct aq_tx_s1_t0_k k;
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_S2S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
 #define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
 
+#define TO_SQCB_INFO_P      to_s3_info
+#define TO_RQCB_INFO_P      to_s4_info
 #define TO_S7_STATS_P       to_s7_stats_info
 
 %%
@@ -260,7 +262,7 @@ create_ah:
 
     /* write the AH size at the end*/
     phvwr       p.ah_size, r3[7:0]
-    add         r2, r2, AT_ENTRY_SIZE_BYTES
+    add         r2, r2, HDR_TEMPLATE_T_SIZE_BYTES
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_AH_SIZE)
     DMA_HBM_PHV2MEM_SETUP(r6, ah_size, ah_size, r2)
 
@@ -297,7 +299,9 @@ create_qp:
     
     phvwr       p.{sqcb0.intrinsic.total_rings, sqcb0.intrinsic.host_rings}, (MAX_SQ_DOORBELL_RINGS<<4|MAX_SQ_HOST_RINGS)
     phvwr       p.sqcb0.log_num_wqes, d.qp.sq_depth_log2[4:0]
-    
+
+    // c3: RC QP?
+    seq         c3, d.type_state, RDMA_SERV_TYPE_RC
 
     // TODO: For now setting it to RTS, but later change it to INIT
     // state. modify_qp is supposed to set it to RTR and RTS.
@@ -310,22 +314,26 @@ create_qp:
     phvwr       p.sqcb0.log_wqe_size, d.qp.sq_stride_log2[4:0]
     phvwr       p.sqcb0.pd, d.{qp.pd_id}.wx
     phvwr       p.sqcb0.service, d.type_state
-    phvwr       p.sqcb0.local_ack_timeout, 0xE
-    
+    phvwr.c3    p.sqcb0.local_ack_timeout, 0xE
+    phvwr       p.sqcb0.priv_oper_enable, d.qp.privileged
+    phvwr.!c3   p.sqcb0.log_pmtu, 12
+
     // SQCB1:
 
     add         r2, d.{qp.sq_cq_id}.wx, r0
     phvwr       p.sqcb1.cq_id, r2[23:0]
     phvwr       p.sqcb1.state, QP_STATE_RESET
     phvwr       p.sqcb1.pd, d.{qp.pd_id}.wx
-    
+
     phvwr       p.sqcb1.service, d.type_state[3:0]
     phvwr       p.sqcb1.ssn, 1
     phvwr       p.sqcb1.max_ssn, 1
-    
+    phvwr.!c3   p.sqcb1.log_pmtu, 12
+
     //infinite  retries                 
-    phvwr       p.sqcb1.credits, 0x1F
-    phvwr       p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7)
+    phvwr.c3    p.sqcb1.credits, 0x1F
+    phvwr.c3    p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7)
+    phvwr       p.sqcb1.sqcb1_priv_oper_enable, d.qp.privileged
 
     //SQCB2:
 
@@ -333,10 +341,12 @@ create_qp:
     phvwr       p.sqcb2.ssn, 1
     phvwr       p.sqcb2.service, d.type_state
     // TODO Default should enable credits and set as part of connection negotiation
-    phvwr       p.sqcb2.disable_credits, 1
-    phvwrpair   p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<4|0x7), p.sqcb2.lsn, 0
-    phvwrpair   p.sqcb2.lsn_tx, 0, p.sqcb2.lsn_rx, 0
-    phvwr       p.sqcb2.local_ack_timeout, 0xE
+    // TODO Enable credits by default only for RC QPs
+    phvwr.c3        p.sqcb2.disable_credits, 1
+    phvwr.!c3       p.sqcb2.disable_credits, 1
+    phvwrpair.c3    p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<4|0x7), p.sqcb2.lsn, 0
+    phvwrpair       p.sqcb2.lsn_tx, 0, p.sqcb2.lsn_rx, 0
+    phvwr.c3        p.sqcb2.local_ack_timeout, 0xE
 
     //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
     //          TODO: Move pmtu setup to modify_qp
@@ -356,7 +366,7 @@ create_qp:
     add         r4, r0, d.{qp.sq_map_count}.wx, CAPRI_LOG_SIZEOF_U64 //BD Slot
     beqi        r4, 1<<CAPRI_LOG_SIZEOF_U64, qp_skip_dma_pt
     crestore    [c2, c1], d.{qp.rq_cmb...qp.sq_cmb}, 0x3
-    
+
     //Setup     DMA for SQ PT
 
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_QP_SQPT_SRC)
@@ -426,6 +436,9 @@ qp_no_skip_dma_pt:
     phvwr.!c2   p.p4_to_p4plus.create_qp_ext.rq_dma_addr, d.{qp.rq_dma_addr}.dx
     phvwr.c2    p.p4_to_p4plus.create_qp_ext.rq_dma_addr, r7
     phvwr.c2    p.p4_to_p4plus.create_qp_ext.rq_cmb, 1
+    phvwr       p.p4_to_p4plus.create_qp_ext.qp_privileged, d.qp.privileged
+    // Set log_pmtu for UD
+    phvwr.!c3    p.p4_to_p4plus.create_qp_ext.log_pmtu, 12
     phvwr       p.rdma_feedback.create_qp.rq_type_state, d.type_state
     phvwr       p.rdma_feedback.create_qp.rq_map_count, d.{qp.rq_map_count}.wx
     phvwr       p.rdma_feedback.create_qp.rq_tbl_index, d.{qp.rq_tbl_index_srq_id}.wx
@@ -595,20 +608,12 @@ e_psn:
 q_key:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_QKEY], 1, mod_qp_done
 
-    //Invoke rqcb0
-    add         r4, r2, r0
-    add         r5, r4, FIELD_OFFSET(rqcb0_t, q_key)
-    memwr.w     r5, d.{mod_qp.qkey_dest_qpn}.wx
+    add         r4, d.{mod_qp.qkey_dest_qpn}.wx, r0
 
-    //Invoke rqcb1
-    add         r4, r2, (CB_UNIT_SIZE_BYTES)
-    add         r5, r4, FIELD_OFFSET(rqcb1_t, q_key)
-    memwr.w     r5, d.{mod_qp.qkey_dest_qpn}.wx
-
-    //Invoke sqcb2
-    add         r4, r1, (CB_UNIT_SIZE_BYTES * 2)
-    add         r5, r4, FIELD_OFFSET(sqcb2_t, q_key)
-    memwr.w     r5, d.{mod_qp.qkey_dest_qpn}.wx
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, q_key), r4
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB_INFO_P, q_key_valid), 1
+    phvwr       CAPRI_PHV_FIELD(TO_RQCB_INFO_P, q_key), r4
+    phvwr       CAPRI_PHV_FIELD(TO_RQCB_INFO_P, q_key_valid), 1
 
 mod_qp_done:
     

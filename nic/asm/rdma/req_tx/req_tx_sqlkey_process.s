@@ -39,10 +39,6 @@ req_tx_sqlkey_process:
      seq          c2, K_PD, d.pd // Branch Delay Slot
      bcf          [!c2], pd_check_failure
 
-     // if (!(lkey_p->access_ctrl & ACC_CTRL_LOCAL_WRITE))
-     and          r2, d.acc_ctrl, ACC_CTRL_LOCAL_WRITE // Branch Delay Slot
-     beq          r2, r0, access_violation
-
      // If zbva, va = reth_va + MR_base_va else va = reth_va
      IS_ANY_FLAG_SET_B(c1, d.flags, MR_FLAG_ZBVA) // Branch Delay Slot
      add.c1       r1, K_SGE_VA, d.base_va

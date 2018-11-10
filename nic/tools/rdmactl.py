@@ -181,7 +181,7 @@ class RdmaSQCB0state(Packet):
         LEShortField("sqcb0_rsvd1", 0),
 
         XIntField("pt_base_addr/sq_hbm_base_addr", 0),
-        XIntField("sqcb0_header_template_addr", 0),
+        XIntField("sqcb0_header_template_addr/q_key", 0),
         IntField("pd", 0),
 
         BitField("poll_in_progress", 0, 1),

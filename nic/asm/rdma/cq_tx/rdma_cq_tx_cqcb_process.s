@@ -56,10 +56,10 @@ rdma_cq_tx_cqcb_process:
 
 prepare_feedback:
 
-        #set arm cindex = pindex
-        tblwr     CQ_ARM_C_INDEX, CQ_ARM_P_INDEX
-        #set sarm cindex = pindex
-        tblwr     CQ_SARM_C_INDEX, CQ_SARM_P_INDEX
+        #set arm pindex = cindex
+        tblwr     CQ_ARM_P_INDEX, CQ_ARM_C_INDEX
+        #set sarm pindex = cindex
+        tblwr     CQ_SARM_P_INDEX, CQ_SARM_C_INDEX
 
         phvwr     p.rdma_feedback.feedback_type, RDMA_CQ_ARM_FEEDBACK 
         phvwr     p.rdma_feedback.arm.cindex, CQ_C_INDEX
