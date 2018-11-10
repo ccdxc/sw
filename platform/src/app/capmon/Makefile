@@ -3,38 +3,26 @@
 #
 
 PROGRAM = capmon
-SOURCES = capmon.cc
+SOURCES = main.cc pcie.cc bwmon.cc rxdma.cc txdma.cc p4.cc crypto.cc pb.cc stage.cc
 
-LBUILD_ARCHES = aarch64
+OPTS = "-g"
 
-LCXXFLAGS = \
+LCFLAGS = \
+	-I ../include \
+	-I $(TOPDIR)/src/lib/pal/include \
 	-I $(ASIC_ROOT)/capri/model/cap_top \
 	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
 	$(NULL)
 
-ifeq ("$(BUILD_ARCH)", "aarch64")
-# Use static libraries so we don't
-# have to set LD_LIBRARY_PATH to run
-STATIC_LIBRARIES = \
+LCXXFLAGS = $(LCFLAGS)
+
+LLDFLAGS = \
+	$(NULL)
+
+LIBRARIES += \
 	-lpal \
 	$(NULL)
 
-LCXXFLAGS += \
-	-I ../../lib/pal/include \
-	$(NULL)
-else
-SYSTEM_LIBRARIES = \
-	-lmodel_client \
-	$(NULL)
-
-LCXXFLAGS += \
- 	-I $(TOPDIR)/../nic/model_sim/include/ \
-	$(NULL)
-
-LLDFLAGS += \
-	-L $(TOPDIR)/../bazel-bin/nic/model_sim/ \
-	$(NULL)
-endif
 
 TOPDIR = ../../..
 include $(TOPDIR)/make/Makefile.inc
