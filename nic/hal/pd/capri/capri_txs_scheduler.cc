@@ -145,7 +145,7 @@ capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
 
     cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t       &txs_csr = cap0.txs.txs;
-    cap_psp_csr_t       &psp_csr = cap0.pt.pt.psp;
+    cap_psp_csr_t       &psp_pt_csr = cap0.pt.pt.psp, &psp_pr_csr = cap0.pr.pr.psp;
     uint64_t            txs_sched_hbm_base_addr;
     uint16_t            dtdm_lo_map, dtdm_hi_map;
     uint32_t            control_cos;
@@ -190,11 +190,23 @@ capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
     }
     txs_csr.cfw_scheduler_glb.sram_hw_init(1);
-    // Disabling scheduler bypass setting for QoS functionality to work.
-   // txs_csr.cfw_scheduler_glb.enable_set_byp(1);
+
+    // Disabling scheduler bypass/collapse setting for QoS functionality to work.
+    txs_csr.cfw_scheduler_glb.enable_set_byp(0);
 
     txs_csr.cfw_scheduler_static.write();
     txs_csr.cfw_scheduler_glb.write();
+
+    //TxDMA
+    psp_pt_csr.cfg_profile.read();
+    psp_pt_csr.cfg_profile.collapse_enable(0);
+    psp_pt_csr.cfg_profile.write();
+
+    // RxDMA
+    psp_pr_csr.cfg_profile.read();
+    psp_pr_csr.cfg_profile.collapse_enable(0);
+    psp_pr_csr.cfg_profile.write();
+
 
     // init timer
     capri_txs_timer_init_pre(CAPRI_TIMER_NUM_KEY_CACHE_LINES, hal_cfg);
@@ -254,14 +266,14 @@ capri_txs_scheduler_init (uint32_t admin_cos, hal::hal_cfg_t *hal_cfg)
     cap_txs_init_done(0, 0);
 
     //Init PSP block to enable mapping tm_oq value in PHV.
-    psp_csr.cfg_npv_values.read();
-    psp_csr.cfg_npv_values.tm_oq_map_enable(1);
-    psp_csr.cfg_npv_values.write();
+    psp_pt_csr.cfg_npv_values.read();
+    psp_pt_csr.cfg_npv_values.tm_oq_map_enable(1);
+    psp_pt_csr.cfg_npv_values.write();
 
     //Program one-to-one mapping from cos to tm_oq.
     for (int i = 0; i < NUM_MAX_COSES ; i++) {
-        psp_csr.cfg_npv_cos_to_tm_oq_map[i].tm_oq(i);
-        psp_csr.cfg_npv_cos_to_tm_oq_map[i].write();
+        psp_pt_csr.cfg_npv_cos_to_tm_oq_map[i].tm_oq(i);
+        psp_pt_csr.cfg_npv_cos_to_tm_oq_map[i].write();
     }
 
     // init timer post init done
