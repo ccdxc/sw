@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -104,7 +103,6 @@ func Test_SSH_Background(t *testing.T) {
 	TestUtils.Assert(t, cmdResp.Handle == nil, "Command Handle not set ")
 	TestUtils.Assert(t, cmdResp.Ctx.Stdout != "", "Command stdout is set!")
 	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
-	fmt.Println(cmdResp.Ctx.Stdout)
 }
 
 func Test_SSH_TimedOut(t *testing.T) {
@@ -147,7 +145,6 @@ func Test_Cmd_Foreground(t *testing.T) {
 	TestUtils.Assert(t, cmdResp.Ctx.ExitCode != 0, "Command failed!")
 	TestUtils.Assert(t, cmdResp.Ctx.Stdout != "", "Command stdout is set!")
 	TestUtils.Assert(t, !cmdResp.Ctx.TimedOut, "Command TimedOut!")
-	fmt.Println(cmdResp.Ctx.Stdout)
 }
 
 func Test_Cmd_Background(t *testing.T) {

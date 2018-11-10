@@ -47,12 +47,16 @@ func execCmd(cmdArgs []string, TimedOut int, background bool, shell bool,
 	shout := io.MultiWriter(&stdoutBuf)
 	ssherr := io.MultiWriter(&stderrBuf)
 
+        ioCopies := make(chan int)
 	go func() {
 		io.Copy(shout, sshOut)
+                ioCopies <- 1
 	}()
 	go func() {
 		io.Copy(ssherr, sshErr)
+                ioCopies <- 2
 	}()
+        
 
 	done := make(chan error)
 
@@ -86,6 +90,9 @@ func execCmd(cmdArgs []string, TimedOut int, background bool, shell bool,
 					cmdInfo.Ctx.ExitCode = 1
 				}
 			}
+                        for i := 0; i < 2; i++ {
+                            <-ioCopies
+                        }
 			cmdInfo.Ctx.Done = true
 			cmdInfo.Ctx.Stdout = stdoutBuf.String()
 			cmdInfo.Ctx.Stderr = stderrBuf.String()
