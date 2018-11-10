@@ -28,7 +28,7 @@
  * TODO-seq:
  *	- although chaining can be done generically for compression
  *	related chains, focus for now is comp+hash bring-up.
- *	- revisit layer violations
+ *	- revisit layer violations, sonic_get_accel_ring/lif/seq_q() routines
  *	- storage_seq_p4pd. vs utils.h
  *
  */
@@ -597,7 +597,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 
 	err = sonic_get_seq_sq(lif, qtype, &q);
 	if (err) {
-		OSAL_ASSERT(err);
+		OSAL_ASSERT(!err);
 		goto out;
 	}
 
@@ -706,7 +706,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 
 	err = sonic_get_seq_sq(lif, qtype, &q);
 	if (err) {
-		OSAL_ASSERT(err);
+		OSAL_ASSERT(!err);
 		goto out;
 	}
 
@@ -806,7 +806,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 	err = sonic_get_seq_sq(lif, qtype, &q);
 	if (err) {
-		OSAL_ASSERT(err);
+		OSAL_ASSERT(!err);
 		goto out;
 	}
 
