@@ -53,7 +53,7 @@ class TestcaseDataIters:
 
 class TestcaseData:
     def __init__(self, dirname, args):
-        self.__status = types.result.PASS
+        self.__status = types.status.FAILURE
         self.args = args
         self.iterators = TestcaseDataIters()
         self.__logs_dir = "%s/iota/logs/tcdata/%s/" % (api.GetTopDir(), dirname)
