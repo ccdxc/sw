@@ -9,25 +9,6 @@ struct pnso_compression_header {
 	uint16_t version;
 };
 
-#define MAX_CPDC_SRC_BUF_LEN	(1 << 16)
-#define MAX_CPDC_DST_BUF_LEN	MAX_CPDC_SRC_BUF_LEN
-
-/* status reported by hardware */
-#define CP_STATUS_SUCCESS		0
-#define CP_STATUS_AXI_TIMEOUT		1
-#define CP_STATUS_AXI_DATA_ERROR	2
-#define CP_STATUS_AXI_ADDR_ERROR	3
-#define CP_STATUS_COMPRESSION_FAILED	4
-#define CP_STATUS_DATA_TOO_LONG		5
-#define CP_STATUS_CHECKSUM_FAILED	6
-#define CP_STATUS_SGL_DESC_ERROR	7
-
-/* HW to update 'partial_data' in status descriptor */
-#define CPDC_CP_STATUS_DATA		1234
-#define CPDC_DC_STATUS_DATA		2345
-#define CPDC_HASH_STATUS_DATA		3456
-#define CPDC_CHKSUM_STATUS_DATA		4567
-
 #ifdef NDEBUG
 #define CPDC_PPRINT_DESC(d)
 #define CPDC_PPRINT_STATUS_DESC(d)
