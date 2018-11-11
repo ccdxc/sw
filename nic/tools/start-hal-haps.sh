@@ -5,18 +5,13 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export NIC_DIR=`dirname $ABS_TOOLS_DIR`
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export HAL_LOG_DIR=/data/log/
+export HAL_LOG_DIR=/var/log/
 export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
-
-# These two must be set before the script gets executed 
-#export FWD_MODE="$1"
-#export PLATFORM="$2"
-
 #export DISABLE_AGING=1
 
-# Remove logs
-rm -f /hal.log* $HAL_LOG_FILE
+# remove logs
+rm -f $HAL_LOG_DIR/hal.log*
 
 ulimit -c unlimited
 
@@ -25,10 +20,15 @@ if [ -r $SYSCONFIG/sysuuid ]; then
     export SYSUUID=`cat $SYSCONFIG/sysuuid`
 fi
 
-if [[ "$FWD_MODE" != "classic" ]]; then
-    cp $HAL_CONFIG_PATH/hal_hostpin.ini $HAL_CONFIG_PATH/hal.ini
-else
+if [[ "$FWD_MODE" == "classic" ]]; then
     cp $HAL_CONFIG_PATH/hal_classic.ini $HAL_CONFIG_PATH/hal.ini
+elif [[ "$FWD_MODE" == "hostpin" ]]; then
+    cp $HAL_CONFIG_PATH/hal_hostpin.ini $HAL_CONFIG_PATH/hal.ini
+elif [[ "$FWD_MODE" == "switch" ]]; then
+    cp $HAL_CONFIG_PATH/hal_switch.ini $HAL_CONFIG_PATH/hal.ini
+else
+    echo "Unknown forwarding mode $FWD_MODE"
+    exit 1
 fi
 
 if [[ "$PLATFORM" != "hw" ]]; then
