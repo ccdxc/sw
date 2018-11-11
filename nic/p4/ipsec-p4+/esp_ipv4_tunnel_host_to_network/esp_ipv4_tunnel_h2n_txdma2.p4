@@ -229,6 +229,7 @@ action ipsec_txdma2_stats_update(H2N_STATS_UPDATE_PARAMS)
 {
     TXDMA2_GLOBAL_SCRATCH_INIT
     H2N_STATS_UPDATE_SET
+    modify_field(ipsec_to_stage4_scratch.ipsec_cb_addr, ipsec_to_stage4.ipsec_cb_addr);
 }
 
 

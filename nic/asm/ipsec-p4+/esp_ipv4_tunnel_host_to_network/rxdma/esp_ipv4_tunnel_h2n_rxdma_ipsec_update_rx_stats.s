@@ -10,13 +10,10 @@ struct phv_ p;
 %%
         .align
 esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats:
-    tbladd d.h2n_rx_pkts, 1
-    add r1, r0, k.t1_s2s_payload_size 
-    tbladd.f d.h2n_rx_bytes, r1 
-    phvwri p.dma_cmd_iv_salt_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri p.{dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_end_addr...dma_cmd_phv2mem_ipsec_int_dma_cmd_type}, ((IPSEC_INT_END_OFFSET << 18) | (IPSEC_INT_START_OFFSET << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
-    phvwri p.dma_cmd_fill_esp_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri p.dma_cmd_in_desc_aol_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-
+    tbladd.f d.h2n_rx_pkts, 1
+    phvwri p.{dma_cmd_phv2mem_ipsec_int_dma_cmd_phv_end_addr...dma_cmd_phv2mem_ipsec_int_dma_cmd_type}, ((IPSEC_INT_END_OFFSET << 18) | (IPSEC_INT_START_OFFSET << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri p.{dma_cmd_pkt2mem_dma_cmd_cache...dma_cmd_pkt2mem_dma_cmd_type}, (IPSEC_MEM2PKT_CACHE_ENABLE | CAPRI_DMA_COMMAND_PKT_TO_MEM)
+    phvwri p.{tail_2_bytes_dma_cmd_phv_end_addr...tail_2_bytes_dma_cmd_type}, ((IPSEC_TAIL_2_BYTES_PHV_END << 18) | (IPSEC_TAIL_2_BYTES_PHV_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri.e p.{dma_cmd_iv_salt_dma_cmd_phv_end_addr...dma_cmd_iv_salt_dma_cmd_type}, ((IPSEC_IN_DESC_IV_SALT_END << 18) | (IPSEC_IN_DESC_IV_SALT_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     phvwri.e p.app_header_table2_valid, 0
     nop 

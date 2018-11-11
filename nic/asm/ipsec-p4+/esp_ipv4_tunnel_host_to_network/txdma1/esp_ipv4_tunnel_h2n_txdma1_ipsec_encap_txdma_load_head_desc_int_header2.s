@@ -12,17 +12,17 @@ struct phv_ p;
         .align
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2:
     phvwri p.app_header_table1_valid, 0
-    phvwri p.{brq_req_write_dma_cmd_phv_end_addr...brq_req_write_dma_cmd_type}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 18) | (IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
-    phvwri p.{dma_cmd_post_barco_ring_dma_cmd_phv_end_addr...dma_cmd_post_barco_ring_dma_cmd_type}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 18) | (IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri p.{brq_req_write_dma_cmd_phv_end_addr...brq_req_write_dma_cmd_type}, ((IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END << 18) | (IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri p.{dma_cmd_post_barco_ring_dma_cmd_phv_end_addr...dma_cmd_post_barco_ring_dma_cmd_type}, ((IPSEC_TXDMA1_BARCO_CB_REQ_PHV_OFFSET_END << 18) | (IPSEC_TXDMA1_BARCO_CB_REQ_PHV_OFFSET_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
 
     add r2, d.in_desc, 96
     add r3, d.out_desc, 96
     blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2_illegal_dma_in_desc
     phvwr p.brq_in_desc_zero_dma_cmd_addr, r2 
-    phvwri p.{brq_in_desc_zero_dma_cmd_phv_end_addr...brq_in_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri p.{brq_in_desc_zero_dma_cmd_phv_end_addr...brq_in_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header2_illegal_dma_out_desc
     phvwr p.brq_out_desc_zero_dma_cmd_addr, r3 
-    phvwri.e p.{brq_out_desc_zero_dma_cmd_phv_end_addr...brq_out_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri.e p.{brq_out_desc_zero_dma_cmd_phv_end_addr...brq_out_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     nop 
 
 

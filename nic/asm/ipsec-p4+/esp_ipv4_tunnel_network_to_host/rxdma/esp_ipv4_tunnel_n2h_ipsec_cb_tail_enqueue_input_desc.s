@@ -36,7 +36,7 @@ esp_ipv4_tunnel_n2h_post_to_cb_ring:
     add r3, r3, d.cb_ring_base_addr 
     blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_cb_ring
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
-    phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_type}, ((IPSEC_CB_RING_IN_DESC_END << 18) | (IPSEC_CB_RING_IN_DESC_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_type}, ((IPSEC_CB_RING_IN_DESC_END << 18) | (IPSEC_CB_RING_IN_DESC_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
 
 esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
     add r7, k.ipsec_global_cb_pindex, 1

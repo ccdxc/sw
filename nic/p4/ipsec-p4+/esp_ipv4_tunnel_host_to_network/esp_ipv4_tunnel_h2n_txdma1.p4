@@ -82,7 +82,8 @@ header_type ipsec_to_stage3_t {
 header_type ipsec_to_stage4_t {
     fields {
         barco_req_addr   : ADDRESS_WIDTH;
-        stage4_pad1     : ADDRESS_WIDTH;
+        barco_pindex : 16;
+        stage4_pad1     :  48;
     }
 }
 
@@ -230,7 +231,8 @@ metadata h2n_stats_header_t ipsec_stats_scratch;
 
 #define IPSEC_TXDMA1_TO_STAGE4_INIT \
     modify_field(scratch_to_s4.barco_req_addr, ipsec_to_stage4.barco_req_addr); \
-    modify_field(scratch_to_s4.stage3_pad1, ipsec_to_stage4.stage4_pad1);
+    modify_field(scratch_to_s4.barco_pindex, ipsec_to_stage4.barco_pindex); \
+    modify_field(scratch_to_s4.stage4_pad1, ipsec_to_stage4.stage4_pad1);
 
 //stage 3 table 0
 action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
@@ -248,7 +250,7 @@ action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
     IPSEC_CB_SCRATCH_WITH_PC
     // memwr to increment hw-cindex (cb_base + offset)
     IPSEC_TXDMA1_S2S0_SCRATCH_INIT
-
+    IPSEC_TXDMA1_TO_STAGE4_INIT
     DMA_COMMAND_PHV2MEM_FILL(brq_req_write, ipsec_to_stage4.barco_req_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END, 0, 0, 0, 0) 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA1_DMA_COMMANDS_OFFSET);
 }

@@ -16,11 +16,9 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     b.c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
     phvwri.c1 p.p4_intr_global_drop, 1
 
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 10 
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy[33:6] 
-    phvwri p.common_te0_phv_table_addr, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE 
     and r1, d.barco_cindex, IPSEC_BARCO_RING_INDEX_MASK 
+    tblmincri d.barco_cindex, IPSEC_BARCO_RING_WIDTH, 1
+    tblmincri.f  d.{barco_ring_cindex}.hx, IPSEC_BARCO_RING_WIDTH, 1
     sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
     add r1, r1, d.barco_ring_base_addr 
     phvwr  p.ipsec_to_stage1_barco_desc_addr, r1
@@ -33,12 +31,12 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr.c4 p.ipsec_to_stage4_is_vlan_encap, 1
     smeqb c3, d.flags, IPSEC_FLAGS_NATT_MASK, IPSEC_FLAGS_NATT_MASK 
     phvwr.c3 p.ipsec_to_stage4_is_nat_t, 1
-    add r7, d.barco_cindex, 1
-    and r7, r7, IPSEC_BARCO_RING_INDEX_MASK 
-    tblwr d.barco_cindex, r7 
-    phvwr p.txdma2_global_iv_size, d.iv_size
-    tblmincri.f  d.{barco_ring_cindex}.hx, IPSEC_BARCO_RING_WIDTH, 1
-    phvwr.f p.txdma2_global_icv_size, d.icv_size
+    phvwri p.app_header_table0_valid, 1
+    phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 10 
+    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy[33:6] 
+    phvwri.f p.common_te0_phv_table_addr, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE 
+    //phvwr p.txdma2_global_iv_size, d.iv_size
+    //phvwr.f p.txdma2_global_icv_size, d.icv_size
     seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
     b.!c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)

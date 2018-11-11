@@ -20,6 +20,8 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_global_ipsec_cb_pindex, d.cb_pindex 
     add r7, d.cb_pindex, 1
     andi r7, r7, IPSEC_CB_RING_INDEX_MASK 
+    tbladd d.esn_lo, 1
+    tbladd d.iv, 1
     tblwr.f d.cb_pindex, r7
     phvwr p.ipsec_int_header_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
     // I understand that I need to take care of 32 bit overflow into esn-hi etc.
@@ -49,7 +51,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_to_stage3_packet_len, r1
     addi r5, r0, INDESC_SEMAPHORE_ADDR
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore, r5, TABLE_SIZE_64_BITS) 
-    phvwr.e p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+    phvwr.e p.t1_s2s_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     nop
 
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table_cb_ring_full:

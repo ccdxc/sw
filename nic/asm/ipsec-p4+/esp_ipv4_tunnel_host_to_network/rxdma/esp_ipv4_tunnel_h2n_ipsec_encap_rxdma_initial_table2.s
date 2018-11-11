@@ -15,8 +15,6 @@ struct phv_ p;
 
         .align
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table2:
-    tbladd d.esn_lo, 1
-    tbladd.f d.iv, 1
 
     smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
     phvwr.c3 p.ipsec_to_stage2_is_random, 1

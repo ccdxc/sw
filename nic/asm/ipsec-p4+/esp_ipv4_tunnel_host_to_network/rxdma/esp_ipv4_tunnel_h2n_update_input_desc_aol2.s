@@ -16,7 +16,8 @@ dma_cmd_to_move_input_pkt_to_mem:
     phvwri p.app_header_table3_valid, 0
     add r1, k.ipsec_to_stage3_iv_size, IPSEC_SALT_HEADROOM+ESP_FIXED_HDR_SIZE
     add r1, r1, k.ipsec_to_stage3_iv_size
-    add r1, r1, k.t3_s2s_in_page_addr
+    add r6, k.ipsec_global_in_desc_addr, IPSEC_PAGE_OFFSET
+    add r1, r1, r6 
     blti  r1, CAPRI_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_in_page 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r1 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_packet_len[13:0]
@@ -43,7 +44,8 @@ dma_cmd_to_write_pad_size_l4_proto:
     phvwr p.tail_2_bytes_dma_cmd_addr, r2
 
 dma_cmd_write_salt_to_in_desc:
-    phvwr.e p.dma_cmd_iv_salt_dma_cmd_addr, k.t3_s2s_in_page_addr[51:0]
+    blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_in_page
+    phvwr.e p.dma_cmd_iv_salt_dma_cmd_addr, r6 
     nop
 
 

@@ -367,6 +367,20 @@ hal_ret_t capri_barco_asym_key_array_init(void)
 
     hese.dhs_crypto_ctl.pk_key_array_size.fld(asym_key_array_key_count);
     hese.dhs_crypto_ctl.pk_key_array_size.write();
+
+    /*
+     * Enable the read/write cache for AXI memory accesses for Barco descriptors, data-read,
+     * data-write and status/opaque-tag/doorbell writes.
+     */
+    hese.dhs_crypto_ctl.pk_axi_desc.fld(0x3c0);
+    hese.dhs_crypto_ctl.pk_axi_desc.write();
+    hese.dhs_crypto_ctl.pk_axi_data_read.fld(0x3c0);
+    hese.dhs_crypto_ctl.pk_axi_data_read.write();
+    hese.dhs_crypto_ctl.pk_axi_data_write.fld(0x3c0);
+    hese.dhs_crypto_ctl.pk_axi_data_write.write();
+    hese.dhs_crypto_ctl.pk_axi_status.fld(0x3c0);
+    hese.dhs_crypto_ctl.pk_axi_status.write();
+
     HAL_TRACE_DEBUG("Barco Asym Key Descriptor Array of count {} setup @ {:x}",
             asym_key_array_key_count, asym_key_array_base);
 
@@ -675,6 +689,20 @@ hal_ret_t capri_barco_mpp0_key_array_init(void)
 
     mpse.dhs_crypto_ctl.mpp0_key_array_size.fld(key_array_key_count);
     mpse.dhs_crypto_ctl.mpp0_key_array_size.write();
+
+    /*
+     * Enable the read/write cache for AXI memory accesses for Barco descriptors, data-read,
+     * data-write and status/opaque-tag/doorbell writes.
+     */
+    mpse.dhs_crypto_ctl.mpp0_axi_desc.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp0_axi_desc.write();
+    mpse.dhs_crypto_ctl.mpp0_axi_data_read.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp0_axi_data_read.write();
+    mpse.dhs_crypto_ctl.mpp0_axi_data_write.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp0_axi_data_write.write();
+    mpse.dhs_crypto_ctl.mpp0_axi_status.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp0_axi_status.write();
+
     HAL_TRACE_DEBUG("Barco MPP0 Key Descriptor Array of count {} setup @ {:x}",
             key_array_key_count, key_array_base);
 
@@ -835,6 +863,20 @@ hal_ret_t capri_barco_mpp1_key_array_init(void)
 
     mpse.dhs_crypto_ctl.mpp1_key_array_size.fld(key_array_key_count);
     mpse.dhs_crypto_ctl.mpp1_key_array_size.write();
+
+    /*
+     * Enable the read/write cache for AXI memory accesses for Barco descriptors, data-read,
+     * data-write and status/opaque-tag/doorbell writes.
+     */
+    mpse.dhs_crypto_ctl.mpp1_axi_desc.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp1_axi_desc.write();
+    mpse.dhs_crypto_ctl.mpp1_axi_data_read.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp1_axi_data_read.write();
+    mpse.dhs_crypto_ctl.mpp1_axi_data_write.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp1_axi_data_write.write();
+    mpse.dhs_crypto_ctl.mpp1_axi_status.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp1_axi_status.write();
+
     HAL_TRACE_DEBUG("Barco MPP1 Key Descriptor Array of count {} setup @ {:x}",
             key_array_key_count, key_array_base);
 
@@ -912,6 +954,20 @@ hal_ret_t capri_barco_mpp2_key_array_init(void)
 
     mpse.dhs_crypto_ctl.mpp2_key_array_size.fld(key_array_key_count);
     mpse.dhs_crypto_ctl.mpp2_key_array_size.write();
+
+    /*
+     * Enable the read/write cache for AXI memory accesses for Barco descriptors, data-read,
+     * data-write and status/opaque-tag/doorbell writes.
+     */
+    mpse.dhs_crypto_ctl.mpp2_axi_desc.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp2_axi_desc.write();
+    mpse.dhs_crypto_ctl.mpp2_axi_data_read.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp2_axi_data_read.write();
+    mpse.dhs_crypto_ctl.mpp2_axi_data_write.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp2_axi_data_write.write();
+    mpse.dhs_crypto_ctl.mpp2_axi_status.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp2_axi_status.write();
+
     HAL_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count {} setup @ {:x}",
             key_array_key_count, key_array_base);
 
@@ -989,6 +1045,20 @@ hal_ret_t capri_barco_mpp3_key_array_init(void)
 
     mpse.dhs_crypto_ctl.mpp3_key_array_size.fld(key_array_key_count);
     mpse.dhs_crypto_ctl.mpp3_key_array_size.write();
+
+    /*
+     * Enable the read/write cache for AXI memory accesses for Barco descriptors, data-read,
+     * data-write and status/opaque-tag/doorbell writes.
+     */
+    mpse.dhs_crypto_ctl.mpp3_axi_desc.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp3_axi_desc.write();
+    mpse.dhs_crypto_ctl.mpp3_axi_data_read.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp3_axi_data_read.write();
+    mpse.dhs_crypto_ctl.mpp3_axi_data_write.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp3_axi_data_write.write();
+    mpse.dhs_crypto_ctl.mpp3_axi_status.fld(0x3c0);
+    mpse.dhs_crypto_ctl.mpp3_axi_status.write();
+
     HAL_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count {} setup @ {:x}",
             key_array_key_count, key_array_base);
 
@@ -1068,6 +1138,20 @@ hal_ret_t capri_barco_gcm0_key_array_init(void)
 
     hese.dhs_crypto_ctl.gcm0_key_array_size.fld(key_array_key_count);
     hese.dhs_crypto_ctl.gcm0_key_array_size.write();
+
+    /*
+     * Enable the read/write cache for AXI memory accesses for Barco descriptors, data-read,
+     * data-write and status/opaque-tag/doorbell writes.
+     */
+    hese.dhs_crypto_ctl.gcm0_axi_desc.fld(0x3c0);
+    hese.dhs_crypto_ctl.gcm0_axi_desc.write();
+    hese.dhs_crypto_ctl.gcm0_axi_data_read.fld(0x3c0);
+    hese.dhs_crypto_ctl.gcm0_axi_data_read.write();
+    hese.dhs_crypto_ctl.gcm0_axi_data_write.fld(0x3c0);
+    hese.dhs_crypto_ctl.gcm0_axi_data_write.write();
+    hese.dhs_crypto_ctl.gcm0_axi_status.fld(0x3c0);
+    hese.dhs_crypto_ctl.gcm0_axi_status.write();
+
     HAL_TRACE_DEBUG("Barco gcm0 Key Descriptor Array of count {} setup @ {:x}",
             key_array_key_count, key_array_base);
 
@@ -1229,6 +1313,20 @@ hal_ret_t capri_barco_gcm1_key_array_init(void)
 
     hese.dhs_crypto_ctl.gcm1_key_array_size.fld(key_array_key_count);
     hese.dhs_crypto_ctl.gcm1_key_array_size.write();
+
+    /*
+     * Enable the read/write cache for AXI memory accesses for Barco descriptors, data-read,
+     * data-write and status/opaque-tag/doorbell writes.
+     */
+    hese.dhs_crypto_ctl.gcm1_axi_desc.fld(0x3c0);
+    hese.dhs_crypto_ctl.gcm1_axi_desc.write();
+    hese.dhs_crypto_ctl.gcm1_axi_data_read.fld(0x3c0);
+    hese.dhs_crypto_ctl.gcm1_axi_data_read.write();
+    hese.dhs_crypto_ctl.gcm1_axi_data_write.fld(0x3c0);
+    hese.dhs_crypto_ctl.gcm1_axi_data_write.write();
+    hese.dhs_crypto_ctl.gcm1_axi_status.fld(0x3c0);
+    hese.dhs_crypto_ctl.gcm1_axi_status.write();
+
     HAL_TRACE_DEBUG("Barco gcm1 Key Descriptor Array of count {} setup @ {:x}",
             key_array_key_count, key_array_base);
 

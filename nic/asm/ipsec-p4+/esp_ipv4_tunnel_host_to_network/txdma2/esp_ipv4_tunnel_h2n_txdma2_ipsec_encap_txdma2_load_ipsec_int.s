@@ -15,8 +15,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int:
     add r4, k.ipsec_to_stage3_ipsec_cb_addr, IPSEC_H2N_STATS_CB_OFFSET
     phvwr  p.common_te2_phv_table_addr, r4 
 
+    phvwr p.t0_s2s_out_page_addr, d.out_page 
     phvwr p.txdma2_global_pad_size, d.pad_size
-    //phvwr p.txdma2_global_l4_protocol, d.l4_protocol
     phvwr p.txdma2_global_payload_size, d.payload_size
     phvwr.e p.t0_s2s_tailroom_offset, d.tailroom_offset
     nop

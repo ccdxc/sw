@@ -35,7 +35,7 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_prd/cap_prd_csr.h"
 
-#define P4PLUS_SYMBOLS_MAX  133
+#define P4PLUS_SYMBOLS_MAX  130
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
@@ -426,30 +426,6 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[3].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_TX);
     symbols[i].params[4].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
     symbols[i].params[4].val = get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
-    i++;
-
-    symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_input_page_semaphore.bin";
-    symbols[i].num_params = 2;
-    symbols[i].params[0].name = IPSEC_RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSEC_NMPR_RX);
-    symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
-    i++;
-
-    symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore.bin";
-    symbols[i].num_params = 2;
-    symbols[i].params[0].name = IPSEC_TNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSEC_NMDR_TX);
-    symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
-    i++;
-
-    symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_output_page_semaphore.bin";
-    symbols[i].num_params = 2;
-    symbols[i].params[0].name = IPSEC_TNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSEC_NMPR_TX);
-    symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_txdma2_initial_table.bin";

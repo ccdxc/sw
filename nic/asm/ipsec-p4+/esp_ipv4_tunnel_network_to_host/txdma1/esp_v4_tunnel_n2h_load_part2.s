@@ -13,6 +13,6 @@ esp_v4_tunnel_n2h_load_part2:
     phvwr p.ipsec_to_stage2_new_spi, d.new_spi
     phvwri p.app_header_table2_valid, 0
     phvwri p.barco_req_header_size, ESP_FIXED_HDR_SIZE_LI
-    phvwri p.{brq_in_desc_zero_dma_cmd_phv_end_addr...brq_in_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
-    phvwri.e p.{brq_out_desc_zero_dma_cmd_phv_end_addr...brq_out_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri p.{brq_in_desc_zero_dma_cmd_phv_end_addr...brq_in_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
+    phvwri.e p.{brq_out_desc_zero_dma_cmd_phv_end_addr...brq_out_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
     nop 

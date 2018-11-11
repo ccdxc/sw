@@ -69,7 +69,7 @@ header_type ipsec_table0_s2s {
 header_type ipsec_table1_s2s {
     fields {
         out_desc_addr : ADDRESS_WIDTH;
-        out_page_addr : ADDRESS_WIDTH; 
+        ipsec_cb_addr : ADDRESS_WIDTH; 
         payload_size : 16;
         payload_start : 16;
     }
@@ -93,13 +93,8 @@ header_type ipsec_table3_s2s {
 
 header_type ipsec_rxdma_global_t {
     fields {
-        lif            : 11;
-        qtype          : 3;
-        rxdma_pad1     : 2;
-        qid            : 24;
-        frame_size     : 16; 
-        ipsec_cb_addr : 34;
-        ipsec_global_pad : 6;
+        in_desc_addr   : ADDRESS_WIDTH;
+        ipsec_cb_addr : 32;
         ipsec_cb_index : 16;
         ipsec_cb_pindex : 16;
     }
@@ -225,7 +220,7 @@ metadata h2n_stats_header_t ipsec_stats_scratch;
 
 #define IPSEC_SCRATCH_T1_S2S \
     modify_field(scratch_t1_s2s.out_desc_addr, t1_s2s.out_desc_addr); \
-    modify_field(scratch_t1_s2s.out_page_addr, t1_s2s.out_page_addr); \
+    modify_field(scratch_t1_s2s.ipsec_cb_addr, t1_s2s.ipsec_cb_addr); \
     modify_field(scratch_t1_s2s.payload_size, t1_s2s.payload_size); \
     modify_field(scratch_t1_s2s.payload_start, t1_s2s.payload_start); 
 
@@ -240,9 +235,7 @@ metadata h2n_stats_header_t ipsec_stats_scratch;
     modify_field(scratch_t3_s2s.s2s3_pad, t3_s2s.s2s3_pad);
 
 #define IPSEC_SCRATCH_GLOBAL \
-    modify_field(ipsec_global_scratch.lif, ipsec_global.lif); \
-    modify_field(ipsec_global_scratch.qtype, ipsec_global.qtype); \
-    modify_field(ipsec_global_scratch.qid, ipsec_global.qid); \
+    modify_field(ipsec_global_scratch.in_desc_addr, ipsec_global.in_desc_addr); \
     modify_field(ipsec_global_scratch.ipsec_cb_index, ipsec_global.ipsec_cb_index); \
     modify_field(ipsec_global_scratch.ipsec_cb_addr, ipsec_global.ipsec_cb_addr); \
     modify_field(ipsec_global_scratch.ipsec_cb_pindex, ipsec_global.ipsec_cb_pindex); \
@@ -319,9 +312,6 @@ action update_output_desc_aol(addr0, offset0, length0,
                               addr2, offset2, length2,
                               nextptr, rsvd)
 {
-    modify_field(barco_desc_out.A0_addr, t1_s2s.out_page_addr);
-    modify_field(barco_desc_out.O0, 0);
-    modify_field(barco_desc_out.L0, 0); 
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
     modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); 
@@ -397,7 +387,6 @@ action allocate_output_page_index(out_page_index)
     modify_field(common_te3_phv.table_lock_en, 0);
     modify_field(common_te3_phv.table_addr, OUT_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * out_page_index));
     modify_field(ipsec_int_header.out_page, OUT_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * out_page_index));
-    modify_field(t1_s2s.out_page_addr, OUT_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * out_page_index));
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T3_S2S
 }
@@ -515,11 +504,6 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     //  modify_field(ipsec_int_header.tailroom, ipsec_int_header.pad_size + 2 + icv_size);
     // modify_field(ipsec_int_header.buf_size, p4_intr.frame_size + ipsec_int_header.headroom+ipsec_int_header.tailroom);
     modify_field(ipsec_int_header.l4_protocol, p42p4plus_hdr.l4_protocol);
-
-    // Lif, type, qid
-    modify_field(ipsec_global.lif, p4_intr_global.lif);
-    modify_field(ipsec_global.qtype, p4_rxdma_intr.qtype);
-    modify_field(ipsec_global.qid, p4_rxdma_intr.qid);
 
     modify_field(p42p4plus_scratch_hdr.p4plus_app_id, p42p4plus_hdr.p4plus_app_id);
     modify_field(p42p4plus_scratch_hdr.table0_valid, p42p4plus_hdr.table0_valid);

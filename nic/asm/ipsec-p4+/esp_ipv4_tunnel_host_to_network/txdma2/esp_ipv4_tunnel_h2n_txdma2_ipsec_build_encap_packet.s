@@ -29,7 +29,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     add r4, r0, k.t0_s2s_in_page_addr
     blti r4, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_in_page
     phvwr p.esp_iv_hdr_dma_cmd_addr, k.t0_s2s_in_page_addr 
-    add r2, k.txdma2_global_iv_size, ESP_FIXED_HDR_SIZE 
+    //add r2, k.txdma2_global_iv_size, ESP_FIXED_HDR_SIZE 
+    addi r2, r0, IPSEC_DEFAULT_IV_SIZE+ESP_FIXED_HDR_SIZE 
     phvwr p.esp_iv_hdr_dma_cmd_size, r2
     // Payload
     add r4, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE 
@@ -39,7 +40,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     addi r3, r3, 2
     phvwr p.enc_pay_load_dma_cmd_size, r3
     //ICV
-    phvwr p.icv_header_dma_cmd_size, k.txdma2_global_icv_size
+    //phvwr p.icv_header_dma_cmd_size, k.txdma2_global_icv_size
+    phvwri p.icv_header_dma_cmd_size, IPSEC_DEFAULT_ICV_SIZE 
     add r1, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE+2 
     blti r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_out_page
     add r1, r1, k.txdma2_global_pad_size

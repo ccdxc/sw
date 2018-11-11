@@ -14,10 +14,9 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
 
 esp_ipv4_tunnel_h2n_post_to_barco_ring:
-    and r3, d.barco_pindex, IPSEC_BARCO_RING_INDEX_MASK 
-    add r7, d.barco_pindex, 1
+    and r3, k.ipsec_to_stage4_barco_pindex, IPSEC_BARCO_RING_INDEX_MASK 
+    add r7, k.ipsec_to_stage4_barco_pindex, 1
     and r7, r7, IPSEC_BARCO_RING_INDEX_MASK 
-    tblwr.f d.barco_pindex, r7 
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr 
     blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_ring 
