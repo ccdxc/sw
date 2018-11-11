@@ -1273,6 +1273,7 @@ Eth::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
         comp->supported = (
             ETH_HW_VLAN_RX_STRIP |
             ETH_HW_VLAN_TX_TAG |
+            ETH_HW_VLAN_RX_FILTER |
             ETH_HW_RX_CSUM |
             ETH_HW_TX_CSUM |
             ETH_HW_RX_HASH |
