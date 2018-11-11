@@ -7,16 +7,13 @@ SOURCES = eth_dbgtool.cc
 
 LBUILD_ARCHES = x86_64 aarch64
 
-LPREALL = deps
-
-deps:
-	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic all
-
 LCXXFLAGS += \
 	-I $(TOPDIR)/.. \
 	-I $(TOPDIR)/../nic/include \
 	-I $(TOPDIR)/../nic/sdk/include \
 	-I $(TOPDIR)/../nic/sdk \
+	-I $(ASIC_ROOT)/capri/model/cap_top \
+	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
 	$(NULL)
 
 LLDFLAGS = \
