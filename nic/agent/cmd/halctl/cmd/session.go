@@ -20,22 +20,14 @@ import (
 )
 
 var (
-	sessionVrfID         uint64
-	sessionHandle        uint64
-	sessionSrcIP         string
-	sessionDstIP         string
-	sessionSrcPort       uint32
-	sessionDstPort       uint32
-	sessionIPProto       uint32
-	sessionL2SegID       uint32
-	sessionDetailVrfID   uint64
-	sessionDetailHandle  uint64
-	sessionDetailSrcIP   string
-	sessionDetailDstIP   string
-	sessionDetailSrcPort uint32
-	sessionDetailDstPort uint32
-	sessionDetailIPProto uint32
-	sessionDetailL2SegID uint32
+	sessionVrfID   uint64
+	sessionHandle  uint64
+	sessionSrcIP   string
+	sessionDstIP   string
+	sessionSrcPort uint32
+	sessionDstPort uint32
+	sessionIPProto uint32
+	sessionL2SegID uint32
 )
 
 var sessionShowCmd = &cobra.Command{
@@ -43,13 +35,6 @@ var sessionShowCmd = &cobra.Command{
 	Short: "show session information",
 	Long:  "show session object information",
 	Run:   sessionShowCmdHandler,
-}
-
-var sessionDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed session information",
-	Long:  "show detailed information about session objects",
-	Run:   sessionDetailShowCmdHandler,
 }
 
 var sessionClearCmd = &cobra.Command{
@@ -61,8 +46,8 @@ var sessionClearCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(sessionShowCmd)
-	sessionShowCmd.AddCommand(sessionDetailShowCmd)
 
+	sessionShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	sessionShowCmd.Flags().Uint64Var(&sessionVrfID, "vrfid", 0, "Specify vrf-id (default is 0)")
 	sessionShowCmd.Flags().Uint64Var(&sessionHandle, "handle", 0, "Specify session handle")
 	sessionShowCmd.Flags().StringVar(&sessionSrcIP, "srcip", "0.0.0.0", "Specify session src ip")
@@ -71,14 +56,6 @@ func init() {
 	sessionShowCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
 	sessionShowCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
 	sessionShowCmd.Flags().Uint32Var(&sessionL2SegID, "l2segid", 0, "Specify session L2 Segment ID")
-	sessionDetailShowCmd.Flags().Uint64Var(&sessionDetailVrfID, "vrfid", 0, "Specify vrf-id (default is 0)")
-	sessionDetailShowCmd.Flags().Uint64Var(&sessionDetailHandle, "handle", 0, "Specify session handle")
-	sessionDetailShowCmd.Flags().StringVar(&sessionDetailSrcIP, "srcip", "0.0.0.0", "Specify session src ip")
-	sessionDetailShowCmd.Flags().StringVar(&sessionDetailDstIP, "dstip", "0.0.0.0", "Specify session dst ip")
-	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailSrcPort, "srcport", 0, "Specify session src port")
-	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailDstPort, "dstport", 0, "Specify session dst port")
-	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailIPProto, "ipproto", 0, "Specify session IP proto")
-	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailL2SegID, "l2segid", 0, "Specify session L2 Segment ID")
 
 	clearCmd.AddCommand(sessionClearCmd)
 	sessionClearCmd.Flags().Uint64Var(&sessionVrfID, "vrfid", 0, "Specify vrf-id (default is 0)")
@@ -92,6 +69,11 @@ func init() {
 }
 
 func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		sessionDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -244,7 +226,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		var req *halproto.SessionGetRequest
 		req = &halproto.SessionGetRequest{
 			GetBy: &halproto.SessionGetRequest_SessionHandle{
-				SessionHandle: sessionDetailHandle,
+				SessionHandle: sessionHandle,
 			},
 		}
 		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
@@ -262,20 +244,20 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						SrcIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDetailSrcIP),
+								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
 							},
 						},
 						DstIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDetailDstIP),
+								V4Addr: IPAddrStrtoUint32(sessionDstIP),
 							},
 						},
-						SrcPort:     sessionDetailSrcPort,
-						DstPort:     sessionDetailDstPort,
-						IpProto:     halproto.IPProtocol(sessionDetailIPProto),
-						VrfId:       sessionDetailVrfID,
-						L2SegmentId: sessionDetailL2SegID,
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
 					},
 				},
 			}
@@ -286,14 +268,14 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						SrcIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDetailSrcIP),
+								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
 							},
 						},
-						SrcPort:     sessionDetailSrcPort,
-						DstPort:     sessionDetailDstPort,
-						IpProto:     halproto.IPProtocol(sessionDetailIPProto),
-						VrfId:       sessionDetailVrfID,
-						L2SegmentId: sessionDetailL2SegID,
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
 					},
 				},
 			}
@@ -304,14 +286,14 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						DstIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDetailDstIP),
+								V4Addr: IPAddrStrtoUint32(sessionDstIP),
 							},
 						},
-						SrcPort:     sessionDetailSrcPort,
-						DstPort:     sessionDetailDstPort,
-						IpProto:     halproto.IPProtocol(sessionDetailIPProto),
-						VrfId:       sessionDetailVrfID,
-						L2SegmentId: sessionDetailL2SegID,
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
 					},
 				},
 			}
@@ -319,11 +301,11 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 			req = &halproto.SessionGetRequest{
 				GetBy: &halproto.SessionGetRequest_SessionFilter{
 					SessionFilter: &halproto.SessionFilter{
-						SrcPort:     sessionDetailSrcPort,
-						DstPort:     sessionDetailDstPort,
-						IpProto:     halproto.IPProtocol(sessionDetailIPProto),
-						VrfId:       sessionDetailVrfID,
-						L2SegmentId: sessionDetailL2SegID,
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
 					},
 				},
 			}

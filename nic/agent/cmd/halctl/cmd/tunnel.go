@@ -19,8 +19,7 @@ import (
 )
 
 var (
-	tunnelID       uint64
-	tunnelDetailID uint64
+	tunnelID uint64
 )
 
 var tunnelShowCmd = &cobra.Command{
@@ -44,21 +43,13 @@ var tunnelStatusShowCmd = &cobra.Command{
 	Run:   tunnelShowStatusCmdHandler,
 }
 
-var tunnelDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed information about tunnel interface",
-	Long:  "show detailed information about tunnel interface object",
-	Run:   tunnelDetailShowCmdHandler,
-}
-
 func init() {
 	ifShowCmd.AddCommand(tunnelShowCmd)
-	tunnelShowCmd.AddCommand(tunnelDetailShowCmd)
 	tunnelShowCmd.AddCommand(tunnelSpecShowCmd)
 	tunnelShowCmd.AddCommand(tunnelStatusShowCmd)
 
+	tunnelShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	tunnelShowCmd.Flags().Uint64Var(&tunnelID, "id", 1, "Specify if-id")
-	tunnelDetailShowCmd.Flags().Uint64Var(&tunnelDetailID, "id", 1, "Specify if-id")
 }
 
 func handleTunnelShowCmd(cmd *cobra.Command, spec bool, status bool) {
@@ -119,6 +110,11 @@ func handleTunnelShowCmd(cmd *cobra.Command, spec bool, status bool) {
 }
 
 func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		tunnelDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
@@ -158,7 +154,7 @@ func tunnelDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.InterfaceGetRequest{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: tunnelDetailID,
+					InterfaceId: tunnelID,
 				},
 			},
 		}

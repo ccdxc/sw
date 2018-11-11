@@ -39,18 +39,12 @@ var nwStatusShowCmd = &cobra.Command{
 	Run:   nwShowStatusCmdHandler,
 }
 
-var nwDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed network information",
-	Long:  "show detailed information about network objects",
-	Run:   nwDetailShowCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(nwShowCmd)
 	nwShowCmd.AddCommand(nwSpecShowCmd)
 	nwShowCmd.AddCommand(nwStatusShowCmd)
-	nwShowCmd.AddCommand(nwDetailShowCmd)
+
+	nwShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 }
 
 func nwShowCmdHandler(cmd *cobra.Command, spec bool, status bool) {
@@ -101,11 +95,14 @@ func nwShowCmdHandler(cmd *cobra.Command, spec bool, status bool) {
 }
 
 func nwShowSpecCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		nwDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	if len(args) > 0 {
-		if strings.Compare(args[0], "spec") != 0 {
-			fmt.Printf("Invalid argument\n")
-			return
-		}
+		fmt.Printf("Invalid argument\n")
+		return
 	}
 
 	nwShowCmdHandler(cmd, true, false)

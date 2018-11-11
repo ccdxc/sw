@@ -19,8 +19,7 @@ import (
 )
 
 var (
-	enicID       uint64
-	enicDetailID uint64
+	enicID uint64
 )
 
 var enicShowCmd = &cobra.Command{
@@ -48,26 +47,17 @@ var enicStatusShowCmd = &cobra.Command{
 	Run:   enicShowStatusCmdHandler,
 }
 
-var enicDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed information about enic interface",
-	Long:  "show detailed information about enic interface object",
-	Run:   enicDetailShowCmdHandler,
-}
-
 func init() {
 	ifShowCmd.AddCommand(enicShowCmd)
 	enicShowCmd.AddCommand(enicSpecShowCmd)
 	enicShowCmd.AddCommand(enicStatusShowCmd)
-	enicShowCmd.AddCommand(enicDetailShowCmd)
-
+	enicShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	enicShowCmd.Flags().Uint64Var(&enicID, "id", 1, "Specify if-id")
 	enicSpecShowCmd.Flags().Uint64Var(&enicID, "id", 1, "Specify if-id")
 	enicStatusShowCmd.Flags().Uint64Var(&enicID, "id", 1, "Specify if-id")
-	enicDetailShowCmd.Flags().Uint64Var(&enicDetailID, "id", 1, "Specify if-id")
 }
 
-func handleEnicShowStatusCmd(cmd *cobra.Command, spec bool, status bool) {
+func handleEnicShowCmd(cmd *cobra.Command, spec bool, status bool) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -130,7 +120,12 @@ func enicShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	handleEnicShowStatusCmd(cmd, true, false)
+	if cmd.Flags().Changed("yaml") {
+		enicDetailShowCmdHandler(cmd, nil)
+		return
+	}
+
+	handleEnicShowCmd(cmd, true, false)
 }
 
 func enicShowStatusCmdHandler(cmd *cobra.Command, args []string) {
@@ -139,7 +134,7 @@ func enicShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	handleEnicShowStatusCmd(cmd, false, true)
+	handleEnicShowCmd(cmd, false, true)
 }
 
 func enicDetailShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -153,18 +148,13 @@ func enicDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	defer c.Close()
 
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
-
 	var req *halproto.InterfaceGetRequest
-	if cmd.Flags().Changed("detId") {
+	if cmd.Flags().Changed("id") {
 		// Get specific if
 		req = &halproto.InterfaceGetRequest{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: enicDetailID,
+					InterfaceId: enicID,
 				},
 			},
 		}

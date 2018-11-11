@@ -19,8 +19,7 @@ import (
 )
 
 var (
-	natpoolHandle       uint64
-	natpoolDetailHandle uint64
+	natpoolHandle uint64
 )
 
 var natShowCmd = &cobra.Command{
@@ -36,25 +35,11 @@ var natpoolShowCmd = &cobra.Command{
 	Run:   natpoolShowCmdHandler,
 }
 
-var natpoolDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed NAT pool information",
-	Long:  "show detailed information about NAT pool objects",
-	Run:   natpoolDetailShowCmdHandler,
-}
-
 var natmappingShowCmd = &cobra.Command{
 	Use:   "mapping",
 	Short: "show NAT mapping objects",
 	Long:  "show NAT mapping object information",
 	Run:   natmappingShowCmdHandler,
-}
-
-var natmappingDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed NAT mapping information",
-	Long:  "show detailed information about NAT mapping objects",
-	Run:   natmappingDetailShowCmdHandler,
 }
 
 var natpolicyShowCmd = &cobra.Command{
@@ -67,16 +52,20 @@ var natpolicyShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(natShowCmd)
 	natShowCmd.AddCommand(natpoolShowCmd)
-	natpoolShowCmd.AddCommand(natpoolDetailShowCmd)
 	natShowCmd.AddCommand(natmappingShowCmd)
-	natmappingShowCmd.AddCommand(natmappingDetailShowCmd)
 	natShowCmd.AddCommand(natpolicyShowCmd)
 
+	natpoolShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	natpoolShowCmd.Flags().Uint64Var(&natpoolHandle, "handle", 1, "Specify natpool handle")
-	natpoolDetailShowCmd.Flags().Uint64Var(&natpoolDetailHandle, "handle", 1, "Specify natpool handle")
+	natmappingShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 }
 
 func natpoolShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		natpoolDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -148,7 +137,7 @@ func natpoolDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.NatPoolGetRequest{
 			KeyOrHandle: &halproto.NatPoolKeyHandle{
 				KeyOrHandle: &halproto.NatPoolKeyHandle_PoolHandle{
-					PoolHandle: natpoolDetailHandle,
+					PoolHandle: natpoolHandle,
 				},
 			},
 		}
@@ -181,6 +170,11 @@ func natpoolDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func natmappingShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		natmappingDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()

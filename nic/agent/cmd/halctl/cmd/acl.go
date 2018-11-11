@@ -35,13 +35,6 @@ var aclShowCmd = &cobra.Command{
 	Run:   aclShowCmdHandler,
 }
 
-var aclDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show acl detail information",
-	Long:  "show acl object detail information",
-	Run:   aclDetailShowCmdHandler,
-}
-
 var aclShowSpecCmd = &cobra.Command{
 	Use:   "spec",
 	Short: "show acl spec information",
@@ -60,7 +53,7 @@ func init() {
 	showCmd.AddCommand(aclShowCmd)
 	aclShowCmd.AddCommand(aclShowSpecCmd)
 	aclShowCmd.AddCommand(aclShowStatusCmd)
-	aclShowCmd.AddCommand(aclDetailShowCmd)
+	aclShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	aclShowCmd.Flags().Uint32Var(&aclID, "id", 0, "Specify acl ID")
 	aclShowCmd.Flags().Uint64Var(&aclHandle, "handle", 0, "Specify acl handle")
@@ -68,8 +61,6 @@ func init() {
 	aclShowSpecCmd.Flags().Uint64Var(&aclHandle, "handle", 0, "Specify acl handle")
 	aclShowStatusCmd.Flags().Uint32Var(&aclStatusID, "id", 0, "Specify acl ID")
 	aclShowStatusCmd.Flags().Uint64Var(&aclStatusHandle, "handle", 0, "Specify acl handle")
-	aclDetailShowCmd.Flags().Uint32Var(&aclDetailID, "id", 0, "Specify acl ID")
-	aclDetailShowCmd.Flags().Uint64Var(&aclDetailHandle, "handle", 0, "Specify acl handle")
 }
 
 func handleACLShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -89,7 +80,7 @@ func handleACLShowCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.AclGetRequest{
 			KeyOrHandle: &halproto.AclKeyHandle{
 				KeyOrHandle: &halproto.AclKeyHandle_AclHandle{
-					AclHandle: aclDetailHandle,
+					AclHandle: aclHandle,
 				},
 			},
 		}
@@ -98,7 +89,7 @@ func handleACLShowCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.AclGetRequest{
 			KeyOrHandle: &halproto.AclKeyHandle{
 				KeyOrHandle: &halproto.AclKeyHandle_AclId{
-					AclId: aclDetailID,
+					AclId: aclID,
 				},
 			},
 		}
@@ -137,16 +128,16 @@ func handleACLShowCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 }
 
-func aclDetailShowCmdHandler(cmd *cobra.Command, args []string) {
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
+func aclShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		if len(args) > 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+		handleACLShowCmd(cmd, nil)
 		return
 	}
 
-	handleACLShowCmd(cmd, nil)
-}
-
-func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {

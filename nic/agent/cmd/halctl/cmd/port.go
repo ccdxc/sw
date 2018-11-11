@@ -36,13 +36,6 @@ var portShowCmd = &cobra.Command{
 	Run:   portDetailShowCmdHandler,
 }
 
-var portDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show port details",
-	Long:  "show port details information",
-	Run:   portDetailShowCmdHandler,
-}
-
 var portStatusShowCmd = &cobra.Command{
 	Use:   "status",
 	Short: "show port status",
@@ -59,10 +52,10 @@ var portStatsShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(portShowCmd)
-	portShowCmd.AddCommand(portDetailShowCmd)
 	portShowCmd.AddCommand(portStatusShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
 
+	portShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	portShowCmd.PersistentFlags().Uint32Var(&portNum, "port", 1, "Specify port number")
 
 	clearCmd.AddCommand(portClearStatsCmd)
@@ -203,7 +196,11 @@ func portDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Invalid argument\n")
 		return
 	}
-	handlePortDetailShowCmd(cmd, nil)
+	if cmd.Flags().Changed("yaml") {
+		handlePortDetailShowCmd(cmd, nil)
+	} else {
+		fmt.Printf("Only --yaml option supported\n")
+	}
 }
 
 func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {

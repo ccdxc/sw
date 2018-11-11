@@ -19,11 +19,10 @@ import (
 )
 
 var (
-	l2segID       uint64
-	l2segBr       bool
-	pdL2segID     uint64
-	pdL2segBr     bool
-	detailL2segID uint64
+	l2segID   uint64
+	l2segBr   bool
+	pdL2segID uint64
+	pdL2segBr bool
 )
 
 var l2segShowCmd = &cobra.Command{
@@ -47,27 +46,26 @@ var l2segStatusShowCmd = &cobra.Command{
 	Run:   l2segShowStatusCmdHandler,
 }
 
-var l2segDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed L2 segment information",
-	Long:  "show detailed information about L2 segments",
-	Run:   l2segDetailShowCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(l2segShowCmd)
 	l2segShowCmd.AddCommand(l2segSpecShowCmd)
 	l2segShowCmd.AddCommand(l2segStatusShowCmd)
-	l2segShowCmd.AddCommand(l2segDetailShowCmd)
 
+	l2segShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	l2segShowCmd.Flags().Uint64Var(&l2segID, "id", 1, "Specify l2seg id")
+	l2segShowCmd.Flags().BoolVar(&l2segBr, "brief", false, "Display briefly")
 	l2segSpecShowCmd.Flags().Uint64Var(&l2segID, "id", 1, "Specify l2seg id")
 	l2segSpecShowCmd.Flags().BoolVar(&l2segBr, "brief", false, "Display briefly")
 	l2segStatusShowCmd.Flags().Uint64Var(&pdL2segID, "id", 1, "Specify l2seg id")
 	l2segStatusShowCmd.Flags().BoolVar(&pdL2segBr, "brief", false, "Display briefly")
-	l2segDetailShowCmd.Flags().Uint64Var(&detailL2segID, "id", 1, "Specify l2seg id")
 }
 
 func l2segShowSpecCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		l2segDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -193,7 +191,7 @@ func handlel2segDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.L2SegmentGetRequest{
 			KeyOrHandle: &halproto.L2SegmentKeyHandle{
 				KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
-					SegmentId: detailL2segID,
+					SegmentId: l2segID,
 				},
 			},
 		}
@@ -234,10 +232,8 @@ func handlel2segDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 
 func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
-		if strings.Compare(args[0], "detail") != 0 {
-			fmt.Printf("Invalid argument\n")
-			return
-		}
+		fmt.Printf("Invalid argument\n")
+		return
 	}
 	handlel2segDetailShowCmd(cmd, nil)
 }

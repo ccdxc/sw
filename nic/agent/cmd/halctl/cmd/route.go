@@ -25,19 +25,18 @@ var routeShowCmd = &cobra.Command{
 	Run:   routeShowCmdHandler,
 }
 
-var routeDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed route information",
-	Long:  "shows detailed information about route objects",
-	Run:   routeDetailShowCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(routeShowCmd)
-	routeShowCmd.AddCommand(routeDetailShowCmd)
+
+	routeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 }
 
 func routeShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		routeDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()

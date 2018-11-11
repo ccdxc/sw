@@ -23,12 +23,6 @@ var systemShowCmd = &cobra.Command{
 	Use:   "system",
 	Short: "show system information",
 	Long:  "show system information",
-}
-
-var systemDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show system object information",
-	Long:  "show system object information",
 	Run:   systemDetailShowCmdHandler,
 }
 
@@ -67,22 +61,16 @@ var threadShowCmd = &cobra.Command{
 	Run:   threadShowCmdHandler,
 }
 
-var threadDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show system threads information",
-	Long:  "show system threads information",
-	Run:   threadDetailShowCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.AddCommand(systemStatsShowCmd)
 	systemShowCmd.AddCommand(threadShowCmd)
-	systemShowCmd.AddCommand(systemDetailShowCmd)
 	systemShowCmd.AddCommand(systemClockShowCmd)
 	systemStatsShowCmd.AddCommand(systemStatsTableShowCmd)
 	systemStatsShowCmd.AddCommand(systemDropStatsShowCmd)
-	threadShowCmd.AddCommand(threadDetailShowCmd)
+
+	systemShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	threadShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 }
 
 func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -123,7 +111,11 @@ func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func systemDetailShowCmdHandler(cmd *cobra.Command, args []string) {
-	handleSystemDetailShowCmd(cmd, nil)
+	if cmd.Flags().Changed("yaml") {
+		handleSystemDetailShowCmd(cmd, nil)
+	} else {
+		fmt.Printf("Only --yaml option supported\n")
+	}
 }
 
 func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -1039,6 +1031,11 @@ func apiStatsEntryShow(entry *halproto.ApiStatsEntry) {
 }
 
 func threadShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		threadDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()

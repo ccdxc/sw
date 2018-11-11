@@ -21,7 +21,6 @@ import (
 var (
 	ifID       uint64
 	ifStatusID uint64
-	ifDetailID uint64
 )
 
 var ifShowCmd = &cobra.Command{
@@ -45,26 +44,23 @@ var ifShowStatusCmd = &cobra.Command{
 	Run:   ifShowStatusCmdHandler,
 }
 
-var ifDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed interface information",
-	Long:  "shows detailed interface object information",
-	Run:   ifDetailShowCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(ifShowCmd)
 	ifShowCmd.AddCommand(ifShowSpecCmd)
 	ifShowCmd.AddCommand(ifShowStatusCmd)
-	ifShowCmd.AddCommand(ifDetailShowCmd)
 
+	ifShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	ifShowCmd.Flags().Uint64Var(&ifID, "id", 1, "Specify if-id")
 	ifShowSpecCmd.Flags().Uint64Var(&ifID, "id", 1, "Specify if-id")
 	ifShowStatusCmd.Flags().Uint64Var(&ifStatusID, "id", 1, "Specify if-id")
-	ifDetailShowCmd.Flags().Uint64Var(&ifDetailID, "id", 1, "Specify if-id")
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		ifDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -190,7 +186,7 @@ func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.InterfaceGetRequest{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: ifDetailID,
+					InterfaceId: ifID,
 				},
 			},
 		}

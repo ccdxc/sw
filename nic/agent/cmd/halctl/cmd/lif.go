@@ -22,7 +22,6 @@ var (
 	lifID       uint64
 	lifSpecID   uint64
 	lifStatusID uint64
-	lifDetailID uint64
 )
 
 var lifShowCmd = &cobra.Command{
@@ -46,23 +45,15 @@ var lifShowStatusCmd = &cobra.Command{
 	Run:   lifShowStatusCmdHandler,
 }
 
-var lifDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed logical interface (lif) information",
-	Long:  "shows detailed information about logical interface (lif) objects",
-	Run:   lifDetailShowCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(lifShowCmd)
 	lifShowCmd.AddCommand(lifShowSpecCmd)
 	lifShowCmd.AddCommand(lifShowStatusCmd)
-	lifShowCmd.AddCommand(lifDetailShowCmd)
 
+	lifShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	lifShowCmd.Flags().Uint64Var(&lifID, "id", 1, "Specify lif-id")
 	lifShowSpecCmd.Flags().Uint64Var(&lifSpecID, "id", 1, "Specify lif-id")
 	lifShowStatusCmd.Flags().Uint64Var(&lifStatusID, "id", 1, "Specify lif-id")
-	lifDetailShowCmd.Flags().Uint64Var(&lifDetailID, "id", 1, "Specify lif-id")
 }
 
 func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
@@ -124,11 +115,14 @@ func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 }
 
 func lifShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		lifDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	if len(args) > 0 {
-		if strings.Compare(args[0], "spec") != 0 {
-			fmt.Printf("Invalid argument\n")
-			return
-		}
+		fmt.Printf("Invalid argument\n")
+		return
 	}
 
 	if cmd.Flags().Changed("id") {
@@ -181,7 +175,7 @@ func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.LifGetRequest{
 			KeyOrHandle: &halproto.LifKeyHandle{
 				KeyOrHandle: &halproto.LifKeyHandle_LifId{
-					LifId: lifDetailID,
+					LifId: lifID,
 				},
 			},
 		}

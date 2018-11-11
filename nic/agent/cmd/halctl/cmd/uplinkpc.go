@@ -19,8 +19,7 @@ import (
 )
 
 var (
-	uplinkPcID       uint64
-	uplinkPcDetailID uint64
+	uplinkPcID uint64
 )
 
 var uplinkPcShowCmd = &cobra.Command{
@@ -44,23 +43,15 @@ var uplinkPcStatusShowCmd = &cobra.Command{
 	Run:   uplinkPcShowStatusCmdHandler,
 }
 
-var uplinkPcDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed information about uplink-pc interface",
-	Long:  "show detailed information about uplink-pc interface object",
-	Run:   uplinkPcDetailShowCmdHandler,
-}
-
 func init() {
 	ifShowCmd.AddCommand(uplinkPcShowCmd)
 	uplinkPcShowCmd.AddCommand(uplinkPcSpecShowCmd)
 	uplinkPcShowCmd.AddCommand(uplinkPcStatusShowCmd)
-	uplinkPcShowCmd.AddCommand(uplinkPcDetailShowCmd)
 
+	uplinkPcShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	uplinkPcShowCmd.Flags().Uint64Var(&uplinkPcID, "id", 1, "Specify if-id")
 	uplinkPcSpecShowCmd.Flags().Uint64Var(&uplinkPcID, "id", 1, "Specify if-id")
 	uplinkPcStatusShowCmd.Flags().Uint64Var(&uplinkPcID, "id", 1, "Specify if-id")
-	uplinkPcDetailShowCmd.Flags().Uint64Var(&uplinkPcDetailID, "id", 1, "Specify if-id")
 }
 
 func handleUplinkPcShowCmd(cmd *cobra.Command, spec bool, status bool) {
@@ -121,6 +112,11 @@ func handleUplinkPcShowCmd(cmd *cobra.Command, spec bool, status bool) {
 }
 
 func uplinkPcShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		uplinkPcDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
@@ -160,7 +156,7 @@ func uplinkPcDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.InterfaceGetRequest{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: uplinkPcDetailID,
+					InterfaceId: uplinkPcID,
 				},
 			},
 		}

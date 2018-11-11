@@ -39,21 +39,79 @@ var epShowStatusCmd = &cobra.Command{
 	Run:   epStatusShowCmdHandler,
 }
 
-var epDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed endpoint information",
-	Long:  "show detailed information about endpoint objects",
-	Run:   epDetailShowCmdHandler,
+var filterShowCmd = &cobra.Command{
+	Use:   "filter",
+	Short: "show filter object information",
+	Long:  "show filter object information",
+	Run:   filterShowCmdHandler,
 }
 
 func init() {
 	showCmd.AddCommand(epShowCmd)
 	epShowCmd.AddCommand(epShowSpecCmd)
 	epShowCmd.AddCommand(epShowStatusCmd)
-	epShowCmd.AddCommand(epDetailShowCmd)
+	epShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+
+	showCmd.AddCommand(filterShowCmd)
+	filterShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+}
+
+func filterShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := halproto.NewEndpointClient(c.ClientConn)
+
+	// Get filter
+	req := &halproto.FilterGetRequest{}
+	filterGetReqMsg := &halproto.FilterGetRequestMsg{
+		Request: []*halproto.FilterGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.FilterGet(context.Background(), filterGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Filter failed. %v\n", err)
+		return
+	}
+
+	if !(cmd.Flags().Changed("yaml")) {
+		fmt.Printf("Only --yaml option supported\n")
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b) + "\n")
+		fmt.Println("---")
+	}
 }
 
 func epShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		if len(args) > 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+		handleEpDetailShowCmd(cmd, nil)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {

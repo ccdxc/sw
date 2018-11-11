@@ -19,11 +19,10 @@ import (
 )
 
 var (
-	vrfID       uint64
-	brief       bool
-	pdVrfID     uint64
-	pdBrief     bool
-	detailVrfID uint64
+	vrfID   uint64
+	brief   bool
+	pdVrfID uint64
+	pdBrief bool
 )
 
 var vrfShowCmd = &cobra.Command{
@@ -47,27 +46,31 @@ var vrfStatusShowCmd = &cobra.Command{
 	Run:   vrfShowStatusCmdHandler,
 }
 
-var vrfDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed vrf information",
-	Long:  "show detailed information about vrf objects",
-	Run:   vrfDetailShowCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(vrfShowCmd)
 	vrfShowCmd.AddCommand(vrfSpecShowCmd)
 	vrfShowCmd.AddCommand(vrfStatusShowCmd)
-	vrfShowCmd.AddCommand(vrfDetailShowCmd)
 
+	vrfShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	vrfShowCmd.Flags().Uint64Var(&vrfID, "id", 1, "Specify vrf-id")
+	vrfShowCmd.Flags().BoolVar(&brief, "brief", false, "Display briefly")
 	vrfSpecShowCmd.Flags().Uint64Var(&vrfID, "id", 1, "Specify vrf-id")
 	vrfSpecShowCmd.Flags().BoolVar(&brief, "brief", false, "Display briefly")
 	vrfStatusShowCmd.Flags().Uint64Var(&pdVrfID, "id", 1, "Specify vrf-id")
 	vrfStatusShowCmd.Flags().BoolVar(&pdBrief, "brief", false, "Display briefly")
-	vrfDetailShowCmd.Flags().Uint64Var(&detailVrfID, "id", 1, "Specify vrf-id")
 }
 
 func vrfShowSpecCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		vrfDetailShowCmdHandler(cmd, args)
+		return
+	}
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -115,6 +118,11 @@ func vrfShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func vrfShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -177,7 +185,7 @@ func handleVrfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.VrfGetRequest{
 			KeyOrHandle: &halproto.VrfKeyHandle{
 				KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
-					VrfId: detailVrfID,
+					VrfId: vrfID,
 				},
 			},
 		}
@@ -217,6 +225,11 @@ func handleVrfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func vrfDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	handleVrfDetailShowCmd(cmd, nil)
 }
 

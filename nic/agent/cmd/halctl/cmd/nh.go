@@ -19,8 +19,7 @@ import (
 )
 
 var (
-	nhID       uint64
-	nhDetailID uint64
+	nhID uint64
 )
 
 var nhShowCmd = &cobra.Command{
@@ -30,22 +29,19 @@ var nhShowCmd = &cobra.Command{
 	Run:   nhShowCmdHandler,
 }
 
-var nhDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed nexthop information",
-	Long:  "shows detailed information about nexthop objects",
-	Run:   nhDetailShowCmdHandler,
-}
-
 func init() {
 	showCmd.AddCommand(nhShowCmd)
-	nhShowCmd.AddCommand(nhDetailShowCmd)
 
+	nhShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	nhShowCmd.Flags().Uint64Var(&nhID, "id", 1, "Specify nexthop-id")
-	nhDetailShowCmd.Flags().Uint64Var(&nhDetailID, "id", 1, "Specify nexthop-id")
 }
 
 func nhShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		nhDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -117,7 +113,7 @@ func nhDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.NexthopGetRequest{
 			KeyOrHandle: &halproto.NexthopKeyHandle{
 				KeyOrHandle: &halproto.NexthopKeyHandle_NexthopId{
-					NexthopId: nhDetailID,
+					NexthopId: nhID,
 				},
 			},
 		}

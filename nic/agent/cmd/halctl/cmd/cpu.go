@@ -19,8 +19,7 @@ import (
 )
 
 var (
-	cpuID       uint64
-	cpuDetailID uint64
+	cpuID uint64
 )
 
 var cpuShowCmd = &cobra.Command{
@@ -44,21 +43,12 @@ var cpuStatusShowCmd = &cobra.Command{
 	Run:   cpuShowStatusCmdHandler,
 }
 
-var cpuDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "show detailed CPU interface information",
-	Long:  "show detailed CPU interface object information",
-	Run:   cpuDetailShowCmdHandler,
-}
-
 func init() {
 	ifShowCmd.AddCommand(cpuShowCmd)
 	cpuShowCmd.AddCommand(cpuSpecShowCmd)
 	cpuShowCmd.AddCommand(cpuStatusShowCmd)
-	cpuShowCmd.AddCommand(cpuDetailShowCmd)
-
+	cpuShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	cpuShowCmd.Flags().Uint64Var(&cpuID, "id", 1, "Specify if-id")
-	cpuDetailShowCmd.Flags().Uint64Var(&cpuDetailID, "id", 1, "Specify if-id")
 }
 
 func handleCPUShowCmd(cmd *cobra.Command, spec bool, status bool) {
@@ -133,6 +123,11 @@ func cpuShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	if cmd.Flags().Changed("yaml") {
+		cpuDetailShowCmdHandler(cmd, nil)
+		return
+	}
+
 	handleCPUShowCmd(cmd, true, false)
 }
 
@@ -147,18 +142,13 @@ func cpuDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	defer c.Close()
 
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
-
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {
 		// Get specific if
 		req = &halproto.InterfaceGetRequest{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: cpuDetailID,
+					InterfaceId: cpuID,
 				},
 			},
 		}

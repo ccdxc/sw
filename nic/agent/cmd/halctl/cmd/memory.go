@@ -19,8 +19,7 @@ import (
 )
 
 var (
-	slabID       uint32
-	slabDetailID uint32
+	slabID uint32
 )
 
 var memShowCmd = &cobra.Command{
@@ -36,25 +35,11 @@ var slabShowCmd = &cobra.Command{
 	Run:   slabShowCmdHandler,
 }
 
-var slabDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "Show slab detail information",
-	Long:  "Show slab detail information",
-	Run:   slabDetailShowCmdHandler,
-}
-
 var mtrackShowCmd = &cobra.Command{
 	Use:   "mtrack",
 	Short: "Show mtrack information",
 	Long:  "Show mtrack information",
 	Run:   mtrackShowCmdHandler,
-}
-
-var mtrackDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "Show mtrack detail information",
-	Long:  "Show mtrack detail information",
-	Run:   mtrackDetailShowCmdHandler,
 }
 
 var summaryShowCmd = &cobra.Command{
@@ -71,35 +56,29 @@ var hashShowCmd = &cobra.Command{
 	Long:  "Show hash information",
 	Run:   hashShowCmdHandler,
 }
-
-var hashDetailShowCmd = &cobra.Command{
-	Use:   "detail",
-	Short: "Show hash detail information",
-	Long:  "Show hash detail information",
-	Run:   hashDetailShowCmdHandler,
-}
 */
 
 func init() {
-	slabShowCmd.AddCommand(slabDetailShowCmd)
-	memShowCmd.AddCommand(slabShowCmd)
 	systemShowCmd.AddCommand(memShowCmd)
-
-	mtrackShowCmd.AddCommand(mtrackDetailShowCmd)
+	memShowCmd.AddCommand(slabShowCmd)
 	memShowCmd.AddCommand(mtrackShowCmd)
-
 	memShowCmd.AddCommand(summaryShowCmd)
 
-	//hashShowCmd.AddCommand(hashDetailShowCmd)
 	//memShowCmd.AddCommand(hashShowCmd)
 
+	slabShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	slabShowCmd.Flags().Uint32Var(&slabID, "id", 0, "Specify slab id")
 	slabShowCmd.Flags().MarkHidden("id")
-	slabDetailShowCmd.Flags().Uint32Var(&slabDetailID, "id", 0, "Specify slab id")
-	slabDetailShowCmd.Flags().MarkHidden("id")
+	mtrackShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	//hashShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 }
 
 func slabShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		slabDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -208,7 +187,7 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		var req *halproto.SlabGetRequest
 		req = &halproto.SlabGetRequest{
-			Id: slabDetailID,
+			Id: slabID,
 		}
 		slabGetReqMsg = &halproto.SlabGetRequestMsg{
 			Request: []*halproto.SlabGetRequest{req},
@@ -248,6 +227,11 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		mtrackDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -364,6 +348,11 @@ func mtrackDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 /*
 func hashShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		hashDetailShowCmdHandler(cmd, args)
+		return
+	}
+
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
