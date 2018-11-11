@@ -6,6 +6,8 @@
 #ifndef __PNSO_MPOOL_H__
 #define __PNSO_MPOOL_H__
 
+#include <linux/spinlock.h>
+
 #include "osal_assert.h"
 #include "osal_mem.h"
 #include "sonic_api_int.h"
@@ -44,6 +46,7 @@ extern "C" {
  * TODO-mpool:
  *	- move PNSO_MAX to common/util
  *	- enhance: mpool stats, header/footer in objects as/if needed
+ *	- use osal spin/lock
  *
  */
 /* unit of following constants is bytes */
@@ -85,6 +88,7 @@ enum mem_pool_type {
 struct mem_pool_stack {
 	uint32_t mps_num_objects;	/* total number of objects */
 	uint32_t mps_top;		/* stack pointer */
+	spinlock_t mps_lock;		/* to serialize get/put in poll/async */
 	void **mps_objects;		/* array of pointers to objects */
 };
 

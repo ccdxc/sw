@@ -304,6 +304,7 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 
 	mpool->mp_stack.mps_num_objects = num_objects;
 	mpool->mp_stack.mps_objects = objects;
+	spin_lock_init(&mpool->mp_stack.mps_lock);
 
 	/* populate the stack to point the newly created objects */
 	obj = (char *) mpool->mp_objects;
@@ -379,10 +380,13 @@ mpool_get_object(struct mem_pool *mpool)
 		return NULL;
 
 	mem_stack = &mpool->mp_stack;
+
+	spin_lock(&mem_stack->mps_lock);
 	if (mem_stack->mps_top > 0) {
 		object = mem_stack->mps_objects[--(mem_stack->mps_top)];
 		MPOOL_VALIDATE_OBJECT(mpool, object);
 	}
+	spin_unlock(&mem_stack->mps_lock);
 
 	return object;
 }
@@ -401,7 +405,9 @@ mpool_put_object(struct mem_pool *mpool, void *object)
 	MPOOL_VALIDATE_OBJECT(mpool, object);
 
 	mem_stack = &mpool->mp_stack;
+	spin_lock(&mem_stack->mps_lock);
 	if (mem_stack->mps_top >= mem_stack->mps_num_objects) {
+		spin_unlock(&mem_stack->mps_lock);
 		OSAL_LOG_ERROR("cannot return object to pool! object: 0x" PRIx64 "  type: %s",
 				(uint64_t) object,
 				mpool_get_type_str(mpool->mp_config.mpc_type));
@@ -411,6 +417,7 @@ mpool_put_object(struct mem_pool *mpool, void *object)
 
 	mem_stack->mps_objects[mem_stack->mps_top] = object;
 	mem_stack->mps_top++;
+	spin_unlock(&mem_stack->mps_lock);
 }
 
 pnso_error_t
