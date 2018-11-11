@@ -1,0 +1,116 @@
+global_params:
+    store_output_files  : None
+    output_file_suffix  : None
+    output_file_prefix  : None
+    status_interval     : None
+    limit_rate          : None
+    cpu_mask            : None
+    block_size          : None
+    per_core_qdepth     : None
+
+crypto_keys:
+    - key:
+        idx : None
+        key2: None
+        key1: None
+
+svc_chains:
+    - svc_chain:
+        name: None
+        idx : None
+        ops:
+            - decompact:
+                output_flags: None
+                output_file : None
+                vvbn        : None
+            - decrypt:
+                output_flags: None
+                output_file : None
+                iv_data     : None
+                key_idx     : None
+                algo_type   : None
+            - encrypt:
+                output_flags: None
+                output_file : None
+                iv_data     : None
+                key_idx     : None
+                algo_type   : None
+            - chksum:
+                output_flags: None
+                output_file : None
+                algo_type   : None
+                flags       : None
+            - hash:
+                output_flags: None
+                output_file : None
+                algo_type   : None
+                flags       : None
+            - decompress:
+                output_flags: None
+                output_file : None
+                hdr_fmt_idx : None
+                algo_type   : None
+                flags       : None
+            - compress:
+                output_flags    : None
+                output_file     : None
+                threshold_delta : None
+                threshold       : None
+                hdr_algo        : None
+                hdr_fmt_idx     : None
+                algo_type       : None
+                flags           : None
+        input:
+            block_count     : None
+            max_block_size  : None
+            min_block_size  : None
+            pattern         : None
+            file            : None
+            len             : None
+            offset          : None
+            random_len      : None
+            random          : None
+tests:
+    - test:
+        svc_chains  : None
+        batch_depth : None
+        repeat      : None
+        turbo       : None
+        mode        : None
+        name        : None
+        idx         : None
+        validations:
+            - retcode_compare:
+                svc_retcodes: None
+                retcode     : None
+                svc_chain   : None
+                type        : None
+                idx         : None
+            - size_compare:
+                val     : None
+                file2   : None
+                file1   : None
+                type    : None
+                idx     : None
+            - data_compare:
+                len     : None
+                offset  : None
+                pattern : None
+                file2   : None
+                file1   : None
+                type    : None
+                idx     : None
+
+cp_hdr_formats:
+    - format:
+        idx: None
+        cp_hdr_fields:
+            - field:
+                val     : None
+                len     : None
+                offset  : None
+                type    : None
+cp_hdr_mapping:
+    - entry:
+        hdr_algo    :
+        pnso_algo   :

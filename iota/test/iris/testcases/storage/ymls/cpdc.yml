@@ -1,0 +1,54 @@
+svc_chains:
+    - svc_chain:
+        idx: 1
+        input:
+            pattern : ababababababababababababababababababababababababababababababababababababab1234
+            len     : 'param::blocksize'
+        ops:
+            - compress:
+                flags           : 'zero_pad'
+                hdr_fmt_idx     : 1
+                threshold_delta : 8
+                output_file     : '%chain_id%_compressed.bin'
+ 
+    - svc_chain:
+        idx: 2
+        input:
+            file: '1_compressed.bin'
+        ops:
+            - decompress:
+                flags       : 0
+                hdr_fmt_idx : 1
+                output_file : '%chain_id%_decompressed.bin'
+
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1
+      repeat: 'param::repeat'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+        - size_compare:
+            idx: 2
+            type: lt
+            file1: '1_compressed.bin'
+            val: 'param::blocksize'
+        #- data_compare:
+        #    idx: 3
+        #    file1: '1_compressed.bin'
+        #    pattern: 0x00
+        #    offset: 2048
+        #    len: 2048
+
+  - test:
+      idx: 2
+      svc_chains: 2
+      repeat: 'param::repeat'
+      validations:
+        - size_compare:
+            idx: 1
+            file1: '2_decompressed.bin'
+            val: 'param::blocksize'

@@ -4,16 +4,15 @@ import pdb
 import os
 
 import iota.harness.api as api
+import iota.test.iris.testcases.storage.pnsodefs as pnsodefs
+import iota.test.iris.testcases.storage.pnsoutils as pnsoutils
 
 def Setup(tc):
-    tc.nodes = api.GetNaplesHostnames()
-    tc.files = []
-    for cfgfile in tc.args.cfg:
-        tc.files.append("%s/%s/%s" % (api.GetTopDir(), tc.args.dir, cfgfile))
-    tc.files.append("%s/%s/%s" % (api.GetTopDir(), tc.args.dir, tc.args.test))
-    tc.files.append("%s/iota/test/iris/testcases/storage/pnsotest.py" % api.GetTopDir())
+    pnsoutils.Setup(tc)
 
+    tc.nodes = api.GetNaplesHostnames()
     for n in tc.nodes:
+        api.Logger.info("Copying testyml files to Node:%s" % n)
         resp = api.CopyToHost(n, tc.files)
         if not api.IsApiResponseOk(resp):
             return api.types.status.FAILURE
@@ -21,16 +20,14 @@ def Setup(tc):
 
 def Trigger(tc):
     for n in tc.nodes:
-        cmd = "./pnsotest.py --wait %d --cfg " % tc.args.wait
-        for cfgfile in tc.args.cfg:
-            cmd += "%s " % cfgfile
-        cmd += " --test %s " % tc.args.test
-
+        cmd = "./pnsotest.py --wait %d --cfg blocksize.yml globals.yml --test %s" % (tc.args.wait, tc.args.test)
     if getattr(tc.args, "failtest", False):
         cmd += " --failure-test"
 
     req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Trigger_AddHostCommand(req, n, "dmesg -c > /dev/null")
     api.Trigger_AddHostCommand(req, n, cmd)
+    api.Trigger_AddHostCommand(req, n, "dmesg")
     api.Logger.info("Running PNSO test %s" % cmd)
     
     tc.resp = api.Trigger(req)

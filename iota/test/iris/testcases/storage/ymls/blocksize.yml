@@ -1,0 +1,6 @@
+alias_group1:
+  - alias: '1block=param::blocksize'
+  - alias: '2block=param::x2blocksize'
+  - alias: '4block=param::x4blocksize'
+  - alias: '8block=param::x8blocksize'
+  - alias: '16block=param::x16blocksize'
