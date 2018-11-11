@@ -384,7 +384,7 @@ mpool_get_object(struct mem_pool *mpool)
 	spin_lock(&mem_stack->mps_lock);
 	if (mem_stack->mps_top > 0) {
 		object = mem_stack->mps_objects[--(mem_stack->mps_top)];
-		MPOOL_VALIDATE_OBJECT(mpool, object);
+		// MPOOL_VALIDATE_OBJECT(mpool, object);
 	}
 	spin_unlock(&mem_stack->mps_lock);
 
