@@ -565,6 +565,36 @@ end:
 }
 
 hal_ret_t
+clear_ingress_drop_stats (void)
+{
+    hal_ret_t ret;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_DROP_STATS_CLEAR, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to clear drop stats, err : {}", ret);
+        goto end;
+    }
+end:
+    return ret;
+}
+
+hal_ret_t
+clear_egress_drop_stats (void)
+{
+    hal_ret_t ret;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to clear egress drop stats, err : {}", ret);
+        goto end;
+    }
+end:
+    return ret;
+}
+
+hal_ret_t
 clear_pb_stats (void)
 {
     hal_ret_t          ret = HAL_RET_OK;

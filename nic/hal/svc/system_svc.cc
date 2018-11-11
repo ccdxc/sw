@@ -56,8 +56,7 @@ SystemServiceImpl::ClearIngressDropStats(ServerContext *context,
 {
     HAL_TRACE_DEBUG("Rcvd Clear Ingress Drop Stats");
 
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    hal::hal_cfg_db_close();
+    hal::clear_ingress_drop_stats();
 
     return Status::OK;
 }
@@ -69,8 +68,7 @@ SystemServiceImpl::ClearEgressDropStats(ServerContext *context,
 {
     HAL_TRACE_DEBUG("Rcvd Clear Egress Drop Stats");
 
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    hal::hal_cfg_db_close();
+    hal::clear_egress_drop_stats();
 
     return Status::OK;
 }

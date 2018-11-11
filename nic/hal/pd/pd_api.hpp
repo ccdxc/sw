@@ -3174,7 +3174,9 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_CLOCK_DETAIL_GET,         280, "PD_FUNC_ID_CLOCK_DETAIL_GET")\
     ENTRY(PD_FUNC_ID_EP_IPSG_CHANGE,           281, "PD_FUNC_ID_EP_IPSG_CHANGE")\
     ENTRY(PD_FUNC_ID_PB_STATS_CLEAR,           282, "PD_FUNC_ID_PB_STATS_CLEAR")\
-    ENTRY(PD_FUNC_ID_MAX,                      283, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_DROP_STATS_CLEAR,         283, "PD_FUNC_ID_DROP_STATS_CLEAR")\
+    ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR,  284, "PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR")\
+    ENTRY(PD_FUNC_ID_MAX,                      285, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3865,7 +3867,9 @@ PD_FUNCP_TYPEDEF(pd_get_opaque_tag_addr);
 
 // stats
 PD_FUNCP_TYPEDEF(pd_drop_stats_get);
+PD_FUNCP_TYPEDEF(pd_drop_stats_clear);
 PD_FUNCP_TYPEDEF(pd_egress_drop_stats_get);
+PD_FUNCP_TYPEDEF(pd_egress_drop_stats_clear);
 PD_FUNCP_TYPEDEF(pd_table_stats_get);
 
 // oifl

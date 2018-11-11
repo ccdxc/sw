@@ -23,6 +23,66 @@ thread_local void *t_clock_rollover_timer = NULL;
 #define HW_CLOCK_TICK_TO_NS(x)         (x * 1.200) //based on frequency of 833 MHz
 #define NS_TO_HW_CLOCK_TICK(x)         (x / 1.200)
 
+static hal_ret_t
+pd_system_drop_stats_set (int id, drop_stats_actiondata *data)
+{
+    hal_ret_t                ret;
+    sdk_ret_t                sdk_ret;
+    tcam                     *tcam;
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+
+    data->actionid = DROP_STATS_DROP_STATS_ID;
+    sdk_ret = tcam->update(id, data);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        HAL_TRACE_ERR("drop stats table write failure, idx : {}, err : {}",
+                      id, ret);
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_system_clear_drop_stats (uint8_t idx)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    tcam                    *tcam;
+    drop_stats_swkey         key = { 0 };
+    drop_stats_swkey_mask    key_mask = { 0 };
+    drop_stats_actiondata    data = { 0 };
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+
+    // Read from drop stats table
+    sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to retrieve drop stats at idx : {}, err : {}",
+                      idx, ret);
+        goto end;
+    }
+
+    // Reset drop_pkts field in data
+    if (!key.entry_inactive_drop_stats) {
+        memset(data.drop_stats_action_u.drop_stats_drop_stats.drop_pkts,
+               0, sizeof(data.drop_stats_action_u.drop_stats_drop_stats.drop_pkts));
+        
+        ret = pd_system_drop_stats_set(idx, &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to reset drop stats at idx : {}, err : {}",
+                          idx, ret);
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
 hal_ret_t
 pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
 {
@@ -64,6 +124,17 @@ pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
 end:
 
     return ret;
+}
+
+hal_ret_t
+pd_drop_stats_clear (pd_func_args_t *pd_func_args)
+{
+    HAL_TRACE_DEBUG("Reset drop stats");
+    for (int i = 0; i < DROP_STATS_TABLE_SIZE; i++) {
+        pd_system_clear_drop_stats(i);
+    }
+
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -178,6 +249,76 @@ pd_egress_drop_stats_get (pd_func_args_t *pd_func_args)
 
     return ret;
 }
+
+static hal_ret_t
+pd_system_egress_drop_stats_set (int id, egress_drop_stats_actiondata *data)
+{
+    hal_ret_t                ret;
+    sdk_ret_t                sdk_ret;
+    tcam                     *tcam;
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+
+    data->actionid = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
+    sdk_ret = tcam->update(id, data);
+    if (sdk_ret != sdk::SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        HAL_TRACE_ERR("egress drop stats table write failure, idx : {}, err : {}",
+                      id, ret);
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_system_clear_egress_drop_stats (uint8_t idx)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    sdk_ret_t                       sdk_ret;
+    tcam                            *tcam;
+    egress_drop_stats_swkey         key = { 0 };
+    egress_drop_stats_swkey_mask    key_mask = { 0 };
+    egress_drop_stats_actiondata    data = { 0 };
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
+    HAL_ASSERT(tcam != NULL);
+
+    // Read from drop stats table
+    sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to retrieve drop stats at idx : {}, err : {}",
+                      idx, ret);
+        goto end;
+    }
+
+    // Reset drop_pkts field in data
+    memset(data.egress_drop_stats_action_u.egress_drop_stats_egress_drop_stats.drop_pkts,
+           0, sizeof(data.egress_drop_stats_action_u.egress_drop_stats_egress_drop_stats.drop_pkts));
+        
+    ret = pd_system_egress_drop_stats_set(idx, &data);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to reset egress drop stats at idx : {}, err : {}",
+                      idx, ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
+pd_egress_drop_stats_clear (pd_func_args_t *pd_func_args)
+{
+    HAL_TRACE_DEBUG("Clearing egress drop stats");
+    for (int i = 0; i < (EGRESS_DROP_MAX + 1); i++) {
+        pd_system_clear_egress_drop_stats(i);
+    }
+
+    return HAL_RET_OK;
+}
+
 inline hbm_addr_t
 hbm_get_addr_for_stat_index (p4pd_table_id table_id,
                              uint8_t idx)
@@ -228,28 +369,6 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
 
     return stats_base_addr;
 }
-
-hal_ret_t
-pd_system_drop_stats_set (int id, drop_stats_actiondata *data)
-{
-    hal_ret_t                ret;
-    sdk_ret_t                sdk_ret;
-    tcam                     *tcam;
-
-    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
-
-    data->actionid = DROP_STATS_DROP_STATS_ID;
-    sdk_ret = tcam->update(id, data);
-    if (sdk_ret != sdk::SDK_RET_OK) {
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
-                id, ret);
-        return ret;
-    }
-    return HAL_RET_OK;
-}
-
 
 hal_ret_t
 pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,

@@ -19,6 +19,8 @@ hal_ret_t api_stats_get(ApiStatsResponse *rsp);
 hal_ret_t system_get(SystemResponse *rsp);
 hal_ret_t system_uuid_get(SystemResponse *rsp);
 hal_ret_t clear_pb_stats(void);
+hal_ret_t clear_ingress_drop_stats(void);
+hal_ret_t clear_egress_drop_stats(void);
 
 }    // namespace hal
 
