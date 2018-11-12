@@ -94,7 +94,7 @@ DeviceManager::lifs_reservation(platform_t platform)
 {
     struct queue_info empty_qinfo[NUM_QUEUE_TYPES] = {0};
     struct lif_info linfo;
-    uint32_t lif_id;
+    uint32_t lif_id = 0;
     int ret;
 
     // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
