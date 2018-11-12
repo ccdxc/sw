@@ -81,7 +81,7 @@ MODULE_PARM_DESC(xxx_pgidx, "XXX Tell device idx in eight byte blocks instead of
 static bool ionic_xxx_limits = false;
 module_param_named(xxx_limits, ionic_xxx_limits, bool, 0444);
 MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
-static bool ionic_xxx_kdbid = false;
+static bool ionic_xxx_kdbid = true;
 module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0644);
 MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
 static bool ionic_xxx_udp = true;
