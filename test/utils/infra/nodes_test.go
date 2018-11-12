@@ -245,6 +245,7 @@ func TestNodesLoad(t *testing.T) {
 }
 
 func TestQemuNodesLoad(t *testing.T) {
+	t.Skip("Test no longer needed post IOTA. TODO remove test code")
 	Common.Run = Common.RunCmd
 	Common.SudoCmd = func(cmd string) string {
 		return cmd
