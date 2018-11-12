@@ -163,6 +163,10 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'read_rsp_in_progress', 0):
             return False
 
+        # verify that num_dup_rd_atomic_bt_pkts is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_dup_rd_atomic_bt_pkts', 1):
+            return False
+
     elif step.step_id == 3:
 
         if not ValidatePostSyncCQChecks(tc):

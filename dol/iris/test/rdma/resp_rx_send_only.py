@@ -85,6 +85,14 @@ def TestCaseStepVerify(tc, step):
         # verify that max_pkts_in_any_msg is 1
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([1, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
             return False
+
+        # verify that last psn/msn/syndrome is updated
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'tx_last_psn', tc.pvtdata.rq_post_qstate.ack_nak_psn):
+            return False
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'tx_last_msn', tc.pvtdata.rq_post_qstate.aeth_msn):
+            return False
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'tx_last_syndrome', (tc.pvtdata.rq_post_qstate.syndrome|tc.pvtdata.rq_post_qstate.credits)):
+            return False
     
         ############     CQ VALIDATIONS #################
         if not ValidateRespRxCQChecks(tc):

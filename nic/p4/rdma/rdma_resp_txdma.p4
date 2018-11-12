@@ -146,15 +146,15 @@ header_type phv_global_common_t {
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
         pad                              :   22;
-        _error_disable_qp                :    1;
-        _only                            :    1;
-        _first                           :    1;
-        _middle                          :    1;
-        _last                            :    1;
-        _read_resp                       :    1;
-        _atomic_resp                     :    1;
-        _ack                             :    1;
         _rsvd_flags                      :    8;
+        _atomic_resp                     :    1;
+        _read_resp                       :    1;
+        _ack                             :    1;
+        _only                            :    1;
+        _last                            :    1;
+        _middle                          :    1;
+        _first                           :    1;
+        _error_disable_qp                :    1;
     }
 }
 

@@ -78,6 +78,14 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_read_req_msgs', 1):
         return False
 
+    # verify that last psn/msn/syndrome is updated
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'tx_last_psn', tc.pvtdata.rq_post_qstate.ack_nak_psn):
+        return False
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'tx_last_msn', tc.pvtdata.rq_post_qstate.aeth_msn):
+        return False
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'tx_last_syndrome', (tc.pvtdata.rq_post_qstate.syndrome|tc.pvtdata.rq_post_qstate.credits)):
+        return False
+    
    ############     CQ VALIDATIONS #################
     if not ValidateNoCQChanges(tc):
         return False

@@ -59,6 +59,10 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
         return False
 
+    # verify that num_dup_wr_send_pkts is incremented by 1
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_dup_wr_send_pkts', 1):
+        return False
+
     ############     CQ VALIDATIONS #################
     if not ValidateNoCQChanges(tc):
         return False

@@ -455,15 +455,15 @@ struct req_tx_flags_t {
 
 
 struct resp_tx_flags_t {
-    _error_disable_qp: 1;
-    _only:1;
-    _first:1;
-    _middle:1;
-    _last:1;
-    _read_resp:1;
-    _atomic_resp:1;
-    _ack:1;
     _rsvd_flags:8;
+    _atomic_resp:1;
+    _read_resp:1;
+    _ack:1;
+    _only:1;
+    _last:1;
+    _middle:1;
+    _first:1;
+    _error_disable_qp: 1;
 };
 
 #define RESP_TX_FLAG_ERR_DIS_QP         0x0001
