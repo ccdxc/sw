@@ -138,6 +138,7 @@ export NIC_iris_P4PD_SOLIBS := p4pd_iris p4pd_common_p4plus_txdma \
 export NIC_gft_P4PD_SOLIBS := p4pd_gft p4pd_common_p4plus_txdma \
     p4pd_common_p4plus_rxdma
 export NIC_apollo_P4PD_SOLIBS := p4pd_apollo p4pd_apollo_rxdma p4pd_apollo_txdma
+export NIC_hello_P4PD_SOLIBS := p4pd_hello
 
 # ==========================================================================
 #                           P4PD CLI Libs
@@ -198,3 +199,4 @@ export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
 iris_DEFS       := -DIRIS
 gft_DEFS        := -DGFT
 apollo_DEFS     := -DAPOLLO
+hello_DEFS      := -DHELLO

@@ -1,0 +1,43 @@
+{
+    "regions": [
+        {
+            "name": "lif2qstate_map",
+            "size_kb": 131072,
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "p4_program",
+            "size_kb": 1024
+        },
+        {
+            "name": "rxdma_program",
+            "size_kb": 1024,
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "txdma_program",
+            "size_kb": 1024,
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "flow_lkp",
+            "size_kb": 4096
+        },
+        {
+            "name": "snat",
+            "size_kb": 4096
+        },
+        {
+            "name": "tunnel",
+            "size_kb": 4096
+        },
+        {
+            "name": "qos-hbm-fifo",
+            "size_kb": 262144
+        },
+        {
+            "name": "tx-scheduler",
+            "size_kb": 2048
+        }
+    ]
+}

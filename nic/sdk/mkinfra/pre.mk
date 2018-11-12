@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 MODULE_ARCH                 := x86_64 aarch64
-MODULE_PIPELINE             := iris gft apollo
+MODULE_PIPELINE             := iris gft apollo hello
 MODULE_SRC_DIR              := ${MODULE_DIR}
 MODULE_EXPORT_DIR           := ${MODULE_DIR}/${ARCH}
 MODULE_BASECMD              :=

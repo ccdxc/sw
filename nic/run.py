@@ -200,6 +200,8 @@ def run_model(args):
         elif args.apollo_gtest:
             os.system("%s/tools/merge_model_debug.py --p4 apollo --rxdma apollo_rxdma --txdma apollo_txdma" % nic_dir)
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen//apollo/dbg_out/combined_model_debug.json")
+        elif args.hello_gtest:
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/hello/gen/p4gen//hello/dbg_out/model_debug.json")
         else:
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
@@ -213,6 +215,8 @@ def run_model(args):
         bin_dir = nic_dir + '/build/x86_64/gft/bin/'
     elif args.apollo_gtest:
         bin_dir = nic_dir + '/build/x86_64/apollo/bin/'
+    elif args.hello_gtest:
+        bin_dir = nic_dir + '/build/x86_64/hello/bin/'
 
     os.chdir(bin_dir)
     log = open(model_log, "w")
@@ -494,6 +498,14 @@ def run_apollo_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.chdir(nic_dir)
     cmd = ['build/x86_64/apollo/bin/apollo_test']
+    p = Popen(cmd)
+    return check_for_completion(p, None, model_process, hal_process, args)
+
+# Run Hello tests
+def run_hello_test(args):
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    os.chdir(nic_dir)
+    cmd = ['build/x86_64/hello/bin/hello_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -1013,6 +1025,8 @@ def main():
                         default=False, help="Run nicmgr gtests")
     parser.add_argument("--apollo_gtest", dest='apollo_gtest', action="store_true",
                         default=False, help="Run Apollo2 gtests")
+    parser.add_argument("--hello_gtest", dest='hello_gtest', action="store_true",
+                        default=False, help="Run Apollo2 gtests")
     parser.add_argument('--shuffle', dest='shuffle', action="store_true",
                         help='Shuffle tests and loop for X times.')
     parser.add_argument('--mbt', dest='mbt', default=None,
@@ -1120,7 +1134,8 @@ def main():
                 run_rtl(args)
             else:
                 run_model(args)
-            if args.gft_gtest is False and args.apollo_gtest is False:
+            if args.gft_gtest is False and args.apollo_gtest is False \
+                    and args.hello_gtest is False:
                 run_hal(args)
 
     if args.storage and args.feature not in [None, 'storage'] and args.combined is False:
@@ -1152,6 +1167,10 @@ def main():
         status = run_apollo_test(args)
         if status != 0:
             print "- Apollo2 test failed, status=", status
+    elif args.hello_gtest:
+        status = run_hello_test(args)
+        if status != 0:
+            print "- Hello test failed, status=", status
     elif args.mbt and not args.feature:
         status = run_mbt(args)
         if status != 0:

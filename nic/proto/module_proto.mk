@@ -2,7 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = device.proto
-MODULE_PIPELINE     = iris gft apollo
 MODULE_PREREQS      = gogo.proto
 MODULE_GEN_TYPES    = CC PY
 MODULE_INCS         = ${MODULE_DIR} \

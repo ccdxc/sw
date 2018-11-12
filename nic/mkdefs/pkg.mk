@@ -14,6 +14,7 @@ package-clean:
 	@rm -f  $(NICDIR)/nic.tar
 
 package: ${PKG_PREREQS}
+ifneq ($(PIPELINE),hello)
 	${MAKE} package-clean
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target host
     ifeq ($(ARCH),aarch64)
@@ -28,6 +29,7 @@ package: ${PKG_PREREQS}
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py \
 			--pipeline $(PIPELINE) --target sim --no-strip
     endif
+endif
 
 package-clean-debug-arm:
 	@rm -f  $(TOPDIR)/debug_aarch64_iris.tgz

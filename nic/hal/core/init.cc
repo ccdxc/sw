@@ -605,7 +605,7 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg)
      * apollo-gtest is resolved
      */
 
-#ifndef APOLLO
+#if !defined(APOLLO) && !defined(HELLO)
     // Enable linkmgr only for sim/mock
     if (hal_cfg->platform == HAL_PLATFORM_SIM ||
         hal_cfg->platform == HAL_PLATFORM_MOCK ||
