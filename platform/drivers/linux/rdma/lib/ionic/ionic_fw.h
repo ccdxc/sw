@@ -162,7 +162,7 @@ struct ionic_v1_cqe {
 			__u64		npg_wqe_id;
 		} send;
 	};
-	__le32				status_length;
+	__be32				status_length;
 	__be32				qid_type_flags;
 };
 
@@ -229,7 +229,7 @@ struct ionic_v1_base_hdr {
 	__u8				op;
 	__u8				num_sge_key;
 	__be16				flags;
-	__be32				length_key;
+	__be32				imm_data_key;
 };
 
 /* v1 receive wqe body */
@@ -245,14 +245,14 @@ struct ionic_v1_common_bdy {
 			__le32		ah_id;
 			__be32		dest_qpn;
 			__be32		dest_qkey;
-			__be32		imm_data_rkey;
 		} send;
 		struct {
-			__be64		remote_va;
+			__be32		remote_va_high;
+			__be32		remote_va_low;
 			__be32		remote_rkey;
-			__be32		imm_data;
 		} rdma;
 	};
+	__be32				length;
 	union {
 		__u8			data[32];
 		struct ionic_sge	sgl[2];
@@ -261,7 +261,8 @@ struct ionic_v1_common_bdy {
 
 /* v1 atomic wqe body */
 struct ionic_v1_atomic_bdy {
-	__be64				remote_va;
+	__be32				remote_va_high;
+	__be32				remote_va_low;
 	__be32				remote_rkey;
 	__be32				swap_add_high;
 	__be32				swap_add_low;

@@ -282,6 +282,14 @@ static void ionic_uninit_device(struct verbs_device *vdev)
 	struct ionic_dev *dev = to_ionic_dev(&vdev->device);
 
 	free(dev);
+
+	static_assert(sizeof(struct ionic_v1_cqe) == 32, "bad size");
+	static_assert(sizeof(struct ionic_v1_base_hdr) == 16, "bad size");
+	static_assert(sizeof(struct ionic_v1_recv_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_common_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_atomic_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_bind_mw_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_wqe) == 64, "bad size");
 }
 
 #define PCI_VENDOR_ID_PENSANDO 0x1dd8

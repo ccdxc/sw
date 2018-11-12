@@ -474,7 +474,7 @@ static bool ionic_put_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res)
 		return false;
 
 	if (ionic_xxx_pgidx)
-		res->tbl_pos >>= dev->cl_stride - 3;
+		res->tbl_pos >>= dev->cl_stride - dev->pte_stride;
 
 	spin_lock_irqsave(&dev->inuse_lock, irqflags);
 	bitmap_release_region(dev->inuse_restbl, res->tbl_pos, res->tbl_order);
@@ -2911,11 +2911,12 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 {
 	struct ionic_qp *qp = NULL;
 	struct ionic_rq_meta *meta;
-	u32 src_qpn;
+	u32 src_qpn, st_len;
 	u8 op;
+	int rc = 0;
 
 	if (cqe_qp->rq_flush)
-		return 0;
+		goto out;
 
 	if (cqe_qp->has_rq) {
 		qp = cqe_qp;
@@ -2928,6 +2929,22 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 
 		qp = to_ionic_srq(cqe_qp->ibqp.srq);
 	}
+
+	st_len = be32_to_cpu(cqe->status_length);
+
+	/* ignore wqe_id in case of flush error */
+	if (ionic_v1_cqe_error(cqe) && st_len == IONIC_STS_WQE_FLUSHED_ERR) {
+		/* should only see flushed for rq, never srq, check anyway */
+		cqe_qp->rq_flush = !qp->is_srq;
+		if (cqe_qp->rq_flush) {
+			cq->flush = true;
+			list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
+		}
+		goto out;
+	}
+
+	/* if wqe_id is valid, application should see wc */
+	rc = 1;
 
 	/* there had better be something in the recv queue to complete */
 	if (ionic_queue_empty(&qp->rq))
@@ -2954,8 +2971,8 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		wc->qp = &cqe_qp->ibqp;
 
 	if (ionic_v1_cqe_error(cqe)) {
-		wc->vendor_err = be32_to_cpu(cqe->status_length);
-		wc->status = ionic_to_ib_status(wc->vendor_err);
+		wc->vendor_err = st_len;
+		wc->status = ionic_to_ib_status(st_len);
 
 		cqe_qp->rq_flush = !qp->is_srq;
 		if (cqe_qp->rq_flush) {
@@ -2996,8 +3013,12 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		wc->ex.invalidate_rkey = be32_to_cpu(cqe->recv.imm_data_rkey);
 	}
 
-	wc->byte_len = be32_to_cpu(cqe->status_length);
-	wc->byte_len = meta->len; /* XXX byte_len must come from cqe */
+	wc->byte_len = be32_to_cpu(st_len);
+
+	/* XXX byte_len must come from cqe */
+	if (!st_len)
+		wc->byte_len = meta->len;
+
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16_to_cpu(cqe->recv.pkey_index);
 
@@ -3010,7 +3031,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 out:
 	ionic_queue_consume(&qp->rq);
 
-	return 1;
+	return rc;
 }
 
 static bool ionic_peek_send(struct ionic_qp *qp)
@@ -3118,6 +3139,9 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	u16 cqe_seq, cqe_idx;
 	int rc;
 
+	if (qp->sq_flush)
+		return 0;
+
 	cqe_seq = be32_to_cpu(cqe->send.msg_msn) & qp->sq.mask;
 
 	if (ionic_v1_cqe_error(cqe))
@@ -3154,10 +3178,26 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 {
 	struct ionic_sq_meta *meta;
 	u16 cqe_seq, cqe_idx;
+	uint32_t st_len;
 	int rc;
 
-	cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
-	cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
+	if (qp->sq_flush)
+		return 0;
+
+	st_len = be32_to_cpu(cqe->status_length);
+
+	if (ionic_v1_cqe_error(cqe) && st_len == IONIC_STS_WQE_FLUSHED_ERR) {
+		/* In case of flush err, ignore wqe_id.
+		 *
+		 * Normally seq is next after idx, but setting them equal
+		 * here will validate below even if the sq is empty.
+		 */
+		cqe_idx = qp->sq_npg_cons;
+		cqe_seq = qp->sq_npg_cons;
+	} else {
+		cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
+		cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
+	}
 
 	rc = ionic_validate_cons(qp->sq.prod,
 				 qp->sq_npg_cons,
@@ -3169,8 +3209,8 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 
 	if (ionic_v1_cqe_error(cqe)) {
 		meta = &qp->sq_meta[cqe_idx];
-		meta->len = be32_to_cpu(cqe->status_length);
-		meta->ibsts = ionic_to_ib_status(meta->len);
+		meta->len = st_len;
+		meta->ibsts = ionic_to_ib_status(st_len);
 		meta->remote = false;
 	}
 
@@ -5019,7 +5059,7 @@ static int ionic_v1_prep_common(struct ionic_qp *qp,
 		return signed_len;
 
 	meta->len = signed_len;
-	wqe->base.length_key = cpu_to_be32(signed_len);
+	wqe->common.length = cpu_to_be32(signed_len);
 
 	ionic_v1_prep_base(qp, wr, meta, wqe);
 
@@ -5084,11 +5124,11 @@ static int ionic_v1_prep_send(struct ionic_qp *qp,
 		break;
 	case IB_WR_SEND_WITH_IMM:
 		wqe->base.op = IONIC_V1_OP_SEND_IMM;
-		wqe->common.send.imm_data_rkey = wr->ex.imm_data;
+		wqe->base.imm_data_key = wr->ex.imm_data;
 		break;
 	case IB_WR_SEND_WITH_INV:
 		wqe->base.op = IONIC_V1_OP_SEND_INV;
-		wqe->common.send.imm_data_rkey =
+		wqe->base.imm_data_key =
 			cpu_to_be32(wr->ex.invalidate_rkey);
 		break;
 	default:
@@ -5172,7 +5212,7 @@ static int ionic_v1_prep_send_ud(struct ionic_qp *qp,
 		break;
 	case IB_WR_SEND_WITH_IMM:
 		wqe->base.op = IONIC_V1_OP_SEND_IMM;
-		wqe->common.send.imm_data_rkey = wr->wr.ex.imm_data;
+		wqe->base.imm_data_key = wr->wr.ex.imm_data;
 		break;
 	default:
 		return -EINVAL;
@@ -5253,13 +5293,14 @@ static int ionic_v1_prep_rdma(struct ionic_qp *qp,
 		break;
 	case IB_WR_RDMA_WRITE_WITH_IMM:
 		wqe->base.op = IONIC_V1_OP_RDMA_WRITE_IMM;
-		wqe->common.rdma.imm_data = wr->wr.ex.imm_data;
+		wqe->base.imm_data_key = wr->wr.ex.imm_data;
 		break;
 	default:
 		return -EINVAL;
 	}
 
-	wqe->common.rdma.remote_va = cpu_to_be64(wr->remote_addr);
+	wqe->common.rdma.remote_va_high = cpu_to_be32(wr->remote_addr >> 32);
+	wqe->common.rdma.remote_va_low = cpu_to_be32(wr->remote_addr);
 	wqe->common.rdma.remote_rkey = cpu_to_be32(wr->rkey);
 
 	/* XXX makeshift will be removed */
@@ -5357,7 +5398,8 @@ static int ionic_v1_prep_atomic(struct ionic_qp *qp,
 		return -EINVAL;
 	}
 
-	wqe->atomic.remote_va = cpu_to_be64(wr->remote_addr);
+	wqe->atomic.remote_va_high = cpu_to_be32(wr->remote_addr >> 32);
+	wqe->atomic.remote_va_low = cpu_to_be32(wr->remote_addr);
 	wqe->atomic.remote_rkey = cpu_to_be32(wr->rkey);
 
 	wqe->base.num_sge_key = 1;
@@ -5388,7 +5430,7 @@ static int ionic_v1_prep_inv(struct ionic_qp *qp,
 	memset(wqe, 0, 1u << qp->sq.stride_log2);
 
 	wqe->base.op = IONIC_V1_OP_LOCAL_INV;
-	wqe->base.length_key = cpu_to_be32(wr->ex.invalidate_rkey);
+	wqe->base.imm_data_key = cpu_to_be32(wr->ex.invalidate_rkey);
 
 	/* XXX makeshift will be removed */
 	if (dev->rdma_version != 1 || dev->qp_opcodes <= wqe->base.op)
@@ -5424,7 +5466,7 @@ static int ionic_v1_prep_reg(struct ionic_qp *qp,
 
 	wqe->base.op = IONIC_V1_OP_REG_MR;
 	wqe->base.num_sge_key = wr->key;
-	wqe->base.length_key = cpu_to_be32(mr->ibmr.lkey);
+	wqe->base.imm_data_key = cpu_to_be32(mr->ibmr.lkey);
 	wqe->reg_mr.va = cpu_to_be64(mr->ibmr.iova);
 	wqe->reg_mr.length = cpu_to_be32(mr->ibmr.length);
 	wqe->reg_mr.offset =
@@ -5611,7 +5653,9 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 	wqe->base.wqe_id = meta - qp->rq_meta;
 	wqe->base.op = wr->num_sge; /* XXX makeshift has num_sge in the opcode position */
 	wqe->base.num_sge_key = wr->num_sge;
-	wqe->base.length_key = cpu_to_be32(signed_len);
+
+	/* total length for recv goes in base imm_data_key */
+	wqe->base.imm_data_key = cpu_to_be32(signed_len);
 
 	/* if this is a srq, set fence bit to indicate device ownership */
 	if (qp->is_srq)
@@ -6699,7 +6743,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	/* XXX hardcode values, intentionally low, should come from identify */
 	dev->dev_attr.fw_ver = 0;
 	dev->dev_attr.sys_image_guid = 0;
-	dev->dev_attr.max_mr_size = 0x10000 * PAGE_SIZE; /* XXX ident->dev.pgtbl_size*PAGE_SIZE */
+	dev->dev_attr.max_mr_size = ident->dev.nrdma_pts_per_lif * PAGE_SIZE;
 	dev->dev_attr.page_size_cap = 0x1000;
 	dev->dev_attr.vendor_id = 0;
 	dev->dev_attr.vendor_part_id = 0;
@@ -6734,7 +6778,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_srq = ident->dev.nrdmarqs_per_lif;
 	dev->dev_attr.max_srq_wr = 0xffff;
 	dev->dev_attr.max_srq_sge = 7;
-	dev->dev_attr.max_fast_reg_page_list_len = 0; /* XXX ident->dev.pgtbl_size */
+	dev->dev_attr.max_fast_reg_page_list_len = ident->dev.nrdma_pts_per_lif;
 	dev->dev_attr.max_pkeys = 1;
 
 	/* XXX hardcode values, intentionally low, should come from identify */
@@ -6826,7 +6870,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		goto err_qpid;
 	}
 
-	dev->size_restbl = dev->dev_attr.max_mr_size / PAGE_SIZE;
+	dev->size_restbl = ident->dev.nrdma_pts_per_lif;
+	if (ionic_xxx_pgidx)
+		dev->size_restbl >>= dev->cl_stride - dev->pte_stride;
 	size = sizeof(long) * BITS_TO_LONGS(dev->size_restbl);
 	dev->inuse_restbl = kzalloc(size, GFP_KERNEL);
 	if (!dev->inuse_restbl) {

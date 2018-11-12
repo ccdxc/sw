@@ -251,11 +251,12 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 {
 	struct ionic_qp *qp = NULL;
 	struct ionic_rq_meta *meta;
-	uint32_t src_qpn;
+	uint32_t src_qpn, st_len;
 	uint8_t op;
+	int rc = 0;
 
 	if (cqe_qp->rq_flush)
-		return 0;
+		goto out;
 
 	if (cqe_qp->has_rq) {
 		qp = cqe_qp;
@@ -272,6 +273,26 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 
 		qp = to_ionic_srq(cqe_qp->vqp.qp.srq);
 	}
+
+	st_len = be32toh(cqe->status_length);
+
+	/* ignore wqe_id in case of flush error */
+	if (ionic_v1_cqe_error(cqe) && st_len == IONIC_STS_WQE_FLUSHED_ERR) {
+		/* should only see flushed for rq, never srq, check anyway */
+		cqe_qp->rq_flush = !qp->is_srq;
+		if (cqe_qp->rq_flush) {
+			cq->flush = true;
+			list_del(&cqe_qp->cq_flush_rq);
+			list_add_tail(&cq->flush_rq, &cqe_qp->cq_flush_rq);
+		}
+
+		ionic_stat_incr(ctx->stats, poll_cq_wc_err);
+
+		goto out;
+	}
+
+	/* if wqe_id is valid, application should see a wc */
+	rc = 1;
 
 	/* there had better be something in the recv queue to complete */
 	if (ionic_queue_empty(&qp->rq)) {
@@ -301,8 +322,8 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	wc->qp_num = cqe_qp->qpid;
 
 	if (ionic_v1_cqe_error(cqe)) {
-		wc->vendor_err = be32toh(cqe->status_length);
-		wc->status = ionic_to_ibv_status(wc->vendor_err);
+		wc->vendor_err = st_len;
+		wc->status = ionic_to_ibv_status(st_len);
 
 		cqe_qp->rq_flush = !qp->is_srq;
 		if (cqe_qp->rq_flush) {
@@ -347,8 +368,12 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 		wc->invalidated_rkey = be32toh(cqe->recv.imm_data_rkey);
 	}
 
-	wc->byte_len = be32toh(cqe->status_length);
-	wc->byte_len = meta->len; /* XXX byte_len must come from cqe */
+	wc->byte_len = st_len;
+
+	/* XXX byte_len must come from cqe */
+	if (!st_len)
+		wc->byte_len = meta->len;
+
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16toh(cqe->recv.pkey_index);
 
@@ -359,7 +384,7 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 out:
 	ionic_queue_consume(&qp->rq);
 
-	return 1;
+	return rc;
 }
 
 static bool ionic_peek_send(struct ionic_qp *qp)
@@ -469,6 +494,9 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	uint16_t cqe_seq, cqe_idx;
 	int rc;
 
+	if (qp->sq_flush)
+		return 0;
+
 	cqe_seq = be32toh(cqe->send.msg_msn) & qp->sq.mask;
 
 	if (ionic_v1_cqe_error(cqe))
@@ -508,10 +536,26 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 {
 	struct ionic_sq_meta *meta;
 	uint16_t cqe_seq, cqe_idx;
+	uint32_t st_len;
 	int rc;
 
-	cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
-	cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
+	if (qp->sq_flush)
+		return 0;
+
+	st_len = be32toh(cqe->status_length);
+
+	if (ionic_v1_cqe_error(cqe) && st_len == IONIC_STS_WQE_FLUSHED_ERR) {
+		/* In case of flush err, ignore wqe_id.
+		 *
+		 * Normally seq is next after idx, but setting them equal
+		 * here will validate below even if the sq is empty.
+		 */
+		cqe_idx = qp->sq_npg_cons;
+		cqe_seq = qp->sq_npg_cons;
+	} else {
+		cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
+		cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
+	}
 
 	rc = ionic_validate_cons(qp->sq.prod,
 				 qp->sq_npg_cons,
@@ -526,8 +570,8 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 
 	if (ionic_v1_cqe_error(cqe)) {
 		meta = &qp->sq_meta[cqe_idx];
-		meta->len = be32toh(cqe->status_length);
-		meta->ibsts = ionic_to_ibv_status(meta->len);
+		meta->len = st_len;
+		meta->ibsts = ionic_to_ibv_status(st_len);
 		meta->remote = false;
 	}
 
@@ -1409,7 +1453,7 @@ static int ionic_v1_prep_common(struct ionic_qp *qp,
 		return -signed_len;
 
 	meta->len = signed_len;
-	wqe->base.length_key = htobe32(signed_len);
+	wqe->common.length = htobe32(signed_len);
 
 	ionic_v1_prep_base(qp, wr, meta, wqe);
 
@@ -1474,11 +1518,11 @@ static int ionic_v1_prep_send(struct ionic_qp *qp,
 		break;
 	case IBV_WR_SEND_WITH_IMM:
 		wqe->base.op = IONIC_V1_OP_SEND_IMM;
-		wqe->common.send.imm_data_rkey = wr->imm_data;
+		wqe->base.imm_data_key = wr->imm_data;
 		break;
 	case IBV_WR_SEND_WITH_INV:
 		wqe->base.op = IONIC_V1_OP_SEND_INV;
-		wqe->common.send.imm_data_rkey = htobe32(wr->imm_data);
+		wqe->base.imm_data_key = htobe32(wr->imm_data);
 		break;
 	default:
 		return EINVAL;
@@ -1556,7 +1600,7 @@ static int ionic_v1_prep_send_ud(struct ionic_qp *qp, struct ibv_send_wr *wr)
 		break;
 	case IBV_WR_SEND_WITH_IMM:
 		wqe->base.op = IONIC_V1_OP_SEND_IMM;
-		wqe->common.send.imm_data_rkey = wr->imm_data;
+		wqe->base.imm_data_key = wr->imm_data;
 		break;
 	default:
 		return EINVAL;
@@ -1633,13 +1677,14 @@ static int ionic_v1_prep_rdma(struct ionic_qp *qp,
 		break;
 	case IBV_WR_RDMA_WRITE_WITH_IMM:
 		wqe->base.op = IONIC_V1_OP_RDMA_WRITE_IMM;
-		wqe->common.rdma.imm_data = wr->imm_data;
+		wqe->base.imm_data_key = wr->imm_data;
 		break;
 	default:
 		return EINVAL;
 	}
 
-	wqe->common.rdma.remote_va = htobe64(wr->wr.rdma.remote_addr);
+	wqe->common.rdma.remote_va_high = htobe32(wr->wr.rdma.remote_addr >> 32);
+	wqe->common.rdma.remote_va_low = htobe32(wr->wr.rdma.remote_addr);
 	wqe->common.rdma.remote_rkey = htobe32(wr->wr.rdma.rkey);
 
 	return ionic_v1_prep_common(qp, wr, meta, wqe);
@@ -1730,7 +1775,8 @@ static int ionic_v1_prep_atomic(struct ionic_qp *qp,
 		return EINVAL;
 	}
 
-	wqe->atomic.remote_va = htobe64(wr->wr.atomic.remote_addr);
+	wqe->atomic.remote_va_high = htobe32(wr->wr.atomic.remote_addr >> 32);
+	wqe->atomic.remote_va_low = htobe32(wr->wr.atomic.remote_addr);
 	wqe->atomic.remote_rkey = htobe32(wr->wr.atomic.rkey);
 
 	wqe->base.num_sge_key = 1;
@@ -1757,7 +1803,7 @@ static int ionic_v1_prep_inv(struct ionic_qp *qp, struct ibv_send_wr *wr)
 	memset(wqe, 0, 1u << qp->sq.stride_log2);
 
 	wqe->base.op = IONIC_V1_OP_LOCAL_INV;
-	wqe->base.length_key = htobe32(wr->imm_data);
+	wqe->base.imm_data_key = htobe32(wr->imm_data);
 
 	ionic_v1_prep_base(qp, wr, meta, wqe);
 
@@ -1803,7 +1849,7 @@ static int ionic_v1_prep_bind(struct ionic_qp *qp, struct ibv_send_wr *wr)
 
 	wqe->base.op = IONIC_V1_OP_BIND_MW;
 	wqe->base.num_sge_key = wr->bind_mw.rkey;
-	wqe->base.length_key = htobe32(wr->bind_mw.mw->rkey);
+	wqe->base.imm_data_key = htobe32(wr->bind_mw.mw->rkey);
 	wqe->bind_mw.va = htobe64(wr->bind_mw.bind_info.addr);
 	wqe->bind_mw.length = htobe32(wr->bind_mw.bind_info.length);
 	wqe->bind_mw.lkey = htobe32(wr->bind_mw.bind_info.mr->lkey);
@@ -2207,7 +2253,9 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 	wqe->base.wqe_id = meta - qp->rq_meta;
 	wqe->base.op = wr->num_sge; /* XXX makeshift has num_sge in the opcode position */
 	wqe->base.num_sge_key = wr->num_sge;
-	wqe->base.length_key = htobe32(signed_len);
+
+	/* total length for recv goes in base imm_data_key */
+	wqe->base.imm_data_key = htobe32(signed_len);
 
 	/* if this is a srq, set fence bit to indicate device ownership */
 	if (qp->is_srq)
