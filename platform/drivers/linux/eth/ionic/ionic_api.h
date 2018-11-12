@@ -36,6 +36,14 @@ struct lif;
 struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 				 const char *api_version);
 
+/** ionic_api_request_reset - request reset or disable the device or lif.
+ * @lif:		Handle to lif.
+ *
+ * The reset will be carried out asynchronously.  If it succeeds, then the
+ * callback specified in ionic_api_set_private() will be called.
+ */
+void ionic_api_request_reset(struct lif *lif);
+
 /** enum ionic_api_private - kinds of private data for the lif. */
 enum ionic_api_private {
 	IONIC_RDMA_PRIVATE,
@@ -56,6 +64,7 @@ void *ionic_api_get_private(struct lif *lif,
 /** ionic_api_get_private - Set private data associated with the lif.
  * @lif:		Handle to lif.
  * @priv:		Private data or NULL.
+ * @reset_cb:		Callback if device has been disabled or reset.
  * @kind:		Kind of private data.
  *
  * Set the private data of some kind.  The private data may be, for example, an
@@ -66,6 +75,7 @@ void *ionic_api_get_private(struct lif *lif,
  * Return: zero or negative error status.
  */
 int ionic_api_set_private(struct lif *lif, void *priv,
+			  void (*reset_cb)(void *priv),
 			  enum ionic_api_private kind);
 
 /** ionic_api_get_debugfs - Get the debugfs dir (if any) for the lif.

@@ -66,8 +66,7 @@ struct ionic_eq;
 enum ionic_admin_state {
 	IONIC_ADMIN_ACTIVE, /* subbmitting admin commands to queue */
 	IONIC_ADMIN_PAUSED, /* not submitting, but may complete normally */
-	IONIC_ADMIN_KILLED, /* not submitting, fake normal completion */
-	IONIC_ADMIN_FAILED, /* not submitting, failed completion */
+	IONIC_ADMIN_KILLED, /* not submitting, locally completed */
 };
 
 struct ionic_mmap_info {
@@ -147,6 +146,7 @@ struct ionic_ibdev {
 	unsigned long		*inuse_restbl;
 	u32			size_restbl;
 
+	struct work_struct	reset_work;
 	struct work_struct	admin_work;
 	spinlock_t		admin_lock;
 	struct ionic_aq		*adminq;

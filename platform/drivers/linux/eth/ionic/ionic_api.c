@@ -22,6 +22,12 @@ struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 }
 EXPORT_SYMBOL_GPL(get_netdev_ionic_lif);
 
+void ionic_api_request_reset(struct lif *lif)
+{
+	dev_warn(&lif->netdev->dev, "not implemented\n");
+}
+EXPORT_SYMBOL_GPL(ionic_api_request_reset);
+
 void *ionic_api_get_private(struct lif *lif, enum ionic_api_private kind)
 {
 	if (kind != IONIC_RDMA_PRIVATE)
@@ -32,6 +38,7 @@ void *ionic_api_get_private(struct lif *lif, enum ionic_api_private kind)
 EXPORT_SYMBOL_GPL(ionic_api_get_private);
 
 int ionic_api_set_private(struct lif *lif, void *priv,
+			  void (*reset_cb)(void *priv),
 			  enum ionic_api_private kind)
 {
 	if (kind != IONIC_RDMA_PRIVATE)
@@ -41,6 +48,7 @@ int ionic_api_set_private(struct lif *lif, void *priv,
 		return -EBUSY;
 
 	lif->api_private = priv;
+	lif->api_reset_cb = reset_cb;
 
 	return 0;
 }

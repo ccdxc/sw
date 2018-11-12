@@ -123,6 +123,7 @@ struct lif {
 	unsigned long *dbid_inuse;
 	unsigned int dbid_count;
 	void *api_private;
+	void (*api_reset_cb)(void *api_private);
 	struct dentry *debugfs;
 };
 

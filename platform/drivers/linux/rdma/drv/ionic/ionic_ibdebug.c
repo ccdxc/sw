@@ -772,12 +772,8 @@ static ssize_t ionic_aq_ctrl_write(struct file *fp, const char __user *ubuf,
 				dev_warn(&aq->dev->ibdev.dev, "wait %d\n", rc);
 				ionic_admin_cancel(aq->dev, &wr->wr);
 				goto out;
-			} else if (wr->wr.status == IONIC_ADMIN_FAILED) {
-				dev_warn(&aq->dev->ibdev.dev, "failed\n");
-				rc = -ENODEV;
-				goto out;
 			} else if (wr->wr.status == IONIC_ADMIN_KILLED) {
-				dev_warn(&aq->dev->ibdev.dev, "killed\n");
+				dev_dbg(&aq->dev->ibdev.dev, "killed\n");
 				rc = 0;
 				goto out;
 			} else if (ionic_v1_cqe_error(&wr->wr.cqe)) {
