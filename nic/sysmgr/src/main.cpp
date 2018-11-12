@@ -27,19 +27,32 @@
 
 using namespace std;
 
-#define LOG_LOCATION "/data/log/"
 #define MAX_EVENTS 10
 
 static auto died_pids = make_shared<Pipe<pid_t>>();
 static auto started_pids = make_shared<Pipe<pid_t>>();
 static auto delphi_messages = make_shared<Pipe<int32_t>>();
 static auto heartbeats = make_shared<Pipe<pid_t>>();
+static auto quit_pipe = make_shared<Pipe<int>>();
+
+const pid_t mypid = getpid();
+string log_location = "/var/log/sysmgr";
 
 void mkdirs(const char *dir) {
     char tmp[PATH_MAX];
     char *p = NULL;
     size_t len;
+    struct stat sb;
 
+    // if file exists bail out
+    if (stat(dir, &sb) == 0) {
+	if (!S_ISDIR(sb.st_mode)) {
+	    ERR("%s is not a directory");
+	    exit(-1);
+	}
+	return;
+    }
+    
     snprintf(tmp, sizeof(tmp), "%s", dir);
     len = strlen(tmp);
 
@@ -76,8 +89,8 @@ void redirect(const string &filename, int fd)
 // Redirect stdout and stderr
 void redirect_stds(const string &name, pid_t pid)
 {
-    redirect(LOG_LOCATION + name + "." + to_string(pid) + ".out" + ".log", 1);
-    redirect(LOG_LOCATION + name + "." + to_string(pid) + ".err" + ".log", 2);
+    redirect(log_location + "/" + name + "." + to_string(pid) + ".out" + ".log", 1);
+    redirect(log_location + "/" + name + "." + to_string(pid) + ".err" + ".log", 2);
 }
 
 void exec_command(const string &command)
@@ -140,26 +153,17 @@ void sigquit_handler(__attribute__((unused)) int sig)
 
 void sigterm_handler(__attribute__((unused)) int sig)
 {
-    // Kill our children
-    kill(-getpid(), SIGQUIT);
-    printf("Got SIGTERM, exiting\n");
-    exit(-1);
+    quit_pipe->pipe_write(SIGTERM);
 }
 
 void sigint_handler(__attribute__((unused)) int sig)
 {
-    // Kill our children
-    kill(-getpid(), SIGQUIT);
-    printf("Got SIGINT, exiting\n");
-    exit(-1);
+    quit_pipe->pipe_write(SIGINT);
 }
 
 void sigsegv_handler(__attribute__((unused)) int sig)
 {
-    // Kill our children
-    kill(-getpid(), SIGQUIT);
-    printf("Got SIGSEGV, exiting\n");
-    exit(-1);
+    quit_pipe->pipe_write(SIGSEGV);
 }
 
 void install_sigchld_handler()
@@ -233,7 +237,14 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
                 scheduler.heartbeat(pid);
             }
         }
-        else
+	else if (events[i].data.fd == quit_pipe->raw_fd())
+	{
+	    DEBUG("Quit signal received");
+	    kill(-mypid, SIGTERM);
+	    printf("Got SIGTERM, exiting\n");
+	    exit(-1);
+	}
+	else
         {
             INFO("UNKOWN EVENT");
         }
@@ -266,6 +277,7 @@ void loop(Scheduler &scheduler)
     epollfd_register(epollfd, started_pids->raw_fd());
     epollfd_register(epollfd, delphi_messages->raw_fd());
     epollfd_register(epollfd, heartbeats->raw_fd());
+    epollfd_register(epollfd, quit_pipe->raw_fd());
 
     for (;;)
     {
@@ -289,8 +301,7 @@ void loop(Scheduler &scheduler)
         else if (action->type == REBOOT)
         {
             INFO("Rebooting");
-            // kills all children "-pid" means all process in this process group
-            kill(-getpid(), SIGQUIT);
+            kill(-mypid, SIGTERM);
             exit(0);
         }
     }
@@ -314,11 +325,15 @@ void *delphi_thread_run(void *ctx)
 
 int main(int argc, char *argv[])
 {
-    mkdirs(LOG_LOCATION);
     if (argc < 2) {
        fprintf(stderr, "Please use %s <CONFIG_FILE>\n`", argv[0]);
        return -1;
     }
+    if (argc == 3) {
+	log_location = argv[2];
+    }
+    
+    mkdirs(log_location.c_str());
    
     int rc = setpgid(0, 0);
     if (rc == -1) 

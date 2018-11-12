@@ -24,7 +24,7 @@ RET_1=$?
 pushd /usr/src/github.com/pensando/sw/nic/sysmgr/goexample && go build && popd
 
 rm -rf *.log core.*
-timeout 60s ${BUILD_DIR}/bin/sysmgr_test test.json
+timeout 60s ${BUILD_DIR}/bin/sysmgr_test test.json .
 RET_2=$?
 
 cat *.log
