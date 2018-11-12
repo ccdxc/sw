@@ -27,6 +27,7 @@ void pciehw_close(void);
 void pciehw_initialize_topology(const u_int8_t port);
 void pciehw_finalize_topology(pciehdev_t *proot);
 void pciehw_dev_show(int argc, char *argv[]);
+void pciehw_pmt_show(int argc, char *argv[]);
 void pciehw_bar_show(void);
 
 #define AXIMSTF_TLP     0x1

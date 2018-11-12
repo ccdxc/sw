@@ -49,15 +49,6 @@ prt_addr(const int prti)
     return PRT_BASE + (prti * PRT_STRIDE);
 }
 
-char *
-prt_type_str(const int type)
-{
-    static char *typestr[4] = {
-        "res", "db64", "db32", "db16"
-    };
-    return typestr[type & 0x3];
-}
-
 int
 prt_alloc(const int n)
 {

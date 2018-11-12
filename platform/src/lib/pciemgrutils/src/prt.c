@@ -27,6 +27,15 @@ prt_type(const prt_t *prt)
     return prt->cmn.type;
 }
 
+char *
+prt_type_str(const int type)
+{
+    static char *typestr[4] = {
+        "res", "db64", "db32", "db16"
+    };
+    return typestr[type & 0x3];
+}
+
 /*
  * Sizes are encoded in the PRT entry using this format.
  *

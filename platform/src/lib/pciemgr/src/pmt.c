@@ -461,7 +461,7 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     }
 
     pciesys_loginfo("%-4d %2d %-3s %c%c %1d:%-7s 0x%04x "
-                    "%4d %d:%-7s %4d %5d 0x%09"PRIx64" %c%c%c%c%c\n",
+                    "%4d %d:%-7s %4d %5d 0x%09" PRIx64 " %c%c%c%c%c\n",
                     pmti, d->tblid,
                     d->type == r->type ? pmt_type_str(d->type) : "BAD",
                     ((!rw && rw_m) || !rw_m) ? 'r' : ' ',
@@ -506,81 +506,112 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
 static void
 pmt_show_bar_entry_hdr(void)
 {
-    pciesys_loginfo("%-4s %-2s %-4s %-2s %-9s %-10s "
+    pciesys_loginfo("%-4s %-2s %-4s %-2s %-9s %-10s %-4s "
                     "%-5s %-5s %-5s %-5s %-5s "
-                    "%4s:%-4s\n",
+                    "%-4s\n",
                     "idx", "id", "type", "rw", "p:bb:dd.f", "baraddr",
-                    " vf  ", " lif ", " prt ", " pid ", "qtype",
-                    "prtb", "prtc");
+                    "size", " vf  ", " lif ", " prt ", " pid ", "qtype",
+                    "prts");
+}
 
+static int
+bitspan(const int bits, const int bite)
+{
+    return bite > bits ? bite - bits : 0;
 }
 
 static void
 pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
 {
+    const pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
     const pmt_bar_format_t *d = &dm->data.bar;
     const pmt_bar_format_t *m = &dm->mask.bar;
     const pmr_bar_entry_t *pmr = &pmt->pmre.bar;
-    const u_int32_t pagesize = pmr_pagesize_dec(pmr->pagesize);
     const int rw = d->rw;
     const int rw_m = m->rw;
-    int pid_s, pid_e, qtype_s, qtype_e;
-    int vf_s, vf_e, lif_s, lif_e, prt_s, prt_e;
+    prt_t lprt, *prt = &lprt;
+    int pidb, pidc, qtyb, qtyc;
+    int vfb, vfc, lifb, lifc, resb, resc;
+    char qtys[8] = { '\0' };
+    char ress[8] = { '\0' };
+    char pids[8] = { '\0' };
+    char lifs[8] = { '\0' };
+    char vfs [8] = { '\0' };
+    char prts[8] = { '\0' };
 
     if (last_hdr_displayed != PMTF_BAR) {
         pmt_show_bar_entry_hdr();
         last_hdr_displayed = PMTF_BAR;
     }
 
-    vf_s = pmr->vfstart;
-    vf_e = pmr->vfend - 1;
-
-    lif_s = lif_e = 0;
-    prt_s = prt_e = 0;
-    pid_s = pid_e = 0;
-    qtype_s = qtype_e = 0;
-
-    if (pmr->qtypemask) {
-        /* 64b db pmt entry */
-        lif_s = pmr->prtsize;
-        lif_e = pmr->vfstart;
-
-        prt_s = pmr->prtsize; /* no real prt selection for 64b db */
-        prt_e = pmr->prtsize;
-
-        pid_s = ffs(pagesize) - 1;
-        pid_e = pmr->prtsize - 1;
-
-        qtype_s = pmr->qtypestart;
-        qtype_e = (pmr->qtypemask ?
-                   qtype_s + ffs(pmr->qtypemask + 1) - 2 : qtype_s);
-
-    } else if (pmr->qidend) {
-        /* 32b/16b db pmt entry */
-        lif_s = lif_e = -1;
-        qtype_s = qtype_e = -1;
-
+    if (spmt->loaded) {
+        prt_get(pmr->prtb, prt);
     } else {
-        /* resource pmt entry */
-        prt_s = pmr->prtsize;
-        prt_e = pmr->prtsize + (ffs(pmr->prtsize) - 1);
+        const pciehw_sprt_t *sprt = &pshmem->sprt[pmr->prtb];
+        *prt = sprt->prt;
     }
 
-    pciesys_loginfo("%-4d %2d %-4s %c%c %1d:%-7s 0x%08"PRIx64" "
-                    "%2d:%-2d %2d:%-2d %2d:%-2d %2d:%-2d %2d:%-2d %4d:%-4d\n",
+    qtyb = qtyc = 0;
+    resb = resc = 0;
+    pidb = pidc = 0;
+    lifb = lifc = 0;
+    vfb  = vfc  = 0;
+
+    switch (prt->cmn.type) {
+    case PRT_TYPE_RES:
+        resb = pmr->prtsize;
+        resc = bitspan(resb, pmr->vfstart);
+        vfb = pmr->vfstart;
+        vfc = bitspan(vfb, pmr->vfend);
+        if (pmr->prtc) {
+            if (pmr->prtc == 1) {
+                snprintf(prts, sizeof(prts), "%d", pmr->prtb);
+            } else {
+                snprintf(prts, sizeof(prts), "%d-%d",
+                         pmr->prtb, pmr->prtb + pmr->prtc - 1);
+            }
+        }
+        break;
+    case PRT_TYPE_DB64:
+        qtyb = pmr->qtypestart;
+        qtyc = 3;
+
+        resb = pmr->prtsize;
+        resc = bitspan(resb, pmr->vfstart);
+
+        pidb = ffs(pmt_bar_get_pagesize(pmt)) - 1;
+        pidc = bitspan(pidb, pmr->prtsize);
+
+        lifb = pmr->prtsize;
+        lifc = bitspan(lifb, pmr->vfstart);
+
+        vfb = pmr->vfstart;
+        vfc = bitspan(vfb, pmr->vfend);
+
+        snprintf(prts, sizeof(prts), "%d", pmr->prtb);
+        break;
+    case PRT_TYPE_DB32:
+    case PRT_TYPE_DB16:
+        /* XXX add these */
+        break;
+    }
+
+#define S(x) \
+    if (x##c) snprintf(x##s, sizeof(x##s), "%2d:%-2d", x##b + x##c - 1, x##b);
+    S(qty); S(res); S(pid); S(lif); S(vf);
+
+    pciesys_loginfo("%-4d %2d %-4s %c%c %1d:%-7s 0x%08" PRIx64 " %-4s "
+                    "%5s %5s %5s %5s %5s "
+                    "%-4s\n",
                     pmti, d->tblid,
                     d->type == pmr->type ? pmt_type_str(d->type) : "BAD",
-                    ((!rw && rw_m) || !rw_m) ? 'r' : ' ',
-                    (( rw && rw_m) || !rw_m) ? 'w' : ' ',
-                    d->port,
-                    bdf_to_str(pmr->bdf),
+                    ((!rw && rw_m) || !rw_m) ? 'r' : '-',
+                    (( rw && rw_m) || !rw_m) ? 'w' : '-',
+                    d->port, bdf_to_str(pmr->bdf),
                     (u_int64_t)d->addrdw << 2,
-                    vf_e, vf_s,
-                    lif_e, lif_s,
-                    prt_e, prt_s,
-                    pid_e, pid_s,
-                    qtype_e, qtype_s,
-                    pmr->prtb, pmr->prtc);
+                    human_readable(pmt_bar_getsize(pmt)),
+                    vfs, lifs, ress, pids, qtys, prts);
 }
 
 static void
@@ -603,7 +634,7 @@ pmt_show_raw_entry(const int pmti,
         last_hdr_displayed = PMTF_RAW;
     }
 
-    pciesys_loginfo("%-4d %016"PRIx64" %016"PRIx64" %08x %08x %08x %08x\n",
+    pciesys_loginfo("%-4d %016" PRIx64 " %016" PRIx64 " %08x %08x %08x %08x\n",
                     pmti, tcam->x, tcam->y,
                     w[0], w[1], w[2], w[3]);
 }
@@ -660,7 +691,7 @@ pmt_show(const int flags)
 }
 
 void
-pciehw_pmt_dbg(int argc, char *argv[])
+pciehw_pmt_show(int argc, char *argv[])
 {
     int opt, flags;
 
@@ -686,4 +717,10 @@ pciehw_pmt_dbg(int argc, char *argv[])
     }
 
     pmt_show(flags);
+}
+
+void
+pciehw_pmt_dbg(int argc, char *argv[])
+{
+    pciehw_pmt_show(argc, argv);
 }

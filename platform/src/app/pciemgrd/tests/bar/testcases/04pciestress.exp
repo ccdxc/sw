@@ -39,9 +39,9 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
     7    res   i---  32    0x3ffffffffffc0 0x13f000000
     8    res   ----  0     0x3ffffffffffe0 0x000000000
 
-idx  id type rw p:bb:dd.f baraddr     vf    lif   prt   pid  qtype prtb:prtc
-32    0 mem  rw 0:02:00.0 0xfffffffffc000 11:14  0:0  14:12  0:0   0:0     1:4   
-33    0 io   rw 0:02:00.0 0xfffffffffff80  4:7   0:0   5:5   0:0   0:0     5:4   
+idx  id type rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
+32    0 mem  rw 0:02:00.0 0xfffffffffc000 16K              13:12             1-4 
+33    0 io   rw 0:02:00.0 0xfffffffffff80 128               6:5              5-8 
 idx  x                y                pmr
 32   0fffffffffc00009 00000000000001f0 80020003 00c39800 00004000 00000000
 33   0fffffffffff8029 00000000000001d0 800a000b 0051ca00 00004000 00000000
