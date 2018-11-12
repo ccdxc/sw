@@ -114,8 +114,8 @@ modules:
         package : test.ipsec-proxy
         module  : nat_t_pkt_to_uplink
         spec    : nat_t_pkt_to_uplink.testspec
-        ignore  : False 
-        rtl     : True
+        ignore  : True 
+        rtl     : True 
         iterate :
             - flow: filter://type=IPV4,proto=UDP
     - module:
