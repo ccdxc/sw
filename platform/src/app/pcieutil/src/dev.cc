@@ -16,22 +16,12 @@
 static void
 dev(int argc, char *argv[])
 {
-    int opt;
-
-    optind = 0;
-    while ((opt = getopt(argc, argv, "")) != -1) {
-        switch (opt) {
-        default:
-            return;
-        }
-    }
-
     if (pciehdev_open(NULL) < 0) {
         printf("pciehdev_open failed\n");
         exit(1);
     }
 
-    pciehw_dev_show();
+    pciehw_dev_show(argc, argv);
 
     pciehdev_close();
 }

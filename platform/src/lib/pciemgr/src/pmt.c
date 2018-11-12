@@ -329,14 +329,9 @@ pciehw_pmt_load_bar(pciehwbar_t *phwbar)
     pciehw_spmt_t *spmt = &pshmem->spmt[phwbar->pmtb];
     pciehw_spmt_t *spmte;
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
-    const pciehw_port_t *p = &pshmem->port[phwdev->port];
-    const u_int16_t bdf = bdf_make(bdf_to_bus(phwdev->bdf) + p->secbus,
-                                   bdf_to_dev(phwdev->bdf),
-                                   bdf_to_fnc(phwdev->bdf));
+    const u_int16_t bdf = pciehwdev_get_bdf(phwdev);
 
 #if 0
-    const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
-
     if (strncmp(pciehwdev_get_name(phwdev), "rcdev", 5) == 0) {
         pmt_load_bar_rcdev(phwbar);
         return;

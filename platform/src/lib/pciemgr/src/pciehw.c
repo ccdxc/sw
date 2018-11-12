@@ -69,6 +69,17 @@ pciehwdev_get_name(const pciehwdev_t *phwdev)
     return phwdev->name;
 }
 
+const u_int16_t
+pciehwdev_get_bdf(const pciehwdev_t *phwdev)
+{
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    const pciehw_port_t *p = &pshmem->port[phwdev->port];
+    const u_int16_t bdf = bdf_make(bdf_to_bus(phwdev->bdf) + p->secbus,
+                                   bdf_to_dev(phwdev->bdf),
+                                   bdf_to_fnc(phwdev->bdf));
+    return bdf;
+}
+
 pciehwdev_t *
 pciehwdev_find_by_name(const char *name)
 {
@@ -698,36 +709,85 @@ pciehw_finalize_topology(pciehdev_t *proot)
  * debug
  */
 
-void
-pciehw_dev_show(void)
+#define DEVF_ALL        0x01
+
+static void
+dev_show1(const pciehwdev_t *phwdev, const int flags)
+{
+    char lifstr[8] = { '\0' };
+    char intrsstr[16] = { '\0' };
+
+    if (phwdev->lif_valid) {
+        snprintf(lifstr, sizeof(lifstr), "%d", phwdev->lif);
+    }
+    if (phwdev->intrc) {
+        snprintf(intrsstr, sizeof(intrsstr), "%d-%d",
+                 phwdev->intrb,
+                 phwdev->intrb + phwdev->intrc - 1);
+    }
+    pciesys_loginfo("%-3d %-4s %-16s %1d:%-7s %c    %-5s\n",
+                    pciehwdev_geth(phwdev),
+                    lifstr,
+                    pciehwdev_get_name(phwdev),
+                    phwdev->port,
+                    bdf_to_str(pciehwdev_get_bdf(phwdev)),
+                    phwdev->intrc ? "ABCD"[phwdev->intpin] : ' ',
+                    intrsstr);
+}
+
+static void
+dev_show_all(const int flags)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     pciehwdev_t *phwdev;
-    char lifstr[8];
     int i;
 
-    pciesys_loginfo("%-3s %-16s %-9s %-4s %-4s\n",
-                    "hdl", "name", "p:bdf", "intx", "lif");
     phwdev = &pshmem->dev[1];
     for (i = 1; i <= pshmem->allocdev; i++, phwdev++) {
-        lifstr[0] = '\0';
-        if (phwdev->lif_valid) {
-            snprintf(lifstr, sizeof(lifstr), "%d", phwdev->lif);
+        cfgspace_t cs;
+
+        pciehwdev_get_cfgspace(phwdev, &cs);
+        if (flags & DEVF_ALL || cfgspace_get_headertype(&cs) == 0) {
+            dev_show1(phwdev, flags);
         }
-        pciesys_loginfo("%3d %-16s %1d:%-7s    %c %4s\n",
-                        pciehwdev_geth(phwdev),
-                        pciehwdev_get_name(phwdev),
-                        phwdev->port,
-                        bdf_to_str(phwdev->bdf),
-                        phwdev->intrc ? "ABCD"[phwdev->intpin] : ' ',
-                        lifstr);
+    }
+}
+
+void
+pciehw_dev_show(int argc, char *argv[])
+{
+    int opt, flags = 0;
+
+    optind = 0;
+    while ((opt = getopt(argc, argv, "a")) != -1) {
+        switch (opt) {
+        case 'a': flags |= DEVF_ALL; break;
+        case '?': return;
+        }
+    }
+
+    pciesys_loginfo("%-3s %-4s %-16s %-9s %-4s %-5s\n",
+                    "hdl", "lif", "name", "p:bdf", "intx", "intrs");
+    if (optind >= argc) {
+        dev_show_all(flags);
+    } else {
+        int i;
+        for (i = optind; i < argc; i++) {
+            const char *name = argv[i];
+            pciehwdev_t *phwdev = pciehwdev_find_by_name(name);
+            if (phwdev != NULL) {
+                dev_show1(phwdev, flags);
+            } else {
+                pciesys_loginfo("%s: not found\n", name);
+            }
+        }
     }
 }
 
 static void
 cmd_dev(int argc, char *argv[])
 {
-    pciehw_dev_show();
+    pciehw_dev_show(argc, argv);
 }
 
 static void

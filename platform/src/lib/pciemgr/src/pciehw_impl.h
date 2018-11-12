@@ -164,6 +164,7 @@ pciehwdev_t *pciehwdev_get(pciehwdevh_t hwdevh);
 pciehwdevh_t pciehwdev_geth(const pciehwdev_t *phwdev);
 void pciehwdev_get_cfgspace(const pciehwdev_t *phwdev, cfgspace_t *cs);
 const char *pciehwdev_get_name(const pciehwdev_t *phwdev);
+const u_int16_t pciehwdev_get_bdf(const pciehwdev_t *phwdev);
 pciehwdev_t *pciehwdev_find_by_name(const char *name);
 
 #include "hdrt.h"

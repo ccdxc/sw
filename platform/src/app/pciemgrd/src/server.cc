@@ -57,7 +57,7 @@ do_finalize(pmmsg_t *m)
     }
 
     // log some info about the final config
-    pciehw_dev_show();
+    pciehw_dev_show(0, NULL);
     pciehw_bar_show();
     pciesys_loginfo("finalize: port %d ready\n", port);
 }
@@ -297,8 +297,10 @@ server_loop(void)
         goto close_dev_error_out;
     }
 
+#ifdef __aarch64__
     // connect to delphi
     delphi_client_start();
+#endif
 
     pciemgrs_open(NULL, pciemgr_msg_cb);
     evutil_timer_start(&timer, server_poll, NULL, 0.1, 0.1);
