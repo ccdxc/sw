@@ -1,5 +1,6 @@
 #include "sysmgr_client.hpp"
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -78,6 +79,10 @@ void Client::service_up(std::string name)
 {
    ServiceStatusReactorPtr r = this->reactors[name];
    if (r != nullptr) {
+     printf("Calling reactor for %s\n", name.c_str());
       r->ServiceUp(name);
+   } else {
+     printf("No reactor for %s\n", name.c_str());
    }
+   fflush(stdout);
 }

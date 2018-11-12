@@ -240,7 +240,7 @@ void
 pxb_read_pport_status(uint8_t port)
 {
     uint32_t stall;
-    uint8_t rx_stalls, tx_stalls;
+    uint8_t rx_stalls = 0, tx_stalls = 0;
     int polls = 100;
 
     // Status counters

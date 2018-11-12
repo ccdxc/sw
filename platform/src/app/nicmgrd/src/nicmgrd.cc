@@ -169,10 +169,10 @@ int main(int argc, char *argv[])
         cerr << "Please specify a config file" << endl;
         exit(1);
     }
-
     osigusr1 = signal(SIGUSR1, sigusr1_handler);
 
-    //nicmgr_do_client_registration();
+    // instantiate the logger
+    utils::logger::init(dol_integ);
     if (platform_is_hw(platform)) {
         nicmgr_delphi_client_entry(NULL);
     }

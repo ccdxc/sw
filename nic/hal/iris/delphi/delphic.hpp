@@ -5,12 +5,11 @@
 
 #include "gen/proto/upgrade.delphi.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
-#include "nic/hal/iris/delphi/if_svc.hpp"
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
+#include "nic/hal/iris/delphi/if_svc.hpp"
 #include "nic/hal/iris/upgrade/upgrade.hpp"
 
 namespace dobj = delphi::objects;
-using hal::sysmgr::sysmgr_client;
 using hal::upgrade::upgrade_handler;
 
 namespace hal {
@@ -24,13 +23,14 @@ public:
    void init_done();
 
 private:
-   delphi::SdkPtr          sdk_;
-   ::sysmgr::ClientPtr     sysmgr_;
-   ::upgrade::UpgSdkPtr    upgsdk_;
-   if_svc_ptr_t            if_svc_;
-   bool                    mount_ok;
-   bool                    init_ok;
+    delphi::SdkPtr                                 sdk_;
+    std::shared_ptr<hal::sysmgr::sysmgr_client>    sysmgr_;
+    ::upgrade::UpgSdkPtr                           upgsdk_;
+    if_svc_ptr_t                                   if_svc_;
+    bool                                           mount_ok;
+    bool                                           init_ok;
 };
+void init_done(void);
 
 }    // namespace svc
 }    // namespace hal

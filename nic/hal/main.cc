@@ -168,8 +168,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     HAL_SYSLOG_INFO("HAL-STATUS:UP");
 
     // notify sysmgr that we are up
-    hal::svc::delphic->init_done();
-    
+    hal::svc::init_done();
 
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());

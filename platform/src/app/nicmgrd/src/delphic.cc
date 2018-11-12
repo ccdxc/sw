@@ -36,10 +36,10 @@ NicMgrService::NicMgrService(delphi::SdkPtr sk) {
     upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<nicmgr_upg_hndlr>(),
                                   "nicmgr", NON_AGENT,
                                   (UpgAgentHandlerPtr)NULL);
-    sysmgr_ = make_shared<sysmgr::Client>(sdk_, "nicmgr");
+    sysmgr_ = nicmgr::create_sysmgr_client(sdk_);
 }
 
-// OnMountComplete gets called after all delphi objects are mounted
+// OnMountComplete() gets called after all delphi objects are mounted
 void NicMgrService::OnMountComplete() {
     NIC_LOG_DEBUG("On mount complete got called");
 

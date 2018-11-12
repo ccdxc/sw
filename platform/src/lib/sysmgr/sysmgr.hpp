@@ -16,25 +16,21 @@ using namespace std;
 using namespace sysmgr;
 
 namespace nicmgr {
-//class sysmgr_client : public delphi::Service, public enable_shared_from_this<SysmgrClient> {
-class sysmgr_client : public delphi::Service {
+class sysmgr_client :  public ::sysmgr::ServiceStatusReactor,
+                       public std::enable_shared_from_this<sysmgr_client> {
 public:
-    sysmgr_client(delphi::SdkPtr delphi, std::string name): sysmgr(delphi, name) {
-        this->delphi = delphi;
-        this->name = name;
-    }
-    void OnMountComplete() {
-        this->sysmgr.init_done();
-    }
-    bool SkipHeartbeat() {
+    sysmgr_client(delphi::SdkPtr &sdk);
+    void register_for_service(std::string name);
+    virtual void ServiceUp(std::string name);
+    virtual void ServiceDown(std::string name);
+    void init_done(void);
+    bool SkipHeartbeat(void) {
         return false;
     };
-
 private:
-    delphi::SdkPtr delphi;
-    string name;
-    sysmgr::Client sysmgr;
+    sysmgr::ClientPtr    sysmgr_;
 };
+std::shared_ptr<sysmgr_client> create_sysmgr_client(delphi::SdkPtr &sdk);
 
 } // namespace nicmgr 
 #endif //__NICMGR_SYSMGR_HPP__

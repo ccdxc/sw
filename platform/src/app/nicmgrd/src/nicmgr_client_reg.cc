@@ -2,7 +2,7 @@
 
 #include <nicmgr_upgrade.hpp>
 #include <delphic.hpp>
-#include <nicmgr_sysmgr.hpp>
+#include <sysmgr.hpp>
 #include "nic/sdk/include/sdk/thread.hpp"
 #include "dev.hpp"
 #include "logger.hpp"

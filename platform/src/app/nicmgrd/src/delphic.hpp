@@ -9,7 +9,7 @@
 
 #include "grpc++/grpc++.h"
 #include "nicmgr_upgrade.hpp"
-#include "nicmgr_sysmgr.hpp"
+#include "sysmgr.hpp"
 #include "nicmgr.delphi.hpp"
 #include "port.delphi.hpp"
 
@@ -25,9 +25,9 @@ using delphi::objects::PortStatusPtr;
 class NicMgrService : public delphi::Service,
                       public enable_shared_from_this<NicMgrService> {
 private:
-    shared_ptr<sysmgr::Client>   sysmgr_;
-    UpgSdkPtr                    upgsdk_;
-    delphi::SdkPtr               sdk_;
+     std::shared_ptr<nicmgr::sysmgr_client>    sysmgr_;
+    UpgSdkPtr                                  upgsdk_;
+    delphi::SdkPtr                             sdk_;
 
 public:
     delphi::SdkPtr sdk(void) const { return sdk_; }

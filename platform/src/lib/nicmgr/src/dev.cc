@@ -146,8 +146,6 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
     uint64_t    hw_lif_id;
     // uint32_t    lif_id;
 
-    utils::logger::init(dol_integ);
-
     NIC_HEADER_TRACE("Initializing DeviceManager");
 
 #ifdef __x86_64__
