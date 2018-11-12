@@ -939,7 +939,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                   "log_num_cq_entries: {}",
                   __FUNCTION__, __LINE__, lif, cq_base_addr,
                   max_cqs, log2(roundup_to_pow_2(max_cqs)));
-    assert((cq_base_addr & ((1 << CQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    HAL_ASSERT((cq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.cqcb_base_addr_hi = cq_base_addr >> CQCB_ADDR_HI_SHIFT;
     sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
 
@@ -947,14 +947,14 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     sq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
     NIC_LOG_INFO("({},{}): Lif {} sq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, sq_base_addr);
-    HAL_ASSERT((sq_base_addr & ((1 << SQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    HAL_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
     // Fill the RQ info in sram_lif_entry
     rq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
     NIC_LOG_INFO("({},{}): Lif {} rq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, rq_base_addr);
-    HAL_ASSERT((rq_base_addr & ((1 << RQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    HAL_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
 
     // Setup page table and key table entries

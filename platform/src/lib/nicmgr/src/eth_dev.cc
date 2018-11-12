@@ -73,7 +73,7 @@ string string_format( const std::string& format, Args ... args )
 const char qstate[64] = { 0 };
 const char admin_qstate[128] = { 0 };
 
-const char rdma_qstate_1024[1024] = { 0 };
+const char rdma_qstate_512[512] = { 0 };
 const char rdma_qstate_32[32]     = { 0 };
 const char rdma_qstate_64[32]     = { 0 };
 
@@ -111,21 +111,21 @@ struct queue_info Eth::qinfo [NUM_QUEUE_TYPES] = {
     },
     [ETH_QTYPE_SQ] = {
         .type_num = ETH_QTYPE_SQ,
-        .size = 5,
+        .size = 4,
         .entries = 0,
         .purpose = ::intf::LIF_QUEUE_PURPOSE_RDMA_SEND,
         .prog = "txdma_stage0.bin",
         .label = "rdma_req_tx_stage0",
-        .qstate = rdma_qstate_1024
+        .qstate = rdma_qstate_512
     },
     [ETH_QTYPE_RQ] = {
         .type_num = ETH_QTYPE_RQ,
-        .size = 5,
+        .size = 4,
         .entries = 0,
         .purpose = ::intf::LIF_QUEUE_PURPOSE_RDMA_SEND,
         .prog = "rxdma_stage0.bin",
         .label = "rdma_resp_rx_stage0",
-        .qstate = rdma_qstate_1024
+        .qstate = rdma_qstate_512
     },
     [ETH_QTYPE_CQ] = {
         .type_num = ETH_QTYPE_CQ,

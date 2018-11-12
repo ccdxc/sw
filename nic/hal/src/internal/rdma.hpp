@@ -131,6 +131,9 @@ class RDMAManager {
 #define SQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 #define RQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
     
+#define SQCB_SIZE_SHIFT    9
+#define RQCB_SIZE_SHIFT    9
+
 // all the page_ids are encoded as 22-bits, assuming 4K page size (12-bits)
 // appropriate shift will make 34-bit (22+12) hbm address.
 typedef struct sram_lif_entry_s {

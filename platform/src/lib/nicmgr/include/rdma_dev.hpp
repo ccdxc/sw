@@ -19,6 +19,9 @@
 #define SQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 #define RQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 
+#define SQCB_SIZE_SHIFT 9
+#define RQCB_SIZE_SHIFT 9
+
 #define HBM_PAGE_SIZE 4096
 #define HBM_PAGE_SIZE_SHIFT 12
 

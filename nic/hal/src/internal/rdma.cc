@@ -350,14 +350,14 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
     HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, sq_base_addr);
-    HAL_ASSERT((sq_base_addr & ((1 << SQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    HAL_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
     // Fill the RQ info in sram_lif_entry
     rq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
     HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, rq_base_addr);
-    HAL_ASSERT((rq_base_addr & ((1 << RQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    HAL_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
     
     // Setup page table and key table entries

@@ -51,8 +51,8 @@
 
 #define LOG_SIZEOF_EQCB_T   6   // 2^6 = 64 Bytes
 
-#define LOG_SIZEOF_SQCB_T   10
-#define LOG_SIZEOF_RQCB_T   10
+#define LOG_SIZEOF_SQCB_T   9
+#define LOG_SIZEOF_RQCB_T   9
 
 #define SQCB0_ADDR_GET(_r) \
     sll     _r, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;

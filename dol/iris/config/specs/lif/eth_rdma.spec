@@ -89,7 +89,7 @@ queue_types:
         id          : RDMA_SQ
         type        : 3
         purpose     : LIF_QUEUE_PURPOSE_RDMA_SEND
-        size        : 1024
+        size        : 512
         count       : 32
         queues:
             - queue:
@@ -113,7 +113,7 @@ queue_types:
         id          : RDMA_RQ
         type        : 4
         purpose     : LIF_QUEUE_PURPOSE_RDMA_RECV
-        size        : 1024
+        size        : 512
         count       : 32
         queues:
             - queue:

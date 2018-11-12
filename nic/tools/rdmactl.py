@@ -740,19 +740,19 @@ elif args.sqcb3 is not None:
     sqcb3 = RdmaSQCB3state(bin_str)
     sqcb3.show()
 elif args.rqcb0 is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.rqcb0, 1024, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.rqcb0, 512, 64)
     rqcb0 = RdmaRQCB0state(bin_str)
     rqcb0.show()
 elif args.rqcb1 is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.rqcb1, 1024+64, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.rqcb1, 512+64, 64)
     rqcb1 = RdmaRQCB1state(bin_str)
     rqcb1.show()
 elif args.rqcb2 is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.rqcb2, 1024+128, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.rqcb2, 512+128, 64)
     rqcb2 = RdmaRQCB2state(bin_str)
     rqcb2.show()
 elif args.rqcb3 is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.rqcb3, 1024+192, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.rqcb3, 512+192, 64)
     rqcb3 = RdmaRQCB3state(bin_str)
     rqcb3.show()
 elif args.req_tx_stats is not None:
@@ -764,11 +764,11 @@ elif args.req_rx_stats is not None:
     req_rx_stats = RdmaReqRxStats(bin_str)
     req_rx_stats.show()
 elif args.resp_tx_stats is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.resp_tx_stats, 1024+256, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.resp_tx_stats, 512+256, 64)
     resp_tx_stats = RdmaRespTxStats(bin_str)
     resp_tx_stats.show()
 elif args.resp_rx_stats is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.resp_rx_stats, 1024+320, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.resp_rx_stats, 512+320, 64)
     resp_rx_stats = RdmaRespRxStats(bin_str)
     resp_rx_stats.show()
 elif args.kt_entry is not None:
