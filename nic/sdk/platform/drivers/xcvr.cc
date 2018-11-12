@@ -2,6 +2,7 @@
 
 #include "include/sdk/thread.hpp"
 #include "include/sdk/periodic.hpp"
+#include "include/sdk/linkmgr.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"
 #include "platform/drivers/xcvr_sfp.hpp"
@@ -10,21 +11,28 @@
 namespace sdk {
 namespace platform {
 
+using sdk::linkmgr::xcvr_event_notify_t;
+using sdk::types::xcvr_type_t;
+using sdk::types::xcvr_cable_type_t;
+using sdk::types::xcvr_state_t;
+using sdk::types::xcvr_pid_t;
+
 xcvr_t g_xcvr[XCVR_MAX_PORTS];
+xcvr_event_notify_t g_xcvr_notify_cb;
 
 static bool
 xcvr_state_change (int port) {
     // Detect xcvr and set state
     if (sdk::lib::pal_is_qsfp_port_present(port + 1)) {
-        if (xcvr_state(port) == XCVR_REMOVED) {
-            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port + 1, xcvr_state(port), XCVR_INSERTED);
-            xcvr_set_state(port, XCVR_INSERTED);
+        if (xcvr_state(port) == xcvr_state_t::XCVR_REMOVED) {
+            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port + 1, xcvr_state(port), xcvr_state_t::XCVR_INSERTED);
+            xcvr_set_state(port, xcvr_state_t::XCVR_INSERTED);
             return true;
         }
     } else {
-        if (xcvr_state(port) != XCVR_REMOVED) {
-            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port + 1, xcvr_state(port), XCVR_REMOVED);
-            xcvr_set_state(port, XCVR_REMOVED);
+        if (xcvr_state(port) != xcvr_state_t::XCVR_REMOVED) {
+            SDK_TRACE_DEBUG("Xcvr port %d state changed from %d to %d", port + 1, xcvr_state(port), xcvr_state_t::XCVR_REMOVED);
+            xcvr_set_state(port, xcvr_state_t::XCVR_REMOVED);
             return true;
         }
     }
@@ -35,12 +43,31 @@ xcvr_state_change (int port) {
 // Send notification for xcvr_state
 static sdk_ret_t
 xcvr_send_notification (int port) {
+    if (g_xcvr_notify_cb) {
+        switch (xcvr_state(port)) {
+        case xcvr_state_t::XCVR_REMOVED:
+            g_xcvr_notify_cb(port, xcvr_state(port), xcvr_pid_t::XCVR_PID_UNKNOWN);
+            break;
+        case xcvr_state_t::XCVR_INSERTED:
+            g_xcvr_notify_cb(port, xcvr_state(port), xcvr_pid_t::XCVR_PID_UNKNOWN);
+            break;
+        case xcvr_state_t::XCVR_SPROM_READ:
+            g_xcvr_notify_cb(port, xcvr_state(port), xcvr_pid_t::XCVR_PID_QSFP_100G_CR4);
+            break;
+        case xcvr_state_t::XCVR_SPROM_READ_ERR:
+            g_xcvr_notify_cb(port, xcvr_state(port), xcvr_pid_t::XCVR_PID_UNKNOWN);
+            break;
+        default:
+            break;
+        }
+    }
+
     return SDK_RET_OK;
 }
 
 static uint8_t *
 xcvr_sprom_read (int port, bool cached) {
-    if ((xcvr_state(port) == XCVR_SPROM_READ) && cached) {
+    if ((xcvr_state(port) == xcvr_state_t::XCVR_SPROM_READ) && cached) {
         return xcvr_cache(port);
     }
 
@@ -48,9 +75,9 @@ xcvr_sprom_read (int port, bool cached) {
     qsfp_read_page(0xA0, 0, 128, port, xcvr_cache(port));
 
     if (is_xcvr_qsfp(xcvr_cache(port))) {
-        xcvr_set_type(port, XCVR_TYPE_QSFP);
+        xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_QSFP);
     } else {
-        xcvr_set_type(port, XCVR_TYPE_SFP);
+        xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_SFP);
         sfp_read_page(0xA0, 0, 256, port, xcvr_cache(port));
     }
 
@@ -60,6 +87,12 @@ xcvr_sprom_read (int port, bool cached) {
 static sdk_ret_t
 xcvr_sprom_parse (uint8_t *data) {
     return SDK_RET_OK;
+}
+
+void
+xcvr_init (xcvr_event_notify_t xcvr_notify_cb)
+{
+    g_xcvr_notify_cb = xcvr_notify_cb;
 }
 
 void
@@ -78,26 +111,26 @@ xcvr_poll_timer (void)
         }
 
         switch (xcvr_state(port)) {
-        case XCVR_INSERTED:
+        case xcvr_state_t::XCVR_INSERTED:
             if (!state_change) {
                 // This should not really happen.
                 // When xcvr is inserted we proceed to
                 // sprom read and the state will not
-                // remain as XCVR_INSERTED.
+                // remain as xcvr_state_t::XCVR_INSERTED.
                 // Continue to next port
                 break; 
             }
             // Set state as SPROM_PENDING
-            xcvr_set_state(port, XCVR_SPROM_PENDING);
+            xcvr_set_state(port, xcvr_state_t::XCVR_SPROM_PENDING);
             // fall-through
-        case XCVR_SPROM_PENDING:
+        case xcvr_state_t::XCVR_SPROM_PENDING:
             // Read sprom
             data = xcvr_sprom_read(port, false);
             if (data == NULL) {
-                xcvr_send_notification(port);
                 if (!xcvr_sprom_read_count_inc(port)) {
                     // Reached max read attempts
-                    xcvr_set_state(port, XCVR_SPROM_READ_ERR);
+                    xcvr_set_state(port, xcvr_state_t::XCVR_SPROM_READ_ERR);
+                    xcvr_send_notification(port);
                     SDK_TRACE_DEBUG("Xcvr port %d sprom read failed after 10 retries", port + 1);
                 } else {
                     SDK_TRACE_DEBUG("Xcvr port %d sprom read error", port + 1);
@@ -109,15 +142,15 @@ xcvr_poll_timer (void)
             xcvr_sprom_parse(data);
 
             // Send sprom_read notification
-            xcvr_set_state(port, XCVR_SPROM_READ);
-            SDK_TRACE_DEBUG("Xcvr port %d sprom read successful", port);
+            xcvr_set_state(port, xcvr_state_t::XCVR_SPROM_READ);
+            SDK_TRACE_DEBUG("Xcvr port %d sprom read successful", port + 1);
             xcvr_send_notification(port);
             break;
-        case XCVR_REMOVED:
+        case xcvr_state_t::XCVR_REMOVED:
             xcvr_reset(port);
             break;
-        case XCVR_SPROM_READ:
-        case XCVR_SPROM_READ_ERR:
+        case xcvr_state_t::XCVR_SPROM_READ:
+        case xcvr_state_t::XCVR_SPROM_READ_ERR:
             break;
         }
     }

@@ -524,8 +524,10 @@ linkmgr_workq_init(void)
 }
 
 sdk_ret_t
-xcvr_poll_init (void)
+xcvr_poll_init (linkmgr_cfg_t *cfg)
 {
+    sdk::platform::xcvr_init(cfg->xcvr_event_cb);
+
     xcvr_poll_timer_handle =
         sdk::lib::timer_schedule(
             0, XCVR_POLL_TIME, NULL,
@@ -559,7 +561,7 @@ linkmgr_init (linkmgr_cfg_t *cfg)
     port::port_init(cfg);
 
     // initialize xcvr polling
-    xcvr_poll_init();
+    xcvr_poll_init(cfg);
 
     return SDK_RET_OK;
 }

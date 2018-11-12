@@ -4,6 +4,8 @@
 #define __XCVR_HPP__
 
 #include <cstring>
+#include "include/sdk/types.hpp"
+#include "include/sdk/linkmgr.hpp"
 
 #define XCVR_SPROM_CACHE_SIZE   512
 #define XCVR_MAX_PORTS          2
@@ -12,24 +14,11 @@
 namespace sdk {
 namespace platform {
 
-typedef enum xcvr_state_s {
-    XCVR_REMOVED,
-    XCVR_INSERTED,
-    XCVR_SPROM_PENDING,
-    XCVR_SPROM_READ,
-    XCVR_SPROM_READ_ERR,
-} xcvr_state_t;
+using sdk::linkmgr::xcvr_event_notify_t;
+using sdk::types::xcvr_type_t;
+using sdk::types::xcvr_cable_type_t;
+using sdk::types::xcvr_state_t;
 
-typedef enum xcvr_type_s {
-    XCVR_TYPE_SFP,
-    XCVR_TYPE_QSFP,
-} xcvr_type_t;
-
-typedef enum xcvr_cable_type_s {
-    XCVR_CABLE_TYPE_COPPER,
-    XCVR_CABLE_TYPE_OPTIC,
-} xcvr_cable_type_t;
- 
 typedef struct xcvr_s {
     xcvr_type_t             type;
     xcvr_cable_type_t       cable_type;
@@ -87,6 +76,7 @@ xcvr_sprom_read_count_inc (int port) {
 
 sdk_ret_t xcvr_poll_init(void);
 void xcvr_poll_timer(void);
+void xcvr_init(xcvr_event_notify_t xcvr_notify_cb);
 
 } // namespace platform
 } // namespace sdk

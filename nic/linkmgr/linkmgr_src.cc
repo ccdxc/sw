@@ -155,6 +155,8 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
     linkmgr_logger = linkmgr_logger_init();
 
     sdk_cfg->port_log_fn = linkmgr_log;
+    sdk_cfg->port_event_cb  = linkmgr::port_event_cb;
+    sdk_cfg->xcvr_event_cb  = linkmgr::xcvr_event_cb;
 
     sdk_ret = sdk::linkmgr::linkmgr_init(sdk_cfg);
     if (sdk_ret != SDK_RET_OK) {

@@ -20,7 +20,11 @@ using grpc::Status;
 using delphi::error;
 using delphi::objects::PortSpecPtr;
 using port::PortOperStatus;
+using port::PortXcvrState;
+using port::PortXcvrPid;
 using sdk::types::port_event_t;
+using sdk::types::xcvr_state_t;
+using sdk::types::xcvr_pid_t;
 
 // port_svc is the handler for the Port object
 class port_svc : public delphi::objects::PortSpecReactor {
@@ -41,6 +45,10 @@ public:
     // update_port_status updates port status in delphi
     error update_port_status(::google::protobuf::uint32 port_id,
                            PortOperStatus status);
+
+    // update_xcvr_status updates port status in delphi
+    error update_xcvr_status(::google::protobuf::uint32 port_id,
+                           PortXcvrState state, PortXcvrPid pid);
 
 private:
     delphi::SdkPtr sdk_;

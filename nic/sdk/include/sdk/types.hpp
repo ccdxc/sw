@@ -73,6 +73,30 @@ enum class port_fec_type_t {
     PORT_FEC_TYPE_RS,    // Enable ReedSolomon FEC
 };
 
+typedef enum xcvr_state_s {
+    XCVR_REMOVED,
+    XCVR_INSERTED,
+    XCVR_SPROM_PENDING,
+    XCVR_SPROM_READ,
+    XCVR_SPROM_READ_ERR,
+} xcvr_state_t;
+
+typedef enum xcvr_type_s {
+    XCVR_TYPE_SFP,
+    XCVR_TYPE_QSFP,
+} xcvr_type_t;
+
+typedef enum xcvr_cable_type_s {
+    XCVR_CABLE_TYPE_COPPER,
+    XCVR_CABLE_TYPE_OPTIC,
+} xcvr_cable_type_t;
+
+typedef enum xcvr_pid_s {
+    XCVR_PID_UNKNOWN,
+    XCVR_PID_SFP_10G_CR,
+    XCVR_PID_QSFP_100G_CR4,
+} xcvr_pid_t;
+
 }    // namespace types
 }    // namespace sdk
 

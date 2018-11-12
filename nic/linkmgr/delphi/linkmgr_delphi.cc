@@ -19,6 +19,8 @@ using grpc::Status;
 using delphi::error;
 using port::PortResponse;
 using port::PortOperStatus;
+using port::PortXcvrState;
+using port::PortXcvrPid;
 using delphi::objects::PortSpec;
 using delphi::objects::PortStatus;
 using delphi::objects::PortSpecPtr;
@@ -179,6 +181,56 @@ port_event_cb (uint32_t port_num, port_event_t event)
     case port_event_t::PORT_EVENT_LINK_DOWN:
         HAL_TRACE_DEBUG("port: {}, Link DOWN", port_num);
         port_svc_get()->update_port_status(port_num, port::PORT_OPER_STATUS_DOWN);
+        break;
+
+    default:
+        break;
+    }
+}
+
+// update_xcvr_status updates xcvr status in delphi
+error port_svc::update_xcvr_status(google::protobuf::uint32 port_id,
+                                   PortXcvrState state,
+                                   PortXcvrPid pid) {
+    // create port status object
+    PortStatusPtr port = std::make_shared<PortStatus>();
+    port->mutable_key_or_handle()->set_port_id(port_id);
+    port->mutable_xcvr_status()->set_state(state);
+    port->mutable_xcvr_status()->set_pid(pid);
+
+    // add it to database
+    sdk_->QueueUpdate(port);
+
+    HAL_TRACE_DEBUG("Updated port status object for xcvr port_id {} state {} pid {}"
+                    "port: {}", port_id, state, pid, port);
+
+    return error::OK();
+}
+
+void
+xcvr_event_cb (uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid)
+{
+    switch (state) {
+    case xcvr_state_t::XCVR_REMOVED:
+        HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num);
+        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_REMOVED, port::XCVR_PID_UNKNOWN);
+        break;
+
+    case xcvr_state_t::XCVR_INSERTED:
+        HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num);
+        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_INSERTED, port::XCVR_PID_UNKNOWN);
+        break;
+
+    case xcvr_state_t::XCVR_SPROM_READ:
+        HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num,
+                        (pid == 0) ? "Unknown" : (pid == 1) ? "SFP-10G-CR" : "QSFP-100G-CR4");
+        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ,
+                        (pid == 0) ? port::XCVR_PID_UNKNOWN : (pid == 1) ? port::XCVR_PID_SFP_10G_CR : port::XCVR_PID_QSFP_100G_CR4);
+        break;
+
+    case xcvr_state_t::XCVR_SPROM_READ_ERR:
+        HAL_TRACE_DEBUG("Xcvr sprom read error; port: {}", port_num);
+        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ_ERR, port::XCVR_PID_UNKNOWN);
         break;
 
     default:

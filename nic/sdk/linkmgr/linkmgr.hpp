@@ -10,12 +10,19 @@
 namespace sdk {
 namespace linkmgr {
 
+using sdk::types::xcvr_state_t;
+using sdk::types::xcvr_pid_t;
+
 typedef void (*port_event_notify_t)(uint32_t port_num,
                                     port_event_t port_event);
 
 typedef void (*port_log_fn_t)(std::string log_type,
                               const char *buf,
                               int len);
+
+typedef void (*xcvr_event_notify_t)(uint32_t port_num,
+                                    xcvr_state_t state,
+                                    xcvr_pid_t pid);
 
 typedef enum linkmgr_thread_id_e {
     LINKMGR_THREAD_ID_MIN         = 0,
@@ -32,6 +39,7 @@ typedef struct linkmgr_cfg_s {
     void                *server_builder;
     const char          *cfg_path;
     port_event_notify_t port_event_cb;
+    xcvr_event_notify_t xcvr_event_cb;
     port_log_fn_t       port_log_fn;
     bool                process_mode;
 } __PACK__ linkmgr_cfg_t;

@@ -68,6 +68,24 @@ enum PortFecType {
   PORT_FEC_TYPE_RS   = 2;  // Enable ReedSolomon FEC
 }
 
+enum PortXcvrState {
+  XCVR_STATE_REMOVED        = 0;
+  XCVR_STATE_INSERTED       = 1;
+  XCVR_STATE_SPROM_READ     = 2;
+  XCVR_STATE_SPROM_READ_ERR = 3;
+}
+
+enum PortXcvrPid {
+  XCVR_PID_UNKNOWN       = 0;
+  XCVR_PID_SFP_10G_CR    = 1;
+  XCVR_PID_QSFP_100G_CR4 = 2;
+}
+
+message PortXcvrStatus {
+  PortXcvrState state = 1;
+  PortXcvrPid   pid   = 2;
+}
+
 // PortSpec message is used to do add/mod properties of a port
 message PortSpec {
   option (delphi.update_event) = true;
@@ -94,6 +112,7 @@ message PortStatus {
     delphi.ObjectMeta      Meta        = 1;
     kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
     PortOperStatus    oper_status      = 3;    // operational state of port
+    PortXcvrStatus    xcvr_status      = 4;
 }
 
 //------------------------------------------------------------------------------

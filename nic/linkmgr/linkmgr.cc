@@ -331,7 +331,6 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
     sdk_cfg.cfg_path       = cfg_path;
     sdk_cfg.catalog        = catalog;
     sdk_cfg.server_builder = &server_builder;
-    sdk_cfg.port_event_cb  = port_event_cb;
     sdk_cfg.process_mode   = true;
 
     linkmgr_csr_init();
