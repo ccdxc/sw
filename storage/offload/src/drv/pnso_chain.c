@@ -665,8 +665,6 @@ chn_create_chain(struct request_params *req_params)
 		centry->ce_next = NULL;
 		svc_info = &centry->ce_svc_info;
 
-		set_service_mode(req_params->rp_flags, &svc_info->si_flags);
-
 		if (i == 0) {
 			svc_info->si_flags = (chain->sc_num_services == 1) ?
 				CHAIN_SFLAG_LONE_SERVICE :
@@ -675,6 +673,8 @@ chn_create_chain(struct request_params *req_params)
 		} else
 			centry_prev->ce_next = centry;
 		centry_prev = centry;
+
+		set_service_mode(req_params->rp_flags, &svc_info->si_flags);
 
 		if (!(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE))
 			if (i+1 == chain->sc_num_services)

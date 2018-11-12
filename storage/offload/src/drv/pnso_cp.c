@@ -17,13 +17,11 @@
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 
-#if 0
 static inline bool
 is_dflag_zero_pad_enabled(uint16_t flags)
 {
 	return (flags & PNSO_CP_DFLAG_ZERO_PAD) ? true : false;
 }
-#endif
 
 static inline bool
 is_dflag_insert_header_enabled(uint16_t flags)
@@ -123,17 +121,7 @@ compress_setup(struct service_info *svc_info,
 			svc_info->si_dst_sgl.sgl, status_desc,
 			svc_info->si_src_blist.len, threshold_len);
 	clear_insert_header(flags, cp_desc);
-#if 0
-	if (is_dflag_zero_pad_enabled(flags)) {
-		err = seq_setup_cp_pad_chain_params(svc_info, cp_desc,
-				status_desc);
-		if (err) {
-			OSAL_LOG_ERROR("failed to setup cp/pad params! err: %d",
-					err);
-                        goto out;
-		}
-	}
-#endif
+
 	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
 	svc_info->si_desc_flags = flags;
 
@@ -168,16 +156,27 @@ compress_chain(struct chain_entry *centry)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(centry);
+
 	svc_info = &centry->ce_svc_info;
+	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
 	if (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) {
+		/* TODO-cp: if chained, allow padding only to 'last' service */
+		if (is_dflag_zero_pad_enabled(svc_info->si_desc_flags)) {
+			err = seq_setup_cp_pad_chain_params(svc_info, cp_desc,
+					status_desc);
+			if (err) {
+				OSAL_LOG_ERROR("failed to setup cp/pad params! err: %d",
+						err);
+				goto out;
+			}
+		}
+
 		OSAL_LOG_DEBUG("lone service, chaining not needed! si_type: %d si_flags: %d",
 				svc_info->si_type, svc_info->si_flags);
 		goto done;
 	}
-
-	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 
 	err = seq_setup_cp_chain_params(svc_info, cp_desc, status_desc);
 	if (err) {
@@ -273,8 +272,50 @@ compress_ring_db(const struct service_info *svc_info)
 static pnso_error_t
 compress_poll(const struct service_info *svc_info)
 {
+	pnso_error_t err;
+	volatile struct cpdc_status_desc *status_desc;
+	uint64_t elapsed_ts, start_ts;
+
+	OSAL_LOG_DEBUG("enter ...");
+
 	OSAL_ASSERT(svc_info);
-	return cpdc_poll(svc_info);
+
+	err = cpdc_poll(svc_info);
+	if (err)
+		goto out;
+
+	/*
+	 * compression is done, however, bail-out only if service is not lone
+	 * and if cp/pad is not requested
+	 *
+	 */
+	if (!((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) &&
+			(is_dflag_zero_pad_enabled(svc_info->si_desc_flags))))
+		goto out;
+
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+
+	start_ts = osal_get_clock_nsec();
+	while (1) {
+		/* poll on padding opaque tag updated by P4+ */
+		if (status_desc->csd_integrity_data == CPDC_PAD_STATUS_DATA) {
+			OSAL_LOG_DEBUG("cp/pad status data matched!");
+			break;
+		}
+
+		elapsed_ts = osal_get_clock_nsec() - start_ts;
+		if (elapsed_ts >= CPDC_POLL_LOOP_TIMEOUT) {
+			err = ETIMEDOUT;
+			OSAL_LOG_DEBUG("cp/pad poll-time limit reached! service: %s status_desc: 0x" PRIx64 " err: %d",
+					svc_get_type_str(svc_info->si_type),
+					(uint64_t) status_desc, err);
+			break;
+		}
+	}
+
+out:
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
 }
 
 static pnso_error_t

@@ -730,7 +730,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &status_q);
 	if (err) {
-		OSAL_ASSERT(err);
+		OSAL_ASSERT(!err);
 		goto out;
 	}
 
@@ -797,7 +797,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 
 	struct lif *lif;
-	struct queue *q, *status_q;
+	struct queue *status_q;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -806,7 +806,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 	seq_info = &svc_info->si_seq_info;
 	qtype = seq_info->sqi_qtype;
-	seq_info->sqi_index = 0;
 
 	lif = sonic_get_lif();
 	if (!lif) {
@@ -814,15 +813,9 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		goto out;
 	}
 
-	err = sonic_get_seq_sq(lif, qtype, &q);
-	if (err) {
-		OSAL_ASSERT(!err);
-		goto out;
-	}
-
 	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &status_q);
 	if (err) {
-		OSAL_ASSERT(err);
+		OSAL_ASSERT(!err);
 		goto out;
 	}
 
@@ -833,13 +826,17 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 				err);
 		goto out;
 	}
-	seq_info->sqi_index = index;
+
 	svc_info->si_seq_info.sqi_status_total_takes++;
 	seq_info->sqi_status_desc = seq_status_desc;
 
-	seq_spec->sqs_seq_q = q;
 	seq_spec->sqs_seq_status_q = status_q;
-	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for comp+hash */
+	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for cp+pad */
+
+	chain_params->ccp_next_db_spec.nds_addr =
+		sonic_virt_to_phy(&status_desc->csd_integrity_data);
+	chain_params->ccp_next_db_spec.nds_data =
+		cpu_to_be64(CPDC_PAD_STATUS_DATA);
 
 	cp_desc->cd_db_addr = sonic_get_lif_local_dbaddr();
 	cp_desc->cd_db_data = sonic_q_ringdb_data(status_q, index);
@@ -847,6 +844,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
 	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 0;
+
 	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
