@@ -327,6 +327,26 @@ serdes_sbm_set_sbus_clock_divider (int val)
     return 0;
 }
 
+static void
+aapl_log_fn(Aapl_t *aapl, Aapl_log_type_t log_type,
+            const char *buf, size_t new_item_len)
+{
+    switch (log_type) {
+    case Aapl_log_type_t::AVAGO_ERR:
+        SDK_LINKMGR_TRACE_ERR_SIZE(new_item_len, "%s", buf);
+        break;
+     case Aapl_log_type_t::AVAGO_WARNING:
+        SDK_LINKMGR_TRACE_ERR_SIZE(new_item_len, "%s", buf);
+        break;
+     case Aapl_log_type_t::AVAGO_INFO:
+        SDK_LINKMGR_TRACE_DEBUG_SIZE(new_item_len, "%s", buf);
+        break;
+     default:
+        SDK_LINKMGR_TRACE_DEBUG_SIZE(new_item_len, "%s", buf);
+        break;
+    }
+}
+
 Aapl_t*
 serdes_global_init_hw(uint32_t     jtag_id,
                       int          num_sbus_rings,
@@ -369,6 +389,10 @@ serdes_global_init_hw(uint32_t     jtag_id,
     } else {
         // register access methods
         aapl_register_sbus_fn(aapl, aapl_sbus_access, NULL, NULL);
+
+        // register AAPL logging
+        aapl_register_logging_fn(aapl, &aapl_log_fn, NULL, NULL);
+
         // aapl_register_spico_int_fn(aapl, spico_int);
     }
 

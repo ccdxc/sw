@@ -48,6 +48,16 @@ extern char log_buf[];
     SDK_LINKMGR_LOG("ERROR", log_buf);                      \
 }
 
+#define SDK_LINKMGR_TRACE_DEBUG_SIZE(logsize, format, ...)  {   \
+    snprintf(log_buf, logsize, format, ##__VA_ARGS__);          \
+    SDK_LINKMGR_LOG("DEBUG", log_buf);                          \
+}
+
+#define SDK_LINKMGR_TRACE_ERR_SIZE(logsize, format, ...)  {     \
+    snprintf(log_buf, logsize, format, ##__VA_ARGS__);          \
+    SDK_LINKMGR_LOG("ERROR", log_buf);                          \
+}
+
 sdk_ret_t
 linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data);
 

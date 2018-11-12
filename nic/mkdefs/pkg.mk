@@ -14,17 +14,16 @@ package-clean:
 	@rm -f  $(NICDIR)/nic.tar
 
 package: ${PKG_PREREQS}
+	${MAKE} package-clean
 	cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target host
     ifeq ($(ARCH),aarch64)
 		${MAKE} -j1 BUILD_ARCHES=aarch64 -C ${TOPDIR}/platform
-		${MAKE} package-clean
 		ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py
     else
         ifeq ($(PIPELINE),iris)
 			${MAKE} -j1 BUILD_ARCHES=x86_64 -C ${TOPDIR}/platform
         endif
-		${MAKE} package-clean
 		ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py \
 			--pipeline $(PIPELINE) --target sim --no-strip
