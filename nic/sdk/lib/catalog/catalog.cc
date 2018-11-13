@@ -213,6 +213,24 @@ catalog::populate_qos_profile(ptree &prop_tree)
     qos_profile.num_p4ig_qs = prop_tree.get<uint32_t>("qos.profile.num_p4ig_qs", 0);
     qos_profile.num_p4eg_qs = prop_tree.get<uint32_t>("qos.profile.num_p4eg_qs", 0);
     qos_profile.num_dma_qs = prop_tree.get<uint32_t>("qos.profile.num_dma_qs", 0);
+    qos_profile.num_p4_high_perf_qs = 0;
+    if (prop_tree.get_child_optional("qos.profile.p4_high_perf_qs")) {
+        qos_profile.num_p4_high_perf_qs = prop_tree.get_child("qos.profile.p4_high_perf_qs").size();
+    }
+    if (qos_profile.num_p4_high_perf_qs) {
+        qos_profile.p4_high_perf_qs = (int32_t *) SDK_CALLOC(sdk::SDK_MEM_ALLOC_CATALOG, 
+                                                             qos_profile.num_p4_high_perf_qs * 
+                                                             sizeof(int32_t));
+        if (!qos_profile.p4_high_perf_qs) {
+            SDK_TRACE_ERR("Failed to allocate memory for qos profile");
+            return SDK_RET_ERR;
+        }
+        int i = 0;
+        for (ptree::value_type &q: prop_tree.get_child("qos.profile.p4_high_perf_qs")) {
+            qos_profile.p4_high_perf_qs[i] = q.second.get_value<std::uint32_t>();
+            i++;
+        }
+    }
 
     return SDK_RET_OK;
 }
@@ -610,6 +628,10 @@ catalog::get_child_str (std::string catalog_file, std::string path, std::string&
 //------------------------------------------------------------------------------
 catalog::~catalog()
 {
+    if (catalog_db_.qos_profile.p4_high_perf_qs) {
+        SDK_FREE(sdk::SDK_MEM_ALLOC_CATALOG, 
+                 catalog_db_.qos_profile.p4_high_perf_qs);
+    }
 }
 
 void

@@ -99,6 +99,8 @@ typedef struct qos_profile_s {
     uint32_t num_p4ig_qs;
     uint32_t num_p4eg_qs;
     uint32_t num_dma_qs;
+    int32_t  *p4_high_perf_qs;
+    uint32_t num_p4_high_perf_qs;
 } qos_profile_t;
 
 typedef struct aacs_info_s {

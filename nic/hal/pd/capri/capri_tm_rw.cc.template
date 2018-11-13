@@ -41,6 +41,8 @@ typedef struct capri_tm_cfg_profile_s {
     uint32_t hbm_fifo_size;
     bool     sw_init_enabled;
     bool     sw_cfg_write_enabled;
+    tm_q_t   *p4_high_perf_qs;
+    uint32_t num_p4_high_perf_qs;
 } capri_tm_cfg_profile_t;
 
 typedef struct capri_tm_port_asic_profile_s {
@@ -355,6 +357,17 @@ capri_tm_get_fifo_type_for_port (tm_port_t port)
             return NUM_TM_HBM_FIFO_TYPES;
     }
     return NUM_TM_HBM_FIFO_TYPES;
+}
+
+static inline bool
+tm_is_high_perf_q (tm_q_t q)
+{
+    for (int i = 0; i < tm_cfg_profile()->num_p4_high_perf_qs; i++) {
+        if (q == tm_cfg_profile()->p4_high_perf_qs[i]) {
+            return true;
+        }
+    }
+    return false;
 }
 
 //:: from collections import OrderedDict
@@ -1283,8 +1296,10 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
     uint32_t island;
     uint32_t num_qs;
     uint32_t reserved_chunks;
+    uint32_t high_perf_reserved_chunks;
     uint32_t headroom_chunks;
     uint32_t chunks_needed;
+    uint32_t num_high_perf_qs = tm_cfg_profile()->num_p4_high_perf_qs;
 
     island = capri_tm_get_island_for_port_type(port_type);
 
@@ -1306,7 +1321,12 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
 
         reserved_chunks = cells_to_chunks(reserved_cells);
 
-        chunks_needed = (reserved_chunks + headroom_chunks) * num_qs;
+        high_perf_reserved_chunks = reserved_chunks * 2;
+
+        chunks_needed = (reserved_chunks + headroom_chunks) * (num_qs - num_high_perf_qs);
+        chunks_needed = chunks_needed + 
+            (high_perf_reserved_chunks + headroom_chunks) * num_high_perf_qs;
+
         if (pbc_cell_chunks[island] < chunks_needed) {
             HAL_TRACE_ERR("Error allocating reserved pbc chunks "
                           "island {} port_type {} num_qs {} reserved_cells {} "
@@ -1563,7 +1583,12 @@ capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
     if (!iq_disabled(${pinfo["enum"]}, ${pg})) {
         if (tm_asic_profile()->port[port_type].uses_credits &&
             tm_asic_profile()->port[port_type].recirc_q != ${pg}) {
-            reserved_min = buf_cfg->chunks_per_q[port_type] +
+            reserved_min = buf_cfg->chunks_per_q[port_type];
+
+            if (tm_is_high_perf_q(${pg})) {
+                reserved_min *= 2;
+            }
+            reserved_min = reserved_min +
                 cells_to_chunks(bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type])) + 2;
             headroom = 0;
         } else {
@@ -1574,9 +1599,9 @@ capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
 
     if (headroom) {
         HAL_ASSERT(chunks_to_cells(reserved_min) >=
-                   (bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]) + 1));
+                   bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]));
         xon_threshold = chunks_to_cells(reserved_min) -
-            (bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]) + 1);
+            bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]);
     }
 
     if (port_type == TM_PORT_TYPE_DMA) {
@@ -1634,7 +1659,12 @@ capri_tm_program_p4_credits (capri_tm_buf_cfg_t *buf_cfg)
     if (!iq_disabled(${pinfo["enum"]}, ${pg})) {
         if (tm_asic_profile()->port[port_type].uses_credits &&
             (tm_asic_profile()->port[port_type].recirc_q != ${pg})) {
+
             credits = chunks_to_cells(buf_cfg->chunks_per_q[port_type]);
+            if (tm_is_high_perf_q(${pg})) {
+                credits = chunks_to_cells(2 * buf_cfg->chunks_per_q[port_type]);
+            }
+
             credit_enable |= 1<<${pg};
 
             cpp_helper.set_slc(max_growth, 1, ${pg} * 5, ((${pg}+1)*5)-1);
@@ -1800,16 +1830,16 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
         cpp_helper.set_slc(port_payload_base_val, payload_offset,
                             q * 27, ((q + 1) * 27) - 1);
         // 23 bits per q
-        cpp_helper.set_slc(port_payload_size_val, payload_size,
+        cpp_helper.set_slc(port_payload_size_val, payload_size ? payload_size - 1 : 0,
                             q * 23, ((q + 1) * 23) - 1);
         // 19 bits per q
-        cpp_helper.set_slc(port_payload_occupancy_val, payload_occupancy,
+        cpp_helper.set_slc(port_payload_occupancy_val, payload_occupancy ? payload_occupancy - 1 : 0,
                             q * 19, ((q + 1) * 19) - 1);
         // 27 bits per q
         cpp_helper.set_slc(port_control_base_val, control_offset,
                             q * 27, ((q + 1) * 27) - 1);
         // 23 bits per q
-        cpp_helper.set_slc(port_control_size_val, control_size,
+        cpp_helper.set_slc(port_control_size_val, control_size ? control_size - 1 : 0,
                             q * 23, ((q + 1) * 23) - 1);
 
         // Global registers
@@ -1818,13 +1848,13 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
         cpp_helper.set_slc(payload_base_val[fifo_type], payload_offset,
                             context * 27, ((context + 1) * 27) - 1);
         // 23 bits per context
-        cpp_helper.set_slc(payload_size_val[fifo_type], payload_size,
+        cpp_helper.set_slc(payload_size_val[fifo_type], payload_size ? payload_size - 1 : 0,
                             context * 23, ((context + 1) * 23) - 1);
         // 27 bits per context
         cpp_helper.set_slc(control_base_val[fifo_type], control_offset,
                             context * 27, ((context + 1) * 27) - 1);
         // 23 bits per context
-        cpp_helper.set_slc(control_size_val[fifo_type], control_size,
+        cpp_helper.set_slc(control_size_val[fifo_type], control_size ? control_size - 1 : 0,
                             context * 23, ((context + 1) * 23) - 1);
 
         if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
@@ -2536,6 +2566,15 @@ populate_cfg_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
     tm_cfg_profile->num_qs[TM_PORT_TYPE_P4EG] = qos_profile->num_p4eg_qs;
     tm_cfg_profile->num_qs[TM_PORT_TYPE_DMA] = qos_profile->num_dma_qs;
 
+    tm_cfg_profile->num_p4_high_perf_qs = qos_profile->num_p4_high_perf_qs;;
+    if (tm_cfg_profile->num_p4_high_perf_qs) {
+        tm_cfg_profile->p4_high_perf_qs = 
+            (tm_q_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_PD, 
+                                 tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
+
+        memcpy(tm_cfg_profile->p4_high_perf_qs, qos_profile->p4_high_perf_qs, 
+               tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
+    }
 
     if ((tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] *
          tm_cfg_profile->num_active_uplink_ports) > HAL_TM_MAX_HBM_ETH_CONTEXTS) {

@@ -68,6 +68,25 @@ struct pd_qos_class_s {
     qos_class_t        *pi_qos_class;
 } __PACK__;
 
+inline std::ostream& operator<<(std::ostream& os, const struct pd_qos_class_s& s) 
+{
+    os << fmt::format("{{");
+    os << fmt::format("uplink iq {} ", s.uplink.iq);
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(s.txdma); i++) {
+        os << fmt::format("txdma iq {} ", s.txdma[i].iq);
+    }
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(s.p4_ig_q); i++) {
+        os << fmt::format("p4_ig_q iq {} ", s.p4_ig_q[i]);
+    }
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(s.p4_eg_q); i++) {
+        os << fmt::format("p4_eg_q iq {} ", s.p4_eg_q[i]);
+    }
+    os << fmt::format("dest_oq_type {} dest_oq {} pcie_oq {} ",
+                      s.dest_oq_type, s.dest_oq, s.pcie_oq);
+
+    return os << fmt::format("}}");
+}
+
 // allocate Qos-class Instance
 static inline pd_qos_class_t *
 qos_class_pd_alloc (void)

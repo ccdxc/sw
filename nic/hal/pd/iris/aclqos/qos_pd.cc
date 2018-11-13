@@ -208,6 +208,8 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
     pd_qos_class->dest_oq_type = q_alloc_params.dest_oq_type;
     pd_qos_class->pcie_oq = q_alloc_params.pcie_oq;
 
+    HAL_TRACE_DEBUG("Allocated pd qos class {}", *pd_qos_class);
+
     return HAL_RET_OK;
 }
 
