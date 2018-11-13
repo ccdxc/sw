@@ -206,7 +206,6 @@ public:
     void DevcmdPoll();
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
-    void accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring);
 
     struct lif_info             info;
     dev_cmd_regs_t              *devcmd;
@@ -279,6 +278,8 @@ private:
     friend ostream &operator<<(ostream&, const Accel_PF&);
     const char*opcode_to_str(enum cmd_opcode opcode);
 };
+
+void accel_ring_info_resync(delphi::objects::AccelHwRingInfoPtr ring);
 
 #endif /* _NICMGR_IF_HPP_ */
 

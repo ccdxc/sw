@@ -28,9 +28,6 @@ void *nicmgr_delphi_client_entry (void *ctxt)
     // init port reactor
     init_port_reactors(sdk);
 
-    // init other reactors
-    init_accel_hw_ring_reactors(sdk);
-    // 
     //  connect to delphi
     sdk->Connect();
     return NULL;

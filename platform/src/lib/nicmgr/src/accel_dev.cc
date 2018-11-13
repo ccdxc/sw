@@ -36,6 +36,12 @@
 #define ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US (10 * ACCEL_DEV_RING_OP_QUIESCE_TIME_US)
 #define ACCEL_DEV_NUM_CRYPTO_KEYS_MIN           512     // arbitrary low water mark
 
+static void
+accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring);
+
+static accel_rgroup_ring_t&
+accel_pf_rgroup_find_create(uint32_t ring_handle,
+                            uint32_t sub_ring);
 static uint32_t log_2(uint32_t x);
 static uint64_t timestamp(void);
 
@@ -1247,19 +1253,13 @@ static void
 accel_rgroup_rinfo_rsp_cb(void *user_ctx,
                           const accel_rgroup_rinfo_rsp_t& info)
 {
-    Accel_PF                            *accel_pf = (Accel_PF *)user_ctx;
-    accel_rgroup_ring_key_t             key;
+    Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
 
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(info.ring_handle);
-    key = accel_rgroup_ring_key_make(info.ring_handle, info.sub_ring);
-    accel_rgroup_ring_t& rgroup_ring = accel_pf_rgroup_map[key];
-    memset(&rgroup_ring, 0, sizeof(rgroup_ring));
+    accel_rgroup_ring_t& rgroup_ring = 
+            accel_pf_rgroup_find_create(info.ring_handle, info.sub_ring);
     rgroup_ring.info = info;
-    rgroup_ring.obj_ptr = make_shared<delphi::objects::AccelHwRingInfo>();
-    rgroup_ring.obj_ptr->mutable_key()->set_rid((::accel_metrics::AccelHwRingId)
-                                                rgroup_ring.info.ring_handle);
-    rgroup_ring.obj_ptr->mutable_key()->set_sub_rid(rgroup_ring.info.sub_ring);
-    accel_pf->accel_ring_info_publish(rgroup_ring);
+    accel_ring_info_publish(rgroup_ring);
 }
 
 /*
@@ -1285,20 +1285,12 @@ static void
 accel_rgroup_rindices_rsp_cb(void *user_ctx,
                              const accel_rgroup_rindices_rsp_t& indices)
 {
-    Accel_PF                *accel_pf = (Accel_PF *)user_ctx;
-    accel_rgroup_ring_key_t key;
-    accel_rgroup_iter_t     iter;
+    Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
 
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(indices.ring_handle);
-    key = accel_rgroup_ring_key_make(indices.ring_handle, indices.sub_ring);
-    iter = accel_pf_rgroup_map.find(key);
-    if (iter == accel_pf_rgroup_map.end()) {
-        NIC_LOG_ERR("lif{}:: ring_handle {} sub_ring {} not found",
-                    accel_pf->info.hw_lif_id, indices.ring_handle,
-                    indices.sub_ring);
-    } else {
-        iter->second.indices = indices;
-    }
+    accel_rgroup_ring_t& rgroup_ring = 
+            accel_pf_rgroup_find_create(indices.ring_handle, indices.sub_ring);
+    rgroup_ring.indices = indices;
 }
 
 /*
@@ -1324,20 +1316,12 @@ static void
 accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
                              const accel_rgroup_rmetrics_rsp_t& metrics)
 {
-    Accel_PF                *accel_pf = (Accel_PF *)user_ctx;
-    accel_rgroup_ring_key_t key;
-    accel_rgroup_iter_t     iter;
+    Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
 
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(metrics.ring_handle);
-    key = accel_rgroup_ring_key_make(metrics.ring_handle, metrics.sub_ring);
-    iter = accel_pf_rgroup_map.find(key);
-    if (iter == accel_pf_rgroup_map.end()) {
-        NIC_LOG_ERR("lif{}:: ring_handle {} sub_ring {} not found",
-                    accel_pf->info.hw_lif_id, metrics.ring_handle,
-                    metrics.sub_ring);
-    } else {
-        iter->second.metrics = metrics;
-    }
+    accel_rgroup_ring_t& rgroup_ring = 
+            accel_pf_rgroup_find_create(metrics.ring_handle, metrics.sub_ring);
+    rgroup_ring.metrics = metrics;
 }
 
 /*
@@ -1450,8 +1434,8 @@ Accel_PF::periodic_sync(ev::timer &watcher, int revents)
 /*
  * Publish AccelHwRingInfo object to Delphi.
  */
-void
-Accel_PF::accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring)
+static void
+accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring)
 {
     if (g_nicmgr_svc) {
         delphi::objects::AccelHwRingInfoPtr shared_obj(rgroup_ring.obj_ptr);
@@ -1460,9 +1444,61 @@ Accel_PF::accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring)
         shared_obj->set_input_bytes(rgroup_ring.metrics.input_bytes);
         shared_obj->set_output_bytes(rgroup_ring.metrics.output_bytes);
         shared_obj->set_soft_resets(rgroup_ring.metrics.soft_resets);
-        g_nicmgr_svc->sdk()->SetObject(shared_obj);
+        g_nicmgr_svc->sdk()->QueueUpdate(shared_obj);
     }
 }
+
+/*
+ * Resync AccelHwRingInfo object per NicMgrService::OnMountComplete
+ */
+void
+accel_ring_info_resync(delphi::objects::AccelHwRingInfoPtr ring)
+{
+    if (g_nicmgr_svc) {
+        accel_rgroup_ring_t& rgroup_ring = 
+                accel_pf_rgroup_find_create(ring->key().rid(),
+                                            ring->key().sub_rid());
+        rgroup_ring.indices.pndx = ring->pindex();
+        rgroup_ring.indices.cndx = ring->cindex();
+        rgroup_ring.metrics.input_bytes = ring->input_bytes();
+        rgroup_ring.metrics.output_bytes = ring->output_bytes();
+        rgroup_ring.metrics.soft_resets = ring->soft_resets();
+
+        NIC_LOG_INFO("resync ring {} sub_ring {} pindex {} cindex {} "
+                     "input_bytes {} output_bytes {} soft_resets {}",
+                     accel_ring_id2name_get(ring->key().rid()),
+                     ring->key().sub_rid(), rgroup_ring.indices.pndx,
+                     rgroup_ring.indices.cndx, rgroup_ring.metrics.input_bytes,
+                     rgroup_ring.metrics.output_bytes,
+                     rgroup_ring.metrics.soft_resets);
+        accel_ring_info_publish(rgroup_ring);
+    }
+}
+
+/*
+ * Find or create an accelerator ring group ring
+ */
+static accel_rgroup_ring_t&
+accel_pf_rgroup_find_create(uint32_t ring_handle,
+                            uint32_t sub_ring)
+{
+    accel_rgroup_ring_key_t     key;
+    accel_rgroup_iter_t         iter;
+
+    key = accel_rgroup_ring_key_make(ring_handle, sub_ring);
+    iter = accel_pf_rgroup_map.find(key);
+    if (iter != accel_pf_rgroup_map.end()) {
+        return iter->second;
+    }
+
+    accel_rgroup_ring_t rgroup_ring = {0};
+    rgroup_ring.obj_ptr = make_shared<delphi::objects::AccelHwRingInfo>();
+    rgroup_ring.obj_ptr->mutable_key()->set_rid((::accel_metrics::AccelHwRingId)
+                                                ring_handle);
+    rgroup_ring.obj_ptr->mutable_key()->set_sub_rid(sub_ring);
+    return accel_pf_rgroup_map.insert(std::make_pair(key, rgroup_ring)).first->second;
+}
+
 
 /*
  * rounded up log2

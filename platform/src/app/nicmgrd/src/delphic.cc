@@ -33,9 +33,6 @@ namespace nicmgr {
 port_svc_ptr_t g_port_rctr;
 shared_ptr<NicMgrService> g_nicmgr_svc;
 
-// accelerator reactors
-accel_hw_ring_svc_ptr_t g_accel_hw_ring_rctr;
-
 // NicMgr delphi service
 NicMgrService::NicMgrService(delphi::SdkPtr sk) {
     sdk_ = sk;
@@ -43,6 +40,11 @@ NicMgrService::NicMgrService(delphi::SdkPtr sk) {
                                   "nicmgr", NON_AGENT,
                                   (UpgAgentHandlerPtr)NULL);
     sysmgr_ = nicmgr::create_sysmgr_client(sdk_);
+
+    accelHwRingInfoSvc_ = std::make_shared<AccelHwRingInfoSvc>(sdk_);
+    AccelHwRingInfo::Mount(sdk_, delphi::ReadWriteMode);
+    AccelHwRingInfo::Watch(sdk_, accelHwRingInfoSvc_);
+
 }
 
 // OnMountComplete() gets called after all delphi objects are mounted
@@ -64,7 +66,7 @@ void NicMgrService::OnMountComplete() {
         delphi::objects::AccelHwRingInfo::List(sdk_);
     for (vector<delphi::objects::AccelHwRingInfoPtr>::iterator ring=hw_ring_list.begin();
          ring!=hw_ring_list.end(); ++ring) {  
-        g_accel_hw_ring_rctr->OnAccelHwRingInfoCreate(*ring);
+        accel_ring_info_resync(*ring);
     }
 }
 
@@ -128,36 +130,21 @@ error port_svc::update_port_status(PortStatusPtr port) {
     return error::OK();
 }
 
-// get_accel_hw_ring_reactor gets the accelerator HW ring reactor object
-accel_hw_ring_svc_ptr_t get_accel_hw_ring_reactor (void) {
-    return g_accel_hw_ring_rctr;
-}
+error AccelHwRingInfoSvc::OnAccelHwRingInfoCreate(AccelHwRingInfoPtr ring) {
 
-// init_accel_hw_ring_reactors creates an accelerator HW ring reactor
-Status init_accel_hw_ring_reactors (delphi::SdkPtr sdk) {
-    // create the PortStatus reactor
-    g_accel_hw_ring_rctr = std::make_shared<accel_hw_ring_svc>(sdk);
-
-    // mount objects
-    AccelHwRingInfo::Mount(sdk, delphi::ReadMode);
-
-    // Register PortStatus reactor
-    AccelHwRingInfo::Watch(sdk, g_accel_hw_ring_rctr);
-
-    return Status::OK;
-}
-
-error accel_hw_ring_svc::OnAccelHwRingInfoCreate(AccelHwRingInfoPtr ring) {
+    /*
+     * nicmgrd Accel_PF manages the creation of all AccelHwRingInfo objects
+     * hence this reactor is a no-op.
+     */
     printf("Received %s\n", __FUNCTION__);
     return error::OK();
 }
 
-error accel_hw_ring_svc::OnAccelHwRingInfoUpdate(AccelHwRingInfoPtr ring) {
-    printf("Received %s\n", __FUNCTION__);
-    return error::OK();
-}
+error AccelHwRingInfoSvc::OnAccelHwRingInfoDelete(AccelHwRingInfoPtr ring) {
 
-error accel_hw_ring_svc::OnAccelHwRingInfoDelete(AccelHwRingInfoPtr ring) {
+    /*
+     * See above
+     */
     printf("Received %s\n", __FUNCTION__);
     return error::OK();
 }
