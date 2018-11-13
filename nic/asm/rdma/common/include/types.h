@@ -754,8 +754,9 @@ struct rrqwqe_d_t {
 
 struct rqwqe_base_t {
     wrid: 64;
+    rsvd0: 8;
     num_sges: 8;
-    rsvd: 184;
+    rsvd: 176;
     rsvd2:256;
 };
 

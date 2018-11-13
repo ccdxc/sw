@@ -155,8 +155,8 @@ class RdmaRrqDescriptorAtomic(Packet):
 class RdmaRqDescriptorBase(Packet):
     fields_desc = [
         LongField("wrid", 0),
-        ByteField("num_sges", 0),
         ByteField("rsvd0", 0),
+        ByteField("num_sges", 0),
         ShortField("rsvd1", 0),
         IntField("rsvd2", 0),
         LongField("rsvd3", 0),

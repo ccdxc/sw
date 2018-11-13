@@ -627,8 +627,9 @@ typedef struct rqwqe_s {
 
 typedef struct rqwqe_base_s {
     uint64_t     rsvd2[2];
-    uint8_t      rsvd1[7];
+    uint8_t      rsvd1[6];
     uint8_t      num_sges;
+    uint8_t      rsvd0;
     uint64_t     wrid;
 } PACKED rqwqe_base_t;
 
