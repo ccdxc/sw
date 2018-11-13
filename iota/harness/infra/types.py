@@ -8,6 +8,7 @@ __status = [
     'RETRY',
     'UNAVAIL',
     'IGNORED',
+    'ABORTED',
 ]
 status = utils.List2Enum(__status)
 
@@ -38,5 +39,5 @@ __tbtype = [
 tbtype = utils.List2Enum(__tbtype)
 
 
-HEADER_SUMMARY = "=" * 90
-FORMAT_TESTCASE_SUMMARY = "%-72s %-7s %-8s"
+HEADER_SUMMARY = "-" * 120
+FORMAT_TESTCASE_SUMMARY = "%-70s %-32s %-7s %-8s"

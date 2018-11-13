@@ -424,10 +424,10 @@ func (ctr *Container) SetUpCommand(cmd []string, dir string, background bool, sh
 	cmd = []string{"sh", "-c", strings.Join(cmd, " ")}
 
 	fmt.Println("CMD ", strings.Join(cmd, " "))
-	resp, err := ctr.client.ContainerExecCreate(ctr.ctx, ctr.ContainerName, types.ExecConfig{
+	resp, err := ctr.client.ContainerExecCreate(context.Background(), ctr.ContainerName, types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
-		Tty:          false,
+		Tty:          true,
 		Detach:       background,
 		Cmd:          cmd,
 	})
@@ -443,7 +443,7 @@ func (ctr *Container) SetUpCommand(cmd []string, dir string, background bool, sh
 func (ctr *Container) StopCommand(cmdHandle CommandHandle) error {
 
 	for true {
-		cResp, err := ctr.client.ContainerExecInspect(ctr.ctx, (string)(cmdHandle))
+		cResp, err := ctr.client.ContainerExecInspect(context.Background(), (string)(cmdHandle))
 		if err != nil || !cResp.Running {
 			return err
 		}
@@ -453,7 +453,7 @@ func (ctr *Container) StopCommand(cmdHandle CommandHandle) error {
 			RunCmd(cmd, 0, false, false, nil)
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 	}
 
 	return nil
@@ -467,7 +467,7 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle, timeout uint32) (Comma
 	stdout := io.MultiWriter(&stdoutBuf)
 	stderr := io.MultiWriter(&stderrBuf)
 
-	hResp, err := ctr.client.ContainerExecAttach(ctr.ctx, (string)(cmdHandle),
+	hResp, err := ctr.client.ContainerExecAttach(context.Background(), (string)(cmdHandle),
 		types.ExecConfig{})
 
 	defer hResp.Close()
@@ -475,7 +475,7 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle, timeout uint32) (Comma
 		return CommandResp{RetCode: -1}, err
 	}
 
-	err = ctr.client.ContainerExecStart(ctr.ctx, (string)(cmdHandle), types.ExecStartCheck{})
+	err = ctr.client.ContainerExecStart(context.Background(), (string)(cmdHandle), types.ExecStartCheck{})
 	if err != nil {
 		return CommandResp{RetCode: -1}, err
 	}
@@ -484,10 +484,10 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle, timeout uint32) (Comma
 		cTimeout = time.After(time.Second * time.Duration(timeout))
 	}
 	retCode := 0
+    go StdCopy(stdout, stderr, hResp.Reader)
 	for true {
-		cmdResp, _ := ctr.client.ContainerExecInspect(ctr.ctx, (string)(cmdHandle))
-		go StdCopy(stdout, stderr, hResp.Reader)
-		if cmdResp.Running == false {
+		cmdResp, err := ctr.client.ContainerExecInspect(context.Background(), (string)(cmdHandle))
+		if err != nil || cmdResp.Running == false {
 			retCode = cmdResp.ExitCode
 			if cmdResp.ExitCode != 0 {
 				err = errors.New("Command Failed")

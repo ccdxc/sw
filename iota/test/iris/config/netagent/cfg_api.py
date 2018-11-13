@@ -9,13 +9,10 @@ import iota.harness.api as api
 import iota.test.iris.config.netagent.api as agent_api
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
-
-
 gl_ep_json_obj = None
 gl_nw_json_obj = None
 gl_sg_json_obj = None
 gl_port_json_obj = None
-
 
 def __read_one_json(filename):
     json_file_path = "%s/%s" % (api.GetTopologyDirectory(), filename)

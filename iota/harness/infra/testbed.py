@@ -125,8 +125,7 @@ class _Testbed:
         return getattr(resource, "NICType", None)
 
     def __recover_testbed(self):
-        if GlobalOptions.skip_firmware_upgrade:
-            return
+        if GlobalOptions.skip_firmware_upgrade: return
         proc_hdls = []
         logfiles = []
         for instance in self.tbspec.Instances:
@@ -141,7 +140,7 @@ class _Testbed:
             cmd.extend(["--drivers-ionic-pkg", "%s/platform/gen/drivers-linux.tar.xz" % GlobalOptions.topdir])
             cmd.extend(["--drivers-sonic-pkg", "%s/storage/gen/storage-offload.tar.xz" % GlobalOptions.topdir])
             cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
-            if self.__fw_upgrade_done:
+            if self.__fw_upgrade_done or GlobalOptions.only_reboot:
                 cmd.extend(["--mode-change"])
                 logfile = "%s-mode-change.log" % instance.Name
             else:
@@ -190,6 +189,7 @@ class _Testbed:
     def InitForTestsuite(self, ts):
         self.prev_ts = self.curr_ts
         self.curr_ts = ts
+
         #status = self.__cleanup_testbed()
         #if status != types.status.SUCCESS:
         #    return status

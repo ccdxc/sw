@@ -12,6 +12,7 @@ sys.path.insert(0, topdir)
 cmdargs = argparse.ArgumentParser(description='IOTA Log Collector')
 cmdargs.add_argument('--testbed', dest='testbed_json', default="/warmd.json",
                      help='Testbed JSON file')
+cmdargs.add_argument('--testsuite', dest='testsuite', help='Testsuite')
 GlobalOptions = cmdargs.parse_args()
 
 SSHCMD = "sshpass -p docker scp -r -o StrictHostKeyChecking=no root@"
@@ -23,7 +24,7 @@ logdirs = [
 
 def run_commands(cmdlist, node_name):
     global topdir
-    localdir = "%s/iota/logs/nodes/%s/" % (topdir, node_name)
+    localdir = "%s/iota/logs/%s/nodes/%s/" % (topdir, GlobalOptions.testsuite, node_name)
     os.system("mkdir -p %s" % localdir)
     for logdir in logdirs:
         fullcmd = "%s%s:%s %s" % (SSHCMD, node_name, logdir, localdir)
@@ -38,7 +39,6 @@ def collect_logs(node_name):
 
 import iota.harness.infra.utils.parser as parser
 from multiprocessing.dummy import Pool as ThreadPool 
-#os.system("yum install -y sshpass")
 tbspec = parser.JsonParse(GlobalOptions.testbed_json)
 pool = ThreadPool(len(tbspec.Instances))
 nodes = []

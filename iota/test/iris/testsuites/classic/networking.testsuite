@@ -23,7 +23,8 @@ common:
 testcases:
     -   name    : Port_Flap
         testcase: testcases.networking.port_flap
-    -   name    : Ping_Local_Workloads
+
+    -   name    : PingLocalWorkloads
         testcase: testcases.networking.ping
         iterators :
             type    : simple
@@ -34,20 +35,23 @@ testcases:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : Ping_Remote_Workloads
+    -   name    : PingRemoteWorkloads
         testcase: testcases.networking.ping
+        iterators :
+            type    : simple
+            pktsize : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
         args    :
             type: remote_only
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : Iperf_Remote_Workloads
+    -   name    : IperfRemoteWorkloads
         testcase: testcases.networking.iperf
         iterators:
             type      : nested
             proto     : [ udp, tcp ]
-            bandwidth : [ 1Gbps, 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
         args    :
             type: remote_only
         verifs  :

@@ -34,6 +34,8 @@ parser.add_argument('--skip-firmware-upgrade', dest='skip_firmware_upgrade',
                     action='store_true', help='Skip Firmware Upgrade and Start Tests.')
 parser.add_argument('--only-firmware-upgrade', dest='only_firmware_upgrade',
                     action='store_true', help='Only Do Firmware Upgrade and Stop.')
+parser.add_argument('--only-reboot', dest='only_reboot',
+                    action='store_true', help='Only reboot the nodes and start tests.')
 GlobalOptions = parser.parse_args()
 
 GlobalOptions.default_username = "vm"

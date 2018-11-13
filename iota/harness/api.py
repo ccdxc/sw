@@ -236,6 +236,12 @@ def SetTestsuiteAttr(attr, value):
 def GetTestsuiteAttr(attr):
     return store.GetTestbed().GetCurrentTestsuite().GetAttr(attr)
 
+def GetTestsuiteName():
+    return store.GetTestbed().GetCurrentTestsuite().Name()
+
+def GetTestsuiteLogsDir():
+    return store.GetTestbed().GetCurrentTestsuite().LogsDir()
+
 def IsApiResponseOk(resp):
     if resp is None: return False
     if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False

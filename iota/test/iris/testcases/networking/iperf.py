@@ -15,10 +15,13 @@ def Trigger(tc):
                    (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
 
+    basecmd = 'iperf'
+    if tc.iterators.proto == 'udp':
+        basecmd = 'iperf -u'
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                           "iperf -s -t 300", background = True)
+                           "%s -s -t 300" % basecmd, background = True)
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "iperf -c %s" % w1.ip_address)
+                           "%s -c %s" % (basecmd, w1.ip_address))
 
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)

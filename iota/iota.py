@@ -56,7 +56,6 @@ def __exit_cleanup():
     Logger.info("ATEXIT: Stopping IOTA Server")
     gl_server_process.Stop()
     Logger.info("ATEXIT: Saving logs to iota_sanity_logs.tar.gz")
-    os.system("%s/iota/scripts/collect_logs.py --testbed %s" % (topdir, glopts.GlobalOptions.testbed_json))
     os.system("%s/iota/scripts/savelogs.sh %s" % (topdir, topdir))
     return
 

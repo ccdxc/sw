@@ -95,7 +95,7 @@ class _Logger:
         if self.tsname:
             prefix += "[TS:%s]" % self.tsname
         if self.tcname:
-            prefix += "[TC:%s:%s]" % (self.tcname, str(self.tcid))
+            prefix += "[TC:%s_%s]" % (self.tcname, str(self.tcid))
         if level:
             prefix += "[%s]" % prefixes[level]
         else:

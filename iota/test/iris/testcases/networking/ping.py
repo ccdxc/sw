@@ -22,7 +22,7 @@ def Trigger(tc):
         tc.cmd_cookies.append(cmd_cookie)
 
         api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                               "ping -c 10 %s" % w2.ip_address)
+                               "ping -c 10 %s -s %d" % (w2.ip_address, tc.iterators.pktsize))
     tc.resp = api.Trigger(req)
     return api.types.status.SUCCESS
 

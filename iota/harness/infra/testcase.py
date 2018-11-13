@@ -2,6 +2,7 @@
 import pdb
 import copy
 import os
+import subprocess
 from iota.harness.infra.utils.logger import Logger as Logger
 
 import iota.harness.infra.utils.timeprofiler as timeprofiler
@@ -39,24 +40,28 @@ class TestcaseDataIters:
     def __init__(self):
         self.__summary = None
         return
+
     def __add_to_summary(self, kv_summary):
         if self.__summary:
             self.__summary += kv_summary
         else:
             self.__summary = kv_summary
         return
+
     def AddKV(self, key, val):
         self.__add_to_summary("%s:%s," % (key, str(val)))
         return setattr(self, key, val)
+
     def Summary(self):
         return self.__summary
 
 class TestcaseData:
     def __init__(self, dirname, args):
         self.__status = types.status.FAILURE
+        self.__timer = timeprofiler.TimeProfiler()
         self.args = args
         self.iterators = TestcaseDataIters()
-        self.__logs_dir = "%s/iota/logs/tcdata/%s/" % (api.GetTopDir(), dirname)
+        self.__logs_dir = "%s/tcdata/%s/" % (api.GetTestsuiteLogsDir(), dirname)
         os.system("mkdir -p %s" % self.__logs_dir)
         return
 
@@ -69,6 +74,17 @@ class TestcaseData:
 
     def GetLogsDir(self):
         return self.__logs_dir
+
+    def StartTime(self):
+        self.__timer.Start()
+        return
+
+    def StopTime(self):
+        self.__timer.Stop()
+        return
+
+    def TotalTime(self):
+        return self.__timer.TotalTime()
 
 class Testcase:
     def __init__(self, spec):
@@ -84,14 +100,23 @@ class Testcase:
         self.status = types.status.UNAVAIL
 
         self.__setup_iters()
+
+        self.__stats_pass = 0
+        self.__stats_fail = 0
+        self.__stats_ignored = 0
+        self.__stats_error = 0
         return
+
+    def __get_iter_directory(self, iter_id):
+        return "%s_%d" % (self.__spec.name, iter_id)
 
     def __new_TestcaseData(self):
         self.__iterid += 1
-        return TestcaseData("%s/%d" % (self.Name(), self.__iterid), 
+        return TestcaseData(self.__get_iter_directory(self.__iterid), 
                             getattr(self.__spec, 'args', None))
 
     def __setup_simple_iters(self, spec):
+        Logger.debug("Setting up simple iterators.")
         min_len = 0
         for k,v in spec.__dict__.items():
             if isinstance(v, list):
@@ -106,6 +131,7 @@ class Testcase:
             for k,v in spec.__dict__.items():
                 if not v: continue
                 new_data.iterators.AddKV(k, next(v))
+                Logger.debug("- Adding K:%s V:" % k, v)
             self.__iters.append(new_data)
         return
 
@@ -136,7 +162,6 @@ class Testcase:
         if spec is None:
             self.__iters.append(self.__new_TestcaseData())
             return
-
         iter_type = getattr(spec, 'type', None)
         if iter_type and iter_type == 'simple':
             return self.__setup_simple_iters(spec)
@@ -166,6 +191,7 @@ class Testcase:
         return types.status.SUCCESS
 
     def __mk_testcase_directory(self, newdir):
+        Logger.info("Creating Testcase directory: %s" % newdir)
         command = "mkdir -p %s && chmod 777 %s" % (newdir, newdir)
         req = api.Trigger_CreateExecuteCommandsRequest()
         for nodename in api.GetNaplesHostnames():
@@ -178,19 +204,37 @@ class Testcase:
             return types.status.FAILURE
         return types.status.SUCCESS
 
+    def __update_stats(self, status):
+        if status == types.status.SUCCESS:
+            self.__stats_pass += 1
+        elif status == types.status.FAILURE:
+            self.__stats_fail += 1
+        elif status == types.status.IGNORED:
+            self.__stats_ignored += 1
+        else:
+            self.__stats_error += 1
+        return
+
     def __execute(self):
         ignored = getattr(self.__spec, "ignore", False)
-        ret = self.__mk_testcase_directory(self.__spec.name) 
-        if ret != types.status.SUCCESS:
-            return ret
-
-        api.ChangeDirectory(self.__spec.name)
         
         final_result = types.status.SUCCESS
         iter_id = 1
         for iter_data in self.__iters:
+            iter_data.StartTime()
+
+            api.ChangeDirectory("")
             Logger.SetTestcaseID(iter_id)
-            iter_id = iter_id + 1
+            
+            tc_iter_directory = self.__get_iter_directory(iter_id)
+            Logger.debug("Testcase Iteration directory = %s", tc_iter_directory)
+            ret = self.__mk_testcase_directory(tc_iter_directory)
+            if ret != types.status.SUCCESS: 
+                self.__update_stats(ret)
+                return ret
+            
+            api.ChangeDirectory(tc_iter_directory)
+            
             result = types.status.SUCCESS
             setup_result = loader.RunCallback(self.__tc, 'Setup', False, iter_data)
             if setup_result != types.status.SUCCESS:
@@ -198,39 +242,53 @@ class Testcase:
                 loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 result = setup_result
             else:
-                    trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
-                    if trigger_result != types.status.SUCCESS:
-                    	result = trigger_result
+                trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
+                if trigger_result != types.status.SUCCESS:
+                    result = trigger_result
 
-                    verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
-                    if verify_result != types.status.SUCCESS:
-                    	result = verify_result
+                verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
+                if verify_result != types.status.SUCCESS:
+                    result = verify_result
 
-                    teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
-                    if teardown_result != types.status.SUCCESS:
-                    	Logger.error("Teardown callback failed.")
-                    	result = teardown_result
+                teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
+                if teardown_result != types.status.SUCCESS:
+                    Logger.error("Teardown callback failed.")
+                    result = teardown_result
 
-                    iter_data.SetStatus(result)
+                iter_data.SetStatus(result)
+                iter_data.StopTime()
 
-                    if self.__aborted:
-                    	return types.status.FAILURE
+                if self.__aborted:
+                    iter_data.SetStatus(types.status.ABORTED)
+                    self.__update_stats(types.status.ABORTED)
+                    return types.status.FAILURE
  
             if result != types.status.SUCCESS:
                 if ignored:
                     iter_data.SetStatus(types.status.IGNORED)
                 else:
                     final_result = result
+            iter_id = iter_id + 1
 
         api.ChangeDirectory("")
         return final_result
 
+    def __get_owner(self):
+        result = subprocess.run([ "git", "log", "-n", "1", "--format=%an",
+                                  "%s" % self.__tc.__file__], stdout=subprocess.PIPE)
+        owner = result.stdout.decode('utf-8')
+        owner = owner.replace('\n', '').split(' ')[0]
+        
+        return owner
+
     def PrintResultSummary(self):
         for iter_data in self.__iters:
+            iters_str = iter_data.iterators.Summary()
             print(types.FORMAT_TESTCASE_SUMMARY %\
-                  (self.__spec.name, types.status.str(iter_data.GetStatus()).title(), self.__timer.TotalTime()))
-            summary = iter_data.iterators.Summary()
-            if summary: print("- Iterators: %s" % summary)
+                  (self.__spec.name, self.__get_owner(),
+                   types.status.str(iter_data.GetStatus()).title(), 
+                   iter_data.TotalTime()))
+            if iters_str: print("- Iterators: %s" % iters_str)
             for v in self.__verifs:
                 v.PrintResultSummary()
 
@@ -241,11 +299,21 @@ class Testcase:
         self.__aborted = True
         return
 
+    
+    def __aggregate_stats(self):
+        for iter_data in self.__iters:
+            self.__update_stats(iter_data.GetStatus())
+        return
+
+    def GetStats(self):
+        return (self.__stats_pass, self.__stats_fail, self.__stats_ignored, self.__stats_error)
+
     def Main(self):
         Logger.SetTestcase(self.Name())
         Logger.info("Starting Testcase: %s" % self.Name())
         self.__timer.Start()
         self.status = self.__execute()
+        self.__aggregate_stats()
         self.__timer.Stop()
         Logger.info("Testcase %s FINAL RESULT = %d" % (self.Name(), self.status))
         return self.status

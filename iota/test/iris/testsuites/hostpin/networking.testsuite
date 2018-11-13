@@ -29,6 +29,9 @@ testcases:
         testcase: testcases.networking.ping
         args    :
             type: local_only
+        iterators :
+            type    : simple
+            pktsize : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
@@ -37,12 +40,19 @@ testcases:
         testcase: testcases.networking.ping
         args    :
             type: remote_only
+        iterators :
+            type    : simple
+            pktsize : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
     -   name    : Iperf_Remote_Workloads
         testcase: testcases.networking.iperf
+        iterators:
+            type      : nested
+            proto     : [ udp, tcp ]
+            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
         args    :
             type: remote_only
         verifs  :
