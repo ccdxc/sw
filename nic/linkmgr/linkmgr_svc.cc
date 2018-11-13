@@ -117,6 +117,9 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
     args->debounce_time   = spec.debounce_time();
     args->mtu             = spec.mtu();
 
+    args->pause           =
+        linkmgr::port_pause_type_spec_to_sdk_port_pause_type(spec.pause());
+
     args->port_type   =
         linkmgr::port_type_spec_to_sdk_port_type (spec.port_type());
     args->admin_state =
@@ -229,7 +232,6 @@ bool
 validate_port_update (PortSpec& spec, PortResponse*rsp)
 {
     // TODO no meta check?
-    // TODO can mac_id/mac_ch be updated?
 
     std::string str;
 
@@ -239,24 +241,6 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
         HAL_TRACE_ERR("{} not set in update request",
                        str.c_str());
         rsp->set_api_status(types::API_STATUS_PORT_ID_INVALID);
-        return false;
-    }
-
-    // port type must not be set in update
-    str = "port type";
-    if (spec.port_type() != ::port::PORT_TYPE_NONE) {
-        HAL_TRACE_ERR("{} set in update request",
-                       str.c_str());
-        rsp->set_api_status(types::API_STATUS_PORT_TYPE_INVALID);
-        return false;
-    }
-
-    // number of lanes must not be set in update
-    str = "number of lanes";
-    if (spec.num_lanes() != 0) {
-        HAL_TRACE_ERR("{} set in update request",
-                       str.c_str());
-        rsp->set_api_status(types::API_STATUS_PORT_NUM_LANES_INVALID);
         return false;
     }
 
@@ -273,7 +257,12 @@ populate_port_update_args (PortSpec& spec, port_args_t *args)
     args->auto_neg_enable = spec.auto_neg_enable();
     args->debounce_time   = spec.debounce_time();
     args->mac_stats_reset = spec.mac_stats_reset();
+    args->num_lanes       = spec.num_lanes();
 
+    args->port_type   =
+        linkmgr::port_type_spec_to_sdk_port_type (spec.port_type());
+    args->pause           =
+        linkmgr::port_pause_type_spec_to_sdk_port_pause_type(spec.pause());
     args->admin_state =
         linkmgr::port_admin_st_spec_to_sdk_port_admin_st(spec.admin_state());
     args->port_speed  =

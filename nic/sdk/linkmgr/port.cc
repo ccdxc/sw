@@ -98,10 +98,9 @@ port::port_mac_cfg(void)
     mac_info.speed     = static_cast<uint32_t>(this->port_speed_);
 
     mac_info.mtu       = this->mtu_;
+    mac_info.pause     = this->pause_;
     mac_info.num_lanes = this->num_lanes_;
 
-    // 0: disable fec, 1: enable fec
-    // TODO current FEC type is determined by global mode in mx api
     mac_info.fec       = static_cast<uint32_t>(this->fec_type_);
 
     // Enable Tx padding. Disable Rx padding

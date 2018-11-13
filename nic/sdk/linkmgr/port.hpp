@@ -69,6 +69,11 @@ public:
         this->auto_neg_enable_ = auto_neg_enable;
     }
 
+    port_pause_type_t pause(void) const { return this->pause_; }
+    void set_pause(port_pause_type_t pause) {
+        this->pause_ = pause;
+    }
+
     uint32_t debounce_time(void) const { return this->debounce_time_; }
     void set_debounce_time(uint32_t debounce_time) {
         this->debounce_time_ = debounce_time;
@@ -241,6 +246,7 @@ private:
     port_link_sm_t        link_sm_;                   // port link state machine
     port_link_sm_t        link_dfe_sm_;               // port link DFE state machine
     port_fec_type_t       fec_type_;                  // FEC type
+    port_pause_type_t     pause_;                     // Enable MAC pause
     bool                  auto_neg_enable_;           // Enable AutoNeg
     void                  *link_bring_up_timer_;      // port link bring up timer
     void                  *link_debounce_timer_;      // port link debounce timer

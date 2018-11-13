@@ -147,6 +147,23 @@ sdk_port_fec_type_to_port_fec_type_spec (port_fec_type_t fec_type)
     return ::port::PORT_FEC_TYPE_NONE;
 }
 
+port_pause_type_t
+port_pause_type_spec_to_sdk_port_pause_type (::port::PortPauseType pause_type)
+{
+    switch(pause_type) {
+    case ::port::PORT_PAUSE_TYPE_LINK:
+        return port_pause_type_t::PORT_PAUSE_TYPE_LINK;
+
+    case ::port::PORT_PAUSE_TYPE_PFC:
+        return port_pause_type_t::PORT_PAUSE_TYPE_PFC;
+
+    default:
+        return port_pause_type_t::PORT_PAUSE_TYPE_NONE;
+    }
+
+    return port_pause_type_t::PORT_PAUSE_TYPE_NONE;
+}
+
 port_fec_type_t
 port_fec_type_spec_to_sdk_port_fec_type (::port::PortFecType fec_type)
 {

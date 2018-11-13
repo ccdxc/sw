@@ -73,6 +73,12 @@ enum class port_fec_type_t {
     PORT_FEC_TYPE_RS,    // Enable ReedSolomon FEC
 };
 
+enum class port_pause_type_t {
+    PORT_PAUSE_TYPE_NONE,  // Disable pause
+    PORT_PAUSE_TYPE_LINK,  // Link level pause
+    PORT_PAUSE_TYPE_PFC,   // PFC
+};
+
 typedef enum xcvr_state_s {
     XCVR_REMOVED,
     XCVR_INSERTED,
@@ -106,6 +112,7 @@ using sdk::types::port_admin_state_t;
 using sdk::types::port_oper_status_t;
 using sdk::types::platform_type_t;
 using sdk::types::port_fec_type_t;
+using sdk::types::port_pause_type_t;
 using sdk::types::port_event_t;
 using sdk::types::port_breakout_mode_t;
 

@@ -52,6 +52,7 @@ typedef struct port_info_s {
     port::PortType       port_type;
     port::PortAdminState admin_state;
     port::PortFecType    fec_type;
+    port::PortPauseType  pause;
     uint32_t             db_time;
     uint32_t             mtu;
     bool                 an_enable;
@@ -62,6 +63,7 @@ typedef struct port_info_s {
     bool                 update_db_time;
     bool                 port_id_set;
     bool                 update_fec;
+    bool                 update_pause;
 } port_info_t;
 
 typedef struct debug_info_s {
@@ -263,6 +265,7 @@ public:
         spec->set_port_type(port_info->port_type);
         spec->set_admin_state(port_info->admin_state);
         spec->set_fec_type(port_info->fec_type);
+        spec->set_pause(port_info->pause);
         spec->set_mac_id(port_info->mac_id);
         spec->set_mac_ch(port_info->mac_ch);
 
@@ -340,6 +343,13 @@ public:
                           port_info->port_id, port_info->fec_type);
             }
 
+            if (port_info->update_pause == false) {
+                port_info->pause = get_response.spec().pause();
+            } else {
+                PRINT_LOG("port: %d, udpating pause: %d",
+                          port_info->port_id, port_info->pause);
+            }
+
             if (port_info->update_db_time == false) {
                 port_info->db_time = get_response.spec().debounce_time();
             } else {
@@ -368,9 +378,12 @@ public:
 
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_port_id(port_info->port_id);
+        spec->set_port_type(port_info->port_type);
+        spec->set_num_lanes(port_info->num_lanes);
         spec->set_port_speed(port_info->speed);
         spec->set_admin_state(port_info->admin_state);
         spec->set_fec_type(port_info->fec_type);
+        spec->set_pause(port_info->pause);
         spec->set_debounce_time(port_info->db_time);
         spec->set_mtu(port_info->mtu);
         spec->set_auto_neg_enable(port_info->an_enable);
@@ -644,6 +657,18 @@ parse_fec_type(char *fec_type)
     return port::PORT_FEC_TYPE_NONE;
 }
 
+static port::PortPauseType
+parse_pause(char *pause)
+{
+    if (!(strcmp(pause, "link"))) {
+        return port::PORT_PAUSE_TYPE_LINK;
+    } else if (!(strcmp(pause, "pfc"))) {
+        return port::PORT_PAUSE_TYPE_PFC;
+    }
+
+    return port::PORT_PAUSE_TYPE_NONE;
+}
+
 static port::PortAdminState
 parse_admin_state(char *admin_state)
 {
@@ -691,6 +716,7 @@ parse_options(int argc, char **argv)
 	   { "num_lanes",    required_argument, NULL,  0  },
 	   { "port_type",    required_argument, NULL,  0  },
 	   { "fec_type",     required_argument, NULL,  0  },
+	   { "pause",        required_argument, NULL,  0  },
 	   { "db_time",      required_argument, NULL,  0  },
 	   { "an_enable",    required_argument, NULL,  0  },
 	   { "mtu",          required_argument, NULL,  0  },
@@ -753,6 +779,9 @@ parse_options(int argc, char **argv)
                 } else if (!strcmp("fec_type",  longopts[option_index].name)) {
                     port_info.fec_type    = parse_fec_type(optarg);
                     port_info.update_fec = true;
+                } else if (!strcmp("pause",  longopts[option_index].name)) {
+                    port_info.pause        = parse_pause(optarg);
+                    port_info.update_pause = true;
                 } else if (!strcmp("db_time",   longopts[option_index].name)) {
                     port_info.update_db_time = true;
                     port_info.db_time     = atoi(optarg);

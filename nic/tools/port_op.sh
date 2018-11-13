@@ -13,8 +13,8 @@ PORT_CLIENT=$NIC_DIR/bin/port_client
 GRPC_PORT=localhost:50054
 GDB=
 
-OPTIONS=crudp:s:y:f:e:ith
-LONGOPTS=create,get,update,delete,port:,speed:,type:,fec:,enable:,sim,test,help
+OPTIONS=crudp:s:y:f:l:e:ith
+LONGOPTS=create,get,update,delete,port:,speed:,type:,fec:,pause:,enable:,sim,test,help
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -33,6 +33,7 @@ en=0
 dry_run=0
 port_type=eth
 fec=not_set
+pause=not_set
 
 while true; do
     case "$1" in
@@ -68,6 +69,10 @@ while true; do
             fec=$2
             shift 2
             ;;
+        -l|--pause)
+            pause=$2
+            shift 2
+            ;;
         -e|--enable)
             en=$2
             shift 2
@@ -82,9 +87,9 @@ while true; do
             ;;
         -h|--help)
             echo "Usage:"
-            echo "$0 [--sim] --create --port <port_num> --speed <100|40|50|25|10> --type <eth/mgmt> --enable <0|1>"
+            echo "$0 [--sim] --create --port <port_num> --speed <100|40|50|25|10> --type <eth/mgmt> --enable <0|1> --fec <rs/fc/none> --pause <link/pfc/none>"
             echo "$0 [--sim] --get    --port <port_num> "
-            echo "$0 [--sim] --update --port <port_num> --enable <0|1>"
+            echo "$0 [--sim] --update --port <port_num> --enable <0|1> --fec <rs/fc/none> --pause <link/pfc/none>"
             echo "$0 [--sim] --delete --port <port_num>"
             exit 0
             ;;
@@ -133,6 +138,8 @@ if [[ "$create" == "1" ]]; then
         fi
     fi
 
+    pause=none
+
     if [[ $port == "5" ]]; then
         mac_id=1
     fi
@@ -141,7 +148,7 @@ if [[ "$create" == "1" ]]; then
         admin_st=up
     fi
 
-    CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --create -p $port --speed $speed --num_lanes $num_lanes --port_type $port_type --fec_type $fec --mac_id $mac_id --mac_ch $mac_ch --admin_state $admin_st $dry_run"
+    CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --create -p $port --speed $speed --num_lanes $num_lanes --port_type $port_type --pause $pause --fec_type $fec --mac_id $mac_id --mac_ch $mac_ch --admin_state $admin_st $dry_run"
 fi
 
 if [[ "$get" == "1" ]]; then
@@ -156,10 +163,15 @@ if [[ "$update" == "1" ]]; then
     if [[ "$en" == "1" ]];then
         admin_st=up
     fi
-    if [[ "$fec" == "not_set" ]]; then
-        CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --update -p $port --admin_state $admin_st $dry_run"
-    else
-        CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --update -p $port --admin_state $admin_st --fec_type $fec $dry_run"
+
+    CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --update -p $port --admin_state $admin_st $dry_run"
+
+    if [[ "$fec" != "not_set" ]]; then
+        CMD="$CMD --fec_type $fec"
+    fi
+
+    if [[ "$pause" != "not_set" ]]; then
+        CMD="$CMD --pause $pause"
     fi
 fi
 

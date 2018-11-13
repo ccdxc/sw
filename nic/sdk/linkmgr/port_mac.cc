@@ -455,7 +455,8 @@ mac_cfg_hw (mac_info_t *mac_info)
     uint32_t     num_lanes     = mac_info->num_lanes;
     uint32_t     fec           = mac_info->fec;
     uint32_t     mx_api_speed  = 0;
-    port_speed_t port_speed    = (port_speed_t) mac_info->speed;
+    port_pause_type_t pause      = mac_info->pause;
+    port_speed_t      port_speed = (port_speed_t) mac_info->speed;
 
     switch (port_speed) {
     case port_speed_t::PORT_SPEED_10G:
@@ -502,6 +503,7 @@ mac_cfg_hw (mac_info_t *mac_info)
         cap_mx_load_from_cfg_glbl1(chip_id, inst_id, &ch_enable_vec);
 
         cap_mx_set_tx_padding(chip_id, inst_id, mac_info->tx_pad_enable);
+
     }
 
     mx_init[inst_id] = mx_init[inst_id] | mac_ch_en;
@@ -516,6 +518,20 @@ mac_cfg_hw (mac_info_t *mac_info)
         cap_mx_set_fec(chip_id, inst_id, ch, fec);
         cap_mx_set_rx_padding(chip_id, inst_id, ch, mac_info->rx_pad_enable);
         cap_mx_set_mtu(chip_id, inst_id, ch, mx_api_speed, mac_info->mtu);
+
+        switch (pause) {
+        case port_pause_type_t::PORT_PAUSE_TYPE_LINK:
+            cap_mx_set_pause(chip_id, inst_id, ch, 0x1, 0);
+            break;
+
+        case port_pause_type_t::PORT_PAUSE_TYPE_PFC:
+            cap_mx_set_pause(chip_id, inst_id, ch, 0xff, 0);
+            break;
+
+        default:
+            cap_mx_set_pause(chip_id, inst_id, ch, 0x0, 0);
+            break;
+        }
 
         cap_mx_cfg_ch_en(chip_id,
                          inst_id,
@@ -833,7 +849,6 @@ mac_mgmt_deinit_hw (uint32_t mac_inst, uint32_t mac_ch)
 static bool
 mac_sync_get_mock (uint32_t port_num)
 {
-    return false;
     uint32_t inst_id    = mac_get_inst_from_port(port_num);
     uint32_t start_lane = mac_get_lane_from_port(port_num);;
 

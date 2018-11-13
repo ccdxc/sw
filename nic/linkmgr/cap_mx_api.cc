@@ -182,6 +182,138 @@ int cap_mx_port_to_ch_mapping(int chip_id, int inst_id, int port) {
    return 0;
 }
 
+static inline uint32_t
+set_bits(uint32_t data, int pos, int num_bits, uint32_t value)
+{
+    uint32_t mask = 0;
+
+    for (int i = pos; i < pos + num_bits; ++i) {
+        mask |= (1 << i);
+    }
+
+    // clear the bits
+    data = data & ~mask;
+
+    // set the bits
+    data = data | (value << pos);
+
+    return data;
+}
+
+int
+cap_mx_set_bits(int chip_id, int inst_id, uint32_t addr,
+                int pos, int num_bits, uint32_t value)
+{
+    uint32_t data = cap_mx_apb_read(chip_id, inst_id, addr);
+
+    set_bits(data, pos, num_bits, value);
+
+    cap_mx_apb_write(chip_id, inst_id, addr, data);
+
+    return 0;
+}
+
+int
+cap_mx_set_pause(int chip_id, int inst_id, int ch, int pri_vec, int legacy)
+{
+    cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+
+    int txfcxoff_enable  = 0;
+    int txpfcxoff_enable = 0;
+
+    int addr1 = (ch == 1) ? 0x501 : (ch == 2) ? 0x601 : (ch == 3) ? 0x701 : 0x401;
+    int addr2 = (ch == 1) ? 0x502 : (ch == 2) ? 0x602 : (ch == 3) ? 0x702 : 0x402;
+    int addr3 = (ch == 1) ? 0x506 : (ch == 2) ? 0x606 : (ch == 3) ? 0x706 : 0x406;
+
+    if (pri_vec == 0) {
+        cap_mx_apb_write(chip_id, inst_id, addr1, 0x030);
+        cap_mx_apb_write(chip_id, inst_id, addr2, 0x010);  // bit4 Promiscuous Mode (1: disable MAC address check)
+        cap_mx_apb_write(chip_id, inst_id, addr3, 0x00);   // MAC Tx Priority Pause Vector
+    } else {
+        if (legacy) {
+            txfcxoff_enable = 1;
+            cap_mx_apb_write(chip_id, inst_id, addr1, 0x130);   // Bit8: Control Frame Generation Enable
+            cap_mx_apb_write(chip_id, inst_id, addr2, 0x130);   // bit5: Enable Rx Flow Control Decode, bit8 filter pause frame
+            cap_mx_apb_write(chip_id, inst_id, addr3, 0x00);    // MAC Tx Priority Pause Vector
+        } else {
+            txpfcxoff_enable = 0xff;
+            cap_mx_apb_write(chip_id, inst_id, addr1, 0x230);   // bit9: Priority Flow Control Generation Enable
+            cap_mx_apb_write(chip_id, inst_id, addr2, 0x130);   // bit5: Enable Rx Flow Control Decode, bit8 filter pause frame
+            cap_mx_apb_write(chip_id, inst_id, addr3, pri_vec); // MAC Tx Priority Pause Vector
+        }
+    }
+
+    /*
+     * MAC channel to PB port mapping
+     * inst: 0, ch: 0: PB port 0
+     * inst: 0, ch: 1: PB port 2
+     * inst: 0, ch: 2: PB port 4
+     * inst: 0, ch: 3: PB port 5
+     * inst: 1, ch: 0: PB port 1
+     * inst: 1, ch: 1: PB port 3
+     * inst: 1, ch: 2: PB port 6
+     * inst: 1, ch: 3: PB port 7
+     *
+     * MODE         MAC_CH      MAC_PORT
+     * 1x100G           0          0
+     * 1x40G            0          0
+     * 2x50G            0,2        0,1
+     * 4x1G/10G/25G     0,1,2,3    0,1,2,3
+     */
+
+    switch(mx[inst_id].mac_mode) {
+    case MAC_MODE_1x100g:
+    case MAC_MODE_1x40g:
+        mx_csr.cfg_mac_xoff.ff_tx0fcxoff_i(txfcxoff_enable);
+        mx_csr.cfg_mac_xoff.ff_tx0pfcxoff_i(txpfcxoff_enable);
+        break;
+
+    case MAC_MODE_1x50g:
+        if (ch == 0) {
+            mx_csr.cfg_mac_xoff.ff_tx0fcxoff_i(txfcxoff_enable);
+            mx_csr.cfg_mac_xoff.ff_tx0pfcxoff_i(txpfcxoff_enable);
+        } else {
+            mx_csr.cfg_mac_xoff.ff_tx1fcxoff_i(txfcxoff_enable);
+            mx_csr.cfg_mac_xoff.ff_tx1pfcxoff_i(txpfcxoff_enable);
+        }
+        break;
+
+    case MAC_MODE_4x25g:
+    case MAC_MODE_4x10g:
+    case MAC_MODE_4x1g:
+        switch (ch) {
+        case 1:
+            mx_csr.cfg_mac_xoff.ff_tx1fcxoff_i(txfcxoff_enable);
+            mx_csr.cfg_mac_xoff.ff_tx1pfcxoff_i(txpfcxoff_enable);
+            break;
+
+        case 2:
+            mx_csr.cfg_mac_xoff.ff_tx2fcxoff_i(txfcxoff_enable);
+            mx_csr.cfg_mac_xoff.ff_tx2pfcxoff_i(txpfcxoff_enable);
+            break;
+
+        case 3:
+            mx_csr.cfg_mac_xoff.ff_tx3fcxoff_i(txfcxoff_enable);
+            mx_csr.cfg_mac_xoff.ff_tx3pfcxoff_i(txpfcxoff_enable);
+            break;
+
+        case 0:
+        default:
+            mx_csr.cfg_mac_xoff.ff_tx0fcxoff_i(txfcxoff_enable);
+            mx_csr.cfg_mac_xoff.ff_tx0pfcxoff_i(txpfcxoff_enable);
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    mx_csr.cfg_mac_xoff.write();
+
+    return 0;
+}
+
 void cap_mx_set_pause(int chip_id , int inst_id, int ch0_pri_vec, int ch1_pri_vec, int ch2_pri_vec, int ch3_pri_vec, int legacy) {
  cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
 

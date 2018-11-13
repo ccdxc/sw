@@ -53,6 +53,7 @@ typedef struct port_args_s {
     port_admin_state_t    admin_state;                // admin state of the port
     port_oper_status_t    oper_status;                // oper status of the port
     port_fec_type_t       fec_type;                   // FEC type
+    port_pause_type_t     pause;                      // mac pause
     bool                  auto_neg_enable;            // Enable AutoNeg
     bool                  mac_stats_reset;            // mac stats reset
     uint32_t              mac_id;                     // mac id associated with the port

@@ -86,6 +86,12 @@ message PortXcvrStatus {
   PortXcvrPid   pid   = 2;
 }
 
+enum PortPauseType {
+  PORT_PAUSE_TYPE_NONE = 0;   // Disable Pause
+  PORT_PAUSE_TYPE_LINK = 1;   // Link level pause
+  PORT_PAUSE_TYPE_PFC  = 2;   // PFC
+}
+
 // PortSpec message is used to do add/mod properties of a port
 message PortSpec {
   option (delphi.update_event) = true;
@@ -95,16 +101,17 @@ message PortSpec {
   kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
 
   PortType          port_type        = 3 [(gogoproto.moretags) = "venice:immutable"];    // port type
-  PortAdminState    admin_state      = 4;    // admin status of the port
-  PortSpeed         port_speed       = 5;    // speed of the port
+  PortAdminState    admin_state      = 4;   // admin status of the port
+  PortSpeed         port_speed       = 5;   // speed of the port
   uint32            mac_id           = 6 [(gogoproto.moretags) = "venice:immutable"];    // mac associated with the port
   uint32            mac_ch           = 7 [(gogoproto.moretags) = "venice:immutable"];    // mac channel associated with the port
   uint32            num_lanes        = 8 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
   PortFecType       fec_type         = 9;   // FEC type
-  bool              auto_neg_enable  = 10;   // Enable AutoNeg
-  uint32            debounce_time    = 11;   // Debounce time in ms
-  uint32            mtu              = 12;   // port mtu
-  bool              mac_stats_reset  = 13;  // Reset port mac stats. Only during update
+  bool              auto_neg_enable  = 10;  // Enable AutoNeg
+  uint32            debounce_time    = 11;  // Debounce time in ms
+  uint32            mtu              = 12;  // port mtu
+  PortPauseType     pause            = 13;  // MAC pause
+  bool              mac_stats_reset  = 14;  // Reset port mac stats. Only during update
 }
 
 message PortStatus {

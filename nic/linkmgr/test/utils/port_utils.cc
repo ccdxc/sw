@@ -70,6 +70,8 @@ int port_update(uint32_t            port_id,
     args.fec_type        = fec_type;
     args.debounce_time   = debounce_time;
     args.auto_neg_enable = auto_neg_enable;
+    args.num_lanes       = 1;
+    args.port_type       = port_type_t::PORT_TYPE_ETH;
 
     if (num_lanes != 0) {
         args.num_lanes = num_lanes;
