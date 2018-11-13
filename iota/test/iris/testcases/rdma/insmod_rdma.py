@@ -1,0 +1,64 @@
+#! /usr/bin/python3
+import iota.harness.api as api
+import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
+import iota.test.iris.verif.utils.rdma_utils as rdma
+
+def Setup(tc):
+    tc.nodes = api.GetNaplesHostnames()
+    tc.pkgname = 'drivers-linux.tar.xz'
+    fullpath = api.GetTopDir() + '/platform/gen/' + tc.pkgname
+    api.Logger.info("Copying RDMA driver package to the following nodes: {0}".format(tc.nodes))
+
+    for n in tc.nodes:
+        api.ChangeDirectory("")
+        resp = api.CopyToHost(n, [fullpath], 'rdma-drivers')
+        if not api.IsApiResponseOk(resp):
+            api.Logger.error("Failed to copy Drivers to Node: %s" % n)
+            return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
+
+def Trigger(tc):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Logger.info("Installing RDMA driver on the following nodes: {0}".format(tc.nodes))
+
+    for n in tc.nodes:
+        api.Trigger_AddHostCommand(req, n, "rmmod ionic_rdma")
+
+        api.Trigger_AddHostCommand(req, n, "tar xaf %s" % tc.pkgname,
+                                   rundir = 'rdma-drivers')
+
+        api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./setup_apt.sh",
+                                   rundir = 'rdma-drivers')
+
+        api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./build.sh",
+                                   rundir = 'rdma-drivers')
+
+        api.Trigger_AddHostCommand(req, n, "modprobe ib_uverbs")
+        api.Trigger_AddHostCommand(req, n, "cd drivers-linux && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1",
+                                   rundir = 'rdma-drivers')
+
+        api.Trigger_AddHostCommand(req, n, "cp -r drivers-linux %s" % api.GetHostToolsDir(),
+                                   rundir = 'rdma-drivers')
+
+    tc.resp = api.Trigger(req)
+
+    return api.types.status.SUCCESS
+
+def Verify(tc):
+    if tc.resp is None:
+        return api.types.status.FAILURE
+
+    result = api.types.status.SUCCESS
+    api.Logger.info("insmod_rdma results for the following nodes: {0}".format(tc.nodes))
+
+    for cmd in tc.resp.commands:
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
+            result = api.types.status.FAILURE
+    return result
+
+def Teardown(tc):
+    #set the path for testcases in this testsuite to use
+    api.SetTestsuiteAttr("driver_path", "%s/" % api.GetHostToolsDir())
+    return api.types.status.SUCCESS

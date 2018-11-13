@@ -229,6 +229,9 @@ def IsConfigOnly():
 def GetTopDir():
     return GlobalOptions.topdir
 
+def GetHostToolsDir():
+    return types.HOST_TOOLS_DIR
+
 def SetTestsuiteAttr(attr, value):
     store.GetTestbed().GetCurrentTestsuite().SetAttr(attr, value)
     return
@@ -353,6 +356,10 @@ def CopyToWorkload(node_name, workload_name, files, dest_dir = ""):
 def CopyToHost(node_name, files, dest_dir = ""):
     return __CopyCommon(topo_svc.DIR_IN, node_name,
                         "%s_host" % node_name, files, dest_dir)
+
+def CopyToHostTools(node_name, files):
+    return __CopyCommon(topo_svc.DIR_IN, node_name,
+                        "%s_host" % node_name, files, GetHostToolsDir())
 
 def CopyFromHost(node_name, files, dest_dir):
     return __CopyCommon(topo_svc.DIR_OUT, node_name,
