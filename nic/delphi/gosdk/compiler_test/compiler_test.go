@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	"github.com/pensando/sw/nic/delphi/gosdk/compiler_test/testproto"
 	delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
@@ -67,15 +68,15 @@ func (t *testClient) DumpSubtrees() {
 type reactA struct {
 }
 
-func (r *reactA) OnMessageACreate(obj *MessageA) {
+func (r *reactA) OnMessageACreate(obj *testproto.MessageA) {
 
 }
 
-func (r *reactA) OnMessageAUpdate(old *MessageA, obj *MessageA) {
+func (r *reactA) OnMessageAUpdate(old *testproto.MessageA, obj *testproto.MessageA) {
 
 }
 
-func (r *reactA) OnMessageADelete(obj *MessageA) {
+func (r *reactA) OnMessageADelete(obj *testproto.MessageA) {
 
 }
 
@@ -85,13 +86,13 @@ func (r *reactA) OnMessageADelete(obj *MessageA) {
 func TestMessageA(t *testing.T) {
 	client := new(testClient)
 
-	MessageAMount(client, delphi.MountMode_ReadWriteMode)
-	MessageAMountKey(client, 1, delphi.MountMode_ReadWriteMode)
+	testproto.MessageAMount(client, delphi.MountMode_ReadWriteMode)
+	testproto.MessageAMountKey(client, 1, delphi.MountMode_ReadWriteMode)
 	if lastMountKindKeyKeyValue != "1" {
 		t.Errorf("lastMountKindKeyKeyValue != 1 (%s)", lastMountKindKeyKeyValue)
 	}
 
-	a := MessageA{
+	a := testproto.MessageA{
 		Key:         11,
 		StringValue: "Empty",
 	}
@@ -139,12 +140,12 @@ func TestMessageA(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	base, err := MessageAFactory(client, data)
+	base, err := testproto.MessageAFactory(client, data)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
-	a2, ok := base.(*MessageA)
+	a2, ok := base.(*testproto.MessageA)
 	if !ok {
 		t.Errorf("a2, ok := base.(*MessageA_)")
 	}
@@ -167,15 +168,15 @@ func TestMessageA(t *testing.T) {
 type reactB struct {
 }
 
-func (r *reactB) OnMessageBCreate(obj *MessageB) {
+func (r *reactB) OnMessageBCreate(obj *testproto.MessageB) {
 
 }
 
-func (r *reactB) OnMessageBUpdate(old *MessageB, obj *MessageB) {
+func (r *reactB) OnMessageBUpdate(old *testproto.MessageB, obj *testproto.MessageB) {
 
 }
 
-func (r *reactB) OnMessageBDelete(obj *MessageB) {
+func (r *reactB) OnMessageBDelete(obj *testproto.MessageB) {
 
 }
 
@@ -183,16 +184,16 @@ func (r *reactB) OnMessageBDelete(obj *MessageB) {
 func TestMessageB(t *testing.T) {
 	client := new(testClient)
 
-	MessageBMount(client, delphi.MountMode_ReadWriteMode)
-	MessageBMountKey(client, &MessageKey{Value: 12},
+	testproto.MessageBMount(client, delphi.MountMode_ReadWriteMode)
+	testproto.MessageBMountKey(client, &testproto.MessageKey{Value: 12},
 		delphi.MountMode_ReadWriteMode)
 	if lastMountKindKeyKeyValue != "Value:12 " {
 		t.Errorf("lastMountKindKeyKeyValue != \"Value:12 \" (%s)",
 			lastMountKindKeyKeyValue)
 	}
 
-	b := MessageB{
-		Key: &MessageKey{
+	b := testproto.MessageB{
+		Key: &testproto.MessageKey{
 			Value: 11,
 		},
 		StringValue: "Empty",
@@ -241,12 +242,12 @@ func TestMessageB(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	base, err := MessageBFactory(client, data)
+	base, err := testproto.MessageBFactory(client, data)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
-	b2, ok := base.(*MessageB)
+	b2, ok := base.(*testproto.MessageB)
 	if !ok {
 		t.Errorf("b2, ok := base.(*MessageB)")
 	}
@@ -264,7 +265,7 @@ func TestMessageB(t *testing.T) {
 	b2.TriggerEvent(client, b2, delphi.ObjectOperation_DeleteOp, rl)
 
 	b.Reset() // just for coverage
-	key := &MessageKey{}
+	key := &testproto.MessageKey{}
 	key.Descriptor()
 	key.ProtoMessage()
 	key.Reset()
@@ -273,13 +274,13 @@ func TestMessageB(t *testing.T) {
 type reactC struct {
 }
 
-func (r *reactC) OnMessageCCreate(obj *MessageC) {
+func (r *reactC) OnMessageCCreate(obj *testproto.MessageC) {
 }
 
-func (r *reactC) OnMessageCUpdate(old *MessageC, obj *MessageC) {
+func (r *reactC) OnMessageCUpdate(old *testproto.MessageC, obj *testproto.MessageC) {
 }
 
-func (r *reactC) OnMessageCDelete(obj *MessageC) {
+func (r *reactC) OnMessageCDelete(obj *testproto.MessageC) {
 
 }
 
@@ -287,9 +288,9 @@ func (r *reactC) OnMessageCDelete(obj *MessageC) {
 func TestMessageC(t *testing.T) {
 	client := new(testClient)
 
-	MessageCMount(client, delphi.MountMode_ReadWriteMode)
+	testproto.MessageCMount(client, delphi.MountMode_ReadWriteMode)
 
-	c := MessageC{
+	c := testproto.MessageC{
 		StringValue: "Empty",
 	}
 	c.Descriptor()   // just for coverage
@@ -327,12 +328,12 @@ func TestMessageC(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	base, err := MessageCFactory(client, data)
+	base, err := testproto.MessageCFactory(client, data)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 
-	c2, ok := base.(*MessageC)
+	c2, ok := base.(*testproto.MessageC)
 	if !ok {
 		t.Errorf("c2, ok := base.(*MessageC)")
 	}

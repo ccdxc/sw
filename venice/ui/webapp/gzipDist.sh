@@ -15,6 +15,7 @@ find . -name "*.gz" -type f -delete
 defaultMinSize=1400
 
 # We compress the following types: js css html json ico eot otf ttf
+# NOTE: If adding any other types, make sure to check that gzipserver.go supports the extra types.
 find . -size +${defaultMinSize}c -type f \( -iname \*.js -o -iname \*.css -o -iname \*.html -o -iname \*.json -o -iname \*.ico -o -iname \*.eot -o -iname \*.otf -o -iname \*.ttf  \) -exec gzip --best --keep {} \;
 find . -name "*.gz" -type f |  while read -r fileGz
 # we make sure we didnt increase any file sizes by compressing, and delete the larger file

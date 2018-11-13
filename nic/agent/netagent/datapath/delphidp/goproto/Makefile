@@ -2,12 +2,12 @@
 
 all: build
 
-interface.delphi.go: interface.proto
+interface.pb.go: interface.proto
 	protoc --delphigo_out=Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,Mgogo.proto=github.com/gogo/protobuf/gogoproto:. \
 		interface.proto -I /usr/src/github.com/pensando/sw -I . -I ../../../../../../vendor/github.com/gogo/protobuf/gogoproto/ \
 		-I ../../../../../delphi/proto/delphi/
 
-build: interface.delphi.go
+build: interface.pb.go
 	go build
 
 clean:

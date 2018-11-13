@@ -55,7 +55,7 @@ BUILD_CONTAINER ?= pens-bld:v0.13
 UI_BUILD_CONTAINER ?= pens-ui-bld:v0.17
 DIND_CONTAINER ?= pens-dind:v0.3
 E2E_CONTAINER ?= pens-e2e:v0.4
-TARGETS ?= ws-tools gen build
+TARGETS ?= ws-tools pull-assets gen build
 BUILD_CMD ?= bash -c  "make ${TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
@@ -65,6 +65,7 @@ export GIT_COMMIT GIT_VERSION BUILD_DATE
 
 default:
 	$(MAKE) ws-tools
+	$(MAKE) pull-assets
 	$(MAKE) gen
 	$(MAKE) checks
 	$(MAKE) build
@@ -135,7 +136,7 @@ build: gopkglist
 # this will return a non 0 error when coverage for a package is < 75.0%
 unit-test-cover: gopkglist
 	$(info +++ running go tests)
-	#@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG}
+	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG}
 
 c-start:
 	@tools/scripts/create-container.sh startCluster

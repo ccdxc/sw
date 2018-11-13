@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <cstdint>
 
-#include "nic/delphi/sdk/delphi_metrics_cgo.h"
-#include "nic/delphi/sdk/delphi_metrics.hpp"
+#include "nic/delphi/shm/delphi_metrics_cgo.h"
+#include "nic/delphi/shm/delphi_metrics.hpp"
 
 using namespace delphi::shm;
 

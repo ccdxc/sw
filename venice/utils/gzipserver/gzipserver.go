@@ -20,6 +20,29 @@ type gzipfileHandler struct {
 	root http.FileSystem
 }
 
+// Includes the built in types provided by go as well as some others
+var supportedTypesLower = map[string]string{
+	// Provided by go in go/src/mime/type.go
+	".css":  "text/css; charset=utf-8",
+	".gif":  "image/gif",
+	".htm":  "text/html; charset=utf-8",
+	".html": "text/html; charset=utf-8",
+	".jpg":  "image/jpeg",
+	".js":   "application/javascript",
+	".wasm": "application/wasm",
+	".pdf":  "application/pdf",
+	".png":  "image/png",
+	".svg":  "image/svg+xml",
+	".xml":  "text/xml; charset=utf-8",
+	// Following are added
+	".json": "application/json",
+	".ico":  "image/x-icon",
+	".eot":  "application/vnd.ms-fontobject",
+	".otf":  "font/otf",
+	".ttf":  "font/ttf",
+	".txt":  "text/plain; charset=utf-8",
+}
+
 // GzipFileServer replaces the default go file server
 // If a gzip version of the requested file is present and
 // the client accepts gzip encoding, we send it. Otherwise,
@@ -100,5 +123,20 @@ func (f *gzipfileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 		fileStat, err = file.Stat()
 	}
+	setMIMEType(w, fpath)
 	http.ServeContent(w, r, fpath, fileStat.ModTime(), file)
+}
+
+func setMIMEType(w http.ResponseWriter, fileName string) error {
+	extIndex := strings.LastIndex(fileName, ".")
+	if extIndex == -1 {
+		return fmt.Errorf("Couldn't find file extension")
+	}
+	ext := strings.ToLower(fileName[extIndex:])
+	ctype, ok := supportedTypesLower[ext]
+	if !ok {
+		return fmt.Errorf("Couldn't find a content type for the given file")
+	}
+	w.Header().Set("Content-Type", ctype)
+	return nil
 }

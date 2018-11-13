@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
+	genproto "github.com/pensando/sw/nic/delphi/proto/goproto"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -66,6 +67,9 @@ func (dp *DelphiDatapath) OnMountComplete() {
 
 	// let sysmgr know init completed
 	dp.sysmgrClient.InitDone()
+
+	// dummy code to test cgo
+	genproto.NewExampleMetricsIterator()
 
 	dp.Lock()
 	defer dp.Unlock()

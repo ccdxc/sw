@@ -5,7 +5,7 @@
 #include <sstream>      // std::stringstream
 #include "gtest/gtest.h"
 
-#include "nic/delphi/sdk/delphi_metrics.hpp"
+#include "nic/delphi/shm/delphi_metrics.hpp"
 
 namespace {
 using namespace std;

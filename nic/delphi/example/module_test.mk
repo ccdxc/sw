@@ -5,7 +5,7 @@ MODULE_TARGET   = delphi_example_test.gtest
 MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = delphisdk
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
-MODULE_ARLIBS   = delphiexampleproto
+MODULE_ARLIBS   = delphiexampleproto delphishm
 MODULE_SRCS     = ${MODULE_SRC_DIR}/example_test.cc ${MODULE_SRC_DIR}/example.cc \
                   ${MODULE_SRC_DIR}/example_stats.cc
 

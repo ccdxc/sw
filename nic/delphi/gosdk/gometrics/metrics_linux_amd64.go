@@ -4,8 +4,8 @@ package gometrics
 
 // #cgo CFLAGS: -I${SRCDIR} -I${SRCDIR}/../../../../
 // #cgo CXXFLAGS: -std=c++11
-// #cgo LDFLAGS: ${SRCDIR}/../../../build/x86_64/iris/lib/libdelphisdk.so ${SRCDIR}/../../../build/x86_64/iris/lib/libev.a -L${SRCDIR}/../../../build/x86_64/iris/lib -lgcc -lstdc++ -lm -lrt -lprotobuf
-// #include "nic/delphi/sdk/delphi_metrics_cgo.h"
+// #cgo LDFLAGS: ${SRCDIR}/../../../build/x86_64/iris/out/libdelphishm_a/libdelphishm.a ${SRCDIR}/../../../build/x86_64/iris/out/libdelphiutils_a/libdelphiutils.a ${SRCDIR}/../../../hal/third-party/google/x86_64/lib/libprotobuf.a -lstdc++ -lm -lrt
+// #include "nic/delphi/shm/delphi_metrics_cgo.h"
 import "C"
 import (
 	"errors"

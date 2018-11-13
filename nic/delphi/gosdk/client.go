@@ -148,6 +148,15 @@ func (c *client) GetObject(kind string, key string) clientApi.BaseObject {
 // Delete object, as it names sugests, deletes an object from the database.
 // Users can use this, or just call <OBJECT>.Delete()
 func (c *client) DeleteObject(obj clientApi.BaseObject) error {
+	meta := obj.GetDelphiMeta()
+	if meta == nil {
+		obj.SetDelphiMeta(&delphi.ObjectMeta{
+			Kind:   obj.GetDelphiKind(),
+			Key:    obj.GetDelphiKey(),
+			Path:   obj.GetDelphiPath(),
+			Handle: c.newHandle(),
+		})
+	}
 	c.queueChange(&change{
 		obj: obj,
 		op:  delphi.ObjectOperation_DeleteOp,

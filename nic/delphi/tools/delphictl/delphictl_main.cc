@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/delphi/sdk/delphi_metrics.hpp"
+#include "nic/delphi/shm/delphi_metrics.hpp"
 #include "argh/argh.h"
 #include "gen/proto/delphi_objects.hpp"
 

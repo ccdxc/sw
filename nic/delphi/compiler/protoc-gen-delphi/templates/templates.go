@@ -8,7 +8,7 @@ var (
 #define _{{ .FilePrefix | ToUpper }}_OBJECTS_DELPHI_H_
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
-#include "nic/delphi/sdk/delphi_metrics.hpp"
+#include "nic/delphi/shm/delphi_metrics.hpp"
 #include "{{.FilePrefix}}.pb.h"
 #include <google/protobuf/text_format.h>
 

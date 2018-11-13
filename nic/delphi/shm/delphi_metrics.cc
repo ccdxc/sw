@@ -1,6 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-#include "nic/delphi/sdk/delphi_metrics.hpp"
+#include "nic/delphi/shm/delphi_metrics.hpp"
 
 namespace delphi {
 namespace metrics {

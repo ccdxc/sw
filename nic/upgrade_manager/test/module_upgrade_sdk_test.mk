@@ -3,6 +3,7 @@ include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = upgrade_sdk_test.gtest
 MODULE_SOLIBS   = delphisdk upgrade_app upgradeproto
+MODULE_ARLIBS   = delphishm
 MODULE_ARCH     = x86_64
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
 MODULE_SRCS     = ${MODULE_SRC_DIR}/upgrade_sdkclib_test.cc
