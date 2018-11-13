@@ -12,9 +12,7 @@ struct cpu_rx_ring_full_drop_d d;
     .param ARQRX_BASE
     .align
 cpu_rx_ring_full_drop_error:
-    CAPRI_CLEAR_TABLE0_VALID
     tbladd d.u.cpu_rx_ring_full_drop_action_d.rx_ring_full_drop, 1
-    phvwri  p.p4_intr_global_drop, 1
-    nop.e
+    phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0
     nop
         

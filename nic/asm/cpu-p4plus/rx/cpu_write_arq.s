@@ -82,20 +82,19 @@ dma_cmd_arqrx_slot:
                    c_debug_dol)  
 
 cpu_write_arqrx_done:
+    add r7, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, 16, 1)
     nop.e
     nop
         
 cpu_rx_arq_full_error:
-    CAPRI_CLEAR_TABLE1_VALID
-    CAPRI_CLEAR_TABLE2_VALID
-    CAPRI_CLEAR_TABLE3_VALID
-    phvwri  p.p4_intr_global_drop, 1
-    add    r3, r0, k.common_phv_qstate_addr
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
+    phvwri p.{app_header_table1_valid...app_header_table3_valid}, 7 
+    add    r3, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN,
                          cpu_rx_ring_full_drop_error,
                          r3,
-                         TABLE_SIZE_64_BITS)
+                         TABLE_SIZE_512_BITS)
 
-    nop.e
+    phvwri.e  p.p4_intr_global_drop, 1
     nop
         

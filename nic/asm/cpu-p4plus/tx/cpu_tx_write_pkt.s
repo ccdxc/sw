@@ -138,7 +138,7 @@ cpu_tx_write_pkt_done:
 
 cpu_tx_ascq_full_fatal_error:
     add r3, r0, k.{common_phv_cpucb_addr_sbit0_ebit3...common_phv_cpucb_addr_sbit36_ebit39}
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, cpu_tx_sem_full_drop_error, r3, TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, cpu_tx_sem_full_drop_error, r3, TABLE_SIZE_512_BITS)
     CAPRI_CLEAR_TABLE1_VALID
     CAPRI_CLEAR_TABLE2_VALID
     CAPRI_CLEAR_TABLE3_VALID

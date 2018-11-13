@@ -10,6 +10,7 @@ struct cpu_rx_read_cpu_desc_d d;
 %%
     .param cpu_rx_desc_alloc_start
     .param RNMDPR_BIG_TABLE_BASE
+    .param cpu_rx_semaphore_full_drop_error
     .align
 
 cpu_rx_read_desc_pindex_start:
@@ -17,6 +18,8 @@ cpu_rx_read_desc_pindex_start:
     add     r4, r0, d.{u.read_cpu_desc_d.desc_pindex}.wx
     andi    r4, r4, ((1 << CAPRI_RNMDPR_BIG_RING_SHIFT) - 1)
     phvwr   p.s2_t1_s2s_desc_pindex, r4 
+    seq     c1, d.u.read_cpu_desc_d.desc_pindex_full, 1
+    bcf     [c1], cpu_rx_semaphore_full_error
 
 table_read_desc_alloc:
     addui   r3, r0, hiword(RNMDPR_BIG_TABLE_BASE)
@@ -36,4 +39,14 @@ table_read_desc_alloc:
     phvwri  p.app_header_table1_valid, 1
 	nop.e
 	nop 
+
+cpu_rx_semaphore_full_error:
+    phvwri p.{app_header_table1_valid...app_header_table1_valid}, 7
+    add    r3, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN,
+                         cpu_rx_semaphore_full_drop_error,
+                         r3,
+                         TABLE_SIZE_512_BITS)
+    nop.e
+    nop 
 
