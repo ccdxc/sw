@@ -1495,7 +1495,9 @@ struct aqwqe_t {
             rrq_depth:8;
             pkey_id:16;
             ah_id_len:32;
-            rsvd:96;
+            rsvd:32;
+            rrq_index:32;
+            rsq_index:32;
             dma_addr:64;
 		} mod_qp;
 		struct {

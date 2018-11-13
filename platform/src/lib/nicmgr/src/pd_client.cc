@@ -738,8 +738,6 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (
     uint32_t pt_base_addr_page_id,
     uint32_t ah_base_addr_page_id,
     uint8_t log_num_pt_entries,
-    uint32_t rrq_base_addr_page_id,
-    uint32_t rsq_base_addr_page_id,
     uint32_t cqcb_base_addr_hi,
     uint32_t sqcb_base_addr_hi,
     uint32_t rqcb_base_addr_hi,
@@ -762,8 +760,6 @@ PdClient::p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.pt_base_addr_page_id = pt_base_addr_page_id;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.ah_base_addr_page_id = ah_base_addr_page_id;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_pt_entries = log_num_pt_entries;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rrq_base_addr_page_id = rrq_base_addr_page_id;
-    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rsq_base_addr_page_id = rsq_base_addr_page_id;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;
@@ -902,13 +898,11 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                          uint64_t *hbm_bar_addr, uint32_t *hbm_bar_size)
 {
     sram_lif_entry_t    sram_lif_entry;
-    uint32_t            pt_size, key_table_size, ah_table_size, rrq_size, rsq_size;
+    uint32_t            pt_size, key_table_size, ah_table_size;
     uint32_t            total_size;
     uint64_t            base_addr;
     uint64_t            size;
     uint32_t            max_cqs;
-    uint32_t            max_rqps, max_sqps;
-    uint32_t            max_rd_atomic, max_dest_rd_atomic;
     uint64_t            cq_base_addr; //address in HBM memory
     uint64_t            sq_base_addr; //address in HBM memory
     uint64_t            rq_base_addr; //address in HBM memory
@@ -925,11 +919,6 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     }
 
     max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].num_queues;
-    max_rqps = qstate->type[Q_TYPE_RDMA_RQ].num_queues;
-    max_sqps = qstate->type[Q_TYPE_RDMA_SQ].num_queues;
-
-    max_rd_atomic = max_dest_rd_atomic = 16;
-
 
     memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
 
@@ -988,18 +977,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
         ah_table_size = ((ah_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
     }
 
-    rrq_size = sizeof(rrqwqe_t) * max_rd_atomic * max_rqps;
-    rsq_size = sizeof(rsqwqe_t) * max_dest_rd_atomic * max_sqps;
-
-    if (rrq_size & (HBM_PAGE_SIZE - 1)) {
-        rrq_size = ((rrq_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
-    }
-
-    if (rsq_size & (HBM_PAGE_SIZE - 1)) {
-        rsq_size = ((rsq_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
-    }
-
-    total_size = pt_size + key_table_size + ah_table_size + rrq_size + rsq_size + HBM_PAGE_SIZE;
+    total_size = pt_size + key_table_size + ah_table_size + HBM_PAGE_SIZE;
 
     base_addr = RdmaHbmAlloc(total_size);
 
@@ -1014,9 +992,6 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     sram_lif_entry.ah_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
     sram_lif_entry.log_num_pt_entries = log2(max_ptes);
     size += ah_table_size;
-    sram_lif_entry.rrq_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
-    size += rrq_size;
-    sram_lif_entry.rsq_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
 
     // TODO: Fill prefetch data and add corresponding code
 
@@ -1100,8 +1075,6 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
                             sram_lif_entry.pt_base_addr_page_id,
                             sram_lif_entry.ah_base_addr_page_id,
                             sram_lif_entry.log_num_pt_entries,
-                            sram_lif_entry.rrq_base_addr_page_id,
-                            sram_lif_entry.rsq_base_addr_page_id,
                             sram_lif_entry.cqcb_base_addr_hi,
                             sram_lif_entry.sqcb_base_addr_hi,
                             sram_lif_entry.rqcb_base_addr_hi,

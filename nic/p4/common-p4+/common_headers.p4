@@ -276,8 +276,6 @@ header_type tx_rdma_scratch_metadata_t {
         pt_base_addr_page_id: 22;
         ah_base_addr_page_id: 22;
         log_num_pt_entries: 7;
-        rrq_base_addr_page_id: 22;
-        rsq_base_addr_page_id: 22;
 
         //Per LIF CQCB and EQCB tables
         //are allocated adjacent to each other in HBM in that order.
@@ -300,7 +298,7 @@ header_type tx_rdma_scratch_metadata_t {
         //barmap size in 8MB units
         //need 8 bits to present 2GB per LIF
         barmap_size: 8;
-        reserved: 14;
+        reserved: 58;
 
     }
 }
@@ -326,8 +324,6 @@ header_type rx_rdma_scratch_metadata_t {
         pt_base_addr_page_id: 22;
         ah_base_addr_page_id: 22;
         log_num_pt_entries: 7;
-        rrq_base_addr_page_id: 22;
-        rsq_base_addr_page_id: 22;
 
         //Per LIF CQCB and EQCB tables
         //are allocated adjacent to each other in HBM in that order.
@@ -344,7 +340,7 @@ header_type rx_rdma_scratch_metadata_t {
         sq_qtype: 3;
         rq_qtype: 3;
         aq_qtype: 3;
-        reserved: 32;
+        reserved: 76;
 
     }
 }

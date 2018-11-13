@@ -20,10 +20,8 @@ struct aq_tx_s2_t1_k k;
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
 #define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit15, ah_base_addr_page_id_sbit16_ebit21)
-#define K_RRQ_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, rrq_base_addr_page_id_sbit0_ebit1, rrq_base_addr_page_id_sbit18_ebit21)
-#define K_RSQ_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, rsq_base_addr_page_id_sbit0_ebit3, rsq_base_addr_page_id_sbit20_ebit21)
-#define K_SQCB_BASE_ADDR_HI CAPRI_KEY_RANGE(IN_TO_S_P, sqcb_base_addr_hi_sbit0_ebit5, sqcb_base_addr_hi_sbit22_ebit23) 
-#define K_RQCB_BASE_ADDR_HI CAPRI_KEY_RANGE(IN_TO_S_P, rqcb_base_addr_hi_sbit0_ebit5, rqcb_base_addr_hi_sbit22_ebit23)
+#define K_SQCB_BASE_ADDR_HI CAPRI_KEY_RANGE(IN_TO_S_P, sqcb_base_addr_hi_sbit0_ebit1, sqcb_base_addr_hi_sbit18_ebit23)
+#define K_RQCB_BASE_ADDR_HI CAPRI_KEY_RANGE(IN_TO_S_P, rqcb_base_addr_hi_sbit0_ebit1, rqcb_base_addr_hi_sbit18_ebit23)
 
 %%
 
@@ -78,32 +76,32 @@ hdr_update:
 rrq_base:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_MAX_QP_RD_ATOMIC], 1, rsq_base
 
-    add         r7, r0, K_RRQ_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT //BD Slot
-    add         r7, r7, r3[23:0], LOG_RRQ_QP_SIZE
-    srl         r7, r7, RRQ_BASE_ADDR_SHIFT
+    PT_BASE_ADDR_GET2(r4)   // BD Slot
+    add         r5, r4, d.{mod_qp.rrq_index}.wx, CAPRI_LOG_SIZEOF_U64
+    srl         r5, r5, RRQ_BASE_ADDR_SHIFT
 
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rrq_valid), 1
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rrq_depth_log2), d.mod_qp.rrq_depth[4: 0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rrq_base_addr), r7[31:0]
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rrq_base_addr), r5[31:0]
 
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rrq_valid), 1
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rrq_depth_log2), d.mod_qp.rrq_depth[4: 0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rrq_base_addr), r7[31:0]
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, rrq_base_addr), r5[31:0]
     
 rsq_base:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_MAX_DEST_RD_ATOMIC], 1, state
 
-    add         r7, r0, K_RSQ_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT //BD Slot
-    add         r7, r7, r3[23:0], LOG_RSQ_QP_SIZE
-    srl         r7, r7, RSQ_BASE_ADDR_SHIFT
+    // r4 has the PT Base address from the previous BD slot
+    add         r5, r4, d.{mod_qp.rsq_index}.wx, CAPRI_LOG_SIZEOF_U64   // BD Slot
+    srl         r5, r5, RSQ_BASE_ADDR_SHIFT
 
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, rsq_valid), 1
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, rsq_depth_log2), d.mod_qp.rsq_depth[4: 0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, rsq_base_addr), r7[31:0]
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB0_P, rsq_base_addr), r5[31:0]
 
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rsq_valid), 1
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rsq_depth_log2), d.mod_qp.rsq_depth[4: 0]
-    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rsq_base_addr), r7[31:0]
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB1_P, rsq_base_addr), r5[31:0]
     
 state:
 

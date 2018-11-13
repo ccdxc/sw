@@ -53,8 +53,6 @@ aq:
     
     add         r2, r0, offsetof(struct phv_, to_stage_2_to_stage_data)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S2_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)
-    CAPRI_SET_FIELD(r2, AQ_TX_TO_S2_T, rrq_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.rrq_base_addr_page_id)
-    CAPRI_SET_FIELD(r2, AQ_TX_TO_S2_T, rsq_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.rsq_base_addr_page_id)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S2_T, sqcb_base_addr_hi, d.u.tx_stage0_lif_rdma_params_d.sqcb_base_addr_hi)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S2_T, rqcb_base_addr_hi, d.u.tx_stage0_lif_rdma_params_d.rqcb_base_addr_hi)
 
