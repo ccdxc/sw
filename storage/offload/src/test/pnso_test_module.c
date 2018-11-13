@@ -8,6 +8,7 @@
 #include "pnso_api.h"
 #include "pnso_test.h"
 #include "pnso_test_sysfs.h"
+#include "pnso_test_dev.h"
 
 OSAL_LICENSE("Dual BSD/GPL");
 
@@ -69,8 +70,11 @@ pnso_test_mod_init(void)
 		goto done;
 #ifndef __FreeBSD__ 
 	rv = pnso_test_sysfs_init();
-#endif	
-
+	if (rv)
+		goto done;
+#else
+	rv = pnso_test_cdev_init();	
+#endif
 done:	
 	return rv;
 }
@@ -84,6 +88,8 @@ pnso_test_mod_fini(void)
 
 #ifndef __FreeBSD__ 
 	pnso_test_sysfs_finit();
+#else
+	pnso_test_cdev_deinit();
 #endif
 
 	return PNSO_OK;
@@ -92,9 +98,7 @@ pnso_test_mod_fini(void)
 static void
 status_output_func(const char *status, void *opaque)
 {
-#ifndef __FreeBSD__	
 	pnso_test_sysfs_write_status_data(status, strlen(status), opaque);
-#endif	
 	OSAL_LOG("%s", status);
 }
 
@@ -547,11 +551,7 @@ body(void *not_used)
 	while (!pnso_test_is_shutdown()) {
 		int ctl_state;
 
-#ifndef __FreeBSD__	
 		ctl_state = pnso_test_sysfs_read_ctl();
-#else
-		ctl_state = CTL_STATE_MAX;
-#endif		
 		switch (ctl_state) {
 		case CTL_STATE_START:
 		case CTL_STATE_REPEAT:

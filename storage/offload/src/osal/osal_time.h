@@ -21,7 +21,7 @@ extern "C" {
 
 static inline uint64_t osal_get_clock_nsec(void)
 {
-	return (uint64_t) ktime_get_ns();
+	return (uint64_t) ktime_get_raw_ns();
 }
 
 #else

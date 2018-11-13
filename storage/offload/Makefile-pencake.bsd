@@ -8,6 +8,7 @@ SRCS= \
 src/test/pnso_test_module.c \
 src/test/pnso_test_util.c \
 src/test/pnso_test.c \
+src/test/pnso_test_dev.c \
 src/common/pnso_pbuf.c \
 src/osal/linux/kernel/osal_logger.c \
 src/osal/linux/kernel/osal_sys.c \
@@ -25,6 +26,7 @@ third-party/libyaml/src/scanner.c \
 third-party/libyaml/src/writer.c \
 src/test/pnso_test_parse.c \
 device_if.h bus_if.h vnode_if.h pci_if.h 
+
 
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include -I${SRCTOP}/sys/compat/linuxkpi/common/include/linux -I${SRCTOP}/sys/sys
 INCDIRS = include src/osal src/test src/drv/linux/kernel src/common third-party/libyaml/include
