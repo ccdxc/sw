@@ -16,17 +16,29 @@ export interface IMonitoringStatsPolicySpec {
 
 
 export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringStatsPolicySpec {
+    /** should be a valid time duration
+     */
     'compaction-interval ': string = null;
+    /** should be a valid time duration
+     */
     'retention-time': string = null;
+    /** should be a valid time duration
+     */
     'downsample-retention-time': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'compaction-interval ': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
             type: 'string'
         },
         'retention-time': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
             type: 'string'
         },
         'downsample-retention-time': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
             type: 'string'
         },
     }

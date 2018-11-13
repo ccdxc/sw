@@ -3775,7 +3775,7 @@
           },
           {
             "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted.",
+            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4152,21 +4152,21 @@
           },
           {
             "name": "spec.compaction-interval ",
-            "description": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host.",
+            "description": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'.",
+            "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.downsample-retention-time",
-            "description": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'.",
+            "description": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8102,7 +8102,7 @@
           },
           {
             "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted.",
+            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8483,21 +8483,21 @@
           },
           {
             "name": "spec.compaction-interval ",
-            "description": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host.",
+            "description": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'.",
+            "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.downsample-retention-time",
-            "description": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'.",
+            "description": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -12273,6 +12273,8 @@
       "properties": {
         "interval": {
           "type": "string",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
           "title": "Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'"
         },
         "format": {
@@ -12395,6 +12397,8 @@
       "properties": {
         "retention-time": {
           "type": "string",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
           "title": "RetentionTime defines for how long to keep the fwlog before it is deleted"
         },
         "filter": {
@@ -12789,14 +12793,20 @@
       "properties": {
         "compaction-interval ": {
           "type": "string",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
           "title": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host"
         },
         "retention-time": {
           "type": "string",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
           "title": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'"
         },
         "downsample-retention-time": {
           "type": "string",
+          "example": "2h",
+          "description": "should be a valid time duration\n",
           "title": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'"
         }
       },

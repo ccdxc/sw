@@ -288,7 +288,9 @@ func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
 func (m *StatsPolicy) Defaults(ver string) bool {
 	m.Kind = "StatsPolicy"
 	m.Tenant, m.Namespace = "default", "default"
-	return false
+	var ret bool
+	ret = m.Spec.Defaults(ver) || ret
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -309,7 +311,8 @@ func (m *StatsPolicySpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *StatsPolicySpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -505,11 +508,33 @@ func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
 	}
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "Spec"
+	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
 	return ret
 }
 
 func (m *StatsPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapTelemetry["StatsPolicySpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapTelemetry["StatsPolicySpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -536,6 +561,14 @@ func init() {
 
 		if _, ok := FlowExportTarget_Formats_value[m.Format]; !ok {
 			return errors.New("FlowExportTarget.Format did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry["FlowExportTarget"]["all"] = append(validatorMapTelemetry["FlowExportTarget"]["all"], func(path string, i interface{}) error {
+		m := i.(*FlowExportTarget)
+		if !validators.Duration(m.Interval) {
+			return fmt.Errorf("%v validation failed", path+"."+"Interval")
 		}
 		return nil
 	})
@@ -569,6 +602,40 @@ func init() {
 			if _, ok := FwlogFilter_value[v]; !ok {
 				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Filter", k)
 			}
+		}
+		return nil
+	})
+
+	validatorMapTelemetry["FwlogPolicySpec"]["all"] = append(validatorMapTelemetry["FwlogPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogPolicySpec)
+		if !validators.Duration(m.RetentionTime) {
+			return fmt.Errorf("%v validation failed", path+"."+"RetentionTime")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry["StatsPolicySpec"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapTelemetry["StatsPolicySpec"]["all"] = append(validatorMapTelemetry["StatsPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*StatsPolicySpec)
+		if !validators.Duration(m.CompactionInterval) {
+			return fmt.Errorf("%v validation failed", path+"."+"CompactionInterval")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry["StatsPolicySpec"]["all"] = append(validatorMapTelemetry["StatsPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*StatsPolicySpec)
+		if !validators.Duration(m.DownSampleRetentionTime) {
+			return fmt.Errorf("%v validation failed", path+"."+"DownSampleRetentionTime")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry["StatsPolicySpec"]["all"] = append(validatorMapTelemetry["StatsPolicySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*StatsPolicySpec)
+		if !validators.Duration(m.RetentionTime) {
+			return fmt.Errorf("%v validation failed", path+"."+"RetentionTime")
 		}
 		return nil
 	})

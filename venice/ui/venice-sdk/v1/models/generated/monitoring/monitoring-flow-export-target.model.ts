@@ -20,6 +20,8 @@ export interface IMonitoringFlowExportTarget {
 
 
 export class MonitoringFlowExportTarget extends BaseModel implements IMonitoringFlowExportTarget {
+    /** should be a valid time duration
+     */
     'interval': string = null;
     'format': MonitoringFlowExportTarget_format = null;
     'match-rules': Array<MonitoringMatchRule> = null;
@@ -27,6 +29,8 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     'exports': Array<MonitoringExportConfig> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interval': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
             type: 'string'
         },
         'format': {

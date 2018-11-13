@@ -778,7 +778,7 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 					sp.GetSpec(), tpm.DefaultStatsSpec))
 			return true, nil
 		}
-		return false, nil
+		return false, err
 	}, "failed to find stats policy")
 
 	AssertEventually(c, func() (bool, interface{}) {

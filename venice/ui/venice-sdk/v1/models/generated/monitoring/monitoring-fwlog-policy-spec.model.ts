@@ -18,11 +18,15 @@ export interface IMonitoringFwlogPolicySpec {
 
 
 export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringFwlogPolicySpec {
+    /** should be a valid time duration
+     */
     'retention-time': string = null;
     'filter': Array<MonitoringFwlogPolicySpec_filter> = null;
     'exports': Array<MonitoringFwlogExport> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'retention-time': {
+            description:  'should be a valid time duration ',
+            hint:  '2h',
             type: 'string'
         },
         'filter': {

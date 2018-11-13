@@ -106,8 +106,12 @@ func (it *veniceIntegSuite) getStatsPolicy(tenantName string) (*monitoring.Stats
 		Tenant: tenantName,
 	}
 
-	// TODO: use rest api
-	return it.apisrvClient.MonitoringV1().StatsPolicy().Get(context.Background(), &ometa)
+	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	if err != nil {
+		return nil, err
+	}
+
+	return it.restClient.MonitoringV1().StatsPolicy().Get(ctx, &ometa)
 }
 
 // getFwlogPolicy gets a fwlog policy
@@ -118,6 +122,10 @@ func (it *veniceIntegSuite) getFwlogPolicy(tenantName string) (*monitoring.Fwlog
 		Tenant: tenantName,
 	}
 
-	// TODO: use rest api
-	return it.apisrvClient.MonitoringV1().FwlogPolicy().Get(context.Background(), &ometa)
+	ctx, err := NewLoggedInContext(context.Background(), integTestAPIGWURL, it.userCred)
+	if err != nil {
+		return nil, err
+	}
+
+	return it.restClient.MonitoringV1().FwlogPolicy().Get(ctx, &ometa)
 }
