@@ -136,6 +136,8 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
     uint64_t        rate_tokens = 0;
     uint64_t        burst_tokens = 0;
     uint64_t        rate;
+    hal::hal_cfg_t  *hal_cfg = 
+        (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
 
 
     copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
@@ -183,13 +185,15 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
 
     // TODO Fixme. Setting entry-valid to 0 until copp is verified and values
     // are determined
-    COPP_ACTION(d, entry_valid) = 0;
+    if (hal_cfg && (hal_cfg->platform != hal::HAL_PLATFORM_HW)) {
+        COPP_ACTION(d, entry_valid) = 0;
+    }
     if (is_restore) {
-        sdk_ret = copp_tbl->insert_withid(&d, pd_copp->hw_policer_id);
+        sdk_ret = copp_tbl->insert_withid(&d, pd_copp->hw_policer_id, &d_mask);
     } else if (update) {
-        sdk_ret = copp_tbl->update(pd_copp->hw_policer_id, &d);
+        sdk_ret = copp_tbl->update(pd_copp->hw_policer_id, &d, &d_mask);
     } else {
-        sdk_ret = copp_tbl->insert(&d, &pd_copp->hw_policer_id);
+        sdk_ret = copp_tbl->insert(&d, &pd_copp->hw_policer_id, &d_mask);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {

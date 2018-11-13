@@ -128,9 +128,9 @@ public:
 
 
     // operational methods
-    sdk_ret_t insert(void *data, uint32_t *index);
     // data_mask specifies that the data should be a masked write - needed for
     // policers etc
+    sdk_ret_t insert(void *data, uint32_t *index, void *data_mask = NULL);
     sdk_ret_t insert_withid(void *data, uint32_t index, void *data_mask = NULL);
     sdk_ret_t update(uint32_t index, void *data, void *data_mask = NULL);
     sdk_ret_t remove(uint32_t index, void *data = NULL);

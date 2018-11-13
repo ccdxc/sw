@@ -399,7 +399,7 @@
                 [
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_FLOW_MISS" },
-                        "policer" : { "bps_policer" : { "bytes_per_sec" : 64000, "burst_bytes" : 6400 } }
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 32000, "burst_packets" : 3200 } }
                     },
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_ARP" },

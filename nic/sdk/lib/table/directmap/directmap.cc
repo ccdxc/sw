@@ -174,7 +174,7 @@ directmap::dm_entry_compare_key_func(void *key1, void *key2)
 // insert entry in HW
 // ----------------------------------------------------------------------------
 sdk_ret_t
-directmap::insert(void *data, uint32_t *index)
+directmap::insert(void *data, uint32_t *index, void *data_mask)
 {
     sdk_ret_t           rs     = SDK_RET_OK;
     p4pd_error_t        pd_err = P4PD_SUCCESS;
@@ -201,7 +201,9 @@ directmap::insert(void *data, uint32_t *index)
             }
 
             // program P4
-            pd_err = p4pd_global_entry_write(id_, *index, NULL, NULL, data);
+            pd_err = p4pd_global_entry_write_with_datamask(id_, *index,
+                                                           NULL, NULL,
+                                                           data, data_mask);
             if (pd_err != P4PD_SUCCESS) {
                 rs = SDK_RET_HW_PROGRAM_ERR;
                 SDK_ASSERT(0);
@@ -239,7 +241,9 @@ directmap::insert(void *data, uint32_t *index)
     }
 
     // P4-API: write API
-    pd_err = p4pd_global_entry_write(id_, *index, NULL, NULL, data);
+    pd_err = p4pd_global_entry_write_with_datamask(id_, *index,
+                                                   NULL, NULL,
+                                                   data, data_mask);
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
         SDK_ASSERT(0);
