@@ -652,7 +652,8 @@ Eth::CmdHandler(void *req, void *req_data,
     enum DevcmdStatus status;
 
     NIC_HEADER_TRACE("Dev Cmd");
-    NIC_LOG_INFO("lif-{}: Handling cmd: {}", info.hw_lif_id,
+    NIC_LOG_INFO("lif-{}-{}: Handling cmd: {}", info.hw_lif_id,
+                 spec->if_name,
                  opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
 
     switch (cmd->cmd.opcode) {
@@ -790,6 +791,10 @@ Eth::CmdHandler(void *req, void *req_data,
 
     comp->comp.status = status;
     comp->comp.rsvd = 0xff;
+    NIC_LOG_INFO("lif-{}-{}: Done cmd: {}, status: {}", info.hw_lif_id,
+                 spec->if_name,
+                 opcode_to_str((enum cmd_opcode)cmd->cmd.opcode),
+                 status);
 
     return (status);
 }
