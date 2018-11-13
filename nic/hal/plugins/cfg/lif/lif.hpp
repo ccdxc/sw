@@ -77,7 +77,7 @@ typedef struct lif_s {
     intf::IfStatus      admin_status;    // admin status
     bool                vlan_strip_en;   // vlan strip enable
     bool                vlan_insert_en;  // if en, ingress vlan is in p4plus_to_p4 dr
-    bool                is_management;   // set for MNICs and management NICs
+    bool                is_management;   // set for OOB MNIC, int_mgmt MNIC and host management NIC
     hal_handle_t        pinned_uplink;   // uplink this LIF is pinned to
     bool                enable_rdma;     // enable rdma on this LIF
     uint32_t            rdma_max_keys;

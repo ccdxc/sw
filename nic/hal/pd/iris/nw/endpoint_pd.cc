@@ -564,7 +564,8 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
                                  TABLE_OPER_INSERT);
     }
 
-    // Classic mode or if its behind MNIC or management NIC:
+    // Classic mode or if its behind OOB MNIC or internal  management MNIC pr
+    // host management mnic
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
         is_ep_management(pi_ep)) {
         ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);

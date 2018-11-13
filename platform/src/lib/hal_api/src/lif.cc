@@ -68,9 +68,11 @@ Lif::Lif(EthLif * eth_lif)
 
     eth_lif_ = eth_lif;
 
-    NIC_LOG_INFO("Creating Lif: prom: {}, oob: {}, rdma_en: {}",
+    NIC_LOG_INFO("Creating Lif: prom: {}, oob: {}, int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
                     lif_info->receive_promiscuous,
                     eth_lif_->IsOOBMnic(),
+                    eth_lif_->IsInternalManagementMnic(),
+                    eth_lif_->IsHostManagement(),
                     lif_info->enable_rdma);
 
     PopulateRequest(req_msg, &req);
@@ -186,7 +188,8 @@ Lif::PopulateRequest(intf::LifRequestMsg &req_msg, intf::LifSpec **req_ptr)
     req->mutable_packet_filter()->set_receive_promiscuous(lif_info->receive_promiscuous);
     req->set_vlan_strip_en(lif_info->vlan_strip_en);
     req->set_vlan_insert_en(lif_info->vlan_insert_en);
-    req->set_is_management(eth_lif_->IsOOBMnic());
+    req->set_is_management(eth_lif_->IsOOBMnic() ||
+                           eth_lif_->IsInternalManagement());
     req->set_admin_status(::intf::IF_STATUS_UP);
     req->set_enable_rdma(lif_info->enable_rdma);
 

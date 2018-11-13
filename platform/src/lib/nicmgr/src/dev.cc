@@ -356,14 +356,13 @@ DeviceManager::LoadConfig(string path)
             eth_spec->txq_count    = val.get<uint64_t>("txq_count");
             eth_spec->eq_count     = val.get<uint64_t>("eq_count");
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
-            eth_spec->intr_base    = intr_base;
             eth_spec->intr_count   = val.get<uint64_t>("intr_count");
             eth_spec->mac_addr     = sys_mac_base++;
-
             if (intr_allocator->alloc_block(&intr_base, eth_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
                 NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
                 return -1;
             }
+            eth_spec->intr_base    = intr_base;
 #if 0
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
             if (eth_spec->lif_id == 0) {

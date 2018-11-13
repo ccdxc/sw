@@ -189,7 +189,7 @@ l2seg_free (l2seg_t *l2seg)
 
 
 bool
-l2seg_is_oob_mgmt (l2seg_t *l2seg)
+l2seg_is_mgmt (l2seg_t *l2seg)
 {
     vrf_t *vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
     if (vrf) {
@@ -318,7 +318,7 @@ l2seg_create_oiflists (l2seg_t *l2seg)
     hal_ret_t  ret = HAL_RET_OK;
 
     // create the broadcast/flood list for this l2seg
-    if (is_forwarding_mode_classic_nic() || l2seg_is_oob_mgmt(l2seg)) {
+    if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
         ret = oif_list_create_block(&l2seg->base_oif_list_id, 3);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to create broadcast list[3], err : {}", ret);
@@ -571,7 +571,7 @@ static inline hal_ret_t
 l2seg_delete_oiflists (l2seg_t *l2seg)
 {
     // create the broadcast/flood list for this l2seg
-    if (is_forwarding_mode_classic_nic() || l2seg_is_oob_mgmt(l2seg)) {
+    if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
         oif_list_clr_honor_ingress(l2seg_get_bcast_oif_list(l2seg));
         oif_list_clr_honor_ingress(l2seg_get_mcast_oif_list(l2seg));
         oif_list_clr_honor_ingress(l2seg_get_prmsc_oif_list(l2seg));
@@ -2434,7 +2434,7 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
 #endif
     // fill operational state of this L2 segment
     rsp->mutable_status()->set_l2segment_handle(l2seg->hal_handle);
-    if (is_forwarding_mode_classic_nic() || l2seg_is_oob_mgmt(l2seg)) {
+    if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
         rsp->mutable_status()->set_bcast_idx(l2seg_get_bcast_oif_list(l2seg));
         rsp->mutable_status()->set_mcast_idx(l2seg_get_mcast_oif_list(l2seg));
         rsp->mutable_status()->set_prom_idx(l2seg_get_prmsc_oif_list(l2seg));
