@@ -61,7 +61,7 @@ func TestDataNodeBasic(t *testing.T) {
 
 	// create rpc client
 	for idx := 0; idx < numNodes; idx++ {
-		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false))
 		AssertOk(t, err, "Error connecting to grpc server")
 		defer clients[idx].Close()
 	}
@@ -270,7 +270,7 @@ func TestDataNodeErrors(t *testing.T) {
 
 	// create rpc client
 	for idx := 0; idx < numNodes; idx++ {
-		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false))
 		AssertOk(t, err, "Error connecting to grpc server")
 		defer clients[idx].Close()
 	}
@@ -556,7 +556,7 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 
 	// create rpc client
 	for idx := 0; idx < numNodes; idx++ {
-		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false))
 		AssertOk(t, err, "Error connecting to grpc server")
 		defer clients[idx].Close()
 	}
@@ -786,7 +786,7 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 
 	// create rpc client
 	for idx := 0; idx < numNodes; idx++ {
-		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false))
 		AssertOk(t, err, "Error connecting to grpc server")
 		defer clients[idx].Close()
 	}
@@ -1044,7 +1044,7 @@ func TestSyncBuffer(t *testing.T) {
 
 	// create rpc client
 	for idx := 0; idx < numNodes; idx++ {
-		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false))
 		AssertOk(t, err, "Error connecting to grpc server")
 		defer clients[idx].Close()
 	}

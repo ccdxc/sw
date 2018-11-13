@@ -105,7 +105,7 @@ func createNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL string) (*meta.Watche
 	}
 
 	// Start a rpc server
-	rpcSrv, err := rpckit.NewRPCServer(fmt.Sprintf("datanode-%s", nodeUUID), nodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+	rpcSrv, err := rpckit.NewRPCServer(fmt.Sprintf("datanode-%s", nodeUUID), nodeURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Errorf("failed to listen to %s: Err %v", nodeURL, err)
 		return nil, nil, nil, err

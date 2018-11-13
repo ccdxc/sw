@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
 	"github.com/pensando/sw/venice/citadel/tstore"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/safelist"
@@ -94,7 +95,7 @@ type syncBufferState struct {
 // NewDataNode creates a new data node instance
 func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string) (*DNode, error) {
 	// Start a rpc server
-	rpcSrv, err := rpckit.NewRPCServer(fmt.Sprintf("datanode-%s", nodeUUID), nodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+	rpcSrv, err := rpckit.NewRPCServer(globals.Citadel, nodeURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Errorf("failed to listen to %s: Err %v", nodeURL, err)
 		return nil, err
@@ -538,7 +539,7 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 	}
 
 	// dial a new connection for syncing data
-	rclient, err := rpckit.NewRPCClient(fmt.Sprintf("datanode-%s", dn.nodeUUID), req.DestNodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+	rclient, err := rpckit.NewRPCClient(fmt.Sprintf("datanode-%s", dn.nodeUUID), req.DestNodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
 		log.Errorf("Error connecting to rpc server %s. err: %v", req.DestNodeURL, err)
 		return
@@ -797,7 +798,7 @@ func (dn *DNode) SoftRestart() error {
 	dn.isStopped = false
 
 	// Start a rpc server
-	dn.rpcServer, err = rpckit.NewRPCServer(fmt.Sprintf("datanode-%s", dn.nodeUUID), dn.nodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+	dn.rpcServer, err = rpckit.NewRPCServer(globals.Citadel, dn.nodeURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Errorf("failed to listen to %s: Err %v", dn.nodeURL, err)
 		return err
@@ -884,7 +885,7 @@ func (dn *DNode) getDnclient(clusterType, nodeUUID string) (tproto.DataNodeClien
 	}
 
 	// dial the connection
-	rclient, err := rpckit.NewRPCClient(fmt.Sprintf("datanode-%s", dn.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+	rclient, err := rpckit.NewRPCClient(fmt.Sprintf("datanode-%s", dn.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
 		log.Errorf("Error connecting to rpc server %s. err: %v", node.NodeURL, err)
 		return nil, err

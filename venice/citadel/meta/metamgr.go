@@ -13,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/citadel/tproto"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -394,7 +395,7 @@ func (md *MetadataMgr) getRPCClient(nodeUUID string) (*grpc.ClientConn, error) {
 	}
 
 	// dial the connection
-	rclient, err = rpckit.NewRPCClient(fmt.Sprintf("metanode-%s", md.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+	rclient, err = rpckit.NewRPCClient(fmt.Sprintf("metanode-%s", md.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
 		log.Errorf("Error connecting to rpc server %s. err: %v", node.NodeURL, err)
 		return nil, err

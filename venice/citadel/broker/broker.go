@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/venice/citadel/meta"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -110,7 +111,7 @@ func (br *Broker) getRPCClient(nodeUUID, clusterType string) (*grpc.ClientConn, 
 	}
 
 	// dial the connection
-	rclient, err = rpckit.NewRPCClient(fmt.Sprintf("broker-%s", br.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithTLSProvider(nil))
+	rclient, err = rpckit.NewRPCClient(fmt.Sprintf("broker-%s", br.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
 		log.Errorf("Error connecting to rpc server %s. err: %v", node.NodeURL, err)
 		return nil, err
