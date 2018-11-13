@@ -18,6 +18,8 @@
 
 PKG_TOP=$(readlink -f "$(dirname "$0")")
 
-. "$PKG_TOP/env.sh"
+cd "$PKG_TOP"
+. env.sh
+cd -
 
 "$@"
