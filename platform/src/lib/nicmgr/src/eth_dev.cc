@@ -270,8 +270,10 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
         mnet_req.devcmd_pa = pci_resources.devcmdpa;
         mnet_req.devcmd_db_pa = pci_resources.devcmddbpa;
         mnet_req.doorbell_pa = DOORBELL_ADDR(info.hw_lif_id);
-        mnet_req.drvcfg_pa = intr_drvcfg_addr(Eth::intr_base);
-        mnet_req.msixcfg_pa = intr_msixcfg_addr(Eth::intr_base);
+        // mnet_req.drvcfg_pa = intr_drvcfg_addr(Eth::intr_base);
+        // mnet_req.msixcfg_pa = intr_msixcfg_addr(Eth::intr_base);
+        mnet_req.drvcfg_pa = intr_drvcfg_addr(spec->intr_base);
+        mnet_req.msixcfg_pa = intr_msixcfg_addr(spec->intr_base);
         strcpy(mnet_req.iface_name, spec->if_name.c_str());
 
         NIC_LOG_INFO("lif-{}: Mnet devcmd_pa: {:#x}, devcmd_db_pa: {:#x}, "
@@ -284,10 +286,10 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
                      mnet_req.drvcfg_pa,
                      mnet_req.msixcfg_pa,
                      mnet_req.iface_name,
-                     Eth::intr_base,
+                     spec->intr_base,
                      spec->intr_count);
 
-        for (uint32_t fw_cfg_entry = Eth::intr_base; fw_cfg_entry < (Eth::intr_base + spec->intr_count); fw_cfg_entry++) {
+        for (uint32_t fw_cfg_entry = spec->intr_base; fw_cfg_entry < (spec->intr_base + spec->intr_count); fw_cfg_entry++) {
             intr_fwcfg(fw_cfg_entry, info.hw_lif_id, 0, 0, 0, 0);
             intr_fwcfg_local(fw_cfg_entry, 1);
         }
@@ -842,16 +844,16 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
                  "nrdma_ahs_per_lif {} ncqs_per_lif {} rdma_version {} "
                  "rdma_admin_opcodes {}",
                  info.hw_lif_id,
-                 rsp->dev.asic_type, rsp->dev.asic_rev, rsp->dev.serial_num, 
-                 rsp->dev.fw_version, rsp->dev.ndbpgs_per_lif, 
-                 rsp->dev.ntxqs_per_lif, rsp->dev.nrxqs_per_lif, 
-                 rsp->dev.nintrs, rsp->dev.intr_coal_mult, 
-                 rsp->dev.intr_coal_div, rsp->dev.nucasts_per_lif, 
-                 rsp->dev.nmcasts_per_lif, rsp->dev.nadminqs_per_lif, 
-                 rsp->dev.neqs_per_lif, rsp->dev.nrdmasqs_per_lif, 
-                 rsp->dev.nrdmarqs_per_lif, rsp->dev.nrdma_mrs_per_lif, 
-                 rsp->dev.nrdma_pts_per_lif, rsp->dev.nrdma_ahs_per_lif, 
-                 rsp->dev.ncqs_per_lif, rsp->dev.rdma_version, 
+                 rsp->dev.asic_type, rsp->dev.asic_rev, rsp->dev.serial_num,
+                 rsp->dev.fw_version, rsp->dev.ndbpgs_per_lif,
+                 rsp->dev.ntxqs_per_lif, rsp->dev.nrxqs_per_lif,
+                 rsp->dev.nintrs, rsp->dev.intr_coal_mult,
+                 rsp->dev.intr_coal_div, rsp->dev.nucasts_per_lif,
+                 rsp->dev.nmcasts_per_lif, rsp->dev.nadminqs_per_lif,
+                 rsp->dev.neqs_per_lif, rsp->dev.nrdmasqs_per_lif,
+                 rsp->dev.nrdmarqs_per_lif, rsp->dev.nrdma_mrs_per_lif,
+                 rsp->dev.nrdma_pts_per_lif, rsp->dev.nrdma_ahs_per_lif,
+                 rsp->dev.ncqs_per_lif, rsp->dev.rdma_version,
                  rsp->dev.rdma_admin_opcodes[0]);
 
     return (DEVCMD_SUCCESS);
@@ -1085,7 +1087,7 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     comp->qid = cmd->index;
     comp->qtype = ETH_QTYPE_ADMIN;
 
-    NIC_LOG_INFO("lif-{}: qid {} qtype {}", 
+    NIC_LOG_INFO("lif-{}: qid {} qtype {}",
                  info.hw_lif_id, comp->qid, comp->qtype);
     return (DEVCMD_SUCCESS);
 }
@@ -1163,7 +1165,7 @@ Eth::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     comp->qid = cmd->index;
     comp->qtype = ETH_QTYPE_TX;
 
-    NIC_LOG_INFO("lif-{}: qid {} qtype {}", 
+    NIC_LOG_INFO("lif-{}: qid {} qtype {}",
                  info.hw_lif_id, comp->qid, comp->qtype);
     return (DEVCMD_SUCCESS);
 }
@@ -1235,7 +1237,7 @@ Eth::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     comp->qid = cmd->index;
     comp->qtype = ETH_QTYPE_RX;
 
-    NIC_LOG_INFO("lif-{}: qid {} qtype {}", 
+    NIC_LOG_INFO("lif-{}: qid {} qtype {}",
                  info.hw_lif_id, comp->qid, comp->qtype);
     return (DEVCMD_SUCCESS);
 }
@@ -1286,7 +1288,7 @@ Eth::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
     hal->LifSetVlanOffload(spec->lif_id,
         cmd->wanted & comp->supported & ETH_HW_VLAN_RX_STRIP,
         cmd->wanted & comp->supported & ETH_HW_VLAN_TX_TAG);
-    NIC_LOG_INFO("lif-{}: supported {}", 
+    NIC_LOG_INFO("lif-{}: supported {}",
                  info.hw_lif_id, comp->supported);
 
     return (DEVCMD_SUCCESS);
@@ -1522,7 +1524,7 @@ Eth::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     comp->filter_id = filter_id;
-    NIC_LOG_INFO("lif-{}: filter_id {}", 
+    NIC_LOG_INFO("lif-{}: filter_id {}",
                  info.hw_lif_id, comp->filter_id);
     return (DEVCMD_SUCCESS);
 }

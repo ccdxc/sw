@@ -4,6 +4,7 @@
 
 #include "ethlif.hpp"
 #include "print.hpp"
+#include "storage_seq_common.h"
 
 using namespace std;
 
@@ -13,6 +14,7 @@ const char qstate_1024[1024] = { 0 };
 
 
 sdk::lib::indexer *EthLif::filter_allocator = sdk::lib::indexer::factory(EthLif::max_filters_per_lif, false, true);
+EthLif *EthLif::internal_mgmt_ethlif = NULL;
 
 EthLifMap EthLif::ethlif_db;
 
@@ -21,6 +23,7 @@ EthLif *
 EthLif::Factory(hal_lif_info_t *info)
 {
     HalL2Segment *native_l2seg;
+    HalVrf       *vrf;
 
     api_trace("EthLif Create");
 
@@ -34,39 +37,77 @@ EthLif::Factory(hal_lif_info_t *info)
 
     EthLif *eth_lif = new EthLif(info);
 
-    // Only for storage lif STORAGE_SEQ_SW_LIF_ID uplink is NULL
-    if (eth_lif->GetUplink() == NULL) {
-        goto end;
+    if (eth_lif->IsInternalManagementMnic()) {
+        NIC_LOG_INFO("lif-{}:Setting Internal management lif",
+                     info->hw_lif_id);
+        EthLif::SetInternalMgmtEthLif(eth_lif);
     }
 
-    eth_lif->GetUplink()->IncNumLifs();
+
+    if (eth_lif->GetUplink() == NULL) {
+        // HW: Admin Lif.
+        // DOL: HAL_LIF_ID_NICMGR_MIN lifs created in DevMgr constructor
+        if (!eth_lif->IsInternalManagement()) {
+            // All LIFs with uplink NULL except internal mgmt mnic and host mgmt.
+            NIC_LOG_INFO("lif-{}: Uplink is NULL", eth_lif->GetHwLifId());
+            goto end;
+        }
+    }
+
+#if 0
+    // Only for storage lif STORAGE_SEQ_SW_LIF_ID uplink is NULL
+    // if (eth_lif->GetUplink() == NULL) {
+    if (info->id == STORAGE_SEQ_SW_LIF_ID) {
+        NIC_LOG_INFO("Storage lif id: {}. Skip fwd entities creation.",
+                     info->id);
+        // NIC_LOG_INFO("lif-{}: Uplink is NULL", eth_lif->GetHwLifId());
+        goto end;
+    }
+#endif
+
+
+    // Skipping for Internal mgmt mnic
+    if (eth_lif->GetUplink()) {
+        eth_lif->GetUplink()->IncNumLifs();
+    }
 
     // Store in DB for disruptive upgrade
     ethlif_db[eth_lif->GetHwLifId()] = eth_lif;
 
     // Create Enic for every Lif in Classic Mode
-    if (hal->GetMode() == FWD_MODE_CLASSIC ||
-        eth_lif->IsOOBMnic()) {
+    if (eth_lif->IsClassicForwarding()) {
+        if (eth_lif->IsInternalManagement()) {
+            // For Internal Mgmt mnic, create vrf and native l2seg.
+            if (eth_lif->IsInternalManagementMnic()) {
+                // Create Internal Mgmt Vrf
+                vrf = HalVrf::Factory(types::VRF_TYPE_MANAGEMENT);
+                eth_lif->SetVrf(vrf);
+                // Create native l2seg to hal
+                native_l2seg = HalL2Segment::Factory(eth_lif->GetVrf(),
+                                                     NATIVE_VLAN_ID);
+                eth_lif->SetNativeL2Seg(native_l2seg);
+            }
+        } else {
+            if (eth_lif->GetUplink()->GetNumLifs() == 1) {
 
-        if (eth_lif->GetUplink()->GetNumLifs() == 1) {
+                NIC_LOG_INFO("First lif id: {}, hw_id: {} on uplink {}",
+                             eth_lif->GetLif()->GetId(),
+                             eth_lif->GetHwLifId(),
+                             eth_lif->GetUplink()->GetId());
 
-            NIC_LOG_DEBUG("First lif id: {}, hw_id: {} on uplink {}",
-                            eth_lif->GetLif()->GetId(),
-                            eth_lif->GetHwLifId(),
-                            eth_lif->GetUplink()->GetId());
+                // Create native l2seg to hal
+                native_l2seg = HalL2Segment::Factory(eth_lif->GetUplink()->GetVrf(),
+                                                     NATIVE_VLAN_ID);
 
-            // Create native l2seg to hal
-            native_l2seg = HalL2Segment::Factory(eth_lif->GetUplink()->GetVrf(),
-                                                 NATIVE_VLAN_ID);
+                // Update uplink structure with native l2seg
+                eth_lif->GetUplink()->SetNativeL2Seg(native_l2seg);
 
-            // Update uplink structure with native l2seg
-            eth_lif->GetUplink()->SetNativeL2Seg(native_l2seg);
+                // Update native_l2seg on uplink to hal
+                eth_lif->GetUplink()->UpdateHalWithNativeL2seg(native_l2seg->GetId());
 
-            // Update native_l2seg on uplink to hal
-            eth_lif->GetUplink()->UpdateHalWithNativeL2seg(native_l2seg->GetId());
-
-            // Update l2seg's mbrifs on uplink
-            native_l2seg->AddUplink(eth_lif->GetUplink());
+                // Update l2seg's mbrifs on uplink
+                native_l2seg->AddUplink(eth_lif->GetUplink());
+            }
         }
 
         // Create Enic
@@ -100,32 +141,44 @@ EthLif::Destroy(EthLif *eth_lif)
         eth_lif->remove_vlan_filters();
         eth_lif->remove_mac_vlan_filters();
 
+        if (eth_lif->GetUplink()) {
+            eth_lif->GetUplink()->DecNumLifs();
+        }
 
-        if (hal->GetMode() == FWD_MODE_CLASSIC ||
-            eth_lif->IsOOBMnic()) {
+        if (eth_lif->IsClassicForwarding()) {
             // Delete Vlan filter
             eth_lif->DelVlan(NATIVE_VLAN_ID);
 
             // Delete enic
             Enic::Destroy(eth_lif->GetEnic());
 
-            eth_lif->GetUplink()->DecNumLifs();
+            if (eth_lif->IsInternalManagement()) {
+                if (eth_lif->IsInternalManagementMnic()) {
+                    // Delete L2seg
+                    HalL2Segment::Destroy(eth_lif->GetNativeL2Seg());
+                    eth_lif->SetNativeL2Seg(NULL);
+                    // Delete Vrf
+                    HalVrf::Destroy(eth_lif->GetVrf());
+                    eth_lif->SetVrf(NULL);
+                }
+            } else {
 
-            if (eth_lif->GetUplink()->GetNumLifs() == 0) {
-                NIC_LOG_DEBUG("Last lif id: {}, hw_id: {} on uplink {}",
-                                eth_lif->GetLif()->GetId(),
-                                eth_lif->GetHwLifId(),
-                                eth_lif->GetUplink()->GetId());
+                if (eth_lif->GetUplink()->GetNumLifs() == 0) {
+                    NIC_LOG_INFO("Last lif id: {}, hw_id: {} on uplink {}",
+                                 eth_lif->GetLif()->GetId(),
+                                 eth_lif->GetHwLifId(),
+                                 eth_lif->GetUplink()->GetId());
 
-                eth_lif->GetUplink()->GetNativeL2Seg()->DelUplink(eth_lif->GetUplink());
+                    eth_lif->GetUplink()->GetNativeL2Seg()->DelUplink(eth_lif->GetUplink());
 
-                // Update native_l2seg on uplink to hal
-                eth_lif->GetUplink()->UpdateHalWithNativeL2seg(0);
+                    // Update native_l2seg on uplink to hal
+                    eth_lif->GetUplink()->UpdateHalWithNativeL2seg(0);
 
-                // Delete L2seg
-                HalL2Segment::Destroy(eth_lif->GetUplink()->GetNativeL2Seg());
+                    // Delete L2seg
+                    HalL2Segment::Destroy(eth_lif->GetUplink()->GetNativeL2Seg());
 
-                eth_lif->GetUplink()->SetNativeL2Seg(NULL);
+                    eth_lif->GetUplink()->SetNativeL2Seg(NULL);
+                }
             }
         } else {
             if (eth_lif->GetIsPromiscuous()) {
@@ -140,6 +193,8 @@ EthLif::Destroy(EthLif *eth_lif)
 EthLif::EthLif(hal_lif_info_t *info)
 {
     memcpy(&info_, info, sizeof(hal_lif_info_t));
+
+    vrf_ = NULL;
 
     lif_ = Lif::Factory(this);
 }
@@ -193,7 +248,7 @@ EthLif::AddMac(mac_t mac)
     mac_vlan_t mac_vlan;
 
     api_trace("Adding Mac Filter");
-    NIC_LOG_DEBUG("Adding Mac filter: {}", macaddr2str(mac));
+    NIC_LOG_INFO("Adding Mac filter: {}", macaddr2str(mac));
 
     if (mac_table_.find(mac) == mac_table_.end()) {
 
@@ -211,8 +266,7 @@ EthLif::AddMac(mac_t mac)
          * Smart:
          *      - Create Mac filter
          */
-        if (hal->GetMode() == FWD_MODE_CLASSIC ||
-            IsOOBMnic()) {
+        if (IsClassicForwarding()) {
             // Register new mac across all existing vlans
             for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
                 // Check if (MacVlan) filter is already present
@@ -221,7 +275,7 @@ EthLif::AddMac(mac_t mac)
                     // No (MacVlan) filter. Creating (Mac, Vlan)
                     CreateMacVlanFilter(mac, *vlan_it);
                 } else {
-                    NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
+                    NIC_LOG_INFO("(Mac,Vlan) filter present. No-op");
                 }
             }
         } else {
@@ -242,25 +296,24 @@ EthLif::DelMac(mac_t mac)
     mac_vlan_t mac_vlan_key, mac_key, vlan_key;
 
     api_trace("Deleting Mac Filter");
-    NIC_LOG_DEBUG("Deleting Mac filter: {}", macaddr2str(mac));
+    NIC_LOG_INFO("Deleting Mac filter: {}", macaddr2str(mac));
 
     mac_key = make_tuple(mac, 0);
     if (mac_table_.find(mac) != mac_table_.end()) {
-        if (hal->GetMode() == FWD_MODE_CLASSIC ||
-            IsOOBMnic()) {
+        if (IsClassicForwarding()) {
             for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
                 vlan_key = make_tuple(0, *vlan_it);
                 mac_vlan_key = make_tuple(mac, *vlan_it);
                 if (vlan_table_.find(*vlan_it) != vlan_table_.end() &&
                     mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
-                    NIC_LOG_DEBUG("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
+                    NIC_LOG_INFO("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
                     // Mac, Vlan are present and (Mac,Vlan) is not
                     DeleteMacVlanFilter(mac, *vlan_it);
                 } else {
                     // Case:
                     //  Case 1: Vlan filter not present but (Mac,Vlan) is either present or not.
                     //  Case 2: Vlan filter is present along with (Mac,Vlan)
-                    NIC_LOG_DEBUG("Mac Delete: No-op");
+                    NIC_LOG_INFO("Mac Delete: No-op");
                 }
             }
         } else {
@@ -281,7 +334,7 @@ EthLif::AddVlan(vlan_t vlan)
     mac_vlan_t mac_vlan;
 
     api_trace("Adding Vlan Filter");
-    NIC_LOG_DEBUG("Adding Vlan filter: {}", vlan);
+    NIC_LOG_INFO("Adding Vlan filter: {}", vlan);
 
     if (vlan_table_.find(vlan) == vlan_table_.end()) {
         // Check if max limit reached
@@ -298,8 +351,7 @@ EthLif::AddVlan(vlan_t vlan)
          * Smart:
          *      - Create Vlan filter
          */
-        if (hal->GetMode() == FWD_MODE_CLASSIC ||
-            IsOOBMnic()) {
+        if (IsClassicForwarding()) {
             // Register new mac across all existing vlans
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 // Check if (MacVlan) filter is already present
@@ -308,7 +360,7 @@ EthLif::AddVlan(vlan_t vlan)
                     // No (MacVlan) filter. Creating (Mac, Vlan)
                     CreateMacVlanFilter(*it, vlan);
                 } else {
-                    NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
+                    NIC_LOG_INFO("(Mac,Vlan) filter present. No-op");
                 }
             }
         } else {
@@ -329,23 +381,22 @@ EthLif::DelVlan(vlan_t vlan)
     mac_vlan_t mac_vlan_key;
 
     api_trace("Deleting Vlan Filter");
-    NIC_LOG_DEBUG("Deleting Vlan filter: {}", vlan);
+    NIC_LOG_INFO("Deleting Vlan filter: {}", vlan);
 
     if (vlan_table_.find(vlan) != vlan_table_.end()) {
-        if (hal->GetMode() == FWD_MODE_CLASSIC ||
-            IsOOBMnic()) {
+        if (IsClassicForwarding()) {
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 mac_vlan_key = make_tuple(*it, vlan);
                 if (mac_table_.find(*it) != mac_table_.end() &&
                     mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
-                    NIC_LOG_DEBUG("Vlan Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
+                    NIC_LOG_INFO("Vlan Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
                     // Mac, Vlan are present and (Mac,Vlan) is not
                     DeleteMacVlanFilter(*it, vlan);
                 } else {
                     // Case:
                     //  Case 1: Mac filter not present but (Mac,Vlan) is either present or not.
                     //  Case 2: Mac filter is present along with (Mac,Vlan)
-                    NIC_LOG_DEBUG("Vlan Delete: No-op");
+                    NIC_LOG_INFO("Vlan Delete: No-op");
                 }
             }
         } else {
@@ -366,7 +417,7 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
     mac_vlan_t key(mac, vlan);
 
     api_trace("Adding (Mac,Vlan) Filter");
-    NIC_LOG_DEBUG("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
+    NIC_LOG_INFO("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     if (mac_vlan_table_.find(key) == mac_vlan_table_.end()) {
         // Check if max limit reached
@@ -376,14 +427,13 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
                           GetHwLifId());
             return HAL_IRISC_RET_LIMIT_REACHED;
         }
-        if (hal->GetMode() == FWD_MODE_CLASSIC ||
-            IsOOBMnic()) {
+        if (IsClassicForwarding()) {
             // Check if mac filter and vlan filter is present
             if (mac_table_.find(mac) == mac_table_.end() ||
                 vlan_table_.find(vlan) == vlan_table_.end()) {
                 CreateMacVlanFilter(mac, vlan);
             } else {
-                NIC_LOG_DEBUG("Mac filter and Vlan filter preset. "
+                NIC_LOG_INFO("Mac filter and Vlan filter preset. "
                                 "No-op for (Mac,Vlan) filter");
             }
         } else {
@@ -404,12 +454,11 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
     mac_vlan_t mac_vlan_key;
 
     api_trace("Deleting (Mac,Vlan) Filter");
-    NIC_LOG_DEBUG("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
+    NIC_LOG_INFO("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     mac_vlan_key = make_tuple(mac, vlan);
     if (mac_vlan_table_.find(mac_vlan_key) != mac_vlan_table_.end()) {
-        if (hal->GetMode() == FWD_MODE_CLASSIC ||
-            IsOOBMnic()) {
+        if (IsClassicForwarding()) {
             if (mac_table_.find(mac) == mac_table_.end() ||
                  vlan_table_.find(vlan) == vlan_table_.end()) {
                 // One of Mac or Vlan is not present.
@@ -417,7 +466,7 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
                 DeleteMacVlanFilter(mac, vlan);
             } else {
                 // Mac filter and Vlan filter both exist
-                NIC_LOG_DEBUG("Mac filter and Vlan filter present. "
+                NIC_LOG_INFO("Mac filter and Vlan filter present. "
                                 "No-op for (Mac,Vlan) filter");
             }
         } else {
@@ -442,14 +491,13 @@ EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
         goto end;
     }
 
-    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_promiscuous,
                     receive_promiscuous);
 
     info_.receive_promiscuous = receive_promiscuous;
 
-    if (hal->GetMode() == FWD_MODE_CLASSIC ||
-        IsOOBMnic()) {
+    if (IsClassicForwarding()) {
     } else {
         if (receive_promiscuous) {
             CreateMacVlanFilter(0, 0);
@@ -474,7 +522,7 @@ EthLif::UpdateReceiveBroadcast(bool receive_broadcast)
         goto end;
     }
 
-    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_broadcast,
                     receive_broadcast);
 
@@ -496,7 +544,7 @@ EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
         goto end;
     }
 
-    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.receive_all_multicast,
                     receive_all_multicast);
 
@@ -518,7 +566,7 @@ EthLif::UpdateVlanStripEn(bool vlan_strip_en)
         goto end;
     }
 
-    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.vlan_strip_en,
                     vlan_strip_en);
 
@@ -540,7 +588,7 @@ EthLif::UpdateVlanInsertEn(bool vlan_insert_en)
         goto end;
     }
 
-    NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
                     lif_->GetId(), info_.vlan_insert_en,
                     vlan_insert_en);
 
@@ -678,13 +726,86 @@ EthLif::GetLifInfo()
     return &info_;
 }
 
+HalVrf *
+EthLif::GetVrf()
+{
+    if (IsInternalManagementMnic()) {
+        return vrf_;
+    } else if (IsHostManagement()) {
+        return internal_mgmt_ethlif->GetVrf();
+    } else {
+        return GetUplink()->GetVrf();
+    }
+}
+
+HalL2Segment *
+EthLif::GetNativeL2Seg()
+{
+    if (IsInternalManagementMnic()) {
+        return native_l2seg_;
+    } else if (IsHostManagement()) {
+        return internal_mgmt_ethlif->GetNativeL2Seg();
+    } else {
+        return GetUplink()->GetNativeL2Seg();
+    }
+
+}
+
 bool
 EthLif::IsOOBMnic()
 {
+    return (info_.type ==
+            types::LIF_TYPE_MNIC_OOB_MANAGEMENT);
+#if 0
     Uplink *up = GetUplink();
     if (up) {
         return up->IsOOB();
     }
     return false;
+#endif
+}
+
+bool
+EthLif::IsInternalManagementMnic()
+{
+    return (info_.type ==
+            types::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT);
+}
+
+bool
+EthLif::IsInbandManagementMnic()
+{
+    return (info_.type ==
+            types::LIF_TYPE_MNIC_INBAND_MANAGEMENT);
+}
+
+bool
+EthLif::IsMnic()
+{
+    return (IsOOBMnic() ||
+            IsInternalManagementMnic() ||
+            IsInbandManagementMnic());
+}
+
+bool
+EthLif::IsHostManagement()
+{
+    return (info_.type == types::LIF_TYPE_HOST_MANAGEMENT);
+}
+
+bool
+EthLif::IsInternalManagement()
+{
+    return (IsInternalManagementMnic() ||
+            IsHostManagement());
+}
+
+bool
+EthLif::IsClassicForwarding()
+{
+    return (hal->GetMode() == FWD_MODE_CLASSIC ||
+            IsOOBMnic() ||
+            IsInternalManagementMnic() ||
+            IsHostManagement());
 }
 

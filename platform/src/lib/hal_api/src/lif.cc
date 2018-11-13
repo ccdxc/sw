@@ -68,11 +68,13 @@ Lif::Lif(EthLif * eth_lif)
 
     eth_lif_ = eth_lif;
 
-    NIC_LOG_DEBUG("Creating Lif: prom: {}, oob: {}, rdma_en: {}",
+    NIC_LOG_INFO("Creating Lif: prom: {}, oob: {}, rdma_en: {}",
                     lif_info->receive_promiscuous,
                     eth_lif_->IsOOBMnic(),
                     lif_info->enable_rdma);
 
+    PopulateRequest(req_msg, &req);
+#if 0
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
     req->set_type(lif_info->type);
@@ -87,14 +89,15 @@ Lif::Lif(EthLif * eth_lif)
     req->set_is_management(eth_lif_->IsOOBMnic());
     req->set_admin_status(::intf::IF_STATUS_UP);
     req->set_enable_rdma(lif_info->enable_rdma);
+#endif
 
     // Populate qstate map
     for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
         auto & qinfo = lif_info->queue_info[i];
-        NIC_LOG_DEBUG("Processing queue type: {}, size: {}", i, qinfo.size);
+        NIC_LOG_INFO("Processing queue type: {}, size: {}", i, qinfo.size);
         if (qinfo.size < 1) continue;
 
-        NIC_LOG_DEBUG("Queue type_num: {}, entries: {}, purpose: {}, prog: {}, label: {}",
+        NIC_LOG_INFO("Queue type_num: {}, entries: {}, purpose: {}, prog: {}, label: {}",
                         qinfo.type_num,
                         qinfo.entries, qinfo.purpose, qinfo.prog, qinfo.label);
 
@@ -123,7 +126,7 @@ Lif::Lif(EthLif * eth_lif)
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle_ = rsp.status().lif_handle();
             hw_lif_id_ = rsp.status().hw_lif_id();
-            NIC_LOG_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_INFO("Created Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, hw_lif_id_, handle_);
         } else {
             NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. err: {}",
@@ -154,7 +157,7 @@ Lif::~Lif()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_DEBUG("Deleted Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_INFO("Deleted Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, eth_lif_->GetLifInfo()->hw_lif_id, handle_);
         } else {
             NIC_LOG_ERR("Failed to delete Lif for id: {}. err: {}",
@@ -164,6 +167,30 @@ Lif::~Lif()
         NIC_LOG_ERR("Failed to delete Lif for id: {}. err: {}:{}",
                       id_, status.error_code(), status.error_message());
     }
+}
+
+void
+Lif::PopulateRequest(intf::LifRequestMsg &req_msg, intf::LifSpec **req_ptr)
+{
+    hal_lif_info_t             *lif_info = eth_lif_->GetLifInfo();
+    intf::LifSpec              *req;
+
+    req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_lif_id(id_);
+    req->set_type(lif_info->type);
+    req->set_hw_lif_id(lif_info->hw_lif_id);
+    req->mutable_pinned_uplink_if_key_handle()->
+        set_interface_id(lif_info->pinned_uplink ? lif_info->pinned_uplink->GetId() : 0);
+    req->mutable_packet_filter()->set_receive_broadcast(lif_info->receive_broadcast);
+    req->mutable_packet_filter()->set_receive_all_multicast(lif_info->receive_all_multicast);
+    req->mutable_packet_filter()->set_receive_promiscuous(lif_info->receive_promiscuous);
+    req->set_vlan_strip_en(lif_info->vlan_strip_en);
+    req->set_vlan_insert_en(lif_info->vlan_insert_en);
+    req->set_is_management(eth_lif_->IsOOBMnic());
+    req->set_admin_status(::intf::IF_STATUS_UP);
+    req->set_enable_rdma(lif_info->enable_rdma);
+
+    *req_ptr = req;
 }
 
 void
@@ -178,11 +205,15 @@ Lif::TriggerHalUpdate()
     intf::LifResponseMsg       rsp_msg;
     hal_lif_info_t             *lif_info = eth_lif_->GetLifInfo();
 
+    PopulateRequest(req_msg, &req);
+
+#if 0
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
     req->set_type(lif_info->type);
     req->set_hw_lif_id(lif_info->hw_lif_id);
-    req->mutable_pinned_uplink_if_key_handle()->set_interface_id(lif_info->pinned_uplink->GetId());
+    req->mutable_pinned_uplink_if_key_handle()->
+        set_interface_id(lif_info->pinned_uplink ? lif_info->pinned_uplink->GetId() : 0);
     req->mutable_packet_filter()->set_receive_broadcast(lif_info->receive_broadcast);
     req->mutable_packet_filter()->set_receive_all_multicast(lif_info->receive_all_multicast);
     req->mutable_packet_filter()->set_receive_promiscuous(lif_info->receive_promiscuous);
@@ -191,12 +222,13 @@ Lif::TriggerHalUpdate()
     req->set_is_management(eth_lif_->IsOOBMnic());
     req->set_admin_status(::intf::IF_STATUS_UP);
     req->set_enable_rdma(lif_info->enable_rdma);
+#endif
 
     status = hal->lif_update(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_DEBUG("Created Lif id: {} hw_lif_id: {}, handle: {}",
+            NIC_LOG_INFO("Created Lif id: {} hw_lif_id: {}, handle: {}",
                             id_, lif_info->hw_lif_id, handle_);
         } else {
             NIC_LOG_ERR("Failed to create Lif for id: {}. err: {}",

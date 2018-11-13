@@ -45,6 +45,7 @@ init(bool log_to_console)
             // nop
         }
     }
+    level = spdlog::level::debug;
 
     logdir = std::getenv("NIC_LOG_DIR");
     if (!logdir) {
@@ -85,7 +86,8 @@ init(bool log_to_console)
 
     _logger = std::make_shared<spdlog::logger>("nicmgr", begin(sinks), end(sinks));
     assert(_logger != NULL);
-    _logger->info("Logger initialized!");
+    _logger->info("Logger initialized... Log level: {}, {}",
+                  level, spdlog::level::level_names[level]);
     // messages at this level or higher should be flushed immediately
     _logger->flush_on(spdlog::level::trace);
 

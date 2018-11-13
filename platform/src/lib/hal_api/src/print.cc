@@ -36,5 +36,5 @@ api_trace (const char *trace)
     for (int i = 0; i < NUM_DASHES; i++) {
         buf.write("{}", "-");
     }
-    NIC_LOG_DEBUG("{}", buf.c_str());
+    NIC_LOG_INFO("{}", buf.c_str());
 }

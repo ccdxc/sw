@@ -351,10 +351,6 @@ DeviceManager::LoadConfig(string path)
             // TODO: Refactor into resource allocator.
             // TODO: For now interrupts must be 256 aligned. The allocator does not support
             //       aligning resource ids, so allocate 256.
-            if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
-                return -1;
-            }
             eth_spec->dev_uuid     = val.get<uint64_t>("dev_uuid");
             eth_spec->rxq_count    = val.get<uint64_t>("rxq_count");
             eth_spec->txq_count    = val.get<uint64_t>("txq_count");
@@ -364,6 +360,10 @@ DeviceManager::LoadConfig(string path)
             eth_spec->intr_count   = val.get<uint64_t>("intr_count");
             eth_spec->mac_addr     = sys_mac_base++;
 
+            if (intr_allocator->alloc_block(&intr_base, eth_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
+                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
+                return -1;
+            }
 #if 0
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
             if (eth_spec->lif_id == 0) {
@@ -458,11 +458,20 @@ DeviceManager::LoadConfig(string path)
 
             eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             eth_spec->lif_id = eth_spec->hw_lif_id;
+            if (val.get_optional<string>("network")) {
+                eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
+                eth_spec->uplink = uplinks[eth_spec->uplink_id];
+                if (eth_spec->uplink == NULL) {
+                    NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
+                }
+            }
+#if 0
             eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
             eth_spec->uplink = uplinks[eth_spec->uplink_id];
             if (eth_spec->uplink == NULL) {
                 NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
             }
+#endif
 
             eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
             eth_spec->host_dev = true;

@@ -27,6 +27,7 @@ LCFLAGS = \
           -I $(TOPDIR)/../nic/sdk/include \
           -I $(TOPDIR)/../nic/hal/third-party/google/include \
           -I $(TOPDIR)/../nic/hal/third-party/grpc/include \
+          -I $(TOPDIR)/../storage/offload/include \
           -I ../include \
           -I ../../nicmgr/include \
           $(NULL)

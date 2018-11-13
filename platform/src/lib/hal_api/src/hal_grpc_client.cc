@@ -63,7 +63,7 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
     channel = grpc::CreateChannel(svc_url, grpc::InsecureChannelCredentials());
 
     // cout << "[INFO] Waiting for HAL to be ready ..." << endl;
-    NIC_LOG_DEBUG("Waiting for HAL to be ready at: {}", svc_url);
+    NIC_LOG_INFO("Waiting for HAL to be ready at: {}", svc_url);
     auto state = channel->GetState(true);
     while (state != GRPC_CHANNEL_READY) {
         // Wait for State change or deadline

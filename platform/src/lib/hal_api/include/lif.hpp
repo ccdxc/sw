@@ -19,6 +19,8 @@ public:
   uint32_t GetHwLifId();
 
   void TriggerHalUpdate();
+  void PopulateRequest(intf::LifRequestMsg &req_msg,
+                       intf::LifSpec **req_ptr);
 private:
   Lif(EthLif *eth_lif);
   ~Lif();
