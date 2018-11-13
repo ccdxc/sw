@@ -312,6 +312,7 @@ p4pd_utils_widekey_hash_table_entry_prepare(uint8_t *hwentry,
                                             uint16_t match_key_start_bit,
                                             uint8_t *hwkey,
                                             uint16_t keylen,
+                                            uint16_t actiondata_len,
                                             uint8_t *packed_actiondata_before_matchkey,
                                             uint16_t actiondata_before_matchkey_len,
                                             uint8_t *packed_actiondata_after_matchkey,
@@ -370,6 +371,17 @@ p4pd_utils_widekey_hash_table_entry_prepare(uint8_t *hwentry,
                                 actiondata_after_matchkey_len);
 
     dest_start_bit += actiondata_after_matchkey_len;
+    if ((actiondata_before_matchkey_len + actiondata_after_matchkey_len) < actiondata_len) {
+        // handle cases where certain p4-action parameters bit-width is less than
+        // maximum allocated action-data bits (based on p4-action with max parameters)
+        // For such actions that do not pack action-data, total-sram width should
+        // still add to key-length + max(action-data-len across all p4-action functions)
+        // when key+actiondata length doesn't add up to entry-size, swizzled bytes
+        // misaligns key leading to hash table miss (key doesn't match)
+        //
+        // Increment dest_start_bit so as to add up to max action data len.
+        dest_start_bit +=  (actiondata_len - (actiondata_before_matchkey_len + actiondata_after_matchkey_len));
+    }
 
     /* when computing size of entry, drop axi shift bit len */
     dest_start_bit -= (*axi_shift_bytes * 8);
@@ -386,6 +398,7 @@ p4pd_utils_hash_table_entry_prepare(uint8_t *hwentry,
                                     uint16_t match_key_start_bit,
                                     uint8_t *hwkey,
                                     uint16_t keylen,
+                                    uint16_t actiondata_len,
                                     uint8_t *packed_actiondata_before_matchkey,
                                     uint16_t actiondata_before_matchkey_len,
                                     uint8_t *packed_actiondata_after_matchkey,
@@ -441,6 +454,18 @@ p4pd_utils_hash_table_entry_prepare(uint8_t *hwentry,
                                 (actiondata_after_matchkey_len - key_byte_shared_bits));
 
     dest_start_bit += (actiondata_after_matchkey_len - key_byte_shared_bits);
+
+    if ((actiondata_before_matchkey_len + actiondata_after_matchkey_len) < actiondata_len) {
+        // handle cases where certain p4-action parameters bit-width is less than
+        // maximum allocated action-data bits (based on p4-action with max parameters)
+        // For such actions that do not pack action-data, total-sram width should
+        // still add to key-length + max(action-data-len across all p4-action functions)
+        // when key+actiondata length doesn't add up to entry-size, swizzled bytes
+        // misaligns key leading to hash table miss (key doesn't match)
+        //
+        // Increment dest_start_bit so as to add up to max action data len.
+        dest_start_bit +=  (actiondata_len - (actiondata_before_matchkey_len + actiondata_after_matchkey_len));
+    }
 
     /* when computing size of entry, drop axi shift bit len */
     dest_start_bit -= (*axi_shift_bytes * 8);
