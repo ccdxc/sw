@@ -20,7 +20,7 @@
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "netagent",
-    "command": "/nic/bin/netagent -datapath hal -logtofile /data/log/agent.log -hostif lo",
+    "command": "/nic/bin/netagent -datapath hal -logtofile /var/log/agent.log -hostif lo",
     "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
 }, {
@@ -30,12 +30,12 @@
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "nmd",
-    "command": "/nic/bin/nmd -log-to-file /data/log/nmd.log -hostif lo",
+    "command": "/nic/bin/nmd -log-to-file /var/log/nmd.log -hostif lo",
     "dependencies": ["delphi"],
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "tmagent",
-    "command": "/nic/bin/tmagent -logtofile /data/log/tmagent.log -hostif lo",
+    "command": "/nic/bin/tmagent -logtofile /var/log/tmagent.log -hostif lo",
     "dependencies": ["delphi"],
     "flags": ["no_watchdog", "non_critical"]
 }]
