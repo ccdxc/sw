@@ -49,6 +49,7 @@ using namespace sdk::lib;
                               sizeof(ipv4_header_t)+sizeof(tcp_header_t)+TCP_TS_OPTION_LEN)
 #define TCP_IPV4_PKT_SZ (sizeof(ether_header_t)+\
                          sizeof(ipv4_header_t)+sizeof(tcp_header_t))
+#define TIME_DIFF(val1, val2) ((val1 <= val2)?(val2-val1):(val1-val2))
 
 namespace hal {
 
@@ -706,7 +707,7 @@ session_state_to_session_get_response (session_t *session,
 
     // iflow_age
     create_ns = session_state->iflow_state.create_ts;
-    age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+    age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
 
@@ -716,7 +717,7 @@ session_state_to_session_get_response (session_t *session,
         response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_time_to_age(HAL_MAX_INACTIVTY_TIMEOUT);
     } else {
-        time_elapsed = (ctime_ns-session_state->iflow_state.last_pkt_ts);
+        time_elapsed = TIME_DIFF(ctime_ns, session_state->iflow_state.last_pkt_ts);
         time_remaining = (session_timeout > time_elapsed)?\
                          ((session_timeout-time_elapsed)/TIME_NSECS_PER_SEC):0;
         response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
@@ -1676,14 +1677,14 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     // Check initiator flow
     //HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
     //                session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
-    if ((ctime_ns - session_state.iflow_state.last_pkt_ts) >= session_timeout) {
+    if (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) {
         // session hasn't aged yet, move on
         retval = SESSION_AGED_IFLOW;
     }
 
     if (session->rflow) {
         //check responder flow
-        if ((ctime_ns - session_state.rflow_state.last_pkt_ts) >= session_timeout) {
+        if (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) {
             // responder flow seems to be active still
             if (retval == SESSION_AGED_IFLOW)
                 retval = SESSION_AGED_BOTH;
