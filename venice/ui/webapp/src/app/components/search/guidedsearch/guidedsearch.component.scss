@@ -1,5 +1,5 @@
 
-@import 'global-mixins';
+@import 'src/global-mixins';
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
@@ -60,6 +60,10 @@ $vertical-gutter: 5px;
     margin: $vertical-gutter $horizontal-gutter;
 }
 
+.guidesearch-row-fieldtag {
+    padding: 5px 0px;
+}
+
 .guidesearch-set-selectfield {
     cursor: pointer;
 }
@@ -76,9 +80,9 @@ $vertical-gutter: 5px;
 }
 
 .guidesearch-title-label-right {
-  margin-left:5px;
+  margin-left:15px;
   margin-right:10px;
-  width: 190px;
+//   width: 190px;
   height: 17px;
   font-size: 14px;
   font-weight: normal;

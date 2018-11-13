@@ -1,5 +1,5 @@
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/map';
+
+
 
 import {
   ApplicationRef,
@@ -17,8 +17,8 @@ import { PinPayload } from '@app/models/frontend/shared/pinpayload.interface.ts'
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface.ts';
 import * as _ from 'lodash';
 import { Promise } from 'q';
-import { Subject } from 'rxjs/Subject';
-import { Subscription } from 'rxjs/Subscription';
+import { Subject, Subscription } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { LogService } from '@app/services/logging/log.service';
 
 interface Message {
@@ -140,10 +140,10 @@ export class ControllerService {
    * subscribe to an event
    */
   subscribe(type: Eventtypes, callback: MessageCallback): Subscription {
-    return this.handler
-      .filter(message => message.type === type)
-      .map(message => message.payload)
-      .subscribe(callback);
+    return this.handler.pipe(
+      filter(message => message.type === type),
+      map(message => message.payload)
+    ).subscribe(callback);
   }
 
   /**

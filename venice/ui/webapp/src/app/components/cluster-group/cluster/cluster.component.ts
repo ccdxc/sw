@@ -12,7 +12,7 @@ import { ClusterCluster, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { Metrics_queryQuerySpec } from '@sdk/v1/models/generated/metrics_query';
 import { IMetrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
 import { MessageService } from 'primeng/primeng';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-cluster',

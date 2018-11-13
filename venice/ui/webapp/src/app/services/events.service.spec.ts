@@ -7,7 +7,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { MatIconRegistry } from '@angular/material';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 
 describe('EventsService', () => {
   let postSpy;

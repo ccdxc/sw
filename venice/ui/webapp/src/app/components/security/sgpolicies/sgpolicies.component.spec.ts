@@ -13,7 +13,7 @@ import { MatIconRegistry } from '@angular/material';
 import { SecurityService } from '@app/services/generated/security.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';

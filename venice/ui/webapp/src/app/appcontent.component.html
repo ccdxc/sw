@@ -182,9 +182,9 @@
                                             class="app-ptoast-icon">
                                         error 
                                     </mat-icon>
-                                    <div fxFlex FxLayout="column">
-                                        <div fxFlex="none" class="ui-toast-summary">{{message.summary}}</div>
-                                        <div fxFlex="none" class="ui-toast-detail">{{message.detail}}</div>
+                                    <div fxFlex fxLayout="column">
+                                        <div fxFlex="nogrow" class="ui-toast-summary">{{message.summary}}</div>
+                                        <div fxFlex="nogrow" class="ui-toast-detail">{{message.detail}}</div>
                                     </div>
                                     <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
                                         <mat-icon fxFlex="none" class="app-ptoast-close" (click)="onClose($event)" >close</mat-icon>

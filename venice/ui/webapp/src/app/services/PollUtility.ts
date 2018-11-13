@@ -1,7 +1,4 @@
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { timer } from 'rxjs/observable/timer';
+import { Observable, Subscription, BehaviorSubject, timer } from 'rxjs';
 import { Utility } from '@app/common/Utility';
 
 /**

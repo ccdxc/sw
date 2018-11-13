@@ -1,12 +1,12 @@
 import { HttpClient, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { Utility } from '@app/common/Utility';
 import * as oboe from 'oboe';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/delay';
-import 'rxjs/add/operator/publishReplay';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
+import { publishReplay, refCount } from 'rxjs/operators'
+
+
+
+
+import { Observable ,  Subject } from 'rxjs';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { MockDataUtil } from '@app/common/MockDataUtil';
 
@@ -81,12 +81,12 @@ export class GenServiceUtility {
     }
     if (this.oboeServiceMap[url] == null)  {
       // Creating cold observer that emits events when oboe receives new data
-      const oboeObserver = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));
+      const oboeObserver: Observable<any> = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));
       // Creating a replay subject that subscribes and unsubscribes from the oboeObserver source
       // only if it has subscribers.
       // The connection will only be open if there is a listener, and closed as soon as there
       // are no more listeners
-      const observer = oboeObserver.publishReplay().refCount();
+      const observer = oboeObserver.pipe(publishReplay(), refCount());
       this.oboeServiceMap[url] = observer;
     }
     const retObserver = this.oboeServiceMap[url];

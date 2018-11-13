@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ContentChildren, QueryList, TemplateRef, Output, EventEmitter, ViewChildren, AfterContentInit, ContentChild } from '@angular/core';
+import { AfterContentInit, Component, ContentChild, ContentChildren, EventEmitter, Input, Output, QueryList, TemplateRef } from '@angular/core';
 
 @Component({
   selector: 'app-penuitab',

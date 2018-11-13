@@ -17,6 +17,7 @@ import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
 import { ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 import { MessageService } from 'primeng/primeng';
+import { map } from 'rxjs/internal/operators';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -150,19 +151,18 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     this.initializeData();
 
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'SgpolicydetailComponent', 'state': Eventtypes.COMPONENT_INIT });
-    this._route.params
-      .map(params => params['id'])
-      .subscribe((id) => {
-        this.selectedPolicyId = id;
-        this.initializeData();
-        this.getSGPoliciesDetail();
-        this._controllerService.setToolbarData({
-          buttons: [],
-          breadcrumb: [
-            { label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' },
-            { label: id, url: Utility.getBaseUIUrl() + 'security/sgpolicies/' + id }]
-        });
+    this._route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      this.selectedPolicyId = id;
+      this.initializeData();
+      this.getSGPoliciesDetail();
+      this._controllerService.setToolbarData({
+        buttons: [],
+        breadcrumb: [
+          { label: 'Security Group Policies', url: Utility.getBaseUIUrl() + 'security/sgpolicies' },
+          { label: id, url: Utility.getBaseUIUrl() + 'security/sgpolicies/' + id }]
       });
+    });
 
     this.cols = [
       { field: 'sourceIPs', header: 'Source IPs' },

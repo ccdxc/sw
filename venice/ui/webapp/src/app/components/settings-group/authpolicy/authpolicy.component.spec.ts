@@ -15,7 +15,7 @@ import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Observable } from 'rxjs/Observable';
+import { Observable, of } from 'rxjs';
 import { AuthAuthenticators_authenticator_order } from '@sdk/v1/models/generated/auth';
 import { By } from '@angular/platform-browser';
 import { MessageService } from 'primeng/primeng';
@@ -23,7 +23,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 
 class MockAuthService extends AuthService {
   public GetAuthenticationPolicy(): any {
-     const items = {
+    const items = {
       spec: {
         authenticators: {
           'authenticator-order': [AuthAuthenticators_authenticator_order.LOCAL, AuthAuthenticators_authenticator_order.LDAP],
@@ -69,8 +69,8 @@ class MockAuthService extends AuthService {
         }
       }
     };
-    const response = {body: items};
-   return Observable.of(response);
+    const response = { body: items };
+    return of(response);
   }
 }
 
@@ -117,7 +117,7 @@ describe('AuthpolicyComponent', () => {
     expect(component).toBeTruthy();
   });
 
- it('should fetch data and change ranks', async(() => {
+  it('should fetch data and change ranks', async(() => {
     // TODO: Add RADIUS data
     const authService = fixture.debugElement.injector.get(AuthService);
     const spy = spyOn(authService, 'GetAuthenticationPolicy').and.callThrough();
@@ -142,16 +142,16 @@ describe('AuthpolicyComponent', () => {
         const toggle = groups[0].queryAll(By.css('.mat-checked'));
         expect(toggle.length).toBe(1);
         const values = groups[0].queryAll(By.css('.ldap-input'));
-        expect(values[0].nativeElement.innerText).toContain('binddn');
-        expect(values[1].nativeElement.innerText).toContain('bindpass');
-        expect(values[2].nativeElement.innerText).toContain('basedn');
-        expect(values[3].nativeElement.innerText).toContain('user-obj');
-        expect(values[4].nativeElement.innerText).toContain('group-obj-class');
-        expect(values[5].nativeElement.innerText).toContain('user');
-        expect(values[6].nativeElement.innerText).toContain('group');
-        expect(values[7].nativeElement.innerText).toContain('tenant');
-        expect(values[8].nativeElement.innerText).toContain('fullname');
-        expect(values[9].nativeElement.innerText).toContain('email');
+        expect(values[0].nativeElement.innerHTML).toContain('binddn');
+        expect(values[1].nativeElement.innerHTML).toContain('bindpass');
+        expect(values[2].nativeElement.innerHTML).toContain('basedn');
+        expect(values[3].nativeElement.innerHTML).toContain('user-obj');
+        expect(values[4].nativeElement.innerHTML).toContain('group-obj-class');
+        expect(values[5].nativeElement.innerHTML).toContain('user');
+        expect(values[6].nativeElement.innerHTML).toContain('group');
+        expect(values[7].nativeElement.innerHTML).toContain('tenant');
+        expect(values[8].nativeElement.innerHTML).toContain('fullname');
+        expect(values[9].nativeElement.innerHTML).toContain('email');
 
         // moving it back down
         arrow_container = fixture.debugElement.queryAll(By.css('.authpolicy-arrow-down'));

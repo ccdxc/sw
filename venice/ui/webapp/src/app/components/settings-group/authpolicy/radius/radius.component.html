@@ -1,4 +1,4 @@
-<div fxFlex="nogrow" fxLayout="row" class="authpolicy-group" [ngClass]="!radiusEditMode ? 'authpolicy-group-hover' : '' ">
+<div fxFlex="noshrink" fxLayout="row" class="authpolicy-group" [ngClass]="!radiusEditMode ? 'authpolicy-group-hover' : '' ">
   <ng-container *ngIf="radiusData; else RadiusCreate">
     <ng-container *ngTemplateOutlet="Radius"></ng-container>
   </ng-container>
@@ -41,7 +41,7 @@
     <div fxFlex="40px"></div>
   
     <!-- Server setup -->
-    <div fxFlex fxLayout="row" [style.position]="'relative'">
+    <div fxFlex="noshrink" fxLayout="row" [style.position]="'relative'">
       <div fxFlex fxLayout="column">
         <ng-container *ngIf="radiusEditMode">
           <ng-container *ngTemplateOutlet="RadiusServers"></ng-container>
@@ -60,7 +60,7 @@
         arrow_upward
       </mat-icon>
     </div>
-    <div fxFlex fxLayout="row" fxLayoutAlign="end center">
+    <div fxFlex="noshrink" fxLayout="row" fxLayoutAlign="end center">
       <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}} </div>
     </div>
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
@@ -81,13 +81,13 @@
 </ng-template>
 
 <ng-template #RadiusConfig>
-  <div fxFlex fxLayout="row">
+  <div fxFlex="noshrink" fxLayout="row">
     <div fxFlex="50px"></div>
     <div fxFlex fxLayout="row wrap" fxLayoutGap="10px" [formGroup]="radiusObject.$formGroup">
       <!-- INPUT GROUP 1 -->
       <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
         <div fxFlex="30px" class="radius-fieldtitle">CONFIG</div>
-        <div fxFlex fxLayout="row">
+        <div fxFlex="noshrink" fxLayout="row">
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
@@ -113,7 +113,7 @@
       <!-- INPUT GROUP 2 -->
       <div  *ngIf="!radiusEditMode" fxFlex="nogrow" fxLayout="column wrap" class="radius-input-group">
           <div fxFlex="30px" class="radius-fieldtitle">SERVERS</div>
-          <div fxFlex fxLayout="row">
+          <div fxFlex="noshrink" fxLayout="row">
             <div fxFlex fxLayout="column" *ngFor="let server of radiusObject.servers">
               <div fxFlex="30px" fxLayout="row" class="radius-fieldtitle radius-input" fxLayoutAlign="start center" fxLayoutGap="5px">
                 <mat-icon fxFlex="nogrow" class="authpolicy-lock">lock</mat-icon>
@@ -131,14 +131,14 @@
 </ng-template>
 
 <ng-template #RadiusServers>
-    <div fxFlex fxLayout="column" class="radius-servergroup" [@slideInOut] 
+    <div fxFlex="noshrink" fxLayout="column" class="radius-servergroup" [@slideInOut] 
     *ngFor="let server of radiusObject.$formGroup.get('servers').controls; let index = index; let first = first" [formGroup]="server">
     <div fxFlex="20px"></div>
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between start">
-    <div fxFlex class="radius-fieldtitle">
+    <div fxFlex="noshrink" class="radius-fieldtitle">
       SERVER CONFIGURATION
     </div>
-    <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center" class="radius-and">
+    <div fxFlex="noshrink" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center" class="radius-and">
         <span *ngIf="first" fxFlex="nogrow" (click)="addServer()">+ ADD</span>
         <mat-icon *ngIf="radiusObject.$formGroup.get('servers').length > 1" fxFlex="nogrow" (click)="removeServer(index)" [style.color]="'#767676'">delete</mat-icon>
     </div>
@@ -146,10 +146,10 @@
     <div fxFlex="10px"></div>
     <!-- <div fxFlex fxLayout="row"> -->
 
-    <div fxFlex fxLayout="row wrap">
+    <div fxFlex="noshrink" fxLayout="row wrap">
       <!-- GROUP 1 -->
       <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
-        <div fxFlex="nogrow" fxLayout="row">
+        <div fxFlex="noshrink" fxLayout="row">
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
@@ -165,7 +165,7 @@
         </div>
       </div>
       <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
-        <div fxFlex fxLayout="row">
+        <div fxFlex="noshrink" fxLayout="row">
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
@@ -182,7 +182,7 @@
         </div>
       </div>
       <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
-        <div fxFlex fxLayout="row">
+        <div fxFlex="noshrink" fxLayout="row">
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
@@ -204,6 +204,7 @@
           <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button">TEST CONNECTION</div>
       </div> -->
     </div>
+    <div fxFlex="20px"></div>
 </div>
 
 </ng-template>

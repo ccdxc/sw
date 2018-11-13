@@ -9,7 +9,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec, FieldsRequirement } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem, MessageService } from 'primeng/primeng';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { BaseComponent } from '@app/components/base/base.component';
 
 @Component({

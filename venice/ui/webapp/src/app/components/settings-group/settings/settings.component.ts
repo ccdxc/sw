@@ -4,8 +4,8 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
 import { environment } from '@env/environment';
 import { Store } from '@ngrx/store';
-import { takeUntil } from 'rxjs/operators/takeUntil';
-import { Subject } from 'rxjs/Subject';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 import { actionChangeTheme, selectorSettings } from '../settings.reducer';
 import { MessageService } from 'primeng/primeng';

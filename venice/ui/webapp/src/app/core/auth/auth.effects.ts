@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Actions, Effect } from '@ngrx/effects';
+import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs/Observable';
-import { tap } from 'rxjs/operators/tap';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Eventtypes } from '../../enum/eventtypes.enum';
 import { AuthService } from '../../services/auth.service';
 import { ControllerService } from '../../services/controller.service';
@@ -33,29 +33,27 @@ export class AuthEffects {
 
   @Effect({ dispatch: false })
   login(): Observable<UIAction> {
-    return this.actions$
-      .ofType(AUTH_LOGIN)
-      .pipe(
-        tap(action => {
-          this._authService.login(action.payload).subscribe(
-            data => {
-              const userData = data;
-              const isAuthOK = (data) ? true : false;
-              if (isAuthOK) {
-                this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: true });
-                this._controllerService.publish(Eventtypes.LOGIN_SUCCESS, userData);
-                this._store.dispatch(authReducer.login_success(userData));
-              } else {
-                this.onLoginFailure('Fail to login');
-              }
-            },
-            err => {
-              this.onLoginFailure(err);
+    return this.actions$.pipe(
+      ofType(AUTH_LOGIN),
+      tap(action => {
+        this._authService.login(action.payload).subscribe(
+          data => {
+            const userData = data;
+            const isAuthOK = (data) ? true : false;
+            if (isAuthOK) {
+              this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: true });
+              this._controllerService.publish(Eventtypes.LOGIN_SUCCESS, userData);
+              this._store.dispatch(authReducer.login_success(userData));
+            } else {
+              this.onLoginFailure('Fail to login');
             }
-          );
-        }
-        )
-      );
+          },
+          err => {
+            this.onLoginFailure(err);
+          }
+        );
+      })
+    );
   }
 
   protected onLoginFailure(err: any) {
@@ -66,14 +64,13 @@ export class AuthEffects {
 
   @Effect({ dispatch: false })
   logout(): Observable<UIAction> {
-    return this.actions$
-      .ofType(AUTH_LOGOUT)
-      .pipe(
-        tap(action => {
-          this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: false });
-          this._controllerService.publish(Eventtypes.LOGOUT, {});
-          this._store.dispatch(authReducer.logout_success());
-        })
-      );
+    return this.actions$.pipe(
+      ofType(AUTH_LOGOUT),
+      tap(action => {
+        this.localStorageService.setItem(AUTH_KEY, { isAuthenticated: false });
+        this._controllerService.publish(Eventtypes.LOGOUT, {});
+        this._store.dispatch(authReducer.logout_success());
+      })
+    );
   }
 }

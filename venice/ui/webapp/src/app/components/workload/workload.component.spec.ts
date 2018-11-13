@@ -35,7 +35,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';

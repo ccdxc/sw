@@ -2,10 +2,8 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } fro
 import { AbstractControl, FormControl, FormGroupDirective, NgForm, ValidatorFn } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { Utility } from '@app/common/Utility';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import { map } from 'rxjs/operators/map';
-import { startWith } from 'rxjs/operators/startWith';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 /** Error when invalid control is touched, or submitted.
  * Modified from https://material.angular.io/components/input/examples

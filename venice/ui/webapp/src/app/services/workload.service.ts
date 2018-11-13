@@ -1,10 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
-import 'rxjs/add/observable/forkJoin';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+
 import { environment } from '../../environments/environment';
 import { Utility } from '../common/Utility';
 import { Eventtypes } from '../enum/eventtypes.enum';

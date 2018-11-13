@@ -38,7 +38,7 @@
     },
     "@pensando/swagger-ts-generator": {
       "version": "file:pensando-swagger-ts-generator-1.1.29.tgz",
-      "integrity": "sha512-PGzMUu0VvzaIqgsWcYXEB6msTdy6ElO121zsXePLPE6U4HP3ZJrhnNPYrc5dtXAbU2o6bae1Aw+vOPsHxRKjdA==",
+      "integrity": "sha512-/uijw5M9OZFAV0RuU1S0sXEUB029zXS+9/VOsNwjPTxXLfxPFZ7+/TIVhlzopkP6VJ3aeKALOMSNENzyrl3Zlg==",
       "requires": {
         "fs": "0.0.2",
         "handlebars": "4.0.12",

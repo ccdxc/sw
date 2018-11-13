@@ -10,9 +10,8 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
-import { map } from 'rxjs/operators/map';
-import { takeUntil } from 'rxjs/operators/takeUntil';
-import { Subject } from 'rxjs/Subject';
+import { map, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 import { CommonComponent } from './common.component';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings-group';

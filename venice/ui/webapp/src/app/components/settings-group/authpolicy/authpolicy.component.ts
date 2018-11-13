@@ -9,8 +9,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
 import { MessageService } from 'primeng/primeng';
-import { Observable } from 'rxjs/Observable';
-import { MatButtonBase } from '@angular/material';
+import { Observable } from 'rxjs';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 
@@ -84,7 +83,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     }
 
     this._controllerService.setToolbarData({
-      buttons: buttons ,
+      buttons: buttons,
       breadcrumb: [{ label: 'Settings', url: '' }, { label: 'Auth Policy', url: '' }]
     });
   }
@@ -197,8 +196,8 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         this.authPolicy = new AuthAuthenticationPolicy(body);
         this.setupToolbarItems();
         // Since we change auth-policy, we have to log-out user.
-        const setTime1 = window.setTimeout ( () => {
-          this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Authentication Policy Update.'});
+        const setTime1 = window.setTimeout(() => {
+          this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Authentication Policy Update.' });
           window.clearTimeout(setTime1);
         }, 3000);
       },

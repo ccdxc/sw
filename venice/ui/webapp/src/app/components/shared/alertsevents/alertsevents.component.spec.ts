@@ -26,7 +26,7 @@ import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { WhitespaceTrimDirective } from '@app/components/shared/directives/whitespacetrim.directive';
 import { TableheaderComponent } from '@app/components/shared/tableheader/tableheader.component';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 import { Utility } from '@app/common/Utility';
 import { EventsEvent, EventsEventAttributes_severity_uihint } from '@sdk/v1/models/generated/events';
 import { Eventsv1Service } from '@sdk/v1/services/generated/eventsv1.service';

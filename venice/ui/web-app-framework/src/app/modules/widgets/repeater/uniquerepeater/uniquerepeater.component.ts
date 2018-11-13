@@ -42,6 +42,7 @@ export class UniquerepeaterComponent implements OnInit {
   keyToValues: { [key: string]: SelectItem[] } = {};
   keyToValueType: { [key: string]: ValueType } = {};
   keyToValueHintText: { [key: string]: string } = {};
+  styleClass = '';
 
   // Map from key to boolean of whether the key is being used or not
   keyUsed: { [key: string]: boolean } = {};

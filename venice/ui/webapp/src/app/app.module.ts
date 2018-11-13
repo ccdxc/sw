@@ -6,11 +6,11 @@ import { HttpClientModule, HTTP_INTERCEPTORS, HttpClientXsrfModule } from '@angu
 import { FormsModule } from '@angular/forms';
 
 import { LocationStrategy, HashLocationStrategy } from '@angular/common';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/toPromise';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/do';
-import 'rxjs/add/observable/throw';
+
+
+
+
+
 
 // Venice Widget NPM Module
 import { WidgetsModule } from 'web-app-framework';

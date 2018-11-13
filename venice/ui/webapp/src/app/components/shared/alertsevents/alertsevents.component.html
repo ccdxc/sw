@@ -69,9 +69,9 @@
               {{rowData.meta['creation-time'] | PrettyDate }}
             </div>
             <ng-container *ngSwitchCase="'severity'" >
-                <mat-icon *ngIf="rowData.severity === 'CRITICAL'" fxFlex="nogrow" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
-                <mat-icon *ngIf="rowData.severity === 'WARNING'" fxFlex="nogrow" class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
-                <mat-icon *ngIf="rowData.severity === 'INFO'" fxFlex="nogrow" class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
+                <mat-icon *ngIf="rowData.severity === 'CRITICAL'" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
+                <mat-icon *ngIf="rowData.severity === 'WARNING'" class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
+                <mat-icon *ngIf="rowData.severity === 'INFO'" class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
                 <div style="display: inline; margin-left: 25px"> {{ severityEnum[rowData.severity] }} </div>
             </ng-container>
             <ng-container *ngSwitchCase="'source'" >
@@ -154,9 +154,9 @@
                 {{rowData.meta['creation-time'] | PrettyDate }}
               </div>
               <ng-container *ngSwitchCase="'status.severity'" >
-                  <mat-icon *ngIf="rowData.status.severity === 'CRITICAL'" fxFlex="nogrow" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
-                  <mat-icon *ngIf="rowData.status.severity === 'WARNING'" fxFlex="nogrow" class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
-                  <mat-icon *ngIf="rowData.status.severity === 'INFO'" fxFlex="nogrow" class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
+                  <mat-icon *ngIf="rowData.status.severity === 'CRITICAL'" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
+                  <mat-icon *ngIf="rowData.status.severity === 'WARNING'" class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
+                  <mat-icon *ngIf="rowData.status.severity === 'INFO'" class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
                   <div style="display: inline; margin-left: 25px"> {{ severityEnum[rowData.status.severity] }} </div>
               </ng-container>
               <div *ngSwitchCase="'status.source'">

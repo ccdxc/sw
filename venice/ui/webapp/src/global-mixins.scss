@@ -41,14 +41,17 @@
 @mixin global-mat-radio($mat-radio-size) {
   // Container for radio circles and ripple.
   .mat-radio-container {
-    width: $mat-radio-size;
-    height: $mat-radio-size;
+    width: $mat-radio-size !important;
+    height: $mat-radio-size !important;
+  }
+  .mat-radio-button .mat-radio-ripple {
+    visibility: hidden;
   }
   
   // The outer circle for the radio, always present.
   .mat-radio-outer-circle {
-    height: $mat-radio-size;
-    width: $mat-radio-size;
+    height: $mat-radio-size !important;
+    width: $mat-radio-size !important;
   }
   
   // The inner circle for the radio, shown when checked.

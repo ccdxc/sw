@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
+import { Observable, Subject, of } from 'rxjs';
 
 interface UIConfig {
   'disabled-objects': string[];
@@ -150,7 +149,7 @@ export class UIConfigsService {
       );
       return observable;
     } else {
-      return Observable.of();
+      return of();
     }
   }
 

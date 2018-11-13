@@ -71,7 +71,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   toggleEdit() {
-    this.setLDAPEditMode (!this.LDAPEditMode);
+    this.setLDAPEditMode(!this.LDAPEditMode);
     if (this.LDAPEditMode) {
       this.verifyCertToggleFormArray = new FormArray([]);
       // Add a blank server if there is none
@@ -90,7 +90,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.setLDAPEnableControl();
   }
 
-  setLDAPEnableControl( ) {
+  setLDAPEnableControl() {
     if (this.LDAPEditMode) {
       this.LDAPObject.$formGroup.controls['enabled'].enable();
     } else {
@@ -98,7 +98,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     }
   }
 
-  setLDAPEditMode (isInEditMode) {
+  setLDAPEditMode(isInEditMode) {
     this.LDAPEditMode = isInEditMode;
     this.setLDAPEnableControl();
   }
@@ -161,7 +161,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   saveLDAP() {
     this.updateLDAPData();
     // POST DATA
-    this.invokeSaveLDAP.emit(false); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
+    this.invokeSaveLDAP.emit(true); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
   }
 
   createLDAP() {

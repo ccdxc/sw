@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation, TemplateRef } from '@angular/core';
 import { ControllerService } from '../../services/controller.service';
 import { CommonComponent } from '../../common.component';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ToolbarButton, BreadcrumbItem, ToolbarData, SplitButton, Dropdown } from '@app/models/frontend/shared/toolbar.interface';
@@ -84,10 +84,10 @@ export class ToolbarComponent extends CommonComponent implements OnInit, OnDestr
       this.buttons.length = 0;
     }
     if (this.splitbuttons) {
-      this.splitbuttons.length  = 0;
+      this.splitbuttons.length = 0;
     }
     if (this.dropdowns) {
-      this.dropdowns.length  = 0;
+      this.dropdowns.length = 0;
     }
   }
 }

@@ -1,4 +1,4 @@
-<div fxFlex="nogrow" fxLayout="row" class="authpolicy-group" [ngClass]="!LDAPEditMode ? 'authpolicy-group-hover' : '' ">
+<div fxFlex="noshrink" fxLayout="row" class="authpolicy-group" [ngClass]="!LDAPEditMode ? 'authpolicy-group-hover' : '' ">
   <ng-container *ngIf="LDAPData != null; else LDAPCreate">
     <ng-container *ngTemplateOutlet="LDAP"></ng-container>
   </ng-container>
@@ -42,7 +42,7 @@
     <div fxFlex="40px"></div>
   
     <!-- Server setup -->
-    <div fxFlex fxLayout="row" [style.position]="'relative'">
+    <div fxFlex="noshrink" fxLayout="row" [style.position]="'relative'">
       <div fxFlex fxLayout="column">
         <ng-container *ngIf="LDAPEditMode;else LDAPServersViewMode">
           <ng-container *ngTemplateOutlet="LDAPServers"></ng-container>
@@ -61,7 +61,7 @@
         arrow_upward
       </mat-icon>
     </div>
-    <div fxFlex fxLayout="row" fxLayoutAlign="end center">
+    <div fxFlex="noshrink" fxLayout="row" fxLayoutAlign="end center">
       <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}} </div>
     </div>
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
@@ -83,7 +83,7 @@
 </ng-template>
 
 <ng-template #LDAPConfig>
-  <div fxFlex fxLayout="row">
+  <div fxFlex="noshrink" fxLayout="row">
     <div fxFlex="50px"></div>
     <div fxFlex fxLayout="row wrap" fxLayoutGap="10px" [formGroup]="LDAPObject.$formGroup">
       <!-- INPUT GROUP 1 -->
@@ -92,7 +92,7 @@
           Credentials
         </div> -->
         <div fxFlex="30px" class="ldap-fieldtitle">CREDENTIALS</div>
-        <div fxFlex fxLayout="row">
+        <div fxFlex="noshrink" fxLayout="row">
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
@@ -134,7 +134,7 @@
           Scope
         </div> -->
         <div fxFlex="30px" class="ldap-fieldtitle">SCOPE</div>
-        <div fxFlex fxLayout="row">
+        <div fxFlex="noshrink" fxLayout="row">
           <!-- Field Title --> 
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
@@ -182,7 +182,7 @@
           Scope
         </div> -->
         <div fxFlex="30px" class="ldap-fieldtitle" >ATTRIBUTE MAPPING</div>
-        <div fxFlex="nogrow" fxLayout="row">
+        <div fxFlex="noshrink" fxLayout="row">
             <!-- Field Title --> 
             <div fxFlex="nogrow" fxLayout="column">
               <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
@@ -278,7 +278,7 @@
 </ng-template>
   
 <ng-template #LDAPServers >
-  <div fxFlex fxLayout="column" class="ldap-servergroup" [@slideInOut] 
+  <div fxFlex="noshrink" fxLayout="column" class="ldap-servergroup" [@slideInOut] 
           *ngFor="let server of LDAPObject.$formGroup.get('servers').controls; let index = index; let first = first" [formGroup]="server">
     <div fxFlex="20px"></div>
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between start">
@@ -293,7 +293,7 @@
     <div fxFlex="10px"></div>
     <!-- <div fxFlex fxLayout="row"> -->
 
-    <div fxFlex fxLayout="row wrap">
+    <div fxFlex="noshrink" fxLayout="row wrap">
         <!-- GROUP 1 -->
         <div fxFlex="nogrow" fxLayout="column" class="ldap-input-group">
           <div fxFlex="nogrow" fxLayout="row">
@@ -348,7 +348,7 @@
           <textarea fxFlex formControlName="trusted-certs" placeholder="Trusted Certificates..." class="ldap-server-certs" pInputTextarea></textarea>
         </ng-container>
     </div>
- 
+    <div fxFlex="10px"></div>
   </div>
   <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
       <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick($event)"  title="{{getConnConfigErrorTooltip()}}" class="ldap-test-error-icon">

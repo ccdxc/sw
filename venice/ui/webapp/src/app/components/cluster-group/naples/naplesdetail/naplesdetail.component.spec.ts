@@ -14,7 +14,7 @@ import { SharedModule } from '@app/components/shared/shared.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AlerttableService } from '@app/services/alerttable.service';

@@ -10,7 +10,7 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { IApiStatus, WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { Table } from 'primeng/table';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 import { BaseComponent } from '../base/base.component';
 import { MessageService } from 'primeng/primeng';
 

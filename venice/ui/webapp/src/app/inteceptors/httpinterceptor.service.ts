@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpErrorResponse, HttpResponse } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
-import { _throw } from 'rxjs/observable/throw';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/do';
+import { Observable, throwError as _throw } from 'rxjs';
+import { tap, catchError } from 'rxjs/internal/operators';
+
 
 import { Utility } from '@app/common/Utility';
 import { LogService } from '@app/services/logging/log.service';
@@ -61,24 +60,26 @@ export class VeniceUIHttpInterceptor implements HttpInterceptor {
       }
     }
     return next
-      .handle(req)
-      .do(event => {
-        if (event instanceof HttpResponse) {
+      .handle(req).pipe(
+        tap(event => {
+          if (event instanceof HttpResponse) {
+            const elapsed = Date.now() - started;
+            this.logger.log(`VeniceUIHttpInterceptor log: Request for ${req.urlWithParams} took ${elapsed} ms.`, this.getClassName());
+          }
+        }),
+        catchError(errorReponse => {
+          let errMsg: string;
           const elapsed = Date.now() - started;
-          this.logger.log(`VeniceUIHttpInterceptor log: Request for ${req.urlWithParams} took ${elapsed} ms.`, this.getClassName());
-        }
-      }).catch(errorReponse => {
-        let errMsg: string;
-        const elapsed = Date.now() - started;
-        if (errorReponse instanceof HttpErrorResponse) {
-          const err = errorReponse.message || JSON.stringify(errorReponse.error);
-          errMsg = `${errorReponse.status} - ${errorReponse.statusText || ''} Details: ${err}`;
-        } else {
-          errMsg = errorReponse.message ? errorReponse.message : errorReponse.toString();
-        }
-        this.logger.error(`VeniceUIHttpInterceptor log: Request for ${req.urlWithParams} took ${elapsed} ms.`, this.getClassName());
-        this.logger.error('VeniceUIHttpInterceptor log ' + errMsg, this.getClassName());
-        return _throw(errorReponse);
-      });
+          if (errorReponse instanceof HttpErrorResponse) {
+            const err = errorReponse.message || JSON.stringify(errorReponse.error);
+            errMsg = `${errorReponse.status} - ${errorReponse.statusText || ''} Details: ${err}`;
+          } else {
+            errMsg = errorReponse.message ? errorReponse.message : errorReponse.toString();
+          }
+          this.logger.error(`VeniceUIHttpInterceptor log: Request for ${req.urlWithParams} took ${elapsed} ms.`, this.getClassName());
+          this.logger.error('VeniceUIHttpInterceptor log ' + errMsg, this.getClassName());
+          return _throw(errorReponse);
+        })
+      );
   }
 }

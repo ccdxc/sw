@@ -1,9 +1,9 @@
-<app-pagebody header="Authentication Policy" fxLayout="column" class="authpolicy-widget">
+<app-pagebody header="Authentication Policy" class="authpolicy-widget">
   <div fxFlex fxLayout="column" class="authpolicy-border">
     <div fxFlex="nogrow" class="authpolicy-header">
       Authenticators
     </div>
-    <div fxFlex fxLayout="row">
+    <div fxFlex="noshrink" fxLayout="row">
       <div fxFlex="37px" fxLayout="column">
         <div fxFlex="55px" fxLayout="row" fxLayoutAlign="start center" class="authpolicy-auth-description">
         </div>
@@ -15,19 +15,19 @@
             User credentials will be tested against the following authentication methods until one of them returns successfully. 
           </div>
         </div>
-        <div fxLayout="column" >
+        <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start stretch">
           <ng-container *ngFor="let authType of authPolicy.spec.authenticators['authenticator-order']; let index = index" [ngSwitch]="authType">
             <ng-container *ngSwitchCase="'LDAP'">
-              <app-ldap [LDAPData]="authPolicy.spec.authenticators.ldap" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
+              <app-ldap fxFlex="nogrow" fxLayout="column" [LDAPData]="authPolicy.spec.authenticators.ldap" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
               (invokeCheckLDAPServerConnect)="onCheckLDAPServerConnect($event)" (invokeCheckLDAPBindConnect)="onCheckLDAPBindConnect($event)" (invokeSaveLDAP)="onInvokeSaveLDAP($event)" 
               [ldapConnCheckResponse]="_ldapConnCheckResponse"   [ldapBindCheckResponse]="_ldapBindCheckResponse"
               ></app-ldap>
             </ng-container>
             <ng-container *ngSwitchCase="'LOCAL'">
-              <app-local [localData]="authPolicy.spec.authenticators.local" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"></app-local>
+              <app-local fxFlex="nogrow" fxLayout="column" [localData]="authPolicy.spec.authenticators.local" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"></app-local>
             </ng-container>
             <ng-container *ngSwitchCase="'RADIUS'">
-              <app-radius [radiusData]="authPolicy.spec.authenticators.radius" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
+              <app-radius fxFlex="nogrow" fxLayout="column" [radiusData]="authPolicy.spec.authenticators.radius" [currentRank]="index" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
               (invokeSaveRadius)="onInvokeSaveRadius($event)" 
               ></app-radius>
             </ng-container>
@@ -36,14 +36,14 @@
             <!-- WE NEED TO SHOW ALL 3 OPTIONS IF THEY AREN"T CONFIGURED -->
             <!-- SINCE LOCAL ONLY HAS ENABLE/DISABLED, WE DON"T HAVE A CREATE NEW MODE FOR IT -->
             <ng-container *ngIf="!authPolicy.spec.authenticators['authenticator-order'].includes('LOCAL')">
-              <app-local [currentRank]="authPolicy.spec.authenticators['authenticator-order'].length" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"></app-local>
+              <app-local fxFlex="nogrow" fxLayout="column" [currentRank]="authPolicy.spec.authenticators['authenticator-order'].length" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"></app-local>
             </ng-container>
             <ng-container *ngIf="!authPolicy.spec.authenticators['authenticator-order'].includes('LDAP')">
-              <app-ldap [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
+              <app-ldap fxFlex="nogrow" fxLayout="column" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"
               (invokeCheckLDAPServerConnect)="onCheckLDAPServerConnect($event)" (invokeCheckLDAPBindConnect)="onCheckLDAPBindConnect($event)"  ></app-ldap>
             </ng-container>
             <ng-container *ngIf="!authPolicy.spec.authenticators['authenticator-order'].includes('RADIUS')">
-              <app-radius [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"></app-radius>
+              <app-radius fxFlex="nogrow" fxLayout="column" [numRanks]="authPolicy.spec.authenticators['authenticator-order'].length" (changeAuthRank)="swapRanks($event, index)"></app-radius>
             </ng-container>
 
           </ng-container>

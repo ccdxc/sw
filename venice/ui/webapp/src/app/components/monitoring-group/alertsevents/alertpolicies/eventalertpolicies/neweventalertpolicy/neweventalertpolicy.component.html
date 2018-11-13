@@ -1,12 +1,12 @@
 <div fxFlex fxLayout="row" fxLayoutAlign="center start" class="neweventalertpolicy-container" >
   <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start start" class="neweventalertpolicy-content" [formGroup]="newPolicy.$formGroup">
+  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start stretch" class="neweventalertpolicy-content" [formGroup]="newPolicy.$formGroup">
 
     <ng-container formGroupName="spec">
       <mat-slide-toggle formControlName="enable" fxFlex='nogrow' class="neweventalertpolicy-toggle"></mat-slide-toggle>
     </ng-container>
     <div fxFlex fxLayout="column">
-      <div fxFlex fxLayout="row" class="neweventalertpolicy-row" formGroupName="meta"> <!-- First row-->
+      <div fxFlex="nogrow" fxLayout="row" class="neweventalertpolicy-row" formGroupName="meta"> <!-- First row-->
         <input fxFlex="300px" formControlName="name"
               class="neweventalertpolicy-name" [ngClass]="isErrorState(newPolicy.$formGroup.get('meta.name')) ? 'error' : ''" spellcheck="false"
               type="text"  pInputText  placeholder="Unique Policy Name...">

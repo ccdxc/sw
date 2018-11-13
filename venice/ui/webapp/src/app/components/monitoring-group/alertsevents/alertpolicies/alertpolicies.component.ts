@@ -5,7 +5,7 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { BaseComponent } from '@app/components/base/base.component';
 import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus, MonitoringAlertPolicy, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 import { MessageService } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 

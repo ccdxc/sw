@@ -15,9 +15,10 @@ import { EventsEvent_severity, EventsEvent_severity_uihint, IApiListWatchOptions
 import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchQuery_kinds, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { Table } from 'primeng/table';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
-import { Subscription } from 'rxjs/Subscription';
+
+
+import { Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MessageService } from 'primeng/primeng';
 
 export interface AlertsEventsSelector {
@@ -166,13 +167,14 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     if (<any>false) {
       // After user stops typing for 1 second, we invoke a search request to elastic
       const subscription =
-        this.eventSearchFormControl.valueChanges
-          .debounceTime(1000)
-          .distinctUntilChanged().subscribe(
-            value => {
-              this.invokeEventsSearch();
-            }
-          );
+        this.eventSearchFormControl.valueChanges.pipe(
+          debounceTime(1000),
+          distinctUntilChanged()
+        ).subscribe(
+          value => {
+            this.invokeEventsSearch();
+          }
+        );
       this.subscriptions.push(subscription);
     }
 

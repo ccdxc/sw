@@ -16,6 +16,7 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
 import { Metrics_queryQuerySpec, IMetrics_queryQuerySpec, Metrics_queryQuerySpec_function } from '@sdk/v1/models/generated/metrics_query';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
+import { map } from 'rxjs/internal/operators';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -87,19 +88,18 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit {
   ngOnInit() {
     this.initializeData();
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'NapledetailComponent', 'state': Eventtypes.COMPONENT_INIT });
-    this._route.params
-      .map(params => params['id'])
-      .subscribe((id) => {
-        this.selectedId = id;
-        this.initializeData();
-        this.getNaplesDetails();
-        this._controllerService.setToolbarData({
-          buttons: [],
-          breadcrumb: [
-            { label: 'Naples', url: Utility.getBaseUIUrl() + 'cluster/naples' },
-            { label: id, url: Utility.getBaseUIUrl() + 'cluster/naples/' + id }]
-        });
+    this._route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      this.selectedId = id;
+      this.initializeData();
+      this.getNaplesDetails();
+      this._controllerService.setToolbarData({
+        buttons: [],
+        breadcrumb: [
+          { label: 'Naples', url: Utility.getBaseUIUrl() + 'cluster/naples' },
+          { label: id, url: Utility.getBaseUIUrl() + 'cluster/naples/' + id }]
       });
+    });
   }
 
   initializeData() {

@@ -16,6 +16,7 @@ import { MetricsUtility } from '@app/common/MetricsUtility';
 import { MetricsPollingOptions, MetricsqueryService } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
+import { map } from 'rxjs/internal/operators';
 
 /**
  * If a user navigates to a node that doesn't exist
@@ -100,19 +101,18 @@ export class NodedetailComponent extends BaseComponent implements OnInit {
   ngOnInit() {
     this.initializeData();
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'NodedetailComponent', 'state': Eventtypes.COMPONENT_INIT });
-    this._route.params
-      .map(params => params['id'])
-      .subscribe((id) => {
-        this.selectedId = id;
-        this.initializeData();
-        this.getNodedetails();
-        this._controllerService.setToolbarData({
-          buttons: [],
-          breadcrumb: [
-            { label: 'Cluster', url: Utility.getBaseUIUrl() + 'cluster/cluster' },
-            { label: id, url: Utility.getBaseUIUrl() + 'cluster/cluster/' + id }]
-        });
+    this._route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      this.selectedId = id;
+      this.initializeData();
+      this.getNodedetails();
+      this._controllerService.setToolbarData({
+        buttons: [],
+        breadcrumb: [
+          { label: 'Cluster', url: Utility.getBaseUIUrl() + 'cluster/cluster' },
+          { label: id, url: Utility.getBaseUIUrl() + 'cluster/cluster/' + id }]
       });
+    });
   }
 
   initializeData() {

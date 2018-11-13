@@ -1,18 +1,13 @@
-import 'rxjs/add/observable/of';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/delay';
-
+import { catchError } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { _throw } from 'rxjs/observable/throw';
+import { Observable, throwError as _throw, Subscription, timer, forkJoin } from 'rxjs';
 
 import { MockDataUtil } from '../common/MockDataUtil';
 import { Utility } from '../common/Utility';
 import { LogService } from './logging/log.service';
 import { environment } from '../../environments/environment';
-import { Subscription } from 'rxjs/Subscription';
-import { timer } from 'rxjs/observable/timer';
+import { delay } from 'rxjs/operators'
 
 @Injectable()
 export class AbstractService {
@@ -158,9 +153,9 @@ export class AbstractService {
       const method = 'POST';
       return this.handleOfflineAJAX(url, method, eventpayload);
     } else {
-      return http.post(url, payload).catch((err: HttpErrorResponse) => {
+      return http.post(url, payload).pipe(catchError((err: HttpErrorResponse) => {
         return _throw(this.handleError(err));
-      });
+      }));
     }
   }
 
@@ -183,9 +178,9 @@ export class AbstractService {
       const method = 'GET';
       return this.handleOfflineAJAX(url, method, eventpayload);
     }
-    return http.get(url).catch((err: HttpErrorResponse) => {
+    return http.get(url).pipe(catchError((err: HttpErrorResponse) => {
       return _throw(this.handleError(err));
-    });
+    }));
   }
 
   /**
@@ -197,9 +192,9 @@ export class AbstractService {
       const method = 'DELETE';
       return this.handleOfflineAJAX(url, method, eventpayload);
     }
-    return http.delete(url).catch((err: HttpErrorResponse) => {
+    return http.delete(url).pipe(catchError((err: HttpErrorResponse) => {
       return _throw(this.handleError(err));
-    });
+    }));
   }
 
   /**
@@ -211,13 +206,13 @@ export class AbstractService {
    */
   protected invokeAJAXPutCall(url: string, payload: any, http: HttpClient, eventpayload: any): Observable<any> {
     this.publishAJAX(eventpayload);
-    if (this.isToMockData() ) {
+    if (this.isToMockData()) {
       const method = 'PUT';
       return this.handleOfflineAJAX(url, method, eventpayload);
     } else {
-      return http.put(url, payload).catch((err: HttpErrorResponse) => {
+      return http.put(url, payload).pipe(catchError((err: HttpErrorResponse) => {
         return _throw(this.handleError(err));
-      });
+      }));
     }
   }
 
@@ -232,7 +227,7 @@ export class AbstractService {
     const fakeObservable = Observable.create(obs => {
       obs.next(mockedData);
       obs.complete();
-    }).delay(1000);
+    }).pipe(delay(1000));
     return fakeObservable;
   }
 
@@ -271,7 +266,7 @@ export class AbstractService {
       }
       observables.push(obserable);
     }
-    return Observable.forkJoin(observables);
+    return forkJoin(observables);
   }
 
   /**
@@ -298,7 +293,7 @@ export class AbstractService {
    */
   _buildURLHelperWithGroup(grouptoken: string, token: string): string {
     return grouptoken + '/' + this.getTenant() + '/' + token;
- }
+  }
 
   isToUseRealData(): boolean {
     const isUseRealData = Utility.getInstance().getControllerService().useRealData;

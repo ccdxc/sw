@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    // "noUnusedLocals": true,
     "newLine": "lf",
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
@@ -16,16 +15,31 @@
     "lib": [
       "es2017",
       "dom"
-    ] ,
+    ],
     "baseUrl": "src",
     "paths": {
-      "@app/*": ["app/*"],
-      "@components/*": ["app/components/*"],
-      "@common/*": ["app/common/*"],
-      "@lib/*": ["app/lib/*"],
-      "@env/*": ["environments/*"],
-      "@sdk/*": ["../../venice-sdk/*"],
-      "@angular/*": [ "../node_modules/@angular/*"]
+      "@app/*": [
+        "app/*"
+      ],
+      "@components/*": [
+        "app/components/*"
+      ],
+      "@common/*": [
+        "app/common/*"
+      ],
+      "@lib/*": [
+        "app/lib/*"
+      ],
+      "@env/*": [
+        "environments/*"
+      ],
+      "@sdk/*": [
+        "../../venice-sdk/*"
+      ],
+      "@angular/*": [
+        "../node_modules/@angular/*"
+      ]
     },
-  },
+    "module": "es2015"
+  }
 }

@@ -18,10 +18,19 @@
     ],
     "baseUrl": "src",
     "paths": {
-      "@testapp/*": ["app/test/*"],
-      "@modules/*": ["app/modules/*"],
-      "@env/*": ["environments/*"],
-      "@angular/*": [ "../node_modules/@angular/*"]
-    }
-  },
+      "@testapp/*": [
+        "app/test/*"
+      ],
+      "@modules/*": [
+        "app/modules/*"
+      ],
+      "@env/*": [
+        "environments/*"
+      ],
+      "@angular/*": [
+        "../node_modules/@angular/*"
+      ]
+    },
+    "module": "es2015"
+  }
 }

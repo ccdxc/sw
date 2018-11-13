@@ -2,9 +2,6 @@ import { inject, TestBed, getTestBed, fakeAsync, tick, discardPeriodicTasks } fr
 
 import { AbstractService } from './abstract.service';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
-import { MockDataUtil } from '@app/common/MockDataUtil';
-import { Observable } from 'rxjs/Observable';
-import { TestScheduler } from 'rxjs/testing/TestScheduler';
 
 describe('AbstractService', () => {
   let httpMock: HttpTestingController;

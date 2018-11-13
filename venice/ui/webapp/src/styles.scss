@@ -2,7 +2,7 @@
  * This file does not need to be imported by any file except for theme.scss.
  */
 @import '~@angular/material/theming';
-@import 'global-mixins';
+@import 'src/global-mixins';
 
 @mixin global-styles($theme) {
   $colorPalette: map-get($theme, colors);

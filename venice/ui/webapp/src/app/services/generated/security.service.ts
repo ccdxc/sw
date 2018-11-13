@@ -4,7 +4,7 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { Securityv1Service } from '@sdk/v1/services/generated/securityv1.service';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';

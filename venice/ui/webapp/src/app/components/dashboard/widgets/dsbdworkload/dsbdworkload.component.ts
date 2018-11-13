@@ -2,7 +2,7 @@ import { Component, OnChanges, OnDestroy, OnInit } from '@angular/core';
 import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { WorkloadService } from '@app/services/workload.service';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dsbdworkloadwidget',

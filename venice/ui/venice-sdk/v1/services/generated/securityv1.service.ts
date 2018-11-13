@@ -1,6 +1,6 @@
 import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
-import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
+import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
 import { ISecurityAppList,IApiStatus,ISecurityApp,ISecurityCertificateList,ISecurityCertificate,ISecuritySecurityGroupList,ISecuritySecurityGroup,ISecuritySGPolicyList,ISecuritySGPolicy,ISecurityTrafficEncryptionPolicy,ISecurityAutoMsgAppWatchHelper,ISecurityAutoMsgCertificateWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,ISecurityAutoMsgSGPolicyWatchHelper,ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper } from '../../models/generated/security';

@@ -1,6 +1,6 @@
 import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
-import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
+import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
 import { IClusterCluster,IApiStatus,IClusterClusterAuthBootstrapRequest,IClusterHostList,IClusterHost,IClusterNodeList,IClusterNode,IClusterSmartNICList,IClusterSmartNIC,IClusterTenantList,IClusterTenant,IClusterAutoMsgClusterWatchHelper,IClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,IClusterAutoMsgSmartNICWatchHelper,IClusterAutoMsgTenantWatchHelper } from '../../models/generated/cluster';

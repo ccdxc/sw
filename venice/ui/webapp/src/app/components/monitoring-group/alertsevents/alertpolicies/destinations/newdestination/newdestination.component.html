@@ -1,10 +1,10 @@
 <div fxFlex fxLayout="row" fxLayoutAlign="center start" class="newdestination-container">
   <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start start" class="newdestination-content"
+  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start stretch" class="newdestination-content"
     [formGroup]="newDestination.$formGroup">
 
-    <div fxFlex fxLayout="column">
-      <div fxFlex fxLayout="row" formGroupName="meta" class="newdestination-row">
+    <div fxFlex="nogrow" fxLayout="column">
+      <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newdestination-row">
         <!-- First row-->
         <input fxFlex="300px" formControlName="name" class="newdestination-name" spellcheck="false" type="text" pInputText placeholder="Unique Destination Name...">
         <!-- Commented out as it still isn't decided whether there will be a description -->
@@ -13,10 +13,12 @@
       </div>
       <div fxFlex="10px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
 
-      <ng-container *ngTemplateOutlet="syslog"></ng-container>
-      <ng-container *ngIf="enableSnmpTrap">
-        <ng-container *ngTemplateOutlet="snmp"></ng-container>
-      </ng-container>
+      <div fxFlex="noshrink" fxLayout="column">
+        <ng-container *ngTemplateOutlet="syslog"></ng-container>
+        <ng-container *ngIf="enableSnmpTrap">
+          <ng-container *ngTemplateOutlet="snmp"></ng-container>
+        </ng-container>
+      </div>
     </div>
     <div *ngIf="isInline" class="newdestination-buttoncontainer" fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
       <div fxFlex="nogrow">
@@ -35,17 +37,17 @@
   <ng-container [formGroup]="newDestination.$formGroup">
     <ng-container formArrayName="spec">
       <ng-container formArrayName="syslog-servers">
-        <div fxFlex="nogrow" fxLayout="row">
-          <div fxFlex fxLayout="column">
-            <div fxFlex="nogrow" class="newdestination-syslog" fxLayout="column" [@slideInOut] *ngFor="let syslog of newDestination.$formGroup.get(['spec','syslog-servers']).controls; let index = index; let first = first"
+        <div fxFlex="noshrink" fxLayout="row">
+          <div fxFlex="nogrow" fxLayout="column">
+            <div fxFlex="noshrink" class="newdestination-syslog" fxLayout="column" [@slideInOut] *ngFor="let syslog of newDestination.$formGroup.get(['spec','syslog-servers']).controls; let index = index; let first = first"
               [formGroupName]="index">
               <div fxFlex="20px"></div> <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-              <div fxFlex fxLayout="row">
+              <div fxFlex="auto" fxLayout="row">
                 <div fxFlex="nogrow" fxLayout="row wrap" fxLayoutGap="10px">
                   <div fxFlex="nogrow" fxLayout="column" class="newdestination-group">
 
                     <div fxFlex="30px" class="newdestination-fieldtitle">SYSLOG EXPORT CONFIGURATION</div>
-                    <div fxFlex fxLayout="column">
+                    <div fxFlex="auto" fxLayout="column">
                       <div fxFlex="nogrow" fxLayout="row">
                         <!-- Field Title -->
                         <div fxFlex="nogrow" fxLayout="column">
@@ -57,7 +59,7 @@
                           </div>
                         </div>
                         <!-- Field Values -->
-                        <div fxFlex fxLayout="column">
+                        <div fxFlex="auto" fxLayout="column">
                           <ng-container formGroupName="target">
                             <div fxFlex="30px" fxLayout="row" class="newdestination-value">
                               <input fxFlex="nogrow" formControlName="destination" class="newdestination-host" spellcheck="false" type="text" pInputText
@@ -110,7 +112,7 @@
                   <div fxFlex="nogrow" fxLayout="column" class="newdestination-group" formGroupName="target">
                     <!-- Credentials -->
                     <div fxFlex="30px" class="newdestination-fieldtitle">Credentials</div>
-                    <div fxFlex fxLayout="row" formGroupName="credentials">
+                    <div fxFlex="auto" fxLayout="row" formGroupName="credentials">
                       
                       <mat-radio-group fxFlex="nogrow" fxLayout="column" fxLayoutGap="5px" class="newdestination-fieldtitle newdestination-credential-radio" formControlName="auth-type">
                         <mat-radio-button fxFlex="none" color="primary" [disableRipple]="true" class="" *ngFor="let option of syslogCredentialOptions"
@@ -120,7 +122,7 @@
                       </mat-radio-group>
 
                       <!-- we use getSelectedCredentialMethod(syslog) to control switch on displaying auth-type UI -->
-                      <div fxFlex fxLayout="row" [ngSwitch]="getSelectedCredentialMethod(syslog)">
+                      <div fxFlex="auto" fxLayout="row" [ngSwitch]="getSelectedCredentialMethod(syslog)">
                         <ng-container *ngSwitchCase="'AUTHTYPE_USERNAMEPASSWORD'">
                           <!-- Field Title -->
                           <div fxFlex="nogrow" fxLayout="column">

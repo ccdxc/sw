@@ -13,7 +13,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MatIconRegistry } from '@angular/material';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';

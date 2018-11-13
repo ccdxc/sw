@@ -11,9 +11,9 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { EventsEvent_severity_uihint } from '@sdk/v1/models/generated/events';
 import { IApiStatus, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
-import { Subscription } from 'rxjs/Subscription';
+
+
+import { Subscription } from 'rxjs';
 import { MessageService } from 'primeng/primeng';
 
 @Component({

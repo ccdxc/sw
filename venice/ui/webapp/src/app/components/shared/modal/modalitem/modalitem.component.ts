@@ -1,6 +1,5 @@
 import { Component, Input, OnChanges, OnDestroy, OnInit, ViewEncapsulation, SimpleChanges } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
+import { Observable, Subscription } from 'rxjs';
 
 /**
  * This component is for rendering an item that should have a progress icon.

@@ -30,7 +30,7 @@
     <div fxFlex="none" fxLayout="row" class="cluster-node-table-title">
       Nodes ({{nodes.length }})
     </div>
-    <div *ngFor="let node of nodes" class="cluster-nodes-container-loop">
+    <ng-container *ngFor="let node of nodes">
       <div routerLink="./{{node.meta.name}}" fxFlex="none" fxLayout="column"  class="cluster-node-container">
         <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" class="cluster-node-name">
           <div fxFlex="none" class="cluster-node-status"></div>
@@ -60,7 +60,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </ng-container>
     <div fxFlex="none" fxLayout="column" class="cluster-details">
       <div fxFlex="none" class="cluster-details-title"> Cluster Detail </div>
       <div fxFlex="none" fxLayout="row">

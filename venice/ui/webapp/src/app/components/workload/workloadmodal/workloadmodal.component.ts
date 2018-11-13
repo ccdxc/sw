@@ -3,10 +3,8 @@ import { AbstractControl, FormControl, FormGroupDirective, NgForm, ValidatorFn, 
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { Utility } from '@app/common/Utility';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import { map } from 'rxjs/operators/map';
-import { startWith } from 'rxjs/operators/startWith';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 /** Error when invalid control is touched, or submitted.
  * On first focus, the error state won't activate till the user leaves the field

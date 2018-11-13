@@ -1,4 +1,4 @@
-import { AfterContentInit, Component, ContentChildren, OnDestroy, OnInit, QueryList, SimpleChanges, ViewEncapsulation, ChangeDetectorRef, Input, Output, EventEmitter } from '@angular/core';
+import { AfterContentInit, Component, ContentChildren, OnDestroy, OnInit, QueryList, SimpleChanges, ViewEncapsulation, Input, Output, EventEmitter } from '@angular/core';
 import { PenuitabComponent } from './penuitab/penuitab.component';
 
 /**

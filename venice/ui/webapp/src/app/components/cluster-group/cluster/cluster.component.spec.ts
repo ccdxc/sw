@@ -25,7 +25,7 @@ import { EventsService } from '@app/services/events.service';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchService } from '@app/services/generated/search.service';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { BehaviorSubject } from 'rxjs';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from 'primeng/primeng';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
@@ -110,9 +110,9 @@ describe('ClusterComponent', () => {
     expect(clusterDe.queryAll(By.css('.pagebody-icon')).length).toBe(1, 'More than pagebody icon was present');
     expect(clusterHe.querySelector('div.pagebody-headercontent').textContent).toContain('Cluster Overview', 'header title was not cluster overview');
     // Node values
-    expect(clusterDe.queryAll(By.css('div.cluster-nodes-container-loop')).length).toBe(5, 'Number of nodes displayed was incorrect');
+    expect(clusterDe.queryAll(By.css('div.cluster-node-container')).length).toBe(5, 'Number of nodes displayed was incorrect');
     for (let i = 0; i < 5; i++) {
-      const node = clusterDe.queryAll(By.css('div.cluster-nodes-container-loop'))[i];
+      const node = clusterDe.queryAll(By.css('div.cluster-node-container'))[i];
       expect(node.nativeElement.querySelector('div.cluster-node-name').textContent).toContain('node' + (5 - i), 'node name was incorrect');
       if (5 - i === 1) {
         expect(node.nativeElement.querySelector('.cluster-node-star')).toBeTruthy('Expected node to be the leader');

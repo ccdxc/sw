@@ -3,14 +3,14 @@
 @import 'src/app/appcontent.component.sidenav.scss-theme';
 @import 'src/app/components/shared/pagebody/pagebody.component.scss-theme';
 @import 'styles';
-@import 'global-mixins';
+@import 'src/global-mixins';
 @include mat-core();
 
-@import 'default-theme.scss';
-@import 'light-theme.scss';
-@import 'black-theme.scss';
+@import 'src/themes/default-theme';
+@import 'src/themes/light-theme';
+@import 'src/themes/black-theme';
 
-@import '~web-app-framework/theme.scss';
+@import '~web-app-framework/theme';
 
 
 @mixin component-themes($theme) {

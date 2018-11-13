@@ -1,6 +1,6 @@
 import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
-import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
+import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
 import { INetworkLbPolicyList,IApiStatus,INetworkLbPolicy,INetworkNetworkList,INetworkNetwork,INetworkServiceList,INetworkService,INetworkAutoMsgLbPolicyWatchHelper,INetworkAutoMsgNetworkWatchHelper,INetworkAutoMsgServiceWatchHelper } from '../../models/generated/network';

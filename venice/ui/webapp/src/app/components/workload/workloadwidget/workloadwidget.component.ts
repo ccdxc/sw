@@ -5,7 +5,7 @@ import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { WorkloadService } from '@app/services/workload.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 import { PinPayload } from '@app/models/frontend/shared/pinpayload.interface';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
