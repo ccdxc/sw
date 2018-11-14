@@ -75,7 +75,10 @@ const (
 	EventsDir = "/var/lib/pensando/events"
 
 	// Cores directory
-	CoresDir = "/var/cores/"
+	CoresDir = "/data/core"
+
+	// Update directory
+	UpdateDir = "/update"
 
 	//Reverse Proxy Router Port
 	RevProxyPort = "8888"

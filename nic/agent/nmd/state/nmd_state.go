@@ -314,7 +314,7 @@ func (n *NMD) StartRestServer() error {
 	router := mux.NewRouter()
 	t1 := router.Methods("POST").Subrouter()
 	t1.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesConfigHandler))
-	t1.HandleFunc(UploadURL, NaplesFileUploadHandler)
+	t1.HandleFunc(UpdateURL, NaplesFileUploadHandler)
 
 	t2 := router.Methods("GET").Subrouter()
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
@@ -328,6 +328,7 @@ func (n *NMD) StartRestServer() error {
 	router.PathPrefix(MonitoringURL + "logs/").Handler(http.StripPrefix(MonitoringURL+"logs/", http.FileServer(http.Dir(globals.LogDir))))
 	router.PathPrefix(MonitoringURL + "events/").Handler(http.StripPrefix(MonitoringURL+"events/", http.FileServer(http.Dir(globals.EventsDir))))
 	router.PathPrefix(CoresURL).Handler(http.StripPrefix(CoresURL, http.FileServer(http.Dir(globals.CoresDir))))
+	router.PathPrefix(UpdateURL).Handler(http.StripPrefix(UpdateURL, http.FileServer(http.Dir(globals.UpdateDir))))
 
 	// create listener
 	listener, err := net.Listen("tcp", n.listenURL)
@@ -388,7 +389,7 @@ func (n *NMD) GetNMDCmdExecURL() string {
 
 // GetGetNMDUploadURL returns the REST URL
 func (n *NMD) GetGetNMDUploadURL() string {
-	return "http://" + n.GetListenURL() + UploadURL
+	return "http://" + n.GetListenURL() + UpdateURL
 }
 
 func (n *NMD) initTLSProvider() error {
@@ -463,7 +464,7 @@ func (n *NMD) RegisterROCtrlClient(rollout RolloutCtrlAPI) error {
 // NaplesCoreDeleteHandler is the REST handler for Naples delete core file operation
 func NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
 	resp := NaplesConfigResp{}
-	file := globals.CoresDir + strings.TrimPrefix(r.URL.Path, CoresURL)
+	file := globals.CoresDir + "/" + strings.TrimPrefix(r.URL.Path, CoresURL)
 	err := os.Remove(file)
 	if err != nil {
 		resp.ErrorMsg = err.Error()

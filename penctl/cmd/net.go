@@ -65,7 +65,10 @@ func getNaplesIPFromIntf(ifname string) (string, error) {
 
 func pickNetwork(cmd *cobra.Command, args []string) error {
 	var err error
-	if cmd.Flags().Changed("interface") {
+	if cmd.Flags().Changed("ip") {
+		naplesIP = ip
+		err = nil
+	} else if cmd.Flags().Changed("interface") {
 		naplesIP, err = getNaplesIPFromIntf(intf)
 	} else if val, ok := os.LookupEnv("PENETHDEV"); !ok {
 		if verbose {

@@ -22,11 +22,18 @@ var uploadImageCmd = &cobra.Command{
 	Run:   uploadImageCmdHandler,
 }
 
+var listImageCmd = &cobra.Command{
+	Use:   "firmware",
+	Short: "List firmware images on Naples",
+	Long:  "\n-------------------------------\n List Firmware Images on Naples \n-------------------------------\n",
+	RunE:  listImageCmdHandler,
+}
+
 var installPackageCmd = &cobra.Command{
 	Use:   "package install",
 	Short: "Install package on Naples",
 	Long:  "\n---------------------------\n Install package on Naples \n---------------------------\n",
-	Run:   installPackageCmdHandler,
+	RunE:  installPackageCmdHandler,
 }
 
 var listInstalledImagesCmd = &cobra.Command{
@@ -50,6 +57,13 @@ var setStartupImageCmd = &cobra.Command{
 	Run:   setStartupImageCmdHandler,
 }
 
+var setBootImageCmd = &cobra.Command{
+	Use:   "boot-image",
+	Short: "Set Boot Image to Other (Non-Running) Image on Naples",
+	Long:  "\n-------------------------------------------------------\n Set Boot Image to Other (Non-Running) Image on Naples \n-------------------------------------------------------\n",
+	RunE:  setBootImageCmdHandler,
+}
+
 var uploadFile string
 var packageName string
 
@@ -57,23 +71,36 @@ func init() {
 	putCmd.AddCommand(uploadImageCmd)
 	setCmd.AddCommand(installPackageCmd)
 	getCmd.AddCommand(listInstalledImagesCmd)
+	getCmd.AddCommand(listImageCmd)
 	getCmd.AddCommand(getRunningPackageImagesCmd)
 	setCmd.AddCommand(setStartupImageCmd)
+	setCmd.AddCommand(setBootImageCmd)
 
 	uploadImageCmd.Flags().StringVarP(&uploadFile, "file", "f", "", "Firmware file location/name")
 	installPackageCmd.Flags().StringVarP(&packageName, "package", "p", "", "Package name")
+	setBootImageCmd.Flags().StringVarP(&packageName, "package", "p", "", "Package name")
 
 	uploadImageCmd.MarkFlagRequired("file")
-	uploadImageCmd.MarkFlagRequired("package")
+	installPackageCmd.MarkFlagRequired("package")
+	setBootImageCmd.MarkFlagRequired("package")
+}
+
+func listImageCmdHandler(cmd *cobra.Command, args []string) error {
+	resp, _ := restGetResp(revProxyPort, "update/")
+	err := parseFiles(resp)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func uploadImageCmdHandler(cmd *cobra.Command, args []string) {
 	//prepare the reader instances to encode
 	values := map[string]io.Reader{
 		"uploadFile": mustOpen(uploadFile),
-		"uploadPath": strings.NewReader("/upload/"),
+		"uploadPath": strings.NewReader("/update/"),
 	}
-	resp, err := restPostForm(revProxyPort, "upload/", values)
+	resp, err := restPostForm(revProxyPort, "update/", values)
 	if verbose {
 		fmt.Println(err.Error())
 	}
@@ -88,16 +115,16 @@ func mustOpen(f string) *os.File {
 	return r
 }
 
-func installPackageCmdHandler(cmd *cobra.Command, args []string) {
+func installPackageCmdHandler(cmd *cobra.Command, args []string) error {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
+		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-p ", packageName, " -i all"}, ""),
 	}
 
 	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
 	if len(resp) > 3 {
 		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
@@ -106,11 +133,12 @@ func installPackageCmdHandler(cmd *cobra.Command, args []string) {
 	if verbose {
 		fmt.Println(string(resp))
 	}
+	return nil
 }
 
 func listInstalledImagesCmdHandler(cmd *cobra.Command, args []string) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
+		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-l"}, ""),
 	}
 
@@ -130,7 +158,7 @@ func listInstalledImagesCmdHandler(cmd *cobra.Command, args []string) {
 
 func getRunningPackageImagesCmdHandler(cmd *cobra.Command, args []string) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
+		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-r"}, ""),
 	}
 
@@ -150,7 +178,7 @@ func getRunningPackageImagesCmdHandler(cmd *cobra.Command, args []string) {
 
 func setStartupImageCmdHandler(cmd *cobra.Command, args []string) {
 	v := &nmd.NaplesCmdExecute{
-		Executable: "fwupdate",
+		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
 	}
 
@@ -166,4 +194,84 @@ func setStartupImageCmdHandler(cmd *cobra.Command, args []string) {
 	if verbose {
 		fmt.Println(string(resp))
 	}
+}
+
+func setBootImageCmdHandler(cmd *cobra.Command, args []string) error {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-p ", "/update/" + packageName, " -i all"}, ""),
+	}
+
+	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+	if verbose {
+		fmt.Println(string(resp))
+	}
+	fmt.Println("Package " + packageName + " installed")
+
+	v = &nmd.NaplesCmdExecute{
+		Executable: "rm",
+		Opts:       strings.Join([]string{"-rf ", "/update/" + packageName}, ""),
+	}
+
+	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+	if verbose {
+		fmt.Println(string(resp))
+	}
+
+	fmt.Println("File /update/" + packageName + " removed")
+
+	v = &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
+	}
+
+	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+	if verbose {
+		fmt.Println(string(resp))
+	}
+	fmt.Println("Startup image set")
+
+	v = &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/sysreset.sh",
+		Opts:       "",
+	}
+
+	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+	if verbose {
+		fmt.Println(string(resp))
+	}
+	fmt.Println("Naples reset")
+	return nil
 }

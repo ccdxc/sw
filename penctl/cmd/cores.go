@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,24 +29,25 @@ var coreShowCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Show cores from Naples",
 	Long:  "\n------------------------\n Show Cores From Naples \n------------------------\n",
-	Run:   coreShowCmdHandler,
+	RunE:  coreShowCmdHandler,
 }
 
 var coreFetchCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get a core from Naples",
 	Long:  "\n------------------------\n Get a Core From Naples \n------------------------\n",
-	Run:   coreFetchCmdHandler,
+	RunE:  coreFetchCmdHandler,
 }
 
 var coreDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a core from Naples",
 	Long:  "\n---------------------------\n Delete a Core From Naples \n---------------------------\n",
-	Run:   coreDeleteCmdHandler,
+	RunE:  coreDeleteCmdHandler,
 }
 
 var path string
+var file string
 
 func init() {
 	rootCmd.AddCommand(coreRootCmd)
@@ -53,18 +55,22 @@ func init() {
 	coreRootCmd.AddCommand(coreFetchCmd)
 	coreRootCmd.AddCommand(coreDeleteCmd)
 	coreFetchCmd.Flags().StringVarP(&path, "path", "p", "", "Path to copy files to")
+	coreFetchCmd.Flags().StringVarP(&file, "file", "f", "", "Core file to copy")
+	coreFetchCmd.MarkFlagRequired("file")
+	coreDeleteCmd.Flags().StringVarP(&file, "file", "f", "", "Core file to delete")
+	coreDeleteCmd.MarkFlagRequired("file")
 }
 
-func parseCoreFiles(resp *http.Response) {
+func parseFiles(resp *http.Response) error {
 	defer resp.Body.Close()
 	doc, err := html.Parse(resp.Body)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
 	// Recursively visit nodes in the parse tree
-	var f func(*html.Node)
-	f = func(n *html.Node) {
+	var f func(*html.Node) error
+	f = func(n *html.Node) error {
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, a := range n.Attr {
 				if a.Key == "href" {
@@ -76,53 +82,64 @@ func parseCoreFiles(resp *http.Response) {
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			f(c)
 		}
+		return nil
 	}
-	f(doc)
+	return f(doc)
 }
 
-func coreShowCmdHandler(cmd *cobra.Command, args []string) {
+func coreShowCmdHandler(cmd *cobra.Command, args []string) error {
 	resp, _ := restGetResp(revProxyPort, "cores/v1/naples/")
-	parseCoreFiles(resp)
+	err := parseFiles(resp)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func coreFetchCmdHandler(cmd *cobra.Command, args []string) {
+func coreFetchCmdHandler(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("path") {
 		path = "./"
 	}
-	for _, corefile := range args {
-		resp, err := restGetResp(revProxyPort, "cores/v1/naples/"+corefile)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		defer resp.Body.Close()
-		corefile = path + "/" + corefile
-		out, err := os.Create(corefile)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer out.Close()
-		// Write the body to file
-		_, err = io.Copy(out, resp.Body)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// path/to/whatever does not exist
+		os.MkdirAll(path, os.ModePerm)
 	}
+
+	corefile := file
+	resp, err := restGetResp(revProxyPort, "cores/v1/naples/"+corefile)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	defer resp.Body.Close()
+	corefile = path + "/" + corefile
+	out, err := os.Create(corefile)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	defer out.Close()
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
-func coreDeleteCmdHandler(cmd *cobra.Command, args []string) {
-	for _, corefile := range args {
-		resp, err := restDelete(revProxyPort, "cores/v1/naples/"+corefile)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		naplesCfg := state.NaplesConfigResp{}
-		json.Unmarshal(resp, &naplesCfg)
-		if tabularFormat && naplesCfg.ErrorMsg != "" {
-			fmt.Println("Error: ", naplesCfg.ErrorMsg)
-		}
+func coreDeleteCmdHandler(cmd *cobra.Command, args []string) error {
+	corefile := file
+	resp, err := restDelete(revProxyPort, "cores/v1/naples/"+corefile)
+	if err != nil {
+		fmt.Println(err)
+		return err
 	}
+	naplesCfg := state.NaplesConfigResp{}
+	json.Unmarshal(resp, &naplesCfg)
+	if tabularFormat && naplesCfg.ErrorMsg != "" {
+		fmt.Println("Error: ", naplesCfg.ErrorMsg)
+		return errors.New("Error: " + naplesCfg.ErrorMsg)
+	}
+	return nil
 }

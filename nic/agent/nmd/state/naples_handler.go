@@ -25,8 +25,8 @@ const (
 	CoresURL = "/cores/v1/naples/"
 	// CmdEXECUrl is URL to fetch output from running executables on Naples in classic mode
 	CmdEXECUrl = "/cmd/v1/naples/"
-	// UploadURL is the URL to help with file upload
-	UploadURL = "/upload/"
+	// UpdateURL is the URL to help with file upload
+	UpdateURL = "/update/"
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped

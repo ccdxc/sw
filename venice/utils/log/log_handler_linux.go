@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"syscall"
 )
 
@@ -12,6 +13,9 @@ import (
 
 // LogtoFileHandler writes the log to the specified file on linux based platforms using Dup3 syscall
 func (c *Config) LogtoFileHandler() (err error) {
+	if os.MkdirAll(filepath.Dir(c.FileCfg.Filename), os.ModePerm) != nil {
+		panic(fmt.Sprintf("Failed to create directory %s for logfile %s err: %v", filepath.Dir(c.FileCfg.Filename), c.FileCfg.Filename, err))
+	}
 	logFile, err := os.OpenFile(c.FileCfg.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open logfile: %s err: %v", c.FileCfg.Filename, err))

@@ -186,6 +186,9 @@ def GetWorkloadTypeForNode(node_name):
 def GetWorkloadImageForNode(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadImageForNode(node_name)
 
+def GetNodeOs(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodeOs(node_name)
+
 def Testbed_AllocateVlan():
     return store.GetTestbed().AllocateVlan()
 
@@ -346,7 +349,9 @@ def __CopyCommon(direction, node_name, entity_name, files, dest_dir):
     req.entity_name = entity_name
     for f in files:
         req.files.append(f)
-    req.dest_dir = __gl_rundir + '/' + dest_dir
+    req.dest_dir = dest_dir 
+    if direction == topo_svc.DIR_IN:
+        req.dest_dir = __gl_rundir + '/' + dest_dir
     return EntityCopy(req)
    
 def CopyToWorkload(node_name, workload_name, files, dest_dir = ""):

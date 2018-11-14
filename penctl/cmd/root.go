@@ -40,6 +40,7 @@ var jsonFormat bool
 var tabularFormat bool
 var mockMode bool
 var intf string
+var ip string
 
 func init() {
 	// Fill logger config params
@@ -59,9 +60,11 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", true, "display in tabular format")
 	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock mode to localhost")
 	rootCmd.PersistentFlags().StringVarP(&intf, "interface", "e", "", "ethernet device of naples")
+	rootCmd.PersistentFlags().StringVarP(&ip, "ip", "", "", "ip of naples")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
 	rootCmd.PersistentFlags().MarkHidden("verbose")
+	rootCmd.PersistentFlags().MarkHidden("ip")
 
 	rootCmd.GenBashCompletionFile("penctl.sh")
 }

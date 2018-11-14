@@ -66,7 +66,7 @@ class _Testbed:
     def __read_warmd_json(self):
         self.tbspec = parser.JsonParse(GlobalOptions.testbed_json)
         for instance in self.tbspec.Instances:
-            self.__node_ips.append(instance.NodeMgmtIP)
+            self.__node_ips.append((instance.NodeMgmtIP, instance.NodeOs))
         return
 
     def __get_full_path(self, path):
@@ -207,12 +207,12 @@ class _Testbed:
 
     def ReserveNodeIpAddress(self):
         try:
-            node_ip = next(self.__node_ip_pool)
+            node_ip_os = next(self.__node_ip_pool)
         except:
             Logger.error("No Nodes available in Testbed.")
             assert(0)
-            node_ip = None
-        return node_ip
+            node_ip_os = None
+        return node_ip_os
 
     def GetDataVlans(self):
         return copy.deepcopy(self.__vlans)

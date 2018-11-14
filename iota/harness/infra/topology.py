@@ -19,7 +19,7 @@ class Node(object):
     def __init__(self, spec):
         self.__spec = spec
         self.__name = spec.name
-        self.__ip_address = store.GetTestbed().ReserveNodeIpAddress()
+        self.__ip_address,self.__os = store.GetTestbed().ReserveNodeIpAddress()
         self.__role = topo_pb2.PersonalityType.Value(spec.role)
 
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
@@ -37,10 +37,10 @@ class Node(object):
 
     def Name(self):
         return self.__name
-
     def Role(self):
         return self.__role
-
+    def GetOs(self):
+        return self.__os
     def IsNaplesSim(self):
         return self.__role == topo_pb2.PERSONALITY_NAPLES_SIM
     def IsNaplesHw(self):
@@ -229,3 +229,6 @@ class Topology(object):
 
     def AllocateHostInterfaceForNode(self, node_name):
         return self.__nodes[node_name].AllocateHostInterface()
+
+    def GetNodeOs(self, node_name):
+        return self.__nodes[node_name].GetOs()
