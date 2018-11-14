@@ -11,15 +11,7 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
-    rs = tc.config.rdmasession
-
-    # Read RQ pre state
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
-
-    # Read CQ pre state
-    rs.lqp.rq_cq.qstate.Read()
-    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
+    PopulatePreQStates(tc)
     return
 
 def TestCaseTrigger(tc):
@@ -29,10 +21,10 @@ def TestCaseTrigger(tc):
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.Read()
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
-    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     if step.step_id == 0:
     
@@ -41,21 +33,20 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):
             return False
     
-        # verify that proxy_cindex is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 1):
+        # verify that proxy_cindex is NOT incremented
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 0):
             return False
     
         # verify that token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 1):
             return False
     
-        # verify that nxt_to_go_token_id is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
+        # verify that nxt_to_go_token_id is NOT incremented
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 0):
             return False
     
-    
-        ############     CQ VALIDATIONS #################
-        if not ValidateRespRxCQChecks(tc):
+        # verify that state is now moved to ERR (2)
+        if not VerifyErrQState(tc):
             return False
 
     elif step.step_id == 1:
@@ -66,5 +57,7 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
+    if (GlobalOptions.dryrun): return
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    ResetErrQState(tc)
     return

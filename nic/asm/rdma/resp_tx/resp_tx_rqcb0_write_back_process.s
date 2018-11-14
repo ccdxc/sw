@@ -37,6 +37,9 @@ resp_tx_rqcb0_write_back_process:
     bbeq       CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, dcqcn_rl_failure
 
 add_headers_common:
+    // prior to adding any DMA commands to ship headers, check if it is UD service.
+    seq             c1, d.serv_type, RDMA_SERV_TYPE_UD  //BD Slot
+    bcf             [c1], process_ud
 
     // intrinsic
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_INTRINSIC) //BD Slot
@@ -119,6 +122,14 @@ dcqcn_rl_failure:
     tblmincri.e     d.curr_color, 1, 1
     nop
 
+process_ud:
+    // if error is encountered in RxDMA, we need to move txdma to error disable and inject a
+    // feedback phv to SQ. Otherwise we can safely drop the phv as we don't need to send any ACK
+    // in case of UD.
+    bbeq        K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_qp
+    nop         //BD Slot 
+    // fall thru to drop_phv
+
 drop_phv:
     phvwr.e         p.common.p4_intr_global_drop, 1
     nop // Exit Slot
@@ -148,3 +159,5 @@ error_disable_qp_and_drop:
     // don't execute any DMA instructions etc. all we do is set the state to ERROR and drop the phv.
     phvwr.e         p.common.p4_intr_global_drop, 1
     tblwr           d.state, QP_STATE_ERR   //Exit slot
+
+    

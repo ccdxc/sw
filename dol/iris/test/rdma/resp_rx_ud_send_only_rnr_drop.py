@@ -37,12 +37,16 @@ def TestCaseStepVerify(tc, step):
     if step.step_id == 0:
     
         ############     RQ VALIDATIONS #################
-        # verify that e_psn is NOT incremented
+        # verify that e_psn is NOT incremented 
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 0):
             return False
     
-        # verify that proxy_cindex is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 1):
+        # verify that msn is NOT incremented
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'msn', 0):
+            return False
+
+        # verify that proxy_cindex is NOT incremented
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask, 0):
             return False
     
         # verify that token_id is incremented by 1
@@ -53,11 +57,10 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
     
-    
-        ############     CQ VALIDATIONS #################
-        if not ValidateRespRxCQChecks(tc):
+        # verify that no cqe is posted
+        if not ValidateNoCQChanges(tc):
             return False
-
+    
     elif step.step_id == 1:
 
         if not ValidatePostSyncCQChecks(tc):

@@ -146,8 +146,8 @@ skip_cnp_receive:
     bcf         [!c7], inv_req_nak
 
     // check if payload_len is <= pmtu
-    sll         r1, 1, d.log_pmtu  //BD Slot
-    blt         r1, REM_PYLD_BYTES, inv_req_nak
+    sll         r3, 1, d.log_pmtu  //BD Slot
+    blt         r3, REM_PYLD_BYTES, inv_req_nak
     // c7 is used in process_write_only down the path. Pls do not touch.
     crestore    [c7], r7, (RESP_RX_FLAG_IMMDT)  //BD Slot
 
@@ -165,7 +165,7 @@ process_send_write_fml:
     nop // BD Slot
 
     // first/middle packets should be of pmtu size
-    sne         c7, r1, REM_PYLD_BYTES
+    sne         c7, r3, REM_PYLD_BYTES
     bcf.c7      [c1|c2], inv_req_nak
 
     phvwr       p.s1.ack_info.psn, d.e_psn // BD Slot
@@ -233,16 +233,16 @@ wr_skip_immdt_as_dbell:
 process_send:
     //  c6: immdt, c5: write, c4: send, c3: last, c2: middle, c1: first
 
-    seq         c2, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
-    // c2: fresh packet
+    seq         c7, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
+    // c7: fresh packet
     seq         c4, d.log_wqe_size, WQE_SIZE_2_SGES 
     // c4: send_sge_opt
 
     // if recirc pkt (token_id check already done) or
     // tiny wqe, skip token_id_check
-    bcf         [!c2 | c4], skip_token_id_check
-    seq         c2, TOKEN_ID, d.nxt_to_go_token_id // BD Slot
-    bcf         [!c2], recirc_wait_for_turn
+    bcf         [!c7 | c4], skip_token_id_check
+    seq         c7, TOKEN_ID, d.nxt_to_go_token_id // BD Slot
+    bcf         [!c7], recirc_wait_for_turn
     nop //BD Slot
 
 skip_token_id_check:
@@ -794,26 +794,28 @@ skip_nak:
 process_ud:
     crestore [c2, c1], r7, (RESP_RX_FLAG_SEND | RESP_RX_FLAG_ONLY)
     // c2: send, c1: only
-    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
 
     phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
     seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type
     seq         c3, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
-    // if it doesn't match serv_type OR not send OR not only, drop
-    bcf         [!c7 | !c2 | !c1], phv_drop
+    seq         c4, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
+    // if it doesn't match serv_type OR not send OR not only OR no posted buffers, drop
+    bcf         [!c7 | !c2 | !c1 | c4], ud_phv_drop
     // check if payload_len is <= pmtu
     sll         r1, 1, d.log_pmtu // BD Slot
     // REM_PYLD_BYTES for UD is set to the actual payload size and the GRH header size to enable one shot dma for UD.
     // Compare only real payload size to PMTU.
     sub         r2, REM_PYLD_BYTES, GRH_HDR_T_SIZE_BYTES
-    blt         r1, r2, phv_drop
+    blt         r1, r2, ud_phv_drop
 
     // check if q_key matches
     sne    c1, CAPRI_RXDMA_DETH_Q_KEY, d.q_key //BD Slot
     addi   r1, r0, 0x01234567
     sne    c2, CAPRI_RXDMA_DETH_Q_KEY, r1
-    bcf    [c1 & c2] , phv_drop
+    bcf    [c1 & c2] , ud_phv_drop
     IS_ANY_FLAG_SET(c6, r7, RESP_RX_FLAG_IMMDT) //BD Slot
+
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
 
     // populate completion entry
     phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD
@@ -856,7 +858,19 @@ rc_checkout:
     phvwrpair   CAPRI_PHV_FIELD(LAUNCH_RQPT_INFO_P, c_index), r1, \
                 CAPRI_PHV_FIELD(LAUNCH_RQPT_INFO_P, remaining_payload_bytes), REM_PYLD_BYTES
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_launch_rqpt_process, r0)
- 
+
+ud_phv_drop:
+    // we can still set the intrinsic drop bit, though we are going to writeback
+    phvwr       p.common.p4_intr_global_drop, 1
+    // turn off completion
+    and         r7, r7, ~(RESP_RX_FLAG_COMPLETION)
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
+    CAPRI_RESET_TABLE_2_ARG()
+    // we need to set soft_nak_or_dup so that msn is not updated for these cases in writeback.
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
+                CAPRI_PHV_FIELD(TO_S_WB1_P, soft_nak_or_dup), 1
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+
 phv_drop:
     phvwr.e     p.common.p4_intr_global_drop, 1
     nop

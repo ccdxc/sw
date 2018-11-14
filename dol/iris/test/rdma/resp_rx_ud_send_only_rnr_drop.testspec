@@ -1,0 +1,115 @@
+# Test Spec
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=3
+        rqp         : filter://svc=3
+#    maxflows    : 1 
+#    maxrdmasessions     : 1 
+
+packets:
+   - packet:
+        id          : BASE_PYLD
+        payloadsize : 64
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
+
+   - packet:
+        id          : IN_PKT    # Input packet 
+        payloadsize : ref://testcase/packets/id=BASE_PYLD/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_DETH,v6=ETH_IPV6_UDP_BTH_DETH
+        icrc        : True
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 100
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetRqPreEpsn
+            deth:
+                qkey    : ref://testcase/config/rdmasession/lqp/id
+                srcqp   : ref://testcase/config/rdmasession/rqp/id
+            payload:
+                data    : ref://testcase/packets/id=BASE_PYLD/rawbytes
+
+   - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://testcase/packets/id=BASE_PYLD/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ROCE_UD_IPV4,v6=ROCE_UD_IPV6
+        headers     :
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+                len     : 116 #from the IN_PKT
+            pad:
+                data0   : 00000000
+                data1   : 00000000
+                data2   : 00000000
+                data3   : 00000000
+                data4   : 00000000
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                hlim    : 64
+                plen    : 96 #from the IN_PKT
+            payload:
+                data    : ref://testcase/packets/id=BASE_PYLD/rawbytes
+               
+buffers:
+
+descriptors:
+
+session:
+    - step:
+        trigger:
+            #inject a packet without posting any RQ buffers
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IN_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        
+        expect:
+            #packet should be silently dropped, no RQ buffer should be consumed, no CQ should be posted
+        
+    #set CI for CQ ring to that of proxy CI in DB data
+    - step:
+
+        trigger:
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ/doorbell
+                fields:
+                    upd : 0x4 #Set CI
+
+        expect:
+

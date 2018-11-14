@@ -127,7 +127,7 @@ check_inv_rkey:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_process, KEY_ADDR)
 
 check_ack_nak:
-    seq         c3, K_GLOBAL_FLAG(_ack_req), 1
+    seq         c3, K_GLOBAL_FLAG(_ack_req), 1      //BD Slot
     // c3: ack_req
     setcf       c4, [c7 | c6 | c5]
     // c4: read or atomic
