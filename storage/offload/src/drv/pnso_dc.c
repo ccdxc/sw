@@ -178,6 +178,12 @@ decompress_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
+decompress_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
+{
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
 decompress_ring_db(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
@@ -320,6 +326,7 @@ struct service_ops dc_ops = {
 	.chain = decompress_chain,
 	.sub_chain_from_cpdc = decompress_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = decompress_sub_chain_from_crypto,
+	.enable_interrupt = decompress_enable_interrupt,
 	.ring_db = decompress_ring_db,
 	.poll = decompress_poll,
 	.read_status = decompress_read_status,

@@ -126,10 +126,16 @@ struct service_ops {
 
 	/* chain the service(s) */
 	pnso_error_t (*chain)(struct chain_entry *centry);
+
 	pnso_error_t (*sub_chain_from_cpdc)(struct service_info *svc_info,
 			struct cpdc_chain_params *cpdc_chain);
+
 	pnso_error_t (*sub_chain_from_crypto)(struct service_info *svc_info,
 			struct crypto_chain_params *crypto_chain);
+
+	/* configure the service for async/interrupt handling */
+	pnso_error_t (*enable_interrupt)(const struct service_info *svc_info,
+			void *poll_ctx);
 
 	/* a NULL-op for all services except the first within the chain */
 	pnso_error_t (*ring_db)(const struct service_info *svc_info);

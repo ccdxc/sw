@@ -184,6 +184,12 @@ chksum_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
+chksum_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
+{
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
 chksum_ring_db(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
@@ -503,6 +509,7 @@ struct service_ops chksum_ops = {
 	.chain = chksum_chain,
 	.sub_chain_from_cpdc = chksum_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = chksum_sub_chain_from_crypto,
+	.enable_interrupt = chksum_enable_interrupt,
 	.ring_db = chksum_ring_db,
 	.poll = chksum_poll,
 	.read_status = chksum_read_status,

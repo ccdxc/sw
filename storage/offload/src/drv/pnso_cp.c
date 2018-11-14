@@ -255,6 +255,12 @@ compress_sub_chain_from_crypto(struct service_info *svc_info,
 }
 
 static pnso_error_t
+compress_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
+{
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
 compress_ring_db(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
@@ -453,6 +459,7 @@ struct service_ops cp_ops = {
 	.chain = compress_chain,
 	.sub_chain_from_cpdc = compress_sub_chain_from_cpdc,
 	.sub_chain_from_crypto = compress_sub_chain_from_crypto,
+	.enable_interrupt = compress_enable_interrupt,
 	.ring_db = compress_ring_db,
 	.poll = compress_poll,
 	.read_status = compress_read_status,
