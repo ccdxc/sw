@@ -10,7 +10,7 @@
     "flags": ["no_watchdog"]
 }, {
     "name": "example2",
-    "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example2",
+    "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example2 --exit 12",
     "dependencies": ["delphi", "example1"],
-    "flags": ["no_watchdog"]
+    "flags": ["no_watchdog", "non_critical"]
 }]

@@ -37,8 +37,8 @@ public:
   void service_launched(shared_ptr<Service> srv, pid_t pid);
   void service_started(const string &name);
   void service_started(pid_t pid);
-  void service_died(const string &name);
-  void service_died(pid_t pid);
+    void service_died(const string &name, int status);
+    void service_died(pid_t pid, int status);
   void heartbeat(const string &name);
   void heartbeat(pid_t pid);
    

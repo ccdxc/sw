@@ -33,5 +33,6 @@ SysmgrService::SysmgrService(delphi::SdkPtr sdk, string name, shared_ptr<Pipe<pi
 
 void SysmgrService::OnMountComplete()
 {
-    delphi_message_pipe->pipe_write(DELPHI_UP);
+    int32_t msg = DELPHI_UP;
+    delphi_message_pipe->pipe_write(&msg);
 }

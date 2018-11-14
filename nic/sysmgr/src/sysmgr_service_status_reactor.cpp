@@ -18,7 +18,8 @@ SysmgrServiceStatusReactor::SysmgrServiceStatusReactor(shared_ptr<Pipe<pid_t> > 
 delphi::error SysmgrServiceStatusReactor::OnSysmgrServiceStatusCreate(delphi::objects::SysmgrServiceStatusPtr obj)
 {
     INFO("SysmgrServiceCreate {}({})", obj->key(), obj->pid());
-    started_pids_pipe->pipe_write(obj->pid());
+    pid_t pid = obj->pid();
+    started_pids_pipe->pipe_write(&pid);
     return delphi::error::OK();
 }
 delphi::error SysmgrServiceStatusReactor::OnSysmgrServiceStatusDelete(delphi::objects::SysmgrServiceStatusPtr obj)
@@ -29,6 +30,7 @@ delphi::error SysmgrServiceStatusReactor::OnSysmgrServiceStatusDelete(delphi::ob
 delphi::error SysmgrServiceStatusReactor::OnSysmgrServiceStatusUpdate(delphi::objects::SysmgrServiceStatusPtr obj)
 {
     INFO("SysmgrServiceUpdate {}({})", obj->key(), obj->pid());
-    started_pids_pipe->pipe_write(obj->pid());
+    pid_t pid = obj->pid();
+    started_pids_pipe->pipe_write(&pid);
     return delphi::error::OK();
 }

@@ -6,57 +6,81 @@
 
 #include <stdio.h>
 
+#include <boost/program_options.hpp>
+
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "gen/proto/sysmgr.delphi.hpp"
 #include "nic/sysmgr/lib/sysmgr_client.hpp"
 
 using namespace std;
+using namespace boost::program_options;
 
 class ExampleService :
-   public delphi::Service,
-   public sysmgr::ServiceStatusReactor,
-   public enable_shared_from_this<ExampleService>
+    public delphi::Service,
+    public sysmgr::ServiceStatusReactor,
+    public enable_shared_from_this<ExampleService>
 {
 private:
-   delphi::SdkPtr delphi;
-   string name;
-   sysmgr::ClientPtr sysmgr;
+    delphi::SdkPtr delphi;
+    string name;
+    bool no_heartbreat;
+    sysmgr::ClientPtr sysmgr;
 
 public:
-   ExampleService(delphi::SdkPtr delphi, string name)
-   {
-      this->delphi = delphi;
-      this->name = name;
-      this->sysmgr = sysmgr::CreateClient(delphi, name);
-   }
+    ExampleService(delphi::SdkPtr delphi, string name, bool no_heartbeat) {
+	this->delphi = delphi;
+	this->name = name;
+	this->no_heartbreat = no_heartbreat;
+	this->sysmgr = sysmgr::CreateClient(delphi, name);
+    }
 
-   void register_mounts()
-   {
-      this->sysmgr->register_service_reactor(
-	  "TestCompleteService",
-	  shared_from_this());
-   }
+    virtual string Name() {
+	return this->name;
+    }
 
-   virtual void OnMountComplete()
-   {
-      this->sysmgr->init_done();
-   }
+    void register_mounts() {
+	this->sysmgr->register_service_reactor(
+	    "TestCompleteService",
+	    shared_from_this());
+    }
 
-   virtual void ServiceUp(std::string name)
-   {
-   }
+    virtual void OnMountComplete() {
+	this->sysmgr->init_done();
+    }
 
-   virtual void ServiceDown(std::string)
-   {
-   }
+    virtual void ServiceUp(std::string name) {
+    }
+
+    virtual void ServiceDown(std::string) {
+    }
 };
 
-int main(int argc, char **argv) {
-   delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-   
-   shared_ptr<ExampleService> svc = make_shared<ExampleService>(sdk, "ExampleService");
-   svc->register_mounts();
-   sdk->RegisterService(svc);
+int main(int argc, char *argv[]) {
+    variables_map vm;
+    try
+    {
+    	options_description desc{"Options"};
+    	desc.add_options()
+    	    ("name", value<string>()->default_value("example"), "Name")
+    	    ("exit", value<int>(), "Exit code")
+	    ("no-heartbeat", "No heartbeat");
+    	store(parse_command_line(argc, argv, desc), vm);
+    }
+    catch (const error &ex)
+    {
+    	std::cerr << ex.what() << '\n';
+    }
 
-   return sdk->MainLoop();
+    if (vm.count("exit") > 0) {
+    	std::exit(vm["exit"].as<int>());
+    }
+    
+    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
+    
+    shared_ptr<ExampleService> svc = make_shared<ExampleService>(sdk,
+	vm["name"].as<string>(), vm.count("no-heartbeat") > 0);
+    svc->register_mounts();
+    sdk->RegisterService(svc);
+    
+    return sdk->MainLoop();
 }

@@ -145,7 +145,7 @@ TEST(Scheduler, RestartableProcessDeath)
     start_all(sched);
 
     // Test 1: Process dies while its in "started" state
-    sched.service_died("agent2");
+    sched.service_died("agent2", 0);
     auto action = sched.next_action();
     next_action_is(sched, LAUNCH, {"agent2"});
 
@@ -153,7 +153,7 @@ TEST(Scheduler, RestartableProcessDeath)
     next_action_is(sched, WAIT, {});
 
     // Test 2: Process dies while its in "launched" state
-    sched.service_died("agent2");
+    sched.service_died("agent2", 0);
     action = sched.next_action();
     next_action_is(sched, LAUNCH, {"agent2"});
 }
@@ -171,7 +171,7 @@ TEST(Scheduler, NonRestartableStartedProcessDeath)
     auto sched = Scheduler(specs);
     start_all(sched);
 
-    sched.service_died("agent1");
+    sched.service_died("agent1", 0);
     auto action = sched.next_action();
     next_action_is(sched, REBOOT, {});
 }
@@ -196,7 +196,7 @@ TEST(Scheduler, NonRestartableStartingProcessDeath)
     // launches agent1 and agent 2
     launch_ready(sched);
 
-    sched.service_died("agent1");
+    sched.service_died("agent1", 0);
     auto action = sched.next_action();
     next_action_is(sched, REBOOT, {});
 }
@@ -221,7 +221,7 @@ TEST(Scheduler, NonCritical)
     // launches agent1 and agent 2
     launch_ready(sched);
 
-    sched.service_died("agent1");
+    sched.service_died("agent1", 0);
     auto action = sched.next_action();
     next_action_is(sched, WAIT, {});
 }

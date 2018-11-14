@@ -27,26 +27,24 @@ class Pipe
         return this->fds[PIPE_T_READ];
     }
 
-    void pipe_write(T value)
+    void pipe_write(T *value)
     {
-        ssize_t n = write(this->fds[PIPE_T_WRITE], &value, sizeof(value));
-        if (n != sizeof(value))
+        ssize_t n = write(this->fds[PIPE_T_WRITE], value, sizeof(T));
+        if (n != sizeof(T))
         {
             exit(-1);
         }
     }
 
-    T pipe_read()
+    int pipe_read(T *value)
     {
-        T value = -1;
-
-        int n = read(this->fds[PIPE_T_READ], &value, sizeof(value));
-        if (n < (ssize_t)sizeof(value))
+        ssize_t n = read(this->fds[PIPE_T_READ], value, sizeof(T));
+        if (n < (ssize_t)sizeof(T))
         {
             return -1;
         }
 
-        return value;
+        return 0;
     }
 
   private:

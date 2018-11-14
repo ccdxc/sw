@@ -1,11 +1,33 @@
 #include <assert.h>
 #include <memory>
 
+#include <boost/format.hpp>
+
 #include "logger.hpp"
 #include "scheduler.hpp"
 #include "spec.hpp"
 
 using namespace std;
+
+string parse_status(int status)
+{
+    if (WIFEXITED(status))
+    {
+	return boost::str(boost::format("Exited normally with code: %1%") %
+	    WEXITSTATUS(status));
+    }
+    else if (WIFSIGNALED(status))
+    {
+	return boost::str(boost::format("Exited due to signal: %1%") %
+	    WTERMSIG(status));
+    }
+    else
+    {
+	return boost::str(boost::format("Exited with unparsed status: %1%") %
+	    status);
+    }
+    
+}
 
 shared_ptr<Service> Scheduler::get_for_pid(pid_t pid)
 {
@@ -214,13 +236,13 @@ void Scheduler::service_started(pid_t pid)
     }
 }
 
-void Scheduler::service_died(const string &name)
+void Scheduler::service_died(const string &name, int status)
 {
     auto service = this->get_for_name(name);
-    this->service_died(service->pid);
+    this->service_died(service->pid, status);
 }
 
-void Scheduler::service_died(pid_t pid)
+void Scheduler::service_died(pid_t pid, int status)
 {
     auto service = this->get_for_pid(pid);
     assert((service->get_status() == RUNNING) || (service->get_status() == STARTING));
@@ -230,7 +252,7 @@ void Scheduler::service_died(pid_t pid)
     this->running.erase(service);
     this->starting.erase(service);
     this->dead.insert(service);
-    INFO("{} -> died", service->name);
+    INFO("{} -> {}", service->name, parse_status(status));
 }
 
 void Scheduler::debug()

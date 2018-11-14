@@ -29,7 +29,12 @@ using namespace std;
 
 #define MAX_EVENTS 10
 
-static auto died_pids = make_shared<Pipe<pid_t>>();
+struct died_pid_t {
+    pid_t pid;
+    int   status;
+};
+
+static auto died_pids = make_shared<Pipe<died_pid_t>>();
 static auto started_pids = make_shared<Pipe<pid_t>>();
 static auto delphi_messages = make_shared<Pipe<int32_t>>();
 static auto heartbeats = make_shared<Pipe<pid_t>>();
@@ -135,35 +140,21 @@ pid_t launch(const string &name, const string &command)
     return pid;
 }
 
-void sigchld_handler(__attribute__((unused)) int sig)
+void sigchld_handler(int sig)
 {
-    int saved_errno = errno;
     pid_t pid;
-    while ((pid = waitpid((pid_t)(-1), 0, WNOHANG)) > 0)
+    int status;
+
+    while ((pid = waitpid((pid_t)(-1), &status, WNOHANG)) > 0)
     {
-        died_pids->pipe_write(pid);
+	struct died_pid_t dp = { .pid = pid, .status = status };
+        died_pids->pipe_write(&dp);
     }
-    errno = saved_errno;
 }
 
-// Ignore the Quit Signal since it's what we send to the children to kill them
-void sigquit_handler(__attribute__((unused)) int sig)
+void sig_handler(int sig)
 {
-}
-
-void sigterm_handler(__attribute__((unused)) int sig)
-{
-    quit_pipe->pipe_write(SIGTERM);
-}
-
-void sigint_handler(__attribute__((unused)) int sig)
-{
-    quit_pipe->pipe_write(SIGINT);
-}
-
-void sigsegv_handler(__attribute__((unused)) int sig)
-{
-    quit_pipe->pipe_write(SIGSEGV);
+    quit_pipe->pipe_write(&sig);
 }
 
 void install_sigchld_handler()
@@ -193,18 +184,18 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
         if (events[i].data.fd == died_pids->raw_fd())
         {
             INFO("died_pids event");
-            pid_t pid;
-            while ((pid = died_pids->pipe_read()) > 0)
+            died_pid_t dp;
+            while (died_pids->pipe_read(&dp) == 0)
             {
-                INFO("died_pids: pipe_read(): {}", pid);
-                scheduler.service_died(pid);
+                INFO("died_pids: pipe_read(): {}", dp.pid);
+                scheduler.service_died(dp.pid, dp.status);
             }
         }
         else if (events[i].data.fd == started_pids->raw_fd())
         {
             INFO("started_pids event");
             pid_t pid;
-            while ((pid = started_pids->pipe_read()) > 0)
+            while (started_pids->pipe_read(&pid) == 0)
             {
                 INFO("started_pids: pipe_read(): {}", pid);
                 scheduler.service_started(pid);
@@ -214,7 +205,7 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
         {
             INFO("delphi_messages event");
             int32_t msg;
-            while ((msg = delphi_messages->pipe_read()) > 0)
+            while (delphi_messages->pipe_read(&msg) == 0)
             {
                 INFO("delphi_messages: pipe_read(): {}", msg);
                 if (msg == DELPHI_UP)
@@ -231,7 +222,7 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
         {
             DEBUG("heartbeat event");
             pid_t pid;
-            while((pid = heartbeats->pipe_read()) > 0)
+            while(heartbeats->pipe_read(&pid) == 0)
             {
                 DEBUG("heartbeat: pipe_read(): {}", pid);
                 scheduler.heartbeat(pid);
@@ -239,10 +230,13 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
         }
 	else if (events[i].data.fd == quit_pipe->raw_fd())
 	{
-	    DEBUG("Quit signal received");
-	    kill(-mypid, SIGTERM);
-	    printf("Got SIGTERM, exiting\n");
-	    exit(-1);
+	    int sig;
+	    while(quit_pipe->pipe_read(&sig) == 0)
+	    {
+		INFO("Signal {} received. Exiting", sig);
+		kill(-mypid, SIGTERM);
+		exit(-1);
+	    }
 	}
 	else
         {
@@ -345,15 +339,15 @@ int main(int argc, char *argv[])
 
     auto spec = specs_from_json(argv[1]);
     Scheduler scheduler(spec);
-    
-    install_sigchld_handler();
-    signal(SIGQUIT, sigquit_handler);
-    signal(SIGTERM, sigterm_handler);
-    signal(SIGSEGV, sigsegv_handler);
-    signal(SIGINT, sigint_handler);
 
     pthread_t delphi_thread;
     pthread_create(&delphi_thread, NULL, delphi_thread_run, NULL);
+    
+    install_sigchld_handler();
+    signal(SIGQUIT, sig_handler);
+    signal(SIGTERM, sig_handler);
+    signal(SIGSEGV, sig_handler);
+    signal(SIGINT, sig_handler);
 
     loop(scheduler);
 
