@@ -29,6 +29,7 @@ const (
 	naplesSimHostIntfPrefix = "lif"
 	naplesPciDevicePrefix   = "Device"
 	mellanoxPciDevicePrefix = "Mellanox Technologies"
+	broadcomPciDevicePrefix = "Broadcom Limited"
 	bareMetalWorkloadName   = "bareMetalWorkload"
 )
 
@@ -48,13 +49,13 @@ var workloadTypeMap = map[iota.WorkloadType]string{
 
 type dataNode struct {
 	iotaNode
-	entityMap map[string]Workload.Workload
+	entityMap     map[string]Workload.Workload
+	hostEntityKey string
 }
 
 type naplesHwNode struct {
 	dataNode
 	naplesEntityKey string
-	hostEntityKey   string
 }
 
 type naplesSimNode struct {
@@ -68,7 +69,10 @@ type naplesQemuNode struct {
 }
 
 type mellanoxNode struct {
-	mlxEntityKey string
+	dataNode
+}
+
+type broadcomNode struct {
 	dataNode
 }
 
@@ -735,12 +739,12 @@ func (naples *naplesQemuNode) NodeType() iota.PersonalityType {
 	return iota.PersonalityType_PERSONALITY_NAPLES_SIM_WITH_QEMU
 }
 
-func (mlx *mellanoxNode) addNodeEntities(in *iota.Node) error {
+func (dnode *dataNode) addNodeEntities(in *iota.Node) error {
 	for _, entityEntry := range in.GetEntities() {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_HOST {
-			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, mlx.logger)
-			mlx.mlxEntityKey = entityEntry.GetName()
+			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, dnode.logger)
+			dnode.hostEntityKey = entityEntry.GetName()
 		}
 
 		wDir := Common.DstIotaEntitiesDir + "/" + entityEntry.GetName()
@@ -749,11 +753,11 @@ func (mlx *mellanoxNode) addNodeEntities(in *iota.Node) error {
 		naplesCfg := in.GetNaplesConfig()
 		if err := wload.BringUp(naplesCfg.GetNaplesIpAddress(),
 			strconv.Itoa(sshPort), naplesCfg.GetNaplesUsername(), naplesCfg.GetNaplesPassword()); err != nil {
-			mlx.logger.Errorf("Naples Hw entity type add failed %v", err.Error())
+			dnode.logger.Errorf("DataNode Hw entity type add failed %v", err.Error())
 			return err
 		}
 		if wload != nil {
-			mlx.entityMap[entityEntry.GetName()] = wload
+			dnode.entityMap[entityEntry.GetName()] = wload
 		}
 	}
 	time.Sleep(1 * time.Second)
@@ -828,4 +832,38 @@ func (dnode *dataNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error
 //NodeType return node type
 func (dnode *dataNode) NodeType() iota.PersonalityType {
 	return iota.PersonalityType_PERSONALITY_NONE
+}
+
+//Init initalize node type
+func (brcm *broadcomNode) Init(in *iota.Node) (resp *iota.Node, err error) {
+
+	brcm.init()
+	brcm.iotaNode.name = in.GetName()
+
+	if in.GetBroadcomConfig() == nil {
+		in.NodeInfo = &iota.Node_BroadcomConfig{BroadcomConfig: &iota.BroadcomConfig{}}
+	}
+
+	in.GetBroadcomConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(broadcomPciDevicePrefix)
+
+	brcm.logger.Printf("Broadcom host interfaces : %v", in.GetBroadcomConfig().HostIntfs)
+	for _, intf := range in.GetBroadcomConfig().HostIntfs {
+		cmd := []string{"ifconfig", intf, "up"}
+		_, stdout, err := Utils.Run(cmd, 0, false, true, nil)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to bring interface %s up err : %s", intf, stdout)
+			brcm.logger.Errorf(msg)
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		}
+	}
+
+	/* Finally add entity type */
+	if err := brcm.addNodeEntities(in); err != nil {
+		brcm.logger.Error("Adding node entities failed")
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
+	}
+
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
+		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
+		NodeInfo: &iota.Node_BroadcomConfig{BroadcomConfig: in.GetBroadcomConfig()}}, nil
 }

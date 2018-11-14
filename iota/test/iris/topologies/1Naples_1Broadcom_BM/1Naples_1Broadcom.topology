@@ -1,0 +1,19 @@
+meta:
+    name: 1Naples_1Broadcom
+    description: 1Naples + 1Broadcom Topology
+
+nodes:
+    - node: node1
+      name: naples1
+      role: PERSONALITY_NAPLES
+      workloads:
+            type:   WORKLOAD_TYPE_BARE_METAL
+            image:  ubuntu_18_04
+
+
+    - node: node2
+      name: broadcom1
+      role: PERSONALITY_BROADCOM
+      workloads:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image:  ubuntu_18_04

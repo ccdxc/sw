@@ -28,7 +28,7 @@ class Node(object):
         self.__data_intfs = [ "eth2", "eth3" ]
         self.__host_intfs = []
         self.__host_if_alloc_idx = 0
-        
+
         if self.IsWorkloadNode():
             self.__workload_type = topo_pb2.WorkloadType.Value(spec.workloads.type)
             self.__workload_image = spec.workloads.image
@@ -49,11 +49,13 @@ class Node(object):
         return self.IsNaplesSim() or self.IsNaplesHw()
     def IsMellanox(self):
         return self.__role == topo_pb2.PERSONALITY_MELLANOX
+    def IsBroadcom(self):
+        return self.__role == topo_pb2.PERSONALITY_BROADCOM
     def IsWorkloadNode(self):
-        return self.IsNaples() or self.IsMellanox()
+        return self.IsNaples() or self.IsMellanox() or self.IsBroadcom()
 
     def UUID(self):
-        if self.IsMellanox():
+        if self.IsMellanox() or self.IsBroadcom():
             return self.Name()
         return self.__uuid
 
@@ -95,7 +97,7 @@ class Node(object):
         else:
             msg.naples_config.control_intf = self.__control_intf
             msg.naples_config.control_ip = str(self.__control_ip)
-            if not self.IsNaplesHw() and not self.IsMellanox():
+            if not self.IsNaplesHw() and not (self.IsMellanox() or self.IsBroadcom()):
                 msg.image = os.path.basename(testsuite.GetImages().naples)
             for data_intf in self.__data_intfs:
                 msg.naples_config.data_intfs.append(data_intf)
@@ -123,6 +125,8 @@ class Node(object):
         Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
         if self.IsMellanox():
             self.__host_intfs = resp.mellanox_config.host_intfs
+        if self.IsBroadcom():
+            self.__host_intfs = resp.broadcom_config.host_intfs
         elif self.IsNaples():
             self.__host_intfs = resp.naples_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
@@ -157,7 +161,7 @@ class Topology(object):
         Logger.info("Adding Nodes:")
         req = topo_pb2.NodeMsg()
         req.node_op = topo_pb2.ADD
-        
+
         for name,node in self.__nodes.items():
             msg = req.nodes.add()
             ret = node.AddToNodeMsg(msg, self, testsuite)
@@ -223,7 +227,7 @@ class Topology(object):
 
     def GetWorkloadTypeForNode(self, node_name):
         return self.__nodes[node_name].WorkloadType()
-    
+
     def GetWorkloadImageForNode(self, node_name):
         return self.__nodes[node_name].WorkloadImage()
 

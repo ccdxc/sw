@@ -178,6 +178,7 @@ var iotaNodes = map[iota.PersonalityType]func() IotaNode{
 	iota.PersonalityType_PERSONALITY_VENICE:               newVenice,
 	iota.PersonalityType_PERSONALITY_NAPLES_SIM_WITH_QEMU: newNaplesQemu,
 	iota.PersonalityType_PERSONALITY_MELLANOX:             newMellanox,
+	iota.PersonalityType_PERSONALITY_BROADCOM:             newBroadcom,
 }
 
 func newNaples() IotaNode {
@@ -186,6 +187,10 @@ func newNaples() IotaNode {
 
 func newMellanox() IotaNode {
 	return &mellanoxNode{dataNode: dataNode{iotaNode: iotaNode{name: "mellanox"}}}
+}
+
+func newBroadcom() IotaNode {
+	return &broadcomNode{dataNode: dataNode{iotaNode: iotaNode{name: "broadcom"}}}
 }
 
 func newNaplesSim() IotaNode {

@@ -79,6 +79,7 @@ enum PersonalityType {
     // Naples Hardware
     PERSONALITY_NAPLES                  = 4;
     PERSONALITY_MELLANOX                = 5;
+    PERSONALITY_BROADCOM                = 6;
 }
 
 enum EntityType {
@@ -119,12 +120,14 @@ message Node {
         VeniceConfig    venice_config   = 7;
 
         MellanoxConfig  mellanox_config = 8;
+
+        BroadcomConfig  broadcom_config = 9;
     }
 
     // NodeStatus captures the details of the node action
-    IotaAPIResponse     node_status     = 9;
+    IotaAPIResponse     node_status     = 10;
 
-    string              node_uuid       = 10;
+    string              node_uuid       = 11;
 }
 
 
@@ -156,6 +159,12 @@ message NaplesConfig {
 }
 
 message MellanoxConfig {
+
+    // host intfs , returned as part of add node
+    repeated string host_intfs   = 5;
+}
+
+message BroadcomConfig {
 
     // host intfs , returned as part of add node
     repeated string host_intfs   = 5;
