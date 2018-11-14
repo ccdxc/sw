@@ -96,10 +96,6 @@ func TestGetAlertPolicies(t *testing.T) {
 			expNumAlertPolicies: 0,
 		},
 		{
-			filters:             []FilterFn{WithAlertStateFilter("n/a")},
-			expNumAlertPolicies: 0,
-		},
-		{
 			filters:             []FilterFn{WithAlertPolicyIDFilter("n/a")},
 			expNumAlertPolicies: 0,
 		},
@@ -181,7 +177,7 @@ func TestGetAlerts(t *testing.T) {
 			expNumAlerts: 1,
 		},
 		{
-			filters:      []FilterFn{WithTenantFilter("infra"), WithAlertPolicyIDFilter(""), WithAlertStateFilter("INFO")},
+			filters:      []FilterFn{WithTenantFilter("infra"), WithAlertPolicyIDFilter("")},
 			expNumAlerts: 1,
 		},
 		{
@@ -214,11 +210,11 @@ func TestGetAlerts(t *testing.T) {
 
 	a := policygen.CreateAlertObj("infra", globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil)
 	AssertOk(t, mDb.AddObject(a), "failed to add object to mem DB")
-	objs := mDb.GetAlerts(WithAlertStateFilter("RESOLVED"))
+	objs := mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_RESOLVED}))
 	Assert(t, len(objs) == 0, "invalid number of alerts, expected: %v, got: %v", 0, len(objs))
 
 	a.Spec.State = "RESOLVED"
 	AssertOk(t, mDb.UpdateObject(a), "failed to update object to mem DB")
-	objs = mDb.GetAlerts(WithAlertStateFilter("RESOLVED"))
+	objs = mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_RESOLVED}))
 	Assert(t, len(objs) == 1, "invalid number of alerts, expected: %v, got: %v", 1, len(objs))
 }

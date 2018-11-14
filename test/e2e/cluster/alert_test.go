@@ -49,7 +49,7 @@ var _ = Describe("alert test", func() {
 			}
 
 			for _, alert := range alerts {
-				if alert.Status.Reason.GetPolicyID() == alertPolicy1.GetUUID() &&
+				if alert.Status.Reason.GetPolicyID() == alertPolicy1.GetName() &&
 					strings.Contains(alert.Status.GetMessage(), fmt.Sprintf("pen-ntp stopped on %s", serviceStoppedOn)) {
 					return true
 				}

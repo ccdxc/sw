@@ -12,9 +12,9 @@ import (
 
 // event types
 const (
-	CreateEvent memdb.EventType = memdb.CreateEvent
-	UpdateEvent memdb.EventType = memdb.UpdateEvent
-	DeleteEvent memdb.EventType = memdb.DeleteEvent
+	CreateEvent = memdb.CreateEvent
+	UpdateEvent = memdb.UpdateEvent
+	DeleteEvent = memdb.DeleteEvent
 )
 
 // MemDb in-memory database to store policy objects and alerts
@@ -57,13 +57,17 @@ func WithEnabledFilter(enabled bool) FilterFn {
 	}
 }
 
-// WithAlertStateFilter returns a fn() which returns true if the alert object matches the given state
+// WithAlertStateFilter returns a fn() which returns true if the alert object matches one of the given states
 // * applicable only for alert object *
-func WithAlertStateFilter(state string) FilterFn {
+func WithAlertStateFilter(states []monitoring.AlertSpec_AlertState) FilterFn {
 	return func(obj runtime.Object) bool {
 		switch obj.(type) {
 		case *monitoring.Alert:
-			return obj.(*monitoring.Alert).Spec.GetState() == state
+			for _, st := range states {
+				if obj.(*monitoring.Alert).Spec.GetState() == monitoring.AlertSpec_AlertState_name[int32(st)] {
+					return true
+				}
+			}
 		}
 		return false
 	}
@@ -156,7 +160,7 @@ func (m *MemDb) GetAlerts(filters ...FilterFn) []*monitoring.Alert {
 	return alerts
 }
 
-// GetAlertDestination returns the alert destionation matching the given name
+// GetAlertDestination returns the alert destination matching the given name
 func (m *MemDb) GetAlertDestination(name string) *monitoring.AlertDestination {
 	for _, alertD := range m.ListObjects("AlertDestination") {
 		ad := alertD.(*monitoring.AlertDestination)
@@ -168,14 +172,14 @@ func (m *MemDb) GetAlertDestination(name string) *monitoring.AlertDestination {
 	return nil
 }
 
-// WatchAlertDestinations returns the watcher to watch for alert destionation events
+// WatchAlertDestinations returns the watcher to watch for alert destination events
 func (m *MemDb) WatchAlertDestinations() chan memdb.Event {
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
 	m.WatchObjects("AlertDestination", watchChan)
 	return watchChan
 }
 
-// StopWatchAlertDestinations stops the alert destionation watcher
+// StopWatchAlertDestinations stops the alert destination watcher
 func (m *MemDb) StopWatchAlertDestinations(watchChan chan memdb.Event) {
 	m.StopWatchObjects("AlertDestination", watchChan)
 }

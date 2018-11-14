@@ -6,7 +6,6 @@ import (
 
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -173,9 +172,4 @@ func registerMirrorSessionHooks(svc apiserver.Service, logger log.Logger) {
 	logger.Log("msg", "registering Hooks")
 	svc.GetCrudService("MirrorSession", apiserver.CreateOper).WithPreCommitHook(r.validateMirrorSession)
 	svc.GetCrudService("MirrorSession", apiserver.UpdateOper).WithPreCommitHook(r.validateMirrorSession)
-}
-
-func init() {
-	apisrv := apisrvpkg.MustGetAPIServer()
-	apisrv.RegisterHooksCb("monitoring.MonitoringV1", registerMirrorSessionHooks)
 }

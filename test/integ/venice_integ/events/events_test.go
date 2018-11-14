@@ -938,7 +938,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 // respective alert policy is updated accordingly.
 func TestEventsAlertEngine(t *testing.T) {
 	// setup events pipeline to record and distribute events
-	ti := tInfo{}
+	ti := tInfo{batchInterval: 100 * time.Millisecond, dedupInterval: 100 * time.Second}
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
@@ -946,6 +946,26 @@ func TestEventsAlertEngine(t *testing.T) {
 	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
 	AssertOk(t, err, "failed to create API server client, err: %v", err)
 	defer apiClient.Close()
+
+	// start spyglass (backend service for events)
+	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger, ti.esClient)
+	AssertOk(t, err, "failed to start spyglass finder, err: %v", err)
+	fdr := fdrTemp.(finder.Interface)
+	defer fdr.Stop()
+
+	// API gateway
+	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
+		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{"metrics_query"}, []string{}, ti.logger)
+	AssertOk(t, err, "failed to start API gateway, err: %v", err)
+	defer apiGw.Stop()
+
+	// setup authn and get authz token
+	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
+	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, ti.logger)
+	AssertOk(t, err, "failed to setup authN service, err: %v", err)
+	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
+	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
+	AssertOk(t, err, "failed to get authZ header, err: %v", err)
 
 	// add event based alert policies
 	// policy - 1
@@ -1042,7 +1062,7 @@ func TestEventsAlertEngine(t *testing.T) {
 		}
 
 		// wait for the batch interval
-		time.Sleep(ti.batchInterval + 10*time.Millisecond)
+		time.Sleep(1 * time.Second)
 		// if objRef!=nil, this should increase the hits but not recreate the alerts.
 		// it will recreate alerts otherwise.
 		for i := range recordEvents {
@@ -1057,37 +1077,37 @@ func TestEventsAlertEngine(t *testing.T) {
 	}{
 		{
 			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+				alertPolicy1.GetName(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
 			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+				alertPolicy1.GetName(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
 			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+				alertPolicy1.GetName(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
 			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+				alertPolicy2.GetName(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
 			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+				alertPolicy2.GetName(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
 			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+				alertPolicy2.GetName(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
 			expSuccess: true,
 		},
 		{
 			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), "invalid"),
+				alertPolicy2.GetName(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), "invalid"),
 			expSuccess: false,
 		},
 		{
@@ -1153,6 +1173,87 @@ func TestEventsAlertEngine(t *testing.T) {
 
 			return true, nil
 		}, "alert status does not match the expected", string("20ms"), string("10s"))
+	}
+
+	// resolve or acknowledge alerts
+	alerts, err := apiClient.MonitoringV1().Alert().List(context.Background(),
+		&api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	AssertOk(t, err, "failed to list alerts, err: %v", err)
+	Assert(t, len(alerts) > 2, "expected more than 2 alerts, got: %v", len(alerts))
+
+	alertTests := []*struct {
+		alert       monitoring.Alert
+		resolve     bool
+		acknowledge bool
+	}{
+		{alert: *alerts[0], resolve: true, acknowledge: false},
+		{alert: *alerts[len(alerts)-1], resolve: false, acknowledge: true},
+	}
+
+	for _, at := range alertTests {
+		aURL := fmt.Sprintf("http://%s/configs/monitoring/v1/alerts/%s", apiGwAddr, at.alert.GetName())
+		apURL := fmt.Sprintf("http://%s/configs/monitoring/v1/alertPolicies/%s", apiGwAddr, at.alert.Status.Reason.GetPolicyID())
+
+		httpClient := netutils.NewHTTPClient()
+		httpClient.SetHeader("Authorization", authzHeader)
+
+		// check alert policy before update
+		ap := &monitoring.AlertPolicy{}
+		statusCode, err := httpClient.Req("GET", apURL, &api.ListWatchOptions{}, &ap)
+		AssertOk(t, err, "failed to get alert policy, err: %v", err)
+		Assert(t, statusCode == http.StatusOK, "failed to get alert policy")
+
+		// UPDATE alert state (to acknowledged or resolved)
+		if at.acknowledge {
+			resp := monitoring.Alert{}
+			AssertEventually(t,
+				func() (bool, interface{}) {
+					at.alert.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_ACKNOWLEDGED)]
+					statusCode, err := httpClient.Req("PUT", aURL, at.alert, &resp)
+					if err != nil {
+						return false, fmt.Sprintf("err: %v", err)
+					}
+
+					if statusCode != http.StatusOK {
+						return false, fmt.Sprintf("update failed with status: %d", statusCode)
+					}
+
+					if resp.Status.Acknowledged == nil {
+						return false, fmt.Sprintf("alert status not updated, acknowledged: nil")
+					}
+
+					return true, nil
+				}, "failed to update alert state", "20ms", "6s")
+		} else if at.resolve {
+			resp := monitoring.Alert{}
+			AssertEventually(t,
+				func() (bool, interface{}) {
+					at.alert.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_RESOLVED)]
+					statusCode, err := httpClient.Req("PUT", aURL, at.alert, &resp)
+					if err != nil {
+						return false, fmt.Sprintf("err: %v", err)
+					}
+
+					if statusCode != http.StatusOK {
+						return false, fmt.Sprintf("update failed with status: %d", statusCode)
+					}
+
+					if resp.Status.Resolved == nil {
+						return false, fmt.Sprintf("alert status not updated, resolved: nil")
+					}
+
+					return true, nil
+				}, "failed to update alert state", "20ms", "6s")
+		}
+
+		updatedAp := &monitoring.AlertPolicy{}
+		statusCode, err = httpClient.Req("GET", apURL, &api.ListWatchOptions{}, &updatedAp)
+		AssertOk(t, err, "failed to get alert policy, err: %v", err)
+		Assert(t, statusCode == http.StatusOK, "failed to get alert policy")
+		Assert(t, !at.acknowledge || (at.acknowledge && updatedAp.Status.AcknowledgedAlerts > ap.Status.AcknowledgedAlerts),
+			"expected #acknowledged alerts: >%d, got: %d", ap.Status.AcknowledgedAlerts, updatedAp.Status.AcknowledgedAlerts)
+		Assert(t, !at.resolve || (at.resolve && updatedAp.Status.OpenAlerts < ap.Status.OpenAlerts),
+			"expected #acknowledged alerts: <%d, got: %d", ap.Status.OpenAlerts, updatedAp.Status.OpenAlerts)
 	}
 }
 
@@ -1225,51 +1326,51 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	}{
 		receivedMsgsAtTCPServer: {
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
@@ -1324,12 +1425,14 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	AssertOk(t, err, "failed to start UDP server, err: %v", err)
 	defer pConn1.Close()
 	tmp1 := strings.Split(pConn1.LocalAddr().String(), ":")
+	log.Infof("UDP server-1 running at: %s", pConn1.LocalAddr().String())
 
 	// start UDP server - 2 to receive syslog messages
 	pConn2, receivedMsgsAtUDPServer2, err := serviceutils.StartUDPServer(":0")
 	AssertOk(t, err, "failed to start UDP server, err: %v", err)
 	defer pConn2.Close()
 	tmp2 := strings.Split(pConn2.LocalAddr().String(), ":")
+	log.Infof("UDP server-2 running at: %s", pConn2.LocalAddr().String())
 
 	// alert destination - 1: BSD style syslog export
 	alertDestBSDSyslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
@@ -1377,41 +1480,41 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	}{
 		receivedMsgsAtUDPServer1: {
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
 		receivedMsgsAtUDPServer2: {
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetUUID()},
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 		},

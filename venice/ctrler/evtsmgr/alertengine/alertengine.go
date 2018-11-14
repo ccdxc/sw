@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
@@ -194,7 +194,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 			Severity: alertPolicy.Spec.GetSeverity(),
 			Message:  evt.GetMessage(),
 			Reason: monitoring.AlertReason{
-				PolicyID:            alertPolicy.GetUUID(),
+				PolicyID:            alertPolicy.GetName(),
 				MatchedRequirements: matchedRequirements,
 			},
 			Source: &monitoring.AlertSource{
@@ -223,8 +223,8 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 		if evt.GetObjectRef() != nil {
 			outstandingAlerts = a.memDb.GetAlerts(
 				memdb.WithTenantFilter(alertPolicy.GetTenant()),
-				memdb.WithAlertStateFilter(monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)]),
-				memdb.WithAlertPolicyIDFilter(alertPolicy.GetUUID()),
+				memdb.WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_OPEN, monitoring.AlertSpec_ACKNOWLEDGED}),
+				memdb.WithAlertPolicyIDFilter(alertPolicy.GetName()),
 				memdb.WithObjectRefFilter(evt.GetObjectRef()))
 			if len(outstandingAlerts) >= 1 { // there should be exactly one outstanding alert; not more than that
 				a.logger.Debug("1 or more outstanding alert found that matches the object ref. and policy")
