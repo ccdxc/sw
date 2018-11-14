@@ -193,6 +193,9 @@ class NaplesManagement:
         
         self.hdl.sendline("echo %s > /sysconfig/config0/sysuuid" % GlobalOptions.uuid)
         self.hdl.expect_exact("#")
+        
+        self.hdl.sendline("rm -rf /data/log")
+        self.hdl.expect_exact("#")
         return
 
     def reboot(self):
