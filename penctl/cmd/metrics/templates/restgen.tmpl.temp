@@ -9,11 +9,12 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/pensando/sw/nic/delphi/proto/goproto"
 )
 
  {{$msgs := .Messages}}
  {{range $msgs}}
-       var {{.GetName}}Name string
+	var {{.GetName}}Name string
 
     {{if (HasSuffix .GetName "Metrics")}}
 	var {{ToLower .GetName}}ShowCmd = &cobra.Command{
@@ -24,10 +25,29 @@ import (
 	}
 
 	func {{ToLower .GetName}}ShowCmdHandler(cmd *cobra.Command, args []string) {
+		var resp []byte
 		if cmd.Flags().Changed("{{ToLower .GetName}}") {
-			restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/default/"+{{.GetName}}Name+"/")
+			resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/default/"+{{.GetName}}Name+"/")
+	                myvar := goproto.{{.GetName}}{}
+        	        json.Unmarshal(resp, &myvar)
+                	if tabularFormat {
+                        	{{$fields := .Fields}}{{range $fields}}
+				{{if and (not (eq .GetName "Meta"))  (not (eq .GetName "Key"))}}
+        	                        fmt.Println("{{.GetName}}: ", myvar.{{.GetName}})
+                	        {{end}} {{end}}
+	                }
 		} else {
-			restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/")
+			resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/")
+			myvars := []goproto.{{.GetName}}{}
+			json.Unmarshal(resp, &myvars)
+			if tabularFormat {
+				for _, myvar := range myvars {
+					{{$fields := .Fields}}{{range $fields}}
+					{{if and (not (eq .GetName "Meta"))  (not (eq .GetName "Key"))}}
+						fmt.Println("{{.GetName}}: ", myvar.{{.GetName}})
+					{{end}} {{end}}
+				}
+			}
 		}
 	}
     {{end}}
@@ -35,8 +55,6 @@ import (
         func init() {
  {{range $msgs}}
     {{if (HasSuffix .GetName "Metrics")}}
-		tabularFormat = false
-		jsonFormat = true
                 metricsShowCmd.AddCommand({{ToLower .GetName}}ShowCmd)
 		{{ToLower .GetName}}ShowCmd.Flags().StringVarP(&{{.GetName}}Name, "name", "n", "", "Name/Key for metrics object")
     {{end}}

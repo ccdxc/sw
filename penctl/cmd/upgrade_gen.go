@@ -7,12 +7,20 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
-var upgradename string
+var UpgAppName string
+
+var UpgAppRespName string
+
+var UpgReqName string
+
+var UpgRespName string
+
+var UpgStateReqName string
+
+var UpgradeMetricsName string
 
 var upgrademetricsShowCmd = &cobra.Command{
 	Use:   "upgrademetrics",
@@ -22,24 +30,18 @@ var upgrademetricsShowCmd = &cobra.Command{
 }
 
 func upgrademetricsShowCmdHandler(cmd *cobra.Command, args []string) {
-	var resp []byte
-	if cmd.Flags().Changed("name") {
-		resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/default/"+upgradename+"/")
+	if cmd.Flags().Changed("upgrademetrics") {
+		restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/default/"+UpgradeMetricsName+"/")
 	} else {
-		resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/")
-	}
-	fmt.Println(string(resp))
-	if jsonFormat {
-		fmt.Println("JSON not supported for this command")
-	}
-	if yamlFormat {
-		fmt.Println("YAML not supported for this command")
+		restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/")
 	}
 }
 
 func init() {
 
+	tabularFormat = false
+	jsonFormat = true
 	metricsShowCmd.AddCommand(upgrademetricsShowCmd)
-	upgrademetricsShowCmd.Flags().StringVarP(&upgradename, "name", "n", "", "Name/Key for metrics object")
+	upgrademetricsShowCmd.Flags().StringVarP(&UpgradeMetricsName, "name", "n", "", "Name/Key for metrics object")
 
 }

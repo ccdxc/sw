@@ -7,7 +7,9 @@
 package restapi
 import (
 	"github.com/gorilla/mux"
-	{{$pkgName}} "github.com/pensando/sw/nic/agent/tmagent/metrics/protos"
+	"github.com/pensando/sw/nic/delphi/proto/goproto"
+	"github.com/pensando/sw/venice/utils/ntranslate"
+	_ "github.com/pensando/sw/nic/utils/ntranslate"
 )
 
  {{$msgs := .Messages}}
@@ -26,24 +28,45 @@ import (
 
 	// run{{.GetName}}ListHandler is the List Handler for {{.GetName}}
 	func (s *RestServer) run{{.GetName}}ListHandler(r *http.Request) (interface{}, error){
+		iter, _ := goproto.New{{.GetName}}Iterator()
+		var mtr []*goproto.{{.GetName}}
+		for iter.HasNext() {
+			mtr = append(mtr, iter.Next())
+			log.Infof("New {{.GetName}}: %+v\n", mtr)
+		}
 		log.Infof("Got GET LIST request")
-		res := fmt.Sprintf("Got GET LIST request")
-		return res, nil
+		return mtr, nil
 	}
 
 	// run{{.GetName}}GetHandler is the Get Handler for {{.GetName}}
 	func (s *RestServer) run{{.GetName}}GetHandler(r *http.Request) (interface{}, error){
-		o := {{$pkgName}}.{{.GetName}} {
-			Meta: &delphi.ObjectMeta{
-				Kind: "{{.GetName}}",
-				Key: mux.Vars(r)["Meta.Name"],
-			},
+		tstr := ntranslate.MustGetTranslator()
+		key := tstr.GetKey("{{.GetName}}", &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: mux.Vars(r)["Meta.Name"]})
+		if key == nil {
+			key, _ = mux.Vars(r)["Meta.Name"]
 		}
-		o.Meta.Kind = "{{.GetName}}"
-		o.Meta.Key = mux.Vars(r)["Meta.Name"]
-		log.Infof("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)
-		res := fmt.Sprintf("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)
-		return res, nil
+
+		{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+		{{if (eq .GetName "Key") }}
+		keyVal, ok := key.({{GetGolangTypeName .GetType .GetTypeName}})
+		if !ok {
+			return "Key is not of type {{GetGolangTypeName .GetType .GetTypeName}}", errors.New("Key is not of type {{GetGolangTypeName .GetType .GetTypeName}}")
+		}
+		{{end}} {{end}}
+		log.Infof("Got GET request {{.GetName}}/%s/%v", mux.Vars(r)["Meta.Name"], keyVal)
+
+		iter, err := goproto.New{{.GetName}}Iterator()
+		if err != nil {
+			return "Unable to get {{.GetName}}Iterator", err
+		}
+
+		mtr, err := iter.Find(keyVal)
+		if err != nil {
+			return "Unable to Find UpgradeMetrics Object", err
+		}
+		log.Infof("err %s", err.Error())
+		log.Infof("New {{.GetName}}: %+v", mtr)
+		return mtr, nil
 	}
     {{end}}
 {{end}}

@@ -1,5 +1,5 @@
 SRC := $(shell ls ${GOPATH}/src/github.com/pensando/sw/nic/upgrade_manager/upgrade/*.proto)
-DEST := $(SRC:%.proto=%.pb.go)
+#DEST := $(SRC:%.proto=%.pb.go)
 NAMES = $(notdir $(basename $(SRC)))
 NICDIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi
 NICFILES := ${NICDIR}/${NAMES}_apigen.go
@@ -14,7 +14,8 @@ $(info $$DEST: ${DEST})
 $(info $$NICFILES: ${NICFILES})
 $(info $$PENFILES: ${PENFILES})
 
-default: ${DEST} template penctl_template
+#default: ${DEST} template penctl_template
+default: template penctl_template
 
 %.pb.go: %.proto Makefile 
 	mkdir -p ${NICDIR}

@@ -2098,6 +2098,45 @@ func isSvcWatch(meth *descriptor.Method, svcName string) bool {
 	return meth.GetName() == "AutoWatchSvc"+svcName
 }
 
+// getGolangTypeName returns golang type name for the field
+func getGolangTypeName(t gogoproto.FieldDescriptorProto_Type, n string) string {
+	var proto3TypeNames = map[gogoproto.FieldDescriptorProto_Type]string{
+		gogoproto.FieldDescriptorProto_TYPE_DOUBLE:  "float64",
+		gogoproto.FieldDescriptorProto_TYPE_FLOAT:   "float",
+		gogoproto.FieldDescriptorProto_TYPE_INT64:   "int64",
+		gogoproto.FieldDescriptorProto_TYPE_UINT64:  "uint64",
+		gogoproto.FieldDescriptorProto_TYPE_INT32:   "int32",
+		gogoproto.FieldDescriptorProto_TYPE_FIXED64: "uint64",
+		gogoproto.FieldDescriptorProto_TYPE_FIXED32: "uint32",
+		gogoproto.FieldDescriptorProto_TYPE_BOOL:    "bool",
+		gogoproto.FieldDescriptorProto_TYPE_STRING:  "string",
+		// FieldDescriptorProto_TYPE_GROUP
+		// FieldDescriptorProto_TYPE_MESSAGE
+		gogoproto.FieldDescriptorProto_TYPE_BYTES:  "string",
+		gogoproto.FieldDescriptorProto_TYPE_UINT32: "uint32",
+		// FieldDescriptorProto_TYPE_ENUM
+		// TODO(yugui) Handle Enum
+		gogoproto.FieldDescriptorProto_TYPE_SFIXED32: "int32",
+		gogoproto.FieldDescriptorProto_TYPE_SFIXED64: "int64",
+		gogoproto.FieldDescriptorProto_TYPE_SINT32:   "int32",
+		gogoproto.FieldDescriptorProto_TYPE_SINT64:   "int64",
+	}
+
+	switch t {
+	case gogoproto.FieldDescriptorProto_TYPE_MESSAGE:
+		sl := strings.Split(n, ".")
+		if len(sl) > 2 {
+			return "goproto." + sl[2]
+		} else if len(sl) > 1 {
+			return "goproto." + sl[1]
+		} else {
+			return "goproto." + sl[0]
+		}
+	default:
+		return proto3TypeNames[t]
+	}
+}
+
 func getAPIOperType(in string) (string, error) {
 	switch in {
 	case "CreateOper":
@@ -2270,6 +2309,7 @@ func init() {
 	reg.RegisterFunc("getActionTarget", getActionTarget)
 	reg.RegisterFunc("getCLIFlagMap", getCLIFlagMap)
 	reg.RegisterFunc("splitSvcObj", splitSvcObj)
+	reg.RegisterFunc("GetGolangTypeName", getGolangTypeName)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

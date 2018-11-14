@@ -7,15 +7,17 @@
 package restapi
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
-	upgrade "github.com/pensando/sw/nic/agent/tmagent/metrics/protos"
-	delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
+	"github.com/pensando/sw/nic/delphi/proto/goproto"
+	_ "github.com/pensando/sw/nic/utils/ntranslate"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ntranslate"
 )
 
 func init() {
@@ -31,22 +33,41 @@ func addUpgradeMetricsAPIRoutes(r *mux.Router, srv *RestServer) {
 
 // runUpgradeMetricsListHandler is the List Handler for UpgradeMetrics
 func (s *RestServer) runUpgradeMetricsListHandler(r *http.Request) (interface{}, error) {
+	iter, _ := goproto.NewUpgradeMetricsIterator()
+	var mtr []*goproto.UpgradeMetrics
+	for iter.HasNext() {
+		mtr = append(mtr, iter.Next())
+		log.Infof("New UpgradeMetrics: %+v\n", mtr)
+	}
 	log.Infof("Got GET LIST request")
-	res := fmt.Sprintf("Got GET LIST request")
-	return res, nil
+	return mtr, nil
 }
 
 // runUpgradeMetricsGetHandler is the Get Handler for UpgradeMetrics
 func (s *RestServer) runUpgradeMetricsGetHandler(r *http.Request) (interface{}, error) {
-	o := upgrade.UpgradeMetrics{
-		Meta: &delphi.ObjectMeta{
-			Kind: "UpgradeMetrics",
-			Key:  mux.Vars(r)["Meta.Name"],
-		},
+	tstr := ntranslate.MustGetTranslator()
+	key := tstr.GetKey("UpgradeMetrics", &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: mux.Vars(r)["Meta.Name"]})
+	if key == nil {
+		key, _ = mux.Vars(r)["Meta.Name"]
 	}
-	o.Meta.Kind = "UpgradeMetrics"
-	o.Meta.Key = mux.Vars(r)["Meta.Name"]
-	log.Infof("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)
-	res := fmt.Sprintf("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)
-	return res, nil
+
+	keyVal, ok := key.(uint32)
+	if !ok {
+		return "Key is not of type uint32", errors.New("Key is not of type uint32")
+	}
+
+	log.Infof("Got GET request UpgradeMetrics/%s/%v", mux.Vars(r)["Meta.Name"], keyVal)
+
+	iter, err := goproto.NewUpgradeMetricsIterator()
+	if err != nil {
+		return "Unable to get UpgradeMetricsIterator", err
+	}
+
+	mtr, err := iter.Find(keyVal)
+	if err != nil {
+		return "Unable to Find UpgradeMetrics Object", err
+	}
+	log.Infof("err %s", err.Error())
+	log.Infof("New UpgradeMetrics: %+v", mtr)
+	return mtr, nil
 }
