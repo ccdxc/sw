@@ -285,7 +285,7 @@ var DefaultStatsSpec = telemetry.StatsPolicySpec{
 
 // DefaultFwlogSpec default firewall log policy spec
 var DefaultFwlogSpec = telemetry.FwlogPolicySpec{
-	RetentionTime: " 48hrs",
+	RetentionTime: "48h",
 }
 
 // process tenants
