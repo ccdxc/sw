@@ -24,6 +24,25 @@
 #include "ionic.h"
 #include "ionic_lif.h"
 
+static inline void ionic_txq_post(struct queue *q, bool ring_dbell,
+	   desc_cb cb_func, void *cb_arg)
+{
+	struct qcq *qcq = q_to_qcq(q);
+
+	DEBUG_STATS_TXQ_POST(qcq, q->head->desc, ring_dbell);
+
+	ionic_q_post(q, ring_dbell, cb_func, cb_arg);
+}
+
+static inline void ionic_rxq_post(struct queue *q, bool ring_dbell,
+	   desc_cb cb_func, void *cb_arg)
+{
+	struct qcq *qcq = q_to_qcq(q);
+	ionic_q_post(q, ring_dbell, cb_func, cb_arg);
+
+	DEBUG_STATS_RX_BUFF_CNT(qcq);
+}
+
 static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 			   struct cq_info *cq_info, void *cb_arg);
 
@@ -36,7 +55,7 @@ static void ionic_rx_recycle(struct queue *q, struct desc_info *desc_info,
 	new->addr = old->addr;
 	new->len = old->len;
 
-	ionic_q_post(q, true, ionic_rx_clean, skb);
+	ionic_rxq_post(q, true, ionic_rx_clean, skb);
 }
 
 static bool ionic_rx_copybreak(struct queue *q, struct desc_info *desc_info,
@@ -135,10 +154,13 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	if (netdev->features & NETIF_F_RXCSUM && comp->csum_calc) {
 		skb->ip_summed = CHECKSUM_COMPLETE;
 		skb->csum = comp->csum;
+		stats->csum_complete++;
 #ifdef CSUM_DEBUG
 		if (skb->csum != (u16)~csum)
 			printk(KERN_ERR "Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n", (u16)~csum, skb->csum, htons(skb->protocol));
 #endif
+	} else {
+		stats->csum_none++;
 	}
 
 	if (netdev->features & NETIF_F_HW_VLAN_CTAG_RX) {
@@ -230,7 +252,7 @@ void ionic_rx_fill(struct queue *q)
 		ring_doorbell = ((q->head->index + 1) &
 				RX_RING_DOORBELL_STRIDE) == 0;
 
-		ionic_q_post(q, ring_doorbell, ionic_rx_clean, skb);
+		ionic_rxq_post(q, ring_doorbell, ionic_rx_clean, skb);
 	}
 }
 
@@ -348,7 +370,11 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 
 	if (skb) {
 		queue_index = skb_get_queue_mapping(skb);
-		netif_wake_subqueue(q->lif->netdev, queue_index);
+		if (unlikely(__netif_subqueue_stopped(q->lif->netdev,
+			   queue_index))) {
+			netif_wake_subqueue(q->lif->netdev, queue_index);
+			stats->wake++;
+		}
 		dev_kfree_skb_any(skb);
 		stats->clean++;
 	}
@@ -426,9 +452,9 @@ static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
 
 	if (done) {
 		skb_tx_timestamp(skb);
-		ionic_q_post(q, !skb->xmit_more, ionic_tx_clean, skb);
+		ionic_txq_post(q, !skb->xmit_more, ionic_tx_clean, skb);
 	} else {
-		ionic_q_post(q, false, ionic_tx_clean, NULL);
+		ionic_txq_post(q, false, ionic_tx_clean, NULL);
 	}
 }
 
@@ -683,7 +709,7 @@ static int ionic_tx(struct queue *q, struct sk_buff *skb)
 		return err;
 
 	skb_tx_timestamp(skb);
-	ionic_q_post(q, !skb->xmit_more, ionic_tx_clean, skb);
+	ionic_txq_post(q, !skb->xmit_more, ionic_tx_clean, skb);
 
 	stats->pkts++;
 	stats->bytes += skb->len;
@@ -735,10 +761,12 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 		/* Might race with ionic_tx_clean, check again */
 
 		smp_rmb();
-		if (ionic_q_has_space(q, ndescs))
+		if (ionic_q_has_space(q, ndescs)) {
 			netif_wake_subqueue(netdev, queue_index);
-		else
+			stats->wake++;
+		} else {
 			return NETDEV_TX_BUSY;
+		}
 	}
 
 	if (skb_is_gso(skb))

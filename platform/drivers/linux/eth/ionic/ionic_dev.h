@@ -314,6 +314,7 @@ struct queue {
 	unsigned int pid;
 	unsigned int qid;
 	unsigned int qtype;
+	u64 dbell_count;
 };
 
 #define INTR_INDEX_NOT_ASSIGNED		(-1)
@@ -324,6 +325,7 @@ struct intr {
 	unsigned int index;
 	unsigned int vector;
 	struct intr_ctrl __iomem *ctrl;
+	u64 rearm_count;
 };
 
 struct cq {
@@ -334,6 +336,7 @@ struct cq {
 	struct cq_info *tail;
 	struct queue *bound_q;
 	struct intr *bound_intr;
+	u64 compl_count;
 	unsigned int num_descs;
 	unsigned int desc_size;
 	bool done_color;

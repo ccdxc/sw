@@ -25,6 +25,77 @@
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_ethtool.h"
+#include "ionic_stats.h"
+
+static void ionic_get_stats_strings(struct lif *lif, u8 *buf)
+{
+	u32 i;
+
+	for (i = 0; i < ionic_num_stats_grps; i++) {
+		ionic_stats_groups[i].get_strings(lif, &buf);
+	}
+}
+
+static void ionic_get_stats(struct net_device *netdev,
+				  struct ethtool_stats *stats, u64 *buf)
+{
+	struct lif *lif;
+	u32 i;
+
+	lif = netdev_priv(netdev);
+
+	for (i = 0; i < ionic_num_stats_grps; i++) {
+		ionic_stats_groups[i].get_values(lif, &buf);
+	}
+}
+
+static int ionic_get_stats_count(struct lif *lif)
+{
+	int i, num_stats = 0;
+
+	for (i = 0; i < ionic_num_stats_grps; i++) {
+		num_stats += ionic_stats_groups[i].get_count(lif);
+	}
+
+	return num_stats;
+}
+
+static int ionic_get_sset_count(struct net_device *netdev, int sset)
+{
+	struct lif *lif = netdev_priv(netdev);
+	int count = 0;
+
+	switch (sset) {
+	case ETH_SS_STATS:
+		count = ionic_get_stats_count(lif);
+		break;
+	case ETH_SS_TEST:
+		break;
+	case ETH_SS_PRIV_FLAGS:
+		break;
+	default:
+		return -EOPNOTSUPP;
+	}
+	return count;
+}
+
+static void ionic_get_strings(struct net_device *netdev,
+	   u32 sset, u8 *buf)
+{
+	struct lif *lif = netdev_priv(netdev);
+
+	switch (sset) {
+	case ETH_SS_STATS:
+		ionic_get_stats_strings(lif, buf);
+		break;
+	case ETH_SS_PRIV_FLAGS:
+		// IONIC_TODO
+	case ETH_SS_TEST:
+		// IONIC_TODO
+	default:
+		netdev_err(netdev, "Invalid sset %d\n", sset);
+	}
+}
 
 static void ionic_get_drvinfo(struct net_device *netdev,
 			      struct ethtool_drvinfo *drvinfo)
@@ -248,6 +319,9 @@ static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_coalesce		= ionic_get_coalesce,
 	.set_coalesce		= ionic_set_coalesce,
 	.get_ringparam		= ionic_get_ringparam,
+	.get_strings		= ionic_get_strings,
+	.get_ethtool_stats	= ionic_get_stats,
+	.get_sset_count		= ionic_get_sset_count,
 	.get_rxnfc		= ionic_get_rxnfc,
 	.get_rxfh_indir_size    = ionic_get_rxfh_indir_size,
 	.get_rxfh_key_size	= ionic_get_rxfh_key_size,

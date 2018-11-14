@@ -330,6 +330,8 @@ unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
 		if (cq->tail->last)
 			cq->done_color = !cq->done_color;
 		cq->tail = cq->tail->next;
+		DEBUG_STATS_CQE_CNT(cq);
+
 		if (++work_done == work_to_do)
 			break;
 	}

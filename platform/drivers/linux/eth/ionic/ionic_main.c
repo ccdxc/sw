@@ -104,7 +104,8 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       void *cb_arg)
 {
-	struct cq *cq = napi_to_cq(napi);
+	struct qcq *qcq = napi_to_qcq(napi);
+	struct cq *cq = &qcq->cq;
 	unsigned int work_done;
 
 	work_done = ionic_cq_service(cq, budget, cb, cb_arg);
@@ -112,8 +113,11 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	if (work_done > 0)
 		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 
-	if ((work_done < budget) && napi_complete_done(napi, work_done))
+	if ((work_done < budget) && napi_complete_done(napi, work_done)) {
+		DEBUG_STATS_INTR_REARM(cq->bound_intr);
 		ionic_intr_mask(cq->bound_intr, false);
+	}
+	DEBUG_STATS_NAPI_POLL(qcq, work_done);
 
 	return work_done;
 }
