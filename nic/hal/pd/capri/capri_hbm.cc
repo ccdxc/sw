@@ -390,6 +390,8 @@ capri_tpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
 
+    HAL_TRACE_DEBUG("TXDMA AVG_RD: {}, MAX_RD: {}", *avrg, *maxv);
+
     return HAL_RET_OK;
 }
 
@@ -403,6 +405,8 @@ capri_tpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 
     *maxv = pics_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
+
+    HAL_TRACE_DEBUG("TXDMA AVG_WR: {}, MAX_WR: {}", *avrg, *maxv);
 
     return HAL_RET_OK;
 }
@@ -418,6 +422,8 @@ capri_rpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
 
+    HAL_TRACE_DEBUG("RXDMA AVG_RD: {}, MAX_RD: {}", *avrg, *maxv);
+
     return HAL_RET_OK;
 }
 
@@ -431,6 +437,8 @@ capri_rpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 
     *maxv = pics_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
+
+    HAL_TRACE_DEBUG("RXDMA AVG_WR: {}, MAX_WR: {}", *avrg, *maxv);
 
     return HAL_RET_OK;
 }
@@ -494,12 +502,18 @@ capri_pxb_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 static inline void
 populate_hbm_bw (uint64_t max_rd, uint64_t max_wr,
                  uint64_t avg_rd, uint64_t avg_wr,
-                 asic_hbm_bw_t *hbm_bw)
+                 asic_hbm_bw_t *hbm_bw,
+                 uint32_t num_bits, uint32_t window_size)
 {
-    hbm_bw->max.read  = (max_rd * 400) / 256;
-    hbm_bw->max.write = (max_wr * 400) / 256;
-    hbm_bw->avg.read  = (avg_rd * 400) / 256;
-    hbm_bw->avg.write = (avg_wr * 400) / 256;
+    hbm_bw->max.read  = (max_rd * (num_bits * capri_freq)/1000.0f) / window_size;
+    hbm_bw->max.write = (max_wr * (num_bits * capri_freq)/1000.0f) / window_size;
+    hbm_bw->avg.read  = (avg_rd * (num_bits * capri_freq)/1000.0f) / window_size;
+    hbm_bw->avg.write = (avg_wr * (num_bits * capri_freq)/1000.0f) / window_size;
+
+    HAL_TRACE_DEBUG("AVG_RD: {}, AVG_WR: {}, "
+                    "MAX_RD: {}, MAX_WR: {}",
+                    hbm_bw->avg.read, hbm_bw->avg.write,
+                    hbm_bw->max.read, hbm_bw->max.write);
 }
 
 static uint32_t
@@ -507,7 +521,7 @@ capri_freq_get (void)
 {
     uint64_t prev_ts     = 0;
     uint64_t cur_ts      = 0;
-    int      delay       = 10000;
+    int      delay       = 5000;
 
     prev_ts = capri_hbm_timestamp_get();
     usleep(delay * 1000);
@@ -531,6 +545,62 @@ capri_pb_axi_read_cnt (void)
            + pbc_csr.hbm.cnt_hbm_axi_ctrl.all().convert_to<uint64_t>();
 }
 
+static hal_ret_t
+capri_clear_hbm_bw (int val)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    cap_pics_csr_t &pics_csr = cap0.tpc.pics;
+    pics_csr.cfg_axi_bw_mon.read();
+    pics_csr.cfg_axi_bw_mon.alpha(val);
+    pics_csr.cfg_axi_bw_mon.write();
+
+    cap_pics_csr_t &rpc_pics_csr = cap0.rpc.pics;
+    rpc_pics_csr.cfg_axi_bw_mon.read();
+    rpc_pics_csr.cfg_axi_bw_mon.alpha(val);
+    rpc_pics_csr.cfg_axi_bw_mon.write();
+
+    cap_ms_csr_t &ms_csr = cap0.ms.ms;
+    ms_csr.cfg_axi_bw_mon.read();
+    ms_csr.cfg_axi_bw_mon.alpha(val);
+    ms_csr.cfg_axi_bw_mon.write();
+
+    cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
+    pxb_csr.cfg_axi_bw_mon.read();
+    pxb_csr.cfg_axi_bw_mon.alpha(val);
+    pxb_csr.cfg_axi_bw_mon.write();
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+capri_set_hbm_bw_window (uint32_t val)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    cap_pics_csr_t &pics_csr = cap0.tpc.pics;
+    pics_csr.cfg_axi_bw_mon.read();
+    pics_csr.cfg_axi_bw_mon.cycle(val);
+    pics_csr.cfg_axi_bw_mon.write();
+
+    cap_pics_csr_t &rpc_pics_csr = cap0.rpc.pics;
+    rpc_pics_csr.cfg_axi_bw_mon.read();
+    rpc_pics_csr.cfg_axi_bw_mon.cycle(val);
+    rpc_pics_csr.cfg_axi_bw_mon.write();
+
+    cap_ms_csr_t &ms_csr = cap0.ms.ms;
+    ms_csr.cfg_axi_bw_mon.read();
+    ms_csr.cfg_axi_bw_mon.cycle(val);
+    ms_csr.cfg_axi_bw_mon.write();
+
+    cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
+    pxb_csr.cfg_axi_bw_mon.read();
+    pxb_csr.cfg_axi_bw_mon.cycle(val);
+    pxb_csr.cfg_axi_bw_mon.write();
+
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
               asic_hbm_bw_t *hbm_bw_arr)
@@ -549,11 +619,19 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
     uint64_t prev_wr_cnt = 0;
     int      index       = 0;
     uint64_t cycle_per_nsec = 0;
+    uint32_t window_size = 0xfff;
     asic_hbm_bw_t *hbm_bw = NULL;
 
     if (capri_freq == 0) {
         capri_freq = capri_freq_get();
+        capri_set_hbm_bw_window(window_size);
+        HAL_TRACE_DEBUG("HBM BW mon window size set to: {:#x}", window_size);
+        HAL_TRACE_DEBUG("capri freq: {}", capri_freq);
     }
+
+    capri_clear_hbm_bw(0);
+    usleep(1000000);    // 1 sec
+    capri_clear_hbm_bw(1);
 
     prev_ts = capri_hbm_timestamp_get();
 
@@ -570,42 +648,56 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_tpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_tpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw);
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, TXD BW. MAX_RD: {}, MAX_WR: {}"
-                        ", AVG_RD: {}, AVG_WR: {}",
-                        clk_diff, max_rd, max_wr, avg_rd, avg_wr);
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, TXDMA BW "
+                        "AVG_RD: {}, AVG_WR: {}, "
+                        "MAX_RD: {}, MAX_WR: {}",
+                        clk_diff,
+                        avg_rd, avg_wr,
+                        max_rd, max_wr);
+        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
         hbm_bw->type = hal::pd::ASIC_BLOCK_RXD;
         hbm_bw->clk_diff = clk_diff;
         capri_rpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_rpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw);
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, RXD BW. MAX_RD: {}, MAX_WR: {}"
-                        ", AVG_RD: {}, AVG_WR: {}",
-                        clk_diff, max_rd, max_wr, avg_rd, avg_wr);
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, RXDMA BW "
+                        "AVG_RD: {}, AVG_WR: {}, "
+                        "MAX_RD: {}, MAX_WR: {}",
+                        clk_diff,
+                        avg_rd, avg_wr,
+                        max_rd, max_wr);
+        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
         hbm_bw->type = hal::pd::ASIC_BLOCK_MS;
         hbm_bw->clk_diff = clk_diff;
         capri_ms_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_ms_bw_mon_wr_get(&max_wr, &avg_wr);
-        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw);
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, MS BW. MAX_RD: {}, MAX_WR: {}"
-                        ", AVG_RD: {}, AVG_WR: {}",
-                        clk_diff, max_rd, max_wr, avg_rd, avg_wr);
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, MS BW "
+                        "AVG_RD: {}, AVG_WR: {}, "
+                        "MAX_RD: {}, MAX_WR: {}",
+                        clk_diff,
+                        avg_rd, avg_wr,
+                        max_rd, max_wr);
+        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
         hbm_bw = &hbm_bw_arr[index++];
         hbm_bw->type = hal::pd::ASIC_BLOCK_PCIE;
         hbm_bw->clk_diff = clk_diff;
         capri_pxb_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_pxb_bw_mon_wr_get(&max_wr, &avg_wr);
-        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw);
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, PCIE BW. MAX_RD: {}, MAX_WR: {}"
-                        ", AVG_RD: {}, AVG_WR: {}",
-                        clk_diff, max_rd, max_wr, avg_rd, avg_wr);
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, PCIE BW "
+                        "AVG_RD: {}, AVG_WR: {}, "
+                        "MAX_RD: {}, MAX_WR: {}",
+                        clk_diff,
+                        avg_rd, avg_wr,
+                        max_rd, max_wr);
+        populate_hbm_bw(max_rd, max_wr, avg_rd, avg_wr, hbm_bw, num_bits, window_size);
 
-        cycle_per_nsec = ((cur_ts - prev_ts) * 1000) / capri_freq;
+        if (capri_freq != 0) {
+            cycle_per_nsec = ((cur_ts - prev_ts) * 1000) / capri_freq;
+        }
 
         hbm_bw = &hbm_bw_arr[index++];
         hbm_bw->type = hal::pd::ASIC_BLOCK_PB;
@@ -621,8 +713,10 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
 
         hbm_bw->avg.read  = avg_rd;
         hbm_bw->avg.write = avg_wr;
-        HAL_TRACE_DEBUG("CLK_DIFF: {}, PB RD AVG: {}. PB WR AVG: {}",
-                        clk_diff, avg_rd, avg_wr);
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, PB BW "
+                        "AVG_RD: {}, AVG_WR: {}",
+                        clk_diff,
+                        avg_rd, avg_wr);
 
         prev_rd_cnt = rd_cnt;
         prev_wr_cnt = wr_cnt;

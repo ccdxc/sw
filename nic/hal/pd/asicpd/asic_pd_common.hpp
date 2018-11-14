@@ -44,8 +44,8 @@ typedef enum asic_block_e {
 } asic_block_t;
 
 typedef struct asic_bw_s {
-    uint64_t read;
-    uint64_t write;
+    double read;
+    double write;
 } asic_bw_t;
 
 typedef struct asic_hbm_bw_s {

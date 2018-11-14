@@ -133,7 +133,7 @@ static pal_ret_t
 pal_hw_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words)
 {
     (*gl_hw_vecs.reg_read)(addr, data, num_words); 
-    
+
     return PAL_RET_OK;
 }
 

@@ -132,6 +132,9 @@ public:
     Status LlcClear(ServerContext *context,
                     const Empty *request,
                     Empty *rsp);
+    Status HbmCacheSetup(ServerContext *context,
+                         const HbmCacheRequestMsg *req,
+                         HbmCacheResponseMsg *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__

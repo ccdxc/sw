@@ -480,8 +480,8 @@ enum CapriBlock {
 }
 
 message Bandwidth {
-  uint64 read  = 1;
-  uint64 write = 2;
+  double read  = 1;
+  double write = 2;
 }
 
 message HbmBwGetRequest {

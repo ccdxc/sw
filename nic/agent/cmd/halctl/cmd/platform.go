@@ -19,6 +19,7 @@ import (
 var (
 	numSamples    uint32
 	sleepInterval uint32
+	enableMsPcie  bool
 )
 
 var platShowCmd = &cobra.Command{
@@ -55,6 +56,7 @@ func init() {
 
 	platHbmBwShowCmd.Flags().Uint32Var(&numSamples, "num-samples", 1, "Specify number of samples")
 	platHbmBwShowCmd.Flags().Uint32Var(&sleepInterval, "sleep-interval", 1, "Specify sleep interval in ns")
+	platHbmBwShowCmd.Flags().BoolVar(&enableMsPcie, "enable-ms-pcie", false, "Dump MS and PCIE BW")
 }
 
 func llcStatsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -137,30 +139,66 @@ func platHbmBwShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Header
-	hbmBwShowHeader()
+	hbmBwShowHeader(enableMsPcie)
 
-	// Print LIFs
+	i := 0
 	for _, resp := range respMsg.Response {
-		hbmBwShowOneResp(resp)
+		hbmBwShowOneResp(resp, enableMsPcie)
+		i++
+		if i%5 == 0 {
+			fmt.Printf("%-10d\n", resp.GetClkDiff())
+		}
 	}
 }
 
-func hbmBwShowHeader() {
+func hbmBwShowHeader(enableMsPcie bool) {
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 110)
+	hdrLine := strings.Repeat("-", 140)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-20s%-20s%-20s%-20s%-20s\n",
-		"BlockType", "AvgReadBW", "AvgWriteBW", "MaxReadBW", "MaxWriteBW", "ClockDiff")
+	if enableMsPcie == true {
+		fmt.Printf(
+			"%-11s%-11s%-11s%-11s"+
+				"%-11s%-11s%-11s%-11s"+
+				"%-11s%-11s%-11s%-11s"+
+				"%-11s%-11s%-11s%-11s"+
+				"%-11s%-11s%-11s%-11s"+
+				"%-11s\n",
+			"TXD AvgRd", "TXD AvgWr", "TXD MaxRd", "TXD MaxWr",
+			"RXD AvgRd", "RXD AvgWr", "RXD MaxRd", "RXD MaxWr",
+			"PB AvgRd", "PB AvgWr", "PB MaxRd", "PB MaxWr",
+			"MS AvgRd", "MS AvgWr", "MS MaxRd", "MS MaxWr",
+			"PCIE AvgRd", "PCIE AvgWr", "PCIE MaxRd", "PCIE MaxWr",
+			"ClockDiff")
+	} else {
+		fmt.Printf(
+			"%-11s%-11s%-11s%-11s"+
+				"%-11s%-11s%-11s%-11s"+
+				"%-11s%-11s%-11s%-11s"+
+				"%-11s\n",
+			"TXD AvgRd", "TXD AvgWr", "TXD MaxRd", "TXD MaxWr",
+			"RXD AvgRd", "RXD AvgWr", "RXD MaxRd", "RXD MaxWr",
+			"PB AvgRd", "PB AvgWr", "PB MaxRd", "PB MaxWr",
+			"ClockDiff")
+	}
+
 	fmt.Println(hdrLine)
 }
 
-func hbmBwShowOneResp(resp *halproto.HbmBwGetResponse) {
-	var avgRead uint64
-	var avgWrite uint64
-	var maxRead uint64
-	var maxWrite uint64
+func hbmBwShowOneResp(resp *halproto.HbmBwGetResponse, enableMsPcie bool) {
+	var avgRead float64
+	var avgWrite float64
+	var maxRead float64
+	var maxWrite float64
 
-	blockType := strings.Replace(resp.GetType().String(), "CAPRI_BLOCK_", "", -1)
+	blockType := resp.GetType()
+
+	if enableMsPcie == false {
+		if blockType == halproto.CapriBlock_CAPRI_BLOCK_MS ||
+			blockType == halproto.CapriBlock_CAPRI_BLOCK_PCIE {
+			return
+		}
+	}
+
 	avgRead = 0
 	avgWrite = 0
 	maxRead = 0
@@ -178,7 +216,6 @@ func hbmBwShowOneResp(resp *halproto.HbmBwGetResponse) {
 		maxWrite = max.GetWrite()
 	}
 
-	fmt.Printf("%-10s%-20d%-20d%-20d%-20d%-20d\n",
-		blockType, avgRead, avgWrite,
-		maxRead, maxWrite, resp.GetClkDiff())
+	fmt.Printf("%-11f%-11f%-11f%-11f",
+		avgRead, avgWrite, maxRead, maxWrite)
 }
