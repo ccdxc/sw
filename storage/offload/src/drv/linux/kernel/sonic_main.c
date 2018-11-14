@@ -15,7 +15,7 @@
  * SOFTWARE.
  *
  */
-
+#define LINUXKPI_PARAM_PREFIX sonic_
 #include <linux/module.h>
 #ifndef __FreeBSD__
 #include <linux/version.h>

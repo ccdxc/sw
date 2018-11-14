@@ -4,6 +4,7 @@
  *
  */
 
+#define LINUXKPI_PARAM_PREFIX pencake_
 #include "osal.h"
 #include "pnso_api.h"
 #include "pnso_test.h"
@@ -54,6 +55,14 @@ static unsigned int log_level = OSAL_LOG_LEVEL_NOTICE;
 module_param(log_level, uint, 0444);
 MODULE_PARM_DESC(log_level, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN,5=NOTICE,6=INFO,7=DBG");
 
+static unsigned int success_cnt = 0;
+module_param(success_cnt, uint, 0444);
+MODULE_PARM_DESC(success_cnt, "Success Count: Number of passed tests");
+
+static unsigned int fail_cnt = 0;
+module_param(fail_cnt, uint, 0444);
+MODULE_PARM_DESC(fail_cnt, "Failure Count: Number of failed tests");
+
 static osal_thread_t g_main_thread;
 
 #ifdef __FreeBSD__ 
@@ -100,6 +109,16 @@ status_output_func(const char *status, void *opaque)
 {
 	pnso_test_sysfs_write_status_data(status, strlen(status), opaque);
 	OSAL_LOG("%s", status);
+}
+
+void pnso_test_inc_success_cnt(void)
+{
+	success_cnt++;
+}
+
+void pnso_test_inc_fail_cnt(void)
+{
+	fail_cnt++;
 }
 
 static const unsigned char default_alias_yaml[] =

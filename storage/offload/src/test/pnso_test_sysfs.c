@@ -6,6 +6,7 @@
 #include "pnso_test_ctx.h"
 #include "pnso_test_sysfs.h"
 #include "osal_atomic.h"
+#include "pnso_test_dev.h"
 
 static const char *ctl_state_strs[CTL_STATE_MAX+1] = {
 	[CTL_STATE_READ] = "read",
@@ -117,9 +118,11 @@ static void write_testcase_summary(uint32_t testcase_id, bool success)
 {
 	if (success) {
 		osal_atomic_fetch_add(&status_success_node.stat, 1);
+		pnso_test_inc_success_cnt();
 	} else {
 		osal_atomic_fetch_add(&status_fail_node.stat, 1);
 		osal_atomic_set(&status_fail_id_node.stat, (int) testcase_id);
+		pnso_test_inc_fail_cnt();
 	}
 }
 

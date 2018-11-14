@@ -14,7 +14,7 @@ static d_close_t pnso_test_close;
 static d_read_t pnso_test_read;
 static d_write_t pnso_test_write;
 
-#define DEVNAME "pnso_test"
+#define DEVNAME "pencake"
 
 /* Character device entry points */
 static struct cdevsw pnso_test_cdevsw = {
@@ -50,11 +50,11 @@ pnso_test_cdev_init(void)
 {
 	mtx_init(&pnso_test_softc.mtx, "pnso char", NULL, MTX_SPIN);
 
-	pnso_test_softc.input_max = BUFFERSIZE;
-	pnso_test_softc.output_max = BUFFERSIZE;
+	pnso_test_softc.input_max = BUFFERSIZE - 1;
+	pnso_test_softc.output_max = BUFFERSIZE - 1;
 
-        pnso_test_softc.input = TEST_ALLOC(pnso_test_softc.input_max);
-        pnso_test_softc.output = TEST_ALLOC(pnso_test_softc.output_max);
+        pnso_test_softc.input = TEST_ALLOC(pnso_test_softc.input_max + 1);
+        pnso_test_softc.output = TEST_ALLOC(pnso_test_softc.output_max + 1);
 	if ((pnso_test_softc.input == NULL) || (pnso_test_softc.output == NULL)) {
 		PNSO_LOG_ERROR("Opened device pnso_test alloc failed\n");
 		return (EINVAL);
@@ -182,7 +182,7 @@ char *pnso_test_sysfs_alloc_and_get_cfg(void)
 	PNSO_LOG_DEBUG("Sending pnso_test buffer for test.\n");
 
 	len = pnso_test_softc.input_len;
-	buf = TEST_ALLOC(len);
+	buf = TEST_ALLOC(len + 1);
 
 	if (buf == NULL)
 		return (NULL);
@@ -191,6 +191,7 @@ char *pnso_test_sysfs_alloc_and_get_cfg(void)
 	memcpy(buf, pnso_test_softc.input, len);
 	mtx_unlock(&pnso_test_softc.mtx);
 	
+	buf[len] = 0;
 	return (buf);
 }
 
@@ -199,7 +200,7 @@ int pnso_test_sysfs_read_ctl(void)
 	return (osal_atomic_exchange(&ctl_state, CTL_STATE_READ));
 }
 
-void pnso_test_sysfs_write_status_data(const char *src, uint32_t size, void *opaque)
+static void write_dev_data(const char *src, uint32_t size)
 {
 	int len;
 	
@@ -208,9 +209,29 @@ void pnso_test_sysfs_write_status_data(const char *src, uint32_t size, void *opa
 
 	mtx_lock(&pnso_test_softc.mtx);
 	/* One less for null character. */
-	len = min(size, (pnso_test_softc.output_max -1) - pnso_test_softc.output_len);
+	len = min(size, pnso_test_softc.output_max  - pnso_test_softc.output_len);
 	memcpy(pnso_test_softc.output + pnso_test_softc.output_len, src, len);
 	pnso_test_softc.output_len += len;
 	pnso_test_softc.output[pnso_test_softc.output_len] = 0;
 	mtx_unlock(&pnso_test_softc.mtx);
+}
+
+static void write_testcase_summary(uint32_t testcase_id, bool success)
+{
+	if (success) {
+		pnso_test_inc_success_cnt();
+	} else {
+		pnso_test_inc_fail_cnt();
+	}
+}
+
+void pnso_test_sysfs_write_status_data(const char *src, uint32_t len, void *opaque)
+{
+	struct testcase_context *test_ctx = (struct testcase_context *) opaque;
+
+	write_dev_data(src, len);
+	if (test_ctx) {
+	write_testcase_summary(test_ctx->testcase->node.idx,
+		test_ctx->stats.agg_stats.validation_failures == 0);
+	}
 }

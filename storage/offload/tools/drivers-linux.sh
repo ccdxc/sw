@@ -63,6 +63,8 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="modules.order" \
   --exclude="Module.symvers" \
   --exclude=".tmp_versions/" \
+  --exclude="cscope.*" \
+  --exclude="tags" \
   --exclude="tools/" \
   "$DRIVERS_SRC/" "$GEN_DIR"
 report_version "$DRIVERS_SRC" > "$GEN_DIR/version.drivers"

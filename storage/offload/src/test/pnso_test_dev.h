@@ -17,6 +17,8 @@ extern "C"
 
 int pnso_test_cdev_init(void);
 void pnso_test_cdev_deinit(void);
+void pnso_test_inc_success_cnt(void);
+void pnso_test_inc_fail_cnt(void);
 
 #ifdef __cplusplus
 }  /* extern "C" */
