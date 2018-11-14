@@ -176,17 +176,17 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
     exp_flow_key.dport = 22345;
     g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
                                          &exp_flow, true, 8, true);
-    sleep(15);
+    sleep(25);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 
     exp_flow_key.dport = 22346;
     g_rpc_state->alloc_and_insert_exp_flow(app_sess, exp_flow_key,
                                          &exp_flow, true, 5, true);
     exp_flow->entry.ref_count.count++;
-    sleep(5);
+    sleep(10);
     ASSERT_EQ(exp_flow->entry.deleting, true);
     exp_flow->entry.ref_count.count--;
-    sleep(15);
+    sleep(30);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 
     l4_alg_status_t *exp_flow_old = NULL, *exp_flow_new = NULL;
@@ -198,7 +198,7 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
                                          &exp_flow_new, true, 5, true);
     ASSERT_EQ(exp_flow_old, exp_flow_new);
     ASSERT_EQ(exp_flow_new->entry.deleting, false); 
-    sleep(20);
+    sleep(30);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 }
 
