@@ -8,6 +8,7 @@
 
 #include <linux/atomic.h>
 #include "pnso_api.h"
+#include "osal_atomic.h"
 
 #ifdef __cplusplus
 extern "C" {
