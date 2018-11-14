@@ -23,14 +23,14 @@ class ExampleService :
 private:
     delphi::SdkPtr delphi;
     string name;
-    bool no_heartbreat;
+    bool no_heartbeat;
     sysmgr::ClientPtr sysmgr;
 
 public:
     ExampleService(delphi::SdkPtr delphi, string name, bool no_heartbeat) {
 	this->delphi = delphi;
 	this->name = name;
-	this->no_heartbreat = no_heartbreat;
+	this->no_heartbeat = no_heartbeat;
 	this->sysmgr = sysmgr::CreateClient(delphi, name);
     }
 
@@ -46,6 +46,10 @@ public:
 
     virtual void OnMountComplete() {
 	this->sysmgr->init_done();
+    }
+
+    virtual bool SkipHeartbeat() {
+	return this->no_heartbeat;
     }
 
     virtual void ServiceUp(std::string name) {

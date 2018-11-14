@@ -1,0 +1,16 @@
+[{
+    "name": "delphi",
+    "command": "/sw/nic/build/x86_64/iris/bin/delphi_hub",
+    "dependencies": [],
+    "flags": ["no_watchdog"]
+}, {
+    "name": "example1",
+    "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example1",
+    "dependencies": ["delphi"],
+    "flags": []
+}, {
+    "name": "example2",
+    "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example2 --no-heartbeat",
+    "dependencies": ["delphi", "example1"],
+    "flags": []
+}]
