@@ -200,97 +200,159 @@ static int ionic_verbs_status_to_rc(u32 status)
 
 static int ionic_get_pdid(struct ionic_ibdev *dev, u32 *pdid)
 {
-	unsigned long irqflags;
-	u32 id;
+	int rc;
 
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
+	mutex_lock(&dev->inuse_lock);
+	rc = resid_get(&dev->inuse_pdid);
+	mutex_unlock(&dev->inuse_lock);
 
-	id = find_next_zero_bit(dev->inuse_pdid, dev->size_pdid, dev->next_pdid);
-	if (id != dev->size_pdid)
-		goto found;
+	if (rc >= 0) {
+		*pdid = rc;
+		rc = 0;
+	}
 
-	id = find_first_zero_bit(dev->inuse_pdid, dev->next_pdid);
-	if (id != dev->next_pdid)
-		goto found;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	/* not found */
-	return -ENOMEM;
-
-found:
-	set_bit(id, dev->inuse_pdid);
-	dev->next_pdid = id + 1;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	*pdid = id;
-
-	return 0;
+	return rc;
 }
 
 static int ionic_get_ahid(struct ionic_ibdev *dev, u32 *ahid)
 {
 	unsigned long irqflags;
-	u32 id;
+	int rc;
 
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
+	spin_lock_irqsave(&dev->inuse_splock, irqflags);
+	rc = resid_get(&dev->inuse_ahid);
+	spin_unlock_irqrestore(&dev->inuse_splock, irqflags);
 
-	id = find_next_zero_bit(dev->inuse_ahid, dev->size_ahid, dev->next_ahid);
-	if (id != dev->size_ahid)
-		goto found;
+	if (rc >= 0) {
+		*ahid = rc;
+		rc = 0;
+	}
 
-	id = find_first_zero_bit(dev->inuse_ahid, dev->next_ahid);
-	if (id != dev->next_ahid)
-		goto found;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	/* not found */
-	return -ENOMEM;
-
-found:
-	set_bit(id, dev->inuse_ahid);
-	dev->next_ahid = id + 1;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	*ahid = id;
-
-	return 0;
+	return rc;
 }
 
 static int ionic_get_mrid(struct ionic_ibdev *dev, u32 *mrid)
 {
-	unsigned long irqflags;
-	u32 id;
+	int rc;
 
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
+	mutex_lock(&dev->inuse_lock);
+	/* wrap to 1, skip reserved lkey */
+	rc = resid_get_wrap(&dev->inuse_mrid, 1);
+	if (rc >= 0) {
+		*mrid = ionic_mrid(rc, dev->next_mrkey++);
+		rc = 0;
+	}
+	mutex_unlock(&dev->inuse_lock);
 
-	id = find_next_zero_bit(dev->inuse_mrid, dev->size_mrid, dev->next_mrid);
-	if (id != dev->size_mrid)
-		goto found;
+	return rc;
+}
 
-	id = find_next_zero_bit(dev->inuse_mrid, dev->next_mrid, 1);
-	if (id != dev->next_mrid)
-		goto found;
+static int ionic_get_cqid(struct ionic_ibdev *dev, u32 *cqid)
+{
+	int rc;
 
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
+	mutex_lock(&dev->inuse_lock);
+	rc = resid_get(&dev->inuse_cqid);
+	mutex_unlock(&dev->inuse_lock);
 
-	/* not found */
-	return -ENOMEM;
+	if (rc >= 0) {
+		*cqid = rc;
+		rc = 0;
+	}
 
-found:
-	set_bit(id, dev->inuse_mrid);
-	dev->next_mrid = id + 1;
+	return rc;
+}
 
-	id = ionic_mrid(id, dev->next_mrkey++);
+static int ionic_get_gsi_qpid(struct ionic_ibdev *dev, u32 *qpid)
+{
+	int rc = 0;
 
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
+	mutex_lock(&dev->inuse_lock);
+	if (test_bit(IB_QPT_GSI, dev->inuse_qpid.inuse)) {
+		rc = -EINVAL;
+	} else {
+		set_bit(IB_QPT_GSI, dev->inuse_qpid.inuse);
+		*qpid = IB_QPT_GSI;
+	}
+	mutex_unlock(&dev->inuse_lock);
 
-	*mrid = id;
+	return rc;
+}
 
-	return 0;
+static int ionic_get_qpid(struct ionic_ibdev *dev, u32 *qpid)
+{
+	int rc = 0;
+
+	mutex_lock(&dev->inuse_lock);
+	rc = resid_get_shared(&dev->inuse_qpid, 2,
+			      dev->inuse_qpid.next_id,
+			      dev->size_qpid);
+	if (rc >= 0) {
+		dev->inuse_qpid.next_id = rc + 1;
+		*qpid = rc;
+		rc = 0;
+	}
+	mutex_unlock(&dev->inuse_lock);
+
+	return rc;
+}
+
+static int ionic_get_srqid(struct ionic_ibdev *dev, u32 *qpid)
+{
+	int rc = 0;
+
+	mutex_lock(&dev->inuse_lock);
+	rc = resid_get_shared(&dev->inuse_qpid,
+			      dev->size_qpid,
+			      dev->next_srqid,
+			      dev->size_srqid);
+	if (rc >= 0) {
+		dev->next_srqid = rc + 1;
+		*qpid = rc;
+		rc = 0;
+	} else {
+		rc = resid_get_shared(&dev->inuse_qpid, 2,
+				      dev->inuse_qpid.next_id,
+				      dev->size_qpid);
+		if (rc >= 0) {
+			dev->inuse_qpid.next_id = rc + 1;
+			*qpid = rc;
+			rc = 0;
+		}
+	}
+	mutex_unlock(&dev->inuse_lock);
+
+	return rc;
+}
+
+static void ionic_put_pdid(struct ionic_ibdev *dev, u32 pdid)
+{
+	resid_put(&dev->inuse_pdid, pdid);
+}
+
+static void ionic_put_ahid(struct ionic_ibdev *dev, u32 ahid)
+{
+	resid_put(&dev->inuse_ahid, ahid);
+}
+
+static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
+{
+	resid_put(&dev->inuse_mrid, mrid);
+}
+
+static void ionic_put_cqid(struct ionic_ibdev *dev, u32 cqid)
+{
+	resid_put(&dev->inuse_cqid, cqid);
+}
+
+static void ionic_put_qpid(struct ionic_ibdev *dev, u32 qpid)
+{
+	resid_put(&dev->inuse_qpid, qpid);
+}
+
+static void ionic_put_srqid(struct ionic_ibdev *dev, u32 qpid)
+{
+	resid_put(&dev->inuse_qpid, qpid);
 }
 
 static int ionic_res_order(int count, int stride, int cl_stride)
@@ -307,13 +369,11 @@ static int ionic_res_order(int count, int stride, int cl_stride)
 
 static int ionic_get_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res)
 {
-	unsigned long irqflags;
-	int rc;
+	int rc = 0;
 
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
-	rc = bitmap_find_free_region(dev->inuse_restbl, dev->size_restbl,
-				     res->tbl_order);
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
+	mutex_lock(&dev->inuse_lock);
+	rc = buddy_get(&dev->inuse_restbl, res->tbl_order);
+	mutex_unlock(&dev->inuse_lock);
 
 	if (rc < 0) {
 		res->tbl_order = IONIC_RES_INVALID;
@@ -329,176 +389,22 @@ static int ionic_get_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res)
 	return 0;
 }
 
-static int ionic_get_cqid(struct ionic_ibdev *dev, u32 *cqid)
-{
-	unsigned long irqflags;
-	u32 id;
-
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
-
-	id = find_next_zero_bit(dev->inuse_cqid, dev->size_cqid, dev->next_cqid);
-	if (id != dev->size_cqid)
-		goto found;
-
-	id = find_first_zero_bit(dev->inuse_cqid, dev->next_cqid);
-	if (id != dev->next_cqid)
-		goto found;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	/* not found */
-	return -ENOMEM;
-
-found:
-	set_bit(id, dev->inuse_cqid);
-	dev->next_cqid = id + 1;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	*cqid = id;
-
-	return 0;
-}
-
-static int ionic_get_gsi_qpid(struct ionic_ibdev *dev, u32 *qpid)
-{
-	unsigned long irqflags;
-	int rc = 0;
-
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
-	if (test_bit(IB_QPT_GSI, dev->inuse_qpid))
-		rc = -EINVAL;
-	else {
-		set_bit(IB_QPT_GSI, dev->inuse_qpid);
-		*qpid = IB_QPT_GSI;
-	}
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	return rc;
-}
-
-static int ionic_get_qpid(struct ionic_ibdev *dev, u32 *qpid)
-{
-	unsigned long irqflags;
-	u32 id;
-
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
-
-	id = find_next_zero_bit(dev->inuse_qpid, dev->size_qpid, dev->next_qpid);
-	if (id != dev->size_qpid)
-		goto found;
-
-	id = find_next_zero_bit(dev->inuse_qpid, dev->next_qpid, 2);
-	if (id != dev->next_qpid)
-		goto found;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	/* not found */
-	return -ENOMEM;
-
-found:
-	set_bit(id, dev->inuse_qpid);
-	dev->next_qpid = id + 1;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	*qpid = id;
-
-	return 0;
-}
-
-static int ionic_get_srqid(struct ionic_ibdev *dev, u32 *qpid)
-{
-	unsigned long irqflags;
-	u32 id;
-
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
-
-	id = find_next_zero_bit(dev->inuse_qpid, dev->size_srqid, dev->next_srqid);
-	if (id != dev->size_srqid)
-		goto found;
-
-	id = find_next_zero_bit(dev->inuse_qpid, dev->next_srqid, dev->size_qpid);
-	if (id != dev->next_srqid)
-		goto found;
-
-	id = find_next_zero_bit(dev->inuse_qpid, dev->size_qpid, dev->next_qpid);
-	if (id != dev->size_qpid)
-		goto found;
-
-	id = find_next_zero_bit(dev->inuse_qpid, dev->next_qpid, 2);
-	if (id != dev->next_qpid)
-		goto found;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	/* not found */
-	return -ENOMEM;
-
-found:
-	set_bit(id, dev->inuse_qpid);
-
-	if (id < dev->size_qpid)
-		dev->next_qpid = id + 1;
-	else
-		dev->next_srqid = id + 1;
-
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
-
-	*qpid = id;
-
-	return 0;
-}
-
-static void ionic_put_pdid(struct ionic_ibdev *dev, u32 pdid)
-{
-	clear_bit(pdid, dev->inuse_pdid);
-}
-
-static void ionic_put_ahid(struct ionic_ibdev *dev, u32 ahid)
-{
-	clear_bit(ahid, dev->inuse_ahid);
-}
-
-static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
-{
-	clear_bit(ionic_mrid_index(mrid), dev->inuse_mrid);
-}
-
 static bool ionic_put_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res)
 {
-	unsigned long irqflags;
-
 	if (res->tbl_order == IONIC_RES_INVALID)
 		return false;
 
 	if (ionic_xxx_pgidx)
 		res->tbl_pos >>= dev->cl_stride - dev->pte_stride;
 
-	spin_lock_irqsave(&dev->inuse_lock, irqflags);
-	bitmap_release_region(dev->inuse_restbl, res->tbl_pos, res->tbl_order);
-	spin_unlock_irqrestore(&dev->inuse_lock, irqflags);
+	mutex_lock(&dev->inuse_lock);
+	buddy_put(&dev->inuse_restbl, res->tbl_pos, res->tbl_order);
+	mutex_unlock(&dev->inuse_lock);
 
 	res->tbl_order = IONIC_RES_INVALID;
 	res->tbl_pos = 0;
 
 	return true;
-}
-
-static void ionic_put_cqid(struct ionic_ibdev *dev, u32 cqid)
-{
-	clear_bit(cqid, dev->inuse_cqid);
-}
-
-static void ionic_put_qpid(struct ionic_ibdev *dev, u32 qpid)
-{
-	clear_bit(qpid, dev->inuse_qpid);
-}
-
-static void ionic_put_srqid(struct ionic_ibdev *dev, u32 qpid)
-{
-	clear_bit(qpid, dev->inuse_qpid);
 }
 
 static int ionic_pgtbl_page(struct ionic_tbl_buf *buf, u64 dma)
@@ -2769,7 +2675,6 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 	int rc;
 
 	cq = __ionic_create_cq(dev, &buf, attr, ibctx, udata);
-
 	if (IS_ERR(cq)) {
 		rc = PTR_ERR(cq);
 		goto err_cq;
@@ -6637,13 +6542,12 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	kfree(dev->stats_buf);
 	kfree(dev->stats_hdrs);
 
-	kfree(dev->inuse_qpid);
-	kfree(dev->inuse_cqid);
-	kfree(dev->inuse_restbl);
-	kfree(dev->inuse_mrid);
-	kfree(dev->inuse_ahid);
-	kfree(dev->inuse_pdid);
-
+	resid_destroy(&dev->inuse_qpid);
+	resid_destroy(&dev->inuse_cqid);
+	resid_destroy(&dev->inuse_mrid);
+	resid_destroy(&dev->inuse_ahid);
+	resid_destroy(&dev->inuse_pdid);
+	buddy_destroy(&dev->inuse_restbl);
 	tbl_destroy(&dev->qp_tbl);
 	tbl_destroy(&dev->cq_tbl);
 
@@ -6658,7 +6562,6 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
 	const union identity *ident;
-	size_t size;
 	int rc, lif_id, version, compat;
 
 	dev_hold(ndev);
@@ -6820,65 +6723,51 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	tbl_init(&dev->qp_tbl);
 	tbl_init(&dev->cq_tbl);
 
-	spin_lock_init(&dev->inuse_lock);
+	mutex_init(&dev->inuse_lock);
+	spin_lock_init(&dev->inuse_splock);
 
-	dev->size_pdid = dev->dev_attr.max_pd;
-	dev->next_pdid = 0;
-	size = sizeof(long) * BITS_TO_LONGS(dev->size_pdid);
-	dev->inuse_pdid = kzalloc(size, GFP_KERNEL);
-	if (!dev->inuse_pdid) {
-		rc = -ENOMEM;
-		goto err_pdid;
-	}
-
-	dev->size_ahid = dev->dev_attr.max_ah;
-	dev->next_ahid = 0;
-	size = sizeof(long) * BITS_TO_LONGS(dev->size_ahid);
-	dev->inuse_ahid = kzalloc(size, GFP_KERNEL);
-	if (!dev->inuse_ahid) {
-		rc = -ENOMEM;
-		goto err_ahid;
-	}
-
-	dev->size_mrid = dev->dev_attr.max_mr;
-	dev->next_mrid = 1;
-	dev->next_mrkey = 1;
-	size = sizeof(long) * BITS_TO_LONGS(dev->size_mrid);
-	dev->inuse_mrid = kzalloc(size, GFP_KERNEL);
-	if (!dev->inuse_mrid) {
-		rc = -ENOMEM;
-		goto err_mrid;
-	}
-
-	dev->size_cqid = dev->dev_attr.max_cq;
-	dev->next_cqid = 0;
-	size = sizeof(long) * BITS_TO_LONGS(dev->size_cqid);
-	dev->inuse_cqid = kzalloc(size, GFP_KERNEL);
-	if (!dev->inuse_cqid) {
-		rc = -ENOMEM;
-		goto err_cqid;
-	}
-
-	dev->size_qpid = dev->dev_attr.max_qp;
-	dev->next_qpid = 2;
-	dev->size_srqid = dev->dev_attr.max_srq;
-	dev->next_srqid = dev->dev_attr.max_qp;
-	size = sizeof(long) * BITS_TO_LONGS(dev->size_srqid);
-	dev->inuse_qpid = kzalloc(size, GFP_KERNEL);
-	if (!dev->inuse_qpid) {
-		rc = -ENOMEM;
-		goto err_qpid;
-	}
-
-	dev->size_restbl = ident->dev.nrdma_pts_per_lif;
 	if (ionic_xxx_pgidx)
-		dev->size_restbl >>= dev->cl_stride - dev->pte_stride;
-	size = sizeof(long) * BITS_TO_LONGS(dev->size_restbl);
-	dev->inuse_restbl = kzalloc(size, GFP_KERNEL);
-	if (!dev->inuse_restbl) {
-		rc = -ENOMEM;
+		rc = buddy_init(&dev->inuse_restbl,
+				ident->dev.nrdma_pts_per_lif >>
+				(dev->cl_stride - dev->pte_stride));
+	else
+		rc = buddy_init(&dev->inuse_restbl,
+				ident->dev.nrdma_pts_per_lif);
+	if (rc)
 		goto err_restbl;
-	}
+
+	rc = resid_init(&dev->inuse_pdid, dev->dev_attr.max_pd);
+	if (rc)
+		goto err_pdid;
+
+	rc = resid_init(&dev->inuse_ahid, dev->dev_attr.max_ah);
+	if (rc)
+		goto err_ahid;
+
+	rc = resid_init(&dev->inuse_mrid, dev->dev_attr.max_mr);
+	if (rc)
+		goto err_mrid;
+
+	/* skip reserved lkey */
+	dev->inuse_mrid.next_id = 1;
+	dev->next_mrkey = 1;
+
+	rc = resid_init(&dev->inuse_cqid, dev->dev_attr.max_cq);
+	if (rc)
+		goto err_cqid;
+
+	rc = resid_init(&dev->inuse_qpid, max(dev->dev_attr.max_qp,
+					      dev->dev_attr.max_srq));
+	if (rc)
+		goto err_qpid;
+
+	/* prefer srqids after qpids */
+	dev->size_qpid = dev->dev_attr.max_qp;
+	dev->size_srqid = dev->dev_attr.max_srq;
+	dev->next_srqid = dev->dev_attr.max_qp,
+
+	/* skip reserved SMI and GSI qpids */
+	dev->inuse_qpid.next_id = 2;
 
 	rc = ionic_rdma_reset_devcmd(dev);
 	if (rc)
@@ -7023,18 +6912,18 @@ err_register:
 	kfree(dev->stats_buf);
 	kfree(dev->stats_hdrs);
 err_reset:
-	kfree(dev->inuse_restbl);
-err_restbl:
-	kfree(dev->inuse_qpid);
+	resid_destroy(&dev->inuse_qpid);
 err_qpid:
-	kfree(dev->inuse_cqid);
+	resid_destroy(&dev->inuse_cqid);
 err_cqid:
-	kfree(dev->inuse_mrid);
+	resid_destroy(&dev->inuse_mrid);
 err_mrid:
-	kfree(dev->inuse_ahid);
+	resid_destroy(&dev->inuse_ahid);
 err_ahid:
-	kfree(dev->inuse_pdid);
+	resid_destroy(&dev->inuse_pdid);
 err_pdid:
+	buddy_destroy(&dev->inuse_restbl);
+err_restbl:
 	tbl_destroy(&dev->qp_tbl);
 	tbl_destroy(&dev->cq_tbl);
 	ib_dealloc_device(ibdev);

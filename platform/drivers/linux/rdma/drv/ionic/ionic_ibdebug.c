@@ -121,6 +121,7 @@ static void ionic_tbl_buf_dump(struct seq_file *s, struct ionic_tbl_buf *buf)
 static int ionic_dev_info_show(struct seq_file *s, void *v)
 {
 	struct ionic_ibdev *dev = s->private;
+	int i;
 
 	seq_printf(s, "lif_id:\t%d\n", dev->lif_id);
 	seq_printf(s, "dbid:\t%u\n", dev->dbid);
@@ -149,36 +150,48 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "admin_armed:\t%u\n", dev->admin_armed);
 	seq_printf(s, "admin_state:\t%u\n", dev->admin_state);
 
-	seq_printf(s, "inuse_pdid:\t%u\n", bitmap_weight(dev->inuse_pdid,
-							 dev->size_pdid));
-	seq_printf(s, "size_pdid:\t%u\n", dev->size_pdid);
-	seq_printf(s, "next_pdid:\t%u\n", dev->next_pdid);
+	seq_printf(s, "inuse_pdid:\t%u\n",
+		   bitmap_weight(dev->inuse_pdid.inuse,
+				 dev->inuse_pdid.inuse_size));
+	seq_printf(s, "size_pdid:\t%u\n", dev->inuse_pdid.inuse_size);
+	seq_printf(s, "next_pdid:\t%u\n", dev->inuse_pdid.next_id);
 
-	seq_printf(s, "inuse_mrid:\t%u\n", bitmap_weight(dev->inuse_mrid,
-							 dev->size_mrid));
-	seq_printf(s, "size_mrid:\t%u\n", dev->size_mrid);
-	seq_printf(s, "next_mrid:\t%u\n", dev->next_mrid);
+	seq_printf(s, "inuse_mrid:\t%u\n",
+		   bitmap_weight(dev->inuse_mrid.inuse,
+				 dev->inuse_mrid.inuse_size));
+	seq_printf(s, "size_mrid:\t%u\n", dev->inuse_mrid.inuse_size);
+	seq_printf(s, "next_mrid:\t%u\n", dev->inuse_mrid.next_id);
 	seq_printf(s, "next_mrkey:\t%u\n", dev->next_mrkey);
 
-	seq_printf(s, "inuse_cqid:\t%u\n", bitmap_weight(dev->inuse_cqid,
-							 dev->size_cqid));
-	seq_printf(s, "size_cqid:\t%u\n", dev->size_cqid);
-	seq_printf(s, "next_cqid:\t%u\n", dev->next_cqid);
+	seq_printf(s, "inuse_cqid:\t%u\n",
+		   bitmap_weight(dev->inuse_cqid.inuse,
+				 dev->inuse_cqid.inuse_size));
+	seq_printf(s, "size_cqid:\t%u\n", dev->inuse_cqid.inuse_size);
+	seq_printf(s, "next_cqid:\t%u\n", dev->inuse_cqid.next_id);
 
-	seq_printf(s, "inuse_qpid:\t%u\n", bitmap_weight(dev->inuse_qpid,
-							 dev->size_qpid));
+	seq_printf(s, "inuse_qpid:\t%u\n",
+		   bitmap_weight(dev->inuse_qpid.inuse,
+				 dev->size_qpid));
 	seq_printf(s, "size_qpid:\t%u\n", dev->size_qpid);
-	seq_printf(s, "next_qpid:\t%u\n", dev->next_qpid);
+	seq_printf(s, "next_qpid:\t%u\n", dev->inuse_qpid.next_id);
 
 	/* includes inuse_qpid: subtract inuse_qpid to get only srqid */
-	seq_printf(s, "inuse_srqid:\t%u\n", bitmap_weight(dev->inuse_qpid,
-							  dev->size_srqid));
+	seq_printf(s, "inuse_srqid:\t%u\n",
+		   bitmap_weight(dev->inuse_qpid.inuse,
+				 dev->size_srqid));
 	seq_printf(s, "size_srqid:\t%u\n", dev->size_srqid);
 	seq_printf(s, "next_srqid:\t%u\n", dev->next_srqid);
 
-	seq_printf(s, "inuse_restbl:\t%u\n", bitmap_weight(dev->inuse_restbl,
-							  dev->size_restbl));
-	seq_printf(s, "size_restbl:\t%u\n", dev->size_restbl);
+	seq_printf(s, "inuse_restbl:\t%u\n",
+		   bitmap_weight(dev->inuse_restbl.inuse,
+				 dev->inuse_restbl.inuse_size));
+	seq_printf(s, "size_restbl:\t%u\n",
+		   dev->inuse_restbl.inuse_size);
+	seq_printf(s, "order_restbl:\t%u\n", dev->inuse_restbl.order_max);
+
+	for (i = 0; i <= dev->inuse_restbl.order_max; ++i)
+		seq_printf(s, "next_restbl[%d]:\t%u\n", i,
+			   dev->inuse_restbl.order_next[i]);
 
 	return 0;
 }

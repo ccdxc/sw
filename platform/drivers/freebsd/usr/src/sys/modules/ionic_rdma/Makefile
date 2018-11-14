@@ -4,6 +4,7 @@ KMOD=ionic_rdma
 SRCS= \
 ionic_ibdev.c \
 ionic_queue.c \
+res.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
 	opt_inet.h opt_inet6.h
 

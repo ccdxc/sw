@@ -44,6 +44,7 @@
 
 #include "ionic_fw.h"
 #include "ionic_queue.h"
+#include "res.h"
 #include "table.h"
 
 #define IONIC_MIN_RDMA_VERSION 0
@@ -118,35 +119,22 @@ struct ionic_ibdev {
 	struct tbl_root		qp_tbl;
 	struct tbl_root		cq_tbl;
 
-	spinlock_t		inuse_lock; /* for id reservation */
+	struct mutex		inuse_lock; /* for id reservation */
+	spinlock_t		inuse_splock; /* for ahid reservation */
 
-	unsigned long		*inuse_pdid;
-	u32			size_pdid;
-	u32			next_pdid;
-
-	unsigned long		*inuse_ahid;
-	u32			size_ahid;
-	u32			next_ahid;
-
-	unsigned long		*inuse_mrid;
-	u32			size_mrid;
-	u32			next_mrid;
+	struct buddy_bits	inuse_restbl;
+	struct resid_bits	inuse_pdid;
+	struct resid_bits	inuse_ahid;
+	struct resid_bits	inuse_mrid;
 	u8			next_mrkey;
-
-	unsigned long		*inuse_cqid;
-	u32			size_cqid;
-	u32			next_cqid;
-
-	unsigned long		*inuse_qpid;
-	u32			size_qpid;
-	u32			next_qpid;
-	u32			size_srqid;
-	u32			next_srqid;
-
-	unsigned long		*inuse_restbl;
-	u32			size_restbl;
+	struct resid_bits	inuse_cqid;
+	struct resid_bits	inuse_qpid;
+	int			size_qpid;
+	int			size_srqid;
+	int			next_srqid;
 
 	struct work_struct	reset_work;
+
 	struct work_struct	admin_work;
 	spinlock_t		admin_lock;
 	struct ionic_aq		*adminq;
