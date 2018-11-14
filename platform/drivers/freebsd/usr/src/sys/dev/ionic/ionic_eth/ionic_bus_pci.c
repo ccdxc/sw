@@ -153,6 +153,8 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_set_drvdata(pdev, ionic);
 	ionic->dev = dev;
 
+	ionic->is_mgmt_nic = ent->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
+
 	err = ionic_set_dma_mask(ionic);
 	if (err) {
 		dev_err(dev, "Cannot set DMA mask, aborting\n");

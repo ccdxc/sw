@@ -1497,12 +1497,20 @@ static int ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
 	return 0;
 }
 
+struct lif *ionic_netdev_lif(struct net_device *netdev)
+{
+	if (!netdev || netdev->netdev_ops->ndo_start_xmit != ionic_start_xmit)
+		return NULL;
+
+	return netdev_priv(netdev);
+}
+
 static int ionic_lif_notify(struct notifier_block *nb,
 			    unsigned long event, void *info)
 {
 	struct ionic *ionic = container_of(nb, struct ionic, nb);
 	struct net_device *ndev = netdev_notifier_info_to_dev(info);
-	struct lif *lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION);
+	struct lif *lif = ionic_netdev_lif(ndev);
 	int err;
 
 	if (!lif || lif->ionic != ionic)

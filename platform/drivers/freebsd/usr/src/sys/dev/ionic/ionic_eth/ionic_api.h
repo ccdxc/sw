@@ -10,31 +10,41 @@
 /** IONIC_API_VERSION - Version number of this interface.
  *
  * Any interface changes to this interface must also change the version.
+ *
+ * If netdev and other (eg, rdma) drivers are compiled from different sources,
+ * they are compatible only if IONIC_API_VERSION is statically the same in both
+ * sources.  Drivers must have matching values of IONIC_API_VERSION at compile
+ * time, to be considered compatible at run time.
+ *
+ * This is a more strict check than just comparing the driver name in
+ * ethtool_api->get_drvinfo().  The name may match, yet drivers may still be
+ * incompatible if compiled from different sources, or if some other driver
+ * happens to be called "ionic".
  */
-#define IONIC_API_VERSION "2"
+#define IONIC_API_VERSION "3"
 
 struct dentry;
 struct lif;
 
+/** enum ionic_api_prsn - personalities that can be applied to the lif. */
+enum ionic_api_prsn {
+	IONIC_PRSN_RDMA,
+};
+
 /** get_netdev_ionic_lif - Get the lif if the netdev is ionic.
  * @netdev:		Net device to check.
  * @api_version:	IONIC_API_VERSION.
+ * @prsn:		Personality to apply.
  *
- * If netdev and other (eg, rdma) drivers are compiled from different sources,
- * they are compatible only if IONIC_API_VERSION is the same in both sources.
- * The compatibility is with exactly the driver module that exports the
- * symbols is_netdev_ionic, and get_netdev_ionic_api.  Only one driver may be
- * loaded exporting those symbols.  Compatible drivers must have the same
- * compile-time value of IONIC_API_VERSION.
- *
- * This is a more strict check than just comparing the driver name in
- * ethtool_api->get_drvinfo().  The name may match, yet drivers may still be
- * incompatible if compiled from different sources.
+ * This will return the opaque struct lif if and only if the netdev was created
+ * by the ionic driver, if the api version matches as described above for
+ * IONIC_API_VERSION, and if the personality can be applied to the lif.
  *
  * Return: Ionic lif if the netdev is a compatible ionic device.
  */
 struct lif *get_netdev_ionic_lif(struct net_device *netdev,
-				 const char *api_version);
+				 const char *api_version,
+				 enum ionic_api_prsn prsn);
 
 /* (BSD) get linuxkpi device from lif instead of ifnet */
 struct device *ionic_api_get_device(struct lif *lif);
@@ -47,39 +57,33 @@ struct device *ionic_api_get_device(struct lif *lif);
  */
 void ionic_api_request_reset(struct lif *lif);
 
-/** enum ionic_api_private - kinds of private data for the lif. */
-enum ionic_api_private {
-	IONIC_RDMA_PRIVATE,
-};
-
 /** ionic_api_get_private - Get private data associated with the lif.
  * @lif:		Handle to lif.
- * @kind:		Kind of private data.
+ * @prsn:		Personality to which the private data applies.
  *
  * Get the private data of some kind.  The private data may be, for example, an
  * instance of an rdma device for this lif.
  *
  * Return: private data or NULL.
  */
-void *ionic_api_get_private(struct lif *lif,
-			    enum ionic_api_private kind);
+void *ionic_api_get_private(struct lif *lif, enum ionic_api_prsn prsn);
 
 /** ionic_api_get_private - Set private data associated with the lif.
  * @lif:		Handle to lif.
  * @priv:		Private data or NULL.
  * @reset_cb:		Callback if device has been disabled or reset.
- * @kind:		Kind of private data.
+ * @prsn:		Personality to which the private data applies.
  *
  * Set the private data of some kind.  The private data may be, for example, an
  * instance of an rdma device for this lif.
  *
- * This will fail if private data is already set for that kind.
+ * This will fail if private data is already set for that personality.
  *
  * Return: zero or negative error status.
  */
 int ionic_api_set_private(struct lif *lif, void *priv,
 			  void (*reset_cb)(void *priv),
-			  enum ionic_api_private kind);
+			  enum ionic_api_prsn prsn);
 
 /** ionic_api_get_identity - Get result of device identification.
  * @lif:		Handle to lif.

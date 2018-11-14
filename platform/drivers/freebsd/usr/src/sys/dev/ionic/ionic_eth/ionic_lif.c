@@ -2183,6 +2183,14 @@ static int ionic_lif_register(struct lif *lif)
 	return 0;
 }
 
+struct lif *ionic_netdev_lif(struct net_device *netdev)
+{
+	if (!netdev || netdev->if_transmit != ionic_start_xmit)
+		return NULL;
+
+	return if_getsoftc(netdev);
+}
+
 int ionic_lifs_register(struct ionic *ionic)
 {
 	struct list_head *cur;

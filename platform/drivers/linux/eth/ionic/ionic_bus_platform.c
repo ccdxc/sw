@@ -251,6 +251,8 @@ static int ionic_probe(struct platform_device *pfdev)
 	platform_set_drvdata(pfdev, ionic);
 	ionic->dev = dev;
 
+	ionic->is_mgmt_nic = true;
+
 	err = ionic_set_dma_mask(ionic);
 	if (err) {
 		dev_err(dev, "Cannot set DMA mask, aborting\n");

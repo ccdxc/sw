@@ -176,6 +176,8 @@ int ionic_lifs_size(struct ionic *ionic);
 int ionic_intr_alloc(struct lif *lif, struct intr *intr);
 void ionic_intr_free(struct lif *lif, struct intr *intr);
 
+struct lif *ionic_netdev_lif(struct net_device *netdev);
+
 #ifdef IONIC_DEBUG_STATS
 static void inline debug_stats_txq_post(struct qcq *qcq,
 	   struct txq_desc *desc, bool dbell)

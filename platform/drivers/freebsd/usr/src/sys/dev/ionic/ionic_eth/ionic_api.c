@@ -12,15 +12,20 @@
 #include "ionic_txrx.h"
 
 struct lif *get_netdev_ionic_lif(struct net_device *netdev,
-				 const char *api_version)
+				 const char *api_version,
+				 enum ionic_api_prsn prsn)
 {
-	if (netdev->if_transmit != ionic_start_xmit)
-		return NULL;
+	struct lif *lif;
 
 	if (strcmp(api_version, IONIC_API_VERSION))
 		return NULL;
 
-	return if_getsoftc(netdev);
+	lif = ionic_netdev_lif(netdev);
+
+	if (!lif || lif->ionic->is_mgmt_nic || prsn != IONIC_PRSN_RDMA)
+		return NULL;
+
+	return lif;
 }
 EXPORT_SYMBOL_GPL(get_netdev_ionic_lif);
 
@@ -36,9 +41,9 @@ void ionic_api_request_reset(struct lif *lif)
 }
 EXPORT_SYMBOL_GPL(ionic_api_request_reset);
 
-void *ionic_api_get_private(struct lif *lif, enum ionic_api_private kind)
+void *ionic_api_get_private(struct lif *lif, enum ionic_api_prsn prsn)
 {
-	if (kind != IONIC_RDMA_PRIVATE)
+	if (prsn != IONIC_PRSN_RDMA)
 		return NULL;
 
 	return lif->api_private;
@@ -47,9 +52,9 @@ EXPORT_SYMBOL_GPL(ionic_api_get_private);
 
 int ionic_api_set_private(struct lif *lif, void *priv,
 			  void (*reset_cb)(void *priv),
-			  enum ionic_api_private kind)
+			  enum ionic_api_prsn prsn)
 {
-	if (kind != IONIC_RDMA_PRIVATE)
+	if (prsn != IONIC_PRSN_RDMA)
 		return -EINVAL;
 
 	if (lif->api_private && priv)

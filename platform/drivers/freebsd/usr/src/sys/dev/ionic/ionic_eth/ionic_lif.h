@@ -376,6 +376,8 @@ int ionic_lifs_size(struct ionic *ionic);
 int ionic_intr_alloc(struct lif *lif, struct intr *intr);
 void ionic_intr_free(struct lif *lif, struct intr *intr);
 
+struct lif *ionic_netdev_lif(struct net_device *netdev);
+
 int ionic_reinit(struct net_device *netdev);
 int ionic_set_features(struct lif *lif, uint16_t set_feature);
 int ionic_set_hw_feature(struct lif *lif, uint16_t set_feature);

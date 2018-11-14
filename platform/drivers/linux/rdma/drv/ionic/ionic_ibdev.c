@@ -7209,7 +7209,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 	struct ionic_ibdev *dev;
 	int rc;
 
-	dev = ionic_api_get_private(work->lif, IONIC_RDMA_PRIVATE);
+	dev = ionic_api_get_private(work->lif, IONIC_PRSN_RDMA);
 
 	switch (work->event) {
 	case NETDEV_REGISTER:
@@ -7228,7 +7228,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 		}
 
 		rc = ionic_api_set_private(work->lif, dev, ionic_kill_ibdev,
-					   IONIC_RDMA_PRIVATE);
+					   IONIC_PRSN_RDMA);
 		if (rc) {
 			netdev_dbg(ndev, "error set private %d\n", rc);
 			ionic_destroy_ibdev(dev);
@@ -7245,7 +7245,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 		netdev_dbg(ndev, "unregister ibdev\n");
 
 		ionic_api_set_private(work->lif, NULL, NULL,
-				      IONIC_RDMA_PRIVATE);
+				      IONIC_PRSN_RDMA);
 		ionic_destroy_ibdev(dev);
 
 		break;
@@ -7317,7 +7317,7 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 
 	ndev = netdev_notifier_info_to_dev(ptr);
 
-	lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION);
+	lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION, IONIC_PRSN_RDMA);
 	if (!lif) {
 		pr_devel("unrecognized netdev: %s\n", netdev_name(ndev));
 		goto out;
@@ -7395,7 +7395,7 @@ static void __exit ionic_exit_work(struct work_struct *ws)
 	list_for_each_entry_safe_reverse(dev, dev_next, &ionic_ibdev_list,
 					 driver_ent) {
 		ionic_api_set_private(dev->lif, NULL, NULL,
-				      IONIC_RDMA_PRIVATE);
+				      IONIC_PRSN_RDMA);
 		ionic_destroy_ibdev(dev);
 	}
 }
