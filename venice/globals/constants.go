@@ -67,6 +67,7 @@ const (
 	// Filebeat does not run as root, so it has a hard time navigating the /var/lib/pki directory structure.
 	// Since it doesn't need anything else from pki, it's easier to mount Elastic credentials directly in the Filebeat directory
 	FilebeatElasticClientAuthDir = "/usr/share/filebeat/auth"
+	VosHTTPSAuthDir              = PKIDir + "/" + Vos + "/certs"
 
 	// Log direcory
 	LogDir = "/var/log/pensando"

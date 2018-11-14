@@ -4,18 +4,23 @@ package objstoreinteg
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"os"
 	"os/exec"
 
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/venice/cmd/credentials"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -41,7 +46,7 @@ const (
 	keyPath        = "../../../venice/utils/certmgr/testdata/ca.key.pem"
 	rootsPath      = "../../../venice/utils/certmgr/testdata/roots.pem"
 	minioURL       = "127.0.0.1:19001"
-	minioHealthURL = "http://127.0.0.1:19001/minio/health/live"
+	minioHealthURL = "https://127.0.0.1:19001/minio/health/live"
 )
 
 // objstoreIntegSuite is the state of integ test
@@ -50,6 +55,8 @@ type objstoreIntegSuite struct {
 	restClient     apiclient.Services
 	resolverSrv    *rpckit.RPCServer
 	resolverClient resolver.Interface
+	authDir        string
+	tlsConfig      *tls.Config
 }
 
 func TestObjStoreInteg(t *testing.T) {
@@ -86,9 +93,29 @@ func (it *objstoreIntegSuite) SetUpSuite(c *C) {
 	resolverServer.Start()
 	it.resolverSrv = resolverServer
 
+	caKey, err := certs.ReadPrivateKey(keyPath)
+	c.Assert(err, IsNil)
+	caCert, err := certs.ReadCertificate(certPath)
+	c.Assert(err, IsNil)
+	trustRoots, err := certs.ReadCertificates(rootsPath)
+	c.Assert(err, IsNil)
+	it.authDir, err = ioutil.TempDir("/tmp", "objstore_test")
+	c.Assert(err, IsNil)
+	csrSigner := func(csr *x509.CertificateRequest) (*x509.Certificate, error) {
+		return certs.SignCSRwithCA(csr, caCert, caKey, certs.WithValidityDays(1))
+	}
+	err = credentials.GenVosHTTPSAuth(it.authDir, csrSigner, append([]*x509.Certificate{caCert}, trustRoots[0]))
+	c.Assert(err, IsNil)
+
+	it.tlsConfig = &tls.Config{
+		RootCAs:    certs.NewCertPool(trustRoots),
+		ServerName: globals.Vos,
+	}
+
 	// start objstore
 	cmd := []string{
 		"run",
+		"--rm",
 		"-d",
 		"-p",
 		"19001:19001",
@@ -96,6 +123,8 @@ func (it *objstoreIntegSuite) SetUpSuite(c *C) {
 		"MINIO_ACCESS_KEY=miniokey",
 		"-e",
 		"MINIO_SECRET_KEY=minio0523",
+		"-v",
+		fmt.Sprintf("%s:/root/.minio/certs", it.authDir),
 		"--name",
 		"objstore",
 		"registry.test.pensando.io:5000/objstore:v0.2",
@@ -105,15 +134,21 @@ func (it *objstoreIntegSuite) SetUpSuite(c *C) {
 	_, err = exec.Command("docker", cmd...).CombinedOutput()
 	AssertOk(c, err, fmt.Sprintf("failed to start objstore, %s", err))
 
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: it.tlsConfig,
+		},
+	}
+
 	// check health
 	AssertEventually(c, func() (bool, interface{}) {
-		s, err := http.Get(minioHealthURL)
+		s, err := client.Get(minioHealthURL)
 		if err != nil {
 			return false, s
 		}
 		defer s.Body.Close()
 		return s.StatusCode == http.StatusOK, s
-	}, "minio server is unhealthy", "1s", "20s")
+	}, "minio server is unhealthy", "1s", "60s")
 
 	// populate the mock resolver with apiserver instance.
 	apiSrvSi := types.ServiceInstance{
@@ -157,11 +192,12 @@ func (it *objstoreIntegSuite) TearDownSuite(c *C) {
 	_, err := exec.Command("docker", cmd...).CombinedOutput()
 	AssertOk(c, err, fmt.Sprintf("failed to remove objstore, %s", err))
 
+	os.RemoveAll(it.authDir)
 }
 
 // basic test to make sure all components come up
 func (it *objstoreIntegSuite) TestObjStoreApis(c *C) {
-	oc, err := objstore.NewClient("default", "pktcap", it.resolverClient)
+	oc, err := objstore.NewClient("default", "pktcap", it.resolverClient, objstore.WithTLSConfig(it.tlsConfig))
 	AssertOk(c, err, fmt.Sprintf("obj store client failed"))
 	_, err = oc.ListObjects("")
 	AssertOk(c, err, fmt.Sprintf("list objects failed"))

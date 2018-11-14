@@ -5,6 +5,7 @@ package objstore
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -50,15 +51,27 @@ type objStoreBackend interface {
 type client struct {
 	accessID       string
 	secretKey      string
-	usetls         bool
+	tlsConfig      *tls.Config
 	bucketName     string
 	client         objStoreBackend
 	resolverClient resolver.Interface
 }
 
+// Option provides optional parameters to the client constructor
+type Option func(c *client)
+
+// WithTLSConfig provides a custom TLS configuration for the client to use when
+// contacting the backend. Can be used to provide custom trust roots, server names,
+// cipher configs, etc.
+func WithTLSConfig(tlsConfig *tls.Config) Option {
+	return func(c *client) {
+		c.tlsConfig = tlsConfig
+	}
+}
+
 // NewClient creates a new client to the Venice object store
 // tenant name and service name is used to form the bucket as "tenantName.serviceName"
-func NewClient(tenantName, serviceName string, resolver resolver.Interface) (Client, error) {
+func NewClient(tenantName, serviceName string, resolver resolver.Interface, opts ...Option) (Client, error) {
 
 	// TODO: validate bucket name
 	// TODO: get access id & secret key from object store
@@ -67,9 +80,12 @@ func NewClient(tenantName, serviceName string, resolver resolver.Interface) (Cli
 	c := &client{
 		accessID:       "miniokey",
 		secretKey:      "minio0523",
-		usetls:         false,
 		bucketName:     fmt.Sprintf("%s.%s", tenantName, serviceName),
 		resolverClient: resolver,
+	}
+
+	for _, o := range opts {
+		o(c)
 	}
 
 	if err := c.connect(); err != nil {
@@ -99,7 +115,7 @@ func (c *client) connect() error {
 	for _, url := range addr {
 		for i := 0; i < maxRetry; i++ {
 			objsLog.Infof("connecting to {%s} %s", globals.Vos, url)
-			mc, err := minio.NewClient(url, c.accessID, c.secretKey, c.usetls, c.bucketName)
+			mc, err := minio.NewClient(url, c.accessID, c.secretKey, c.tlsConfig, c.bucketName)
 			if err != nil {
 				objsLog.Warnf("failed to create client to %s, %s", url, err)
 				time.Sleep(time.Second * 1)

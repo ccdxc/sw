@@ -243,6 +243,12 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			log.Infof("generated k8s credentials, dir: %v, err: %v", globals.KubernetesConfigDir, err)
 		}
 
+		err = credentials.GenVosAuth(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustChain())
+		if err != nil {
+			log.Errorf("Failed to generate VOS credentials, error: %v", err)
+			// try to proceed anyway
+		}
+
 		k8sConfig := services.K8sServiceConfig{
 			OverriddenModules: utils.GetOverriddenModules(""),
 			DisabledModules:   utils.GetDisabledModules(""),

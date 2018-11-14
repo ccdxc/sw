@@ -516,6 +516,11 @@ var k8sModules = map[string]protos.Module{
 				objstoreVolume,
 				logVolume,
 				eventsVolume,
+				protos.ModuleSpec_Volume{
+					Name:      "minio-credentials",
+					HostPath:  globals.VosHTTPSAuthDir,
+					MountPath: "/root/.minio/certs",
+				},
 			},
 		},
 	},

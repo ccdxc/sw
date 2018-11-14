@@ -201,7 +201,6 @@ func TestPutObject(t *testing.T) {
 		bucketName:     "ten1:svc1",
 		accessID:       "miniokey",
 		secretKey:      "minio0523",
-		usetls:         false,
 		resolverClient: r,
 	}
 
@@ -295,7 +294,6 @@ func TestGetObject(t *testing.T) {
 		bucketName:     "ten1:svc1",
 		accessID:       "miniokey",
 		secretKey:      "minio0523",
-		usetls:         false,
 		resolverClient: r,
 	}
 
@@ -389,7 +387,6 @@ func TestStatObject(t *testing.T) {
 		bucketName:     "ten1:svc1",
 		accessID:       "miniokey",
 		secretKey:      "minio0523",
-		usetls:         false,
 		resolverClient: r,
 	}
 
@@ -492,7 +489,6 @@ func TestListObjects(t *testing.T) {
 		bucketName:     "ten1:svc1",
 		accessID:       "miniokey",
 		secretKey:      "minio0523",
-		usetls:         false,
 		resolverClient: r,
 	}
 
@@ -601,7 +597,6 @@ func TestRemoveObjects(t *testing.T) {
 		bucketName:     "ten1:svc1",
 		accessID:       "miniokey",
 		secretKey:      "minio0523",
-		usetls:         false,
 		resolverClient: r,
 	}
 
@@ -678,7 +673,6 @@ func TestGetStreamObjectAtOffset(t *testing.T) {
 		bucketName:     "ten1:svc1",
 		accessID:       "miniokey",
 		secretKey:      "minio0523",
-		usetls:         false,
 		resolverClient: r,
 	}
 
@@ -736,7 +730,6 @@ func TestPutStreamObject(t *testing.T) {
 		bucketName:     "ten1:svc1",
 		accessID:       "miniokey",
 		secretKey:      "minio0523",
-		usetls:         false,
 		resolverClient: r,
 	}
 

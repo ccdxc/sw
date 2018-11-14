@@ -4,8 +4,10 @@ package minio
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -33,10 +35,18 @@ const (
 )
 
 // NewClient creates a new client to minio
-func NewClient(url, accessID, secretKey string, usetls bool, bucketName string) (*Client, error) {
-	mc, err := minio.New(url, accessID, secretKey, usetls)
+func NewClient(url, accessID, secretKey string, tlsConfig *tls.Config, bucketName string) (*Client, error) {
+	mc, err := minio.New(url, accessID, secretKey, (tlsConfig != nil))
 	if err != nil {
 		return nil, fmt.Errorf("minio client, err:%s", err)
+	}
+
+	if tlsConfig != nil {
+		tr := &http.Transport{
+			TLSClientConfig:    tlsConfig,
+			DisableCompression: true,
+		}
+		mc.SetCustomTransport(tr)
 	}
 
 	if _, err := mc.ListBuckets(); err != nil {
