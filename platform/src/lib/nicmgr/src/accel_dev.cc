@@ -318,12 +318,6 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                  info.lif_id, info.hw_lif_id, spec->seq_created_count);
     name = string_format("accel{}", spec->lif_id);
 
-    // Establish sequencer queues metrics with Delphi
-    if (SeqQueueMetricsInit()) {
-        NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
-        return;
-    }
-
     // Configure PCI resources
     pci_resources.lif_valid = 1;
     pci_resources.lif = info.hw_lif_id;
@@ -365,6 +359,12 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         }
     }
 
+    // Establish sequencer queues info and metrics with Delphi
+    if (DelphiDeviceInit()) {
+        NIC_LOG_ERR("lif{}: Failed to establish Delphi device", info.hw_lif_id);
+        return;
+    }
+
     if (spec->pub_intv_frac) {
         float intv = 1.0 / (float)spec->pub_intv_frac;
         sync_timer.set<Accel_PF, &Accel_PF::periodic_sync>(this);
@@ -373,23 +373,43 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 }
 
 int
-Accel_PF::SeqQueueMetricsInit(void)
+Accel_PF::DelphiDeviceInit(void)
 {
-    accel_metrics::AccelSeqQueueKey     key;
+    accel_metrics::AccelSeqQueueKey     seq_qkey;
     uint64_t                            qmetrics_addr;
     uint32_t                            qid;
 
-    key.set_lif_id(info.hw_lif_id);
-    for (qid = 0; qid < spec->seq_created_count; qid++) {
-        key.set_qid(qid);
-        qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
-                        offsetof(storage_seq_qstate_t, metrics);
-        auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
-                        NewDpAccelSeqQueueMetrics(key, qmetrics_addr);
-        if (!qmetrics) {
-            NIC_LOG_ERR("Failed qmetrics registration with delphi for "
-                        "lif {} qid {}", info.hw_lif_id, qid);
-            return -1;
+    if (g_nicmgr_svc) {
+        delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
+        delphi::objects::AccelPfInfoPtr shared_pf(delphi_pf);
+        shared_pf->set_key(info.hw_lif_id);
+        shared_pf->set_hw_lif_id(info.hw_lif_id);
+        shared_pf->set_num_seq_queues(spec->seq_created_count);
+        shared_pf->set_crypto_key_idx_base(crypto_key_idx_base);
+        shared_pf->set_num_crypto_keys_max(num_crypto_keys_max);
+        shared_pf->set_intr_base(pci_resources.intrb);
+        shared_pf->set_intr_count(pci_resources.intrc);
+        g_nicmgr_svc->sdk()->SetObject(shared_pf);
+
+        seq_qkey.set_lif_id(info.hw_lif_id);
+        for (qid = 0; qid < spec->seq_created_count; qid++) {
+            seq_qkey.set_qid(qid);
+            qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
+                            offsetof(storage_seq_qstate_t, metrics);
+            auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
+                            NewDpAccelSeqQueueMetrics(seq_qkey, qmetrics_addr);
+            delphi_qmetrics_vec.push_back(std::move(qmetrics));
+
+            /*
+             * Some of the fields below will be updated when driver
+             * issues _DevcmdSeqQueueInit().
+             */
+            auto qinfo = make_shared<delphi::objects::AccelSeqQueueInfo>();
+            qinfo->mutable_key()->set_lif_id(info.hw_lif_id);
+            qinfo->mutable_key()->set_qid(qid);
+            qinfo->set_qstate_addr(GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid));
+            delphi_qinfo_vec.push_back(std::move(qinfo));
+            seq_queue_info_publish(qid, STORAGE_SEQ_QGROUP_CPDC, 0);
         }
     }
 
@@ -876,6 +896,8 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
 
     WRITE_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
     invalidate_txdma_cacheline(qstate_addr);
+
+    seq_queue_info_publish(qid, cmd->qgroup, cmd->core_id);
 
     cpl->qid = qid;
     cpl->qtype = STORAGE_SEQ_QTYPE_SQ;
@@ -1432,46 +1454,39 @@ Accel_PF::periodic_sync(ev::timer &watcher, int revents)
 }
 
 /*
+ * Publish AccelSeqQueueInfo object to Delphi.
+ */
+void
+Accel_PF::seq_queue_info_publish(uint32_t qid,
+                                 storage_seq_qgroup_t qgroup,
+                                 uint32_t core_id)
+{
+    if (g_nicmgr_svc && (qid < delphi_qinfo_vec.size())) {
+        delphi::objects::AccelSeqQueueInfoPtr shared_q(delphi_qinfo_vec.at(qid));
+        shared_q->set_qgroup((::accel_metrics::AccelSeqQGroup)qgroup);
+        shared_q->set_core_id(core_id);
+        g_nicmgr_svc->sdk()->SetObject(shared_q);
+    }
+}
+
+/*
  * Publish AccelHwRingInfo object to Delphi.
  */
 static void
 accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring)
 {
     if (g_nicmgr_svc) {
-        delphi::objects::AccelHwRingInfoPtr shared_obj(rgroup_ring.obj_ptr);
-        shared_obj->set_pindex(rgroup_ring.indices.pndx);
-        shared_obj->set_cindex(rgroup_ring.indices.cndx);
-        shared_obj->set_input_bytes(rgroup_ring.metrics.input_bytes);
-        shared_obj->set_output_bytes(rgroup_ring.metrics.output_bytes);
-        shared_obj->set_soft_resets(rgroup_ring.metrics.soft_resets);
-        g_nicmgr_svc->sdk()->QueueUpdate(shared_obj);
-    }
-}
+        delphi::objects::AccelHwRingInfoPtr shared_ring(rgroup_ring.delphi_ring);
+        shared_ring->set_pindex(rgroup_ring.indices.pndx);
+        shared_ring->set_cindex(rgroup_ring.indices.cndx);
+        g_nicmgr_svc->sdk()->SetObject(shared_ring);
 
-/*
- * Resync AccelHwRingInfo object per NicMgrService::OnMountComplete
- */
-void
-accel_ring_info_resync(delphi::objects::AccelHwRingInfoPtr ring)
-{
-    if (g_nicmgr_svc) {
-        accel_rgroup_ring_t& rgroup_ring = 
-                accel_pf_rgroup_find_create(ring->key().rid(),
-                                            ring->key().sub_rid());
-        rgroup_ring.indices.pndx = ring->pindex();
-        rgroup_ring.indices.cndx = ring->cindex();
-        rgroup_ring.metrics.input_bytes = ring->input_bytes();
-        rgroup_ring.metrics.output_bytes = ring->output_bytes();
-        rgroup_ring.metrics.soft_resets = ring->soft_resets();
-
-        NIC_LOG_INFO("resync ring {} sub_ring {} pindex {} cindex {} "
-                     "input_bytes {} output_bytes {} soft_resets {}",
-                     accel_ring_id2name_get(ring->key().rid()),
-                     ring->key().sub_rid(), rgroup_ring.indices.pndx,
-                     rgroup_ring.indices.cndx, rgroup_ring.metrics.input_bytes,
-                     rgroup_ring.metrics.output_bytes,
-                     rgroup_ring.metrics.soft_resets);
-        accel_ring_info_publish(rgroup_ring);
+        rgroup_ring.delphi_metrics->input_bytes()->
+                                    Set(rgroup_ring.metrics.input_bytes);
+        rgroup_ring.delphi_metrics->output_bytes()->
+                                    Set(rgroup_ring.metrics.output_bytes);
+        rgroup_ring.delphi_metrics->soft_resets()->
+                                    Set(rgroup_ring.metrics.soft_resets);
     }
 }
 
@@ -1482,8 +1497,9 @@ static accel_rgroup_ring_t&
 accel_pf_rgroup_find_create(uint32_t ring_handle,
                             uint32_t sub_ring)
 {
-    accel_rgroup_ring_key_t     key;
-    accel_rgroup_iter_t         iter;
+    accel_rgroup_ring_key_t         key;
+    accel_rgroup_iter_t             iter;
+    accel_metrics::AccelHwRingKey   delphi_key;
 
     key = accel_rgroup_ring_key_make(ring_handle, sub_ring);
     iter = accel_pf_rgroup_map.find(key);
@@ -1491,14 +1507,18 @@ accel_pf_rgroup_find_create(uint32_t ring_handle,
         return iter->second;
     }
 
-    accel_rgroup_ring_t rgroup_ring = {0};
-    rgroup_ring.obj_ptr = make_shared<delphi::objects::AccelHwRingInfo>();
-    rgroup_ring.obj_ptr->mutable_key()->set_rid((::accel_metrics::AccelHwRingId)
-                                                ring_handle);
-    rgroup_ring.obj_ptr->mutable_key()->set_sub_rid(sub_ring);
-    return accel_pf_rgroup_map.insert(std::make_pair(key, rgroup_ring)).first->second;
-}
+    accel_rgroup_ring_t& rgroup_ring = accel_pf_rgroup_map[key];
+    rgroup_ring.delphi_ring = make_shared<delphi::objects::AccelHwRingInfo>();
+    rgroup_ring.delphi_ring->mutable_key()->set_rid((::accel_metrics::AccelHwRingId)
+                                                    ring_handle);
+    rgroup_ring.delphi_ring->mutable_key()->set_sub_rid(sub_ring);
 
+    delphi_key.set_rid((::accel_metrics::AccelHwRingId)ring_handle);
+    delphi_key.set_sub_rid(sub_ring);
+    rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
+                                 NewAccelHwRingMetrics(delphi_key);
+    return rgroup_ring;
+}
 
 /*
  * rounded up log2

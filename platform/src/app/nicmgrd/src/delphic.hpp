@@ -21,23 +21,6 @@ using grpc::Status;
 using delphi::error;
 using port::PortOperStatus;
 using delphi::objects::PortStatusPtr;
-using delphi::objects::AccelHwRingInfoPtr;
-
-// AccelHwRingInfoSvc is the reactor for the accelerator HW ring
-class AccelHwRingInfoSvc : public delphi::objects::AccelHwRingInfoReactor {
-public:
-    AccelHwRingInfoSvc(delphi::SdkPtr sdk) {
-        this->sdk_ = sdk;
-    }
-
-    virtual error OnAccelHwRingInfoCreate(AccelHwRingInfoPtr ring);
-    virtual error OnAccelHwRingInfoDelete(AccelHwRingInfoPtr ring);
-
-private:
-    delphi::SdkPtr sdk_;
-};
-typedef std::shared_ptr<AccelHwRingInfoSvc> AccelHwRingInfoSvcPtr;
-
 
 class NicMgrService : public delphi::Service,
                       public enable_shared_from_this<NicMgrService> {
@@ -45,7 +28,6 @@ private:
      std::shared_ptr<nicmgr::sysmgr_client>    sysmgr_;
     UpgSdkPtr                                  upgsdk_;
     delphi::SdkPtr                             sdk_;
-    AccelHwRingInfoSvcPtr                      accelHwRingInfoSvc_;
 
 public:
     delphi::SdkPtr sdk(void) const { return sdk_; }

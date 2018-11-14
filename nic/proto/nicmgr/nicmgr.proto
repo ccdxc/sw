@@ -39,38 +39,3 @@ message EthDeviceInfo {
     repeated    MacAddrVlans   mac_addr_vlans = 9;
 }
 
-
-enum AccelSeqQGroup {
-    QGroupCpdc         = 0;     // CP/DC sequencer submission queue group
-    QGroupCpdcStatus   = 1;     // CP/DC sequencer status queue group
-    QGroupCrypto       = 2;     // Crypto sequencer submission queue group
-    QGroupCryptoStatus = 3;     // Crypto sequencer status queue group
-}
-
-message AccelQstateInfo {
-    uint64 qstate_addr = 1;
-    AccelSeqQGroup qgroup = 2;
-    uint32 core_id = 3;
-}
-
-message AccelLifInfo {
-    uint64 hw_lif_id = 1;
-    repeated AccelQstateInfo qstate_info = 2;
-}
-
-message AccelDeviceInfo {
-    delphi.ObjectMeta          Meta = 1;
-    uint64                     Key = 2;
-    AccelLifInfo               lif = 3;
-    uint32                     num_seq_queues = 4;
-    uint32                     crypto_key_idx_base = 5;
-    uint32                     num_crypto_keys_max = 6;
-    uint32                     intr_base = 7;
-    uint32                     intr_count = 8;
-}
-
-
-    
-
-    
-

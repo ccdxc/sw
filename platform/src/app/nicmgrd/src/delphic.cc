@@ -21,9 +21,6 @@ using delphi::objects::PortStatus;
 using delphi::objects::PortStatusPtr;
 using sdk::types::port_oper_status_t;
 
-using delphi::objects::AccelHwRingInfo;
-using delphi::objects::AccelHwRingInfoPtr;
-
 extern DeviceManager *devmgr;
 extern DeviceManager *devices[];
 
@@ -40,11 +37,6 @@ NicMgrService::NicMgrService(delphi::SdkPtr sk) {
                                   "nicmgr", NON_AGENT,
                                   (UpgAgentHandlerPtr)NULL);
     sysmgr_ = nicmgr::create_sysmgr_client(sdk_);
-
-    accelHwRingInfoSvc_ = std::make_shared<AccelHwRingInfoSvc>(sdk_);
-    AccelHwRingInfo::Mount(sdk_, delphi::ReadWriteMode);
-    AccelHwRingInfo::Watch(sdk_, accelHwRingInfoSvc_);
-
 }
 
 // OnMountComplete() gets called after all delphi objects are mounted
@@ -59,14 +51,6 @@ void NicMgrService::OnMountComplete() {
     for (vector<delphi::objects::PortStatusPtr>::iterator port=list.begin();
          port!=list.end(); ++port) {  
         g_port_rctr->update_port_status(*port);
-    }
-
-    // walk all accelerator objects and handle them
-    vector <delphi::objects::AccelHwRingInfoPtr> hw_ring_list =
-        delphi::objects::AccelHwRingInfo::List(sdk_);
-    for (vector<delphi::objects::AccelHwRingInfoPtr>::iterator ring=hw_ring_list.begin();
-         ring!=hw_ring_list.end(); ++ring) {  
-        accel_ring_info_resync(*ring);
     }
 }
 
@@ -127,25 +111,6 @@ error port_svc::update_port_status(PortStatusPtr port) {
         devmgr->DevLinkDownHandler(port_id);
     }
 
-    return error::OK();
-}
-
-error AccelHwRingInfoSvc::OnAccelHwRingInfoCreate(AccelHwRingInfoPtr ring) {
-
-    /*
-     * nicmgrd Accel_PF manages the creation of all AccelHwRingInfo objects
-     * hence this reactor is a no-op.
-     */
-    printf("Received %s\n", __FUNCTION__);
-    return error::OK();
-}
-
-error AccelHwRingInfoSvc::OnAccelHwRingInfoDelete(AccelHwRingInfoPtr ring) {
-
-    /*
-     * See above
-     */
-    printf("Received %s\n", __FUNCTION__);
     return error::OK();
 }
 
