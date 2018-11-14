@@ -197,7 +197,7 @@ def Abort():
 
 def PrintCommandResults(cmd):
     Logger.header('COMMAND')
-    Logger.info("%s (Exit Code = %d)" % (cmd.command, cmd.exit_code))
+    Logger.info("%s (Exit Code = %d) (TimedOut = %s)" % (cmd.command, cmd.exit_code, cmd.timed_out))
     def PrintOutputLines(name, output):
         lines = output.split('\n')
         if len(lines): Logger.header(name)

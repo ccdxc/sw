@@ -70,12 +70,13 @@ class TestcaseDataIters:
         return self.__summary
 
 class TestcaseData:
-    def __init__(self, dirname, args):
+    def __init__(self, tcinst, args):
         self.__status = types.status.FAILURE
         self.__timer = timeprofiler.TimeProfiler()
+        self.__tcinst = tcinst
         self.args = args
         self.iterators = TestcaseDataIters()
-        self.__logs_dir = "%s/tcdata/%s/" % (api.GetTestsuiteLogsDir(), dirname)
+        self.__logs_dir = "%s/tcdata/%s/" % (api.GetTestsuiteLogsDir(), tcinst)
         os.system("mkdir -p %s" % self.__logs_dir)
         return
 
@@ -99,6 +100,9 @@ class TestcaseData:
 
     def TotalTime(self):
         return self.__timer.TotalTime()
+
+    def Name(self):
+        return self.__tcinst
 
 class Testcase:
     def __init__(self, spec):
@@ -309,7 +313,7 @@ class Testcase:
         for iter_data in self.__iters:
             iters_str = iter_data.iterators.Summary()
             print(types.FORMAT_TESTCASE_SUMMARY %\
-                  (self.__spec.name, self.__get_owner(),
+                  (iter_data.Name(), self.__get_owner(),
                    types.status.str(iter_data.GetStatus()).title(), 
                    iter_data.TotalTime()))
             if iters_str: print("- Iterators: %s" % iters_str)

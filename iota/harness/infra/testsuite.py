@@ -9,6 +9,7 @@ import iota.harness.api as api
 import iota.harness.infra.testcase as testcase
 import iota.harness.infra.topology as topology
 import iota.harness.infra.logcollector as logcollector
+import iota.harness.infra.utils.utils as utils
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -205,6 +206,7 @@ class TestSuite:
         try:
             self.result = self.__execute_testcases()
         except:
+            utils.LogException(Logger)
             Logger.error("EXCEPTION: Aborting Testcase Execution.")
             self.result = types.status.FAILURE
 

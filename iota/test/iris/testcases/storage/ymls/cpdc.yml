@@ -23,9 +23,10 @@ svc_chains:
 
 tests:
   - test:
-      idx: 1
-      svc_chains: 1
-      repeat: 'param::repeat'
+      idx           : 1
+      svc_chains    : 1
+      repeat        : 'param::repeat'
+      batch_depth   : 'param::batch_depth'
       validations:
         - retcode_compare:
             idx: 1
@@ -44,9 +45,10 @@ tests:
         #    len: 2048
 
   - test:
-      idx: 2
-      svc_chains: 2
-      repeat: 'param::repeat'
+      idx           : 2
+      svc_chains    : 2
+      repeat        : 'param::repeat'
+      batch_depth   : 'param::batch_depth'
       validations:
         - size_compare:
             idx: 1

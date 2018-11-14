@@ -90,7 +90,6 @@ def __add_workloads():
 
 def Main(step):
     # time.sleep(120)
-    api.Logger.SetLoggingLevel(api.types.loglevel.DEBUG)
     api.Init()
     agent_ips = api.GetNaplesMgmtIpAddresses()
     agent_api.Init(agent_ips)

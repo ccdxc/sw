@@ -42,8 +42,11 @@ def Trigger(tc):
         api.Trigger_AddHostCommand(req, n, "dmesg -c 2>&1 > /dev/null")
         api.Trigger_AddHostCommand(req, n, "rmmod pencake", rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "rmmod sonic", rundir = pnsodefs.PNSO_DRIVER_DIR)
-        api.Trigger_AddHostCommand(req, n, "insmod sonic.ko core_count=2", rundir = pnsodefs.PNSO_DRIVER_DIR)
-        api.Trigger_AddHostCommand(req, n, "insmod pencake.ko repeat=1", rundir = pnsodefs.PNSO_DRIVER_DIR)
+        api.Trigger_AddHostCommand(req, n, 
+                    "insmod sonic.ko core_count=%d" % pnsodefs.PNSO_DRIVER_MAX_CORE_COUNT,
+                    rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = 300)
+        api.Trigger_AddHostCommand(req, n, "insmod pencake.ko repeat=1",
+                                   rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "sleep 10")
         cmd = api.Trigger_AddHostCommand(req, n, "dmesg | tail -n 100")
         tc.dmesg_commands.append(cmd)

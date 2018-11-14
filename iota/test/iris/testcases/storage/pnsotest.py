@@ -35,10 +35,13 @@ GlobalOptions = parser.parse_args()
 old_success_count = GetSuccessCount()
 old_failure_count = GetFailureCount()
 
+for cfgidx in range(10):
+    os.system("echo "" >  /sys/module/pencake/cfg/%d" % cfgidx)
+
 num_cfgs = len(GlobalOptions.cfg)
 for cfgidx in range(num_cfgs):
     os.system("cp -v %s /sys/module/pencake/cfg/%d" % (GlobalOptions.cfg[cfgidx], cfgidx))
-os.system("cp -v %s /sys/module/pencake/cfg/%d" % (GlobalOptions.test, num_cfgs + 1))
+os.system("cp -v %s /sys/module/pencake/cfg/%d" % (GlobalOptions.test, num_cfgs))
 os.system("echo start > /sys/module/pencake/cfg/ctl")
 
 time.sleep(GlobalOptions.wait)

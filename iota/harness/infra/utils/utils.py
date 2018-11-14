@@ -1,5 +1,10 @@
 #! /usr/bin/python3
 import pdb
+import pprint
+import traceback
+import re
+import sys
+
 from google.protobuf import text_format
 class Dict2Enum(object):
     def __init__(self, entries):
@@ -30,3 +35,13 @@ def LogMessageContents(hdrstr, msg, logfn):
     for s in msgstr:
         if s != '': logfn("- %s: " % s)
     return
+
+def LogException(lg):
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    lg.info("Exception: %s-- %s" % (exc_type, exc_value))
+    lg.info('-' * 60)
+    backtrace = pprint.pformat(traceback.format_tb(exc_traceback))
+    for line in backtrace.split('\n'):
+        lg.info("%s" % line)
+    lg.info('-' * 60)
+

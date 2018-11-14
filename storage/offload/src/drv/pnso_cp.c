@@ -121,7 +121,7 @@ compress_setup(struct service_info *svc_info,
 			svc_info->si_dst_sgl.sgl, status_desc,
 			svc_info->si_src_blist.len, threshold_len);
 	clear_insert_header(flags, cp_desc);
-
+#if 0
 	if (is_dflag_zero_pad_enabled(flags)) {
 		err = seq_setup_cp_pad_chain_params(svc_info, cp_desc,
 				status_desc);
@@ -131,7 +131,7 @@ compress_setup(struct service_info *svc_info,
 			goto out_status_desc;
 		}
 	}
-
+#endif
 	svc_info->si_type = PNSO_SVC_TYPE_COMPRESS;
 	svc_info->si_desc_flags = flags;
 	svc_info->si_desc = cp_desc;

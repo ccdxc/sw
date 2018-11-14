@@ -43,20 +43,6 @@ def __prepare_ymls(tc):
 
     return
 
-
-def __setup_default_params(tc):
-    def __set(tc, key, value):
-        if getattr(tc.args, key, None) is None and\
-           getattr(tc.iterators, key, None) is None:
-            setattr(tc.args, key, value)
-        return
-    __set(tc, 'repeat', pnsodefs.PNSO_TEST_DEFAULT_REPEAT) 
-    __set(tc, 'key1', pnsodefs.PNSO_TEST_DEFAULT_KEY1)
-    __set(tc, 'key2', pnsodefs.PNSO_TEST_DEFAULT_KEY2)
-    __set(tc, 'wait', pnsodefs.PNSO_TEST_DEFAULT_WAIT)
-    __set(tc, 'pcqdepth', pnsodefs.PNSO_TEST_DEFAULT_PCQDEPTH)
-    return
-
 def __get_blocksize(tc):
     if getattr(tc.args, 'blocksize', None) is not None:
         return getattr(tc.args, 'blocksize')
@@ -64,6 +50,26 @@ def __get_blocksize(tc):
         return getattr(tc.iterators, 'blocksize')
     return pnsodefs.PNSO_TEST_DEFAULT_BLOCKSIZE
 
+def __get_batch_depth(tc):
+    if getattr(tc.args, 'batch_depth', None) is not None:
+        return getattr(tc.args, 'batch_depth')
+    if getattr(tc.iterators, 'batch_depth', None) is not None:
+        return getattr(tc.iterators, 'batch_depth')
+    return pnsodefs.PNSO_TEST_DEFAULT_BLOCKSIZE
+
+def __setup_default_params(tc):
+    def __set(tc, key, value):
+        if getattr(tc.args, key, None) is None and\
+           getattr(tc.iterators, key, None) is None:
+            setattr(tc.args, key, value)
+        return
+    __set(tc, 'repeat', pnsodefs.PNSO_TEST_DEFAULT_REPEAT*__get_batch_depth(tc)) 
+    __set(tc, 'key1', pnsodefs.PNSO_TEST_DEFAULT_KEY1)
+    __set(tc, 'key2', pnsodefs.PNSO_TEST_DEFAULT_KEY2)
+    __set(tc, 'wait', pnsodefs.PNSO_TEST_DEFAULT_WAIT)
+    __set(tc, 'pcqdepth', pnsodefs.PNSO_TEST_DEFAULT_PCQDEPTH)
+    __set(tc, 'batch_depth', pnsodefs.PNSO_TEST_DEFAULT_BATCH_DEPTH)
+    return
 
 
 def Setup(tc):
