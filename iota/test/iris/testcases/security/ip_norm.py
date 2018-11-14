@@ -35,7 +35,7 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    api.Logger.Info("Validating ...")
+    api.Logger.info("Validating ...")
     if tc.resp is None:
         return api.types.status.FAILURE
 

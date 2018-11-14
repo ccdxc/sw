@@ -10,6 +10,13 @@ import iota.harness.infra.types as types
 import iota.harness.infra.utils.loader as loader
 import iota.harness.api as api
 
+def get_owner(file):
+    result = subprocess.run([ "git", "log", "-n", "1", "--format=%an",
+			  "%s" % file], stdout=subprocess.PIPE)
+    owner = result.stdout.decode('utf-8')
+    owner = owner.replace('\n', '').split(' ')[0]
+    return owner
+
 class VerifStep:
     def __init__(self, spec):
         self.__spec = spec
@@ -23,18 +30,25 @@ class VerifStep:
         return
 
     def __execute(self):
-        return
+        Logger.debug("Running testcase verif module: %s" % self.__spec.step)
+        return loader.RunCallback(self.__mod, 'Main', True, None) 
 
     def Main(self):
         self.__timer.Start()
-        self.__execute()
+        ret = self.__execute()
         self.__timer.Stop()
-        return
+        if ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+        return ret
+
+    def __get_owner(self):
+        return get_owner(self.__mod.__file__)
 
     def PrintResultSummary(self):
         modname = "- %s" % self.__mod.__name__.split('.')[-1]
-        print(types.FORMAT_TESTCASE_SUMMARY % (modname, "Pass", self.__timer.TotalTime()))
+        print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), "Pass", self.__timer.TotalTime()))
         return types.status.SUCCESS
+
 
 class TestcaseDataIters:
     def __init__(self):
@@ -215,6 +229,15 @@ class Testcase:
             self.__stats_error += 1
         return
 
+    def __run_common_verifs(self):
+        result = types.status.SUCCESS
+        for s in self.__verifs:
+            status = s.Main()
+            if status != types.status.SUCCESS:
+                result = status
+        return result
+
+
     def __execute(self):
         ignored = getattr(self.__spec, "ignore", False)
         
@@ -242,26 +265,31 @@ class Testcase:
                 loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 result = setup_result
             else:
-                trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
-                if trigger_result != types.status.SUCCESS:
-                    result = trigger_result
+                    trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
+                    if trigger_result != types.status.SUCCESS:
+                        result = trigger_result
 
-                verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
-                if verify_result != types.status.SUCCESS:
-                    result = verify_result
+                    verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
+                    if verify_result != types.status.SUCCESS:
+                        result = verify_result
 
-                teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
-                if teardown_result != types.status.SUCCESS:
-                    Logger.error("Teardown callback failed.")
-                    result = teardown_result
+                    verify_result = self.__run_common_verifs();
+                    if verify_result != types.status.SUCCESS:
+                        Logger.error("Common verifs failed.")
+                        result = verify_result
 
-                iter_data.SetStatus(result)
-                iter_data.StopTime()
+                    teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
+                    if teardown_result != types.status.SUCCESS:
+                        Logger.error("Teardown callback failed.")
+                        result = teardown_result
 
-                if self.__aborted:
-                    iter_data.SetStatus(types.status.ABORTED)
-                    self.__update_stats(types.status.ABORTED)
-                    return types.status.FAILURE
+                    iter_data.SetStatus(result)
+                    iter_data.StopTime()
+
+                    if self.__aborted:
+                        iter_data.SetStatus(types.status.ABORTED)
+                        self.__update_stats(types.status.ABORTED)
+                        return types.status.FAILURE
  
             if result != types.status.SUCCESS:
                 if ignored:
@@ -274,12 +302,8 @@ class Testcase:
         return final_result
 
     def __get_owner(self):
-        result = subprocess.run([ "git", "log", "-n", "1", "--format=%an",
-                                  "%s" % self.__tc.__file__], stdout=subprocess.PIPE)
-        owner = result.stdout.decode('utf-8')
-        owner = owner.replace('\n', '').split(' ')[0]
+        return get_owner(self.__tc.__file__)
         
-        return owner
 
     def PrintResultSummary(self):
         for iter_data in self.__iters:

@@ -3,5 +3,5 @@
 import iota.harness.api as api
 
 def Main(tc):
-    api.logger.info("Verify Cores.")
-    return api.types.SUCCESS
+    api.Logger.info("Verify Cores.")
+    return api.types.status.SUCCESS

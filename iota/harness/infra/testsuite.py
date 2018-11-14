@@ -71,8 +71,8 @@ class TestSuite:
                 Logger.info("Skipping disabled test case %s" % tc_spec.name)
                 continue
             tc_spec.packages = self.__spec.packages
-            if getattr(tc_spec, 'verifs', None):
-                tc_spec.verifs.extend(self.__spec.common.verifs)
+            if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'verifs', None):
+                tc_spec.verifs = self.__spec.common.verifs
             tc = testcase.Testcase(tc_spec)
             self.__tcs.append(tc)
         return types.status.SUCCESS
