@@ -25,6 +25,11 @@ def Trigger(tc):
     api.Trigger_AddNaplesCommand(req, w1.node_name, "taskset 0x8 ifconfig inb_mnic1 30.30.30.30 netmask 255.255.255.0 up")
     api.Trigger_AddNaplesCommand(req, w2.node_name, "taskset 0x8 ifconfig inb_mnic1 30.30.30.31 netmask 255.255.255.0 up")
 
+    #int_mnic0 interface
+    api.Trigger_AddNaplesCommand(req, w1.node_name, "taskset 0x8 ifconfig int_mnic0 40.40.40.40 netmask 255.255.255.0 up")
+    api.Trigger_AddNaplesCommand(req, w2.node_name, "taskset 0x8 ifconfig int_mnic0 40.40.40.41 netmask 255.255.255.0 up")
+
+
     trig_resp = api.Trigger(req)
 
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)

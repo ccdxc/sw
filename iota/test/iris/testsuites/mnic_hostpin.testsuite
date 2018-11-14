@@ -1,10 +1,10 @@
 meta:
-    name        : mnic_sanity
-    enable      : False
+    name        : mnic_hostpin_sanity
+    enable      : True
     description : Mnic Sanity Test Suite
     mode        : hardware
     cfgmode     : netagent
-    nicmode     : classic
+    nicmode     : hostpin
 packages:
     - iota.test.iris
 images:
@@ -24,6 +24,15 @@ testcases:
     -   name    : Make MNIC interface Up
         testcase: testcases.mnic.if_up
         ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : Ping on MNIC Internal Mgmt interface
+        testcase: testcases.mnic.ping_int_mnic0
+        ignore: False
+        args    :
+            mtu: 1500
         verifs:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw

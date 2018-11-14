@@ -1,0 +1,69 @@
+meta:
+    name        : mnic_classic_sanity
+    enable      : True
+    description : Mnic Sanity Test Suite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+packages:
+    - iota.test.iris
+images:
+#    naples: /sw/nic/obj/images/naples-release-v1.tgz
+#    venice: /sw/bin/venice.tgz
+#    drivers: /sw/platform/drivers.tgz
+setup:
+    topology: test/iris/topologies/2Naples_BM/2Naples.topology
+    
+    config  : 
+        - step : config.netagent.hw_push_config
+common:
+    verifs:
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+testcases:
+    -   name    : Make MNIC interface Up
+        testcase: testcases.mnic.if_up
+        ignore: False
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : Ping on MNIC Internal Mgmt interface
+        testcase: testcases.mnic.ping_int_mnic0
+        ignore: False
+        args    :
+            mtu: 1500
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : Ping on MNIC OOB interface
+        testcase: testcases.mnic.ping_oob
+        ignore: True
+        args    :
+            mtu: 1500
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : Ping on MNIC Inband-0 interface
+        testcase: testcases.mnic.ping_inb0
+        ignore: False
+        args    :
+            mtu: 1500
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : Ping on MNIC Inband-1 interface
+        testcase: testcases.mnic.ping_inb1
+        ignore: False
+        args    :
+            mtu: 1500
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores
+
