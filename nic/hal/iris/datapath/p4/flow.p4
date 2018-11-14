@@ -66,13 +66,15 @@ action flow_miss() {
     modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
 
     if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
-        modify_field(control_metadata.flow_miss, TRUE);
+        modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
+                     (1 << P4_I2E_FLAGS_FLOW_MISS));
         modify_field(control_metadata.flow_miss_ingress, TRUE);
         modify_field(control_metadata.dst_lport, CPU_LPORT);
     }
 
     if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_CPU) {
-        modify_field(control_metadata.flow_miss, TRUE);
+        modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
+                     (1 << P4_I2E_FLAGS_FLOW_MISS));
         modify_field(control_metadata.flow_miss_ingress, TRUE);
         modify_field(control_metadata.dst_lport, CPU_LPORT);
     }
@@ -324,14 +326,14 @@ action flow_hash_info(entry_valid, export_en,
 
     // no further matches
     if ((hash1 == 0) and (hint1 == 0)) {
-        modify_field(control_metadata.flow_miss, TRUE);
+        modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
+                     (1 << P4_I2E_FLAGS_FLOW_MISS));
         modify_field(control_metadata.flow_miss_ingress, TRUE);
         modify_field(flow_info_metadata.flow_index, 0);
     }
 
     // resolve hint and pick next hash for recirc path
-    if ((control_metadata.flow_miss == TRUE) and
-        (hash1 == scratch_metadata.flow_hash1)) {
+    if (hash1 == scratch_metadata.flow_hash1) {
         recirc_packet(RECIRC_FLOW_HASH_OVERFLOW);
         // do not assign it to larger variable.. can result in K+D violation
         //modify_field(recirc_header.overflow_entry_index, hint1);

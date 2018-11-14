@@ -10,8 +10,6 @@ struct phv_        p;
 %%
 
 flow_hash_info:
-  K_DBG_WR(0x40)
-  DBG_WR(0x48, r1)
   phvwr       p.rewrite_metadata_entropy_hash, r1
   or          r7, k.flow_lkp_metadata_lkp_type, k.flow_lkp_metadata_lkp_inst, CPU_LKP_FLAGS_LKP_INST
   or          r7, r7, k.flow_lkp_metadata_lkp_dir, CPU_LKP_FLAGS_LKP_DIR
@@ -37,15 +35,13 @@ flow_hash_info:
   seq         c1, d.flow_hash_info_d.more_hashs, 1
   bcf         [c1&c2], flow_hash_more_hashs
   phvwr       p.recirc_header_valid, 0
-  DBG_WR(0x49, 0x49)
-  phvwrpair.e p.control_metadata_flow_miss_ingress, 1, \
-                p.control_metadata_flow_miss[0], 1
-  phvwr       p.flow_info_metadata_flow_index, 0
+  phvwr       p.control_metadata_flow_miss_ingress, 1
+  phvwr.e     p.control_metadata_i2e_flags[P4_I2E_FLAGS_FLOW_MISS], 1
+  phvwr.f     p.flow_info_metadata_flow_index, 0
 
 flow_hash_hit:
-  DBG_WR(0x4a, d.flow_hash_info_d.flow_index)
   phvwr.e     p.recirc_header_valid, 0
-  phvwr       p.flow_info_metadata_flow_index, d.flow_hash_info_d.flow_index
+  phvwr.f     p.flow_info_metadata_flow_index, d.flow_hash_info_d.flow_index
 
 flow_hash_hint1:
   b           flow_hash_recirc

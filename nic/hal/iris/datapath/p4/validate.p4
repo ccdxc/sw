@@ -61,7 +61,7 @@ action validate_ipv4_flow_key() {
         (flow_lkp_metadata.lkp_src == 0xffffffff) or
         (flow_lkp_metadata.lkp_dst == 0) or
         ((flow_lkp_metadata.lkp_dst & 0xff000000) == 0x7f000000) or
-        ((l4_metadata.ip_normalization_en == TRUE) and 
+        ((l4_metadata.ip_normalization_en == TRUE) and
          (flow_lkp_metadata.lkp_src == flow_lkp_metadata.lkp_dst))) {
         malformed_packet();
     }
@@ -74,7 +74,7 @@ action validate_ipv6_flow_key() {
          0xff000000000000000000000000000000) or
         (flow_lkp_metadata.lkp_dst == 0x00000000000000000000000000000000) or
         (flow_lkp_metadata.lkp_dst == 0x00000000000000000000000000000001) or
-        ((l4_metadata.ip_normalization_en == TRUE) and 
+        ((l4_metadata.ip_normalization_en == TRUE) and
          (flow_lkp_metadata.lkp_src == flow_lkp_metadata.lkp_dst))) {
         malformed_packet();
     }
@@ -116,7 +116,7 @@ action validate_tunneled_packet() {
     // For tunneled packet we will also validate the outer-L2 Header
     // Not validating outer-L3 header because if we decided to terminate
     // then the outer L3 header is mostly good (Like DIP should be valid
-    // as we do a lookup of it in input_mapping_tunnel table, where as 
+    // as we do a lookup of it in input_mapping_tunnel table, where as
     // outer SIP might still be invalid).
     if ((ethernet.srcAddr == 0) or
         (ethernet.dstAddr == 0) or
@@ -191,4 +191,8 @@ table validate_packet {
         validate_packet;
     }
     default_action : validate_packet;
+}
+
+control process_validation {
+    apply(validate_packet);
 }

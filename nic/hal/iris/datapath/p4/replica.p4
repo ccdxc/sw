@@ -2,7 +2,14 @@
 /* Replica processing                                                        */
 /*****************************************************************************/
 action set_replica_rewrites() {
-    modify_field(control_metadata.flow_miss_egress, control_metadata.flow_miss);
+    if ((control_metadata.i2e_flags & (1 << P4_I2E_FLAGS_FLOW_MISS)) == TRUE) {
+         modify_field(control_metadata.flow_miss_egress, TRUE);
+    }
+    if ((control_metadata.i2e_flags & (1 << P4_I2E_FLAGS_UPLINK)) == TRUE) {
+        modify_field(control_metadata.uplink_e, TRUE);
+    }
+    modify_field(control_metadata.nic_mode_e,
+                 control_metadata.i2e_flags >> P4_I2E_FLAGS_NIC_MODE);
     modify_field(tunnel_metadata.tunnel_originate_egress,
                  tunnel_metadata.tunnel_originate);
     modify_field(tunnel_metadata.tunnel_terminate_egress,
@@ -62,8 +69,4 @@ table replica {
     actions {
         set_replica_rewrites;
     }
-}
-
-control process_replica {
-    apply(replica);
 }

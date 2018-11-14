@@ -88,5 +88,7 @@ table ipsg {
 }
 
 control process_ipsg {
-    apply(ipsg);
+    if (control_metadata.nic_mode == NIC_MODE_SMART) {
+        apply(ipsg);
+    }
 }

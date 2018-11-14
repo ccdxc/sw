@@ -62,9 +62,9 @@ tx_fixup_upd_tcp_seq:
     bcf             [!c1], tx_fixup_rdma_done
     .assert(offsetof(p, roce_bth_1_icrc) - offsetof(p, udp_1_icrc) == 2)
     phvwrmi.c1      p.{roce_bth_1_icrc...udp_1_icrc}, 0x7, 0x5
-    .assert(offsetof(p, ipv4_1_icrc) - offsetof(p, ipv6_1_icrc) == 9)
-    or              r7, k.ipv6_1_valid, k.ipv4_1_valid, 9
-    phvwrm.c1       p.{ipv4_1_icrc...ipv6_1_icrc}, r7, 0x201
+    .assert(offsetof(p, ipv4_1_icrc) - offsetof(p, ipv6_1_icrc) == 5)
+    or              r7, k.ipv6_1_valid, k.ipv4_1_valid, 5
+    phvwrm.c1       p.{ipv4_1_icrc...ipv6_1_icrc}, r7, 0x21
     sub             r1, r1, k.p4plus_to_p4_udp_opt_bytes
     bcf             [c1], tx_fixup_done
     phvwr.c1.e      p.capri_deparser_len_icrc_payload_len, r1

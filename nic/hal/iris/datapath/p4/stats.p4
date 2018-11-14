@@ -17,10 +17,18 @@ action ingress_tx_stats() {
         flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
         modify_field(capri_intrinsic.tm_replicate_en, FALSE);
     }
-    if (control_metadata.uplink == TRUE and
-        control_metadata.nic_mode == NIC_MODE_CLASSIC and
-        (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST or
-         flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST)) {
+
+    modify_field(control_metadata.i2e_flags,
+		 control_metadata.uplink << P4_I2E_FLAGS_UPLINK,
+                 (1 << P4_I2E_FLAGS_UPLINK));
+    modify_field(control_metadata.i2e_flags,
+                 control_metadata.nic_mode << P4_I2E_FLAGS_NIC_MODE,
+                 (1 << P4_I2E_FLAGS_NIC_MODE));
+
+    if ((control_metadata.uplink == TRUE) and
+        (control_metadata.nic_mode == NIC_MODE_CLASSIC) and
+        ((flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) or
+         (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST))) {
         modify_field(control_metadata.dst_lport, 0);
     }
 
@@ -289,7 +297,8 @@ control process_stats {
     if (capri_intrinsic.drop == TRUE) {
         apply(drop_stats);
     }
-    if (control_metadata.flow_miss_ingress == FALSE) {
+    if ((control_metadata.nic_mode == NIC_MODE_SMART) and
+        (control_metadata.flow_miss_ingress == FALSE)) {
         apply(flow_stats);
     }
     apply(ingress_tx_stats);
@@ -347,5 +356,7 @@ control process_tx_stats {
     if (capri_intrinsic.drop == TRUE) {
         apply(egress_drop_stats);
     }
-    apply(tx_stats);
+    if (control_metadata.uplink_e == FALSE) {
+        apply(tx_stats);
+    }
 }

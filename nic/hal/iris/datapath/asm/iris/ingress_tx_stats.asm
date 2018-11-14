@@ -15,6 +15,10 @@ ingress_tx_stats:
     seq         c3, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
     setcf       c2, [c2 & c3]
     phvwr.c2    p.capri_intrinsic_tm_replicate_en, 0
+    or          r1, r0, k.control_metadata_uplink, P4_I2E_FLAGS_UPLINK
+    or          r1, r1, k.control_metadata_nic_mode, P4_I2E_FLAGS_NIC_MODE
+    phvwrm      p.control_metadata_i2e_flags, r1, \
+                    ((1 << P4_I2E_FLAGS_UPLINK) | (1 << P4_I2E_FLAGS_NIC_MODE))
     seq         c2, k.control_metadata_uplink, TRUE
     seq.c2      c2, k.control_metadata_nic_mode, TRUE
     setcf       c2, [c2 & !c3]

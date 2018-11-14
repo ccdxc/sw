@@ -259,9 +259,15 @@ action p4plus_app_rdma() {
                  control_metadata.p4plus_app_id);
     if (ipv4.valid == TRUE) {
         modify_field(p4_to_p4plus_roce.ecn, ipv4.diffserv, 0x3);
+        if (control_metadata.rdma_ud == TRUE) {
+            add_header(p4_to_p4plus_roce_ipv4);
+        }
     } else {
         if (ipv6.valid == TRUE) {
             modify_field(p4_to_p4plus_roce.ecn, ipv6.trafficClass, 0x3);
+            if (control_metadata.rdma_ud == TRUE) {
+                add_header(p4_to_p4plus_roce_ipv6);
+            }
         }
     }
 

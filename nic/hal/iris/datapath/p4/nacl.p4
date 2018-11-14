@@ -26,7 +26,8 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
     }
 
     if (force_flow_hit == TRUE) {
-        modify_field(control_metadata.flow_miss, FALSE);
+        modify_field(control_metadata.i2e_flags, 0,
+                     (1 << P4_I2E_FLAGS_FLOW_MISS));
         modify_field(control_metadata.flow_miss_ingress, FALSE);
     }
     if (qid_en == TRUE) {

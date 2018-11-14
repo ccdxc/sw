@@ -1887,7 +1887,3 @@ control process_normalization {
     apply(tcp_options_fixup);
 }
 #endif
-
-control process_validation {
-    apply(validate_packet);
-}

@@ -67,17 +67,17 @@ packets:
         payloadsize : ref://testcase/packets/id=BASE_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ROCE_UD_IPV4,v6=ROCE_UD_IPV6
         headers     :
-            ipv4:
-                src     : ref://testcase/config/rdmasession/session/responder/addr
-                dst     : ref://testcase/config/rdmasession/session/initiator/addr
-                ttl     : 64
-                len     : 116 #from the IN_PKT
             pad:
                 data0   : 00000000
                 data1   : 00000000
                 data2   : 00000000
                 data3   : 00000000
                 data4   : 00000000
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+                len     : 116 #from the IN_PKT
             ipv6:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr

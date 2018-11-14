@@ -39,10 +39,10 @@ input_properties_mac_vlan:
   phvwr         p.{control_metadata_src_lif,control_metadata_flow_miss_idx}, r1
   phvwr         p.flow_miss_metadata_tunnel_originate, \
                     d.input_properties_mac_vlan_d.tunnel_originate
-  or            r1, d.input_properties_mac_vlan_d.tunnel_vnid, \
-                    d.input_properties_mac_vlan_d.tunnel_rewrite_index, 30
-  phvwr         p.{flow_miss_metadata_tunnel_rewrite_index,_flit_pad__922,\
-                    flow_miss_metadata_tunnel_vnid}, r1
+  phvwr         p.flow_miss_metadata_tunnel_rewrite_index, \
+                    d.input_properties_mac_vlan_d.tunnel_rewrite_index
+  phvwr         p.flow_miss_metadata_tunnel_vnid, \
+                    d.input_properties_mac_vlan_d.tunnel_vnid
   or            r1, d.input_properties_mac_vlan_d.src_lport, \
                     d.input_properties_mac_vlan_d.dst_lport, 16
   phvwrpair     p.{control_metadata_dst_lport,control_metadata_src_lport}, r1, \

@@ -331,10 +331,10 @@
 /* 2. ALGs have some requirements where the requirment is to drive           */
 /*    specific qnum per flow but that is not possible with this solution.    */
 /*****************************************************************************/
-#define P4_NW_MCAST_INDEX_FIN_COPY                     1
-#define P4_NW_MCAST_INDEX_RST_COPY                     2
-#define P4_NW_MCAST_INDEX_FLOW_REL_COPY                3
-#define P4_NW_MCAST_INDEX_P4PT_COPY                    4
+#define P4_NW_MCAST_INDEX_FIN_COPY      1
+#define P4_NW_MCAST_INDEX_RST_COPY      2
+#define P4_NW_MCAST_INDEX_FLOW_REL_COPY 3
+#define P4_NW_MCAST_INDEX_P4PT_COPY     4
 
 
 /*****************************************************************************/
@@ -348,4 +348,13 @@
 /*****************************************************************************/
 /* Number of Hints in Flow table                                             */
 /*****************************************************************************/
-#define P4_FLOW_NUM_HINTS_PER_ENTRY                 5
+#define P4_FLOW_NUM_HINTS_PER_ENTRY     5
+
+/*****************************************************************************/
+/* P4 ingress to P4 egress flags                                             */
+/*****************************************************************************/
+#define P4_I2E_FLAGS_FLOW_MISS          0
+#define P4_I2E_FLAGS_TUNNEL_TERMINATE   1
+#define P4_I2E_FLAGS_TUNNEL_ORIGINATE   2
+#define P4_I2E_FLAGS_UPLINK             3
+#define P4_I2E_FLAGS_NIC_MODE           4

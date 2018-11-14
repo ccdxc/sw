@@ -40,9 +40,8 @@ decode_roce_opcode:
 
   // increment splitter offset to conditionally skip eth header for UD RDMA
   add.c1      r1, r1, 14
-  .assert((offsetof(p, p4_to_p4plus_roce_ip_valid) - \
-           offsetof(p, p4_to_p4plus_roce_eth_valid)) == 1)
-  phvwr.c1    p.{p4_to_p4plus_roce_ip_valid, p4_to_p4plus_roce_eth_valid}, 3
+  phvwr.c1    p.p4_to_p4plus_roce_eth_valid, 1
+  phvwr.c1    p.control_metadata_rdma_ud, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, r1
 
   // subtract udp header length 8 and icrc length 4

@@ -3,12 +3,6 @@ meta:
 
 headers:
     - header:
-        id      : ipv4
-        template: ref://store/headers/id=IPV4
-        fields:
-            proto: ipproto/17
-
-    - header:
         id      : pad
         template: ref://store/headers/id=ROCE_UD_IPV4_PAD
         fields:
@@ -17,6 +11,12 @@ headers:
             data2: 00000000
             data3: 00000000
             data4: 00000000
+
+    - header:
+        id      : ipv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/17
 
     - header:
         id      : payload

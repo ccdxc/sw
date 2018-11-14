@@ -10,12 +10,6 @@ struct phv_        p;
 %%
 
 flow_info:
-  K_DBG_WR(0x60)
-  DBG_WR(0x68, d.u.flow_info_d.dst_lport)
-  DBG_WR(0x69, d.u.flow_info_d.rewrite_index)
-  DBG_WR(0x6a, d.u.flow_info_d.rewrite_flags)
-  DBG_WR(0x6b, d.u.flow_info_d.tunnel_rewrite_index)
-
   seq           c1, r5[0], 0
   b.!c1         f_flow_info_thread_1
   //bbne          r5[0], 0, f_flow_info_thread_1
@@ -39,10 +33,11 @@ flow_info:
                     d.u.flow_info_d.tunnel_originate
   phvwr         p.rewrite_metadata_rewrite_index[11:0], \
                     d.u.flow_info_d.rewrite_index
-  phvwr         p.rewrite_metadata_tunnel_rewrite_index[9:0], \
-                    d.u.flow_info_d.tunnel_rewrite_index
-  phvwrpair.e   p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid, \
-                    p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
+  phvwr         p.{rewrite_metadata_tunnel_rewrite_index[9:0], \
+                    rewrite_metadata_tunnel_vnid}, \
+                    d.{u.flow_info_d.tunnel_rewrite_index, \
+                    u.flow_info_d.tunnel_vnid}
+  phvwr.e       p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
 
   // rewrite info
   phvwr.f       p.{nat_metadata_nat_ip...nat_metadata_twice_nat_idx}, \
@@ -86,15 +81,13 @@ f_flow_info_thread_1:
 
 .align
 flow_miss:
-  K_DBG_WR(0x60)
-  DBG_WR(0x6c, 0x6c)
   seq           c1, r5[0], 0
   nop.!c1.e
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   bcf           [c1], validate_ipv4_flow_key
   seq           c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
   bcf           [c1], validate_ipv6_flow_key
-  phvwr         p.control_metadata_flow_miss, 1
+  phvwr         p.control_metadata_i2e_flags[P4_I2E_FLAGS_FLOW_MISS], 1
 
 flow_miss_common:
   seq           c1, k.flow_lkp_metadata_lkp_vrf, r0

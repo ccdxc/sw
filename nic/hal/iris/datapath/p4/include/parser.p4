@@ -112,7 +112,7 @@ header snap_header_t snap_header;
 header vlan_tag_t vlan_tag;
 header mpls_t mpls[MPLS_DEPTH];
 
-@pragma pa_header_union egress ipv6 p4_to_p4plus_roce_ip
+@pragma pa_header_union egress ipv6 p4_to_p4plus_roce_ipv6
 @pragma pa_field_union ingress ipv4.ttl ipv6.nextHdr        // keep ordering so parser can combine
 @pragma pa_field_union ingress ipv4.protocol ipv6.hopLimit  // keep ordering so parser can combine
 @pragma pa_field_union ingress ipv4.identification ipv6.payloadLen
@@ -267,7 +267,26 @@ header p4_to_p4plus_tcp_proxy_sack_header_t p4_to_p4plus_tcp_proxy_sack;
 @pragma synthetic_header
 header ethernet_t p4_to_p4plus_roce_eth;
 @pragma synthetic_header
-header ipv6_t p4_to_p4plus_roce_ip;
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.pad0           tcp_option_four_sack.first_le
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.pad1           tcp_option_four_sack.first_re
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.pad2           tcp_option_four_sack.second_le
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.pad3           tcp_option_four_sack.second_re
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.pad4           tcp_option_four_sack.third_le
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.version        ipv4.version
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.ihl            ipv4.ihl
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.diffserv       ipv4.diffserv
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.totalLen       ipv4.totalLen
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.identification ipv4.identification
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.flags          ipv4.flags
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.fragOffset     ipv4.fragOffset
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.ttl            ipv4.ttl
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.protocol       ipv4.protocol
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.hdrChecksum    ipv4.hdrChecksum
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.srcAddr        ipv4.srcAddr
+@pragma pa_field_union egress p4_to_p4plus_roce_ipv4.dstAddr        ipv4.dstAddr
+header roce_ipv4_t p4_to_p4plus_roce_ipv4;
+@pragma synthetic_header
+header ipv6_t p4_to_p4plus_roce_ipv6;
 
 @pragma synthetic_header
 @pragma pa_field_union egress p4_to_p4plus_classic_nic_ip.ip_sa        ipv6.srcAddr
@@ -1426,7 +1445,8 @@ parser parse_udp_option_unknown {
 @pragma deparse_only
 parser parse_roce_eth {
     extract(p4_to_p4plus_roce_eth);
-    extract(p4_to_p4plus_roce_ip);
+    extract(p4_to_p4plus_roce_ipv4);
+    extract(p4_to_p4plus_roce_ipv6);
     return ingress;
 }
 

@@ -31,7 +31,7 @@ action local_span(dst_lport, truncate_len, span_tm_oq, qid, qid_en) {
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.dest_tm_oq, span_tm_oq);
     modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
-    modify_field(tunnel_metadata.tunnel_originate, FALSE);
+    modify_field(tunnel_metadata.tunnel_originate_egress, FALSE);
     mirror_truncate(truncate_len, FALSE);
 }
 
@@ -44,7 +44,6 @@ action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan, span_tm_
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.dest_tm_oq, span_tm_oq);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
-    modify_field(tunnel_metadata.tunnel_originate, TRUE);
     modify_field(rewrite_metadata.tunnel_vnid, vlan);
     mirror_truncate(truncate_len, FALSE);
 }
@@ -61,7 +60,6 @@ action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index, span_tm_oq) 
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.dest_tm_oq, span_tm_oq);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
-    modify_field(tunnel_metadata.tunnel_originate, TRUE);
     mirror_truncate(truncate_len, TRUE);
 }
 

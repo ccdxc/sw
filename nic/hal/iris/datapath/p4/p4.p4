@@ -78,7 +78,6 @@ header_type control_metadata_t {
         src_tm_iq                      : 5;
         normalization_cpu_reason       : 8;
         ingress_bypass                 : 1;
-        egress_bypass                  : 1;
         ipsg_enable                    : 1;
         recirc_reason                  : 2;
         uplink                         : 1;
@@ -94,9 +93,11 @@ header_type control_metadata_t {
         src_lport                      : 11;
         dst_lport                      : 11;
         clear_promiscuous_repl         : 1;
-        flow_miss                      : 1;
-        flow_miss_ingress              : 1;  // NCC workaround for predication
-        flow_miss_egress               : 1;  // NCC workaround for predication
+        i2e_flags                      : 8;
+        flow_miss_ingress              : 1;  // workaround for predication
+        flow_miss_egress               : 1;  // workaround for predication
+        uplink_e                       : 1;  // workaround for predication
+        nic_mode_e                     : 1;  // workaround for predication
         lkp_flags_egress               : 8;
         vlan_strip                     : 1;
         span_copy                      : 1;
@@ -113,6 +114,7 @@ header_type control_metadata_t {
         same_if_check_failed           : 1;
         mirror_on_drop_en              : 1;
         mirror_on_drop_session_id      : 8;
+        rdma_ud                        : 1;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;
@@ -359,14 +361,11 @@ control ingress {
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
-    if (control_metadata.egress_bypass == FALSE) {
-        process_replica();
-        process_output_mapping();
-        process_roce();
-        process_rewrites();
-        process_policer();
-        process_ddos_egress();
-    }
+    process_output_mapping();
+    process_roce();
+    process_rewrites();
+    process_policer();
+    process_ddos_egress();
     process_tx_stats();
     process_checksum_computation();
 }

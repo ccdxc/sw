@@ -91,12 +91,15 @@ control process_rewrites {
     if (control_metadata.span_copy == TRUE) {
         apply(mirror);
     } else {
+        apply(replica);
         if (tunnel_metadata.tunnel_terminate_egress == TRUE) {
             apply(tunnel_decap_copy_inner);
             apply(tunnel_decap);
         }
-        apply(twice_nat);
-        apply(rewrite);
+        if (control_metadata.nic_mode_e == NIC_MODE_SMART) {
+            apply(twice_nat);
+            apply(rewrite);
+        }
     }
     if (tunnel_metadata.tunnel_originate_egress == TRUE) {
         apply(tunnel_encap_update_inner);

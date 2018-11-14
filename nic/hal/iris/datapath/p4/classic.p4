@@ -12,11 +12,6 @@ action registered_macs(dst_lport, multicast_en) {
         modify_field(control_metadata.dst_lport, dst_lport);
     }
 
-    // miss action
-    //if (control_metadata.uplink == FALSE) {
-    //    return
-    //}
-
     // Current assumption is for input_properties miss case we don't
     // need to honor promiscuous receivers list.
     if (flow_lkp_metadata.lkp_vrf == 0) {

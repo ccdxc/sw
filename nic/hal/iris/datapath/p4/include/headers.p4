@@ -558,6 +558,28 @@ header_type icrc_t {
     }
 }
 
+header_type roce_ipv4_t {
+    fields {
+        pad0 : 32;
+        pad1 : 32;
+        pad2 : 32;
+        pad3 : 32;
+        pad4 : 32;
+        version : 4;
+        ihl : 4;
+        diffserv : 8;
+        totalLen : 16;
+        identification : 16;
+        flags : 3;
+        fragOffset : 13;
+        ttl : 8;
+        protocol : 8;
+        hdrChecksum : 16;
+        srcAddr : 32;
+        dstAddr: 32;
+    }
+}
+
 header_type recirc_header_t {
     fields {
         src_tm_iport : 4;

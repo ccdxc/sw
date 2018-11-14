@@ -14,8 +14,8 @@ metadata policer_metadata_t policer_metadata;
 /* Egress policer                                                            */
 /*****************************************************************************/
 action execute_rx_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
-                              color_aware, rsvd, axi_wr_pend,
-                              burst, rate, tbkt) {
+                          color_aware, rsvd, axi_wr_pend,
+                          burst, rate, tbkt) {
     modify_field(policer_metadata.packet_len, capri_p4_intrinsic.packet_len);
     if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
         modify_field(policer_metadata.rx_policer_color, POLICER_COLOR_RED);
@@ -48,7 +48,7 @@ table rx_policer {
 }
 
 action rx_policer_action(permitted_packets, permitted_bytes,
-                             denied_packets, denied_bytes) {
+                         denied_packets, denied_bytes) {
     if (policer_metadata.rx_policer_color == POLICER_COLOR_RED) {
         add(scratch_metadata.policer_packets, denied_packets, 1);
         add(scratch_metadata.policer_bytes, denied_bytes,
