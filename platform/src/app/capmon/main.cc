@@ -56,8 +56,6 @@ main(int argc, char *argv[])
     int i = 1;
     int interval = 0;
 
-    pal_init((char *)"capmon");
-
     while (i < (argc)) {
         if (strcmp(argv[i], "-r") == 0) {
             reset_counters();
