@@ -35,15 +35,15 @@
                 "native_l2seg" : 1
             },
             "rdma" : {
-                "sq_count" : 4096,
-                "rq_count" : 4096,
-                "cq_count" : 2048,
-                "eq_count" : 4096,
-                "adminq_count" : 1,
-                "pid_count" : 256,
-                "pte_count" : 1048576,
-                "key_count" : 262144,
-                "ah_count"  : 8192,
+                "sq_count" : 131072,
+                "rq_count" : 131072,
+                "cq_count" : 131072,
+                "eq_count" : 4192,
+                "adminq_count" : 2,
+                "pid_count" : 32,
+                "pte_count" : 18874368,
+                "key_count" : 131072,
+                "ah_count"  : 131072,
                 "barmap_size" : 1
             }
         }

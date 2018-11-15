@@ -584,15 +584,23 @@ dst_qp:
     add         r4, r1, (CB_UNIT_SIZE_BYTES * 2) //BD Slot
     add         r4, r4, FIELD_OFFSET(sqcb2_t, dst_qp)
     add         r5, d.{mod_qp.qkey_dest_qpn}.wx, r0
-    memwr.h     r4, r5[15:8]
-    add         r4, r4, 2
+
+    
+    // byte based memwr are safer as it wont cause alignment issues
+    // when field changes its offset in future
+    memwr.b     r4, r5[23:16]
+    add         r4, r4, 1
+    memwr.b     r4, r5[15:8]
+    add         r4, r4, 1
     memwr.b     r4, r5[7:0]
 
     add         r5, r2, r0
     add         r5, r5, FIELD_OFFSET(rqcb0_t, dst_qp)
     add         r4, d.{mod_qp.qkey_dest_qpn}.wx, r0
-    memwr.h     r5, r4[15:8]
-    add         r5, r5, 2
+    memwr.b     r5, r4[23:16]
+    add         r5, r5, 1
+    memwr.b     r5, r4[15:8]
+    add         r5, r5, 1
     memwr.b     r5, r4[7:0]
 
 e_psn:
@@ -603,8 +611,10 @@ e_psn:
     add         r5, r2, (CB_UNIT_SIZE_BYTES) //BD Slot
     add         r5, r5, FIELD_OFFSET(rqcb1_t, e_psn)
     add         r4, d.{mod_qp.rq_psn}.wx, r0
-    memwr.h     r5, r4[23:8]
-    add         r5, r5, 2
+    memwr.b     r5, r4[23:16]
+    add         r5, r5, 1
+    memwr.b     r5, r4[15:8]
+    add         r5, r5, 1
     memwr.b     r5, r4[7:0]
 
 q_key:

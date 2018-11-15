@@ -60,7 +60,7 @@
         },
         {
             "name": "nicmgrqstate_map",
-            "size_kb": 32768,
+            "size_kb": 268435456,
             "cache": "p4plus-all"
         },
         {
@@ -363,7 +363,7 @@
         },
         {
             "name": "rdma",
-            "size_kb": 131072,
+            "size_kb": 524288, 
             "cache": "p4plus-all"
         },
         {

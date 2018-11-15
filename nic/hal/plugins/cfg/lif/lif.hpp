@@ -66,7 +66,7 @@ typedef struct lif_rss_info_s {
 typedef struct lif_queue_info_s {
     uint8_t     type;        // hardware queue type of queue
     uint16_t    size;        // size of qstate
-    uint16_t    num_queues;  // number of queues
+    uint32_t    num_queues;  // number of queues
 } __PACK__ lif_queue_info_t;
 
 // LIF structure

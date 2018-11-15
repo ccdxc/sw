@@ -301,7 +301,7 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
 
         lif->qinfo[ent.purpose()].type = ent.type_num();
         lif->qinfo[ent.purpose()].size = (uint16_t)pow(2, ent.size());
-        lif->qinfo[ent.purpose()].num_queues = (uint16_t)pow(2, ent.entries());
+        lif->qinfo[ent.purpose()].num_queues = pow(2, ent.entries());
         qcount += lif->qinfo[ent.purpose()].num_queues;
 
         HAL_TRACE_DEBUG("type: {}, entries: {}, size: {}, log entries: {}, size: {}",
@@ -838,6 +838,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         HAL_TRACE_ERR("pi-lif:{}:failed to fetch admin cos of lif {}, err : {}",
                       __FUNCTION__, lif->lif_id, ret);
     }
+
     cosA = args.cos;
 
     HAL_TRACE_DEBUG("cosA: {}, cosB: {}", cosA, cosB);

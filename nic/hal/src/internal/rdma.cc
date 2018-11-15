@@ -41,7 +41,7 @@ RDMAManager::RDMAManager() {
   size_args.reg_name = kHBMLabel;
   pd_func_args.pd_get_size_kb = &size_args;
   pd::hal_pd_call(pd::PD_FUNC_ID_GET_REG_SIZE, &pd_func_args);
-  assert(size_args.size == kHBMSizeKB);
+  //assert(size_args.size == kHBMSizeKB);
 
 
 
@@ -290,7 +290,7 @@ uint64_t rdma_lif_at_base_addr(uint32_t lif)
     return(ah_table_base_addr);
 }
 
-hal_ret_t
+  hal_ret_t
 rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry;
