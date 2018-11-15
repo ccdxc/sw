@@ -23,89 +23,98 @@
 #include "ionic_api.h"
 #include "ionic_kpicompat.h"
 
-//#define ADMINQ
+#define DRV_NAME		"ionic"
+#define DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
+#define DRV_VERSION		"0.1"
+
+#define SIZE_1K				1024
+#define IONIX_TX_MAX_DESC	(64 * SIZE_1K)
+#define IONIX_RX_MAX_DESC	(64 * SIZE_1K)
+
+/* TSO DMA related definitions. */
+/* XXX: these are arbitrary, we are not limited in h/w. */
+#define IONIC_MAX_TSO_SEG 		32
+#define IONIC_MAX_TSO_SEG_SIZE 	(64 * SIZE_1K)
+#define IONIC_MAX_TSO_SIZE 		(16 * IONIC_MAX_TSO_SEG_SIZE)
+
+MALLOC_DECLARE(M_IONIC);
 
 /* Init time debug. */
 #ifdef IONIC_DEBUG
-#define	IONIC_INFO(fmt, ...)	printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+#define	IONIC_INFO(fmt, ...)								\
+		printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
 #else
 #define	IONIC_INFO(fmt, ...)
 #endif
-#define	IONIC_ERROR(fmt, ...)	printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+#define	IONIC_ERROR(fmt, ...)								\
+			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
 
 /* Device related */
 #define	IONIC_DEV_DEBUG(dev, fmt, ...)							\
 		device_printf((dev)->bsddev, fmt, ##__VA_ARGS__);
 
 #ifdef IONIC_DEBUG
-#define IONIC_DEVICE_INFO(d, f, args...) \
-	IONIC_DEV_DEBUG(d, "[%s:%d]" f, __func__, __LINE__, ## args)
+#define IONIC_DEV_INFO(d, f, args...) 						\
+		IONIC_DEV_DEBUG(d, "[%s:%d]" f, __func__, __LINE__, ## args)
 #else
-#define IONIC_DEVICE_INFO(d, f, args...)
+#define IONIC_DEV_INFO(d, f, args...)
 #endif
 
-#define IONIC_DEVICE_WARN(d, f, args...) \
-	IONIC_DEV_DEBUG(d, "[%s:%d]WARN:" f, __func__, __LINE__, ## args)
-#define IONIC_DEVICE_ERROR(d, f, args...) \
-	IONIC_DEV_DEBUG(d, "[%s:%d]ERROR:" f, __func__, __LINE__, ## args)
+#define IONIC_DEV_WARN(d, f, args...) 						\
+		IONIC_DEV_DEBUG(d, "[%s:%d]WARN:" f, __func__, __LINE__, ## args)
+#define IONIC_DEV_ERROR(d, f, args...) 						\
+		IONIC_DEV_DEBUG(d, "[%s:%d]ERROR:" f, __func__, __LINE__, ## args)
 
 /* Netdev related. */
 #define IONIC_NETDEV_DEBUG(dev, fmt, ...) if_printf(dev, fmt, ##__VA_ARGS__)
+
 #ifdef IONIC_DEBUG
-#define IONIC_NETDEV_INFO(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_INFO(dev, fmt, ...) 						\
+		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
 #else
 #define IONIC_NETDEV_INFO(dev, fmt, ...)
 #endif
 
-#define IONIC_NETDEV_WARN(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, "WARN:" fmt, ##__VA_ARGS__)
-#define IONIC_NETDEV_ERROR(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, "ERROR:" fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_WARN(dev, fmt, ...) 						\
+		IONIC_NETDEV_DEBUG(dev, "WARN:" fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_ERROR(dev, fmt, ...) 						\
+		IONIC_NETDEV_DEBUG(dev, "ERROR:" fmt, ##__VA_ARGS__)
+
+/* Print the MAC address. */
+#ifdef __FreeBSD__
+#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 			\
+		IONIC_NETDEV_INFO(dev, fmt " MAC:%6D\n", ##__VA_ARGS__, (addr), ":")
+#else
+#define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 			\
+		IONIC_NETDEV_INFO(dev, fmt " %pM\n", ##__VA_ARGS__, (addr))
+#endif
 
 /* Netdevice queue related macros. */
-#define IONIC_QUE_DEBUG(q, fmt, ...)	do {					\
-	if (q && q->lif && q->lif->netdev)	 						\
-		if_printf(q->lif->netdev, "[%s:%d](ts:%u):%s:" fmt, 	\
-			__func__, __LINE__, jiffies, q->name, ##__VA_ARGS__);\
-} 	while(0)
+#define IONIC_QUE_DEBUG(q, fmt, ...)							\
+		if_printf(q->lif->netdev, "[%s:%d]%s:" fmt, 			\
+			__func__, __LINE__, q->name, ##__VA_ARGS__);
 
 #ifdef IONIC_DEBUG
-#define IONIC_QUE_INFO(q, fmt, ...)	 IONIC_QUE_DEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#define IONIC_QUE_INFO(q, fmt, ...)	 							\
+		IONIC_QUE_DEBUG(q, "info:" fmt, ##__VA_ARGS__)
 #else
 #define IONIC_QUE_INFO(q, fmt, ...)
 #endif
 
-#define IONIC_QUE_WARN(q, fmt, ...)	IONIC_QUE_DEBUG(q, "WARN:" fmt, ##__VA_ARGS__)
-#define IONIC_QUE_ERR(q, fmt, ...)	IONIC_QUE_DEBUG(q, "ERROR:" fmt, ##__VA_ARGS__)
+#define IONIC_QUE_WARN(q, fmt, ...)								\
+		IONIC_QUE_DEBUG(q, "WARN:" fmt, ##__VA_ARGS__)
+#define IONIC_QUE_ERROR(q, fmt, ...)							\
+		IONIC_QUE_DEBUG(q, "ERROR:" fmt, ##__VA_ARGS__)
 
-#if defined(IONIC_DEBUG_TX) && defined(IONIC_DEBUG)
-#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)	IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
+#if defined(IONIC_ENABLE_TRACEING)
+#define IONIC_TX_TRACE(q, fmt, ...)		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
+#define IONIC_RX_TRACE(q, fmt, ...)		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 #else
-#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)
+#define IONIC_TX_TRACE(q, fmt, ...)
+#define IONIC_RX_TRACE(q, fmt, ...)
 #endif
 
-#if defined(IONIC_DEBUG_RX) && defined(IONIC_DEBUG)
-#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)	IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
-#else
-#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
-#endif
-
-#define DRV_NAME		"ionic"
-#define DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
-#define DRV_VERSION		"0.1"
-
-/* END */
-
-MALLOC_DECLARE(M_IONIC);
-
-#ifndef napi_struct
-#define napi_struct work_struct
-#endif
-struct napi_struct;
 struct ionic_dev;
-
-extern int ionic_max_queues;
-extern int ntxq_descs;
-extern int nrxq_descs;
-extern int adminq_descs;
 
 struct ionic {
 	struct pci_dev *pdev;
@@ -123,6 +132,7 @@ struct ionic {
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;
 	unsigned int nintrs;
+
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
 };
 

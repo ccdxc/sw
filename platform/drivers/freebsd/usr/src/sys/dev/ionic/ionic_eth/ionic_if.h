@@ -1082,7 +1082,7 @@ union stats_dump {
 
 enum rss_hash_types {
 /* Conflicts with FreeBSD rss definitions. */
-#ifndef FREEBSD
+#ifndef __FreeBSD__
 	RSS_TYPE_IPV4		= BIT(0),
 	RSS_TYPE_IPV4_TCP	= BIT(1),
 	RSS_TYPE_IPV4_UDP	= BIT(2),

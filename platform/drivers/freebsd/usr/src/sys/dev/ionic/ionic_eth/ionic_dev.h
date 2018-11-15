@@ -180,9 +180,9 @@ struct intr_ctrl
 	u32 rsvd6[3];
 };
 
-#define intr_to_coal(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 0)
-#define intr_to_mask(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 8)
+#define intr_to_coal(intr_ctrl) 	(void *)((u8 *)(intr_ctrl) + 0)
+#define intr_to_mask(intr_ctrl) 	(void *)((u8 *)(intr_ctrl) + 4)
+#define intr_to_credits(intr_ctrl) 	(void *)((u8 *)(intr_ctrl) + 8)
 #define intr_to_mask_on_assert(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 12)
 
 struct intr_status
@@ -285,11 +285,11 @@ struct ionic_dev
 
 #define INTR_INDEX_NOT_ASSIGNED (-1)
 
-#ifndef FREEBSD
-#define INTR_NAME_MAX_SZ (32)
+#ifndef __FreeBSD__
+#define INTR_NAME_MAX_SZ 	(32)
 #else
 /* Interrupt name can't be longer than MAXCOMLEN */
-#define INTR_NAME_MAX_SZ (MAXCOMLEN)
+#define INTR_NAME_MAX_SZ 	(MAXCOMLEN)
 #endif
 
 struct intr
@@ -297,15 +297,12 @@ struct intr
 	char name[INTR_NAME_MAX_SZ];
 	unsigned int index;
 	unsigned int vector;
-	/* Interrupt related respurces for completion Q */
-	struct resource *irq_res;
 	struct intr_ctrl __iomem *ctrl;
 };
 
 int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 					unsigned int num_bars);
 
-union dev_cmd; //Need to remove it
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);

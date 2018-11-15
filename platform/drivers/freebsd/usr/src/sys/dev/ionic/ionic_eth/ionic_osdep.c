@@ -1,3 +1,20 @@
+/*
+ * Copyright 2018 Pensando Systems, Inc.  All rights reserved.
+ *
+ * This program is free software; you may redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; version 2 of the License.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
 #include <sys/types.h>
 #include <sys/bus.h>
 
@@ -75,55 +92,61 @@ ionic_dmamap_cb(void *arg, bus_dma_segment_t *segs, int nsegs, int error)
 		*(bus_addr_t *)arg = segs->ds_addr;
 }
 
+/*
+ * DMA ring allocations.
+ */
 int
 ionic_dma_alloc(struct ionic* ionic, bus_size_t size,
 		struct ionic_dma_info *dma, int mapflags)
 {
 	device_t dev = ionic->dev->bsddev;
-	int             r;
+	int error;
 
-	r = bus_dma_tag_create(bus_get_dma_tag(dev),	/* parent */
-			       128, 		            /* XXX: ??? Alignment */
-				   0,	/* alignment, bounds */
+	error = bus_dma_tag_create(bus_get_dma_tag(dev),/* parent */
+			       1, 		            /* Alignment */
+				   0,					/* Bounds */
 			       BUS_SPACE_MAXADDR,	/* lowaddr */
 			       BUS_SPACE_MAXADDR,	/* highaddr */
-			       NULL, NULL,	/* filter, filterarg */
-			       size,	/* maxsize */
-			       1,	/* nsegments */
-			       size,	/* maxsegsize */
+			       NULL, NULL,			/* filter, filterarg */
+			       size,				/* maxsize */
+			       1,					/* nsegments */
+			       size,				/* maxsegsize */
 			       BUS_DMA_ALLOCNOW,	/* flags */
-			       NULL,	/* lockfunc */
-			       NULL,	/* lockfuncarg */
+			       NULL,				/* lockfunc */
+			       NULL,				/* lockfuncarg */
 			       &dma->dma_tag);
-	if (r != 0) {
-		IONIC_DEVICE_ERROR(ionic->dev, "bus_dma_tag_create failed, error: %d\n", r);
-		goto fail_0;
+	if (error != 0) {
+		IONIC_DEV_ERROR(ionic->dev, "bus_dma_tag_create failed, error: %d\n", error);
+		dma->dma_tag = NULL;
+		return (error);
 	}
-	r = bus_dmamem_alloc(dma->dma_tag, (void **)&dma->dma_vaddr,
+
+	error = bus_dmamem_alloc(dma->dma_tag, (void **)&dma->dma_vaddr,
 			     BUS_DMA_NOWAIT, &dma->dma_map);
-	if (r != 0) {
-		IONIC_DEVICE_ERROR(ionic->dev,"bus_dmamem_alloc failed, error: %d\n", r);
-		goto fail_1;
+	if (error != 0) {
+		IONIC_DEV_ERROR(ionic->dev,"bus_dmamem_alloc failed, error: %d\n", error);
+		goto alloc_failed;
 	}
-	r = bus_dmamap_load(dma->dma_tag, dma->dma_map, dma->dma_vaddr,
+
+	error = bus_dmamap_load(dma->dma_tag, dma->dma_map, dma->dma_vaddr,
 			    size,
 			    ionic_dmamap_cb,
 			    &dma->dma_paddr,
 			    mapflags | BUS_DMA_NOWAIT);
-	if (r != 0) {
-		IONIC_DEVICE_ERROR(ionic->dev, "bus_dmamap_load failed, error: %d\n", r);
-		goto fail_2;
+	if (error != 0) {
+		IONIC_DEV_ERROR(ionic->dev, "bus_dmamap_load failed, error: %d\n", error);
+		goto map_failed;
 	}
 	dma->dma_size = size;
 	return (0);
 
-fail_2:
+map_failed:
 	bus_dmamem_free(dma->dma_tag, dma->dma_vaddr, dma->dma_map);
-fail_1:
+alloc_failed:
 	bus_dma_tag_destroy(dma->dma_tag);
-fail_0:
 	dma->dma_tag = NULL;
-	return (r);
+
+	return (error);
 }
 
 void

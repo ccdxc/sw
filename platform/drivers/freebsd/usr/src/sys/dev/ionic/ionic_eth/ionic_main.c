@@ -25,16 +25,10 @@
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 
-
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Anish Gupta anish@pensando.io");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(ionic, 1);
-
-module_param(ntxq_descs, uint, 0);
-module_param(nrxq_descs, uint, 0);
-MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
-MODULE_PARM_DESC(nrxq_descs, "Descriptors per Rx queue, must be power of 2");
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
@@ -58,8 +52,9 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
 		{ CMD_OPCODE_STATS_DUMP_START, "CMD_OPCODE_STATS_DUMP_START" },
 		{ CMD_OPCODE_STATS_DUMP_STOP, "CMD_OPCODE_STATS_DUMP_STOP" },
-		{ 0, 0 }, /* keep last */
+		{ 0, 0 }, /* Required at end. */
 	};
+
 	struct cmds *cmd = cmds;
 	char *name = "UNKNOWN";
 
@@ -67,9 +62,10 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 		while ((++cmd)->cmd)
 			if (cmd->cmd == ctx->cmd.cmd.opcode)
 				name = cmd->name;
-		IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
-			   name, ctx->comp.comp.status);
-		return -EIO;
+
+			IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
+				name, ctx->comp.comp.status);
+		return EIO;
 	}
 
 	return 0;
@@ -85,22 +81,23 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 
 	wait_for_completion(&ctx->work);
 
-	return ionic_adminq_check_err(lif, ctx);
-}
+	err = ionic_adminq_check_err(lif, ctx);
+	IONIC_INFO("ionic_adminq_post_wait, err: %d\n", err);
 
+	return (err);
+}
 
 static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 {
 	unsigned long time;
 	int done;
 
-	/* Wait for dev cmd to complete...but no more than max_wait
-	 */
-
 	time = jiffies + max_wait;
 	do {
 
 		done = ionic_dev_cmd_done(idev);
+		IONIC_INFO("DEVCMD wait %ld secs (%ld jiffies)\n",
+			       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
 #ifdef HAPS
 		if (done)
 			IONIC_INFO("DEVCMD done took %ld secs (%ld jiffies)\n",
@@ -109,19 +106,18 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		if (done)
 			return 0;
 
-#ifdef FREEBSD
-		// Need adminq lock for msleep
-		//msleep("ionic devcmd", HZ / 10);
-		DELAY(100000);
+#ifdef __FreeBSD__
+		/* XXX: use msleep but need mtx access. */
+		DELAY(1000);
 #else
 		schedule_timeout_uninterruptible(HZ / 10);
 #endif
 
 	} while (time_after(time, jiffies));
 
-	IONIC_ERROR("DEVCMD timeout after %ld secs\n", max_wait/HZ);
+	IONIC_ERROR("DEVCMD timeout after %ld secs\n", max_wait / HZ);
 
-	return -ETIMEDOUT;
+	return ETIMEDOUT;
 }
 
 static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
@@ -153,7 +149,8 @@ int ionic_set_dma_mask(struct ionic *ionic)
 	struct device *dev = ionic->dev;
 	int err;
 
-	/* Query system for DMA addressing limitation for the device.
+	/* 
+	 * Query system for DMA addressing limitation for the device.
 	 */
 
 	err = dma_set_mask(dev, DMA_BIT_MASK(64));
@@ -167,7 +164,11 @@ int ionic_set_dma_mask(struct ionic *ionic)
 		dev_err(dev, "Unable to obtain 64-bit DMA "
 			"for consistent allocations, aborting\n");
 
+	/* XXX: 2GB? */
+	dma_set_max_seg_size(dev, 2u * 1024 * 1024 * 1024);
+
 	return err;
+
 }
 
 int ionic_setup(struct ionic *ionic)
@@ -188,15 +189,15 @@ int ionic_identify(struct ionic *ionic)
 
 	ident = dma_zalloc_coherent(dev, sizeof(*ident), &ident_pa, GFP_KERNEL);
 	if (!ident)
-		return -ENOMEM;
+		return ENOMEM;
 
-	ident->drv.os_type = OS_TYPE_LINUX;
+	ident->drv.os_type = OS_TYPE_FREEBSD;
 	ident->drv.os_dist = 0;
 	strncpy(ident->drv.os_dist_str, "FreeBSD",
 		sizeof(ident->drv.os_dist_str) - 1);
-	ident->drv.kernel_ver = 11;
-	strncpy(ident->drv.kernel_ver_str, "11",
-		sizeof(ident->drv.kernel_ver_str) - 1);
+	ident->drv.kernel_ver = __FreeBSD_version;
+	snprintf(ident->drv.kernel_ver_str, sizeof(ident->drv.kernel_ver_str) - 1,
+		"%d", __FreeBSD_version);
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
 		sizeof(ident->drv.driver_ver_str) - 1);
 

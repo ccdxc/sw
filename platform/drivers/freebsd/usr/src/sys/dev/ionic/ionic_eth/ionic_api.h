@@ -192,10 +192,8 @@ struct ionic_admin_ctx {
 	union adminq_cmd cmd;
 	union adminq_comp comp;
 
-#ifndef ADMINQ
 	void *side_data;
 	size_t side_data_len;
-#endif
 };
 
 /** ionic_api_adminq_post - Post an admin command.

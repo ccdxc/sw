@@ -77,19 +77,21 @@ EXPORT_SYMBOL_GPL(ionic_api_get_identity);
 
 int ionic_api_get_intr(struct lif *lif, int *irq)
 {
-	struct intr intr_obj = {};
+	struct intr intr_obj = {
+		.index = INTR_INDEX_NOT_ASSIGNED
+	};
 	int err;
 
 	if (!lif->neqs)
 		return -ENOSPC;
 
-	err = ionic_intr_alloc(lif, &intr_obj);
+	err = ionic_dev_intr_reserve(lif, &intr_obj);
 	if (err)
 		return err;
 
-	err = ionic_bus_get_irq(lif->ionic, intr_obj.index);
+	err = ionic_get_msix_irq(lif->ionic, intr_obj.index);
 	if (err < 0) {
-		ionic_intr_free(lif, &intr_obj);
+		ionic_dev_intr_unreserve(lif, &intr_obj);
 		return err;
 	}
 
@@ -106,7 +108,7 @@ void ionic_api_put_intr(struct lif *lif, int intr)
 		.index = intr
 	};
 
-	ionic_intr_free(lif, &intr_obj);
+	ionic_dev_intr_unreserve(lif, &intr_obj);
 
 	++lif->neqs;
 }
@@ -241,54 +243,64 @@ static int SBD_put(struct ionic_dev *idev, void *src, size_t len)
 	return 0;
 }
 #else
-static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
-				struct cq_info *cq_info, void *cb_arg)
+
+static void ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
 {
-	struct ionic_admin_ctx *ctx = cb_arg;
-	struct admin_comp *comp = cq_info->cq_desc;
+	struct doorbell *db;
 
-	if (WARN_ON(comp->comp_index != desc_info->index))
-		return;
+	IONIC_NETDEV_INFO(adminq->lif->netdev, "ring doorbell for index: %d\n", index);
+	db = adminq->lif->kern_dbpage + adminq->qtype;
+	ionic_ring_doorbell(db, adminq->qid, index);
+}
 
-	memcpy(&ctx->comp, comp, sizeof(*comp));
+static bool ionic_adminq_avail(struct adminq *adminq, int want)
+{
+	int avail;
 
-	//IONIC_NETDEV_DEBUG(lif->netdev, "comp admin queue command:\n");
-	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
-			     &ctx->comp, sizeof(ctx->comp), true);
+	avail = ionic_desc_avail(adminq->num_descs, adminq->head_index, adminq->tail_index);
 
-	complete_all(&ctx->work);
+	return (avail > want);
 }
 #endif
 
 int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
+	struct adminq *adminq = lif->adminqcq;
 #ifdef ADMINQ
-	struct queue *adminq = &lif->adminqcq->q;
+	struct admin_cmd *cmd;
 	int err = 0;
 
-	spin_lock(&lif->adminq_lock);
-	if (!ionic_q_has_space(adminq, 1)) {
-		err = -ENOSPC;
-		goto err_out;
+	IONIC_ADMIN_LOCK(adminq);
+
+	if (!ionic_adminq_avail(adminq, 1)) {
+		err = ENOSPC;
+		IONIC_QUE_ERROR(adminq, "adminq is hung!\n");
+		IONIC_ADMIN_UNLOCK(adminq);
+
+		return (err);
 	}
 
-	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
+	cmd =  &adminq->cmd_ring[adminq->head_index];
+	memcpy(cmd, &ctx->cmd, sizeof(ctx->cmd));
 
-	//netdev_dbg(lif->netdev, "post admin queue command:\n");
+	IONIC_QUE_INFO(adminq, "post admin queue command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->cmd, sizeof(ctx->cmd), true);
 
-	ionic_q_post(adminq, true, ionic_api_adminq_cb, ctx);
 
-err_out:
-	spin_unlock(&lif->adminq_lock);
+	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
+	ionic_adminq_ring_doorbell(adminq, adminq->head_index);
+
+
+	ionic_adminq_clean(adminq, adminq->num_descs);
+	IONIC_ADMIN_UNLOCK(adminq);
 
 	return err;
 #else
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
 
-	IONIC_ADMIN_LOCK(lif);
+	IONIC_ADMIN_LOCK(adminq);
 #ifdef IONIC_DEBUG
 	IONIC_NETDEV_INFO(lif->netdev, "post admin dev command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
@@ -309,7 +321,7 @@ err_out:
 
 	ionic_dev_cmd_go(idev, (void *)&ctx->cmd);
 
-	/* sleep while holding spinlock... this is just temporary */
+	/* XXX: sleep while holding spinlock... this is just temporary */
 	err = ionic_dev_cmd_wait_check(idev, HZ * 10);
 	if (err)
 		goto err_out;
@@ -335,7 +347,7 @@ err_out:
 #endif
 
 err_out:
-	IONIC_ADMIN_UNLOCK(lif);
+	IONIC_ADMIN_UNLOCK(adminq);
 
 	if (!err) {
 		complete_all(&ctx->work);

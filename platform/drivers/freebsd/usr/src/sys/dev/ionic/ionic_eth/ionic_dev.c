@@ -23,19 +23,17 @@
 
 #include "ionic_dev.h"
 #include "ionic.h"
-/* BAR0 resources
- */
 
-#define BAR0_SIZE			0x8000
+#define BAR0_SIZE					0x8000
 
 #define BAR0_DEV_CMD_REGS_OFFSET	0x0000
 #define BAR0_DEV_CMD_DB_OFFSET		0x1000
 #define BAR0_INTR_STATUS_OFFSET		0x2000
 #define BAR0_INTR_CTRL_OFFSET		0x3000
 
-#define DEV_CMD_DONE			0x00000001
+#define DEV_CMD_DONE				0x00000001
 
-#define ASIC_TYPE_CAPRI			0
+#define ASIC_TYPE_CAPRI				0
 
 int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 		    unsigned int num_bars)
@@ -43,7 +41,8 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 	struct ionic_dev_bar *bar = &bars[0];
 	u32 sig;
 
-	/* BAR0 resources
+	/*
+	 * BAR0 resources
 	 */
 
 	if (num_bars < 1 || bar->len != BAR0_SIZE)
@@ -58,21 +57,24 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 #endif
 
 	sig = ioread32(&idev->dev_cmd->signature);
-	if (sig != DEV_CMD_SIGNATURE)
+	if (sig != DEV_CMD_SIGNATURE) {
+		IONIC_ERROR("mismatch in devcmd signature[%p]: 0x%x\n",
+			&idev->dev_cmd->signature, sig);
 		return -EFAULT;
+	}
 
-	/* BAR1 resources
+	/*
+	 * BAR1 resources
 	 */
 
 	bar++;
-	if (num_bars < 2)
-		return -EFAULT;
 
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
 
-	/* BAR2 resources
-	*/
+	/* 
+	 * BAR2 resources
+	 */
 
 	mutex_init(&idev->cmb_inuse_lock);
 
@@ -185,6 +187,7 @@ void ionic_intr_mask_on_assertion(struct intr *intr)
 		.mask_on_assert = 1,
 	};
 
+	KASSERT(intr->ctrl, ("%s intr->ctrl is NULL", intr->name));
 	iowrite32(*(u32 *)intr_to_mask_on_assert(&ctrl),
 		  intr_to_mask_on_assert(intr->ctrl));
 }
@@ -198,6 +201,9 @@ void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 		.coal_timer_reset = reset_timer,
 	};
 
+	KASSERT(intr->ctrl, ("%s intr->ctrl is NULL", intr->name));
+	IONIC_INFO("%s Intr credits: %d\n", intr->name, intr->ctrl->int_credits);
+
 	iowrite32(*(u32 *)intr_to_credits(&ctrl),
 		  intr_to_credits(intr->ctrl));
 }
@@ -207,6 +213,9 @@ void ionic_intr_mask(struct intr *intr, bool mask)
 	struct intr_ctrl ctrl = {
 		.mask = mask ? 1 : 0,
 	};
+
+	IONIC_INFO("%s index: %d vector: %d %s\n",
+		intr->name, intr->index, intr->vector, mask ? "masked" : "unmasked");
 
 	iowrite32(*(u32 *)intr_to_mask(&ctrl),
 		  intr_to_mask(intr->ctrl));
@@ -220,13 +229,14 @@ void ionic_intr_coal_set(struct intr *intr, u32 intr_coal)
 			INTR_CTRL_COAL_MAX : intr_coal,
 	};
 
+	KASSERT(intr->ctrl, ("%s intr->ctrl is NULL", intr->name));
+
 	iowrite32(*(u32 *)intr_to_coal(&ctrl), intr_to_coal(intr->ctrl));
 	(void)ioread32(intr_to_coal(intr->ctrl)); /* flush write */
 }
 
 void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_index)
 {
-
 	struct doorbell db_data = {
 		.qid_lo = qid,
 		.qid_hi = qid >> 8,

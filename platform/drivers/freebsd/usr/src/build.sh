@@ -20,10 +20,7 @@
 #
 # run in $OS_DIR:
 #
-#   make buildkernel
-#   make installkernel
-#   make buildworld
-#   make installworld
+#   make -j <num> buildworld buildkernel installworld installkernel
 #
 
 if [ "x" == "x$OS_DIR" ] ; then

@@ -15,7 +15,6 @@
  * SOFTWARE.
  *
  */
-
 #include <linux/module.h>
 #include <linux/netdevice.h>
 #include <linux/pci.h>
@@ -24,11 +23,10 @@
 #include "ionic_lif.h"
 #include "ionic_bus.h"
 
-// TODO move PCI_VENDOR_ID_PENSANDO to include/linux/pci_ids.h
-#define PCI_VENDOR_ID_PENSANDO			0x1dd8
+#define PCI_VENDOR_ID_PENSANDO					0x1dd8
 
-#define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF	0x1002
-#define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF	0x1003
+#define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF		0x1002
+#define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF		0x1003
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT	0x1004
 
 /* Supported devices */
@@ -38,9 +36,10 @@ static const struct pci_device_id ionic_id_table[] = {
 	{ PCI_VDEVICE(PENSANDO, PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT) },
 	{ 0, }	/* end of table */
 };
+
 MODULE_DEVICE_TABLE(pci, ionic_id_table);
 
-int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
+int ionic_get_msix_irq(struct ionic *ionic, unsigned int num)
 {
 	return ionic->pdev->dev.msix + num;
 }
@@ -50,7 +49,7 @@ const char *ionic_bus_info(struct ionic *ionic)
 	return pci_name(ionic->pdev);
 }
 
-int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
+int ionic_alloc_msix_vectors(struct ionic *ionic, unsigned int nintrs)
 {
 	struct resource_list_entry *rle;
 	int avail, ret;
@@ -58,15 +57,17 @@ int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
 	avail = pci_msix_count(ionic->pdev->dev.bsddev);
 
 	if (avail < nintrs) {
-		dev_err(ionic->dev, "Device need %d interrupts, available MSI/X vectors %u\n", nintrs, avail);
+		IONIC_DEV_ERROR(ionic->dev, "Device need %d interrupts, available MSI/X vectors %u\n", nintrs, avail);
 		return -EINVAL;
 	}
 	avail = nintrs;
 
-	ret = -pci_alloc_msix(ionic->pdev->dev.bsddev, &avail);
-	dev_err(ionic->dev, "try alloc nintrs %u avail %u ret %u\n", nintrs, avail, ret);
-	if (ret)
+	ret = pci_alloc_msix(ionic->pdev->dev.bsddev, &avail);
+
+	if (ret) {
+		IONIC_DEV_ERROR(ionic->dev, "try alloc nintrs %u avail %u ret %u\n", nintrs, avail, ret);
 		return ret;
+	}
 
 	rle = linux_pci_get_rle(ionic->pdev, SYS_RES_IRQ, 1);
 	ionic->pdev->dev.msix = rle->start;
@@ -75,9 +76,10 @@ int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
 	return avail;
 }
 
-void ionic_bus_free_irq_vectors(struct ionic *ionic)
+void ionic_free_msix_vector(struct ionic *ionic)
 {
-	pci_release_msi(ionic->pdev->dev.bsddev);
+	if (ionic->pdev->dev.msix)
+		pci_release_msi(ionic->pdev->dev.bsddev);
 }
 
 static int ionic_map_bars(struct ionic *ionic)
@@ -98,12 +100,18 @@ static int ionic_map_bars(struct ionic *ionic)
 			bars[j].vaddr = ioremap(bars[j].bus_addr, bars[j].len);
 			if (!bars[j].vaddr) {
 				dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
-				return -ENODEV;
+				return ENODEV;
 			}
 		}
 
 		ionic->num_bars++;
 		j++;
+	}
+
+	/* First two BARs are required. */
+	if (j < 2) {
+		IONIC_DEV_ERROR(dev, "Cannot memory-map BAR%u\n", j);
+		return ENODEV;
 	}
 
 	return 0;
@@ -139,6 +147,50 @@ void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
 	iounmap(page);
 }
 
+static int ionic_pci_init(struct pci_dev *pdev)
+{
+	struct device *dev = &pdev->dev;
+	struct ionic *ionic = pci_get_drvdata(pdev);
+	int err;
+
+	pci_set_master(pdev);
+	pci_enable_device(pdev);
+
+	err = pci_request_regions(pdev, DRV_NAME);
+	if (err) {
+		IONIC_DEV_ERROR(dev, "Cannot request PCI regions, aborting\n");
+		return (err);
+	}
+
+	err = pci_enable_io(pdev->dev.bsddev, SYS_RES_MEMORY);
+	if (err) {
+		IONIC_DEV_ERROR(dev, "Cannot enable PCI device, aborting\n");
+		pci_release_regions(pdev);
+		return (err);
+	}
+
+	err = ionic_set_dma_mask(ionic);
+	if (err) {
+		IONIC_DEV_ERROR(dev, "Cannot set DMA mask, aborting\n");
+		pci_release_regions(pdev);
+		return (err);
+	}
+
+	err = ionic_map_bars(ionic);
+	if (err) {
+		pci_release_regions(pdev);
+		return (err);
+	}
+
+	return (0);
+}
+
+static void ionic_pci_deinit(struct pci_dev *pdev)
+{
+
+	pci_release_regions(pdev);
+}
+
 static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct device *dev = &pdev->dev;
@@ -150,56 +202,31 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		return -ENOMEM;
 
 	ionic->pdev = pdev;
-	pci_set_drvdata(pdev, ionic);
 	ionic->dev = dev;
+	pci_set_drvdata(pdev, ionic);
 
 	ionic->is_mgmt_nic = ent->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
 
-	err = ionic_set_dma_mask(ionic);
+	err = ionic_pci_init(pdev);
 	if (err) {
-		dev_err(dev, "Cannot set DMA mask, aborting\n");
-		return err;
-	}
-
-	/* Setup PCI device
-	 */
-
-	err = pci_enable_io(pdev->dev.bsddev, SYS_RES_MEMORY);
-	if (err) {
-		dev_err(dev, "Cannot enable PCI device, aborting\n");
-		goto err_out_del_dev;
-	}
-
-	err = pci_request_regions(pdev, DRV_NAME);
-	if (err) {
-		dev_err(dev, "Cannot request PCI regions, aborting\n");
-		goto err_out_disable_device;
-	}
-
-	pci_set_master(pdev);
-
-	err = ionic_map_bars(ionic);
-	if (err)
 		goto err_out_unmap_bars;
-
-	/* Discover ionic dev resources
-	 */
+	}
 
 	err = ionic_setup(ionic);
 	if (err) {
-		dev_err(dev, "Cannot setup device, aborting\n");
+		IONIC_DEV_ERROR(dev, "Cannot setup device, aborting\n");
 		goto err_out_unmap_bars;
 	}
 
 	err = ionic_reset(ionic);
 	if (err) {
-		dev_err(dev, "Cannot reset device, aborting\n");
+		IONIC_DEV_ERROR(dev, "Cannot reset device, aborting\n");
 		goto err_out_unmap_bars;
 	}
 
 	err = ionic_identify(ionic);
 	if (err) {
-		dev_err(dev, "Cannot identify device, aborting\n");
+		IONIC_DEV_ERROR(dev, "Cannot identify device, aborting\n");
 		goto err_out_unmap_bars;
 	}
 
@@ -208,32 +235,31 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		 ionic->ident->dev.asic_rev, ionic->ident->dev.serial_num,
 		 ionic->ident->dev.fw_version);
 
-	/* Allocate and init LIFs, creating a netdev per LIF
-	 */
-
 	err = ionic_lifs_size(ionic);
 	if (err) {
-		dev_err(dev, "Cannot size LIFs, aborting\n");
+		IONIC_DEV_ERROR(dev, "Cannot size LIFs, aborting\n");
 		goto err_out_forget_identity;
 	}
 
 	err = ionic_lifs_alloc(ionic);
 	if (err) {
-		dev_err(dev, "Cannot allocate LIFs, aborting\n");
+		IONIC_DEV_ERROR(dev, "Cannot allocate LIFs, aborting\n");
 		goto err_out_free_lifs;
 	}
 
 	err = ionic_lifs_init(ionic);
 	if (err) {
-		dev_err(dev, "Cannot init LIFs, aborting\n");
+		IONIC_DEV_ERROR(dev, "Cannot init LIFs, aborting\n");
 		goto err_out_deinit_lifs;
 	}
 
 	err = ionic_lifs_register(ionic);
 	if (err) {
-		dev_err(dev, "Cannot register LIFs, aborting\n");
+		IONIC_DEV_ERROR(dev, "Cannot register LIFs, aborting\n");
 		goto err_out_deinit_lifs;
 	}
+
+	pci_save_state(pdev->dev.bsddev);
 
 	return 0;
 
@@ -241,16 +267,15 @@ err_out_deinit_lifs:
 	ionic_lifs_deinit(ionic);
 err_out_free_lifs:
 	ionic_lifs_free(ionic);
-	ionic_bus_free_irq_vectors(ionic);
+	ionic_free_msix_vector(ionic);
 err_out_forget_identity:
 	ionic_forget_identity(ionic);
 err_out_unmap_bars:
 	ionic_unmap_bars(ionic);
-	pci_release_regions(pdev);
-err_out_disable_device:
-	pci_disable_device(pdev);
-err_out_del_dev:
+	ionic_pci_deinit(pdev);
 	pci_set_drvdata(pdev, NULL);
+
+	kfree(ionic);
 
 	return err;
 }
@@ -259,24 +284,34 @@ static void ionic_remove(struct pci_dev *pdev)
 {
 	struct ionic *ionic = pci_get_drvdata(pdev);
 
-	if (ionic) {
-		ionic_lifs_unregister(ionic);
-		ionic_lifs_deinit(ionic);
-		ionic_lifs_free(ionic);
-		ionic_bus_free_irq_vectors(ionic);
-		ionic_forget_identity(ionic);
-		ionic_unmap_bars(ionic);
-		pci_release_regions(pdev);
-		pci_disable_device(pdev);
-		kfree(ionic);
-	}
+	KASSERT(ionic, ("ionic is NULL"));
+
+	ionic_lifs_unregister(ionic);
+	ionic_lifs_deinit(ionic);
+	ionic_lifs_free(ionic);
+
+	ionic_free_msix_vector(ionic);
+	ionic_forget_identity(ionic);
+
+	ionic_unmap_bars(ionic);
+	ionic_pci_deinit(pdev);
+	pci_set_drvdata(pdev, NULL);
+
+	kfree(ionic);
+}
+
+static void ionic_shutdown(struct pci_dev *pdev)
+{
+	pci_disable_device(pdev);
 }
 
 static struct pci_driver ionic_driver = {
-	.name = DRV_NAME,
+	/* XXX: used for interrupt description, limited in space. */
+	.name = "ion", //DRV_NAME,
 	.id_table = ionic_id_table,
 	.probe = ionic_probe,
 	.remove = ionic_remove,
+	.shutdown	= ionic_shutdown,
 };
 
 int ionic_bus_register_driver(void)

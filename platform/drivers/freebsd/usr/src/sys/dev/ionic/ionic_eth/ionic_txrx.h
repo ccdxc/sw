@@ -21,12 +21,9 @@
 
 #define NON_TSO_MAX_DESC	16
 
-#ifndef napi_struct
-#define napi_struct work_struct
-#endif
-struct napi_struct;
-
-void ionic_tx_napi(struct napi_struct *napi);
+int ionic_setup_rx_intr(struct rxque* rxq);
+int ionic_setup_tx_intr(struct txque* txq);
+int ionic_setup_legacy_intr(struct lif* lif);
 
 int ionic_start_xmit(struct net_device *netdev, struct mbuf *m);
 int ionic_start_xmit_locked(struct ifnet* ifp, 	struct txque* txq);
@@ -47,7 +44,15 @@ void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
 void ionic_rx_destroy_map(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
 
 /* sysctl variables. */
+extern int ionic_enable_msix;
 extern int ionic_rx_stride;
 extern int ionic_rx_fill_threshold;
 extern int ionic_rx_process_limit;
+extern u32 ionic_tx_coalesce_usecs;
+extern u32 ionic_rx_coalesce_usecs;
+extern int ionic_max_queues;
+extern int ntxq_descs;
+extern int nrxq_descs;
+extern int adminq_descs;
+
 #endif /* _IONIC_TXRX_H_ */
