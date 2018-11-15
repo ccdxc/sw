@@ -30,6 +30,14 @@
 #define CPU_ASCQ_ENTRY_SIZE                 8
 #define CPU_ASCQ_ENTRY_SIZE_SHIFT           3
 
+#define CPU_CB_RX_TOTAL_OFFSET              16
+#define CPU_CB_RX_ARQ_FULL_OFFSET           24
+#define CPU_RX_CB_SEM_FULL_OFFSET           32
+#define CPU_CB_RX_QUEUE0_OFFSET             40
+#define CPU_CB_RX_QUEUE1_OFFSET             48
+#define CPU_CB_RX_QUEUE2_OFFSET             56
+
+
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_START CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_END CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
 
@@ -38,6 +46,7 @@
                                 _k_cpu_id) \
     add    _dest_r, r0, _k_cpu_id; \
     sll    _dest_r, _dest_r, CPU_ARQ_TABLE_SHIFT; \
+    sll    _dest_r, _dest_r, NIC_ARQ_ENTRY_SIZE_SHIFT; \
     add    _dest_r, _dest_r, _arqrx_base
 
 #define CPU_ARQ_SEM_INF_ADDR(_k_cpu_id, _dest_r) \

@@ -69,6 +69,7 @@ dma_cmd_arqrx_slot:
     addui      r5, r0, hiword(ARQRX_BASE)
     addi       r5, r5, loword(ARQRX_BASE)
     CPU_RX_ARQ_BASE_FOR_ID(r2, r5, k.t0_s2s_arqrx_id)
+    
 
     // pindex will be in r6
     CPU_RX_ENQUEUE(r5,
@@ -84,17 +85,22 @@ dma_cmd_arqrx_slot:
 cpu_write_arqrx_done:
     add r7, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, 16, 1)
+    seq c1, k.t0_s2s_arqrx_id, 1
+    bcf [c1], cpu_incr_queue1_stats
+    nop
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK (r7, 40, 1)
     nop.e
     nop
         
 cpu_rx_arq_full_error:
-    phvwri p.{app_header_table1_valid...app_header_table3_valid}, 7 
-    add    r3, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN,
-                         cpu_rx_ring_full_drop_error,
-                         r3,
-                         TABLE_SIZE_512_BITS)
-
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0 
+    add    r7, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, 24, 1)
     phvwri.e  p.p4_intr_global_drop, 1
+    nop
+
+cpu_incr_queue1_stats:
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK (r7, 48, 1)
+    nop.e
     nop
         

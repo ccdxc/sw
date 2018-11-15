@@ -189,7 +189,7 @@ const hal::ipv4_rule_t* ipsec_lookup_rules(vrf_id_t vrf_id, fte::ctx_t&ctx)
         }
     }
     if (!rule) {
-        HAL_TRACE_DEBUG("Rule lookup failed for vrf {}", vrf_id);
+        //HAL_TRACE_DEBUG("Rule lookup failed for vrf {}", vrf_id);
     }
     return rule;
 }
@@ -237,8 +237,6 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
         ipsec_info->action = IPSEC_PLUGIN_RFLOW_ACTION_DO_NOTHING;
         HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
         return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
-    } else {
-        HAL_TRACE_DEBUG("Rule lookup failed for vrf {}", ctx.key().dvrf_id);
     }
     return fte::PIPELINE_CONTINUE; 
 }
@@ -310,8 +308,6 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
             HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
             return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
         }
-    } else {
-        HAL_TRACE_DEBUG("Rule lookup failed for vrf {}", ctx.key().dvrf_id);
     }
     return fte::PIPELINE_CONTINUE; 
 }
@@ -404,8 +400,6 @@ ipsec_process_rflow(fte::ctx_t&ctx)
                             flowupd.fwding.qid_en, flowupd.fwding.qid, flowupd.fwding.qtype, flowupd.fwding.lport);
             ctx.set_feature_status(ret);
             return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
-        } else {
-            HAL_TRACE_DEBUG("Rule lookup failed for vrf {}", ipsec_info->vrf);
         }
     } 
     return fte::PIPELINE_CONTINUE;

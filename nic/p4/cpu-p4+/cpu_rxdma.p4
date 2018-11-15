@@ -55,10 +55,30 @@ header_type cpu_rxdma_initial_action_t {
         flags                       : 8;
         debug_dol                   : 8;
         rxdma_pad                   : 48;
-        rx_processed                : 32;
-        rx_ring_full_drop           : 32;
-        rx_sema_full_drop           : 32;
-        pad                         : 192;
+        rx_processed                : 64;
+        rx_ring_full_drop           : 64;
+        rx_sema_full_drop           : 64;
+        rx_queue0_pkts              : 64;
+        rx_queue1_pkts              : 64;
+        rx_queue2_pkts              : 64;
+    }
+}
+
+// d for stage 0
+header_type cpu_rxdma_initial_action_with_pc_t {
+    fields {
+        pc                          : 8;
+        // 8 Bytes intrinsic header
+        CAPRI_QSTATE_HEADER_COMMON
+        flags                       : 8;
+        debug_dol                   : 8;
+        rxdma_pad                   : 48;
+        rx_processed                : 64;
+        rx_ring_full_drop           : 64;
+        rx_sema_full_drop           : 64;
+        rx_queue0_pkts              : 64;
+        rx_queue1_pkts              : 64;
+        rx_queue2_pkts              : 64;
     }
 }
 
@@ -145,6 +165,9 @@ header_type s2_t2_s2s_phv_t {
 metadata cpu_rxdma_initial_action_t cpu_rxdma_initial_d;
 
 @pragma scratch_metadata
+metadata cpu_rxdma_initial_action_with_pc_t cpu_rxdma_initial_with_pc_d;
+
+@pragma scratch_metadata
 metadata read_cpudr_d_t read_cpudr_d;
 
 @pragma scratch_metadata
@@ -225,7 +248,9 @@ metadata dma_cmd_phv2mem_t dma_cmd3;
 action cpu_rxdma_initial_action(rsvd, cosA, cosB, cos_sel, 
                                 eval_last, host, total, pid, 
                                 flags, debug_dol, rxdma_pad, rx_processed, 
-                                rx_ring_full_drop, rx_sema_full_drop, pad) {
+                                rx_ring_full_drop, rx_sema_full_drop,
+                                rx_queue0_pkts, rx_queue1_pkts, rx_queue2_pkts) 
+{
     // k + i for stage 0
 
     // from intrinsic
@@ -265,7 +290,9 @@ action cpu_rxdma_initial_action(rsvd, cosA, cosB, cos_sel,
     modify_field(cpu_rxdma_initial_d.rx_processed, rx_processed);
     modify_field(cpu_rxdma_initial_d.rx_ring_full_drop, rx_ring_full_drop);
     modify_field(cpu_rxdma_initial_d.rx_sema_full_drop, rx_sema_full_drop);
-    modify_field(cpu_rxdma_initial_d.pad, pad);
+    modify_field(cpu_rxdma_initial_d.rx_queue0_pkts, rx_queue0_pkts);
+    modify_field(cpu_rxdma_initial_d.rx_queue1_pkts, rx_queue1_pkts);
+    modify_field(cpu_rxdma_initial_d.rx_queue2_pkts, rx_queue2_pkts);
 }
 
 // Stage 1 table 1 action
@@ -346,48 +373,60 @@ action write_arqrx(ARQ_PI_PARAMS) {
     GENERATE_ARQ_PI_D(write_arqrx_d)
 }
 
-action cpu_rx_ring_full_drop_action(rsvd, cosA, cosB, cos_sel, 
+action cpu_rx_ring_full_drop_action(pc, rsvd, cosA, cosB, cos_sel, 
                                     eval_last, host, total, pid, 
                                     flags, debug_dol, rxdma_pad, rx_processed, 
-                                    rx_ring_full_drop, rx_sema_full_drop, pad) 
+                                    rx_ring_full_drop, rx_sema_full_drop,
+                                    rx_queue0_pkts, rx_queue1_pkts, rx_queue2_pkts) 
 {
+    // from ki global
+    GENERATE_GLOBAL_K
     // d for stage 0
-    modify_field(cpu_rxdma_initial_d.rsvd, rsvd);
-    modify_field(cpu_rxdma_initial_d.cosA, cosA);
-    modify_field(cpu_rxdma_initial_d.cosB, cosB);
-    modify_field(cpu_rxdma_initial_d.cos_sel, cos_sel);
-    modify_field(cpu_rxdma_initial_d.eval_last, eval_last);
-    modify_field(cpu_rxdma_initial_d.host, host);
-    modify_field(cpu_rxdma_initial_d.total, total);
-    modify_field(cpu_rxdma_initial_d.pid, pid);
-    modify_field(cpu_rxdma_initial_d.flags, flags);
-    modify_field(cpu_rxdma_initial_d.debug_dol, debug_dol);
-    modify_field(cpu_rxdma_initial_d.rxdma_pad, rxdma_pad);
-    modify_field(cpu_rxdma_initial_d.rx_processed, rx_processed);
-    modify_field(cpu_rxdma_initial_d.rx_ring_full_drop, rx_ring_full_drop);
-    modify_field(cpu_rxdma_initial_d.rx_sema_full_drop, rx_sema_full_drop);
-    modify_field(cpu_rxdma_initial_d.pad, pad);
+    modify_field(cpu_rxdma_initial_with_pc_d.pc, pc);
+    modify_field(cpu_rxdma_initial_with_pc_d.rsvd, rsvd);
+    modify_field(cpu_rxdma_initial_with_pc_d.cosA, cosA);
+    modify_field(cpu_rxdma_initial_with_pc_d.cosB, cosB);
+    modify_field(cpu_rxdma_initial_with_pc_d.cos_sel, cos_sel);
+    modify_field(cpu_rxdma_initial_with_pc_d.eval_last, eval_last);
+    modify_field(cpu_rxdma_initial_with_pc_d.host, host);
+    modify_field(cpu_rxdma_initial_with_pc_d.total, total);
+    modify_field(cpu_rxdma_initial_with_pc_d.pid, pid);
+    modify_field(cpu_rxdma_initial_with_pc_d.flags, flags);
+    modify_field(cpu_rxdma_initial_with_pc_d.debug_dol, debug_dol);
+    modify_field(cpu_rxdma_initial_with_pc_d.rxdma_pad, rxdma_pad);
+    modify_field(cpu_rxdma_initial_with_pc_d.rx_processed, rx_processed);
+    modify_field(cpu_rxdma_initial_with_pc_d.rx_ring_full_drop, rx_ring_full_drop);
+    modify_field(cpu_rxdma_initial_with_pc_d.rx_sema_full_drop, rx_sema_full_drop);
+    modify_field(cpu_rxdma_initial_d.rx_queue0_pkts, rx_queue0_pkts);
+    modify_field(cpu_rxdma_initial_d.rx_queue1_pkts, rx_queue1_pkts);
+    modify_field(cpu_rxdma_initial_d.rx_queue2_pkts, rx_queue2_pkts);
 }
 
-action cpu_rx_semaphore_full_drop_action(rsvd, cosA, cosB, cos_sel, 
+action cpu_rx_semaphore_full_drop_action(pc, rsvd, cosA, cosB, cos_sel, 
                                     eval_last, host, total, pid, 
                                     flags, debug_dol,rxdma_pad,  rx_processed, 
-                                    rx_ring_full_drop, rx_sema_full_drop, pad) 
+                                    rx_ring_full_drop, rx_sema_full_drop,
+                                    rx_queue0_pkts, rx_queue1_pkts, rx_queue2_pkts)
 {
+    // from ki global
+    GENERATE_GLOBAL_K
     // d for stage 0
-    modify_field(cpu_rxdma_initial_d.rsvd, rsvd);
-    modify_field(cpu_rxdma_initial_d.cosA, cosA);
-    modify_field(cpu_rxdma_initial_d.cosB, cosB);
-    modify_field(cpu_rxdma_initial_d.cos_sel, cos_sel);
-    modify_field(cpu_rxdma_initial_d.eval_last, eval_last);
-    modify_field(cpu_rxdma_initial_d.host, host);
-    modify_field(cpu_rxdma_initial_d.total, total);
-    modify_field(cpu_rxdma_initial_d.pid, pid);
-    modify_field(cpu_rxdma_initial_d.flags, flags);
-    modify_field(cpu_rxdma_initial_d.debug_dol, debug_dol);
-    modify_field(cpu_rxdma_initial_d.rxdma_pad, rxdma_pad);
-    modify_field(cpu_rxdma_initial_d.rx_processed, rx_processed);
-    modify_field(cpu_rxdma_initial_d.rx_ring_full_drop, rx_ring_full_drop);
-    modify_field(cpu_rxdma_initial_d.rx_sema_full_drop, rx_sema_full_drop);
-    modify_field(cpu_rxdma_initial_d.pad, pad);
+    modify_field(cpu_rxdma_initial_with_pc_d.pc, pc);
+    modify_field(cpu_rxdma_initial_with_pc_d.rsvd, rsvd);
+    modify_field(cpu_rxdma_initial_with_pc_d.cosA, cosA);
+    modify_field(cpu_rxdma_initial_with_pc_d.cosB, cosB);
+    modify_field(cpu_rxdma_initial_with_pc_d.cos_sel, cos_sel);
+    modify_field(cpu_rxdma_initial_with_pc_d.eval_last, eval_last);
+    modify_field(cpu_rxdma_initial_with_pc_d.host, host);
+    modify_field(cpu_rxdma_initial_with_pc_d.total, total);
+    modify_field(cpu_rxdma_initial_with_pc_d.pid, pid);
+    modify_field(cpu_rxdma_initial_with_pc_d.flags, flags);
+    modify_field(cpu_rxdma_initial_with_pc_d.debug_dol, debug_dol);
+    modify_field(cpu_rxdma_initial_with_pc_d.rxdma_pad, rxdma_pad);
+    modify_field(cpu_rxdma_initial_with_pc_d.rx_processed, rx_processed);
+    modify_field(cpu_rxdma_initial_with_pc_d.rx_ring_full_drop, rx_ring_full_drop);
+    modify_field(cpu_rxdma_initial_with_pc_d.rx_sema_full_drop, rx_sema_full_drop);
+    modify_field(cpu_rxdma_initial_d.rx_queue0_pkts, rx_queue0_pkts);
+    modify_field(cpu_rxdma_initial_d.rx_queue1_pkts, rx_queue1_pkts);
+    modify_field(cpu_rxdma_initial_d.rx_queue2_pkts, rx_queue2_pkts);
 }

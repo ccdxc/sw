@@ -612,8 +612,7 @@ tcp_is_proxy_policy_enabled_for_flow(fte::ctx_t &ctx)
 
     rule = tcp_proxy_lookup_rules(ctx.key().dvrf_id, ctx);
     if (!rule) {
-        HAL_TRACE_DEBUG("TCP Proxy rule lookup failed for vrf {}",
-                ctx.key().dvrf_id);
+        //HAL_TRACE_DEBUG("TCP Proxy rule lookup failed for vrf {}", ctx.key().dvrf_id);
         return false;
     }
 
@@ -636,8 +635,7 @@ tcp_proxy_type_action(fte::ctx_t &ctx, proxy_flow_info_t *pfi)
 
     rule = tcp_proxy_lookup_rules(ctx.key().dvrf_id, ctx);
     if (!rule) {
-        HAL_TRACE_DEBUG("TCP Proxy rule lookup failed for vrf {}",
-                ctx.key().dvrf_id);
+        //HAL_TRACE_DEBUG("TCP Proxy rule lookup failed for vrf {}", ctx.key().dvrf_id);
         return HAL_RET_ERR;
     }
 

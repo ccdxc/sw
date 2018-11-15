@@ -1361,7 +1361,12 @@ session_update(const session_args_t *args, session_t *session)
     pd::pd_session_update_args_t    pd_session_args;
     pd::pd_func_args_t              pd_func_args = {0};
 
-    HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
+    //HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
+
+    if (session->fte_id != fte::fte_id()) {
+        HAL_TRACE_ERR("session fte_id {} current fte_id {}", session->fte_id, fte::fte_id());
+        return HAL_RET_OK; 
+    }
 
     if (args->iflow[0]) {
         session->iflow->config = *args->iflow[0];
