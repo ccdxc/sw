@@ -1,2 +1,2 @@
-#!/bin/bash
-cd /tmp/git/pensando/sw/storage/offload && make modules && sudo insmod pnso.ko && dmesg | grep "PNSO: Osal test complete" && sudo rmmod pnso && dmesg > /tmp/ClusterLogs
+#!/bin/sh
+cd /tmp/git/pensando/sw/storage/offload && OS_DIR=/usr/src/freebsd ./freebsd_build.sh 
