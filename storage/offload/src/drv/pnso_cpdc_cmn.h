@@ -106,6 +106,9 @@ pnso_error_t cpdc_setup_batch_desc(struct service_info *svc_info,
 pnso_error_t cpdc_setup_seq_desc(struct service_info *svc_info,
 		struct cpdc_desc *desc, uint32_t num_tags);
 
+pnso_error_t cpdc_setup_interrupt_params(const struct service_info *svc_info,
+		void *poll_ctx);
+
 pnso_error_t cpdc_convert_desc_error(int error);
 
 #endif /* __PNSO_CPDC_CMN_H__ */

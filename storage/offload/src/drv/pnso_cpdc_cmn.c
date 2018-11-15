@@ -707,3 +707,28 @@ cpdc_setup_seq_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 out:
 	return err;
 }
+
+pnso_error_t
+cpdc_setup_interrupt_params(const struct service_info *svc_info, void *poll_ctx)
+{
+	struct cpdc_desc *cp_desc;
+	struct per_core_resource *pcr;
+
+	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
+	pcr = svc_info->si_pcr;
+
+	OSAL_LOG_DEBUG("cp_desc: 0x" PRIx64 " pcr: 0x" PRIx64 " poll_ctx: 0x" PRIx64,
+			(uint64_t) cp_desc, (uint64_t) pcr,
+			(uint64_t) poll_ctx);
+
+	cp_desc->u.cd_bits.cc_db_on = 1;
+	cp_desc->u.cd_bits.cc_otag_on = 1;
+
+	cp_desc->cd_db_addr = (uint64_t) sonic_intr_get_db_addr(pcr);
+	cp_desc->cd_db_data = (uint64_t) poll_ctx;
+
+	cp_desc->cd_otag_addr = sonic_get_per_core_intr_assert_addr(pcr);
+	cp_desc->cd_otag_data = sonic_get_intr_assert_data();
+
+	return  PNSO_OK;
+}

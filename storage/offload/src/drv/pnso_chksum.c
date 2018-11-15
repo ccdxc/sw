@@ -186,7 +186,7 @@ chksum_sub_chain_from_crypto(struct service_info *svc_info,
 static pnso_error_t
 chksum_enable_interrupt(const struct service_info *svc_info, void *poll_ctx)
 {
-	return EOPNOTSUPP;
+	return cpdc_setup_interrupt_params(svc_info, poll_ctx);
 }
 
 static pnso_error_t
