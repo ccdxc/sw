@@ -1695,7 +1695,7 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_buf;
 
-	hdr_buf = kmalloc(sizeof(*hdr_buf), GFP_ATOMIC);
+	hdr_buf = kmalloc(PAGE_SIZE, GFP_ATOMIC);
 	if (!hdr_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
