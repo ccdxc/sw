@@ -36,6 +36,8 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl get <penctl_get.rst>`_ 	 - Get CLIs
+* `penctl get metrics accelhwringmetrics <penctl_get_metrics_accelhwringmetrics.rst>`_ 	 - Show AccelHwRingMetrics from Naples
+* `penctl get metrics accelseqqueuemetrics <penctl_get_metrics_accelseqqueuemetrics.rst>`_ 	 - Show AccelSeqQueueMetrics from Naples
 * `penctl get metrics kind <penctl_get_metrics_kind.rst>`_ 	 - Show Metrics from Naples On Non-Listed Kind
 * `penctl get metrics upgrademetrics <penctl_get_metrics_upgrademetrics.rst>`_ 	 - Show UpgradeMetrics from Naples
 

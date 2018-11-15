@@ -17,6 +17,9 @@ import (
     {{if (HasSuffix .GetName "Metrics")}}
 	func init() {
 		name := "/telemetry/v1/metrics/{{ToLower .GetName}}/"
+		if prefixRoutes == nil {
+			prefixRoutes = make(map[string]routeAddFunc)
+		}
 		prefixRoutes[name] = add{{.GetName}}APIRoutes
 	}
 

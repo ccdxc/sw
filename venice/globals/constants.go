@@ -69,8 +69,11 @@ const (
 	FilebeatElasticClientAuthDir = "/usr/share/filebeat/auth"
 	VosHTTPSAuthDir              = PKIDir + "/" + Vos + "/certs"
 
-	// Log direcory
+	// LogDir direcory
 	LogDir = "/var/log/pensando"
+
+	// PenCtlLogDir direcory
+	PenCtlLogDir = "/var/log"
 
 	// Events directory
 	EventsDir = "/var/lib/pensando/events"

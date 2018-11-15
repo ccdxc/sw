@@ -18,7 +18,8 @@ penctl core delete [flags]
 ### Options
 
 ```
-  -h, --help   help for delete
+  -f, --file string   Core file to delete
+  -h, --help          help for delete
 ```
 
 ### Options inherited from parent commands

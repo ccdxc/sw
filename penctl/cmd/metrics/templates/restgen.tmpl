@@ -13,9 +13,10 @@ import (
 
  {{$msgs := .Messages}}
  {{range $msgs}}
-       var {{.GetName}}Name string
 
     {{if (HasSuffix .GetName "Metrics")}}
+        var {{ToLower .GetName}}Var string
+
 	var {{ToLower .GetName}}ShowCmd = &cobra.Command{
 		Use:   "{{ToLower .GetName}}",
 		Short: "Show {{.GetName}} from Naples",
@@ -24,8 +25,10 @@ import (
 	}
 
 	func {{ToLower .GetName}}ShowCmdHandler(cmd *cobra.Command, args []string) {
+		tabularFormat = false
+		jsonFormat = true
 		if cmd.Flags().Changed("{{ToLower .GetName}}") {
-			restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/default/"+{{.GetName}}Name+"/")
+			restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/default/"+{{ToLower .GetName}}Var+"/")
 		} else {
 			restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/")
 		}
@@ -35,10 +38,8 @@ import (
         func init() {
  {{range $msgs}}
     {{if (HasSuffix .GetName "Metrics")}}
-		tabularFormat = false
-		jsonFormat = true
                 metricsShowCmd.AddCommand({{ToLower .GetName}}ShowCmd)
-		{{ToLower .GetName}}ShowCmd.Flags().StringVarP(&{{.GetName}}Name, "name", "n", "", "Name/Key for metrics object")
+		{{ToLower .GetName}}ShowCmd.Flags().StringVarP(&{{ToLower .GetName}}Var, "name", "n", "", "Name/Key for metrics object")
     {{end}}
  {{end}}
         }

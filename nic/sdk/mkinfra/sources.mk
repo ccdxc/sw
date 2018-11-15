@@ -87,7 +87,7 @@ $${${1}_BLD_OUT_DIR}/${2}/%.proto_gometricsobj: ${2}/%.proto $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${NAME_PROT2GOMETRICS} $$(call CANPATH,$$<)
 	${AT}$(strip ${CMD_PROTOC} --delphigo-metrics_out=${TOPDIR}/nic/delphi/proto/goproto/ ${${1}_INCS} ${${1}_DEFS} $$<)
-	${AT}$(strip ${CMD_GOIMPORTS} -w ${${1}_GOIMPORTS_OPTS} ${TOPDIR}/nic/delphi/proto/goproto/*) > $$(call CANPATH,$$@_build.log)
+	${AT}$(strip ${CMD_GOIMPORTS} -w ${${1}_GOIMPORTS_OPTS} ${TOPDIR}/nic/delphi/proto/goproto/$$(basename $$(notdir $$(basename $$(call CANPATH,$$<)))).dm.go) > $$(call CANPATH,$$@_build.log)
 	${AT}touch $$@
 endef
 

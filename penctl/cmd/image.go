@@ -87,9 +87,12 @@ func init() {
 
 func listImageCmdHandler(cmd *cobra.Command, args []string) error {
 	resp, _ := restGetResp(revProxyPort, "update/")
-	err := parseFiles(resp)
+	retS, err := parseFiles(resp)
 	if err != nil {
 		return err
+	}
+	for _, ret := range retS {
+		fmt.Println(ret)
 	}
 	return nil
 }

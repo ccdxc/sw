@@ -45,7 +45,7 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		moduleVal = globals.Tmagent
 	}
 	moduleVal += ".log"
-	resp, err := restGet(revProxyPort, "monitoring/v1/naples/logs/"+moduleVal)
+	resp, err := restGet(revProxyPort, "monitoring/v1/naples/logs/pensando/"+moduleVal)
 	if err != nil {
 		return err
 	}

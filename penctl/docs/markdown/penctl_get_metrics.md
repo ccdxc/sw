@@ -28,6 +28,8 @@ Show metrics from Naples
 
 ### SEE ALSO
 * [penctl get](penctl_get.md)	 - Get CLIs
+* [penctl get metrics accelhwringmetrics](penctl_get_metrics_accelhwringmetrics.md)	 - Show AccelHwRingMetrics from Naples
+* [penctl get metrics accelseqqueuemetrics](penctl_get_metrics_accelseqqueuemetrics.md)	 - Show AccelSeqQueueMetrics from Naples
 * [penctl get metrics kind](penctl_get_metrics_kind.md)	 - Show Metrics from Naples On Non-Listed Kind
 * [penctl get metrics upgrademetrics](penctl_get_metrics_upgrademetrics.md)	 - Show UpgradeMetrics from Naples
 

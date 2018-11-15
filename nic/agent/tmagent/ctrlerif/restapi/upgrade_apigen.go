@@ -22,6 +22,9 @@ import (
 
 func init() {
 	name := "/telemetry/v1/metrics/upgrademetrics/"
+	if prefixRoutes == nil {
+		prefixRoutes = make(map[string]routeAddFunc)
+	}
 	prefixRoutes[name] = addUpgradeMetricsAPIRoutes
 }
 

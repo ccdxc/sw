@@ -24,6 +24,7 @@ Options
 
 ::
 
+  -f, --file string   Core file to copy
   -h, --help          help for get
   -p, --path string   Path to copy files to
 

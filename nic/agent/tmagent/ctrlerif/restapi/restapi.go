@@ -32,7 +32,9 @@ type routeAddFunc func(*mux.Router, *RestServer)
 var prefixRoutes map[string]routeAddFunc
 
 func init() {
-	prefixRoutes = make(map[string]routeAddFunc)
+	if prefixRoutes == nil {
+		prefixRoutes = make(map[string]routeAddFunc)
+	}
 }
 
 // NewRestServer creates a new HTTP server servicg REST api

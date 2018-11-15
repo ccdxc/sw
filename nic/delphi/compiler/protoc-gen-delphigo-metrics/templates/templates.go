@@ -31,9 +31,9 @@ type {{.GetName}} struct {
 	key       {{.GetGolangTypeName}}
 	{{end}}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
-	{{.GetName}} gometrics.Counter
-    {{else if (eq .GetTypeName ".delphi.Gauge") }}
-	{{.GetName}}    gometrics.Gauge
+	{{.GetCamelCaseName}} gometrics.Counter
+	{{else if (eq .GetTypeName ".delphi.Gauge") }}
+	{{.GetCamelCaseName}}    gometrics.Gauge
 	{{end}} {{end}}
 
 	// private state
@@ -58,9 +58,9 @@ func (mtr *{{.GetName}}) Size() int {
 	{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
     {{if (eq .GetName "Key") }}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
-	sz += mtr.{{.GetName}}.Size()
+	sz += mtr.{{.GetCamelCaseName}}.Size()
 	{{else if (eq .GetTypeName ".delphi.Gauge") }}
-	sz += mtr.{{.GetName}}.Size()
+	sz += mtr.{{.GetCamelCaseName}}.Size()
 	{{end}} {{end}}
 	return sz
 }
@@ -77,11 +77,11 @@ func (mtr *{{.GetName}}) Unmarshal() error {
 	mtr.key = {{.GetGolangTypeName}}(val)
 	{{end}}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
-	mtr.{{.GetName}} = mtr.metrics.GetCounter(offset)
-	offset += mtr.{{.GetName}}.Size()
+	mtr.{{.GetCamelCaseName}} = mtr.metrics.GetCounter(offset)
+	offset += mtr.{{.GetCamelCaseName}}.Size()
 	{{else if (eq .GetTypeName ".delphi.Gauge") }}
-	mtr.{{.GetName}} = mtr.metrics.GetGauge(offset)
-	offset += mtr.{{.GetName}}.Size()
+	mtr.{{.GetCamelCaseName}} = mtr.metrics.GetGauge(offset)
+	offset += mtr.{{.GetCamelCaseName}}.Size()
 	{{end}} {{end}}
 	return nil
 }
@@ -93,15 +93,15 @@ func (mtr *{{.GetName}}) getOffset(fldName string) int {
 	{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
 	{{if (eq .GetName "Key") }}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
-	if fldName == "{{.GetName}}" {
+	if fldName == "{{.GetCamelCaseName}}" {
 		return offset
 	}
-	offset += mtr.{{.GetName}}.Size()
+	offset += mtr.{{.GetCamelCaseName}}.Size()
 	{{else if (eq .GetTypeName ".delphi.Gauge") }}
-	if fldName == "{{.GetName}}" {
+	if fldName == "{{.GetCamelCaseName}}" {
 		return offset
 	}
-	offset += mtr.{{.GetName}}.Size()
+	offset += mtr.{{.GetCamelCaseName}}.Size()
 	{{end}} {{end}}
 	return offset
 }
@@ -109,15 +109,15 @@ func (mtr *{{.GetName}}) getOffset(fldName string) int {
 {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
 {{if (eq .GetName "Key") }}
 {{else if (eq .GetTypeName ".delphi.Counter") }}
-// Set{{.GetName}} sets cunter in shared memory
-func (mtr *{{$msgName}}) Set{{.GetName}}(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("{{.GetName}}"))
+// Set{{.GetCamelCaseName}} sets cunter in shared memory
+func (mtr *{{$msgName}}) Set{{.GetCamelCaseName}}(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("{{.GetCamelCaseName}}"))
 	return nil
 }
 {{else if (eq .GetTypeName ".delphi.Gauge") }}
-// Set{{.GetName}} sets gauge in shared memory
-func (mtr *{{$msgName}}) Set{{.GetName}}(val gometrics.Gauge) error {
-	mtr.metrics.SetGauge(val, mtr.getOffset("{{.GetName}}"))
+// Set{{.GetCamelCaseName}} sets gauge in shared memory
+func (mtr *{{$msgName}}) Set{{.GetCamelCaseName}}(val gometrics.Gauge) error {
+	mtr.metrics.SetGauge(val, mtr.getOffset("{{.GetCamelCaseName}}"))
 	return nil
 }
 {{end}} {{end}}

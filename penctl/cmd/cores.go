@@ -61,20 +61,22 @@ func init() {
 	coreDeleteCmd.MarkFlagRequired("file")
 }
 
-func parseFiles(resp *http.Response) error {
+var retSlice []string
+
+func parseFiles(resp *http.Response) ([]string, error) {
 	defer resp.Body.Close()
 	doc, err := html.Parse(resp.Body)
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return nil, err
 	}
 	// Recursively visit nodes in the parse tree
-	var f func(*html.Node) error
-	f = func(n *html.Node) error {
+	var f func(*html.Node) ([]string, error)
+	f = func(n *html.Node) ([]string, error) {
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, a := range n.Attr {
 				if a.Key == "href" {
-					fmt.Println(a.Val)
+					retSlice = append(retSlice, a.Val)
 					break
 				}
 			}
@@ -82,16 +84,19 @@ func parseFiles(resp *http.Response) error {
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			f(c)
 		}
-		return nil
+		return retSlice, nil
 	}
 	return f(doc)
 }
 
 func coreShowCmdHandler(cmd *cobra.Command, args []string) error {
 	resp, _ := restGetResp(revProxyPort, "cores/v1/naples/")
-	err := parseFiles(resp)
+	retS, err := parseFiles(resp)
 	if err != nil {
 		return err
+	}
+	for _, ret := range retS {
+		fmt.Println(ret)
 	}
 	return nil
 }

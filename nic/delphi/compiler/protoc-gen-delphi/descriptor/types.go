@@ -331,6 +331,11 @@ func (f *Field) GetGolangTypeName() string {
 	}
 }
 
+// GetCamelCaseName returns camel cased name
+func (f *Field) GetCamelCaseName() string {
+        return gogen.CamelCase(f.GetName())
+}
+
 // IsRepeated checks if the field is a repeated field
 func (f *Field) IsRepeated() bool {
 	if f.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {

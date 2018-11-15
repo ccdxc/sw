@@ -1,0 +1,9 @@
+Cmds:
+ -
+   bin: ps
+   opts: "-ef"
+   ofile: ps.out
+ -
+   bin: ls
+   opts: "-al"
+   ofile: ls.out

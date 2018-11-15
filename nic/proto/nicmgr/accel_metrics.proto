@@ -42,7 +42,7 @@ enum AccelHwRingId {
 }
 
 message AccelHwRingKey {
-    AccelHwRingId  rid                       = 1;     // Ring id
+    uint32         rid                       = 1;     // Ring id
     uint32         sub_rid                   = 2;     // Sub-ring id
 }
 
