@@ -28,19 +28,19 @@
         {
             "_comment" : "cache coherent",
             "name": "arq-rx",
-            "size_kb": 64,
+            "size_kb": 256,
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "ascq",
-            "size_kb": 64,
+            "size_kb": 256,
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "asq",
-            "size_kb": 64,
+            "size_kb": 256,
             "cc"     : "true"
         },
         {

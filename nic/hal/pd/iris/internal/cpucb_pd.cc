@@ -128,6 +128,11 @@ p4pd_get_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd)
     }
     cpucb_pd->cpucb->total_rx_pkts = ntohll(data.u.cpu_rxdma_initial_action_d.rx_processed);
     cpucb_pd->cpucb->rx_qfull_drop_errors = ntohll(data.u.cpu_rxdma_initial_action_d.rx_ring_full_drop);
+    cpucb_pd->cpucb->rx_sem_full_drops = ntohll(data.u.cpu_rxdma_initial_action_d.rx_sema_full_drop);
+    cpucb_pd->cpucb->rx_queue0_pkts = ntohll(data.u.cpu_rxdma_initial_action_d.rx_queue0_pkts);
+    cpucb_pd->cpucb->rx_queue1_pkts = ntohll(data.u.cpu_rxdma_initial_action_d.rx_queue1_pkts);
+    cpucb_pd->cpucb->rx_queue2_pkts = ntohll(data.u.cpu_rxdma_initial_action_d.rx_queue2_pkts);
+
     return HAL_RET_OK;
 }
 
@@ -236,8 +241,8 @@ p4pd_get_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd)
         return HAL_RET_HW_FAIL;
     }
     cpucb_pd->cpucb->total_tx_pkts = ntohll(data.u.cpu_tx_initial_action_d.asq_total_pkts);
-    cpucb_pd->cpucb->tx_sem_full_drops = ntohl(data.u.cpu_tx_initial_action_d.ascq_sem_full_drops);
-    cpucb_pd->cpucb->ascq_free_requests = ntohl(data.u.cpu_tx_initial_action_d.ascq_free_requests);
+    cpucb_pd->cpucb->tx_sem_full_drops = ntohll(data.u.cpu_tx_initial_action_d.ascq_sem_full_drops);
+    cpucb_pd->cpucb->ascq_free_requests = ntohll(data.u.cpu_tx_initial_action_d.ascq_free_requests);
 
     return HAL_RET_OK;
 }

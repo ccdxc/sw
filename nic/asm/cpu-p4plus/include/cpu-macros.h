@@ -10,8 +10,8 @@
 #define CPU_PIDX_SIZE                       16
 #define CPU_PIDX_SHIFT                      4
 
-#define CPU_ARQ_TABLE_SIZE                  1024
-#define CPU_ARQ_TABLE_SHIFT                 10
+#define CPU_ARQ_TABLE_SIZE                  4096 
+#define CPU_ARQ_TABLE_SHIFT                 12
 
 #define NIC_ARQ_ENTRY_SIZE                  8
 #define NIC_ARQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
@@ -20,13 +20,13 @@
 
 #define CPU_VALID_BIT_SHIFT                 63
 
-#define CPU_ASQ_TABLE_SIZE                  1024
-#define CPU_ASQ_TABLE_SHIFT                 10
+#define CPU_ASQ_TABLE_SIZE                  4096 
+#define CPU_ASQ_TABLE_SHIFT                 12
 #define CPU_ASQ_ENTRY_SIZE                  8
 #define CPU_ASQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
 
-#define CPU_ASCQ_TABLE_SIZE                 1024
-#define CPU_ASCQ_TABLE_SHIFT                10
+#define CPU_ASCQ_TABLE_SIZE                 4096 
+#define CPU_ASCQ_TABLE_SHIFT                12 
 #define CPU_ASCQ_ENTRY_SIZE                 8
 #define CPU_ASCQ_ENTRY_SIZE_SHIFT           3
 

@@ -62,8 +62,8 @@ header_type cpu_txdma_initial_action_t {
         ascq_sem_inf_addr       : 64;
         asq_pi_ci_eq_drops      : 32;
         asq_total_pkts          : 64;
-        ascq_sem_full_drops     : 32;
-        ascq_free_requests      : 32;
+        ascq_sem_full_drops     : 64;
+        ascq_free_requests      : 64;
     }
 }
 

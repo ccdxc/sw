@@ -9,6 +9,8 @@
 #include "nic/include/capri_barco.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
+#define ARM_CPU_RING_SIZE  4096
+
 namespace hal {
 namespace pd {
 
@@ -143,16 +145,16 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB_BARCO, 1024, 128,
                                   "", 0, 0, NULL, NULL, false, 1, 0};
     g_meta[types::WRING_TYPE_ARQRX] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE,
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQRX, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                             "", 0, 0, armq_slot_parser, arqrx_get_hw_meta,
                             false, 1, 0};
 
     g_meta[types::WRING_TYPE_ASQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE,
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASQ, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                             "", 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_ASCQ] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASCQ, 1024, DEFAULT_WRING_SLOT_SIZE,
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASCQ, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                             "", 0, 0, armq_slot_parser, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
