@@ -30,7 +30,7 @@ testcases:
 
     -   name    : Ping on MNIC Internal Mgmt interface
         testcase: testcases.mnic.ping_int_mnic0
-        ignore: False
+        ignore: True
         args    :
             mtu: 1500
         verifs:
