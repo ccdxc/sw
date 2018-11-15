@@ -2818,10 +2818,9 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	struct ionic_rq_meta *meta;
 	u32 src_qpn, st_len;
 	u8 op;
-	int rc = 0;
 
 	if (cqe_qp->rq_flush)
-		goto out;
+		return 0;
 
 	if (cqe_qp->has_rq) {
 		qp = cqe_qp;
@@ -2845,11 +2844,10 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 			cq->flush = true;
 			list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
 		}
-		goto out;
-	}
 
-	/* if wqe_id is valid, application should see wc */
-	rc = 1;
+		/* posted recvs (if any) flushed by ionic_flush_recv */
+		return 0;
+	}
 
 	/* there had better be something in the recv queue to complete */
 	if (ionic_queue_empty(&qp->rq))
@@ -2936,7 +2934,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 out:
 	ionic_queue_consume(&qp->rq);
 
-	return rc;
+	return 1;
 }
 
 static bool ionic_peek_send(struct ionic_qp *qp)
