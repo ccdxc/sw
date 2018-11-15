@@ -56,19 +56,22 @@ message AccelSeqQueueMetrics {
     delphi.Counter len_update_reqs           = 18;    // CP/DC length updates after decrypt
 }
 
-enum AccelHwRingId {
-    HwRingCp                                 = 0;     // Compression ring
-    HwRingCpHot                              = 1;     // Hot compression ring
-    HwRingDc                                 = 2;     // Decompression ring
-    HwRingDcHot                              = 3;     // Hot decompression ring
-    HwRingXtsEncr                            = 4;     // XTS encryption ring
-    HwRingXtsDecr                            = 5;     // XTS decryption ring
-    HwRingGcmEncr                            = 6;     // GCM encryption ring
-    HwRingGcmDecr                            = 7;     // GCM decryption ring
-}
+//enum temporarily commented out since the new goproto tool does not
+//have support for enum in Key.
+//enum AccelHwRingId {
+//    HwRingCp                                 = 0;     // Compression ring
+//    HwRingCpHot                              = 1;     // Hot compression ring
+//    HwRingDc                                 = 2;     // Decompression ring
+//    HwRingDcHot                              = 3;     // Hot decompression ring
+//    HwRingXtsEncr                            = 4;     // XTS encryption ring
+//    HwRingXtsDecr                            = 5;     // XTS decryption ring
+//    HwRingGcmEncr                            = 6;     // GCM encryption ring
+//    HwRingGcmDecr                            = 7;     // GCM decryption ring
+//}
 
 message AccelHwRingKey {
-    AccelHwRingId       rid                  = 1;     // Ring id
+//    AccelHwRingId       rid                  = 1;     // Ring id
+    uint32              rid                  = 1;     // Ring id
     uint32              sub_rid              = 2;     // Sub-ring id
 }
 

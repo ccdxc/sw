@@ -1509,11 +1509,11 @@ accel_pf_rgroup_find_create(uint32_t ring_handle,
 
     accel_rgroup_ring_t& rgroup_ring = accel_pf_rgroup_map[key];
     rgroup_ring.delphi_ring = make_shared<delphi::objects::AccelHwRingInfo>();
-    rgroup_ring.delphi_ring->mutable_key()->set_rid((::accel_metrics::AccelHwRingId)
+    rgroup_ring.delphi_ring->mutable_key()->set_rid(/*(::accel_metrics::AccelHwRingId)*/
                                                     ring_handle);
     rgroup_ring.delphi_ring->mutable_key()->set_sub_rid(sub_ring);
 
-    delphi_key.set_rid((::accel_metrics::AccelHwRingId)ring_handle);
+    delphi_key.set_rid(/*(::accel_metrics::AccelHwRingId)*/ring_handle);
     delphi_key.set_sub_rid(sub_ring);
     rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
                                  NewAccelHwRingMetrics(delphi_key);

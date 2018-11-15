@@ -37,6 +37,10 @@ NicMgrService::NicMgrService(delphi::SdkPtr sk) {
                                   "nicmgr", NON_AGENT,
                                   (UpgAgentHandlerPtr)NULL);
     sysmgr_ = nicmgr::create_sysmgr_client(sdk_);
+
+    delphi::objects::AccelPfInfo::Mount(sdk_, delphi::ReadWriteMode);
+    delphi::objects::AccelSeqQueueInfo::Mount(sdk_, delphi::ReadWriteMode);
+    delphi::objects::AccelHwRingInfo::Mount(sdk_, delphi::ReadWriteMode);
 }
 
 // OnMountComplete() gets called after all delphi objects are mounted
