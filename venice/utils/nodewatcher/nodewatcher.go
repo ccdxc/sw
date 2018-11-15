@@ -80,7 +80,7 @@ func NewNodeWatcher(ctx context.Context, obj runtime.Object, resolver resolver.I
 
 	logger.Infof("Creating new table")
 	metricObj := &nodeMetrics{}
-	table, err := tsdb.NewOTable(obj, metricObj, &tsdb.TableOpts{})
+	table, err := tsdb.NewVeniceObj(obj, metricObj, nil)
 	if err != nil {
 		return err
 	}

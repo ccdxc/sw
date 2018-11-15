@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
@@ -64,7 +63,7 @@ func localMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	tables := []*iTable{}
 	global.Lock()
 	for _, table := range global.tables {
-		if (tableName == "" || tableName == table.name) && atomic.LoadInt32(&table.dirty) != 0 {
+		if (tableName == "" || tableName == table.name) && table.dirty {
 			tables = append(tables, table)
 		}
 	}

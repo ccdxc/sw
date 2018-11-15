@@ -129,7 +129,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fwTable, err = ntsdb.NewTable("firewall", &ntsdb.TableOpts{})
+		fwTable, err = ntsdb.NewObj("firewall", map[string]string{}, &ntsdb.TableOpts{})
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -26,7 +26,7 @@ func TestTableAPI(t *testing.T) {
 	Assert(t, len(res[0].Series) == 0, "Expected empty result")
 
 	// push metrics
-	table, err := ntsdb.NewTable(measName, &ntsdb.TableOpts{})
+	table, err := ntsdb.NewObj(measName, map[string]string{}, nil)
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -38,7 +38,7 @@ func TestTableAPI(t *testing.T) {
 	time.Sleep(50 * testSendInterval)
 	tt := collectorinteg.NewTimeTable(measName)
 	tags := map[string]string{
-		"Name": t.Name(),
+		"name": t.Name(),
 	}
 	fields := map[string]interface{}{
 		"rxpkts": int64(1),
@@ -60,7 +60,7 @@ func TestPointsPrecision(t *testing.T) {
 	defer ts.TearDown()
 
 	// create tsdb table (change the precision between metrics)
-	table, err := ntsdb.NewTable(t.Name(), &ntsdb.TableOpts{Precision: 3 * time.Millisecond})
+	table, err := ntsdb.NewObj(measName, map[string]string{}, &ntsdb.TableOpts{Precision: 3 * time.Millisecond})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -76,7 +76,7 @@ func TestPointsPrecision(t *testing.T) {
 	// create expected records
 	tt := collectorinteg.NewTimeTable(measName)
 	tags := map[string]string{
-		"Name": t.Name(),
+		"name": t.Name(),
 	}
 	fields := map[string]interface{}{
 		"cpu_usage":    float64(67.6),
@@ -86,7 +86,7 @@ func TestPointsPrecision(t *testing.T) {
 	tt.AddRow(collectorinteg.InfluxTS(ts1, time.Millisecond), tags, fields)
 
 	tags = map[string]string{
-		"Name": t.Name(),
+		"name": t.Name(),
 	}
 	fields = map[string]interface{}{
 		"cpu_usage":    nil,
@@ -117,7 +117,7 @@ func TestRegression(t *testing.T) {
 	ep.ObjectMeta.Name = "ep1"
 	epm := &endpointMetric{}
 
-	table, err := ntsdb.NewOTable(ep, epm, &ntsdb.TableOpts{})
+	table, err := ntsdb.NewVeniceObj(ep, epm, &ntsdb.TableOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 	epm.RxPacketSize.SetRanges([]int64{10, 100, 1000, 10000})
@@ -191,7 +191,7 @@ func TestOTableAPI(t *testing.T) {
 		ep.TypeMeta.Kind = t.Name()
 		ep.ObjectMeta.Tenant = testTenant
 		ep.ObjectMeta.Name = "ep1"
-		table, err := ntsdb.NewOTable(ep, &ep.epm, &ntsdb.TableOpts{})
+		table, err := ntsdb.NewVeniceObj(ep, &ep.epm, &ntsdb.TableOpts{})
 		AssertOk(t, err, "unable to create table")
 
 		ts1 := time.Now()

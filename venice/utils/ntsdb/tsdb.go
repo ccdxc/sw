@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -119,52 +119,65 @@ type iTable struct {
 	keys       map[string]string
 	fields     map[string]interface{}
 	timeFields []*timeField
-	dirty      int32
+	dirty      bool
 }
 
-// NewTable creates a freeform table that can be used to record arbitrary fields
-func NewTable(name string, opts *TableOpts) (Table, error) {
-	t := &iTable{}
-	t.name = name
-	t.keys = make(map[string]string)
-	t.keys["Name"] = name
-	t.fields = make(map[string]interface{})
-
-	t.opts = *opts
-	if t.opts.Precision == 0 {
-		t.opts.Precision = time.Millisecond
+// NewObj creates a metric object that can be used to record arbitrary keys/fields
+func NewObj(tableName string, keys map[string]string, opts *TableOpts) (Table, error) {
+	if strings.HasPrefix(tableName, "obj-") {
+		return nil, fmt.Errorf("Table Name starting with 'obj-' is reserved for internal tables")
 	}
 
 	global.Lock()
 	defer global.Unlock()
-	if _, ok := global.tables[name]; ok {
-		return nil, fmt.Errorf("table already exist")
+	t, ok := global.tables[tableName]
+	if !ok {
+		t = &iTable{}
+		t.name = tableName
+		t.fields = make(map[string]interface{})
+		t.keys = keys
+		if len(t.keys) == 0 {
+			t.keys = map[string]string{"name": tableName}
+		}
 	}
-	global.tables[name] = t
+	if opts != nil {
+		t.opts = *opts
+	}
+	if t.opts.Precision == 0 {
+		t.opts.Precision = time.Millisecond
+	}
+
+	global.tables[tableName] = t
 
 	return t, nil
 }
 
-// NewOTable creates a table for the specified object and its metrics
-func NewOTable(obj interface{}, metrics interface{}, opts *TableOpts) (Table, error) {
+// NewVeniceObj creates a metric object for the specified venice object and its metrics
+func NewVeniceObj(obj interface{}, metrics interface{}, opts *TableOpts) (Table, error) {
 	keys := make(map[string]string)
-	tableName, err := getKeys(obj, keys)
+	objKind, err := getKeys(obj, keys)
 	if err != nil {
 		return nil, err
 	}
 
-	table, err := NewTable(tableName, opts)
+	global.Lock()
+	_, tableExists := global.tables[objKind]
+	global.Unlock()
+
+	table, err := NewObj(objKind, keys, opts)
 	if err != nil {
 		return nil, err
 	}
-	t := table.(*iTable)
-
-	t.keys = keys
-	if err := fillFields(t, metrics); err != nil {
-		return nil, err
+	if !tableExists {
+		global.Lock()
+		t := table.(*iTable)
+		if err := fillFields(t, metrics); err != nil {
+			return nil, err
+		}
+		global.Unlock()
 	}
 
-	return t, nil
+	return table, nil
 }
 
 // Delete cleans up resources associated with the table
@@ -190,12 +203,40 @@ func (c *iCounter) Add(inc int64) {
 	defer table.Unlock()
 
 	c.value += inc
+	tf := &timeField{ts: time.Now(), field: c}
+	table.timeFields = append(table.timeFields, tf)
+	c.nextIdx++
+
+	table.dirty = true
+}
+
+// Sub decrements the counter by the specified value
+func (c *iCounter) Sub(inc int64) {
+	table := c.table
+	table.Lock()
+	defer table.Unlock()
+
+	c.value -= inc
+	tf := &timeField{ts: time.Now(), field: c}
+	table.timeFields = append(table.timeFields, tf)
+	c.nextIdx++
+
+	table.dirty = true
+}
+
+// Set sets the counter value to a specified value
+func (c *iCounter) Set(val int64) {
+	table := c.table
+	table.Lock()
+	defer table.Unlock()
+
+	c.value = val
 	//	var cntr = (*c)
 	tf := &timeField{ts: time.Now(), field: c /* &cntr */}
 	table.timeFields = append(table.timeFields, tf)
 	c.nextIdx++
 
-	atomic.StoreInt32(&table.dirty, 1)
+	table.dirty = true
 }
 
 // Add increments the counter by one
@@ -209,7 +250,21 @@ func (c *iCounter) Inc() {
 	table.timeFields = append(table.timeFields, tf)
 	c.nextIdx++
 
-	atomic.StoreInt32(&table.dirty, 1)
+	table.dirty = true
+}
+
+// Dec decrements the counter by one
+func (c *iCounter) Dec() {
+	table := c.table
+	table.Lock()
+	defer table.Unlock()
+
+	c.value--
+	tf := &timeField{ts: time.Now(), field: c}
+	table.timeFields = append(table.timeFields, tf)
+	c.nextIdx++
+
+	table.dirty = true
 }
 
 // Counter function creates and returns a new counter metric
@@ -248,7 +303,7 @@ func (g *iGauge) Set(val float64, ts time.Time) {
 	table.timeFields = append(table.timeFields, tf)
 	g.nextIdx++
 
-	atomic.StoreInt32(&table.dirty, 1)
+	table.dirty = true
 }
 
 // Gauge creates a gauge metric
@@ -286,7 +341,7 @@ func (b *iBool) Set(val bool, ts time.Time) {
 	table.timeFields = append(table.timeFields, tf)
 	b.nextIdx++
 
-	atomic.StoreInt32(&table.dirty, 1)
+	table.dirty = true
 }
 
 // Bool creates a boolean metric
@@ -324,7 +379,7 @@ func (s *iString) Set(val string, ts time.Time) {
 	table.timeFields = append(table.timeFields, tf)
 	s.nextIdx++
 
-	atomic.StoreInt32(&table.dirty, 1)
+	table.dirty = true
 }
 
 // String creates a string metric
@@ -419,7 +474,7 @@ func (h *iHistogram) AddSample(value int64) {
 	h.nextIdx++
 
 	h.dirty[key] = true
-	atomic.StoreInt32(&table.dirty, 1)
+	table.dirty = true
 }
 
 // Summary
@@ -457,7 +512,7 @@ func (s *iSummary) AddSample(value float64) {
 	table.timeFields = append(table.timeFields, tf)
 	s.nextIdx++
 
-	atomic.StoreInt32(&table.dirty, 1)
+	table.dirty = true
 }
 
 // Point
@@ -480,5 +535,5 @@ func (table *iTable) Point(keys map[string]string, fields map[string]interface{}
 	tf := &timeField{ts: ts, field: p}
 	table.timeFields = append(table.timeFields, tf)
 
-	atomic.StoreInt32(&table.dirty, 1)
+	table.dirty = true
 }

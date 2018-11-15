@@ -7,7 +7,10 @@ import "time"
 // Counter implements an incrementing metric
 type Counter interface {
 	Add(int64)
+	Sub(int64)
 	Inc()
+	Dec()
+	Set(int64)
 }
 
 // Gauge implements a changeable metric i.e. can be set to any value

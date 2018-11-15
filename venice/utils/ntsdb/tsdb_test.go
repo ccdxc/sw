@@ -19,6 +19,7 @@ import (
 
 const (
 	testSendInterval = 10 * time.Millisecond
+	tableID          = "table-id"
 )
 
 type testSuite struct {
@@ -92,7 +93,7 @@ func TestOMetricsAPI(t *testing.T) {
 	ep.ObjectMeta.Name = "ucase1"
 
 	// Use case 1 - collect various kinds of metrics
-	table, err := NewOTable(ep, &ep.epm, &TableOpts{})
+	table, err := NewVeniceObj(ep, &ep.epm, nil)
 	AssertOk(t, err, "unable to create table")
 
 	ep.epm.OutgoingConns.Add(32)
@@ -112,7 +113,7 @@ func TestOMetricsAPI(t *testing.T) {
 	// Use case 2 - another table with same kind/tenant
 	ep.ObjectMeta.Name = "ucase2"
 	epm := &endpointMetric{}
-	table, err = NewOTable(ep, epm, &TableOpts{})
+	table, err = NewVeniceObj(ep, epm, nil)
 	AssertOk(t, err, "unable to create table")
 
 	epm.OutgoingConns.Add(7)
@@ -123,12 +124,17 @@ func TestOMetricsAPI(t *testing.T) {
 	// Use case 3 - use freeform apis on Otable
 	ep.ObjectMeta.Name = "ucase3"
 	epm = &endpointMetric{}
-	table, err = NewOTable(ep, epm, &TableOpts{})
+	table, err = NewVeniceObj(ep, epm, nil)
 	AssertOk(t, err, "unable to create table")
 
 	epm.OutgoingConns.Add(3)
 	epm.OutgoingConns.Inc()
+	epm.OutgoingConns.Dec()
+	epm.OutgoingConns.Inc()
+	epm.OutgoingConns.Sub(20)
+	epm.OutgoingConns.Add(23)
 	table.Counter("OutgoingConns").Inc()
+	epm.IncomingConns.Set(77)
 
 	time.Sleep(3 * testSendInterval)
 	table.Delete()
@@ -153,7 +159,7 @@ func TestOMetricsAPI(t *testing.T) {
 			"OutgoingConns": int64(7), "Violations": int64(1),
 		},
 		{
-			"OutgoingConns": int64(5),
+			"OutgoingConns": int64(8), "IncomingConns": int64(77),
 		},
 	}
 
@@ -165,7 +171,8 @@ func TestOMetricsAPI(t *testing.T) {
 func TestMetricsAPI(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, nil)
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -186,7 +193,7 @@ func TestMetricsAPI(t *testing.T) {
 	table.Summary("rtt").AddSample(18)
 
 	tags := []map[string]string{
-		{"Name": t.Name()},
+		keyTags,
 	}
 	fields := []map[string]interface{}{
 		{
@@ -206,7 +213,8 @@ func TestMetricsAPI(t *testing.T) {
 func TestMetricsWithPoints(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, nil)
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -220,7 +228,7 @@ func TestMetricsWithPoints(t *testing.T) {
 		map[string]interface{}{"action": "permitted"}, time.Time{})
 
 	tags := []map[string]string{
-		{"Name": t.Name()},
+		keyTags,
 		{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
 		{"src": "10.1.1.1", "dest": "12.1.1.1", "port": "80"},
 	}
@@ -238,7 +246,8 @@ func TestMetricsWithPoints(t *testing.T) {
 func TestAttributeChangeWithAggregation(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, nil)
 	AssertOk(t, err, "unable to create table")
 
 	table.String("status").Set("upgrading", time.Time{})
@@ -250,8 +259,8 @@ func TestAttributeChangeWithAggregation(t *testing.T) {
 	time.Sleep(3 * testSendInterval)
 
 	tags := []map[string]string{
-		{"Name": t.Name()},
-		{"Name": t.Name()},
+		keyTags,
+		keyTags,
 	}
 	fields := []map[string]interface{}{
 		{
@@ -279,7 +288,7 @@ func TestHistogramCustomRangeOTable(t *testing.T) {
 
 	epm := &endpointMetric{}
 
-	table, err := NewOTable(ep, epm, &TableOpts{})
+	table, err := NewVeniceObj(ep, epm, nil)
 	AssertOk(t, err, "unable to create table")
 
 	ranges := []int64{10, 100, 1000, 10000}
@@ -317,10 +326,11 @@ func TestHistogramCustomRangeOTable(t *testing.T) {
 func TestHistogramCustomRange(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	ranges := []int64{10, 100, 1000, 10000}
-	table, err := NewTable(t.Name(), &TableOpts{})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
 	AssertOk(t, err, "unable to create table")
 
+	ranges := []int64{10, 100, 1000, 10000}
 	table.Histogram("latency").SetRanges(ranges)
 
 	table.Histogram("latency").AddSample(15)
@@ -332,7 +342,7 @@ func TestHistogramCustomRange(t *testing.T) {
 	time.Sleep(3 * testSendInterval)
 
 	tags := []map[string]string{
-		{"Name": t.Name()},
+		keyTags,
 	}
 	fields := []map[string]interface{}{
 		{
@@ -350,7 +360,8 @@ func TestHistogramCustomRange(t *testing.T) {
 func TestMultipleSets(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -362,9 +373,9 @@ func TestMultipleSets(t *testing.T) {
 	table.Counter("rxpkts").Inc()
 
 	tags := []map[string]string{
-		{"Name": t.Name()},
-		{"Name": t.Name()},
-		{"Name": t.Name()},
+		keyTags,
+		keyTags,
+		keyTags,
 	}
 	fields := []map[string]interface{}{
 		{"bandwidth": float64(8.1)},
@@ -380,7 +391,8 @@ func TestMultipleSets(t *testing.T) {
 func TestMultipleSendIntervals(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -394,8 +406,8 @@ func TestMultipleSendIntervals(t *testing.T) {
 	table.Counter("rxpkts").Inc()
 
 	tags := []map[string]string{
-		{"Name": t.Name()},
-		{"Name": t.Name()},
+		keyTags,
+		keyTags,
 	}
 	fields := []map[string]interface{}{
 		{"bandwidth": float64(88.1), "rxpkts": int64(3)},
@@ -410,7 +422,8 @@ func TestMultipleSendIntervals(t *testing.T) {
 func TestUserSuppliedTime(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -421,7 +434,7 @@ func TestUserSuppliedTime(t *testing.T) {
 	table.Counter("rxpkts").Inc()
 
 	tags := []map[string]string{
-		{"Name": t.Name()},
+		keyTags,
 	}
 	fields := []map[string]interface{}{
 		{"bandwidth": float64(94.3), "rxpkts": int64(3)},
@@ -435,7 +448,8 @@ func TestUserSuppliedTime(t *testing.T) {
 func TestLocalTable(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{Local: true})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{Local: true})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -462,7 +476,8 @@ func TestLocalTable(t *testing.T) {
 func TestLocalTableMultipleRecords(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{Local: true})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{Local: true})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -482,7 +497,8 @@ func TestLocalTableMultipleRecords(t *testing.T) {
 func TestLocalOneTable(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{Local: true})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{Local: true})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -490,7 +506,9 @@ func TestLocalOneTable(t *testing.T) {
 	table.Counter("counter1").Inc()
 	table.Gauge("cpu_in_use").Set(67.6, time.Time{})
 
-	table2, err := NewTable(t.Name()+"_2", &TableOpts{Local: true})
+	tableName2 := t.Name() + "_2"
+	keyTags2 := map[string]string{tableID: tableName2}
+	table2, err := NewObj(tableName2, keyTags2, &TableOpts{Local: true})
 	AssertOk(t, err, "unable to create table")
 	defer table2.Delete()
 
@@ -509,7 +527,8 @@ func TestLocalOneTable(t *testing.T) {
 func TestLocalTableAttribute(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{Local: true})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{Local: true})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -524,19 +543,22 @@ func TestLocalTableAttribute(t *testing.T) {
 	Assert(t, lms[0].Attributes["counter1"] == "2", fmt.Sprintf("invalid lms attributes %+v", lms))
 }
 
-func TestTableRecreateFailure(t *testing.T) {
-	table, err := NewTable(t.Name(), &TableOpts{})
+func TestTableRecreate(t *testing.T) {
+	keyTags := map[string]string{tableID: t.Name()}
+	t1, err := NewObj(t.Name(), keyTags, &TableOpts{})
 	AssertOk(t, err, "unable to create table")
-	defer table.Delete()
+	defer t1.Delete()
 
-	_, err = NewTable(t.Name(), &TableOpts{})
-	Assert(t, err != nil, "successfully able to recreate table")
+	t2, err2 := NewObj(t.Name(), keyTags, &TableOpts{})
+	AssertOk(t, err2, "unable to create table")
+	Assert(t, t1 == t2, "didn't get same table")
 }
 
 func TestInitOptsReset(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -551,7 +573,8 @@ func TestInitOptsReset(t *testing.T) {
 	// set the send interval
 	Init(ts.context, &Opts{SendInterval: time.Second})
 
-	table, err = NewTable(t.Name()+"_bigger_timeout", &TableOpts{})
+	keyTags = map[string]string{tableID + "_bigger_timeout": t.Name()}
+	table, err = NewObj(t.Name(), keyTags, &TableOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -570,7 +593,8 @@ func TestInitOptsReset(t *testing.T) {
 func TestOptionTablePrecision(t *testing.T) {
 	ts.metricServer.ClearMetrics()
 
-	table, err := NewTable(t.Name(), &TableOpts{Precision: time.Millisecond})
+	keyTags := map[string]string{tableID: t.Name()}
+	table, err := NewObj(t.Name(), keyTags, &TableOpts{Precision: time.Millisecond})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -581,8 +605,8 @@ func TestOptionTablePrecision(t *testing.T) {
 	time.Sleep(3 * testSendInterval)
 
 	tags := []map[string]string{
-		{"Name": t.Name()},
-		{"Name": t.Name()},
+		keyTags,
+		keyTags,
 	}
 	fields := []map[string]interface{}{
 		{"cpu_usage": float64(67.6), "disk_usage": float64(31.4)},
@@ -607,7 +631,7 @@ func TestOTablePerf(t *testing.T) {
 	epm := &endpointMetric{}
 
 	// increase precision to capture accurate count of exported metrics
-	table, err := NewOTable(ep, epm, &TableOpts{})
+	table, err := NewVeniceObj(ep, epm, &TableOpts{})
 	AssertOk(t, err, "unable to create table")
 	epm.RxPacketSize.SetRanges([]int64{10, 100, 1000, 10000})
 	intSamples := []int64{9, 99, 999, 9999}

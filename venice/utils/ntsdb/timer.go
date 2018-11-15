@@ -2,7 +2,6 @@ package ntsdb
 
 import (
 	"fmt"
-	"sync/atomic"
 	"time"
 
 	protobuf "github.com/gogo/protobuf/types"
@@ -66,7 +65,7 @@ func sendAllTables() {
 	global.Lock()
 	dbName := global.opts.DBName
 	for _, table := range global.tables {
-		if !table.opts.Local && atomic.LoadInt32(&table.dirty) != 0 {
+		if !table.opts.Local && table.dirty {
 			tables = append(tables, table)
 		}
 	}
@@ -158,7 +157,7 @@ func (table *iTable) getMetricBundles(mb *metric.MetricBundle) {
 
 	// clear cache
 	table.timeFields = []*timeField{}
-	atomic.StoreInt32(&table.dirty, 0)
+	table.dirty = false
 }
 
 func newMetricPoint(table *iTable, beginTime time.Time) *metric.MetricPoint {
