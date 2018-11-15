@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -53,11 +54,14 @@ type Option func(*EventsManager)
 // EventsManager instance of events manager; responsible for all aspects of events
 // including management of elastic connections.
 type EventsManager struct {
-	RPCServer *rpcserver.RPCServer // RPCServer that exposes the server implementation of event manager APIs
-	apiClient apiclient.Services   // api client
-	memDb     *memdb.MemDb         // memDb to store the alert policies and alerts
-	logger    log.Logger           // logger
-	esClient  elastic.ESClient     // elastic client
+	RPCServer     *rpcserver.RPCServer  // RPCServer that exposes the server implementation of event manager APIs
+	apiClient     apiclient.Services    // api client
+	memDb         *memdb.MemDb          // memDb to store the alert policies and alerts
+	logger        log.Logger            // logger
+	esClient      elastic.ESClient      // elastic client
+	alertEngine   alertengine.Interface // alert engine
+	ctxCancelFunc context.CancelFunc    // cancel func
+	wg            sync.WaitGroup        // wait group for API server watcher
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -74,9 +78,12 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 		return nil, errors.New("all parameters are required")
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	em := &EventsManager{
-		logger: logger,
-		memDb:  memdb.NewMemDb(),
+		logger:        logger,
+		memDb:         memdb.NewMemDb(),
+		ctxCancelFunc: cancel,
 	}
 	for _, opt := range opts {
 		if opt != nil {
@@ -85,7 +92,8 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 	}
 
 	// start watching alert policies and alerts; update the results in mem DB
-	go em.watchAPIServerEvents(resolverClient)
+	em.wg.Add(1)
+	go em.watchAPIServerEvents(ctx, resolverClient)
 
 	// create elastic client
 	if em.esClient == nil {
@@ -109,19 +117,42 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 		return nil, err
 	}
 
-	alertEngine, err := alertengine.NewAlertEngine(em.memDb, logger.WithContext("pkg", "evts-alert-engine"), resolverClient)
+	var err error
+
+	em.alertEngine, err = alertengine.NewAlertEngine(em.memDb, logger.WithContext("pkg", "evts-alert-engine"), resolverClient)
 	if err != nil {
 		em.logger.Errorf("failed to create alert engine, err: %v", err)
 		return nil, err
 	}
 
 	// create RPC server
-	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, alertEngine)
+	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, em.alertEngine)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating RPC server")
 	}
 
 	return em, nil
+}
+
+// Stop stops events manager
+func (em *EventsManager) Stop() {
+	if em.RPCServer != nil {
+		em.RPCServer.Stop()
+		em.RPCServer = nil
+	}
+
+	if em.alertEngine != nil {
+		em.alertEngine.Stop()
+		em.alertEngine = nil
+	}
+
+	if em.esClient != nil {
+		em.esClient.Close()
+		em.esClient = nil
+	}
+
+	em.ctxCancelFunc() // this will stop watchAPIServerEvents go routine
+	em.wg.Wait()
 }
 
 // createEventsElasticTemplate helper function to create index template for events.
@@ -155,9 +186,10 @@ func (em *EventsManager) createEventsElasticTemplate(esClient elastic.ESClient) 
 }
 
 // watchAPIServerEvents handles alert policy and alert events
-func (em *EventsManager) watchAPIServerEvents(resolverClient resolver.Interface) error {
+func (em *EventsManager) watchAPIServerEvents(parentCtx context.Context, resolverClient resolver.Interface) error {
+	defer em.wg.Done()
 	for {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(parentCtx)
 		defer cancel()
 
 		client, err := utils.ExecuteWithRetry(func() (interface{}, error) {
@@ -176,6 +208,7 @@ func (em *EventsManager) watchAPIServerEvents(resolverClient resolver.Interface)
 		em.apiClient.Close()
 		if err := ctx.Err(); err != nil {
 			em.logger.Errorf("watcher context error: %v", err)
+			return err
 		}
 
 		time.Sleep(2 * time.Second)

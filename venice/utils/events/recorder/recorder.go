@@ -329,7 +329,7 @@ func (r *recorderImpl) reconnect() {
 		// make sure the connection is stable
 		time.Sleep(10 * time.Millisecond)
 		if r.eventsProxy.rpcClient.ClientConn.GetState() != connectivity.Ready {
-			log.Errorf("connnection not ready after 10ms")
+			log.Errorf("connection not ready after 10ms")
 			continue
 		}
 
@@ -382,7 +382,7 @@ func (r *recorderImpl) processFailedEvents() {
 	r.eventsFile.DeleteBackupFiles(filenames)
 }
 
-// forwardEvents helper function to foward given list of events to the proxy.
+// forwardEvents helper function to forward given list of events to the proxy.
 // it will be retried until success or stop
 func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
 	r.failedEventsForwarder.wg.Add(1)

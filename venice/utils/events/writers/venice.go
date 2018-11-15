@@ -207,7 +207,7 @@ func (v *VeniceWriter) reconnect() {
 		defer v.eventsMgr.Unlock()
 		v.eventsMgr.client = emgrpc.NewEvtsMgrAPIClient(v.eventsMgr.rpcClient.ClientConn)
 		v.eventsMgr.connectionAlive = true
-		log.Info("reconnnected with events manager")
+		log.Info("reconnected with events manager")
 		return
 	}
 }

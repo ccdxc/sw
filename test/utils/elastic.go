@@ -45,9 +45,9 @@ func CreateElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 
 // StartElasticsearch starts elasticsearch service
 func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.Certificate) (string, string, error) {
-	log.Info("starting elasticsearch ..")
-
 	setMaxMapCount()
+
+	log.Info("starting elasticsearch ...")
 
 	var authDir string
 	if signer != nil {
@@ -107,7 +107,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 
 		// retry with a different port
 		if strings.Contains(string(out), "port is already allocated") {
-			log.Errorf("port already allocated, retrying")
+			log.Errorf("port(%d) already allocated, retrying", port)
 			continue
 		}
 
@@ -132,7 +132,7 @@ func StopElasticsearch(name, authDir string) error {
 		return nil
 	}
 
-	log.Info("stopping elasticsearch ..")
+	log.Info("stopping elasticsearch ...")
 
 	defer certs.DeleteTLSCredentials(authDir)
 	defer os.RemoveAll(authDir)
@@ -194,16 +194,18 @@ func createElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 	if signer != nil {
 		authDir, err := ioutil.TempDir("", "elastic-client")
 		if err != nil {
-			return nil, fmt.Errorf("Error creating temp dir for credentials: %v", err)
+			return nil, fmt.Errorf("error creating temp dir for credentials: %v", err)
 		}
 		defer os.RemoveAll(authDir)
+
 		err = credentials.GenElasticClientsAuth(authDir, signer, trustRoots)
 		if err != nil {
-			return nil, fmt.Errorf("Error generating Elastic client TLS credentials: %v", err)
+			return nil, fmt.Errorf("error generating Elastic client TLS credentials: %v", err)
 		}
+
 		tlsConfig, err := certs.LoadTLSCredentials(authDir)
 		if err != nil {
-			return nil, fmt.Errorf("Error accessing client credentials: %v", err)
+			return nil, fmt.Errorf("error accessing client credentials: %v", err)
 		}
 
 		tlsConfig.ServerName = globals.ElasticSearch + "-https"
@@ -247,14 +249,14 @@ func setMaxMapCount() {
 	// $ sysctl -w vm.max_map_count=262144
 	//
 	if runtime.GOOS == "darwin" {
-		fmt.Println("\n++++++ run this one time setup commands from your mac if you haven't done yet +++++++\n" +
+		fmt.Println("++++++ run this one time setup commands from your mac if you haven't done yet +++++++\n" +
 			"screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty\n" +
 			"on the blank screen, press return and run: sysctl -w vm.max_map_count=262144")
 		fmt.Println()
 		return
 	}
 
-	fmt.Println("\n++++++ setting vm.max_map_count=262144 +++++++")
+	fmt.Println("++++++ setting vm.max_map_count=262144 +++++++")
 	out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput()
 	outStr := strings.TrimSpace(string(out))
 	if err != nil || outStr != "vm.max_map_count = 262144" {

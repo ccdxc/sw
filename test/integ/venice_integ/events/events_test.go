@@ -205,7 +205,7 @@ func TestEventsProxyRestart(t *testing.T) {
 		// and the events are dlivered to elastic
 		for i := 0; i < 3; i++ {
 			time.Sleep(1 * time.Second)
-			ti.evtsProxy.RPCServer.Stop()
+			ti.evtsProxy.Stop()
 
 			// proxy won't be able to accept any events for 2s
 			time.Sleep(1 * time.Second)
@@ -240,13 +240,13 @@ func TestEventsProxyRestart(t *testing.T) {
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
-	ti.assertElasticUniqueEvents(t, query, false, 3*numRecorders, "60s") // mininum of (3 event types * numRecorders = unique events)
+	ti.assertElasticUniqueEvents(t, query, false, 3*numRecorders, "60s") // minimum of (3 event types * numRecorders = unique events)
 	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "60s") // there can be duplicates because of proxy restarts; so check for received >= sent
 }
 
 // TestEventsMgrRestart tests the events flow with events manager restart
 // 1. record events using recorder.
-// 2. restart events manager.
+// 2. restart events manager multiple times.
 //     - venice writer -> events manager becomes unavailable;
 //     - events should be buffered at the writer and sent once the connection is established back again.
 // 3. make sure none of the event is lost during restart (events can be lost only when the writer channel is full).
@@ -308,15 +308,20 @@ func TestEventsMgrRestart(t *testing.T) {
 	go func() {
 		evtsMgrURL := ti.evtsMgr.RPCServer.GetListenURL()
 
-		time.Sleep(1 * time.Second)
-		ti.evtsMgr.RPCServer.Stop()
+		for i := 0; i < 3; i++ {
+			time.Sleep(1 * time.Second)
+			ti.evtsMgr.Stop()
 
-		// manager won't be able to accept any events for 2s; all the elastic writes will be denied
-		// and all the events will be buffered at the writer for this time
-		time.Sleep(1 * time.Second)
+			// manager won't be able to accept any events for 1s; all the elastic writes will be denied
+			// and all the events will be buffered at the writer for this time
+			time.Sleep(1 * time.Second)
 
-		// writers should be able to release all the holding events from the buffer
-		testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient)
+			// writers should be able to release all the holding events from the buffer
+			evtsMgr, _, err := testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient)
+			AssertOk(t, err, "failed to start events manager, err: %v", err)
+			ti.evtsMgr = evtsMgr
+		}
+
 		time.Sleep(1 * time.Second)
 
 		// stop all the recorders
@@ -369,6 +374,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
 	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, ti.logger)
 	AssertOk(t, err, "failed to setup authN service")
+	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
 	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
 	AssertOk(t, err, "failed to get authZ header")
 

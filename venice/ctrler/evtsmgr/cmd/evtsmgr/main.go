@@ -93,7 +93,7 @@ func main() {
 		log.Fatalf("error creating events manager instance: %v", err)
 	}
 
-	logger.Infof("%s is running {%+v}", globals.EvtsMgr, *emgr)
+	logger.Infof("%s is running {%+v}", globals.EvtsMgr, emgr)
 	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.EvtsMgr, utils.GetHostname()), nil)
 
 	// wait till the server stops

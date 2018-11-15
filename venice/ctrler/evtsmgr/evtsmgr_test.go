@@ -87,7 +87,7 @@ func TestEventsManager(t *testing.T) {
 	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger, WithElasticClient(ec))
 	tu.AssertOk(t, err, "failed to create events manager")
 
-	defer evtsMgr.RPCServer.Stop()
+	evtsMgr.Stop()
 }
 
 // TestEventsManagerInstantiation tests the events manager instantiation cases
@@ -151,9 +151,11 @@ func TestEventsElasticTemplate(t *testing.T) {
 			}
 			return true, nil
 		}, "failed to create elastic client", "20ms", "2m")
+	defer esClient.Close()
 
 	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger, WithElasticClient(esClient))
 	tu.AssertOk(t, err, "failed to create events manager")
+	defer evtsMgr.Stop()
 
 	err = evtsMgr.createEventsElasticTemplate(esClient)
 	tu.AssertOk(t, err, "failed to create events template")
@@ -175,7 +177,7 @@ func TestEventsMgrAlertPolicyCache(t *testing.T) {
 	tu.AssertOk(t, err, "failed to create elastic client")
 	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger, WithElasticClient(ec))
 	tu.AssertOk(t, err, "failed to create events manager")
-	defer evtsMgr.RPCServer.Stop()
+	defer evtsMgr.Stop()
 
 	pol := &monitoring.AlertPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "AlertPolicy"},
@@ -235,6 +237,7 @@ func TestEventsMgrAlertCache(t *testing.T) {
 	tu.AssertOk(t, err, "failed to create elastic client")
 	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger, WithElasticClient(ec))
 	tu.AssertOk(t, err, "failed to create events manager")
+	defer evtsMgr.Stop()
 
 	alert := &monitoring.Alert{
 		TypeMeta:   api.TypeMeta{Kind: "Alert"},

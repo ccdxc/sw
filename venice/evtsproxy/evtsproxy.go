@@ -83,6 +83,14 @@ func NewEventsProxy(serverName, serverURL, evtsMgrURL string, resolverClient res
 	}, nil
 }
 
+// Stop stops events proxy
+func (ep *EventsProxy) Stop() {
+	if ep.RPCServer != nil {
+		ep.RPCServer.Stop()
+		ep.RPCServer = nil
+	}
+}
+
 // addDefaultWriters registers default writer with the dispatcher
 func addDefaultWriters(defaultWriters []WriterType, dispatcher events.Dispatcher, evtsMgrURL string,
 	resolverClient resolver.Interface, logger log.Logger) error {

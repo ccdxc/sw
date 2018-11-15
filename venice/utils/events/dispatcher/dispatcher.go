@@ -32,15 +32,15 @@ const (
 type dispatcherImpl struct {
 	sync.Mutex                  // for protecting the dispatcher object
 	sendInterval  time.Duration // i.e, batch interval; events are sent to the writers in this interval
-	dedupInterval time.Duration // events are deduped for the given interval
+	dedupInterval time.Duration // events are de-duped for the given interval
 	logger        log.Logger    // logger
 
 	// store, cache and batch needs to be in sync always; so, they should be handled through a common lock
 	eventsStore   events.PersistentStore // persistent store for events
-	dedupCache    *cache                 // in-memory cache to dedup events
+	dedupCache    *cache                 // in-memory cache to de-dup events
 	eventsBatcher *eventsBatcher         // batcher batches the list of events to be sent out in the next send (batch) interval
 
-	// any operation on writers (events distribution, registration, unregistraion) should not stall the events pipeline
+	// any operation on writers (events distribution, registration, un-registration) should not stall the events pipeline
 	writers *eventWriters // event writers
 
 	stop     sync.Once      // used for shutting down the dispatcher
@@ -56,7 +56,7 @@ type eventWriters struct {
 	list       map[string]*writer // map of writers with their name; writers are given a name during creation NewWriter(...).
 }
 
-// writer ties the writer with it's associated channal receiving events and the offset tracker.
+// writer ties the writer with it's associated channel receiving events and the offset tracker.
 type writer struct {
 	eventsCh      events.Chan
 	offsetTracker events.OffsetTracker
@@ -106,8 +106,8 @@ func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath st
 
 // Action implements the action to be taken when the event reaches the dispatcher.
 // 1. Writes the events to persistent store.
-// 2. Add event to the dedup cache.
-// 3. Add the deduped event to the batch which will be sent to the writers.
+// 2. Add event to the de-dup cache.
+// 3. Add the de-duped event to the batch which will be sent to the writers.
 func (d *dispatcherImpl) Action(event evtsapi.Event) error {
 	return d.addEvent(&event)
 }
@@ -133,7 +133,7 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 		return err
 	}
 
-	// dedup and add the event to batch
+	// de-dup and add the event to batch
 	if err := d.dedupAndBatch(events.GetEventKey(event), event); err != nil {
 		d.logger.Errorf("failed to dedup and batch event {%s}, err: %v", event.GetUUID(), err)
 		return err
@@ -255,7 +255,7 @@ func (d *dispatcherImpl) RegisterWriter(w events.Writer) (events.Chan, events.Of
 // UnregisterWriter removes the writer identified by given name from the list of writers. As a result
 // the channel associated with the given name will no more receive the events
 // from the dispatcher. And, offset tracker will be stopped as well.
-// call does nothing if the writer identified by given name is not found in the disptacher's writer list.
+// call does nothing if the writer identified by given name is not found in the dispatcher's writer list.
 func (d *dispatcherImpl) UnregisterWriter(name string) {
 	d.writers.Lock()
 	if w, ok := d.writers.list[name]; ok {
@@ -266,7 +266,7 @@ func (d *dispatcherImpl) UnregisterWriter(name string) {
 	d.writers.Unlock()
 }
 
-// Shutdown sends shutdown signal to the notifier, flushes all the deudped events to all
+// Shutdown sends shutdown signal to the notifier, flushes all the de-duped events to all
 // registered writers and closes all the writers.
 func (d *dispatcherImpl) Shutdown() {
 	d.stop.Do(func() {
@@ -299,7 +299,7 @@ func (d *dispatcherImpl) Shutdown() {
 	})
 }
 
-// notifyWriters is a deamon which processes the deduped/cached events every send interval
+// notifyWriters is a daemon which processes the de-duped/cached events every send interval
 // and distributes it to all the writers. This daemon stops when it receives shutdown
 // signal.
 func (d *dispatcherImpl) notifyWriters() {
@@ -311,6 +311,10 @@ func (d *dispatcherImpl) notifyWriters() {
 		case <-ticker.C: // distribute current batch with offset
 			d.Lock()
 			evts := d.eventsBatcher.getEvents()
+			if len(evts) == 0 {
+				d.Unlock()
+				continue
+			}
 			d.eventsBatcher.clear()
 
 			offset, err := d.eventsStore.GetCurrentOffset()
@@ -347,6 +351,7 @@ func (d *dispatcherImpl) distributeEvents(evts []*evtsapi.Event, offset int64) {
 			// slow writers will block this. So, it is highly recommended to set a large enough
 			// channel length for them.
 		default:
+			d.logger.Debugf("writer event channel {%s} failed to receive events", w.wr.Name())
 			// for non-blocking send; writer failing to receive the event for a any reason (channel full)
 			// will lose the event.
 		}
@@ -371,7 +376,7 @@ func (d *dispatcherImpl) writeToEventsStore(event *evtsapi.Event) error {
 func (d *dispatcherImpl) dedupAndBatch(hashKey string, event *evtsapi.Event) error {
 	evt := *event
 
-	// look for potentail deduplication
+	// look for potential de-duplication
 	srcCache := d.getCacheByEventSource(event.GetSource())
 	if existingEvt, ok := srcCache.Get(hashKey); ok { // found, update the count of the existing event and timestamp
 		d.logger.Debugf("event {%s} found in cache, updating the counter and timestamp", event.GetSelfLink())
@@ -383,7 +388,7 @@ func (d *dispatcherImpl) dedupAndBatch(hashKey string, event *evtsapi.Event) err
 		evt.ObjectMeta.ModTime.Timestamp = *timestamp
 	}
 
-	// add to dedup cache
+	// add to de-dup cache
 	srcCache.Add(hashKey, evt)
 
 	// add event to the batch

@@ -72,6 +72,7 @@ func (t *tInfo) setup(tst *testing.T) error {
 	var err error
 	logConfig := log.GetDefaultConfig("events_test")
 	logConfig.Format = log.JSONFmt
+	logConfig.Debug = true
 
 	t.logger = log.GetNewLogger(logConfig)
 	t.mockResolver = mockresolver.New()
@@ -140,8 +141,8 @@ func (t *tInfo) teardown() {
 
 	testutils.StopElasticsearch(t.elasticsearchName, t.elasticsearchAuthDir)
 
-	t.evtsMgr.RPCServer.Stop()
-	t.evtsProxy.RPCServer.Stop()
+	t.evtsMgr.Stop()
+	t.evtsProxy.Stop()
 	t.apiServer.Stop()
 
 	// remove the local persistent events store
@@ -160,9 +161,6 @@ func (t *tInfo) createElasticClient() error {
 // startElasticsearch helper function to start elasticsearch
 func (t *tInfo) startElasticsearch() error {
 	var err error
-
-	log.Infof("starting elasticsearch")
-
 	t.elasticsearchName = uuid.NewV4().String()
 	t.elasticsearchAddr, t.elasticsearchAuthDir, err = testutils.StartElasticsearch(t.elasticsearchName, t.signer, t.trustRoots)
 	if err != nil {

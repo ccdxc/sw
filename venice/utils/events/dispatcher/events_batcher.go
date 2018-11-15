@@ -33,24 +33,33 @@ func (b *batch) GetEvents() []*evtsapi.Event {
 // map is used for O(1) look up to avoid iterating the slice.
 // NOTE: the caller will need to ensure thread safety.
 type eventsBatcher struct {
-	meta map[string]int   // event key (uniquely identifies the event) mapping to the actual index of an event in the slice
-	evts []*evtsapi.Event // helps to preserve the order of events
+	meta        map[string]int   // event key (uniquely identifies the event) mapping to the actual index of an event in the slice
+	evts        []*evtsapi.Event // helps to preserve the order of events
+	expiredEvts []*evtsapi.Event // list of events that're expired from the cache but not dispatched to the writers yet
 }
 
 // newEventsBatcher creates a new events batcher
 func newEventsBatcher() *eventsBatcher {
-	return &eventsBatcher{meta: map[string]int{}, evts: []*evtsapi.Event{}}
+	return &eventsBatcher{meta: map[string]int{}, evts: []*evtsapi.Event{}, expiredEvts: []*evtsapi.Event{}}
 }
 
 // clear clears the events batch
 func (e *eventsBatcher) clear() {
 	e.meta = map[string]int{}
 	e.evts = []*evtsapi.Event{}
+	e.expiredEvts = []*evtsapi.Event{}
 }
 
 // add adds the given event to the batch or updates the existing event
 func (e *eventsBatcher) add(key string, evt *evtsapi.Event) {
 	if index, ok := e.meta[key]; ok {
+		// different UUID indicates that the existing (old) event got expired from the cache
+		// but not dispatched yet as it still exists in the batch.
+		if e.evts[index].GetUUID() != evt.GetUUID() {
+			e.expiredEvts = append(e.expiredEvts, e.evts[index])
+		}
+
+		// update the slice with new event
 		e.evts[index] = evt
 		return
 	}
@@ -61,5 +70,5 @@ func (e *eventsBatcher) add(key string, evt *evtsapi.Event) {
 
 // getEvents returns the list of events from the batcher
 func (e *eventsBatcher) getEvents() []*evtsapi.Event {
-	return e.evts
+	return append(e.evts, e.expiredEvts...)
 }

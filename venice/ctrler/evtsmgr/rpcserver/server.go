@@ -25,9 +25,7 @@ func (rs *RPCServer) Done() <-chan error {
 
 // Stop stops the RPC server
 func (rs *RPCServer) Stop() error {
-	sErr := rs.server.Stop() // this will stop accepting further requests
-	rs.handler.alertEngine.Stop()
-	return sErr
+	return rs.server.Stop() // this will stop accepting further requests
 }
 
 // GetListenURL returns the listen URL for the server.
