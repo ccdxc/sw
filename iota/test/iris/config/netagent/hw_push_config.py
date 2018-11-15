@@ -67,9 +67,13 @@ def __add_workloads():
 
         resp = api.AddWorkloads(req)
 
+#This function is hack for now as we need add workloads again if driver reloaded
+def AddWorkloads():
+    __add_workloads()
+
+
 def Main(step):
     #time.sleep(120)
-    api.Init()
     agent_ips = api.GetNaplesMgmtIpAddresses()
     agent_api.Init(agent_ips, hw = True)
 

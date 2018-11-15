@@ -13,6 +13,11 @@ def Setup(tc):
     else:
         tc.workload_pairs = api.GetRemoteWorkloadPairs()
 
+    tc.nodes = api.GetWorkloadNodeHostnames()
+    tc.host_intfs = {}
+    for node in tc.nodes:
+        tc.host_intfs[node] = api.GetWorkloadNodeHostInterfaces(node)
+
     api.Logger.info("Setting driver features")
     if common.setup_features(tc) != api.types.status.SUCCESS:
         api.Logger.info("Setting driver features :Failed")
@@ -21,7 +26,8 @@ def Setup(tc):
     api.Logger.info("Setting driver features : Success")
 
     if getattr(tc.args, 'capture_pcap', False):
-        return common.start_pcap_capture(tc)
+        if common.start_pcap_capture(tc) != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def Trigger(tc):

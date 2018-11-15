@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import traceback
 
 import iota.harness.infra.store as store
 import iota.harness.infra.types as types
@@ -65,6 +66,9 @@ class TestSuite:
 
     def IsConfigOnly(self):
        return getattr(self.__spec.meta, "cfgonly", False)
+ 
+    def DoConfig(self):
+        return self.__setup_config()
 
     def __resolve_testcases(self):
         for tc_spec in self.__spec.testcases:

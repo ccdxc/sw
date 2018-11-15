@@ -18,6 +18,8 @@ from iota.harness.infra.glopts import GlobalOptions
 
 DEFAULT_COMMAND_TIMEOUT = 30
 
+HOST_NAPLES_DIR         = "/naples"
+
 gl_iota_svc_channel = None
 gl_topo_svc_stub = None
 gl_cfg_svc_stub = None
@@ -189,6 +191,9 @@ def GetWorkloadImageForNode(node_name):
 def GetNodeOs(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodeOs(node_name)
 
+def DoNodeConfig(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().DoConfig()
+
 def Testbed_AllocateVlan():
     return store.GetTestbed().AllocateVlan()
 
@@ -275,6 +280,7 @@ def Trigger_AddCommand(req, node_name, entity_name, command,
     if __gl_rundir:
         cmd.running_dir = __gl_rundir + '/' + rundir
     return cmd
+
 
 def Trigger_AddHostCommand(req, node_name, command,
                            background = False, rundir = "",

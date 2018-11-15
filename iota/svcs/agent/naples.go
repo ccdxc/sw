@@ -349,17 +349,7 @@ func (naples *naplesSimNode) configureWorkloadInHntap(in *iota.Workload) error {
 	return nil
 }
 
-func (dnode *dataNode) setupWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {
-	/* Create working directory and set that as base dir */
-	wDir := Common.DstIotaEntitiesDir + "/" + in.GetWorkloadName()
-	wload.SetBaseDir(wDir)
-	if err := wload.BringUp(in.GetWorkloadName(), in.GetWorkloadImage()); err != nil {
-		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
-		dnode.logger.Error(msg)
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-		return resp, err
-	}
-	dnode.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
+func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {
 
 	if err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), int(in.GetEncapVlan())); err != nil {
 		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
@@ -377,6 +367,22 @@ func (dnode *dataNode) setupWorkload(wload Workload.Workload, in *iota.Workload)
 	return resp, nil
 }
 
+func (dnode *dataNode) setupWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {
+	/* Create working directory and set that as base dir */
+	wDir := Common.DstIotaEntitiesDir + "/" + in.GetWorkloadName()
+	wload.SetBaseDir(wDir)
+	if err := wload.BringUp(in.GetWorkloadName(), in.GetWorkloadImage()); err != nil {
+		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
+		dnode.logger.Error(msg)
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+		return resp, err
+	}
+	dnode.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
+
+	return dnode.configureWorkload(wload, in)
+}
+
+
 // AddWorkload brings up a workload type on a given node
 func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 
@@ -389,11 +395,10 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 	wloadKey := in.GetWorkloadName()
 	var wload Workload.Workload
 	dnode.logger.Printf("Adding workload : %s", in.GetWorkloadName())
-	if _, ok := dnode.entityMap[wloadKey]; ok {
+	if wload, ok := dnode.entityMap[wloadKey]; ok {
 		msg := fmt.Sprintf("Trying to add workload %s, which already exists ", wloadKey)
 		dnode.logger.Error(msg)
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
-		return resp, nil
+                return dnode.configureWorkload(wload, in)
 	}
 
 	wlType, ok := workloadTypeMap[in.GetWorkloadType()]

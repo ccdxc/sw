@@ -324,7 +324,7 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 
 	fmt.Println(workloadResp)
 
-	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
 
 	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
 	if err != nil {
@@ -586,7 +586,7 @@ func TestAgentService_Mellanox_Workload_Add_Delete(t *testing.T) {
 
 	fmt.Println(workloadResp)
 
-	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
 
 	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
 	if err != nil {
@@ -684,7 +684,7 @@ func TestAgentService_Naples_Hw_Workload_Add_Delete(t *testing.T) {
 
 	fmt.Println(workloadResp)
 
-	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
 
 	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
 	if err != nil {
@@ -757,7 +757,7 @@ func TestAgentService_Naples_Hw_baremetal_Workload_Add_Delete(t *testing.T) {
 
 	fmt.Println(workloadResp)
 
-	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload succeded!")
 
 	workloadResp, err = agentClient.DeleteWorkload(context.Background(), &workload)
 	if err != nil {
