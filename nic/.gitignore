@@ -26,6 +26,7 @@ asic_gen
 hal.log*
 model.log*
 dol.log*
+asicrw.log*
 *.log
 *.cacov
 sample_client.log

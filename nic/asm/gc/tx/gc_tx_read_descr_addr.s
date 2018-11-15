@@ -7,24 +7,26 @@ struct phv_ p;
 struct gc_tx_read_descr_addr_read_descr_addr_d d;
 
 %%
-    .param          gc_tx_read_rnmdr_descr
-    .param          gc_tx_read_tnmdr_descr
+    .param          gc_tx_rnmdr_dummy
+    .param          gc_tx_tnmdr_dummy
 
 .align
 gc_tx_read_rnmdr_addr:
-    phvwr           p.common_phv_desc_addr, d.desc_addr
-    add             r3, d.desc_addr, NIC_DESC_ENTRY_0_OFFSET
-    blti            r3, CAPRI_HBM_BASE, gc_tx_read_descr_fatal_error
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_rnmdr_descr, r3, TABLE_SIZE_512_BITS)
+    phvwr           p.{ring_entry1_descr_addr...ring_entry4_descr_addr}, \
+                    d.{desc_addr1...desc_addr4}
+    phvwr           p.{ring_entry5_descr_addr...ring_entry8_descr_addr}, \
+                    d.{desc_addr5...desc_addr8}
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, gc_tx_rnmdr_dummy)
     nop.e
     nop
 
 .align
 gc_tx_read_tnmdr_addr:
-    phvwr           p.common_phv_desc_addr, d.desc_addr
-    add             r3, d.desc_addr, NIC_DESC_ENTRY_0_OFFSET
-    blti            r3, CAPRI_HBM_BASE, gc_tx_read_descr_fatal_error
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, gc_tx_read_tnmdr_descr, r3, TABLE_SIZE_512_BITS)
+    phvwr           p.{ring_entry1_descr_addr...ring_entry4_descr_addr}, \
+                    d.{desc_addr1...desc_addr4}
+    phvwr           p.{ring_entry5_descr_addr...ring_entry8_descr_addr}, \
+                    d.{desc_addr5...desc_addr8}
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, gc_tx_tnmdr_dummy)
     nop.e
     nop
 

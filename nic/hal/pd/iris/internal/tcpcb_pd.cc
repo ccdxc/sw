@@ -16,6 +16,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
+#include "nic/include/capri_common.h"
 #include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
@@ -775,12 +776,19 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         uint64_t tls_stage0_addr;
+        uint64_t gc_base;
 
         tls_stage0_addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
                     tcpcb_pd->tcpcb->other_qid);
         data.sesq_ci_addr =
             htonl(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
         data.retx_snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
+
+        // get gc address
+        gc_base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC, 0,
+                    CAPRI_RNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
+        HAL_TRACE_DEBUG("gc_base: {:#x}", gc_base);
+        data.gc_base = htonll(gc_base);
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),

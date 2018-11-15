@@ -7,21 +7,19 @@
 #define tx_table_s1_t0 gc_tx_read_descr_addr
 #define tx_table_s2_t0 gc_tx_read_descr
 #define tx_table_s3_t0 gc_tx_read_descr_free_pair_pi
-#define tx_table_s4_t0 gc_tx_read_page_free_pair_pi
 
 /*******************************************************
  * Action names
  ******************************************************/
 #define tx_table_s0_t0_action initial_action
 #define tx_table_s1_t0_action read_descr_addr
-#define tx_table_s2_t0_action read_descr
+#define tx_table_s2_t0_action dummy
 #define tx_table_s3_t0_action read_descr_free_pair_pi
-#define tx_table_s4_t0_action read_page_free_pair_pi
 
 #include "../common-p4+/common_txdma.p4"
 
 #define GENERATE_GLOBAL_K \
-    modify_field(common_global_scratch.desc_addr, common_phv.desc_addr);
+    modify_field(common_global_scratch.num_entries_freed, common_phv.num_entries_freed);
     
 /******************************************************************************
  * D-vectors
@@ -31,26 +29,37 @@ header_type gc_txdma_initial_action_t {
         // 8 Bytes intrinsic header
         CAPRI_QSTATE_HEADER_COMMON
         
-        CAPRI_QSTATE_HEADER_RING(0)
+        CAPRI_QSTATE_HEADER_RING(0) // Total 12 bytes
 
-        CAPRI_QSTATE_HEADER_RING(1)
+        ring_base               : 64; // Total 20 bytes
 
-        CAPRI_QSTATE_HEADER_RING(2)
+        pad                     : 96; // Total 32 bytes
 
-        CAPRI_QSTATE_HEADER_RING(3)
-
-        CAPRI_QSTATE_HEADER_RING(4)
-
-        CAPRI_QSTATE_HEADER_RING(5) // Total 32 bytes
-
-        ring_base               : 64;
+        // offset 32 (needs to match TCP_GC_CB_SW_PI_OFFSET)
+        sw_pi                   : 16;
+        sw_ci                   : 16;
     }    
 }
 
 // d for stage 1
 header_type read_descr_addr_d_t {
     fields {
-        desc_addr               : 64;
+        desc_addr1              : 64;
+        desc_addr2              : 64;
+        desc_addr3              : 64;
+        desc_addr4              : 64;
+        desc_addr5              : 64;
+        desc_addr6              : 64;
+        desc_addr7              : 64;
+        desc_addr8              : 64;
+    }
+}
+
+// d for stage 3
+header_type gc_global_t {
+    fields {
+        rnmdpr_fp_pi            : 32;
+        tnmdpr_fp_pi            : 32;
     }
 }
 
@@ -59,7 +68,7 @@ header_type read_descr_addr_d_t {
  *****************************************************************************/
 header_type common_global_phv_t {
     fields {
-        desc_addr               : 34;
+        num_entries_freed       : 8;
         // global k (max 128)
     }
 }
@@ -71,10 +80,7 @@ header_type common_global_phv_t {
 // 160 bytes
 header_type common_t0_s2s_phv_t {
     fields {
-        a0                      : 34;
-        a1                      : 34;
-        a2                      : 34;
-        idx                     : 16;
+        dummy                   : 16;
     }
 }
 
@@ -88,7 +94,7 @@ metadata read_descr_addr_d_t read_descr_addr_d;
 @pragma scratch_metadata
 metadata pkt_descr_aol_t read_descr_d;
 @pragma scratch_metadata
-metadata semaphore_pi_t read_descr_free_pair_pi_d;
+metadata gc_global_t read_descr_free_pair_pi_d;
 @pragma scratch_metadata
 metadata semaphore_pi_t read_page_free_pair_pi_d;
 
@@ -114,6 +120,18 @@ metadata ring_entry_t ring_entry1;
 @pragma dont_trim
 metadata ring_entry_t ring_entry2;
 @pragma dont_trim
+metadata ring_entry_t ring_entry3;
+@pragma dont_trim
+metadata ring_entry_t ring_entry4;
+@pragma dont_trim
+metadata ring_entry_t ring_entry5;
+@pragma dont_trim
+metadata ring_entry_t ring_entry6;
+@pragma dont_trim
+metadata ring_entry_t ring_entry7;
+@pragma dont_trim
+metadata ring_entry_t ring_entry8;
+@pragma dont_trim
 metadata semaphore_ci_t ci_1;
 @pragma dont_trim
 metadata semaphore_ci_t ci_2;
@@ -124,9 +142,9 @@ metadata semaphore_ci_t ci_4;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t ringentry1_dma;      // dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ci_1_dma;            // dma cmd 2
+metadata dma_cmd_phv2mem_t ringentry2_dma;      // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ringentry2_dma;      // dma cmd 3
+metadata dma_cmd_phv2mem_t ci_1_dma;            // dma cmd 3
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t ci_2_dma;            // dma cmd 4
 @pragma dont_trim
@@ -149,8 +167,7 @@ metadata dma_cmd_phv2mem_t ci_4_dma;            // dma cmd 8
  * Stage 0 table 0 action
  */
 action initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-                             pi_0, ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,
-                             pi_4, ci_4, pi_5, ci_5, ring_base) {
+                             pi_0, ci_0, ring_base, pad, sw_pi, sw_ci) {
     // k + i for stage 0
 
     // from intrinsic
@@ -175,85 +192,56 @@ action initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
 
     modify_field(gc_txdma_initial_d.pi_0, pi_0);
     modify_field(gc_txdma_initial_d.ci_0, ci_0);
-    modify_field(gc_txdma_initial_d.pi_1, pi_1);
-    modify_field(gc_txdma_initial_d.ci_1, ci_1);
-    modify_field(gc_txdma_initial_d.pi_2, pi_2);
-    modify_field(gc_txdma_initial_d.ci_2, ci_2);
-    modify_field(gc_txdma_initial_d.pi_3, pi_3);
-    modify_field(gc_txdma_initial_d.ci_3, ci_3);
-    modify_field(gc_txdma_initial_d.pi_4, pi_4);
-    modify_field(gc_txdma_initial_d.ci_4, ci_4);
-    modify_field(gc_txdma_initial_d.pi_5, pi_5);
-    modify_field(gc_txdma_initial_d.ci_5, ci_5);
 
     modify_field(gc_txdma_initial_d.ring_base, ring_base);
+    modify_field(gc_txdma_initial_d.pad, pad);
+    modify_field(gc_txdma_initial_d.sw_pi, sw_pi);
+    modify_field(gc_txdma_initial_d.sw_ci, sw_ci);
 }
 
 /*
  * Stage 1 table 0 action
  */
-action read_descr_addr(desc_addr) {
+action read_descr_addr(desc_addr1, desc_addr2, desc_addr3, desc_addr4,
+        desc_addr5, desc_addr6, desc_addr7, desc_addr8) {
     // from ki global
     GENERATE_GLOBAL_K
 
     // d for stage 1
-    modify_field(read_descr_addr_d.desc_addr, desc_addr);
+    modify_field(read_descr_addr_d.desc_addr1, desc_addr1);
+    modify_field(read_descr_addr_d.desc_addr2, desc_addr2);
+    modify_field(read_descr_addr_d.desc_addr3, desc_addr3);
+    modify_field(read_descr_addr_d.desc_addr4, desc_addr4);
+    modify_field(read_descr_addr_d.desc_addr5, desc_addr5);
+    modify_field(read_descr_addr_d.desc_addr6, desc_addr6);
+    modify_field(read_descr_addr_d.desc_addr7, desc_addr7);
+    modify_field(read_descr_addr_d.desc_addr8, desc_addr8);
 }
 
 /*
  * Stage 2 table 0 action
  */
-action read_descr(A0, O0, L0, A1, O1, L1, A2, O2, L2) {
+action dummy() {
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
-    modify_field(t0_s2s_scratch.a0, t0_s2s.a0);
-    modify_field(t0_s2s_scratch.a1, t0_s2s.a1);
-    modify_field(t0_s2s_scratch.a2, t0_s2s.a2);
 
     // d for stage 2
-    modify_field(read_descr_d.A0, A0);
-    modify_field(read_descr_d.O0, O0);
-    modify_field(read_descr_d.L0, L0);
-    modify_field(read_descr_d.A1, A1);
-    modify_field(read_descr_d.O1, O1);
-    modify_field(read_descr_d.L1, L1);
-    modify_field(read_descr_d.A2, A2);
-    modify_field(read_descr_d.O2, O2);
-    modify_field(read_descr_d.L2, L2);
 }
 
 /*
  * Stage 3 table 0 action
  */
-action read_descr_free_pair_pi(index) {
+action read_descr_free_pair_pi(rnmdpr_fp_pi, tnmdpr_fp_pi) {
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
-    modify_field(t0_s2s_scratch.a0, t0_s2s.a0);
-    modify_field(t0_s2s_scratch.a1, t0_s2s.a1);
-    modify_field(t0_s2s_scratch.a2, t0_s2s.a2);
-    modify_field(t0_s2s_scratch.idx, t0_s2s.idx);
+    modify_field(t0_s2s_scratch.dummy, t0_s2s.dummy);
 
     // d for stage 3
-    modify_field(read_descr_free_pair_pi_d.index, index);
+    modify_field(read_descr_free_pair_pi_d.rnmdpr_fp_pi, rnmdpr_fp_pi);
+    modify_field(read_descr_free_pair_pi_d.tnmdpr_fp_pi, tnmdpr_fp_pi);
 }
 
-/*
- * Stage 4 table 0 action
- */
-action read_page_free_pair_pi(index) {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // from stage to stage
-    modify_field(t0_s2s_scratch.a0, t0_s2s.a0);
-    modify_field(t0_s2s_scratch.a1, t0_s2s.a1);
-    modify_field(t0_s2s_scratch.a2, t0_s2s.a2);
-    modify_field(t0_s2s_scratch.idx, t0_s2s.idx);
-
-    // d for stage 4
-    modify_field(read_page_free_pair_pi_d.index, index);
-}

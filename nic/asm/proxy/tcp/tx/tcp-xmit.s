@@ -107,7 +107,7 @@ rearm_rto:
     seq             c1, k.common_phv_debug_dol_dont_start_retx_timer, 1
     b.c1            rearm_rto_done
 
-    CAPRI_OPERAND_DEBUG(k.t0_s2s_rto)
+    CAPRI_OPERAND_DEBUG(k.to_s5_rto)
 
     /*
      * r1 = rto
@@ -116,7 +116,7 @@ rearm_rto:
      * TODO: rto_backoff needs to be reset upon indication from rx
      * pipeline (rx2tx_extra_pending_reset_backoff)
      */
-    add             r1, r0, k.t0_s2s_rto
+    add             r1, r0, k.to_s5_rto
     sll             r1, r1, d.rto_backoff
     slt             c1, r1, TCP_RTO_MAX
     add.!c1         r1, r0, TCP_RTO_MAX
@@ -124,12 +124,17 @@ rearm_rto:
     // result will be in r3
     CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_RTO, r1)
 
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RETX_TIMER_CI_OFFSET
+#ifndef HW
+    memwr.hx        r1, d.rto_pi
+#endif
+    tbladd          d.rto_pi, 1
+
     // TODO : using slow timer just for testing
     addi            r5, r0, CAPRI_SLOW_TIMER_ADDR(LIF_TCP)
+#ifndef HW
     memwr.dx        r5, r3
-    add             r1, k.common_phv_qstate_addr, TCP_TCB_RETX_TIMER_CI_OFFSET
-    memwr.hx        r1, d.rto_pi
-    tbladd          d.rto_pi, 1
+#endif
 rearm_rto_done:
     b.c_snd_una     tcp_tx_end_program
     nop
@@ -250,7 +255,9 @@ tcp_tx_xmit_snd_una_update:
 
     // cancel retx timer if packets_out == 0
     add.!c1         r1, k.common_phv_qstate_addr, TCP_TCB_RETX_TIMER_CI_OFFSET
+#ifndef HW
     memwr.hx.!c1    r1, d.rto_pi
+#endif
 
 tcp_tx_end_program:
     // We have no window, wait till window opens up

@@ -32,11 +32,13 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-read-rx2tx-shared.s \
     $(SRC_DIR)/tcp-read-rx2tx-shared-extra.s \
     $(SRC_DIR)/tcp-read-sesq-ci.s \
+    $(SRC_DIR)/tcp-read-sesq-retx-ci.s \
 	$(SRC_DIR)/tcp-tx-read-xmit-d.s \
     $(SRC_DIR)/tcp-s2-bubble.s \
     $(SRC_DIR)/tcp-read-descr.s \
     $(SRC_DIR)/tcp-read-tcp-flags.s \
     $(SRC_DIR)/tcp-retx.s \
+    $(SRC_DIR)/tcp-clean-retx.s \
     $(SRC_DIR)/tcp-cc-and-fra.s \
     $(SRC_DIR)/tcp-xmit.s \
     $(SRC_DIR)/tcp-tx-read-gc-nmdr-idx.s \

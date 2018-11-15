@@ -275,7 +275,6 @@ tcp_in_ack_event:
 tcp_in_ack_event_end:
     phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
                         TCP_PENDING_TXDMA_SND_UNA_UPDATE
-    phvwr           p.rx2tx_rx_flag, d.flag
     phvwr           p.rx2tx_extra_snd_una, d.snd_una
     phvwr           p.common_phv_snd_una, d.snd_una
     /*

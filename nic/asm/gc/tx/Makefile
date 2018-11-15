@@ -21,7 +21,7 @@ CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim
 SRC_FILES := \
     $(SRC_DIR)/gc_tx.s \
     $(SRC_DIR)/gc_tx_read_descr_addr.s \
-    $(SRC_DIR)/gc_tx_read_descr.s \
+    $(SRC_DIR)/gc_tx_dummy.s \
     $(SRC_DIR)/gc_tx_inc_descr_free_pair_pi.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

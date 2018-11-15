@@ -24,7 +24,7 @@ tcp_is_cwnd_limited:
     /*
      * c1 = tcp_in_slow_start = snd_cwnd < snd_ssthresh
      */
-    slt             c1, d.snd_cwnd, k.t0_s2s_snd_ssthresh
+    slt             c1, d.snd_cwnd, k.t0_s2s_clean_retx_snd_ssthresh
 
     /*
      *  c2 = tcp_is_cwnd_limited()
@@ -278,9 +278,9 @@ tcp_slow_start:
     /*
      * r3 = cwnd = min(tp->cc.snd_cwnd + acked, tp->cc.snd_ssthresh)
      */
-    add         r3, d.snd_cwnd, k.t0_s2s_pkts_acked
-    slt         c1, k.t0_s2s_snd_ssthresh, r3
-    add.c1      r3, r0, k.t0_s2s_snd_ssthresh
+    add         r3, d.snd_cwnd, k.t0_s2s_clean_retx_pkts_acked
+    slt         c1, k.t0_s2s_clean_retx_snd_ssthresh, r3
+    add.c1      r3, r0, k.t0_s2s_clean_retx_snd_ssthresh
 
     /*
      * snd_cwnd = min(cwnd, tp->cc.snd_cwnd_clamp)

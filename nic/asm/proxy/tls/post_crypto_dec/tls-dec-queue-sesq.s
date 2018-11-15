@@ -48,7 +48,7 @@ dma_cmd_sesq_slot:
     phvwr       p.ring_entry_descr_addr, r3.dx
 #endif
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_sesq_slot_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_sesq_slot_dma_cmd, r1, ring_entry_pad,ring_entry_descr_addr)
 
     smeqb       c1, k.tls_global_phv_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip

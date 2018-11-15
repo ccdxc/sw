@@ -17,10 +17,21 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
 %%
     .align
     .param          tcp_tx_read_rx2tx_shared_extra_stage1_start
+    .param          tcp_tx_read_rx2tx_shared_extra_clean_retx_stage1_start
     .param          tcp_tx_sesq_read_ci_stage1_start
+    .param          tcp_tx_sesq_read_retx_ci_stage1_start
     .param          tcp_tx_process_read_xmit_start
 
+
+// mask ring clean_retx and pending_tx when barrier is set
+#define CLEAN_RETX_PENDING_MASK         0x5f
+
 tcp_tx_read_rx2tx_shared_process:
+    CAPRI_OPERAND_DEBUG(r7)
+    // if barrier is set, mask out clean_retx ring from the list of rings
+    // to eval
+    seq             c1, d.clean_retx_pending, CLEAN_RETX_PENDING_MASK
+    and.c1          r7, r7, d.clean_retx_pending
 	.brbegin
         // priorities are 0 (highest) to 7 (lowest)
         // The rightmost value specifies the priority of r7[0]
@@ -31,7 +42,7 @@ tcp_tx_read_rx2tx_shared_process:
 	            b tcp_tx_launch_sesq            // prio 4
 	            nop
 	        .brcase 1
-	            b tcp_tx_send_ack               // prio 1
+	            b tcp_tx_send_ack               // prio 2
 	            nop
 	        .brcase 2
 	            b tcp_tx_ft_expired             // prio 6
@@ -43,16 +54,17 @@ tcp_tx_read_rx2tx_shared_process:
 	            b tcp_tx_launch_asesq           // prio 5
 	            nop
 	        .brcase 5
+                // unused
 	            b tcp_tx_launch_pending_tx      // prio 0
 	            nop
 	        .brcase 6
 	            b tcp_tx_fast_retrans           // prio 3
 	            nop
             .brcase 7
-	            b tcp_tx_clean_retx             // prio 2
+	            b tcp_tx_clean_retx             // prio 1
 	            nop
             .brcase 8
-	            b tcp_tx_rx2tx_abort
+	            b tcp_tx_abort
 	            nop
 	.brend
 
@@ -137,6 +149,7 @@ tcp_tx_launch_asesq:
     and             r1, d.{ci_4}.hx, (CAPRI_ASESQ_RING_SLOTS - 1)
     add             r3, r3, r1, NIC_SESQ_ENTRY_SIZE_SHIFT
     tbladd.f        d.{ci_4}.hx, 1
+    phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
 
     // This table need not be locked since it is read-only.
     // Moreover it should not be locked to prevent the bypass
@@ -173,131 +186,7 @@ tcp_tx_launch_asesq_end:
  * tcp_tx_launch_pending_tx
  *****************************************************************************/
 tcp_tx_launch_pending_tx:
-    tblwr           d.{ci_5}.hx, d.{pi_5}.hx
-#ifndef HW
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
-    phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
-
-    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, \
-                        TCP_TX_DDOL_DONT_SEND_ACK
-    phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
-#endif
-
-pending_tx_snd_una_update:
-
-    seq             c1, d.asesq_retx_ci, d.{ci_4}.hx
-    b.!c1           pending_tx_clean_asesq
-
-pending_tx_clean_sesq:
-    // if sesq_retx_ci has reached sesq_ci, there is nothing to
-    // retransmit. Quit.
-    seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
-    b.c1            pending_tx_ring_doorbell_and_drop
-    /*
-     * Launch sesq entry read with RETX CI as index
-     */
-    add             r5, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
-    tblmincri.f     d.sesq_retx_ci, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
-
-pending_tx_sesq_ring_doorbell:
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP,
-                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_TX)
-    memwr.dx        r4, r3
-
-    phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
-    /*
-     * Relay SESQ CI to S3 for updation in the TLS-CB
-     */
-    phvwr           p.to_s3_sesq_retx_ci, d.sesq_retx_ci
-
-pending_tx_sesq_launch_next:
-    // This table need not be locked since it is read-only.
-    // Moreover it should not be locked to prevent the bypass
-    // cache from being used (bypass cache cannot be used,
-    // since the contents are written from rx pipeline)
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
-                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
-    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
-                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.t0_s2s_state, d.state
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
-                     r5, TABLE_SIZE_64_BITS)
-
-pending_tx_clean_sesq_done:
-    phvwrpair       p.common_phv_pending_retx_cleanup, PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX, \
-                        p.common_phv_pending_rx2tx, 1
-
-    CAPRI_NEXT_TABLE_READ_OFFSET_e(2, TABLE_LOCK_DIS,
-                        tcp_tx_process_read_xmit_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
-    nop
-
-pending_tx_ring_doorbell_and_drop:
-    phvwri          p.app_header_table0_valid, 0;
-    phvwri          p.p4_intr_global_drop, 1
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP,
-                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_TX)
-    memwr.dx.e      r4, r3
-    nop
-
-
-pending_tx_clean_asesq:
-    /*
-     * Launch asesq entry read with asesq RETX CI as index
-     */
-
-    // asesq_base = sesq_base - number of sesq slots
-    sub             r5, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
-    add             r5, r5, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
-    tblmincri.f     d.asesq_retx_ci, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
-
-pending_tx_asesq_ring_doorbell:
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP,
-                        DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_TX)
-    memwr.dx        r4, r3
-
-    phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
-    /*
-     * Relay SESQ CI to S3 for updation in the TLS-CB
-     */
-    phvwr           p.to_s3_sesq_retx_ci, d.sesq_retx_ci
-
-pending_tx_asesq_launch_next:
-    phvwri          p.common_phv_pending_asesq, 1
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
-                     r5, TABLE_SIZE_64_BITS)
-    // This table need not be locked since it is read-only.
-    // Moreover it should not be locked to prevent the bypass
-    // cache from being used (bypass cache cannot be used,
-    // since the contents are written from rx pipeline)
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
-                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
-    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
-                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-    phvwr           p.t0_s2s_state, d.state
-pending_tx_clean_asesq_done:
-    phvwrpair       p.common_phv_pending_retx_cleanup, PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX, \
-                        p.common_phv_pending_rx2tx, 1
-
-    CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS,
-                        tcp_tx_process_read_xmit_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
-
-pending_tx_asesq_end:
+    // unused
     nop.e
     nop
 
@@ -357,43 +246,37 @@ pending_send_ack_end:
  * tcp_tx_clean_retx
  *****************************************************************************/
 tcp_tx_clean_retx:
-    tblwr.f         d.{ci_7}.hx, d.{pi_7}.hx
-clean_retx_doorbell:
+    bbeq            d.clean_retx_pending[0], 1, clean_retx_drop
+    // if sesq_retx_ci has reached sesq_ci, there is nothing to
+    // retransmit. Quit.
+    seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
+    seq             c2, d.asesq_retx_ci, d.{ci_4}.hx
+    bcf             [c1 & c2], clean_retx_flush_and_drop
 
-    /*
-     * Ring doorbell to set CI
-     */
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_CLEAN_RETX)
-    memwr.dx        r4, r3
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    //tblwr           d.debug_dol_tblsetaddr, d.sesq_retx_ci[7:0]
+    tblwr.f         d.clean_retx_pending, CLEAN_RETX_PENDING_MASK
 
     // This table need not be locked since it is read-only.
     // Moreover it should not be locked to prevent the bypass
     // cache from being used (bypass cache cannot be used,
     // since the contents are written from rx pipeline)
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
-                        tcp_tx_read_rx2tx_shared_extra_stage1_start,
+                        tcp_tx_read_rx2tx_shared_extra_clean_retx_stage1_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
-    phvwr           p.to_s6_rcv_nxt, d.rcv_nxt
-    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
-                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
     phvwr           p.t0_s2s_state, d.state
     phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
-    phvwrpair       p.common_phv_pending_retx_cleanup, PENDING_RETX_CLEANUP_TRIGGERED_FROM_RX, \
+    phvwrpair       p.common_phv_pending_retx_cleanup, PENDING_RETX_CLEANUP, \
                         p.common_phv_pending_rx2tx, 1
+    phvwr           p.to_s3_clean_retx_pi, d.{pi_7}.hx
 #ifndef HW
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_START_RETX_TIMER, TCP_TX_DDOL_DONT_START_RETX_TIMER
     phvwri.c1       p.common_phv_debug_dol_dont_start_retx_timer, 1
 #endif
 
 pending_rx2tx_snd_una_update:
-    /*
-     * Relay SESQ CI to S3 for updation in the TLS-CB
-     */
-    phvwr           p.to_s3_sesq_retx_ci, d.sesq_retx_ci
-
     seq             c1, d.asesq_retx_ci, d.{ci_4}.hx
     b.c1            pending_rx2tx_clean_sesq
 
@@ -404,36 +287,68 @@ pending_rx2tx_clean_asesq:
     // asesq_base = sesq_base - number of sesq slots
     sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
     add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
-    //tblmincri.f     d.asesq_retx_ci, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
+
+    // pkts to free = min(ci-retx_ci, distance to end of sesq ring)
+    sub             r1, d.{ci_4}.hx, d.asesq_retx_ci
+    sub             r2, CAPRI_ASESQ_RING_SLOTS, d.{ci_4}.hx
+    slt             c1, r2, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
+    add.c1          r1, r0, r2
+    phvwr           p.to_s1_num_retx_pkts, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
+    phvwr           p.t0_s2s_clean_retx_num_retx_pkts, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
+
     phvwri          p.common_phv_pending_asesq, 1
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
-                     r3, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_retx_ci_stage1_start,
+                     r3, TABLE_SIZE_512_BITS)
     b               pending_rx2tx_clean_sesq_done
+    /*
+     * Relay ASESQ CI to S3
+     */
+    phvwr           p.to_s3_sesq_retx_ci, d.asesq_retx_ci
 
 pending_rx2tx_clean_sesq:
-    // if sesq_retx_ci has reached sesq_ci, there is nothing to
-    // retransmit. Quit.
-    seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
-    b.c1            clean_retx_drop
+    /*
+     * Relay SESQ CI to S3 for updation in the TLS-CB
+     */
+    phvwr           p.to_s3_sesq_retx_ci, d.sesq_retx_ci
+
+    // pkts to free = min(ci-retx_ci, distance to end of sesq ring)
+    sub             r1, d.{ci_0}.hx, d.sesq_retx_ci
+    sub             r2, CAPRI_SESQ_RING_SLOTS, d.{ci_0}.hx
+    slt             c1, r2, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
+    add.c1          r1, r0, r2
+    phvwr           p.to_s1_num_retx_pkts, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
+    phvwr           p.t0_s2s_clean_retx_num_retx_pkts, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
+
     /*
      * Launch sesq entry read with RETX CI as index
      */
     add             r3, d.{sesq_base}.wx, d.sesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
-    //tblmincri.f     d.sesq_retx_ci, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
-                     r3, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_retx_ci_stage1_start,
+                     r3, TABLE_SIZE_512_BITS)
 
 pending_rx2tx_clean_sesq_done:
+    // barrier is set to non-zero here in stage 0, and set to 0 in stage 3.
+    // Sometimes we see that barrier memwr to 0 in stage 3 overtakes the tblwr
+    // in stage 0. This wrfence is to preserve the order
+    wrfence
+
     CAPRI_NEXT_TABLE_READ_OFFSET_e(2, TABLE_LOCK_DIS,
                         tcp_tx_process_read_xmit_start,
                         k.p4_txdma_intr_qstate_addr,
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
     nop
 
-clean_retx_drop:
+clean_retx_flush_and_drop:
+    tblwr.f         d.{ci_7}.hx, d.{pi_7}.hx
     /*
      * Ring doorbell to set CI
      */
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_CLEAN_RETX)
+    memwr.dx        r4, r3
+
+clean_retx_drop:
     phvwri          p.app_header_table0_valid, 0;
     phvwri.e        p.p4_intr_global_drop, 1
     nop
@@ -460,6 +375,10 @@ tcp_tx_retx_timer_expired:
     CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_RTO)
     memwr.dx        r4, r3
 
+    b.c1            tcp_tx_rx2tx_end
+    seq             c1, d.sesq_retx_ci, d.{ci_0}.hx
+    seq             c2, d.asesq_retx_ci, d.{ci_4}.hx
+    bcf             [c1 & c2], tcp_tx_rx2tx_end
 
     // This table need not be locked since it is read-only.
     // Moreover it should not be locked to prevent the bypass
@@ -473,8 +392,6 @@ tcp_tx_retx_timer_expired:
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
     phvwr           p.t0_s2s_state, d.state
-
-    b.c1            tcp_tx_rx2tx_end
     /*
      * Launch sesq entry ready with RETX CI as index
      */
@@ -586,16 +503,11 @@ tcp_tx_cancel_fast_timer:
     
 
 /******************************************************************************
- * tcp_tx_rx2tx_abort
+ * tcp_tx_abort
  *****************************************************************************/
-tcp_tx_rx2tx_abort:
-    phvwri          p.p4_intr_global_drop, 1
-    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
-    /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid, TCP_SCHED_RING_SEND_ACK)
-    memwr.dx        r4, r3
-
+tcp_tx_abort:
 tcp_tx_rx2tx_end:
+    phvwri          p.p4_intr_global_drop, 1
     nop.e
     CAPRI_CLEAR_TABLE_VALID(0)
 

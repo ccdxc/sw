@@ -78,7 +78,6 @@ bytes_acked_stats_update_end:
      * Launch next stage
      */
 tcp_ack_done:
-    phvwr           p.rx2tx_rx_flag, d.flag
     phvwr           p.rx2tx_extra_snd_una, d.snd_una
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_rx_rtt_start,

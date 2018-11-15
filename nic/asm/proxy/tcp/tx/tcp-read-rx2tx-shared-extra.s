@@ -29,13 +29,12 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     CAPRI_OPERAND_DEBUG(k.common_phv_pending_rx2tx)
     phvwr           p.common_phv_snd_una, d.snd_una
     phvwr           p.to_s6_rcv_mss, d.rcv_mss
-    phvwr           p.t0_s2s_snd_ssthresh, d.snd_ssthresh
     phvwri          p.tcp_header_flags, TCPHDR_ACK
     //phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
                         //p.t0_s2s_rto, d.rto
+    phvwr           p.t0_s2s_snd_wnd, d.snd_wnd
     // HACK: Force a timer of 100 ticks
-    phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
-                        p.t0_s2s_rto, 100
+    phvwr           p.to_s5_rto, 100
 
     phvwr           p.tcp_ts_opt_kind, TCPOPT_TIMESTAMP
     phvwr           p.tcp_ts_opt_len, TCPOLEN_TIMESTAMP
@@ -50,7 +49,6 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
 tcp_tx_start_pending:
     // Debug : Don't send ack based on dol flag
     seq             c1, k.common_phv_debug_dol_dont_send_ack, 1
-    sne             c2, k.common_phv_pending_retx_cleanup, 0
     seq             c3, k.common_phv_pending_ack_send, 1
 
     /*
@@ -59,11 +57,10 @@ tcp_tx_start_pending:
      * the PHV, then set global_drop bit
      */
     phvwri.c1       p.app_header_table0_valid, 0
-    setcf           c4, [c1 & !c2]
-    phvwri.c4       p.p4_intr_global_drop, 1
+    phvwri.c1       p.p4_intr_global_drop, 1
     bcf             [!c1 & c3], pending_ack
     nop
-    bcf             [c1 | c2], tcp_tx_rx2tx_extra_end
+    bcf             [c1], tcp_tx_rx2tx_extra_end
     nop
 
 pending_ack:
@@ -73,11 +70,6 @@ pending_ack:
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_tx_s2_bubble_start)
 
 tcp_tx_rx2tx_extra_end:
-    nop.e
-    nop
-
-tcp_tx_start_s2_bubble:
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_tx_s2_bubble_start)
     nop.e
     nop
 

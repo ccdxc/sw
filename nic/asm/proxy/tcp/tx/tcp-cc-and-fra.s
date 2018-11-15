@@ -28,8 +28,7 @@ tcp_cc_and_fra_process_start:
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
     smeqb           c1, k.common_phv_pending_retx_cleanup, \
-                        PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX, \
-                        PENDING_RETX_CLEANUP_TRIGGERED_FROM_TX
+                        PENDING_RETX_CLEANUP, PENDING_RETX_CLEANUP
     seq             c2, k.common_phv_pending_ack_send, 1
     bcf             [c1 & !c2], tcp_cong_control
 
@@ -76,7 +75,7 @@ tcp_cwnd_reduction:
      * if (newly_acked_sacked <= 0 || WARN_ON_ONCE(!tp->prior_cwnd))
      *      return;
      */
-     sle            c1, k.t0_s2s_pkts_acked, r0
+     sle            c1, k.t0_s2s_clean_retx_pkts_acked, r0
      sne            c2, d.prior_cwnd, r0
      bcf            [c1 | !c2], tcp_cwnd_reduction_done
      nop
@@ -91,12 +90,12 @@ tcp_cwnd_reduction:
      /*
       * r3 = delta = snd_ssthresh - tcp_packets_in_flight
       */
-      sub           r3, k.t0_s2s_snd_ssthresh, r6
+      sub           r3, k.t0_s2s_clean_retx_snd_ssthresh, r6
 
     /*
      * tp->prr_delivered += newly_acked_sacked
      */
-     tbladd         d.prr_delivered, k.t0_s2s_pkts_acked
+     tbladd         d.prr_delivered, k.t0_s2s_clean_retx_pkts_acked
 
     /*
      * r5 = sndcnt
@@ -126,7 +125,7 @@ tcp_cwnd_reduction:
     //      u64 dividend = (u64)tp->snd_ssthresh * tp->prr_delivered +
     //                     tp->prior_cwnd - 1;
     //      sndcnt = div_u64(dividend, tp->prior_cwnd) - tp->prr_out;
-    mul             r5, k.t0_s2s_snd_ssthresh, d.prr_delivered
+    mul             r5, k.t0_s2s_clean_retx_snd_ssthresh, d.prr_delivered
     add             r5, r5, d.prior_cwnd
     sub             r5, r5, 1
 
@@ -144,7 +143,7 @@ packets_in_flight_less_than_ssthresh:
     // else {
     //      sndcnt = min(delta, newly_acked_sacked);
 
-    add             r5, r0, k.t0_s2s_pkts_acked
+    add             r5, r0, k.t0_s2s_clean_retx_pkts_acked
     slt             c1, r3, r5
     add.c1          r5, r0, r3
     b               update_sndcnt
@@ -155,8 +154,8 @@ sndcnt_retx_data_acked_not_lost_retrans:
     //                     max_t(int, tp->prr_delivered - tp->prr_out,
     //                           newly_acked_sacked) + 1);
     sub             r2, d.prr_delivered, d.prr_out
-    slt             c1, r2, k.t0_s2s_pkts_acked
-    add.!c1         r2, r0, k.t0_s2s_pkts_acked
+    slt             c1, r2, k.t0_s2s_clean_retx_pkts_acked
+    add.!c1         r2, r0, k.t0_s2s_clean_retx_pkts_acked
     add             r5, r2, 1
 
     slt             c1, r3, r5

@@ -403,6 +403,10 @@
 #define RDMA_EQ_INTR_TABLE_SIZE              255
 #define RDMA_EQ_INTR_TABLE_SHFT              8
 
+#define GC_GLOBAL_TABLE_BASE            hbm_gc_table_base
+
+#define TCP_PROXY_STATS                 tcp_proxy_stats
+
 #define RNMDR_GC_TABLE_BASE             hbm_rnmdr_gc_table_base
 #define TNMDR_GC_TABLE_BASE             hbm_tnmdr_gc_table_base
 
@@ -411,9 +415,13 @@
 #define RNMDR_GC_PRODUCER_TCP           CAPRI_RNMDR_GC_TCP_RING_PRODUCER
 #define RNMDR_GC_PRODUCER_ARM           CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER
 #define RNMDR_GC_PER_PRODUCER_SHIFT     CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT
+#define RNMDR_GC_PER_PRODUCER_MASK      CAPRI_HBM_GC_PER_PRODUCER_RING_MASK
+#define RNMDR_GC_PER_PRODUCER_SIZE      CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE
 
 #define TNMDR_GC_PRODUCER_TCP           CAPRI_TNMDR_GC_TCP_RING_PRODUCER
 #define TNMDR_GC_PER_PRODUCER_SHIFT     CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT
+#define TNMDR_GC_PER_PRODUCER_MASK      CAPRI_HBM_GC_PER_PRODUCER_RING_MASK
+#define TNMDR_GC_PER_PRODUCER_SIZE      CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE
 
 /* Semaphores */
 #define SERQ_PRODUCER_IDX              0xba00ba00
@@ -523,7 +531,21 @@
 #define CAPRI_SET_DEBUG_STAGE4_7(_p, _stage, _table)
 #endif
 
-#define CAPRI_DMA_CMD_PHV2MEM_SETUP(_dma_cmd_prefix, __addr, _sfield, _efield)                   \
+// _len in bytes
+// uses r7
+#define CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(_dma_cmd_prefix, __addr, _sfield, _len)            \
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
+                     ((CAPRI_PHV_START_OFFSET(_sfield) << 8) |                                  \
+                     CAPRI_DMA_COMMAND_PHV_TO_MEM);                                             \
+        add         r7, (CAPRI_PHV_START_OFFSET(_sfield) - 1), _len;                            \
+        phvwr       p.##_dma_cmd_prefix##_phv_end_addr, r7;                                     \
+        phvwr       p.##_dma_cmd_prefix##_addr, __addr
+
+#define CAPRI_DMA_CMD_PHV2MEM_SETUP_NO_OFFSETS(_dma_cmd_prefix, __addr)                         \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;                   \
+        phvwr       p.##_dma_cmd_prefix##_addr, __addr
+
+#define CAPRI_DMA_CMD_PHV2MEM_SETUP(_dma_cmd_prefix, __addr, _sfield, _efield)                  \
         phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
                     ((CAPRI_PHV_END_OFFSET(_efield) << 18) |                                    \
                      (CAPRI_PHV_START_OFFSET(_sfield) << 8) |                                   \

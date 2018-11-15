@@ -47,7 +47,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 #define RX2TX_SHARED_STATE \
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
         ft_pi                           : 16                    ;\
-        rx_flag                         : 8                     ;\
         state                           : 8                     ;\
         pending_ack_send                : 1                     ;\
         saved_pending_ack_send          : 1                     ;\
@@ -100,9 +99,9 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
         sesq_ci_addr                    : HBM_ADDRESS_WIDTH     ;\
+        gc_base                         : 64                    ;\
         partial_ack_cnt                 : 32                    ;\
         tx_ring_pi                      : 16                    ;\
-        tx_ring_scheduled               : 1                     ;\
         tx_rst_sent                     : 1                     ;\
 
 #define TCB_CC_AND_FRA_SHARED_STATE \
@@ -157,9 +156,9 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 #define RETX_SHARED_PARAMS \
 retx_snd_una,\
 sesq_ci_addr,\
+gc_base,\
 partial_ack_cnt,\
 tx_ring_pi,\
-tx_ring_scheduled,\
 tx_rst_sent
 
 #define CC_AND_FRA_SHARED_PARAMS \
@@ -187,9 +186,9 @@ quick_acks_decr
 #define GENERATE_RETX_SHARED_D \
     modify_field(retx_d.retx_snd_una, retx_snd_una); \
     modify_field(retx_d.sesq_ci_addr, sesq_ci_addr); \
+    modify_field(retx_d.gc_base, gc_base); \
     modify_field(retx_d.partial_ack_cnt, partial_ack_cnt); \
     modify_field(retx_d.tx_ring_pi, tx_ring_pi); \
-    modify_field(retx_d.tx_ring_scheduled, tx_ring_scheduled); \
     modify_field(retx_d.tx_rst_sent, tx_rst_sent); \
 
 #define GENERATE_CC_AND_FRA_SHARED_D \

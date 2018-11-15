@@ -588,7 +588,7 @@ metadata doorbell_data_t db_data3;
 
 header_type ring_entry_pad_t {
     fields {
-        ring_entry_pad      : 80;
+        ring_entry_pad      : 24;
     }
 }
 @pragma dont_trim
@@ -603,6 +603,7 @@ metadata pkt_descr_aol_t aol;
 @pragma dont_trim
 metadata doorbell_data_t l7_db_data;
 
+@pragma pa_align 128
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t pkt_dma;                 // dma cmd 1
 @pragma dont_trim

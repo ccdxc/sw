@@ -125,7 +125,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_NMDPR_OBJS_BIG_TX     "big-tx-objs"
 #define CAPRI_HBM_REG_NMDPR_OBJS_BIG_RX     "big-rx-objs"
 #define CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS "ipsec-global-drop-stats"
-
+#define CAPRI_HBM_REG_TCP_PROXY_STATS       "tcp_proxy_stats"
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512
@@ -155,6 +155,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 
 
 #define RNMDR_TLS_GC_TABLE_BASE "hbm_rnmdr_tls_gc_table_base"
+#define GC_GLOBAL_TABLE_BASE    "hbm_gc_table_base"
+#define TCP_PROXY_STATS         "tcp_proxy_stats"
 
 #define IPSEC_CB_BASE "ipsec_cb_base"
 #define IPSEC_PAD_BYTES_HBM_TABLE_BASE "ipsec_pad_table_base"

@@ -42,6 +42,8 @@ tls_enc_post_read_odesc:
     /* Account for 16 bytes of additional authentication tag */
     addi        r2, r0, TLS_AES_GCM_AUTH_TAG_SIZE
     add         r1, d.{u.tls_read_odesc_d.L0}.wx, r2
+    phvwr.c1    p.ring_entry_len, d.{u.tls_read_odesc_d.L0}.wx
+    phvwr.!c1   p.ring_entry_len, r1
     phvwr       p.odesc_L0, r1.wx
 
     /* Compute TLS header address and setup DMA command */

@@ -19,12 +19,14 @@ struct s2_t0_tcp_tx_read_descr_d d;
 %%
     .align
     .param          tcp_retx_process_start
+    .param          tcp_clean_retx_process_start
 
 tcp_tx_read_descr_start:
 
     CAPRI_OPERAND_DEBUG(d.A0)
     CAPRI_OPERAND_DEBUG(d.O0)
     CAPRI_OPERAND_DEBUG(d.L0)
+    bbeq            k.common_phv_pending_retx_cleanup, 1, tcp_tx_asesq_cleanup
     phvwr           p.to_s3_addr, d.{A0}.dx
     phvwr           p.to_s3_offset, d.{O0}.wx
     phvwr           p.to_s3_len, d.{L0}.wx
@@ -36,3 +38,11 @@ tcp_tx_read_descr_start:
                         TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
     nop
+
+tcp_tx_asesq_cleanup:
+    phvwr           p.t0_s2s_clean_retx_len1, d.{L0}.wx
+    CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,
+                        tcp_clean_retx_process_start,
+                        k.common_phv_qstate_addr,
+                        TCP_TCB_RETX_OFFSET, TABLE_SIZE_512_BITS)
+    phvwr           p.t0_s2s_clean_retx_num_retx_pkts, 1

@@ -43,7 +43,6 @@ struct pd_wring_meta_s {
     char        obj_hbm_reg_name[64];
     uint32_t    obj_size;
     uint64_t    alloc_semaphore_addr;
-    uint64_t    free_semaphore_addr;
     wring_slot_parser   slot_parser;
     wring_get_hw_meta   get_hw_meta_fn;   
     bool        skip_init_slots;

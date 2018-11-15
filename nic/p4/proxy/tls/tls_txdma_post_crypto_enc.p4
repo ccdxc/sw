@@ -220,7 +220,7 @@ metadata pkt_descr_aol_t odesc;
 @pragma dont_trim
 metadata barco_result_t read_desc;
 @pragma dont_trim
-metadata ring_entry_t ring_entry;
+metadata hbm_al_ring_entry_t ring_entry;
 @pragma dont_trim
 metadata doorbell_data_raw_t db_data;
 @pragma dont_trim

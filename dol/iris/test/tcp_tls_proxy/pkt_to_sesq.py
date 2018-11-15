@@ -147,7 +147,7 @@ def TestCaseVerify(tc):
     sesq_cur.GetRingEntries([0])
 
     # 6. Verify descriptor 
-    if (rnmdpr_big.ringentries[rnmdpr_big.pi].handle != (sesq_cur.ringentries[0].handle - 0x40)):
+    if (rnmdpr_big.ringentries[rnmdpr_big.pi].handle != ((sesq_cur.ringentries[0].handle & 0x3ffffffff) - 0x40)):
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, sesq_cur.ringentries[0].handle)) 
         return False
 

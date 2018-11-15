@@ -35,7 +35,7 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_prd/cap_prd_csr.h"
 
-#define P4PLUS_SYMBOLS_MAX  130
+#define P4PLUS_SYMBOLS_MAX  134
 
 class capri_state_pd *g_capri_state_pd;
 uint64_t capri_hbm_base;
@@ -225,12 +225,32 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_RX);
+    symbols[i].params[1].name = TCP_PROXY_STATS;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TCP_PROXY_STATS);
     i++;
 
     symbols[i].name = "tcp-read-rnmpr-alloc-idx.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    i++;
+
+    symbols[i].name = "tcp-read-sesq-ci.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TCP_PROXY_STATS;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TCP_PROXY_STATS);
+    i++;
+
+    symbols[i].name = "tcp-read-sesq-retx-ci.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TCP_PROXY_STATS;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TCP_PROXY_STATS);
+    i++;
+
+    symbols[i].name = "tcp-clean-retx.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TCP_PROXY_STATS;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TCP_PROXY_STATS);
     i++;
 
     symbols[i].name = "tls-enc-read-tnmdr-alloc-idx.bin";
@@ -566,11 +586,15 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     }
 
     symbols[i].name = "tcp-tx-read-gc-nmdr-idx.bin";
-    symbols[i].num_params = 2;
+    symbols[i].num_params = 3;
     symbols[i].params[0].name = RNMDR_GC_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC);
     symbols[i].params[1].name = TNMDR_GC_TABLE_BASE;
     symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX_GC);
+    symbols[i].params[2].name = TCP_PROXY_STATS;
+    symbols[i].params[2].val = get_start_offset(CAPRI_HBM_REG_TCP_PROXY_STATS);
+    i++;
+
     i++;
 
     symbols[i].name = "gc_tx_inc_descr_free_pair_pi.bin";
@@ -579,6 +603,18 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
     symbols[i].params[1].name = TNMDPR_BIG_TABLE_BASE;
     symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+    i++;
+
+    /*
+     * The 'CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE' region is provisioned for 1KB out of
+     * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
+     * HBM memory from this region to store other TCP/TLS global resources.
+     */
+    symbols[i].name = "gc_tx_dummy.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = GC_GLOBAL_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                    CAPRI_GC_GLOBAL_TABLE;
     i++;
 
     symbols[i].name = "tcp-l7-read-rnmdr-alloc-idx.bin";

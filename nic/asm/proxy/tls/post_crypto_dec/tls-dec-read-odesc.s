@@ -46,6 +46,7 @@ tls_dec_post_read_odesc:
     sub         r1, d.{u.tls_read_odesc_d.L0}.wx, r2
     phvwr       p.odesc_L0, r1.wx
     phvwr.c1    p.l7_desc_L0, r1.wx
+    phvwr       p.ring_entry_len, r1
 
     /* Skip queue to SESQ for L7 IPS case */
     bcf         [c1 & !c2], tls_dec_queue_l7q

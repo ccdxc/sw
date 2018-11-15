@@ -227,6 +227,17 @@ header_type ring_entry_t {
     }
 }
 
+/*
+ * Ring entry containing both address and length
+ */
+header_type hbm_al_ring_entry_t {
+    fields {
+        pad : 16;
+        len : 14;
+        descr_addr : HBM_FULL_ADDRESS_WIDTH;
+    }
+}
+
 header_type semaphore_ci_t {
     fields {
         index : 32;
