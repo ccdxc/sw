@@ -12,6 +12,8 @@ struct aq_tx_s2_t1_k k;
 #define IN_TO_S_P to_s2_info
 
 #define TO_SQCB_INFO_P to_s3_info
+
+#define DMA_CMD_BASE r6
     
 #define WQE2_TO_SQCB0_P t1_s2s_wqe2_to_sqcb0_info
 #define WQE2_TO_SQCB1_P t2_s2s_wqe2_to_sqcb1_info
@@ -68,10 +70,10 @@ hdr_update:
     phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, ah_addr), r7
     
     //setup DMA in this stage but do CB updates in later stages.
-    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MOD_QP_AH_SRC)
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.{mod_qp.dma_addr}.dx)
-    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MOD_QP_AH_DST)
-    DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r5)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MOD_QP_AH_SRC)
+    DMA_HOST_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r4, d.{mod_qp.dma_addr}.dx)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MOD_QP_AH_DST)
+    DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, r4, r5)
     
 rrq_base:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_MAX_QP_RD_ATOMIC], 1, rsq_base
@@ -139,7 +141,7 @@ state:
         nop
     .brcase IBV_QP_STATE_ERR                                            
         add         r2, r0, QP_STATE_ERR
-        b           state_next
+        b           error_disable_qp
         nop
     .brcase IBV_QP_STATE_SQD_ON_ERR
         add         r2, r0, QP_STATE_SQD_ON_ERR
@@ -201,3 +203,46 @@ setup_sqcb_stages:
 done:
     nop.e
     nop
+
+error_disable_qp:
+
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID,
+                            AQ_TX_DMA_CMD_REQ_ERR_FEEDBACK)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, req_feedback.p4_intr_global, req_feedback.rdma_feedback)
+    phvwrpair      p.req_feedback.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.req_feedback.p4_intr_global.tm_oport, TM_PORT_DMA
+    phvwrpair      p.req_feedback.p4_intr_global.tm_iq, 0, p.req_feedback.p4_intr_global.lif, K_GLOBAL_LIF
+    phvwr          p.req_feedback.p4_intr_rxdma.intr_qid, r3[23:0]
+    phvwri         p.req_feedback.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
+
+    phvwrpair      p.req_feedback.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_SQ, p.req_feedback.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
+    phvwri         p.req_feedback.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
+    phvwri         p.req_feedback.p4_to_p4plus.table0_valid, 1
+
+    phvwrpair      p.req_feedback.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
+                   p.req_feedback.rdma_feedback.completion.status, CQ_STATUS_WQE_FLUSHED_ERR
+    phvwrpair      p.req_feedback.rdma_feedback.completion.wrid, 0, \
+                   p.req_feedback.rdma_feedback.completion.error, 1
+
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID,
+                            AQ_TX_DMA_CMD_RESP_ERR_FEEDBACK)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, resp_feedback.p4_intr_global, resp_feedback.rdma_feedback)
+    phvwrpair      p.resp_feedback.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.resp_feedback.p4_intr_global.tm_oport, TM_PORT_DMA
+    phvwrpair      p.resp_feedback.p4_intr_global.tm_iq, 0, p.resp_feedback.p4_intr_global.lif, K_GLOBAL_LIF
+    phvwr          p.resp_feedback.p4_intr_rxdma.intr_qid, r3[23:0]
+    phvwri         p.resp_feedback.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
+
+    phvwrpair      p.resp_feedback.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_RQ, p.resp_feedback.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
+    phvwri         p.resp_feedback.p4_to_p4plus.raw_flags, RESP_RX_FLAG_ERR_DIS_QP
+    phvwri         p.resp_feedback.p4_to_p4plus.table0_valid, 1
+
+    phvwrpair      p.resp_feedback.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
+                   p.resp_feedback.rdma_feedback.completion.status, CQ_STATUS_WQE_FLUSHED_ERR
+    phvwrpair      p.resp_feedback.rdma_feedback.completion.wrid, 0, \
+                   p.resp_feedback.rdma_feedback.completion.error, 1
+
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+
+    b done
+    CAPRI_SET_TABLE_1_VALID(0)  // BD Slot

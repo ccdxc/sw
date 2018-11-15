@@ -20,28 +20,38 @@
 
 #define AQ_TX_DMA_CMD_RDMA_FEEDBACK (AQ_TX_MAX_DMA_CMDS -1)  // This should be at the end
 
+/* DMA Cmds for Create CQ */
 #define AQ_TX_DMA_CMD_CREATE_CQCB_PT_DST  (AQ_TX_MAX_DMA_CMDS - 2)
 #define AQ_TX_DMA_CMD_CREATE_CQCB_PT_SRC  (AQ_TX_MAX_DMA_CMDS - 3 )
 #define AQ_TX_DMA_CMD_CREATE_CQ_PT_DST  (AQ_TX_MAX_DMA_CMDS - 4)
 #define AQ_TX_DMA_CMD_CREATE_CQ_PT_SRC  (AQ_TX_MAX_DMA_CMDS - 5)
 #define AQ_TX_DMA_CMD_CREATE_CQ_CB  (AQ_TX_MAX_DMA_CMDS - 6)
 
+/* DMA Cmds for Create QP */
 #define AQ_TX_DMA_CMD_CREATE_QP_CB    (AQ_TX_MAX_DMA_CMDS -2)
 #define AQ_TX_DMA_CMD_CREATE_QP_SQPT_DST  (AQ_TX_MAX_DMA_CMDS -3)
 #define AQ_TX_DMA_CMD_CREATE_QP_SQPT_SRC  (AQ_TX_MAX_DMA_CMDS -4)
 
+/* DMA Cmds for Modify QP */
+// Modify QP to ERR
+#define AQ_TX_DMA_CMD_REQ_ERR_FEEDBACK  (AQ_TX_MAX_DMA_CMDS - 2)
+#define AQ_TX_DMA_CMD_RESP_ERR_FEEDBACK (AQ_TX_MAX_DMA_CMDS - 3)
+// Modify QP Set Header Template
 #define AQ_TX_DMA_CMD_MOD_QP_AH_DST    (AQ_TX_MAX_DMA_CMDS - 2)
 #define AQ_TX_DMA_CMD_MOD_QP_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 3)
 
+/* DMA Cmds for Create AH */
 #define AQ_TX_DMA_CMD_CREATE_AH_DST    (AQ_TX_MAX_DMA_CMDS - 2)
 #define AQ_TX_DMA_CMD_CREATE_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 3)
 #define AQ_TX_DMA_CMD_CREATE_AH_SIZE   (AQ_TX_MAX_DMA_CMDS - 4)
 
+/* DMA Cmds for AQ Stats Dump */
 #define AQ_TX_DMA_CMD_STATS_DUMP_4 (AQ_TX_MAX_DMA_CMDS - 2)
 #define AQ_TX_DMA_CMD_STATS_DUMP_3 (AQ_TX_MAX_DMA_CMDS - 3)
 #define AQ_TX_DMA_CMD_STATS_DUMP_2 (AQ_TX_MAX_DMA_CMDS - 4)
 #define AQ_TX_DMA_CMD_STATS_DUMP_1 (AQ_TX_MAX_DMA_CMDS - 5)
 
+/* DMA Cmds for Reg MR */
 #define AQ_TX_DMA_CMD_MR_PT_DST (AQ_TX_MAX_DMA_CMDS - 2)
 #define AQ_TX_DMA_CMD_MR_PT_SRC (AQ_TX_MAX_DMA_CMDS - 3)
 #define AQ_TX_DMA_CMD_MR_KT_UPDATE (AQ_TX_MAX_DMA_CMDS - 4)
@@ -83,6 +93,15 @@ struct aq_tx_dma_cmds_flit_t {
     dma_cmd3 : 128;
 };
 
+struct err_feedback_t {
+    struct phv_intr_global_t p4_intr_global;
+    struct phv_intr_p4_t p4_intr;
+    struct phv_intr_rxdma_t p4_intr_rxdma;
+    struct p4_to_p4plus_roce_header_t p4_to_p4plus;
+    struct rdma_feedback_t rdma_feedback;
+    pad     : 8;
+};
+
 // phv 
 struct aq_tx_phv_t {
     // dma commands
@@ -99,12 +118,14 @@ struct aq_tx_phv_t {
     union {
         struct aq_tx_dma_cmds_flit_t flit_8;
         struct sqcb2_t sqcb2;
+        struct err_feedback_t req_feedback;
     };
      
         /* flit 7 */
     union {
         struct aq_tx_dma_cmds_flit_t flit_7;
         struct sqcb1_t sqcb1;
+        struct err_feedback_t resp_feedback;
     };
         
         /* flit 6 */
