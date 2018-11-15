@@ -4,10 +4,10 @@ OutDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/resta
 SRC := app.proto endpoint.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto route.proto security.proto service.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto tcp_proxy.proto
 
 #these wont have _api.go generated
-FILTER_OUT_API := match.proto service.proto app.proto secprofile.proto
+FILTER_OUT_API := match.proto service.proto app.proto
 
 #additionally these wont have swagger spec generated
-FILTER_OUT_SWAGGER := interface.proto app.proto secprofile.proto
+FILTER_OUT_SWAGGER := interface.proto app.proto
 
 SRC1 :=  $(filter-out ${FILTER_OUT_API}, ${SRC})
 SRC2 :=  $(filter-out ${FILTER_OUT_SWAGGER}, ${SRC1})

@@ -47,6 +47,8 @@ import (
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/tcp/proxies/", &{{lower $crudObject}}{{title .}} )
 												{{else if strEq $crudObject "Port"}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/system/ports/", &{{lower $crudObject}}{{title .}} )
+												{{else if strEq $crudObject "SecurityProfile"}}
+														err := netutils.HTTPGet("http://"+cl.agentURL+"/api/security/profiles/", &{{lower $crudObject}}{{title .}} )
                         {{else}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}{{title .}} )
                         {{end}}
@@ -90,6 +92,8 @@ import (
                          		err := netutils.HTTPPost("http://"+cl.agentURL+"/api/nat/bindings/", &{{lower .}}Data, &resp)
 											  {{else if strEq $crudObject "Port"}}
 														err := netutils.HTTPPost("http://"+cl.agentURL+"/api/system/ports/", &{{lower .}}Data, &resp)
+												{{else if strEq $crudObject "SecurityProfile"}}
+                          	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/security/profiles/", &{{lower .}}Data, &resp)
                         {{end}}
 
                         return err
@@ -127,6 +131,8 @@ import (
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                            		{{else if strEq $crudObject "SGPolicy"}}
                                		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/policies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+															{{else if strEq $crudObject "SecurityProfile"}}
+                               		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/profiles/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                              	{{else if strEq $crudObject "Tunnel"}}
                                  	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/tunnels/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                             	{{else if strEq $crudObject "Interface"}}
@@ -167,6 +173,8 @@ import (
                              			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/namespaces/preCreatedTenant/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "SGPolicy"}}
                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/security/policies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+															{{else if strEq $crudObject "SecurityProfile"}}
+																	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/security/profiles/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "Interface"}}
                               		err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/interfaces/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "Tunnel"}}
@@ -174,7 +182,7 @@ import (
                         			{{else if strEq $crudObject "TCPProxyPolicy"}}
                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/tcp/proxies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "Port"}}
-                              		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/system/ports/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)					
+                              		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/system/ports/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         {{end}}
                         return err
                     }

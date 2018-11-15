@@ -17,10 +17,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// This will ensure that the agent will allocate uplink IDs starting from 128 and this will not clash with any of
-// the internal hal interfaces
-const uplinkOffset = 127
-
 // Nagent is an instance of network agent.
 type Nagent types.NetAgent
 
@@ -188,6 +184,7 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.TunnelDB = make(map[string]*netproto.Tunnel)
 	na.TCPProxyPolicyDB = make(map[string]*netproto.TCPProxyPolicy)
 	na.PortDB = make(map[string]*netproto.Port)
+	na.SecurityProfileDB = make(map[string]*netproto.SecurityProfile)
 	na.Solver = dependencies.NewDepSolver()
 }
 

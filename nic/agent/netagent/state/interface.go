@@ -46,7 +46,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 		log.Errorf("Could not allocate interface id. {%+v}", err)
 		return err
 	}
-	intf.Status.InterfaceID = intfID + uplinkOffset
+	intf.Status.InterfaceID = intfID + types.UplinkOffset
 
 	// Perform interface associations, currently only ENIC interfaces supported as
 	switch intf.Spec.Type {
@@ -297,7 +297,7 @@ func (na *Nagent) createPortAndUplink(p *netproto.Port) error {
 		log.Errorf("Could not allocate IDs for uplinks. %v", err)
 		return fmt.Errorf("could not allocate IDs for uplinks. %v", err)
 	}
-	id += uint64(uplinkOffset)
+	id += uint64(types.UplinkOffset)
 
 	if p.Spec.Type == "TYPE_MANAGEMENT" {
 		uplinkType = "UPLINK_MGMT"

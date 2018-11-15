@@ -495,6 +495,39 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
+	secProfile := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedSecurityProfile",
+		},
+		Spec: netproto.SecurityProfileSpec{
+			Timeouts: &netproto.Timeouts{
+				SessionIdle:        "10s",
+				TCP:                "1m",
+				TCPDrop:            "5s",
+				TCPConnectionSetup: "300ms",
+				TCPClose:           "1h",
+				Drop:               "30s",
+				UDP:                "5s",
+				UDPDrop:            "1s",
+				ICMP:               "100ms",
+				ICMPDrop:           "1h10m15s",
+			},
+			EnableConnectionTracking: true,
+			EnableICMPNormalization:  true,
+			EnableIPNormalization:    true,
+			EnableTCPNormalization:   true,
+		},
+	}
+
+	err = nagent.CreateSecurityProfile(&secProfile)
+	if err != nil {
+		log.Errorf("Failed to create security profile. {%v}", enic)
+		return
+	}
+
 	return nil
 }
 

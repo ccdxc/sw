@@ -507,6 +507,31 @@ func (ag *fakeAgent) DeletePort(tn, ns, name string) error {
 	return nil
 }
 
+// CreateSecurityProfile creates a security profile. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateSecurityProfile(profile *netproto.SecurityProfile) error {
+	return nil
+}
+
+// FindSecurityProfile finds a security profile. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindSecurityProfile(meta api.ObjectMeta) (*netproto.SecurityProfile, error) {
+	return nil, nil
+}
+
+// ListSecurityProfile lists a security profile. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListSecurityProfile() []*netproto.SecurityProfile {
+	return nil
+}
+
+// UpdateSecurityProfile updates a security profile. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error {
+	return nil
+}
+
+// DeleteSecurityProfile deletes a security profile. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteSecurityProfile(tn, ns, name string) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

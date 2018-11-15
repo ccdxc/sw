@@ -69,6 +69,7 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 		"/api/ipsec/encryption/":      addIPSecSAEncryptAPIRoutes,
 		"/api/ipsec/decryption/":      addIPSecSADecryptAPIRoutes,
 		"/api/security/policies/":     addSGPolicyAPIRoutes,
+		"/api/security/profiles/":     addSecurityProfileAPIRoutes,
 		"/api/mirror/sessions/":       addMirrorSessionAPIRoutes,
 		"/api/tunnels/":               addTunnelAPIRoutes,
 		"/api/tcp/proxies/":           addTCPProxyPolicyAPIRoutes,

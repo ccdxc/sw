@@ -344,6 +344,21 @@ func (dp *DelphiDatapath) DeletePort(port *netproto.Port) error {
 	return nil
 }
 
+// CreateSecurityProfile creates security profile
+func (dp *DelphiDatapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf *netproto.Namespace) error {
+	return nil
+}
+
+// UpdateSecurityProfile updates security profile
+func (dp *DelphiDatapath) UpdateSecurityProfile(profile *netproto.SecurityProfile) error {
+	return nil
+}
+
+// DeleteSecurityProfile deletes security profile
+func (dp *DelphiDatapath) DeleteSecurityProfile(profile *netproto.SecurityProfile, vrf *netproto.Namespace) error {
+	return nil
+}
+
 // GetUUID gets the FRU information for the NAPLES from HAL.
 func (dp *DelphiDatapath) GetUUID() (string, error) {
 	return "", nil

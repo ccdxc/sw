@@ -46,6 +46,8 @@ import (
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/tcp/proxies/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "Port"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/system/ports/", &{{lower $crudObject}}{{title .}} )
+                        {{else if strEq $crudObject "SecurityProfile"}}
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/security/profiles/", &{{lower $crudObject}}{{title .}} )
                         {{else}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}{{title .}} )
                         {{end}}
@@ -206,6 +208,35 @@ import (
                                                        }
                                err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/policies/", &{{lower .}}Data, &resp)
                                getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &{{lower $crudObject}}List )
+                               {{else if strEq $crudObject "SecurityProfile"}}
+                                                            {{lower .}}Data := netproto.SecurityProfile{
+                                                                TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+                                                                ObjectMeta: api.ObjectMeta{
+                                                                    Tenant: "default",
+                                                                    Namespace: "default",
+                                                                    Name:   "test{{title .}}{{title $crudObject}}",
+                                                                },
+                                                                Spec: netproto.SecurityProfileSpec{
+                                                              			Timeouts: &netproto.Timeouts{
+                                                              				SessionIdle: "10s",
+                                                              				TCP: "1m",
+                                                              				TCPDrop: "5s",
+                                                              				TCPConnectionSetup: "300ms",
+                                                              				TCPClose: "1h",
+                                                              				Drop: "30s",
+                                                              				UDP: "5s",
+                                                              				UDPDrop: "1s",
+                                                              				ICMP: "100ms",
+                                                              				ICMPDrop: "1h10m15s",
+                                                              			},
+                                                              			EnableConnectionTracking: true,
+                                                              			EnableICMPNormalization: true,
+                                                              			EnableIPNormalization: true,
+                                                              			EnableTCPNormalization: true,
+                                                              		},
+                                                            }
+                                    err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &{{lower .}}Data, &resp)
+                                    getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/profiles/", &{{lower $crudObject}}List )
                          {{else if strEq $crudObject "NatPool"}}
                                                    {{lower .}}Data := netproto.NatPool{
                                                        TypeMeta: api.TypeMeta{Kind: "NatPool"},
@@ -681,6 +712,34 @@ import (
                                    }
                                    AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
 
+                                   {{else if strEq $crudObject "SecurityProfile"}}
+
+                                        var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
+                                        updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                               EnableIPNormalization: true,
+                                                                            }
+                                        {{lower .}}Data := netproto.{{title $crudObject}}{
+                                            TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                            ObjectMeta: api.ObjectMeta{
+                                                Tenant: "default",
+                                                Name:   "preCreated{{title $crudObject}}",
+                                                Namespace: "default",
+                                            },
+                                            Spec: updated{{title $crudObject}}Spec,
+                                        }
+                                       err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/profiles/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                       AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
+
+                                       getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/profiles/", &{{lower $crudObject}}List )
+                                       AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
+                                       for _, o := range {{lower $crudObject}}List{
+                                            if o.Name == "preCreated{{title $crudObject}}"{
+                                                    actual{{title $crudObject}}Spec = o.Spec
+                                                    break
+                                            }
+                                       }
+                                       AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
+
 
                                {{else if strEq $crudObject "TCPProxyPolicy"}}
 
@@ -1007,6 +1066,37 @@ import (
                         postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/system/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
                         err := netutils.HTTPDelete("http://"+agentRestURL+"/api/system/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/system/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+
+                        {{else if strEq $crudObject "SecurityProfile"}}
+                        {{lower .}}Data := netproto.{{title $crudObject}}{
+                            TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                            ObjectMeta: api.ObjectMeta{
+                                Tenant: "default",
+                                Namespace: "default",
+                                Name: "test{{title .}}{{title $crudObject}}",
+                            },
+                            Spec:   netproto.SecurityProfileSpec{
+                          			Timeouts: &netproto.Timeouts{
+                          				SessionIdle: "10s",
+                          				TCP: "1m",
+                          				TCPDrop: "5s",
+                          				TCPConnectionSetup: "300ms",
+                          				TCPClose: "1h",
+                          				Drop: "30s",
+                          				UDP: "5s",
+                          				UDPDrop: "1s",
+                          				ICMP: "100ms",
+                          				ICMPDrop: "1h10m15s",
+                          			},
+                          			EnableConnectionTracking: true,
+                          			EnableICMPNormalization: true,
+                          			EnableIPNormalization: true,
+                          			EnableTCPNormalization: true,
+                          		},
+                        }
+                        postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &{{lower .}}Data, &resp)
+                        err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/profiles/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/security/profiles/", &{{lower $crudObject}}List )
 
                         {{else if strEq $crudObject "NatBinding"}}
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -1408,6 +1498,8 @@ import (
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/tcp/proxies/", &badPostData, &resp)
           {{else if strEq $crudObject "Port"}}
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/system/ports/", &badPostData, &resp)
+          {{else if strEq $crudObject "SecurityProfile"}}
+            err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &badPostData, &resp)
           {{end}}
           Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
         }
@@ -1456,6 +1548,8 @@ import (
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/tcp/proxies/default/default/badObject", &badDelData, &resp)
        {{else if strEq $crudObject "Port"}}
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/system/ports/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "SecurityProfile"}}
+         err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/profiles/default/default/badObject", &badDelData, &resp)
 
        {{end}}
        Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
@@ -1503,8 +1597,10 @@ import (
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/tunnels/default/default/badObject", &badDelData, &resp)
    {{else if strEq $crudObject "TCPProxyPolicy"}}
       err := netutils.HTTPPut("http://"+agentRestURL+"/api/tcp/proxies/default/default/badObject", &badDelData, &resp)
-    {{else if strEq $crudObject "Port"}}
+   {{else if strEq $crudObject "Port"}}
       err := netutils.HTTPPut("http://"+agentRestURL+"/api/system/ports/default/default/badObject", &badDelData, &resp)
+   {{else if strEq $crudObject "SecurityProfile"}}
+      err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/profiles/default/default/badObject", &badDelData, &resp)
    {{end}}
     Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
   }
