@@ -298,11 +298,11 @@ cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp)
         if (ret == HAL_RET_OK) {
             intf::CpuQueueStats *qstats = cpu_stats->add_cpu_queue_stats();
             qstats->set_cpucb_id((types::CpucbId)i);
-            qstats->set_num_tx_packets(0);
-            qstats->set_num_rx_packets(0);  
-            qstats->set_rx_qfull_drop_errors(0);
-            qstats->set_tx_sem_full_drops(0);
-            qstats->set_tx_free_requests(0);
+            qstats->set_num_tx_packets(cpucb.total_tx_pkts);
+            qstats->set_num_rx_packets(cpucb.total_rx_pkts);
+            qstats->set_rx_qfull_drop_errors(cpucb.rx_qfull_drop_errors);
+            qstats->set_tx_sem_full_drops(cpucb.tx_sem_full_drops);
+            qstats->set_tx_free_requests(cpucb.ascq_free_requests);
         }
     }
     return ret;
