@@ -19,7 +19,8 @@ export THIRD_PARTY_INCLUDES := \
        ${TOPDIR}/nic/hal/third-party/grpc/include \
        ${TOPDIR}/nic/hal/third-party/google/include \
        ${TOPDIR}/nic/hal/third-party/openssl/include \
-       ${TOPDIR}/nic/third-party/libev/include
+       ${TOPDIR}/nic/third-party/libev/include \
+       ${TOPDIR}/nic/third-party/libz/include
 
 export NIC_CSR_DEFINES := -DEXCLUDE_PER_FIELD_CNTRL \
     -DCAPRI_HAL -DCAP_CSR_LARGE_ARRAY_THRESHOLD=1024 -DBOOST_EXCEPTION_DISABLE \

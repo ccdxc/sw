@@ -1,5 +1,5 @@
 # format: <name> <version>
-third_party_libs 1.1.72
+third_party_libs 1.1.75
 lkl_libs 1.1.6
 openssl_libs 1.1.0
 platform_libs 0.0.11

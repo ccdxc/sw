@@ -30,3 +30,5 @@ nic/hal/third-party/judy/*
 nic/third-party/gflags/include/*
 nic/third-party/gflags/x86_64/*
 nic/third-party/gflags/aarch64/*
+
+nic/third-party/libz/*
