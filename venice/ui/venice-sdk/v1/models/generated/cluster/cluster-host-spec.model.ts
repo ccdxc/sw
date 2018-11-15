@@ -7,16 +7,17 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ClusterSmartNICID, IClusterSmartNICID } from './cluster-smart-nicid.model';
 
 export interface IClusterHostSpec {
-    'interfaces'?: object;
+    'smart-nics'?: Array<IClusterSmartNICID>;
 }
 
 
 export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
-    'interfaces': object = null;
+    'smart-nics': Array<ClusterSmartNICID> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'interfaces': {
+        'smart-nics': {
             type: 'object'
         },
     }
@@ -40,6 +41,7 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     */
     constructor(values?: any) {
         super();
+        this['smart-nics'] = new Array<ClusterSmartNICID>();
         this.setValues(values);
     }
 
@@ -48,10 +50,8 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['interfaces'] != null) {
-            this['interfaces'] = values['interfaces'];
-        } else if (fillDefaults && ClusterHostSpec.hasDefaultValue('interfaces')) {
-            this['interfaces'] = ClusterHostSpec.propInfo['interfaces'].default;
+        if (values) {
+            this.fillModelArray<ClusterSmartNICID>(this, 'smart-nics', values['smart-nics'], ClusterSmartNICID);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,8 +60,10 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'interfaces': new FormControl(this['interfaces']),
+                'smart-nics': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<ClusterSmartNICID>('smart-nics', this['smart-nics'], ClusterSmartNICID);
         }
         return this._formGroup;
     }
@@ -72,7 +74,7 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['interfaces'].setValue(this['interfaces']);
+            this.fillModelArray<ClusterSmartNICID>(this, 'smart-nics', this['smart-nics'], ClusterSmartNICID);
         }
     }
 }

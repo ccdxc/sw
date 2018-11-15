@@ -79,12 +79,14 @@ func (wtg *workloadTestGroup) testWorkloadCrudops() {
 		Spec: workload.WorkloadSpec{
 			HostName: "naples1-host",
 			// Interfaces Spec keyed by MAC addr of Interface
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"00:50:56:00:00:01": workload.WorkloadIntfSpec{
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:50:56:00:00:01",
 					MicroSegVlan: 101,
 					ExternalVlan: 1001,
 				},
-				"00:50:56:00:00:02": workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:50:56:00:00:02",
 					MicroSegVlan: 102,
 					ExternalVlan: 1002,
 				},
@@ -102,12 +104,14 @@ func (wtg *workloadTestGroup) testWorkloadCrudops() {
 		Spec: workload.WorkloadSpec{
 			HostName: "naples2-host",
 			// Interfaces Spec keyed by MAC addr of Interface
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"00:50:56:00:00:03": workload.WorkloadIntfSpec{
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:50:56:00:00:03",
 					MicroSegVlan: 103,
 					ExternalVlan: 1003,
 				},
-				"00:50:56:00:00:04": workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:50:56:00:00:04",
 					MicroSegVlan: 104,
 					ExternalVlan: 1004,
 				},
@@ -268,8 +272,9 @@ func (wtg *workloadTestGroup) testWorkloadHostname() {
 		Spec: workload.WorkloadSpec{
 			HostName: "10.1.1.0/24",
 			// Interfaces Spec keyed by MAC addr of Interface
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"00:50:56:00:00:01": workload.WorkloadIntfSpec{
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:50:56:00:00:01",
 					MicroSegVlan: 101,
 					ExternalVlan: 1001,
 				},
@@ -339,8 +344,9 @@ func (wtg *workloadTestGroup) testWorkloadMacaddr() {
 		Spec: workload.WorkloadSpec{
 			HostName: "naples4-host.local",
 			// Interfaces Spec keyed by MAC addr of Interface
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"aaBB.ccDD.00.00": workload.WorkloadIntfSpec{
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "aaBB.ccDD.00.00",
 					MicroSegVlan: 101,
 					ExternalVlan: 1001,
 				},
@@ -361,9 +367,9 @@ func (wtg *workloadTestGroup) testWorkloadMacaddr() {
 	}, 30, 1).Should(BeTrue(), fmt.Sprintf("Object creation expected to fail, but succeeded for obj:%s with invalid mac", wkld4Name))
 
 	// Verify creation for workload-4 object succeeds with valid interface mac-address
-	delete(wkld4.Spec.Interfaces, "hello-world")
-	wkld4.Spec.Interfaces = map[string]workload.WorkloadIntfSpec{
-		"00:50:56:00:00:01": workload.WorkloadIntfSpec{
+	wkld4.Spec.Interfaces = []workload.WorkloadIntfSpec{
+		{
+			MACAddress:   "00:50:56:00:00:01",
 			MicroSegVlan: 101,
 			ExternalVlan: 1001,
 		},

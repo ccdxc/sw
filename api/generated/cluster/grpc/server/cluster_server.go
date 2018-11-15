@@ -580,13 +580,11 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 		}),
 
-		"cluster.HostIntfSpec":   apisrvpkg.NewMessage("cluster.HostIntfSpec"),
-		"cluster.HostIntfStatus": apisrvpkg.NewMessage("cluster.HostIntfStatus"),
-		"cluster.HostSpec":       apisrvpkg.NewMessage("cluster.HostSpec"),
-		"cluster.HostStatus":     apisrvpkg.NewMessage("cluster.HostStatus"),
-		"cluster.InterfaceInfo":  apisrvpkg.NewMessage("cluster.InterfaceInfo"),
-		"cluster.MemInfo":        apisrvpkg.NewMessage("cluster.MemInfo"),
-		"cluster.NetworkInfo":    apisrvpkg.NewMessage("cluster.NetworkInfo"),
+		"cluster.HostSpec":      apisrvpkg.NewMessage("cluster.HostSpec"),
+		"cluster.HostStatus":    apisrvpkg.NewMessage("cluster.HostStatus"),
+		"cluster.InterfaceInfo": apisrvpkg.NewMessage("cluster.InterfaceInfo"),
+		"cluster.MemInfo":       apisrvpkg.NewMessage("cluster.MemInfo"),
+		"cluster.NetworkInfo":   apisrvpkg.NewMessage("cluster.NetworkInfo"),
 		"cluster.Node": apisrvpkg.NewMessage("cluster.Node").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := cluster.Node{}
@@ -786,6 +784,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		"cluster.NodeSpec":          apisrvpkg.NewMessage("cluster.NodeSpec"),
 		"cluster.NodeStatus":        apisrvpkg.NewMessage("cluster.NodeStatus"),
 		"cluster.OsInfo":            apisrvpkg.NewMessage("cluster.OsInfo"),
+		"cluster.SmartNICID":        apisrvpkg.NewMessage("cluster.SmartNICID"),
 		"cluster.StorageDeviceInfo": apisrvpkg.NewMessage("cluster.StorageDeviceInfo"),
 		"cluster.StorageInfo":       apisrvpkg.NewMessage("cluster.StorageInfo"),
 		// Add a message handler for ListWatch options

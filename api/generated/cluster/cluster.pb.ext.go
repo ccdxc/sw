@@ -220,48 +220,6 @@ func (m *Host) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *HostIntfSpec) Clone(into interface{}) (interface{}, error) {
-	var out *HostIntfSpec
-	var ok bool
-	if into == nil {
-		out = &HostIntfSpec{}
-	} else {
-		out, ok = into.(*HostIntfSpec)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *HostIntfSpec) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *HostIntfStatus) Clone(into interface{}) (interface{}, error) {
-	var out *HostIntfStatus
-	var ok bool
-	if into == nil {
-		out = &HostIntfStatus{}
-	} else {
-		out, ok = into.(*HostIntfStatus)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *HostIntfStatus) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *HostSpec) Clone(into interface{}) (interface{}, error) {
 	var out *HostSpec
 	var ok bool
@@ -530,6 +488,27 @@ func (m *OsInfo) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *SmartNICID) Clone(into interface{}) (interface{}, error) {
+	var out *SmartNICID
+	var ok bool
+	if into == nil {
+		out = &SmartNICID{}
+	} else {
+		out, ok = into.(*SmartNICID)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SmartNICID) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *StorageDeviceInfo) Clone(into interface{}) (interface{}, error) {
 	var out *StorageDeviceInfo
 	var ok bool
@@ -636,16 +615,6 @@ func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
-	return ret
-}
-
-func (m *HostIntfSpec) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *HostIntfStatus) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
 	return ret
 }
 
@@ -793,6 +762,11 @@ func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *OsInfo) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *SmartNICID) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }

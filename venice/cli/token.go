@@ -21,11 +21,10 @@ type tokenInfo struct {
 
 func getCfgDir() string {
 	usr, err := user.Current()
-	if err != nil {
-		log.Fatalf("Unable to determine current user: %v", err)
+	if err == nil {
+		return path.Join(usr.HomeDir, ".pensando")
 	}
-
-	return path.Join(usr.HomeDir, ".pensando")
+	return ".pensando"
 }
 
 func saveToken(token, server string) {

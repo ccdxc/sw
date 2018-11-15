@@ -14,8 +14,6 @@ The following Messages are defined.
   ClusterStatus
   DockerInfo
   Host
-  HostIntfSpec
-  HostIntfStatus
   HostSpec
   HostStatus
   InterfaceInfo
@@ -27,6 +25,7 @@ The following Messages are defined.
   NodeSpec
   NodeStatus
   OsInfo
+  SmartNICID
   StorageDeviceInfo
   StorageInfo
 

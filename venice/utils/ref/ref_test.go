@@ -1795,10 +1795,7 @@ func TestFieldByJSONTag(t *testing.T) {
 		{"cluster.Cluster", "status.last-leader-transition-time", true, "Status.LastLeaderTransitionTime"},
 		{"cluster.Node", "status.conditions[*].status", false, "Status.Conditions[*].Status"}, // Slice cant be indexed
 		{"cluster.Node", "status.conditions.status", true, "Status.Conditions.Status"},
-		{"cluster.Host", "spec.interfaces[*].mac-addrs", true, "Spec.Interfaces[*].MacAddrs"},
-		{"cluster.Host", "spec.interfaces[foo].mac-addrs", true, "Spec.Interfaces[foo].MacAddrs"},
-		{"cluster.Host", "spec.interfaces[100].mac-addrs", true, "Spec.Interfaces[100].MacAddrs"}, // 100 is a string here
-		{"cluster.Host", "spec.interfaces[100].mac-addrs[*]", false, ""},                          // Slice cant be indexed
+		{"cluster.Host", "spec.smartnics[*].mac-addrs", false, "Spec.SmartNICs[*].MacAddrs"}, // Slice cant be indexed
 	}
 	for ii := range tests {
 		field, err := FieldByJSONTag(tests[ii].kind, tests[ii].jsonTag)

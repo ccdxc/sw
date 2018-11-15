@@ -255,74 +255,6 @@ func DecodeGrpcRespHost(ctx context.Context, response interface{}) (interface{},
 	return response, nil
 }
 
-func encodeHTTPHostIntfSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPHostIntfSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req HostIntfSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqHostIntfSpec encodes GRPC request
-func EncodeGrpcReqHostIntfSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*HostIntfSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqHostIntfSpec decodes GRPC request
-func DecodeGrpcReqHostIntfSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*HostIntfSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespHostIntfSpec encodes GRC response
-func EncodeGrpcRespHostIntfSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespHostIntfSpec decodes GRPC response
-func DecodeGrpcRespHostIntfSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPHostIntfStatus(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPHostIntfStatus(_ context.Context, r *http.Request) (interface{}, error) {
-	var req HostIntfStatus
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqHostIntfStatus encodes GRPC request
-func EncodeGrpcReqHostIntfStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*HostIntfStatus)
-	return req, nil
-}
-
-// DecodeGrpcReqHostIntfStatus decodes GRPC request
-func DecodeGrpcReqHostIntfStatus(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*HostIntfStatus)
-	return req, nil
-}
-
-// EncodeGrpcRespHostIntfStatus encodes GRC response
-func EncodeGrpcRespHostIntfStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespHostIntfStatus decodes GRPC response
-func DecodeGrpcRespHostIntfStatus(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPHostSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -694,6 +626,40 @@ func EncodeGrpcRespOsInfo(ctx context.Context, response interface{}) (interface{
 
 // DecodeGrpcRespOsInfo decodes GRPC response
 func DecodeGrpcRespOsInfo(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSmartNICID(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSmartNICID(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SmartNICID
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSmartNICID encodes GRPC request
+func EncodeGrpcReqSmartNICID(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNICID)
+	return req, nil
+}
+
+// DecodeGrpcReqSmartNICID decodes GRPC request
+func DecodeGrpcReqSmartNICID(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SmartNICID)
+	return req, nil
+}
+
+// EncodeGrpcRespSmartNICID encodes GRC response
+func EncodeGrpcRespSmartNICID(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSmartNICID decodes GRPC response
+func DecodeGrpcRespSmartNICID(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

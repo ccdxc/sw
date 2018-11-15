@@ -43,8 +43,9 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 			},
 			Spec: workload.WorkloadSpec{
 				HostName: fmt.Sprintf("host%d", i),
-				Interfaces: map[string]workload.WorkloadIntfSpec{
-					ag.NetworkAgent.NodeUUID: workload.WorkloadIntfSpec{
+				Interfaces: []workload.WorkloadIntfSpec{
+					{
+						MACAddress:   ag.NetworkAgent.NodeUUID,
 						MicroSegVlan: uint32(i + 100),
 						ExternalVlan: 1,
 					},

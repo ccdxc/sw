@@ -864,9 +864,9 @@ func TestWorkloadCreateDelete(t *testing.T) {
 			Tenant:    "",
 		},
 		Spec: cluster.HostSpec{
-			Interfaces: map[string]cluster.HostIntfSpec{
-				"00:01:02:03:04:05": cluster.HostIntfSpec{
-					MacAddrs: []string{"00:01:02:03:04:05"},
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: "00:01:02:03:04:05",
 				},
 			},
 		},
@@ -886,8 +886,9 @@ func TestWorkloadCreateDelete(t *testing.T) {
 		},
 		Spec: workload.WorkloadSpec{
 			HostName: "testHost",
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"00:01:02:03:04:05": workload.WorkloadIntfSpec{
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:01:02:03:04:05",
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
 				},
@@ -934,9 +935,9 @@ func TestHostCreateDelete(t *testing.T) {
 			Tenant:    "default",
 		},
 		Spec: cluster.HostSpec{
-			Interfaces: map[string]cluster.HostIntfSpec{
-				"00:01:02:03:04:05": cluster.HostIntfSpec{
-					MacAddrs: []string{"00:01:02:03:04:05"},
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: "00:01:02:03:04:05",
 				},
 			},
 		},
@@ -949,7 +950,7 @@ func TestHostCreateDelete(t *testing.T) {
 	// verify we can find the endpoint associated with the host
 	foundHost, err := stateMgr.FindHost("default", "testHost")
 	AssertOk(t, err, "Could not find the host")
-	Assert(t, (len(foundHost.Spec.Interfaces) == 1), "host params did not match")
+	Assert(t, (len(foundHost.Spec.SmartNICs) == 1), "host params did not match")
 
 	// delete the host
 	err = stateMgr.hostReactor.DeleteHost(host)

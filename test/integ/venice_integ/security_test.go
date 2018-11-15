@@ -123,8 +123,9 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			},
 			Spec: workload.WorkloadSpec{
 				HostName: fmt.Sprintf("host%d", i),
-				Interfaces: map[string]workload.WorkloadIntfSpec{
-					fmt.Sprintf("00:01:02:03:04:%02d", i): workload.WorkloadIntfSpec{
+				Interfaces: []workload.WorkloadIntfSpec{
+					{
+						MACAddress:   fmt.Sprintf("00:01:02:03:04:%02d", i),
 						MicroSegVlan: 100,
 						ExternalVlan: 1,
 					},

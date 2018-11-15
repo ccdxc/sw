@@ -9,12 +9,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IWorkloadWorkloadIntfSpec {
+    'mac-address'?: string;
     'micro-seg-vlan'?: number;
     'external-vlan'?: number;
 }
 
 
 export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWorkloadIntfSpec {
+    'mac-address': string = null;
     /** value should be between 1 and 4095
      */
     'micro-seg-vlan': number = null;
@@ -22,6 +24,9 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
      */
     'external-vlan': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'mac-address': {
+            type: 'string'
+        },
         'micro-seg-vlan': {
             description:  'value should be between 1 and 4095 ',
             type: 'number'
@@ -59,6 +64,11 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['mac-address'] != null) {
+            this['mac-address'] = values['mac-address'];
+        } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('mac-address')) {
+            this['mac-address'] = WorkloadWorkloadIntfSpec.propInfo['mac-address'].default;
+        }
         if (values && values['micro-seg-vlan'] != null) {
             this['micro-seg-vlan'] = values['micro-seg-vlan'];
         } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('micro-seg-vlan')) {
@@ -76,6 +86,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'mac-address': new FormControl(this['mac-address']),
                 'micro-seg-vlan': new FormControl(this['micro-seg-vlan'], [minValueValidator(1), maxValueValidator(4095), ]),
                 'external-vlan': new FormControl(this['external-vlan'], [minValueValidator(1), maxValueValidator(4095), ]),
             });
@@ -89,6 +100,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['mac-address'].setValue(this['mac-address']);
             this._formGroup.controls['micro-seg-vlan'].setValue(this['micro-seg-vlan']);
             this._formGroup.controls['external-vlan'].setValue(this['external-vlan']);
         }

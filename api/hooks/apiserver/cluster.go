@@ -57,16 +57,11 @@ func (cl *clusterHooks) validateHostConfig(i interface{}, ver string, ignStatus 
 	}
 
 	// validate the mac address in the interface spec
-	for mackey, intf := range obj.Spec.Interfaces {
+	for ii := range obj.Spec.SmartNICs {
+		mackey := obj.Spec.SmartNICs[ii].MACAddress
 		if vldtor.MacAddr(mackey) == false {
 			cl.logger.Errorf("Invalid mac key: %s", mackey)
 			err = append(err, cl.errInvalidMacConfig(mackey))
-		}
-		for _, mac := range intf.MacAddrs {
-			if vldtor.MacAddr(mac) == false {
-				cl.logger.Errorf("Invalid mac addr: %s", mac)
-				err = append(err, cl.errInvalidMacConfig(mac))
-			}
 		}
 	}
 

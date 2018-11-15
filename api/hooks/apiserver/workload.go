@@ -28,7 +28,8 @@ func (wl *wlHooks) validateWorkloadConfig(i interface{}, ver string, ignStatus b
 	}
 
 	// validate the mac address in the interface spec
-	for mac := range obj.Spec.Interfaces {
+	for ii := range obj.Spec.Interfaces {
+		mac := obj.Spec.Interfaces[ii].MACAddress
 		if vldtor.MacAddr(mac) == false {
 			wl.logger.Errorf("Invalid mac: %s", mac)
 			err = append(err, wl.errInvalidMacConfig(mac))

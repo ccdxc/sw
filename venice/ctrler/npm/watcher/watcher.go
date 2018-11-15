@@ -811,8 +811,9 @@ func (w *Watcher) CreateWorkload(tenant, namespace, name, host, macAddr string, 
 		},
 		Spec: workload.WorkloadSpec{
 			HostName: host,
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				macAddr: workload.WorkloadIntfSpec{
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   macAddr,
 					MicroSegVlan: usegVlan,
 					ExternalVlan: extVlan,
 				},
@@ -843,8 +844,9 @@ func (w *Watcher) DeleteWorkload(tenant, namespace, name, host, macAddr string, 
 		},
 		Spec: workload.WorkloadSpec{
 			HostName: host,
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				macAddr: workload.WorkloadIntfSpec{
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   macAddr,
 					MicroSegVlan: usegVlan,
 					ExternalVlan: extVlan,
 				},
@@ -894,9 +896,9 @@ func (w *Watcher) CreateHost(name, macAddr string) error {
 			Name: name,
 		},
 		Spec: cluster.HostSpec{
-			Interfaces: map[string]cluster.HostIntfSpec{
-				macAddr: cluster.HostIntfSpec{
-					MacAddrs: []string{macAddr},
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: macAddr,
 				},
 			},
 		},

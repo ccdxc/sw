@@ -7,10 +7,11 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { WorkloadWorkloadIntfSpec, IWorkloadWorkloadIntfSpec } from './workload-workload-intf-spec.model';
 
 export interface IWorkloadWorkloadSpec {
     'host-name'?: string;
-    'interfaces'?: object;
+    'interfaces'?: Array<IWorkloadWorkloadIntfSpec>;
 }
 
 
@@ -18,7 +19,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     /** should be a valid host address, IP address or hostname
      */
     'host-name': string = null;
-    'interfaces': object = null;
+    'interfaces': Array<WorkloadWorkloadIntfSpec> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'host-name': {
             description:  'should be a valid host address, IP address or hostname ',
@@ -49,6 +50,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     */
     constructor(values?: any) {
         super();
+        this['interfaces'] = new Array<WorkloadWorkloadIntfSpec>();
         this.setValues(values);
     }
 
@@ -62,10 +64,8 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
         } else if (fillDefaults && WorkloadWorkloadSpec.hasDefaultValue('host-name')) {
             this['host-name'] = WorkloadWorkloadSpec.propInfo['host-name'].default;
         }
-        if (values && values['interfaces'] != null) {
-            this['interfaces'] = values['interfaces'];
-        } else if (fillDefaults && WorkloadWorkloadSpec.hasDefaultValue('interfaces')) {
-            this['interfaces'] = WorkloadWorkloadSpec.propInfo['interfaces'].default;
+        if (values) {
+            this.fillModelArray<WorkloadWorkloadIntfSpec>(this, 'interfaces', values['interfaces'], WorkloadWorkloadIntfSpec);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -75,8 +75,10 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'host-name': new FormControl(this['host-name']),
-                'interfaces': new FormControl(this['interfaces']),
+                'interfaces': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<WorkloadWorkloadIntfSpec>('interfaces', this['interfaces'], WorkloadWorkloadIntfSpec);
         }
         return this._formGroup;
     }
@@ -88,7 +90,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['host-name'].setValue(this['host-name']);
-            this._formGroup.controls['interfaces'].setValue(this['interfaces']);
+            this.fillModelArray<WorkloadWorkloadIntfSpec>(this, 'interfaces', this['interfaces'], WorkloadWorkloadIntfSpec);
         }
     }
 }

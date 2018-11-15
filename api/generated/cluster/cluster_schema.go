@@ -188,47 +188,25 @@ var typesMapCluster = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"ip-addrs":         api.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
-			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"mac-addrs":        api.CLIInfo{Path: "Spec.Interfaces[].MacAddrs", Skip: false, Insert: "", Help: ""},
-			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"operating-system": api.CLIInfo{Path: "Status.OperatingSystem", Skip: false, Insert: "", Help: ""},
-			"orchestrator":     api.CLIInfo{Path: "Status.Orchestrator", Skip: false, Insert: "", Help: ""},
-			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"smartnics":        api.CLIInfo{Path: "Status.SmartNICs", Skip: false, Insert: "", Help: ""},
-			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"type":             api.CLIInfo{Path: "Status.Type", Skip: false, Insert: "", Help: ""},
-			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
-		},
-	},
-	"cluster.HostIntfSpec": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostIntfSpec{}) },
-		Fields: map[string]api.Field{
-			"MacAddrs": api.Field{Name: "MacAddrs", CLITag: api.CLIInfo{ID: "mac-addrs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addrs", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"cluster.HostIntfStatus": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostIntfStatus{}) },
-		Fields: map[string]api.Field{
-			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{ID: "ip-addrs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addrs", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"admitted-smart-nics": api.CLIInfo{Path: "Status.AdmittedSmartNICs", Skip: false, Insert: "", Help: ""},
+			"api-version":         api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"generation-id":       api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"kind":                api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":              api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"mac-address":         api.CLIInfo{Path: "Spec.SmartNICs[].MACAddress", Skip: false, Insert: "", Help: ""},
+			"name":                api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":           api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"resource-version":    api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":           api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"tenant":              api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"type":                api.CLIInfo{Path: "Status.Type", Skip: false, Insert: "", Help: ""},
+			"uuid":                api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.HostSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostSpec{}) },
 		Fields: map[string]api.Field{
-			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "cluster.HostIntfSpec"},
-		},
-	},
-	"cluster.HostSpec.InterfacesEntry": &api.Struct{
-		Fields: map[string]api.Field{
-			"key": api.Field{Name: "key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.HostIntfSpec"},
+			"SmartNICs": api.Field{Name: "SmartNICs", CLITag: api.CLIInfo{ID: "smart-nics", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smart-nics", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNICID"},
 		},
 	},
 	"cluster.HostStatus": &api.Struct{
@@ -236,20 +214,7 @@ var typesMapCluster = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"OperatingSystem": api.Field{Name: "OperatingSystem", CLITag: api.CLIInfo{ID: "operating-system", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "operating-system", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Orchestrator": api.Field{Name: "Orchestrator", CLITag: api.CLIInfo{ID: "orchestrator", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "orchestrator", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "cluster.HostIntfStatus"},
-
-			"SmartNICs": api.Field{Name: "SmartNICs", CLITag: api.CLIInfo{ID: "smartnics", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartnics", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
-	"cluster.HostStatus.InterfacesEntry": &api.Struct{
-		Fields: map[string]api.Field{
-			"key": api.Field{Name: "key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.HostIntfStatus"},
+			"AdmittedSmartNICs": api.Field{Name: "AdmittedSmartNICs", CLITag: api.CLIInfo{ID: "admitted-smart-nics", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admitted-smart-nics", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.InterfaceInfo": &api.Struct{
@@ -392,6 +357,14 @@ var typesMapCluster = map[string]*api.Struct{
 			"Version": api.Field{Name: "Version", CLITag: api.CLIInfo{ID: "kernel-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kernel-version", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Processor": api.Field{Name: "Processor", CLITag: api.CLIInfo{ID: "processor", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "processor", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"cluster.SmartNICID": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICID{}) },
+		Fields: map[string]api.Field{
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.StorageDeviceInfo": &api.Struct{

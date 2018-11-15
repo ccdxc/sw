@@ -267,26 +267,28 @@ func (s *RPCServer) UpdateHost(nic *cluster.SmartNIC, add bool) (*cluster.Host, 
 
 	for ii := range listObj {
 		host := listObj[ii]
-		for k := range host.Spec.Interfaces {
-			if k == nic.Name {
+		for ii := range host.Spec.SmartNICs {
+			mac := host.Spec.SmartNICs[ii].MACAddress
+			name := host.Spec.SmartNICs[ii].Name
+			if name == nic.Name || mac == nic.Name {
 				if add {
 					log.Debugf("Adding %v to Host: %v", nic.Name, host.Name)
 					// A NIC may register multiple times, so only add if it is not already present
 					found := false
-					for ii := range host.Status.SmartNICs {
-						if host.Status.SmartNICs[ii] == nic.Name {
+					for ii := range host.Status.AdmittedSmartNICs {
+						if host.Status.AdmittedSmartNICs[ii] == nic.Name {
 							found = true
 							break
 						}
 					}
 					if !found {
-						host.Status.SmartNICs = append(host.Status.SmartNICs, nic.Name)
+						host.Status.AdmittedSmartNICs = append(host.Status.AdmittedSmartNICs, nic.Name)
 					}
 				} else {
 					log.Debugf("Deleting %v from Host: %v", nic.Name, host.Name)
-					for ii := range host.Status.SmartNICs {
-						if host.Status.SmartNICs[ii] == nic.Name {
-							host.Status.SmartNICs = append(host.Status.SmartNICs[:ii], host.Status.SmartNICs[ii+1:]...)
+					for ii := range host.Status.AdmittedSmartNICs {
+						if host.Status.AdmittedSmartNICs[ii] == nic.Name {
+							host.Status.AdmittedSmartNICs = append(host.Status.AdmittedSmartNICs[:ii], host.Status.AdmittedSmartNICs[ii+1:]...)
 							break
 						}
 					}

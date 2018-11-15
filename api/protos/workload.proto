@@ -39,37 +39,38 @@ message WorkloadSpec {
 
     // Hostname of the server where the workload is running.
     // cli-help: Host name where the workload runs
-    string HostName                             = 1 [(gogoproto.nullable) = true,
-                                                    (venice.check) = "HostAddr()",
-                                                    (gogoproto.jsontag) = "host-name,omitempty"];
+    string HostName                         = 1 [(gogoproto.nullable) = true,
+                                                (venice.check) = "HostAddr()",
+                                                (gogoproto.jsontag) = "host-name"];
 
     // Spec of all interfaces in the Workload identified by Primary MAC
-    map<string, WorkloadIntfSpec> Interfaces    = 2 [(gogoproto.nullable) = false,
-                                                    (gogoproto.jsontag) = "interfaces,omitempty"];
+    repeated WorkloadIntfSpec Interfaces    = 2 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "interfaces,omitempty"];
 }
 
 // Status part of Workload object
 message WorkloadStatus {
 
     // Status of all interfaces in the Workload identified by Primary MAC
-    map<string, WorkloadIntfStatus> Interfaces  = 1 [(gogoproto.nullable) = false,
-                                                    (gogoproto.jsontag) = "interfaces,omitempty"];
+    repeated WorkloadIntfStatus Interfaces  = 1 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "interfaces,omitempty"];
 }
 
 // Spec of a Workload interface
 message WorkloadIntfSpec {
 
-    // TBD: Is it possible to have multiple/secondary MAC
-    // addrs on a workload interface ?
+    // MACAddress contains the MAC address of the interface as seen by the workload
+    // cli-help: MAC address of the interface as seen by the workload
+    string MACAddress    = 1 [(gogoproto.jsontag) = "mac-address,omitempty"];
 
     // Micro-segmentation vlan assigned for this interface
     // cli-help: Vlan identifying host unique vlan id
-    uint32 MicroSegVlan  = 1 [(gogoproto.jsontag) = "micro-seg-vlan,omitempty",
+    uint32 MicroSegVlan  = 2 [(gogoproto.jsontag) = "micro-seg-vlan,omitempty",
                               (venice.check) = "IntRange(1,4095)"];
 
     // External vlan assigned for this interface
     // cli-help: External vlan associated with the workload
-    uint32 ExternalVlan  = 2 [(gogoproto.jsontag) = "external-vlan,omitempty",
+    uint32 ExternalVlan  = 3 [(gogoproto.jsontag) = "external-vlan,omitempty",
                               (venice.check) = "IntRange(1,4095)"];
 
 }
@@ -77,9 +78,12 @@ message WorkloadIntfSpec {
 // Status of a Workload interface
 message WorkloadIntfStatus {
 
+    // MACAddress contains the MAC address of the interface as seen by the workload
+    string MACAddress    = 1 [(gogoproto.jsontag) = "mac-address,omitempty"];
+
     // List of all IP addresses configured and discovered on a Workload Interface
-    repeated string IpAddrs = 1 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
+    repeated string IpAddrs = 2 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
 
     // Endpoint associated with this Workload interface
-    string Endpoint         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint,omitempty"];
+    string Endpoint         = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint,omitempty"];
 }

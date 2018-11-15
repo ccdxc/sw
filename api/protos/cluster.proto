@@ -359,9 +359,19 @@ message Host {
 // HostSpec contains the configuration of the Host.
 message HostSpec {
 
-    // Spec of all interfaces in the Host identified by Primary MAC
-    map<string, HostIntfSpec> Interfaces    = 1 [(gogoproto.nullable) = false,
-                                                (gogoproto.jsontag) = "interfaces,omitempty"];
+    // SmartNICs contains the information about all SmartNICs on a host
+    repeated SmartNICID SmartNICs    = 1 [(gogoproto.nullable) = false,
+                                         (gogoproto.jsontag) = "smart-nics,omitempty"];
+}
+
+// SmartNICID contains the identifying information of a SmartNIC
+message SmartNICID {
+
+    // Name contains the name of the SmartNIC on a host
+    string Name = 1 [(gogoproto.jsontag) = "name,omitempty"];
+
+    // MACAddress contains the primary MAC address of a SmartNIC
+    string MACAddress = 2 [(gogoproto.jsontag) = "mac-address,omitempty"];
 }
 
 // HostStatus contains the current state of the Host.
@@ -378,32 +388,7 @@ message HostStatus {
     string Type                             = 1 [(venice.check) = "StrEnum(HostStatus.HostType)",
                                                 (gogoproto.jsontag) = "type,omitempty"];
 
-    // Operating system info - name of OS with version, eg: "Linux 3.10.0.xyz"
-    string OperatingSystem                  = 2 [(gogoproto.jsontag) = "operating-system,omitempty"];
-
-    // Orchestrator is the name of associated Compute controller
-    // (like VCenter) managing this host.
-    string Orchestrator                     = 3 [(gogoproto.jsontag) = "orchestrator,omitempty"];
-
-    // Status of all interfaces in the Host identified by Primary MAC
-    map<string, HostIntfStatus> Interfaces  = 4 [(gogoproto.nullable) = false,
-                                                (gogoproto.jsontag) = "interfaces,omitempty"];
-
-    // SmartNICs contains a list of admitted SmartNICs that are on this host
-    repeated string SmartNICs               = 5 [(gogoproto.nullable) = false,
-                                                (gogoproto.jsontag) = "smartnics,omitempty"];
-}
-
-// Spec of a Host interface
-message HostIntfSpec {
-
-    // List of all MAC addresses configured and discovered on a Host Interface
-    repeated string MacAddrs = 1 [(gogoproto.jsontag) = "mac-addrs,omitempty"];
-}
-
-// Status of a Host interface
-message HostIntfStatus {
-
-    // List of all IP addresses configured on a Host Interface
-    repeated string IpAddrs = 1 [(gogoproto.jsontag) = "ip-addrs,omitempty"];
+    // AdmittedSmartNICs contains a list of admitted SmartNICs that are on this host
+    repeated string AdmittedSmartNICs         = 2 [(gogoproto.nullable) = false,
+                                                  (gogoproto.jsontag) = "admitted-smart-nics,omitempty"];
 }

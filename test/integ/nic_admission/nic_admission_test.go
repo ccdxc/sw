@@ -117,8 +117,10 @@ func getHost(index int) *pencluster.Host {
 			Name: fmt.Sprintf("e2e-host-%02d", index),
 		},
 		Spec: pencluster.HostSpec{
-			Interfaces: map[string]pencluster.HostIntfSpec{
-				getSmartNICMAC(index): pencluster.HostIntfSpec{},
+			SmartNICs: []pencluster.SmartNICID{
+				{
+					MACAddress: getSmartNICMAC(index),
+				},
 			},
 		},
 		Status: pencluster.HostStatus{
@@ -415,8 +417,8 @@ func TestCreateNMDs(t *testing.T) {
 							log.Errorf("Failed to GET Host object:%s, %v", host.Name, err)
 							return false, nil
 						}
-						for ii := range hostObj.Status.SmartNICs {
-							if hostObj.Status.SmartNICs[ii] == priMac {
+						for ii := range hostObj.Status.AdmittedSmartNICs {
+							if hostObj.Status.AdmittedSmartNICs[ii] == priMac {
 								return true, nil
 							}
 						}

@@ -7,14 +7,15 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { WorkloadWorkloadIntfStatus, IWorkloadWorkloadIntfStatus } from './workload-workload-intf-status.model';
 
 export interface IWorkloadWorkloadStatus {
-    'interfaces'?: object;
+    'interfaces'?: Array<IWorkloadWorkloadIntfStatus>;
 }
 
 
 export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorkloadStatus {
-    'interfaces': object = null;
+    'interfaces': Array<WorkloadWorkloadIntfStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interfaces': {
             type: 'object'
@@ -40,6 +41,7 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     */
     constructor(values?: any) {
         super();
+        this['interfaces'] = new Array<WorkloadWorkloadIntfStatus>();
         this.setValues(values);
     }
 
@@ -48,10 +50,8 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['interfaces'] != null) {
-            this['interfaces'] = values['interfaces'];
-        } else if (fillDefaults && WorkloadWorkloadStatus.hasDefaultValue('interfaces')) {
-            this['interfaces'] = WorkloadWorkloadStatus.propInfo['interfaces'].default;
+        if (values) {
+            this.fillModelArray<WorkloadWorkloadIntfStatus>(this, 'interfaces', values['interfaces'], WorkloadWorkloadIntfStatus);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -60,8 +60,10 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'interfaces': new FormControl(this['interfaces']),
+                'interfaces': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<WorkloadWorkloadIntfStatus>('interfaces', this['interfaces'], WorkloadWorkloadIntfStatus);
         }
         return this._formGroup;
     }
@@ -72,7 +74,7 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['interfaces'].setValue(this['interfaces']);
+            this.fillModelArray<WorkloadWorkloadIntfStatus>(this, 'interfaces', this['interfaces'], WorkloadWorkloadIntfStatus);
         }
     }
 }

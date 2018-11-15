@@ -22,17 +22,17 @@ type WorkloadHandler interface {
 	DeleteWorkload(w workload.Workload) error
 }
 
-// networkName returns network name for the workload interface
-func (wr *WorkloadReactor) networkName(intf workload.WorkloadIntfSpec) string {
-	return "Vlan-" + fmt.Sprintf("%d", intf.ExternalVlan)
+// networkName returns network name for the external vlan
+func (wr *WorkloadReactor) networkName(extVlan uint32) string {
+	return "Vlan-" + fmt.Sprintf("%d", extVlan)
 }
 
 // CreateWorkload handle workload creation
 func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 	// loop over each interface of the workload
-	for mac, intf := range w.Spec.Interfaces {
+	for ii := range w.Spec.Interfaces {
 		// check if we have a network for this workload
-		netName := wr.networkName(intf)
+		netName := wr.networkName(w.Spec.Interfaces[ii].ExternalVlan)
 		nw, err := wr.stateMgr.FindNetwork(w.Tenant, netName)
 		if (err != nil) && (ErrIsObjectNotFound(err)) {
 			err = wr.stateMgr.CreateNetwork(&network.Network{
@@ -45,7 +45,7 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 				Spec: network.NetworkSpec{
 					IPv4Subnet:  "",
 					IPv4Gateway: "",
-					VlanID:      intf.ExternalVlan,
+					VlanID:      w.Spec.Interfaces[ii].ExternalVlan,
 				},
 				Status: network.NetworkStatus{},
 			})
@@ -60,7 +60,7 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 		}
 
 		// check if we already have the endpoint for this workload
-		epName := w.Name + "-" + mac
+		epName := w.Name + "-" + w.Spec.Interfaces[ii].MACAddress
 		_, err = wr.stateMgr.FindEndpoint(w.Tenant, epName)
 		if (err != nil) && (ErrIsObjectNotFound(err)) {
 			// find the host for the workload
@@ -72,11 +72,15 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 
 			// find the smart nic by mac addr
 			nodeUUID := ""
-			for snicMac := range host.Spec.Interfaces {
+			for jj := range host.Spec.SmartNICs {
+				snicMac := host.Spec.SmartNICs[jj].MACAddress
 				snic, err := wr.stateMgr.FindSmartNICByMacAddr(snicMac)
 				if err != nil {
-					log.Errorf("Error finding smart nic for mac add %v", snicMac)
-					return err
+					snic, err = wr.stateMgr.FindSmartNIC("", host.Spec.SmartNICs[jj].Name)
+					if err != nil {
+						log.Errorf("Error finding smart nic for mac add %v", snicMac)
+						return err
+					}
 				}
 				if snic.Status.PrimaryMAC != "" {
 					nodeUUID = snic.Status.PrimaryMAC
@@ -100,10 +104,10 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 					WorkloadName:       w.Name,
 					WorkloadUUID:       w.Name,
 					WorkloadAttributes: w.Labels,
-					MacAddress:         mac,
+					MacAddress:         w.Spec.Interfaces[ii].MACAddress,
 					HomingHostAddr:     "", // TODO: get host address
 					HomingHostName:     w.Spec.HostName,
-					MicroSegmentVlan:   intf.MicroSegVlan,
+					MicroSegmentVlan:   w.Spec.Interfaces[ii].MicroSegVlan,
 				},
 			}
 
@@ -123,9 +127,9 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 // DeleteWorkload handles workload deletion
 func (wr *WorkloadReactor) DeleteWorkload(w workload.Workload) error {
 	// loop over each interface of the workload
-	for mac, intf := range w.Spec.Interfaces {
+	for ii := range w.Spec.Interfaces {
 		// find the network for the interface
-		netName := wr.networkName(intf)
+		netName := wr.networkName(w.Spec.Interfaces[ii].ExternalVlan)
 		nw, err := wr.stateMgr.FindNetwork(w.Tenant, netName)
 		if err != nil {
 			log.Errorf("Error finding the network %v. Err: %v", netName, err)
@@ -133,7 +137,7 @@ func (wr *WorkloadReactor) DeleteWorkload(w workload.Workload) error {
 		}
 
 		// check if we created an endpoint for this workload interface
-		epName := w.Name + "-" + mac
+		epName := w.Name + "-" + w.Spec.Interfaces[ii].MACAddress
 		_, ok := nw.FindEndpoint(epName)
 		if !ok {
 			log.Errorf("Could not find endpoint %v", epName)

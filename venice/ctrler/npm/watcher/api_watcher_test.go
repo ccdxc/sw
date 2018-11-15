@@ -418,9 +418,9 @@ func TestAPIServerRestarts(t *testing.T) {
 			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
-			Interfaces: map[string]cluster.HostIntfSpec{
-				"00:01:02:03:04:05": {
-					MacAddrs: []string{"00:01:02:03:04:05"},
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: "00:01:02:03:04:05",
 				},
 			},
 		},
@@ -439,8 +439,9 @@ func TestAPIServerRestarts(t *testing.T) {
 		},
 		Spec: workload.WorkloadSpec{
 			HostName: "testHost",
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"00:01:02:03:04:05": {
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:01:02:03:04:05",
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
 				},
@@ -661,9 +662,9 @@ func TestWorkloadWatcher(t *testing.T) {
 			Name: "testHost",
 		},
 		Spec: cluster.HostSpec{
-			Interfaces: map[string]cluster.HostIntfSpec{
-				"00:01:02:03:04:05": {
-					MacAddrs: []string{"00:01:02:03:04:05"},
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: "00:01:02:03:04:05",
 				},
 			},
 		},
@@ -682,8 +683,9 @@ func TestWorkloadWatcher(t *testing.T) {
 		},
 		Spec: workload.WorkloadSpec{
 			HostName: "testHost",
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"00:01:02:03:04:05": {
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:01:02:03:04:05",
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
 				},

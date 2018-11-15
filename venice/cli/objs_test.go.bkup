@@ -76,9 +76,9 @@ func TestGetKvs(t *testing.T) {
 	wObj.ObjectMeta.Name = "vm445.112"
 	wObj.ObjectMeta.Tenant = "default"
 	wObj.Spec.HostName = "esxi-343"
-	wObj.Spec.Interfaces = map[string]workload.WorkloadIntfSpec{
-		"00.11.22.44.55.66": {MicroSegVlan: 23, ExternalVlan: 100},
-		"00.11.33.44.55.66": {MicroSegVlan: 33, ExternalVlan: 200}}
+	wObj.Spec.Interfaces = []workload.WorkloadIntfSpec{
+		{MACAddress: "00.11.22.44.55.66", MicroSegVlan: 23, ExternalVlan: 100},
+		{MACAddress: "00.11.33.44.55.66", MicroSegVlan: 33, ExternalVlan: 200}}
 
 	metaKvs := make(map[string]cliField)
 	specKvs := make(map[string]cliField)
@@ -95,12 +95,13 @@ func TestGetKvs(t *testing.T) {
 	if !reflect.DeepEqual(specKvs["host-name"].values, []string{"esxi-343"}) {
 		t.Fatalf("unable to get specKvs %+v", specKvs)
 	}
-	if !reflect.DeepEqual(specKvs["micro-seg-vlan"].values, []string{"00.11.22.44.55.66" + kvSplitter + "23", "00.11.33.44.55.66" + kvSplitter + "33"}) &&
-		!reflect.DeepEqual(specKvs["micro-seg-vlan"].values, []string{"00.11.33.44.55.66" + kvSplitter + "33", "00.11.22.44.55.66" + kvSplitter + "23"}) {
+	if !reflect.DeepEqual(specKvs["mac-address"].values, []string{"00.11.22.44.55.66", "00.11.33.44.55.66"}) {
 		t.Fatalf("unable to get specKvs %+v", specKvs)
 	}
-	if !reflect.DeepEqual(specKvs["external-vlan"].values, []string{"00.11.22.44.55.66" + kvSplitter + "100", "00.11.33.44.55.66" + kvSplitter + "200"}) &&
-		!reflect.DeepEqual(specKvs["external-vlan"].values, []string{"00.11.33.44.55.66" + kvSplitter + "200", "00.11.22.44.55.66" + kvSplitter + "100"}) {
+	if !reflect.DeepEqual(specKvs["micro-seg-vlan"].values, []string{"23", "33"}) {
+		t.Fatalf("unable to get specKvs %+v", specKvs)
+	}
+	if !reflect.DeepEqual(specKvs["external-vlan"].values, []string{"100", "200"}) {
 		t.Fatalf("unable to get specKvs %+v", specKvs)
 	}
 }
@@ -135,10 +136,10 @@ func TestGetAllKvs(t *testing.T) {
 		},
 		Spec: workload.WorkloadSpec{
 			HostName: "node021",
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"11:11:11:11:11:11": {ExternalVlan: 11, MicroSegVlan: 1000},
-				"22:22:22:22:22:22": {ExternalVlan: 22, MicroSegVlan: 2000},
-				"33:33:33:33:33:33": {ExternalVlan: 33, MicroSegVlan: 3000},
+			Interfaces: []workload.WorkloadIntfSpec{
+				{MACAddress: "11:11:11:11:11:11", ExternalVlan: 11, MicroSegVlan: 1000},
+				{MACAddress: "22:22:22:22:22:22", ExternalVlan: 22, MicroSegVlan: 2000},
+				{MACAddress: "33:33:33:33:33:33", ExternalVlan: 33, MicroSegVlan: 3000},
 			},
 		},
 	}
@@ -150,8 +151,8 @@ func TestGetAllKvs(t *testing.T) {
 		},
 		Spec: workload.WorkloadSpec{
 			HostName: "node021",
-			Interfaces: map[string]workload.WorkloadIntfSpec{
-				"44:44:44:44:44:44": {ExternalVlan: 11, MicroSegVlan: 4000},
+			Interfaces: []workload.WorkloadIntfSpec{
+				{MACAddress: "44:44:44:44:44:44", ExternalVlan: 11, MicroSegVlan: 4000},
 			},
 		},
 	}
@@ -175,7 +176,7 @@ func TestGetAllKvs(t *testing.T) {
 	if !objmValidKvs["labels"] || !objmValidKvs["name"] {
 		t.Fatalf("unable to find valid objmValidKvs: %+v", objmValidKvs)
 	}
-	if !specValidKvs["host-name"] || !specValidKvs["micro-seg-vlan"] || !specValidKvs["external-vlan"] {
+	if !specValidKvs["host-name"] || !specValidKvs["mac-address"] || !specValidKvs["micro-seg-vlan"] || !specValidKvs["external-vlan"] {
 		t.Fatalf("unable to find valid specValidKvs: %+v", specValidKvs)
 	}
 	if len(objmKvs) != len(wObjList.Items) {

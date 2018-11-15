@@ -11,38 +11,20 @@ import { ClusterHostStatus_type,  } from './enums';
 
 export interface IClusterHostStatus {
     'type'?: ClusterHostStatus_type;
-    'operating-system'?: string;
-    'orchestrator'?: string;
-    'interfaces'?: object;
-    'smartnics'?: Array<string>;
+    'admitted-smart-nics'?: Array<string>;
 }
 
 
 export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     'type': ClusterHostStatus_type = null;
-    'operating-system': string = null;
-    /** Orchestrator is the name of associated Compute controller
-    (like VCenter) managing this host. */
-    'orchestrator': string = null;
-    'interfaces': object = null;
-    'smartnics': Array<string> = null;
+    'admitted-smart-nics': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: ClusterHostStatus_type,
             default: 'UNKNOWN',
             type: 'string'
         },
-        'operating-system': {
-            type: 'string'
-        },
-        'orchestrator': {
-            description:  'Orchestrator is the name of associated Compute controller (like VCenter) managing this host.',
-            type: 'string'
-        },
-        'interfaces': {
-            type: 'object'
-        },
-        'smartnics': {
+        'admitted-smart-nics': {
             type: 'Array<string>'
         },
     }
@@ -66,7 +48,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     */
     constructor(values?: any) {
         super();
-        this['smartnics'] = new Array<string>();
+        this['admitted-smart-nics'] = new Array<string>();
         this.setValues(values);
     }
 
@@ -80,23 +62,8 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
         } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('type')) {
             this['type'] = <ClusterHostStatus_type>  ClusterHostStatus.propInfo['type'].default;
         }
-        if (values && values['operating-system'] != null) {
-            this['operating-system'] = values['operating-system'];
-        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('operating-system')) {
-            this['operating-system'] = ClusterHostStatus.propInfo['operating-system'].default;
-        }
-        if (values && values['orchestrator'] != null) {
-            this['orchestrator'] = values['orchestrator'];
-        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('orchestrator')) {
-            this['orchestrator'] = ClusterHostStatus.propInfo['orchestrator'].default;
-        }
-        if (values && values['interfaces'] != null) {
-            this['interfaces'] = values['interfaces'];
-        } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('interfaces')) {
-            this['interfaces'] = ClusterHostStatus.propInfo['interfaces'].default;
-        }
-        if (values && values['smartnics'] != null) {
-            this['smartnics'] = values['smartnics'];
+        if (values && values['admitted-smart-nics'] != null) {
+            this['admitted-smart-nics'] = values['admitted-smart-nics'];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -106,10 +73,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'type': new FormControl(this['type'], [enumValidator(ClusterHostStatus_type), ]),
-                'operating-system': new FormControl(this['operating-system']),
-                'orchestrator': new FormControl(this['orchestrator']),
-                'interfaces': new FormControl(this['interfaces']),
-                'smartnics': new FormControl(this['smartnics']),
+                'admitted-smart-nics': new FormControl(this['admitted-smart-nics']),
             });
         }
         return this._formGroup;
@@ -122,10 +86,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
-            this._formGroup.controls['operating-system'].setValue(this['operating-system']);
-            this._formGroup.controls['orchestrator'].setValue(this['orchestrator']);
-            this._formGroup.controls['interfaces'].setValue(this['interfaces']);
-            this._formGroup.controls['smartnics'].setValue(this['smartnics']);
+            this._formGroup.controls['admitted-smart-nics'].setValue(this['admitted-smart-nics']);
         }
     }
 }

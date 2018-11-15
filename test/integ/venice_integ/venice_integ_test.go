@@ -199,8 +199,10 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 				Name: hostName,
 			},
 			Spec: pencluster.HostSpec{
-				Interfaces: map[string]pencluster.HostIntfSpec{
-					hostID: pencluster.HostIntfSpec{},
+				SmartNICs: []pencluster.SmartNICID{
+					{
+						MACAddress: hostID,
+					},
 				},
 			},
 			Status: pencluster.HostStatus{

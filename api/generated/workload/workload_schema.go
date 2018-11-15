@@ -60,6 +60,7 @@ var typesMapWorkload = map[string]*api.Struct{
 			"ip-addresses":     api.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"mac-address":      api.CLIInfo{Path: "Status.Interfaces[].MACAddress", Skip: false, Insert: "", Help: ""},
 			"micro-seg-vlan":   api.CLIInfo{Path: "Spec.Interfaces[].MicroSegVlan", Skip: false, Insert: "", Help: "Vlan identifying host unique vlan id"},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
@@ -72,6 +73,8 @@ var typesMapWorkload = map[string]*api.Struct{
 	"workload.WorkloadIntfSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadIntfSpec{}) },
 		Fields: map[string]api.Field{
+			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: "MAC address of the interface as seen by the workload"}, JSONTag: "mac-address", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"MicroSegVlan": api.Field{Name: "MicroSegVlan", CLITag: api.CLIInfo{ID: "micro-seg-vlan", Path: "", Skip: false, Insert: "", Help: "Vlan identifying host unique vlan id"}, JSONTag: "micro-seg-vlan", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"ExternalVlan": api.Field{Name: "ExternalVlan", CLITag: api.CLIInfo{ID: "external-vlan", Path: "", Skip: false, Insert: "", Help: "External vlan associated with the workload"}, JSONTag: "external-vlan", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
@@ -80,6 +83,8 @@ var typesMapWorkload = map[string]*api.Struct{
 	"workload.WorkloadIntfStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadIntfStatus{}) },
 		Fields: map[string]api.Field{
+			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{ID: "ip-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Endpoint": api.Field{Name: "Endpoint", CLITag: api.CLIInfo{ID: "endpoint", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoint", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
@@ -90,27 +95,13 @@ var typesMapWorkload = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"HostName": api.Field{Name: "HostName", CLITag: api.CLIInfo{ID: "host-name", Path: "", Skip: false, Insert: "", Help: "Host name where the workload runs"}, JSONTag: "host-name", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "workload.WorkloadIntfSpec"},
-		},
-	},
-	"workload.WorkloadSpec.InterfacesEntry": &api.Struct{
-		Fields: map[string]api.Field{
-			"key": api.Field{Name: "key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfSpec"},
+			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfSpec"},
 		},
 	},
 	"workload.WorkloadStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadStatus{}) },
 		Fields: map[string]api.Field{
-			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "workload.WorkloadIntfStatus"},
-		},
-	},
-	"workload.WorkloadStatus.InterfacesEntry": &api.Struct{
-		Fields: map[string]api.Field{
-			"key": api.Field{Name: "key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfStatus"},
+			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfStatus"},
 		},
 	},
 }

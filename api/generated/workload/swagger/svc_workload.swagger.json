@@ -3296,6 +3296,10 @@
     "workloadWorkloadIntfSpec": {
       "type": "object",
       "properties": {
+        "mac-address": {
+          "type": "string",
+          "title": "MACAddress contains the MAC address of the interface as seen by the workload\ncli-help: MAC address of the interface as seen by the workload"
+        },
         "micro-seg-vlan": {
           "type": "integer",
           "format": "int64",
@@ -3318,6 +3322,10 @@
     "workloadWorkloadIntfStatus": {
       "type": "object",
       "properties": {
+        "mac-address": {
+          "type": "string",
+          "title": "MACAddress contains the MAC address of the interface as seen by the workload"
+        },
         "ip-addresses": {
           "type": "array",
           "items": {
@@ -3364,8 +3372,8 @@
           "title": "Hostname of the server where the workload is running.\ncli-help: Host name where the workload runs"
         },
         "interfaces": {
-          "type": "object",
-          "additionalProperties": {
+          "type": "array",
+          "items": {
             "$ref": "#/definitions/workloadWorkloadIntfSpec"
           },
           "title": "Spec of all interfaces in the Workload identified by Primary MAC"
@@ -3377,8 +3385,8 @@
       "type": "object",
       "properties": {
         "interfaces": {
-          "type": "object",
-          "additionalProperties": {
+          "type": "array",
+          "items": {
             "$ref": "#/definitions/workloadWorkloadIntfStatus"
           },
           "title": "Status of all interfaces in the Workload identified by Primary MAC"

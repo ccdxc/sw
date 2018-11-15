@@ -56,8 +56,10 @@ func TestHostObject(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: cluster.HostSpec{
-					Interfaces: map[string]cluster.HostIntfSpec{
-						"hello-world": cluster.HostIntfSpec{},
+					SmartNICs: []cluster.SmartNICID{
+						{
+							MACAddress: "hello-world",
+						},
 					},
 				},
 			},
@@ -76,16 +78,15 @@ func TestHostObject(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: cluster.HostSpec{
-					Interfaces: map[string]cluster.HostIntfSpec{
-						"01.02.03.04.05.06": cluster.HostIntfSpec{
-							MacAddrs: []string{"0102.0304.05.06"},
+					SmartNICs: []cluster.SmartNICID{
+						{
+							MACAddress: "01.02.03.04.05.06",
 						},
 					},
 				},
 			},
 			[]error{
 				cl.errInvalidMacConfig("01.02.03.04.05.06"),
-				cl.errInvalidMacConfig("0102.0304.05.06"),
 			},
 		},
 		// valid host object #1
@@ -99,9 +100,9 @@ func TestHostObject(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: cluster.HostSpec{
-					Interfaces: map[string]cluster.HostIntfSpec{
-						"0102.0304.0506": cluster.HostIntfSpec{
-							MacAddrs: []string{"0102.0304.0506"},
+					SmartNICs: []cluster.SmartNICID{
+						{
+							MACAddress: "0102.0304.0506",
 						},
 					},
 				},
@@ -119,9 +120,9 @@ func TestHostObject(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: cluster.HostSpec{
-					Interfaces: map[string]cluster.HostIntfSpec{
-						"01-02-03-04-05-06": cluster.HostIntfSpec{
-							MacAddrs: []string{"0102.0304.0506"},
+					SmartNICs: []cluster.SmartNICID{
+						{
+							MACAddress: "01-02-03-04-05-06",
 						},
 					},
 				},

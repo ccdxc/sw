@@ -99,8 +99,10 @@ var _ = BeforeSuite(func() {
 					Name: fmt.Sprintf("naples%d-host", idx+1),
 				},
 				Spec: cluster.HostSpec{
-					Interfaces: map[string]cluster.HostIntfSpec{
-						naples.Spec.PrimaryMAC: cluster.HostIntfSpec{},
+					SmartNICs: []cluster.SmartNICID{
+						{
+							MACAddress: naples.Spec.PrimaryMAC,
+						},
 					},
 				},
 			}

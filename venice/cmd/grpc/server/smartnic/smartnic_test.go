@@ -273,8 +273,8 @@ func verifyHostObj(t *testing.T, hostName, mac string) {
 			return false, nil
 		}
 		t.Logf("\nHost NIC list, host: %+v \n", hostObj)
-		for ii := range hostObj.Status.SmartNICs {
-			if hostObj.Status.SmartNICs[ii] == mac {
+		for ii := range hostObj.Status.AdmittedSmartNICs {
+			if hostObj.Status.AdmittedSmartNICs[ii] == mac {
 				return true, nil
 			}
 		}
@@ -522,8 +522,10 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				Name: testCases[ii].hostName,
 			},
 			Spec: cmd.HostSpec{
-				Interfaces: map[string]cmd.HostIntfSpec{
-					testCases[ii].mac: cmd.HostIntfSpec{},
+				SmartNICs: []cmd.SmartNICID{
+					{
+						MACAddress: testCases[ii].mac,
+					},
 				},
 			},
 		}
@@ -645,8 +647,8 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				}
 				t.Logf("\n++++++ Host NIC list, host: %+v \n", hostObj)
 
-				for ii := range hostObj.Status.SmartNICs {
-					if hostObj.Status.SmartNICs[ii] == tc.mac {
+				for ii := range hostObj.Status.AdmittedSmartNICs {
+					if hostObj.Status.AdmittedSmartNICs[ii] == tc.mac {
 						return true, nil
 					}
 
@@ -701,8 +703,10 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 				Name: fmt.Sprintf("esxt-%d", i),
 			},
 			Spec: cmd.HostSpec{
-				Interfaces: map[string]cmd.HostIntfSpec{
-					nicName: cmd.HostIntfSpec{},
+				SmartNICs: []cmd.SmartNICID{
+					{
+						MACAddress: nicName,
+					},
 				},
 			},
 		}
@@ -965,8 +969,10 @@ func TestSmartNICConfigByUser(t *testing.T) {
 			Name: "esxc",
 		},
 		Spec: cmd.HostSpec{
-			Interfaces: map[string]cmd.HostIntfSpec{
-				testMac: cmd.HostIntfSpec{},
+			SmartNICs: []cmd.SmartNICID{
+				{
+					MACAddress: testMac,
+				},
 			},
 		},
 	}
@@ -1063,8 +1069,8 @@ func TestSmartNICConfigByUser(t *testing.T) {
 			log.Errorf("Failed to GET Host object, name:%s, %v", meta.Name, err)
 			return false, nil
 		}
-		for ii := range hostObj.Status.SmartNICs {
-			if hostObj.Status.SmartNICs[ii] == testMac {
+		for ii := range hostObj.Status.AdmittedSmartNICs {
+			if hostObj.Status.AdmittedSmartNICs[ii] == testMac {
 				return false, nil
 			}
 		}
@@ -1176,8 +1182,10 @@ func TestManualAdmission(t *testing.T) {
 			Name: hostName,
 		},
 		Spec: cmd.HostSpec{
-			Interfaces: map[string]cmd.HostIntfSpec{
-				mac: cmd.HostIntfSpec{},
+			SmartNICs: []cmd.SmartNICID{
+				{
+					MACAddress: mac,
+				},
 			},
 		},
 	}

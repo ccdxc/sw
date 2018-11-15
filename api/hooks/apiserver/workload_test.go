@@ -29,8 +29,10 @@ func TestWorkloadObject(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: workload.WorkloadSpec{
-					Interfaces: map[string]workload.WorkloadIntfSpec{
-						"01.02.03.04.05.06": workload.WorkloadIntfSpec{},
+					Interfaces: []workload.WorkloadIntfSpec{
+						{
+							MACAddress: "01.02.03.04.05.06",
+						},
 					},
 				},
 			},
@@ -49,8 +51,10 @@ func TestWorkloadObject(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: workload.WorkloadSpec{
-					Interfaces: map[string]workload.WorkloadIntfSpec{
-						"hello-world": workload.WorkloadIntfSpec{},
+					Interfaces: []workload.WorkloadIntfSpec{
+						{
+							MACAddress: "hello-world",
+						},
 					},
 				},
 			},
@@ -69,8 +73,9 @@ func TestWorkloadObject(t *testing.T) {
 					APIVersion: "v1",
 				},
 				Spec: workload.WorkloadSpec{
-					Interfaces: map[string]workload.WorkloadIntfSpec{
-						"0202.0404.0606": workload.WorkloadIntfSpec{
+					Interfaces: []workload.WorkloadIntfSpec{
+						{
+							MACAddress: "0202.0404.0606",
 							// MicroSegVlan will be allocated by backend (NPM)
 							ExternalVlan: 1001,
 						},

@@ -759,22 +759,8 @@
             "type": "string"
           },
           {
-            "name": "status.operating-system",
-            "description": "Operating system info - name of OS with version, eg: \"Linux 3.10.0.xyz\".",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.orchestrator",
-            "description": "Orchestrator is the name of associated Compute controller\n(like VCenter) managing this host.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status.smartnics",
-            "description": "SmartNICs contains a list of admitted SmartNICs that are on this host.",
+            "name": "status.admitted-smart-nics",
+            "description": "AdmittedSmartNICs contains a list of admitted SmartNICs that are on this host.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -3877,32 +3863,6 @@
       "description": "Host represents a Baremetal or Hypervisor server.",
       "title": "---------------------------------- HOST ------------------------------------"
     },
-    "clusterHostIntfSpec": {
-      "type": "object",
-      "properties": {
-        "mac-addrs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "List of all MAC addresses configured and discovered on a Host Interface"
-        }
-      },
-      "title": "Spec of a Host interface"
-    },
-    "clusterHostIntfStatus": {
-      "type": "object",
-      "properties": {
-        "ip-addrs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "List of all IP addresses configured on a Host Interface"
-        }
-      },
-      "title": "Status of a Host interface"
-    },
     "clusterHostList": {
       "type": "object",
       "properties": {
@@ -3928,12 +3888,12 @@
     "clusterHostSpec": {
       "type": "object",
       "properties": {
-        "interfaces": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clusterHostIntfSpec"
+        "smart-nics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterSmartNICID"
           },
-          "title": "Spec of all interfaces in the Host identified by Primary MAC"
+          "title": "SmartNICs contains the information about all SmartNICs on a host"
         }
       },
       "description": "HostSpec contains the configuration of the Host."
@@ -3951,27 +3911,12 @@
           "default": "UNKNOWN",
           "title": "Type of the host"
         },
-        "operating-system": {
-          "type": "string",
-          "title": "Operating system info - name of OS with version, eg: \"Linux 3.10.0.xyz\""
-        },
-        "orchestrator": {
-          "type": "string",
-          "description": "Orchestrator is the name of associated Compute controller\n(like VCenter) managing this host."
-        },
-        "interfaces": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/clusterHostIntfStatus"
-          },
-          "title": "Status of all interfaces in the Host identified by Primary MAC"
-        },
-        "smartnics": {
+        "admitted-smart-nics": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "SmartNICs contains a list of admitted SmartNICs that are on this host"
+          "title": "AdmittedSmartNICs contains a list of admitted SmartNICs that are on this host"
         }
       },
       "description": "HostStatus contains the current state of the Host."
@@ -4301,6 +4246,20 @@
         }
       },
       "description": "SmartNICCondition describes the state of a SmartNIC at a certain point."
+    },
+    "clusterSmartNICID": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name contains the name of the SmartNIC on a host"
+        },
+        "mac-address": {
+          "type": "string",
+          "title": "MACAddress contains the primary MAC address of a SmartNIC"
+        }
+      },
+      "title": "SmartNICID contains the identifying information of a SmartNIC"
     },
     "clusterSmartNICInfo": {
       "type": "object",

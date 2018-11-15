@@ -16,8 +16,9 @@ func TestWriteObjStructMap(t *testing.T) {
 
 	specKvs := make(map[string]cliField)
 	specKvs["host-name"] = cliField{values: []string{"esx-node12"}}
-	specKvs["external-vlan"] = cliField{values: []string{"00:11:22:33:44:55=100", "00:22:33:44:55:66=200"}}
-	specKvs["micro-seg-vlan"] = cliField{values: []string{"00:11:22:33:44:55=1001", "00:22:33:44:55:66=2001"}}
+	specKvs["mac-address"] = cliField{values: []string{"00:11:22:33:44:55", "00:22:33:44:55:66"}}
+	specKvs["external-vlan"] = cliField{values: []string{"100", "200"}}
+	specKvs["micro-seg-vlan"] = cliField{values: []string{"1001", "2001"}}
 
 	obj := getNewObj(ctx)
 
@@ -30,9 +31,9 @@ func TestWriteObjStructMap(t *testing.T) {
 		t.Fatalf("invalid hostname in wObj: %+v", wObj)
 	}
 	if len(wObj.Spec.Interfaces) != 2 || !reflect.DeepEqual(wObj.Spec.Interfaces,
-		map[string]workload.WorkloadIntfSpec{
-			"00:11:22:33:44:55": workload.WorkloadIntfSpec{ExternalVlan: 100, MicroSegVlan: 1001},
-			"00:22:33:44:55:66": workload.WorkloadIntfSpec{ExternalVlan: 200, MicroSegVlan: 2001}}) {
+		[]workload.WorkloadIntfSpec{
+			{MACAddress: "00:11:22:33:44:55", ExternalVlan: 100, MicroSegVlan: 1001},
+			{MACAddress: "00:22:33:44:55:66", ExternalVlan: 200, MicroSegVlan: 2001}}) {
 		t.Fatalf("invalid Interfaces: %+v", wObj.Spec.Interfaces)
 	}
 }
