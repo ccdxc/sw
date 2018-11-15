@@ -532,6 +532,10 @@
           "items": {
             "$ref": "#/definitions/metrics_queryQueryResult"
           }
+        },
+        "meta": {
+          "$ref": "#/definitions/metrics_queryObjectSelector",
+          "title": "ObjectSelector is the selectors used for the query"
         }
       },
       "title": "QueryResponse is the response send out"

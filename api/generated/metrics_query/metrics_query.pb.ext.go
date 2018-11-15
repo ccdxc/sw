@@ -183,6 +183,15 @@ func (m *PaginationSpec) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *QueryResponse) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
+	}
+	npath := path + dlmtr + "ObjectSelector"
+	if errs := m.ObjectSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
 	return ret
 }
 

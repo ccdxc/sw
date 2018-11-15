@@ -2,28 +2,36 @@ package query
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/influxdata/influxdb/query"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/metrics_query"
-	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+// BrokerInf defines the broker interface required by query.go
+type BrokerInf interface {
+	ClusterCheck() error
+	ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error)
+}
+
 // Server defines a metrics query server
 type Server struct {
 	grpcSrv *rpckit.RPCServer
-	broker  *broker.Broker
+	broker  BrokerInf
 }
 
 // NewQueryService creates an RPC server to handle queries from APIGW/gRPC
-func NewQueryService(listenURL string, br *broker.Broker) (*Server, error) {
+func NewQueryService(listenURL string, br BrokerInf) (*Server, error) {
 	s, err := rpckit.NewRPCServer(globals.Citadel, listenURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Errorf("failed to start query grpc server: %v", err)
@@ -52,43 +60,61 @@ func (q *Server) Stop() {
 func (q *Server) validate(qs *metrics_query.QuerySpec) error {
 
 	if qs == nil {
-		return fmt.Errorf("query parameter required")
+		return status.Errorf(codes.InvalidArgument, "query parameter required")
 	}
 
 	if qs.Kind == "" {
-		return fmt.Errorf("kind required")
+		return status.Errorf(codes.InvalidArgument, "kind required")
+	}
+
+	if !validators.RegExp(qs.Kind, []string{"name"}) {
+		return status.Errorf(codes.InvalidArgument, "invalid kind")
 	}
 
 	if qs.Tenant == "" {
-		return fmt.Errorf("tenant required")
+		return status.Errorf(codes.InvalidArgument, "tenant required")
 	}
 
 	qs.Function = strings.ToUpper(qs.Function)
 
 	if _, ok := metrics_query.TsdbFunctionType_value[qs.Function]; !ok {
-		return fmt.Errorf("function %s did not match allowed strings", qs.Function)
+		return status.Errorf(codes.InvalidArgument, "function %s is not an accepted function", qs.Function)
+	}
+
+	if qs.Function != "" {
+		switch qs.Function {
+		case metrics_query.TsdbFunctionType_MAX.String():
+			// Can only specify one field when using MAX
+			if len(qs.Fields) != 1 {
+				return status.Errorf(codes.InvalidArgument, "Function MAX requires exactly one field")
+			}
+		case metrics_query.TsdbFunctionType_MEAN.String():
+			//none
+		case metrics_query.TsdbFunctionType_NONE.String():
+			//none
+		}
 	}
 
 	for _, v := range qs.Fields {
 		if !validators.RegExp(v, []string{"name"}) {
-			return fmt.Errorf("failed to validate field %s", v)
+			return status.Errorf(codes.InvalidArgument, "field %s was not a valid field", v)
 		}
 	}
 
 	if qs.GroupbyField != "" {
 		if !validators.RegExp(qs.GroupbyField, []string{"name"}) {
-			return fmt.Errorf("failed to validate field %s", qs.GroupbyField)
+			return status.Errorf(codes.InvalidArgument, "group-by-field %s was not a valid field", qs.GroupbyField)
 		}
 	}
 
 	if qs.Selector != nil && len(qs.Selector.Requirements) > 0 {
 		if _, err := qs.Selector.PrintSQL(); err != nil {
-			return err
+			return status.Errorf(codes.InvalidArgument, "Failed to parse selector requirements: %v", err)
 		}
 	}
 
 	if !validators.Duration(qs.GroupbyTime) {
-		return fmt.Errorf("failed to validate group-by-time %s", qs.GroupbyTime)
+		return status.Errorf(codes.InvalidArgument, "group-by-time value %s was not a valid duration", qs.GroupbyTime)
 	}
 
 	return nil
@@ -169,30 +195,43 @@ func (q *Server) Query(c context.Context, qs *metrics_query.QuerySpec) (*metrics
 		}
 		queryResults = append(queryResults, result)
 	}
-	return &metrics_query.QueryResponse{Results: queryResults}, nil
+	return &metrics_query.QueryResponse{
+		Results: queryResults,
+		ObjectSelector: metrics_query.ObjectSelector{
+			Name:      qs.Name,
+			Tenant:    qs.Tenant,
+			Namespace: qs.Namespace,
+			Selector:  qs.Selector,
+		}}, nil
 }
 
 func buildCitadelQuery(qs *metrics_query.QuerySpec) (string, error) {
 	measurement := qs.Kind
-	fields := "*"
+	fields := []string{"*"}
 	var selectors []string
 
 	if len(qs.Fields) > 0 {
-		fields = strings.Join(qs.Fields, ",")
+		fields = qs.Fields
 	}
 
 	if qs.Function != "" {
 		switch qs.Function {
-		case metrics_query.TsdbFunctionType_MEAN.String():
-			fields = fmt.Sprintf("%s(%s)", qs.Function, fields)
-		case metrics_query.TsdbFunctionType_MAX.String():
-			fields = fmt.Sprintf("%s(%s),*", qs.Function, fields)
+		case metrics_query.TsdbFunctionType_MEAN.String(), metrics_query.TsdbFunctionType_MAX.String():
+			newFields := []string{}
+			for _, field := range fields {
+				newFields = append(newFields, fmt.Sprintf("%s(%s)", qs.Function, field))
+			}
+			if qs.Function == metrics_query.TsdbFunctionType_MAX.String() {
+				// We add * to select the other fields to give the max query context
+				newFields = append(newFields, "*")
+			}
+			fields = newFields
 		case metrics_query.TsdbFunctionType_NONE.String():
 			//none
 		}
 	}
 
-	q := fmt.Sprintf("SELECT %s FROM %s", fields, measurement)
+	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(fields, ","), measurement)
 
 	if qs.Selector != nil && len(qs.Selector.Requirements) > 0 {
 		sel, err := qs.Selector.PrintSQL()
@@ -240,5 +279,5 @@ func buildCitadelQuery(qs *metrics_query.QuerySpec) (string, error) {
 
 // AutoWatchSvcMetricsV1 is not implemented
 func (q *Server) AutoWatchSvcMetricsV1(lwo *api.ListWatchOptions, s metrics_query.MetricsV1_AutoWatchSvcMetricsV1Server) error {
-	return errors.New("not supported")
+	return status.Errorf(codes.Unimplemented, "not supported")
 }

@@ -89,4 +89,6 @@ message QueryResult {
 // QueryResponse is the response send out
 message QueryResponse {
    repeated QueryResult Results = 1 [(gogoproto.jsontag) = "results,omitempty"];
+    // ObjectSelector is the selectors used for the query 
+    ObjectSelector O          = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 }

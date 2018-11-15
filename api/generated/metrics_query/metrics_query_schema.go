@@ -39,6 +39,16 @@ var typesMapMetrics_query = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(QueryResponse{}) },
 		Fields: map[string]api.Field{
 			"Results": api.Field{Name: "Results", CLITag: api.CLIInfo{ID: "results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "results", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.QueryResult"},
+
+			"ObjectSelector": api.Field{Name: "ObjectSelector", CLITag: api.CLIInfo{ID: "meta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "metrics_query.ObjectSelector"},
+
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{ID: "tenant", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{ID: "namespace", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Selector": api.Field{Name: "Selector", CLITag: api.CLIInfo{ID: "selector", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "selector", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "labels.Selector"},
 		},
 	},
 	"metrics_query.QueryResult": &api.Struct{

@@ -8,16 +8,22 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Metrics_queryQueryResult, IMetrics_queryQueryResult } from './metrics-query-query-result.model';
+import { Metrics_queryObjectSelector, IMetrics_queryObjectSelector } from './metrics-query-object-selector.model';
 
 export interface IMetrics_queryQueryResponse {
     'results'?: Array<IMetrics_queryQueryResult>;
+    'meta'?: IMetrics_queryObjectSelector;
 }
 
 
 export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_queryQueryResponse {
     'results': Array<Metrics_queryQueryResult> = null;
+    'meta': Metrics_queryObjectSelector = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'results': {
+            type: 'object'
+        },
+        'meta': {
             type: 'object'
         },
     }
@@ -42,6 +48,7 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
     constructor(values?: any) {
         super();
         this['results'] = new Array<Metrics_queryQueryResult>();
+        this['meta'] = new Metrics_queryObjectSelector();
         this.setValues(values);
     }
 
@@ -53,6 +60,9 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
         if (values) {
             this.fillModelArray<Metrics_queryQueryResult>(this, 'results', values['results'], Metrics_queryQueryResult);
         }
+        if (values) {
+            this['meta'].setValues(values['meta']);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -61,6 +71,7 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'results': new FormArray([]),
+                'meta': this['meta'].$formGroup,
             });
             // generate FormArray control elements
             this.fillFormArray<Metrics_queryQueryResult>('results', this['results'], Metrics_queryQueryResult);
@@ -75,6 +86,7 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this.fillModelArray<Metrics_queryQueryResult>(this, 'results', this['results'], Metrics_queryQueryResult);
+            this['meta'].setFormGroupValuesToBeModelValues();
         }
     }
 }
