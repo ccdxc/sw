@@ -16,6 +16,10 @@ export DISABLE_AGING=1
 #CMD_OPTS="COVFILE\=${COVFILE}"
 PRELOADS=${BUILD_DIR}/lib/libp4pd_mock.so
 HBMHASH_PRELOADS=${BUILD_DIR}/lib/libhbmhashp4pd_mock.so
+function finish {
+   ${TOPDIR}/tools/savelogs.sh
+}
+trap finish EXIT
 set -e
 # PI gtests
 export PATH=${PATH}:${BUILD_DIR}/bin
