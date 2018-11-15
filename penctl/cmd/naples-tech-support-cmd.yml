@@ -1,9 +1,7 @@
 Cmds:
  -
-   bin: ps
-   opts: "-ef"
+   cmd: ps -ef
    ofile: ps.out
  -
-   bin: ls
-   opts: "-al"
+   cmd: ls -al
    ofile: ls.out

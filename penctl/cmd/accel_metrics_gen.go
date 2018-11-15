@@ -10,8 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var accelhwringmetricsVar string
-
 var accelhwringmetricsShowCmd = &cobra.Command{
 	Use:   "accelhwringmetrics",
 	Short: "Show AccelHwRingMetrics from Naples",
@@ -22,14 +20,8 @@ var accelhwringmetricsShowCmd = &cobra.Command{
 func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) {
 	tabularFormat = false
 	jsonFormat = true
-	if cmd.Flags().Changed("accelhwringmetrics") {
-		restGet(revProxyPort, "telemetry/v1/metrics/accelhwringmetrics/default/"+accelhwringmetricsVar+"/")
-	} else {
-		restGet(revProxyPort, "telemetry/v1/metrics/accelhwringmetrics/")
-	}
+	restGet(revProxyPort, "telemetry/v1/metrics/accelhwringmetrics/")
 }
-
-var accelseqqueuemetricsVar string
 
 var accelseqqueuemetricsShowCmd = &cobra.Command{
 	Use:   "accelseqqueuemetrics",
@@ -41,19 +33,13 @@ var accelseqqueuemetricsShowCmd = &cobra.Command{
 func accelseqqueuemetricsShowCmdHandler(cmd *cobra.Command, args []string) {
 	tabularFormat = false
 	jsonFormat = true
-	if cmd.Flags().Changed("accelseqqueuemetrics") {
-		restGet(revProxyPort, "telemetry/v1/metrics/accelseqqueuemetrics/default/"+accelseqqueuemetricsVar+"/")
-	} else {
-		restGet(revProxyPort, "telemetry/v1/metrics/accelseqqueuemetrics/")
-	}
+	restGet(revProxyPort, "telemetry/v1/metrics/accelseqqueuemetrics/")
 }
 
 func init() {
 
 	metricsShowCmd.AddCommand(accelhwringmetricsShowCmd)
-	accelhwringmetricsShowCmd.Flags().StringVarP(&accelhwringmetricsVar, "name", "n", "", "Name/Key for metrics object")
 
 	metricsShowCmd.AddCommand(accelseqqueuemetricsShowCmd)
-	accelseqqueuemetricsShowCmd.Flags().StringVarP(&accelseqqueuemetricsVar, "name", "n", "", "Name/Key for metrics object")
 
 }

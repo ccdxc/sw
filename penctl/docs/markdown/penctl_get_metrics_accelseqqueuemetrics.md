@@ -18,8 +18,7 @@ penctl get metrics accelseqqueuemetrics [flags]
 ### Options
 
 ```
-  -h, --help          help for accelseqqueuemetrics
-  -n, --name string   Name/Key for metrics object
+  -h, --help   help for accelseqqueuemetrics
 ```
 
 ### Options inherited from parent commands
@@ -28,7 +27,7 @@ penctl get metrics accelseqqueuemetrics [flags]
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -y, --yaml               display in yaml json
+  -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO

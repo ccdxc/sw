@@ -3,7 +3,7 @@
 penctl get firmware
 -------------------
 
-List firmware images on Naples
+Get running firmware image on Naples
 
 Synopsis
 ~~~~~~~~
@@ -11,7 +11,7 @@ Synopsis
 
 
 -------------------------------
- List Firmware Images on Naples 
+ Get Running Firmware Image On Naples 
 -------------------------------
 
 
@@ -34,10 +34,11 @@ Options inherited from parent commands
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -y, --yaml               display in yaml json
+  -y, --yaml               display in yaml format
 
 SEE ALSO
 ~~~~~~~~
 
 * `penctl get <penctl_get.rst>`_ 	 - Get CLIs
+* `penctl get firmware detail <penctl_get_firmware_detail.rst>`_ 	 - Get detail of running firmware image on Naples
 

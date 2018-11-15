@@ -27,7 +27,7 @@ penctl get proc-meminfo [flags]
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -y, --yaml               display in yaml json
+  -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO

@@ -10,8 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var lifmetricsVar string
-
 var lifmetricsShowCmd = &cobra.Command{
 	Use:   "lifmetrics",
 	Short: "Show LifMetrics from Naples",
@@ -22,16 +20,11 @@ var lifmetricsShowCmd = &cobra.Command{
 func lifmetricsShowCmdHandler(cmd *cobra.Command, args []string) {
 	tabularFormat = false
 	jsonFormat = true
-	if cmd.Flags().Changed("lifmetrics") {
-		restGet(revProxyPort, "telemetry/v1/metrics/lifmetrics/default/"+lifmetricsVar+"/")
-	} else {
-		restGet(revProxyPort, "telemetry/v1/metrics/lifmetrics/")
-	}
+	restGet(revProxyPort, "telemetry/v1/metrics/lifmetrics/")
 }
 
 func init() {
 
 	metricsShowCmd.AddCommand(lifmetricsShowCmd)
-	lifmetricsShowCmd.Flags().StringVarP(&lifmetricsVar, "name", "n", "", "Name/Key for metrics object")
 
 }

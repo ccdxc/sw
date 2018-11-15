@@ -38,14 +38,13 @@ func init() {
 
 	showTechCmd.Flags().StringVarP(&destDir, "dest-dir", "d", "", "Destination directory to copy Naples tech-support to")
 	showTechCmd.Flags().StringVarP(&cmdFile, "cmds", "c", "", "YML file with list of commands to run on Naples")
-	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create")
+	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create (without .tar.gz)")
 }
 
 // NaplesCmds is the format of the yaml file used to run commands on Naples for tech-support
 type NaplesCmds struct {
 	Cmds []struct {
-		Bin   string `yaml:"bin"`
-		Opts  string `yaml:"opts"`
+		Cmd   string `yaml:"cmd"`
 		Ofile string `yaml:"ofile"`
 	} `yaml:"Cmds"`
 }
@@ -163,9 +162,11 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		for _, naplesCmd := range naplesCmds.Cmds {
+			cmd := strings.Fields(naplesCmd.Cmd)
+			opts := strings.Join(cmd[1:], " ")
 			v := &nmd.NaplesCmdExecute{
-				Executable: naplesCmd.Bin,
-				Opts:       naplesCmd.Opts,
+				Executable: cmd[0],
+				Opts:       opts,
 			}
 			resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
 			if err != nil {
@@ -183,7 +184,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 				}
 				defer out.Close()
 				w := bufio.NewWriter(out)
-				w.WriteString("===" + naplesCmd.Bin + " " + naplesCmd.Opts + "===\n" + s)
+				w.WriteString("===" + cmd[0] + " " + opts + "===\n" + s)
 				w.Flush()
 			}
 		}
@@ -195,6 +196,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("tarball") {
 		tarFile = "naples-tech-support"
 	}
+	fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
 	tarcmd := exec.Command("tar", "-zcvf", tarFile+".tar.gz", destDir)
 	tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
 	var out bytes.Buffer
@@ -213,7 +215,6 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Removed " + destDir)
 
 	return nil
 }

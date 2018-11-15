@@ -18,14 +18,13 @@ Pensando CLIs
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -y, --yaml               display in yaml json
+  -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
-* [penctl core](penctl_core.md)	 - Cores on Naples
-* [penctl execute](penctl_execute.md)	 - Execute Binary
+* [penctl delete](penctl_delete.md)	 - Delete CLIs
+* [penctl exec](penctl_exec.md)	 - Execute Binary
 * [penctl get](penctl_get.md)	 - Get CLIs
-* [penctl put](penctl_put.md)	 - Put CLIs
 * [penctl set](penctl_set.md)	 - Config CLIs
 * [penctl ssh](penctl_ssh.md)	 - SSH Commands to Naples
 

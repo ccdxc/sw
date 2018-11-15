@@ -10,8 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var upgrademetricsVar string
-
 var upgrademetricsShowCmd = &cobra.Command{
 	Use:   "upgrademetrics",
 	Short: "Show UpgradeMetrics from Naples",
@@ -22,16 +20,11 @@ var upgrademetricsShowCmd = &cobra.Command{
 func upgrademetricsShowCmdHandler(cmd *cobra.Command, args []string) {
 	tabularFormat = false
 	jsonFormat = true
-	if cmd.Flags().Changed("upgrademetrics") {
-		restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/default/"+upgrademetricsVar+"/")
-	} else {
-		restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/")
-	}
+	restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/")
 }
 
 func init() {
 
 	metricsShowCmd.AddCommand(upgrademetricsShowCmd)
-	upgrademetricsShowCmd.Flags().StringVarP(&upgrademetricsVar, "name", "n", "", "Name/Key for metrics object")
 
 }

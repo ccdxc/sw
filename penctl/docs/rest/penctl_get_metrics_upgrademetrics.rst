@@ -24,8 +24,7 @@ Options
 
 ::
 
-  -h, --help          help for upgrademetrics
-  -n, --name string   Name/Key for metrics object
+  -h, --help   help for upgrademetrics
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,7 +34,7 @@ Options inherited from parent commands
   -e, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -y, --yaml               display in yaml json
+  -y, --yaml               display in yaml format
 
 SEE ALSO
 ~~~~~~~~

@@ -14,7 +14,7 @@ import (
 )
 
 var execBinCmd = &cobra.Command{
-	Use:                "execute",
+	Use:                "exec",
 	Short:              "Execute Binary",
 	Long:               "\n-----------------------------------\n Execute Binary on Naples \n-----------------------------------\n",
 	Run:                execBinCmdHandler,

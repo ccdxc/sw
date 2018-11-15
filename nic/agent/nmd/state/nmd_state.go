@@ -493,16 +493,9 @@ func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Naples Cmd Execute Request: %+v", req)
 	parts := strings.Fields(req.Opts)
 	cmd := exec.Command(req.Executable, parts...)
-	stdout, err := cmd.StdoutPipe()
+	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
-	slurp, _ := ioutil.ReadAll(stdout)
-	if err := cmd.Wait(); err != nil {
-		log.Fatal(err)
-	}
-	return string(slurp), nil
+	return string(stdoutStderr), nil
 }

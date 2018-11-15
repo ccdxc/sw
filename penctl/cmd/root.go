@@ -55,7 +55,7 @@ func init() {
 	log.SetConfig(logConfig)
 
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml json")
+	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml format")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", false, "display in json format")
 	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", true, "display in tabular format")
 	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock mode to localhost")
@@ -66,7 +66,8 @@ func init() {
 	rootCmd.PersistentFlags().MarkHidden("verbose")
 	rootCmd.PersistentFlags().MarkHidden("ip")
 
-	rootCmd.GenBashCompletionFile("penctl.sh")
+	// TODO generate this file only for linux/etc
+	// rootCmd.GenBashCompletionFile("penctl.sh")
 }
 
 // NewPenctlCommand exports the rootCmd for bash-completion

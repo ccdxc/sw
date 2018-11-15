@@ -33,14 +33,14 @@ var coreShowCmd = &cobra.Command{
 }
 
 var coreFetchCmd = &cobra.Command{
-	Use:   "get",
+	Use:   "file",
 	Short: "Get a core from Naples",
 	Long:  "\n------------------------\n Get a Core From Naples \n------------------------\n",
 	RunE:  coreFetchCmdHandler,
 }
 
 var coreDeleteCmd = &cobra.Command{
-	Use:   "delete",
+	Use:   "core",
 	Short: "Delete a core from Naples",
 	Long:  "\n---------------------------\n Delete a Core From Naples \n---------------------------\n",
 	RunE:  coreDeleteCmdHandler,
@@ -50,10 +50,11 @@ var path string
 var file string
 
 func init() {
-	rootCmd.AddCommand(coreRootCmd)
+	getCmd.AddCommand(coreRootCmd)
 	coreRootCmd.AddCommand(coreShowCmd)
 	coreRootCmd.AddCommand(coreFetchCmd)
-	coreRootCmd.AddCommand(coreDeleteCmd)
+	deleteCmd.AddCommand(coreDeleteCmd)
+
 	coreFetchCmd.Flags().StringVarP(&path, "path", "p", "", "Path to copy files to")
 	coreFetchCmd.Flags().StringVarP(&file, "file", "f", "", "Core file to copy")
 	coreFetchCmd.MarkFlagRequired("file")
