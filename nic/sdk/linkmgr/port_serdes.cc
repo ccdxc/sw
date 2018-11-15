@@ -17,6 +17,11 @@ Aapl_t *aapl = NULL;
 #define SPICO_INT_ENABLE 0x1
 #define SPICO_INT_RESET  0x39
 
+#define serdes_spico_int_check_hw(sbus_addr, int_code, int_data)  \
+    avago_spico_int_check(aapl, __func__, __LINE__,         \
+                          sbus_addr, int_code, int_data);   \
+
+
 //---------------------------------------------------------------------------
 // HAPS platform methods
 //---------------------------------------------------------------------------
@@ -202,6 +207,30 @@ serdes_prbs_start_default (uint32_t sbus_addr, serdes_info_t *serdes_info)
     return 0;
 }
 
+int
+serdes_an_start_default(uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    return 0;
+}
+
+bool
+serdes_an_wait_hcd_default(uint32_t sbus_addr)
+{
+    return true;
+}
+
+uint32_t
+serdes_an_hcd_read_default (uint32_t sbus_addr)
+{
+    return 0x0;
+}
+
+int
+serdes_an_hcd_cfg_default (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
+{
+    return 0;
+}
+
 //---------------------------------------------------------------------------
 // HW methods
 //---------------------------------------------------------------------------
@@ -301,13 +330,6 @@ aapl_sbus_access (Aapl_t *aapl,
     return sbus_access(sbus_addr, reg_addr, command, sbus_data);
 }
 
-bool
-serdes_spico_int_hw (uint32_t sbus_addr, int int_code, int int_data)
-{
-    return avago_spico_int_check(aapl, __func__, __LINE__,
-                                 sbus_addr, int_code, int_data);
-}
-
 void
 serdes_get_ip_info(int chip_reset)
 {
@@ -345,6 +367,12 @@ aapl_log_fn(Aapl_t *aapl, Aapl_log_type_t log_type,
         SDK_LINKMGR_TRACE_DEBUG_SIZE(new_item_len, "%s", buf);
         break;
     }
+}
+
+bool
+serdes_spico_int_hw (uint32_t sbus_addr, int int_code, int int_data)
+{
+    return serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
 }
 
 Aapl_t*
@@ -420,21 +448,27 @@ serdes_signal_detect_hw (uint32_t sbus_addr)
     // TODO workaround
     FILE *d_fp = fopen("/aapl_enable_ei", "r");
     if (d_fp) {
-        int threshold = 3;
-        bool idle = false;
+        int  threshold = 3;
+        bool idle      = false;
+
+        fscanf(d_fp, "%d", &threshold);
+
         avago_serdes_initialize_signal_ok(aapl, sbus_addr, threshold);
 
         // check for electricle idle
         idle = avago_serdes_get_electrical_idle (aapl, sbus_addr);
 
-        if (idle == true) {
-            SDK_LINKMGR_TRACE_DEBUG("EI detected on sbus: 0x%x", sbus_addr);
+        if (idle == false) {
+            SDK_LINKMGR_TRACE_DEBUG("Signal detected, EI not detected on sbus: "
+                            "0x%x, threshold: %d", sbus_addr, threshold);
         } else {
-            SDK_LINKMGR_TRACE_DEBUG("EI not detected on sbus: 0x%x", sbus_addr);
+            SDK_LINKMGR_TRACE_DEBUG("Signal NOT detected on sbus: 0x%x, "
+                            "threshold: %d", sbus_addr, threshold);
         }
 
         // Disable electrical idle
         avago_spico_int(aapl, sbus_addr, 0x20, 0x0);
+
         fclose(d_fp);
     }
 
@@ -479,38 +513,13 @@ serdes_tx_rx_enable_hw (uint32_t sbus_addr, bool enable)
     // To be set only during init stage.
     // Need to wait for Tx/Rx ready once set
     return SDK_RET_OK;
-
-#if 0
-    int  mask     = 0;
-    bool rc       = false;
-    int  int_code = SPICO_INT_ENABLE;
-
-    mask = serdes_get_int01_bits(aapl, sbus_addr, ~0x3) | (enable ? 0x3 : 0x0);
-
-    rc = avago_spico_int_check(aapl, __func__, __LINE__, sbus_addr, int_code, mask);
-    return rc ? SDK_RET_OK : SDK_RET_ERR;
-#endif
 }
 
 int
 serdes_sbus_reset_hw (uint32_t sbus_addr, int hard)
 {
     avago_sbus_reset(aapl, sbus_addr, hard);
-
     return 0;
-
-#if 0
-    int  mask     = 0;
-    bool rc       = false;
-    int  int_code = SPICO_INT_RESET;
-
-    if (reset == true) {
-        mask = 1;
-    }
-
-    rc = avago_spico_int_check(aapl, __func__, __LINE__, sbus_addr, int_code, mask);
-    return rc ? SDK_RET_OK : SDK_RET_ERR;
-#endif
 }
 
 int
@@ -523,19 +532,6 @@ serdes_spico_reset_hw (uint32_t sbus_addr)
     }
 
     return rc;
-
-#if 0
-    int  mask     = 0;
-    bool rc       = false;
-    int  int_code = SPICO_INT_RESET;
-
-    if (reset == true) {
-        mask = 1;
-    }
-
-    rc = avago_spico_int_check(aapl, __func__, __LINE__, sbus_addr, int_code, mask);
-    return rc ? SDK_RET_OK : SDK_RET_ERR;
-#endif
 }
 
 int
@@ -755,9 +751,267 @@ serdes_get_errors_hw (uint32_t sbus_addr, bool clear)
     return avago_serdes_get_errors(aapl, sbus_addr, AVAGO_LSB, clear);
 }
 
+// Init serdes in 1G
+// Reset AN to start from clean slate
+// Start AN
+// Assert Link Status
+int
+serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    int  ret     = 0;
+    bool int_ret = false;
+
+    // Init serdes in 1G
+    uint32_t divider = serdes_info->sbus_divider;
+
+    // 1G width for BX is 10. Use 20 for AN as recommended by Avago
+    uint32_t width    = 20;
+    uint32_t tx_slip  = serdes_info->tx_slip_value;
+    uint32_t rx_slip  = serdes_info->rx_slip_value;
+    int      int_code = 0x0;
+    int      int_data = 0x0;
+
+    Avago_serdes_an_config_t *config = NULL;
+
+    SDK_LINKMGR_TRACE_DEBUG(
+                    "sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
+                    " rx_slip: 0x%x",
+                    sbus_addr, divider, width, tx_slip, rx_slip);
+
+    Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
+    if (NULL == cfg) {
+        SDK_LINKMGR_TRACE_ERR("Failed to construct avago config");
+        return -1;
+    }
+
+    cfg->init_mode = Avago_serdes_init_mode_t::AVAGO_PRBS31_ELB;
+
+    // divider and width
+    cfg->tx_divider = divider;
+    cfg->rx_divider = divider;
+    cfg->tx_width   = width;
+    cfg->rx_width   = width;
+
+    // Disable signal_ok
+    cfg->signal_ok_en = 0;
+
+    // Enable tx_output for AN
+    cfg->tx_output_en = 1;
+
+    // Tx/Rx enable
+    cfg->init_tx = 1;
+    cfg->init_rx = 1;
+
+    // encoding
+    cfg->tx_encoding = AVAGO_SERDES_NRZ;
+    cfg->rx_encoding = AVAGO_SERDES_NRZ;
+
+    // resets
+    cfg->sbus_reset  = 1;
+    cfg->spico_reset = 1;
+
+    // reset the earlier error code
+    aapl->return_code = 0;
+
+    ret = avago_serdes_init(aapl, sbus_addr, cfg);
+
+    if (ret != 0) {
+        SDK_LINKMGR_TRACE_DEBUG("PRBS errors during init. sbus_addr: %d, "
+                                "ret: %d", sbus_addr, ret);
+    }
+
+    if(aapl->return_code) {
+        SDK_LINKMGR_TRACE_ERR("Failed to initialize SerDes\n");
+        ret = -1;
+        goto cleanup;
+    }
+
+    // Tx/Rx slip values
+    if (tx_slip != 0) {
+        int_ret = serdes_spico_int_check_hw(sbus_addr, 0xd, tx_slip);
+        if (int_ret == false) {
+            SDK_LINKMGR_TRACE_ERR("Failed to set Tx slip. sbus_addr: %d", sbus_addr);
+            ret = -1;
+            goto cleanup;
+        }
+    }
+
+    if (rx_slip != 0) {
+        int_ret = serdes_spico_int_check_hw(sbus_addr, 0xe, rx_slip);
+        if (int_ret == false) {
+            SDK_LINKMGR_TRACE_ERR("Failed to set Rx slip. sbus_addr: %d", sbus_addr);
+            ret = -1;
+            goto cleanup;
+        }
+    }
+
+    int_code = 0x2;
+    int_data = 0x1ff;
+    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+    if (int_ret == false) {
+        SDK_LINKMGR_TRACE_ERR("Failed to reset TxPRBS. sbus_addr: %d", sbus_addr);
+        ret = -1;
+        goto cleanup;
+    }
+
+    // Reset AN to start from clean slate
+    int_code = 0x7;
+    int_data = 0x0;
+    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+    if (int_ret == false) {
+        SDK_LINKMGR_TRACE_ERR("Failed to reset AN. sbus_addr: %d", sbus_addr);
+        ret = -1;
+        goto cleanup;
+    }
+
+    config = avago_serdes_an_config_construct(aapl);
+    if (config == NULL) {
+        SDK_LINKMGR_TRACE_ERR("Failed to construct an config. "
+                              "sbus_addr: %d", sbus_addr);
+        ret = -1;
+        goto cleanup;
+    }
+
+    config->disable_link_inhibit_timer = 0x1;
+    config->user_cap    = 0x4   | // 10G  KR
+                          0x8   | // 40G  KR4
+                          0x10  | // 40G  CR4
+                          0x80  | // 100G KR4
+                          0x100 | // 100G CR4
+                          0x200 | // 25G  KR/CR-S
+                          0x400;  // 25G  KR/CR
+
+    config->an_clk      = 0;     // 1.25Gbps
+    config->fec_ability = 1;
+    config->fec_request = 0x2;   // 25G RS-FEC
+
+    avago_serdes_an_start(aapl, sbus_addr, config);
+
+    // assert link status
+    int_code = 0x107;
+    int_data = 0x8009;
+    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+    if (int_ret == false) {
+        SDK_LINKMGR_TRACE_ERR("Failed to assert link status. sbus_addr: %d",
+                              sbus_addr);
+        ret = -1;
+    }
+
+cleanup:
+    avago_serdes_an_config_destruct(aapl, config);
+    avago_serdes_init_config_destruct(aapl, cfg);
+
+    return ret;
+}
+
+bool
+serdes_an_wait_hcd_hw(uint32_t sbus_addr)
+{
+    return (avago_serdes_an_wait_hcd(aapl, sbus_addr, 0, 1) == 0);
+}
+
+uint32_t
+serdes_an_hcd_read_hw (uint32_t sbus_addr)
+{
+    return
+        avago_serdes_an_read_status(aapl, sbus_addr, AVAGO_SERDES_AN_READ_HCD);
+}
+
+int
+serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
+{
+    int      ret      = 0;
+    int      tx_width = 0;
+    int      rx_width = 0;
+    uint32_t an_hcd   = 0;
+
+    Avago_serdes_an_config_t  *config      = NULL;
+    Avago_serdes_pmd_config_t *pmd_config  = NULL;
+    Avago_addr_t              *addr_struct = NULL;
+    Avago_addr_t              *head        = NULL;
+    Avago_addr_t              *node        = NULL;
+
+    // construct AAPL addr_list
+    for (int i = 0; i < 4; ++i) {
+        node = avago_addr_new(aapl);
+        avago_addr_init(node);
+        node->sbus = sbus_addr_arr[i];
+
+        if (head == NULL) {
+            addr_struct = head = node;
+        } else {
+            head->next = node;
+            head = head->next;
+        }
+    }
+
+    an_hcd =
+        avago_serdes_an_read_status(aapl, sbus_addr, AVAGO_SERDES_AN_READ_HCD);
+
+    SDK_LINKMGR_TRACE_DEBUG("an_hcd: %d, an_hcd_string: %s",
+                            an_hcd,
+                            aapl_an_hcd_to_str(an_hcd));
+
+    switch (an_hcd) {
+        case 0x08: /* 100GBASE-KR4 */
+        case 0x09: /* 100GBASE-CR4 */
+        case 0x0a: /* 25GBASE-KRCR-S */
+        case 0x0b: /* 25GBASE-KRCR */
+            tx_width = 40;
+            rx_width = 40;
+            break;
+        case 0x03: /* 40GBASE-KR4 */
+        case 0x04: /* 40GBASE-CR4 */
+        case 0x02: /* 10GBASE-KR */
+            tx_width = 20;
+            rx_width = 20;
+            break;
+            // unsupported modes
+        case 0x00: /* 1000BASE-KX */
+        case 0x01: /* 10GBASE-KX4 */
+        case 0x0c: /* 2.5GBASE-KX */
+        case 0x0d: /* 5GBASE-KR */
+        case 0x05: /* 100GBASE-CR10 */
+        case 0x06: /* 100GBASE-KP4 */
+        case 0x0e: /* 50GBASE-KR/CR */
+        case 0x10: /* 100GBASE-KR2/CR2 */
+        case 0x11: /* 200GBASE-KR4/CR4 */
+        default:
+        case 0x07:
+        case 0x0f:
+        case 0x1f:
+            SDK_LINKMGR_TRACE_ERR("unsupported an_hcd: %d, an_hcd_str: %s",
+                                  an_hcd,
+                                  aapl_an_hcd_to_str(an_hcd));
+            ret = -1;
+            break;
+    }
+
+    config     = avago_serdes_an_config_construct(aapl);
+    pmd_config = avago_serdes_pmd_config_construct(aapl);
+
+    if (ret == -1) {
+        goto cleanup;
+    }
+
+    avago_serdes_an_configure_to_hcd(
+                    aapl, addr_struct, config, pmd_config, tx_width, rx_width);
+
+    ret = aapl->return_code < 0 ? 1 : 0;
+
+cleanup:
+    // cleanup
+    avago_serdes_an_config_destruct(aapl, config);
+    avago_serdes_pmd_config_destruct(aapl, pmd_config);
+    avago_addr_delete(aapl, addr_struct);
+
+    return an_hcd;
+}
+
 int
 serdes_prbs_start_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
+    int      ret     = 0;
     uint32_t divider = serdes_info->sbus_divider;
     uint32_t width   = serdes_info->width;
     uint32_t tx_slip = serdes_info->tx_slip_value;
@@ -776,7 +1030,8 @@ serdes_prbs_start_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
     if (NULL == cfg) {
         SDK_LINKMGR_TRACE_ERR("Failed to construct avago config");
-        return -1;
+        ret = -1;
+        goto cleanup;
     }
 
     cfg->init_mode = Avago_serdes_init_mode_t::AVAGO_PRBS31_ILB;
@@ -808,29 +1063,25 @@ serdes_prbs_start_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 
     if(aapl->return_code) {
         SDK_LINKMGR_TRACE_ERR("Failed to initialize SerDes\n");
-        return -1;
+        ret = -1;
+        goto cleanup;
     }
 
-    return 0;
+cleanup:
+    // cleanup
+    avago_serdes_init_config_destruct(aapl, cfg);
+    return ret;
 }
 
 int
-serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
+serdes_basic_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
+    int ret = 0;
     uint32_t divider = serdes_info->sbus_divider;
     uint32_t width   = serdes_info->width;
-    uint32_t tx_slip = serdes_info->tx_slip_value;
-    uint32_t rx_slip = serdes_info->rx_slip_value;
-    uint8_t  rx_term = serdes_info->rx_term;
-    uint32_t amp     = serdes_info->amp;
-    uint32_t pre     = serdes_info->pre;
-    uint32_t post    = serdes_info->post;
 
-    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
-                    " rx_slip: 0x%x, rx_term: %d, amp: 0x%x, pre: 0x%x,"
-                    " post: 0x%x",
-                    sbus_addr, divider, width, tx_slip, rx_slip, rx_term,
-                    amp, pre, post);
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u",
+                            sbus_addr, divider, width);
 
     Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
     if (NULL == cfg) {
@@ -866,16 +1117,40 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 
     if(aapl->return_code) {
         SDK_LINKMGR_TRACE_ERR("Failed to initialize SerDes\n");
-        return -1;
+        ret = -1;
     }
+
+    avago_serdes_init_config_destruct(aapl, cfg);
+
+    return ret;
+}
+
+int
+serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    int      ret     = 0;
+    uint32_t divider = serdes_info->sbus_divider;
+    uint32_t width   = serdes_info->width;
+    uint32_t tx_slip = serdes_info->tx_slip_value;
+    uint32_t rx_slip = serdes_info->rx_slip_value;
+    uint8_t  rx_term = serdes_info->rx_term;
+    uint32_t amp     = serdes_info->amp;
+    uint32_t pre     = serdes_info->pre;
+    uint32_t post    = serdes_info->post;
+
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
+                    " rx_slip: 0x%x, rx_term: %d, amp: 0x%x, pre: 0x%x,"
+                    " post: 0x%x",
+                    sbus_addr, divider, width, tx_slip, rx_slip, rx_term,
+                    amp, pre, post);
 
     // Tx/Rx slip values
     if (tx_slip != 0) {
-        serdes_spico_int_hw(sbus_addr, 0xd, tx_slip);
+        serdes_spico_int_check_hw(sbus_addr, 0xd, tx_slip);
     }
 
     if (rx_slip != 0) {
-        serdes_spico_int_hw(sbus_addr, 0xe, rx_slip);
+        serdes_spico_int_check_hw(sbus_addr, 0xe, rx_slip);
     }
 
     // Rx termination
@@ -884,9 +1159,7 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     // DFE Tx params
     serdes_set_tx_eq_hw(sbus_addr, amp, pre, post);
 
-    avago_serdes_init_config_destruct(aapl, cfg);
-
-    return 0;
+    return ret;
 }
 
 void
@@ -907,6 +1180,7 @@ port_serdes_fn_init(platform_type_t platform_type,
 {
     serdes_fn_t        *serdes_fn = &serdes_fns;
 
+    serdes_fn->serdes_basic_cfg     = &serdes_cfg_default;
     serdes_fn->serdes_cfg           = &serdes_cfg_default;
     serdes_fn->serdes_signal_detect = &serdes_signal_detect_default;
     serdes_fn->serdes_rdy           = &serdes_rdy_default;
@@ -933,9 +1207,14 @@ port_serdes_fn_init(platform_type_t platform_type,
     serdes_fn->serdes_spico_int     = &serdes_spico_int_default;
     serdes_fn->serdes_get_errors    = &serdes_get_errors_default;
     serdes_fn->serdes_prbs_start    = &serdes_prbs_start_default;
+    serdes_fn->serdes_an_start      = &serdes_an_start_default;
+    serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_default;
+    serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_default;
+    serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
+        serdes_fn->serdes_basic_cfg     = &serdes_basic_cfg_hw;
         serdes_fn->serdes_cfg           = &serdes_cfg_hw;
         serdes_fn->serdes_signal_detect = &serdes_signal_detect_hw;
         serdes_fn->serdes_rdy           = &serdes_rdy_hw;
@@ -965,6 +1244,10 @@ port_serdes_fn_init(platform_type_t platform_type,
         serdes_fn->serdes_spico_int     = &serdes_spico_int_hw;
         serdes_fn->serdes_get_errors    = &serdes_get_errors_hw;
         serdes_fn->serdes_prbs_start    = &serdes_prbs_start_hw;
+        serdes_fn->serdes_an_start      = &serdes_an_start_hw;
+        serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_hw;
+        serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_hw;
+        serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_hw;
 
         // serdes global init
         aapl = serdes_global_init_hw(jtag_id, num_sbus_rings,

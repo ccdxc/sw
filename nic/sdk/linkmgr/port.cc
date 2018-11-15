@@ -247,6 +247,7 @@ port::port_serdes_cfg(void)
                                     static_cast<uint32_t>(serdes_speed),
                                     this->cable_type_);
 
+        serdes_fns()->serdes_basic_cfg(sbus_addr, serdes_info);
         serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
     }
 
@@ -396,6 +397,189 @@ port::port_serdes_dfe_complete(void)
     return true;
 }
 
+int
+port::port_serdes_an_start (void)
+{
+    uint32_t      sbus_addr    = 0;
+    serdes_info_t *serdes_info = NULL;
+    serdes_info_t serdes_info_an;
+
+    memset(&serdes_info_an, 0, sizeof(serdes_info_t));
+
+    port_speed_t serdes_speed =
+                    port_speed_to_serdes_speed(this->port_speed_);
+
+    // AN on lane 0
+    sbus_addr = port_sbus_addr(0);
+
+    serdes_info = serdes_info_get(
+                                sbus_addr,
+                                static_cast<uint32_t>(serdes_speed),
+                                this->cable_type_);
+
+    memcpy (&serdes_info_an, serdes_info, sizeof(serdes_info_t));
+
+    // TODO 1G settings
+    serdes_info_an.width         = 20;
+    serdes_info_an.sbus_divider  = 8;
+    serdes_info_an.tx_slip_value = 0x8004;
+    serdes_info_an.rx_slip_value = 0x8900;
+
+    return serdes_fns()->serdes_an_start(port_sbus_addr(0), &serdes_info_an);
+}
+
+bool
+port::port_serdes_an_wait_hcd (void)
+{
+    return serdes_fns()->serdes_an_wait_hcd(port_sbus_addr(0));
+}
+
+int
+port::port_serdes_an_hcd_cfg (void)
+{
+    uint32_t      an_hcd       = 0;
+    uint32_t      lane         = 0;
+    uint32_t      sbus_addr    = 0;
+    serdes_info_t *serdes_info = NULL;
+
+    an_hcd = serdes_fns()->serdes_an_hcd_read(port_sbus_addr(0));
+
+    // set the negotiated port params
+    if (port_set_an_hcd(an_hcd) == -1) {
+        SDK_PORT_SM_TRACE(this, "AN CFG failed");
+        return -1;
+    }
+
+    port_speed_t serdes_speed =
+                    port_speed_to_serdes_speed(this->port_speed_);
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        sbus_addr = port_sbus_addr(lane);
+
+        serdes_info = serdes_info_get(
+                                sbus_addr,
+                                static_cast<uint32_t>(serdes_speed),
+                                this->cable_type_);
+
+        // configure Tx/Rx slip, Rx termination, Tx EQ
+        serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
+    }
+
+    // configure divider, width, start link training
+    serdes_fns()->serdes_an_hcd_cfg(port_sbus_addr(0), this->sbus_addr_);
+
+    return 0;
+}
+
+int
+port::port_set_an_hcd (int an_hcd)
+{
+    int ret = 0;
+
+    switch (an_hcd) {
+    case 0x08: /* 100GBASE-KR4 */
+    case 0x09: /* 100GBASE-CR4 */
+        this->set_port_speed(port_speed_t::PORT_SPEED_100G);
+        this->set_num_lanes(4);
+        break;
+    case 0x03: /* 40GBASE-KR4 */
+    case 0x04: /* 40GBASE-CR4 */
+        this->set_port_speed(port_speed_t::PORT_SPEED_40G);
+        this->set_num_lanes(4);
+        break;
+    case 0x0a: /* 25GBASE-KRCR-S */
+    case 0x0b: /* 25GBASE-KRCR */
+        this->set_port_speed(port_speed_t::PORT_SPEED_25G);
+        this->set_num_lanes(1);
+        break;
+    case 0x02:  /* 10GBASE-KR */
+        this->set_port_speed(port_speed_t::PORT_SPEED_10G);
+        this->set_num_lanes(1);
+        break;
+        // unsupported modes
+    case 0x00: /* 1000BASE-KX */
+    case 0x01: /* 10GBASE-KX4 */
+    case 0x0c: /* 2.5GBASE-KX */
+    case 0x0d: /* 5GBASE-KR */
+    case 0x05: /* 100GBASE-CR10 */
+    case 0x06: /* 100GBASE-KP4 */
+    case 0x0e: /* 50GBASE-KR/CR */
+    case 0x10: /* 100GBASE-KR2/CR2 */
+    case 0x11: /* 200GBASE-KR4/CR4 */
+    default:
+    case 0x07:
+    case 0x0f:
+    case 0x1f:
+        // TODO convert to SDK_PORT_SM_TRACE
+        SDK_TRACE_ERR("unsupported an_hcd: %d", an_hcd);
+        ret = -1;
+        break;
+    }
+
+    return ret;
+}
+
+bool
+port::port_link_sm_an_process(void)
+{
+    bool an_good = false;
+    bool ret     = true;
+    int  timeout = 1; //msecs
+
+    switch(this->link_an_sm_) {
+    case port_link_sm_t::PORT_LINK_SM_AN_DISABLED:
+
+        // transition to start AN
+        set_port_link_an_sm(
+                port_link_sm_t::PORT_LINK_SM_AN_START);
+
+    case port_link_sm_t::PORT_LINK_SM_AN_START:
+
+        SDK_PORT_SM_TRACE(this, "start AN");
+
+        port_serdes_an_start();
+
+        // transition to wait for AN HCD
+        set_port_link_an_sm(
+                port_link_sm_t::PORT_LINK_SM_AN_WAIT_HCD);
+
+    case port_link_sm_t::PORT_LINK_SM_AN_WAIT_HCD:
+
+        // TODO use timers
+        while(an_good == false) {
+            SDK_PORT_SM_TRACE(this, "wait AN HCD");
+            usleep(500);
+            an_good = port_serdes_an_wait_hcd();
+        }
+
+        if(an_good == false) {
+            this->bringup_timer_val_ += timeout;
+            this->link_bring_up_timer_ =
+                sdk::lib::timer_schedule(
+                        0, timeout, this,
+                        (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                        false);
+            ret = false;
+            break;
+        }
+
+        // transition to AN complete
+        set_port_link_an_sm(
+                port_link_sm_t::PORT_LINK_SM_AN_COMPLETE);
+
+    case port_link_sm_t::PORT_LINK_SM_AN_COMPLETE:
+
+        SDK_PORT_SM_TRACE(this, "AN HCD configure");
+
+        port_serdes_an_hcd_cfg();
+
+    default:
+        break;
+    }
+
+    return ret;
+}
+
 bool
 port::port_link_sm_dfe_process(void)
 {
@@ -536,18 +720,33 @@ port::port_link_sm_process(void)
 
             SDK_PORT_SM_DEBUG(this, "Enabled");
 
+            // transition to AN cfg state
+            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_AN_CFG);
+
+         case port_link_sm_t::PORT_LINK_SM_AN_CFG:
+
+            if (auto_neg_enable() == true) {
+                if (port_link_sm_an_process() == false) {
+                    // AN is pending
+                    // Timer will already be started. Just break.
+                    break;
+                }
+            }
+
             // transition to serdes cfg state
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SERDES_CFG);
 
         case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
 
-            SDK_PORT_SM_DEBUG(this, "SerDes CFG");
+            // If AN is enabled, serdes will be configured with negotiated speed
+            if (auto_neg_enable() == false) {
+                SDK_PORT_SM_DEBUG(this, "SerDes CFG");
 
-            // configure the serdes
-            port_serdes_cfg();
-
-            // enable serdes tx and rx
-            port_serdes_tx_rx_enable(true);
+                // configure the serdes
+                port_serdes_cfg();
+                // enable serdes tx and rx
+                port_serdes_tx_rx_enable(true);
+            }
 
             // transition to wait for serdes rdy state
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY);
@@ -587,40 +786,44 @@ port::port_link_sm_process(void)
             port_mac_enable(true);
             port_mac_soft_reset(false);
 
-            // TODO wait for mac to initialize?
-
-            // enable serdes
-            port_serdes_output_enable(true);
-
             // transition to serdes signal detect state
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT);
 
         case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
 
-            SDK_PORT_SM_DEBUG(this, "Wait for signal detect");
+            if (auto_neg_enable() == false) {
+                // enable serdes
+                port_serdes_output_enable(true);
 
-            sig_detect = port_serdes_signal_detect();
+                SDK_PORT_SM_DEBUG(this, "Wait for signal detect");
 
-            if(sig_detect == false) {
-                this->bringup_timer_val_ += timeout;
+                sig_detect = port_serdes_signal_detect();
 
-                this->link_bring_up_timer_ =
-                    sdk::lib::timer_schedule(
-                            0, timeout, this,
-                            (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
-                            false);
-                break;
+                if(sig_detect == false) {
+
+                    this->bringup_timer_val_ += timeout;
+
+                    this->link_bring_up_timer_ =
+                        sdk::lib::timer_schedule(
+                                0, timeout, this,
+                                (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
+                                false);
+                    break;
+                }
             }
 
             // transition to DFE tuning stage
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DFE_TUNING);
 
         case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
-            if (port_dfe_tuning_enabled()) {
-                if (port_link_sm_dfe_process() == false) {
-                    // DFE tuning is pending
-                    // Timer would have been already started. So just break.
-                    break;
+
+            if (auto_neg_enable() == false) {
+                if (port_dfe_tuning_enabled()) {
+                    if (port_link_sm_dfe_process() == false) {
+                        // DFE tuning is pending
+                        // Timer would have been already started. So just break.
+                        break;
+                    }
                 }
             }
 
@@ -670,9 +873,10 @@ port::port_link_sm_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_UP:
 
-            SDK_PORT_SM_DEBUG(this, "PCAL continuous");
-
-            port_serdes_pcal_continuous_start();
+            if (auto_neg_enable() == false) {
+                SDK_PORT_SM_DEBUG(this, "PCAL continuous");
+                port_serdes_pcal_continuous_start();
+            }
 
             SDK_PORT_SM_TRACE(this, "Link UP");
 
@@ -712,6 +916,7 @@ port::port_enable(void)
     // enable the port
     set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
     set_port_link_dfe_sm(port_link_sm_t::PORT_LINK_SM_DFE_DISABLED);
+    set_port_link_an_sm(port_link_sm_t::PORT_LINK_SM_AN_DISABLED);
 
     port_link_sm_process();
 
@@ -733,6 +938,8 @@ port::port_disable(void)
 
     // disable the port
     set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DISABLED);
+    set_port_link_dfe_sm(port_link_sm_t::PORT_LINK_SM_DFE_DISABLED);
+    set_port_link_an_sm(port_link_sm_t::PORT_LINK_SM_AN_DISABLED);
 
     port_link_sm_process();
 

@@ -88,6 +88,10 @@ public:
         this->link_dfe_sm_ = link_sm;
     }
 
+    void set_port_link_an_sm(port_link_sm_t link_sm) {
+        this->link_an_sm_ = link_sm;
+    }
+
     void *link_bring_up_timer(void) const {
         return this->link_bring_up_timer_;
     }
@@ -121,6 +125,7 @@ public:
     sdk_ret_t port_disable(void);
     sdk_ret_t port_link_sm_process(void);
     bool      port_link_sm_dfe_process(void);
+    bool      port_link_sm_an_process(void);
     bool      port_dfe_tuning_enabled(void);
     bool      port_link_status(void);
 
@@ -215,6 +220,9 @@ public:
     // check for serdes ready
     bool port_serdes_rdy(void);
     bool port_serdes_dfe_complete(void);
+    int  port_serdes_an_start(void);
+    bool port_serdes_an_wait_hcd(void);
+    int  port_serdes_an_hcd_cfg(void);
 
     // set the sbus addr for each serdes
     sdk_ret_t sbus_addr_set (uint32_t lane, uint32_t sbus_addr);
@@ -245,6 +253,7 @@ private:
     port_admin_state_t    admin_state_;               // port admin state
     port_link_sm_t        link_sm_;                   // port link state machine
     port_link_sm_t        link_dfe_sm_;               // port link DFE state machine
+    port_link_sm_t        link_an_sm_;                // port link AN state machine
     port_fec_type_t       fec_type_;                  // FEC type
     port_pause_type_t     pause_;                     // Enable MAC pause
     bool                  auto_neg_enable_;           // Enable AutoNeg
@@ -270,6 +279,8 @@ private:
 
     // Get serdes sbus address for a port lane
     uint32_t port_sbus_addr(uint32_t lane);
+
+    int port_set_an_hcd (int an_hcd);
 
     port_speed_t port_speed_to_serdes_speed(port_speed_t port_speed);
 

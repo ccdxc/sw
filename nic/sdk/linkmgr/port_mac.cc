@@ -521,7 +521,7 @@ mac_cfg_hw (mac_info_t *mac_info)
 
         switch (pause) {
         case port_pause_type_t::PORT_PAUSE_TYPE_LINK:
-            cap_mx_set_pause(chip_id, inst_id, ch, 0x1, 0);
+            cap_mx_set_pause(chip_id, inst_id, ch, 0x1, 1);
             break;
 
         case port_pause_type_t::PORT_PAUSE_TYPE_PFC:
