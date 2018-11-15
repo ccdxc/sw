@@ -12,7 +12,7 @@ struct sqcb1_t d;
 
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit24_ebit31)
-#define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit15, e_rsp_psn_sbit16_ebit23)
+#define K_MSG_PSN CAPRI_KEY_RANGE(IN_P, msg_psn_sbit0_ebit15, msg_psn_sbit16_ebit23)
 #define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit2, rexmit_psn_sbit19_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit2, msn_sbit19_ebit23)
 
@@ -40,23 +40,24 @@ req_rx_sqcb1_write_back_process:
     bcf            [!c1], recirc_for_turn
 
     seq            c1, d.bktrack_in_progress, 1 // BD-Slot
-    bcf            [c1], drop_response
-    tbladd.c1      d.nxt_to_go_token_id, 1 // BD-Slot
-
-    bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_exit
-    nop            // Branch Delay Slot
+    bcf            [c1], drop_phv
+    nop            // BD-Slot
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, error_drop_phv), 1, drop_phv
 
     seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1 // BD-Slot
-    tbladd.c1      d.nxt_to_go_token_id, 1
 
-    tblwr          d.rrq_in_progress, CAPRI_KEY_FIELD(IN_P, rrq_in_progress)
+    scwlt24        c2, K_REXMIT_PSN, d.rexmit_psn
+    bcf            [c2], drop_phv
+    tbladd.c1      d.nxt_to_go_token_id, 1 // BD-Slot
+
+    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, sge_opt), 1, update_qstate
+    tblwr          d.rexmit_psn, K_REXMIT_PSN // BD-Slot
+
     tblwr          d.rrqwqe_cur_sge_id, K_CUR_SGE_ID
     tblwr          d.rrqwqe_cur_sge_offset, K_CUR_SGE_OFFSET
-    tblwr          d.e_rsp_psn, K_E_RSP_PSN
-    tblwr          d.rexmit_psn, K_REXMIT_PSN
-    tblwr          d.msn, K_MSN
+
+update_qstate:
     phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), d.state
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_stats_process, r0)
@@ -73,10 +74,11 @@ req_rx_sqcb1_write_back_process:
      */
     add            r6, FIELD_OFFSET(sqcb2_t, rrq_cindex), r5
     memwr.b        r6, RRQ_C_INDEX
-
 post_cq:
     bbne           K_POST_CQ, 1, check_bktrack
 
+    scwle24        c1, K_MSN, d.msn // BD-Slot
+    bcf            [c1], check_bktrack
     // Re-load err_retry, rnr_retry counter and set rnr_timeout to 0 if
     // outstanding request is cleared. Otherwise, keep decrementing the
     // err_retry_count upon retrans timer expiry or NAK (seq_err) or
@@ -95,6 +97,10 @@ post_cq:
     phvwrpair      CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), d.cq_id, \
                    CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cqe_type), CQE_TYPE_SEND_MSN
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
+    tblwr          d.msn, K_MSN
+
+    bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_exit
+    nop            // Branch Delay Slot
 
 check_bktrack:
     bbne           CAPRI_KEY_FIELD(IN_P, post_bktrack), 1, check_sq_drain

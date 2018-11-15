@@ -146,7 +146,8 @@ struct sqcb1_t {
     tx_psn                         : 24; // R0 S0 (WO S5 TXDMA)
     ssn                            : 24; // R0 S0 (WO S5 TXDMA)
     rsvd2                          : 16; // rsvd for TXDMA memwr
-    rsvd3                          :  8;
+    log_sqwqe_size                 :  5;
+    rsvd3                          :  3;
 
     header_template_addr           : 32; // RO SO // DCQCN ???
     header_template_size           : 8;  // RO SO
@@ -154,7 +155,7 @@ struct sqcb1_t {
     nxt_to_go_token_id             : 8;  // RW S3
     token_id                       : 8;  // RW S0
 
-    e_rsp_psn                      : 24; // RW S0
+    msg_psn                        : 24; // RW S0
     rexmit_psn                     : 24; // RW S0
     msn                            : 24; // RW S0
 
@@ -167,12 +168,11 @@ struct sqcb1_t {
     rrqwqe_num_sges                : 8;  // RW S3
     rrqwqe_cur_sge_id              : 8;  // RW S3
     rrqwqe_cur_sge_offset          : 32; // RW S3
-    rrq_in_progress                : 1;  // RW S3
     state                          : 3;  // RW S3
     sqcb1_priv_oper_enable         : 1;  // RO
     sq_drained                     : 1;  // RW S5
     sqd_async_notify_enable        : 1;  // RO S5
-    rsvd5                          : 1;
+    rsvd5                          : 2;
 
     bktrack_in_progress            : 8; // RW S3 (W0 S5 TXDMA)
     pd                             : 32; // RO

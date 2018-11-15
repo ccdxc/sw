@@ -144,11 +144,12 @@ read_or_sge_bktrack:
     nop            // Branch Delay Slot
     
     // num_pkts = rexmit_psn - wqe_start_psn
-    sub           r2, K_REXMIT_PSN, r1
+    sub           r3, K_REXMIT_PSN, r1
+    mincr         r3, 24, r0
     // wqe_p->read.va += (num_pkts << log_pmtu)
     // wqe_p->read.len -= (num_pkts << log_pmtu)
-    add           r3, CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu), r0
-    sllv          r2, r2, r3
+    add           r2, CAPRI_KEY_FIELD(IN_TO_S_P, log_pmtu), r0
+    sllv          r2, r3, r2
 
     // wqe_start_psn and tx_psn set to rexmit_psn as wqe's va
     // is modified to start from the rexmit_psn. if there's retransmission
@@ -226,6 +227,7 @@ sqcb_writeback:
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data), d.send.imm_data, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, inv_key), d.send.inv_key
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, sq_cindex), r4
     phvwr.c6 CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, bktrack_in_progress), 1
+    phvwr.c5 CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, msg_psn), r3
 
     SQCB2_ADDR_GET(r5)
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqcb2_write_back_process, r5)

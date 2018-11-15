@@ -165,7 +165,7 @@ header_type req_rx_rrqwqe_to_cq_info_t {
 header_type req_rx_sqcb1_to_rrqwqe_info_t {
     fields {
         cur_sge_offset                   :   32;
-        e_rsp_psn                        :   24;
+        msg_psn                          :   24;
         cur_sge_id                       :    8;
         ssn                              :   24;
         msn                              :   24;
@@ -212,6 +212,7 @@ header_type req_rx_to_stage_rrqwqe_info_t {
         bth_psn                          :   24;
         aeth_syndrome                    :    8;
         remaining_payload_bytes          :   14;
+        sge_opt                          :    1;
     }
 }
 
@@ -223,6 +224,8 @@ header_type req_rx_sqcb1_to_sge_recirc_info_t {
 
 header_type req_rx_to_stage_rrqsge_info_t {
     fields {
+        msg_psn                          :   24;
+        log_pmtu                         :    5;
         priv_oper_enable                 :    1;
     }
 }
@@ -250,6 +253,7 @@ header_type req_rx_to_stage_sqcb1_wb_info_t {
         my_token_id                      :    8;
         error_disable_qp                 :    1;
         error_drop_phv                   :    1;
+        sge_opt                          :    1;
     }
 }
 
@@ -331,7 +335,7 @@ header_type req_rx_cqcb_to_eq_info_t {
 header_type req_rx_sqcb1_write_back_info_t {
     fields {
         cur_sge_offset                   :   32;
-        e_rsp_psn                        :   24;
+        msg_psn                          :   24;
         cur_sge_id                       :    8;
         rrq_in_progress                  :    1;
         incr_nxt_to_go_token_id          :    1;
@@ -1364,6 +1368,8 @@ action req_rx_rrqsge_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s2_rrqsge_info_scr.msg_psn, to_s2_rrqsge_info.msg_psn);
+    modify_field(to_s2_rrqsge_info_scr.log_pmtu, to_s2_rrqsge_info.log_pmtu);
     modify_field(to_s2_rrqsge_info_scr.priv_oper_enable, to_s2_rrqsge_info.priv_oper_enable);
 
     // stage to stage
@@ -1387,12 +1393,13 @@ action req_rx_rrqwqe_process () {
     modify_field(to_s1_rrqwqe_info_scr.bth_psn, to_s1_rrqwqe_info.bth_psn);
     modify_field(to_s1_rrqwqe_info_scr.aeth_syndrome, to_s1_rrqwqe_info.aeth_syndrome);
     modify_field(to_s1_rrqwqe_info_scr.remaining_payload_bytes, to_s1_rrqwqe_info.remaining_payload_bytes);
+    modify_field(to_s1_rrqwqe_info_scr.sge_opt, to_s1_rrqwqe_info.sge_opt);
 
     // stage to stage
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_offset, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_offset);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.ssn, t0_s2s_sqcb1_to_rrqwqe_info.ssn);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.cur_sge_id, t0_s2s_sqcb1_to_rrqwqe_info.cur_sge_id);
-    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.e_rsp_psn, t0_s2s_sqcb1_to_rrqwqe_info.e_rsp_psn);
+    modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.msg_psn, t0_s2s_sqcb1_to_rrqwqe_info.msg_psn);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.msn, t0_s2s_sqcb1_to_rrqwqe_info.msn);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rrq_in_progress, t0_s2s_sqcb1_to_rrqwqe_info.rrq_in_progress);
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rrq_empty, t0_s2s_sqcb1_to_rrqwqe_info.rrq_empty);
@@ -1435,10 +1442,11 @@ action req_rx_sqcb1_write_back_process () {
     modify_field(to_s4_sqcb1_wb_info_scr.my_token_id, to_s4_sqcb1_wb_info.my_token_id);
     modify_field(to_s4_sqcb1_wb_info_scr.error_disable_qp, to_s4_sqcb1_wb_info.error_disable_qp);
     modify_field(to_s4_sqcb1_wb_info_scr.error_drop_phv, to_s4_sqcb1_wb_info.error_drop_phv);
+    modify_field(to_s4_sqcb1_wb_info_scr.sge_opt, to_s4_sqcb1_wb_info.sge_opt);
 
     // stage to stage
     modify_field(t2_s2s_sqcb1_write_back_info_scr.cur_sge_offset, t2_s2s_sqcb1_write_back_info.cur_sge_offset);
-    modify_field(t2_s2s_sqcb1_write_back_info_scr.e_rsp_psn, t2_s2s_sqcb1_write_back_info.e_rsp_psn);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.msg_psn, t2_s2s_sqcb1_write_back_info.msg_psn);
     modify_field(t2_s2s_sqcb1_write_back_info_scr.cur_sge_id, t2_s2s_sqcb1_write_back_info.cur_sge_id);
     modify_field(t2_s2s_sqcb1_write_back_info_scr.rrq_in_progress, t2_s2s_sqcb1_write_back_info.rrq_in_progress);
     modify_field(t2_s2s_sqcb1_write_back_info_scr.incr_nxt_to_go_token_id, t2_s2s_sqcb1_write_back_info.incr_nxt_to_go_token_id);

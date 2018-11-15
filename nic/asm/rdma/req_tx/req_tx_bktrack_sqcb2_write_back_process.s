@@ -9,8 +9,7 @@ struct sqcb2_t d;
 
 #define K_SSN             CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit16_ebit23)
 #define K_TX_PSN          CAPRI_KEY_RANGE(IN_P, tx_psn_sbit0_ebit7, tx_psn_sbit16_ebit23)
-#define K_WQE_START_PSN   CAPRI_KEY_FIELD(IN_P, wqe_start_psn)
-#define K_TBL_ID          CAPRI_KEY_FIELD(IN_P, tbl_id)
+#define K_MSG_PSN         CAPRI_KEY_RANGE(IN_P, msg_psn_sbit0_ebit0, msg_psn_sbit17_ebit23)
 #define K_IMM_DATA        CAPRI_KEY_RANGE(IN_P, imm_data_sbit0_ebit6, imm_data_sbit31_ebit31)
 #define K_INV_KEY         CAPRI_KEY_RANGE(IN_P, inv_key_sbit0_ebit6, inv_key_sbit31_ebit31)
 #define K_OP_TYPE         CAPRI_KEY_FIELD(IN_P, op_type)
@@ -56,7 +55,14 @@ req_tx_bktrack_sqcb2_write_back_process:
      add            r2, FIELD_OFFSET(sqcb1_t, rrq_spec_cindex), r1
      memwr.h        r2, 0
 
-     tblwr           d.{rrq_pindex...rrq_cindex}, 0
+     add            r2, FIELD_OFFSET(sqcb1_t, msg_psn), r1
+     memwr.b        r2, K_MSG_PSN[23:16]
+     add            r2, r2, 1
+     memwr.b        r2, K_MSG_PSN[15:8]
+     add            r2, r2, 1
+     memwr.b        r2, K_MSG_PSN[7:0]
+
+     tblwr          d.{rrq_pindex...rrq_cindex}, 0
  
      tblwr          d.need_credits, 0
      tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)

@@ -79,8 +79,8 @@ def TestCaseStepVerify(tc, step):
             return False
         
         # verify that rrq_in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
+        #    return False
 
         # verify that p_index of rrq is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index4', ring4_mask, 1):
@@ -106,8 +106,8 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that rrq_in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
+        #    return False
 
         # verify that tx_psn is not incremented
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'tx_psn', tc.pvtdata.sq_post_qstate, 'tx_psn'):
@@ -121,8 +121,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
      
-        # verify that e_rsp_psn is same as last response psn
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'e_rsp_psn', (tc.pvtdata.sq_post_qstate.rexmit_psn - 1)):
+        # verify that msg_psn is 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msg_psn', 0):
             return False
 
         # validate cqcb pindex and color

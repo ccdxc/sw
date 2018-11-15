@@ -279,7 +279,7 @@ destroy_qp:
     memwr.b     r3, 0x0
 
     add         r1, r1, CB_UNIT_SIZE_BYTES
-    add         r3, r1, FIELD_OFFSET(sqcb1_t, rrq_in_progress)
+    add         r3, r1, FIELD_OFFSET(sqcb1_t, state)
     memwr.b     r3, 0x0
 
     RQCB_ADDR_GET(r1, r2[23:0], K_RQCB_BASE_ADDR_HI)
@@ -335,6 +335,7 @@ create_qp:
     phvwr.c3    p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7)
     phvwr       p.sqcb1.sqcb1_priv_oper_enable, d.qp.privileged
 
+    phvwr       p.sqcb1.log_sqwqe_size, d.qp.sq_stride_log2[4:0]
     //SQCB2:
 
     phvwr       p.sqcb2.log_sq_size, d.qp.sq_depth_log2[4: 0]

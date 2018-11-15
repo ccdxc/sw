@@ -141,8 +141,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 0):
             return False
 
-        # verify that e_rsp_psn is same as last response psn
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'e_rsp_psn', (tc.pvtdata.begin_psn + tc.pvtdata.num_resp_pkts - 1)):
+        # verify that msg_psn is equal to 0 as its not multi-packet msg
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msg_psn', 0):
             return False
 
     elif step.step_id == 2:

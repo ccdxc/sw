@@ -191,7 +191,8 @@ header_type req_tx_bktrack_sqcb2_write_back_info_t {
         sq_cindex                        :   16;
         in_progress                      :    1;
         bktrack_in_progress              :    1;
-        pad                              :   25;
+        msg_psn                          :   24;
+        pad                              :   1;
     }
 }
 
@@ -486,6 +487,7 @@ header_type req_tx_to_stage_sqcb_wb_add_hdr_info_t {
         rsvd                             : 1;
         fence                            : 1;
         packet_len                       : 14;
+        read_req_adjust                  : 24;
     }
 }
 
@@ -960,6 +962,7 @@ action req_tx_bktrack_sqcb2_write_back_process () {
     modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.sq_cindex, t1_s2s_bktrack_sqcb2_write_back_info.sq_cindex);
     modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.in_progress, t1_s2s_bktrack_sqcb2_write_back_info.in_progress);
     modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.bktrack_in_progress, t1_s2s_bktrack_sqcb2_write_back_info.bktrack_in_progress);
+    modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.msg_psn, t1_s2s_bktrack_sqcb2_write_back_info.msg_psn);
     modify_field(t1_s2s_bktrack_sqcb2_write_back_info_scr.pad, t1_s2s_bktrack_sqcb2_write_back_info.pad);
 
 }
@@ -1842,6 +1845,7 @@ action req_tx_add_headers_process_rd () {
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.spec_cindex, to_s5_sqcb_wb_add_hdr_info.spec_cindex);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.ah_size, to_s5_sqcb_wb_add_hdr_info.ah_size);
     modify_field(to_s5_sqcb_wb_add_hdr_info_scr.fence, to_s5_sqcb_wb_add_hdr_info.fence);
+    modify_field(to_s5_sqcb_wb_add_hdr_info_scr.read_req_adjust, to_s5_sqcb_wb_add_hdr_info.read_req_adjust);
 
     // stage to stage
     modify_field(t2_s2s_sqcb_write_back_info_rd_scr.hdr_template_inline, t2_s2s_sqcb_write_back_info_rd.hdr_template_inline);

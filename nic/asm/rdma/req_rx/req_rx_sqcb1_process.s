@@ -16,8 +16,11 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TO_S4_P to_s4_sqcb1_wb_info
 #define TO_S3_P to_s3_rrqlkey_info
 #define TO_S2_P to_s2_rrqsge_info
+#define TO_S1_P to_s1_rrqwqe_info
 
 #define TOKEN_ID r6
+#define WORK_NOT_DONE_RECIRC_CNT_MAX    8
+#define WQE_SIZE_2_SGES                 6
 
 %%
 
@@ -52,6 +55,11 @@ req_rx_sqcb1_process:
     // avoid updating CB state while bktrack logic is updating the same
     bbeq            d.bktrack_in_progress[0], 1, drop_packet
 
+    // If number of work_not_done recirc packets are more than what can be handled,
+    //  drop and let requester retry the requests
+    slt             c2, d.work_not_done_recirc_cnt, WORK_NOT_DONE_RECIRC_CNT_MAX // Branch Delay Slot
+    bcf             [!c2], drop_packet
+
     // If QP is not in RTS state, do not process any received packet. Branch to
     // check for drain state and process packets until number of acknowledged
     // messages (msn) matches total number of messages sent out (max_ssn -1)
@@ -68,19 +76,21 @@ process_req_rx:
     phvwr          CAPRI_PHV_FIELD(TO_S4_P, my_token_id), TOKEN_ID
 
     // recirc if work_not_done_recirc_cnt != 0
-    seq            c2, d.work_not_done_recirc_cnt, 0 
+    seq            c2, d.work_not_done_recirc_cnt, 0
     bcf            [!c2], recirc_for_turn
 
     tbladd         d.token_id, 1 // Branch Delay Slot
 
 process_recirc_work_not_done:
     crestore    [c3, c2], r1, (REQ_RX_FLAG_READ_RESP | REQ_RX_FLAG_ONLY) 
-    setcf       c7, [c3 & !c2]
+    seq         c7, d.log_sqwqe_size, WQE_SIZE_2_SGES
+    setcf       c4, [!c3 | c2 | c7]
 
-    // skip_token_id_check if fresh packet except Read-resp FML, OR 
-    // recirc packet with reason other than work_not_done.
-    // recirc packets with any other reason do not come here
-    bcf         [c1 & !c7], skip_token_id_check  // c1 is set initially if (recirc_cnt = 0)
+    // skip_token_id_check if not read response or read response and
+    // its read_resp_only or read_response with rrqwqe size of <= 2 SGES
+    // (optimized 2 sge speculation processing) or recirc packet with reason
+    // other than work_not_done
+    bcf         [c1 & c4], skip_token_id_check  // c1 is set initially if (recirc_cnt = 0)
 
 token_id_check:
     // Slow path: token id check is mandatory if fresh packet with Read-resp FML, OR
@@ -113,9 +123,12 @@ process_rx_pkt:
     seq            c1, r3, d.service
     bcf            [!c1], invalid_serv_type
 
+    CAPRI_RESET_TABLE_0_ARG()
+    phvwr          CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msg_psn), d.msg_psn
+
     ARE_ALL_FLAGS_SET(c3, r1, REQ_RX_FLAG_ACK) // Branch Delay Slot
     bcf            [!c3], atomic 
-    seq            c4, RRQ_P_INDEX, RRQ_C_INDEX // Branch Delay Slot
+    seq            c4, RRQ_P_INDEX, d.rrq_spec_cindex // Branch Delay Slot
 
 ack:
     // remaining_payload_bytes != 0
@@ -145,24 +158,34 @@ read:
     // remaining_payload_bytes != pmtu
     sll            r3, 1, d.log_pmtu
     sne            c1, r3, r2
-    IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_MIDDLE|REQ_RX_FLAG_FIRST)
-    bcf            [c1 & c2], invalid_pyld_len
+    IS_ANY_FLAG_SET(c3, r1, REQ_RX_FLAG_MIDDLE|REQ_RX_FLAG_FIRST)
+    bcf            [c1 & c3], invalid_pyld_len
 
     // remaining_payload_bytes > pmtu
     slt            c1, r3, r2 // Branch Delay Slot
     IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_ONLY|REQ_RX_FLAG_LAST)
-    bcf            [c1 & c2], invalid_pyld_len
+    bcf            [c1 & c3], invalid_pyld_len
 
     // remaining_payload_bytes < 1
     slt            c1, r2, 1 // Branch Delay Slot
     ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_LAST)
     bcf            [c1 & c2], invalid_pyld_len
-
-    nop
-    //phvwr          p.cqe.op_type, OP_TYPE_READ // Branch Delay Slot
+    nop            // Branch Delay Slot
 
     bcf            [c4], rrq_empty
     phvwr          CAPRI_PHV_FIELD(TO_S2_P, priv_oper_enable), d.sqcb1_priv_oper_enable //BD Slot
+
+    bcf            [!c7], update_msg_psn
+    nop            // Branch Delay Slot
+
+    phvwr          CAPRI_PHV_FIELD(TO_S1_P, sge_opt), 1
+    phvwrpair      CAPRI_PHV_FIELD(TO_S2_P, msg_psn), d.msg_psn, \
+                   CAPRI_PHV_FIELD(TO_S2_P, log_pmtu), d.log_pmtu
+    phvwr          CAPRI_PHV_FIELD(TO_S4_P, sge_opt), 1
+
+update_msg_psn:
+    tblmincri.c3   d.msg_psn, 24, 1
+    tblwr.c2       d.msg_psn, 0
 
 check_psn:
     // Update max_tx_psn/ssn to the maximum forward progress
@@ -177,7 +200,10 @@ check_psn:
     scwlt24        c1, d.max_ssn, d.ssn
     tblwr.c1       d.max_ssn, d.ssn
 
-    // TODO Check valid PSN
+    // PSN in response should be less than the last request
+    // PSN sent out
+    scwle24        c3, d.max_tx_psn, CAPRI_APP_DATA_BTH_PSN
+    bcf            [c3], invalid_pkt_psn
 
 check_duplicate_read_resp_mid:
     // bth.psn >= sqcb1_p->rexmit_psn, valid response
@@ -256,21 +282,18 @@ post_rexmit_psn:
 
 set_arg:
 
-    CAPRI_RESET_TABLE_0_ARG()
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_offset), d.rrqwqe_cur_sge_offset, \
-              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, tx_psn), d.tx_psn
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_id), d.rrqwqe_cur_sge_id, \
-              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_in_progress), d.rrq_in_progress
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, e_rsp_psn), d.e_rsp_psn, \
-              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, ssn), d.ssn
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msn), d.msn, \
-              CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, dma_cmd_start_index), REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START
-    phvwr.c4  CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_empty), 1
-    //phvwr CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, timer_active), d.timer_active
+    phvwrpair      CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_offset), d.rrqwqe_cur_sge_offset, \
+                   CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, tx_psn), d.tx_psn
+    phvwrpair      CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, cur_sge_id), d.rrqwqe_cur_sge_id, \
+                   CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, ssn), d.ssn
+    phvwrpair      CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msn), d.msn, \
+                   CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, dma_cmd_start_index), REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START
+    phvwr.c4       CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_empty), 1
     add            r2, RRQ_C_INDEX, r0
     mincr          r2, d.log_rrq_size, 1
-    phvwr      CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_cindex), r2
+    phvwr          CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_cindex), r2
 
+set_rrqwqe_pc:
     sll            r5, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
     add            r5, r5, d.rrq_spec_cindex, LOG_RRQ_WQE_SIZE
 
@@ -287,12 +310,13 @@ recirc_work_done:
 unsolicited_ack:
     // if its unsolicted ack, just post credits, msn and exit, CQ posting not needed
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
-    phvwr          CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
+    //phvwr          CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
 
 duplicate_read_resp_mid:
 duplicate_resp:
+invalid_pkt_psn:
 invalid_pkt_msn:
 invalid_serv_type:
 invalid_pyld_len:
@@ -423,6 +447,5 @@ check_state:
 
 process_recirc_sge_work_pending:
     CAPRI_RESET_TABLE_0_ARG()
-    phvwr          CAPRI_PHV_FIELD(SQCB1_TO_SGE_RECIRC_P, rrq_in_progress), d.rrq_in_progress
 
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_recirc_sge_process, r0)

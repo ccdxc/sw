@@ -15,14 +15,7 @@ def Teardown(infra, module):
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
     
-    rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
-    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
-
-    # Read CQ pre state
-    rs.lqp.sq_cq.qstate.Read()
-    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
-
+    PopulatePreQStates(tc)
     return
 
 def TestCaseTrigger(tc):
@@ -76,14 +69,14 @@ def TestCaseStepVerify(tc, step):
             return False
 
     elif step.step_id == 1:
-        msn = tc.pvtdata.sq_pre_qstate.ssn - 2
+        msn = tc.pvtdata.sq_pre_qstate.ssn - 1
 
-        # verify that msn is not incremented to SSN of the msg sent out
+        # verify that msn is incremented to SSN of the msg failed
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
             return False
 
-        # verify rexmit_psn is not incremented
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_post_qstate, 'rexmit_psn', tc.pvtdata.sq_post_qstate, 'rexmit_psn'):
+        # verify rexmit_psn is  incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rexmit_psn', 1):
             return False
 
         # verify that c_index of rrq is not incremented
@@ -110,8 +103,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
-        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
-            return False 
+        if not ValidateCQCompletions(tc, 1, 1):
+            return False
         ############     SKIP EQ VALIDATIONS #################
         #if not ValidateEQChecks(tc):
         #    return False
@@ -119,7 +112,7 @@ def TestCaseStepVerify(tc, step):
     elif step.step_id == 2:
 
         if not ValidatePostSyncCQChecks(tc):
-            return False 
+            return False
 
     # update current as pre_qstate ... so next step_id can use it as pre_qstate
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
@@ -135,4 +128,5 @@ def TestCaseTeardown(tc):
     rs.lqp.sq.qstate.data.msn = rs.lqp.sq.qstate.data.sqcb2_msn = rs.lqp.sq.qstate.data.ssn - 1
     rs.lqp.sq.qstate.data.rexmit_psn = rs.lqp.sq.qstate.data.sqcb2_rexmit_psn = rs.lqp.sq.qstate.data.tx_psn
     rs.lqp.sq.qstate.WriteWithDelay();
+    ResetErrQState(tc)
     return

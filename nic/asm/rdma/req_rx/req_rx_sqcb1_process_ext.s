@@ -6,6 +6,7 @@ struct sqcb1_t d;
 struct common_p4plus_stage0_app_header_table_k k;
 
 #define TO_S1_P to_s1_rrqwqe_info
+#define TO_S2_P to_s2_rrqsge_info
 #define TO_S4_P to_s4_sqcb1_wb_info
 #define TO_S6_P to_s6_cq_info
 #define TO_S7_P to_s7_stats_info

@@ -30,6 +30,7 @@ struct sqcb2_t d;
 #define K_RD_LOG_PMTU CAPRI_KEY_FIELD(IN_RD_P, op_rd_log_pmtu)
 #define K_WQE_ADDR    CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr)
 #define K_TO_S5_DATA k.{to_stage_5_to_stage_data_sbit0_ebit63...to_stage_5_to_stage_data_sbit112_ebit127}
+#define K_READ_REQ_ADJUST CAPRI_KEY_RANGE(IN_TO_S_P, read_req_adjust_sbit0_ebit7, read_req_adjust_sbit8_ebit23)
 
 #define ADD_HDR_T t3_s2s_add_hdr_info
 #define SQCB_WRITE_BACK_T t2_s2s_sqcb_write_back_info
@@ -230,7 +231,10 @@ req_tx_add_headers_process:
         sll            r3, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
         add            r3, r3, d.rrq_pindex, LOG_RRQ_WQE_SIZE
         
-        phvwr          p.{rrqwqe.psn...rrqwqe.msn}, d.{tx_psn...ssn}
+        srl            r5, K_READ_REQ_ADJUST, K_RD_LOG_PMTU
+        sub            r5, d.tx_psn, r5
+        mincr          r5, 24, r0
+        phvwrpair      p.rrqwqe.psn, r5, p.rrqwqe.msn, d.ssn
         
         // dma_cmd[3]
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)

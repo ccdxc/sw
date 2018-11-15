@@ -995,12 +995,11 @@ typedef struct sqcb1_s {
     uint32_t pd;
 
     uint8_t bktrack_in_progress;
-    uint32_t rsvd5: 1;
+    uint32_t rsvd5: 2;
     uint32_t sqd_async_notify_enable: 1;
     uint32_t sq_drained: 1;
     uint32_t sqcb1_priv_oper_enable: 1;
     uint32_t state: 3;
-    uint32_t rrq_in_progress:1;
     uint32_t rrqwqe_cur_sge_offset;
     uint8_t  rrqwqe_cur_sge_id;
     uint8_t  rrqwqe_num_sges;
@@ -1013,7 +1012,7 @@ typedef struct sqcb1_s {
 
     uint32_t msn:24;
     uint32_t rexmit_psn:24;
-    uint32_t e_rsp_psn:24;
+    uint32_t msg_psn:24;
 
     uint8_t  token_id;
     uint8_t  nxt_to_go_token_id;
@@ -1021,7 +1020,8 @@ typedef struct sqcb1_s {
     uint8_t header_template_size;
     uint32_t header_template_addr;
 
-    uint32_t rsvd3:8;
+    uint32_t rsvd3:3;
+    uint32_t log_sqwqe_size:5;
     uint32_t rsvd2:16;
     uint32_t ssn:24;
     uint32_t tx_psn:24;      //tx

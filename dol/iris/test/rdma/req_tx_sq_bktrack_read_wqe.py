@@ -78,8 +78,8 @@ def TestCaseStepVerify(tc, step):
             return False
         
         # verify that rrq_in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
+        #    return False
 
         # verify that p_index of rrq is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index4', ring4_mask, 1):
@@ -107,8 +107,8 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that rrq_in_progress is 1
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 1):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 1):
+        #    return False
 
         # verify that tx_psn is not incremented
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'tx_psn', tc.pvtdata.sq_post_qstate, 'tx_psn'):
@@ -156,8 +156,8 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that rrq_in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
+        #    return False
 
         # verify that token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'token_id', 2):
@@ -205,8 +205,8 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that rrq_in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rrq_in_progress', 0):
+        #    return False
 
         # verify that token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'token_id', 1):

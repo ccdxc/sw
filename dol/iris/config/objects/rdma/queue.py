@@ -361,7 +361,8 @@ class RdmaSQstate(Packet):
         X3BytesField("sqcb1_tx_psn", 0),
         X3BytesField("sqcb1_ssn", 0),
         ShortField("sqcb1_rsvd2", 0),
-        ByteField("sqcb1_rsvd3", 0),
+        BitField("log_sqwqe_size", 0, 5),
+        BitField("sqcb1_rsvd3", 0, 3),
 
         XIntField("sqcb1_header_template_addr", 0),
         ByteField("sqcb1_header_template_size", 0),
@@ -369,7 +370,7 @@ class RdmaSQstate(Packet):
         ByteField("nxt_to_go_token_id", 0),
         ByteField("token_id", 0),
 
-        X3BytesField("e_rsp_psn", 0),
+        X3BytesField("msg_psn", 0),
         X3BytesField("rexmit_psn", 0),
         X3BytesField("msn", 0),
 
@@ -382,12 +383,11 @@ class RdmaSQstate(Packet):
         ByteField("rrqwqe_num_sges", 0),
         ByteField("rrqwqe_cur_sge_id", 0),
         IntField("rrqwqe_cur_sge_offset", 0),
-        BitField("rrq_in_progress", 0, 1),
         BitField("sqcb1_state", 0, 3),
         BitField("sqcb1_priv_oper_enable", 0, 1),
         BitField("sqcb1_drained", 0, 1),
         BitField("sqd_async_notify_enable", 0, 1),
-        BitField("sqcb1_rsvd5", 0, 1),
+        BitField("sqcb1_rsvd5", 0, 2),
         ByteField("sqcb1_bktrack_in_progress", 0),
         IntField("sqcb1_pd", 0),
         BitField("rrq_spec_cindex", 0, 16),
