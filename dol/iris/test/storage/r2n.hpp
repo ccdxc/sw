@@ -48,8 +48,9 @@ typedef struct {
 
 typedef struct {
   uint64_t wrid;               // 0
-  uint8_t  num_sges;           // 64
-  uint8_t  rsvd[23];           // 72
+  uint8_t  rsvd0;              // 64
+  uint8_t  num_sges;           // 72
+  uint8_t  rsvd[22];           // 80
 
   // SGE 0
   uint64_t va0;                // 256

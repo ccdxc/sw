@@ -663,7 +663,7 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
 void FillTargetRQWQE(dp_mem_t *rqwqe, dp_mem_t *cmd_buf, uint32_t size) {
   rqwqe->clear();
   // Fill the RQ WQE to post the buffer (at the offset)
-  rqwqe->write_bit_fields(64, 8, 1);  // num_sges = 1
+  rqwqe->write_bit_fields(72, 8, 1);  // num_sges = 1
   rqwqe->write_bit_fields(256, 64, cmd_buf->va()); // sge0->va 
   rqwqe->write_bit_fields(256+64, 32, size);  // sge0->len
   rqwqe->write_bit_fields(256+64+32, 32, kTargetRcvBuf1LKey << 8);  // sge0->l_key
@@ -675,7 +675,7 @@ void FillTargetRQWQE(dp_mem_t *rqwqe, dp_mem_t *cmd_buf, uint32_t size) {
 void FillInitiatorRQWQE(dp_mem_t *rqwqe, dp_mem_t *status_buf, uint32_t size) {
   rqwqe->clear();
   // Fill the RQ WQE to post the buffer (at the offset)
-  rqwqe->write_bit_fields(64, 8, 1);  // num_sges = 1
+  rqwqe->write_bit_fields(72, 8, 1);  // num_sges = 1
   rqwqe->write_bit_fields(256, 64, status_buf->va()); // sge0->va 
   rqwqe->write_bit_fields(256+64, 32, size);  // sge0->len
   rqwqe->write_bit_fields(256+64+32, 32, kInitiatorRcvBuf1LKey << 8);  // sge0->l_key

@@ -291,8 +291,9 @@ header_type roce_sq_wqe_t {
 header_type roce_rq_wqe_t {
   fields {
     wrid		: 64;	// Work request id
-    num_sges		: 8;	// Number of SGEs
-    rsvd0		: 184;
+    rsvd2       : 8;
+    num_sges    : 8;	// Number of SGEs
+    rsvd0		: 176;
     sge_va		: 64;	// VA of the buffer
     sge_len		: 32;	// Length of buffer
     sge_l_key		: 32;	// L_KEY 
