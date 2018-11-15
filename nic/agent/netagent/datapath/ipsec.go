@@ -331,14 +331,18 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 
 		for _, ruleMatch := range ruleMatches {
 			// Populate esp info in the match selector.
-			appInfo := halproto.RuleMatch_AppMatch{
-				App: &halproto.RuleMatch_AppMatch_EspInfo{
-					EspInfo: &halproto.RuleMatch_ESPInfo{
-						Spi: r.SPI,
+			var appInfo halproto.RuleMatch_AppMatch
+			if r.SAType == "DECRYPT" {
+				// Override ESP info only for decrypt rules,
+				appInfo = halproto.RuleMatch_AppMatch{
+					App: &halproto.RuleMatch_AppMatch_EspInfo{
+						EspInfo: &halproto.RuleMatch_ESPInfo{
+							Spi: r.SPI,
+						},
 					},
-				},
+				}
+				ruleMatch.AppMatch = &appInfo
 			}
-			ruleMatch.AppMatch = &appInfo
 
 			rule := &halproto.IpsecRuleMatchSpec{
 				RuleId:   r.ID,
