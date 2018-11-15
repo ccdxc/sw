@@ -40,13 +40,14 @@ void reset_counters();
 void qstate_lif_dump(int);
 void dump_qstate(int, int, uint64_t);
 void measure_pps(int);
-
+void qstate_lif_dump(int lif_start, int lif_end, int queue_type,
+                     int qid, int rid, int rsize, int poll,
+                     int verbose);
 using namespace std;
 
 // Default options
 int verbose = 0;
 int bwmon = 0;
-int queues = 0;
 int crypto = 0;
 int no_opt = 1;
 
@@ -55,6 +56,14 @@ main(int argc, char *argv[])
 {
     int i = 1;
     int interval = 0;
+    int queue_dump = 0;
+    int lif = -1;
+    int qtype = -1;
+    int qid = -1;
+    int rid = -1;
+    int poll = 0;
+    int rsize = 65536;
+    int lif_max = 2048;
 
     while (i < (argc)) {
         if (strcmp(argv[i], "-r") == 0) {
@@ -62,9 +71,78 @@ main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-v") == 0) {
             verbose = 1;
         } else if (strcmp(argv[i], "-q") == 0) {
-            printf("==Queues==\n");
-            qstate_lif_dump(verbose);
-            return 0;
+            queue_dump = 1;
+        } else if (strcmp(argv[i], "-l") == 0) {
+            i++;
+            if(i >= argc ) {
+                printf("Error: -l requires a lif\n");
+                return(-1);
+            }
+
+            lif = atoi(argv[i]);
+            if((lif < 0) || (lif >= 2048)) {
+                printf("Error: Invalid lif %d\n", lif);
+                return(-1);
+            }
+            printf("lif = %d\n", lif);
+        } else if (strcmp(argv[i], "-t") == 0) {
+            i++;
+            if(i >= argc ) {
+                printf("Error: -t requires a queue type\n");
+                return(-1);
+            }
+
+            qtype = atoi(argv[i]);
+            if((qtype < 0) || (qtype >= 8)) {
+                printf("Error: Invalid queue type %d\n", qtype);
+                return(-1);
+            }
+            printf("qtype = %d\n", qtype);
+        } else if (strcmp(argv[i], "-i") == 0) {
+            i++;
+            if(i >= argc ) {
+                printf("Error: -i requires a queue id\n");
+                return(-1);
+            }
+
+            qid = atoi(argv[i]);
+            if((qid < 0) || (qid >= 16000000)) {
+                printf("Error: Invalid queue Id %d\n", qid);
+                return(-1);
+            }
+            printf("qid = %d\n", qid);
+        } else if (strcmp(argv[i], "-R") == 0) {
+            i++;
+            if(i >= argc ) {
+                printf("Error: -R requires a ring id\n");
+                return(-1);
+            }
+
+            rid = atoi(argv[i]);
+            if((rid < 0) || (rid >= 8)) {
+                printf("Error: Invalid ring id %d\n", rid);
+                return(-1);
+            }
+            printf("rid = %d\n", rid);
+        } else if (strcmp(argv[i], "-z") == 0) {
+            i++;
+            if(i >= argc ) {
+                printf("Error: -z requires ring size\n");
+                return(-1);
+            }
+
+            rsize = atoi(argv[i]);
+            if((rsize < 0) || (rsize > 65536)) {
+                printf("Error: Invalid ring size %d\n", rsize);
+                return(-1);
+            }
+            printf("rsize = %d\n", rsize);
+        } else if (strcmp(argv[i], "-p") == 0) {
+            i++;
+            if(i < argc ) {
+                poll = atoi(argv[i]);
+            }
+            printf("Poll = %d\n", poll);
         } else if (strcmp(argv[i], "-n") == 0) {
             no_opt = 0;
         } else if (strcmp(argv[i], "-b") == 0) {
@@ -81,14 +159,27 @@ main(int argc, char *argv[])
             measure_pps(interval);
             return (0);
         } else {
-            printf("usage: capmon -v[erbose] -r[eset] -q[ueues] -p[cie] -b[wmon] -s[pps] "
+            printf("usage: capmon -v[erbose] -r[eset] -q[ueues] -p[cie] -b[wmon] -s[pps] -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]"
                    "<interval>\n");
             return (0);
         }
         i++;
     }
 
-    read_counters();
+    if((poll != 0) && ((lif == -1) || (qtype == -1) || (qid == -1))) {
+      printf("Error: -p requires lif, qtype and qid to be specified.");
+      return(-1);
+    }
+
+    if(queue_dump == 1) {
+      if(lif >= 0 ) {
+        qstate_lif_dump(lif, lif, qtype, qid, rid, rsize, poll, verbose);
+      } else {
+        qstate_lif_dump(0, (lif_max - 1), qtype, qid, rid, rsize, poll, verbose);
+      }
+    } else {
+      read_counters();
+    }
 
     exit(0);
 }
@@ -321,104 +412,4 @@ reset_counters()
             break;
         }
     }
-}
-
-void
-qstate_lif_dump(int verbose)
-{
-    uint32_t cnt[4], size[8], length[8];
-    uint32_t valid, hint, hint_cos;
-    uint64_t base;
-    int lif, type, q, max_type;
-    int this_size, this_len;
-
-    for (lif = 0; lif < 128; lif++) {
-        pal_reg_rd32w(CAP_ADDR_BASE_DB_WA_OFFSET + CAP_WA_CSR_DHS_LIF_QSTATE_MAP_BYTE_ADDRESS +
-                          (16 * lif),
-                      cnt, 4);
-        // decode lif qstate table:
-        base = (uint64_t)CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_QSTATE_BASE_GET(cnt[0]);
-        valid = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_VLD_GET(cnt[0]);
-        hint = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SCHED_HINT_EN_GET(cnt[2]);
-        hint_cos = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SCHED_HINT_COS_GET(cnt[2]);
-        // 3 bit size is qstate size: 32B/64B/128B...
-        size[0] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_SIZE0_GET(cnt[0]);
-        size[1] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE1_GET(cnt[1]);
-        size[2] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE2_GET(cnt[1]);
-        size[3] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE3_GET(cnt[1]);
-        size[4] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE4_GET(cnt[1]);
-        size[5] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE5_GET(cnt[2]);
-        size[6] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE6_GET(cnt[2]);
-        size[7] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE7_GET(cnt[2]);
-        // 5 bit length is lg2 # entries:
-        length[0] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_LENGTH0_GET(cnt[0]);
-        length[1] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_LENGTH1_0_0_GET(cnt[0]) |
-                    (CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH1_4_1_GET(cnt[1]) << 1);
-        length[2] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH2_GET(cnt[1]);
-        length[3] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH3_GET(cnt[1]);
-        length[4] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH4_GET(cnt[1]);
-        length[5] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH5_0_0_GET(cnt[1]) |
-                    (CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH5_4_1_GET(cnt[2]) << 1);
-        length[6] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH6_GET(cnt[2]);
-        length[7] = CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH7_GET(cnt[2]);
-
-        for (max_type = 0; max_type < 8; max_type++) {
-            if (size[max_type] == 0) {
-                break;
-            }
-        }
-
-        if (valid) {
-            base = base << 12; // base is 4KB aligned
-            printf("LIF %u valid, qstate_base=0x%lx, hint=%u, hint_cos=%u\n", lif, base, hint,
-                   hint_cos);
-            for (type = 0; type < max_type; type++) {
-                this_len = 1 << length[type];
-                this_size = 32 * (1 << size[type]);
-                printf(" type %u type_base = 0x%lx, length=%u entries, qstate_size=%u bytes\n",
-                       type, base, this_len, this_size);
-                for (q = 0; q < this_len; q++) {
-                    dump_qstate(verbose, q, base + (uint64_t)(q * this_size));
-                }
-                base += this_size * this_len;
-            }
-        }
-    }
-}
-
-void
-dump_qstate(int verbose, int qid, uint64_t qaddr)
-{
-    uint8_t buf[64];
-
-    typedef struct {
-        uint8_t pc_offset;
-        uint8_t rsvd0;
-        uint8_t cosA : 4;
-        uint8_t cosB : 4;
-        uint8_t cos_sel;
-        uint8_t eval_last;
-        uint8_t host : 4;
-        uint8_t total : 4;
-        uint16_t pid;
-
-        struct {
-            uint16_t pi;
-            uint16_t ci;
-        } rings[8];
-
-    } qstate_t;
-
-    pal_mem_rd(qaddr, buf, 64, 0);
-    qstate_t *q = (qstate_t *)buf;
-
-    printf("QID %u: ", qid);
-    if (verbose) {
-        printf(" total_rings=%02d cosA=%02d cosB=%02d cos_sel=0x%02x pc=0x%02x", q->total, q->cosA,
-               q->cosB, q->cos_sel, q->pc_offset);
-    }
-    for (uint8_t ring = 0; ring < q->total; ring++) {
-        printf(" ring %02d: PI=%06d CI=%06d", ring, q->rings[ring].pi, q->rings[ring].ci);
-    }
-    printf("\n");
 }

@@ -3,7 +3,7 @@
 #
 
 PROGRAM = capmon
-SOURCES = main.cc pcie.cc bwmon.cc rxdma.cc txdma.cc p4.cc crypto.cc pb.cc stage.cc
+SOURCES = main.cc pcie.cc bwmon.cc rxdma.cc txdma.cc p4.cc crypto.cc pb.cc stage.cc queue.cc
 
 OPTS = "-g"
 
