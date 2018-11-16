@@ -13,12 +13,12 @@ import (
 var eventsShowCmd = &cobra.Command{
 	Use:   "events",
 	Short: "Show events from Naples",
-	Long:  "\n------------------------------\n Show Events From Naples \n------------------------------\n",
+	Long:  "\n-------------------------\n Show Events From Naples \n-------------------------\n",
 	Run:   eventsShowCmdHandler,
 }
 
 func init() {
-	getCmd.AddCommand(eventsShowCmd)
+	showCmd.AddCommand(eventsShowCmd)
 }
 
 func eventsShowCmdHandler(cmd *cobra.Command, args []string) {

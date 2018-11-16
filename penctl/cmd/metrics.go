@@ -5,7 +5,7 @@
 package cmd
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -21,24 +21,21 @@ var generickind string
 var genericname string
 
 func init() {
-	getCmd.AddCommand(metricsShowCmd)
+	showCmd.AddCommand(metricsShowCmd)
 	metricsShowCmd.Flags().StringVarP(&genericname, "name", "n", "", "Name/Key for metrics object")
 	metricsShowCmd.Flags().StringVarP(&generickind, "kind", "k", "", "Kind for metrics object")
 	metricsShowCmd.MarkFlagRequired("kind")
 }
 
 func genericmetricsShowCmdHandler(cmd *cobra.Command, args []string) {
-	var resp []byte
+	tabularFormat = false
+	if !cmd.Flags().Changed("yaml") {
+		jsonFormat = true
+	}
+	generickind = strings.ToLower(generickind)
 	if cmd.Flags().Changed("name") {
-		resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/generic/"+generickind+"/default/"+genericname+"/")
+		restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/default/"+genericname+"/")
 	} else {
-		resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/generic/"+generickind+"/")
-	}
-	fmt.Println(string(resp))
-	if jsonFormat {
-		fmt.Println("JSON not supported for this command")
-	}
-	if yamlFormat {
-		fmt.Println("YAML not supported for this command")
+		restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/")
 	}
 }

@@ -20,6 +20,7 @@ var sshCmd = &cobra.Command{
 	Long:               "\n------------------------------------\n Execute Commands on Naples via SSH \n------------------------------------\n",
 	Run:                sshCmdHandler,
 	DisableFlagParsing: true,
+	Hidden:             true,
 }
 
 func init() {

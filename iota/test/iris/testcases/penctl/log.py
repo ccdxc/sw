@@ -35,11 +35,11 @@ def Trigger(tc):
                                    rundir = penctldefs.PENCTL_ROOT_DIR)
         api.Trigger_AddHostCommand(req, n, penctl + "-h", background = False,
                                    rundir = penctldefs.PENCTL_DEST_DIR)
-        api.Trigger_AddHostCommand(req, n, penctl + "get logs -m nmd --ip %s | tail -n 20" % mgmt_ip, background = False,
+        api.Trigger_AddHostCommand(req, n, penctl + "show logs -m nmd --ip %s | tail -n 20" % mgmt_ip, background = False,
                                    rundir = penctldefs.PENCTL_DEST_DIR)
-        api.Trigger_AddHostCommand(req, n, penctl + "get logs -m nmd --ip %s > nmd.log" % mgmt_ip, background = False,
+        api.Trigger_AddHostCommand(req, n, penctl + "show logs -m nmd --ip %s > nmd.log" % mgmt_ip, background = False,
                                    rundir = penctldefs.PENCTL_DEST_DIR)
-        api.Trigger_AddHostCommand(req, n, penctl + "get running-package --ip " + mgmt_ip, background = False,
+        api.Trigger_AddHostCommand(req, n, penctl + "show running-firmware --ip " + mgmt_ip, background = False,
                                    rundir = penctldefs.PENCTL_DEST_DIR)
     tc.resp = api.Trigger(req)
 

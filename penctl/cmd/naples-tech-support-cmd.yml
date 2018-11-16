@@ -1,7 +1,7 @@
 Cmds:
  -
-   cmd: ps -ef
-   ofile: ps.out
+   cmd: /nic/tools/fwupdate -l
+   ofile: fw_version.out
  -
    cmd: ls -al
    ofile: ls.out

@@ -21,7 +21,7 @@ Options
 ::
 
   -h, --help               help for penctl
-  -e, --interface string   ethernet device of naples
+  -i, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
   -y, --yaml               display in yaml format
@@ -29,9 +29,10 @@ Options
 SEE ALSO
 ~~~~~~~~
 
-* `penctl delete <penctl_delete.rst>`_ 	 - Delete CLIs
-* `penctl exec <penctl_exec.rst>`_ 	 - Execute Binary
-* `penctl get <penctl_get.rst>`_ 	 - Get CLIs
-* `penctl set <penctl_set.rst>`_ 	 - Config CLIs
-* `penctl ssh <penctl_ssh.rst>`_ 	 - SSH Commands to Naples
+* `penctl delete <penctl_delete.rst>`_ 	 - Delete Object
+* `penctl execute <penctl_execute.rst>`_ 	 - Execute remote commands on the Naples card
+* `penctl list <penctl_list.rst>`_ 	 - List Objects
+* `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
+* `penctl system <penctl_system.rst>`_ 	 - System Operations
+* `penctl update <penctl_update.rst>`_ 	 - Update Object
 

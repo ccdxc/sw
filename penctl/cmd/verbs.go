@@ -8,37 +8,45 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// setCmd represents the base sub-command verb
-var setCmd = &cobra.Command{
-	Use:   "set",
-	Short: "Config CLIs",
-	Long:  "\n--------------------\n Configuration CLIs \n--------------------\n",
-}
-
-// putCmd represents the base sub-command verb
-var putCmd = &cobra.Command{
-	Use:   "put",
-	Short: "Put CLIs",
-	Long:  "\n----------\n Put CLIs \n----------\n",
+// updateCmd represents the base sub-command verb
+var updateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update Object",
+	Long:  "\n---------------\n Update Object \n---------------\n",
 }
 
 // deleteCmd represents the base sub-command verb
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete CLIs",
-	Long:  "\n-------------\n Delete CLIs \n-------------\n",
+	Short: "Delete Object",
+	Long:  "\n---------------\n Delete Object \n---------------\n",
 }
 
-// getCmd represents the base sub-command verb
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get CLIs",
-	Long:  "\n----------\n Get CLIs \n----------\n",
+// showCmd represents the base sub-command verb
+var showCmd = &cobra.Command{
+	Use:   "show",
+	Short: "Show Object and Information",
+	Long:  "\n-----------------------------\n Show Object and Information \n-----------------------------\n",
+}
+
+// sysCmd represents the base sub-command verb
+var sysCmd = &cobra.Command{
+	Use:   "system",
+	Short: "System Operations",
+	Long:  "\n-------------------\n System Operations \n-------------------\n",
+}
+
+// listCmd represents the base sub-command verb
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List Objects",
+	Long:  "\n-------------\n List Objects \n-------------\n",
 }
 
 func init() {
-	rootCmd.AddCommand(setCmd)
-	rootCmd.AddCommand(putCmd)
+	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(deleteCmd)
-	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(showCmd)
+	rootCmd.AddCommand(sysCmd)
+	rootCmd.AddCommand(listCmd)
 }

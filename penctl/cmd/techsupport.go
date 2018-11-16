@@ -25,7 +25,7 @@ import (
 var showTechCmd = &cobra.Command{
 	Use:   "tech-support",
 	Short: "Get Tech Support from Naples",
-	Long:  "\n-------------------------------\n Get Tech Support from Naples \n-------------------------------\n",
+	Long:  "\n------------------------------\n Get Tech Support from Naples \n------------------------------\n",
 	RunE:  showTechCmdHandler,
 }
 
@@ -34,7 +34,7 @@ var cmdFile string
 var tarFile string
 
 func init() {
-	getCmd.AddCommand(showTechCmd)
+	sysCmd.AddCommand(showTechCmd)
 
 	showTechCmd.Flags().StringVarP(&destDir, "dest-dir", "d", "", "Destination directory to copy Naples tech-support to")
 	showTechCmd.Flags().StringVarP(&cmdFile, "cmds", "c", "", "YML file with list of commands to run on Naples")
@@ -90,6 +90,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	if _, err := os.Stat(destDir); os.IsNotExist(err) {
 		os.MkdirAll(destDir, os.ModePerm)
 	}
+
 	fmt.Printf("Fetching cores")
 	//Copy out core files from /data/core
 	coreDestDir := destDir + "/cores/"
@@ -105,6 +106,23 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Printf("\nCores fetched\n")
 	retSlice = nil
+
+	fmt.Printf("Fetching events")
+	//Copy out events from /var/lib/pensando/events/events file
+	eventsDestDir := destDir + "/events/"
+	createDestDir(eventsDestDir)
+	evresp, _ := restGet(revProxyPort, "monitoring/v1/naples/events/events")
+	file = eventsDestDir + "/" + "events"
+	out, err := os.Create(file)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	defer out.Close()
+	w := bufio.NewWriter(out)
+	w.WriteString(string(evresp))
+	w.Flush()
+	fmt.Printf("\nEvents fetched\n")
 
 	fmt.Printf("Fetching logs")
 	//Copy out log files from /var/log recursively
@@ -199,8 +217,8 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	fmt.Println("Creating tarball: " + tarFile + ".tar.gz")
 	tarcmd := exec.Command("tar", "-zcvf", tarFile+".tar.gz", destDir)
 	tarcmd.Stdin = strings.NewReader("tar naples-tech-support")
-	var out bytes.Buffer
-	tarcmd.Stdout = &out
+	var tarout bytes.Buffer
+	tarcmd.Stdout = &tarout
 	err = tarcmd.Run()
 	if err != nil {
 		return err

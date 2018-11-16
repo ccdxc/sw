@@ -3,16 +3,16 @@
 penctl delete
 -------------
 
-Delete CLIs
+Delete Object
 
 Synopsis
 ~~~~~~~~
 
 
 
--------------
- Delete CLIs 
--------------
+---------------
+ Delete Object 
+---------------
 
 
 Options
@@ -27,7 +27,7 @@ Options inherited from parent commands
 
 ::
 
-  -e, --interface string   ethernet device of naples
+  -i, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
   -y, --yaml               display in yaml format

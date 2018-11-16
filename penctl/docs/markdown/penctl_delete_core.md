@@ -25,12 +25,12 @@ penctl delete core [flags]
 ### Options inherited from parent commands
 
 ```
-  -e, --interface string   ethernet device of naples
+  -i, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
   -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
-* [penctl delete](penctl_delete.md)	 - Delete CLIs
+* [penctl delete](penctl_delete.md)	 - Delete Object
 

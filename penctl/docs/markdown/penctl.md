@@ -15,16 +15,17 @@ Pensando CLIs
 
 ```
   -h, --help               help for penctl
-  -e, --interface string   ethernet device of naples
+  -i, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
   -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
-* [penctl delete](penctl_delete.md)	 - Delete CLIs
-* [penctl exec](penctl_exec.md)	 - Execute Binary
-* [penctl get](penctl_get.md)	 - Get CLIs
-* [penctl set](penctl_set.md)	 - Config CLIs
-* [penctl ssh](penctl_ssh.md)	 - SSH Commands to Naples
+* [penctl delete](penctl_delete.md)	 - Delete Object
+* [penctl execute](penctl_execute.md)	 - Execute remote commands on the Naples card
+* [penctl list](penctl_list.md)	 - List Objects
+* [penctl show](penctl_show.md)	 - Show Object and Information
+* [penctl system](penctl_system.md)	 - System Operations
+* [penctl update](penctl_update.md)	 - Update Object
 

@@ -22,13 +22,13 @@ import (
 var modeManagedCmd = &cobra.Command{
 	Use:   "mode",
 	Short: "Set Naples to Managed mode",
-	Long:  "\n-----------------------------------\n Set Naples to Venice Managed mode \n-----------------------------------\n",
+	Long:  "\n----------------------------\n Set NAPLES management mode \n----------------------------\n",
 	Run:   modeManagedCmdHandler,
 	Args:  modeManagedCmdArgsValidator,
 }
 
 var modeManagedShowCmd = &cobra.Command{
-	Use:   "mode info",
+	Use:   "mode",
 	Short: "Show mode of operation of Naples",
 	Long:  "\n-------------------------------------------------------------------\n Show mode of operation of Naples - host-managed vs venice-managed \n-------------------------------------------------------------------\n",
 	Run:   modeManagedShowCmdHandler,
@@ -45,14 +45,14 @@ var defaultGW string
 var dnsServers []string
 
 func init() {
-	setCmd.AddCommand(modeManagedCmd)
-	getCmd.AddCommand(modeManagedShowCmd)
+	updateCmd.AddCommand(modeManagedCmd)
+	showCmd.AddCommand(modeManagedShowCmd)
 
 	modeManagedCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or hostnames")
-	modeManagedCmd.Flags().StringVarP(&mode, "mode", "m", "network", "host or network managed")
+	modeManagedCmd.Flags().StringVarP(&mode, "operational-mode", "o", "network", "host or network managed")
 	modeManagedCmd.Flags().StringVarP(&priMac, "primary-mac", "p", "", "Primary mac")
 	modeManagedCmd.Flags().StringVarP(&hostname, "hostname", "n", "", "Host name")
-	modeManagedCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "i", "", "Management IP in CIDR format")
+	modeManagedCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	modeManagedCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
 	modeManagedCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
 }

@@ -1,14 +1,14 @@
 ## penctl execute
 
-Execute Binary
+Execute remote commands on the Naples card
 
 ### Synopsis
 
 
 
------------------------------------
- Execute Binary on Naples 
------------------------------------
+--------------------------------------------
+ Execute remote commands on the Naples card 
+--------------------------------------------
 
 
 ```
@@ -24,10 +24,10 @@ penctl execute [flags]
 ### Options inherited from parent commands
 
 ```
-  -e, --interface string   ethernet device of naples
+  -i, --interface string   ethernet device of naples
   -j, --json               display in json format
   -t, --tabular            display in tabular format (default true)
-  -y, --yaml               display in yaml json
+  -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO

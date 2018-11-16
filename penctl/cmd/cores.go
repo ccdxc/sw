@@ -8,9 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 
 	"golang.org/x/net/html"
 
@@ -19,24 +17,11 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/state"
 )
 
-var coreRootCmd = &cobra.Command{
-	Use:   "core",
-	Short: "Cores on Naples",
-	Long:  "\n-----------------\n Cores on Naples \n-----------------\n",
-}
-
 var coreShowCmd = &cobra.Command{
-	Use:   "list",
+	Use:   "cores",
 	Short: "Show cores from Naples",
 	Long:  "\n------------------------\n Show Cores From Naples \n------------------------\n",
 	RunE:  coreShowCmdHandler,
-}
-
-var coreFetchCmd = &cobra.Command{
-	Use:   "file",
-	Short: "Get a core from Naples",
-	Long:  "\n------------------------\n Get a Core From Naples \n------------------------\n",
-	RunE:  coreFetchCmdHandler,
 }
 
 var coreDeleteCmd = &cobra.Command{
@@ -50,14 +35,9 @@ var path string
 var file string
 
 func init() {
-	getCmd.AddCommand(coreRootCmd)
-	coreRootCmd.AddCommand(coreShowCmd)
-	coreRootCmd.AddCommand(coreFetchCmd)
+	listCmd.AddCommand(coreShowCmd)
 	deleteCmd.AddCommand(coreDeleteCmd)
 
-	coreFetchCmd.Flags().StringVarP(&path, "path", "p", "", "Path to copy files to")
-	coreFetchCmd.Flags().StringVarP(&file, "file", "f", "", "Core file to copy")
-	coreFetchCmd.MarkFlagRequired("file")
 	coreDeleteCmd.Flags().StringVarP(&file, "file", "f", "", "Core file to delete")
 	coreDeleteCmd.MarkFlagRequired("file")
 }
@@ -98,38 +78,6 @@ func coreShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	for _, ret := range retS {
 		fmt.Println(ret)
-	}
-	return nil
-}
-
-func coreFetchCmdHandler(cmd *cobra.Command, args []string) error {
-	if !cmd.Flags().Changed("path") {
-		path = "./"
-	}
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		// path/to/whatever does not exist
-		os.MkdirAll(path, os.ModePerm)
-	}
-
-	corefile := file
-	resp, err := restGetResp(revProxyPort, "cores/v1/naples/"+corefile)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	defer resp.Body.Close()
-	corefile = path + "/" + corefile
-	out, err := os.Create(corefile)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	defer out.Close()
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return err
 	}
 	return nil
 }

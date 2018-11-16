@@ -24,7 +24,7 @@ var logsShowCmd = &cobra.Command{
 var module string
 
 func init() {
-	getCmd.AddCommand(logsShowCmd)
+	showCmd.AddCommand(logsShowCmd)
 
 	str := "\t\t\tValid modules are:\n"
 	str += "\t\t\t\t" + strings.TrimPrefix(globals.Nmd, "pen-") + "\n"

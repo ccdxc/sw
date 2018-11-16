@@ -28,8 +28,8 @@ var getProcMemInfoCmd = &cobra.Command{
 }
 
 func init() {
-	getCmd.AddCommand(getSysMemCmd)
-	getCmd.AddCommand(getProcMemInfoCmd)
+	showCmd.AddCommand(getSysMemCmd)
+	showCmd.AddCommand(getProcMemInfoCmd)
 }
 
 func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
