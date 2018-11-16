@@ -173,17 +173,17 @@ export enum MonitoringFwlogExport_format_uihint {
 }
 
 export enum MonitoringFwlogExport_export_filter_uihint {
-    'FWLOG_ACCEPT' = "Accept",
-    'FWLOG_ALL' = "All",
-    'FWLOG_DENY' = "Deny",
-    'FWLOG_REJECT' = "Reject",
+    'FWLOG_ACCEPT' = "Accept Logs",
+    'FWLOG_ALL' = "All Logs",
+    'FWLOG_DENY' = "Deny Logs",
+    'FWLOG_REJECT' = "Reject Logs",
 }
 
 export enum MonitoringFwlogPolicySpec_filter_uihint {
-    'FWLOG_ACCEPT' = "Accept",
-    'FWLOG_ALL' = "All",
-    'FWLOG_DENY' = "Deny",
-    'FWLOG_REJECT' = "Reject",
+    'FWLOG_ACCEPT' = "Accept Logs",
+    'FWLOG_ALL' = "All Logs",
+    'FWLOG_DENY' = "Deny Logs",
+    'FWLOG_REJECT' = "Reject Logs",
 }
 
 export enum MonitoringMatchedRequirement_operator_uihint {

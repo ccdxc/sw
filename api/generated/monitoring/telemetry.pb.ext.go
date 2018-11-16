@@ -243,6 +243,7 @@ func (m *FwlogPolicySpec) Defaults(ver string) bool {
 		for k := range m.Filter {
 			m.Filter[k] = "FWLOG_ALL"
 		}
+		m.RetentionTime = "48h"
 	}
 	return ret
 }
@@ -312,6 +313,12 @@ func (m *StatsPolicySpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *StatsPolicySpec) Defaults(ver string) bool {
 	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.DownSampleRetentionTime = "168h"
+		m.RetentionTime = "48h"
+	}
 	return ret
 }
 
@@ -615,14 +622,6 @@ func init() {
 	})
 
 	validatorMapTelemetry["StatsPolicySpec"] = make(map[string][]func(string, interface{}) error)
-
-	validatorMapTelemetry["StatsPolicySpec"]["all"] = append(validatorMapTelemetry["StatsPolicySpec"]["all"], func(path string, i interface{}) error {
-		m := i.(*StatsPolicySpec)
-		if !validators.Duration(m.CompactionInterval) {
-			return fmt.Errorf("%v validation failed", path+"."+"CompactionInterval")
-		}
-		return nil
-	})
 
 	validatorMapTelemetry["StatsPolicySpec"]["all"] = append(validatorMapTelemetry["StatsPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*StatsPolicySpec)

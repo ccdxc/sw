@@ -205,7 +205,6 @@ var typesMapTelemetry = map[string]*api.Struct{
 
 		CLITags: map[string]api.CLIInfo{
 			"api-version":               api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"compaction-interval ":      api.CLIInfo{Path: "Spec.CompactionInterval", Skip: false, Insert: "", Help: ""},
 			"downsample-retention-time": api.CLIInfo{Path: "Spec.DownSampleRetentionTime", Skip: false, Insert: "", Help: ""},
 			"generation-id":             api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":                      api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
@@ -222,8 +221,6 @@ var typesMapTelemetry = map[string]*api.Struct{
 	"monitoring.StatsPolicySpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsPolicySpec{}) },
 		Fields: map[string]api.Field{
-			"CompactionInterval": api.Field{Name: "CompactionInterval", CLITag: api.CLIInfo{ID: "compaction-interval ", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "compaction-interval ", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
 			"RetentionTime": api.Field{Name: "RetentionTime", CLITag: api.CLIInfo{ID: "retention-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "retention-time", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"DownSampleRetentionTime": api.Field{Name: "DownSampleRetentionTime", CLITag: api.CLIInfo{ID: "downsample-retention-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "downsample-retention-time", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},

@@ -638,7 +638,11 @@ func GetJSONTag(fld *descriptor.Field) string {
 	if r, err := reg.GetExtension("gogoproto.jsontag", fld); err == nil {
 		t := strings.Split(r.(string), ",")
 		if len(t) > 0 {
-			return t[0]
+			tag := t[0]
+			if len(strings.TrimSpace(tag)) != len(tag) {
+				glog.Fatalf("JSON tag %s has either leading or trailing spaces", tag)
+			}
+			return tag
 		}
 	}
 	return ""

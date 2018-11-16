@@ -9,34 +9,29 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringStatsPolicySpec {
-    'compaction-interval '?: string;
     'retention-time'?: string;
     'downsample-retention-time'?: string;
 }
 
 
 export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringStatsPolicySpec {
-    /** should be a valid time duration
-     */
-    'compaction-interval ': string = null;
-    /** should be a valid time duration
-     */
+    /** RetentionTime defines for how long to keep the stats data before it is deleted
+    The value is specified as a string format to be hours, days, or months etc.
+    e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
+    Default is 48h. */
     'retention-time': string = null;
     /** should be a valid time duration
      */
     'downsample-retention-time': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'compaction-interval ': {
-            description:  'should be a valid time duration ',
-            hint:  '2h',
-            type: 'string'
-        },
         'retention-time': {
-            description:  'should be a valid time duration ',
+            default: '48h',
+            description:  'RetentionTime defines for how long to keep the stats data before it is deleted The value is specified as a string format to be hours, days, or months etc. e.g. &#x27;24hrs&#x27;, &#x27;72hours&#x27;, &#x27;4days&#x27;, &#x27;6d&#x27;, &#x27;2months&#x27;, &#x27;4mo&#x27;, &#x27;1yr&#x27; Default is 48h.',
             hint:  '2h',
             type: 'string'
         },
         'downsample-retention-time': {
+            default: '168h',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
@@ -70,11 +65,6 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['compaction-interval '] != null) {
-            this['compaction-interval '] = values['compaction-interval '];
-        } else if (fillDefaults && MonitoringStatsPolicySpec.hasDefaultValue('compaction-interval ')) {
-            this['compaction-interval '] = MonitoringStatsPolicySpec.propInfo['compaction-interval '].default;
-        }
         if (values && values['retention-time'] != null) {
             this['retention-time'] = values['retention-time'];
         } else if (fillDefaults && MonitoringStatsPolicySpec.hasDefaultValue('retention-time')) {
@@ -92,7 +82,6 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'compaction-interval ': new FormControl(this['compaction-interval ']),
                 'retention-time': new FormControl(this['retention-time']),
                 'downsample-retention-time': new FormControl(this['downsample-retention-time']),
             });
@@ -106,7 +95,6 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['compaction-interval '].setValue(this['compaction-interval ']);
             this._formGroup.controls['retention-time'].setValue(this['retention-time']);
             this._formGroup.controls['downsample-retention-time'].setValue(this['downsample-retention-time']);
         }

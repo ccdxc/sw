@@ -773,9 +773,9 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		sp, err := it.getStatsPolicy(tenantName)
 		if err == nil {
-			Assert(c, reflect.DeepEqual(sp.GetSpec(), tpm.DefaultStatsSpec),
+			Assert(c, reflect.DeepEqual(sp.GetSpec(), tpm.GetDefaultStatsSpec()),
 				fmt.Sprintf("stats spec didn't match: got %+v, expectd %+v",
-					sp.GetSpec(), tpm.DefaultStatsSpec))
+					sp.GetSpec(), tpm.GetDefaultStatsSpec()))
 			return true, nil
 		}
 		return false, err
@@ -784,8 +784,8 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		fp, err := it.getFwlogPolicy(tenantName)
 		if err == nil {
-			Assert(c, reflect.DeepEqual(fp.GetSpec(), tpm.DefaultFwlogSpec),
-				fmt.Sprintf("fwlog spec didn't match: got %+v, expectd %+v", fp.GetSpec(), tpm.DefaultFwlogSpec))
+			Assert(c, reflect.DeepEqual(fp.GetSpec(), tpm.GetDefaultFwlogSpec()),
+				fmt.Sprintf("fwlog spec didn't match: got %+v, expectd %+v", fp.GetSpec(), tpm.GetDefaultFwlogSpec()))
 			return true, nil
 		}
 		return false, nil

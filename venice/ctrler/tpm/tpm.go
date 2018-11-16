@@ -277,15 +277,21 @@ func (pm *PolicyManager) processExportPolicy(eventType kvstore.WatchEventType, p
 	}
 }
 
-// DefaultStatsSpec default stats policy spec
-var DefaultStatsSpec = telemetry.StatsPolicySpec{
-	RetentionTime:           "48h",
-	DownSampleRetentionTime: "168h",
+// GetDefaultFwlogSpec returns the default fwlog policy spec that is used
+func GetDefaultFwlogSpec() telemetry.FwlogPolicySpec {
+	defaultFwlogSpec := telemetry.FwlogPolicySpec{}
+	// Set filter to be an array of length one
+	// The content will be set to the venice.default
+	defaultFwlogSpec.Filter = []string{"replacedByDefault"}
+	defaultFwlogSpec.Defaults("")
+	return defaultFwlogSpec
 }
 
-// DefaultFwlogSpec default firewall log policy spec
-var DefaultFwlogSpec = telemetry.FwlogPolicySpec{
-	RetentionTime: "48h",
+// GetDefaultStatsSpec returns the default stats policy spec that is used
+func GetDefaultStatsSpec() telemetry.StatsPolicySpec {
+	defaultStatsSpec := telemetry.StatsPolicySpec{}
+	defaultStatsSpec.Defaults("")
+	return defaultStatsSpec
 }
 
 // process tenants
@@ -300,7 +306,7 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 				Name:   tenant.GetName(),
 				Tenant: tenant.GetName(),
 			},
-			Spec: DefaultStatsSpec,
+			Spec: GetDefaultStatsSpec(),
 		}
 
 		if _, err := pm.client.MonitoringV1().StatsPolicy().Get(ctx, &statsPolicy.ObjectMeta); err != nil {
@@ -316,7 +322,7 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 				Name:   tenant.GetName(),
 				Tenant: tenant.GetName(),
 			},
-			Spec: DefaultFwlogSpec,
+			Spec: GetDefaultFwlogSpec(),
 		}
 
 		if _, err := pm.client.MonitoringV1().FwlogPolicy().Get(ctx, &fwlogPolicy.ObjectMeta); err != nil {

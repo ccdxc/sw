@@ -40,20 +40,17 @@ message StatsPolicyStatus {
 // compaction method will be selected by Venice based on the mesaurement/table
 // collection interval will be selected by Venice based on workloads
 message StatsPolicySpec {
-     // Compaction Interval is the down sampling interval in minutes, hours or days
-     // this would be mapped to GROUP BY TIME() in influxdb CQ
-     // example: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host
-     string CompactionInterval  = 1 [(gogoproto.jsontag) = "compaction-interval ,omitempty", (venice.check)="Duration()"];
-
      // RetentionTime defines for how long to keep the stats data before it is deleted
      // The value is specified as a string format to be hours, days, or months etc.
      // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
-     string RetentionTime = 2 [(gogoproto.jsontag) = "retention-time,omitempty", (venice.check)="Duration()"];
+     // Default is 48h.
+     string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty", (venice.check)="Duration()", (venice.default)="48h"];
 
      // DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted
      // The value is specified as a string format to be hours, days, or months etc.
      // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
-     string DownSampleRetentionTime = 3 [(gogoproto.jsontag) = "downsample-retention-time,omitempty", (venice.check)="Duration()"];
+     // Default is 168h
+     string DownSampleRetentionTime = 2 [(gogoproto.jsontag) = "downsample-retention-time,omitempty", (venice.check)="Duration()", (venice.default)="168h"];
 }
 
 message StatsPolicy {
@@ -77,13 +74,13 @@ message FwlogPolicyStatus {
 }
 
 enum FwlogFilter {
-    // ui-hint: All
+    // ui-hint: All Logs
     FWLOG_ALL = 0;
-    // ui-hint: Accept
+    // ui-hint: Accept Logs
     FWLOG_ACCEPT = 1;
-    // ui-hint: Reject
+    // ui-hint: Reject Logs
     FWLOG_REJECT= 2;
-    // ui-hint: Deny
+    // ui-hint: Deny Logs
     FWLOG_DENY = 3;
 }
 
@@ -100,14 +97,14 @@ message FwlogExport {
 
     // configuration to use for syslog format
     // default facility is set to "local4", can be overridden with FacilityOverride
-    // fwlog serverity is set to "Informational"
+    // fwlog severity is set to "Informational"
     SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
 }
 
 // Venice collects fwlog irrespective of the export config
 message FwlogPolicySpec {
-    // RetentionTime defines for how long to keep the fwlog before it is deleted
-    string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty", (venice.check)="Duration()"];
+    // RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h.
+    string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty", (venice.check)="Duration()", (venice.default)="48h"];
 
     // filter firewall logs for venice, FWLOG_ALL default
     repeated string Filter = 2 [(gogoproto.jsontag) = "filter,omitempty", (venice.check) = "StrEnum(FwlogFilter)"];

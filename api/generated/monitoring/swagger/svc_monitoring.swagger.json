@@ -3775,7 +3775,7 @@
           },
           {
             "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. should be a valid time duration",
+            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4151,22 +4151,15 @@
             "type": "string"
           },
           {
-            "name": "spec.compaction-interval ",
-            "description": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host. should be a valid time duration",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'. should be a valid time duration",
+            "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'\nDefault is 48h.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.downsample-retention-time",
-            "description": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'. should be a valid time duration",
+            "description": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'\nDefault is 168h. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8102,7 +8095,7 @@
           },
           {
             "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. should be a valid time duration",
+            "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8482,22 +8475,15 @@
             "type": "string"
           },
           {
-            "name": "spec.compaction-interval ",
-            "description": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host. should be a valid time duration",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "spec.retention-time",
-            "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'. should be a valid time duration",
+            "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'\nDefault is 48h.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.downsample-retention-time",
-            "description": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'. should be a valid time duration",
+            "description": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'\nDefault is 168h. should be a valid time duration",
             "in": "query",
             "required": false,
             "type": "string"
@@ -12335,16 +12321,16 @@
           ],
           "default": "FWLOG_ALL",
           "x-ui-hints": {
-            "FWLOG_ACCEPT": "Accept",
-            "FWLOG_ALL": "All",
-            "FWLOG_DENY": "Deny",
-            "FWLOG_REJECT": "Reject"
+            "FWLOG_ACCEPT": "Accept Logs",
+            "FWLOG_ALL": "All Logs",
+            "FWLOG_DENY": "Deny Logs",
+            "FWLOG_REJECT": "Reject Logs"
           },
           "title": "filter firewall logs, FWLOG_ALL default"
         },
         "syslog-config": {
           "$ref": "#/definitions/monitoringSyslogExportConfig",
-          "title": "configuration to use for syslog format\ndefault facility is set to \"local4\", can be overridden with FacilityOverride\nfwlog serverity is set to \"Informational\""
+          "title": "configuration to use for syslog format\ndefault facility is set to \"local4\", can be overridden with FacilityOverride\nfwlog severity is set to \"Informational\""
         }
       },
       "title": "firewall log export config"
@@ -12397,9 +12383,9 @@
       "properties": {
         "retention-time": {
           "type": "string",
+          "default": "48h",
           "example": "2h",
-          "description": "should be a valid time duration\n",
-          "title": "RetentionTime defines for how long to keep the fwlog before it is deleted"
+          "description": "RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h."
         },
         "filter": {
           "type": "array",
@@ -12414,10 +12400,10 @@
           ],
           "default": "FWLOG_ALL",
           "x-ui-hints": {
-            "FWLOG_ACCEPT": "Accept",
-            "FWLOG_ALL": "All",
-            "FWLOG_DENY": "Deny",
-            "FWLOG_REJECT": "Reject"
+            "FWLOG_ACCEPT": "Accept Logs",
+            "FWLOG_ALL": "All Logs",
+            "FWLOG_DENY": "Deny Logs",
+            "FWLOG_REJECT": "Reject Logs"
           },
           "title": "filter firewall logs for venice, FWLOG_ALL default"
         },
@@ -12791,23 +12777,18 @@
     "monitoringStatsPolicySpec": {
       "type": "object",
       "properties": {
-        "compaction-interval ": {
-          "type": "string",
-          "example": "2h",
-          "description": "should be a valid time duration\n",
-          "title": "Compaction Interval is the down sampling interval in minutes, hours or days\nthis would be mapped to GROUP BY TIME() in influxdb CQ\nexample: SELECT MAX(*) INTO downsampled_xxx FROM xxx GROUP BY time(CompactionInterval),host"
-        },
         "retention-time": {
           "type": "string",
+          "default": "48h",
           "example": "2h",
-          "description": "should be a valid time duration\n",
-          "title": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'"
+          "description": "RetentionTime defines for how long to keep the stats data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'\nDefault is 48h."
         },
         "downsample-retention-time": {
           "type": "string",
+          "default": "168h",
           "example": "2h",
           "description": "should be a valid time duration\n",
-          "title": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'"
+          "title": "DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted\nThe value is specified as a string format to be hours, days, or months etc.\ne.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'\nDefault is 168h"
         }
       },
       "title": "compaction method will be selected by Venice based on the mesaurement/table\ncollection interval will be selected by Venice based on workloads"

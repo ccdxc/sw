@@ -454,12 +454,12 @@ func TestGetTypes(t *testing.T) {
 		t.Errorf("expecting to find testmsg")
 	}
 	fld := msg.Fields[0]
-	tag := getJSONTag(fld)
+	tag := common.GetJSONTag(fld)
 	if tag != "metadata" {
 		t.Errorf("failed to get JSON tag")
 	}
 	fld = msg.Fields[1]
-	tag = getJSONTag(fld)
+	tag = common.GetJSONTag(fld)
 	if tag != "" {
 		t.Errorf("failed to get JSON tag")
 	}

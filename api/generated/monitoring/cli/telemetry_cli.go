@@ -82,13 +82,6 @@ func removeFwlogPolicyOper(obj interface{}) error {
 // CreateStatsPolicyFlags specifies flags for StatsPolicy create operation
 var CreateStatsPolicyFlags = []gen.CliFlag{
 	{
-		ID:     "compaction-interval ",
-		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "downsample-retention-time",
 		Type:   "String",
 		Help:   "",

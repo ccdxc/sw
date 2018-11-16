@@ -1487,16 +1487,6 @@ func getAutoRestOper(meth *descriptor.Method) (string, error) {
 	return "", errors.New("not an autogen method")
 }
 
-func getJSONTag(fld *descriptor.Field) string {
-	if r, err := reg.GetExtension("gogoproto.jsontag", fld); err == nil {
-		t := strings.Split(r.(string), ",")
-		if len(t) > 0 {
-			return t[0]
-		}
-	}
-	return ""
-}
-
 // Field represents the schema details of a field
 type Field struct {
 	Name       string

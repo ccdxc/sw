@@ -18,14 +18,14 @@ export interface IMonitoringFwlogPolicySpec {
 
 
 export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringFwlogPolicySpec {
-    /** should be a valid time duration
-     */
+    /** RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h. */
     'retention-time': string = null;
     'filter': Array<MonitoringFwlogPolicySpec_filter> = null;
     'exports': Array<MonitoringFwlogExport> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'retention-time': {
-            description:  'should be a valid time duration ',
+            default: '48h',
+            description:  'RetentionTime defines for how long to keep the fwlog before it is deleted. Default is 48h.',
             hint:  '2h',
             type: 'string'
         },
