@@ -219,7 +219,10 @@ struct rqcb3_t {
     roce_opt_mss:      16;
     rsvd1:             16;
 
-    pad: 224; //28B
+    num_pkts_in_curr_msg: 32;
+    dma_len: 32;
+
+    pad: 160; //20B
 };
 
 //resp_tx stats

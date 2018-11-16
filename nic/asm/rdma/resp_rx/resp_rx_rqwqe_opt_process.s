@@ -28,6 +28,7 @@ struct rqwqe_base_t d;
 
 #define IN_P    t0_s2s_rqcb_to_wqe_info
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
+#define K_REM_PYLD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
 
 %%
     .param  resp_rx_rqlkey_process
@@ -46,6 +47,11 @@ resp_rx_rqwqe_opt_process:
     add         TRANSFER_BYTES, r0, CAPRI_KEY_FIELD(IN_TO_S_P, spec_psn)
     sll         TRANSFER_BYTES, TRANSFER_BYTES, CAPRI_KEY_FIELD(IN_P, log_pmtu)
     // TRANSFER_BYTES now has the number of bytes transferred so far
+
+    // store transfer_bytes + remaining_pyld_bytes in TMP variable
+    // later copy this TMP to cqe.length if it is last or only pkt
+    add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
+    add         TMP, TRANSFER_BYTES, REM_PYLD_BYTES
 
     // init curr_sge_offset = transfer_bytes
     // if SGE 1, curr_sge_offset will remain same
@@ -75,7 +81,6 @@ sge2:
 sge_common:
     tblwr.l     d.rsvd[63:0], 0
     add         r7, r0, offsetof(struct rqwqe_base_t, rsvd) 
-    add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
     // first_pass = TRUE
     setcf       F_FIRST_PASS, [c0]
 
@@ -176,6 +181,9 @@ loop_exit:
     // if remaining payload bytes are not zero, generate NAK
     bcf         [!c5], nak
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY) //BD Slot
+
+    // for send last/only, copy total message length to cqe
+    phvwr.c1    p.cqe.length, TMP
 
     CAPRI_SET_TABLE_0_VALID(1)
     // skip_inv_rkey if NOT send with invalidate

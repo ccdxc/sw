@@ -13,6 +13,8 @@ struct resp_rx_s1_t0_k k;
 
 #define RQCB_TO_WQE_P   t0_s2s_rqcb_to_wqe_info
 #define IN_P            t0_s2s_rqcb_to_rqcb1_info
+#define K_LOG_PMTU      CAPRI_KEY_FIELD(IN_P, log_pmtu)
+#define K_REM_PYLD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
 
 
 %%
@@ -21,6 +23,29 @@ struct resp_rx_s1_t0_k k;
 .align
 resp_rx_rqcb3_in_progress_process:
 
+    // increment num_pkts_in_curr_msg by 1 and store in r5
+    // if last packet, make r6 zero, else make it same as r5
+    // use r6 to update d.num_pkts_in_curr_msg
+    // note that r5 will still have num_pkts_in_curr_msg + 1.
+
+    add     r5, d.num_pkts_in_curr_msg, 1
+    seq     c1, K_GLOBAL_FLAG(_last), 1
+    cmov    r6, c1, r0, r5
+    bcf     [!c1], skip_cqe_pyld_len
+    tblwr.f d.num_pkts_in_curr_msg, r6   //BD Slot
+
+    // only for last packet, compute the payload length to be populated in cqe.
+    sll     r5, r5, K_LOG_PMTU
+    add     r5, r5, K_REM_PYLD_BYTES
+    
+    // note that length and status fields are unionized in cqe.
+    // if last packet encounters any further error down the line (for ex: lkey error),
+    // status field will overwrite the length that is populated below. But cqe.error bit will be set
+    // so that driver can interpret the field accordingly.
+    phvwr   p.cqe.length, r5
+
+skip_cqe_pyld_len:
+    
     //  wqe_offset = RX_SGE_OFFSET +
     //  rqcb1_p->current_sge_id * sizeof(sge_t);
 

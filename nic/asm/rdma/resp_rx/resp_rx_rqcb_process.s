@@ -322,7 +322,9 @@ send_in_progress:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb3_in_progress_process, r5)
 
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD_RANGE2(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
+    phvwr       CAPRI_PHV_FIELD(RQCB_TO_RQCB1_P, log_pmtu), d.log_pmtu
+    phvwr       CAPRI_PHV_RANGE(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges), d.{curr_wqe_ptr...num_sges}
+
     b           exit
     phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB1_P, in_progress), d.in_progress, \
                 CAPRI_PHV_FIELD(RQCB_TO_RQCB1_P, remaining_payload_bytes), REM_PYLD_BYTES //BD Slot
@@ -345,9 +347,8 @@ process_only_rd_atomic:
 // all packets in the multi packet msg will 
 // branch to rc_checkout and load rqpt_process
 // or dummy_rqpt
-send_sge_opt:
 process_send_only:
-    
+send_sge_opt:
     // check if rnr case for Send Only
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf        [c7], process_rnr
@@ -927,7 +928,7 @@ recirc_sge_work_pending:
     //invoke an MPU only program to continue the activity
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_RQCB1_P, curr_wqe_ptr, num_sges, d.{curr_wqe_ptr...num_sges})
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_recirc_sge_process, r0)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_recirc_sge_process, r0)
 
     nop.e
     nop

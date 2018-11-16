@@ -43,6 +43,9 @@ resp_rx_write_dummy_process:
     CAPRI_SET_FIELD2(RKEY_INFO_P, len, K_REM_PYLD_BYTES)
     // r3: len
 
+    // store the original dma_len separately
+    tblwr.!c1    d.dma_len, r3
+
     cmov    R_KEY, c1, d.r_key, CAPRI_KEY_FIELD(IN_P, r_key)
 
     IS_ANY_FLAG_SET(c7, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
@@ -61,6 +64,10 @@ last_or_only:
     tblwr    d.va, 0
     tblwr    d.r_key, 0
     tblwr.f  d.len, 0
+    
+    // copy the orignal dma_len as the cqe.length. 
+    // note that this cqe is used only when immediate data is present
+    phvwr   p.cqe.length, d.dma_len
 
 done:
     seq     c5, R_KEY, RDMA_RESERVED_LKEY_ID

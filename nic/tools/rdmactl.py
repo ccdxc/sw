@@ -555,7 +555,10 @@ class RdmaRQCB3state(Packet):
         ShortField("roce_opt_mss", 0),
         BitField("rqcb3_rsvd1", 0, 16),
 
-        BitField("rqcb3_pad", 0, 224),
+        IntField("num_pkts_in_curr_msg", 0),
+        IntField("dma_len", 0),
+
+        BitField("rqcb3_pad", 0, 160),
     ]
 
 class RdmaRespTxStats(Packet):

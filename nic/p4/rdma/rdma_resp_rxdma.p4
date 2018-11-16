@@ -313,7 +313,8 @@ header_type resp_rx_rqcb_to_write_rkey_info_t {
 
 header_type resp_rx_rqcb_to_rqcb1_info_t {
     fields {
-        rsvd                             :    7;
+        rsvd                             :    2;
+        log_pmtu                         :    5;
         in_progress                      :    1;
         remaining_payload_bytes          :   16;
         curr_wqe_ptr                     :   64;
@@ -1456,6 +1457,7 @@ action resp_rx_rqcb3_in_progress_process () {
 
     // stage to stage
     modify_field(t0_s2s_rqcb_to_rqcb1_info_scr.rsvd, t0_s2s_rqcb_to_rqcb1_info.rsvd);
+    modify_field(t0_s2s_rqcb_to_rqcb1_info_scr.log_pmtu, t0_s2s_rqcb_to_rqcb1_info.log_pmtu);
     modify_field(t0_s2s_rqcb_to_rqcb1_info_scr.in_progress, t0_s2s_rqcb_to_rqcb1_info.in_progress);
     modify_field(t0_s2s_rqcb_to_rqcb1_info_scr.remaining_payload_bytes, t0_s2s_rqcb_to_rqcb1_info.remaining_payload_bytes);
     modify_field(t0_s2s_rqcb_to_rqcb1_info_scr.curr_wqe_ptr, t0_s2s_rqcb_to_rqcb1_info.curr_wqe_ptr);

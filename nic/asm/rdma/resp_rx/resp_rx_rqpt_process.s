@@ -18,6 +18,7 @@ struct resp_rx_s2_t0_k k;
 
 #define IN_TO_S_P to_s2_ext_hdr_info
 #define K_SEND_SGE_OPT CAPRI_KEY_FIELD(IN_TO_S_P, send_sge_opt)
+#define K_REM_PYLD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 
 %%
     .param  resp_rx_rqwqe_wrid_process
@@ -49,7 +50,7 @@ skip_rqpt_process:
     CAPRI_RESET_TABLE_0_ARG()
 
     phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, remaining_payload_bytes), \
-                CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15), \
+                K_REM_PYLD_BYTES, \
                 CAPRI_PHV_FIELD(INFO_OUT1_P, curr_wqe_ptr), r3
 
     phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, dma_cmd_index), \
@@ -61,6 +62,11 @@ skip_rqpt_process:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS    //BD Slot
 
     ARE_ALL_FLAGS_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT) 
+
+    // if send_only and non_sge_opt case, populate cqe payload len here.
+    // for send_fml case, it would happen in rqcb3_in_progress_process.
+    ARE_ALL_FLAGS_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_SEND|RESP_RX_FLAG_ONLY)
+    phvwr.c2    p.cqe.length, K_REM_PYLD_BYTES
 
     CAPRI_NEXT_TABLE0_READ_PC_CE(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, \
                                  resp_rx_rqwqe_wrid_process, resp_rx_rqwqe_process, r3, c1)

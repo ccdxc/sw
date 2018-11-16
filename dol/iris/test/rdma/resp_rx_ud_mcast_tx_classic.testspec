@@ -170,7 +170,7 @@ descriptors:
             color: callback://rdma/rdma/GetCQColorForMulticastCopy/idx=0,cq_wqe_num=0
             error  : 0
             op_type: 17 #OP_TYPE_SEND_RCVD
-            status : 0  #CQ_STATUS_SUCCESS
+            status : 64 #msg_len
             ipv4: 1
             smac: callback://rdma/rdma/GetUDInitiatorSMAC
 
@@ -209,7 +209,7 @@ descriptors:
             color: callback://rdma/rdma/GetCQColorForMulticastCopy/idx=1,cq_wqe_num=0
             error: 0
             op_type: 17 #OP_TYPE_SEND_RCVD
-            status : 0  #CQ_STATUS_SUCCESS
+            status : 64 #msg_len
             ipv4: 1
             smac: callback://rdma/rdma/GetUDInitiatorSMAC
 

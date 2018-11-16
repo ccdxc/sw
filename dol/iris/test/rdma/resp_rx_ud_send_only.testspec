@@ -141,7 +141,7 @@ descriptors:
             qid: ref://testcase/config/rdmasession/lqp/id
             src_qp : ref://testcase/config/rdmasession/rqp/id
             op_type: 17 #OP_TYPE_SEND_RCVD
-            status : 0  #CQ_STATUS_SUCCESS
+            status : 104 #ip+msg_len
             color  : callback://rdma/rdma/GetCQExpColor
             error  : 0
             ipv4: 1

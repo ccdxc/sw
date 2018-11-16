@@ -201,7 +201,7 @@ descriptors:
             wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             qid: ref://testcase/config/rdmasession/lqp/id
             op_type     : 17 # OP_TYPE_SEND_RCVD
-            status      : 0  #CQ_STATUS_SUCCESS
+            status      : 1000 #msg_len
             color  : callback://rdma/rdma/GetCQExpColor
             error  : 0
             r_key       : ref://testcase/pvtdata/inv_r_key
