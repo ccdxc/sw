@@ -1056,12 +1056,12 @@ sonic_put_seq_statusq(struct queue *q)
 
 	if (q) {
 		pc_res = q->pc_res;
-		switch (q->qtype) {
-		case SONIC_QTYPE_CPDC_STATUS:
+		switch (q->qgroup) {
+		case STORAGE_SEQ_QGROUP_CPDC_STATUS:
 			bmp = pc_res->cpdc_seq_status_qs_bmp;
 			max = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
 			break;
-		case SONIC_QTYPE_CRYPTO_STATUS:
+		case STORAGE_SEQ_QGROUP_CRYPTO_STATUS:
 			bmp = pc_res->crypto_seq_status_qs_bmp;
 			max = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
 			break;

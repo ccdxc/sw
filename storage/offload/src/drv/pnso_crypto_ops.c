@@ -405,7 +405,7 @@ crypto_ring_db(const struct service_info *svc_info)
 static pnso_error_t
 crypto_poll(const struct service_info *svc_info)
 {
-	pnso_error_t err;
+	pnso_error_t err = PNSO_OK;
 
 	volatile struct crypto_status_desc *status_desc;
 	uint64_t cpl_data;
@@ -413,13 +413,19 @@ crypto_poll(const struct service_info *svc_info)
 
 	OSAL_LOG_DEBUG("enter ...");
 
+	/*
+	 * When chaining is involved, crypto_desc's cd_db_addr would point
+	 * to a seq statusQ's doorbell rather than status_desc. The completion
+	 * of the next service also implies completion of this crypto service.
+	 */
+	if (chn_service_has_sub_chain(svc_info))
+		goto out;
+
 	status_desc = svc_info->si_status_desc;
 	start_ts = osal_get_clock_nsec();
-
+	cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
+		CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 	while (1) {
-		cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
-			CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
-
 		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
 		if (!err)
 			break;
@@ -433,7 +439,7 @@ crypto_poll(const struct service_info *svc_info)
 			break;
 		}
 	}
-
+out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
