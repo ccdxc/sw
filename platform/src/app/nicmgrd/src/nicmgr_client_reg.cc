@@ -25,8 +25,9 @@ void *nicmgr_delphi_client_entry (void *ctxt)
     // Register NicMgr as Delphi Service
     sdk->RegisterService(g_nicmgr_svc);
 
-    // init port reactor
+    // init port reactor and other objects
     init_port_reactors(sdk);
+    init_accel_objects(sdk);
 
     //  connect to delphi
     sdk->Connect();

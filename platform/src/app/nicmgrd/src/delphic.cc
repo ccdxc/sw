@@ -37,10 +37,6 @@ NicMgrService::NicMgrService(delphi::SdkPtr sk) {
                                   "nicmgr", NON_AGENT,
                                   (UpgAgentHandlerPtr)NULL);
     sysmgr_ = nicmgr::create_sysmgr_client(sdk_);
-
-    delphi::objects::AccelPfInfo::Mount(sdk_, delphi::ReadWriteMode);
-    delphi::objects::AccelSeqQueueInfo::Mount(sdk_, delphi::ReadWriteMode);
-    delphi::objects::AccelHwRingInfo::Mount(sdk_, delphi::ReadWriteMode);
 }
 
 // OnMountComplete() gets called after all delphi objects are mounted
@@ -116,6 +112,16 @@ error port_svc::update_port_status(PortStatusPtr port) {
     }
 
     return error::OK();
+}
+
+// init_accel_objects mounts accelerator objects
+Status init_accel_objects (delphi::SdkPtr sdk) {
+
+    delphi::objects::AccelPfInfo::Mount(sdk, delphi::ReadWriteMode);
+    delphi::objects::AccelSeqQueueInfo::Mount(sdk, delphi::ReadWriteMode);
+    delphi::objects::AccelHwRingInfo::Mount(sdk, delphi::ReadWriteMode);
+
+    return Status::OK;
 }
 
 }    // namespace nicmgr

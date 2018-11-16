@@ -29,6 +29,9 @@
 #include "accel_dev.hpp"
 #include "pd_client.hpp"
 #include "hal_client.hpp"
+#include "platform/src/app/nicmgrd/src/delphic.hpp"
+
+using namespace nicmgr;
 
 // Amount of time to wait for sequencer queues to be quiesced
 #define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    5000000

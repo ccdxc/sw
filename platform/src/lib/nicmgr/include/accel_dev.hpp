@@ -68,9 +68,9 @@ enum {
 
 /*
  * Default publish interval fraction
- * e.g., 4 means 1/4 of a second
+ * e.g., 2 means 1/2 of a second
  */
-#define ACCEL_DEV_PUB_INTV_FRAC_DFLT    4       // 0.250 second
+#define ACCEL_DEV_PUB_INTV_FRAC_DFLT    2
 
 /**
  * Accelerator Device Spec
@@ -148,10 +148,8 @@ typedef struct dev_cmd_regs {
 
 #ifndef _NICMGR_IF_HPP_
 
-#include "accel_metrics.pb.h"
-#include "accel_metrics.delphi.hpp"
-#include "nicmgr.pb.h"
-#include "nicmgr.delphi.hpp"
+#include "gen/proto/nicmgr/accel_metrics.pb.h"
+#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 
 /**
  * Accelerator device ring group ring info
