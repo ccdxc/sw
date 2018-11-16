@@ -11,18 +11,16 @@
 #include "cap_top_csr_defines.h"
 #include "cap_ms_c_hdr.h"
 
-/* TODO: Find a better home for this */
 #define MAXUUID 32
-#define FREEACCESS 0x01
-#define CONTROLLEDACCESS 0x00
+#define PAL_SECURE 0
+#define PAL_TRACE 1
+
 
 typedef struct pal_mmap_region_s {
     u_int64_t pa;
     u_int64_t sz;
     u_int32_t mapped;
     void *va;
-    struct pal_mmap_region_s *next;
-    struct pal_mmap_region_s *prev;
 } pal_mmap_region_t;
 
 typedef struct {
@@ -37,7 +35,8 @@ typedef struct {
     size_t nregions;
     char app_uuid[MAXUUID];
 
-    pal_mmap_region_t *regions;
+    /* Mapping memory in 1MB chunks - This is applicable for 4GB HBM */
+    pal_mmap_region_t regions[16][256];
 } pal_data_t;
 
 pal_data_t *pal_get_data(void);

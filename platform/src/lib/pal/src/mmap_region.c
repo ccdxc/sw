@@ -36,11 +36,13 @@ pr_span(const u_int64_t pa, const u_int64_t sz)
 }
 
 static void *
-mapfd(int fd, const off_t off, const size_t sz)
+mapfd(int fd, const off_t off, const size_t sz, pal_mmap_region_t *pr)
 {
     const int prot = PROT_READ | PROT_WRITE;
     const int mapflags = MAP_SHARED;
     void *va = mmap(NULL, sz, prot, mapflags, fd, off);
+
+    pr->mapped = 1;
 
     assert(va != (void *)-1);
     return va;
@@ -50,9 +52,30 @@ mapfd(int fd, const off_t off, const size_t sz)
 static void *
 pr_map(pal_mmap_region_t *pr)
 {
+    u_int64_t cur_mapped = 0;
+    u_int16_t i = ((pr->pa & 0xF0000000) >> 28);
+    u_int16_t j = ((pr->pa & 0xFF00000) >> 20);
     pal_data_t *pd = pal_get_data();
-    pr->va = mapfd(pd->memfd, pr->pa, pr->sz);
-    pr->mapped = 1;
+
+    pr->va = mapfd(pd->memfd, pr->pa, pr->sz, pr);
+
+    if(pr->sz > PAL_REGSZ) {
+        while (cur_mapped < pr->sz) {
+           pd->regions[i][j].pa = pr->pa;
+           pd->regions[i][j].va = pr->va;
+           pd->regions[i][j].sz = pr->sz;
+           pd->regions[i][j].mapped = 1;
+
+           j++;
+           cur_mapped += PAL_REGSZ;
+
+           if(j == 256) {
+                j = 0;
+                i++;
+           }
+        }
+    }
+
     return pr->va;
 }
 
@@ -81,64 +104,52 @@ pr_map(pal_mmap_region_t *pr)
     }
 
     /* map the entire file */
-    pr->va = mapfd(fd, 0, pr->sz);
-    pr->mapped = 1;
+    pr->va = mapfd(fd, 0, pr->sz, pr);
     (void)close(fd);
     return pr->va;
 }
 #endif
 
 static pal_mmap_region_t *
-pr_new(const u_int64_t pa, const u_int64_t sz)
+pr_new(pal_mmap_region_t *pr, u_int64_t pa, const u_int64_t sz)
 {
-    pal_data_t *pd = pal_get_data();
-    pal_mmap_region_t *pr;
-
-    pr = (pal_mmap_region_t*) malloc(sizeof(pal_mmap_region_t));
     assert(pr);
     memset(pr, 0, sizeof(*pr));
-    pr->next = pd->regions;
-    pr->prev = NULL;
     
-    if (pd->regions) {
-        pd->regions->prev = pr;
-    }
-
-    pd->regions = pr;
     pr->pa = pr_align(pa);
     pr->sz = pr_span(pa, sz);
-    pd->nregions++;
     return pr;
 }
 
-static pal_mmap_region_t *
+static inline pal_mmap_region_t *
 pr_findpa(const u_int64_t pa, const u_int64_t sz)
 {
     pal_data_t *pd = pal_get_data();
-    pal_mmap_region_t *pr = pd->regions;
 
-    while(pr != NULL) {
-        if (pr->pa <= pa && pa + sz < pr->pa + pr->sz && pr->mapped) {
-            return pr;
-        }
-        pr = pr->next;
-    }
+   /*
+    * regions[16][256]
+    * regions[ (pa & 0xF0000000) >> 28 ][(pa & 0xFF00000) >> 20]
+    */
 
-    return NULL;
+    return &pd->regions[(pa & 0xF0000000) >> 28 ][(pa & 0xFF00000) >> 20];
 }
 
 static pal_mmap_region_t *
 pr_findva(const void *va, const u_int64_t sz)
 {
-    pal_data_t *pd = pal_get_data();
-    pal_mmap_region_t *pr = pd->regions;
+    pal_data_t *pd = pal_get_data(); 
+    int i, j;
+    /* TODO : Improve this - understandably it is slow */
 
-    while(pr != NULL) {
-        if (pr->va <= va && va + sz < pr->va + pr->sz) {
-            return pr;
+    for (i = 0; i < 16; i++) {
+        for (j = 0; j < 256; j++) {
+            if (pd->regions[i][j].va <= va &&
+                pd->regions[i][j].va + pd->regions[i][j].sz >= va + sz) {
+                return &(pd->regions[i][j]);
+            }  
         }
-        pr = pr->next;
     }
+    
     return NULL;
 }
 
@@ -146,9 +157,11 @@ pal_mmap_region_t *
 pr_getpa(const u_int64_t pa, const u_int64_t sz, u_int8_t access)
 {
     pal_mmap_region_t *pr = pr_findpa(pa, sz);
-    if (pr == NULL && access == FREEACCESS) {
-        pr = pr_new(pa, sz);
-            pr_map(pr);
+
+    /* TODO : Add access control check here. */
+    if (pr == NULL || (pr->pa + pr->sz) < (pa + sz)) {
+        pr = pr_new(pr, pa, sz);
+        pr_map(pr);
     }
 
     return pr;
@@ -179,23 +192,25 @@ pr_vtop(const void *va, const u_int64_t sz)
 void
 pr_mem_unmap(void *va)
 {
-    pal_data_t *pd = pal_get_data();
+    u_int64_t cur_cleared = 0;
     pal_mmap_region_t *pr = pr_findva(va, 4);
-    pr->mapped = 0;
+    pal_data_t *pd = pal_get_data();
+    u_int16_t i = ((pr->pa & 0xF0000000) >> 28);
+    u_int16_t j = ((pr->pa & 0xFF00000) >> 20);
+
     munmap(pr->va, pr->sz);    
 
-    if (pr->next) {
-        pr->next->prev = pr->prev;
-    }
+    if(pr->sz > PAL_REGSZ) {
+        while (cur_cleared < pr->sz) {
+           pd->regions[i][j].mapped = 0;
 
-    if (pr->prev) {
-        pr->prev->next = pr->next;
-    }
+           j++;
+           cur_cleared += PAL_REGSZ;
 
-    if (pd->regions == pr) {
-        pd->regions = pr->next;
+           if(j == 256) {
+                j = 0;
+                i++;
+           }
+        }
     }
-
-    free(pr);
 }
-

@@ -32,7 +32,6 @@ pal_get_data(void)
         pd->memfd = open("/dev/mem", O_RDWR | O_SYNC);
         assert(pd->memfd >= 0);
 #endif
-	pd->regions = NULL;
         pd->memopen = 1;
     }
     return pd;
