@@ -22,7 +22,7 @@ req_tx_sqcb2_fence_process:
      *  1. Both fence and li_fence is NOT set - fence/li_fence update in add_headers[stage-5] is not visible here[stage-1] yet.
      *  2. fence_done is set - duplicate fence wqe PHV due to speculation reset in stage 0.
      */
-    crestore    [c3,c2,c1], d.{fence...fence_done}, 0x7
+    crestore    [c3,c2,c1], d.{fence, li_fence, fence_done}, 0x7
     bcf         ![c3 | c2], exit
     nop // BD-slot
     bcf         [c1], exit

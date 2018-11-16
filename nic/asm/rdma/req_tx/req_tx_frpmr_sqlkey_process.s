@@ -93,7 +93,7 @@ load_frpmr_wb:
 error_completion:
     // Set completion status to Memory-Management-Operation-Error
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
-                   p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
+                   p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
     b              load_frpmr_wb
     // Set error-disable-qp. 
     phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1 //BD-slot

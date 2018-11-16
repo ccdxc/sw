@@ -1944,7 +1944,7 @@ static int ionic_prep_one_rc(struct ionic_qp *qp,
 
 		wqe = ionic_queue_at_prod(&qp->sq);
 		ionic_dbg(ctx, "wqe->base.op %u", wqe->base.op);
-		if (0 && ctx->version == 1 && wqe->base.op < ctx->opcodes)
+		if (ctx->version == 1 && wqe->base.op < ctx->opcodes)
 			return rc;
 
 		qp->sq = saved_sq;

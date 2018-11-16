@@ -576,107 +576,112 @@ struct sge_t {
 #define TXWQE_SGE_OFFSET  32 //
 #define TXWQE_SGE_OFFSET_BITS   256 // 32 * 8
 
+//16B
 struct sqwqe_base_t {
     wrid               : 64;
+    op_type_rsvd       : 4;
     op_type            : 4;
-    complete_notify    : 1;
-    fence              : 1;
-    solicited_event    : 1;
-    inline_data_vld    : 1;
-    num_sges           : 8;
+    union {
+        num_sges       : 8;
+        new_r_key_key  : 8;
+        new_user_key   : 8;
+    };
+
+    //flags - u16
+    rsvd_flags         : 11;
     color              : 1;
-    rsvd2              : 15;
+    signalled_compl    : 1;
+    inline_data_vld    : 1;
+    solicited_event    : 1;
+    fence              : 1;
+
+    union {
+        imm_data       : 32; //for send/write with imm
+        key            : 32; //for local-inv, frpmr
+                             //for send-with-inv
+                             //for bind-mw, rkey of the mw
+    };
 };
 
-// RC send
+//16B
+// send
 struct sqwqe_send_t {
-    imm_data           : 32;
-    inv_key            : 32;
-    rsvd1              : 32;  // to align length to match position in write/read reqs
-    length             : 32;
-    rsvd2              : 32;    // for now
-};
-
-// UD send
-struct sqwqe_ud_send_t {
-    imm_data           : 32;
-    q_key              : 32;
-    length             : 32;
-    dst_qp             : 24;
-    rsvd               :  8;
     ah_handle          : 32;
-};
-
-// write
-struct sqwqe_write_t {
-    imm_data           : 32;
-    va                 : 64;
+    q_key              : 32;
+    rsvd               :  8;
+    dst_qp             : 24;
     length             : 32;
-    r_key              : 32;
 };
 
+//16B
+// write/read
+struct sqwqe_rdma_t { 
+    va                 : 64;
+    r_key              : 32;
+    length             : 32;
+};
+
+//32B + 16B SGE
 //Atomic
 struct sqwqe_atomic_t {
-    r_key             : 32;
     va                : 64;
+    r_key             : 32;
     swap_or_add_data  : 64;
     cmp_data          : 64;
-    pad               : 64;
+    pad               : 32;
     struct sge_t sge;
 };
 
-// Read
-struct sqwqe_read_t {
-    rsvd               : 32;
-    va                 : 64;
-    length             : 32;
-    r_key              : 32;
-};
-
-// Local Invalidate
-struct sqwqe_local_inv_t {
-    l_key              : 32;    
-    pad                : 128;
-};
-
-
-// FRMR
-struct sqwqe_frmr_t {
-    mr_id              : 24;
-    type               :  3;
-    dma_src_address    : 64;
-    num_entries        : 32;
-    pad                : 37;
-};
-
+// 18B + 30B pad
 // Bind Memory Window
 struct sqwqe_bind_mw_t {
     va                 : 64;
     len                : 32;
     l_key              : 32;
-    r_key              : 32;
-    new_r_key_key      : 8;
+
+    //flags - u16
     access_ctrl        : 8;
     mw_type            : 2;
     zbva               : 1;
-    pad                : 237;
+    rsvd_flags         : 5;
+
+    //30B
+    pad                : 240;
 };
 
+// 48 Bytes
 // Fast-Register Physical MR (FRPMR)
 struct sqwqe_frpmr_t {
-    l_key              : 32;
-    new_user_key       : 8;
-    access_ctrl        : 8;
-    log_page_size      : 8;
-    num_pt_entries     : 32;
     base_va            : 64;
-    dma_src_address    : 64;
     len                : 64;
+    offset             : 64;
+    dma_src_address    : 64;
+    num_pt_entries     : 32;
+
+    //flags - u16
+    access_ctrl        : 8;
     pt_start_offset    : 3;
     zbva               : 1;
     mw_en              : 1;
-    pad                : 131;
+    rsvd_flags         : 3;
+
+    log_page_size      : 8;
+    log_dir_size       : 8;
+
+    //8B
+    pad                : 64;
 };
+
+//16B
+// FRMR
+struct sqwqe_frmr_t {
+    mr_id              : 24;
+    type               :  3;
+    pad                :  5;
+    num_entries        : 32;
+    dma_src_address    : 64;
+};
+
 
 struct sqwqe_t {
     struct sqwqe_base_t base;
@@ -687,10 +692,9 @@ struct sqwqe_t {
         struct {
             union {
                 struct sqwqe_send_t send;
-                struct sqwqe_ud_send_t ud_send;
-                struct sqwqe_write_t write;
-                struct sqwqe_read_t read;
-                struct sqwqe_local_inv_t local_inv;
+                struct sqwqe_send_t ud_send;
+                struct sqwqe_rdma_t write;
+                struct sqwqe_rdma_t read;
                 struct sqwqe_frmr_t frmr;
             };
             union {

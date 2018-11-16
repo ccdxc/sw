@@ -113,7 +113,7 @@ invalid_len:
 invalid_zbva:
 pd_check_failure:
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
-                   p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, \
+                   p.{rdma_feedback.completion.status, rdma_feedback.completion.error}, \
                    (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
     phvwr.e          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
     CAPRI_SET_TABLE_0_VALID(0)

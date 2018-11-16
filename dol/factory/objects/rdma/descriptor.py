@@ -13,96 +13,81 @@ from factory.objects.rdma import buffer as rdmabuffer
 
 from infra.factory.store    import FactoryStore
 
+#16B
 class RdmaSqDescriptorBase(Packet):
     fields_desc = [
         LongField("wrid", 0),
+        BitField("op_type_rsvd", 0, 4),
         BitField("op_type", 0, 4),
-        BitField("complete_notify", 0, 1),
-        BitField("fence", 0, 1),
-        BitField("solicited_event", 0, 1),
-        BitField("inline_data_vld", 0, 1),
-        ByteField("num_sges", 0),
+        ByteField("num_sges_or_new_user_key", 0),
+
+        BitField("base_rsvd_flags", 0, 11),
         BitField("color", 0, 1),
-        BitField("rsvd1", 0, 15),
+        BitField("signalled_compl", 0, 1),
+        BitField("inline_data_vld", 0, 1),
+        BitField("solicited_event", 0, 1),
+        BitField("fence", 0, 1),
+
+        IntField("imm_data_or_key", 0),
     ]
 
+#16B
 class RdmaSqDescriptorSend(Packet):
     fields_desc = [
-        IntField("imm_data", 0),
-        IntField("inv_key", 0),
-        IntField("rsvd1", 0),      # rsvd1 is to ensure len field in Sq Send and Write defined at same offset
-        IntField("len", 0),
-        IntField("rsvd2", 0),
-    ]
-
-class RdmaSqDescriptorUDSend(Packet):
-    fields_desc = [
-        IntField("imm_data", 0),
-        IntField("q_key", 0),
-        IntField("length", 0),
-        X3BytesField("dst_qp", 0),
-        ByteField("rsvd", 0),
         IntField("ah_handle", 0),
-    ]
-
-class RdmaSqDescriptorWrite(Packet):
-    fields_desc = [
-        IntField("imm_data", 0),
-        LongField("va", 0),
-        IntField("len", 0),    # ensure that len is defined at same offset b/w Sq Send and Write descriptors
-        IntField("r_key", 0),
-    ]
-
-class RdmaSqDescriptorRead(Packet):
-    fields_desc = [
-        IntField("rsvd", 0),
-        LongField("va", 0),
+        IntField("q_key", 0),
+        ByteField("rsvd", 0),
+        X3BytesField("dst_qp", 0),
         IntField("len", 0),
-        IntField("r_key", 0),
     ]
 
+#16B
+class RdmaSqDescriptorRdma(Packet):
+    fields_desc = [
+        LongField("va", 0),
+        IntField("r_key", 0),
+        IntField("len", 0),
+    ]
+
+#32B
 class RdmaSqDescriptorAtomic(Packet):
     fields_desc = [
-        IntField("r_key", 0),
         LongField("va", 0),
+        IntField("r_key", 0),
         LongField("swapdt", 0),
         LongField("cmpdt", 0),
-        LongField("pad", 0),
+        IntField("pad", 0),
     ]
 
-class RdmaSqDescriptorLocalInv(Packet):
-    fields_desc = [
-        IntField("l_key", 0),
-        BitField("pad", 0, 128),
-    ]
-
+#18B + 30B pad
 class RdmaSqDescriptorBindMw(Packet):
      fields_desc = [
          LongField("va", 0),
          IntField("len", 0),
          IntField("l_key", 0),
-         IntField("r_key", 0),
-         ByteField("new_r_key_key", 0),
          ByteField("access_ctrl", 0),
          BitField("mw_type", 0, 2),
          BitField("zbva", 0, 1),
-         BitField("pad", 0, 237),
+         BitField("rsvd_flags", 0, 5),
+         BitField("pad", 0, 240),
      ]
 
+#40B + 8B pad
 class RdmaSqDescriptorFrpmr(Packet):
      fields_desc = [
-         IntField("l_key", 0),
-         ByteField("new_user_key", 0),
-         ByteField("access_ctrl", 0),
-         ByteField("log_page_size", 0),
-         IntField("num_pt_entries", 0),
          LongField("base_va", 0),
-         LongField("dma_src_address", 0),
          LongField("len", 0),
+         LongField("offset", 0),
+         LongField("dma_src_address", 0),
+         IntField("num_pt_entries", 0),
+         ByteField("access_ctrl", 0),
          BitField("pt_start_offset", 0, 3),
          BitField("zbva", 0, 1),
          BitField("mw_en", 0, 1),
-         BitField("pad", 0, 131),
+         BitField("rsvd_flags", 0, 3),
+         ByteField("log_page_size", 0),
+         ByteField("log_dir_size", 0),
+         BitField("pad", 0, 64),
      ]
 
 class RdmaRrqDescriptorBase(Packet):
@@ -280,39 +265,51 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         fence = self.spec.fields.fence if hasattr(self.spec.fields, 'fence') else 0
         logger.info("Writing SQ Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d color: %d fence: %d" % 
                        (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges, color, fence))
-        desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid,
-                                    inline_data_vld = inline_data_vld, num_sges=num_sges, color=color, fence=fence)
+
+        base = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid, 
+                                    imm_data_or_key = 0, num_sges_or_new_user_key = 0, #to be filled in later
+                                    inline_data_vld = inline_data_vld, color=color, fence=fence)
+        desc = base
+
         inline_data_len = 0
         inline_data = None
 
         # Make sure Inline data is specificied only for Send and Write, assert in other operations
         if hasattr(self.spec.fields, 'send'):
            logger.info("Reading Send")
-           imm_data = self.spec.fields.send.imm_data if hasattr(self.spec.fields.send, 'imm_data') else 0
-           inv_key = self.spec.fields.send.inv_key if hasattr(self.spec.fields.send, 'inv_key') else 0
+           base.num_sges_or_new_user_key = num_sges
+           if hasattr(self.spec.fields.send, 'imm_data'):
+               base.imm_data_or_key = self.spec.fields.send.imm_data 
+           elif hasattr(self.spec.fields.send, 'inv_key'):
+               base.imm_data_or_key = self.spec.fields.send.inv_key 
            data_len = self.spec.fields.send.len if hasattr(self.spec.fields.send, 'len') else 0
            if inline_data_vld:
                inline_data_len = data_len
                # Create the Inline data of size provided
                inline_data = bytearray(inline_data_len)
                inline_data[0:inline_data_len] = self.spec.fields.send.inline_data[0:inline_data_len]
-           send = RdmaSqDescriptorSend(imm_data=imm_data, inv_key=inv_key, len=data_len)
+           send = RdmaSqDescriptorSend(len=data_len)
            desc = desc/send
 
         if hasattr(self.spec.fields, 'ud_send'):
            logger.info("Reading UD Send")
+           base.num_sges_or_new_user_key = num_sges
+           if hasattr(self.spec.fields.ud_send, 'imm_data'):
+               base.imm_data_or_key = self.spec.fields.ud_send.imm_data 
            dst_qp = self.spec.fields.ud_send.dst_qp if hasattr(self.spec.fields.ud_send, 'dst_qp') else 0
            q_key = self.spec.fields.ud_send.q_key if hasattr(self.spec.fields.ud_send, 'q_key') else 0
            ah_handle = self.spec.fields.ud_send.ah_handle if hasattr(self.spec.fields.ud_send, 'ah_handle') else 0
            imm_data = self.spec.fields.ud_send.imm_data if hasattr(self.spec.fields.ud_send, 'imm_data') else 0
            logger.info("UD Descriptor fields: dst_qp: %d q_key: 0x%x ah_handle: 0x%x imm_data: 0x%x" % \
                        (dst_qp, q_key, ah_handle, imm_data))
-           send = RdmaSqDescriptorUDSend(imm_data=imm_data, q_key=q_key, dst_qp=dst_qp, ah_handle=ah_handle)
+           send = RdmaSqDescriptorSend(q_key=q_key, dst_qp=dst_qp, ah_handle=ah_handle, len=0)
            desc = desc/send
 
         if hasattr(self.spec.fields, 'write'):
            logger.info("Reading Write")
-           imm_data = self.spec.fields.write.imm_data if hasattr(self.spec.fields.write, 'imm_data') else 0
+           base.num_sges_or_new_user_key = num_sges
+           if hasattr(self.spec.fields.write, 'imm_data'):
+               base.imm_data_or_key = self.spec.fields.write.imm_data 
            va = self.spec.fields.write.va if hasattr(self.spec.fields.write, 'va') else 0
            dma_len = self.spec.fields.write.len if hasattr(self.spec.fields.write, 'len') else 0
            if inline_data_vld:
@@ -321,22 +318,23 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
                inline_data = bytearray(inline_data_len)
                inline_data[0:inline_data_len] = self.spec.fields.write.inline_data[0:inline_data_len]
            r_key = self.spec.fields.write.r_key if hasattr(self.spec.fields.write, 'r_key') else 0
-           write = RdmaSqDescriptorWrite(imm_data=imm_data, va=va, len=dma_len, r_key=r_key)
+           write = RdmaSqDescriptorRdma(va=va, len=dma_len, r_key=r_key)
            desc = desc/write
 
         if hasattr(self.spec.fields, 'read'):
            logger.info("Reading Read")
            assert(inline_data_vld == 0)
-           rsvd = self.spec.fields.read.rsvd if hasattr(self.spec.fields.read, 'rsvd') else 0
+           base.num_sges_or_new_user_key = num_sges
            va = self.spec.fields.read.va if hasattr(self.spec.fields.read, 'va') else 0
            data_len = self.spec.fields.read.len if hasattr(self.spec.fields.read, 'len') else 0
            r_key = self.spec.fields.read.r_key if hasattr(self.spec.fields.read, 'r_key') else 0
-           read = RdmaSqDescriptorRead(rsvd=rsvd, va=va, len=data_len, r_key=r_key)
+           read = RdmaSqDescriptorRdma(va=va, len=data_len, r_key=r_key)
            desc = desc/read
 
         if hasattr(self.spec.fields, 'atomic'):
            logger.info("Reading Atomic")
            assert(inline_data_vld == 0)
+           base.num_sges_or_new_user_key = num_sges
            r_key = self.spec.fields.atomic.r_key if hasattr(self.spec.fields.atomic, 'r_key') else 0
            va = self.spec.fields.atomic.va if hasattr(self.spec.fields.atomic, 'va') else 0
            cmpdt = self.spec.fields.atomic.cmpdt if hasattr(self.spec.fields.atomic, 'cmpdt') else 0
@@ -347,9 +345,8 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         if hasattr(self.spec.fields, 'local_inv'):
            logger.info("Reading Local Invalidate")
            assert(inline_data_vld == 0)
-           l_key = self.spec.fields.local_inv.l_key if hasattr(self.spec.fields.local_inv, 'l_key') else 0
-           local_inv = RdmaSqDescriptorLocalInv(l_key=l_key)
-           desc = desc/local_inv
+           if hasattr(self.spec.fields.local_inv, 'l_key'):
+               base.imm_data_or_key = self.spec.fields.local_inv.l_key
 
         if hasattr(self.spec.fields, 'bind_mw'):
            logger.info("Reading Bind MW")
@@ -362,8 +359,12 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            logger.info("l_key = 0x%x" % l_key)
            r_key = self.spec.fields.bind_mw.r_key if hasattr(self.spec.fields.bind_mw, 'r_key') else 0
            logger.info("r_key = 0x%x" % r_key)
+           if hasattr(self.spec.fields.bind_mw, 'r_key'):
+               base.imm_data_or_key = self.spec.fields.bind_mw.r_key 
            new_r_key_key = self.spec.fields.bind_mw.new_r_key_key if hasattr(self.spec.fields.bind_mw, 'new_r_key_key') else 0
            logger.info("new_r_key_key = 0x%x" % new_r_key_key)
+           if hasattr(self.spec.fields.bind_mw, 'new_r_key_key'):
+               base.num_sges_or_new_user_key = self.spec.fields.bind_mw.new_r_key_key
            access_ctrl = self.spec.fields.bind_mw.access_ctrl if hasattr(self.spec.fields.bind_mw, 'access_ctrl') else 0
            logger.info("access_ctrl = 0x%x" % access_ctrl)
            mw_type = self.spec.fields.bind_mw.mw_type if hasattr(self.spec.fields.bind_mw, 'mw_type') else 0
@@ -371,7 +372,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            zbva = self.spec.fields.bind_mw.zbva if hasattr(self.spec.fields.bind_mw, 'zbva') else 0
            logger.info("zbva = 0x%x" % zbva)
             
-           bind_mw = RdmaSqDescriptorBindMw(va=va, len=data_len, l_key=l_key, r_key=r_key, new_r_key_key=new_r_key_key, access_ctrl=access_ctrl, mw_type=mw_type, zbva=zbva)
+           bind_mw = RdmaSqDescriptorBindMw(va=va, len=data_len, l_key=l_key, access_ctrl=access_ctrl, mw_type=mw_type, zbva=zbva)
            desc = desc/bind_mw
 
 
@@ -380,8 +381,12 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            assert(inline_data_vld == 0)
            l_key = self.spec.fields.frpmr.l_key if hasattr(self.spec.fields.frpmr, 'l_key') else 0
            logger.info("l_key = 0x%x" % l_key)
+           if hasattr(self.spec.fields.frpmr, 'l_key'):
+               base.imm_data_or_key = self.spec.fields.frpmr.l_key 
            new_user_key = self.spec.fields.frpmr.new_user_key if hasattr(self.spec.fields.frpmr, 'new_user_key') else 0
            logger.info("new_user_key = 0x%x" % new_user_key)
+           if hasattr(self.spec.fields.frpmr, 'new_user_key'):
+               base.num_sges_or_new_user_key = self.spec.fields.frpmr.new_user_key
            access_ctrl = self.spec.fields.frpmr.access_ctrl if hasattr(self.spec.fields.frpmr, 'access_ctrl') else 0
            logger.info("access_ctrl = 0x%x" % access_ctrl)
            log_page_size = self.spec.fields.frpmr.log_page_size if hasattr(self.spec.fields.frpmr, 'log_page_size') else 0
@@ -401,7 +406,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            mw_en = self.spec.fields.frpmr.mw_en if hasattr(self.spec.fields.frpmr, 'mw_en') else 0
            logger.info("mw_en = 0x%x" % mw_en)
 
-           frpmr = RdmaSqDescriptorFrpmr(l_key=l_key, new_user_key=new_user_key, access_ctrl=access_ctrl, log_page_size=log_page_size, num_pt_entries=num_pt_entries, base_va=base_va, dma_src_address=dma_src_address, len=data_len, pt_start_offset=pt_start_offset, zbva=zbva, mw_en=mw_en)
+           frpmr = RdmaSqDescriptorFrpmr(access_ctrl=access_ctrl, log_page_size=log_page_size, num_pt_entries=num_pt_entries, base_va=base_va, dma_src_address=dma_src_address, len=data_len, pt_start_offset=pt_start_offset, zbva=zbva, mw_en=mw_en)
            desc = desc/frpmr
 
         if inline_data_vld:
@@ -442,8 +447,11 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
 
         logger.ShowScapyObject(desc)
         self.wrid = desc.wrid
-        self.num_sges = desc.num_sges
         self.op_type = desc.op_type
+        if (self.op_type < 8):
+            self.num_sges = desc.num_sges_or_new_user_key
+        else:
+            self.num_sges = 0
         self.fence   = desc.fence
         logger.info("Read Desciptor @0x%x = wrid: 0x%x num_sges: %d op_type: %d fence: %d" % 
                        (self.address, self.wrid, self.num_sges, self.op_type, self.fence))

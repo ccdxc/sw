@@ -180,9 +180,10 @@ set_sge_arg:
     phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress), CAPRI_PHV_FIELD(WQE_TO_SGE_P, first), 1
     phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, num_valid_sges), d.base.num_sges, CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), K_REMAINING_PAYLOAD_BYTES
     phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(WQE_TO_SGE_P, dma_cmd_start_index), REQ_TX_DMA_CMD_PYLD_BASE
-    phvwrpair CAPRI_PHV_RANGE(WQE_TO_SGE_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color), CAPRI_PHV_RANGE(WQE_TO_SGE_P, imm_data, inv_key_or_ah_handle), d.{send.imm_data...send.inv_key}
+    //imm_data and inv_key are union members
+    phvwrpair CAPRI_PHV_RANGE(WQE_TO_SGE_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color), CAPRI_PHV_FIELD(WQE_TO_SGE_P, imm_data_or_inv_key), d.{base.imm_data}
     // if UD copy ah_handle
-    phvwr.c1 CAPRI_PHV_FIELD(WQE_TO_SGE_P, inv_key_or_ah_handle), r2
+    phvwr.c1 CAPRI_PHV_FIELD(WQE_TO_SGE_P, ah_handle), r2
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqsge_process, r3)
 
@@ -225,7 +226,7 @@ atomic:
 
     // prepare RRQWQE descriptor
     phvwrpair      RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_ATOMIC, RRQWQE_NUM_SGES, 1
-    phvwr          p.{rrqwqe.atomic.sge.va...rrqwqe.atomic.sge.l_key}, d.{atomic.sge.va...atomic.sge.l_key}
+    phvwr          p.{rrqwqe.atomic.sge.va, rrqwqe.atomic.sge.len, rrqwqe.atomic.sge.l_key}, d.{atomic.sge.va, atomic.sge.len, atomic.sge.l_key}
  
     CAPRI_RESET_TABLE_2_ARG()
     //set first = 1, last_pkt = 1
@@ -257,9 +258,9 @@ zero_length:
     CAPRI_RESET_TABLE_2_ARG()
     //set first = 1, last_pkt = 1
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
-    // should work for both send/write as imm_data is located at same offset in wqe for both operations
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, hdr_template_inline), 1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle), d.{send.imm_data...send.inv_key}
-    phvwr.c1 CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_inv_key_or_ah_handle), r2
+    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, hdr_template_inline), 1, \
+              CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data_or_inv_key), d.{base.imm_data}
+    phvwr.c1 CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_ah_handle), r2
     phvwr CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color)
     // leave rest of variables to FALSE
 
@@ -285,7 +286,7 @@ local_inv:
     KT_BASE_ADDR_GET2(r6, r4)
 
     // r4 = lkey
-    add            r4, r0, d.local_inv.l_key
+    add            r4, r0, d.base.key
 
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+ ((lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
     KEY_ENTRY_ADDR_GET(r6, r6, r4)
@@ -315,8 +316,9 @@ bind_mw:
 
     // bind_mw_sqlkey_process should be invoked in stage4 T0 and T1.
     CAPRI_RESET_TABLE_0_ARG()
-    phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, va, len), d.{bind_mw.va...bind_mw.len}
-    phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, r_key, zbva), d.{bind_mw.r_key...bind_mw.zbva}
+    phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, va, len), d.{bind_mw.va, bind_mw.len}
+    phvwrpair      CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, r_key), d.base.key, CAPRI_PHV_FIELD(SQWQE_TO_LKEY_MW_T0_P, new_r_key_key), d.base.new_r_key_key
+    phvwr          CAPRI_PHV_RANGE(SQWQE_TO_LKEY_MW_T0_P, acc_ctrl, zbva), d.{bind_mw.access_ctrl, bind_mw.mw_type, bind_mw.zbva}
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bind_mw_sqlkey_process, r2)
 
@@ -357,7 +359,7 @@ frpmr:
     KT_BASE_ADDR_GET2(r6, r4)
 
     // r4 = lkey
-    add            r4, r0, d.frpmr.l_key
+    add            r4, r0, d.base.key
 
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+ ((lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
     KEY_ENTRY_ADDR_GET(r6, r6, r4)
@@ -372,18 +374,23 @@ frpmr:
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, fast_reg_rsvd_lkey_enable), K_FAST_REG_ENABLE, \
                    CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, base_va), d.frpmr.base_va
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, zbva), d.frpmr.zbva, \
-                   CAPRI_PHV_RANGE(WQE_TO_FRPMR_LKEY_T0, new_user_key, num_pt_entries), d.{frpmr.new_user_key...frpmr.num_pt_entries}
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, new_user_key), d.{base.new_user_key}
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, sge_index), 0, \
                    CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, pt_start_offset), d.frpmr.pt_start_offset
-    phvwr          CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, mw_en), d.frpmr.mw_en
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, mw_en), d.frpmr.mw_en, \
+                   CAPRI_PHV_RANGE(WQE_TO_FRPMR_LKEY_T0, num_pt_entries, acc_ctrl), d.{frpmr.num_pt_entries, frpmr.access_ctrl}
+    phvwr          CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, log_page_size), d.frpmr.log_page_size
 
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, fast_reg_rsvd_lkey_enable), K_FAST_REG_ENABLE, \
                    CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, base_va), d.frpmr.base_va
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, zbva), d.frpmr.zbva, \
-                   CAPRI_PHV_RANGE(WQE_TO_FRPMR_LKEY_T1, new_user_key, num_pt_entries), d.{frpmr.new_user_key...frpmr.num_pt_entries}
-    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 1, \
+                   CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, new_user_key), d.{base.new_user_key}
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 0, \
                    CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, pt_start_offset), d.frpmr.pt_start_offset
-    phvwr          CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, mw_en), d.frpmr.mw_en
+    phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, mw_en), d.frpmr.mw_en, \
+                   CAPRI_PHV_RANGE(WQE_TO_FRPMR_LKEY_T1, num_pt_entries, acc_ctrl), d.{frpmr.num_pt_entries, frpmr.access_ctrl}
+    phvwr          CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, log_page_size), d.frpmr.log_page_size
+
 
     phvwr          CAPRI_PHV_FIELD(TO_S4_FRPMR_LKEY_P, len), d.frpmr.len
 

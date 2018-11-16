@@ -21,7 +21,6 @@ import iris.config.objects.mr        as mr
 
 from factory.objects.rdma.descriptor import RdmaSqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaSqDescriptorSend
-from factory.objects.rdma.descriptor import RdmaSqDescriptorUDSend
 from factory.objects.rdma.descriptor import RdmaRqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaRrqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaRrqDescriptorRead

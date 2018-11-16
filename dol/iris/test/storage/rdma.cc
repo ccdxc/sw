@@ -713,18 +713,18 @@ void PostTargetRcvBuf1() {
   // WRID, Num SGEs and data len are fixed
   sqwqe->write_bit_fields(0, 64, sta_buf->pa());  // wrid 
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
-  sqwqe->write_bit_fields(192, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));  // data len
+  sqwqe->write_bit_fields(224, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));  // data len
 
   // Optype and immediate data varies based on configuration
   // Store doorbell information of Initiator ROCE CQ in immediate data 
   // TODO: FIXME later when kRdmaSendOpType changes but nvme_dp_init remains
   if (nvme_dp_init && kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
-      sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);  // op_type = OP_TYPE_SEND_IMM
+      sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);  // op_type = OP_TYPE_SEND_IMM
       sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
       sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_init_cq);
   } else {
-    sqwqe->write_bit_fields(64, 4, 0);  // op_type = OP_TYPE_SEND
+    sqwqe->write_bit_fields(68, 4, 0);  // op_type = OP_TYPE_SEND
   }
 
   // write the SGE
@@ -865,7 +865,7 @@ void SendSmallUspaceBuf() {
   sqwqe->clear();
 
   sqwqe->write_bit_fields(0, 64, 0x10);  // wrid = 1
-  sqwqe->write_bit_fields(64, 4, 0);  // op_type = OP_TYPE_SEND
+  sqwqe->write_bit_fields(68, 4, 0);  // op_type = OP_TYPE_SEND
   //sqwqe->write_bit_fields(71, 1, 1);  // inline data valid
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
@@ -876,7 +876,7 @@ void SendSmallUspaceBuf() {
   // Register R2N buf memory. Only LKey, no remote access.
   RdmaMemRegister(r2n_buf_va->va(), r2n_buf_va->pa(), kR2NBufSize, SendBufLKey << 8, 0, false, 
                   r2n_buf_va->is_mem_type_host_mem());
-  sqwqe->write_bit_fields(192, 32, (uint64_t)data_len);  // data len
+  sqwqe->write_bit_fields(224, 32, (uint64_t)data_len);  // data len
   // write the SGE
   sqwqe->write_bit_fields(256, 64, r2n_buf_va->va());  // SGE-va, same as pa
   sqwqe->write_bit_fields(256+64, 32, data_len);
@@ -918,7 +918,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_hbm_buf_pa->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);
+  sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data 
@@ -927,7 +927,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
       sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
   }
-  sqwqe->write_bit_fields(192, 32, data_len);  // data len
+  sqwqe->write_bit_fields(224, 32, data_len);  // data len
 
   // Form the SGE
   sqwqe->write_bit_fields(256, 64, r2n_hbm_buf_pa->pa());  // SGE-va, same as pa
@@ -968,7 +968,7 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_buf->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);
+  sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data 
@@ -977,7 +977,7 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
       sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
   }
-  sqwqe->write_bit_fields(192, 32, data_len);  // data len
+  sqwqe->write_bit_fields(224, 32, data_len);  // data len
 
   // Form the SGE
   sqwqe->write_bit_fields(256, 64, r2n_buf->pa());  // SGE-va, same as pa
@@ -1058,7 +1058,7 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
   sqwqe->write_bit_fields(0, 64, r2n_buf_va->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);
+  sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data 
@@ -1067,7 +1067,7 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
       sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
   }
-  sqwqe->write_bit_fields(192, 32, r2n_data_len);  // data len
+  sqwqe->write_bit_fields(224, 32, r2n_data_len);  // data len
 
   // Local read command buffer goes into SGE
   sqwqe->write_bit_fields(256, 64, r2n_buf_va->va());  // SGE-va
@@ -1081,9 +1081,9 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   dp_mem_t *write_wqe = r2n_buf_va->fragment_find(write_wqe_offset, 64);
 
   // Start the write WQE formation (WRID will be filled by P4+)
-  write_wqe->write_bit_fields(64, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
+  write_wqe->write_bit_fields(68, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
   write_wqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
-  write_wqe->write_bit_fields(192, 32, (uint32_t) kR2NDataSize);  // data len
+  write_wqe->write_bit_fields(224, 32, (uint32_t) kR2NDataSize);  // data len
 
   // RDMA will ring the next doorbell with pndx increment,
   // print out this info to make it easy to locate in model.log
@@ -1096,8 +1096,8 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   write_wqe->write_bit_fields(107, 3, SQ_TYPE);
   write_wqe->write_bit_fields(110, 18, seq_pdma_q);
   write_wqe->write_bit_fields(128, 64, r2n_hbm_buf_pa->va()); // va == pa
-  write_wqe->write_bit_fields(128+64, 32, (uint32_t) kR2NDataSize); // len
-  write_wqe->write_bit_fields(128+64+32, 32, WriteBackBufRKey << 8); // rkey
+  write_wqe->write_bit_fields(128+64, 32, WriteBackBufRKey << 8); // rkey
+  write_wqe->write_bit_fields(128+64+32, 32, (uint32_t) kR2NDataSize); // len
   write_wqe->write_thru();
 
   initiator_sq_va->line_advance();
@@ -1146,7 +1146,7 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
    * Point sqwqe to the nvme command in r2n_buf
    */
   sqwqe->write_bit_fields(0, 64, r2n_send_buf->pa());  // wrid 
-  sqwqe->write_bit_fields(64, 4, kRdmaSendOpType);
+  sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data 
@@ -1155,7 +1155,7 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
       sqwqe->write_bit_fields(110, 18, g_rdma_pvm_roce_tgt_cq);
   }
-  sqwqe->write_bit_fields(192, 32, r2n_data_len);
+  sqwqe->write_bit_fields(224, 32, r2n_data_len);
 
   // Local read command buffer goes into SGE
   sqwqe->write_bit_fields(256, 64, r2n_send_buf->va());  // SGE-va
@@ -1172,9 +1172,9 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
                                                               data_len);
 
   // Start the write WQE formation (WRID will be filled by P4+)
-  write_wqe->write_bit_fields(64, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
+  write_wqe->write_bit_fields(68, 4, 5);  // op_type = OP_TYPE_WRITE_IMM
   write_wqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
-  write_wqe->write_bit_fields(192, 32, data_len);  // data len
+  write_wqe->write_bit_fields(224, 32, data_len);  // data len
 
   // RDMA will ring the next doorbell with pndx increment,
   // print out this info to make it easy to locate in model.log
@@ -1187,8 +1187,8 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
   write_wqe->write_bit_fields(107, 3, next_qtype);
   write_wqe->write_bit_fields(110, 18, next_qid);
   write_wqe->write_bit_fields(128, 64, r2n_write_buf->va()); // va == pa
-  write_wqe->write_bit_fields(128+64, 32, data_len);
-  write_wqe->write_bit_fields(128+64+32, 32, WriteBackBufRKey << 8); // rkey
+  write_wqe->write_bit_fields(128+64, 32, WriteBackBufRKey << 8); // rkey
+  write_wqe->write_bit_fields(128+64+32, 32, data_len);
 
   // Write SGE: local side buffer
   // TODO: Remove the write_data_buf pointer and do this in P4+ in production code

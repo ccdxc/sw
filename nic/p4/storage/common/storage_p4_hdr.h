@@ -276,14 +276,17 @@ header_type roce_cq_wqe_t {
 header_type roce_sq_wqe_t {
   fields {
     wrid		: 64;	// Work request id
+    op_type_rsvd: 4;	
     op_type		: 4;	// Operation type
+    num_sges		: 8;	// Number of SGEs
     complete_notify	: 1;	
-    fence		: 1;
+    fence		    : 1;
     solicited_event	: 1;
     inline_data_vld	: 1;
-    num_sges		: 8;	// Number of SGEs
-    rsvd2		: 16;
-    op_data		: 416;	// Storage P4+ does not interpret this
+    color           : 1;
+    rsvd_flags      : 11;
+    imm_data_or_key : 32;
+    op_data		    : 384;	// Storage P4+ does not interpret this
   }
 }
 

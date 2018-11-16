@@ -313,7 +313,7 @@ sq_bktrack1:
                   CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, in_progress), d.in_progress
         phvwr     CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, sq_p_index), SQ_P_INDEX //not eligible for phvwrpair
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, bktrack_in_progress), d.bktrack_in_progress, \
-                  CAPRI_PHV_RANGE(SQCB0_TO_SQCB2_P, current_sge_offset, num_sges), d.{current_sge_offset...num_sges}
+                  CAPRI_PHV_RANGE(SQCB0_TO_SQCB2_P, current_sge_offset, num_sges), d.{current_sge_offset, current_sge_id, num_sges}
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, update_credits), 0, \
                   CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, bktrack), 1
         phvwrpair CAPRI_PHV_FIELD(SQCB0_TO_SQCB2_P, pt_base_addr), d.pt_base_addr, \
@@ -329,22 +329,22 @@ sq_bktrack1:
         //copy backtrack params to TO_STAGE: log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes
         
         phvwrpair CAPRI_PHV_FIELD(TO_S1_BT_P, wqe_addr), r1, \
-                  CAPRI_PHV_RANGE(TO_S1_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu...log_num_wqes}
+                  CAPRI_PHV_RANGE(TO_S1_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes}
 
         phvwrpair CAPRI_PHV_FIELD(TO_S2_BT_P, wqe_addr), r1, \
-                  CAPRI_PHV_RANGE(TO_S2_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu...log_num_wqes}
+                  CAPRI_PHV_RANGE(TO_S2_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes}
 
         phvwrpair CAPRI_PHV_FIELD(TO_S3_BT_P, wqe_addr), r1, \
-                  CAPRI_PHV_RANGE(TO_S3_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu...log_num_wqes}
+                  CAPRI_PHV_RANGE(TO_S3_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes}
 
         phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r1, \
-                  CAPRI_PHV_RANGE(TO_S4_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu...log_num_wqes}
+                  CAPRI_PHV_RANGE(TO_S4_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes}
 
         phvwrpair.e CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r1, \
-                    CAPRI_PHV_RANGE(TO_S5_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu...log_num_wqes}
+                    CAPRI_PHV_RANGE(TO_S5_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes}
 
         phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r1, \
-                  CAPRI_PHV_RANGE(TO_S6_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu...log_num_wqes}
+                  CAPRI_PHV_RANGE(TO_S6_BT_P, log_pmtu, log_num_wqes), d.{log_pmtu, log_sq_page_size, log_wqe_size, log_num_wqes}
         
     .brcase        TIMER_RING_ID
         // reset sched_eval_done 

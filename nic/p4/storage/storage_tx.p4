@@ -1028,8 +1028,8 @@ action pvm_roce_sq_cb_update(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                           RDMA_SEND. Then post the buffer back to ROCE RQ.
  *****************************************************************************/
 
-action pvm_roce_sq_wqe_process(wrid, op_type, complete_notify, fence,
-                           solicited_event, inline_data_vld, num_sges, rsvd2,
+action pvm_roce_sq_wqe_process(wrid, op_type_rsvd, op_type, num_sges, complete_notify, fence,
+                           solicited_event, inline_data_vld, color, rsvd_flags, imm_data_or_key,
                            op_data) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -1042,13 +1042,16 @@ action pvm_roce_sq_wqe_process(wrid, op_type, complete_notify, fence,
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(roce_sq_wqe_scratch.wrid, wrid);
+  modify_field(roce_sq_wqe_scratch.op_type_rsvd, op_type_rsvd);
   modify_field(roce_sq_wqe_scratch.op_type, op_type);
+  modify_field(roce_sq_wqe_scratch.num_sges, num_sges);
   modify_field(roce_sq_wqe_scratch.complete_notify, complete_notify);
   modify_field(roce_sq_wqe_scratch.fence, fence);
   modify_field(roce_sq_wqe_scratch.solicited_event, solicited_event);
   modify_field(roce_sq_wqe_scratch.inline_data_vld, inline_data_vld);
-  modify_field(roce_sq_wqe_scratch.num_sges, num_sges);
-  modify_field(roce_sq_wqe_scratch.rsvd2, rsvd2);
+  modify_field(roce_sq_wqe_scratch.color, color);
+  modify_field(roce_sq_wqe_scratch.rsvd_flags, rsvd_flags);
+  modify_field(roce_sq_wqe_scratch.imm_data_or_key, imm_data_or_key);
   modify_field(roce_sq_wqe_scratch.op_data, op_data);
 
   if ((roce_sq_wqe_scratch.op_type == ROCE_OP_TYPE_SEND) or

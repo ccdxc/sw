@@ -180,8 +180,8 @@ sge_loop:
               CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, num_sges), r6
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_offset), r2, \
               CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, current_sge_id), r1
-    phvwr     CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data, op_send_wr_inv_key_or_ah_handle), \
-              CAPRI_KEY_RANGE(IN_P, imm_data_sbit0_ebit7, inv_key_or_ah_handle_sbit24_ebit31)
+    phvwr     CAPRI_PHV_RANGE(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data_or_inv_key, op_send_wr_ah_handle), \
+              CAPRI_KEY_RANGE(IN_P, imm_data_or_inv_key_sbit0_ebit7, ah_handle_sbit24_ebit31)
     // rest of the fields are initialized to default
 
     mfspr          r1, spr_mpuid
@@ -210,8 +210,8 @@ iterate_sges:
     beqi           r4, REQ_TX_DMA_CMD_PYLD_BASE_END, err_no_dma_cmds
     CAPRI_RESET_TABLE_2_ARG() // Branch Delay Slot
     
-    phvwr CAPRI_PHV_RANGE(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle), \
-          CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31)
+    phvwr CAPRI_PHV_RANGE(WQE_TO_SGE_P, in_progress, ah_handle), \
+          CAPRI_KEY_RANGE(IN_P, in_progress, ah_handle_sbit24_ebit31)
     phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_id), r1, \
               CAPRI_PHV_FIELD(WQE_TO_SGE_P, current_sge_offset), r2
     phvwrpair CAPRI_PHV_FIELD(WQE_TO_SGE_P, remaining_payload_bytes), r3, \

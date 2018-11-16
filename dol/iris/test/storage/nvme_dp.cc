@@ -225,7 +225,7 @@ int setup_one_io_buffer(int index) {
   uint32_t data_len = kIOBufHdrXmitSize + kIOBufMaxDataSize;
   printf("Write data_offset %lx, data len %u \n", data_offset_pa, data_len);
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base, 64, data_offset_pa); // wrid, ptr to actual xmit data
-  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+64, 4,  kRdmaSendOpType);  
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+68, 4,  kRdmaSendOpType);  
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base+72, 8,  1); // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data
@@ -234,7 +234,7 @@ int setup_one_io_buffer(int index) {
       io_buf_base_addr->write_bit_fields(roce_write_wqe_base+107, 3, CQ_TYPE);
       io_buf_base_addr->write_bit_fields(roce_write_wqe_base+110, 18, get_rdma_pvm_roce_tgt_cq());
   }
-  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+192, 32, data_len);  // data len
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+224, 32, data_len);  // data len
 
   // Form the SGE
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256, 64,  data_offset_pa); // SGE-va, same as pa
@@ -248,7 +248,7 @@ int setup_one_io_buffer(int index) {
   data_len = kIOBufHdrXmitSize;
   printf("Read data_offset %lx, data len %u \n", data_offset_pa, data_len);
   io_buf_base_addr->write_bit_fields(roce_read_wqe_base, 64, data_offset_pa); // wrid, ptr to actual xmit data
-  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+64, 4,  kRdmaSendOpType);  
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+68, 4,  kRdmaSendOpType);  
   io_buf_base_addr->write_bit_fields(roce_read_wqe_base+72, 8,  1); // Num SGEs = 1
 
   // Store doorbell information of PVM's ROCE CQ in immediate data
@@ -257,7 +257,7 @@ int setup_one_io_buffer(int index) {
       io_buf_base_addr->write_bit_fields(roce_read_wqe_base+107, 3, CQ_TYPE);
       io_buf_base_addr->write_bit_fields(roce_read_wqe_base+110, 18, get_rdma_pvm_roce_tgt_cq());
   }
-  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+192, 32, data_len);  // data len
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+224, 32, data_len);  // data len
 
   // Form the SGE
   io_buf_base_addr->write_bit_fields(roce_read_wqe_base+256, 64,  data_offset_pa); // SGE-va, same as pa
@@ -270,9 +270,9 @@ int setup_one_io_buffer(int index) {
   data_len = kIOBufMaxDataSize;
 
   // Start the write WQE formation (WRID will be filled by P4+)
-  io_buf_base_addr->write_bit_fields(write_back_wqe_base+64, 4, RDMA_OP_TYPE_WRITE);  // op_type
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+68, 4, RDMA_OP_TYPE_WRITE);  // op_type
   io_buf_base_addr->write_bit_fields(write_back_wqe_base+72, 8, 1);  // Num SGEs = 1
-  io_buf_base_addr->write_bit_fields(write_back_wqe_base+192, 32, (uint32_t) data_len);  // data len
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+224, 32, (uint32_t) data_len);  // data len
 
 #if 0
   // RDMA will ring the next doorbell with pndx increment,
@@ -289,8 +289,8 @@ int setup_one_io_buffer(int index) {
   io_buf_base_addr->write_bit_fields(write_back_wqe_base+110, 18, seq_pdma_q);
 #endif
   io_buf_base_addr->write_bit_fields(write_back_wqe_base+128, 64, data_offset_pa); // va == pa
-  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64, 32, (uint32_t) data_len); // len
-  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64+32, 32, write_back_rkey << 8); // rkey
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64, 32, write_back_rkey << 8); // rkey
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64+32, 32, (uint32_t) data_len); // len
 
   // Form the R2N sequencer doorbell
   uint32_t base_db_bit = (IO_BUF_SEQ_DB_OFFSET + IO_BUF_SEQ_R2N_DB_OFFSET) * 8;

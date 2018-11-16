@@ -178,11 +178,9 @@ sge_bktrack:
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, current_sge_offset), 0, CAPRI_PHV_FIELD(SQ_BKTRACK_P, current_sge_id), 0
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, num_sges), d.base.num_sges, CAPRI_PHV_FIELD(SQ_BKTRACK_P, op_type), d.base.op_type
     // Always copy imm_data assuming op_type to be send. imm_data is ignored
+    // imm_data & inv_key are unions
     // if op_type is not send
-    phvwr CAPRI_PHV_RANGE(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, imm_data2_or_inv_key2), d.send.imm_data
-    // Set inv_key only if op_type is send_inv as imm_data & inv_key are unions
-    seq            c1, d.base.op_type, OP_TYPE_SEND_INV
-    phvwr.c1 CAPRI_PHV_RANGE(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, imm_data2_or_inv_key2), d.send.inv_key
+    phvwr CAPRI_PHV_RANGE(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1, imm_data2_or_inv_key2), d.base.imm_data
      
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqsge_process, r3)
 
@@ -223,8 +221,8 @@ sqcb_writeback:
     CAPRI_RESET_TABLE_1_ARG()
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, tx_psn), r1, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, ssn), r6
     // Assume send and copy imm_data, inv_key. These fields are looked into
-    // only if op_type is send/write
-    phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data), d.send.imm_data, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, inv_key), d.send.inv_key
+    // only if op_type is send/write, imm_data and inv_key are union members
+    phvwr     CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, imm_data_or_inv_key), d.base.imm_data
     phvwrpair CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, op_type), d.base.op_type, CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, sq_cindex), r4
     phvwr.c6 CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, bktrack_in_progress), 1
     phvwr.c5 CAPRI_PHV_FIELD(SQCB2_WRITE_BACK_P, msg_psn), r3

@@ -833,6 +833,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     rsp->dev.ncqs_per_lif = spec->rdma_cq_count;
 
     rsp->dev.rdma_version = 1;
+    rsp->dev.rdma_qp_opcodes[0] = 27;
     rsp->dev.rdma_admin_opcodes[0] = 50;
 
     comp->ver = IDENTITY_VERSION_1;

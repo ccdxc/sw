@@ -40,8 +40,8 @@ req_tx_sqsge_iterate_process:
 
 trigger_stg3_sqsge_process:
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, inv_key_or_ah_handle, \
-                           CAPRI_KEY_RANGE(IN_P, in_progress, inv_key_or_ah_handle_sbit24_ebit31))
+    CAPRI_SET_FIELD_RANGE2(WQE_TO_SGE_P, in_progress, ah_handle, \
+                           CAPRI_KEY_RANGE(IN_P, in_progress, ah_handle_sbit24_ebit31))
 
     //mfspr          r1, spr_tbladdr
 
