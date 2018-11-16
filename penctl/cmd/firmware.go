@@ -17,9 +17,9 @@ import (
 )
 
 var showFirmwareCmd = &cobra.Command{
-	Use:   "firmware",
-	Short: "Get running firmware image on Naples",
-	Long:  "\n--------------------------------------\n Get Running Firmware Image On Naples \n--------------------------------------\n",
+	Use:   "firmware-version",
+	Short: "Get firmware version on Naples",
+	Long:  "\n--------------------------------\n Get Firmware Version On Naples \n--------------------------------\n",
 	Run:   showFirmwareDetailCmdHandler,
 }
 

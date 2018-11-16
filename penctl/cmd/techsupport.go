@@ -81,6 +81,7 @@ func createDestDir(destDir string) {
 
 func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	timeStr := time.Now().Format(time.UnixDate)
+	timeStr = strings.Replace(timeStr, " ", "-", -1)
 	if !cmd.Flags().Changed("dest") {
 		destDir = "./"
 	}

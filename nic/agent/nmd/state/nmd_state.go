@@ -490,9 +490,10 @@ func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 		return resp, err
 	}
 
-	log.Infof("Naples Cmd Execute Request: %+v", req)
+	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
 	parts := strings.Fields(req.Opts)
 	cmd := exec.Command(req.Executable, parts...)
+	cmd.Env = os.Environ()
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, err

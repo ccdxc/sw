@@ -37,7 +37,7 @@ SEE ALSO
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
 * `penctl show events <penctl_show_events.rst>`_ 	 - Show events from Naples
-* `penctl show firmware <penctl_show_firmware.rst>`_ 	 - Get running firmware image on Naples
+* `penctl show firmware-version <penctl_show_firmware-version.rst>`_ 	 - Get firmware version on Naples
 * `penctl show logs <penctl_show_logs.rst>`_ 	 - Show logs from Naples
 * `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
 * `penctl show mode <penctl_show_mode.rst>`_ 	 - Show mode of operation of Naples

@@ -2304,6 +2304,7 @@ func init() {
 	reg.RegisterFunc("isObjTenanted", isObjTenanted)
 	reg.RegisterFunc("getProxyPaths", getProxyPaths)
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
+	reg.RegisterFunc("TrimSuffix", strings.TrimSuffix)
 	reg.RegisterFunc("ToLower", strings.ToLower)
 	reg.RegisterFunc("isActionMethod", isActionMethod)
 	reg.RegisterFunc("getActionTarget", getActionTarget)

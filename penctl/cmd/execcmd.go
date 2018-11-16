@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -19,6 +20,8 @@ var execBinCmd = &cobra.Command{
 	Long:               "\n--------------------------------------------\n Execute remote commands on the Naples card \n--------------------------------------------\n",
 	Run:                execBinCmdHandler,
 	DisableFlagParsing: true,
+	Hidden:             true,
+	Args:               execBinCmdArgsValidator,
 }
 
 func init() {
@@ -54,4 +57,12 @@ func execBinCmdHandler(cmd *cobra.Command, args []string) {
 	if verbose {
 		fmt.Println(string(resp))
 	}
+}
+
+func execBinCmdArgsValidator(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		str := "No command to execute\n"
+		return errors.New(str)
+	}
+	return nil
 }

@@ -11,7 +11,8 @@ import (
 )
 
 var upgrademetricsShowCmd = &cobra.Command{
-	Use:   "upgrademetrics",
+
+	Use:   "upgrade",
 	Short: "Show UpgradeMetrics from Naples",
 	Long:  "\n---------------------------------\n Show UpgradeMetrics From Naples \n---------------------------------\n",
 	Run:   upgrademetricsShowCmdHandler,

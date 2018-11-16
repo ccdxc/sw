@@ -32,7 +32,7 @@ func genericmetricsShowCmdHandler(cmd *cobra.Command, args []string) {
 	if !cmd.Flags().Changed("yaml") {
 		jsonFormat = true
 	}
-	generickind = strings.ToLower(generickind)
+	generickind = strings.ToLower(generickind) + "metrics"
 	if cmd.Flags().Changed("name") {
 		restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/default/"+genericname+"/")
 	} else {

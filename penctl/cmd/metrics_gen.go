@@ -11,7 +11,8 @@ import (
 )
 
 var lifmetricsShowCmd = &cobra.Command{
-	Use:   "lifmetrics",
+
+	Use:   "lif",
 	Short: "Show LifMetrics from Naples",
 	Long:  "\n---------------------------------\n Show LifMetrics From Naples \n---------------------------------\n",
 	Run:   lifmetricsShowCmdHandler,

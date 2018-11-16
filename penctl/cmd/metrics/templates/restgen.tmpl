@@ -16,7 +16,8 @@ import (
 
     {{if (HasSuffix .GetName "Metrics")}}
 	var {{ToLower .GetName}}ShowCmd = &cobra.Command{
-		Use:   "{{ToLower .GetName}}",
+		{{$cli := TrimSuffix .GetName "Metrics"}}
+		Use:   "{{ToLower $cli}}",
 		Short: "Show {{.GetName}} from Naples",
 		Long:  "\n---------------------------------\n Show {{.GetName}} From Naples \n---------------------------------\n",
 		Run:   {{ToLower .GetName}}ShowCmdHandler,

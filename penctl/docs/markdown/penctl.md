@@ -23,7 +23,6 @@ Pensando CLIs
 
 ### SEE ALSO
 * [penctl delete](penctl_delete.md)	 - Delete Object
-* [penctl execute](penctl_execute.md)	 - Execute remote commands on the Naples card
 * [penctl list](penctl_list.md)	 - List Objects
 * [penctl show](penctl_show.md)	 - Show Object and Information
 * [penctl system](penctl_system.md)	 - System Operations

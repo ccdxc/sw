@@ -42,8 +42,8 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
-* `penctl show metrics accelhwringmetrics <penctl_show_metrics_accelhwringmetrics.rst>`_ 	 - Show AccelHwRingMetrics from Naples
-* `penctl show metrics accelseqqueuemetrics <penctl_show_metrics_accelseqqueuemetrics.rst>`_ 	 - Show AccelSeqQueueMetrics from Naples
-* `penctl show metrics lifmetrics <penctl_show_metrics_lifmetrics.rst>`_ 	 - Show LifMetrics from Naples
-* `penctl show metrics upgrademetrics <penctl_show_metrics_upgrademetrics.rst>`_ 	 - Show UpgradeMetrics from Naples
+* `penctl show metrics accelhwring <penctl_show_metrics_accelhwring.rst>`_ 	 - Show AccelHwRingMetrics from Naples
+* `penctl show metrics accelseqqueue <penctl_show_metrics_accelseqqueue.rst>`_ 	 - Show AccelSeqQueueMetrics from Naples
+* `penctl show metrics lif <penctl_show_metrics_lif.rst>`_ 	 - Show LifMetrics from Naples
+* `penctl show metrics upgrade <penctl_show_metrics_upgrade.rst>`_ 	 - Show UpgradeMetrics from Naples
 

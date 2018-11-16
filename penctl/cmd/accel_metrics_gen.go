@@ -11,7 +11,8 @@ import (
 )
 
 var accelhwringmetricsShowCmd = &cobra.Command{
-	Use:   "accelhwringmetrics",
+
+	Use:   "accelhwring",
 	Short: "Show AccelHwRingMetrics from Naples",
 	Long:  "\n---------------------------------\n Show AccelHwRingMetrics From Naples \n---------------------------------\n",
 	Run:   accelhwringmetricsShowCmdHandler,
@@ -24,7 +25,8 @@ func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 var accelseqqueuemetricsShowCmd = &cobra.Command{
-	Use:   "accelseqqueuemetrics",
+
+	Use:   "accelseqqueue",
 	Short: "Show AccelSeqQueueMetrics from Naples",
 	Long:  "\n---------------------------------\n Show AccelSeqQueueMetrics From Naples \n---------------------------------\n",
 	Run:   accelseqqueuemetricsShowCmdHandler,

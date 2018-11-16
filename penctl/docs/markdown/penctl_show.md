@@ -29,7 +29,7 @@ Show Object and Information
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
 * [penctl show events](penctl_show_events.md)	 - Show events from Naples
-* [penctl show firmware](penctl_show_firmware.md)	 - Get running firmware image on Naples
+* [penctl show firmware-version](penctl_show_firmware-version.md)	 - Get firmware version on Naples
 * [penctl show logs](penctl_show_logs.md)	 - Show logs from Naples
 * [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
 * [penctl show mode](penctl_show_mode.md)	 - Show mode of operation of Naples

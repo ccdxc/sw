@@ -15,7 +15,7 @@ import (
 )
 
 var sshCmd = &cobra.Command{
-	Use:                "ssh",
+	Use:                "rexec",
 	Short:              "SSH Commands to Naples",
 	Long:               "\n------------------------------------\n Execute Commands on Naples via SSH \n------------------------------------\n",
 	Run:                sshCmdHandler,

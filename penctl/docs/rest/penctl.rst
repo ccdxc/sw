@@ -30,7 +30,6 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl delete <penctl_delete.rst>`_ 	 - Delete Object
-* `penctl execute <penctl_execute.rst>`_ 	 - Execute remote commands on the Naples card
 * `penctl list <penctl_list.rst>`_ 	 - List Objects
 * `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
 * `penctl system <penctl_system.rst>`_ 	 - System Operations

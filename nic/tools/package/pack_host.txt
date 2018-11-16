@@ -1,2 +1,3 @@
 # package host specific files
 nic/build/x86_64/iris/bin/penctl*                     /nic/bin/
+penctl/cmd/naples-tech-support-cmd.yml                /nic/bin/

@@ -34,8 +34,8 @@ penctl show metrics [flags]
 
 ### SEE ALSO
 * [penctl show](penctl_show.md)	 - Show Object and Information
-* [penctl show metrics accelhwringmetrics](penctl_show_metrics_accelhwringmetrics.md)	 - Show AccelHwRingMetrics from Naples
-* [penctl show metrics accelseqqueuemetrics](penctl_show_metrics_accelseqqueuemetrics.md)	 - Show AccelSeqQueueMetrics from Naples
-* [penctl show metrics lifmetrics](penctl_show_metrics_lifmetrics.md)	 - Show LifMetrics from Naples
-* [penctl show metrics upgrademetrics](penctl_show_metrics_upgrademetrics.md)	 - Show UpgradeMetrics from Naples
+* [penctl show metrics accelhwring](penctl_show_metrics_accelhwring.md)	 - Show AccelHwRingMetrics from Naples
+* [penctl show metrics accelseqqueue](penctl_show_metrics_accelseqqueue.md)	 - Show AccelSeqQueueMetrics from Naples
+* [penctl show metrics lif](penctl_show_metrics_lif.md)	 - Show LifMetrics from Naples
+* [penctl show metrics upgrade](penctl_show_metrics_upgrade.md)	 - Show UpgradeMetrics from Naples
 
