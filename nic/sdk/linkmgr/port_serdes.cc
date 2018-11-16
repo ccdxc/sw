@@ -208,6 +208,12 @@ serdes_prbs_start_default (uint32_t sbus_addr, serdes_info_t *serdes_info)
 }
 
 int
+serdes_an_init_default (uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    return 0;
+}
+
+int
 serdes_an_start_default(uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
     return 0;
@@ -219,7 +225,7 @@ serdes_an_wait_hcd_default(uint32_t sbus_addr)
     return true;
 }
 
-uint32_t
+int
 serdes_an_hcd_read_default (uint32_t sbus_addr)
 {
     return 0x0;
@@ -229,6 +235,18 @@ int
 serdes_an_hcd_cfg_default (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
 {
     return 0;
+}
+
+int
+serdes_an_fec_enable_read_default (uint32_t sbus_addr)
+{
+    return 0x0;
+}
+
+int
+serdes_an_rsfec_enable_read_default (uint32_t sbus_addr)
+{
+    return 0x0;
 }
 
 //---------------------------------------------------------------------------
@@ -752,35 +770,23 @@ serdes_get_errors_hw (uint32_t sbus_addr, bool clear)
 }
 
 // Init serdes in 1G
-// Reset AN to start from clean slate
-// Start AN
-// Assert Link Status
 int
-serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
+serdes_an_init_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
-    int  ret     = 0;
-    bool int_ret = false;
-
-    // Init serdes in 1G
-    uint32_t divider = serdes_info->sbus_divider;
-
-    // 1G width for BX is 10. Use 20 for AN as recommended by Avago
-    uint32_t width    = 20;
-    uint32_t tx_slip  = serdes_info->tx_slip_value;
-    uint32_t rx_slip  = serdes_info->rx_slip_value;
+    int      ret      = 0;
+    bool     int_ret  = false;
     int      int_code = 0x0;
     int      int_data = 0x0;
+    uint32_t divider  = serdes_info->sbus_divider;
+    uint32_t width    = serdes_info->width;
 
-    Avago_serdes_an_config_t *config = NULL;
-
-    SDK_LINKMGR_TRACE_DEBUG(
-                    "sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
-                    " rx_slip: 0x%x",
-                    sbus_addr, divider, width, tx_slip, rx_slip);
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u",
+                            sbus_addr, divider, width);
 
     Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
     if (NULL == cfg) {
-        SDK_LINKMGR_TRACE_ERR("Failed to construct avago config");
+        SDK_LINKMGR_TRACE_ERR("Failed to construct avago config. "
+                              "sbus_addr: %d", sbus_addr);
         return -1;
     }
 
@@ -821,38 +827,39 @@ serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
     }
 
     if(aapl->return_code) {
-        SDK_LINKMGR_TRACE_ERR("Failed to initialize SerDes\n");
+        SDK_LINKMGR_TRACE_ERR("Failed to initialize SerDes. sbus_addr: %d",
+                              sbus_addr);
         ret = -1;
         goto cleanup;
     }
 
-    // Tx/Rx slip values
-    if (tx_slip != 0) {
-        int_ret = serdes_spico_int_check_hw(sbus_addr, 0xd, tx_slip);
-        if (int_ret == false) {
-            SDK_LINKMGR_TRACE_ERR("Failed to set Tx slip. sbus_addr: %d", sbus_addr);
-            ret = -1;
-            goto cleanup;
-        }
-    }
-
-    if (rx_slip != 0) {
-        int_ret = serdes_spico_int_check_hw(sbus_addr, 0xe, rx_slip);
-        if (int_ret == false) {
-            SDK_LINKMGR_TRACE_ERR("Failed to set Rx slip. sbus_addr: %d", sbus_addr);
-            ret = -1;
-            goto cleanup;
-        }
-    }
-
+    // Reset TxPRBSGEN
     int_code = 0x2;
     int_data = 0x1ff;
     int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
     if (int_ret == false) {
         SDK_LINKMGR_TRACE_ERR("Failed to reset TxPRBS. sbus_addr: %d", sbus_addr);
         ret = -1;
-        goto cleanup;
     }
+
+cleanup:
+    avago_serdes_init_config_destruct(aapl, cfg);
+
+    return ret;
+}
+
+// Reset AN to start from clean slate
+// Start AN
+// Assert Link Status
+int
+serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    int  ret      = 0;
+    bool int_ret  = false;
+    int  int_code = 0x0;
+    int  int_data = 0x0;
+
+    Avago_serdes_an_config_t *config = NULL;
 
     // Reset AN to start from clean slate
     int_code = 0x7;
@@ -899,7 +906,6 @@ serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
 
 cleanup:
     avago_serdes_an_config_destruct(aapl, config);
-    avago_serdes_init_config_destruct(aapl, cfg);
 
     return ret;
 }
@@ -910,11 +916,25 @@ serdes_an_wait_hcd_hw(uint32_t sbus_addr)
     return (avago_serdes_an_wait_hcd(aapl, sbus_addr, 0, 1) == 0);
 }
 
-uint32_t
+int
 serdes_an_hcd_read_hw (uint32_t sbus_addr)
 {
-    return
-        avago_serdes_an_read_status(aapl, sbus_addr, AVAGO_SERDES_AN_READ_HCD);
+    return avago_serdes_an_read_status(
+            aapl, sbus_addr, AVAGO_SERDES_AN_READ_HCD);
+}
+
+int
+serdes_an_fec_enable_read_hw (uint32_t sbus_addr)
+{
+    return avago_serdes_an_read_status(
+            aapl, sbus_addr, AVAGO_SERDES_AN_READ_FEC_ENABLE);
+}
+
+int
+serdes_an_rsfec_enable_read_hw (uint32_t sbus_addr)
+{
+    return avago_serdes_an_read_status(
+            aapl, sbus_addr, AVAGO_SERDES_AN_READ_RSFEC_ENABLE);
 }
 
 int
@@ -1207,10 +1227,16 @@ port_serdes_fn_init(platform_type_t platform_type,
     serdes_fn->serdes_spico_int     = &serdes_spico_int_default;
     serdes_fn->serdes_get_errors    = &serdes_get_errors_default;
     serdes_fn->serdes_prbs_start    = &serdes_prbs_start_default;
+    serdes_fn->serdes_an_init       = &serdes_an_init_default;
     serdes_fn->serdes_an_start      = &serdes_an_start_default;
     serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_default;
     serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_default;
     serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_default;
+
+    serdes_fn->serdes_an_fec_enable_read   =
+                                      &serdes_an_fec_enable_read_default;
+    serdes_fn->serdes_an_rsfec_enable_read =
+                                      &serdes_an_rsfec_enable_read_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
@@ -1244,10 +1270,16 @@ port_serdes_fn_init(platform_type_t platform_type,
         serdes_fn->serdes_spico_int     = &serdes_spico_int_hw;
         serdes_fn->serdes_get_errors    = &serdes_get_errors_hw;
         serdes_fn->serdes_prbs_start    = &serdes_prbs_start_hw;
+        serdes_fn->serdes_an_init       = &serdes_an_init_hw;
         serdes_fn->serdes_an_start      = &serdes_an_start_hw;
         serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_hw;
         serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_hw;
         serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_hw;
+
+        serdes_fn->serdes_an_fec_enable_read   =
+                                          &serdes_an_fec_enable_read_hw;
+        serdes_fn->serdes_an_rsfec_enable_read =
+                                          &serdes_an_rsfec_enable_read_hw;
 
         // serdes global init
         aapl = serdes_global_init_hw(jtag_id, num_sbus_rings,

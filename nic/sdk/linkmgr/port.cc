@@ -402,12 +402,10 @@ port::port_serdes_an_start (void)
 {
     uint32_t      sbus_addr    = 0;
     serdes_info_t *serdes_info = NULL;
+    port_speed_t  serdes_speed = port_speed_t::PORT_SPEED_25G;
     serdes_info_t serdes_info_an;
 
     memset(&serdes_info_an, 0, sizeof(serdes_info_t));
-
-    port_speed_t serdes_speed =
-                    port_speed_to_serdes_speed(this->port_speed_);
 
     // AN on lane 0
     sbus_addr = port_sbus_addr(0);
@@ -415,16 +413,32 @@ port::port_serdes_an_start (void)
     serdes_info = serdes_info_get(
                                 sbus_addr,
                                 static_cast<uint32_t>(serdes_speed),
-                                this->cable_type_);
+                                sdk::types::cable_type_t::CABLE_TYPE_CU);
 
     memcpy (&serdes_info_an, serdes_info, sizeof(serdes_info_t));
 
-    // TODO 1G settings
-    serdes_info_an.width         = 20;
-    serdes_info_an.sbus_divider  = 8;
-    serdes_info_an.tx_slip_value = 0x8004;
-    serdes_info_an.rx_slip_value = 0x8900;
+    // 1G AN settings
+    serdes_info_an.width        = 20;
+    serdes_info_an.sbus_divider = 8;
 
+    // Init serdes in 1G
+    serdes_fns()->serdes_an_init(port_sbus_addr(0), &serdes_info_an);
+
+    // Configure Tx/Rx slip, Rx termination, Tx EQ for 25G serdes.
+    // This is to avoid setting these values if negotiated speed
+    // is 25G for each serdes
+    for (uint32_t lane = 0; lane < num_lanes_; ++lane) {
+        sbus_addr = port_sbus_addr(lane);
+
+        serdes_info = serdes_info_get(
+                                sbus_addr,
+                                static_cast<uint32_t>(serdes_speed),
+                                sdk::types::cable_type_t::CABLE_TYPE_CU);
+
+        serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
+    }
+
+    // start AN
     return serdes_fns()->serdes_an_start(port_sbus_addr(0), &serdes_info_an);
 }
 
@@ -437,32 +451,55 @@ port::port_serdes_an_wait_hcd (void)
 int
 port::port_serdes_an_hcd_cfg (void)
 {
+    bool          skip         = false;
     uint32_t      an_hcd       = 0;
     uint32_t      lane         = 0;
     uint32_t      sbus_addr    = 0;
+    int           fec_enable   = 0;
+    int           rsfec_enable = 0;
     serdes_info_t *serdes_info = NULL;
 
-    an_hcd = serdes_fns()->serdes_an_hcd_read(port_sbus_addr(0));
+    an_hcd       = serdes_fns()->serdes_an_hcd_read(port_sbus_addr(0));
+    fec_enable   = serdes_fns()->serdes_an_fec_enable_read(port_sbus_addr(0));
+    rsfec_enable = serdes_fns()->serdes_an_rsfec_enable_read(port_sbus_addr(0));
+
+    SDK_LINKMGR_TRACE_DEBUG("port: %d, an_hcd: %d, fec_enable: %d, "
+                            "rsfec_enable: %d",
+                            port_num(), an_hcd, fec_enable, rsfec_enable);
 
     // set the negotiated port params
-    if (port_set_an_hcd(an_hcd) == -1) {
-        SDK_PORT_SM_TRACE(this, "AN CFG failed");
+    if (port_set_an_resolved_params(an_hcd, fec_enable, rsfec_enable) == -1) {
+        SDK_PORT_SM_TRACE(this, "Resolved params set failed");
         return -1;
     }
 
-    port_speed_t serdes_speed =
-                    port_speed_to_serdes_speed(this->port_speed_);
+    // skip the settings for 25G serdes since its already set
+    // before AN start
+    switch(an_hcd) {
+    case 0x08: /* 100GBASE-KR4 */
+    case 0x09: /* 100GBASE-CR4 */
+    case 0x0a: /* 25GBASE-KRCR-S */
+    case 0x0b: /* 25GBASE-KRCR */
+        skip = true;
+    default:
+        break;
+    }
 
-    for (lane = 0; lane < num_lanes_; ++lane) {
-        sbus_addr = port_sbus_addr(lane);
+    if (skip == false) {
+        port_speed_t serdes_speed =
+                        port_speed_to_serdes_speed(this->port_speed_);
 
-        serdes_info = serdes_info_get(
-                                sbus_addr,
-                                static_cast<uint32_t>(serdes_speed),
-                                this->cable_type_);
+        for (lane = 0; lane < num_lanes_; ++lane) {
+            sbus_addr = port_sbus_addr(lane);
 
-        // configure Tx/Rx slip, Rx termination, Tx EQ
-        serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
+            serdes_info = serdes_info_get(
+                                    sbus_addr,
+                                    static_cast<uint32_t>(serdes_speed),
+                                    this->cable_type_);
+
+            // configure Tx/Rx slip, Rx termination, Tx EQ
+            serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
+        }
     }
 
     // configure divider, width, start link training
@@ -472,31 +509,57 @@ port::port_serdes_an_hcd_cfg (void)
 }
 
 int
-port::port_set_an_hcd (int an_hcd)
+port::port_set_an_resolved_params_internal (port_speed_t speed, int num_lanes,
+                                            int fec_enable, int rsfec_enable)
+{
+    this->set_port_speed(speed);
+
+    this->set_num_lanes(num_lanes);
+
+    if (fec_enable == 1) {
+        this->set_fec_type(port_fec_type_t::PORT_FEC_TYPE_FC);
+    } else if(rsfec_enable == 1) {
+        this->set_fec_type(port_fec_type_t::PORT_FEC_TYPE_RS);
+    } else {
+        this->set_fec_type(port_fec_type_t::PORT_FEC_TYPE_NONE);
+    }
+
+    // TODO rsfec_enable not being set for 100G AN
+    this->set_fec_type(port_fec_type_t::PORT_FEC_TYPE_RS);
+
+    return 0;
+}
+
+int
+port::port_set_an_resolved_params (int an_hcd, int fec_enable, int rsfec_enable)
 {
     int ret = 0;
 
     switch (an_hcd) {
     case 0x08: /* 100GBASE-KR4 */
     case 0x09: /* 100GBASE-CR4 */
-        this->set_port_speed(port_speed_t::PORT_SPEED_100G);
-        this->set_num_lanes(4);
+        port_set_an_resolved_params_internal(
+                port_speed_t::PORT_SPEED_100G, 4, fec_enable, rsfec_enable);
         break;
+
     case 0x03: /* 40GBASE-KR4 */
     case 0x04: /* 40GBASE-CR4 */
-        this->set_port_speed(port_speed_t::PORT_SPEED_40G);
-        this->set_num_lanes(4);
+        port_set_an_resolved_params_internal(
+                port_speed_t::PORT_SPEED_40G, 4, fec_enable, rsfec_enable);
         break;
+
     case 0x0a: /* 25GBASE-KRCR-S */
     case 0x0b: /* 25GBASE-KRCR */
-        this->set_port_speed(port_speed_t::PORT_SPEED_25G);
-        this->set_num_lanes(1);
+        port_set_an_resolved_params_internal(
+                port_speed_t::PORT_SPEED_25G, 1, fec_enable, rsfec_enable);
         break;
+
     case 0x02:  /* 10GBASE-KR */
-        this->set_port_speed(port_speed_t::PORT_SPEED_10G);
-        this->set_num_lanes(1);
+        port_set_an_resolved_params_internal(
+                port_speed_t::PORT_SPEED_10G, 1, fec_enable, rsfec_enable);
         break;
-        // unsupported modes
+
+    // unsupported modes
     case 0x00: /* 1000BASE-KX */
     case 0x01: /* 10GBASE-KX4 */
     case 0x0c: /* 2.5GBASE-KX */
@@ -510,8 +573,8 @@ port::port_set_an_hcd (int an_hcd)
     case 0x07:
     case 0x0f:
     case 0x1f:
-        // TODO convert to SDK_PORT_SM_TRACE
-        SDK_TRACE_ERR("unsupported an_hcd: %d", an_hcd);
+        SDK_LINKMGR_TRACE_ERR("port: %d, unsupported an_hcd: %d",
+                              port_num(), an_hcd);
         ret = -1;
         break;
     }
@@ -524,7 +587,7 @@ port::port_link_sm_an_process(void)
 {
     bool an_good = false;
     bool ret     = true;
-    int  timeout = 1; //msecs
+    int  timeout = 100; //msecs
 
     switch(this->link_an_sm_) {
     case port_link_sm_t::PORT_LINK_SM_AN_DISABLED:
@@ -545,12 +608,18 @@ port::port_link_sm_an_process(void)
 
     case port_link_sm_t::PORT_LINK_SM_AN_WAIT_HCD:
 
+        /*
         // TODO use timers
         while(an_good == false) {
             SDK_PORT_SM_TRACE(this, "wait AN HCD");
             usleep(500);
             an_good = port_serdes_an_wait_hcd();
         }
+        */
+
+        SDK_PORT_SM_TRACE(this, "wait AN HCD");
+
+        an_good = port_serdes_an_wait_hcd();
 
         if(an_good == false) {
             this->bringup_timer_val_ += timeout;

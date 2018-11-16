@@ -280,7 +280,14 @@ private:
     // Get serdes sbus address for a port lane
     uint32_t port_sbus_addr(uint32_t lane);
 
-    int port_set_an_hcd (int an_hcd);
+    int port_set_an_resolved_params(int an_hcd,
+                                    int fec_enable,
+                                    int rsfec_enable);
+
+    int port_set_an_resolved_params_internal(port_speed_t speed,
+                                             int num_lanes,
+                                             int fec_enable,
+                                             int rsfec_enable);
 
     port_speed_t port_speed_to_serdes_speed(port_speed_t port_speed);
 

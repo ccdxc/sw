@@ -14,10 +14,12 @@ typedef struct serdes_fn_s_ {
     int (*serdes_reset)            (uint32_t sbus_addr, bool reset);
     bool (*serdes_signal_detect)   (uint32_t sbus_addr);
     bool (*serdes_rdy)             (uint32_t sbus_addr);
+    int (*serdes_an_init)          (uint32_t sbus_addr,
+                                    serdes_info_t *serdes_info);
     int (*serdes_an_start)         (uint32_t sbus_addr,
                                     serdes_info_t *serdes_info);
     bool (*serdes_an_wait_hcd)     (uint32_t sbus_addr);
-    uint32_t (*serdes_an_hcd_read) (uint32_t sbus_addr);
+    int (*serdes_an_hcd_read)      (uint32_t sbus_addr);
     int (*serdes_an_hcd_cfg)       (uint32_t sbus_addr,
                                     uint32_t *sbus_addr_arr);
     int (*serdes_ical_start)       (uint32_t sbus_addr);
@@ -42,6 +44,9 @@ typedef struct serdes_fn_s_ {
                                     int int_code, int int_data);
     uint32_t (*serdes_get_errors)  (uint32_t sbus_addr, bool clear);
     int (*serdes_prbs_start)   (uint32_t sbus_addr, serdes_info_t *serdes_info);
+
+    int (*serdes_an_fec_enable_read)   (uint32_t sbus_addr);
+    int (*serdes_an_rsfec_enable_read) (uint32_t sbus_addr);
 } serdes_fn_t;
 
 extern serdes_fn_t serdes_fns;
