@@ -1889,3 +1889,161 @@ func TestStaging(t *testing.T) {
 	}
 
 }
+
+func TestRestWatchers(t *testing.T) {
+	ctx := context.Background()
+
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	var watch1Mutex sync.Mutex
+	var watcher1Events, watcher1ExpEvents []kvstore.WatchEvent
+	var watch2Mutex sync.Mutex
+	var watcher2Events, watcher2ExpEvents []kvstore.WatchEvent
+	var watch3Mutex sync.Mutex
+	var watcher3Events, watcher3ExpEvents []kvstore.WatchEvent
+
+	bl, err := restcl.BookstoreV1().Order().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "error getting list of objects")
+	for _, v := range bl {
+		meta := &api.ObjectMeta{Name: v.GetName()}
+		_, err = restcl.BookstoreV1().Order().Delete(ctx, meta)
+		AssertOk(t, err, fmt.Sprintf("error deleting object[%v](%s)", meta, err))
+	}
+
+	waitWatch := make(chan error)
+	go func() {
+		t.Logf("Starting Watchers")
+		watcher1, err := restcl.BookstoreV1().Order().Watch(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			t.Fatalf("could not establish wathcer (%s)", err)
+		}
+		watcher2, err := restcl.BookstoreV1().Order().Watch(ctx, &api.ListWatchOptions{FieldSelector: "Spec.Order.Quantity=30"})
+		if err != nil {
+			t.Fatalf("could not establish wathcer (%s)", err)
+		}
+		watcher3, err := restcl.BookstoreV1().Order().Watch(ctx, &api.ListWatchOptions{FieldSelector: "Spec.Order.Quantity=20"})
+		if err != nil {
+			t.Fatalf("could not establish wathcer (%s)", err)
+		}
+		active := true
+		t.Logf("Done starting Watchers")
+		close(waitWatch)
+		for active {
+			select {
+			case ev, ok := <-watcher1.EventChan():
+				t.Logf("ts[%s] Publisher received event [%v]", time.Now(), ok)
+				if ok {
+					t.Logf("  event [%+v]", *ev)
+					watch1Mutex.Lock()
+					watcher1Events = append(watcher1Events, *ev)
+					watch1Mutex.Unlock()
+				} else {
+					t.Logf("publisher watcher closed")
+					active = false
+				}
+			case ev, ok := <-watcher2.EventChan():
+				t.Logf("ts[%s] Publisher received event [%v]", time.Now(), ok)
+				if ok {
+					t.Logf("  event [%+v]", *ev)
+					watch2Mutex.Lock()
+					watcher2Events = append(watcher2Events, *ev)
+					watch2Mutex.Unlock()
+				} else {
+					t.Logf("publisher watcher closed")
+					active = false
+				}
+			case ev, ok := <-watcher3.EventChan():
+				t.Logf("ts[%s] Publisher received event [%v]", time.Now(), ok)
+				if ok {
+					t.Logf("  event [%+v]", *ev)
+					watch3Mutex.Lock()
+					watcher3Events = append(watcher3Events, *ev)
+					watch3Mutex.Unlock()
+				} else {
+					t.Logf("publisher watcher closed")
+					active = false
+				}
+			}
+		}
+	}()
+	<-waitWatch
+	order := bookstore.Order{
+		ObjectMeta: api.ObjectMeta{
+			Name: "tesForPre-commithookToGenerateNewOrdeId",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Order",
+		},
+		Spec: bookstore.OrderSpec{
+			Id: "order-1",
+			Order: []*bookstore.OrderItem{
+				{
+					ISBNId:   "XXXX",
+					Quantity: 30,
+				},
+			},
+		},
+	}
+	{ // Create
+		ret, err := restcl.BookstoreV1().Order().Create(ctx, &order)
+		if err != nil {
+			t.Fatalf("failed to create order object (%s)", err)
+		}
+		order.Name = ret.Name
+		watcher1ExpEvents = addToWatchList(&watcher1ExpEvents, ret, kvstore.Created)
+		watcher2ExpEvents = addToWatchList(&watcher2ExpEvents, ret, kvstore.Created)
+	}
+	{ // Update
+		order.Spec.Order[0].Quantity = 20
+		ret, err := restcl.BookstoreV1().Order().Update(ctx, &order)
+		if err != nil {
+			t.Fatalf("failed to update order object (%s)", err)
+		}
+		watcher1ExpEvents = addToWatchList(&watcher1ExpEvents, ret, kvstore.Updated)
+		watcher3ExpEvents = addToWatchList(&watcher3ExpEvents, ret, kvstore.Updated)
+	}
+	{ // Delete
+		ret, err := restcl.BookstoreV1().Order().Delete(ctx, &order.ObjectMeta)
+		if err != nil {
+			t.Fatalf("failed to delete order object (%s)", err)
+		}
+		watcher1ExpEvents = addToWatchList(&watcher1ExpEvents, ret, kvstore.Deleted)
+		watcher3ExpEvents = addToWatchList(&watcher3ExpEvents, ret, kvstore.Deleted)
+	}
+
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			defer watch1Mutex.Unlock()
+			watch1Mutex.Lock()
+			return len(watcher1ExpEvents) == len(watcher1Events), nil
+		},
+		fmt.Sprintf("failed to receive all watch1 events[%v/%v]", len(watcher1ExpEvents), len(watcher1Events)),
+		"10ms",
+		"3s")
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			defer watch1Mutex.Unlock()
+			watch1Mutex.Lock()
+			return len(watcher2ExpEvents) == len(watcher2Events), nil
+		},
+		fmt.Sprintf("failed to receive all watch2 events[%v/%v]", len(watcher2ExpEvents), len(watcher2Events)),
+		"10ms",
+		"3s")
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			defer watch1Mutex.Unlock()
+			watch1Mutex.Lock()
+			return len(watcher3ExpEvents) == len(watcher3Events), nil
+		},
+		fmt.Sprintf("failed to receive all watch3 events[%v/%v]", len(watcher3ExpEvents), len(watcher3Events)),
+		"10ms",
+		"3s")
+}

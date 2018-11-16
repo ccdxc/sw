@@ -10,6 +10,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
+	"github.com/gorilla/websocket"
 
 	{{.GoPkg.Name}} "{{getRelPath .}}/generated/{{.GoPkg.Name}}"
 	"github.com/pensando/sw/venice/utils/log"
@@ -228,8 +229,7 @@ func (a *restObj{{$srvname}}{{.}}) Watch(ctx context.Context, options *api.ListW
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatch{{.}}(ctx, options)
 }
 
 func (a *restObj{{$srvname}}{{.}}) Allowed(oper apiserver.APIOperType) bool {

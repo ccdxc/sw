@@ -1866,7 +1866,7 @@
     },
     "/configs/bookstore/v1/watch/orders": {
       "get": {
-        "summary": "Watch Order objects",
+        "summary": "Watch Order objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchOrder",
         "responses": {
           "200": {

@@ -130,18 +130,20 @@ type CheckArgs func(string) bool
 
 // ValidatorArgMap defines the argument types for validators
 var ValidatorArgMap = map[string][]CheckArgs{
-	"StrEnum":   {IsString},
-	"StrLen":    {govldtr.IsInt, govldtr.IsInt},
-	"IntRange":  {govldtr.IsInt, govldtr.IsInt},
-	"IPAddr":    {},
-	"IPv4":      {},
-	"HostAddr":  {},
-	"MacAddr":   {},
-	"URI":       {},
-	"UUID":      {},
-	"Duration":  {},
-	"ProtoPort": {},
-	"RegExp":    {IsValidRegExp},
+	"StrEnum":    {IsString},
+	"StrLen":     {govldtr.IsInt, govldtr.IsInt},
+	"IntRange":   {govldtr.IsInt, govldtr.IsInt},
+	"IPAddr":     {},
+	"IPv4":       {},
+	"HostAddr":   {},
+	"MacAddr":    {},
+	"URI":        {},
+	"UUID":       {},
+	"Duration":   {},
+	"ProtoPort":  {},
+	"RegExp":     {IsValidRegExp},
+	"ValidGroup": {},
+	"ValidKind":  {},
 }
 
 // FieldProfile defines a profile for a field, including validators, defaults,
@@ -173,18 +175,20 @@ func (f *FieldProfile) Init() {
 
 // ValidatorProfileMap maps each validator to a profile function
 var ValidatorProfileMap = map[string]func(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, v *FieldProfile) error{
-	"StrEnum":   strEnumProfile,
-	"StrLen":    strLenProfile,
-	"IntRange":  intRangeProfile,
-	"IPAddr":    ipAddrProfile,
-	"IPv4":      ipv4Profile,
-	"HostAddr":  hostAddrProfile,
-	"MacAddr":   macAddrProfile,
-	"URI":       uriProfile,
-	"UUID":      uuidProfile,
-	"Duration":  durationProfile,
-	"ProtoPort": protoPortProfile,
-	"RegExp":    regexpProfile,
+	"StrEnum":    strEnumProfile,
+	"StrLen":     strLenProfile,
+	"IntRange":   intRangeProfile,
+	"IPAddr":     ipAddrProfile,
+	"IPv4":       ipv4Profile,
+	"HostAddr":   hostAddrProfile,
+	"MacAddr":    macAddrProfile,
+	"URI":        uriProfile,
+	"UUID":       uuidProfile,
+	"Duration":   durationProfile,
+	"ProtoPort":  protoPortProfile,
+	"RegExp":     regexpProfile,
+	"ValidGroup": validGroupProfile,
+	"ValidKind":  validKindProfile,
 }
 
 // convInt is a utility function to get convert string to integer
@@ -372,6 +376,20 @@ func protoPortProfile(field *descriptor.Field, reg *descriptor.Registry, ver str
 	str := "tcp/1234, arp"
 	prof.Example[ver] = prof.Example[ver] + str
 	prof.DocString[ver] = prof.DocString[ver] + "should be a valid layer3 or layer 4 protocol and port/type\n"
+	return nil
+}
+
+func validGroupProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
+	str := "auth"
+	prof.Example[ver] = prof.Example[ver] + str
+	prof.DocString[ver] = prof.DocString[ver] + "should be a valid API Group\n"
+	return nil
+}
+
+func validKindProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
+	str := "Network"
+	prof.Example[ver] = prof.Example[ver] + str
+	prof.DocString[ver] = prof.DocString[ver] + "should be a valid object Kind\n"
 	return nil
 }
 

@@ -4513,7 +4513,7 @@
     },
     "/configs/security/v1/watch/apps": {
       "get": {
-        "summary": "Watch App objects",
+        "summary": "Watch App objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchApp",
         "responses": {
           "200": {
@@ -4673,7 +4673,7 @@
     },
     "/configs/security/v1/watch/certificates": {
       "get": {
-        "summary": "Watch Certificate objects",
+        "summary": "Watch Certificate objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchCertificate_1",
         "responses": {
           "200": {
@@ -4833,7 +4833,7 @@
     },
     "/configs/security/v1/watch/security-groups": {
       "get": {
-        "summary": "Watch SecurityGroup objects",
+        "summary": "Watch SecurityGroup objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchSecurityGroup_1",
         "responses": {
           "200": {
@@ -4993,7 +4993,7 @@
     },
     "/configs/security/v1/watch/sgpolicies": {
       "get": {
-        "summary": "Watch SGPolicy objects",
+        "summary": "Watch SGPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchSGPolicy_1",
         "responses": {
           "200": {
@@ -5153,7 +5153,7 @@
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/certificates": {
       "get": {
-        "summary": "Watch Certificate objects",
+        "summary": "Watch Certificate objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchCertificate",
         "responses": {
           "200": {
@@ -5312,7 +5312,7 @@
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/security-groups": {
       "get": {
-        "summary": "Watch SecurityGroup objects",
+        "summary": "Watch SecurityGroup objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchSecurityGroup",
         "responses": {
           "200": {
@@ -5471,7 +5471,7 @@
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/sgpolicies": {
       "get": {
-        "summary": "Watch SGPolicy objects",
+        "summary": "Watch SGPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchSGPolicy",
         "responses": {
           "200": {
@@ -5630,7 +5630,7 @@
     },
     "/configs/security/v1/watch/tenant/{O.Tenant}/trafficEncryptionPolicy": {
       "get": {
-        "summary": "Watch TrafficEncryptionPolicy objects",
+        "summary": "Watch TrafficEncryptionPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchTrafficEncryptionPolicy",
         "responses": {
           "200": {
@@ -5789,7 +5789,7 @@
     },
     "/configs/security/v1/watch/trafficEncryptionPolicy": {
       "get": {
-        "summary": "Watch TrafficEncryptionPolicy objects",
+        "summary": "Watch TrafficEncryptionPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchTrafficEncryptionPolicy_1",
         "responses": {
           "200": {

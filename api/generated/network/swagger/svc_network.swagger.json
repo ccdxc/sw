@@ -3420,7 +3420,7 @@
     },
     "/configs/network/v1/watch/lb-policy": {
       "get": {
-        "summary": "Watch LbPolicy objects",
+        "summary": "Watch LbPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchLbPolicy_1",
         "responses": {
           "200": {
@@ -3580,7 +3580,7 @@
     },
     "/configs/network/v1/watch/networks": {
       "get": {
-        "summary": "Watch Network objects",
+        "summary": "Watch Network objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchNetwork_1",
         "responses": {
           "200": {
@@ -3740,7 +3740,7 @@
     },
     "/configs/network/v1/watch/services": {
       "get": {
-        "summary": "Watch Service objects",
+        "summary": "Watch Service objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchService_1",
         "responses": {
           "200": {
@@ -3900,7 +3900,7 @@
     },
     "/configs/network/v1/watch/tenant/{O.Tenant}/lb-policy": {
       "get": {
-        "summary": "Watch LbPolicy objects",
+        "summary": "Watch LbPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchLbPolicy",
         "responses": {
           "200": {
@@ -4059,7 +4059,7 @@
     },
     "/configs/network/v1/watch/tenant/{O.Tenant}/networks": {
       "get": {
-        "summary": "Watch Network objects",
+        "summary": "Watch Network objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchNetwork",
         "responses": {
           "200": {
@@ -4218,7 +4218,7 @@
     },
     "/configs/network/v1/watch/tenant/{O.Tenant}/services": {
       "get": {
-        "summary": "Watch Service objects",
+        "summary": "Watch Service objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchService",
         "responses": {
           "200": {

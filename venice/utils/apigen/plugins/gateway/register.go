@@ -287,7 +287,7 @@ func getURIKey(m *descriptor.Method, ver string, req bool) (URIKey, error) {
 		switch params.Oper {
 		case "CreateOper":
 			pattern = rule.GetPost()
-		case "GetOper", "ListOper":
+		case "GetOper", "ListOper", "WatchOper":
 			pattern = rule.GetGet()
 		case "DeleteOper":
 			pattern = rule.GetDelete()

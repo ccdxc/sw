@@ -646,7 +646,7 @@ func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Ob
 		ptr = true
 	}
 	kind := ""
-	k, ok := apiutils.GetVar(ctx, "ObjKind")
+	k, ok := apiutils.GetVar(ctx, apiutils.CtxKeyObjKind)
 	if ok {
 		kind = k.(string)
 	}
@@ -707,7 +707,7 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 		return nil, errorCacheInactive
 	}
 	kind := ""
-	k, ok := apiutils.GetVar(ctx, "ObjKind")
+	k, ok := apiutils.GetVar(ctx, apiutils.CtxKeyObjKind)
 	if ok {
 		kind = k.(string)
 	}

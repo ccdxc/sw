@@ -697,7 +697,7 @@ func (c *overlay) Get(ctx context.Context, key string, into runtime.Object) erro
 func (c *overlay) list(ctx context.Context, prefix string, opts api.ListWatchOptions) []*overlayObj {
 	ret := []*overlayObj{}
 	kind := ""
-	k, ok := apiutils.GetVar(ctx, "ObjKind")
+	k, ok := apiutils.GetVar(ctx, apiutils.CtxKeyObjKind)
 	if ok {
 		kind = k.(string)
 	}

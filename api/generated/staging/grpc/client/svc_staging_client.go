@@ -321,8 +321,7 @@ func (a *restObjStagingV1Buffer) Watch(ctx context.Context, options *api.ListWat
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchBuffer(ctx, options)
 }
 
 func (a *restObjStagingV1Buffer) Allowed(oper apiserver.APIOperType) bool {

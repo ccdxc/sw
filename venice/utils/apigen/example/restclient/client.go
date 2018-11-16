@@ -204,6 +204,7 @@ func main() {
 		instance    = flag.String("gwaddr", "localhost:9000", "API gateway to connect to")
 		testStaging = flag.Bool("staging", false, "Use Api server staging")
 		testScaleSg = flag.Bool("scaleSg", false, "test scaled SG policy post")
+		testWebSock = flag.Bool("ws", false, "test websocket watch")
 	)
 	flag.Parse()
 
@@ -217,7 +218,25 @@ func main() {
 		log.Fatalf("cannot create REST client")
 	}
 
-	if *testScaleSg {
+	if *testWebSock {
+		watcher, err := restcl.BookstoreV1().Order().Watch(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			log.Fatalf("failed to create a watcher (%s)", err)
+		}
+		for {
+			select {
+			case ev, ok := <-watcher.EventChan():
+				if ok {
+					fmt.Printf("received Order Event [ %+v]\n", ev)
+				} else {
+					fmt.Printf("channel closed!!")
+					return
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	} else if *testScaleSg {
 		// Create SG Policy.
 		jsonFile, err := ioutil.ReadFile("/tmp/70k_sg_policy.json")
 		if err != nil {

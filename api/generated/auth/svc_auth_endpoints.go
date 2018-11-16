@@ -16,10 +16,13 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/listerwatcher"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -1787,6 +1790,12 @@ func (m loggingAuthV1MiddlewareServer) AutoWatchRoleBinding(in *api.ListWatchOpt
 	return
 }
 
+func (r *EndpointsAuthV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsAuthV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -1797,10 +1806,7 @@ func (r *EndpointsAuthV1RestClient) getHTTPRequest(ctx context.Context, in inter
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
@@ -1825,6 +1831,12 @@ func makeURIAuthV1AutoAddRoleBindingCreateOper(in *RoleBinding) string {
 //
 func makeURIAuthV1AutoAddUserCreateOper(in *User) string {
 	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users")
+}
+
+//
+func makeURIAuthV1AutoDeleteAuthenticationPolicyDeleteOper(in *AuthenticationPolicy) string {
+	return ""
+
 }
 
 //
@@ -1863,6 +1875,12 @@ func makeURIAuthV1AutoGetUserGetOper(in *User) string {
 }
 
 //
+func makeURIAuthV1AutoListAuthenticationPolicyListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
 func makeURIAuthV1AutoListRoleListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/roles")
 }
@@ -1895,6 +1913,32 @@ func makeURIAuthV1AutoUpdateRoleBindingUpdateOper(in *RoleBinding) string {
 //
 func makeURIAuthV1AutoUpdateUserUpdateOper(in *User) string {
 	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name)
+}
+
+//
+func makeURIAuthV1AutoWatchAuthenticationPolicyWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/auth/v1", "/watch/authn-policy")
+}
+
+//
+func makeURIAuthV1AutoWatchRoleWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/auth/v1", "/watch/tenant/", in.Tenant, "/roles")
+}
+
+//
+func makeURIAuthV1AutoWatchRoleBindingWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/auth/v1", "/watch/tenant/", in.Tenant, "/role-bindings")
+}
+
+//
+func makeURIAuthV1AutoWatchSvcAuthV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIAuthV1AutoWatchUserWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/auth/v1", "/watch/tenant/", in.Tenant, "/users")
 }
 
 //
@@ -2013,9 +2057,44 @@ func (r *EndpointsAuthV1RestClient) AutoListUser(ctx context.Context, options *a
 }
 
 // AutoWatchUser CRUD method for User
-func (r *EndpointsAuthV1RestClient) AutoWatchUser(ctx context.Context, stream AuthV1_AutoWatchUserClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsAuthV1RestClient) AutoWatchUser(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIAuthV1AutoWatchUserWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgUserWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // AutoAddAuthenticationPolicy CRUD method for AuthenticationPolicy
@@ -2092,9 +2171,44 @@ func (r *EndpointsAuthV1RestClient) AutoListAuthenticationPolicy(ctx context.Con
 }
 
 // AutoWatchAuthenticationPolicy CRUD method for AuthenticationPolicy
-func (r *EndpointsAuthV1RestClient) AutoWatchAuthenticationPolicy(ctx context.Context, stream AuthV1_AutoWatchAuthenticationPolicyClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsAuthV1RestClient) AutoWatchAuthenticationPolicy(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIAuthV1AutoWatchAuthenticationPolicyWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgAuthenticationPolicyWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 func (r *EndpointsAuthV1RestClient) LdapConnectionCheckAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
@@ -2243,9 +2357,44 @@ func (r *EndpointsAuthV1RestClient) AutoListRole(ctx context.Context, options *a
 }
 
 // AutoWatchRole CRUD method for Role
-func (r *EndpointsAuthV1RestClient) AutoWatchRole(ctx context.Context, stream AuthV1_AutoWatchRoleClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsAuthV1RestClient) AutoWatchRole(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIAuthV1AutoWatchRoleWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgRoleWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // AutoAddRoleBinding CRUD method for RoleBinding
@@ -2354,9 +2503,44 @@ func (r *EndpointsAuthV1RestClient) AutoListRoleBinding(ctx context.Context, opt
 }
 
 // AutoWatchRoleBinding CRUD method for RoleBinding
-func (r *EndpointsAuthV1RestClient) AutoWatchRoleBinding(ctx context.Context, stream AuthV1_AutoWatchRoleBindingClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsAuthV1RestClient) AutoWatchRoleBinding(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIAuthV1AutoWatchRoleBindingWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgRoleBindingWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // MakeAuthV1RestClientEndpoints make REST client endpoints

@@ -15,10 +15,13 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/listerwatcher"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -900,6 +903,12 @@ func (m loggingWorkloadV1MiddlewareServer) AutoWatchWorkload(in *api.ListWatchOp
 	return
 }
 
+func (r *EndpointsWorkloadV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsWorkloadV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -910,10 +919,7 @@ func (r *EndpointsWorkloadV1RestClient) getHTTPRequest(ctx context.Context, in i
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
@@ -968,6 +974,22 @@ func makeURIWorkloadV1AutoUpdateEndpointUpdateOper(in *Endpoint) string {
 //
 func makeURIWorkloadV1AutoUpdateWorkloadUpdateOper(in *Workload) string {
 	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name)
+}
+
+//
+func makeURIWorkloadV1AutoWatchEndpointWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/workload/v1", "/watch/tenant/", in.Tenant, "/endpoints")
+}
+
+//
+func makeURIWorkloadV1AutoWatchSvcWorkloadV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIWorkloadV1AutoWatchWorkloadWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/workload/v1", "/watch/tenant/", in.Tenant, "/workloads")
 }
 
 // AutoAddEndpoint CRUD method for Endpoint
@@ -1076,9 +1098,44 @@ func (r *EndpointsWorkloadV1RestClient) AutoListEndpoint(ctx context.Context, op
 }
 
 // AutoWatchEndpoint CRUD method for Endpoint
-func (r *EndpointsWorkloadV1RestClient) AutoWatchEndpoint(ctx context.Context, stream WorkloadV1_AutoWatchEndpointClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsWorkloadV1RestClient) AutoWatchEndpoint(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIWorkloadV1AutoWatchEndpointWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgEndpointWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // AutoAddWorkload CRUD method for Workload
@@ -1187,9 +1244,44 @@ func (r *EndpointsWorkloadV1RestClient) AutoListWorkload(ctx context.Context, op
 }
 
 // AutoWatchWorkload CRUD method for Workload
-func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, stream WorkloadV1_AutoWatchWorkloadClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIWorkloadV1AutoWatchWorkloadWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgWorkloadWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // MakeWorkloadV1RestClientEndpoints make REST client endpoints

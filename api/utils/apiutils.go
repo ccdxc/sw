@@ -1,10 +1,25 @@
 package apiutils
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/pensando/sw/api"
+)
 
 type dryRunMarker struct {
 	verVer int64
 }
+
+// Constants for use with SetVar() and GetVar()
+const (
+	CtxKeyObjKind             = "ObjKind"
+	CtxKeyAPIGwHTTPReq        = "ApiGwHttpReq"
+	CtxKeyAPIGwHTTPWriter     = "ApiGwHttpWriter"
+	CtxKeyAPIGwWebSocketWatch = "ApiGwWebSocketWatch"
+	CtxKeyAPIGwWebSocketConn  = "ApiGwWebSocketConn"
+)
 
 // SetDruRun sets the dry run flag in the the context
 func setDryRun(ctx context.Context, val int64) context.Context {
@@ -64,4 +79,41 @@ func GetVar(ctx context.Context, key string) (interface{}, bool) {
 		return val, ok
 	}
 	return nil, false
+}
+
+// GetQueryStringFromListWatchOptions returns a query string given ListWatchOptions
+func GetQueryStringFromListWatchOptions(in *api.ListWatchOptions) string {
+	var params []string
+	if in.Name != "" {
+		params = append(params, fmt.Sprintf("name=%s", in.Name))
+	}
+	if in.Tenant != "" {
+		params = append(params, fmt.Sprintf("tenant=%s", in.Tenant))
+	}
+	if in.Namespace != "" {
+		params = append(params, fmt.Sprintf("namespace=%s", in.Namespace))
+	}
+	if in.LabelSelector != "" {
+		params = append(params, fmt.Sprintf("label-selector=%s", in.LabelSelector))
+	}
+	if in.FieldSelector != "" {
+		params = append(params, fmt.Sprintf("field-selector=%s", in.FieldSelector))
+	}
+	if len(in.FieldChangeSelector) != 0 {
+		for _, v := range in.FieldChangeSelector {
+			if v != "" {
+				params = append(params, fmt.Sprintf("field-change-selector=%s", v))
+			}
+		}
+	}
+	if in.From != 0 {
+		params = append(params, fmt.Sprintf("from=%d", in.From))
+	}
+	if in.MaxResults != 0 {
+		params = append(params, fmt.Sprintf("max-results=%d", in.MaxResults))
+	}
+	if len(params) > 0 {
+		return strings.Join(params, "&")
+	}
+	return ""
 }

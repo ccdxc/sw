@@ -16,10 +16,13 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/listerwatcher"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -2673,6 +2676,12 @@ func (m loggingBookstoreV1MiddlewareServer) AutoWatchCustomer(in *api.ListWatchO
 	return
 }
 
+func (r *EndpointsBookstoreV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsBookstoreV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -2683,10 +2692,7 @@ func (r *EndpointsBookstoreV1RestClient) getHTTPRequest(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
@@ -2704,6 +2710,18 @@ func makeURIBookstoreV1ApplydiscountCreateOper(in *ApplyDiscountReq) string {
 }
 
 //
+func makeURIBookstoreV1AutoAddBookCreateOper(in *Book) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoAddCouponCreateOper(in *Coupon) string {
+	return ""
+
+}
+
+//
 func makeURIBookstoreV1AutoAddCustomerCreateOper(in *Customer) string {
 	return fmt.Sprint("/configs/bookstore/v1", "/customers")
 }
@@ -2714,8 +2732,26 @@ func makeURIBookstoreV1AutoAddOrderCreateOper(in *Order) string {
 }
 
 //
+func makeURIBookstoreV1AutoAddPublisherCreateOper(in *Publisher) string {
+	return ""
+
+}
+
+//
 func makeURIBookstoreV1AutoAddStoreCreateOper(in *Store) string {
 	return fmt.Sprint("/configs/bookstore/v1", "/store")
+}
+
+//
+func makeURIBookstoreV1AutoDeleteBookDeleteOper(in *Book) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoDeleteCouponDeleteOper(in *Coupon) string {
+	return ""
+
 }
 
 //
@@ -2729,6 +2765,12 @@ func makeURIBookstoreV1AutoDeleteOrderDeleteOper(in *Order) string {
 }
 
 //
+func makeURIBookstoreV1AutoDeletePublisherDeleteOper(in *Publisher) string {
+	return ""
+
+}
+
+//
 func makeURIBookstoreV1AutoDeleteStoreDeleteOper(in *Store) string {
 	return fmt.Sprint("/configs/bookstore/v1", "/store")
 }
@@ -2736,6 +2778,12 @@ func makeURIBookstoreV1AutoDeleteStoreDeleteOper(in *Store) string {
 //
 func makeURIBookstoreV1AutoGetBookGetOper(in *Book) string {
 	return fmt.Sprint("/configs/bookstore/v1", "/books/", in.Name)
+}
+
+//
+func makeURIBookstoreV1AutoGetCouponGetOper(in *Coupon) string {
+	return ""
+
 }
 
 //
@@ -2749,8 +2797,26 @@ func makeURIBookstoreV1AutoGetOrderGetOper(in *Order) string {
 }
 
 //
+func makeURIBookstoreV1AutoGetPublisherGetOper(in *Publisher) string {
+	return ""
+
+}
+
+//
 func makeURIBookstoreV1AutoGetStoreGetOper(in *Store) string {
 	return fmt.Sprint("/configs/bookstore/v1", "/store")
+}
+
+//
+func makeURIBookstoreV1AutoListBookListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoListCouponListOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 //
@@ -2764,8 +2830,26 @@ func makeURIBookstoreV1AutoListOrderListOper(in *api.ListWatchOptions) string {
 }
 
 //
+func makeURIBookstoreV1AutoListPublisherListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoListStoreListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
 func makeURIBookstoreV1AutoUpdateBookUpdateOper(in *Book) string {
 	return fmt.Sprint("/configs/bookstore/v1", "/books/", in.Name)
+}
+
+//
+func makeURIBookstoreV1AutoUpdateCouponUpdateOper(in *Coupon) string {
+	return ""
+
 }
 
 //
@@ -2779,8 +2863,55 @@ func makeURIBookstoreV1AutoUpdateOrderUpdateOper(in *Order) string {
 }
 
 //
+func makeURIBookstoreV1AutoUpdatePublisherUpdateOper(in *Publisher) string {
+	return ""
+
+}
+
+//
 func makeURIBookstoreV1AutoUpdateStoreUpdateOper(in *Store) string {
 	return fmt.Sprint("/configs/bookstore/v1", "/store")
+}
+
+//
+func makeURIBookstoreV1AutoWatchBookWatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoWatchCouponWatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoWatchCustomerWatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoWatchOrderWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/bookstore/v1", "/watch/orders")
+}
+
+//
+func makeURIBookstoreV1AutoWatchPublisherWatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoWatchStoreWatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoWatchSvcBookstoreV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 //
@@ -2899,9 +3030,44 @@ func (r *EndpointsBookstoreV1RestClient) AutoListOrder(ctx context.Context, opti
 }
 
 // AutoWatchOrder CRUD method for Order
-func (r *EndpointsBookstoreV1RestClient) AutoWatchOrder(ctx context.Context, stream BookstoreV1_AutoWatchOrderClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsBookstoreV1RestClient) AutoWatchOrder(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIBookstoreV1AutoWatchOrderWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgOrderWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 func (r *EndpointsBookstoreV1RestClient) ApplydiscountOrder(ctx context.Context, in *ApplyDiscountReq) (*Order, error) {
@@ -3002,9 +3168,44 @@ func (r *EndpointsBookstoreV1RestClient) AutoListBook(ctx context.Context, optio
 }
 
 // AutoWatchBook CRUD method for Book
-func (r *EndpointsBookstoreV1RestClient) AutoWatchBook(ctx context.Context, stream BookstoreV1_AutoWatchBookClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsBookstoreV1RestClient) AutoWatchBook(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIBookstoreV1AutoWatchBookWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgBookWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 func (r *EndpointsBookstoreV1RestClient) RestockBook(ctx context.Context, in *RestockRequest) (*RestockResponse, error) {
@@ -3053,9 +3254,44 @@ func (r *EndpointsBookstoreV1RestClient) AutoListPublisher(ctx context.Context, 
 }
 
 // AutoWatchPublisher CRUD method for Publisher
-func (r *EndpointsBookstoreV1RestClient) AutoWatchPublisher(ctx context.Context, stream BookstoreV1_AutoWatchPublisherClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsBookstoreV1RestClient) AutoWatchPublisher(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIBookstoreV1AutoWatchPublisherWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgPublisherWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // AutoAddStore CRUD method for Store
@@ -3148,9 +3384,44 @@ func (r *EndpointsBookstoreV1RestClient) AutoListStore(ctx context.Context, opti
 }
 
 // AutoWatchStore CRUD method for Store
-func (r *EndpointsBookstoreV1RestClient) AutoWatchStore(ctx context.Context, stream BookstoreV1_AutoWatchStoreClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsBookstoreV1RestClient) AutoWatchStore(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIBookstoreV1AutoWatchStoreWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgStoreWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 func (r *EndpointsBookstoreV1RestClient) AddOutageStore(ctx context.Context, in *OutageRequest) (*Store, error) {
@@ -3199,9 +3470,44 @@ func (r *EndpointsBookstoreV1RestClient) AutoListCoupon(ctx context.Context, opt
 }
 
 // AutoWatchCoupon CRUD method for Coupon
-func (r *EndpointsBookstoreV1RestClient) AutoWatchCoupon(ctx context.Context, stream BookstoreV1_AutoWatchCouponClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsBookstoreV1RestClient) AutoWatchCoupon(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIBookstoreV1AutoWatchCouponWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgCouponWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // AutoAddCustomer CRUD method for Customer
@@ -3310,9 +3616,44 @@ func (r *EndpointsBookstoreV1RestClient) AutoListCustomer(ctx context.Context, o
 }
 
 // AutoWatchCustomer CRUD method for Customer
-func (r *EndpointsBookstoreV1RestClient) AutoWatchCustomer(ctx context.Context, stream BookstoreV1_AutoWatchCustomerClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsBookstoreV1RestClient) AutoWatchCustomer(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIBookstoreV1AutoWatchCustomerWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgCustomerWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // MakeBookstoreV1RestClientEndpoints make REST client endpoints

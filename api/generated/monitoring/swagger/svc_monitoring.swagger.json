@@ -8569,7 +8569,7 @@
     },
     "/configs/monitoring/v1/watch/MirrorSession": {
       "get": {
-        "summary": "Watch MirrorSession objects",
+        "summary": "Watch MirrorSession objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchMirrorSession_1",
         "responses": {
           "200": {
@@ -8729,7 +8729,7 @@
     },
     "/configs/monitoring/v1/watch/alertDestinations": {
       "get": {
-        "summary": "Watch AlertDestination objects",
+        "summary": "Watch AlertDestination objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchAlertDestination_1",
         "responses": {
           "200": {
@@ -8889,7 +8889,7 @@
     },
     "/configs/monitoring/v1/watch/alertPolicies": {
       "get": {
-        "summary": "Watch AlertPolicy objects",
+        "summary": "Watch AlertPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchAlertPolicy_1",
         "responses": {
           "200": {
@@ -9049,7 +9049,7 @@
     },
     "/configs/monitoring/v1/watch/alerts": {
       "get": {
-        "summary": "Watch Alert objects",
+        "summary": "Watch Alert objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchAlert_1",
         "responses": {
           "200": {
@@ -9209,7 +9209,7 @@
     },
     "/configs/monitoring/v1/watch/event-policy": {
       "get": {
-        "summary": "Watch EventPolicy objects",
+        "summary": "Watch EventPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchEventPolicy_1",
         "responses": {
           "200": {
@@ -9369,7 +9369,7 @@
     },
     "/configs/monitoring/v1/watch/flowExportPolicy": {
       "get": {
-        "summary": "Watch FlowExportPolicy objects",
+        "summary": "Watch FlowExportPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchFlowExportPolicy_1",
         "responses": {
           "200": {
@@ -9529,7 +9529,7 @@
     },
     "/configs/monitoring/v1/watch/fwlogPolicy": {
       "get": {
-        "summary": "Watch FwlogPolicy objects",
+        "summary": "Watch FwlogPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchFwlogPolicy_1",
         "responses": {
           "200": {
@@ -9689,7 +9689,7 @@
     },
     "/configs/monitoring/v1/watch/statsPolicy": {
       "get": {
-        "summary": "Watch StatsPolicy objects",
+        "summary": "Watch StatsPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchStatsPolicy_1",
         "responses": {
           "200": {
@@ -9849,7 +9849,7 @@
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/MirrorSession": {
       "get": {
-        "summary": "Watch MirrorSession objects",
+        "summary": "Watch MirrorSession objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchMirrorSession",
         "responses": {
           "200": {
@@ -10008,7 +10008,7 @@
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/alertDestinations": {
       "get": {
-        "summary": "Watch AlertDestination objects",
+        "summary": "Watch AlertDestination objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchAlertDestination",
         "responses": {
           "200": {
@@ -10167,7 +10167,7 @@
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/alertPolicies": {
       "get": {
-        "summary": "Watch AlertPolicy objects",
+        "summary": "Watch AlertPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchAlertPolicy",
         "responses": {
           "200": {
@@ -10326,7 +10326,7 @@
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/alerts": {
       "get": {
-        "summary": "Watch Alert objects",
+        "summary": "Watch Alert objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchAlert",
         "responses": {
           "200": {
@@ -10485,7 +10485,7 @@
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/event-policy": {
       "get": {
-        "summary": "Watch EventPolicy objects",
+        "summary": "Watch EventPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchEventPolicy",
         "responses": {
           "200": {
@@ -10644,7 +10644,7 @@
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/flowExportPolicy": {
       "get": {
-        "summary": "Watch FlowExportPolicy objects",
+        "summary": "Watch FlowExportPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchFlowExportPolicy",
         "responses": {
           "200": {
@@ -10803,7 +10803,7 @@
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/fwlogPolicy": {
       "get": {
-        "summary": "Watch FwlogPolicy objects",
+        "summary": "Watch FwlogPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchFwlogPolicy",
         "responses": {
           "200": {
@@ -10962,7 +10962,7 @@
     },
     "/configs/monitoring/v1/watch/tenant/{O.Tenant}/statsPolicy": {
       "get": {
-        "summary": "Watch StatsPolicy objects",
+        "summary": "Watch StatsPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchStatsPolicy",
         "responses": {
           "200": {

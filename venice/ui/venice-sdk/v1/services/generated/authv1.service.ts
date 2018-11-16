@@ -260,46 +260,46 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch AuthenticationPolicy objects */
+  /** Watch AuthenticationPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchAuthenticationPolicy(queryParam: any = null):Observable<{body: IAuthAutoMsgAuthenticationPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/authn-policy';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchAuthenticationPolicy') as Observable<{body: IAuthAutoMsgAuthenticationPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch RoleBinding objects */
+  /** Watch RoleBinding objects. Supports WebSockets or HTTP long poll */
   public WatchRoleBinding_1(queryParam: any = null):Observable<{body: IAuthAutoMsgRoleBindingWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/role-bindings';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchRoleBinding_1') as Observable<{body: IAuthAutoMsgRoleBindingWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Role objects */
+  /** Watch Role objects. Supports WebSockets or HTTP long poll */
   public WatchRole_1(queryParam: any = null):Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/roles';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchRole_1') as Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch RoleBinding objects */
+  /** Watch RoleBinding objects. Supports WebSockets or HTTP long poll */
   public WatchRoleBinding(queryParam: any = null):Observable<{body: IAuthAutoMsgRoleBindingWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/tenant/{O.Tenant}/role-bindings';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchRoleBinding') as Observable<{body: IAuthAutoMsgRoleBindingWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Role objects */
+  /** Watch Role objects. Supports WebSockets or HTTP long poll */
   public WatchRole(queryParam: any = null):Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/tenant/{O.Tenant}/roles';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchRole') as Observable<{body: IAuthAutoMsgRoleWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch User objects */
+  /** Watch User objects. Supports WebSockets or HTTP long poll */
   public WatchUser(queryParam: any = null):Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/tenant/{O.Tenant}/users';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchUser') as Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch User objects */
+  /** Watch User objects. Supports WebSockets or HTTP long poll */
   public WatchUser_1(queryParam: any = null):Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/watch/users';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchUser_1') as Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}>;

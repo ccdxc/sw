@@ -873,8 +873,7 @@ func (a *restObjMonitoringV1EventPolicy) Watch(ctx context.Context, options *api
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchEventPolicy(ctx, options)
 }
 
 func (a *restObjMonitoringV1EventPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1052,8 +1051,7 @@ func (a *restObjMonitoringV1StatsPolicy) Watch(ctx context.Context, options *api
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchStatsPolicy(ctx, options)
 }
 
 func (a *restObjMonitoringV1StatsPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1231,8 +1229,7 @@ func (a *restObjMonitoringV1FwlogPolicy) Watch(ctx context.Context, options *api
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchFwlogPolicy(ctx, options)
 }
 
 func (a *restObjMonitoringV1FwlogPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1410,8 +1407,7 @@ func (a *restObjMonitoringV1FlowExportPolicy) Watch(ctx context.Context, options
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchFlowExportPolicy(ctx, options)
 }
 
 func (a *restObjMonitoringV1FlowExportPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1589,8 +1585,7 @@ func (a *restObjMonitoringV1Alert) Watch(ctx context.Context, options *api.ListW
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchAlert(ctx, options)
 }
 
 func (a *restObjMonitoringV1Alert) Allowed(oper apiserver.APIOperType) bool {
@@ -1768,8 +1763,7 @@ func (a *restObjMonitoringV1AlertPolicy) Watch(ctx context.Context, options *api
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchAlertPolicy(ctx, options)
 }
 
 func (a *restObjMonitoringV1AlertPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -1947,8 +1941,7 @@ func (a *restObjMonitoringV1AlertDestination) Watch(ctx context.Context, options
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchAlertDestination(ctx, options)
 }
 
 func (a *restObjMonitoringV1AlertDestination) Allowed(oper apiserver.APIOperType) bool {
@@ -2126,8 +2119,7 @@ func (a *restObjMonitoringV1MirrorSession) Watch(ctx context.Context, options *a
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchMirrorSession(ctx, options)
 }
 
 func (a *restObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) bool {
@@ -2305,8 +2297,7 @@ func (a *restObjMonitoringV1TroubleshootingSession) Watch(ctx context.Context, o
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchTroubleshootingSession(ctx, options)
 }
 
 func (a *restObjMonitoringV1TroubleshootingSession) Allowed(oper apiserver.APIOperType) bool {

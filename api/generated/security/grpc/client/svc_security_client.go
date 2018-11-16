@@ -573,8 +573,7 @@ func (a *restObjSecurityV1SecurityGroup) Watch(ctx context.Context, options *api
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchSecurityGroup(ctx, options)
 }
 
 func (a *restObjSecurityV1SecurityGroup) Allowed(oper apiserver.APIOperType) bool {
@@ -752,8 +751,7 @@ func (a *restObjSecurityV1SGPolicy) Watch(ctx context.Context, options *api.List
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchSGPolicy(ctx, options)
 }
 
 func (a *restObjSecurityV1SGPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -928,8 +926,7 @@ func (a *restObjSecurityV1App) Watch(ctx context.Context, options *api.ListWatch
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchApp(ctx, options)
 }
 
 func (a *restObjSecurityV1App) Allowed(oper apiserver.APIOperType) bool {
@@ -1107,8 +1104,7 @@ func (a *restObjSecurityV1Certificate) Watch(ctx context.Context, options *api.L
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchCertificate(ctx, options)
 }
 
 func (a *restObjSecurityV1Certificate) Allowed(oper apiserver.APIOperType) bool {
@@ -1286,8 +1282,7 @@ func (a *restObjSecurityV1TrafficEncryptionPolicy) Watch(ctx context.Context, op
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchTrafficEncryptionPolicy(ctx, options)
 }
 
 func (a *restObjSecurityV1TrafficEncryptionPolicy) Allowed(oper apiserver.APIOperType) bool {

@@ -351,7 +351,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 			qver = obj.version
 		}
 		kind := ""
-		k, ok := apiutils.GetVar(ctx, "ObjKind")
+		k, ok := apiutils.GetVar(ctx, apiutils.CtxKeyObjKind)
 		if ok {
 			kind = k.(string)
 		}

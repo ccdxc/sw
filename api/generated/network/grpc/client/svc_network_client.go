@@ -423,8 +423,7 @@ func (a *restObjNetworkV1Network) Watch(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchNetwork(ctx, options)
 }
 
 func (a *restObjNetworkV1Network) Allowed(oper apiserver.APIOperType) bool {
@@ -602,8 +601,7 @@ func (a *restObjNetworkV1Service) Watch(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchService(ctx, options)
 }
 
 func (a *restObjNetworkV1Service) Allowed(oper apiserver.APIOperType) bool {
@@ -781,8 +779,7 @@ func (a *restObjNetworkV1LbPolicy) Watch(ctx context.Context, options *api.ListW
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchLbPolicy(ctx, options)
 }
 
 func (a *restObjNetworkV1LbPolicy) Allowed(oper apiserver.APIOperType) bool {

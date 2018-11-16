@@ -168,31 +168,31 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateTenant') as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Cluster objects */
+  /** Watch Cluster objects. Supports WebSockets or HTTP long poll */
   public WatchCluster(queryParam: any = null):Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/cluster';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchCluster') as Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Host objects */
+  /** Watch Host objects. Supports WebSockets or HTTP long poll */
   public WatchHost(queryParam: any = null):Observable<{body: IClusterAutoMsgHostWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/hosts';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchHost') as Observable<{body: IClusterAutoMsgHostWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Node objects */
+  /** Watch Node objects. Supports WebSockets or HTTP long poll */
   public WatchNode(queryParam: any = null):Observable<{body: IClusterAutoMsgNodeWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/nodes';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchNode') as Observable<{body: IClusterAutoMsgNodeWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch SmartNIC objects */
+  /** Watch SmartNIC objects. Supports WebSockets or HTTP long poll */
   public WatchSmartNIC(queryParam: any = null):Observable<{body: IClusterAutoMsgSmartNICWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/smartnics';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchSmartNIC') as Observable<{body: IClusterAutoMsgSmartNICWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Tenant objects */
+  /** Watch Tenant objects. Supports WebSockets or HTTP long poll */
   public WatchTenant(queryParam: any = null):Observable<{body: IClusterAutoMsgTenantWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/tenants';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchTenant') as Observable<{body: IClusterAutoMsgTenantWatchHelper | IApiStatus | Error, statusCode: number}>;

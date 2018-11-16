@@ -722,8 +722,7 @@ func (a *restObjBookstoreV1Order) Watch(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchOrder(ctx, options)
 }
 
 func (a *restObjBookstoreV1Order) Allowed(oper apiserver.APIOperType) bool {
@@ -920,8 +919,7 @@ func (a *restObjBookstoreV1Book) Watch(ctx context.Context, options *api.ListWat
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchBook(ctx, options)
 }
 
 func (a *restObjBookstoreV1Book) Allowed(oper apiserver.APIOperType) bool {
@@ -1103,8 +1101,7 @@ func (a *restObjBookstoreV1Publisher) Watch(ctx context.Context, options *api.Li
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchPublisher(ctx, options)
 }
 
 func (a *restObjBookstoreV1Publisher) Allowed(oper apiserver.APIOperType) bool {
@@ -1288,8 +1285,7 @@ func (a *restObjBookstoreV1Store) Watch(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchStore(ctx, options)
 }
 
 func (a *restObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
@@ -1471,8 +1467,7 @@ func (a *restObjBookstoreV1Coupon) Watch(ctx context.Context, options *api.ListW
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchCoupon(ctx, options)
 }
 
 func (a *restObjBookstoreV1Coupon) Allowed(oper apiserver.APIOperType) bool {
@@ -1647,8 +1642,7 @@ func (a *restObjBookstoreV1Customer) Watch(ctx context.Context, options *api.Lis
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchCustomer(ctx, options)
 }
 
 func (a *restObjBookstoreV1Customer) Allowed(oper apiserver.APIOperType) bool {

@@ -232,39 +232,39 @@ export class Networkv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateService') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch LbPolicy objects */
+  /** Watch LbPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchLbPolicy_1(queryParam: any = null):Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/lb-policy';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchLbPolicy_1') as Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Network objects */
+  /** Watch Network objects. Supports WebSockets or HTTP long poll */
   public WatchNetwork_1(queryParam: any = null):Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/networks';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchNetwork_1') as Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Service objects */
+  /** Watch Service objects. Supports WebSockets or HTTP long poll */
   public WatchService_1(queryParam: any = null):Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/services';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchService_1') as Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch LbPolicy objects */
+  /** Watch LbPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchLbPolicy(queryParam: any = null):Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/tenant/{O.Tenant}/lb-policy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchLbPolicy') as Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Network objects */
+  /** Watch Network objects. Supports WebSockets or HTTP long poll */
   public WatchNetwork(queryParam: any = null):Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/tenant/{O.Tenant}/networks';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchNetwork') as Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Service objects */
+  /** Watch Service objects. Supports WebSockets or HTTP long poll */
   public WatchService(queryParam: any = null):Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/tenant/{O.Tenant}/services';
     url = url.replace('{O.Tenant}', this['O_Tenant']);

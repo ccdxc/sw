@@ -112,7 +112,7 @@ type RolloutV1Client interface {
 	AutoListRollout(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RolloutList, error)
 	// Update Rollout object
 	AutoUpdateRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error)
-	// Watch Rollout objects
+	// Watch Rollout objects. Supports WebSockets or HTTP long poll
 	AutoWatchRollout(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (RolloutV1_AutoWatchRolloutClient, error)
 	AutoWatchSvcRolloutV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (RolloutV1_AutoWatchSvcRolloutV1Client, error)
 }
@@ -247,7 +247,7 @@ type RolloutV1Server interface {
 	AutoListRollout(context.Context, *api.ListWatchOptions) (*RolloutList, error)
 	// Update Rollout object
 	AutoUpdateRollout(context.Context, *Rollout) (*Rollout, error)
-	// Watch Rollout objects
+	// Watch Rollout objects. Supports WebSockets or HTTP long poll
 	AutoWatchRollout(*api.ListWatchOptions, RolloutV1_AutoWatchRolloutServer) error
 	AutoWatchSvcRolloutV1(*api.ListWatchOptions, RolloutV1_AutoWatchSvcRolloutV1Server) error
 }

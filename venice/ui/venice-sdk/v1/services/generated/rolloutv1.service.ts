@@ -52,7 +52,7 @@ export class Rolloutv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateRollout') as Observable<{body: IRolloutRollout | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Rollout objects */
+  /** Watch Rollout objects. Supports WebSockets or HTTP long poll */
   public WatchRollout(queryParam: any = null):Observable<{body: IRolloutAutoMsgRolloutWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/rollout/v1/watch/rollout';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchRollout') as Observable<{body: IRolloutAutoMsgRolloutWatchHelper | IApiStatus | Error, statusCode: number}>;

@@ -249,6 +249,12 @@ func (m loggingSearchV1MiddlewareServer) AutoWatchSvcSearchV1(in *api.ListWatchO
 	return errors.New("Not implemented")
 }
 
+func (r *EndpointsSearchV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsSearchV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -259,14 +265,17 @@ func (r *EndpointsSearchV1RestClient) getHTTPRequest(ctx context.Context, in int
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
 	return req, nil
+}
+
+//
+func makeURISearchV1AutoWatchSvcSearchV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 func (r *EndpointsSearchV1RestClient) SearchV1PolicyQueryEndpoint(ctx context.Context, in *PolicySearchRequest) (*PolicySearchResponse, error) {

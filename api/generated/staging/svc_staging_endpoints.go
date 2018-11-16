@@ -16,10 +16,13 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/listerwatcher"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -656,6 +659,12 @@ func (m loggingStagingV1MiddlewareServer) AutoWatchBuffer(in *api.ListWatchOptio
 	return
 }
 
+func (r *EndpointsStagingV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsStagingV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -666,10 +675,7 @@ func (r *EndpointsStagingV1RestClient) getHTTPRequest(ctx context.Context, in in
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
@@ -694,6 +700,24 @@ func makeURIStagingV1AutoGetBufferGetOper(in *Buffer) string {
 //
 func makeURIStagingV1AutoListBufferListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/staging/v1", "/tenant/", in.Tenant, "/buffers")
+}
+
+//
+func makeURIStagingV1AutoUpdateBufferUpdateOper(in *Buffer) string {
+	return ""
+
+}
+
+//
+func makeURIStagingV1AutoWatchBufferWatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIStagingV1AutoWatchSvcStagingV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 //
@@ -796,9 +820,44 @@ func (r *EndpointsStagingV1RestClient) AutoListBuffer(ctx context.Context, optio
 }
 
 // AutoWatchBuffer CRUD method for Buffer
-func (r *EndpointsStagingV1RestClient) AutoWatchBuffer(ctx context.Context, stream StagingV1_AutoWatchBufferClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsStagingV1RestClient) AutoWatchBuffer(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIStagingV1AutoWatchBufferWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgBufferWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 func (r *EndpointsStagingV1RestClient) CommitBuffer(ctx context.Context, in *CommitAction) (*CommitAction, error) {

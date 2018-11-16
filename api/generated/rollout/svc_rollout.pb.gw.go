@@ -11,10 +11,12 @@ package rollout
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"net/http"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/gorilla/websocket"
 	"github.com/pensando/grpc-gateway/runtime"
 	"github.com/pensando/grpc-gateway/utilities"
 	"golang.org/x/net/context"
@@ -23,12 +25,14 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/utils"
 )
 
 var _ codes.Code
 var _ io.Reader
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = apiutils.CtxKeyObjKind
 
 func request_RolloutV1_AutoAddRollout_0(ctx context.Context, marshaler runtime.Marshaler, client RolloutV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Rollout{}
@@ -500,6 +504,13 @@ func RegisterRolloutV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
 		}
+		ws := false
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
 		resp, md, err := request_RolloutV1_AutoWatchRollout_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -507,7 +518,17 @@ func RegisterRolloutV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 			return
 		}
 
-		forward_RolloutV1_AutoWatchRollout_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			forward_RolloutV1_AutoWatchRollout_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		}
 
 	})
 

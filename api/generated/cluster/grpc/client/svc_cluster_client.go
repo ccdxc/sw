@@ -593,8 +593,7 @@ func (a *restObjClusterV1Cluster) Watch(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchCluster(ctx, options)
 }
 
 func (a *restObjClusterV1Cluster) Allowed(oper apiserver.APIOperType) bool {
@@ -776,8 +775,7 @@ func (a *restObjClusterV1Node) Watch(ctx context.Context, options *api.ListWatch
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchNode(ctx, options)
 }
 
 func (a *restObjClusterV1Node) Allowed(oper apiserver.APIOperType) bool {
@@ -952,8 +950,7 @@ func (a *restObjClusterV1Host) Watch(ctx context.Context, options *api.ListWatch
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchHost(ctx, options)
 }
 
 func (a *restObjClusterV1Host) Allowed(oper apiserver.APIOperType) bool {
@@ -1128,8 +1125,7 @@ func (a *restObjClusterV1SmartNIC) Watch(ctx context.Context, options *api.ListW
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchSmartNIC(ctx, options)
 }
 
 func (a *restObjClusterV1SmartNIC) Allowed(oper apiserver.APIOperType) bool {
@@ -1304,8 +1300,7 @@ func (a *restObjClusterV1Tenant) Watch(ctx context.Context, options *api.ListWat
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchTenant(ctx, options)
 }
 
 func (a *restObjClusterV1Tenant) Allowed(oper apiserver.APIOperType) bool {

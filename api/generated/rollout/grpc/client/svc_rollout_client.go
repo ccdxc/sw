@@ -269,8 +269,7 @@ func (a *restObjRolloutV1Rollout) Watch(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchRollout(ctx, options)
 }
 
 func (a *restObjRolloutV1Rollout) Allowed(oper apiserver.APIOperType) bool {

@@ -194,10 +194,10 @@ type WorkloadV1Client interface {
 	AutoUpdateEndpoint(ctx context.Context, in *Endpoint, opts ...grpc.CallOption) (*Endpoint, error)
 	// Update Workload object
 	AutoUpdateWorkload(ctx context.Context, in *Workload, opts ...grpc.CallOption) (*Workload, error)
-	// Watch Endpoint objects
+	// Watch Endpoint objects. Supports WebSockets or HTTP long poll
 	AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchEndpointClient, error)
 	AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error)
-	// Watch Workload objects
+	// Watch Workload objects. Supports WebSockets or HTTP long poll
 	AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (WorkloadV1_AutoWatchWorkloadClient, error)
 }
 
@@ -418,10 +418,10 @@ type WorkloadV1Server interface {
 	AutoUpdateEndpoint(context.Context, *Endpoint) (*Endpoint, error)
 	// Update Workload object
 	AutoUpdateWorkload(context.Context, *Workload) (*Workload, error)
-	// Watch Endpoint objects
+	// Watch Endpoint objects. Supports WebSockets or HTTP long poll
 	AutoWatchEndpoint(*api.ListWatchOptions, WorkloadV1_AutoWatchEndpointServer) error
 	AutoWatchSvcWorkloadV1(*api.ListWatchOptions, WorkloadV1_AutoWatchSvcWorkloadV1Server) error
-	// Watch Workload objects
+	// Watch Workload objects. Supports WebSockets or HTTP long poll
 	AutoWatchWorkload(*api.ListWatchOptions, WorkloadV1_AutoWatchWorkloadServer) error
 }
 

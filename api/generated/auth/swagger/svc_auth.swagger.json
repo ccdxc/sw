@@ -3606,7 +3606,7 @@
     },
     "/configs/auth/v1/watch/authn-policy": {
       "get": {
-        "summary": "Watch AuthenticationPolicy objects",
+        "summary": "Watch AuthenticationPolicy objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchAuthenticationPolicy",
         "responses": {
           "200": {
@@ -3766,7 +3766,7 @@
     },
     "/configs/auth/v1/watch/role-bindings": {
       "get": {
-        "summary": "Watch RoleBinding objects",
+        "summary": "Watch RoleBinding objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchRoleBinding_1",
         "responses": {
           "200": {
@@ -3926,7 +3926,7 @@
     },
     "/configs/auth/v1/watch/roles": {
       "get": {
-        "summary": "Watch Role objects",
+        "summary": "Watch Role objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchRole_1",
         "responses": {
           "200": {
@@ -4086,7 +4086,7 @@
     },
     "/configs/auth/v1/watch/tenant/{O.Tenant}/role-bindings": {
       "get": {
-        "summary": "Watch RoleBinding objects",
+        "summary": "Watch RoleBinding objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchRoleBinding",
         "responses": {
           "200": {
@@ -4245,7 +4245,7 @@
     },
     "/configs/auth/v1/watch/tenant/{O.Tenant}/roles": {
       "get": {
-        "summary": "Watch Role objects",
+        "summary": "Watch Role objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchRole",
         "responses": {
           "200": {
@@ -4404,7 +4404,7 @@
     },
     "/configs/auth/v1/watch/tenant/{O.Tenant}/users": {
       "get": {
-        "summary": "Watch User objects",
+        "summary": "Watch User objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchUser",
         "responses": {
           "200": {
@@ -4563,7 +4563,7 @@
     },
     "/configs/auth/v1/watch/users": {
       "get": {
-        "summary": "Watch User objects",
+        "summary": "Watch User objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchUser_1",
         "responses": {
           "200": {

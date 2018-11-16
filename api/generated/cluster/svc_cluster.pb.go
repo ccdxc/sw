@@ -481,16 +481,16 @@ type ClusterV1Client interface {
 	AutoUpdateSmartNIC(ctx context.Context, in *SmartNIC, opts ...grpc.CallOption) (*SmartNIC, error)
 	// Update Tenant object
 	AutoUpdateTenant(ctx context.Context, in *Tenant, opts ...grpc.CallOption) (*Tenant, error)
-	// Watch Cluster objects
+	// Watch Cluster objects. Supports WebSockets or HTTP long poll
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchClusterClient, error)
-	// Watch Host objects
+	// Watch Host objects. Supports WebSockets or HTTP long poll
 	AutoWatchHost(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchHostClient, error)
-	// Watch Node objects
+	// Watch Node objects. Supports WebSockets or HTTP long poll
 	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchNodeClient, error)
-	// Watch SmartNIC objects
+	// Watch SmartNIC objects. Supports WebSockets or HTTP long poll
 	AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSmartNICClient, error)
 	AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchSvcClusterV1Client, error)
-	// Watch Tenant objects
+	// Watch Tenant objects. Supports WebSockets or HTTP long poll
 	AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (ClusterV1_AutoWatchTenantClient, error)
 }
 
@@ -982,16 +982,16 @@ type ClusterV1Server interface {
 	AutoUpdateSmartNIC(context.Context, *SmartNIC) (*SmartNIC, error)
 	// Update Tenant object
 	AutoUpdateTenant(context.Context, *Tenant) (*Tenant, error)
-	// Watch Cluster objects
+	// Watch Cluster objects. Supports WebSockets or HTTP long poll
 	AutoWatchCluster(*api.ListWatchOptions, ClusterV1_AutoWatchClusterServer) error
-	// Watch Host objects
+	// Watch Host objects. Supports WebSockets or HTTP long poll
 	AutoWatchHost(*api.ListWatchOptions, ClusterV1_AutoWatchHostServer) error
-	// Watch Node objects
+	// Watch Node objects. Supports WebSockets or HTTP long poll
 	AutoWatchNode(*api.ListWatchOptions, ClusterV1_AutoWatchNodeServer) error
-	// Watch SmartNIC objects
+	// Watch SmartNIC objects. Supports WebSockets or HTTP long poll
 	AutoWatchSmartNIC(*api.ListWatchOptions, ClusterV1_AutoWatchSmartNICServer) error
 	AutoWatchSvcClusterV1(*api.ListWatchOptions, ClusterV1_AutoWatchSvcClusterV1Server) error
-	// Watch Tenant objects
+	// Watch Tenant objects. Supports WebSockets or HTTP long poll
 	AutoWatchTenant(*api.ListWatchOptions, ClusterV1_AutoWatchTenantServer) error
 }
 

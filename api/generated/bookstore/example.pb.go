@@ -1343,17 +1343,17 @@ type BookstoreV1Client interface {
 	AutoUpdatePublisher(ctx context.Context, in *Publisher, opts ...grpc.CallOption) (*Publisher, error)
 	// Update Store object
 	AutoUpdateStore(ctx context.Context, in *Store, opts ...grpc.CallOption) (*Store, error)
-	// Watch Book objects
+	// Watch Book objects. Supports WebSockets or HTTP long poll
 	AutoWatchBook(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchBookClient, error)
-	// Watch Coupon objects
+	// Watch Coupon objects. Supports WebSockets or HTTP long poll
 	AutoWatchCoupon(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchCouponClient, error)
-	// Watch Customer objects
+	// Watch Customer objects. Supports WebSockets or HTTP long poll
 	AutoWatchCustomer(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchCustomerClient, error)
-	// Watch Order objects
+	// Watch Order objects. Supports WebSockets or HTTP long poll
 	AutoWatchOrder(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchOrderClient, error)
-	// Watch Publisher objects
+	// Watch Publisher objects. Supports WebSockets or HTTP long poll
 	AutoWatchPublisher(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchPublisherClient, error)
-	// Watch Store objects
+	// Watch Store objects. Supports WebSockets or HTTP long poll
 	AutoWatchStore(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchStoreClient, error)
 	AutoWatchSvcBookstoreV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (BookstoreV1_AutoWatchSvcBookstoreV1Client, error)
 	Cleardiscount(ctx context.Context, in *ApplyDiscountReq, opts ...grpc.CallOption) (*Order, error)
@@ -1963,17 +1963,17 @@ type BookstoreV1Server interface {
 	AutoUpdatePublisher(context.Context, *Publisher) (*Publisher, error)
 	// Update Store object
 	AutoUpdateStore(context.Context, *Store) (*Store, error)
-	// Watch Book objects
+	// Watch Book objects. Supports WebSockets or HTTP long poll
 	AutoWatchBook(*api.ListWatchOptions, BookstoreV1_AutoWatchBookServer) error
-	// Watch Coupon objects
+	// Watch Coupon objects. Supports WebSockets or HTTP long poll
 	AutoWatchCoupon(*api.ListWatchOptions, BookstoreV1_AutoWatchCouponServer) error
-	// Watch Customer objects
+	// Watch Customer objects. Supports WebSockets or HTTP long poll
 	AutoWatchCustomer(*api.ListWatchOptions, BookstoreV1_AutoWatchCustomerServer) error
-	// Watch Order objects
+	// Watch Order objects. Supports WebSockets or HTTP long poll
 	AutoWatchOrder(*api.ListWatchOptions, BookstoreV1_AutoWatchOrderServer) error
-	// Watch Publisher objects
+	// Watch Publisher objects. Supports WebSockets or HTTP long poll
 	AutoWatchPublisher(*api.ListWatchOptions, BookstoreV1_AutoWatchPublisherServer) error
-	// Watch Store objects
+	// Watch Store objects. Supports WebSockets or HTTP long poll
 	AutoWatchStore(*api.ListWatchOptions, BookstoreV1_AutoWatchStoreServer) error
 	AutoWatchSvcBookstoreV1(*api.ListWatchOptions, BookstoreV1_AutoWatchSvcBookstoreV1Server) error
 	Cleardiscount(context.Context, *ApplyDiscountReq) (*Order, error)

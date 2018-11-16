@@ -135,6 +135,7 @@ var _ codes.Code
 var _ io.Reader
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = apiutils.CtxKeyObjKind
 `))
 
 	handlerTemplate = template.Must(template.New("handler").Parse(`
@@ -430,7 +431,14 @@ func Register{{$svc.GetName}}HandlerWithClient(ctx context.Context, mux *runtime
 		rctx, err := runtime.AnnotateContext(ctx, req)
 		if err != nil {
 			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
+		} {{if $m.GetServerStreaming}}
+		ws := false
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}{{end}}
 		resp, md, err := request_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -438,7 +446,17 @@ func Register{{$svc.GetName}}HandlerWithClient(ctx context.Context, mux *runtime
 			return
 		}
 		{{if $m.GetServerStreaming}}
-		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		if ws {
+			ic, ok := apiutils.GetVar(rctx,apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		}
 		{{else}}
 		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 		{{end}}

@@ -128,27 +128,27 @@ export class Workloadv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateWorkload') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Endpoint objects */
+  /** Watch Endpoint objects. Supports WebSockets or HTTP long poll */
   public WatchEndpoint_1(queryParam: any = null):Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/endpoints';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchEndpoint_1') as Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Endpoint objects */
+  /** Watch Endpoint objects. Supports WebSockets or HTTP long poll */
   public WatchEndpoint(queryParam: any = null):Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/tenant/{O.Tenant}/endpoints';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchEndpoint') as Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Workload objects */
+  /** Watch Workload objects. Supports WebSockets or HTTP long poll */
   public WatchWorkload(queryParam: any = null):Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/tenant/{O.Tenant}/workloads';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchWorkload') as Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Workload objects */
+  /** Watch Workload objects. Supports WebSockets or HTTP long poll */
   public WatchWorkload_1(queryParam: any = null):Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/workloads';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchWorkload_1') as Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}>;

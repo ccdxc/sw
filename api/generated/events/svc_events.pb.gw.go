@@ -23,12 +23,14 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/utils"
 )
 
 var _ codes.Code
 var _ io.Reader
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
+var _ = apiutils.CtxKeyObjKind
 
 func request_EventsV1_GetEvent_0(ctx context.Context, marshaler runtime.Marshaler, client EventsV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &GetEventRequest{}

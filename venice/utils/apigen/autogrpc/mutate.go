@@ -509,7 +509,7 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		"watch", true, defTenant, "", restopt)
 	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoWatch%s", m)] = codeInfo{
-		comments: fmt.Sprintf("Watch %s objects", m),
+		comments: fmt.Sprintf("Watch %s objects. Supports WebSockets or HTTP long poll", m),
 	}
 	glog.V(1).Infof("Generated AutoGrpc for [%s][%s]\n", *svc.Name, m)
 }

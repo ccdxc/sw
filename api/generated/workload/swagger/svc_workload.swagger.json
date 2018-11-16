@@ -1715,7 +1715,7 @@
     },
     "/configs/workload/v1/watch/endpoints": {
       "get": {
-        "summary": "Watch Endpoint objects",
+        "summary": "Watch Endpoint objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchEndpoint_1",
         "responses": {
           "200": {
@@ -1875,7 +1875,7 @@
     },
     "/configs/workload/v1/watch/tenant/{O.Tenant}/endpoints": {
       "get": {
-        "summary": "Watch Endpoint objects",
+        "summary": "Watch Endpoint objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchEndpoint",
         "responses": {
           "200": {
@@ -2034,7 +2034,7 @@
     },
     "/configs/workload/v1/watch/tenant/{O.Tenant}/workloads": {
       "get": {
-        "summary": "Watch Workload objects",
+        "summary": "Watch Workload objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchWorkload",
         "responses": {
           "200": {
@@ -2193,7 +2193,7 @@
     },
     "/configs/workload/v1/watch/workloads": {
       "get": {
-        "summary": "Watch Workload objects",
+        "summary": "Watch Workload objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchWorkload_1",
         "responses": {
           "200": {

@@ -561,104 +561,104 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateStatsPolicy') as Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch MirrorSession objects */
+  /** Watch MirrorSession objects. Supports WebSockets or HTTP long poll */
   public WatchMirrorSession_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/MirrorSession';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchMirrorSession_1') as Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch AlertDestination objects */
+  /** Watch AlertDestination objects. Supports WebSockets or HTTP long poll */
   public WatchAlertDestination_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/alertDestinations';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchAlertDestination_1') as Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch AlertPolicy objects */
+  /** Watch AlertPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchAlertPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/alertPolicies';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchAlertPolicy_1') as Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Alert objects */
+  /** Watch Alert objects. Supports WebSockets or HTTP long poll */
   public WatchAlert_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/alerts';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchAlert_1') as Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch EventPolicy objects */
+  /** Watch EventPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchEventPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/event-policy';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchEventPolicy_1') as Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch FlowExportPolicy objects */
+  /** Watch FlowExportPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchFlowExportPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/flowExportPolicy';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchFlowExportPolicy_1') as Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch FwlogPolicy objects */
+  /** Watch FwlogPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchFwlogPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/fwlogPolicy';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchFwlogPolicy_1') as Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch StatsPolicy objects */
+  /** Watch StatsPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchStatsPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/statsPolicy';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchStatsPolicy_1') as Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch MirrorSession objects */
+  /** Watch MirrorSession objects. Supports WebSockets or HTTP long poll */
   public WatchMirrorSession(queryParam: any = null):Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/MirrorSession';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchMirrorSession') as Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch AlertDestination objects */
+  /** Watch AlertDestination objects. Supports WebSockets or HTTP long poll */
   public WatchAlertDestination(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/alertDestinations';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchAlertDestination') as Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch AlertPolicy objects */
+  /** Watch AlertPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchAlertPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/alertPolicies';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchAlertPolicy') as Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Alert objects */
+  /** Watch Alert objects. Supports WebSockets or HTTP long poll */
   public WatchAlert(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/alerts';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchAlert') as Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch EventPolicy objects */
+  /** Watch EventPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchEventPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/event-policy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchEventPolicy') as Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch FlowExportPolicy objects */
+  /** Watch FlowExportPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchFlowExportPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/flowExportPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchFlowExportPolicy') as Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch FwlogPolicy objects */
+  /** Watch FwlogPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchFwlogPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/fwlogPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchFwlogPolicy') as Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch StatsPolicy objects */
+  /** Watch StatsPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchStatsPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/statsPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);

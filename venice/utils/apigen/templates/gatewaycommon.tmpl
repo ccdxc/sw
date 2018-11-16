@@ -9,6 +9,7 @@ package {{.GoPkg.Name}}GwService
 import (
     "net/http"
 
+    "github.com/gorilla/websocket"
     "github.com/pkg/errors"
     "github.com/GeertJohan/go.rice"
     "github.com/go-openapi/analysis"
@@ -21,6 +22,7 @@ import (
 
 var muxMutex sync.Mutex
 var mux *runtime.ServeMux
+var wsUpgrader = websocket.Upgrader{}
 
 const codecSize = 1024 * 1024
  {{$swaggerfile := getSwaggerFileName .Name}}

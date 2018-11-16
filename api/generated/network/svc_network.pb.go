@@ -272,11 +272,11 @@ type NetworkV1Client interface {
 	AutoUpdateNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
 	// Update Service object
 	AutoUpdateService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
-	// Watch LbPolicy objects
+	// Watch LbPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchLbPolicyClient, error)
-	// Watch Network objects
+	// Watch Network objects. Supports WebSockets or HTTP long poll
 	AutoWatchNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchNetworkClient, error)
-	// Watch Service objects
+	// Watch Service objects. Supports WebSockets or HTTP long poll
 	AutoWatchService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchServiceClient, error)
 	AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchSvcNetworkV1Client, error)
 }
@@ -585,11 +585,11 @@ type NetworkV1Server interface {
 	AutoUpdateNetwork(context.Context, *Network) (*Network, error)
 	// Update Service object
 	AutoUpdateService(context.Context, *Service) (*Service, error)
-	// Watch LbPolicy objects
+	// Watch LbPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchLbPolicy(*api.ListWatchOptions, NetworkV1_AutoWatchLbPolicyServer) error
-	// Watch Network objects
+	// Watch Network objects. Supports WebSockets or HTTP long poll
 	AutoWatchNetwork(*api.ListWatchOptions, NetworkV1_AutoWatchNetworkServer) error
-	// Watch Service objects
+	// Watch Service objects. Supports WebSockets or HTTP long poll
 	AutoWatchService(*api.ListWatchOptions, NetworkV1_AutoWatchServiceServer) error
 	AutoWatchSvcNetworkV1(*api.ListWatchOptions, NetworkV1_AutoWatchSvcNetworkV1Server) error
 }

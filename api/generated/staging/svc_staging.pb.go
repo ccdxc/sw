@@ -115,7 +115,7 @@ type StagingV1Client interface {
 	AutoListBuffer(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*BufferList, error)
 	// Update Buffer object
 	AutoUpdateBuffer(ctx context.Context, in *Buffer, opts ...grpc.CallOption) (*Buffer, error)
-	// Watch Buffer objects
+	// Watch Buffer objects. Supports WebSockets or HTTP long poll
 	AutoWatchBuffer(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (StagingV1_AutoWatchBufferClient, error)
 	AutoWatchSvcStagingV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (StagingV1_AutoWatchSvcStagingV1Client, error)
 	Clear(ctx context.Context, in *ClearAction, opts ...grpc.CallOption) (*ClearAction, error)
@@ -270,7 +270,7 @@ type StagingV1Server interface {
 	AutoListBuffer(context.Context, *api.ListWatchOptions) (*BufferList, error)
 	// Update Buffer object
 	AutoUpdateBuffer(context.Context, *Buffer) (*Buffer, error)
-	// Watch Buffer objects
+	// Watch Buffer objects. Supports WebSockets or HTTP long poll
 	AutoWatchBuffer(*api.ListWatchOptions, StagingV1_AutoWatchBufferServer) error
 	AutoWatchSvcStagingV1(*api.ListWatchOptions, StagingV1_AutoWatchSvcStagingV1Server) error
 	Clear(context.Context, *ClearAction) (*ClearAction, error)

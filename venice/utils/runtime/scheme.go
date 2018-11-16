@@ -102,6 +102,8 @@ func (s *Scheme) AddSchema(in map[string]*api.Struct) {
 		for _, f := range v.Fields {
 			if f.JSONTag != "" {
 				v.Tags[f.JSONTag] = f.Name
+			} else {
+				v.Tags[f.Name] = f.Name
 			}
 		}
 	}

@@ -974,6 +974,14 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:4a0c072e44da763409da72d41492373a034baf2e6d849c76d239b4abdfbb6c49"
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
+  version = "v1.4.0"
+
+[[projects]]
   branch = "master"
   digest = "1:01c576cd87412579a7aebbca08dc584054199ebff7121a4875792760415c600b"
   name = "github.com/grandcat/zeroconf"
@@ -1591,7 +1599,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:83a63fe09f14548e73492c14f4d36877b2c4ea593685acd94d0b54e54733a0a4"
+  digest = "1:85d93407e48d8b6dc965d19ced90374a1251e15d20649fe855576a49b3fe5e46"
   name = "github.com/pensando/grpc-gateway"
   packages = [
     "protoc-gen-grpc-gateway",
@@ -1608,7 +1616,7 @@
     "utilities",
   ]
   pruneopts = "T"
-  revision = "dda5db59c0af764a4646445653ed6b2266fe3fb2"
+  revision = "13c37389ee3e2fbbdd77ec19c503cdbc69a3bc23"
 
 [[projects]]
   digest = "1:0332ddbee3ad55b3abb8e2d45bd17b89416675b63f566cc4743681b651b7420c"
@@ -2591,6 +2599,7 @@
     "github.com/google/gopacket/pcap",
     "github.com/google/uuid",
     "github.com/gorilla/mux",
+    "github.com/gorilla/websocket",
     "github.com/grandcat/zeroconf",
     "github.com/haya14busa/gopkgs/cmd/gopkgs",
     "github.com/influxdata/influxdb/client/v2",

@@ -353,14 +353,14 @@ type AuthV1Client interface {
 	AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding, opts ...grpc.CallOption) (*RoleBinding, error)
 	// Update User object
 	AutoUpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	// Watch AuthenticationPolicy objects
+	// Watch AuthenticationPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchAuthenticationPolicyClient, error)
-	// Watch Role objects
+	// Watch Role objects. Supports WebSockets or HTTP long poll
 	AutoWatchRole(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleClient, error)
-	// Watch RoleBinding objects
+	// Watch RoleBinding objects. Supports WebSockets or HTTP long poll
 	AutoWatchRoleBinding(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchRoleBindingClient, error)
 	AutoWatchSvcAuthV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchSvcAuthV1Client, error)
-	// Watch User objects
+	// Watch User objects. Supports WebSockets or HTTP long poll
 	AutoWatchUser(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (AuthV1_AutoWatchUserClient, error)
 	LdapBindCheck(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
 	LdapConnectionCheck(ctx context.Context, in *AuthenticationPolicy, opts ...grpc.CallOption) (*AuthenticationPolicy, error)
@@ -775,14 +775,14 @@ type AuthV1Server interface {
 	AutoUpdateRoleBinding(context.Context, *RoleBinding) (*RoleBinding, error)
 	// Update User object
 	AutoUpdateUser(context.Context, *User) (*User, error)
-	// Watch AuthenticationPolicy objects
+	// Watch AuthenticationPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchAuthenticationPolicy(*api.ListWatchOptions, AuthV1_AutoWatchAuthenticationPolicyServer) error
-	// Watch Role objects
+	// Watch Role objects. Supports WebSockets or HTTP long poll
 	AutoWatchRole(*api.ListWatchOptions, AuthV1_AutoWatchRoleServer) error
-	// Watch RoleBinding objects
+	// Watch RoleBinding objects. Supports WebSockets or HTTP long poll
 	AutoWatchRoleBinding(*api.ListWatchOptions, AuthV1_AutoWatchRoleBindingServer) error
 	AutoWatchSvcAuthV1(*api.ListWatchOptions, AuthV1_AutoWatchSvcAuthV1Server) error
-	// Watch User objects
+	// Watch User objects. Supports WebSockets or HTTP long poll
 	AutoWatchUser(*api.ListWatchOptions, AuthV1_AutoWatchUserServer) error
 	LdapBindCheck(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)
 	LdapConnectionCheck(context.Context, *AuthenticationPolicy) (*AuthenticationPolicy, error)

@@ -2527,7 +2527,7 @@
     },
     "/configs/cluster/v1/watch/cluster": {
       "get": {
-        "summary": "Watch Cluster objects",
+        "summary": "Watch Cluster objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchCluster",
         "responses": {
           "200": {
@@ -2687,7 +2687,7 @@
     },
     "/configs/cluster/v1/watch/hosts": {
       "get": {
-        "summary": "Watch Host objects",
+        "summary": "Watch Host objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchHost",
         "responses": {
           "200": {
@@ -2847,7 +2847,7 @@
     },
     "/configs/cluster/v1/watch/nodes": {
       "get": {
-        "summary": "Watch Node objects",
+        "summary": "Watch Node objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchNode",
         "responses": {
           "200": {
@@ -3007,7 +3007,7 @@
     },
     "/configs/cluster/v1/watch/smartnics": {
       "get": {
-        "summary": "Watch SmartNIC objects",
+        "summary": "Watch SmartNIC objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchSmartNIC",
         "responses": {
           "200": {
@@ -3167,7 +3167,7 @@
     },
     "/configs/cluster/v1/watch/tenants": {
       "get": {
-        "summary": "Watch Tenant objects",
+        "summary": "Watch Tenant objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchTenant",
         "responses": {
           "200": {

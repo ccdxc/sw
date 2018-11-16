@@ -5,13 +5,41 @@ import (
 	"io"
 	"net/http"
 	"net/textproto"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/gorilla/websocket"
 	"github.com/pensando/grpc-gateway/runtime/internal"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 )
+
+func FowardResponseStreamToWebSocket(ctx context.Context, marshaler Marshaler, w http.ResponseWriter, req *http.Request, conn *websocket.Conn, recv func() (proto.Message, error), opts ...func(context.Context, http.ResponseWriter, proto.Message) error) {
+	// The HTTP 1.1 response has already been sent by the time we get here. Handle the data stream here.
+	for {
+		resp, err := recv()
+		if err == io.EOF {
+			cmsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Backend connection terminated")
+			conn.WriteControl(websocket.CloseMessage, cmsg, time.Time{})
+			conn.Close()
+			return
+		}
+		if err != nil {
+			cmsg := websocket.FormatCloseMessage(websocket.CloseInternalServerErr, fmt.Sprintf("reading from backed had error (%s)", err))
+			conn.WriteControl(websocket.CloseMessage, cmsg, time.Time{})
+			conn.Close()
+			return
+		}
+		err = conn.WriteJSON(resp)
+		if err != nil {
+			cmsg := websocket.FormatCloseMessage(websocket.CloseProtocolError, fmt.Sprintf("writing message failed with error (%s)", err))
+			conn.WriteControl(websocket.CloseMessage, cmsg, time.Time{})
+			conn.Close()
+			return
+		}
+	}
+}
 
 // ForwardResponseStream forwards the stream from gRPC server to REST client.
 func ForwardResponseStream(ctx context.Context, marshaler Marshaler, w http.ResponseWriter, req *http.Request, recv func() (proto.Message, error), opts ...func(context.Context, http.ResponseWriter, proto.Message) error) {

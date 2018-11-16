@@ -249,6 +249,12 @@ func (m loggingEventsV1MiddlewareServer) AutoWatchSvcEventsV1(in *api.ListWatchO
 	return errors.New("Not implemented")
 }
 
+func (r *EndpointsEventsV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsEventsV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -259,14 +265,17 @@ func (r *EndpointsEventsV1RestClient) getHTTPRequest(ctx context.Context, in int
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
 	return req, nil
+}
+
+//
+func makeURIEventsV1AutoWatchSvcEventsV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 func (r *EndpointsEventsV1RestClient) EventsV1GetEventEndpoint(ctx context.Context, in *GetEventRequest) (*Event, error) {

@@ -42,7 +42,9 @@ func (w *WatcherClient) EventChan() <-chan *kvstore.WatchEvent {
 
 // Stop stops the watch and closes the channel returned by EventChan().
 func (w *WatcherClient) Stop() {
-	w.Stream.CloseSend()
+	if w.Stream != nil {
+		w.Stream.CloseSend()
+	}
 }
 
 // Run starts the event loop to receive events

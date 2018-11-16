@@ -323,59 +323,59 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateTrafficEncryptionPolicy_1') as Observable<{body: ISecurityTrafficEncryptionPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch App objects */
+  /** Watch App objects. Supports WebSockets or HTTP long poll */
   public WatchApp(queryParam: any = null):Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/apps';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchApp') as Observable<{body: ISecurityAutoMsgAppWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Certificate objects */
+  /** Watch Certificate objects. Supports WebSockets or HTTP long poll */
   public WatchCertificate_1(queryParam: any = null):Observable<{body: ISecurityAutoMsgCertificateWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/certificates';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchCertificate_1') as Observable<{body: ISecurityAutoMsgCertificateWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch SecurityGroup objects */
+  /** Watch SecurityGroup objects. Supports WebSockets or HTTP long poll */
   public WatchSecurityGroup_1(queryParam: any = null):Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/security-groups';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchSecurityGroup_1') as Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch SGPolicy objects */
+  /** Watch SGPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchSGPolicy_1(queryParam: any = null):Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/sgpolicies';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchSGPolicy_1') as Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch Certificate objects */
+  /** Watch Certificate objects. Supports WebSockets or HTTP long poll */
   public WatchCertificate(queryParam: any = null):Observable<{body: ISecurityAutoMsgCertificateWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/certificates';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchCertificate') as Observable<{body: ISecurityAutoMsgCertificateWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch SecurityGroup objects */
+  /** Watch SecurityGroup objects. Supports WebSockets or HTTP long poll */
   public WatchSecurityGroup(queryParam: any = null):Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/security-groups';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchSecurityGroup') as Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch SGPolicy objects */
+  /** Watch SGPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchSGPolicy(queryParam: any = null):Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/sgpolicies';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchSGPolicy') as Observable<{body: ISecurityAutoMsgSGPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch TrafficEncryptionPolicy objects */
+  /** Watch TrafficEncryptionPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchTrafficEncryptionPolicy(queryParam: any = null):Observable<{body: ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/tenant/{O.Tenant}/trafficEncryptionPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     return this.invokeAJAXGetCall(url, queryParam, 'WatchTrafficEncryptionPolicy') as Observable<{body: ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Watch TrafficEncryptionPolicy objects */
+  /** Watch TrafficEncryptionPolicy objects. Supports WebSockets or HTTP long poll */
   public WatchTrafficEncryptionPolicy_1(queryParam: any = null):Observable<{body: ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/watch/trafficEncryptionPolicy';
     return this.invokeAJAXGetCall(url, queryParam, 'WatchTrafficEncryptionPolicy_1') as Observable<{body: ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;

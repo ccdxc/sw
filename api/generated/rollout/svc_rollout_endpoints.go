@@ -15,10 +15,13 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/listerwatcher"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -523,6 +526,12 @@ func (m loggingRolloutV1MiddlewareServer) AutoWatchRollout(in *api.ListWatchOpti
 	return
 }
 
+func (r *EndpointsRolloutV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsRolloutV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -533,10 +542,7 @@ func (r *EndpointsRolloutV1RestClient) getHTTPRequest(ctx context.Context, in in
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
@@ -566,6 +572,17 @@ func makeURIRolloutV1AutoListRolloutListOper(in *api.ListWatchOptions) string {
 //
 func makeURIRolloutV1AutoUpdateRolloutUpdateOper(in *Rollout) string {
 	return fmt.Sprint("/configs/rollout/v1", "/rollout/", in.Name)
+}
+
+//
+func makeURIRolloutV1AutoWatchRolloutWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/rollout/v1", "/watch/rollout")
+}
+
+//
+func makeURIRolloutV1AutoWatchSvcRolloutV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 // AutoAddRollout CRUD method for Rollout
@@ -674,9 +691,44 @@ func (r *EndpointsRolloutV1RestClient) AutoListRollout(ctx context.Context, opti
 }
 
 // AutoWatchRollout CRUD method for Rollout
-func (r *EndpointsRolloutV1RestClient) AutoWatchRollout(ctx context.Context, stream RolloutV1_AutoWatchRolloutClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsRolloutV1RestClient) AutoWatchRollout(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIRolloutV1AutoWatchRolloutWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgRolloutWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // MakeRolloutV1RestClientEndpoints make REST client endpoints

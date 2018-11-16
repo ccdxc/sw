@@ -348,8 +348,7 @@ func (a *restObjWorkloadV1Endpoint) Watch(ctx context.Context, options *api.List
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchEndpoint(ctx, options)
 }
 
 func (a *restObjWorkloadV1Endpoint) Allowed(oper apiserver.APIOperType) bool {
@@ -527,8 +526,7 @@ func (a *restObjWorkloadV1Workload) Watch(ctx context.Context, options *api.List
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchWorkload(ctx, options)
 }
 
 func (a *restObjWorkloadV1Workload) Allowed(oper apiserver.APIOperType) bool {

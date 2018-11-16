@@ -16,10 +16,13 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/listerwatcher"
 	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -2098,6 +2101,12 @@ func (m loggingClusterV1MiddlewareServer) AutoWatchTenant(in *api.ListWatchOptio
 	return
 }
 
+func (r *EndpointsClusterV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsClusterV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -2108,10 +2117,7 @@ func (r *EndpointsClusterV1RestClient) getHTTPRequest(ctx context.Context, in in
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
@@ -2124,6 +2130,12 @@ func makeURIClusterV1AuthBootstrapCompleteCreateOper(in *ClusterAuthBootstrapReq
 }
 
 //
+func makeURIClusterV1AutoAddClusterCreateOper(in *Cluster) string {
+	return ""
+
+}
+
+//
 func makeURIClusterV1AutoAddHostCreateOper(in *Host) string {
 	return fmt.Sprint("/configs/cluster/v1", "/hosts")
 }
@@ -2131,6 +2143,12 @@ func makeURIClusterV1AutoAddHostCreateOper(in *Host) string {
 //
 func makeURIClusterV1AutoAddNodeCreateOper(in *Node) string {
 	return fmt.Sprint("/configs/cluster/v1", "/nodes")
+}
+
+//
+func makeURIClusterV1AutoAddSmartNICCreateOper(in *SmartNIC) string {
+	return ""
+
 }
 
 //
@@ -2189,6 +2207,12 @@ func makeURIClusterV1AutoGetTenantGetOper(in *Tenant) string {
 }
 
 //
+func makeURIClusterV1AutoListClusterListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
 func makeURIClusterV1AutoListHostListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/cluster/v1", "/hosts")
 }
@@ -2231,6 +2255,37 @@ func makeURIClusterV1AutoUpdateSmartNICUpdateOper(in *SmartNIC) string {
 //
 func makeURIClusterV1AutoUpdateTenantUpdateOper(in *Tenant) string {
 	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name)
+}
+
+//
+func makeURIClusterV1AutoWatchClusterWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/cluster/v1", "/watch/cluster")
+}
+
+//
+func makeURIClusterV1AutoWatchHostWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/cluster/v1", "/watch/hosts")
+}
+
+//
+func makeURIClusterV1AutoWatchNodeWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/cluster/v1", "/watch/nodes")
+}
+
+//
+func makeURIClusterV1AutoWatchSmartNICWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/cluster/v1", "/watch/smartnics")
+}
+
+//
+func makeURIClusterV1AutoWatchSvcClusterV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoWatchTenantWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/cluster/v1", "/watch/tenants")
 }
 
 // AutoAddCluster CRUD method for Cluster
@@ -2307,9 +2362,44 @@ func (r *EndpointsClusterV1RestClient) AutoListCluster(ctx context.Context, opti
 }
 
 // AutoWatchCluster CRUD method for Cluster
-func (r *EndpointsClusterV1RestClient) AutoWatchCluster(ctx context.Context, stream ClusterV1_AutoWatchClusterClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsClusterV1RestClient) AutoWatchCluster(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIClusterV1AutoWatchClusterWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgClusterWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 func (r *EndpointsClusterV1RestClient) AuthBootstrapCompleteCluster(ctx context.Context, in *ClusterAuthBootstrapRequest) (*Cluster, error) {
@@ -2438,9 +2528,44 @@ func (r *EndpointsClusterV1RestClient) AutoListNode(ctx context.Context, options
 }
 
 // AutoWatchNode CRUD method for Node
-func (r *EndpointsClusterV1RestClient) AutoWatchNode(ctx context.Context, stream ClusterV1_AutoWatchNodeClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsClusterV1RestClient) AutoWatchNode(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIClusterV1AutoWatchNodeWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgNodeWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // AutoAddHost CRUD method for Host
@@ -2549,9 +2674,44 @@ func (r *EndpointsClusterV1RestClient) AutoListHost(ctx context.Context, options
 }
 
 // AutoWatchHost CRUD method for Host
-func (r *EndpointsClusterV1RestClient) AutoWatchHost(ctx context.Context, stream ClusterV1_AutoWatchHostClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsClusterV1RestClient) AutoWatchHost(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIClusterV1AutoWatchHostWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgHostWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // AutoAddSmartNIC CRUD method for SmartNIC
@@ -2644,9 +2804,44 @@ func (r *EndpointsClusterV1RestClient) AutoListSmartNIC(ctx context.Context, opt
 }
 
 // AutoWatchSmartNIC CRUD method for SmartNIC
-func (r *EndpointsClusterV1RestClient) AutoWatchSmartNIC(ctx context.Context, stream ClusterV1_AutoWatchSmartNICClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsClusterV1RestClient) AutoWatchSmartNIC(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIClusterV1AutoWatchSmartNICWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgSmartNICWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // AutoAddTenant CRUD method for Tenant
@@ -2755,9 +2950,44 @@ func (r *EndpointsClusterV1RestClient) AutoListTenant(ctx context.Context, optio
 }
 
 // AutoWatchTenant CRUD method for Tenant
-func (r *EndpointsClusterV1RestClient) AutoWatchTenant(ctx context.Context, stream ClusterV1_AutoWatchTenantClient) (kvstore.Watcher, error) {
-	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
-	return nil, nil
+func (r *EndpointsClusterV1RestClient) AutoWatchTenant(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIClusterV1AutoWatchTenantWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgTenantWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	return lw, nil
 }
 
 // MakeClusterV1RestClientEndpoints make REST client endpoints

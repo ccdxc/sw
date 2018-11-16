@@ -609,7 +609,7 @@
     },
     "/configs/rollout/v1/watch/rollout": {
       "get": {
-        "summary": "Watch Rollout objects",
+        "summary": "Watch Rollout objects. Supports WebSockets or HTTP long poll",
         "operationId": "WatchRollout",
         "responses": {
           "200": {

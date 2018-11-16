@@ -177,3 +177,29 @@ func BenchmarkVarGet(b *testing.B) {
 	}
 
 }
+
+func TestGetQueryStringFromListWatchOptions(t *testing.T) {
+	opts := api.ListWatchOptions{}
+	r := GetQueryStringFromListWatchOptions(&opts)
+	if r != "" {
+		t.Fatalf("expecting empty string got [%s]", r)
+	}
+
+	opts.Name = "foo"
+	opts.Tenant = "tenant1"
+	opts.FieldChangeSelector = []string{"Spec.ABC", "status.in"}
+	exp := "name=foo&tenant=tenant1&field-change-selector=Spec.ABC&field-change-selector=status.in"
+	r = GetQueryStringFromListWatchOptions(&opts)
+	if r != exp {
+		t.Fatalf("expecting empty string got [%s]", r)
+	}
+	opts.FieldSelector = "x.x=test,y.y>=6,z.z<7"
+	opts.LabelSelector = "x in (a,b),y notin (a,b)"
+	opts.MaxResults = 2
+	opts.From = 10
+	exp = "name=foo&tenant=tenant1&label-selector=x in (a,b),y notin (a,b)&field-selector=x.x=test,y.y>=6,z.z<7&field-change-selector=Spec.ABC&field-change-selector=status.in&from=10&max-results=2"
+	r = GetQueryStringFromListWatchOptions(&opts)
+	if r != exp {
+		t.Fatalf("expecting empty string got [%s]", r)
+	}
+}

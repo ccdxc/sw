@@ -528,8 +528,7 @@ func (a *restObjAuthV1User) Watch(ctx context.Context, options *api.ListWatchOpt
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchUser(ctx, options)
 }
 
 func (a *restObjAuthV1User) Allowed(oper apiserver.APIOperType) bool {
@@ -722,8 +721,7 @@ func (a *restObjAuthV1AuthenticationPolicy) Watch(ctx context.Context, options *
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchAuthenticationPolicy(ctx, options)
 }
 
 func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) bool {
@@ -914,8 +912,7 @@ func (a *restObjAuthV1Role) Watch(ctx context.Context, options *api.ListWatchOpt
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchRole(ctx, options)
 }
 
 func (a *restObjAuthV1Role) Allowed(oper apiserver.APIOperType) bool {
@@ -1093,8 +1090,7 @@ func (a *restObjAuthV1RoleBinding) Watch(ctx context.Context, options *api.ListW
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
-	// XXX-TODO(sanjayt): add rest client handler for chunked stream
-	return nil, nil
+	return a.endpoints.AutoWatchRoleBinding(ctx, options)
 }
 
 func (a *restObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {

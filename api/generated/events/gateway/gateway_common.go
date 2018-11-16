@@ -16,6 +16,7 @@ import (
 	"github.com/go-openapi/analysis"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/spec"
+	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 
 	"github.com/pensando/grpc-gateway/runtime"
@@ -25,6 +26,7 @@ import (
 
 var muxMutex sync.Mutex
 var mux *runtime.ServeMux
+var wsUpgrader = websocket.Upgrader{}
 
 const codecSize = 1024 * 1024
 

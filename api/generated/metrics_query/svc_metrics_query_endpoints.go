@@ -183,6 +183,12 @@ func (m loggingMetricsV1MiddlewareServer) AutoWatchSvcMetricsV1(in *api.ListWatc
 	return errors.New("Not implemented")
 }
 
+func (r *EndpointsMetricsV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
+	val, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		header.Add("Authorization", val)
+	}
+}
 func (r *EndpointsMetricsV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)
 	if err != nil {
@@ -193,14 +199,17 @@ func (r *EndpointsMetricsV1RestClient) getHTTPRequest(ctx context.Context, in in
 	if err != nil {
 		return nil, fmt.Errorf("could not create request (%s)", err)
 	}
-	val, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if ok {
-		req.Header.Add("Authorization", val)
-	}
+	r.updateHTTPHeader(ctx, &req.Header)
 	if err = encodeHTTPRequest(ctx, req, in); err != nil {
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
 	return req, nil
+}
+
+//
+func makeURIMetricsV1AutoWatchSvcMetricsV1WatchOper(in *api.ListWatchOptions) string {
+	return ""
+
 }
 
 func (r *EndpointsMetricsV1RestClient) MetricsV1QueryEndpoint(ctx context.Context, in *QuerySpec) (*QueryResponse, error) {

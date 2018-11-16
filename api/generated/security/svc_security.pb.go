@@ -440,16 +440,16 @@ type SecurityV1Client interface {
 	AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup, opts ...grpc.CallOption) (*SecurityGroup, error)
 	// Update TrafficEncryptionPolicy object
 	AutoUpdateTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy, opts ...grpc.CallOption) (*TrafficEncryptionPolicy, error)
-	// Watch App objects
+	// Watch App objects. Supports WebSockets or HTTP long poll
 	AutoWatchApp(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchAppClient, error)
-	// Watch Certificate objects
+	// Watch Certificate objects. Supports WebSockets or HTTP long poll
 	AutoWatchCertificate(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchCertificateClient, error)
-	// Watch SGPolicy objects
+	// Watch SGPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchSGPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchSGPolicyClient, error)
-	// Watch SecurityGroup objects
+	// Watch SecurityGroup objects. Supports WebSockets or HTTP long poll
 	AutoWatchSecurityGroup(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchSecurityGroupClient, error)
 	AutoWatchSvcSecurityV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchSvcSecurityV1Client, error)
-	// Watch TrafficEncryptionPolicy objects
+	// Watch TrafficEncryptionPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchTrafficEncryptionPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (SecurityV1_AutoWatchTrafficEncryptionPolicyClient, error)
 }
 
@@ -931,16 +931,16 @@ type SecurityV1Server interface {
 	AutoUpdateSecurityGroup(context.Context, *SecurityGroup) (*SecurityGroup, error)
 	// Update TrafficEncryptionPolicy object
 	AutoUpdateTrafficEncryptionPolicy(context.Context, *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
-	// Watch App objects
+	// Watch App objects. Supports WebSockets or HTTP long poll
 	AutoWatchApp(*api.ListWatchOptions, SecurityV1_AutoWatchAppServer) error
-	// Watch Certificate objects
+	// Watch Certificate objects. Supports WebSockets or HTTP long poll
 	AutoWatchCertificate(*api.ListWatchOptions, SecurityV1_AutoWatchCertificateServer) error
-	// Watch SGPolicy objects
+	// Watch SGPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchSGPolicy(*api.ListWatchOptions, SecurityV1_AutoWatchSGPolicyServer) error
-	// Watch SecurityGroup objects
+	// Watch SecurityGroup objects. Supports WebSockets or HTTP long poll
 	AutoWatchSecurityGroup(*api.ListWatchOptions, SecurityV1_AutoWatchSecurityGroupServer) error
 	AutoWatchSvcSecurityV1(*api.ListWatchOptions, SecurityV1_AutoWatchSvcSecurityV1Server) error
-	// Watch TrafficEncryptionPolicy objects
+	// Watch TrafficEncryptionPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchTrafficEncryptionPolicy(*api.ListWatchOptions, SecurityV1_AutoWatchTrafficEncryptionPolicyServer) error
 }
 

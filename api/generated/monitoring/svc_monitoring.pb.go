@@ -771,24 +771,24 @@ type MonitoringV1Client interface {
 	AutoUpdateStatsPolicy(ctx context.Context, in *StatsPolicy, opts ...grpc.CallOption) (*StatsPolicy, error)
 	// Update TroubleshootingSession object
 	AutoUpdateTroubleshootingSession(ctx context.Context, in *TroubleshootingSession, opts ...grpc.CallOption) (*TroubleshootingSession, error)
-	// Watch Alert objects
+	// Watch Alert objects. Supports WebSockets or HTTP long poll
 	AutoWatchAlert(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchAlertClient, error)
-	// Watch AlertDestination objects
+	// Watch AlertDestination objects. Supports WebSockets or HTTP long poll
 	AutoWatchAlertDestination(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchAlertDestinationClient, error)
-	// Watch AlertPolicy objects
+	// Watch AlertPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchAlertPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchAlertPolicyClient, error)
-	// Watch EventPolicy objects
+	// Watch EventPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchEventPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchEventPolicyClient, error)
-	// Watch FlowExportPolicy objects
+	// Watch FlowExportPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchFlowExportPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchFlowExportPolicyClient, error)
-	// Watch FwlogPolicy objects
+	// Watch FwlogPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchFwlogPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchFwlogPolicyClient, error)
-	// Watch MirrorSession objects
+	// Watch MirrorSession objects. Supports WebSockets or HTTP long poll
 	AutoWatchMirrorSession(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchMirrorSessionClient, error)
-	// Watch StatsPolicy objects
+	// Watch StatsPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchStatsPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchStatsPolicyClient, error)
 	AutoWatchSvcMonitoringV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchSvcMonitoringV1Client, error)
-	// Watch TroubleshootingSession objects
+	// Watch TroubleshootingSession objects. Supports WebSockets or HTTP long poll
 	AutoWatchTroubleshootingSession(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (MonitoringV1_AutoWatchTroubleshootingSessionClient, error)
 }
 
@@ -1618,24 +1618,24 @@ type MonitoringV1Server interface {
 	AutoUpdateStatsPolicy(context.Context, *StatsPolicy) (*StatsPolicy, error)
 	// Update TroubleshootingSession object
 	AutoUpdateTroubleshootingSession(context.Context, *TroubleshootingSession) (*TroubleshootingSession, error)
-	// Watch Alert objects
+	// Watch Alert objects. Supports WebSockets or HTTP long poll
 	AutoWatchAlert(*api.ListWatchOptions, MonitoringV1_AutoWatchAlertServer) error
-	// Watch AlertDestination objects
+	// Watch AlertDestination objects. Supports WebSockets or HTTP long poll
 	AutoWatchAlertDestination(*api.ListWatchOptions, MonitoringV1_AutoWatchAlertDestinationServer) error
-	// Watch AlertPolicy objects
+	// Watch AlertPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchAlertPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchAlertPolicyServer) error
-	// Watch EventPolicy objects
+	// Watch EventPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchEventPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchEventPolicyServer) error
-	// Watch FlowExportPolicy objects
+	// Watch FlowExportPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchFlowExportPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchFlowExportPolicyServer) error
-	// Watch FwlogPolicy objects
+	// Watch FwlogPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchFwlogPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchFwlogPolicyServer) error
-	// Watch MirrorSession objects
+	// Watch MirrorSession objects. Supports WebSockets or HTTP long poll
 	AutoWatchMirrorSession(*api.ListWatchOptions, MonitoringV1_AutoWatchMirrorSessionServer) error
-	// Watch StatsPolicy objects
+	// Watch StatsPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchStatsPolicy(*api.ListWatchOptions, MonitoringV1_AutoWatchStatsPolicyServer) error
 	AutoWatchSvcMonitoringV1(*api.ListWatchOptions, MonitoringV1_AutoWatchSvcMonitoringV1Server) error
-	// Watch TroubleshootingSession objects
+	// Watch TroubleshootingSession objects. Supports WebSockets or HTTP long poll
 	AutoWatchTroubleshootingSession(*api.ListWatchOptions, MonitoringV1_AutoWatchTroubleshootingSessionServer) error
 }
 

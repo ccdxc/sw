@@ -1161,7 +1161,7 @@ func FieldByJSONTag(kind, f string) (string, error) {
 		}
 		field, ok := schema.FindFieldByJSONTag(jsonStr)
 		if !ok {
-			return "", fmt.Errorf("Did not find field %v", jsonStr)
+			return "", fmt.Errorf("Did not find field [%v][%v]", jsonStr, kind)
 		}
 		if kk != -1 {
 			if field.Slice {
