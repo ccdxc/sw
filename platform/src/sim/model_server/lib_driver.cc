@@ -3,16 +3,14 @@
 #include <thread>
 #include <cmath>
 #include <map>
+#include <pthread.h>
 #include <condition_variable>
-
 #include <grpc++/grpc++.h>
 #include <zmq.h>
 
-#include <pthread.h>
-
-#include <interface.grpc.pb.h>
-#include <internal.grpc.pb.h>
-#include <rdma.grpc.pb.h>
+#include "gen/proto/interface.grpc.pb.h"
+#include "gen/proto/internal.grpc.pb.h"
+#include "gen/proto/rdma.grpc.pb.h"
 
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/model_sim/include/lib_model_client.h"

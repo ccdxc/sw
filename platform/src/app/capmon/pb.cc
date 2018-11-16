@@ -9,7 +9,7 @@
 #include "cap_pbc_c_hdr.h"
 #include "cap_top_csr_defines.h"
 
-#include "pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 
 const char *portname[12] = {"Eth0", "Eth1", "Eth2", "Eth3", "Eth4", "Eth5",
                             "Eth6", "Eth7", "BMC ", "DMA ", "P4EG", "P4IG"};

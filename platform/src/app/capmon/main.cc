@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 #include "dtls.hpp"
-#include "pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 
 #include "cap_mpu_c_hdr.h"
 #include "cap_pbc_c_hdr.h"

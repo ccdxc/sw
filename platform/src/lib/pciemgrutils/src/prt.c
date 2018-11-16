@@ -12,7 +12,7 @@
 #include <inttypes.h>
 #include <sys/param.h>
 
-#include "misc.h"
+#include "platform/src/lib/misc/include/misc.h"
 #include "prt.h"
 
 int

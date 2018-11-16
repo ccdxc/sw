@@ -2,9 +2,10 @@
 #include <iostream>
 #include <cmath>
 
+#include "nic/include/storage_seq_common.h"
+
 #include "ethlif.hpp"
 #include "print.hpp"
-#include "storage_seq_common.h"
 
 using namespace std;
 

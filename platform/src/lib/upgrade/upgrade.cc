@@ -2,14 +2,14 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nicmgr_upgrade.hpp"
-#include "delphic.hpp"
+#include "gen/proto/nicmgr/nicmgr.pb.h"
+
 #include "nic/include/trace.hpp"
 #include "nic/include/base.hpp"
-#include "dev.hpp"
-#include "eth_dev.hpp"
-#include "nicmgr.pb.h"
+#include "platform/src/lib/nicmgr/include/dev.hpp"
+#include "platform/src/app/nicmgrd/src/delphic.hpp"
 
+#include "upgrade.hpp"
 
 using namespace upgrade;
 using namespace nicmgr;

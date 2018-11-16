@@ -2,27 +2,6 @@
 # Copyright (c) 2017, Pensando Systems Inc.
 #
 
-PROGRAM = devparams
-SOURCES = devparams.c
-
-LIBRARIES = \
-	-lsimdev \
-	-lsimlib \
-	-lpciemgr \
-	-lpciemgrutils \
-	-lpcieport \
-	-lpcietlp \
-	-lcfgspace \
-	-lintrutils \
-	-lpal \
-	-lmisc \
-	$(NULL)
-
-TOPDIR = ../../../../..
-include $(TOPDIR)/make/Makefile.inc
-
-# Only run test on x86_64
-ifeq ("$(strip $(BUILD_ARCH))","x86_64")
 LCLEANFILES += dotest.out
 
 test: dotest.out
@@ -36,4 +15,3 @@ test: dotest.out
 
 dotest.out: $(GENLIB) $(GENBIN)/$(PROGRAM)
 	$(Q)./dotest $(GENLIB) $(GENBIN)/$(PROGRAM) > dotest.out 2>&1
-endif # BUILD_ARCH

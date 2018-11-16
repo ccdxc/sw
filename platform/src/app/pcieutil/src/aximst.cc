@@ -11,9 +11,11 @@
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
-#include "pal.h"
-#include "pciehw.h"
-#include "pciehw_dev.h"
+
+#include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pciemgr/include/pciehw.h"
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+
 #include "cmd.h"
 
 #define IND_INFO_BASE \

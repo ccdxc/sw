@@ -7,9 +7,11 @@
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
-#include "pciehw_dev.h"
-#include "pciemgrutils.h"
-#include "pciehw.h"
+
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "platform/src/lib/pciemgr/include/pciehw.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
+
 #include "pmt.h"
 #include "prt.h"
 #include "notify.h"

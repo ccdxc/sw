@@ -10,8 +10,8 @@
 #include <assert.h>
 #include <sys/param.h>
 
-#include "misc.h"
-#include "pal.h"
+#include "platform/src/lib/misc/include/misc.h"
+#include "platform/src/lib/pal/include/pal.h"
 
 static void
 usage(void)

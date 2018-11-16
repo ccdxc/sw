@@ -10,10 +10,11 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
-#include "pciesys.h"
-#include "pciehdevices.h"
-#include "pciehw_dev.h"
-#include "pcieport.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
+#include "platform/src/lib/pciehdevices/include/pciehdevices.h"
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "platform/src/lib/pcieport/include/pcieport.h"
+
 #include "pciemgrd_impl.hpp"
 
 static int poll_enabled;

@@ -118,6 +118,7 @@ elif args.target == 'debug' or args.target == 'debug-arm':
 else:
     print ("Packaging for haps")
     files.append('nic/tools/package/pack_haps.txt')
+    files.append('nic/tools/package/pack_platform.txt')
 
 if args.no_strip == True:
     strip_target = 0

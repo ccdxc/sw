@@ -9,8 +9,8 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "pci_ids.h"
-#include "pciemgrutils.h"
+#include "platform/include/common/pci_ids.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 #include "pciehdevices.h"
 #include "pciehdevices_impl.h"
 

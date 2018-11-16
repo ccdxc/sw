@@ -108,7 +108,7 @@ int
 main(int argc, char *argv[])
 {
     uint32_t infosz;
-    char *info, *wp;
+    char *info, *wp = NULL;
     int i, pass;
     off_t phys;
     char *p;

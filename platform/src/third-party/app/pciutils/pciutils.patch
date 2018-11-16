@@ -86,7 +86,7 @@ diff -uprN pciutils-3.5.6-orig/lib/Makefile pciutils-3.5.6/lib/Makefile
 +# PEN_TOP is relative to parent dir, prepend ../ because we are
 +# building in lib/ subdir.
 +PEN_TOP ?= path-to-pensando-topdir
-+PEN_PCIE = ../$(PEN_TOP)/src/lib
++PEN_PCIE = $(PEN_TOP)/src/lib/
 +OBJS += pen-libpciehost
 +pen-libpciehost.o: CFLAGS += -I$(PEN_PCIE)/pciemgrutils/include \
 +                             -I$(PEN_PCIE)/pciemgr/include
@@ -237,29 +237,28 @@ diff -uprN pciutils-3.5.6-orig/lib/pen-libpciehost.c pciutils-3.5.6/lib/pen-libp
 diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
 --- pciutils-3.5.6-orig/Makefile	2017-11-17 05:00:27.000000000 -0800
 +++ pciutils-3.5.6/Makefile	2018-02-10 23:05:23.232755294 -0800
-@@ -87,6 +87,27 @@ common.o: common.c pciutils.h $(PCIINC)
+@@ -87,6 +87,26 @@ common.o: common.c pciutils.h $(PCIINC)
  lspci: LDLIBS+=$(LIBKMOD_LIBS)
  ls-kernel.o: CFLAGS+=$(LIBKMOD_CFLAGS)
  
 +ifdef PCI_HAVE_PM_PEN_LIBPCIEHOST
 +# expect PEN_TOP, BUILD_ARCH passed in
 +PEN_TOP ?= path-to-pensando-topdir
-+LIBPCIEDIR = $(PEN_TOP)/gen/$(BUILD_ARCH)/lib
++LIBPCIEDIR = $(PEN_TOP)/nic/build/$(BUILD_ARCH)/iris/lib
++BIN_OUT_DIR = $(PEN_TOP)/nic/build/$(BUILD_ARCH)/iris/out
 +LIBPCIE = \
-+	$(LIBPCIEDIR)/libpciemgr.a \
-+	$(LIBPCIEDIR)/libpciemgrutils.a \
-+	$(LIBPCIEDIR)/libpcietlp.a \
-+	$(LIBPCIEDIR)/libpcieport.a \
-+	$(LIBPCIEDIR)/libcfgspace.a \
-+	$(LIBPCIEDIR)/libpal.a \
-+	$(LIBPCIEDIR)/libmisc.a \
-+	$(LIBPCIEDIR)/libintrutils.a
++	$(LIBPCIEDIR)/libpciemgr.so \
++	$(LIBPCIEDIR)/libpciemgrutils.so \
++	$(LIBPCIEDIR)/libpcietlp.so \
++	$(LIBPCIEDIR)/libpcieport.so \
++	$(LIBPCIEDIR)/libcfgspace.so \
++	$(LIBPCIEDIR)/libpal.so \
++	$(LIBPCIEDIR)/libmisc.so \
++	$(LIBPCIEDIR)/libintrutils.so \
++	$(BIN_OUT_DIR)/sbus_pcie_rom_submake/sbus_pcie_rom.o
 +lspci: LDLIBS+=$(LIBPCIE)
-+lspci: $(LIBPCIE)
 +setpci: LDLIBS+=$(LIBPCIE)
-+setpci: $(LIBPCIE)
 +example: LDLIBS+=$(LIBPCIE)
-+example: $(LIBPCIE)
 +endif
 +
  update-pciids: update-pciids.sh

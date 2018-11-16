@@ -17,15 +17,15 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#include "misc.h"
-#include "pal.h"
-#include "pcieport.h"
-#include "pciemgrutils.h"
-#include "cfgspace.h"
-#include "pciehw.h"
-#include "pciehw_dev.h"
+#include "platform/src/lib/misc/include/misc.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pcieport/include/pcieport.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
+#include "platform/src/lib/cfgspace/include/cfgspace.h"
+#include "platform/src/lib/pciemgr/include/pciehw.h"
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
 #include "pciehw_impl.h"
-#include "bdf.h"
 
 static pciehw_t pciehw;
 

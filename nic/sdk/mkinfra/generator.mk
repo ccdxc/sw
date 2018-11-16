@@ -25,6 +25,7 @@ ifeq "$${${1}_PIPELINE}" "${PIPELINE}"
     $$(info Includes         MODULE_INCS          = $${${1}_INCS})
     $$(info LD Lib Paths     MODULE_LDPATHS       = $${${1}_LDPATHS})
     $$(info LD Libs          MODULE_LDLIBS        = $${${1}_LDLIBS})
+    $$(info LD Flags         MODULE_LDFLAGS       = $${${1}_LDFLAGS})
     $$(info Defs             MODULE_DEFS          = $${${1}_DEFS})
     $$(info Dependencies     MODULE_DEPS          = $${${1}_DEPS})
     $$(info Pre-Requisites   MODULE_PREREQS       = $${${1}_PREREQS})
@@ -67,6 +68,7 @@ define INCLUDE_MODULEMK
     MODULE_INCS                 :=
     MODULE_LDPATHS              :=
     MODULE_LDLIBS               :=
+    MODULE_LDFLAGS              :=
     MODULE_DEFS                 :=
     MODULE_DEPS                 :=
     MODULE_PIPELINE             :=
@@ -111,6 +113,7 @@ define INCLUDE_MODULEMK
     $${TGID}_INCS           := $$(addprefix -I,$${MODULE_INCS}) ${CONFIG_INCS}
     $${TGID}_LDPATHS        := $$(addprefix -L,$${MODULE_LDPATHS}) \
                                $$(addprefix $${RPATH_PREFIX},$${MODULE_LDPATHS}) ${CONFIG_LDPATHS}
+    $${TGID}_LDFLAGS        := $${MODULE_LDFLAGS} ${CMD_LINKER_FLAGS}
     $${TGID}_PIPELINE       := $$(findstring ${PIPELINE},$${MODULE_PIPELINE})
     $${TGID}_ARCH           := $$(findstring ${ARCH},$${MODULE_ARCH})
     $${TGID}_DEPS           := $${MODULE_DEPS}

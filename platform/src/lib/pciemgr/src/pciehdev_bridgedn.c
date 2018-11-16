@@ -8,9 +8,9 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
-#include "pci_ids.h"
-#include "misc.h"
-#include "pciemgrutils.h"
+#include "platform/include/common/pci_ids.h"
+#include "platform/src/lib/misc/include/misc.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 
 static void
 init_memtun_bar(const int port, pciehbars_t *pbars)

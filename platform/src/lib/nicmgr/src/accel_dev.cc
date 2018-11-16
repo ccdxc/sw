@@ -15,20 +15,20 @@
 // Tell accel_dev.hpp to emumerate definitions of all devcmds
 #define ACCEL_DEV_CMD_ENUMERATE  1
 
-#include "base.hpp"
+#include "cap_top_csr_defines.h"
+#include "cap_pics_c_hdr.h"
+
+#include "gen/proto/nicmgr/accel_metrics.pb.h"
+#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
+#include "nic/include/base.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "platform/src/lib/intrutils/include/intrutils.h"
+#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+
 #include "logger.hpp"
-#include "intrutils.h"
 #include "accel_dev.hpp"
 #include "pd_client.hpp"
 #include "hal_client.hpp"
-#include "pciemgr_if.hpp"
-#include "cap_top_csr_defines.h"
-#include "cap_pics_c_hdr.h"
-#include "capri_hbm.hpp"
-#include "capri_barco_crypto.hpp"
-
-#include "accel_metrics.pb.h"
-#include "accel_metrics.delphi.hpp"
 
 // Amount of time to wait for sequencer queues to be quiesced
 #define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    5000000

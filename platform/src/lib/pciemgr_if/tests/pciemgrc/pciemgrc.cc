@@ -13,11 +13,11 @@
 #include <sys/param.h>
 #include <sys/time.h>
 
-#include "evutils.h"
-#include "pciehdevices.h"
-#include "pciemgrutils.h"
-#include "pciehw_dev.h"
-#include "pciemgr_if.hpp"
+#include "platform/src/lib/evutils/include/evutils.h"
+#include "platform/src/lib/pciehdevices/include/pciehdevices.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 
 static int verbose_flag;
 static pciemgr *pciemgr;

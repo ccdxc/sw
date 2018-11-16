@@ -1,12 +1,6 @@
-#include <python2.7/Python.h>
-#include "nic/model_sim/include/scapy_pkt_gen.h"
-#include "nic/model_sim/include/cap_env_base.h"
-#include "nic/model_sim/include/cpu.h"
+// #include <python2.7/Python.h>
 #include <iomanip>
 #include <zmq.h>
-#include "nic/model_sim/include/HBM.h"
-#include "nic/model_sim/include/HOST_MEM.h"
-#include "nic/model_sim/include/buf_hdr.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -16,6 +10,13 @@
 #include <vector>
 #include <queue>
 #include <signal.h>
+
+// #include "nic/model_sim/include/scapy_pkt_gen.h"
+#include "nic/model_sim/include/cap_env_base.h"
+#include "nic/model_sim/include/cpu.h"
+#include "nic/model_sim/include/HBM.h"
+#include "nic/model_sim/include/HOST_MEM.h"
+#include "nic/model_sim/include/buf_hdr.h"
 #include "nic/utils/host_mem/params.hpp"
 #include "zmq_wait.h"
 
@@ -132,8 +133,6 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
         case BUFF_TYPE_STEP_PKT:
         {
             std::vector<unsigned char> pkt_vector(buff->data, buff->data + buff->size);
-            uint32_t port;
-            uint32_t cos;
             /* Send packet through the model */
             std::cout << "step_network_pkt port: " << buff->port << " size: " << buff->size << std::endl;
             env->step_network_pkt(pkt_vector, buff->port);
@@ -420,10 +419,8 @@ zmq_model_recv(void *socket, void *arg)
 
 static void wait_loop() {
     int rc;
-    buffer_hdr_t *buff;
     char zmqsockstr[200];
     char *model_socket_name = NULL;
-    char recv_buff[MODEL_ZMQ_BUFF_SIZE];
 
     const char* user_str = std::getenv("ZMQ_SOC_DIR");
     model_socket_name = std::getenv("MODEL_SOCKET_NAME");

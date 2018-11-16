@@ -10,11 +10,12 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
+#include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pcieport/include/pcieport.h"
+
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
 #include "cap_pp_c_hdr.h"
-#include "pal.h"
-#include "pcieport.h"
 #include "cmd.h"
 
 static const char *

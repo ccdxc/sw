@@ -11,7 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "simmsg.h"
+#include "platform/src/sim/libsimlib/include/simmsg.h"
 #include "simlib_impl.h"
 
 /*

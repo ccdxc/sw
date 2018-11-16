@@ -7,6 +7,7 @@ CMD_GXX             := g++
 CMD_GXX_FLAGS       := ${COMMON_GXX_FLAGS} ${RELEASE_GXX_FLAGS}
 CMD_GPP_FLAGS       := ${COMMON_GPP_FLAGS} ${RELEASE_GXX_FLAGS}
 
+CMD_AS              := as
 CMD_AR              := ar
 CMD_AR_FLAGS        := ${COMMON_AR_FLAGS} ${RELEASE_AR_FLAGS}
 

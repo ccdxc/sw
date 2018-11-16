@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "src/lib/misc/include/misc.h"
-#include "src/lib/misc/include/bdf.h"
-#include "src/lib/misc/include/maclib.h"
+#include "platform/src/lib/misc/include/misc.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/lib/misc/include/maclib.h"
 #include "simdev_impl.h"
 
 /*

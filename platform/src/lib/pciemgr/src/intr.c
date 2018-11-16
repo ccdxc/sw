@@ -10,10 +10,10 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "bdf.h"
-#include "pal.h"
-#include "intrutils.h"
-#include "pciesys.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/intrutils/include/intrutils.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 #include "intr.h"
 

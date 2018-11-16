@@ -18,12 +18,12 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "src/lib/misc/include/maclib.h"
-#include "src/lib/misc/include/bdf.h"
-#include "src/sim/libsimlib/include/simserver.h"
-#include "src/sim/libsimdev/src/dev_utils.h"
-#include "src/sim/libsimdev/src/simdev_impl.h"
-#include "eth_common.h"
+#include "nic/include/eth_common.h"
+#include "platform/src/lib/misc/include/maclib.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/sim/libsimlib/include/simserver.h"
+#include "platform/src/sim/libsimdev/src/dev_utils.h"
+#include "platform/src/sim/libsimdev/src/simdev_impl.h"
 
 /* Supply these for ionic_if.h */
 typedef u_int8_t u8;
@@ -33,7 +33,7 @@ typedef u_int64_t u64;
 typedef u_int64_t dma_addr_t;
 #define BIT(n)  (1 << (n))
 
-#include "drivers/linux/eth/ionic/ionic_if.h"
+#include "platform/drivers/linux/eth/ionic/ionic_if.h"
 
 typedef struct ethparams_s {
     int lif;

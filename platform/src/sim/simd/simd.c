@@ -13,11 +13,11 @@
 #include <signal.h>
 #include <sys/types.h>
 
-#include "src/lib/pciemgr/include/pciehsvc.h"
-#include "src/lib/misc/include/maclib.h"
-#include "src/lib/misc/include/bdf.h"
-#include "src/sim/libsimlib/include/simserver.h"
-#include "src/sim/libsimdev/include/simdevices.h"
+#include "platform/src/lib/pciemgr/include/pciehsvc.h"
+#include "platform/src/lib/misc/include/maclib.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/sim/libsimlib/include/simserver.h"
+#include "platform/src/sim/libsimdev/include/simdevices.h"
 
 typedef struct simctx_s {
     int serverfd;

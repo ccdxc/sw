@@ -9,7 +9,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <libgen.h>
-#include "pal.h"
+
+#include "platform/src/lib/pal/include/pal.h"
 
 static const char *progname;
 

@@ -8,13 +8,14 @@
 #include <map>
 #include <grpc++/grpc++.h>
 
-#include "vrf.grpc.pb.h"
-#include "interface.grpc.pb.h"
-#include "endpoint.grpc.pb.h"
-#include "l2segment.grpc.pb.h"
-#include "multicast.grpc.pb.h"
-#include "rdma.grpc.pb.h"
-#include "logger.hpp"
+#include "gen/proto/vrf.grpc.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
+#include "gen/proto/endpoint.grpc.pb.h"
+#include "gen/proto/l2segment.grpc.pb.h"
+#include "gen/proto/multicast.grpc.pb.h"
+#include "gen/proto/rdma.grpc.pb.h"
+
+#include "platform/src/lib/nicmgr/include/logger.hpp"
 
 using grpc::Status;
 using vrf::VrfRequestMsg;

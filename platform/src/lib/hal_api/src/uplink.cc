@@ -2,7 +2,7 @@
 #include <iostream>
 #include <grpc++/grpc++.h>
 
-#include "types.grpc.pb.h"
+#include "gen/proto/types.grpc.pb.h"
 
 #include "uplink.hpp"
 #include "vrf.hpp"

@@ -2,8 +2,8 @@
 #ifndef __HAL_TYPES_HPP__
 #define __HAL_TYPES_HPP__
 
-#include "kh.grpc.pb.h"
-#include "interface.grpc.pb.h"
+#include "gen/proto/kh.grpc.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
 
 #define NUM_QUEUE_TYPES     8
 

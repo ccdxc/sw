@@ -10,8 +10,8 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "pal.h"
-#include "pciesys.h"
+#include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
 static u_int64_t

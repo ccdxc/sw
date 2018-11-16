@@ -7,9 +7,8 @@
 
 #include "dev.hpp"
 #include "hal_client.hpp"
-#include "accel_ring.h"
-#include "adminq.h"
-#include "storage_seq_common.h"
+#include "nic/include/accel_ring.h"
+#include "nic/include/storage_seq_common.h"
 
 #define ACCEL_DEV_PAGE_SIZE             4096
 #define ACCEL_DEV_PAGE_MASK             (ACCEL_DEV_PAGE_SIZE - 1)
@@ -95,7 +94,7 @@ typedef struct dev_cmd_regs dev_cmd_regs_t;
 /* Supply these for accel_dev_if.h */
 #define dma_addr_t uint64_t
 
-#include "accel_dev_if.h"
+#include "nic/include/accel_dev_if.h"
 
 #pragma pack(push, 1)
 

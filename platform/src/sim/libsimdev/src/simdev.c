@@ -14,11 +14,11 @@
 #include <sys/queue.h>
 #include <sys/param.h>
 
-#include "src/lib/misc/include/misc.h"
-#include "src/lib/misc/include/bdf.h"
-#include "src/lib/misc/include/maclib.h"
-#include "src/sim/libsimdev/src/simdev_impl.h"
-#include "src/sim/libsimdev/include/simdevices.h"
+#include "platform/src/lib/misc/include/misc.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/lib/misc/include/maclib.h"
+#include "platform/src/sim/libsimdev/src/simdev_impl.h"
+#include "platform/src/sim/libsimdev/include/simdevices.h"
 
 
 typedef struct simdevinfo_s {

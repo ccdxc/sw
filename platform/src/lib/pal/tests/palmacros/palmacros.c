@@ -1,10 +1,14 @@
+/*
+ * Copyright (c) 2018, Pensando Systems Inc.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <inttypes.h>
 #include <assert.h>
-#include "mm_int.h"
+#include "platform/src/lib/pal/src/mm_int.h"
 
 int main() {
     u_int64_t top = 0;

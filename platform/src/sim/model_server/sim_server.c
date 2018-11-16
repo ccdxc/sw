@@ -15,10 +15,11 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "pciehsvc.h"
-#include "bdf.h"
-#include "simserver.h"
-#include "simdevices.h"
+#include "platform/src/lib/pciemgr/include/pciehsvc.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/sim/libsimlib/include/simserver.h"
+#include "platform/src/sim/libsimdev/include/simdevices.h"
+
 #include "zmq_wait.h"
 
 #include "lib_driver.hpp"

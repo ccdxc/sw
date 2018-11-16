@@ -1,7 +1,0 @@
-#
-# Copyright (c) 2018, Pensando Systems Inc.
-#
-
-SUBDIRS = pcietlp
-TOPDIR = ../../../..
-include $(TOPDIR)/make/Makefile.inc

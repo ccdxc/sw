@@ -3,7 +3,7 @@ include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = libsysmgr.so
 MODULE_SOLIBS   = delphisdk
-MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
+MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev pthread
 MODULE_ARLIBS   = sysmgrproto delphiproto
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp)
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cpp)

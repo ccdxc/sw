@@ -1,7 +1,7 @@
 ---
 targets:
-  build_x86-64: [ "make", "all", "test" ]
-  build_aarch64: [ "make", "BUILD_ARCHES=aarch64", "all", "test" ]
+  build_x86-64: [ "sh", "-c", "cd /sw/nic && make ARCH=x86_64" ]
+  build_aarch64: [ "sh", "-c", "cd /sw/nic && make ARCH=aarch64" ]
   ##nicmgr_gtest: [ "sh", "-c", "make && cd /sw/nic && ./run.py --nicmgr_gtest" ]
   ##nicmgr_classic_gtest: [ "sh", "-c", "make && cd /sw/nic && ./run.py --nicmgr_gtest --classic" ]
 cache:

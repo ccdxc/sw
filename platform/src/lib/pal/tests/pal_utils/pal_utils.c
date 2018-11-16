@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <sys/param.h>
 
-#include "pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 
 int
 main(int argc, char *argv[])

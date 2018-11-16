@@ -7,10 +7,10 @@
 #include <string>
 #include <fstream>
 
-#include "mpu_trace.hpp"
-#include "sdk/pal.hpp"
+#include "gen/proto/debug.grpc.pb.h"
 
-#include "debug.grpc.pb.h"
+#include "nic/include/mpu_trace.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;

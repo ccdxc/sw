@@ -15,15 +15,6 @@
 #include <sstream>
 #include <grpc++/grpc++.h>
 
-#include "types.grpc.pb.h"
-#include "vrf.grpc.pb.h"
-#include "interface.grpc.pb.h"
-#include "endpoint.grpc.pb.h"
-#include "l2segment.grpc.pb.h"
-#include "multicast.grpc.pb.h"
-#include "rdma.grpc.pb.h"
-#include "accel_rgroup.grpc.pb.h"
-
 #include "logger.hpp"
 #include "hal_client.hpp"
 #include "nicmgr_utils.hpp"

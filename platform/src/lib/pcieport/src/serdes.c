@@ -8,7 +8,7 @@
 #include "cap_sw_glue.h"
 #include "cap_pcie_api.h"
 
-#include "pciesys.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 

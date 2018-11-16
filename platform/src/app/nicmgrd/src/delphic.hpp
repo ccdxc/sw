@@ -6,12 +6,12 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include <grpc++/grpc++.h>
 
-#include "grpc++/grpc++.h"
-#include "nicmgr_upgrade.hpp"
-#include "sysmgr.hpp"
-#include "nicmgr.delphi.hpp"
-#include "port.delphi.hpp"
+#include "gen/proto/nicmgr/nicmgr.delphi.hpp"
+#include "gen/proto/port.delphi.hpp"
+#include "platform/src/lib/upgrade/upgrade.hpp"
+#include "platform/src/lib/sysmgr/sysmgr.hpp"
 
 namespace nicmgr {
 

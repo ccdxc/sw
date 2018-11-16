@@ -12,10 +12,11 @@
 #include <inttypes.h>
 #include <sys/param.h>
 
+#include "platform/src/lib/pal/include/pal.h"
+
 #include "cap_top_csr_defines.h"
 #include "cap_intr_c_hdr.h"
 
-#include "pal.h"
 #include "intrutils.h"
 
 #define NWORDS(a)       (sizeof(a) / sizeof(u_int32_t))

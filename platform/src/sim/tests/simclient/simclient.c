@@ -10,8 +10,8 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "simclient.h"
-#include "bdf.h"
+#include "platform/src/sim/libsimlib/include/simclient.h"
+#include "platform/src/lib/misc/include/bdf.h"
 
 static int simfd = -1;
 

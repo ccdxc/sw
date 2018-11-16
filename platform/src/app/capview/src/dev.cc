@@ -4,11 +4,13 @@
  */
 
 #include <system_error>
-#include "dtls.h"
 #include <signal.h>
 #include <setjmp.h>
+
 #include "dev.h"
-#include "pal.h"
+#include "dtls.h"
+
+#include "platform/src/lib/pal/include/pal.h"
 
 static uint8_t tx;
 

@@ -10,10 +10,11 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "pci_ids.h"
-#include "pal.h"
-#include "pciesys.h"
-#include "pciehw_dev.h"
+#include "platform/include/common/pci_ids.h"
+#include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+
 #include "pcieport.h"
 #include "pcieport_impl.h"
 

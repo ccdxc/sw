@@ -13,8 +13,8 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include "pciesys.h"
-#include "pal.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
+#include "platform/src/lib/pal/include/pal.h"
 
 typedef u_int8_t bool;
 #define true 1

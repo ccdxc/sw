@@ -126,8 +126,9 @@ nic/sim/naples/hntap-cfg.json                                    /nic/conf
 nic/sim/naples/hntap-with-qemu-cfg.json                          /nic/conf
 nic/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json      /nic/conf/
 
-platform/gen/x86_64/bin                                          /platform/bin/
-platform/gen/x86_64/lib                                          /platform/lib/
+nic/build/aarch64/iris/bin                                       /platform/bin/
+nic/build/aarch64/iris/lib                                       /platform/lib/
+
 /lib64/libedit.so*                                               /platform/lib/
 platform/tools/setup_pcie.sh                                     /platform/bin/
 nic/e2etests/go/agent/configs/golden/golden_cfg.yml              /nic/tools/

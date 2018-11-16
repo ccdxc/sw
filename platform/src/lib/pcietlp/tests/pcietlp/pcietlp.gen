@@ -1,9 +1,6 @@
 #!/bin/sh
 
-TOPDIR=../../../../..
-GENLIB=$TOPDIR/gen/x86_64/lib
-PROG=$TOPDIR/gen/x86_64/bin/pcietlp
-
-export LD_LIBRARY_PATH=$GENLIB
+PROG=${BLD_OUT_DIR}/../bin/pcietlp
+export LD_LIBRARY_PATH=${BLD_OUT_DIR}/../lib
 
 $PROG $*

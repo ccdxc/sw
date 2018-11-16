@@ -6,12 +6,12 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "adminq.h"
-#include "eth_common.h"
-#include "sdk/pal.hpp"
+#include "nic/include/adminq.h"
+#include "nic/include/eth_common.h"
+#include "nic/sdk/include/sdk/pal.hpp"
 
-#include "cap_top_csr_defines.h"
-#include "cap_wa_c_hdr.h"
+#include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
+#include "nic/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
 
 struct eth_rx_qstate qstate_ethrx = {0};
 struct eth_tx_qstate qstate_ethtx = {0};

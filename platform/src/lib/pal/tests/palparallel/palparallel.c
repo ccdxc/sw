@@ -5,7 +5,8 @@
 #include <inttypes.h>
 #include <ctype.h>
 #include <time.h>
-#include "pal.h"
+
+#include "platform/src/lib/pal/include/pal.h"
 
 #define MAXAPPNAME 64
 #define MAXREGIONNAME 64

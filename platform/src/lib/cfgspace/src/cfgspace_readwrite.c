@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "cfgspace.h"
+#include "platform/src/lib/cfgspace/include/cfgspace.h"
 #include "cfgspace_getset.h"
 
 u_int8_t

@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "cfgspace.h"
+#include "platform/src/lib/cfgspace/include/cfgspace.h"
 
 /*
  * Initialize specific config space registers.

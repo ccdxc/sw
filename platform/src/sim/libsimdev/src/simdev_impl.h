@@ -7,7 +7,7 @@
 
 #include <sys/queue.h>
 
-#include "src/sim/libsimlib/include/simmsg.h"
+#include "platform/src/sim/libsimlib/include/simmsg.h"
 
 struct simdev_s;
 typedef struct simdev_s simdev_t;

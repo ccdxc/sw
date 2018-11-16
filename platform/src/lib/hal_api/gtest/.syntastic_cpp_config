@@ -1,7 +1,0 @@
--I ../../../gen/proto/hal
--I ../../../sdk/include
--I ../../../sdk
--I ../../../..
--I ../../../hal/third-party/spdlog/include
--I ../../../sdk/.gtest
--std=c++11

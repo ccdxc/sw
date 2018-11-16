@@ -9,15 +9,16 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "evutils.h"
-#include "pciemgr.h"
-#include "pciemgrutils.h"
-#include "pcieport.h"
-#include "pciehdev_impl.h"
-#include "pciehcfg_impl.h"
-#include "pciehbar_impl.h"
-#include "pciemgrd_impl.hpp"
-#include "pmserver.h"
+#include "platform/src/lib/evutils/include/evutils.h"
+#include "platform/src/lib/pciemgr/include/pciemgr.h"
+#include "platform/src/lib/pcieport/include/pcieport.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
+#include "platform/src/lib/pciemgrutils/include/pciehdev_impl.h"
+#include "platform/src/lib/pciemgrutils/include/pciehcfg_impl.h"
+#include "platform/src/lib/pciemgrutils/include/pciehbar_impl.h"
+#include "platform/src/app/pciemgrd/src/pciemgrd_impl.hpp"
+#include "platform/src/lib/pciemgr_if/include/pmserver.h"
+
 #include "delphic.h"
 
 static void

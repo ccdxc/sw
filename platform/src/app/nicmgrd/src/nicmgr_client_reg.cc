@@ -1,11 +1,11 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-#include <nicmgr_upgrade.hpp>
-#include <delphic.hpp>
-#include <sysmgr.hpp>
 #include "nic/sdk/include/sdk/thread.hpp"
-#include "dev.hpp"
-#include "logger.hpp"
+#include "platform/src/lib/sysmgr/sysmgr.hpp"
+#include "platform/src/lib/upgrade/upgrade.hpp"
+
+#include "delphic.hpp"
+
 
 #define NICMGR_DELPHI_REG_THREAD_ID 1
 

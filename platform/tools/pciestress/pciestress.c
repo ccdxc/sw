@@ -19,7 +19,7 @@
 #include <sys/mman.h>
 #include <sys/io.h>
 
-#include "pci.h"
+#include "platform/src/third-party/lib/pci/include/pci.h"
 
 typedef struct tdev {
     struct pci_dev *pcidev;

@@ -16,6 +16,6 @@ include ${MKINFRA}/config.mk
 .PHONY: all clean
 all: ${ALL_TARGETS} 
 
-clean: platform-clean package-clean
+clean: package-clean
 	@rm -rf ${BLD_ARCH_DIR}
 	@rm -rf ${CLEAN_DIRS}

@@ -1,6 +1,8 @@
-#include "print.hpp"
+
 #include <spdlog/fmt/ostr.h>
-#include "logger.hpp"
+
+#include "print.hpp"
+#include "platform/src/lib/nicmgr/include/logger.hpp"
 
 char *
 macaddr2str (mac_t mac_addr)

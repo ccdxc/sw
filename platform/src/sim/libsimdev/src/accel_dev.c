@@ -18,18 +18,18 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "src/lib/misc/include/maclib.h"
-#include "src/lib/misc/include/bdf.h"
-#include "src/sim/libsimlib/include/simserver.h"
-#include "src/sim/libsimdev/src/dev_utils.h"
-#include "src/sim/libsimdev/src/simdev_impl.h"
+#include "platform/src/lib/misc/include/maclib.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/sim/libsimlib/include/simserver.h"
+#include "platform/src/sim/libsimdev/src/dev_utils.h"
+#include "platform/src/sim/libsimdev/src/simdev_impl.h"
 
 /* Supply these for accel_dev_if.h */
 #define dma_addr_t uint64_t
 
-#include "storage_seq_common.h"
-#include "accel_ring.h"
-#include "accel_dev_if.h"
+#include "nic/include/storage_seq_common.h"
+#include "nic/include/accel_ring.h"
+#include "nic/include/accel_dev_if.h"
 
 typedef struct accelparams_s {
     int lif;

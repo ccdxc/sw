@@ -1,9 +1,14 @@
+/*
+ * Copyright (c) 2018, Pensando Systems Inc.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <inttypes.h>
-#include "pal.h"
+
+#include "platform/src/lib/pal/include/pal.h"
 
 #define GARBAGE "01234567"
 #define GARBAGESZ 8

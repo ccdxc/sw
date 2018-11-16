@@ -7,9 +7,9 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "pciehw.h"
-#include "pciemgrutils.h"
-#include "pciehsvc.h"
+#include "platform/src/lib/pciemgr/include/pciehw.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
+#include "platform/src/lib/pciemgr/include/pciehsvc.h"
 #include "pciehsvc_impl.h"
 
 static pciehsvc_t pciehsvc;

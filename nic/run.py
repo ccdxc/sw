@@ -331,12 +331,12 @@ def dump_coverage_data():
 # Run sw/platform's model_server
 def run_platform_model_server(args, standalone=False):
     wait_for_hal()
-    bin_dir = nic_dir + "/../bazel-bin/platform/src/sim/model_server"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/platform/src/sim/libsimdev/src/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/platform/src/sim/libsimlib/src/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/gen/x86_64/lib/"
-    os.chdir(bin_dir)
-    cmd = ['./model_server', '-d', 'type=accel,bdf=03:00.0']
+    bin_dir = os.path.join(nic_dir, "build/x86_64/iris/bin")
+    lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
+    os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
+    print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
+    os.chdir(nic_dir)
+    cmd = [os.path.join(bin_dir, 'model_server'), '-d', 'type=accel,bdf=03:00.0']
 
     global platform_model_server_process
     platform_model_server_process = Popen(cmd)
@@ -356,15 +356,15 @@ def run_platform_model_server(args, standalone=False):
 # Run nicmgr gtest
 def run_nicmgr_gtest(args, standalone=False):
     #wait_for_hal()
-    bin_dir = nic_dir + "/../platform/gen/x86_64/src/app/nicmgr_gtest/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../platform/gen/x86_64/lib/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/build/x86_64/iris/lib/"
+    bin_dir = os.path.join(nic_dir, "build/x86_64/iris/bin")
+    lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
+    os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
     print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
     os.chdir(nic_dir)
     if args.classic:
-        cmd = [bin_dir + "./nicmgr_test", "--classic"]
+        cmd = [os.path.join(bin_dir, 'nicmgr_test'), "--classic"]
     else:
-        cmd = [bin_dir + './nicmgr_test']
+        cmd = [os.path.join(bin_dir, 'nicmgr_test')]
 
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -373,13 +373,14 @@ def run_nicmgr_gtest(args, standalone=False):
 # Run nicmgr
 def run_nicmgr(args, standalone=False):
     wait_for_hal()
-    bin_dir = nic_dir + "/../platform/gen/x86_64/bin/"
+    bin_dir = os.path.join(nic_dir, "build/x86_64/iris/bin")
+    lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
     os.environ["DOL"] = "1"
-    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../platform/gen/x86_64/lib/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/build/x86_64/iris/lib/"
-    os.chdir(bin_dir)
-    cmd = ['./nicmgrd', '-c', os.path.join(nic_dir, '../platform/src/app/nicmgrd/etc/accel.json')]
+    os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
+    print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
+    os.chdir(nic_dir)
+    cmd = [os.path.join(bin_dir, 'nicmgrd'), '-c',
+        os.path.join(nic_dir, '../platform/src/app/nicmgrd/etc/accel.json')]
 
     global nicmgr_process
     nicmgr_process = Popen(cmd)

@@ -4,10 +4,10 @@
 
 #include <vector>
 
-#include "sdk/indexer.hpp"
+#include "nic/sdk/include/sdk/indexer.hpp"
 
 #include "hal.hpp"
-#include "types.pb.h"
+#include "gen/proto/types.pb.h"
 
 #define VRF_ID_BASE 17
 

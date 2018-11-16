@@ -9,7 +9,7 @@
 #include "cap_ppa_c_hdr.h"
 #include "cap_top_csr_defines.h"
 
-#include "pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 
 void
 parser_read_counters(int verbose, uint32_t base_addr)

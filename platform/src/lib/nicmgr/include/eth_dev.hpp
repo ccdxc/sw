@@ -6,12 +6,14 @@
 #define __ETH_DEV_HPP__
 
 #include <map>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "dev.hpp"
-#include "eth_common.h"
-#include "sdk/indexer.hpp"
-#include "hal_types.hpp"
-#include "mnet.h"
+#include "nic/include/eth_common.h"
+#include "nic/sdk/include/sdk/indexer.hpp"
+#include "platform/src/lib/hal_api/include/hal_types.hpp"
+#include "platform/src/lib/mnet/include/mnet.h"
 
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)
@@ -22,10 +24,9 @@
 #define u64 uint64_t
 #define dma_addr_t uint64_t
 
-#include "ionic_if.h"
+#include "platform/drivers/linux/eth/ionic/ionic_if.h"
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+
 
 namespace pt = boost::property_tree;
 

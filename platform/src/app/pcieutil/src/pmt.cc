@@ -10,8 +10,15 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
-#include "pciehw.h"
-#include "pciehw_dev.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/lib/pciemgr/include/pciehw.h"
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
+#include "platform/src/lib/pal/include/pal.h"
+
+#include "cap_top_csr_defines.h"
+#include "cap_pxb_c_hdr.h"
+#include "cap_pp_c_hdr.h"
 #include "cmd.h"
 
 static void

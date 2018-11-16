@@ -18,7 +18,7 @@ namespace psp
 #include "cap_psp_c_hdr.h"
 }
 
-#include "pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 
 void
 ptd_read_counters(int verbose)

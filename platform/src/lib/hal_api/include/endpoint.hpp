@@ -2,7 +2,7 @@
 #ifndef __ENDPOINT_HPP__
 #define __ENDPOINT_HPP__
 
-#include "sdk/indexer.hpp"
+#include "nic/sdk/include/sdk/indexer.hpp"
 
 #include "hal.hpp"
 #include "enic.hpp"

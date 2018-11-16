@@ -5,8 +5,10 @@
 #include <memory>
 #include <iostream>
 #include <string>
+
 #include "sysmgr.hpp"
-#include "logger.hpp"
+
+#include "platform/src/lib/nicmgr/include/logger.hpp"
 
 using namespace std;
 

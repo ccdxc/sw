@@ -10,7 +10,7 @@
 #include "cap_pxb_c_hdr.h"
 #include "cap_top_csr_defines.h"
 
-#include "pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 
 void
 pxb_read_target_status()

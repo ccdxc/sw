@@ -6,12 +6,20 @@
 #define __PD_CLIENT_HPP__
 
 #include "hal_client.hpp"
+
 #include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/sdk/include/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/include/sdk/directmap.hpp"
+#include "nic/sdk/include/sdk/table_monitor.hpp"
+#include "nic/include/p4pd_api.hpp"
+#include "nic/include/capri_common.h"
+#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+
 #include "common_rxdma_actions_p4pd.h"
+#include "common_rxdma_actions_p4pd_table.h"
 #include "common_txdma_actions_p4pd.h"
-#include "capri_hbm.hpp"
+#include "common_txdma_actions_p4pd_table.h"
 
 // Maximum number of queue per LIF
 #define ETH_RSS_MAX_QUEUES                  (128)

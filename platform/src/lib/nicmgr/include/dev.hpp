@@ -9,18 +9,17 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/include/globals.hpp"
+#include "nic/include/adminq.h"
+#include "platform/src/lib/hal_api/include/hal_common_client.hpp"
+#include "platform/src/lib/hal_api/include/hal_grpc_client.hpp"
+
 #include "hal_client.hpp"
-#include "hal_common_client.hpp"
-#include "uplink.hpp"
-#include "hal_grpc_client.hpp"
-#include "globals.hpp"
 
 #define HAL_HW_LIF_ID_MAX (HAL_LIF_ID_NICMGR_MIN - 1)
 
 #ifdef __x86_64__
-
-#include "sdk/pal.hpp"
-
 
 #define READ_MEM        sdk::lib::pal_mem_read
 #define WRITE_MEM       sdk::lib::pal_mem_write
@@ -57,7 +56,7 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #define WRITE_DB64      sdk::lib::pal_ring_doorbell
 
 #else
-#include "pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 #define READ_MEM        pal_mem_rd
 #define WRITE_MEM       pal_mem_wr
 #define MEM_SET         pal_memset
@@ -73,10 +72,10 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #endif
 
 #ifdef __aarch64__
-#include "pciemgr.h"
+#include "platform/src/lib/pciemgr/include/pciemgr.h"
 #endif
-#include "pciemgrutils.h"
-#include "pciehdevices.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
+#include "platform/src/lib/pciehdevices/include/pciehdevices.h"
 
 /**
  * Memory Regions

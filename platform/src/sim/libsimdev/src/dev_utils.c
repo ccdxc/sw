@@ -11,10 +11,10 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "src/lib/misc/include/maclib.h"
-#include "src/lib/misc/include/bdf.h"
-#include "src/sim/libsimdev/src/dev_utils.h"
-#include "src/sim/libsimdev/src/simdev_impl.h"
+#include "platform/src/lib/misc/include/maclib.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/sim/libsimdev/src/dev_utils.h"
+#include "platform/src/sim/libsimdev/src/simdev_impl.h"
 
 u_int64_t
 lif_qstate_map_addr(const int lif)

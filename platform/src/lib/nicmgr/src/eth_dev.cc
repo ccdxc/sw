@@ -10,24 +10,21 @@
 #include <endian.h>
 #include <sstream>
 
+#include "gen/proto/nicmgr/nicmgr.pb.h"
+#include "gen/proto/nicmgr/metrics.delphi.hpp"
+#include "gen/proto/common/nicmgr_status_msgs.pb.h"
+#include "gen/proto/common/nicmgr_status_msgs.delphi.hpp"
+
+#include "nic/p4/common/defines.h"
+#include "platform/src/lib/intrutils/include/intrutils.h"
+#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "platform/src/app/nicmgrd/src/delphic.hpp"
+
 #include "logger.hpp"
-#include "intrutils.h"
-#include "adminq.h"
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
 #include "hal_client.hpp"
 #include "pd_client.hpp"
-#include "ethlif.hpp"
-#include "rdma_dev.hpp"
-#include "nic/p4/common/defines.h"
-#include "pciemgr_if.hpp"
-
-#include "metrics.delphi.hpp"
-#include "nicmgr.pb.h"
-#include "nicmgr_status_msgs.pb.h"
-#include "nicmgr_status_msgs.delphi.hpp"
-#include "delphic.hpp"
-#include "intrutils.h"
 
 using namespace nicmgr;
 using namespace nicmgr_status_msgs;

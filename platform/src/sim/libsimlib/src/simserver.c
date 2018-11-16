@@ -17,7 +17,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "simserver.h"
+#include "platform/src/sim/libsimlib/include/simserver.h"
 #include "simlib_impl.h"
 
 typedef struct simserver_s {

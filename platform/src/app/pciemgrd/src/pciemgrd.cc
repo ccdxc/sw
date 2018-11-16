@@ -14,10 +14,11 @@
 #include <sys/param.h>
 #include <sys/time.h>
 
-#include "pci_ids.h"
-#include "pal.h"
-#include "pciesys.h"
-#include "pcieport.h"
+#include "platform/include/common/pci_ids.h"
+#include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
+#include "platform/src/lib/pcieport/include/pcieport.h"
+
 #include "pciemgrd_impl.hpp"
 
 static pciemgrenv_t pciemgrenv;

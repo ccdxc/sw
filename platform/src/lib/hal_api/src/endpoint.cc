@@ -2,8 +2,8 @@
 #include <iostream>
 #include <iomanip>
 
-#include "kh.grpc.pb.h"
-#include "types.grpc.pb.h"
+#include "gen/proto/kh.grpc.pb.h"
+#include "gen/proto/types.grpc.pb.h"
 
 #include "endpoint.hpp"
 #include "print.hpp"

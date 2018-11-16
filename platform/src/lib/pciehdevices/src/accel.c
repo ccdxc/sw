@@ -9,11 +9,12 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "pci_ids.h"
-#include "pciemgrutils.h"
+#include "nic/include/storage_seq_common.h"
+#include "platform/include/common/pci_ids.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
+
 #include "pciehdevices.h"
 #include "pciehdevices_impl.h"
-#include "storage_seq_common.h"
 
 static void
 initialize_bars(pciehdev_t *pdev, const pciehdevice_resources_t *pres)

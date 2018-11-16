@@ -17,14 +17,14 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "src/lib/misc/include/maclib.h"
-#include "src/lib/misc/include/bdf.h"
-#include "src/sim/libsimlib/include/simserver.h"
-#include "src/sim/libsimdev/src/dev_utils.h"
-#include "src/sim/libsimdev/src/simdev_impl.h"
-#include "src/sim/libsimdev/src/pcie_regs.h"
-#include "src/sim/libsimdev/src/virtio_dev_regs.h"
-#include "src/sim/libsimdev/src/capri_defines.h"
+#include "platform/src/lib/misc/include/maclib.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/sim/libsimlib/include/simserver.h"
+#include "platform/src/sim/libsimdev/src/dev_utils.h"
+#include "platform/src/sim/libsimdev/src/simdev_impl.h"
+#include "platform/src/sim/libsimdev/src/pcie_regs.h"
+#include "platform/src/sim/libsimdev/src/virtio_dev_regs.h"
+#include "platform/src/sim/libsimdev/src/capri_defines.h"
 
 typedef struct devparams_s {
     int lif;

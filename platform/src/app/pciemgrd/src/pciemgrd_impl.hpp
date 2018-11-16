@@ -5,7 +5,7 @@
 #ifndef __PCIEMGRD_IMPL_H__
 #define __PCIEMGRD_IMPL_H__
 
-#include "pciehw_dev.h"
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
 
 typedef struct pciemgrenv_s {
     u_int8_t interactive:1;

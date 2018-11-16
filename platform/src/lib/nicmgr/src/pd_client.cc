@@ -4,23 +4,15 @@
 
 #include <cstring>
 
-#include "base.hpp"
-#include "eth_dev.hpp"
-#include "p4pd_api.hpp"
-#include "p4plus_pd_api.h"
-#include "common_rxdma_actions_p4pd_table.h"
-#include "common_txdma_actions_p4pd_table.h"
+#include "nic/include/base.hpp"
+#include "nic/include/hal_cfg.hpp"
+#include "nic/p4/common/defines.h"
+
 #include "logger.hpp"
-#include "table_monitor.hpp"
 #include "pd_client.hpp"
 #include "hal_client.hpp"
-#include "capri_tbl_rw.hpp"
-#include "capri_hbm.hpp"
-#include "logger.hpp"
-#include "capri_common.h"
-#include "hal_cfg.hpp"
+#include "eth_dev.hpp"
 #include "rdma_dev.hpp"
-#include "nic/p4/common/defines.h"
 
 using namespace sdk::platform::capri;
 using namespace sdk::platform::utils;

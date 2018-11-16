@@ -2,54 +2,18 @@
 # Copyright (c) 2017-2018, Pensando Systems Inc.
 #
 
-LIBRARY = libpcieport.a libpcieport.so
-SOURCES = \
-	pcieport.c \
-	events.c \
-	config.c \
-	init.c \
-	intr.c \
-	fsm.c \
-	utils.c \
-	portcfg.c \
-	serdes.c \
-	sbus_pcie_rom.s \
-	$(NULL)
+include ${MKINFRA}/config_${ARCH}.mk
 
-# sbus routines from asic
-SOURCES += \
-	cap_sbus_api.c \
-	cap_pcie_api.c \
-	$(NULL)
+MODULE_BIN_DIR := ${BLD_OUT_DIR}/sbus_pcie_rom_submake/
 
-LCFLAGS += \
-	-I $(ASIC_ROOT)/capri/design/common \
-	-I $(ASIC_ROOT)/capri/model/cap_top \
-	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
-	-I $(TOPDIR)/include/common \
-	-I ../../misc/include \
-	-I ../../pciemgrutils/include \
-	-I ../../pciemgr/include \
-	-I ../../pal/include \
-	-I ../include \
-	$(NULL)
+all: printvars ${MODULE_BIN_DIR}/sbus_pcie_rom.o
 
-# Build cap_* asic files with CAPRI_SW
-LCFLAGS += -DCAPRI_SW
-# Include sbus pcie rom loader
-LCFLAGS += -DSBUS_PCIE_ROM
-# romfile includes generated rom.bin 
-LCFLAGS += -I$(GENDIR)
+${MODULE_BIN_DIR}/sbus_pcie_rom.o: sbus_pcie_rom.s ${MODULE_BIN_DIR}/sbus_pcie_rom.bin
+	${CMD_AS} -I${MODULE_BIN_DIR} sbus_pcie_rom.s -o ${MODULE_BIN_DIR}/sbus_pcie_rom.o
 
-TOPDIR = ../../../..
-include $(TOPDIR)/make/Makefile.inc
+${MODULE_BIN_DIR}/sbus_pcie_rom.bin: serdes.0x108C_2347.rom
+	./sbus_rom2bin.py serdes.0x108C_2347.rom ${MODULE_BIN_DIR}/sbus_pcie_rom.bin
 
-LCLEANFILES += $(GENDIR)/sbus_pcie_rom.bin
-
-quiet_cmd_genrom = GEN     $@
-      cmd_genrom = ./sbus_rom2bin.py $^ $@
-
-$(GENDIR)/sbus_pcie_rom.o: sbus_pcie_rom.s $(GENDIR)/sbus_pcie_rom.bin
-
-$(GENDIR)/sbus_pcie_rom.bin: serdes.0x108C_2347.rom
-	$(call cmd,genrom)
+.PHONY: printvars
+printvars:
+	$(foreach v, $(.VARIABLES), $(info $(v) = $($(v))))

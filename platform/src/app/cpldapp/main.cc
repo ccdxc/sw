@@ -1,5 +1,11 @@
+
+/*
+ * Copyright (c) 2018, Pensando Systems Inc.
+ */
+
 #include <iostream>
-#include "sdk/pal.hpp"
+
+#include "nic/sdk/include/sdk/pal.hpp"
 
 int
 main(int argc, char *argv[])

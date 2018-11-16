@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "misc.h"
+#include "platform/src/lib/misc/include/misc.h"
 #include "pmt.h"
 #include "prt.h"
 #include "pciesys.h"

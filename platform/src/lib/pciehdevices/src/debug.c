@@ -8,9 +8,9 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "pci_ids.h"
-#include "misc.h"
-#include "pciemgrutils.h"
+#include "platform/include/common/pci_ids.h"
+#include "platform/src/lib/misc/include/misc.h"
+#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 #include "pciehdevices.h"
 
 #define PCI_DEVICE_ID_PENSANDO_DEBUG 0x8000

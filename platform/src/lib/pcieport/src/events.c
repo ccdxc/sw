@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "pciesys.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 

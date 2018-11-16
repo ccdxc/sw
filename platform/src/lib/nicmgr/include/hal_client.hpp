@@ -8,19 +8,19 @@
 #include <map>
 #include <grpc++/grpc++.h>
 
-#include "vrf.grpc.pb.h"
-#include "types.grpc.pb.h"
-#include "interface.grpc.pb.h"
-#include "internal.grpc.pb.h"
-#include "endpoint.grpc.pb.h"
-#include "l2segment.grpc.pb.h"
-#include "multicast.grpc.pb.h"
-#include "rdma.grpc.pb.h"
-#include "accel_rgroup.grpc.pb.h"
-#include "crypto_keys.pb.h"
-#include "crypto_keys.grpc.pb.h"
-#include "uplink.hpp"
-#include "ethlif.hpp"
+#include "gen/proto/types.grpc.pb.h"
+#include "gen/proto/vrf.grpc.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
+#include "gen/proto/endpoint.grpc.pb.h"
+#include "gen/proto/l2segment.grpc.pb.h"
+#include "gen/proto/multicast.grpc.pb.h"
+#include "gen/proto/rdma.grpc.pb.h"
+#include "gen/proto/accel_rgroup.grpc.pb.h"
+#include "gen/proto/internal.grpc.pb.h"
+#include "gen/proto/crypto_keys.pb.h"
+#include "gen/proto/crypto_keys.grpc.pb.h"
+
+#include "platform/src/lib/hal_api/include/ethlif.hpp"
 
 
 using namespace kh;

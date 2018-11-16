@@ -14,7 +14,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "simclient.h"
+#include "platform/src/sim/libsimlib/include/simclient.h"
 #include "simlib_impl.h"
 
 typedef struct simclient_s {

@@ -11,16 +11,14 @@
 #include <getopt.h>
 #include <sys/time.h>
 
-#include "evutils.h"
-#include "dev.hpp"
-#include "eth_dev.hpp"
-#include "accel_dev.hpp"
-#include "hal_client.hpp"
-#include "pciehw_dev.h"
-#include "pcieport.h"
-#include "pciemgr_if.hpp"
+#include "nic/sdk/include/sdk/thread.hpp"
+#include "platform/src/lib/evutils/include/evutils.h"
+#include "platform/src/lib/nicmgr/include/dev.hpp"
+#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "platform/src/lib/pcieport/include/pcieport.h"
+
 #include "delphic.hpp"
-#include "sdk/thread.hpp"
 
 using namespace std;
 
@@ -66,6 +64,7 @@ void *nicmgrd_create_mnets(void *ctxt)
 static void
 nicmgrd_mnet_thread_init()
 {
+#ifdef __aarch64__
      sdk::lib::thread    *mnet_thread = NULL;
 
      sdk::lib::thread::control_cores_mask_set(0x8);
@@ -86,6 +85,7 @@ nicmgrd_mnet_thread_init()
      cout << "Starting mnet thread ... " << endl;
      // Starting mnet thread
      mnet_thread->start(mnet_thread);
+#endif
 }
 
 
@@ -106,16 +106,6 @@ loop()
 
     // Initialize Mnet thread to create mnets
     nicmgrd_mnet_thread_init();
-
-#if 0
-    // Register for PCI events
-#ifdef __aarch64__
-    if (pciehdev_register_event_handler(&devmgr->PcieEventHandler) < 0) {
-        printf("[ERROR] Failed to register PCIe Event Handler\n");
-        exit(1);
-    }
-#endif
-#endif
 
     evutil_timer timer;
     evutil_timer_start(&timer, nicmgrd_poll, NULL, 0.1, 0.1);

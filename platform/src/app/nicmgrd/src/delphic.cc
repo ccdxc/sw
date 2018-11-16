@@ -4,12 +4,12 @@
 #include <iostream>
 #include <string>
 
-#include <delphic.hpp>
-#include <nicmgr_upgrade.hpp>
-#include <dev.hpp>
-#include <eth_dev.hpp>
-#include <sdk/types.hpp>
-#include <logger.hpp>
+#include "nic/sdk/include/sdk/types.hpp"
+#include "platform/src/lib/sysmgr/sysmgr.hpp"
+#include "platform/src/lib/upgrade/upgrade.hpp"
+#include "platform/src/lib/nicmgr/include/dev.hpp"
+
+#include "delphic.hpp"
 
 using namespace std;
 using namespace upgrade;

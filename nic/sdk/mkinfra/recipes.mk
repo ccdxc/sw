@@ -16,7 +16,7 @@ endef
 define ADD_RECIPE_FOR_SOLIB
 $${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
 	${NAT}${AT}echo ${NAME_MKTARGET} $$(notdir $$@)
-	${AT}$$(strip ${CMD_GXX} -o $$@ -shared $${${1}_OBJS} $${${1}_LDPATHS} $${${1}_LIBS} $${${1}_LDLIBS})
+	${AT}$$(strip ${CMD_GXX} -o $$@ -shared $${${1}_OBJS} $${${1}_LDFLAGS} $${${1}_LDPATHS} $${${1}_LIBS} $${${1}_LDLIBS})
 	${AT}mkdir -p ${BLD_LIB_DIR}
 	${NAT}${AT}echo ${NAME_SYMLINK} ${BLD_LIB_DIR}/$$(notdir $$@)
 	${AT}ln -sf $$@ ${BLD_LIB_DIR}/
@@ -25,7 +25,7 @@ endef
 define ADD_RECIPE_FOR_BIN
 $${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS} ${EXPORT_PREREQS}
 	${NAT}${AT}echo ${NAME_MKTARGET} $$(notdir $$@)
-	${AT}$$(strip ${CMD_GXX} -o $$@ $${${1}_OBJS}) ${CMD_LINKER_FLAGS} $${${1}_LDPATHS} $${${1}_LIBS} $${${1}_LDLIBS}
+	${AT}$$(strip ${CMD_GXX} -o $$@ $${${1}_OBJS}) $${${1}_LDFLAGS} $${${1}_LDPATHS} $${${1}_LIBS} $${${1}_LDLIBS}
 	${AT}mkdir -p ${BLD_BIN_DIR}
 	${NAT}${AT}echo ${NAME_SYMLINK} ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})
 	${AT}ln -sf $$@ ${BLD_BIN_DIR}/$$(basename $${${1}_TARGET})

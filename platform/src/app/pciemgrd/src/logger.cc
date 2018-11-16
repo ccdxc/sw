@@ -9,8 +9,9 @@
 #include <unistd.h>
 #include <inttypes.h>
 
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
+
 #include "spdlog/spdlog.h"
-#include "pciesys.h"
 #include "pciemgrd_impl.hpp"
 
 static std::shared_ptr<spdlog::logger> spdlogger;

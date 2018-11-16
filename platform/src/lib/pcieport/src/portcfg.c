@@ -12,7 +12,7 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pp_c_hdr.h"
 
-#include "pal.h"
+#include "platform/src/lib/pal/include/pal.h"
 #include "portcfg.h"
 
 #ifndef PXC_

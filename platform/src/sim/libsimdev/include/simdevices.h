@@ -5,7 +5,7 @@
 #ifndef __SIMDEVICES_H__
 #define __SIMDEVICES_H__
 
-#include "src/sim/libsimlib/include/simmsg.h"
+#include "platform/src/sim/libsimlib/include/simmsg.h"
 
 #ifdef __cplusplus
 extern "C" {

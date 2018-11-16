@@ -12,7 +12,8 @@
 #include <inttypes.h>
 #include <endian.h>
 
-#include "bdf.h"
+#include "platform/src/lib/misc/include/bdf.h"
+
 #include "pcietlp.h"
 
 typedef struct pcietlp_info_s {

@@ -7,7 +7,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <inttypes.h>
-#include "pal.h"
+
+#include "platform/src/lib/pal/include/pal.h"
 
 #define QSFP_READ_SIZE 10
 

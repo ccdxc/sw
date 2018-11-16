@@ -13,8 +13,8 @@
 #include <sys/time.h>
 #include <linux/pci_regs.h>
 
-#include "pal.h"
-#include "pciesys.h"
+#include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "portcfg.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"

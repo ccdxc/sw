@@ -10,10 +10,10 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "misc.h"
-#include "bdf.h"
+#include "platform/src/lib/misc/include/misc.h"
+#include "platform/src/lib/misc/include/bdf.h"
+#include "platform/src/lib/pciehdevices/include/pciehdevices.h"
 #include "pciemgrutils.h"
-#include "pciehdevices.h"
 #include "pciehdev_impl.h"
 
 #define NPORTS 8
