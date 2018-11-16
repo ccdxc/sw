@@ -256,6 +256,8 @@ chn_poller(void *pnso_poll_ctx)
 
 	OSAL_LOG_DEBUG("enter ...");
 
+	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
+
 	if (!pnso_poll_ctx) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid poll context! err: %d", err);
@@ -263,8 +265,6 @@ chn_poller(void *pnso_poll_ctx)
 		return err;
 	}
 	PPRINT_CHAIN(chain);
-	OSAL_LOG_DEBUG("poller pcr: 0x" PRIx64,
-			(uint64_t) putil_get_per_core_resource());
 
 	err = chn_poll_all_services(chain);
 	if (err)

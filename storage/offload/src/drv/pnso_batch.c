@@ -343,7 +343,6 @@ deinit_batch(struct batch_info *batch_info)
 	}
 
 	put_mpool_batch_object(pcr, MPOOL_TYPE_BATCH_INFO, batch_info);
-	pcr->batch_info = NULL;
 }
 
 void
@@ -361,6 +360,7 @@ bat_destroy_batch(void)
 		goto out;
 	}
 	deinit_batch(batch_info);
+	pcr->batch_info = NULL;
 
 out:
 	OSAL_LOG_DEBUG("exit!");
@@ -407,6 +407,8 @@ bat_poller(void *pnso_poll_ctx)
 
 	OSAL_LOG_DEBUG("enter ...");
 
+	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
+
 	if (!pnso_poll_ctx) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid poll context! err: %d", err);
@@ -414,8 +416,6 @@ bat_poller(void *pnso_poll_ctx)
 		return err;
 	}
 	PPRINT_BATCH_INFO(batch_info);
-	OSAL_LOG_DEBUG("poller pcr: 0x" PRIx64,
-			(uint64_t) putil_get_per_core_resource());
 
 	err = poll_all_chains(batch_info);
 	if (err)
@@ -568,6 +568,7 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 
 out_batch:
 	deinit_batch(batch_info);
+	pcr->batch_info = NULL;
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -692,7 +693,9 @@ bat_flush_batch(struct request_params *req_params)
 		goto out;
 	}
 
-	err = PNSO_OK;
+	if (!batch_info->bi_mode_sync)
+		pcr->batch_info = NULL;
+
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 
