@@ -27,8 +27,11 @@ _log_modules = {
 def logger_init(log_dir, prog_name='P4Prog', loglevel='DEBUG', floglevel='DEBUG'):
     cur_path = log_dir + '/%s/logs' % prog_name
     if not os.path.exists(cur_path):
-        os.makedirs(cur_path)
-
+        try:
+            os.makedirs(cur_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     for m,fname in _log_modules.items():
         f = "%s/%s" % (cur_path, fname)
         logger = logging.getLogger(m)

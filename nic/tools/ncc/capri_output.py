@@ -13,6 +13,7 @@ import copy
 import pprint
 import json
 import math
+import errno
 from collections import OrderedDict
 from enum import IntEnum
 from capri_utils import *
@@ -542,12 +543,20 @@ def capri_asm_output_pa(gress_pa, asm_output=True):
     if not asm_output:
         cur_path = gen_dir + '/%s/include' % gress_pa.pa.be.prog_name
         if not os.path.exists(cur_path):
-            os.makedirs(cur_path)
+            try:
+                os.makedirs(cur_path)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         fname = cur_path + '/%s_phv.h' % gress_pa.d.name.lower()
     else:
         cur_path = gen_dir + '/%s/asm_out' % gress_pa.pa.be.prog_name
         if not os.path.exists(cur_path):
-            os.makedirs(cur_path)
+            try:
+                os.makedirs(cur_path)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         fname = cur_path + '/%s_p.h' % gress_pa.d.name
     hfile = open(fname, 'w')
     num_flits = gress_pa.pa.be.hw_model['phv']['num_flits']
@@ -740,7 +749,11 @@ def _capri_asm_output_pa(gress_pa):
     gen_dir = gress_pa.pa.be.args.gen_dir
     cur_path = gen_dir + '/%s/asm_out' % gress_pa.pa.be.prog_name
     if not os.path.exists(cur_path):
-        os.makedirs(cur_path)
+        try:
+            os.makedirs(cur_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     fname = cur_path + '/%s_p.h' % gress_pa.d.name
     hfile = open(fname, 'w')
     num_flits = gress_pa.pa.be.hw_model['phv']['num_flits']
@@ -1170,7 +1183,11 @@ def capri_asm_output_table(be, ctable):
     cur_path = gen_dir + '/%s/alt_asm_out' % be.prog_name
     flit_sz = hw_model['phv']['flit_size']
     if not os.path.exists(cur_path):
-        os.makedirs(cur_path)
+        try:
+            os.makedirs(cur_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     fname = cur_path + '/%s_%s_k.h' % (ctable.d.name, ctable.p4_table.name)
     hfile = open(fname, 'w')
 
@@ -1340,7 +1357,11 @@ def capri_parser_logical_output(parser):
     gen_dir = parser.be.args.gen_dir
     out_dir = gen_dir + '/%s/logs/' % (parser.be.prog_name)
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     ofile = open('%s/%s_parser.out' % (out_dir, parser.d.name), 'w')
     pstr = ''
     # create initial config register for start state
@@ -1398,7 +1419,11 @@ def capri_deparser_logical_output(deparser):
     gen_dir = deparser.be.args.gen_dir
     out_dir = gen_dir + '/%s/logs' % (deparser.be.prog_name)
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     ofile = open('%s/%s_deparser.out' % (out_dir, deparser.d.name), 'w')
     pstr = ''
     cf = deparser.be.pa.get_field("capri_p4_intrinsic.frame_size", deparser.d)
@@ -1461,7 +1486,11 @@ def capri_deparser_cfg_output(deparser):
     gen_dir = deparser.be.args.gen_dir
     cfg_out_dir = os.path.join(gen_dir + '/%s/cfg_out' % deparser.be.prog_name)
     if not os.path.exists(cfg_out_dir):
-        os.makedirs(cfg_out_dir)
+        try:
+            os.makedirs(cfg_out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     dpp_cfg_output_reg = os.path.join(cfg_out_dir, 'cap_dpp_%s_cfg_reg.json' \
                          % deparser.d.name)
@@ -1763,7 +1792,11 @@ def capri_model_dbg_output(be, dbg_info):
     gen_dir = be.args.gen_dir
     dbg_out_dir = os.path.join(gen_dir + '/%s/dbg_out' % be.prog_name)
     if not os.path.exists(dbg_out_dir):
-        os.makedirs(dbg_out_dir)
+        try:
+            os.makedirs(dbg_out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     dbg_out_fname = os.path.join(dbg_out_dir, 'model_debug.json')
     dbgfile = open(dbg_out_fname, 'w+')
@@ -1774,7 +1807,11 @@ def capri_output_i2e_meta_header(be, i2e_fields, hsize):
     gen_dir = be.args.gen_dir
     cur_path = gen_dir + '/%s/asm_out' % be.prog_name
     if not os.path.exists(cur_path):
-        os.makedirs(cur_path)
+        try:
+            os.makedirs(cur_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     fname = cur_path + '/i2e_metadata.h'
     hfile = open(fname, 'w')
     pstr = "struct i2e_metadata_header_ {\n"
@@ -2793,7 +2830,11 @@ def capri_parser_output_decoders(parser):
     ppa_decoder_json = json.load(ppa_decoder_file, object_pairs_hook=OrderedDict)
     cfg_out_dir = os.path.join(gen_dir + '/%s/cfg_out' % parser.be.prog_name)
     if not os.path.exists(cfg_out_dir):
-        os.makedirs(cfg_out_dir)
+        try:
+            os.makedirs(cfg_out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     ppa_cfg_output_mem = os.path.join(cfg_out_dir, 'cap_ppa_%s_cfg_decoder_mem.json' % \
         parser.d.name)
     ppa_cfg_output_reg = os.path.join(cfg_out_dir, 'cap_ppa_%s_cfg_decoder_reg.json' % \
@@ -3097,7 +3138,11 @@ def capri_te_cfg_output(stage):
     '''
     cfg_out_dir = os.path.join(gen_dir + '/%s/cfg_out' % stage.gtm.tm.be.prog_name)
     if not os.path.exists(cfg_out_dir):
-        os.makedirs(cfg_out_dir)
+        try:
+            os.makedirs(cfg_out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     te_cfg_output_mem = os.path.join(cfg_out_dir, 'cap_te_%s_%d_cfg_mem.json' % \
         (stage.gtm.d.name, stage.id))
     te_cfg_output_reg = os.path.join(cfg_out_dir, 'cap_te_%s_%d_cfg_reg.json' % \
@@ -3720,7 +3765,11 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
     if cfg_out_dir is None or cap_mod is None or prog_name is None:
         return
     if not os.path.exists(cfg_out_dir):
-        os.makedirs(cfg_out_dir)
+        try:
+            os.makedirs(cfg_out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     cfg_out_fname = os.path.join(cfg_out_dir, '%s_%s_%d.bin' % (prog_name, cap_mod, cap_inst))
     cfg_out_fp = open(cfg_out_fname, 'wb')
 
@@ -3892,7 +3941,11 @@ def capri_pic_csr_output(be, out_pic):
     out_dir = be.args.gen_dir + '/%s/cfg_out/' % (be.prog_name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     for mem_type in out_pic:
         for direction in out_pic[mem_type]:
@@ -3970,7 +4023,11 @@ def capri_p4_table_spec_output(be, out_dict):
     out_dir = be.args.gen_dir + '/%s/p4pd/' % (be.prog_name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     out_file = out_dir + 'capri_p4_table_spec.json'
     with open(out_file, "w") as of:
@@ -3982,7 +4039,11 @@ def capri_p4_table_map_output(be, map_dict):
     out_dir = be.args.gen_dir + '/%s/p4pd/' % (be.prog_name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     out_file = out_dir + 'capri_p4_table_map.json'
     with open(out_file, "w") as of:
@@ -3994,7 +4055,11 @@ def capri_dump_table_memory(be, memory, tables, mem_type, region):
     out_dir = be.args.gen_dir + '/%s/p4pd/' % (be.prog_name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     out_file = out_dir + 'capri_' + region + '_p4_' + mem_type + '_dump.txt'
     with open(out_file, "w") as of:
@@ -4068,7 +4133,11 @@ def capri_p4pd_create_swig_makefile_click(be):
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     top_dir = capri_get_top_level_path(out_dir)
 
@@ -4134,7 +4203,11 @@ def capri_p4pd_create_swig_makefile(be):
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     top_dir = capri_get_top_level_path(out_dir)
 
@@ -4185,7 +4258,11 @@ def capri_p4pd_create_swig_custom_hdr(be):
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     if be.args.p4_plus:
         api_prefix = 'p4pd_' + name
@@ -4265,7 +4342,11 @@ def capri_p4pd_create_bazel_build(be):
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     content_str = 'package(default_visibility = ["//visibility:public"])\n'
     content_str += '\n'
@@ -4309,7 +4390,11 @@ def capri_p4pd_create_swig_interface(be):
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     if be.args.p4_plus:
         prefix = 'p4pd_' + name
@@ -4387,7 +4472,11 @@ def capri_p4pd_create_swig_main(be):
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+        try:
+            os.makedirs(out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     top_dir = capri_get_top_level_path(out_dir)
 

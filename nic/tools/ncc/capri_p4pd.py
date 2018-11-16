@@ -73,14 +73,26 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_output
 def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, gen_dir):
 
     if output_h_dir and not os.path.exists(output_h_dir):
-        os.mkdir(output_h_dir)
+        try:
+            os.mkdir(output_h_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     if output_c_dir and not os.path.exists(output_c_dir):
-        os.mkdir(output_c_dir)
+        try:
+            os.mkdir(output_c_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     if cli_outputdir_map is not None:
         for output_dir in cli_outputdir_map.values():
             if output_dir and not os.path.exists(output_dir):
-                os.mkdir(output_dir)
+                try:
+                    os.mkdir(output_dir)
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
 
     templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, pd_dict['cli-name'])
     _prog_name = ''
@@ -127,14 +139,26 @@ def p4pd_generate_code(pd_dict, template_dir, output_h_dir, output_c_dir, cli_ou
 def p4pd_generate_asm_code(pd_dict, template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name):
 
     if output_h_dir and not os.path.exists(output_h_dir):
-        os.mkdir(output_h_dir)
+        try:
+            os.mkdir(output_h_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
     if output_c_dir and not os.path.exists(output_c_dir):
-        os.mkdir(output_c_dir)
+        try:
+            os.mkdir(output_c_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
     if cli_outputdir_map is not None:
         for output_dir in cli_outputdir_map.values():
             if output_dir and not os.path.exists(output_dir):
-                os.mkdir(output_dir)
+                try:
+                    os.mkdir(output_dir)
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
 
     templates_outfiles = make_templates_outfiles(template_dir, output_h_dir, output_c_dir, cli_outputdir_map, prog_name, pd_dict['cli-name'])
     kd_json = {}
@@ -1496,11 +1520,23 @@ class capri_p4pd:
         py_outputdir = gen_dir + '/%s/cli/' % (self.be.prog_name)
 
         if not os.path.exists(h_outputdir):
-            os.makedirs(h_outputdir)
+            try:
+                os.makedirs(h_outputdir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         if not os.path.exists(c_outputdir):
-            os.makedirs(c_outputdir)
+            try:
+                os.makedirs(c_outputdir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         if not os.path.exists(py_outputdir):
-            os.makedirs(py_outputdir)
+            try:
+                os.makedirs(py_outputdir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
 
         cur_path = os.path.abspath(__file__)
         cur_path = os.path.split(cur_path)[0]
@@ -1518,7 +1554,11 @@ class capri_p4pd:
 
         outputdir = gen_dir + '/%s/asm_out' % (self.be.prog_name)
         if not os.path.exists(outputdir):
-            os.makedirs(outputdir)
+            try:
+                os.makedirs(outputdir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         cur_path = os.path.abspath(__file__)
         cur_path = os.path.split(cur_path)[0]
         templatedir = os.path.join(cur_path, 'asm_templates/')

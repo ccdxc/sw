@@ -1939,7 +1939,11 @@ class Icrc:
     def IcrcLogicalOutputCreate(self):
         out_dir = self.be.args.gen_dir + '/%s/logs' % (self.be.prog_name)
         if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+            try:
+                os.makedirs(out_dir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
 
         for d in xgress:
             if d == xgress.INGRESS:

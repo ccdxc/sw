@@ -1373,7 +1373,11 @@ class Checksum:
         gen_dir = self.be.args.gen_dir
         cur_path = gen_dir + '/%s/asm_out' % self.be.prog_name
         if not os.path.exists(cur_path):
-            os.makedirs(cur_path)
+            try:
+                os.makedirs(cur_path)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         for d in xgress:
             parser = self.be.parsers[d]
             fname = cur_path + '/CSUM_%s.h' % parser.d.name
@@ -2269,7 +2273,11 @@ class Checksum:
         '''
         out_dir = self.be.args.gen_dir + '/%s/logs' % (self.be.prog_name)
         if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+            try:
+                os.makedirs(out_dir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
 
         for d in xgress:
             if d == xgress.INGRESS:

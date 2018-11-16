@@ -1513,7 +1513,11 @@ class FileBaseStore(KeyValueStore):
         fpath = self.filepath(key)
         dirname = os.path.dirname(fpath)
         if not os.path.isdir(dirname):
-            os.makedirs(dirname)
+            try:
+                os.makedirs(dirname)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         now = _time()
         if isinstance(value, _unicode):
             value = value.encode(self.encoding or 'utf-8')
