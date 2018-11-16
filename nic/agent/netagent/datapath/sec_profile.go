@@ -177,7 +177,6 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 				IcmpDropTimeout:     icmpDropTimeout,
 
 				// Defaults Enables
-				IpReassemblyEn:         true,
 				TcpTsNotPresentDrop:    true,
 				TcpNonSynFirstPktDrop:  true,
 				TcpInvalidFlagsDrop:    true,

@@ -12,14 +12,15 @@ const (
 	// DefaultConnectionSetUpTimeout is the default connection set up timeout
 	DefaultConnectionSetUpTimeout = 30
 
+	//-------------------------- Default Action Allow --------------------------
+
 	// IPDFAction is set to allow for IP Do not fragment
 	IPDFAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// IPOptionsAction is set to allow by defaukt
 	IPOptionsAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
-	// ICMPInvalidCodeAction is set to allow by default
-	ICMPInvalidCodeAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
+	//-------------------------- Default Action Edit --------------------------
 
 	// IPInvalidLenAction is set to edit by default
 	IPInvalidLenAction = halproto.NormalizationAction_NORM_ACTION_EDIT
@@ -51,8 +52,13 @@ const (
 	// TCPUnexpectedTSOptionAction is set to edit by default
 	TCPUnexpectedTSOptionAction = halproto.NormalizationAction_NORM_ACTION_EDIT
 
+	//-------------------------- Default Action Drop --------------------------
+
 	// TCPUnexpectedEchoTSAction is set to drop by default
 	TCPUnexpectedEchoTSAction = halproto.NormalizationAction_NORM_ACTION_DROP
+
+	// ICMPInvalidCodeAction is set to allow by default
+	ICMPInvalidCodeAction = halproto.NormalizationAction_NORM_ACTION_DROP
 
 	// TCPUnexpectedSACKOptionAction is set to drop by default
 	TCPUnexpectedSACKOptionAction = halproto.NormalizationAction_NORM_ACTION_DROP
@@ -61,5 +67,5 @@ const (
 	TCPReservedFlagsAction = halproto.NormalizationAction_NORM_ACTION_DROP
 
 	// TCPRSTWithDataAction is set to none by default
-	TCPRSTWithDataAction = halproto.NormalizationAction_NORM_ACTION_NONE
+	TCPRSTWithDataAction = halproto.NormalizationAction_NORM_ACTION_DROP
 )
