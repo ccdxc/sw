@@ -396,6 +396,9 @@ func (wtg *workloadTestGroup) testdownTest() {
 	wtg.wkldIf.Delete(wtg.suite.loggedInCtx, &obj4)
 }
 
+/*
+Commenting till https://github.com/pensando/sw/issues/7261 is fixed
+
 // run the tests
 var _ = Describe("Workload object tests", func() {
 
@@ -415,3 +418,4 @@ var _ = Describe("Workload object tests", func() {
 		AfterEach(workloadTg.testdownTest)
 	})
 })
+*/

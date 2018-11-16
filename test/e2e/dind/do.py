@@ -216,7 +216,10 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
 
     # Post the data. try upto 3 times since the server may not be ready..
     for i in range(1, 4):
-        response = http.httpPost(postUrl, jdata)
+        try:
+            response = http.httpPost(postUrl, jdata)
+        except httplib.BadStatusLine:
+            response = 'Error'
         print "Init cluster with " + jdata
         print "cluster response is: " + response
         if response != "Error":
