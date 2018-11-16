@@ -36,7 +36,7 @@ func (m *fakeAPIGwService) GetServiceProfile(method string) (apigw.ServiceProfil
 	if ret, ok := m.svcProf[method]; ok {
 		return ret, nil
 	}
-	prof := apigwpkg.NewServiceProfile(nil)
+	prof := apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 	m.svcProf[method] = prof
 	return prof, nil
 }

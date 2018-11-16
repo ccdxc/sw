@@ -996,32 +996,52 @@ func (a adapterBookstoreV1) AutoWatchCustomer(oldctx oldcontext.Context, in *api
 }
 
 func (e *sBookstoreV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "bookstore", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AddOutage"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["Applydiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetBook"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateBook"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateStore"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["Cleardiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["Restock"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["_RProxy_"+"/uploads/"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AddOutage"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Store", "bookstore", apiserver.CreateOper)
+
+	e.svcProf["Applydiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Order", "bookstore", apiserver.CreateOper)
+
+	e.svcProf["AutoAddCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Customer", "bookstore", apiserver.CreateOper)
+
+	e.svcProf["AutoAddOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Order", "bookstore", apiserver.CreateOper)
+
+	e.svcProf["AutoAddStore"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Store", "bookstore", apiserver.CreateOper)
+
+	e.svcProf["AutoDeleteCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Customer", "bookstore", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Order", "bookstore", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteStore"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Store", "bookstore", apiserver.DeleteOper)
+
+	e.svcProf["AutoGetBook"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Book", "bookstore", apiserver.GetOper)
+
+	e.svcProf["AutoGetCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Customer", "bookstore", apiserver.GetOper)
+
+	e.svcProf["AutoGetOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Order", "bookstore", apiserver.GetOper)
+
+	e.svcProf["AutoGetStore"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Store", "bookstore", apiserver.GetOper)
+
+	e.svcProf["AutoListCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "CustomerList", "bookstore", apiserver.ListOper)
+
+	e.svcProf["AutoListOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf, "OrderList", "bookstore", apiserver.ListOper)
+
+	e.svcProf["AutoUpdateBook"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Book", "bookstore", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Customer", "bookstore", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Order", "bookstore", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateStore"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Store", "bookstore", apiserver.UpdateOper)
+
+	e.svcProf["AutoWatchOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgOrderWatchHelper", "bookstore", apiserver.WatchOper)
+
+	e.svcProf["Cleardiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Order", "bookstore", apiserver.CreateOper)
+
+	e.svcProf["Restock"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Book", "bookstore", apiserver.CreateOper)
+	e.svcProf["_RProxy_"+"/uploads/"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

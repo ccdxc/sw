@@ -64,7 +64,7 @@ type loginV1GwService struct {
 }
 
 func (s *loginV1GwService) setupSvcProfile() {
-	s.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	s.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 	s.svcProf = make(map[string]apigw.ServiceProfile)
 }
 

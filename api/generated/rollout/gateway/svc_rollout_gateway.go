@@ -209,16 +209,21 @@ func (a adapterRolloutV1) AutoWatchRollout(oldctx oldcontext.Context, in *api.Li
 }
 
 func (e *sRolloutV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "rollout", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiserver.CreateOper)
+
+	e.svcProf["AutoDeleteRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiserver.DeleteOper)
+
+	e.svcProf["AutoGetRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiserver.GetOper)
+
+	e.svcProf["AutoListRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RolloutList", "rollout", apiserver.ListOper)
+
+	e.svcProf["AutoUpdateRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiserver.UpdateOper)
+
+	e.svcProf["AutoWatchRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRolloutWatchHelper", "rollout", apiserver.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

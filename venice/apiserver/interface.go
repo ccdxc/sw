@@ -22,12 +22,13 @@ type APIOperType string
 
 // Operations allowed by the API server on objects
 const (
-	CreateOper APIOperType = "create"
-	UpdateOper APIOperType = "update"
-	GetOper    APIOperType = "get"
-	DeleteOper APIOperType = "delete"
-	ListOper   APIOperType = "list"
-	WatchOper  APIOperType = "watch"
+	CreateOper  APIOperType = "create"
+	UpdateOper  APIOperType = "update"
+	GetOper     APIOperType = "get"
+	DeleteOper  APIOperType = "delete"
+	ListOper    APIOperType = "list"
+	WatchOper   APIOperType = "watch"
+	UnknownOper APIOperType = "unknown"
 )
 
 const (

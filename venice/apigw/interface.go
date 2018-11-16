@@ -108,6 +108,15 @@ type ServiceProfile interface {
 	//  hooks.
 	SetDefaults() error
 
+	// GetKind gets the kind on which this Service profile operates on, "" if it is none or more than one kind
+	GetKind() string
+
+	// GetAPIGroup returns the API group to which this profile belongs.
+	GetAPIGoup() string
+
+	// GetOper returns the operation involved, Unknown oper if none or more than one oper.
+	GetOper() apiserver.APIOperType
+
 	// Rate Limiters- TBD
 
 	// Registered hooks

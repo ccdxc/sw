@@ -769,39 +769,67 @@ func (a adapterSecurityV1) AutoWatchTrafficEncryptionPolicy(oldctx oldcontext.Co
 }
 
 func (e *sSecurityV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "security", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchApp"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiserver.CreateOper)
+
+	e.svcProf["AutoAddCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiserver.CreateOper)
+
+	e.svcProf["AutoAddSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiserver.CreateOper)
+
+	e.svcProf["AutoAddSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiserver.CreateOper)
+
+	e.svcProf["AutoAddTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TrafficEncryptionPolicy", "security", apiserver.CreateOper)
+
+	e.svcProf["AutoDeleteApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TrafficEncryptionPolicy", "security", apiserver.DeleteOper)
+
+	e.svcProf["AutoGetApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiserver.GetOper)
+
+	e.svcProf["AutoGetCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiserver.GetOper)
+
+	e.svcProf["AutoGetSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiserver.GetOper)
+
+	e.svcProf["AutoGetSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiserver.GetOper)
+
+	e.svcProf["AutoGetTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TrafficEncryptionPolicy", "security", apiserver.GetOper)
+
+	e.svcProf["AutoListApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AppList", "security", apiserver.ListOper)
+
+	e.svcProf["AutoListCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "CertificateList", "security", apiserver.ListOper)
+
+	e.svcProf["AutoListSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicyList", "security", apiserver.ListOper)
+
+	e.svcProf["AutoListSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroupList", "security", apiserver.ListOper)
+
+	e.svcProf["AutoUpdateApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TrafficEncryptionPolicy", "security", apiserver.UpdateOper)
+
+	e.svcProf["AutoWatchApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAppWatchHelper", "security", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgCertificateWatchHelper", "security", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSGPolicyWatchHelper", "security", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSecurityGroupWatchHelper", "security", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTrafficEncryptionPolicyWatchHelper", "security", apiserver.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

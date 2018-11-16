@@ -3,6 +3,8 @@ package apigwpkg
 import (
 	"context"
 	"testing"
+
+	"github.com/pensando/sw/venice/apiserver"
 )
 
 type testHooks struct {
@@ -44,7 +46,7 @@ func (t *testHooks) postCallHook(ctx context.Context, in interface{}) (context.C
 }
 
 func TestSvcProfile(t *testing.T) {
-	prof := NewServiceProfile(nil)
+	prof := NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 	mock := &testHooks{}
 	prof.AddPreAuthZHook(mock.preAuthZHook)
 	prof.AddPreAuthZHook(mock.preAuthZHook)
@@ -66,7 +68,7 @@ func TestSvcProfile(t *testing.T) {
 		t.Errorf("expecting 1 pre call hooks got %d", len(tc))
 	}
 
-	mprof := NewServiceProfile(prof)
+	mprof := NewServiceProfile(prof, "test", "testGroup", apiserver.CreateOper)
 	pa = mprof.PreAuthZHooks()
 	if len(pa) != 3 {
 		t.Errorf("expecting 3 pre auth hooks got %d", len(pa))
@@ -78,6 +80,16 @@ func TestSvcProfile(t *testing.T) {
 	tc = mprof.PostCallHooks()
 	if len(tc) != 1 {
 		t.Errorf("expecting 1 pre call hooks got %d", len(tc))
+	}
+
+	if mprof.GetKind() != "test" {
+		t.Errorf("got wrong kind [%s]", mprof.GetKind())
+	}
+	if mprof.GetAPIGoup() != "testGroup" {
+		t.Errorf("got wrong group [%s]", mprof.GetAPIGoup())
+	}
+	if mprof.GetOper() != apiserver.CreateOper {
+		t.Errorf("got wrong oper [%s]", mprof.GetOper())
 	}
 
 	// Set some New hooks

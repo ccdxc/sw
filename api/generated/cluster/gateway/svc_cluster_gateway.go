@@ -788,38 +788,65 @@ func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.Lis
 }
 
 func (e *sClusterV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "cluster", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AuthBootstrapComplete"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchHost"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchNode"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AuthBootstrapComplete"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.CreateOper)
+
+	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiserver.CreateOper)
+
+	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiserver.CreateOper)
+
+	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiserver.CreateOper)
+
+	e.svcProf["AutoDeleteCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiserver.DeleteOper)
+
+	e.svcProf["AutoGetCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.GetOper)
+
+	e.svcProf["AutoGetHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiserver.GetOper)
+
+	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiserver.GetOper)
+
+	e.svcProf["AutoGetSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiserver.GetOper)
+
+	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiserver.GetOper)
+
+	e.svcProf["AutoListHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "HostList", "cluster", apiserver.ListOper)
+
+	e.svcProf["AutoListNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NodeList", "cluster", apiserver.ListOper)
+
+	e.svcProf["AutoListSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNICList", "cluster", apiserver.ListOper)
+
+	e.svcProf["AutoListTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TenantList", "cluster", apiserver.ListOper)
+
+	e.svcProf["AutoUpdateCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiserver.UpdateOper)
+
+	e.svcProf["AutoWatchCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgClusterWatchHelper", "cluster", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgHostWatchHelper", "cluster", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNodeWatchHelper", "cluster", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSmartNICWatchHelper", "cluster", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTenantWatchHelper", "cluster", apiserver.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

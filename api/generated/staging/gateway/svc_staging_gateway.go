@@ -256,16 +256,21 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 }
 
 func (e *sStagingV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "staging", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["Clear"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["Commit"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.CreateOper)
+
+	e.svcProf["AutoDeleteBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.DeleteOper)
+
+	e.svcProf["AutoGetBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.GetOper)
+
+	e.svcProf["AutoListBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "BufferList", "staging", apiserver.ListOper)
+
+	e.svcProf["Clear"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.CreateOper)
+
+	e.svcProf["Commit"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

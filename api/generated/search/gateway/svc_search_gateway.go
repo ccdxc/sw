@@ -92,12 +92,13 @@ func (a adapterSearchV1) AutoWatchSvcSearchV1(oldctx oldcontext.Context, in *api
 }
 
 func (e *sSearchV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["PolicyQuery"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["Query"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["PolicyQuery"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+
+	e.svcProf["Query"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

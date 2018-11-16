@@ -675,34 +675,57 @@ func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.L
 }
 
 func (e *sAuthV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "auth", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchRole"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchUser"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["LdapBindCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["LdapConnectionCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.CreateOper)
+
+	e.svcProf["AutoAddRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiserver.CreateOper)
+
+	e.svcProf["AutoAddRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiserver.CreateOper)
+
+	e.svcProf["AutoAddUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.CreateOper)
+
+	e.svcProf["AutoDeleteRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.DeleteOper)
+
+	e.svcProf["AutoGetAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.GetOper)
+
+	e.svcProf["AutoGetRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiserver.GetOper)
+
+	e.svcProf["AutoGetRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiserver.GetOper)
+
+	e.svcProf["AutoGetUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.GetOper)
+
+	e.svcProf["AutoListRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleList", "auth", apiserver.ListOper)
+
+	e.svcProf["AutoListRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBindingList", "auth", apiserver.ListOper)
+
+	e.svcProf["AutoListUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "UserList", "auth", apiserver.ListOper)
+
+	e.svcProf["AutoUpdateAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.UpdateOper)
+
+	e.svcProf["AutoWatchAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAuthenticationPolicyWatchHelper", "auth", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRoleWatchHelper", "auth", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRoleBindingWatchHelper", "auth", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgUserWatchHelper", "auth", apiserver.WatchOper)
+
+	e.svcProf["LdapBindCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.CreateOper)
+
+	e.svcProf["LdapConnectionCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

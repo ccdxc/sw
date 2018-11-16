@@ -92,12 +92,13 @@ func (a adapterEventsV1) AutoWatchSvcEventsV1(oldctx oldcontext.Context, in *api
 }
 
 func (e *sEventsV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["GetEvent"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["GetEvents"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["GetEvent"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+
+	e.svcProf["GetEvents"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

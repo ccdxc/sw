@@ -2,14 +2,33 @@ package apigwpkg
 
 import (
 	"github.com/pensando/sw/venice/apigw"
+	"github.com/pensando/sw/venice/apiserver"
 )
 
 type svcProfile struct {
+	kind     string
+	group    string
+	oper     apiserver.APIOperType
 	defProf  apigw.ServiceProfile
 	preauthn []apigw.PreAuthNHook
 	preauthz []apigw.PreAuthZHook
 	precall  []apigw.PreCallHook
 	postcall []apigw.PostCallHook
+}
+
+// GetKind gets the kind on which this Service profile operates on, "" if it is none or more than one kind
+func (s *svcProfile) GetKind() string {
+	return s.kind
+}
+
+// GetAPIGroup returns the API group to which this profile belongs.
+func (s *svcProfile) GetAPIGoup() string {
+	return s.group
+}
+
+// GetOper returns the operation involved, Unknown oper if none or more than one oper.
+func (s *svcProfile) GetOper() apiserver.APIOperType {
+	return s.oper
 }
 
 // preauthNHooks returns all registered pre authn hooks
@@ -97,8 +116,11 @@ func (s *svcProfile) SetDefaults() error {
 }
 
 // NewServiceProfile creates a new service profile object
-func NewServiceProfile(fallback apigw.ServiceProfile) apigw.ServiceProfile {
+func NewServiceProfile(fallback apigw.ServiceProfile, kind, group string, oper apiserver.APIOperType) apigw.ServiceProfile {
 	return &svcProfile{
 		defProf: fallback,
+		kind:    kind,
+		group:   group,
+		oper:    oper,
 	}
 }

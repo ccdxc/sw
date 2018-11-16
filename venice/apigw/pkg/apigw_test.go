@@ -385,7 +385,7 @@ func TestErrorHandlers(t *testing.T) {
 }
 
 func TestHandleRequest(t *testing.T) {
-	prof := NewServiceProfile(nil)
+	prof := NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 	mock := &testHooks{}
 	prof.AddPreAuthNHook(mock.preAuthNHook)
 	prof.AddPreAuthNHook(mock.preAuthNHook)
@@ -635,7 +635,7 @@ func TestAuthzFailures(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		prof := NewServiceProfile(nil)
+		prof := NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 		prof.AddPreAuthZHook(test.hooks.preAuthZHook)
 		called := 0
 		input := struct {
@@ -754,7 +754,7 @@ func TestProxyDirector(t *testing.T) {
 }
 
 func TestHandleProxyRequest(t *testing.T) {
-	prof := NewServiceProfile(nil)
+	prof := NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 	mock := &testHooks{}
 	prof.AddPreAuthNHook(mock.preAuthNHook)
 	prof.AddPreAuthNHook(mock.preAuthNHook)

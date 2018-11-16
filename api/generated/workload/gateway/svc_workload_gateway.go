@@ -350,22 +350,33 @@ func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.
 }
 
 func (e *sWorkloadV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "workload", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.CreateOper)
+
+	e.svcProf["AutoAddWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.CreateOper)
+
+	e.svcProf["AutoDeleteEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.DeleteOper)
+
+	e.svcProf["AutoGetEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.GetOper)
+
+	e.svcProf["AutoGetWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.GetOper)
+
+	e.svcProf["AutoListEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EndpointList", "workload", apiserver.ListOper)
+
+	e.svcProf["AutoListWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "WorkloadList", "workload", apiserver.ListOper)
+
+	e.svcProf["AutoUpdateEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.UpdateOper)
+
+	e.svcProf["AutoWatchEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgEndpointWatchHelper", "workload", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgWorkloadWatchHelper", "workload", apiserver.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

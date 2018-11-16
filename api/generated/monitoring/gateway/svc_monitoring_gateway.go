@@ -1330,56 +1330,101 @@ func (a adapterMonitoringV1) AutoWatchTroubleshootingSession(oldctx oldcontext.C
 }
 
 func (e *sMonitoringV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "monitoring", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoAddTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoDeleteTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoGetTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoListTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoUpdateTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf)
-	e.svcProf["AutoWatchStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["AutoAddAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertDestination", "monitoring", apiserver.CreateOper)
+
+	e.svcProf["AutoAddAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertPolicy", "monitoring", apiserver.CreateOper)
+
+	e.svcProf["AutoAddEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EventPolicy", "monitoring", apiserver.CreateOper)
+
+	e.svcProf["AutoAddFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicy", "monitoring", apiserver.CreateOper)
+
+	e.svcProf["AutoAddMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.CreateOper)
+
+	e.svcProf["AutoAddTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiserver.CreateOper)
+
+	e.svcProf["AutoDeleteAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertDestination", "monitoring", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertPolicy", "monitoring", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EventPolicy", "monitoring", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicy", "monitoring", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.DeleteOper)
+
+	e.svcProf["AutoDeleteTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiserver.DeleteOper)
+
+	e.svcProf["AutoGetAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Alert", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoGetAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertDestination", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoGetAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertPolicy", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoGetEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EventPolicy", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoGetFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicy", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoGetFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicy", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoGetMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoGetStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsPolicy", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoGetTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiserver.GetOper)
+
+	e.svcProf["AutoListAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoListAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertDestinationList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoListAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertPolicyList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoListFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicyList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoListFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicyList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoListMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSessionList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoListStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsPolicyList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoListTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSessionList", "monitoring", apiserver.ListOper)
+
+	e.svcProf["AutoUpdateAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Alert", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertDestination", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertPolicy", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EventPolicy", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicy", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicy", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsPolicy", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoUpdateTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiserver.UpdateOper)
+
+	e.svcProf["AutoWatchAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAlertWatchHelper", "monitoring", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAlertDestinationWatchHelper", "monitoring", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAlertPolicyWatchHelper", "monitoring", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgEventPolicyWatchHelper", "monitoring", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgFlowExportPolicyWatchHelper", "monitoring", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgFwlogPolicyWatchHelper", "monitoring", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgMirrorSessionWatchHelper", "monitoring", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgStatsPolicyWatchHelper", "monitoring", apiserver.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
