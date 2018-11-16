@@ -20,3 +20,35 @@ README for tclsh.py
 
     Issue: When logging to stdout everything was getting printed multiple times.
     Fix: Disabled 2nd arg to script. Always log to file
+
+
+README for reload.py
+====================
+    - The reload script can be used to:
+        1) reset naples with existing image OR
+        2) update the image and then reset naples
+
+        Update image + reset
+        ./reload.py --host cap-srv11 --update 1
+
+        Update image + reset
+        ./reload.py --host cap-srv11
+
+    - After resetting naples, the host is rebooted. Once it is back up, the eth and rdma drivers are loaded. The drivers package is taken from the workspace
+    - Interfaces are brought up using the information in dev.json
+    - dev.json is a static file where the information related to interfaces on the host and its peer(s) are populated ahead of time
+    - Information specific to each naples which is rebooted using the script should be added to dev.json
+    - The image to update to must be already built - the script looks for nic/naples_fw.tar in the workspace from where the script is run
+
+    TODO:
+    ======
+    - Clear the console once done using
+    - Bringing up interfaces should be optional, depending on the json file
+    - Add option to load with golden image (to recover)
+    - Error out or get to the prompt if capview is running or if a file is opened on the console
+
+    Fixed:
+    =====
+    - If memtun is not running on host, try to start it. If naples is running a good image, it should work. If not, throw an error
+~
+~
