@@ -40,11 +40,7 @@ u_int16_t
 pal_reg_rd16(const u_int64_t pa)
 {
     const u_int16_t val = *(u_int16_t *)pr_ptov(pa, 2, FREEACCESS);
-
-#if PAL_SECURE
     pal_reg_trace("reg_rd32 0x%08"PRIx64" = 0x%"PRIx16"\n", pa, val);
-#endif
-
     assert((pa & 0x1) == 0);
     return val;
 }
@@ -53,11 +49,7 @@ u_int32_t
 pal_reg_rd32(const u_int64_t pa)
 {
     const u_int32_t val = *(u_int32_t *)pr_ptov(pa, 4, FREEACCESS);
-
-#if PAL_SECURE
     pal_reg_trace("reg_rd32 0x%08"PRIx64" = 0x%"PRIx32"\n", pa, val);
-#endif
-
     assert((pa & 0x3) == 0);
     return val;
 }
@@ -66,11 +58,7 @@ u_int64_t
 pal_reg_rd64(const u_int64_t pa)
 {
     const u_int64_t val = *(u_int64_t *)pr_ptov(pa, 8, FREEACCESS);
-
-#if PAL_SECURE
     pal_reg_trace("reg_rd64 0x%08"PRIx64" = 0x%"PRIx64"\n", pa, val);
-#endif
-
     assert((pa & 0x7) == 0);
     return val;
 }
@@ -86,22 +74,15 @@ pal_reg_rd32w(const u_int64_t pa,
     assert((pa & 0x3) == 0);
     for (i = 0; i < nw; i++) {
         *w++ = *va++;
-
-#if PAL_SECURE
         pal_reg_trace("reg_rd32 0x%08"PRIx64" = 0x%"PRIx32"\n",
                       pa + i * 4, w[-1]);
-#endif
-
     }
 }
 
 void
 pal_reg_wr16(const u_int64_t pa, const u_int16_t val)
 {
-#if PAL_SECURE
     pal_reg_trace("reg_wr32 0x%08"PRIx64" = 0x%"PRIx16"\n", pa, val);
-#endif
-
     assert((pa & 0x1) == 0);
     *(u_int32_t *)pr_ptov(pa, 2, FREEACCESS) = val;
 }
@@ -109,10 +90,7 @@ pal_reg_wr16(const u_int64_t pa, const u_int16_t val)
 void
 pal_reg_wr32(const u_int64_t pa, const u_int32_t val)
 {
-#if PAL_SECURE
     pal_reg_trace("reg_wr32 0x%08"PRIx64" = 0x%"PRIx32"\n", pa, val);
-#endif
-
     assert((pa & 0x3) == 0);
     *(u_int32_t *)pr_ptov(pa, 4, FREEACCESS) = val;
 }
@@ -120,10 +98,7 @@ pal_reg_wr32(const u_int64_t pa, const u_int32_t val)
 void
 pal_reg_wr64(const u_int64_t pa, const u_int64_t val)
 {
-#if PAL_SECURE
     pal_reg_trace("reg_wr64 0x%08"PRIx64" = 0x%"PRIx64"\n", pa, val);
-#endif
-
     assert((pa & 0x7) == 0);
     *(u_int64_t *)pr_ptov(pa, 8, FREEACCESS) = val;
 }
@@ -138,10 +113,8 @@ pal_reg_wr32w(const u_int64_t pa,
 
     assert((pa & 0x3) == 0);
     for (i = 0; i < nw; i++) {
-#if PAL_SECURE
         pal_reg_trace("reg_wr32 0x%08"PRIx64" = 0x%"PRIx32"\n",
                       pa + i * 4, *w);
-#endif
         *va++ = *w++;
     }
 }

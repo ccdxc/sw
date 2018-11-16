@@ -22,15 +22,11 @@ pal_mem_map(const u_int64_t pa, const size_t sz, u_int32_t flags)
 {
     void *va = pr_ptov(pa, sz, FREEACCESS);
 
-#if PAL_TRACE
     pal_mem_trace("mem_map 0x%08"PRIx64" sz %ld\n", pa, sz);
-#endif
 
-#if PAL_SECURE
     if (va == NULL && pal_pa_access_allowed(pa, sz)) {
         va = pr_ptov(pa, sz, FREEACCESS);
     } 
-#endif
 
     return va;
 }
@@ -84,16 +80,11 @@ int
 pal_mem_rd(const u_int64_t pa, void *buf, const size_t sz, u_int32_t flags)
 {
     void *va = pr_ptov(pa, sz, FREEACCESS);
-
-#if PAL_TRACE
     pal_mem_trace("mem_rd 0x%08"PRIx64" sz %ld\n", pa, sz);
-#endif
 
-#if PAL_SECURE
     if (va == NULL && pal_pa_access_allowed(pa, sz)) {
         va = pr_ptov(pa, sz, FREEACCESS);
     } 
-#endif
 
     if (va != NULL) {
         pal_memcpy(buf, va, sz);
@@ -109,16 +100,11 @@ int
 pal_mem_wr(const u_int64_t pa, const void *buf, const size_t sz, u_int32_t flags)
 {
     void *va = pr_ptov(pa, sz, FREEACCESS);
-
-#if PAL_TRACE
     pal_mem_trace("mem_wr 0x%08"PRIx64" sz %ld\n", pa, sz);
-#endif
 
-#if PAL_SECURE
     if (va == NULL && pal_pa_access_allowed(pa, sz)) {
         va = pr_ptov(pa, sz, FREEACCESS); 
     } 
-#endif
 
     if (va != NULL) { 
         pal_memcpy(va, buf, sz);
@@ -135,11 +121,9 @@ pal_memset(const uint64_t pa, u_int8_t c, const size_t sz, u_int32_t flags)
     u_int8_t *d = pr_ptov(pa, sz, FREEACCESS);
     int i;
 
-#if PAL_SECURE
     if (d == NULL && pal_pa_access_allowed(pa, sz)) {
         d = pr_ptov(pa, sz, FREEACCESS);
     }
-#endif
 
     if (d != NULL) {
         for (i = 0; i < sz; i++) {

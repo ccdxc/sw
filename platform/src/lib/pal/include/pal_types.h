@@ -1,9 +1,6 @@
 #ifndef _PAL_TYPES_H_
 #define _PAL_TYPES_H_
 
-#define FREEACCESS 0x01
-#define CONTROLLEDACCESS 0x00
-
 enum {
     PAL_ENV_ASIC = 0,
     PAL_ENV_HAPS = 1,

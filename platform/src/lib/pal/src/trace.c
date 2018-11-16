@@ -45,8 +45,6 @@ pal_reg_trace(const char *fmt, ...)
     va_start(ap, fmt);
     vfprintf(pd->trfp, fmt, ap);
     va_end(ap);
-
-    fflush(pd->trfp);
 }
 
 void
@@ -61,8 +59,6 @@ pal_mem_trace(const char *fmt, ...)
     va_start(ap, fmt);
     vfprintf(pd->trfp, fmt, ap);
     va_end(ap);
-
-    fflush(pd->trfp);
 }
 
 int
