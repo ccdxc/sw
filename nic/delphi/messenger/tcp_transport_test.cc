@@ -94,10 +94,13 @@ public:
         usleep(1000);
 
         // kill the event loop thread
-        LogDebug("Stopping event loop\n");
-        loop.break_loop(ev::ALL);
         pthread_cancel(ev_thread_id);
         pthread_join(ev_thread_id, NULL);
+        usleep(1000);
+
+        LogDebug("Stopping event loop\n");
+        loop.break_loop(ev::ALL);
+        usleep(1000);
     }
 };
 
