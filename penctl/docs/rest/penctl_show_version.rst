@@ -1,9 +1,9 @@
-.. _penctl_list_cores:
+.. _penctl_show_version:
 
-penctl list cores
------------------
+penctl show version
+-------------------
 
-Show cores from Naples
+Show version of penctl
 
 Synopsis
 ~~~~~~~~
@@ -11,20 +11,20 @@ Synopsis
 
 
 ------------------------
- Show Cores From Naples 
+ Show Version of PenCtl 
 ------------------------
 
 
 ::
 
-  penctl list cores [flags]
+  penctl show version [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for cores
+  -h, --help   help for version
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,5 +41,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl list <penctl_list.rst>`_ 	 - List Objects
+* `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
 

@@ -33,7 +33,9 @@ penctl update mode [flags]
 ```
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
+  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
+  -v, --version            version
   -y, --yaml               display in yaml format
 ```
 

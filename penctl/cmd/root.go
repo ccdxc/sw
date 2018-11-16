@@ -15,6 +15,17 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// GitCommit is the variable to hold the sha
+var GitCommit string
+
+// PenCtlVer is the variable to hold penctl version
+var PenCtlVer string
+
+func printPenctlVer() {
+	fmt.Printf("Sha:     %s\n", GitCommit)
+	fmt.Printf("Version: %s\n", PenCtlVer)
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:               "penctl",
@@ -22,6 +33,11 @@ var rootCmd = &cobra.Command{
 	Long:              "\n--------------------------\n Pensando Management CLIs \n--------------------------\n",
 	PersistentPreRunE: cliPreRunInit,
 	DisableAutoGenTag: true,
+	Run: func(cmd *cobra.Command, args []string) {
+		if cmd.Flags().Changed("version") {
+			printPenctlVer()
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -35,6 +51,7 @@ func Execute() {
 }
 
 var verbose bool
+var version bool
 var yamlFormat bool
 var jsonFormat bool
 var tabularFormat bool
@@ -54,7 +71,8 @@ func init() {
 	}
 	log.SetConfig(logConfig)
 
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "log", "z", false, "debug output")
+	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "version")
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml format")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", false, "display in json format")
 	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", true, "display in tabular format")

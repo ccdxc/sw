@@ -1,24 +1,24 @@
-## penctl show metrics accelhwring
+## penctl show version
 
-Show AccelHwRingMetrics from Naples
+Show version of penctl
 
 ### Synopsis
 
 
 
----------------------------------
- Show AccelHwRingMetrics From Naples 
----------------------------------
+------------------------
+ Show Version of PenCtl 
+------------------------
 
 
 ```
-penctl show metrics accelhwring [flags]
+penctl show version [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for accelhwring
+  -h, --help   help for version
 ```
 
 ### Options inherited from parent commands
@@ -33,5 +33,5 @@ penctl show metrics accelhwring [flags]
 ```
 
 ### SEE ALSO
-* [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show](penctl_show.md)	 - Show Object and Information
 

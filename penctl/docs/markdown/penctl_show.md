@@ -22,7 +22,9 @@ Show Object and Information
 ```
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
+  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
+  -v, --version            version
   -y, --yaml               display in yaml format
 ```
 
@@ -37,4 +39,5 @@ Show Object and Information
 * [penctl show running-firmware](penctl_show_running-firmware.md)	 - Show running firmware from Naples
 * [penctl show startup-firmware](penctl_show_startup-firmware.md)	 - Show startup firmware from Naples
 * [penctl show system-memory-usage](penctl_show_system-memory-usage.md)	 - Show free/used memory on Naples
+* [penctl show version](penctl_show_version.md)	 - Show version of penctl
 
