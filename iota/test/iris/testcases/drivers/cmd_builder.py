@@ -187,7 +187,9 @@ def bsd_ethtool_gro_offload(intf, op):
     return ethtool_feature_cmd(intf, "gro", op)
 
 def bsd_ethtool_sg_offload(intf, op):
-    return ethtool_feature_cmd(intf, "sg", op)
+    #SG not required in freebsd
+    return "echo > /dev/null" 
+    #return ethtool_feature_cmd(intf, "sg", op)
 
 def bsd_ethtool_rxvlan_offload(intf, op):
     return ethtool_feature_cmd(intf, "txvlan", op)

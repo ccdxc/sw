@@ -1,10 +1,10 @@
 meta:
-    name        : classic::bsd-driver-features
+    name        : classic::driver-features-sanity
     description : Driver features Test Suite
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
-    enable      : False
+    enable      : True
 
 packages:
     - iota.test.iris
@@ -24,17 +24,15 @@ common:
 testcases:
     -   name    : DRIVER_FEATURES_TX_RING_SIZE
         testcase: testcases.drivers.features
-        disable : True
         iterators :
             type               : nested
-            tx_ring_size       : [ 1024, 2048, 4096, 8192 ]
-            mtu                : [ '1500', '2048', '4098', '8192']
-            pktsize            : [ 128, 1024, 2048, 8192]
+            tx_ring_size       : [ 1024 ]
+            mtu                : [ '1500']
+            pktsize            : [ 1024]
             proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
             type         : remote_only
-            os_type      : freebsd
             #capture_pcap : True
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
@@ -42,127 +40,101 @@ testcases:
 
     -   name    : DRIVER_FEATURES_RX_RING_SIZE
         testcase: testcases.drivers.features
-        disable : True
+        disable : False
         iterators :
             type               : nested
-            rx_ring_size       : [ 1024, 2048, 4096, 8192 ]
-            mtu                : [ '1500', '2048', '4098', '8192']
-            pktsize            : [ 128, 1024, 2048, 8192]
-            proto              : ['udp', 'tcp']
+            rx_ring_size       : [ 1024 ]
+            mtu                : [ '1500']
+            pktsize            : [ 1024 ]
+            proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
             type: remote_only
-            os_type      : freebsd
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
     -   name    : DRIVER_FEATURES_TX_QUEUE_SIZE
         testcase: testcases.drivers.features
-        disable : True
+        disable : False
         iterators :
             type               : nested
-            tx_queue_size      : [ 1, 2, 4, 8, 16]
-            mtu                : [ '1500', '2048', '4098', '8192']
-            pktsize            : [ 128, 1024, 2048, 8192]
+            tx_queue_size      : [ 4 ]
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
             type: remote_only
-            os_type      : freebsd
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
     -   name    : DRIVER_FEATURES_RX_QUEUE_SIZE
         testcase: testcases.drivers.features
-        disable : True
+        disable : False
         iterators :
             type               : nested
-            rx_queue_size      : [ 1, 2, 4, 8, 16]
-            mtu                : [ '1500', '2048', '4098', '8192']
-            pktsize            : [ 128, 1024, 2048, 8192]
+            rx_queue_size      : [ 4]
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
             type: remote_only
-            os_type      : freebsd
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
     -   name    : DRIVER_FEATURES_TX_CHECKSUM
         testcase: testcases.drivers.features
-        disable : True
+        disable : False
         iterators :
             type               : nested
             tx_check_sum       : [ 'off', 'on']
-            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
-            pktsize            : [ 128, 1024, 2048, 8192]
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
             type: remote_only
-            os_type      : freebsd
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
     -   name    : DRIVER_FEATURES_RX_CHECKSUM
         testcase: testcases.drivers.features
-        disable : True
+        disable : False
         iterators :
             type               : nested
             rx_check_sum       : [ 'off', 'on']
-            mtu                : [ '1500', '2048', '4098', '8192']
-            pktsize            : [ 128, 1024, 2048, 8192]
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
             type: remote_only
-            os_type      : freebsd
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
     -   name    : DRIVER_FEATURES_TSO
         testcase: testcases.drivers.features
-        disable : True
+        disable : False
         iterators :
             type               : nested
-            mtu                : [ '1500', '2048', '4098', '8192']
+            mtu                : [ '8192']
             tso_offload        : [ 'off', 'on']
             #Sg seems to be on for TSO testing.
             sg_offload         : [ 'on']
             #TSO requires rx and tx cheksum
             rx_check_sum       : [ 'on']
             tx_check_sum       : [ 'on']
-            pktsize            : [ 128, 1024, 2048, 8192]
+            pktsize            : [  8192 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
             type: remote_only
-            os_type      : freebsd
-            #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_PKT_FILTER
-        testcase: testcases.drivers.features
-        disable : True
-        iterators :
-            type               : nested
-            mtu                : [ '1500', '2048', '4098', '8192']
-            filter_mcast       : [ 'off', 'on']
-            filter_all_mcast   : [ 'off', 'on']
-            filter_broadcast   : [ 'off', 'on']
-            filter_promiscuous : [ 'off', 'on']
-            pktsize            : [ 128, 1024, 2048, 8192]
-            proto              : ['udp', 'tcp']
-            ipproto            : [ 'v4']
-        args    :
-            type: remote_only
-            os_type      : freebsd
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent

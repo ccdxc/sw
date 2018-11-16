@@ -84,7 +84,7 @@ feature_cmd_map = {
         },
 }
 
-def setup_features(tc, os_type = "linux"):
+def setup_features(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     driverReloaded = False
     for n, host_intfs in tc.host_intfs.items():
@@ -97,7 +97,7 @@ def setup_features(tc, os_type = "linux"):
             if not feature_value:
                 api.Logger.error("Feature %s not provided " % feature)
                 continue
-            os_type = getattr(tc.args, "os_type", "linux")
+            os_type = api.GetNodeOs(n)
             callback = cmdBuilderDict[os_type]["cmd"]
             for intf in host_intfs:
                 cmds = callback(intf, feature_value)
