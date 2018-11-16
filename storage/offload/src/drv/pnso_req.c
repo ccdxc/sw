@@ -27,7 +27,7 @@
 typedef pnso_error_t (*validate_req_service_fn_t)(struct pnso_service *svc);
 
 typedef pnso_error_t (*validate_res_service_fn_t)(
-		struct pnso_service_status *svc);
+		struct pnso_service_status *svc, uint32_t num_services);
 
 static void __attribute__((unused))
 pprint_crypto_desc(const struct pnso_crypto_desc *desc)
@@ -483,7 +483,7 @@ static validate_req_service_fn_t validate_req_service_fn[PNSO_SVC_TYPE_MAX] = {
 };
 
 static pnso_error_t
-validate_res_dummy_service(struct pnso_service_status *status)
+validate_res_dummy_service(struct pnso_service_status *status, uint32_t num_services)
 {
 	OSAL_ASSERT(0);
 	return EINVAL;
@@ -530,41 +530,51 @@ out:
 }
 
 static pnso_error_t
-validate_res_encryption_service(struct pnso_service_status *status)
+validate_res_encryption_service(struct pnso_service_status *status, uint32_t num_services)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err = PNSO_OK;
 
-	err = validate_res_status(status);
+	/*
+	 * Dst buffer list is optional in a service chain and since not all services
+	 * uniformly handle it (by supplying interm buffers), it is privately
+	 * dealt with here.
+	 */
+	if (num_services <= 1)
+		err = validate_res_status(status);
 	if (err) {
 		OSAL_LOG_DEBUG("invalid output params specified for encryption! err: %d",
 				err);
 		goto out;
 	}
 
-	err = PNSO_OK;
 out:
 	return err;
 }
 
 static pnso_error_t
-validate_res_decryption_service(struct pnso_service_status *status)
+validate_res_decryption_service(struct pnso_service_status *status, uint32_t num_services)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err = PNSO_OK;
 
-	err = validate_res_status(status);
+	/*
+	 * Dst buffer list is optional in a service chain and since not all services
+	 * uniformly handle it (by supplying interm buffers), it is privately
+	 * dealt with here.
+	 */
+	if (num_services <= 1)
+		err = validate_res_status(status);
 	if (err) {
 		OSAL_LOG_DEBUG("invalid output params specified for decryption! err: %d",
 				err);
 		goto out;
 	}
 
-	err = PNSO_OK;
 out:
 	return err;
 }
 
 static pnso_error_t
-validate_res_compression_service(struct pnso_service_status *status)
+validate_res_compression_service(struct pnso_service_status *status, uint32_t num_services)
 {
 	pnso_error_t err = EINVAL;
 
@@ -581,7 +591,7 @@ out:
 }
 
 static pnso_error_t
-validate_res_decompression_service(struct pnso_service_status *status)
+validate_res_decompression_service(struct pnso_service_status *status, uint32_t num_services)
 {
 	pnso_error_t err = EINVAL;
 
@@ -598,7 +608,7 @@ out:
 }
 
 static pnso_error_t
-validate_res_hash_service(struct pnso_service_status *status)
+validate_res_hash_service(struct pnso_service_status *status, uint32_t num_services)
 {
 	pnso_error_t err = EINVAL;
 
@@ -614,7 +624,7 @@ out:
 }
 
 static pnso_error_t
-validate_res_chksum_service(struct pnso_service_status *status)
+validate_res_chksum_service(struct pnso_service_status *status, uint32_t num_services)
 {
 	pnso_error_t err = EINVAL;
 
@@ -630,7 +640,7 @@ out:
 }
 
 static pnso_error_t
-validate_res_decompaction_service(struct pnso_service_status *status)
+validate_res_decompaction_service(struct pnso_service_status *status, uint32_t num_services)
 {
 	OSAL_ASSERT(0);
 	return EINVAL;
@@ -738,7 +748,7 @@ validate_service_result(struct pnso_service_result *svc_res)
 			goto out;
 		}
 
-		err = validate_res_service_fn[svc_type](&svc_res->svc[i]);
+		err = validate_res_service_fn[svc_type](&svc_res->svc[i], svc_res->num_services);
 		if (err)
 			goto out;
 	}
