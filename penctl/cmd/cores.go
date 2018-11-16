@@ -76,6 +76,9 @@ func coreShowCmdHandler(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	if len(retS) == 0 {
+		fmt.Println("No core files found")
+	}
 	for _, ret := range retS {
 		fmt.Println(ret)
 	}

@@ -496,7 +496,7 @@ func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 	cmd.Env = os.Environ()
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err
 	}
 	return string(stdoutStderr), nil
 }

@@ -7,6 +7,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -15,13 +17,18 @@ var upgrademetricsShowCmd = &cobra.Command{
 	Use:   "upgrade",
 	Short: "Show UpgradeMetrics from Naples",
 	Long:  "\n---------------------------------\n Show UpgradeMetrics From Naples \n---------------------------------\n",
-	Run:   upgrademetricsShowCmdHandler,
+	RunE:  upgrademetricsShowCmdHandler,
 }
 
-func upgrademetricsShowCmdHandler(cmd *cobra.Command, args []string) {
+func upgrademetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/")
+	_, err := restGet(revProxyPort, "telemetry/v1/metrics/upgrademetrics/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
 func init() {

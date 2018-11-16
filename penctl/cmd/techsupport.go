@@ -190,7 +190,6 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
 			if err != nil {
 				fmt.Println(err)
-				return err
 			}
 			if len(resp) > 3 {
 				fmt.Printf(".")
@@ -199,7 +198,6 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 				out, err := os.Create(file)
 				if err != nil {
 					fmt.Println(err)
-					return err
 				}
 				defer out.Close()
 				w := bufio.NewWriter(out)

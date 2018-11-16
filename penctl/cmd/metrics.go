@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ var metricsShowCmd = &cobra.Command{
 	Use:   "metrics",
 	Short: "Show metrics from Naples",
 	Long:  "\n--------------------------\n Show Metrics From Naples \n--------------------------\n",
-	Run:   genericmetricsShowCmdHandler,
+	RunE:  genericmetricsShowCmdHandler,
 }
 
 var generickind string
@@ -27,15 +28,21 @@ func init() {
 	metricsShowCmd.MarkFlagRequired("kind")
 }
 
-func genericmetricsShowCmdHandler(cmd *cobra.Command, args []string) {
+func genericmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	if !cmd.Flags().Changed("yaml") {
 		jsonFormat = true
 	}
 	generickind = strings.ToLower(generickind) + "metrics"
+	var err error
 	if cmd.Flags().Changed("name") {
-		restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/default/"+genericname+"/")
+		_, err = restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/default/"+genericname+"/")
 	} else {
-		restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/")
+		_, err = restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/")
 	}
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }

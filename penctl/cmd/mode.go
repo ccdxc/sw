@@ -23,7 +23,7 @@ var modeManagedCmd = &cobra.Command{
 	Use:   "mode",
 	Short: "Set Naples to Managed mode",
 	Long:  "\n----------------------------\n Set NAPLES management mode \n----------------------------\n",
-	Run:   modeManagedCmdHandler,
+	RunE:  modeManagedCmdHandler,
 	Args:  modeManagedCmdArgsValidator,
 }
 
@@ -31,7 +31,7 @@ var modeManagedShowCmd = &cobra.Command{
 	Use:   "mode",
 	Short: "Show mode of operation of Naples",
 	Long:  "\n-------------------------------------------------------------------\n Show mode of operation of Naples - host-managed vs venice-managed \n-------------------------------------------------------------------\n",
-	Run:   modeManagedShowCmdHandler,
+	RunE:  modeManagedShowCmdHandler,
 }
 
 type clusterAddresses []string
@@ -85,7 +85,7 @@ func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func modeManagedCmdHandler(cmd *cobra.Command, args []string) {
+func modeManagedCmdHandler(cmd *cobra.Command, args []string) error {
 	var modeVal nmd.MgmtMode
 	if mode == "managed" {
 		modeVal = nmd.MgmtMode_NETWORK
@@ -118,24 +118,28 @@ func modeManagedCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println("Unable to set mode.")
 			fmt.Println("Error:", err.Error())
 		}
+		return err
 	}
+	return nil
 }
 
-func modeManagedShowCmdHandler(cmd *cobra.Command, args []string) {
+func modeManagedShowCmdHandler(cmd *cobra.Command, args []string) error {
 	resp, err := restGet(revProxyPort, "api/v1/naples/")
 
 	if err != nil {
 		if verbose {
 			fmt.Println(err.Error())
 		}
-		return
+		return err
 	}
 	naplesCfg := nmd.Naples{}
 	json.Unmarshal(resp, &naplesCfg)
 	if tabularFormat {
+		fmt.Println(strings.Trim(strings.Replace(fmt.Sprintf("%+v", naplesCfg.Spec), " ", "\n", -1), "{}"))
 		fmt.Println("Mode:", nmd.MgmtMode_name[int32(naplesCfg.Spec.Mode)])
 	}
 	if verbose && tabularFormat {
-		fmt.Printf("%+v\n", naplesCfg)
+		fmt.Printf("%+v\n", naplesCfg.Spec)
 	}
+	return nil
 }

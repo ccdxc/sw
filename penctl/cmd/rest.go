@@ -126,6 +126,12 @@ func restGet(port string, url string) ([]byte, error) {
 		return nil, err
 	}
 	defer getResp.Body.Close()
+	if getResp.StatusCode != 200 {
+		if verbose {
+			fmt.Println(getResp.Status + " " + url)
+		}
+		return nil, errors.New(url + " not found")
+	}
 	if verbose {
 		fmt.Println("Status: ", getResp.Status)
 		fmt.Println("Header: ", getResp.Header)
@@ -181,6 +187,12 @@ func restGetWithBody(v interface{}, port string, url string) ([]byte, error) {
 		fmt.Println("Header: ", getResp.Header)
 	}
 	bodyBytes, _ := ioutil.ReadAll(getResp.Body)
+	if getResp.StatusCode != 200 {
+		if verbose {
+			fmt.Println(getResp.Status + " " + url)
+		}
+		return nil, errors.New(string(bodyBytes))
+	}
 
 	if jsonFormat || yamlFormat {
 		var prettyJSON bytes.Buffer

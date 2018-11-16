@@ -7,6 +7,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -15,13 +17,18 @@ var lifmetricsShowCmd = &cobra.Command{
 	Use:   "lif",
 	Short: "Show LifMetrics from Naples",
 	Long:  "\n---------------------------------\n Show LifMetrics From Naples \n---------------------------------\n",
-	Run:   lifmetricsShowCmdHandler,
+	RunE:  lifmetricsShowCmdHandler,
 }
 
-func lifmetricsShowCmdHandler(cmd *cobra.Command, args []string) {
+func lifmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	restGet(revProxyPort, "telemetry/v1/metrics/lifmetrics/")
+	_, err := restGet(revProxyPort, "telemetry/v1/metrics/lifmetrics/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
 func init() {

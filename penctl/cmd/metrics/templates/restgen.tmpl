@@ -20,13 +20,18 @@ import (
 		Use:   "{{ToLower $cli}}",
 		Short: "Show {{.GetName}} from Naples",
 		Long:  "\n---------------------------------\n Show {{.GetName}} From Naples \n---------------------------------\n",
-		Run:   {{ToLower .GetName}}ShowCmdHandler,
+		RunE:  {{ToLower .GetName}}ShowCmdHandler,
 	}
 
-	func {{ToLower .GetName}}ShowCmdHandler(cmd *cobra.Command, args []string) {
+	func {{ToLower .GetName}}ShowCmdHandler(cmd *cobra.Command, args []string) error {
 		tabularFormat = false
 		jsonFormat = true
-		restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/")
+		_, err := restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/")
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		return nil
 	}
     {{end}}
  {{end}}

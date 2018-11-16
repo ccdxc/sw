@@ -7,6 +7,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -15,13 +17,18 @@ var accelhwringmetricsShowCmd = &cobra.Command{
 	Use:   "accelhwring",
 	Short: "Show AccelHwRingMetrics from Naples",
 	Long:  "\n---------------------------------\n Show AccelHwRingMetrics From Naples \n---------------------------------\n",
-	Run:   accelhwringmetricsShowCmdHandler,
+	RunE:  accelhwringmetricsShowCmdHandler,
 }
 
-func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) {
+func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	restGet(revProxyPort, "telemetry/v1/metrics/accelhwringmetrics/")
+	_, err := restGet(revProxyPort, "telemetry/v1/metrics/accelhwringmetrics/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
 var accelseqqueuemetricsShowCmd = &cobra.Command{
@@ -29,13 +36,18 @@ var accelseqqueuemetricsShowCmd = &cobra.Command{
 	Use:   "accelseqqueue",
 	Short: "Show AccelSeqQueueMetrics from Naples",
 	Long:  "\n---------------------------------\n Show AccelSeqQueueMetrics From Naples \n---------------------------------\n",
-	Run:   accelseqqueuemetricsShowCmdHandler,
+	RunE:  accelseqqueuemetricsShowCmdHandler,
 }
 
-func accelseqqueuemetricsShowCmdHandler(cmd *cobra.Command, args []string) {
+func accelseqqueuemetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	restGet(revProxyPort, "telemetry/v1/metrics/accelseqqueuemetrics/")
+	_, err := restGet(revProxyPort, "telemetry/v1/metrics/accelseqqueuemetrics/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
 func init() {

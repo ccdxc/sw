@@ -18,7 +18,7 @@ var execBinCmd = &cobra.Command{
 	Use:                "execute",
 	Short:              "Execute remote commands on the Naples card",
 	Long:               "\n--------------------------------------------\n Execute remote commands on the Naples card \n--------------------------------------------\n",
-	Run:                execBinCmdHandler,
+	RunE:               execBinCmdHandler,
 	DisableFlagParsing: true,
 	Hidden:             true,
 	Args:               execBinCmdArgsValidator,
@@ -28,7 +28,7 @@ func init() {
 	rootCmd.AddCommand(execBinCmd)
 }
 
-func execBinCmdHandler(cmd *cobra.Command, args []string) {
+func execBinCmdHandler(cmd *cobra.Command, args []string) error {
 	var v *nmd.NaplesCmdExecute
 	if args[0] == "-v" {
 		v = &nmd.NaplesCmdExecute{
@@ -48,15 +48,20 @@ func execBinCmdHandler(cmd *cobra.Command, args []string) {
 	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
-	if len(resp) > 3 {
-		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-		fmt.Printf("%s", s)
+	s := strings.Replace(string(resp), `\n`, "\n", -1)
+	if len(s) > 0 && s[0] == '"' {
+		s = s[1:]
 	}
+	if len(s) > 0 && s[len(s)-2] == '"' {
+		s = s[:len(s)-2]
+	}
+	fmt.Println(s)
 	if verbose {
 		fmt.Println(string(resp))
 	}
+	return nil
 }
 
 func execBinCmdArgsValidator(cmd *cobra.Command, args []string) error {
