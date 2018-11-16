@@ -267,8 +267,8 @@ def Trigger_CreateExecuteCommandsRequest(serial = True):
     req.trigger_mode = topo_svc.TRIGGER_SERIAL if serial else topo_svc.TRIGGER_PARALLEL
     return req
 
-def Trigger_AddCommand(req, node_name, entity_name, command, 
-                       background = False, rundir = "", 
+def Trigger_AddCommand(req, node_name, entity_name, command,
+                       background = False, rundir = "",
                        timeout = DEFAULT_COMMAND_TIMEOUT):
     cmd = req.commands.add()
     cmd.mode = topo_svc.COMMAND_BACKGROUND if background else topo_svc.COMMAND_FOREGROUND
@@ -285,7 +285,7 @@ def Trigger_AddCommand(req, node_name, entity_name, command,
 def Trigger_AddHostCommand(req, node_name, command,
                            background = False, rundir = "",
                            timeout = DEFAULT_COMMAND_TIMEOUT):
-    return Trigger_AddCommand(req, node_name, "%s_host" % node_name, 
+    return Trigger_AddCommand(req, node_name, "%s_host" % node_name,
                               command, background, rundir, timeout)
 
 def Trigger_AddNaplesCommand(req, node_name, command,
@@ -344,6 +344,9 @@ def ChangeDirectory(rundir):
     __gl_rundir = rundir
     return types.status.SUCCESS
 
+def GetCurrentDirectory():
+    return __gl_rundir
+
 def __CopyCommon(direction, node_name, entity_name, files, dest_dir):
     #if direction == topo_svc.DIR_IN:
     #    ret = __CreateDir(node_name, entity_name, dest_dir)
@@ -355,11 +358,11 @@ def __CopyCommon(direction, node_name, entity_name, files, dest_dir):
     req.entity_name = entity_name
     for f in files:
         req.files.append(f)
-    req.dest_dir = dest_dir 
+    req.dest_dir = dest_dir
     if direction == topo_svc.DIR_IN:
         req.dest_dir = __gl_rundir + '/' + dest_dir
     return EntityCopy(req)
-   
+
 def CopyToWorkload(node_name, workload_name, files, dest_dir = ""):
     return __CopyCommon(topo_svc.DIR_IN, node_name,
                         workload_name, files, dest_dir)

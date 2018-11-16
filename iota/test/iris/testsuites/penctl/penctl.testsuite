@@ -12,8 +12,9 @@ images:
 
 setup:
     topology: test/iris/topologies/1Naples_BM/1Naples.topology
-    config  : 
+    config  :
         - step : config.netagent.hw_push_config
+        - step : testcases.penctl.install
 
 common:
     verifs:
@@ -21,10 +22,11 @@ common:
         #-   step    : verif.utils.verify_topology_health
 
 testcases:
-    -   name    : Check_nmd_logs
+    -   name    : CHECK_LOGS
         testcase: testcases.penctl.log
-        args    :
-            package: nic/host.tar
+        iterators :
+            type : simple
+            option : ["nmd", "netagent", "tmagent"]
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw

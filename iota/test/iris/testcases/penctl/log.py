@@ -3,55 +3,26 @@ import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.penctldefs as penctldefs
-import os
+import iota.test.iris.testcases.penctl.common as common
+
 
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    fullpath = api.GetTopDir() + '/' + tc.args.package
-    logpath = api.GetTopDir() + '/'
-    for n in tc.Nodes:
-        resp = api.CopyToHost(n, [fullpath], penctldefs.PENCTL_ROOT_DIR)
-        if resp is None:
-            return api.types.status.FAILURE
-        if resp.api_response.api_status != types_pb2.API_STATUS_OK:
-            api.Logger.error("Failed to copy Drivers to Node: %s" % n)
-            return api.types.status.FAILURE
-
-    #mgmt_ip = api.GetNaplesMgmtIpAddresses()[0]
-    mgmt_ip = "1.0.0.2"
-
-    if api.GetNodeOs(tc.Nodes[0]) == "linux":
-        penctl = "./penctl.linux "
-    else:
-        penctl = "./penctl.freebsd "
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        api.Trigger_AddHostCommand(req, n, "tar -xvf %s" % os.path.basename(tc.args.package),
-                                   background = False,
-                                   rundir = penctldefs.PENCTL_ROOT_DIR)
-        api.Trigger_AddHostCommand(req, n, penctl + "-h", background = False,
-                                   rundir = penctldefs.PENCTL_DEST_DIR)
-        api.Trigger_AddHostCommand(req, n, penctl + "show logs -m nmd --ip %s | tail -n 20" % mgmt_ip, background = False,
-                                   rundir = penctldefs.PENCTL_DEST_DIR)
-        api.Trigger_AddHostCommand(req, n, penctl + "show logs -m nmd --ip %s > nmd.log" % mgmt_ip, background = False,
-                                   rundir = penctldefs.PENCTL_DEST_DIR)
-        api.Trigger_AddHostCommand(req, n, penctl + "show running-firmware --ip " + mgmt_ip, background = False,
-                                   rundir = penctldefs.PENCTL_DEST_DIR)
+        mgmt_ip = common.GetNaplesMgmtIP(n)
+        common.AddPenctlCommand(req, n, "show logs -m %s --ip %s | tail -n 20" % (tc.iterators.option, mgmt_ip))
+        common.AddPenctlCommand(req, n, "show logs -m %s --ip %s > %s.log" % (tc.iterators.option, mgmt_ip, tc.iterators.option))
+
     tc.resp = api.Trigger(req)
 
     for n in tc.Nodes:
-        resp = api.CopyFromHost(n, [penctldefs.PENCTL_DEST_DIR + "/nmd.log"], "%s/%s_nmd.log" % (tc.GetLogsDir(), n))
+        resp = api.CopyFromHost(n, [penctldefs.PENCTL_DEST_DIR + "/%s.log" %(tc.iterators.option)], "%s/%s_%s.log" % (tc.GetLogsDir(), n, tc.iterators.option))
 
-    # File is copied to local machine
-    #req2 = api.Trigger_CreateExecuteCommandsRequest()
-    #for n in tc.Nodes:
-    #    api.Trigger_AddHostCommand(req2, n, "tail -n 20 %s/%s_nmd.log" % (logpath, n) , background = False,
-    #                               rundir = penctldefs.PENCTL_DEST_DIR)
-    #tc.resp = api.Trigger(req2)
 
     return api.types.status.SUCCESS
 
