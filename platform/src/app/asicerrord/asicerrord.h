@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <math.h>
 #include "logger.h"
-#include "nic/asic/capri/design/common/cap_addr_define.h"
+#include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_dpp_c_hdr.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_dpr_c_hdr.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"
@@ -23,6 +23,7 @@
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_pbc_c_hdr.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_pbm_c_hdr.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_mc_c_hdr.h"
+#include "gen/proto/asicerrord.delphi.hpp"
 
 #define DPP0_INT_CREDIT CAP_ADDR_BASE_DPP_DPP_0_OFFSET + CAP_DPP_CSR_INT_CREDIT_INTREG_BYTE_ADDRESS
 #define DPP1_INT_CREDIT CAP_ADDR_BASE_DPP_DPP_1_OFFSET + CAP_DPP_CSR_INT_CREDIT_INTREG_BYTE_ADDRESS
@@ -139,11 +140,42 @@
 #define MC6_MCH_INT_MC_INTREG CAP_ADDR_BASE_MC_MC_6_OFFSET + CAP_MC_CSR_MCH_INT_MC_INTREG_BYTE_ADDRESS
 #define MC7_MCH_INT_MC_INTREG CAP_ADDR_BASE_MC_MC_7_OFFSET + CAP_MC_CSR_MCH_INT_MC_INTREG_BYTE_ADDRESS
 
-#define SUCCESS 0
-#define FAIL 1
-
-#define BIT(n) (1 << (n))
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+extern delphi::objects::dppintcreditmetrics_t                  dppintcreditmetrics[2];
+extern delphi::objects::dppintfifometrics_t                    dppintfifometrics[2];
+extern delphi::objects::dppintreg1metrics_t                    dppintreg1metrics[2];
+extern delphi::objects::dppintreg2metrics_t                    dppintreg2metrics[2];
+extern delphi::objects::intsparemetrics_t                      intsparemetrics[4];
+extern delphi::objects::dppintsramseccmetrics_t                dppintsramseccmetrics[2];
+extern delphi::objects::dprintcreditmetrics_t                  dprintcreditmetrics[2];
+extern delphi::objects::dprintfifometrics_t                    dprintfifometrics[2];
+extern delphi::objects::dprintflopfifometrics_t                dprintflopfifometrics[2];
+extern delphi::objects::dprintreg1metrics_t                    dprintreg1metrics[2];
+extern delphi::objects::dprintreg2metrics_t                    dprintreg2metrics[2];
+extern delphi::objects::dprintsramseccmetrics_t                dprintsramseccmetrics[2];
+extern delphi::objects::ssepicsintbadaddrmetrics_t             ssepicsintbadaddrmetrics[1];
+extern delphi::objects::ssepicsintbgmetrics_t                  ssepicsintbgmetrics[1];
+extern delphi::objects::ssepicsintpicsmetrics_t                ssepicsintpicsmetrics[1];
+extern delphi::objects::dbwaintdbmetrics_t                     dbwaintdbmetrics[1];
+extern delphi::objects::dbwaintlifqstatemapmetrics_t           dbwaintlifqstatemapmetrics[1];
+extern delphi::objects::sgeteinterrmetrics_t                   sgeteinterrmetrics[6];
+extern delphi::objects::sgeteintinfometrics_t                  sgeteintinfometrics[6];
+extern delphi::objects::sgempuinterrmetrics_t                  sgempuinterrmetrics[6];
+extern delphi::objects::sgempuintinfometrics_t                 sgempuintinfometrics[6];
+extern delphi::objects::mdhensintaxierrmetrics_t               mdhensintaxierrmetrics[1];
+extern delphi::objects::mdhensinteccmetrics_t                  mdhensinteccmetrics[3];
+extern delphi::objects::mdhensintipcoremetrics_t               mdhensintipcoremetrics[1];
+extern delphi::objects::mpmpnsintcryptometrics_t               mpmpnsintcryptometrics[1];
+extern delphi::objects::pbpbcintcreditunderflowmetrics_t       pbpbcintcreditunderflowmetrics[1];
+extern delphi::objects::inteccdescmetrics_t                    inteccdescmetrics[24];
+extern delphi::objects::pbpbcintpbusviolationmetrics_t         pbpbcintpbusviolationmetrics[2];
+extern delphi::objects::pbpbcintrplmetrics_t                   pbpbcintrplmetrics[1];
+extern delphi::objects::pbpbcintwritemetrics_t                 pbpbcintwritemetrics[12];
+extern delphi::objects::pbpbchbmintecchbmrbmetrics_t           pbpbchbmintecchbmrbmetrics[1];
+extern delphi::objects::pbpbchbminthbmaxierrrspmetrics_t       pbpbchbminthbmaxierrrspmetrics[1];
+extern delphi::objects::pbpbchbminthbmdropmetrics_t            pbpbchbminthbmdropmetrics[1];
+extern delphi::objects::pbpbchbminthbmpbusviolationmetrics_t   pbpbchbminthbmpbusviolationmetrics[2];
+extern delphi::objects::pbpbchbminthbmxoffmetrics_t            pbpbchbminthbmxoffmetrics[1];
+extern delphi::objects::mcmchintmcmetrics_t                    mcmchintmcmetrics[8];
 
 enum etype {
     ERROR = 0,
@@ -152,17 +184,65 @@ enum etype {
     UNKNOWN = 3,
 };
 
-struct interrupts {
-    const char *name;
-    int count;
-};
+void poll_capri_intr();
+const char* errortostring(etype errortype);
 
-struct asic_registers {
-    uint64_t regaddr;
-    const char *name;
-    int ninterrupts;
-    etype errortype;
-    struct interrupts *map;
-};
+#define CAPRI_INTR_KIND_BEGIN(kind, len, classkind) static inline void clear_##kind##metrics(uint32_t key, uint32_t addr) { \
+    uint32_t size = 0; \
+    uint32_t data = 0; \
+    if (len % 32 == 0) { \
+        size = len / 32; \
+    } else { \
+        size =  len / 32 + 1; \
+    } \
+    sdk::lib::pal_ret_t rc = sdk::lib::pal_reg_read(addr, &data, size); \
+    if (rc == sdk::lib::PAL_RET_NOK) { \
+        INFO("unable to read the interrupt failed"); \
+        return; \
+    } \
+    rc = sdk::lib::pal_reg_write(addr, &data, size); \
+    if (rc == sdk::lib::PAL_RET_NOK) { \
+        INFO("clearing the interrupt failed"); \
+    } \
+    memset(&kind##metrics[key], 0, sizeof(delphi::objects::kind##metrics_t)); \
+    delphi::objects::classkind::Publish(key, &kind##metrics[key]); \
+} \
+static inline void poll_##kind##metrics(uint32_t key, uint32_t addr) { \
+    uint32_t size = 0; \
+    uint32_t data = 0; \
+    uint32_t regkey = key; \
+    uint32_t regaddr = addr; \
+    delphi::objects::kind##metrics_t *reg = &kind##metrics[key]; \
+    char regname[50] = #kind; \
+    if (len % 32 == 0) { \
+        size = len / 32; \
+    } else { \
+        size =  len / 32 + 1; \
+    } \
+    if(addr == 0) { \
+        return; \
+    } \
+    sdk::lib::pal_ret_t rc = sdk::lib::pal_reg_read(addr, &data, size); \
+    if (rc == sdk::lib::PAL_RET_NOK) { \
+        return; \
+    } \
 
-extern int asic_registers_count;
+#define CAPRI_INTR_KIND_FIELD(fld, offset, type) { \
+    if (data & (1 << offset)) { \
+        reg->fld++; \
+        INFO("Register {} key {} at address {:x} interrupt {} type {} times {}", \
+             regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
+    } \
+}
+
+#define CAPRI_INTR_KIND_END(classkind) \
+    rc = sdk::lib::pal_reg_write(addr, &data, size); \
+    if (rc == sdk::lib::PAL_RET_NOK) { \
+        INFO("clearing the interrupt failed"); \
+    } \
+    delphi::objects::classkind::Publish(regkey, reg); \
+}
+
+#define CAPRI_INTR_READ(kind, key, addr) poll_##kind(key, addr);
+
+#define CAPRI_INTR_CLEAR(kind, key, addr) clear_##kind(key, addr);

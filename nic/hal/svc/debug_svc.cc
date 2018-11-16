@@ -68,6 +68,9 @@ DebugServiceImpl::RegisterUpdate(ServerContext *context,
         if (req.id_name_or_addr_case() == debug::RegisterRequest::kAddr) {
             hal::pd::asic_reg_write(req.addr(), &data);
             rsp->set_api_status(types::API_STATUS_OK);
+        } else if (req.id_name_or_addr_case() == debug::RegisterRequest::kRegId){
+            hal::register_update(req, rsp);
+            rsp->set_api_status(types::API_STATUS_OK);
         } else {
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         }

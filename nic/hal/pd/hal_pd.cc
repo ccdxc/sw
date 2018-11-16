@@ -298,6 +298,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_DEBUG_CLI_READ, pd_debug_cli_read);
     PD_FUNC_LOAD(PD_FUNC_ID_DEBUG_CLI_WRITE, pd_debug_cli_write);
     PD_FUNC_LOAD(PD_FUNC_ID_MPU_TRACE_ENABLE, pd_mpu_trace_enable);
+    PD_FUNC_LOAD(PD_FUNC_ID_REG_WRITE, pd_reg_write);
     PD_FUNC_LOAD(PD_FUNC_ID_TABLE_METADATA_GET, pd_table_metadata_get);
     PD_FUNC_LOAD(PD_FUNC_ID_TABLE_GET, pd_table_get);
 

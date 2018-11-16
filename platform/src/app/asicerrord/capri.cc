@@ -1,725 +1,730 @@
 #include "asicerrord.h"
+#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/include/sdk/thread.hpp"
 
-struct interrupts dpp_int_credit[] = { 
-    {"ptr_credit_ovflow", 0},
-    {"ptr_credit_undflow", 0},
-    {"pkt_credit_ovflow", 0},
-    {"pkt_credit_undflow", 0},
-    {"framer_credit_ovflow", 0},
-    {"framer_credit_undflow", 0},
-    {"framer_hdrfld_vld_ovfl", 0},
-    {"framer_hdrfld_offset_ovfl", 0},
-    {"err_framer_hdrsize_zero_ovfl", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dppintcredit, 9, DppintcreditMetrics)
+    CAPRI_INTR_KIND_FIELD(ptr_credit_ovflow, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(ptr_credit_undflow, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(pkt_credit_ovflow, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(pkt_credit_undflow, 3, FATAL)
+    CAPRI_INTR_KIND_FIELD(framer_credit_ovflow, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(framer_credit_undflow, 5, FATAL)
+    CAPRI_INTR_KIND_FIELD(framer_hdrfld_vld_ovfl, 6, FATAL)
+    CAPRI_INTR_KIND_FIELD(framer_hdrfld_offset_ovfl, 7, FATAL)
+    CAPRI_INTR_KIND_FIELD(err_framer_hdrsize_zero_ovfl, 8, FATAL)
+CAPRI_INTR_KIND_END(DppintcreditMetrics)
 
-struct interrupts dpp_int_fifo[] = {
-    {"phv_ff_overflow", 0},
-    {"ohi_ff_overflow", 0},
-    {"pkt_size_ff_ovflow", 0},
-    {"pkt_size_ff_undflow", 0},
-    {"csum_phv_ff_ovflow", 0},
-    {"csum_phv_ff_undflow", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dppintfifo, 6, DppintfifoMetrics)
+    CAPRI_INTR_KIND_FIELD(phv_ff_overflow, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(ohi_ff_overflow, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(pkt_size_ff_ovflow, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(pkt_size_ff_undflow, 3, FATAL)
+    CAPRI_INTR_KIND_FIELD(csum_phv_ff_ovflow, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(csum_phv_ff_undflow, 5, FATAL)
+CAPRI_INTR_KIND_END(DppintfifoMetrics)
 
-struct interrupts dpp_int_reg1[] = {
-    {"err_phv_sop_no_eop", 0},
-    {"err_phv_eop_no_sop", 0},
-    {"err_ohi_sop_no_eop", 0},
-    {"err_ohi_eop_no_sop", 0},
-    {"err_framer_credit_overrun", 0},
-    {"err_packets_in_flight_credit_overrun", 0},
-    {"err_null_hdr_vld", 0},
-    {"err_null_hdrfld_vld", 0},
-    {"err_max_pkt_size", 0},
-    {"err_max_active_hdrs", 0},
-    {"err_phv_no_data_reference_ohi", 0},
-    {"err_csum_multiple_hdr", 0},
-    {"err_csum_multiple_hdr_copy", 0},
-    {"err_crc_multiple_hdr", 0},
-    {"err_ptr_fifo_credit_overrun", 0},
-    {"err_clip_max_pkt_size", 0},
-    {"err_min_pkt_size", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dppintreg1, 17, Dppintreg1Metrics)
+    CAPRI_INTR_KIND_FIELD(err_phv_sop_no_eop, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_phv_eop_no_sop, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_ohi_sop_no_eop, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_ohi_eop_no_sop, 3, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_framer_credit_overrun, 4, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_packets_in_flight_credit_overrun, 5, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_null_hdr_vld, 6, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_null_hdrfld_vld, 7, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_max_pkt_size, 8, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_max_active_hdrs, 9, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_phv_no_data_reference_ohi, 10, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_multiple_hdr, 11, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_multiple_hdr_copy, 12, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_crc_multiple_hdr, 13, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_ptr_fifo_credit_overrun, 14, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_clip_max_pkt_size, 15, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_min_pkt_size, 16, ERROR)
+CAPRI_INTR_KIND_END(Dppintreg1Metrics)
 
-struct interrupts dpp_int_reg2[] = {
-    {"fieldC", 0},
-    {"fieldD", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dppintreg2, 2, Dppintreg2Metrics)
+    CAPRI_INTR_KIND_FIELD(fieldC, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(fieldD, 1, ERROR)
+CAPRI_INTR_KIND_END(Dppintreg2Metrics)
 
-struct interrupts dpp_int_spare[] = {
-    {"spare_0", 0},
-    {"spare_1", 0},
-    {"spare_2", 0},
-    {"spare_3", 0},
-    {"spare_4", 0},
-    {"spare_5", 0},
-    {"spare_6", 0},
-    {"spare_7", 0},
-    {"spare_8", 0},
-    {"spare_9", 0},
-    {"spare_10", 0},
-    {"spare_11", 0},
-    {"spare_12", 0},
-    {"spare_13", 0},
-    {"spare_14", 0},
-    {"spare_15", 0},
-    {"spare_16", 0},
-    {"spare_17", 0},
-    {"spare_18", 0},
-    {"spare_19", 0},
-    {"spare_20", 0},
-    {"spare_21", 0},
-    {"spare_22", 0},
-    {"spare_23", 0},
-    {"spare_24", 0},
-    {"spare_25", 0},
-    {"spare_26", 0},
-    {"spare_27", 0},
-    {"spare_28", 0},
-    {"spare_29", 0},
-    {"spare_30", 0},
-    {"spare_31", 0},
-};
+CAPRI_INTR_KIND_BEGIN(intspare, 32, IntspareMetrics)
+    CAPRI_INTR_KIND_FIELD(spare_0, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_1, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_2, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_3, 3, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_4, 4, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_5, 5, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_6, 6, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_7, 7, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_8, 8, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_9, 9, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_10, 10, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_11, 11, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_12, 12, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_13, 13, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_14, 14, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_15, 15, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_16, 16, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_17, 17, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_18, 18, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_19, 19, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_20, 20, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_21, 21, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_22, 22, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_23, 23, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_24, 24, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_25, 25, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_26, 26, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_27, 27, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_28, 28, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_29, 29, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_30, 30, ERROR)
+    CAPRI_INTR_KIND_FIELD(spare_31, 31, ERROR)
+CAPRI_INTR_KIND_END(IntspareMetrics)
 
-struct interrupts dpp_int_srams_ecc[] = {
-    {"dpp_phv_fifo_uncorrectable", 0},
-    {"dpp_phv_fifo_correctable", 0},
-    {"dpp_ohi_fifo_uncorrectable", 0},
-    {"dpp_ohi_fifo_correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dppintsramsecc, 4, DppintsramseccMetrics)
+    CAPRI_INTR_KIND_FIELD(dpp_phv_fifo_uncorrectable, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpp_phv_fifo_correctable, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpp_ohi_fifo_uncorrectable, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpp_ohi_fifo_correctable, 3, ERROR)
+CAPRI_INTR_KIND_END(DppintsramseccMetrics)
 
-struct interrupts dpr_int_credit[] = {
-    {"egress_credit_ovflow", 0},
-    {"egress_credit_undflow", 0},
-    {"pktout_credit_ovflow", 0},
-    {"pktout_credit_undflow", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dprintcredit, 4, DprintcreditMetrics)
+    CAPRI_INTR_KIND_FIELD(egress_credit_ovflow, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(egress_credit_undflow, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(pktout_credit_ovflow, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(pktout_credit_undflow, 3, FATAL)
+CAPRI_INTR_KIND_END(DprintcreditMetrics)
 
-struct interrupts dpr_int_fifo[] = {
-    {"phv_ff_ovflow", 0},
-    {"ohi_ff_ovflow", 0},
-    {"pktin_ff_ovflow", 0},
-    {"pktout_ff_undflow", 0},
-    {"csum_ff_ovflow", 0},
-    {"ptr_ff_ovflow", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dprintfifo, 6, DprintfifoMetrics)
+    CAPRI_INTR_KIND_FIELD(phv_ff_ovflow, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(ohi_ff_ovflow, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(pktin_ff_ovflow, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(pktout_ff_undflow, 3, FATAL)
+    CAPRI_INTR_KIND_FIELD(csum_ff_ovflow, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(ptr_ff_ovflow, 5, FATAL)
+CAPRI_INTR_KIND_END(DprintfifoMetrics)
 
-struct interrupts dpr_int_flop_fifo[] = {
-    {"data_mux_force_bypass_crc_flop_ff_ovflow", 0},
-    {"dpr_crc_info_flop_ff_ovflow", 0},
-    {"dpr_crc_update_info_flop_ff_ovflow", 0},
-    {"dpr_csum_info_flop_ff_ovflow", 0},
-    {"data_mux_force_bypass_csum_flop_ff_ovflow", 0},
-    {"dpr_csum_update_info_flop_ff_ovflow", 0},
-    {"ptr_early_pkt_eop_info_flop_ff_ovflow", 0},
-    {"data_mux_eop_err_flop_ff_ovflow", 0},
-    {"pktin_eop_err_flop_ff_ovflow", 0},
-    {"csum_err_flop_ff_ovflow", 0},
-    {"crc_err_flop_ff_ovflow", 0},
-    {"data_mux_drop_flop_ff_ovflow", 0},
-    {"phv_pkt_data_flop_ff_ovflow", 0},
-    {"pktout_len_cell_flop_ff_ovflow", 0},
-    {"padding_size_flop_ff_ovflow", 0},
-    {"pktin_err_flop_ff_ovflow", 0},
-    {"phv_no_data_flop_ff_ovflow", 0},
-    {"ptr_lookahaed_flop_ff_ovflow", 0},
-    {"eop_vld_flop_ff_ovflow", 0},
-    {"csum_cal_vld_flop_ff_ovflow", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dprintflopfifo, 20, DprintflopfifoMetrics)
+    CAPRI_INTR_KIND_FIELD(data_mux_force_bypass_crc_flop_ff_ovflow, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(dpr_crc_info_flop_ff_ovflow, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(dpr_crc_update_info_flop_ff_ovflow, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(dpr_csum_info_flop_ff_ovflow, 3, FATAL)
+    CAPRI_INTR_KIND_FIELD(data_mux_force_bypass_csum_flop_ff_ovflow, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(dpr_csum_update_info_flop_ff_ovflow, 5, FATAL)
+    CAPRI_INTR_KIND_FIELD(ptr_early_pkt_eop_info_flop_ff_ovflow, 6, FATAL)
+    CAPRI_INTR_KIND_FIELD(data_mux_eop_err_flop_ff_ovflow, 7, FATAL)
+    CAPRI_INTR_KIND_FIELD(pktin_eop_err_flop_ff_ovflow, 8, FATAL)
+    CAPRI_INTR_KIND_FIELD(csum_err_flop_ff_ovflow, 9, FATAL)
+    CAPRI_INTR_KIND_FIELD(crc_err_flop_ff_ovflow, 10, FATAL)
+    CAPRI_INTR_KIND_FIELD(data_mux_drop_flop_ff_ovflow, 11, FATAL)
+    CAPRI_INTR_KIND_FIELD(phv_pkt_data_flop_ff_ovflow, 12, FATAL)
+    CAPRI_INTR_KIND_FIELD(pktout_len_cell_flop_ff_ovflow, 13, FATAL)
+    CAPRI_INTR_KIND_FIELD(padding_size_flop_ff_ovflow, 14, FATAL)
+    CAPRI_INTR_KIND_FIELD(pktin_err_flop_ff_ovflow, 15, FATAL)
+    CAPRI_INTR_KIND_FIELD(phv_no_data_flop_ff_ovflow, 16, FATAL)
+    CAPRI_INTR_KIND_FIELD(ptr_lookahaed_flop_ff_ovflow, 17, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_vld_flop_ff_ovflow, 18, FATAL)
+    CAPRI_INTR_KIND_FIELD(csum_cal_vld_flop_ff_ovflow, 19, FATAL)
+CAPRI_INTR_KIND_END(DprintflopfifoMetrics)
 
-struct interrupts dpr_int_reg1[] = {
-    {"err_phv_sop_no_eop", 0},
-    {"err_phv_eop_no_sop", 0},
-    {"err_ohi_sop_no_eop", 0},
-    {"err_ohi_eop_no_sop", 0},
-    {"err_pktin_sop_no_eop", 0},
-    {"err_pktin_eop_no_sop", 0},
-    {"err_csum_offset_gt_pkt_size_4", 0},
-    {"err_csum_offset_gt_pkt_size_3", 0},
-    {"err_csum_offset_gt_pkt_size_2", 0},
-    {"err_csum_offset_gt_pkt_size_1", 0},
-    {"err_csum_offset_gt_pkt_size_0", 0},
-    {"err_csum_phdr_offset_gt_pkt_size_4", 0},
-    {"err_csum_phdr_offset_gt_pkt_size_3", 0},
-    {"err_csum_phdr_offset_gt_pkt_size_2", 0},
-    {"err_csum_phdr_offset_gt_pkt_size_1", 0},
-    {"err_csum_phdr_offset_gt_pkt_size_0", 0},
-    {"err_csum_loc_gt_pkt_size_4", 0},
-    {"err_csum_loc_gt_pkt_size_3", 0},
-    {"err_csum_loc_gt_pkt_size_2", 0},
-    {"err_csum_loc_gt_pkt_size_1", 0},
-    {"err_csum_loc_gt_pkt_size_0", 0},
-    {"err_crc_offset_gt_pkt_size", 0},
-    {"err_crc_loc_gt_pkt_size", 0},
-    {"err_crc_mask_offset_gt_pkt_size", 0},
-    {"err_pkt_eop_early", 0},
-    {"err_ptr_ff_overflow", 0},
-    {"err_csum_ff_overflow", 0},
-    {"err_pktout_ff_overflow", 0},
-    {"err_ptr_from_cfg_overflow", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dprintreg1, 29, Dprintreg1Metrics)
+    CAPRI_INTR_KIND_FIELD(err_phv_sop_no_eop, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_phv_eop_no_sop, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_ohi_sop_no_eop, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_ohi_eop_no_sop, 3, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_pktin_sop_no_eop, 4, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_pktin_eop_no_sop, 5, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_offset_gt_pkt_size_4, 6, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_offset_gt_pkt_size_3, 7, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_offset_gt_pkt_size_2, 8, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_offset_gt_pkt_size_1, 9, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_offset_gt_pkt_size_0, 10, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_phdr_offset_gt_pkt_size_4, 11, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_phdr_offset_gt_pkt_size_3, 12, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_phdr_offset_gt_pkt_size_2, 13, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_phdr_offset_gt_pkt_size_1, 14, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_phdr_offset_gt_pkt_size_0, 15, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_loc_gt_pkt_size_4, 16, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_loc_gt_pkt_size_3, 17, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_loc_gt_pkt_size_2, 18, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_loc_gt_pkt_size_1, 19, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_loc_gt_pkt_size_0, 20, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_crc_offset_gt_pkt_size, 21, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_crc_loc_gt_pkt_size, 22, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_crc_mask_offset_gt_pkt_size, 23, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_pkt_eop_early, 24, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_ptr_ff_overflow, 25, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_ff_overflow, 26, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_pktout_ff_overflow, 27, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_ptr_from_cfg_overflow, 28, ERROR)
+CAPRI_INTR_KIND_END(Dprintreg1Metrics)
 
-struct interrupts dpr_int_reg2[] = {
-    {"fieldC", 0},
-    {"fieldD", 0},
-    {"err_csum_start_gt_end_4", 0},
-    {"err_csum_start_gt_end_3", 0},
-    {"err_csum_start_gt_end_2", 0},
-    {"err_csum_start_gt_end_1", 0},
-    {"err_csum_start_gt_end_0", 0},
-    {"err_crc_start_gt_end", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dprintreg2, 8, Dprintreg2Metrics)
+    CAPRI_INTR_KIND_FIELD(fieldC, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(fieldD, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_start_gt_end_4, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_start_gt_end_3, 3, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_start_gt_end_2, 4, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_start_gt_end_1, 5, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_csum_start_gt_end_0, 6, ERROR)
+    CAPRI_INTR_KIND_FIELD(err_crc_start_gt_end, 7, ERROR)
+CAPRI_INTR_KIND_END(Dprintreg2Metrics)
 
-struct interrupts dpr_int_spare[] = {
-    {"spare_0", 0},
-    {"spare_1", 0},
-    {"spare_2", 0},
-    {"spare_3", 0},
-    {"spare_4", 0},
-    {"spare_5", 0},
-    {"spare_6", 0},
-    {"spare_7", 0},
-    {"spare_8", 0},
-    {"spare_9", 0},
-    {"spare_10", 0},
-    {"spare_11", 0},
-    {"spare_12", 0},
-    {"spare_13", 0},
-    {"spare_14", 0},
-    {"spare_15", 0},
-    {"spare_16", 0},
-    {"spare_17", 0},
-    {"spare_18", 0},
-    {"spare_19", 0},
-    {"spare_20", 0},
-    {"spare_21", 0},
-    {"spare_22", 0},
-    {"spare_23", 0},
-    {"spare_24", 0},
-    {"spare_25", 0},
-    {"spare_26", 0},
-    {"spare_27", 0},
-    {"spare_28", 0},
-    {"spare_29", 0},
-    {"spare_30", 0},
-    {"spare_31", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dprintsramsecc, 12, DprintsramseccMetrics)
+    CAPRI_INTR_KIND_FIELD(dpr_pktin_fifo_uncorrectable, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_pktin_fifo_correctable, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_csum_fifo_uncorrectable, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_csum_fifo_correctable, 3, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_phv_fifo_uncorrectable, 4, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_phv_fifo_correctable, 5, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_ohi_fifo_uncorrectable, 6, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_ohi_fifo_correctable, 7, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_ptr_fifo_uncorrectable, 8, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_ptr_fifo_correctable, 9, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_pktout_fifo_uncorrectable, 10, ERROR)
+    CAPRI_INTR_KIND_FIELD(dpr_pktout_fifo_correctable, 11, ERROR)
+CAPRI_INTR_KIND_END(DprintsramseccMetrics)
 
-struct interrupts dpr_int_srams_ecc[] = {
-    {"dpr_pktin_fifo_uncorrectable", 0},
-    {"dpr_pktin_fifo_correctable", 0},
-    {"dpr_csum_fifo_uncorrectable", 0},
-    {"dpr_csum_fifo_correctable", 0},
-    {"dpr_phv_fifo_uncorrectable", 0},
-    {"dpr_phv_fifo_correctable", 0},
-    {"dpr_ohi_fifo_uncorrectable", 0},
-    {"dpr_ohi_fifo_correctable", 0},
-    {"dpr_ptr_fifo_uncorrectable", 0},
-    {"dpr_ptr_fifo_correctable", 0},
-    {"dpr_pktout_fifo_uncorrectable", 0},
-    {"dpr_pktout_fifo_correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(ssepicsintbadaddr, 18, SsepicsintbadaddrMetrics)
+    CAPRI_INTR_KIND_FIELD(rdreq0_bad_addr, 0, INFO)
+    CAPRI_INTR_KIND_FIELD(wrreq0_bad_addr, 1, INFO)
+    CAPRI_INTR_KIND_FIELD(rdreq1_bad_addr, 2, INFO)
+    CAPRI_INTR_KIND_FIELD(wrreq1_bad_addr, 3, INFO)
+    CAPRI_INTR_KIND_FIELD(rdreq2_bad_addr, 4, INFO)
+    CAPRI_INTR_KIND_FIELD(wrreq2_bad_addr, 5, INFO)
+    CAPRI_INTR_KIND_FIELD(rdreq3_bad_addr, 6, INFO)
+    CAPRI_INTR_KIND_FIELD(wrreq3_bad_addr, 7, INFO)
+    CAPRI_INTR_KIND_FIELD(rdreq4_bad_addr, 8, INFO)
+    CAPRI_INTR_KIND_FIELD(wrreq4_bad_addr, 9, INFO)
+    CAPRI_INTR_KIND_FIELD(rdreq5_bad_addr, 10, INFO)
+    CAPRI_INTR_KIND_FIELD(wrreq5_bad_addr, 11, INFO)
+    CAPRI_INTR_KIND_FIELD(rdreq6_bad_addr, 12, INFO)
+    CAPRI_INTR_KIND_FIELD(wrreq6_bad_addr, 13, INFO)
+    CAPRI_INTR_KIND_FIELD(rdreq7_bad_addr, 14, INFO)
+    CAPRI_INTR_KIND_FIELD(wrreq7_bad_addr, 15, INFO)
+    CAPRI_INTR_KIND_FIELD(cpu_bad_addr, 16, INFO)
+    CAPRI_INTR_KIND_FIELD(bg_bad_addr, 17, INFO)
+CAPRI_INTR_KIND_END(SsepicsintbadaddrMetrics)
 
-struct interrupts sse_pics_int_badaddr[] = {
-    {"rdreq0_bad_addr", 0},
-    {"wrreq0_bad_addr", 0},
-    {"rdreq1_bad_addr", 0},
-    {"wrreq1_bad_addr", 0},
-    {"rdreq2_bad_addr", 0},
-    {"wrreq2_bad_addr", 0},
-    {"rdreq3_bad_addr", 0},
-    {"wrreq3_bad_addr", 0},
-    {"rdreq4_bad_addr", 0},
-    {"wrreq4_bad_addr", 0},
-    {"rdreq5_bad_addr", 0},
-    {"wrreq5_bad_addr", 0},
-    {"rdreq6_bad_addr", 0},
-    {"wrreq6_bad_addr", 0},
-    {"rdreq7_bad_addr", 0},
-    {"wrreq7_bad_addr", 0},
-    {"cpu_bad_addr", 0},
-    {"bg_bad_addr", 0},
-};
+CAPRI_INTR_KIND_BEGIN(ssepicsintbg, 16, SsepicsintbgMetrics)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg0, 2, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg1, 3, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg2, 4, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg3, 5, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg4, 6, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg5, 7, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg6, 8, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg7, 9, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg8, 10, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg9, 11, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg10, 12, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg11, 13, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg12, 14, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg13, 15, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg14, 16, INFO)
+    CAPRI_INTR_KIND_FIELD(unfinished_bg15, 17, INFO)
+CAPRI_INTR_KIND_END(SsepicsintbgMetrics)
 
-struct interrupts sse_pics_int_bg[] = {
-    {"unfinished_bg0", 0},
-    {"unfinished_bg1", 0},
-    {"unfinished_bg2", 0},
-    {"unfinished_bg3", 0},
-    {"unfinished_bg4", 0},
-    {"unfinished_bg5", 0},
-    {"unfinished_bg6", 0},
-    {"unfinished_bg7", 0},
-    {"unfinished_bg8", 0},
-    {"unfinished_bg9", 0},
-    {"unfinished_bg10", 0},
-    {"unfinished_bg11", 0},
-    {"unfinished_bg12", 0},
-    {"unfinished_bg13", 0},
-    {"unfinished_bg14", 0},
-    {"unfinished_bg15", 0},
-};
+CAPRI_INTR_KIND_BEGIN(ssepicsintpics, 3, SsepicsintpicsMetrics)
+    CAPRI_INTR_KIND_FIELD(uncorrectable_ecc, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(correctable_ecc, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(too_many_rl_sch_error, 2, ERROR)
+CAPRI_INTR_KIND_END(SsepicsintpicsMetrics)
 
-struct interrupts sse_pics_int_pics[] = {
-    {"uncorrectable_ecc", 0},
-    {"correctable_ecc", 0},
-    {"too_many_rl_sch_error", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dbwaintdb, 7, DbwaintdbMetrics)
+    CAPRI_INTR_KIND_FIELD(db_cam_conflict, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(db_pid_chk_fail, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(db_qid_overflow, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(host_ring_access_err, 3, ERROR)
+    CAPRI_INTR_KIND_FIELD(total_ring_access_err, 4, ERROR)
+    CAPRI_INTR_KIND_FIELD(rresp_err, 5, ERROR)
+    CAPRI_INTR_KIND_FIELD(bresp_err, 6, ERROR)
+CAPRI_INTR_KIND_END(DbwaintdbMetrics)
 
-struct interrupts db_wa_int_db[] = {
-    {"db_cam_conflict", 0},
-    {"db_pid_chk_fail", 0},
-    {"db_qid_overflow", 0},
-    {"host_ring_access_err", 0},
-    {"total_ring_access_err", 0},
-    {"rresp_err", 0},
-    {"bresp_err", 0},
-};
+CAPRI_INTR_KIND_BEGIN(dbwaintlifqstatemap, 3, DbwaintlifqstatemapMetrics)
+    CAPRI_INTR_KIND_FIELD(ecc_uncorrectable, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(ecc_correctable, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(qid_invalid, 2, ERROR)
+CAPRI_INTR_KIND_END(DbwaintlifqstatemapMetrics)
 
-struct interrupts db_wa_int_lif_qstate_map[] = {
-    {"ecc_uncorrectable", 0},
-    {"ecc_correctable", 0},
-    {"qid_invalid", 0},
-};
+CAPRI_INTR_KIND_BEGIN(sgeteinterr, 20, SgeteinterrMetrics)
+    CAPRI_INTR_KIND_FIELD(miss_sop, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(miss_eop, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(phv_max_size, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(spurious_axi_rsp, 3, FATAL)
+    CAPRI_INTR_KIND_FIELD(spurious_tcam_rsp, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(te2mpu_timeout, 5, FATAL)
+    CAPRI_INTR_KIND_FIELD(axi_rdrsp_err, 6, FATAL)
+    CAPRI_INTR_KIND_FIELD(axi_bad_read, 7, FATAL)
+    CAPRI_INTR_KIND_FIELD(tcam_req_idx_fifo, 8, FATAL)
+    CAPRI_INTR_KIND_FIELD(tcam_rsp_idx_fifo, 9, FATAL)
+    CAPRI_INTR_KIND_FIELD(mpu_req_idx_fifo, 10, FATAL)
+    CAPRI_INTR_KIND_FIELD(axi_req_idx_fifo, 11, FATAL)
+    CAPRI_INTR_KIND_FIELD(proc_tbl_vld_wo_proc, 12, FATAL)
+    CAPRI_INTR_KIND_FIELD(pend_wo_wb, 13, FATAL)
+    CAPRI_INTR_KIND_FIELD(pend1_wo_pend0, 14, FATAL)
+    CAPRI_INTR_KIND_FIELD(both_pend_down, 15, FATAL)
+    CAPRI_INTR_KIND_FIELD(pend_wo_proc_down, 16, FATAL)
+    CAPRI_INTR_KIND_FIELD(both_pend_went_up, 17, FATAL)
+    CAPRI_INTR_KIND_FIELD(loaded_but_no_proc, 18, FATAL)
+    CAPRI_INTR_KIND_FIELD(loaded_but_no_proc_tbl_vld, 19, FATAL)
+CAPRI_INTR_KIND_END(SgeteinterrMetrics)
 
-struct interrupts sge_te_int_err[] = {
-    {"miss_sop", 0},
-    {"miss_eop", 0},
-    {"phv_max_size", 0},
-    {"spurious_axi_rsp", 0},
-    {"spurious_tcam_rsp", 0},
-    {"te2mpu_timeout", 0},
-    {"axi_rdrsp_err", 0},
-    {"axi_bad_read", 0},
-    {"tcam_req_idx_fifo", 0},
-    {"tcam_rsp_idx_fifo", 0},
-    {"mpu_req_idx_fifo", 0},
-    {"axi_req_idx_fifo", 0},
-    {"proc_tbl_vld_wo_proc", 0},
-    {"pend_wo_wb", 0},
-    {"pend1_wo_pend0", 0},
-    {"both_pend_down", 0},
-    {"pend_wo_proc_down", 0},
-    {"both_pend_went_up", 0},
-    {"loaded_but_no_proc", 0},
-    {"loaded_but_no_proc_tbl_vld", 0},
-};
+CAPRI_INTR_KIND_BEGIN(sgeteintinfo, 17, SgeteintinfoMetrics)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit0, 0, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit1, 1, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit2, 2, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit3, 3, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit4, 4, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit5, 5, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit6, 6, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit7, 7, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit8, 8, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit9, 9, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit10, 10, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit11, 11, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit12, 12, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit13, 13, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit14, 14, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_hit15, 15, INFO)
+    CAPRI_INTR_KIND_FIELD(profile_cam_miss, 16, INFO)
+CAPRI_INTR_KIND_END(SgeteintinfoMetrics)
 
-struct interrupts sge_te_int_info[] = {
-    {"profile_cam_hit0", 0},
-    {"profile_cam_hit1", 0},
-    {"profile_cam_hit2", 0},
-    {"profile_cam_hit3", 0},
-    {"profile_cam_hit4", 0},
-    {"profile_cam_hit5", 0},
-    {"profile_cam_hit6", 0},
-    {"profile_cam_hit7", 0},
-    {"profile_cam_hit8", 0},
-    {"profile_cam_hit9", 0},
-    {"profile_cam_hit10", 0},
-    {"profile_cam_hit11", 0},
-    {"profile_cam_hit12", 0},
-    {"profile_cam_hit13", 0},
-    {"profile_cam_hit14", 0},
-    {"profile_cam_hit15", 0},
-    {"profile_cam_miss", 0},
-};
+CAPRI_INTR_KIND_BEGIN(sgempuinterr, 27, SgempuinterrMetrics)
+    CAPRI_INTR_KIND_FIELD(results_mismatch, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(sdp_mem_uncorrectable, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(sdp_mem_correctable, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(illegal_op_0, 3, ERROR)
+    CAPRI_INTR_KIND_FIELD(illegal_op_1, 4, ERROR)
+    CAPRI_INTR_KIND_FIELD(illegal_op_2, 5, ERROR)
+    CAPRI_INTR_KIND_FIELD(illegal_op_3, 6, ERROR)
+    CAPRI_INTR_KIND_FIELD(max_inst_0, 7, ERROR)
+    CAPRI_INTR_KIND_FIELD(max_inst_1, 8, ERROR)
+    CAPRI_INTR_KIND_FIELD(max_inst_2, 9, ERROR)
+    CAPRI_INTR_KIND_FIELD(max_inst_3, 10, ERROR)
+    CAPRI_INTR_KIND_FIELD(phvwr_0, 11, ERROR)
+    CAPRI_INTR_KIND_FIELD(phvwr_1, 12, ERROR)
+    CAPRI_INTR_KIND_FIELD(phvwr_2, 13, ERROR)
+    CAPRI_INTR_KIND_FIELD(phvwr_3, 14, ERROR)
+    CAPRI_INTR_KIND_FIELD(write_err_0, 15, ERROR)
+    CAPRI_INTR_KIND_FIELD(write_err_1, 16, ERROR)
+    CAPRI_INTR_KIND_FIELD(write_err_2, 17, ERROR)
+    CAPRI_INTR_KIND_FIELD(write_err_3, 18, ERROR)
+    CAPRI_INTR_KIND_FIELD(cache_axi_0, 19, ERROR)
+    CAPRI_INTR_KIND_FIELD(cache_axi_1, 20, ERROR)
+    CAPRI_INTR_KIND_FIELD(cache_axi_2, 21, ERROR)
+    CAPRI_INTR_KIND_FIELD(cache_axi_3, 22, ERROR)
+    CAPRI_INTR_KIND_FIELD(cache_parity_0, 23, ERROR)
+    CAPRI_INTR_KIND_FIELD(cache_parity_1, 24, ERROR)
+    CAPRI_INTR_KIND_FIELD(cache_parity_2, 25, ERROR)
+    CAPRI_INTR_KIND_FIELD(cache_parity_3, 26, ERROR)
+CAPRI_INTR_KIND_END(SgempuinterrMetrics)
 
-struct interrupts sge_mpu_int_err[] = {
-    {"results_mismatch", 0},
-    {"sdp_mem_uncorrectable", 0},
-    {"sdp_mem_correctable", 0},
-    {"illegal_op_0", 0},
-    {"illegal_op_1", 0},
-    {"illegal_op_2", 0},
-    {"illegal_op_3", 0},
-    {"max_inst_0", 0},
-    {"max_inst_1", 0},
-    {"max_inst_2", 0},
-    {"max_inst_3", 0},
-    {"phvwr_0", 0},
-    {"phvwr_1", 0},
-    {"phvwr_2", 0},
-    {"phvwr_3", 0},
-    {"write_err_0", 0},
-    {"write_err_1", 0},
-    {"write_err_2", 0},
-    {"write_err_3", 0},
-    {"cache_axi_0", 0},
-    {"cache_axi_1", 0},
-    {"cache_axi_2", 0},
-    {"cache_axi_3", 0},
-    {"cache_parity_0", 0},
-    {"cache_parity_1", 0},
-    {"cache_parity_2", 0},
-    {"cache_parity_3", 0},
-};
+CAPRI_INTR_KIND_BEGIN(sgempuintinfo, 8, SgempuintinfoMetrics)
+    CAPRI_INTR_KIND_FIELD(trace_full_0, 0, INFO)
+    CAPRI_INTR_KIND_FIELD(trace_full_1, 1, INFO)
+    CAPRI_INTR_KIND_FIELD(trace_full_2, 2, INFO)
+    CAPRI_INTR_KIND_FIELD(trace_full_3, 3, INFO)
+    CAPRI_INTR_KIND_FIELD(mpu_stop_0, 4, INFO)
+    CAPRI_INTR_KIND_FIELD(mpu_stop_1, 5, INFO)
+    CAPRI_INTR_KIND_FIELD(mpu_stop_2, 6, INFO)
+    CAPRI_INTR_KIND_FIELD(mpu_stop_3, 7, INFO)
+CAPRI_INTR_KIND_END(SgempuintinfoMetrics)
 
-struct interrupts sge_mpu_int_info[] = {
-    {"trace_full_0", 0},
-    {"trace_full_1", 0},
-    {"trace_full_2", 0},
-    {"trace_full_3", 0},
-    {"mpu_stop_0", 0},
-    {"mpu_stop_1", 0},
-    {"mpu_stop_2", 0},
-    {"mpu_stop_3", 0},
-};
+CAPRI_INTR_KIND_BEGIN(mdhensintaxierr, 2, MdhensintaxierrMetrics)
+    CAPRI_INTR_KIND_FIELD(wrsp_err, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(rrsp_err, 1, FATAL)
+CAPRI_INTR_KIND_END(MdhensintaxierrMetrics)
 
-struct interrupts md_hens_int_axi_err[] = {
-    {"wrsp_err", 0},
-    {"rrsp_err", 0},
-};
+CAPRI_INTR_KIND_BEGIN(mdhensintecc, 2, MdhensinteccMetrics)
+    CAPRI_INTR_KIND_FIELD(correctable_err, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(uncorrectable_err, 1, ERROR)
+CAPRI_INTR_KIND_END(MdhensinteccMetrics)
 
-struct interrupts md_hens_int_drbg_cryptoram_ecc[] = {
-    {"correctable_err", 0},
-    {"uncorrectable_err", 0},
-};
+CAPRI_INTR_KIND_BEGIN(mdhensintipcore, 8, MdhensintipcoreMetrics)
+    CAPRI_INTR_KIND_FIELD(xts_enc, 0, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(xts, 1, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(gcm0, 2, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(gcm1, 3, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(drbg, 4, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(pk, 5, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(cp, 6, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(dc, 7, UNKNOWN)
+CAPRI_INTR_KIND_END(MdhensintipcoreMetrics)
 
-struct interrupts md_hens_int_drbg_intram_ecc[] = {
-    {"correctable_err", 0},
-    {"uncorrectable_err", 0},
-};
+CAPRI_INTR_KIND_BEGIN(mpmpnsintcrypto, 8, MpmpnsintcryptoMetrics)
+    CAPRI_INTR_KIND_FIELD(mpp0, 0, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(mpp1, 1, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(mpp2, 2, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(mpp3, 3, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(mpp4, 4, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(mpp5, 5, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(mpp6, 6, UNKNOWN)
+    CAPRI_INTR_KIND_FIELD(mpp7, 7, UNKNOWN)
+CAPRI_INTR_KIND_END(MpmpnsintcryptoMetrics)
 
-struct interrupts md_hens_int_ipcore[] = {
-    {"xts_enc", 0},
-    {"xts", 0},
-    {"gcm0", 0},
-    {"gcm1", 0},
-    {"drbg", 0},
-    {"pk", 0},
-    {"cp", 0},
-    {"dc", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbcintcreditunderflow, 2, PbpbcintcreditunderflowMetrics)
+    CAPRI_INTR_KIND_FIELD(port_10, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(port_11, 1, FATAL)
+CAPRI_INTR_KIND_END(PbpbcintcreditunderflowMetrics)
 
-struct interrupts md_hens_int_pk_ecc[] = {
-    {"correctable_err", 0},
-    {"uncorrectable_err", 0},
-};
+CAPRI_INTR_KIND_BEGIN(inteccdesc, 2, InteccdescMetrics)
+    CAPRI_INTR_KIND_FIELD(uncorrectable, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(correctable, 1, ERROR)
+CAPRI_INTR_KIND_END(InteccdescMetrics)
 
-struct interrupts mp_mpns_int_crypto[] = {
-    {"mpp0", 0},
-    {"mpp1", 0},
-    {"mpp2", 0},
-    {"mpp3", 0},
-    {"mpp4", 0},
-    {"mpp5", 0},
-    {"mpp6", 0},
-    {"mpp7", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbcintpbusviolation, 24, PbpbcintpbusviolationMetrics)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_0, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_1, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_2, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_3, 3, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_4, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_5, 5, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_6, 6, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_7, 7, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_8, 8, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_9, 9, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_10, 10, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_11, 11, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_0, 12, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_1, 13, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_2, 14, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_3, 15, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_4, 16, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_5, 17, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_6, 18, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_7, 19, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_8, 20, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_9, 21, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_10, 22, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_11, 23, FATAL)
+CAPRI_INTR_KIND_END(PbpbcintpbusviolationMetrics)
 
-struct interrupts pb_pbc_int_credit_underflow[] = {
-    {"port_10", 0},
-    {"port_11", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbcintrpl, 2, PbpbcintrplMetrics)
+    CAPRI_INTR_KIND_FIELD(memory_error, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(zero_last_error, 1, FATAL)
+CAPRI_INTR_KIND_END(PbpbcintrplMetrics)
 
-struct interrupts pb_pbc_int_ecc_desc[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbcintwrite, 14, PbpbcintwriteMetrics)
+    CAPRI_INTR_KIND_FIELD(out_of_cells, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(out_of_credit, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(port_disabled, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(truncation, 3, FATAL)
+    CAPRI_INTR_KIND_FIELD(intrinsic_drop, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(out_of_cells1, 5, FATAL)
+    CAPRI_INTR_KIND_FIELD(enq_err, 6, FATAL)
+    CAPRI_INTR_KIND_FIELD(tail_drop_cpu, 7, FATAL)
+    CAPRI_INTR_KIND_FIELD(tail_drop_span, 8, FATAL)
+    CAPRI_INTR_KIND_FIELD(min_size_viol, 9, FATAL)
+    CAPRI_INTR_KIND_FIELD(port_range, 10, FATAL)
+    CAPRI_INTR_KIND_FIELD(credit_growth_error, 11, FATAL)
+    CAPRI_INTR_KIND_FIELD(oq_range, 12, FATAL)
+    CAPRI_INTR_KIND_FIELD(xoff_timeout, 13, FATAL)
+CAPRI_INTR_KIND_END(PbpbcintwriteMetrics)
 
-struct interrupts pb_pbc_int_ecc_fc[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbchbmintecchbmrb, 4, PbpbchbmintecchbmrbMetrics)
+    CAPRI_INTR_KIND_FIELD(rb_uncorrectable, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(rb_correctable, 1, ERROR)
+    CAPRI_INTR_KIND_FIELD(cdt_uncorrectable, 2, ERROR)
+    CAPRI_INTR_KIND_FIELD(cdt_correctable, 3, ERROR)
+CAPRI_INTR_KIND_END(PbpbchbmintecchbmrbMetrics)
 
-struct interrupts pb_pbc_int_ecc_ll[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbchbminthbmaxierrrsp, 3, PbpbchbminthbmaxierrrspMetrics)
+    CAPRI_INTR_KIND_FIELD(ctrl, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(pyld, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(r2a, 2, FATAL)
+CAPRI_INTR_KIND_END(PbpbchbminthbmaxierrrspMetrics)
 
-struct interrupts pb_pbc_int_ecc_nc[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbchbminthbmdrop, 20, PbpbchbminthbmdropMetrics)
+    CAPRI_INTR_KIND_FIELD(occupancy_0, 0, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_1, 1, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_2, 2, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_3, 3, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_4, 4, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_5, 5, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_6, 6, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_7, 7, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_8, 8, INFO)
+    CAPRI_INTR_KIND_FIELD(occupancy_9, 9, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_0, 10, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_1, 11, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_2, 12, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_3, 13, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_4, 14, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_5, 15, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_6, 16, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_7, 17, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_8, 18, INFO)
+    CAPRI_INTR_KIND_FIELD(ctrl_full_9, 19, INFO)
+CAPRI_INTR_KIND_END(PbpbchbminthbmdropMetrics)
 
-struct interrupts pb_pbc_int_ecc_pack[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbchbminthbmpbusviolation, 20, PbpbchbminthbmpbusviolationMetrics)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_0, 0, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_1, 1, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_2, 2, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_3, 3, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_4, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_5, 5, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_6, 6, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_7, 7, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_8, 8, FATAL)
+    CAPRI_INTR_KIND_FIELD(sop_sop_in_9, 9, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_0, 10, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_1, 11, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_2, 12, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_3, 13, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_4, 14, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_5, 15, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_6, 16, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_7, 17, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_8, 18, FATAL)
+    CAPRI_INTR_KIND_FIELD(eop_eop_in_9, 19, FATAL)
+CAPRI_INTR_KIND_END(PbpbchbminthbmpbusviolationMetrics)
 
-struct interrupts pb_pbc_int_ecc_port_mon[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(pbpbchbminthbmxoff, 1, PbpbchbminthbmxoffMetrics)
+    CAPRI_INTR_KIND_FIELD(timeout, 0, INFO)
+CAPRI_INTR_KIND_END(PbpbchbminthbmxoffMetrics)
 
-struct interrupts pb_pbc_int_ecc_rc[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
+CAPRI_INTR_KIND_BEGIN(mcmchintmc, 2, McmchintmcMetrics)
+    CAPRI_INTR_KIND_FIELD(ecc_1bit_thres_ps1, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(ecc_1bit_thres_ps0, 1, ERROR)
+CAPRI_INTR_KIND_END(McmchintmcMetrics)
 
-struct interrupts pb_pbc_int_ecc_rwr[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
+void poll_capri_intr() {
+    CAPRI_INTR_READ(dppintcreditmetrics, 0, DPP0_INT_CREDIT);
+    CAPRI_INTR_READ(dppintcreditmetrics, 1, DPP1_INT_CREDIT);
+    CAPRI_INTR_READ(dppintfifometrics, 0, DPP0_INT_FIFO);
+    CAPRI_INTR_READ(dppintfifometrics, 1, DPP1_INT_FIFO);
+    CAPRI_INTR_READ(dppintreg1metrics, 0, DPP0_INT_REG1);
+    CAPRI_INTR_READ(dppintreg2metrics, 0, DPP0_INT_REG2);
+    CAPRI_INTR_READ(dppintreg1metrics, 1, DPP0_INT_REG1);
+    CAPRI_INTR_READ(dppintreg2metrics, 1, DPP0_INT_REG2);
+    CAPRI_INTR_READ(intsparemetrics, 0, DPP0_INT_SPARE);
+    CAPRI_INTR_READ(intsparemetrics, 1, DPP1_INT_SPARE);
+    CAPRI_INTR_READ(dppintsramseccmetrics, 0, DPP0_INT_SRAMS_ECC);
+    CAPRI_INTR_READ(dppintsramseccmetrics, 1, DPP1_INT_SRAMS_ECC);
+    CAPRI_INTR_READ(dprintcreditmetrics, 0, DPR0_INT_CREDIT);
+    CAPRI_INTR_READ(dprintcreditmetrics, 1, DPR1_INT_CREDIT);
+    CAPRI_INTR_READ(dprintfifometrics, 0, DPR0_INT_FIFO);
+    CAPRI_INTR_READ(dprintfifometrics, 1, DPR1_INT_FIFO);
+    CAPRI_INTR_READ(dprintflopfifometrics, 0, DPR0_INT_FLOP_FIFO);
+    CAPRI_INTR_READ(dprintflopfifometrics, 1, DPR1_INT_FLOP_FIFO);
+    CAPRI_INTR_READ(dprintreg1metrics, 0, DPR0_INT_REG1);
+    CAPRI_INTR_READ(dprintreg2metrics, 0, DPR0_INT_REG2);
+    CAPRI_INTR_READ(dprintreg1metrics, 1, DPR1_INT_REG1);
+    CAPRI_INTR_READ(dprintreg2metrics, 1, DPR1_INT_REG2);
+    CAPRI_INTR_READ(intsparemetrics, 2, DPR0_INT_SPARE);
+    CAPRI_INTR_READ(intsparemetrics, 3, DPR1_INT_SPARE);
+    CAPRI_INTR_READ(dprintsramseccmetrics, 0, DPR0_INT_SRAMS_ECC);
+    CAPRI_INTR_READ(dprintsramseccmetrics, 1, DPR1_INT_SRAMS_ECC);
+    CAPRI_INTR_READ(ssepicsintbadaddrmetrics, 0, SSE_PICS_INT_BADADDR);
+    CAPRI_INTR_READ(ssepicsintbgmetrics, 0, SSE_PICS_INT_BG);
+    CAPRI_INTR_READ(ssepicsintpicsmetrics, 0, SSE_PICS_INT_PICS);
+//    CAPRI_INTR_READ(dbwaintdbmetrics, 0, DB_WA_INT_DB);
+//    CAPRI_INTR_READ(dbwaintlifqstatemapmetrics, 0, DB_WA_INT_LIF_QSTATE_MAP);
+    CAPRI_INTR_READ(sgeteinterrmetrics, 0, SGE_TE0_INT_ERR);
+    CAPRI_INTR_READ(sgeteinterrmetrics, 1, SGE_TE1_INT_ERR);
+    CAPRI_INTR_READ(sgeteinterrmetrics, 2, SGE_TE2_INT_ERR);
+    CAPRI_INTR_READ(sgeteinterrmetrics, 3, SGE_TE3_INT_ERR);
+    CAPRI_INTR_READ(sgeteinterrmetrics, 4, SGE_TE4_INT_ERR);
+    CAPRI_INTR_READ(sgeteinterrmetrics, 5, SGE_TE5_INT_ERR);
+    CAPRI_INTR_READ(sgeteintinfometrics, 0, SGE_TE0_INT_INFO);
+    CAPRI_INTR_READ(sgeteintinfometrics, 1, SGE_TE1_INT_INFO);
+    CAPRI_INTR_READ(sgeteintinfometrics, 2, SGE_TE2_INT_INFO);
+    CAPRI_INTR_READ(sgeteintinfometrics, 3, SGE_TE3_INT_INFO);
+    CAPRI_INTR_READ(sgeteintinfometrics, 4, SGE_TE4_INT_INFO);
+    CAPRI_INTR_READ(sgeteintinfometrics, 5, SGE_TE5_INT_INFO);
+    CAPRI_INTR_READ(sgempuinterrmetrics, 0, SGE_MPU0_INT_ERR);
+    CAPRI_INTR_READ(sgempuinterrmetrics, 1, SGE_MPU1_INT_ERR);
+    CAPRI_INTR_READ(sgempuinterrmetrics, 2, SGE_MPU2_INT_ERR);
+    CAPRI_INTR_READ(sgempuinterrmetrics, 3, SGE_MPU3_INT_ERR);
+    CAPRI_INTR_READ(sgempuinterrmetrics, 4, SGE_MPU4_INT_ERR);
+    CAPRI_INTR_READ(sgempuinterrmetrics, 5, SGE_MPU5_INT_ERR);
+    CAPRI_INTR_READ(sgempuintinfometrics, 0, SGE_MPU0_INT_INFO);
+    CAPRI_INTR_READ(sgempuintinfometrics, 1, SGE_MPU1_INT_INFO);
+    CAPRI_INTR_READ(sgempuintinfometrics, 2, SGE_MPU2_INT_INFO);
+    CAPRI_INTR_READ(sgempuintinfometrics, 3, SGE_MPU3_INT_INFO);
+    CAPRI_INTR_READ(sgempuintinfometrics, 4, SGE_MPU4_INT_INFO);
+    CAPRI_INTR_READ(sgempuintinfometrics, 5, SGE_MPU5_INT_INFO);
+    CAPRI_INTR_READ(mdhensintaxierrmetrics, 0, MD_HENS_INT_AXI_ERR);
+    CAPRI_INTR_READ(mdhensinteccmetrics, 0, MD_HENS_INT_DRBG_CRYPTORAM_ECC);
+    CAPRI_INTR_READ(mdhensinteccmetrics, 1, MD_HENS_INT_DRBG_INTRAM_ECC);
+    CAPRI_INTR_READ(mdhensintipcoremetrics, 0, MD_HENS_INT_IPCORE);
+    CAPRI_INTR_READ(mdhensinteccmetrics, 2, MD_HENS_INT_PK_ECC);
+    CAPRI_INTR_READ(mpmpnsintcryptometrics, 0, MP_MPNS_INT_CRYPTO);
+    CAPRI_INTR_READ(pbpbcintcreditunderflowmetrics, 0, PB_PBC_INT_CREDIT_UNDERFLOW);
+    CAPRI_INTR_READ(inteccdescmetrics, 0, PB_PBC_INT_ECC_DESC_0);
+    CAPRI_INTR_READ(inteccdescmetrics, 1, PB_PBC_INT_ECC_DESC_1);
+    CAPRI_INTR_READ(inteccdescmetrics, 2, PB_PBC_INT_ECC_FC_0);
+    CAPRI_INTR_READ(inteccdescmetrics, 3, PB_PBC_INT_ECC_FC_1);
+    CAPRI_INTR_READ(inteccdescmetrics, 4, PB_PBC_INT_ECC_LL_0);
+    CAPRI_INTR_READ(inteccdescmetrics, 5, PB_PBC_INT_ECC_LL_1);
+    CAPRI_INTR_READ(inteccdescmetrics, 6, PB_PBC_INT_ECC_NC);
+    CAPRI_INTR_READ(inteccdescmetrics, 7, PB_PBC_INT_ECC_PACK);
+    CAPRI_INTR_READ(inteccdescmetrics, 8, PB_PBC_INT_ECC_PORT_MON_IN);
+    CAPRI_INTR_READ(inteccdescmetrics, 9, PB_PBC_INT_ECC_PORT_MON_OUT);
+    CAPRI_INTR_READ(inteccdescmetrics, 10, PB_PBC_INT_ECC_RC);
+    CAPRI_INTR_READ(inteccdescmetrics, 11, PB_PBC_INT_ECC_RWR);
+    CAPRI_INTR_READ(inteccdescmetrics, 12, PB_PBC_INT_ECC_SCHED);
+    CAPRI_INTR_READ(inteccdescmetrics, 13, PB_PBC_INT_ECC_SIDEBAND);
+    CAPRI_INTR_READ(inteccdescmetrics, 14, PB_PBC_INT_ECC_UC);
+    CAPRI_INTR_READ(pbpbcintpbusviolationmetrics, 0, PB_PBC_INT_PBUS_VIOLATION_IN);
+    CAPRI_INTR_READ(pbpbcintpbusviolationmetrics, 1, PB_PBC_INT_PBUS_VIOLATION_OUT);
+    CAPRI_INTR_READ(pbpbcintrplmetrics, 0, PB_PBC_INT_ECC_RPL);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 0, PB_PBC_INT_ECC_WRITE_0);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 1, PB_PBC_INT_ECC_WRITE_1);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 2, PB_PBC_INT_ECC_WRITE_2);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 3, PB_PBC_INT_ECC_WRITE_3);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 4, PB_PBC_INT_ECC_WRITE_4);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 5, PB_PBC_INT_ECC_WRITE_5);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 6, PB_PBC_INT_ECC_WRITE_6);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 7, PB_PBC_INT_ECC_WRITE_7);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 8, PB_PBC_INT_ECC_WRITE_8);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 9, PB_PBC_INT_ECC_WRITE_9);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 10, PB_PBC_INT_ECC_WRITE_10);
+    CAPRI_INTR_READ(pbpbcintwritemetrics, 11, PB_PBC_INT_ECC_WRITE_11);
+    CAPRI_INTR_READ(inteccdescmetrics, 15, PB_PBC_HBM_INT_ECC_HBM_HT);
+    CAPRI_INTR_READ(inteccdescmetrics, 16, PB_PBC_HBM_INT_ECC_HBM_MTU);
+    CAPRI_INTR_READ(pbpbchbmintecchbmrbmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_RB);
+    CAPRI_INTR_READ(inteccdescmetrics, 17, PB_PBC_HBM_INT_ECC_HBM_WB);
+    CAPRI_INTR_READ(pbpbchbminthbmaxierrrspmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_AXI_ERR_RSP);
+    CAPRI_INTR_READ(pbpbchbminthbmdropmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_DROP);
+    CAPRI_INTR_READ(pbpbchbminthbmpbusviolationmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_PBUS_VIOLATION_IN);
+    CAPRI_INTR_READ(pbpbchbminthbmpbusviolationmetrics, 1, PB_PBC_HBM_INT_ECC_HBM_PBUS_VIOLATION_OUT);
+    CAPRI_INTR_READ(pbpbchbminthbmxoffmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_XOFF);
+//    CAPRI_INTR_READ(inteccdescmetrics, 18, PM_PBM_INT_ECC_COL0);
+//    CAPRI_INTR_READ(inteccdescmetrics, 19, PM_PBM_INT_ECC_COL1);
+//    CAPRI_INTR_READ(inteccdescmetrics, 20, PM_PBM_INT_ECC_COL2);
+//    CAPRI_INTR_READ(inteccdescmetrics, 21, PM_PBM_INT_ECC_COL3);
+//    CAPRI_INTR_READ(inteccdescmetrics, 22, PM_PBM_INT_ECC_COL4);
+//    CAPRI_INTR_READ(inteccdescmetrics, 23, PM_PBM_INT_ECC_COL5);
+    CAPRI_INTR_READ(mcmchintmcmetrics, 0, MC0_MCH_INT_MC_INTREG);
+    CAPRI_INTR_READ(mcmchintmcmetrics, 1, MC1_MCH_INT_MC_INTREG);
+    CAPRI_INTR_READ(mcmchintmcmetrics, 2, MC2_MCH_INT_MC_INTREG);
+    CAPRI_INTR_READ(mcmchintmcmetrics, 3, MC3_MCH_INT_MC_INTREG);
+    CAPRI_INTR_READ(mcmchintmcmetrics, 4, MC4_MCH_INT_MC_INTREG);
+    CAPRI_INTR_READ(mcmchintmcmetrics, 5, MC5_MCH_INT_MC_INTREG);
+    CAPRI_INTR_READ(mcmchintmcmetrics, 6, MC6_MCH_INT_MC_INTREG);
+    CAPRI_INTR_READ(mcmchintmcmetrics, 7, MC7_MCH_INT_MC_INTREG);
+    FLUSH();
+}
 
-struct interrupts pb_pbc_int_ecc_sched[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
-
-struct interrupts pb_pbc_int_ecc_sideband[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
-
-struct interrupts pb_pbc_int_ecc_uc[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
-
-struct interrupts pb_pbc_int_pbus_violation[] = {
-    {"sop_sop_in_0", 0},
-    {"sop_sop_in_1", 0},
-    {"sop_sop_in_2", 0},
-    {"sop_sop_in_3", 0},
-    {"sop_sop_in_4", 0},
-    {"sop_sop_in_5", 0},
-    {"sop_sop_in_6", 0},
-    {"sop_sop_in_7", 0},
-    {"sop_sop_in_8", 0},
-    {"sop_sop_in_9", 0},
-    {"sop_sop_in_10", 0},
-    {"sop_sop_in_11", 0},
-    {"eop_eop_in_0", 0},
-    {"eop_eop_in_1", 0},
-    {"eop_eop_in_2", 0},
-    {"eop_eop_in_3", 0},
-    {"eop_eop_in_4", 0},
-    {"eop_eop_in_5", 0},
-    {"eop_eop_in_6", 0},
-    {"eop_eop_in_7", 0},
-    {"eop_eop_in_8", 0},
-    {"eop_eop_in_9", 0},
-    {"eop_eop_in_10", 0},
-    {"eop_eop_in_11", 0},
-};
-
-struct interrupts pb_pbc_int_rpl[] = {
-    {"memory_error", 0},
-    {"zero_last_error", 0},
-};
-
-struct interrupts pb_pbc_int_write[] = {
-    {"out_of_cells", 0},
-    {"out_of_credit", 0},
-    {"port_disabled", 0},
-    {"truncation", 0},
-    {"intrinsic_drop", 0},
-    {"out_of_cells1", 0},
-    {"enq_err", 0},
-    {"tail_drop_cpu", 0},
-    {"tail_drop_span", 0},
-    {"min_size_viol", 0},
-    {"port_range", 0},
-    {"credit_growth_error", 0},
-    {"oq_range", 0},
-    {"xoff_timeout", 0},
-};
-
-struct interrupts pb_pbc_hbm_int_ecc_hbm_ht[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
-
-struct interrupts pb_pbc_hbm_int_ecc_hbm_mtu[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
-
-struct interrupts pb_pbc_hbm_int_ecc_hbm_rb[] = {
-    {"rb_uncorrectable", 0},
-    {"rb_correctable", 0},
-    {"cdt_uncorrectable", 0},
-    {"cdt_correctable", 0},
-};
-
-struct interrupts pb_pbc_hbm_int_ecc_hbm_wb[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
-
-struct interrupts pb_pbc_hbm_int_hbm_axi_err_rsp[] = {
-    {"ctrl", 0},
-    {"pyld", 0},
-    {"r2a", 0},
-};
-
-struct interrupts pb_pbc_hbm_int_hbm_drop[] = {
-    {"occupancy_0", 0},
-    {"occupancy_1", 0},
-    {"occupancy_2", 0},
-    {"occupancy_3", 0},
-    {"occupancy_4", 0},
-    {"occupancy_5", 0},
-    {"occupancy_6", 0},
-    {"occupancy_7", 0},
-    {"occupancy_8", 0},
-    {"occupancy_9", 0},
-    {"ctrl_full_0", 0},
-    {"ctrl_full_1", 0},
-    {"ctrl_full_2", 0},
-    {"ctrl_full_3", 0},
-    {"ctrl_full_4", 0},
-    {"ctrl_full_5", 0},
-    {"ctrl_full_6", 0},
-    {"ctrl_full_7", 0},
-    {"ctrl_full_8", 0},
-    {"ctrl_full_9", 0},
-};
-
-struct interrupts pb_pbc_hbm_int_hbm_pbus_violation[] = {
-    {"sop_sop_in_0", 0},
-    {"sop_sop_in_1", 0},
-    {"sop_sop_in_2", 0},
-    {"sop_sop_in_3", 0},
-    {"sop_sop_in_4", 0},
-    {"sop_sop_in_5", 0},
-    {"sop_sop_in_6", 0},
-    {"sop_sop_in_7", 0},
-    {"sop_sop_in_8", 0},
-    {"sop_sop_in_9", 0},
-    {"eop_eop_in_0", 0},
-    {"eop_eop_in_1", 0},
-    {"eop_eop_in_2", 0},
-    {"eop_eop_in_3", 0},
-    {"eop_eop_in_4", 0},
-    {"eop_eop_in_5", 0},
-    {"eop_eop_in_6", 0},
-    {"eop_eop_in_7", 0},
-    {"eop_eop_in_8", 0},
-    {"eop_eop_in_9", 0},
-};
-
-struct interrupts pb_pbc_hbm_int_hbm_xoff[] = {
-    {"timeout", 0},
-};
-
-struct interrupts pm_pbm_int_ecc_col[] = {
-    {"uncorrectable", 0},
-    {"correctable", 0},
-};
-
-struct interrupts mc_mch_int_mc[] = {
-    {"ecc_1bit_thres_ps1", 0},
-    {"ecc_1bit_thres_ps0", 0},
-};
-
-struct asic_registers capri_registers[] = {
-    {DPP0_INT_CREDIT, "dpp0_int_credit", 9, FATAL, dpp_int_credit},
-    {DPP1_INT_CREDIT, "dpp1_int_credit", 9, FATAL, dpp_int_credit},
-    {DPP0_INT_FIFO, "dpp0_int_fifo", 6, FATAL, dpp_int_fifo},
-    {DPP1_INT_FIFO, "dpp1_int_fifo", 6, FATAL, dpp_int_fifo},
-    {DPP0_INT_REG1, "dpp0_int_reg1", 17, ERROR, dpp_int_reg1},
-    {DPP0_INT_REG2, "dpp0_int_reg2", 2, ERROR, dpp_int_reg2},
-    {DPP1_INT_REG1, "dpp1_int_reg1", 17, ERROR, dpp_int_reg1},
-    {DPP1_INT_REG2, "dpp1_int_reg2", 2, ERROR, dpp_int_reg2},
-    {DPP0_INT_SPARE, "dpp0_int_spare", 32, ERROR, dpp_int_spare},
-    {DPP1_INT_SPARE, "dpp1_int_spare", 32, ERROR, dpp_int_spare},
-    {DPP0_INT_SRAMS_ECC, "dpp0_int_srams_ecc", 4, ERROR, dpp_int_srams_ecc},
-    {DPP1_INT_SRAMS_ECC, "dpp1_int_srams_ecc", 4, ERROR, dpp_int_srams_ecc},
-    {DPR0_INT_CREDIT, "dpr0_int_credit", 4, FATAL, dpr_int_credit},
-    {DPR1_INT_CREDIT, "dpr1_int_credit", 4, FATAL, dpr_int_credit},
-    {DPR0_INT_FIFO, "dpr0_int_fifo", 6, FATAL, dpr_int_fifo},
-    {DPR1_INT_FIFO, "dpr1_int_fifo", 6, FATAL, dpr_int_fifo},
-    {DPR0_INT_FLOP_FIFO, "dpr0_int_flop_fifo_0", 20, FATAL, dpr_int_flop_fifo},
-    {DPR1_INT_FLOP_FIFO, "dpr1_int_flop_fifo_1", 20, FATAL, dpr_int_flop_fifo},
-    {DPR0_INT_REG1, "dpr0_int_reg1", 29, ERROR, dpr_int_reg1},
-    {DPR0_INT_REG2, "dpr0_int_reg2", 8, ERROR, dpr_int_reg2},
-    {DPR1_INT_REG1, "dpr1_int_reg1", 29, ERROR, dpr_int_reg1},
-    {DPR1_INT_REG2, "dpr1_int_reg2", 8, ERROR, dpr_int_reg2},
-    {DPR0_INT_SPARE, "dpr0_int_spare", 32, FATAL, dpr_int_spare},
-    {DPR1_INT_SPARE, "dpr1_int_spare", 32, FATAL, dpr_int_spare},
-    {DPR0_INT_SRAMS_ECC, "dpr0_int_srams_ecc", 12, ERROR, dpr_int_srams_ecc},
-    {DPR1_INT_SRAMS_ECC, "dpr1_int_srams_ecc", 12, ERROR, dpr_int_srams_ecc},
-    {SSE_PICS_INT_BADADDR, "sse_pics_int_badaddr", 18, INFO, sse_pics_int_badaddr},
-    {SSE_PICS_INT_BG, "sse_pics_int_bg", 16, INFO, sse_pics_int_bg},
-    {SSE_PICS_INT_PICS, "sse_pics_int_pics", 3, ERROR, sse_pics_int_pics},
-//    {DB_WA_INT_DB, "db_wa_int_db", 7, ERROR, db_wa_int_db},
-//    {DB_WA_INT_LIF_QSTATE_MAP, "db_wa_int_lif_qstate_map", 3, ERROR, db_wa_int_lif_qstate_map},
-    {SGE_TE0_INT_ERR, "sge_te0_int_err", 20, FATAL, sge_te_int_err},
-    {SGE_TE1_INT_ERR, "sge_te1_int_err", 20, FATAL, sge_te_int_err},
-    {SGE_TE2_INT_ERR, "sge_te2_int_err", 20, FATAL, sge_te_int_err},
-    {SGE_TE3_INT_ERR, "sge_te3_int_err", 20, FATAL, sge_te_int_err},
-    {SGE_TE4_INT_ERR, "sge_te4_int_err", 20, FATAL, sge_te_int_err},
-    {SGE_TE5_INT_ERR, "sge_te5_int_err", 20, FATAL, sge_te_int_err},
-//    {SGE_TE0_INT_INFO, "sge_te0_int_info", 17, INFO, sge_te_int_info},
-//    {SGE_TE1_INT_INFO, "sge_te1_int_info", 17, INFO, sge_te_int_info},
-//    {SGE_TE2_INT_INFO, "sge_te2_int_info", 17, INFO, sge_te_int_info},
-//    {SGE_TE3_INT_INFO, "sge_te3_int_info", 17, INFO, sge_te_int_info},
-//    {SGE_TE4_INT_INFO, "sge_te4_int_info", 17, INFO, sge_te_int_info},
-//    {SGE_TE5_INT_INFO, "sge_te5_int_info", 17, INFO, sge_te_int_info},
-    {SGE_MPU0_INT_ERR, "sge_mpu0_int_err", 27, ERROR, sge_mpu_int_err},
-    {SGE_MPU1_INT_ERR, "sge_mpu1_int_err", 27, ERROR, sge_mpu_int_err},
-    {SGE_MPU2_INT_ERR, "sge_mpu2_int_err", 27, ERROR, sge_mpu_int_err},
-    {SGE_MPU3_INT_ERR, "sge_mpu3_int_err", 27, ERROR, sge_mpu_int_err},
-    {SGE_MPU4_INT_ERR, "sge_mpu4_int_err", 27, ERROR, sge_mpu_int_err},
-    {SGE_MPU5_INT_ERR, "sge_mpu5_int_err", 27, ERROR, sge_mpu_int_err},
-    {SGE_MPU0_INT_INFO, "sge_mpu0_int_info", 8, ERROR, sge_mpu_int_info},
-    {SGE_MPU1_INT_INFO, "sge_mpu1_int_info", 8, ERROR, sge_mpu_int_info},
-    {SGE_MPU2_INT_INFO, "sge_mpu2_int_info", 8, ERROR, sge_mpu_int_info},
-    {SGE_MPU3_INT_INFO, "sge_mpu3_int_info", 8, ERROR, sge_mpu_int_info},
-    {SGE_MPU4_INT_INFO, "sge_mpu4_int_info", 8, ERROR, sge_mpu_int_info},
-    {SGE_MPU5_INT_INFO, "sge_mpu5_int_info", 8, ERROR, sge_mpu_int_info},
-    {MD_HENS_INT_AXI_ERR, "md_hens_int_axi_err", 2, FATAL, md_hens_int_axi_err},
-    {MD_HENS_INT_DRBG_CRYPTORAM_ECC, "md_hens_int_drbg_cryptoram_ecc", 2, ERROR, md_hens_int_drbg_cryptoram_ecc},
-    {MD_HENS_INT_DRBG_INTRAM_ECC, "md_hens_int_drbg_intram_ecc", 2, ERROR, md_hens_int_drbg_intram_ecc},
-    {MD_HENS_INT_IPCORE, "md_hens_int_ipcore", 8, UNKNOWN, md_hens_int_ipcore},
-    {MD_HENS_INT_PK_ECC, "md_hens_int_pk_ecc", 2, ERROR, md_hens_int_pk_ecc},
-    {MP_MPNS_INT_CRYPTO, "mp_mpns_int_crypto", 8, UNKNOWN, mp_mpns_int_crypto},
-    {PB_PBC_INT_CREDIT_UNDERFLOW, "pb_pbc_int_credit_underflow", 2, FATAL, pb_pbc_int_credit_underflow},
-    {PB_PBC_INT_ECC_DESC_0, "pb_pbc_int_ecc_desc_0", 2, ERROR, pb_pbc_int_ecc_desc},
-    {PB_PBC_INT_ECC_DESC_1, "pb_pbc_int_ecc_desc_1", 2, ERROR, pb_pbc_int_ecc_desc},
-    {PB_PBC_INT_ECC_FC_0, "pb_pbc_int_ecc_fc_0", 2, ERROR, pb_pbc_int_ecc_fc},
-    {PB_PBC_INT_ECC_FC_1, "pb_pbc_int_ecc_fc_1", 2, ERROR, pb_pbc_int_ecc_fc},
-    {PB_PBC_INT_ECC_LL_0, "pb_pbc_int_ecc_ll_0", 2, ERROR, pb_pbc_int_ecc_ll},
-    {PB_PBC_INT_ECC_LL_1, "pb_pbc_int_ecc_ll_1", 2, ERROR, pb_pbc_int_ecc_ll},
-    {PB_PBC_INT_ECC_NC, "pb_pbc_int_ecc_nc", 2, ERROR, pb_pbc_int_ecc_nc},
-    {PB_PBC_INT_ECC_PACK, "pb_pbc_int_ecc_pack", 2, ERROR, pb_pbc_int_ecc_pack},
-    {PB_PBC_INT_ECC_PORT_MON_IN, "pb_pbc_int_ecc_port_mon_in", 2, ERROR, pb_pbc_int_ecc_port_mon},
-    {PB_PBC_INT_ECC_PORT_MON_OUT, "pb_pbc_int_ecc_port_mon_out", 2, ERROR, pb_pbc_int_ecc_port_mon},
-    {PB_PBC_INT_ECC_RC, "pb_pbc_int_ecc_rc", 2, ERROR, pb_pbc_int_ecc_rc},
-    {PB_PBC_INT_ECC_RWR, "pb_pbc_int_ecc_rwr", 2, ERROR, pb_pbc_int_ecc_rwr},
-    {PB_PBC_INT_ECC_SCHED, "pb_pbc_int_ecc_sched", 2, ERROR, pb_pbc_int_ecc_sched},
-    {PB_PBC_INT_ECC_SIDEBAND, "pb_pbc_int_ecc_sideband", 2, ERROR, pb_pbc_int_ecc_sideband},
-    {PB_PBC_INT_ECC_UC, "pb_pbc_int_ecc_uc", 2, ERROR, pb_pbc_int_ecc_uc},
-    {PB_PBC_INT_PBUS_VIOLATION_IN, "pb_pbc_int_pbus_violation_in", 24, FATAL, pb_pbc_int_pbus_violation},
-    {PB_PBC_INT_PBUS_VIOLATION_OUT, "pb_pbc_int_pbus_violation_out", 24, FATAL, pb_pbc_int_pbus_violation},
-    {PB_PBC_INT_ECC_RPL, "pb_pbc_int_rpl", 2, FATAL, pb_pbc_int_rpl},
-    {PB_PBC_INT_ECC_WRITE_0, "pb_pbc_int_write_0", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_1, "pb_pbc_int_write_1", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_2, "pb_pbc_int_write_2", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_3, "pb_pbc_int_write_3", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_4, "pb_pbc_int_write_4", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_5, "pb_pbc_int_write_5", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_6, "pb_pbc_int_write_6", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_7, "pb_pbc_int_write_7", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_8, "pb_pbc_int_write_8", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_9, "pb_pbc_int_write_9", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_10, "pb_pbc_int_write_10", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_INT_ECC_WRITE_11, "pb_pbc_int_write_11", 14, FATAL, pb_pbc_int_write},
-    {PB_PBC_HBM_INT_ECC_HBM_HT, "pb_pbc_hbm_int_ecc_hbm_ht", 2, ERROR, pb_pbc_hbm_int_ecc_hbm_ht},
-    {PB_PBC_HBM_INT_ECC_HBM_MTU, "pb_pbc_hbm_int_ecc_hbm_mtu", 2, ERROR, pb_pbc_hbm_int_ecc_hbm_mtu},
-    {PB_PBC_HBM_INT_ECC_HBM_RB, "pb_pbc_hbm_int_ecc_hbm_rb", 4, ERROR, pb_pbc_hbm_int_ecc_hbm_rb},
-    {PB_PBC_HBM_INT_ECC_HBM_WB, "pb_pbc_hbm_int_ecc_hbm_wb", 2, ERROR, pb_pbc_hbm_int_ecc_hbm_wb},
-    {PB_PBC_HBM_INT_ECC_HBM_AXI_ERR_RSP, "pb_pbc_hbm_int_hbm_axi_err_rsp", 3, FATAL, pb_pbc_hbm_int_hbm_axi_err_rsp},
-    {PB_PBC_HBM_INT_ECC_HBM_DROP, "pb_pbc_hbm_int_hbm_drop", 20, INFO, pb_pbc_hbm_int_hbm_drop},
-    {PB_PBC_HBM_INT_ECC_HBM_PBUS_VIOLATION_IN, "pb_pbc_hbm_int_hbm_pbus_violation_in", 20, FATAL, pb_pbc_hbm_int_hbm_pbus_violation},
-    {PB_PBC_HBM_INT_ECC_HBM_PBUS_VIOLATION_OUT, "pb_pbc_hbm_int_hbm_pbus_violation_out", 20, FATAL, pb_pbc_hbm_int_hbm_pbus_violation},
-    {PB_PBC_HBM_INT_ECC_HBM_XOFF, "pb_pbc_hbm_int_hbm_xoff", 1, INFO, pb_pbc_hbm_int_hbm_xoff},
-//    {PM_PBM_INT_ECC_COL0, "pm_pbm_int_ecc_col0", 2, ERROR, pm_pbm_int_ecc_col},
-//    {PM_PBM_INT_ECC_COL1, "pm_pbm_int_ecc_col1", 2, ERROR, pm_pbm_int_ecc_col},
-//    {PM_PBM_INT_ECC_COL2, "pm_pbm_int_ecc_col2", 2, ERROR, pm_pbm_int_ecc_col},
-//    {PM_PBM_INT_ECC_COL3, "pm_pbm_int_ecc_col3", 2, ERROR, pm_pbm_int_ecc_col},
-//    {PM_PBM_INT_ECC_COL4, "pm_pbm_int_ecc_col4", 2, ERROR, pm_pbm_int_ecc_col},
-    {MC0_MCH_INT_MC_INTREG, "mc0_mch_int_mc", 2, ERROR, mc_mch_int_mc},
-    {MC1_MCH_INT_MC_INTREG, "mc1_mch_int_mc", 2, ERROR, mc_mch_int_mc},
-    {MC2_MCH_INT_MC_INTREG, "mc2_mch_int_mc", 2, ERROR, mc_mch_int_mc},
-    {MC3_MCH_INT_MC_INTREG, "mc3_mch_int_mc", 2, ERROR, mc_mch_int_mc},
-    {MC4_MCH_INT_MC_INTREG, "mc4_mch_int_mc", 2, ERROR, mc_mch_int_mc},
-    {MC5_MCH_INT_MC_INTREG, "mc5_mch_int_mc", 2, ERROR, mc_mch_int_mc},
-    {MC6_MCH_INT_MC_INTREG, "mc6_mch_int_mc", 2, ERROR, mc_mch_int_mc},
-    {MC7_MCH_INT_MC_INTREG, "mc7_mch_int_mc", 2, ERROR, mc_mch_int_mc},
-};
-
-int asic_registers_count = ARRAY_SIZE(capri_registers);
+void clear_capri_intr() {
+    CAPRI_INTR_CLEAR(dppintcreditmetrics, 0, DPP0_INT_CREDIT);
+    CAPRI_INTR_CLEAR(dppintcreditmetrics, 1, DPP1_INT_CREDIT);
+    CAPRI_INTR_CLEAR(dppintfifometrics, 0, DPP0_INT_FIFO);
+    CAPRI_INTR_CLEAR(dppintfifometrics, 1, DPP1_INT_FIFO);
+    CAPRI_INTR_CLEAR(dppintreg1metrics, 0, DPP0_INT_REG1);
+    CAPRI_INTR_CLEAR(dppintreg2metrics, 0, DPP0_INT_REG2);
+    CAPRI_INTR_CLEAR(dppintreg1metrics, 1, DPP0_INT_REG1);
+    CAPRI_INTR_CLEAR(dppintreg2metrics, 1, DPP0_INT_REG2);
+    CAPRI_INTR_CLEAR(intsparemetrics, 0, DPP0_INT_SPARE);
+    CAPRI_INTR_CLEAR(intsparemetrics, 1, DPP1_INT_SPARE);
+    CAPRI_INTR_CLEAR(dppintsramseccmetrics, 0, DPP0_INT_SRAMS_ECC);
+    CAPRI_INTR_CLEAR(dppintsramseccmetrics, 1, DPP1_INT_SRAMS_ECC);
+    CAPRI_INTR_CLEAR(dprintcreditmetrics, 0, DPR0_INT_CREDIT);
+    CAPRI_INTR_CLEAR(dprintcreditmetrics, 1, DPR1_INT_CREDIT);
+    CAPRI_INTR_CLEAR(dprintfifometrics, 0, DPR0_INT_FIFO);
+    CAPRI_INTR_CLEAR(dprintfifometrics, 1, DPR1_INT_FIFO);
+    CAPRI_INTR_CLEAR(dprintflopfifometrics, 0, DPR0_INT_FLOP_FIFO);
+    CAPRI_INTR_CLEAR(dprintflopfifometrics, 1, DPR1_INT_FLOP_FIFO);
+    CAPRI_INTR_CLEAR(dprintreg1metrics, 0, DPR0_INT_REG1);
+    CAPRI_INTR_CLEAR(dprintreg2metrics, 0, DPR0_INT_REG2);
+    CAPRI_INTR_CLEAR(dprintreg1metrics, 1, DPR1_INT_REG1);
+    CAPRI_INTR_CLEAR(dprintreg2metrics, 1, DPR1_INT_REG2);
+    CAPRI_INTR_CLEAR(intsparemetrics, 2, DPR0_INT_SPARE);
+    CAPRI_INTR_CLEAR(intsparemetrics, 3, DPR1_INT_SPARE);
+    CAPRI_INTR_CLEAR(dprintsramseccmetrics, 0, DPR0_INT_SRAMS_ECC);
+    CAPRI_INTR_CLEAR(dprintsramseccmetrics, 1, DPR1_INT_SRAMS_ECC);
+    CAPRI_INTR_CLEAR(ssepicsintbadaddrmetrics, 0, SSE_PICS_INT_BADADDR);
+    CAPRI_INTR_CLEAR(ssepicsintbgmetrics, 0, SSE_PICS_INT_BG);
+    CAPRI_INTR_CLEAR(ssepicsintpicsmetrics, 0, SSE_PICS_INT_PICS);
+//    CAPRI_INTR_CLEAR(dbwaintdbmetrics, 0, DB_WA_INT_DB);
+//    CAPRI_INTR_CLEAR(dbwaintlifqstatemapmetrics, 0, DB_WA_INT_LIF_QSTATE_MAP);
+    CAPRI_INTR_CLEAR(sgeteinterrmetrics, 0, SGE_TE0_INT_ERR);
+    CAPRI_INTR_CLEAR(sgeteinterrmetrics, 1, SGE_TE1_INT_ERR);
+    CAPRI_INTR_CLEAR(sgeteinterrmetrics, 2, SGE_TE2_INT_ERR);
+    CAPRI_INTR_CLEAR(sgeteinterrmetrics, 3, SGE_TE3_INT_ERR);
+    CAPRI_INTR_CLEAR(sgeteinterrmetrics, 4, SGE_TE4_INT_ERR);
+    CAPRI_INTR_CLEAR(sgeteinterrmetrics, 5, SGE_TE5_INT_ERR);
+    CAPRI_INTR_CLEAR(sgeteintinfometrics, 0, SGE_TE0_INT_INFO);
+    CAPRI_INTR_CLEAR(sgeteintinfometrics, 1, SGE_TE1_INT_INFO);
+    CAPRI_INTR_CLEAR(sgeteintinfometrics, 2, SGE_TE2_INT_INFO);
+    CAPRI_INTR_CLEAR(sgeteintinfometrics, 3, SGE_TE3_INT_INFO);
+    CAPRI_INTR_CLEAR(sgeteintinfometrics, 4, SGE_TE4_INT_INFO);
+    CAPRI_INTR_CLEAR(sgeteintinfometrics, 5, SGE_TE5_INT_INFO);
+    CAPRI_INTR_CLEAR(sgempuinterrmetrics, 0, SGE_MPU0_INT_ERR);
+    CAPRI_INTR_CLEAR(sgempuinterrmetrics, 1, SGE_MPU1_INT_ERR);
+    CAPRI_INTR_CLEAR(sgempuinterrmetrics, 2, SGE_MPU2_INT_ERR);
+    CAPRI_INTR_CLEAR(sgempuinterrmetrics, 3, SGE_MPU3_INT_ERR);
+    CAPRI_INTR_CLEAR(sgempuinterrmetrics, 4, SGE_MPU4_INT_ERR);
+    CAPRI_INTR_CLEAR(sgempuinterrmetrics, 5, SGE_MPU5_INT_ERR);
+    CAPRI_INTR_CLEAR(sgempuintinfometrics, 0, SGE_MPU0_INT_INFO);
+    CAPRI_INTR_CLEAR(sgempuintinfometrics, 1, SGE_MPU1_INT_INFO);
+    CAPRI_INTR_CLEAR(sgempuintinfometrics, 2, SGE_MPU2_INT_INFO);
+    CAPRI_INTR_CLEAR(sgempuintinfometrics, 3, SGE_MPU3_INT_INFO);
+    CAPRI_INTR_CLEAR(sgempuintinfometrics, 4, SGE_MPU4_INT_INFO);
+    CAPRI_INTR_CLEAR(sgempuintinfometrics, 5, SGE_MPU5_INT_INFO);
+    CAPRI_INTR_CLEAR(mdhensintaxierrmetrics, 0, MD_HENS_INT_AXI_ERR);
+    CAPRI_INTR_CLEAR(mdhensinteccmetrics, 0, MD_HENS_INT_DRBG_CRYPTORAM_ECC);
+    CAPRI_INTR_CLEAR(mdhensinteccmetrics, 1, MD_HENS_INT_DRBG_INTRAM_ECC);
+    CAPRI_INTR_CLEAR(mdhensintipcoremetrics, 0, MD_HENS_INT_IPCORE);
+    CAPRI_INTR_CLEAR(mdhensinteccmetrics, 2, MD_HENS_INT_PK_ECC);
+    CAPRI_INTR_CLEAR(mpmpnsintcryptometrics, 0, MP_MPNS_INT_CRYPTO);
+    CAPRI_INTR_CLEAR(pbpbcintcreditunderflowmetrics, 0, PB_PBC_INT_CREDIT_UNDERFLOW);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 0, PB_PBC_INT_ECC_DESC_0);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 1, PB_PBC_INT_ECC_DESC_1);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 2, PB_PBC_INT_ECC_FC_0);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 3, PB_PBC_INT_ECC_FC_1);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 4, PB_PBC_INT_ECC_LL_0);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 5, PB_PBC_INT_ECC_LL_1);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 6, PB_PBC_INT_ECC_NC);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 7, PB_PBC_INT_ECC_PACK);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 8, PB_PBC_INT_ECC_PORT_MON_IN);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 9, PB_PBC_INT_ECC_PORT_MON_OUT);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 10, PB_PBC_INT_ECC_RC);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 11, PB_PBC_INT_ECC_RWR);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 12, PB_PBC_INT_ECC_SCHED);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 13, PB_PBC_INT_ECC_SIDEBAND);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 14, PB_PBC_INT_ECC_UC);
+    CAPRI_INTR_CLEAR(pbpbcintpbusviolationmetrics, 0, PB_PBC_INT_PBUS_VIOLATION_IN);
+    CAPRI_INTR_CLEAR(pbpbcintpbusviolationmetrics, 1, PB_PBC_INT_PBUS_VIOLATION_OUT);
+    CAPRI_INTR_CLEAR(pbpbcintrplmetrics, 0, PB_PBC_INT_ECC_RPL);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 0, PB_PBC_INT_ECC_WRITE_0);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 1, PB_PBC_INT_ECC_WRITE_1);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 2, PB_PBC_INT_ECC_WRITE_2);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 3, PB_PBC_INT_ECC_WRITE_3);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 4, PB_PBC_INT_ECC_WRITE_4);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 5, PB_PBC_INT_ECC_WRITE_5);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 6, PB_PBC_INT_ECC_WRITE_6);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 7, PB_PBC_INT_ECC_WRITE_7);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 8, PB_PBC_INT_ECC_WRITE_8);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 9, PB_PBC_INT_ECC_WRITE_9);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 10, PB_PBC_INT_ECC_WRITE_10);
+    CAPRI_INTR_CLEAR(pbpbcintwritemetrics, 11, PB_PBC_INT_ECC_WRITE_11);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 15, PB_PBC_HBM_INT_ECC_HBM_HT);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 16, PB_PBC_HBM_INT_ECC_HBM_MTU);
+    CAPRI_INTR_CLEAR(pbpbchbmintecchbmrbmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_RB);
+    CAPRI_INTR_CLEAR(inteccdescmetrics, 17, PB_PBC_HBM_INT_ECC_HBM_WB);
+    CAPRI_INTR_CLEAR(pbpbchbminthbmaxierrrspmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_AXI_ERR_RSP);
+    CAPRI_INTR_CLEAR(pbpbchbminthbmdropmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_DROP);
+    CAPRI_INTR_CLEAR(pbpbchbminthbmpbusviolationmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_PBUS_VIOLATION_IN);
+    CAPRI_INTR_CLEAR(pbpbchbminthbmpbusviolationmetrics, 1, PB_PBC_HBM_INT_ECC_HBM_PBUS_VIOLATION_OUT);
+    CAPRI_INTR_CLEAR(pbpbchbminthbmxoffmetrics, 0, PB_PBC_HBM_INT_ECC_HBM_XOFF);
+//    CAPRI_INTR_CLEAR(inteccdescmetrics, 18, PM_PBM_INT_ECC_COL0);
+//    CAPRI_INTR_CLEAR(inteccdescmetrics, 19, PM_PBM_INT_ECC_COL1);
+//    CAPRI_INTR_CLEAR(inteccdescmetrics, 20, PM_PBM_INT_ECC_COL2);
+//    CAPRI_INTR_CLEAR(inteccdescmetrics, 21, PM_PBM_INT_ECC_COL3);
+//    CAPRI_INTR_CLEAR(inteccdescmetrics, 22, PM_PBM_INT_ECC_COL4);
+//    CAPRI_INTR_CLEAR(inteccdescmetrics, 23, PM_PBM_INT_ECC_COL5);
+    CAPRI_INTR_CLEAR(mcmchintmcmetrics, 0, MC0_MCH_INT_MC_INTREG);
+    CAPRI_INTR_CLEAR(mcmchintmcmetrics, 1, MC1_MCH_INT_MC_INTREG);
+    CAPRI_INTR_CLEAR(mcmchintmcmetrics, 2, MC2_MCH_INT_MC_INTREG);
+    CAPRI_INTR_CLEAR(mcmchintmcmetrics, 3, MC3_MCH_INT_MC_INTREG);
+    CAPRI_INTR_CLEAR(mcmchintmcmetrics, 4, MC4_MCH_INT_MC_INTREG);
+    CAPRI_INTR_CLEAR(mcmchintmcmetrics, 5, MC5_MCH_INT_MC_INTREG);
+    CAPRI_INTR_CLEAR(mcmchintmcmetrics, 6, MC6_MCH_INT_MC_INTREG);
+    CAPRI_INTR_CLEAR(mcmchintmcmetrics, 7, MC7_MCH_INT_MC_INTREG);
+}
