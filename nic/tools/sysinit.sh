@@ -11,7 +11,7 @@ ulimit -c unlimited
 
 # Set core file pattern
 mkdir -p /data/core
-echo '/data/core/core.%e.%p' > /proc/sys/kernel/core_pattern
+echo '|/nic/bin/coremgr -P /data/core -p %p -e %e' > /proc/sys/kernel/core_pattern
 
 cd /
 ifconfig lo up
