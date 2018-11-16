@@ -36,6 +36,9 @@ genproto:
 	cd .. && make ${PROTO_GEN_TARGETS}
 
 test: build
+	make test-only
+
+test-only: 
 	for tgt in $(MODULE_TEST_TARGETS); do \
 		if ! ../build/x86_64/iris/bin/$$tgt; then \
 			echo "============= $$tgt Test failed ========================"; \

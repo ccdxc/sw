@@ -12,6 +12,8 @@ namespace {
 using namespace std;
 using namespace delphi;
 
+void * startEventLoop(void* arg); // forward declaration
+
 class TestReactor;
 typedef std::shared_ptr<TestReactor> TestReactorPtr;
 
@@ -82,14 +84,6 @@ error TestObject::TriggerEvent(BaseObjectPtr oldObj, ObjectOperation op, Reactor
     return error::OK();
 }
 
-// event loop thread
-void * startEventLoop(void* arg) {
-    ev::default_loop *loop = (ev::default_loop *)arg;
-    loop->run(0);
-
-    return NULL;
-}
-
 class testObjMgr : public TestReactor {
 public:
     int  numCreateCallbacks;
@@ -142,22 +136,21 @@ public:
 typedef std::shared_ptr<TestService> TestServicePtr;
 
 class DelphiClientTest : public testing::Test {
-protected:
+public:
     pthread_t ev_thread_id = 0;
     ev::default_loop   loop;
     DelphiClientPtr    client;
     TestServicePtr     service;
-public:
+
     virtual void SetUp() {
         // start the client
         client = make_shared<DelphiClient>();
         service = make_shared<TestService>(1, client);
         client->RegisterService(service);
-        client->MockConnect(1);
         usleep(1000);
 
         // start event loop
-        pthread_create(&ev_thread_id, 0, &startEventLoop, (void*)&loop);
+        pthread_create(&ev_thread_id, 0, &startEventLoop, (void*)this);
         LogInfo("Started thread {}", ev_thread_id);
         usleep(1000);
     }
@@ -172,6 +165,18 @@ public:
         usleep(1000);
     }
 };
+
+// event loop thread
+void * startEventLoop(void* arg) {
+    DelphiClientTest *cltest = (DelphiClientTest *)arg;
+    usleep(1000);
+
+    // mock connect and run event loop
+    cltest->client->MockConnect(1);
+    cltest->loop.run(0);
+
+    return NULL;
+}
 
 TEST_F(DelphiClientTest, BasicClientTest) {
     usleep(1000);
@@ -204,6 +209,23 @@ TEST_F(DelphiClientTest, BasicClientTest) {
     err = client->QueueDelete(tobj2);
     ASSERT_EQ(err, error::OK()) << "Queueing delete failed";
     ASSERT_EQ_EVENTUALLY(client->ListKind("TestObject").size(), 0) << "objects were not deleted";
+}
+
+TEST_F(DelphiClientTest, MultiThreadTest) {
+    usleep(1000);
+
+    // verify  the service is inited
+    ASSERT_EQ_EVENTUALLY(service->inited, true) << "client was not inited";
+
+    TestObjectPtr tobj = make_shared<TestObject>();
+    tobj->set_testdata1("Test Data");
+    tobj->mutable_key()->set_idx(1);
+
+    // try to set and delete from wrong thread
+    auto err = client->SetObject(tobj);
+    ASSERT_TRUE(err.IsNotOK()) << "SetObject suceeded from wrong thread";
+    err = client->DeleteObject(tobj);
+    ASSERT_TRUE(err.IsNotOK()) << "DeleteObject suceeded from wrong thread";
 }
 
 class DelphiMountTest : public testing::Test {

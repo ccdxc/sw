@@ -119,6 +119,7 @@ private:
     ev::timer                      heartbeatTimer; // timer to handle message queue updates
     uint64_t                       currObjectID;   // running counter of object handle
     vector<BaseReactorPtr>         mountWatchers;  // reactors watching mount complete
+    pthread_t                      my_thread_;     // delphi thread id
 };
 typedef std::shared_ptr<DelphiClient> DelphiClientPtr;
 

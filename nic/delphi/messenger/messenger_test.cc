@@ -28,13 +28,13 @@ public:
     int changeReq = 0;
     vector<int> socklist;
     error HandleChangeReq(int sockCtx, vector<ObjectData *> req, vector<ObjectData *> *resp) {
-        LogDebug("Server Received set req");
         changeReq += req.size();
         return error::OK();
     };
     error HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsgPtr resp) {
         this->socklist.push_back(sockCtx);
         mountReq += req->mounts().size();
+        resp->set_serviceid(mountReq);
 
         // send a response
         for (int i = 0; i < req->mounts().size(); i++) {
@@ -65,13 +65,18 @@ class clientHandler : public ClientHandler {
 public:
     int notify = 0;
     int mountResp = 0;
+    int client_id;
+    clientHandler(int id) {
+        notify = 0;
+        mountResp = 0;
+        client_id = id;
+    }
     error HandleNotify(vector<ObjectData *> objlist) {
-        LogDebug("Client Received notify");
         notify++;
         return error::OK();
     };
     error HandleMountResp(uint16_t svcID, string status, vector<ObjectData *> objlist) {
-        LogDebug("Client Received mount resp. svcID {}", svcID);
+        LogDebug("Client {} Received mount resp. svcID {}", client_id, svcID);
         for(vector<ObjectData *>::iterator iter=objlist.begin(); iter!=objlist.end(); ++iter){
             LogDebug("Mount resp {}", (*iter)->DebugString());
         }
@@ -101,7 +106,7 @@ public:
 
         // start the clients
         for (int i = 0; i < NUM_CLIENTS; i++) {
-            this->clientHandlers[i] = make_shared<clientHandler>();
+            this->clientHandlers[i] = make_shared<clientHandler>(i);
             this->clients[i] = make_shared<MessangerClient>(this->clientHandlers[i]);
             // connect to the server
             this->clients[i]->Connect();
@@ -122,11 +127,13 @@ public:
         usleep(1000);
 
         // kill the event loop thread
-        LogDebug("Stopping event loop");
-        loop.break_loop(ev::ALL);
         pthread_cancel(ev_thread_id);
         pthread_join(ev_thread_id, NULL);
+        usleep(1000);
 
+        LogDebug("Stopping event loop");
+        loop.break_loop(ev::ALL);
+        usleep(1000);
     }
 };
 
@@ -138,7 +145,8 @@ TEST_F(MessangerTest, BasicMountTest) {
         mnt->set_kind("Endpoint");
         mnt->set_mode(ReadWriteMode);
         mnts.push_back(mnt);
-        this->clients[i]->SendMountReq("TestService", mnts);
+        string svcName = "TestService-" + std::to_string(i);
+        this->clients[i]->SendMountReq(svcName, mnts);
     }
     usleep(1000);
 
@@ -161,9 +169,14 @@ TEST_F(MessangerTest, ChangeReqTest) {
         mnt->set_kind("Endpoint");
         mnt->set_mode(ReadWriteMode);
         mnts.push_back(mnt);
-        this->clients[i]->SendMountReq("TestService", mnts);
+        string svcName = "TestService-" + std::to_string(i);
+        this->clients[i]->SendMountReq(svcName, mnts);
     }
     usleep(1000);
+
+    // verify server got all mount requests
+    ASSERT_EQ_EVENTUALLY(serverHandler->mountReq, NUM_CLIENTS) << "Server did not receive all mount requests";
+    LogDebug("Server got {} mount requests", serverHandler->mountReq);
 
     // send change req from each client
     for (int i = 0; i < NUM_CLIENTS; i++) {
@@ -174,6 +187,7 @@ TEST_F(MessangerTest, ChangeReqTest) {
 
         ObjectMeta *meta = tobj.mutable_meta();
         meta->set_kind(tobj.GetDescriptor()->name());
+        tobj.mutable_key()->set_idx((uint32_t)i);
         tobj.set_testdata1("Test Data");
         tobj.SerializeToString(&out_str);
 
@@ -215,7 +229,7 @@ TEST_F(MessangerTest, ChangeReqTest) {
 
     // verify clients got notify message
     for (int i = 0; i < NUM_CLIENTS; i++) {
-        ASSERT_EQ_EVENTUALLY(clientHandlers[i]->notify, 1) << "client did not receive notify message";
+        ASSERT_EQ_EVENTUALLY(clientHandlers[i]->notify, 1) << "client did not receive notify message " << i;
         LogDebug("Client {} got {} notify messages\n", i, clientHandlers[i]->notify);
     }
 

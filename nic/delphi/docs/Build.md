@@ -1,13 +1,13 @@
 # Building Delphi Framework
 
-Delphi framework can be built using `bazel` build tool. Delphi can be built either in Venice vagrant VM or Nic `make shell` container.
+Delphi can be built either in Venice vagrant VM or Nic `make docker/shell` container.
 
-See [here](../../../docs/dev.md) for instructions on how to bringup Venice vagrant VMs. Note: running `PENS_NODES=1 make dev` will bringup a single VM for development environment.
-See [here](../../README.md) for instruction on how to bringup `make shell` container for Nic builds.
+See [here](../../../docs/dev.md) for instructions on how to bringup Venice vagrant VMs.
+See [here](../../README.md) for instruction on how to bringup `make docker/shell` container for Nic builds.
 
 ### 0. Build the delphi complier (Required only in Venice vagrant VMs)
 
-Delphi complier is built as part of `make ws-tools` build target. In case of `make shell` container, this happens automatically when container is run.
+Delphi complier is built as part of `make ws-tools` build target. In case of `make docker/shell` container, this happens automatically when container is run.
 
 ```
 cd /import/src/github.com/pensando/sw/
@@ -19,21 +19,21 @@ This will build the delphi protobuf plugin which is written in Go language. Delp
 
 ### 1. Build delphi framework and hub
 
-Delphi framework and hub can be built by simply running `bazel build`.
+Delphi framework and hub can be built by simply running `make build` in `nic/delphi` directory.
 
 ```
-cd nic
-make pull-assets
-bazel build //nic/delphi/...
+cd nic/delphi
+make build
 ```
 
 This will build the delphi SDK libraries, delphi hub binary and the example applications.
-Delphi hub binary can be found at `$WORKSPACE/bazel-bin/nic/delphi/hub/delphi_hub`. Example application binary is found at `$WORKSPACE/bazel-bin/nic/delphi/example/example`.
+Delphi hub binary can be found at `$WORKSPACE/nic/build/x86_64/iris/bin/delphi_hub`. Example application binary is found at `$WORKSPACE/nic/build/x86_64/iris/bin/delphi_example`.
 
 ### 2. Unit test delphi framework
 
-Delphi unit tests can be run by invoking `delphi test`.
+Delphi unit tests can be run by invoking `make test` under `nic/delphi/` direcory.
 
 ```
-bazel test //nic/delphi/... --jobs 1 --cache_test_results=no --test_output=all
+cd nic/delphi
+make test
 ```

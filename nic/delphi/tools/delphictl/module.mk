@@ -2,7 +2,8 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = delphictl.bin
-MODULE_SOLIBS   = delphisdk halproto upgradeproto
+MODULE_INCS     = ${BLD_GEN_DIR}/proto
+MODULE_SOLIBS   = delphisdk halproto upgradeproto nicmgrproto commonproto
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
 MODULE_ARLIBS   = delphishm
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)

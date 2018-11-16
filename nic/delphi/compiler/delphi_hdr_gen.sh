@@ -6,5 +6,5 @@ if [ "$#" -ne 1 ]; then
     exit -1
 fi
 
-cd $1
-ls *delphi.hpp | awk '{print "#include \"gen/proto/" $1 "\""}' > delphi_objects.hpp
+cd $1/../..
+find gen/proto/ -name "*delphi.hpp" | awk '{print "#include \"" $1 "\""}' > gen/proto/delphi_objects.hpp

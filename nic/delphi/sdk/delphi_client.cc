@@ -247,6 +247,7 @@ error DelphiClient::HandleMountResp(uint16_t svcID, string status, vector<Object
     // save my service id and mark mount complete
     this->myServiceID = svcID;
     this->isMountComplete = true;
+    this->my_thread_ = pthread_self();
 
     // trigger  mount complete callback
     this->service->OnMountComplete();
@@ -278,6 +279,13 @@ error DelphiClient::SetObject(BaseObjectPtr objinfo) {
     if (key == "") {
         LogError("Object key can not be empty {}", objinfo->GetMessage()->ShortDebugString());
         return error::New("Object key is empty");
+    }
+
+    // make sure SetObject is not called from other threads
+    pthread_t thread_id = pthread_self();
+    if (! pthread_equal(thread_id, this->my_thread_)) {
+        LogError("Error creating object {}/{}. SetObject needs to be called from delphi thread", kind, key);
+        return error::New("Called from invalid thread");
     }
 
     // set key in the meta
@@ -435,6 +443,19 @@ error DelphiClient::DeleteObject(BaseObjectPtr objinfo) {
     if (!this->isMountComplete) {
         LogError("Error deleting object {}/{}. Mount is not complete", kind, key);
         return error::New("Can not create objects before mount complete");
+    }
+
+    // key can not be empty
+    if (key == "") {
+        LogError("Object key can not be empty {}", objinfo->GetMessage()->ShortDebugString());
+        return error::New("Object key is empty");
+    }
+
+    // make sure DeleteObject is not called from other threads
+    pthread_t thread_id = pthread_self();
+    if (! pthread_equal(thread_id, this->my_thread_)) {
+        LogError("Error deleting object {}/{}. DeleteObject needs to be called from delphi thread", kind, key);
+        return error::New("Called from invalid thread");
     }
 
     // set key in the meta
@@ -709,6 +730,7 @@ error DelphiClient::MockConnect(uint16_t mySvcId) {
     // save my service id and mark mount complete
     this->myServiceID = mySvcId;
     this->isMountComplete = true;
+    this->my_thread_ = pthread_self();
 
     // fake a mount complete callback
     this->service->OnMountComplete();

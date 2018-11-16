@@ -217,7 +217,7 @@ PortServiceImpl::PortCreate(ServerContext *context,
         if (hal_ret == HAL_RET_OK) {
             port_status = std::make_shared<dobj::PortStatus>(response->status());
             port_status->mutable_key_or_handle()->set_port_id(spec.key_or_handle().port_id());
-            linkmgr::delphi_sdk_get()->SetObject(port_status);
+            linkmgr::delphi_sdk_get()->QueueUpdate(port_status);
         }
     }
     hal_cfg_db_close();

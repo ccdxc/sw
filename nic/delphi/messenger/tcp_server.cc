@@ -39,7 +39,7 @@ void TcpServer::Accept(ev::io &watcher, int revents) {
 
     // check for error event
     if (EV_ERROR & revents) {
-        LogError("TC server Got error event {}", revents);
+        LogError("TCP server Got error event {}", revents);
         return;
     }
 
