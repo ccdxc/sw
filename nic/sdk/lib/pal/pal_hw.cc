@@ -30,6 +30,8 @@ typedef int (*qsfp_read_fn_t)(const uint8_t *buffer, uint32_t size, uint32_t off
                               uint32_t nretry, uint32_t port);
 typedef int (*qsfp_write_fn_t)(const uint8_t *buffer, uint32_t size, uint32_t addr,
                                uint32_t nretry, uint32_t port);
+typedef void*(*mem_map_fn_t)(const uint64_t pa, const uint32_t sz, uint32_t flags);
+typedef void(*mem_unmap_fn_t)(void *va);
                                
 typedef struct pal_hw_vectors_s {
     hw_init_fn_t                hw_init;
@@ -48,6 +50,8 @@ typedef struct pal_hw_vectors_s {
     qsfp_reset_low_power_mode_fn_t qsfp_reset_low_power_mode;
     qsfp_read_fn_t              qsfp_read;
     qsfp_write_fn_t             qsfp_write;
+    mem_map_fn_t                mem_map;
+    mem_unmap_fn_t              mem_unmap;
 } pal_hw_vectors_t;
 
 static pal_hw_vectors_t   gl_hw_vecs;
@@ -109,6 +113,14 @@ pal_init_hw_vectors (void)
     gl_hw_vecs.qsfp_write = (qsfp_write_fn_t)dlsym(gl_lib_handle,
                                       "pal_qsfp_write");
     SDK_ASSERT(gl_hw_vecs.qsfp_write);
+
+    gl_hw_vecs.mem_map = (mem_map_fn_t)dlsym(gl_lib_handle,
+                                      "pal_mem_map");
+    SDK_ASSERT(gl_hw_vecs.mem_map);
+
+    gl_hw_vecs.mem_unmap = (mem_unmap_fn_t)dlsym(gl_lib_handle,
+                                           "pal_mem_unmap");
+    SDK_ASSERT(gl_hw_vecs.mem_unmap);
 
     return PAL_RET_OK;
 }
@@ -286,6 +298,18 @@ pal_hw_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
     return ret;
 }
 
+static void*
+pal_hw_mem_map(const uint64_t pa, const uint32_t sz)
+{
+    return (*gl_hw_vecs.mem_map)(pa, sz, 1);
+}
+
+static void
+pal_hw_mem_unmap(void *va)
+{
+    (*gl_hw_vecs.mem_unmap)(va);
+}
+
 static pal_ret_t
 pal_hw_init_rwvectors (void)
 {
@@ -306,6 +330,8 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.qsfp_reset_low_power_mode = pal_hw_qsfp_reset_low_power_mode;
     gl_pal_info.rwvecs.qsfp_read = pal_hw_qsfp_read;
     gl_pal_info.rwvecs.qsfp_write = pal_hw_qsfp_write;
+    gl_pal_info.rwvecs.mem_map = pal_hw_mem_map;
+    gl_pal_info.rwvecs.mem_unmap = pal_hw_mem_unmap;
 
     pal_init_hw_vectors();
 

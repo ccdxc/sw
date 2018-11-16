@@ -122,6 +122,19 @@ pal_default_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
     return PAL_RET_OK;
 }
 
+static void*
+pal_default_mem_map(const uint64_t pa, const uint32_t sz)
+{
+    SDK_TRACE_DEBUG("PAL default pal_default_mem_map called for PA=%lx", pa);
+    return NULL;
+}
+
+static void
+pal_default_mem_unmap(void  *va)
+{
+    SDK_TRACE_DEBUG("PAL default pal_default_mem_unmap called.");
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -145,6 +158,8 @@ pal_default_init_rwvectors (void)
                                          pal_default_qsfp_reset_low_power_mode;
     gl_pal_info.rwvecs.qsfp_read = pal_default_qsfp_read;
     gl_pal_info.rwvecs.qsfp_write = pal_default_qsfp_write;
+    gl_pal_info.rwvecs.mem_map = pal_default_mem_map;
+    gl_pal_info.rwvecs.mem_unmap = pal_default_mem_unmap;
 
     return PAL_RET_OK;
 }

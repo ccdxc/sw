@@ -58,6 +58,8 @@ typedef struct pal_rwvectors_s {
     pal_ret_t   (*qsfp_write)(const uint8_t *buffer, uint32_t size,
                              uint32_t offset, qsfp_page_t page,
                              uint32_t nretry, uint32_t port);
+    void*       (*mem_map)(uint64_t pa, uint32_t sz);
+    void        (*mem_unmap)(void *va);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
@@ -166,6 +168,25 @@ pal_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
 {
     return gl_pal_info.rwvecs.qsfp_write(buffer, size, offset,
                                             page, nretry, port);
+}
+
+static inline void* 
+pal_mem_map(uint64_t pa, uint32_t sz) {
+    return gl_pal_info.rwvecs.mem_map(pa, sz);
+}
+
+// Since, PAL manages memory in units of logical blocks,
+// it is expected that the programmer uses pal_mem_map 
+// to map a block of memory she is interested in and
+// get the base address of the block. This base
+// address is then provided to unmap the memory meant
+// for the block.
+//
+// NOTE : Unmapping any valid VA within a block using
+// this API will result in the entire block being unmapped.
+static inline void
+pal_mem_map(void* va) {
+    return gl_pal_info.rwvecs.mem_unmap(va);
 }
 
 }    // namespace lib
