@@ -83,6 +83,21 @@ feature_cmd_map = {
             "linux"    : { "cmd" : cmd_builder.ethtool_txvlan_offload },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_txvlan_offload }
         },
+    "hkey"               :
+        {
+            "linux"    : { "cmd" : cmd_builder.ethtool_hkey_offload },
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_hkey_offload }
+        },
+    "indirection_table"  :
+        {
+            "linux"    : { "cmd" : cmd_builder.ethtool_indirection_table },
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_indirection_table }
+        },
+    "rx-flow-hash"     :
+        {
+            "linux"    : { "cmd" : cmd_builder.ethtool_rssflow },
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rssflow }
+        },
 }
 
 def setup_features(tc):

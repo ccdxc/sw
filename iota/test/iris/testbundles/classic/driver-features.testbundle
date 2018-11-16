@@ -115,3 +115,17 @@ testcases:
         args    :
             type: remote_only
             #capture_pcap : true
+    -   name    : UplinkIntf_RSS
+        testcase: testcases.drivers.features
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4', 'v6']
+            hkey               : [ 'symmetric', 'msft']
+            indirection_table  : [ 'equal', 'w1', 'w2', 'default']
+            rx-flow-hash       : [ 'tcp4', 'udp4', 'udp6', 'tcp6']
+        args    :
+            type: remote_only
+            #capture_pcap : true

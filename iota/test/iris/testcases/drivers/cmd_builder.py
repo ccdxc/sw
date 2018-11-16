@@ -1,5 +1,9 @@
 #! /usr/bin/python3
 import iota.test.iris.utils.naples  as naples
+symmetric_key = "6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A"
+
+msft_key = "6d:5a:56:da:25:5b:0e:c2:41:67:25:3d:43:a3:8f:b0:d0:ca:2b:cb:ae:7b:30:b4:77:cb:2d:a3:80:30:f2:0c:6a:42:b7:3b:be:ac:01:fa"
+
 
 def ethtool_feature_cmd(intf, feature, on_off):
     return " ".join(["ethtool", "-K",  intf,  feature,  on_off])
@@ -72,6 +76,24 @@ def ethtool_rxvlan_offload(intf, op):
 def ethtool_txvlan_offload(intf, op):
     return ethtool_feature_cmd(intf, "rxvlan", op)
 
+def ethtool_hkey_offload(intf, op):
+    if op == "symmetric":
+        return " ".join(["ethtool", "-X",  intf,  "hkey",  symmetric_key])
+    else:
+        return " ".join(["ethtool", "-X",  intf,  "hkey",  msft_key])
+
+def ethtool_indirection_table(intf, op):
+    if op == "w1":
+        return " ".join(["ethtool", "-X",  intf,  "weight 2 2 2 2 2 2"])
+    elif op == "w2":
+        return " ".join(["ethtool", "-X",  intf,  "weight 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2"])
+    elif op == "equal":
+        return " ".join(["ethtool", "-X",  intf,  "equal 16"])
+    else :
+        return " ".join(["ethtool", "-X",  intf,  op])
+
+def ethtool_rssflow(intf, op):
+    return " ".join(["ethtool", "-N",  intf,  "rx-flow-hash",  op,  "sdfn"])
 
 def ip_link_filter_mcast(intf, op):
     return ip_link_pkt_filter_cmd(intf, "multicast", op)
@@ -197,6 +219,14 @@ def bsd_ethtool_rxvlan_offload(intf, op):
 def bsd_ethtool_txvlan_offload(intf, op):
     return ethtool_feature_cmd(intf, "rxvlan", op)
 
+def bsd_ethtool_hkey_offload(intf, op):
+    return "echo > /dev/null"
+
+def bsd_ethtool_indirection_table(intf, op):
+    return "echo > /dev/null"
+
+def bsd_ethtool_rssflow(intf, op):
+    return "echo > /dev/null"
 
 def bsd_ip_link_filter_mcast(intf, op):
     return ip_link_pkt_filter_cmd(intf, "multicast", op)
