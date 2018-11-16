@@ -10,7 +10,7 @@ OS_TYPE_LINUX = "linux"
 OS_TYPE_BSD   = "freebsd"
 
 __ionic_modules = [
-    "ionic_rdma",
+#    "ionic_rdma",
     "ionic"
 ]
 
@@ -23,8 +23,7 @@ def RemoveIonicDriverCommands(os_type = OS_TYPE_LINUX):
         if os_type == OS_TYPE_LINUX:
             cmds.append("rmmod " + module)
         elif os_type == OS_TYPE_BSD:
-            if module != "ionic_rdma":
-                cmds.append("kldunload " + module)
+            cmds.append("kldunload " + module)
         else:
             assert(0)
     return cmds
@@ -33,9 +32,10 @@ def InsertIonicDriverCommands(os_type = OS_TYPE_LINUX, **kwargs):
     driver_args = ' '.join('%s=%r' % x for x in kwargs.items())
     cmds = []
     if os_type == OS_TYPE_LINUX:
-        cmds = ["cd %s/%s/ && insmod drivers/eth/ionic/ionic.ko %s" % (HOST_NAPLES_DRIVERS_DIR, __linux_directory, driver_args),
-                "modprobe ib_uverbs",
-	        "cd %s/%s/ && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1" % (HOST_NAPLES_DRIVERS_DIR, __linux_directory)]
+        cmds = ["cd %s/%s/ && insmod drivers/eth/ionic/ionic.ko %s" % (HOST_NAPLES_DRIVERS_DIR, __linux_directory, driver_args)
+               # "modprobe ib_uverbs",
+	       # "cd %s/%s/ && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1" % (HOST_NAPLES_DRIVERS_DIR, __linux_directory)
+	       ]
     elif os_type == OS_TYPE_BSD:
         for arg  in driver_args.split(" "):
           cmds.append("kenv %s" %  arg)
