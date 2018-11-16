@@ -303,6 +303,10 @@ cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp)
             qstats->set_rx_qfull_drop_errors(cpucb.rx_qfull_drop_errors);
             qstats->set_tx_sem_full_drops(cpucb.tx_sem_full_drops);
             qstats->set_tx_free_requests(cpucb.ascq_free_requests);
+            qstats->set_rx_sem_full_drops(cpucb.rx_sem_full_drops);
+            qstats->set_rx_queue0_pkts(cpucb.rx_queue0_pkts);
+            qstats->set_rx_queue1_pkts(cpucb.rx_queue1_pkts);
+            qstats->set_rx_queue2_pkts(cpucb.rx_queue2_pkts);
         }
     }
     return ret;

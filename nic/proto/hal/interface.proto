@@ -327,6 +327,10 @@ message CpuQueueStats {
   uint64            rx_qfull_drop_errors  = 4;
   uint64            tx_sem_full_drops     = 5;
   uint64            tx_free_requests      = 6;
+  uint64            rx_sem_full_drops     = 7;
+  uint64            rx_queue0_pkts        = 8;
+  uint64            rx_queue1_pkts        = 9;
+  uint64            rx_queue2_pkts        = 10;
 }
 
 message CpuLifStats {
