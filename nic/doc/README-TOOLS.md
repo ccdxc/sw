@@ -50,5 +50,14 @@ README for reload.py
     Fixed:
     =====
     - If memtun is not running on host, try to start it. If naples is running a good image, it should work. If not, throw an error
-~
-~
+
+
+README for captrace_collect.py
+==============================
+    - This script can be used to configure, collect, decode and filter captrace
+    - The script first configures and enables captrace. It then asks for user input before dumping captrace. This is when the test (for which you intend to collect captrace), should be run before providing input to the script
+    - The symbol file is generated in the workspace from where the script is run
+    - captrace.decode can be found in nic/ directory after the script is run
+    - The script asks for filters to be applied on the decode file after generating captrace.decode
+
+    ./captrace_collect.py --host cap-srv11 --rxdma 1
