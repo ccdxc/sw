@@ -137,10 +137,11 @@ pprint_sgl(uint64_t sgl_pa)
 	if (!sgl)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64 " ==> 0x" PRIx64,
+	while (sgl) {
+		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 " ==> 0x" PRIx64,
 			"",
 			(uint64_t) sgl, sgl_pa);
-	while (sgl) {
+
 		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d 0x" PRIx64 "/%d/%d",
 				"",
 				sgl->cs_addr_0, sgl->cs_len_0, sgl->cs_rsvd_0,
@@ -151,6 +152,9 @@ pprint_sgl(uint64_t sgl_pa)
 				sgl->cs_next, sgl->cs_rsvd_swlink);
 
 		CPDC_SGL_SWLINK_GET(sgl, sgl);
+
+		if (sgl)
+			sgl_pa = sonic_virt_to_phy((void *) sgl);
 	}
 }
 
