@@ -5,7 +5,7 @@ def Setup(tc):
  
     tc.desc = '''
     Test  :   ib_read_bw
-    Opcode:   Read Only
+    Opcode:   Read First, Middle, Last
     Num QP:   1, 2
     Pad   :   No
     Inline:   No
@@ -50,7 +50,7 @@ def Trigger(tc):
         api.Logger.info("Starting ib_read_bw test from %s" % (tc.cmd_descr))
 
         # cmd for server
-        cmd = "ib_read_bw -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -s 1024 -q " + str(tc.iterators.num_qp) + " --report_gbits"
+        cmd = "ib_read_bw -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -m 4096 -s 10000 -q " + str(tc.iterators.num_qp) + " --report_gbits"
         api.Trigger_AddCommand(req, 
                                w1.node_name, 
                                w1.workload_name,
@@ -58,7 +58,7 @@ def Trigger(tc):
                                background = True)
 
         # cmd for client
-        cmd = "ib_read_bw -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -s 1024 -q " + str(tc.iterators.num_qp) + " --report_gbits " + w1.ip_address
+        cmd = "ib_read_bw -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -m 4096 -s 10000 -q " + str(tc.iterators.num_qp) + " --report_gbits " + w1.ip_address
         api.Trigger_AddCommand(req, 
                                w2.node_name, 
                                w2.workload_name,

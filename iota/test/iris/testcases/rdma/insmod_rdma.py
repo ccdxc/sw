@@ -23,8 +23,6 @@ def Trigger(tc):
     api.Logger.info("Installing RDMA driver on the following nodes: {0}".format(tc.nodes))
 
     for n in tc.nodes:
-        api.Trigger_AddHostCommand(req, n, "rmmod ionic_rdma")
-
         api.Trigger_AddHostCommand(req, n, "tar xaf %s" % tc.pkgname,
                                    rundir = 'rdma-drivers')
 
@@ -32,10 +30,11 @@ def Trigger(tc):
                                    rundir = 'rdma-drivers')
 
         api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./build.sh",
-                                   rundir = 'rdma-drivers')
+                                   rundir = 'rdma-drivers',
+                                   timeout = 60)
 
         api.Trigger_AddHostCommand(req, n, "modprobe ib_uverbs")
-        api.Trigger_AddHostCommand(req, n, "cd drivers-linux && insmod drivers/rdma/drv/ionic/ionic_rdma.ko xxx_haps=1",
+        api.Trigger_AddHostCommand(req, n, "cd drivers-linux && insmod drivers/rdma/drv/ionic/ionic_rdma.ko",
                                    rundir = 'rdma-drivers')
 
         api.Trigger_AddHostCommand(req, n, "cp -r drivers-linux %s" % api.GetHostToolsDir(),

@@ -19,6 +19,7 @@ def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     api.Logger.info("Extracting device and GID using show_gid")
+    api.Logger.info("Interfaces are {0} {1}".format(tc.w1.interface, tc.w2.interface))
 
     cmd = "show_gid | grep %s | grep v2" % tc.w1.ip_address
     api.Trigger_AddCommand(req,
@@ -47,16 +48,12 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             return api.types.status.FAILURE
-    #set the path for testcases in this testsuite to use
 
+    #set the path for testcases in this testsuite to use
     w = [tc.w1, tc.w2]
     for i in range(2):
         api.SetTestsuiteAttr(w[i].ip_address+"_device", rdma.GetWorkloadDevice(tc.resp.commands[i].stdout))
         api.SetTestsuiteAttr(w[i].ip_address+"_gid", rdma.GetWorkloadGID(tc.resp.commands[i].stdout))
-    #api.SetTestsuiteAttr(tc.w1.ip_address+"_device", rdma.GetWorkloadDevice(tc.resp.commands[0].stdout))
-    #api.SetTestsuiteAttr(tc.w1.ip_address+"_gid", rdma.GetWorkloadGID(tc.resp.commands[0].stdout))
-    #api.SetTestsuiteAttr(tc.w2.ip_address+"_device", rdma.GetWorkloadDevice(tc.resp.commands[1].stdout))
-    #api.SetTestsuiteAttr(tc.w2.ip_address+"_gid", rdma.GetWorkloadGID(tc.resp.commands[1].stdout))
 
     return api.types.status.SUCCESS
 

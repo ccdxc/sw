@@ -4,6 +4,16 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
 
 def Setup(tc):
+
+    tc.desc = '''
+    Test  :   ib_read_lat
+    Opcode:   Read Only
+    Num QP:   1
+    Pad   :   No
+    Inline:   No
+    modes :   inherently bidirectional
+    '''
+
     tc.iota_path = api.GetTestsuiteAttr("driver_path")
 
     pairs = api.GetRemoteWorkloadPairs()

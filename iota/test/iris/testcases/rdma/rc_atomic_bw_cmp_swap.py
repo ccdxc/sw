@@ -6,12 +6,12 @@ import iota.test.iris.verif.utils.rdma_utils as rdma
 def Setup(tc):
 
     tc.desc = '''
-    Test  :   ib_write_lat
-    Opcode:   Write Only
+    Test  :   ib_atomic_bw
+    Opcode:   Atomic CmpSwap
     Num QP:   1
     Pad   :   No
     Inline:   No
-    modes :   inherently bidirectional
+    modes :   workload1 as server, workload2 as client
     '''
 
     tc.iota_path = api.GetTestsuiteAttr("driver_path")
@@ -43,10 +43,10 @@ def Trigger(tc):
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
 
-    api.Logger.info("Starting ib_write_lat test from %s" % (tc.cmd_descr))
+    api.Logger.info("Starting ib_atomic_bw test from %s" % (tc.cmd_descr))
 
     # cmd for server
-    cmd = "ib_write_lat -d " + tc.w1_device + " -n 10 -F -x " + tc.w1_gid + " -s 1024 --report_gbits"
+    cmd = "ib_atomic_bw -d " + tc.w1_device + " -n 10 -F -x " + tc.w1_gid + " -A CMP_AND_SWAP --report_gbits"
     api.Trigger_AddCommand(req, 
                            w1.node_name, 
                            w1.workload_name,
@@ -54,7 +54,7 @@ def Trigger(tc):
                            background = True)
 
     # cmd for client
-    cmd = "ib_write_lat -d " + tc.w2_device + " -n 10 -F -x " + tc.w2_gid + " -s 1024 --report_gbits " + w1.ip_address
+    cmd = "ib_atomic_bw -d " + tc.w2_device + " -n 10 -F -x " + tc.w2_gid + " -A CMP_AND_SWAP --report_gbits " + w1.ip_address
     api.Trigger_AddCommand(req, 
                            w2.node_name, 
                            w2.workload_name,
@@ -73,7 +73,7 @@ def Verify(tc):
 
     result = api.types.status.SUCCESS
 
-    api.Logger.info("ib_write_lat results for %s" % (tc.cmd_descr))
+    api.Logger.info("ib_atomic_bw results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):

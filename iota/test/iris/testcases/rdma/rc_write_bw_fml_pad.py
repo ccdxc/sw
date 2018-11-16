@@ -4,10 +4,10 @@ import iota.harness.api as api
 def Setup(tc):
  
     tc.desc = '''
-    Test  :   ib_read_bw
-    Opcode:   Read Only
+    Test  :   ib_write_bw
+    Opcode:   Write First, Middle, Last
     Num QP:   1, 2
-    Pad   :   No
+    Pad   :   Yes
     Inline:   No
     modes:    workload1 as server, workload2 as client
               workload2 as server, workload1 as client
@@ -47,10 +47,10 @@ def Trigger(tc):
         tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                        (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
 
-        api.Logger.info("Starting ib_read_bw test from %s" % (tc.cmd_descr))
+        api.Logger.info("Starting ib_write_bw test from %s" % (tc.cmd_descr))
 
         # cmd for server
-        cmd = "ib_read_bw -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -s 1024 -q " + str(tc.iterators.num_qp) + " --report_gbits"
+        cmd = "ib_write_bw -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -m 4096 -s 12601 -q " + str(tc.iterators.num_qp) + " --report_gbits"
         api.Trigger_AddCommand(req, 
                                w1.node_name, 
                                w1.workload_name,
@@ -58,7 +58,7 @@ def Trigger(tc):
                                background = True)
 
         # cmd for client
-        cmd = "ib_read_bw -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -s 1024 -q " + str(tc.iterators.num_qp) + " --report_gbits " + w1.ip_address
+        cmd = "ib_write_bw -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -m 4096 -s 12601 -q " + str(tc.iterators.num_qp) + " --report_gbits " + w1.ip_address
         api.Trigger_AddCommand(req, 
                                w2.node_name, 
                                w2.workload_name,
@@ -80,7 +80,7 @@ def Verify(tc):
 
     result = api.types.status.SUCCESS
 
-    api.Logger.info("ib_read_bw results for %s" % (tc.cmd_descr))
+    api.Logger.info("ib_write_bw results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
