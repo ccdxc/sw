@@ -122,6 +122,13 @@ compress_setup(struct service_info *svc_info,
 	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl,
 			svc_info->si_dst_sgl.sgl, status_desc,
 			svc_info->si_src_blist.len, threshold_len);
+#if 1
+	cp_desc->cd_db_addr = (uint64_t) sonic_intr_get_db_addr(pcr);
+	cp_desc->cd_db_data = (uint64_t) svc_info->si_centry->ce_chain_head;
+	cp_desc->cd_otag_addr = sonic_get_per_core_intr_assert_addr(pcr);
+	cp_desc->cd_otag_data = sonic_get_intr_assert_data();
+#endif
+
 	clear_insert_header(flags, cp_desc);
 #if 0
 	if (is_dflag_zero_pad_enabled(flags)) {

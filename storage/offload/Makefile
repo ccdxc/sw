@@ -73,6 +73,7 @@ $(SONIC)-y += src/drv/pnso_stats.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_bus_pci.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_dev.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_lif.o
+$(SONIC)-y += src/drv/linux/kernel/sonic_interrupt.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_main.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_api_int.o
 

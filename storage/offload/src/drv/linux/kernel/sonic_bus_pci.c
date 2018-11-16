@@ -224,7 +224,7 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_lifs_init(sonic);
 	if (err) {
-		OSAL_LOG_ERROR( "Cannot init LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR("Cannot init LIFs, aborting, err=%d\n", err);
 		goto err_out_deinit_lifs;
 	}
 

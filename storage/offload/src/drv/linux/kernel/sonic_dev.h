@@ -182,6 +182,16 @@ struct intr_status {
 	u32 status[2];
 };
 
+#define INTR_INDEX_NOT_ASSIGNED		(-1)
+#define INTR_NAME_MAX_SZ		(32)
+
+struct intr {
+	char name[INTR_NAME_MAX_SZ];
+	unsigned int index;
+	unsigned int vector;
+	struct intr_ctrl __iomem *ctrl;
+};
+
 #pragma pack(pop)
 
 static inline void sonic_struct_size_checks(void)
@@ -235,6 +245,7 @@ struct cq_info {
 
 struct queue;
 struct desc_info;
+struct sonic_ev_list;
 
 typedef void (*desc_cb)(struct queue *q, struct desc_info *desc_info,
 			struct cq_info *cq_info, void *cb_arg);
@@ -301,17 +312,23 @@ struct seq_queue {
 struct per_core_resource {
 	bool initialized;
 	int core_id;
+	int idx;
 	struct lif *lif;
+
 	struct queue cp_seq_q;
 	struct queue dc_seq_q;
 	unsigned int num_cpdc_status_qs;
 	DECLARE_BITMAP(cpdc_seq_status_qs_bmp, MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES);
 	struct queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
+
 	struct queue crypto_enc_seq_q;
 	struct queue crypto_dec_seq_q;
 	unsigned int num_crypto_status_qs;
 	DECLARE_BITMAP(crypto_seq_status_qs_bmp, MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES);
 	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
+
+  	struct intr intr;
+	struct sonic_event_list *evl; /* top half event list */
 
 	struct mem_pool *mpools[MPOOL_TYPE_MAX];
 	struct batch_info *batch_info;
@@ -323,16 +340,6 @@ struct res {
 	int core_to_res_map[OSAL_MAX_CORES];
 	spinlock_t lock;
 	DECLARE_BITMAP(pc_res_bmp, OSAL_MAX_CORES);
-};
-
-#define INTR_INDEX_NOT_ASSIGNED		(-1)
-#define INTR_NAME_MAX_SZ		(32)
-
-struct intr {
-	char name[INTR_NAME_MAX_SZ];
-	unsigned int index;
-	unsigned int vector;
-	struct intr_ctrl __iomem *ctrl;
 };
 
 struct cq {

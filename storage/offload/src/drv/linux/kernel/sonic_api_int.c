@@ -252,6 +252,13 @@ sonic_get_intr_assert_data(void)
 	return ident->dev.intr_assert_data;
 }
 
+uint64_t
+sonic_get_per_core_intr_assert_addr(struct per_core_resource *pcr)
+{
+	return sonic_get_intr_assert_addr(pcr->intr.index);
+}
+
+
 #ifdef NDEBUG
 #define DBG_CHK_RING_ID(r)	PNSO_OK
 #else

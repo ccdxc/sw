@@ -27,6 +27,7 @@
 #include "sonic_dev.h"
 #include "sonic_api_int.h"
 #include "sonic_lif.h"
+#include "sonic_interrupt.h"
 #include "sonic_debugfs.h"
 #include "osal_logger.h"
 #include "osal_sys.h"
@@ -404,14 +405,33 @@ static void sonic_crypto_qs_deinit(struct per_core_resource *res)
 	sonic_q_free(res->lif, &res->crypto_enc_seq_q);
 }
 
+static void sonic_lif_per_core_resource_deinit(struct per_core_resource *res)
+{
+	if (!res)
+		return;
+
+	if (res->evl) {
+		if (res->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+			sonic_intr_mask(&res->intr, true);
+#ifndef __FreeBSD__
+			synchronize_irq(res->intr.vector);
+#endif
+		}
+		devm_free_irq(res->lif->sonic->dev, res->intr.vector, NULL /*&qcq->napi*/);
+		sonic_destroy_ev_list(res);
+	}
+
+	sonic_cpdc_qs_deinit(res);
+	sonic_crypto_qs_deinit(res);
+}
+
 static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 {
 	int i;
 
 	pnso_deinit();
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
-		sonic_cpdc_qs_deinit(lif->res.pc_res[i]);
-		sonic_crypto_qs_deinit(lif->res.pc_res[i]);
+		sonic_lif_per_core_resource_deinit(lif->res.pc_res[i]);
 	}
 }
 
@@ -561,6 +581,7 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 	if (*desc_count > MAX_PER_QUEUE_SQ_ENTRIES)
 		*desc_count = MAX_PER_QUEUE_SQ_ENTRIES;
 
+	*desc_count = rounddown_pow_of_two(*desc_count);
 	if (*desc_count == 0) {
 		OSAL_LOG_ERROR("No descs available for hw ring %d, ring_size=%u.\n",
 			ring_id, ring->ring_size);
@@ -714,6 +735,27 @@ done:
 	return err;
 }
 
+static int per_core_resource_request_irq(struct per_core_resource *res)
+{
+#ifndef __FreeBSD__
+	struct device *dev = res->lif->sonic->dev;
+#endif
+	struct intr *intr = &res->intr;
+
+#ifndef __FreeBSD__
+	snprintf(intr->name, sizeof(intr->name),
+		 "%s-%s-%d", DRV_NAME, res->lif->name, res->idx);
+#else
+	/*
+	 * BSD will prefix by device name, also limited by space.
+	 */
+	snprintf(intr->name, sizeof(intr->name),
+		 "%d", res->idx);//q->name);
+#endif
+	return devm_request_irq(dev, intr->vector, sonic_async_ev_isr,
+				0, intr->name, NULL /*napi*/);
+}
+
 static int sonic_lif_per_core_resource_init(struct lif *lif,
 					    struct per_core_resource *res,
 					    int seq_q_count)
@@ -749,7 +791,35 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	if (err)
 		goto done;
 
+	err = sonic_create_ev_list(res, seq_q_count);
+	if (err) {
+		OSAL_LOG_ERROR("Failed to create ev_list");
+		goto done;
+	}
+	err = sonic_intr_alloc(lif, &res->intr);
+	if (err) {
+		OSAL_LOG_ERROR("Failed to alloc interrupt");
+		res->intr.index = INTR_INDEX_NOT_ASSIGNED;
+		goto done;
+	}
+	err = sonic_bus_get_irq(lif->sonic, res->intr.index);
+	if (err < 0) {
+		OSAL_LOG_ERROR("Failed to get irq");
+		res->intr.index = INTR_INDEX_NOT_ASSIGNED;
+		goto done;
+	}
+	res->intr.vector = err;
+	err = 0;
+	sonic_intr_mask_on_assertion(&res->intr);
+	err = per_core_resource_request_irq(res);
+	if (err) {
+		OSAL_LOG_ERROR("Failed to request irq");
+		goto done;
+	}
+	OSAL_LOG_NOTICE("Successully initialized per_core_resource");
+
 	res->initialized = true;
+	sonic_intr_mask(&res->intr, false);
 done:
 	return err;
 }
@@ -882,7 +952,7 @@ int sonic_lifs_size(struct sonic *sonic)
 	unsigned int nintrs, dev_nintrs = ident->dev.num_intrs;
 
 	sonic->num_per_core_resources = core_count; /* module param */
-	nintrs = core_count;
+	nintrs = core_count + 1; /* 1 for adminq */
 	if (nintrs > dev_nintrs)
 		return -ENOSPC;
 

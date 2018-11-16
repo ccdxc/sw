@@ -4,6 +4,8 @@
 #include <linux/types.h>
 #include "accel_ring.h"
 
+struct per_core_resource;
+
 #define SONIC_RMEM_ADDR_INVALID		0
 
 static inline uint64_t
@@ -35,6 +37,10 @@ uint32_t sonic_get_crypto_key_idx(uint32_t user_key_idx);
 uint64_t sonic_get_intr_assert_addr(uint32_t intr_idx);
 uint32_t sonic_get_intr_assert_data(void);
 accel_ring_t *sonic_get_accel_ring(uint32_t accel_ring_id);
+
+bool sonic_pnso_async_poll(uint64_t data);
+void *sonic_intr_get_db_addr(struct per_core_resource *pc_res);
+uint64_t sonic_get_per_core_intr_assert_addr(struct per_core_resource *pc_res);
 
 uint64_t sonic_hostpa_to_devpa(uint64_t hostpa);
 uint64_t sonic_devpa_to_hostpa(uint64_t devpa);
