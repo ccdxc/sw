@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 struct request_params {
-	uint16_t rp_flags;	/* mode/type/state flags (rflags) */
+	uint16_t rp_flags;	/* mode/type flags (rflags) */
 
 	struct batch_info *rp_batch_info;
 	uint16_t rp_batch_index;
@@ -31,8 +31,6 @@ struct request_params {
 #define REQUEST_RFLAG_MODE_ASYNC	(1 << 2)
 #define REQUEST_RFLAG_TYPE_CHAIN	(1 << 3)
 #define REQUEST_RFLAG_TYPE_BATCH	(1 << 4)
-#define REQUEST_RFLAG_STATE_CHAINED	(1 << 5)
-#define REQUEST_RFLAG_STATE_BATCHED	(1 << 6)
 
 void req_pprint_request(const struct pnso_service_request *req);
 
