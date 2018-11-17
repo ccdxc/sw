@@ -988,6 +988,7 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 	fill_crypto_seq_status_desc(&svc_info->si_crypto_chain,
 				    seq_info->sqi_status_desc);
 	PPRINT_SEQUENCER_INFO(seq_info);
+	PPRINT_CRYPTO_CHAIN_PARAMS(&svc_info->si_crypto_chain);
 
 	return PNSO_OK;
 }
