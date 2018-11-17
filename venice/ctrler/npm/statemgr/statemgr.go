@@ -3,6 +3,8 @@
 package statemgr
 
 import (
+	"time"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/writer"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -10,11 +12,12 @@ import (
 
 // Statemgr is the object state manager
 type Statemgr struct {
-	memDB           *memdb.Memdb     // database of all objects
-	writer          writer.Writer    // writer to apiserver
-	workloadReactor *WorkloadReactor // workload event reactor
-	hostReactor     *HostReactor     // host event reactor
-	smartNicReactor *SmartNICReactor // smart nic event reactor
+	memDB                *memdb.Memdb         // database of all objects
+	writer               writer.Writer        // writer to apiserver
+	workloadReactor      *WorkloadReactor     // workload event reactor
+	hostReactor          *HostReactor         // host event reactor
+	smartNicReactor      *SmartNICReactor     // smart nic event reactor
+	periodicUpdaterQueue chan writer.Writable // queue for periodically writing items back to GUI
 }
 
 // ErrIsObjectNotFound returns true if the error is object not found
@@ -66,6 +69,31 @@ func (sm *Statemgr) SmartNICReactor() SmartNICHandler {
 	return sm.smartNicReactor
 }
 
+func (sm *Statemgr) smartNICCreated(nic *SmartNICState) {
+	// Update SGPolicies
+	policies, _ := sm.ListSgpolicies()
+	for _, policy := range policies {
+		if _, ok := policy.NodeVersions[nic.Name]; ok == false {
+			policy.NodeVersions[nic.Name] = ""
+		}
+	}
+
+	// store it in local DB
+	sm.memDB.AddObject(nic)
+}
+
+func (sm *Statemgr) smartNICDeleted(nic *SmartNICState) error {
+
+	// Update SGPolicies
+	policies, _ := sm.ListSgpolicies()
+	for _, policy := range policies {
+		delete(policy.NodeVersions, nic.Name)
+	}
+
+	// delete the object
+	return sm.memDB.DeleteObject(nic)
+}
+
 // NewStatemgr creates a new state manager object
 func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 	// create new statemgr instance
@@ -78,5 +106,47 @@ func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 	statemgr.hostReactor, _ = NewHostReactor(statemgr)
 	statemgr.smartNicReactor, _ = NewSmartNICReactor(statemgr)
 
+	// newPeriodicUpdater creates a new go subroutines
+	// Given that objects returned by `NewStatemgr` should live for the duration
+	// of the process, we don't have to worry about leaked go subroutines
+	statemgr.periodicUpdaterQueue = newPeriodicUpdater()
+
 	return statemgr, nil
+}
+
+// runPeriodicUpdater runs periodic and write objects back
+func runPeriodicUpdater(queue chan writer.Writable) {
+	ticker := time.NewTicker(5 * time.Second)
+	pending := make(map[writer.Writable]struct{})
+	shouldExit := false
+	for {
+		select {
+		case obj, ok := <-queue:
+			if ok == false {
+				shouldExit = true
+				continue
+			}
+			pending[obj] = struct{}{}
+		case _ = <-ticker.C:
+			for obj := range pending {
+				obj.Write()
+			}
+			pending = make(map[writer.Writable]struct{})
+			if shouldExit == true {
+				return
+			}
+		}
+	}
+}
+
+// NewPeriodicUpdater creates a new periodic updater
+func newPeriodicUpdater() chan writer.Writable {
+	updateChan := make(chan writer.Writable)
+	go runPeriodicUpdater(updateChan)
+	return updateChan
+}
+
+// PeriodicUpdaterPush enqueues an object to the periodic updater
+func (sm *Statemgr) PeriodicUpdaterPush(obj writer.Writable) {
+	sm.periodicUpdaterQueue <- obj
 }

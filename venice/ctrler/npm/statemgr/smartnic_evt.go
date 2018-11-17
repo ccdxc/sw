@@ -47,8 +47,8 @@ func NewSmartNICState(smartNic cluster.SmartNIC, stateMgr *Statemgr) (*SmartNICS
 		stateMgr: stateMgr,
 	}
 
-	// store it in local DB
-	stateMgr.memDB.AddObject(hs)
+	// Notify statemgr about the smartnic
+	stateMgr.smartNICCreated(hs)
 
 	return hs, nil
 }
@@ -85,8 +85,8 @@ func (hr *SmartNICReactor) DeleteSmartNIC(smartNic cluster.SmartNIC) error {
 
 	log.Infof("Deleting smart nic: %+v", smartNic)
 
-	// delete the object
-	return hr.stateMgr.memDB.DeleteObject(hs)
+	// notify statemgr
+	return hr.stateMgr.smartNICDeleted(hs)
 }
 
 // NewSmartNICReactor creates new smartNic event reactor

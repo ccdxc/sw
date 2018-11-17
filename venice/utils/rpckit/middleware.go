@@ -21,6 +21,17 @@ const (
 	RoleServer = "Server"
 )
 
+func addMeta(ctx context.Context, key, value string) context.Context {
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if ok == false {
+		md = metadata.New(nil)
+	} else {
+		md = md.Copy()
+	}
+	newmd := metadata.Join(md, metadata.Pairs(key, value))
+	return metadata.NewOutgoingContext(ctx, newmd)
+}
+
 // rpcServerUnaryInterceptor returns an intercept handler for unary rpc calls
 func rpcServerUnaryInterceptor(rpcServer *RPCServer) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
@@ -65,6 +76,8 @@ func rpcClientUnaryInterceptor(rpcClient *RPCClient) grpc.UnaryClientInterceptor
 			ctx = m.ReqInterceptor(ctx, RoleClient, rpcClient.mysvcName, method, req)
 		}
 
+		ctx = addMeta(ctx, "nodeuuid", rpcClient.nodeuuid)
+
 		// finally, call the invoker
 		err := invoker(ctx, method, req, reply, cc, opts...)
 
@@ -81,6 +94,9 @@ func rpcClientUnaryInterceptor(rpcClient *RPCClient) grpc.UnaryClientInterceptor
 // FIXME: to be implemented
 func rpcClientStreamInterceptor(rpcClient *RPCClient) grpc.StreamClientInterceptor {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+
+		ctx = addMeta(ctx, "nodeuuid", rpcClient.nodeuuid)
+
 		return streamer(ctx, desc, cc, method, opts...)
 	}
 }

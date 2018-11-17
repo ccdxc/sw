@@ -5,8 +5,6 @@ package ctrlerif
 import (
 	"testing"
 
-	context "golang.org/x/net/context"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
@@ -16,6 +14,8 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
+
+	context "golang.org/x/net/context"
 )
 
 type fakeAgent struct {
@@ -31,6 +31,10 @@ type fakeAgent struct {
 	sgAdded   map[string]*netproto.SecurityGroup
 	sgUpdated map[string]*netproto.SecurityGroup
 	sgDeleted map[string]bool
+
+	sgpAdded   map[string]*netproto.SGPolicy
+	sgpUpdated map[string]*netproto.SGPolicy
+	sgpDeleted map[string]bool
 }
 
 func createFakeAgent(name string) *fakeAgent {
@@ -45,6 +49,9 @@ func createFakeAgent(name string) *fakeAgent {
 		sgAdded:    make(map[string]*netproto.SecurityGroup),
 		sgUpdated:  make(map[string]*netproto.SecurityGroup),
 		sgDeleted:  make(map[string]bool),
+		sgpAdded:   make(map[string]*netproto.SGPolicy),
+		sgpUpdated: make(map[string]*netproto.SGPolicy),
+		sgpDeleted: make(map[string]bool),
 	}
 }
 func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif types.CtrlerAPI) error {
@@ -407,28 +414,43 @@ func (ag *fakeAgent) DeleteIPSecSADecrypt(tn, namespace, name string) error {
 	return nil
 }
 
-// CreateSGPolicy creates a security group policy. Stubbed out to satisfy interface
-func (ag *fakeAgent) CreateSGPolicy(np *netproto.SGPolicy) error {
+// CreateSGPolicy creates a security group policy
+func (ag *fakeAgent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
+	ag.sgpAdded[objectKey(sgp.ObjectMeta)] = sgp
 	return nil
 }
 
-// FindSGPolicy finds a security group policy. Stubbed out to satisfy interface
+// FindSGPolicy finds a security group policy
 func (ag *fakeAgent) FindSGPolicy(meta api.ObjectMeta) (*netproto.SGPolicy, error) {
 	return nil, nil
 }
 
-// ListSGPolicy lists a security group policy. Stubbed out to satisfy interface
+// ListSGPolicy lists a security group policy
 func (ag *fakeAgent) ListSGPolicy() []*netproto.SGPolicy {
+	var sgplist []*netproto.SGPolicy
+
+	// walk all sgs
+	for _, sgp := range ag.sgpAdded {
+		sgplist = append(sgplist, sgp)
+	}
+
+	return sgplist
+}
+
+// UpdateSGPolicy updates a security group policy
+func (ag *fakeAgent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
+	ag.sgpUpdated[objectKey(sgp.ObjectMeta)] = sgp
 	return nil
 }
 
-// UpdateSGPolicy updates a security group policy. Stubbed out to satisfy interface
-func (ag *fakeAgent) UpdateSGPolicy(np *netproto.SGPolicy) error {
-	return nil
-}
-
-// DeleteSGPolicy deletes a security group policy. Stubbed out to satisfy interface
+// DeleteSGPolicy deletes a security group policy
 func (ag *fakeAgent) DeleteSGPolicy(tn, namespace, name string) error {
+	meta := api.ObjectMeta{
+		Tenant:    tn,
+		Namespace: namespace,
+		Name:      name,
+	}
+	ag.sgpDeleted[objectKey(meta)] = true
 	return nil
 }
 
@@ -533,10 +555,12 @@ func (ag *fakeAgent) DeleteSecurityProfile(tn, ns, name string) error {
 }
 
 type fakeRPCServer struct {
-	grpcServer *rpckit.RPCServer
-	netdp      map[string]*netproto.Network
-	epdb       map[string]*netproto.Endpoint
-	sgdb       map[string]*netproto.SecurityGroup
+	grpcServer  *rpckit.RPCServer
+	netdp       map[string]*netproto.Network
+	epdb        map[string]*netproto.Endpoint
+	sgdb        map[string]*netproto.SecurityGroup
+	sgpdb       map[string]*netproto.SGPolicy
+	sgpUpdatedb map[string]*netproto.SGPolicy
 }
 
 func createRPCServer(t *testing.T) *fakeRPCServer {
@@ -548,16 +572,19 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 
 	// create fake rpc server
 	srv := fakeRPCServer{
-		grpcServer: grpcServer,
-		netdp:      make(map[string]*netproto.Network),
-		epdb:       make(map[string]*netproto.Endpoint),
-		sgdb:       make(map[string]*netproto.SecurityGroup),
+		grpcServer:  grpcServer,
+		netdp:       make(map[string]*netproto.Network),
+		epdb:        make(map[string]*netproto.Endpoint),
+		sgdb:        make(map[string]*netproto.SecurityGroup),
+		sgpdb:       make(map[string]*netproto.SGPolicy),
+		sgpUpdatedb: make(map[string]*netproto.SGPolicy),
 	}
 
 	// register self as rpc handler
 	netproto.RegisterNetworkApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterEndpointApiServer(grpcServer.GrpcServer, &srv)
 	netproto.RegisterSecurityApiServer(grpcServer.GrpcServer, &srv)
+	netproto.RegisterSGPolicyApiServer(grpcServer.GrpcServer, &srv)
 	grpcServer.Start()
 
 	return &srv
@@ -677,6 +704,55 @@ func (srv *fakeRPCServer) WatchSecurityGroups(sel *api.ObjectMeta, stream netpro
 		watchEvt := netproto.SecurityGroupEvent{
 			EventType:     api.EventType_CreateEvent,
 			SecurityGroup: *sg,
+		}
+
+		// send create event
+		err := stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send update event
+		watchEvt.EventType = api.EventType_UpdateEvent
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+
+		// send delete event
+		watchEvt.EventType = api.EventType_DeleteEvent
+		err = stream.Send(&watchEvt)
+		if err != nil {
+			log.Errorf("Error sending stream. Err: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (srv *fakeRPCServer) GetSGPolicy(ctx context.Context, ometa *api.ObjectMeta) (*netproto.SGPolicy, error) {
+	return nil, nil
+}
+
+func (srv *fakeRPCServer) ListSGPolicys(context.Context, *api.ObjectMeta) (*netproto.SGPolicyList, error) {
+	return nil, nil
+}
+
+func (srv *fakeRPCServer) UpdateSGPolicyStatus(ctx context.Context, sgp *netproto.SGPolicy) (*netproto.SGPolicy, error) {
+	srv.sgpUpdatedb[objectKey(sgp.ObjectMeta)] = sgp
+	return sgp, nil
+}
+
+func (srv *fakeRPCServer) WatchSGPolicys(sel *api.ObjectMeta, stream netproto.SGPolicyApi_WatchSGPolicysServer) error {
+	// walk local db and send stream resp
+	for _, sgp := range srv.sgpdb {
+		// watch event
+		watchEvt := netproto.SGPolicyEvent{
+			EventType: api.EventType_CreateEvent,
+			SGPolicy:  *sgp,
 		}
 
 		// send create event
@@ -882,6 +958,49 @@ func TestSecurityGroupWatch(t *testing.T) {
 		ok := ag.sgDeleted[objectKey(sg.ObjectMeta)]
 		return ok, nil
 	}, "Security group delete not found in agent")
+
+	// stop the server and client
+	cl.Stop()
+	srv.grpcServer.Stop()
+}
+
+func TestSecurityPolicyWatch(t *testing.T) {
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// create a fake rpc server
+	srv := createRPCServer(t)
+	Assert(t, (srv != nil), "Error creating rpc server", srv)
+
+	// create an sg
+	sgp := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "testsgp",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachGroup: make([]string, 0),
+			Rules:       make([]netproto.PolicyRule, 0),
+		},
+	}
+	srv.sgpdb["testsgp"] = &sgp
+
+	// create a fake agent
+	ag := createFakeAgent(t.Name())
+
+	// create npm client
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), nil)
+	AssertOk(t, err, "Error creating npm client")
+	Assert(t, (cl != nil), "Error creating npm client")
+
+	// verify client got the security policy
+	AssertEventually(t, func() (bool, interface{}) {
+		sgs, ok := ag.sgpAdded[objectKey(sgp.ObjectMeta)]
+		return (ok && sgs.Name == sgp.Name), nil
+	}, "Security group policy add not found in agent")
+	AssertEventually(t, func() (bool, interface{}) {
+		sgs, ok := srv.sgpUpdatedb[objectKey(sgp.ObjectMeta)]
+		return (ok && sgs.Name == sgp.Name), nil
+	}, "Security group policy update not found in server")
 
 	// stop the server and client
 	cl.Stop()

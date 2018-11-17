@@ -3,7 +3,9 @@
 package statemgr
 
 import (
+	"errors"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -103,26 +105,41 @@ func createEndpoint(stateMgr *Statemgr, tenant, endpoint, net string) (*Endpoint
 
 // dummy writer
 type dummyWriter struct {
-	// no fields
+	objects map[interface{}]struct{}
+	mutex   *sync.Mutex
+}
+
+func (d *dummyWriter) store(obj interface{}) {
+	if d.objects == nil {
+		return
+	}
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	d.objects[obj] = struct{}{}
 }
 
 func (d *dummyWriter) WriteNetwork(nw *network.Network) error {
+	d.store(nw)
 	return nil
 }
 
 func (d *dummyWriter) WriteEndpoint(ep *workload.Endpoint, update bool) error {
+	d.store(ep)
 	return nil
 }
 
 func (d *dummyWriter) WriteSecurityGroup(sg *security.SecurityGroup) error {
+	d.store(sg)
 	return nil
 }
 
 func (d *dummyWriter) WriteSGPolicy(sgp *security.SGPolicy) error {
+	d.store(sgp)
 	return nil
 }
 
 func (d *dummyWriter) WriteTenant(tn *cluster.Tenant) error {
+	d.store(tn)
 	return nil
 }
 
@@ -130,10 +147,17 @@ func (d *dummyWriter) Close() error {
 	return nil
 }
 
+func newDummyWriter(m map[interface{}]struct{}) *dummyWriter {
+	return &dummyWriter{
+		objects: m,
+		mutex:   &sync.Mutex{},
+	}
+}
+
 // TestNetworkCreateDelete tests network create
 func TestNetworkCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -177,7 +201,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 
 func TestNetworkListWatch(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -211,7 +235,7 @@ func TestNetworkListWatch(t *testing.T) {
 // TestEndpointCreateDelete tests network create
 func TestEndpointCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -306,7 +330,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 
 func TestEndpointCreateFailure(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -373,7 +397,7 @@ func TestEndpointCreateFailure(t *testing.T) {
 // TestEndpointListWatch tests ep watch and list
 func TestEndpointListWatch(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -438,7 +462,7 @@ func TestEndpointListWatch(t *testing.T) {
 
 func TestSgCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -463,7 +487,7 @@ func TestSgCreateDelete(t *testing.T) {
 
 func TestSgAttachEndpoint(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -547,7 +571,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 
 func TestSgpolicyCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -633,7 +657,7 @@ func TestEndpointConcurrency(t *testing.T) {
 	var concurrency = 100
 
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -724,7 +748,7 @@ func TestEndpointConcurrency(t *testing.T) {
 // TestTenantCreateDelete tests tenant create and delete
 func TestTenantCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -794,7 +818,7 @@ func TestTenantCreateDelete(t *testing.T) {
 // TestNonExistentTenantDeletion will test that non existent tenants can't be deleted
 func TestNonExistentTenantDeletion(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -807,7 +831,7 @@ func TestNonExistentTenantDeletion(t *testing.T) {
 
 func TestWorkloadCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -895,7 +919,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 
 func TestHostCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -938,7 +962,7 @@ func TestHostCreateDelete(t *testing.T) {
 
 func TestSmartNicCreateDelete(t *testing.T) {
 	// create network state manager
-	stateMgr, err := NewStatemgr(&dummyWriter{})
+	stateMgr, err := NewStatemgr(newDummyWriter(nil))
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -976,4 +1000,97 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	// verify endpoint is gone from the database
 	_, err = stateMgr.FindSmartNIC("default", "testSmartNIC")
 	Assert(t, (err != nil), "Deleted smartNic still found in db")
+}
+
+func createPolicy(s *Statemgr, name, version string) error {
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:       "default",
+			Name:         name,
+			GenerationID: version,
+		},
+		Spec: security.SGPolicySpec{
+			AttachGroups: []string{"procurement"},
+			Rules: []*security.SGRule{
+				{
+					Apps:   []string{"tcp/80"},
+					Action: "PERMIT",
+				},
+			},
+		},
+	}
+
+	return s.CreateSgpolicy(&sgp)
+}
+
+func createSmartNic(s *Statemgr, name string) error {
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: cluster.SmartNICSpec{},
+	}
+
+	return s.smartNicReactor.CreateSmartNIC(snic)
+}
+
+func getPolicyVersionForNode(s *Statemgr, policyname, nodename string) (string, error) {
+	// Give the watchers a chance to run
+	time.Sleep(250 * time.Millisecond)
+
+	p, err := s.FindSgpolicy("default", policyname)
+	if err != nil {
+		return "", err
+	}
+
+	version, ok := p.NodeVersions[nodename]
+	if ok != true {
+		return "", errors.New("Smartnic not found in versions")
+	}
+
+	return version, nil
+}
+
+func TestSmartPolicNodeVersions(t *testing.T) {
+	// create network state manager
+	writerObjects := make(map[interface{}]struct{})
+	stateMgr, err := NewStatemgr(newDummyWriter(writerObjects))
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	createPolicy(stateMgr, "testPolicy1", "1")
+	createSmartNic(stateMgr, "testSmartnic1")
+	version, err := getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
+	AssertOk(t, err, "Couldn't get policy version for node")
+	AssertEquals(t, version, "", "Policy version not correct for node")
+
+	stateMgr.UpdateSgpolicyStatus("testSmartnic1", "default", "testPolicy1", "1")
+
+	version, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
+	AssertOk(t, err, "Couldn't get policy version for node")
+	AssertEquals(t, version, "1", "Policy version not correct for node")
+
+	createSmartNic(stateMgr, "testSmartnic2")
+	version, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic2")
+	AssertOk(t, err, "Couldn't get policy version for node")
+	AssertEquals(t, version, "", "Policy version not correct for node")
+
+	// Wait for the periodic updater to kick in at least once
+	time.Sleep(6 * time.Second)
+	AssertEquals(t, len(writerObjects), 1, "Too many writer objects")
+	for obj := range writerObjects {
+		sgp, ok := obj.(*security.SGPolicy)
+		AssertEquals(t, ok, true, "Incorrect type of object found in writer objects")
+		prop := &sgp.Status.PropagationStatus
+		AssertEquals(t, prop.Updated, (int32)(1), "Incorrect 'updated' propagation status")
+		AssertEquals(t, prop.Pending, (int32)(1), "Incorrect 'pending' propagation status")
+		AssertEquals(t, prop.GenerationID, "1", "Incorrect 'generation id' propagation status")
+		AssertEquals(t, prop.MinVersion, "", "Incorrect 'min version' propagation status")
+	}
 }

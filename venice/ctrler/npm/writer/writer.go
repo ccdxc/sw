@@ -18,6 +18,12 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+// Writable is the commong interface for objects that can be written to the
+// Writer
+type Writable interface {
+	Write() error
+}
+
 // Writer is the api provided by writer object
 type Writer interface {
 	WriteNetwork(nw *network.Network) error

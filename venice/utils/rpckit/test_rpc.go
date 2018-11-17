@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // TestRPCHandler is a handler for the test RPC defined in test.proto
@@ -25,7 +26,8 @@ func (tst *TestRPCHandler) TestRPC(ctx context.Context, req *TestReq) (*TestResp
 
 	// response message
 	testResp := &TestResp{
-		RespMsg: tst.RespMsg,
+		RespMsg:        tst.RespMsg,
+		CallerNodeUUID: netutils.GetNodeUUIDFromCtx(ctx),
 	}
 
 	return testResp, nil
@@ -40,9 +42,10 @@ func (tst *TestRPCHandler) TestRPCWithContext(ctx context.Context, req *TestReq)
 
 	// response message
 	testResp := &TestResp{
-		RespMsg:       tst.RespMsg,
-		CallerID:      ctxutils.GetPeerID(ctx),
-		CallerAddress: ctxutils.GetPeerAddress(ctx),
+		RespMsg:        tst.RespMsg,
+		CallerID:       ctxutils.GetPeerID(ctx),
+		CallerAddress:  ctxutils.GetPeerAddress(ctx),
+		CallerNodeUUID: netutils.GetNodeUUIDFromCtx(ctx),
 	}
 
 	return testResp, nil

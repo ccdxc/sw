@@ -31,6 +31,7 @@ const (
 // Singleton stats
 var once sync.Once
 var singletonMap *expvar.Map
+var defaultClientFactory = &RPCClientFactory{}
 
 func init() {
 	once.Do(func() {
@@ -75,9 +76,15 @@ type RPCServer struct {
 	options
 }
 
+// RPCClientFactory is used to create RPCClient instances
+type RPCClientFactory struct {
+	nodeuuid string // the uuid of the naples
+}
+
 // RPCClient contains RPC client definitions
 type RPCClient struct {
 	ClientConn *grpc.ClientConn // gRPC connection
+	nodeuuid   string           // the uuid of the naples
 	mysvcName  string           // my service name
 	remoteURL  string           // URL we are connecting to
 	options
@@ -311,6 +318,17 @@ func (srv *RPCServer) Start() {
 //             At this time, the balancer is explicitly passed. At a later
 //             time, there will be an implicit balancer created.
 func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, error) {
+	return defaultClientFactory.NewRPCClient(mysvcName, remoteURL, opts...)
+}
+
+// NewRPCClient returns an RPC client to a remote server
+//
+// mysvcName   - identifier of the client, used in logging
+// remoteURL - either <host:port> or <service-name>. If <service-name> is
+//             specified, a balancer should be involved to resolve the name.
+//             At this time, the balancer is explicitly passed. At a later
+//             time, there will be an implicit balancer created.
+func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, error) {
 	grpcOpts := make([]grpc.DialOption, 0)
 
 	// some error checking
@@ -321,6 +339,7 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 
 	// create RPC client instance
 	rpcClient := &RPCClient{
+		nodeuuid:  factory.nodeuuid,
 		mysvcName: mysvcName,
 		remoteURL: remoteURL,
 		options:   *defaultOptions(mysvcName, RoleClient),
@@ -472,4 +491,17 @@ func (c *RPCClient) Close() error {
 	}
 
 	return nil
+}
+
+// SetDefaultClientFactory sets the default RPCClient factory
+func SetDefaultClientFactory(factory *RPCClientFactory) {
+	defaultClientFactory = factory
+}
+
+// NewClientFactory creates a new RPCClient factory which can be used
+// to create RPCClients with common settings
+func NewClientFactory(nodeuuid string) *RPCClientFactory {
+	return &RPCClientFactory{
+		nodeuuid: nodeuuid,
+	}
 }

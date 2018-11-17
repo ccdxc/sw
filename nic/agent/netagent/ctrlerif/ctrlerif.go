@@ -220,6 +220,8 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 			err = client.agent.CreateSGPolicy(&evt.SGPolicy)
 			if err != nil {
 				log.Errorf("Error creating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+			} else {
+
 			}
 		case api.EventType_UpdateEvent:
 			// update the sg policy
@@ -237,6 +239,11 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 
 		// return if there is no error
 		if err == nil {
+			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
+				sgpRPCClient := netproto.NewSGPolicyApiClient(client.sgpGrpcClient.ClientConn)
+				log.Errorf("Stavros 0: Sending update back {%+v}", &evt.SGPolicy)
+				sgpRPCClient.UpdateSGPolicyStatus(context.Background(), &evt.SGPolicy)
+			}
 			return
 		}
 

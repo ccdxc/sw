@@ -428,6 +428,7 @@ func TestSecurityGroupRPC(t *testing.T) {
 
 // TestSGPolicyRPC tests sg policy rpcs
 func TestSGPolicyRPC(t *testing.T) {
+	rpckit.SetDefaultClientFactory(rpckit.NewClientFactory("testnode"))
 	// create rpc server and client
 	stateMgr, rpcServer, rpcClient := createRPCServerClient(t)
 	Assert(t, ((stateMgr != nil) && (rpcServer != nil) && (rpcClient != nil)), "Err creating rpc server")
@@ -440,9 +441,10 @@ func TestSGPolicyRPC(t *testing.T) {
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testSGPolicy",
+			Tenant:       "default",
+			Namespace:    "default",
+			Name:         "testSGPolicy",
+			GenerationID: "1",
 		},
 		Spec: security.SGPolicySpec{
 			AttachTenant: true,
@@ -502,9 +504,10 @@ func TestSGPolicyRPC(t *testing.T) {
 	pol := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testSGPolicy",
+			Tenant:       "default",
+			Namespace:    "default",
+			Name:         "testSGPolicy",
+			GenerationID: "1",
 		},
 		Spec: security.SGPolicySpec{
 			AttachGroups: []string{"testsg"},
@@ -523,6 +526,12 @@ func TestSGPolicyRPC(t *testing.T) {
 	evt, err = stream.Recv()
 	AssertOk(t, err, "Error receiving sg")
 	Assert(t, evt.EventType == api.EventType_UpdateEvent, "Received invalid event type", evt)
+
+	// update the status
+	_, err = sgRPCClient.UpdateSGPolicyStatus(context.Background(), &evt.SGPolicy)
+
+	stateSgp, err := stateMgr.FindSgpolicy("default", "testSGPolicy")
+	Assert(t, stateSgp.NodeVersions["testnode"] == "1", "Nodes didn't update", stateSgp.NodeVersions)
 
 	// delete the sg policy
 	err = stateMgr.DeleteSgpolicy("default", "testSGPolicy")

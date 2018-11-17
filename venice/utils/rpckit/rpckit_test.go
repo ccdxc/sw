@@ -82,6 +82,8 @@ func validateStats(t *testing.T, svc, prefix, method, suffix string, reqs, resps
 func TestRPCBasic(t *testing.T) {
 	ClearStats()
 
+	SetDefaultClientFactory(NewClientFactory("testnode-uuid"))
+
 	// create an rpc handler object
 	testHandler := NewTestRPCHandler("dummy message", "test response")
 
@@ -110,6 +112,7 @@ func TestRPCBasic(t *testing.T) {
 	AssertOk(t, err, "RPC error")
 	Assert(t, (testHandler.ReqMsg == "test request"), "Unexpected req msg", testHandler)
 	Assert(t, (resp.RespMsg == "test response"), "Unexpected resp msg", resp)
+	Assert(t, (resp.CallerNodeUUID == "testnode-uuid"), "Unexcpected CallerNodeUUID", resp.CallerNodeUUID)
 
 	// make test err rpc and confirm we get an error
 	_, err = testClient.TestRPCErr(context.Background(), &TestReq{ReqMsg: "test request"})
@@ -609,8 +612,9 @@ func TestRPCTraceMiddlewares(t *testing.T) {
 	Assert(t, ok, "RPC request sent not found in annotations")
 	_, ok = collector.AnnotationsSeen["{\"gRPC request received\":\"reqMsg:\\\"test request\\\" \"}"]
 	Assert(t, ok, "RPC request received not found in annotations")
-	_, ok = collector.AnnotationsSeen["{\"gRPC response sent\":\"respMsg:\\\"test response\\\" \"}"]
+	fmt.Printf("%+v", collector)
+	_, ok = collector.AnnotationsSeen["{\"gRPC response sent\":\"respMsg:\\\"test response\\\" callerNodeUUID:\\\"testnode-uuid\\\" \"}"]
 	Assert(t, ok, "RPC response sent not found in annotations")
-	_, ok = collector.AnnotationsSeen["{\"gRPC response received\":\"respMsg:\\\"test response\\\" \"}"]
+	_, ok = collector.AnnotationsSeen["{\"gRPC response received\":\"respMsg:\\\"test response\\\" callerNodeUUID:\\\"testnode-uuid\\\" \"}"]
 	Assert(t, ok, "RPC response received not found in annotations")
 }

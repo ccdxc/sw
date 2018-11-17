@@ -16,11 +16,20 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // SGPolicyRPCServer serves security rpc requests
 type SGPolicyRPCServer struct {
 	stateMgr *statemgr.Statemgr // reference to network manager
+}
+
+// UpdateSGPolicyStatus updates the status part of the sg policy
+func (s *SGPolicyRPCServer) UpdateSGPolicyStatus(ctx context.Context, policy *netproto.SGPolicy) (*netproto.SGPolicy, error) {
+	s.stateMgr.UpdateSgpolicyStatus(netutils.GetNodeUUIDFromCtx(ctx),
+		policy.ObjectMeta.Tenant, policy.ObjectMeta.Name,
+		policy.ObjectMeta.GenerationID)
+	return policy, nil
 }
 
 // GetSGPolicy gets sg policy

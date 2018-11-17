@@ -4,6 +4,7 @@ package statemgr
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/utils/log"
@@ -15,10 +16,36 @@ type SgpolicyState struct {
 	security.SGPolicy                                // embedded security policy object
 	groups            map[string]*SecurityGroupState // list of groups this policy is attached to
 	stateMgr          *Statemgr                      // pointer to state manager
+	NodeVersions      map[string]string              // Map for node -> version
+}
+
+func versionToInt(v string) int {
+	i, err := strconv.Atoi(v)
+	if err != nil {
+		return 0
+	}
+	return i
 }
 
 // Write writes the object to api server
 func (sgp *SgpolicyState) Write() error {
+	// Consolidate the NodeVersions
+	prop := &sgp.Status.PropagationStatus
+	prop.GenerationID = sgp.GenerationID
+	prop.Updated = 0
+	prop.Pending = 0
+	prop.MinVersion = ""
+	for _, ver := range sgp.NodeVersions {
+		if ver == prop.GenerationID {
+			prop.Updated++
+		} else {
+			prop.Pending++
+			if versionToInt(ver) < versionToInt(prop.MinVersion) {
+				prop.MinVersion = ver
+			}
+		}
+	}
+
 	return sgp.stateMgr.writer.WriteSGPolicy(&sgp.SGPolicy)
 }
 
@@ -74,9 +101,10 @@ func SgpolicyStateFromObj(obj memdb.Object) (*SgpolicyState, error) {
 func NewSgpolicyState(sgp *security.SGPolicy, stateMgr *Statemgr) (*SgpolicyState, error) {
 	// create sg state object
 	sgps := SgpolicyState{
-		SGPolicy: *sgp,
-		groups:   make(map[string]*SecurityGroupState),
-		stateMgr: stateMgr,
+		SGPolicy:     *sgp,
+		groups:       make(map[string]*SecurityGroupState),
+		stateMgr:     stateMgr,
+		NodeVersions: make(map[string]string),
 	}
 
 	return &sgps, nil
@@ -170,4 +198,18 @@ func (sm *Statemgr) DeleteSgpolicy(tenant, sgname string) error {
 
 	// delete it from the DB
 	return sm.memDB.DeleteObject(sg)
+}
+
+// UpdateSgpolicyStatus updates the status of an sg policy
+func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID string) {
+	policy, err := sm.FindSgpolicy(tenant, name)
+	if err != nil {
+		return
+	}
+	if policy.NodeVersions == nil {
+		policy.NodeVersions = make(map[string]string)
+	}
+	policy.NodeVersions[nodeuuid] = generationID
+
+	sm.PeriodicUpdaterPush(policy)
 }

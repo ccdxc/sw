@@ -24,6 +24,7 @@ message TestResp {
 	string respMsg = 1;
 	string callerID = 2;
 	string callerAddress = 3;
+	string callerNodeUUID = 4;
 }
 
 // Second RPC handler definition

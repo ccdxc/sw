@@ -28,6 +28,7 @@ service SGPolicyApi {
     rpc GetSGPolicy (api.ObjectMeta) returns (SGPolicy) {};
     rpc ListSGPolicys (api.ObjectMeta) returns (SGPolicyList) {};
     rpc WatchSGPolicys (api.ObjectMeta) returns (stream SGPolicyEvent) {};
+    rpc UpdateSGPolicyStatus (SGPolicy) returns (SGPolicy) {};
 }
 
 // SGPolicy object
