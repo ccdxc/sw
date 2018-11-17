@@ -95,6 +95,7 @@ get_hbm_region_by_address (uint64_t addr)
     return g_mpartition->region_by_address(addr);
 }
 
+// for HW platform this is now done during uboot
 void
 reset_hbm_regions (void)
 {
@@ -102,9 +103,7 @@ reset_hbm_regions (void)
     mpartition_region_t *reg;
 
     hal_cfg = (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
-    if (hal_cfg &&
-        ((hal_cfg->platform == hal::HAL_PLATFORM_HAPS) ||
-         (hal_cfg->platform == hal::HAL_PLATFORM_HW))) {
+    if (hal_cfg && (hal_cfg->platform == hal::HAL_PLATFORM_HAPS)) {
         for (int i = 0; i < g_mpartition->num_regions(); i++) {
             reg = g_mpartition->region(i);
             if (reg->reset) {
@@ -731,70 +730,70 @@ capri_nx_set_llc_counters (uint32_t *data)
 {
     for (int i = 0; i < 16; ++i) {
         switch (i) {
-            case 0:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC0_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 1:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC1_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 2:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC2_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 3:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC3_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 4:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC4_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 5:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC5_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 6:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC6_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 7:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC7_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 8:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC8_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 9:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC9_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 10:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC10_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 11:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC11_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 12:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC12_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 13:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC13_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 14:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC14_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
-            case 15:
-                cap_nx_block_write(0,
-                        RBM_AGENT_(CCC15_LLC_EVENT_COUNTER), 1, data, true, 1);
-                break;
+        case 0:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC0_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 1:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC1_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 2:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC2_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 3:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC3_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 4:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC4_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 5:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC5_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 6:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC6_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 7:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC7_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 8:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC8_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 9:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC9_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 10:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC10_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 11:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC11_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 12:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC12_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 13:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC13_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 14:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC14_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
+        case 15:
+            cap_nx_block_write(0,
+                    RBM_AGENT_(CCC15_LLC_EVENT_COUNTER), 1, data, true, 1);
+            break;
         }
     }
 
@@ -806,70 +805,70 @@ capri_nx_get_llc_counters (uint32_t *rd_data)
 {
     for (int i = 0; i < 16; ++i) {
         switch (i) {
-            case 0:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC0_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 1:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC1_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 2:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC2_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 3:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC3_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 4:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC4_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 5:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC5_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 6:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC6_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 7:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC7_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 8:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC8_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 9:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC9_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 10:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC10_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 11:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC11_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 12:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC12_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 13:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC13_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 14:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC14_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
-            case 15:
-                rd_data[i] = cap_nx_block_read(0,
-                            RBM_AGENT_(CCC15_LLC_EVENT_COUNTER), 1, false, 1);
-                break;
+        case 0:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC0_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 1:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC1_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 2:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC2_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 3:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC3_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 4:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC4_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 5:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC5_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 6:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC6_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 7:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC7_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 8:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC8_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 9:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC9_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 10:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC10_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 11:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC11_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 12:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC12_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 13:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC13_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 14:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC14_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
+        case 15:
+            rd_data[i] = cap_nx_block_read(0,
+                        RBM_AGENT_(CCC15_LLC_EVENT_COUNTER), 1, false, 1);
+            break;
         }
     }
 

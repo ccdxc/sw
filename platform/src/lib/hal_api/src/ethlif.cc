@@ -562,12 +562,12 @@ EthLif::UpdateVlanStripEn(bool vlan_strip_en)
 {
     api_trace("Vlan Strip change");
     if (vlan_strip_en == info_.vlan_strip_en) {
-        NIC_LOG_WARN("Prom flag: {}. No change in broadcast flag. Nop",
+        NIC_LOG_WARN("No change in Vlan strip. Nop",
                        vlan_strip_en);
         goto end;
     }
 
-    NIC_LOG_INFO("Lif: {}. Prom. flag change {} -> {}",
+    NIC_LOG_INFO("Lif: {}. Vlan strip change {} -> {}",
                     lif_->GetId(), info_.vlan_strip_en,
                     vlan_strip_en);
 

@@ -52,11 +52,20 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
 
 TEST_F(nicmgr_test, test1)
 {
-    DeviceManager *devmgr = new DeviceManager(g_fwd_mode, PLATFORM_NONE, false);
+    DeviceManager *devmgr;
+
+    if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
+        devmgr =
+            new DeviceManager("../platform/src/app/nicmgrd/etc/eth.json",
+                              g_fwd_mode, PLATFORM_NONE, false);
+    } else {
+        devmgr =
+            new DeviceManager("../platform/src/app/nicmgrd/etc/eth-smart.json",
+                              g_fwd_mode, PLATFORM_NONE, false);
+    }
     EXPECT_TRUE(devmgr != NULL);
 
     pciemgr = new class pciemgr("nicmgr_test");
-
     // load config
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
         devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");

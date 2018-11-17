@@ -29,9 +29,30 @@ namespace pt = boost::property_tree;
 #define QSTATE_INFO_FILE_NAME  "lif_qstate_info.json"
 
 sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
+DeviceManager *DeviceManager::instance;
+nicmgr_req_qstate_t qstate_req = { 0 };
+nicmgr_resp_qstate_t qstate_resp = { 0 };
 
-//#define LIF_ID_BASE     0
-//sdk::lib::indexer *lif_allocator = sdk::lib::indexer::factory(1024, true, true);
+struct queue_info DeviceManager::qinfo [NUM_QUEUE_TYPES] = {
+    [NICMGR_QTYPE_REQ] = {
+            .type_num = NICMGR_QTYPE_REQ,
+            .size = 2,
+            .entries = 0,
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
+            .prog = "txdma_stage0.bin",
+            .label = "nicmgr_req_stage0",
+            .qstate = (const char *)&qstate_req
+    },
+    [NICMGR_QTYPE_RESP] = {
+            .type_num = NICMGR_QTYPE_RESP,
+            .size = 2,
+            .entries = 0,
+            .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
+            .prog = "txdma_stage0.bin",
+            .label = "nicmgr_resp_stage0",
+            .qstate = (const char *)&qstate_resp
+    },
+};
 
 uint64_t
 mac_to_int(std::string const& s)
@@ -92,9 +113,6 @@ invalidate_txdma_cacheline(uint64_t addr)
 int
 DeviceManager::lifs_reservation(platform_t platform)
 {
-    struct queue_info empty_qinfo[NUM_QUEUE_TYPES] = {0};
-    struct lif_info linfo;
-    uint32_t lif_id = 0;
     int ret;
 
     // Reserve hw_lif_id for uplinks which HAL will use from 1 - 32.
@@ -124,6 +142,11 @@ DeviceManager::lifs_reservation(platform_t platform)
             return -1;
         }
 #endif
+
+
+        // TODO: Fix for storage test cases
+#if 0
+        struct lif_info linfo;
         memset(&linfo, 0, sizeof(linfo));
         linfo.hw_lif_id = i;
         linfo.lif_id = info.hw_lif_id;
@@ -131,103 +154,71 @@ DeviceManager::lifs_reservation(platform_t platform)
             NIC_LOG_ERR("Failed to reserve LIF {} thru HAL LifCreate", lif_id);
             return -1;
         }
+#endif
     }
     return 0;
 }
 
-DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
-                             bool dol_integ) :
-    dol_integ(dol_integ)
+void DeviceManager::CreateUplinkVRFs()
 {
-    hal = new HalClient(fwd_mode);
-    hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
+    Uplink *uplink = NULL;
+    for (auto it = uplinks.cbegin(); it != uplinks.cend(); it++) {
+        uplink = (Uplink *)(it->second);
+        NIC_LOG_INFO("Creating VRF for uplink: {}", uplink->GetId());
+        uplink->CreateVrf();
+    }
+}
+
+void
+DeviceManager::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
+{
+    Device *dev = NULL;
+    Eth *eth_dev = NULL;
+    Accel_PF *acc_dev = NULL;
+
+    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
+        dev = (Device *)(it->second);
+        if (dev->GetType() == ETH) {
+            eth_dev = (Eth *)dev;
+            eth_dev->SetHalClient(hal_client, hal_cmn_client);
+        }
+        if (dev->GetType() == ACCEL) {
+            acc_dev = (Accel_PF *)dev;
+            acc_dev->SetHalClient(hal_client);
+        }
+    }
+}
+
+void DeviceManager::Update()
+{
     uint8_t     cosA = 1;
     uint8_t     cosB = 0;
-    uint64_t    hw_lif_id;
-    // uint32_t    lif_id;
 
-    NIC_HEADER_TRACE("Initializing DeviceManager");
-
-#ifdef __x86_64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
-#elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
-#endif
-
-    pd = PdClient::factory(platform);
-    assert(pd);
-
-    // Create nicmgr service lif
-    nicmgr_req_qstate_t qstate_req = { 0 };
-    nicmgr_resp_qstate_t qstate_resp = { 0 };
-
-    struct queue_info qinfo [NUM_QUEUE_TYPES] = {
-        [NICMGR_QTYPE_REQ] = {
-            .type_num = NICMGR_QTYPE_REQ,
-            .size = 2,
-            .entries = 0,
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-            .prog = "txdma_stage0.bin",
-            .label = "nicmgr_req_stage0",
-            .qstate = (const char *)&qstate_req
-        },
-        [NICMGR_QTYPE_RESP] = {
-            .type_num = NICMGR_QTYPE_RESP,
-            .size = 2,
-            .entries = 0,
-            .purpose = ::intf::LIF_QUEUE_PURPOSE_ADMIN,
-            .prog = "txdma_stage0.bin",
-            .label = "nicmgr_resp_stage0",
-            .qstate = (const char *)&qstate_resp
-        },
-    };
-
-    if (lifs_reservation(platform)) {
-        throw runtime_error("Failed to reserve LIFs");
+    if (init_done) {
+        return;
     }
 
-    NIC_HEADER_TRACE("Admin Lif creation");
-#if 0
-    /*
-     * Allocate sw_lif_id for nicmgr LIF
-     */
-    if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
-        throw runtime_error("Failed to allocate nicmgr sw_lif_id");
-    }
-    info.lif_id = lif_id;
-#endif
-    memset(&info, 0, sizeof(info));
-    hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-    info.lif_id = hw_lif_id;
-    if (dol_integ) {
+    // instantiate HAL client
+    hal = new HalClient(fwd_mode);
+    hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
+    pd->update();
 
-        /*
-         * For DOL integration, allocate nicmgr LIF fully with HAL, i.e.,
-         * complete with qstate initialization by the HAL. Since HAL has
-         * so far kept in lock step with nicmgr regarding hw_lif_id's,
-         * the next id that HAL returns should match.
-         */
-        info.hw_lif_id = 0;
-        if (hal->LifCreate(info.lif_id, qinfo, &info,
-                           0, false, 0, 0, 0, 0) == 0) {
-            throw runtime_error("Failed to create HAL nicmgr LIF");
-        }
-        if (hw_lif_id != info.hw_lif_id) {
-            NIC_LOG_ERR("nicmgr hw_lif_id {} mismatches with HAL hw_lif_id: {}",
-                        hw_lif_id, info.hw_lif_id);
-            throw runtime_error("HAL nicmgr hw_lif_id mismatch");
-        }
-    } else {
-        info.hw_lif_id = hw_lif_id;
-        if (platform_is_hw(platform)) {
-            if (hal->LifCreate(info.lif_id,  NULL, qinfo, &info)) {
-                throw runtime_error("Failed to create HAL nicmgr LIF");
-            }
-        }
-        uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
-        pd->program_qstate(qinfo, &info, coses);
+    // Setting hal clients in all devices
+    SetHalClient(hal, hal_common_client);
+
+
+    // Create VRFs for uplinks
+    NIC_LOG_INFO("Creating VRFs for uplinks");
+    CreateUplinkVRFs();
+
+    uint64_t ret = hal->LifCreate(&hal_lif_info_);
+    if (ret != 0) {
+        NIC_LOG_ERR("Failed to create Nicmgr service LIF. ret: {}", ret);
+        return;
     }
-    NIC_LOG_INFO("nicmgr lif id:{}, hw_lif_id: {}", info.lif_id, info.hw_lif_id);
+
+    uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+    pd->program_qstate(qinfo, &hal_lif_info_, coses);
 
     // Init QState
     uint64_t hbm_base = NICMGR_BASE;
@@ -249,8 +240,8 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
     resp_head = 0;
     resp_tail = 0;
 
-    invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_REQ]);
-    READ_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
+    invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
+    READ_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
 
     qstate_req.host = 1;
     qstate_req.total = 1;
@@ -265,15 +256,15 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
 
     for (int i = 0; i < ring_size; i++) {
         WRITE_MEM(req_ring_base + (sizeof(struct nicmgr_req_desc) * i),
-             (uint8_t *)tmp, sizeof(tmp), 0);
+                  (uint8_t *)tmp, sizeof(tmp), 0);
     }
 
-    WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
-    invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_REQ]);
+    WRITE_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
+    invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
 
 
-    invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_RESP]);
-    READ_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
+    invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
+    READ_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
 
     qstate_resp.host = 1;
     qstate_resp.total = 1;
@@ -288,12 +279,72 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
 
     for (int i = 0; i < ring_size; i++) {
         WRITE_MEM(resp_ring_base + (sizeof(struct nicmgr_resp_desc) * i),
-            (uint8_t *)tmp, sizeof(tmp), 0);
+                  (uint8_t *)tmp, sizeof(tmp), 0);
+    }
+    WRITE_MEM(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
+
+    invalidate_txdma_cacheline(hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
+
+    init_done = true;
+}
+
+void
+devicemanager_init (void)
+{
+    DeviceManager::GetInstance()->Update();
+}
+
+DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mode,
+                             platform_t platform, bool dol_integ) :
+    dol_integ(dol_integ)
+{
+    uint64_t    hw_lif_id;
+
+    NIC_HEADER_TRACE("Initializing DeviceManager");
+    instance = this;
+#ifdef __x86_64__
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) ==
+               sdk::lib::PAL_RET_OK);
+#elif __aarch64__
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) ==
+               sdk::lib::PAL_RET_OK);
+#endif
+    this->fwd_mode = fwd_mode;
+    this->config_file = config_file;
+    pd = PdClient::factory(platform);
+    assert(pd);
+
+    if (lifs_reservation(platform)) {
+        throw runtime_error("Failed to reserve LIFs");
     }
 
-    WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
+    NIC_HEADER_TRACE("Admin Lif creation");
+    memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
+    hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
+    hal_lif_info_.id = hw_lif_id;
+    if (dol_integ) {
+        struct lif_info info;
 
-    invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_RESP]);
+        /*
+         * For DOL integration, allocate nicmgr LIF fully with HAL, i.e.,
+         * complete with qstate initialization by the HAL. Since HAL has
+         * so far kept in lock step with nicmgr regarding hw_lif_id's,
+         * the next id that HAL returns should match.
+         */
+        hal_lif_info_.hw_lif_id = 0;
+        if (hal->LifCreate(hal_lif_info_.id, qinfo, &info,
+                           0, false, 0, 0, 0, 0) == 0) {
+            throw runtime_error("Failed to create HAL nicmgr LIF");
+        }
+        hal_lif_info_.hw_lif_id = info.hw_lif_id;
+    } else {
+        hal_lif_info_.hw_lif_id = hw_lif_id;
+        hal_lif_info_.pinned_uplink = NULL;
+        hal_lif_info_.enable_rdma = false;
+        memcpy(hal_lif_info_.queue_info, qinfo,
+               sizeof(hal_lif_info_.queue_info));
+    }
+    NIC_LOG_INFO("nicmgr lif id:{}, hw_lif_id: {}", hal_lif_info_.id, hal_lif_info_.hw_lif_id);
 }
 
 DeviceManager::~DeviceManager()
@@ -312,15 +363,16 @@ DeviceManager::LoadConfig(string path)
     NIC_HEADER_TRACE("Loading Config");
     NIC_LOG_INFO("Json: {}", path);
 
-    boost::property_tree::read_json(path, spec);
 
+    boost::property_tree::read_json(path, spec);
     if (!system_uuid || !strcmp(system_uuid, "")) {
         sys_mac_base = 0x00DEADBEEF00llu;
     } else {
         sys_mac_base = mac_to_int(system_uuid);
     }
 
-    NIC_LOG_INFO("{}: Entered SysUuid={} SysMacBase={}", __FUNCTION__, system_uuid, sys_mac_base);
+    NIC_LOG_INFO("Entered SysUuid={} SysMacBase={}",
+                 system_uuid, sys_mac_base);
 
 
     // Create Network
@@ -359,21 +411,10 @@ DeviceManager::LoadConfig(string path)
             eth_spec->intr_count   = val.get<uint64_t>("intr_count");
             eth_spec->mac_addr     = sys_mac_base++;
             if (intr_allocator->alloc_block(&intr_base, eth_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
+                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", hal_lif_info_.hw_lif_id);
                 return -1;
             }
             eth_spec->intr_base    = intr_base;
-#if 0
-            eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
-            if (eth_spec->lif_id == 0) {
-                if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
-                    NIC_LOG_ERR("Failed to allocate lif");
-                    return -1;
-                }
-                eth_spec->lif_id = LIF_ID_BASE + lif_id;
-            }
-#endif
-
             eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             eth_spec->lif_id = eth_spec->hw_lif_id;
             if (val.get_optional<string>("network")) {
@@ -416,7 +457,7 @@ DeviceManager::LoadConfig(string path)
             // TODO: For now interrupts must be 256 aligned. The allocator does not support
             //       aligning resource ids, so allocate 256.
             if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
+                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", hal_lif_info_.hw_lif_id);
                 return -1;
             }
 
@@ -444,17 +485,6 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->barmap_size = 1;
             }
 
-#if 0
-            eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
-            if (eth_spec->lif_id == 0) {
-                if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
-                    NIC_LOG_ERR("Failed to allocate lif");
-                    return -1;
-                }
-                eth_spec->lif_id = LIF_ID_BASE + lif_id;
-            }
-#endif
-
             eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             eth_spec->lif_id = eth_spec->hw_lif_id;
             if (val.get_optional<string>("network")) {
@@ -464,13 +494,6 @@ DeviceManager::LoadConfig(string path)
                     NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
                 }
             }
-#if 0
-            eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
-            eth_spec->uplink = uplinks[eth_spec->uplink_id];
-            if (eth_spec->uplink == NULL) {
-                NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
-            }
-#endif
 
             eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
             eth_spec->host_dev = true;
@@ -506,7 +529,7 @@ DeviceManager::LoadConfig(string path)
             // TODO: For now interrupts must be 256 aligned. The allocator does not support
             //       aligning resource ids, so allocate 256.
             if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
+                NIC_LOG_ERR("Accel lif: Failed to allocate interrupts");
                 return -1;
             }
 
@@ -514,13 +537,6 @@ DeviceManager::LoadConfig(string path)
             if (dol_integ) {
                     accel_spec->lif_id = STORAGE_SEQ_SW_LIF_ID;
             } else {
-#if 0
-                if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
-                    NIC_LOG_ERR("Failed to allocate accel_dev lif_id");
-                    return -1;
-                }
-                accel_spec->lif_id =  LIF_ID_BASE + lif_id;
-#endif
                 accel_spec->lif_id = accel_spec->hw_lif_id;
             }
             accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
@@ -539,8 +555,6 @@ DeviceManager::LoadConfig(string path)
             AddDevice(ACCEL, (void *)accel_spec);
         }
     }
-
-    GenerateQstateInfoJson(pd->gen_dir_path_ + "/" + QSTATE_INFO_FILE_NAME);
 
     return 0;
 }
@@ -567,10 +581,10 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
     case ETH:
         eth_dev = new Eth(hal, hal_common_client, dev_spec, pd);
         eth_dev->SetType(type);
-        devices[eth_dev->info.hw_lif_id] = (Device *)eth_dev;
+        devices[eth_dev->GetHalLifInfo()->hw_lif_id] = (Device *)eth_dev;
         return (Device *)eth_dev;
     case ACCEL:
-        accel_dev = new Accel_PF(hal, dev_spec, &info, pd, dol_integ);
+        accel_dev = new Accel_PF(hal, dev_spec, &hal_lif_info_, pd, dol_integ);
         accel_dev->SetType(type);
         devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
         return (Device *)accel_dev;
@@ -603,7 +617,6 @@ DeviceManager::CreateMnets()
         }
     }
 }
-
 
 #ifdef __aarch64__
 void
@@ -664,25 +677,25 @@ DeviceManager::AdminQPoll()
     struct nicmgr_resp_desc resp_desc = { 0 };
     uint8_t resp_data[4096] = { 0 };
 
-    uint64_t req_qstate_addr = info.qstate_addr[NICMGR_QTYPE_REQ];
+    uint64_t req_qstate_addr = hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ];
     uint64_t req_db_addr =
 #ifdef __aarch64__
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
                 (0x8 /* PI_UPD + UPD_NOP */ << 17) +
-                (info.hw_lif_id << 6) +
+                (hal_lif_info_.hw_lif_id << 6) +
                 (NICMGR_QTYPE_REQ << 3);
     uint64_t req_db_data = 0x0;
 
-    uint64_t resp_qstate_addr = info.qstate_addr[NICMGR_QTYPE_RESP];
+    uint64_t resp_qstate_addr = hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP];
     uint64_t resp_db_addr =
 #ifdef __aarch64__
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
                 CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
                 (0x9 /* PI_UPD + UPD_EVAL */ << 17) +
-                (info.hw_lif_id << 6) +
+                (hal_lif_info_.hw_lif_id << 6) +
                 (NICMGR_QTYPE_RESP << 3);
     uint64_t resp_db_data = 0x0;
 

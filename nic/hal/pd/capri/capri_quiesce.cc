@@ -56,24 +56,22 @@ capri_quiesce_init(void) {
     hal_ret_t           ret = HAL_RET_OK;
 	cap_top_csr_t       &top_csr= CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG("{}: Start", __FUNCTION__);
-    HAL_TRACE_DEBUG("{}: Port10: {:x}", __FUNCTION__, top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry());
-    HAL_TRACE_DEBUG("{}: Port11: {:x}", __FUNCTION__, top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry());
+    //HAL_TRACE_DEBUG("{}: Port10: {:x}", __FUNCTION__, top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry());
+    //HAL_TRACE_DEBUG("{}: Port11: {:x}", __FUNCTION__, top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry());
     HAL_ASSERT(top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry() == MAX_PORT10_FLOW_CTRL_ENTRIES);
     HAL_ASSERT(top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry() == MAX_PORT11_FLOW_CTRL_ENTRIES);
 
 	for (int i=0; i < top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry(); i++) {
         top_csr.pb.pbc.port_10.dhs_oq_flow_control.entry[i].read();
 		port_10_ref_credits[i] = top_csr.pb.pbc.port_10.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
-        HAL_TRACE_DEBUG("{}: Port 10[{}] : {:x}", __FUNCTION__, i, port_10_ref_credits[i]);
+        //HAL_TRACE_DEBUG("{}: Port 10[{}] : {:x}", __FUNCTION__, i, port_10_ref_credits[i]);
 	}
 
 	for (int i=0; i < top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry(); i++) {
         top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].read();
 		port_11_ref_credits[i] = top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
-        HAL_TRACE_DEBUG("{}: Port 11[{}] : {:x}", __FUNCTION__, i, port_11_ref_credits[i]);
+        //HAL_TRACE_DEBUG("{}: Port 11[{}] : {:x}", __FUNCTION__, i, port_11_ref_credits[i]);
 	}
-    HAL_TRACE_DEBUG("{}: End", __FUNCTION__);
 
     return ret;
 }

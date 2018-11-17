@@ -221,6 +221,9 @@ hal_init (hal_cfg_t *hal_cfg)
         HAL_TRACE_DEBUG("Running as superuser ...");
     }
 
+    // instantiate delphi thread
+    HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
+
     // do HAL state initialization
     HAL_ABORT(hal_state_init(hal_cfg) == HAL_RET_OK);
     HAL_ABORT(hal_main_thread_init(hal_cfg) == HAL_RET_OK);
@@ -242,7 +245,6 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
-    HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
 
     // unless periodic thread is fully initialized and
     // done calling all plugins' thread init callbacks
@@ -250,6 +252,9 @@ hal_init (hal_cfg_t *hal_cfg)
     while (!sdk::lib::periodic_thread_is_ready()) {
         pthread_yield();
     }
+
+    // notify sysmgr that we are up
+    hal::svc::init_done();
 
     if (!getenv("DISABLE_FTE") &&
         (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&

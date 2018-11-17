@@ -40,8 +40,8 @@ typedef struct hal_queue_info_s {
 } hal_queue_info_t;
 
 typedef struct hal_lif_info_s {
-    uint32_t id;
-    uint32_t hw_lif_id;
+    uint64_t id;
+    uint64_t hw_lif_id;
     types::LifType type;
     Uplink *pinned_uplink;
     bool is_management;
@@ -54,7 +54,9 @@ typedef struct hal_lif_info_s {
     uint32_t max_vlan_filters;
     uint32_t max_mac_filters;
     uint32_t max_mac_vlan_filters;
+    bool pushed_to_hal;
     hal_queue_info_t queue_info[NUM_QUEUE_TYPES];
+    uint64_t qstate_addr[NUM_QUEUE_TYPES];
 } hal_lif_info_t;
 
 

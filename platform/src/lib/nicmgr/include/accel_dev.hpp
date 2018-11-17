@@ -199,17 +199,24 @@ private:
 class Accel_PF : public Device {
 public:
     Accel_PF(HalClient *hal_client, void *dev_spec,
-             const struct lif_info *nicmgr_lif_info,
+             const hal_lif_info_t *nicmgr_lif_info,
              PdClient *pd_client,
              bool dol_integ);
 
+    void Update();
     void DevcmdHandler();
     void DevcmdPoll();
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
+    void SetHalClient(HalClient *hal_client);
 
-    struct lif_info             info;
+    hal_lif_info_t              info;
     dev_cmd_regs_t              *devcmd;
+
+    void LifInit();
+    void set_lif_init_done(bool done) { lif_init_done = done; }
+    bool get_lif_init_done() { return lif_init_done; }
+
 
 private:
 
@@ -238,7 +245,8 @@ private:
     uint32_t                    num_crypto_keys_max;
     uint32_t                    seq_qid_init_high;  // highest seq qid initialized
 
-    const struct lif_info       *nicmgr_lif_info;
+    const hal_lif_info_t        *nicmgr_lif_info;
+    bool                        lif_init_done;
 
     /* Methods */
     void _PostDevcmdDone(enum DevcmdStatus status);

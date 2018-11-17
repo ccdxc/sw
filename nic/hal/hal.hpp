@@ -19,6 +19,16 @@ extern hal::hal_cfg_t g_hal_cfg;
 
 using sdk::lib::thread;
 
+typedef enum hal_status_e {
+    HAL_STATUS_NONE,
+    HAL_STATUS_ASIC_INIT_DONE,
+    HAL_STATUS_MEM_INIT_DONE,
+    HAL_STATUS_PACKET_BUFFER_INIT_DONE,
+    HAL_STATUS_DATA_PLANE_INIT_DONE,
+    HAL_STATUS_SCHEDULER_INIT_DONE,
+    HAL_STATUS_UP
+} hal_status_t;
+
 // TODO: remove these two from here and move to HAL core
 thread *hal_get_current_thread(void);
 

@@ -64,9 +64,7 @@ acl_get(const char *name)
 void
 print_ref_count(const acl_ctx_t *ctx)
 {
-
-    int count = ctx->print_ref_count();
-    HAL_TRACE_DEBUG(" ref count is {}", count);
+    ctx->print_ref_count();
 }
 
 //------------------------------------------------------------------------

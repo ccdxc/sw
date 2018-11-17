@@ -1,3 +1,8 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+// This file contains metrics published to Delphi
+//------------------------------------------------------------------------------
+
 syntax = "proto3";
 package metrics;
 

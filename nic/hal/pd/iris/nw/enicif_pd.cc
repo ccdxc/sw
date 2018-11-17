@@ -1338,22 +1338,6 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
     pd_enicif = (pd_enicif_t *)args->intf->pd_if;
     hal_if = (if_t *)pd_enicif->pi_if;
 
-    // Check if classic
-    if ((hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) ||
-        (is_forwarding_mode_host_pinned())) {
-
-        if (args->vlan_insert_en_changed || args->pinned_uplink_changed) {
-            // Program Input Properties Mac Vlan
-            ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL, args,
-                                                      TABLE_OPER_UPDATE);
-        }
-    }
-
-    if (args->vlan_strip_en_changed) {
-        // Program Output Mapping
-        ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, args,
-                                                  TABLE_OPER_UPDATE);
-    }
 
     // Check if classic
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
@@ -1374,7 +1358,33 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
                                                       TABLE_OPER_UPDATE);
             }
         }
+    } else {
+        if (args->vlan_insert_en_changed || args->pinned_uplink_changed) {
+            // Program Input Properties Mac Vlan
+            ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL, args,
+                                                      TABLE_OPER_UPDATE);
+        }
     }
+
+#if 0
+    // Check if classic
+    if ((hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) ||
+        (is_forwarding_mode_host_pinned())) {
+
+        if (args->vlan_insert_en_changed || args->pinned_uplink_changed) {
+            // Program Input Properties Mac Vlan
+            ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL, args,
+                                                      TABLE_OPER_UPDATE);
+        }
+    }
+#endif
+
+    if (args->vlan_strip_en_changed) {
+        // Program Output Mapping
+        ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, args,
+                                                  TABLE_OPER_UPDATE);
+    }
+
 
     return ret;
 }

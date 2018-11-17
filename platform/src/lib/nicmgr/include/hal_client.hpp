@@ -215,10 +215,7 @@ public:
                      uint32_t max_ahs,
                      uint32_t hw_lif_id = 0);
 
-  uint64_t LifCreate(uint64_t lif_id,
-                     Uplink *uplink,
-                     struct queue_info *queue_info,
-                     struct lif_info *lif_info);
+  uint64_t LifCreate(hal_lif_info_t *hal_lif_info);
 
   uint64_t LifDelete(uint64_t lif_id);
 

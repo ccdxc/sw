@@ -32,25 +32,6 @@ Uplink::Factory(uplink_id_t id, bool is_oob)
     // Store in DB for disruptive restart
     uplink_db[uplink->GetId()] = uplink;
 
-    // Classic:
-    if (hal->GetMode() == FWD_MODE_CLASSIC ||
-        uplink->IsOOB()) {
-
-        // Create VRF for each uplink
-        uplink->vrf = HalVrf::Factory(uplink->IsOOB() ? types::VRF_TYPE_MANAGEMENT : types::VRF_TYPE_CUSTOMER);
-
-#if 0
-        // Create native L2seg
-        uplink->native_l2seg = HalL2Segment::Factory(uplink->vrf, 0);
-
-        // Update uplink with native l2seg
-        uplink->UpdateHalWithNativeL2seg(uplink->native_l2seg->GetId());
-
-        // Update l2seg with uplink
-        uplink->native_l2seg->AddUplink(uplink);
-#endif
-    }
-
     return uplink;
 }
 
@@ -62,16 +43,6 @@ Uplink::Destroy(Uplink *uplink)
     if (hal->GetMode() == FWD_MODE_CLASSIC ||
         uplink->IsOOB()) {
 
-#if 0
-        // Remove uplink from l2seg
-        uplink->native_l2seg->DelUplink(uplink);
-
-        // Update uplink with native l2seg
-        uplink->UpdateHalWithNativeL2seg(0);
-
-        // Delete L2seg
-        HalL2Segment::Destroy(uplink->GetNativeL2Seg());
-#endif
         // Delete Vrf
         HalVrf::Destroy(uplink->GetVrf());
     }
@@ -96,6 +67,18 @@ Uplink::Uplink(uplink_id_t id, bool is_oob)
 Uplink::~Uplink()
 {
 
+}
+
+void
+Uplink::CreateVrf()
+{
+    if (!hal) {
+        PopulateHalCommonClient();
+    }
+    if (hal->GetMode() == FWD_MODE_CLASSIC || IsOOB()) {
+        // Create VRF for each uplink
+        vrf = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_MANAGEMENT : types::VRF_TYPE_CUSTOMER);
+    }
 }
 
 int

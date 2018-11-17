@@ -9,14 +9,14 @@
     "dependencies": ["delphi"],
     "flags": ["no_watchdog", "non_critical"]
 }, {
-    "name": "hal",
-    "command": "/bin/sh /nic/tools/start-hal-haps.sh",
-    "dependencies": ["delphi"],
-    "flags": ["no_watchdog", "non_critical"]
-}, {
     "name": "nicmgrd",
     "command": "/bin/sh /platform/tools/start-nicmgr-haps.sh",
-    "dependencies": ["delphi", "hal"],
+    "dependencies": ["delphi", "pciemgrd"],
+    "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "hal",
+    "command": "/bin/sh /nic/tools/start-hal-haps.sh",
+    "dependencies": ["delphi", "nicmgrd"],
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "netagent",
@@ -26,7 +26,7 @@
 }, {
     "name": "asicerrord",
     "command": "/platform/bin/asicerrord",
-    "dependencies": ["delphi", "nicmgrd"],
+    "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "nmd",
@@ -36,6 +36,6 @@
 }, {
     "name": "tmagent",
     "command": "/nic/bin/tmagent -hostif lo",
-    "dependencies": ["delphi"],
+    "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
 }]

@@ -19,8 +19,9 @@ using namespace sdk::platform::utils;
 
 #define ENTRY_TRACE_EN      true
 
-const static char *kRdmaHBMLabel = "rdma";
 const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
+
+const static char *kRdmaHBMLabel = "rdma";
 const static uint32_t kRdmaAllocUnit = 4096;
 
 const static char *kRdmaHBMBarLabel = "rdma-hbm-bar";
@@ -285,72 +286,74 @@ PdClient::create_dirs() {
     return 0;
 }
 
-PdClient* PdClient::factory(platform_t platform)
+void PdClient::init(void)
 {
     int ret;
-    hal::hal_cfg_t      hal_cfg;
-    PdClient            *pdc = new PdClient();
+    hal::hal_cfg_t hal_cfg;
 
-    NIC_LOG_DEBUG("{}: Entered\n", __FUNCTION__);
-    assert(pdc);
-
-    pdc->platform_ = platform;
-    pdc->hal_cfg_path_ = string(std::getenv("HAL_CONFIG_PATH"));
-
-    ret = pdc->create_dirs();
+    NIC_LOG_INFO("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
+    ret = p4plus_rxdma_init_tables();
     assert(ret == 0);
-
-    NIC_LOG_INFO("Loading p4plus RxDMA asic lib tables cfg_path: {}...", pdc->hal_cfg_path_);
-    ret = pdc->p4plus_rxdma_init_tables();
+    NIC_LOG_INFO("Loading p4plus TxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
+    ret = p4plus_txdma_init_tables();
     assert(ret == 0);
-    NIC_LOG_INFO("Loading p4plus TxDMA asic lib tables cfg_path: {}...", pdc->hal_cfg_path_);
-    ret = pdc->p4plus_txdma_init_tables();
-    assert(ret == 0);
-
     NIC_LOG_INFO("Initializing HBM Memory Partitions from: {}...");
-    pdc->mp_ = mpartition::factory((pdc->hal_cfg_path_ +
+    mp_ = mpartition::factory((hal_cfg_path_ +
                                     "/iris/hbm_mem.json").c_str(),
-                                    CAPRI_HBM_BASE);
-    assert(pdc->mp_);
+                                   CAPRI_HBM_BASE);
+    assert(mp_);
+    NIC_LOG_INFO("Initializing NIC LIF Mgr ...");
+    lm_ = LIFManager::factory(mp_, NULL, kLif2QstateHBMLabel);
+    assert(lm_);
 
-    NIC_LOG_INFO("Initializing Program Info ...");
-    pdc->pinfo_ = program_info::factory((pdc->hal_cfg_path_ +
-                                        "/gen/mpu_prog_info.json").c_str());
-    assert(pdc->pinfo_);
-
-    switch (pdc->platform_){
-        case PLATFORM_SIM:
-            hal_cfg.platform = hal::HAL_PLATFORM_SIM;
-            break;
-        case PLATFORM_HW:
-            hal_cfg.platform = hal::HAL_PLATFORM_HW;
-            break;
-        case PLATFORM_HAPS:
-            hal_cfg.platform = hal::HAL_PLATFORM_HAPS;
-            break;
-        case PLATFORM_RTL:
-            hal_cfg.platform = hal::HAL_PLATFORM_RTL;
-            break;
-        case PLATFORM_MOCK:
-            hal_cfg.platform = hal::HAL_PLATFORM_MOCK;
-            break;
-        default :
-            hal_cfg.platform = hal::HAL_PLATFORM_NONE;
-            break;
+    switch (platform_){
+    case PLATFORM_SIM:
+        hal_cfg.platform = hal::HAL_PLATFORM_SIM;
+        break;
+    case PLATFORM_HW:
+        hal_cfg.platform = hal::HAL_PLATFORM_HW;
+        break;
+    case PLATFORM_HAPS:
+        hal_cfg.platform = hal::HAL_PLATFORM_HAPS;
+        break;
+    case PLATFORM_RTL:
+        hal_cfg.platform = hal::HAL_PLATFORM_RTL;
+        break;
+    case PLATFORM_MOCK:
+        hal_cfg.platform = hal::HAL_PLATFORM_MOCK;
+        break;
+    default :
+        hal_cfg.platform = hal::HAL_PLATFORM_NONE;
+        break;
     }
 
-    hal_cfg.cfg_path = pdc->hal_cfg_path_;
+    hal_cfg.cfg_path = hal_cfg_path_;
     NIC_LOG_INFO("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init(&hal_cfg);
     assert(ret == 0);
 
-    NIC_LOG_INFO("Initializing NIC LIF Mgr ...");
-    pdc->lm_ = LIFManager::factory(pdc->mp_, pdc->pinfo_, kLif2QstateHBMLabel);
-    assert(pdc->lm_);
+    rdma_manager_init();
+}
 
-    pdc->rdma_manager_init();
+// called after HAL is UP and running
+void PdClient::update(void)
+{
+    set_program_info();
 
-    NIC_LOG_INFO("{}: Exited\n", __FUNCTION__);
+}
+
+PdClient* PdClient::factory(platform_t platform)
+{
+    int ret;
+    PdClient *pdc = new PdClient();
+
+    assert(pdc);
+    pdc->platform_ = platform;
+    pdc->hal_cfg_path_ = string(std::getenv("HAL_CONFIG_PATH"));
+    ret = pdc->create_dirs();
+    assert(ret == 0);
+    pdc->init();
+
     return pdc;
 }
 
@@ -478,7 +481,7 @@ PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
 }
 
 int PdClient::program_qstate(struct queue_info* queue_info,
-                             struct lif_info *lif_info,
+                             hal_lif_info_t *lif_info,
                              uint8_t coses)
 {
     int ret;
@@ -1093,4 +1096,14 @@ sdk::platform::utils::mem_addr_t
 PdClient::mem_start_addr (const char *region)
 {
     return mp_->start_addr(region);
+}
+
+void
+PdClient::set_program_info()
+{
+    NIC_LOG_INFO("Initializing Program Info ...");
+    pinfo_ = program_info::factory((hal_cfg_path_ +
+                                    "/gen/mpu_prog_info.json").c_str());
+    assert(pinfo_);
+    lm_->set_program_info(pinfo_);
 }

@@ -222,14 +222,14 @@ capri_load_mpu_programs (const char *handle,
         program_info[i].base_addr = ctx->prog_hbm_base_addr;
         program_info[i].size = program_info[i].prog.text.size()*sizeof(uint64_t);
         /* Dump program specific info and the symbol table */
-        HAL_TRACE_DEBUG("MPU Program file name {} loaded, valid {}, "
-                        "complete {}, number of symbols {}, "
-                        "base address {:#x}, size {}",
-                        program_info[i].name.c_str(),
-                        program_info[i].prog.valid,
-                        program_info[i].prog.complete,
-                        program_info[i].prog.symtab.size(),
-                        program_info[i].base_addr, program_info[i].size);
+        //HAL_TRACE_DEBUG("MPU Program {} loaded, valid {}, "
+                        //"complete {}, number of symbols {}, "
+                        //"base address {:#x}, size {}",
+                        //program_info[i].name.c_str(),
+                        //program_info[i].prog.valid,
+                        //program_info[i].prog.complete,
+                        //program_info[i].prog.symtab.size(),
+                        //program_info[i].base_addr, program_info[i].size);
 
         /* Check to see if the program that is loaded is present in the
          * list of programs for which parameters are specified via input
@@ -257,13 +257,13 @@ capri_load_mpu_programs (const char *handle,
                         prog_param_info &&
                         param_check(&prog_param_info[prog_index], symbol->name,
                                     &val) >= 0) {
-                        HAL_TRACE_DEBUG("resolved param: name {} val {:#x}",
-                                        symbol->name.c_str(), val);
+                        //HAL_TRACE_DEBUG("Resolved param: name {} val {:#x}",
+                                          //symbol->name.c_str(), val);
                         program_info[i].resolved_params.add(
                             MpuSymbol(symbol->name.c_str(), MPUSYM_PARAM, val));
                     } else {
-                        HAL_TRACE_DEBUG("unresolved param: name {}",
-                                        symbol->name.c_str());
+                        //HAL_TRACE_DEBUG("Unresolved param: name {}",
+                                        //symbol->name.c_str());
                         program_info[i].unresolved_params.add(
                             MpuSymbol(symbol->name.c_str(), MPUSYM_PARAM, 0x0));
                     }
@@ -272,9 +272,9 @@ capri_load_mpu_programs (const char *handle,
                     /* Add it to the list of program specific and global labels
                      * which will help resolve unknown parameters in pass 2
                      */
-                    HAL_TRACE_DEBUG("label: name {} addr {:#x}",
-                                    symbol->name.c_str(),
-                                    program_info[i].base_addr + symbol->val);
+                    //HAL_TRACE_DEBUG("label: name {} addr {:#x}",
+                                    //symbol->name.c_str(),
+                                    //program_info[i].base_addr + symbol->val);
                     global_labels.add(
                              MpuSymbol(symbol->name.c_str(),
                                        symbol->type,
@@ -285,7 +285,7 @@ capri_load_mpu_programs (const char *handle,
                 /* Symbol type not known */
                 } else {
                     /* Other symbol types are not supported at the moment*/
-                    HAL_TRACE_ERR("unknown symbol type {}", symbol->type);
+                    HAL_TRACE_ERR("Unknown symbol type {}", symbol->type);
                     HAL_ASSERT_RETURN(0, HAL_RET_ERR);
                 }
             }
@@ -309,8 +309,8 @@ capri_load_mpu_programs (const char *handle,
                 /* Try to resolve it by looking at the global labels */
                 if ((param_r = global_labels.get_byname(param_u->name.c_str()))
                     != NULL) {
-                    HAL_TRACE_DEBUG("Resolved param {} to value {:#x}",
-                                    param_r->name.c_str(), param_r->val);
+                    //HAL_TRACE_DEBUG("Resolved param {} to value {:#x}",
+                                      //param_r->name.c_str(), param_r->val);
 
                     /* Add it to the list of resolved params for that program */
                     program_info[i].resolved_params.add(
@@ -350,13 +350,13 @@ capri_load_mpu_programs (const char *handle,
 
            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
        } else {
-           HAL_TRACE_DEBUG("Successfully resolved program: name {}, "
-                           "base address {:#x}, size {}, valid {}, complete {}",
-                           program_info[i].name.c_str(),
-                           program_info[i].base_addr,
-                           program_info[i].size,
-                           program_info[i].copy.valid,
-                           program_info[i].copy.complete);
+           //HAL_TRACE_DEBUG("Successfully resolved program: name {}, "
+                           //"base address {:#x}, size {}, valid {}, complete {}",
+                           //program_info[i].name.c_str(),
+                           //program_info[i].base_addr,
+                           //program_info[i].size,
+                           //program_info[i].copy.valid,
+                           //program_info[i].copy.complete);
        }
 
        /* Write program to HBM */
@@ -414,17 +414,17 @@ capri_program_label_to_offset(const char *handle,
         if (program_info[i].name == prog_name_str) {
             if ((label = program_info[i].labels.get_byname(label_name))
                  != NULL) {
-                HAL_TRACE_DEBUG("Resolved program name {} label name {} to "
-                                "value {:#x}", program_info[i].name.c_str(),
-                                label->name.c_str(), label->val);
+                //HAL_TRACE_DEBUG("Resolved program name {} label name {} to "
+                                  //"value {:#x}", program_info[i].name.c_str(),
+                                  //label->name.c_str(), label->val);
                 *offset = label->val;
                 return 0;
             }
         }
     }
 
-    HAL_TRACE_ERR("Could not resolve program name {} label name {}",
-                  prog_name, label_name);
+    //HAL_TRACE_ERR("Could not resolve program name {} label name {}",
+                    //prog_name, label_name);
     return -1;
 }
 
@@ -523,14 +523,14 @@ capri_program_to_base_addr(const char *handle,
      */
     for (i = 0; i < ctx->num_programs; i++) {
         if (program_info[i].name == prog) {
-            HAL_TRACE_DEBUG("Resolved program name {} to base_addr {:#x}",
-                            program_info[i].name.c_str(),
-                            program_info[i].base_addr);
+            //HAL_TRACE_DEBUG("Resolved program name {} to base_addr {:#x}",
+                            //program_info[i].name.c_str(),
+                            //program_info[i].base_addr);
             *base_addr = program_info[i].base_addr;
             return 0;
         }
     }
-    HAL_TRACE_ERR("Could not resolve program name {}", prog_name);
+    //HAL_TRACE_ERR("Could not resolve program name {}", prog_name);
     return -1;
 }
 
@@ -609,7 +609,7 @@ capri_dump_program_info (const char *filename)
                 symbols.clear();
             }
         } else {
-            HAL_TRACE_DEBUG("Cannot listing programs for handle name {}",
+            HAL_TRACE_DEBUG("Cannot list programs for handle name {}",
                             it->first);
         }
     }
@@ -669,7 +669,7 @@ capri_list_program_addr (const char *filename)
                 fflush(fp);
             }
         } else {
-            HAL_TRACE_DEBUG("Cannot listing programs for handle name {}",
+            HAL_TRACE_DEBUG("Cannot list programs for handle name {}",
                             it->first);
         }
     }

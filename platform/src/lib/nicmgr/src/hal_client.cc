@@ -736,6 +736,36 @@ HalClient::LifGet(uint64_t lif_id, struct lif_info *lif_info)
 }
 
 uint64_t
+HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
+{
+    NIC_LOG_INFO("Creating with Lif: id: {}, type: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
+                 hal_lif_info->id,
+                 hal_lif_info->type,
+                 hal_lif_info->pinned_uplink ? hal_lif_info->pinned_uplink->GetId() : 0,
+                 hal_lif_info->hw_lif_id,
+                 hal_lif_info->enable_rdma);
+
+    // Nicmgr should always allocate hw_lif_id and pass to HAL
+    NIC_ASSERT(hal_lif_info->hw_lif_id != 0);
+
+    EthLif *eth_lif = EthLif::Factory(hal_lif_info);
+    hal_lif_info->pushed_to_hal = true;
+
+    eth_lif_map[hal_lif_info->id] = eth_lif;
+    // eth_lif_map.insert(std::pair<uint64_t, EthLif*>(lif_id, eth_lif));
+
+
+    // Passed hw_lif_id should be same as HAL returned
+    NIC_ASSERT(hal_lif_info->hw_lif_id == eth_lif->GetLif()->GetHwLifId());
+
+    NIC_LOG_INFO("lif-{} Created with id: {}",
+                 hal_lif_info->hw_lif_id, hal_lif_info->id);
+
+    return 0;
+}
+
+#if 0
+uint64_t
 HalClient::LifCreate(uint64_t lif_id,
                      Uplink *uplink,
                      struct queue_info *queue_info,
@@ -772,6 +802,7 @@ HalClient::LifCreate(uint64_t lif_id,
 
     return 0;
 }
+#endif
 
 uint64_t
 HalClient::LifCreate(uint64_t lif_id,

@@ -136,8 +136,6 @@ class Eth : public Device {
 public:
     Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
         void *dev_spec, PdClient *pd_client);
-    struct lif_info info;
-    hal_lif_info_t lif_info;
     uint32_t uplink_id;
     struct dev_cmd_regs *devcmd;
     void DevcmdPoll();
@@ -152,6 +150,9 @@ public:
     bool isHostManagement();
     bool isHost();
     void CreateMnet();
+    void Update();
+    hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
+    void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
 
 private:
     /* Static members */
@@ -160,6 +161,7 @@ private:
     /* Members */
     string name;
     struct eth_devspec *spec;
+    hal_lif_info_t hal_lif_info_;
     /* Mnet Info */
     struct mnet_dev_create_req_t mnet_req;
     // Hardware Info

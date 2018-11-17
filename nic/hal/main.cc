@@ -72,8 +72,7 @@
 #include "gen/hal/svc/l4lb_svc_gen.hpp"
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
-
-#include "nic/hal/iris/delphi/delphi.hpp"
+//#include "nic/hal/iris/delphi/delphi.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -168,7 +167,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     HAL_SYSLOG_INFO("HAL-STATUS:UP");
 
     // notify sysmgr that we are up
-    hal::svc::init_done();
+    //hal::svc::init_done();
 
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
@@ -296,7 +295,9 @@ main (int argc, char **argv)
         exit(1);
     }
 
-    if (hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
+    if ((hal::g_hal_cfg.features == hal::HAL_FEATURE_SET_IRIS) &&
+        ((hal::g_hal_cfg.forwarding_mode == hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED) ||
+         (hal::g_hal_cfg.forwarding_mode == hal::HAL_FORWARDING_MODE_SMART_SWITCH))) {
         HAL_TRACE_DEBUG("lkl init");
         if (hal::pd::lkl_init() != HAL_RET_OK) {
             fprintf(stderr, "LKL initialization failed, quitting ...\n");

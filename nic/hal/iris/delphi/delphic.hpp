@@ -5,6 +5,7 @@
 
 #include "gen/proto/upgrade.delphi.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
+#include "nic/hal/hal.hpp"
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
 #include "nic/hal/iris/delphi/if_svc.hpp"
 #include "nic/hal/iris/upgrade/upgrade.hpp"
@@ -20,7 +21,8 @@ class delphi_client : public delphi::Service {
 public:
    delphi_client(delphi::SdkPtr &sdk);
    void OnMountComplete(void);
-   void init_done();
+   void init_done(void);
+   delphi::SdkPtr sdk(void);
 
 private:
     delphi::SdkPtr                                 sdk_;
@@ -30,7 +32,9 @@ private:
     bool                                           mount_ok;
     bool                                           init_ok;
 };
+std::shared_ptr<delphi_client> delphic(void);
 void init_done(void);
+void set_hal_status(hal::hal_status_t hal_status);
 
 }    // namespace svc
 }    // namespace hal

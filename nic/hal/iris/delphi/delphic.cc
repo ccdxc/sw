@@ -10,6 +10,7 @@
 #include "nic/hal/iris/delphi/delphic.hpp"
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
+#include "gen/proto/hal.delphi.hpp"
 
 namespace hal {
 namespace svc {
@@ -76,28 +77,77 @@ delphi_client::delphi_client(delphi::SdkPtr &sdk)
 void
 delphi_client::OnMountComplete(void)
 {
-    HAL_TRACE_DEBUG("OnMountComplete got called..");
+    HAL_TRACE_DEBUG("OnMountComplete got called ...");
     mount_ok = true;
     if (init_ok && this->mount_ok) {
        sysmgr_->init_done();
     }
 }
 
+// indicate HAL init done to rest of the system
 void
 delphi_client::init_done(void)
 {
-   HAL_TRACE_DEBUG("Init done called..");
+   HAL_TRACE_DEBUG("Init done called ...");
    init_ok = true;
    if (init_ok && mount_ok) {
       sysmgr_->init_done();
    }
 }
 
+// API to invoke when HAL is ready for external world
 void
-init_done(void)
+init_done (void)
 {
     g_delphic->init_done();
 }
-   
+
+delphi::SdkPtr
+delphi_client::sdk (void)
+{
+    return sdk_;
+}
+
+static ::hal::HalState
+hal_state (hal::hal_status_t hal_status)
+{
+    switch (hal_status) {
+    case HAL_STATUS_NONE:
+        return ::hal::HalState::HAL_STATE_NONE;
+    case HAL_STATUS_ASIC_INIT_DONE:
+        return ::hal::HalState::HAL_STATE_ASIC_INIT_DONE;
+    case HAL_STATUS_MEM_INIT_DONE:
+        return ::hal::HalState::HAL_STATE_MEM_INIT_DONE;
+    case HAL_STATUS_PACKET_BUFFER_INIT_DONE:
+        return ::hal::HalState::HAL_STATE_PACKET_BUFFER_INIT_DONE;
+    case HAL_STATUS_DATA_PLANE_INIT_DONE:
+        return ::hal::HalState::HAL_STATE_DATA_PLANE_INIT_DONE;
+    case HAL_STATUS_SCHEDULER_INIT_DONE:
+        return ::hal::HalState::HAL_STATE_SCHEDULER_INIT_DONE;
+    case HAL_STATUS_UP:
+        return ::hal::HalState::HAL_STATE_UP;
+    default:
+        return hal::HalState::HAL_STATE_NONE;
+    }
+}
+
+// API to update HAL status
+void
+set_hal_status (hal::hal_status_t hal_status)
+{
+    dobj::HalStatusPtr    status;
+    ::hal::HalState       state;
+
+    state = hal_state(hal_status);
+    status = dobj::HalStatus::FindObject(g_delphic->sdk());
+    if (status) {
+        status->set_state(state);
+    } else {
+        status = std::make_shared<dobj::HalStatus>();
+        status->set_state(state);
+        g_delphic->sdk()->SetObject(status);
+    }
+}
+
 }    // namespace svc
 }    // namespace hal

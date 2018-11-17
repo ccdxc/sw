@@ -183,6 +183,7 @@ GENDIR = $(GENTOP)/$(SRCDIR)
 
 # OPT is separate to allow override on command line, e.g. "make OPT=-g"
 OPT ?= -O3
+#OPT=-g
 
 BUILD_PARAMS = $(NULL)
 BUILD_PARAMS += -DBUILD_OS_$(BUILD_OS)

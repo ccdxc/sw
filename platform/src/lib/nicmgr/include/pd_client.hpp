@@ -37,6 +37,7 @@
 class PdClient {
 public:
     static PdClient* factory(platform_t platform);
+    void update(void);
     void destroy(PdClient *pdc);
 
     string hal_cfg_path_;
@@ -55,13 +56,12 @@ public:
     int lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info);
 
     int program_qstate(struct queue_info* queue_info,
-                       struct lif_info *lif_info,
+                       hal_lif_info_t *lif_info,
                        uint8_t coses);
-
-
+    void set_program_info();
     int create_dirs();
     int p4plus_rxdma_init_tables();
-    int p4plus_txdma_init_tables();    
+    int p4plus_txdma_init_tables();
     int pd_state_init();
 
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
@@ -130,6 +130,7 @@ public:
 private:
     PdClient(){}
     ~PdClient(){}
+    void init(void);
 
     std::unique_ptr<hal::BMAllocator> rdma_hbm_allocator_;
     std::unique_ptr<hal::BMAllocator> rdma_hbm_bar_allocator_;
@@ -144,6 +145,5 @@ private:
         uint32_t idx, tx_stage0_lif_params_table_actiondata *data);
 
 };
-
 
 #endif //__PD_CLIENT_HPP__

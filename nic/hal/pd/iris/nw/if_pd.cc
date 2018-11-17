@@ -409,6 +409,10 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
         return HAL_RET_OK;
     }
 
+    HAL_ASSERT_RETURN(pi_if, HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN(pi_l2seg, HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN(data, HAL_RET_INVALID_ARG);
+
     HAL_ASSERT_RETURN(pi_if && pi_l2seg && data, HAL_RET_INVALID_ARG);
 
     data->lport = if_get_lport_id(pi_if);

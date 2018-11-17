@@ -243,24 +243,28 @@ private:
  */
 class DeviceManager {
 public:
-    DeviceManager(enum ForwardingMode fwd_mode, platform_t platform,
+    DeviceManager(std::string config_file, enum ForwardingMode fwd_mode, platform_t platform,
                   bool dol_integ);
     ~DeviceManager();
     int LoadConfig(std::string path);
     Device *AddDevice(enum DeviceType type, void *dev_spec);
+    static DeviceManager *GetInstance() { return instance; }
 
 #ifdef __aarch64__
     static void PcieEventHandler(const pciehdev_eventdata_t *evd);
 #endif
+    void Update();
+    void CreateMnets();
     void DevcmdPoll();
     void AdminQPoll();
     void DevLinkDownHandler(uint32_t port_num);
     void DevLinkUpHandler(uint32_t port_num);
-
     Device *GetDevice(uint64_t id);
-    void CreateMnets();
+    void CreateUplinkVRFs();
+    void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
 
 private:
+    static DeviceManager *instance;
     int lifs_reservation(platform_t platform);
 
     boost::property_tree::ptree spec;
@@ -268,7 +272,7 @@ private:
     std::map<uint64_t, Uplink*> uplinks; // uplink_id -> Uplink
 
     // Service Lif Info
-    struct lif_info info;
+    hal_lif_info_t hal_lif_info_;
     static struct queue_info qinfo[NUM_QUEUE_TYPES];
     int GenerateQstateInfoJson(std::string qstate_info_file);
 
@@ -279,6 +283,8 @@ private:
     // Bharat TODO: Not needed anymore as its being used for non-eth lif
     uint64_t lif_handle;
     bool dol_integ;
+    bool init_done;
+    std::string config_file;
 
     PdClient *pd;
 
@@ -290,6 +296,9 @@ private:
     uint16_t req_tail;
     uint16_t resp_head;
     uint16_t resp_tail;
+    ForwardingMode fwd_mode;
 };
+void devicemanager_init(void);
+
 
 #endif /* __DEV_HPP__ */

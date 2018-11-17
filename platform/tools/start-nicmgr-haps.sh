@@ -5,6 +5,7 @@ SYSCONFIG=/sysconfig/config0
 export NIC_DIR='/nic'
 export PLATFORM_DIR='/platform'
 export NIC_LOG_DIR=/var/log
+export NICMGR_LOG_LEVEL=debug
 export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
 export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_LIBRARY_PATH
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
@@ -22,7 +23,7 @@ if [ -r $SYSCONFIG/sysuuid ]; then
     export SYSUUID=`cat $SYSCONFIG/sysuuid`
 fi
 
-sleep 30
+#sleep 30
 
 if [[ "$FWD_MODE" != "classic" ]]; then
     if [ -r $SYSCONFIG/eth-smart.json ]; then

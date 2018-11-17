@@ -10,27 +10,28 @@
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 
 #include "delphic.hpp"
+#include "nicmgrd.hpp"
 
 using namespace std;
 using namespace upgrade;
 using grpc::Status;
 using delphi::error;
-using port::PortResponse;
-using port::PortOperStatus;
-using delphi::objects::PortStatus;
-using delphi::objects::PortStatusPtr;
+using dobj::PortStatus;
+using dobj::HalStatus;
 using sdk::types::port_oper_status_t;
 
 extern DeviceManager *devmgr;
 extern DeviceManager *devices[];
+extern bool g_hal_up;
 
 namespace nicmgr {
 
 // port reactors
-port_svc_ptr_t g_port_rctr;
+port_status_handler_ptr_t g_port_status_handler;
+hal_status_handler_ptr_t g_hal_status_handler;
 shared_ptr<NicMgrService> g_nicmgr_svc;
 
-// NicMgr delphi service
+// nicMgr delphi service
 NicMgrService::NicMgrService(delphi::SdkPtr sk) {
     sdk_ = sk;
     upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<nicmgr_upg_hndlr>(),
@@ -50,60 +51,60 @@ void NicMgrService::OnMountComplete() {
         delphi::objects::PortStatus::List(sdk_);
     for (vector<delphi::objects::PortStatusPtr>::iterator port=list.begin();
          port!=list.end(); ++port) {  
-        g_port_rctr->update_port_status(*port);
+        g_port_status_handler->update_port_status(*port);
     }
 }
 
-// get_port_reactor gets the port reactor object
-port_svc_ptr_t get_port_reactor (void) {
-    return g_port_rctr;
+// get_port_handler gets the port reactor object
+port_status_handler_ptr_t get_port_status_handler (void) {
+    return g_port_status_handler;
 }
 
-// init_port_reactors creates a port reactor
-Status init_port_reactors (delphi::SdkPtr sdk) {
+// init_port_handler creates a port reactor
+Status init_port_status_handler (delphi::SdkPtr sdk) {
     // create the PortStatus reactor
-    g_port_rctr = std::make_shared<port_svc>(sdk);
+    g_port_status_handler = std::make_shared<port_status_handler>(sdk);
 
     // mount objects
     PortStatus::Mount(sdk, delphi::ReadMode);
 
     // Register PortStatus reactor
-    PortStatus::Watch(sdk, g_port_rctr);
+    PortStatus::Watch(sdk, g_port_status_handler);
 
     return Status::OK;
 }
 
 // OnPortStatusCreate gets called when PortStatus object is created
-error port_svc::OnPortStatusCreate(PortStatusPtr portStatus) {
-    printf("Received port status create\n");
+error port_status_handler::OnPortStatusCreate(PortStatusPtr portStatus) {
+    NIC_LOG_DEBUG("Received port status create\n");
     update_port_status(portStatus);
     return error::OK();
 }
 
 // OnPortStatusUpdate gets called when PortStatus object is updated
-error port_svc::OnPortStatusUpdate(PortStatusPtr portStatus) {
-    printf("Received port status update\n");
+error port_status_handler::OnPortStatusUpdate(PortStatusPtr portStatus) {
+    NIC_LOG_DEBUG("Received port status update\n");
     update_port_status(portStatus);
     return error::OK();
 }
 
 // OnPortStatusDelete gets called when PortStatus object is deleted
-error port_svc::OnPortStatusDelete(PortStatusPtr portStatus) {
-    printf("Received port status delete\n");
+error port_status_handler::OnPortStatusDelete(PortStatusPtr portStatus) {
+    NIC_LOG_DEBUG("Received port status delete\n");
     return error::OK();
 }
 
-// update_port_status updates port status in delphi
-error port_svc::update_port_status(PortStatusPtr port) {
+// update_port_status_handler updates port status in delphi
+error port_status_handler::update_port_status(PortStatusPtr port) {
     // create port status object
     uint32_t port_id = port->mutable_key_or_handle()->port_id();
     port::PortOperStatus oper_status = port->oper_status();
-
-    printf("Delphi setting port %u status to %u\n", port_id, oper_status);
+    NIC_LOG_DEBUG("Updating port %u status to %u\n",
+                  port_id, oper_status);
 
     if (!devmgr) {
-        printf("devmgr ptr is null\n");
-        return error::OK();
+        NIC_LOG_ERR("devmgr ptr is null\n");
+        return error::OK();    // TODO: rameshp, pleaes fix this ???
     }
     if (oper_status == port::PortOperStatus::PORT_OPER_STATUS_UP) {
         devmgr->DevLinkUpHandler(port_id);
@@ -114,13 +115,57 @@ error port_svc::update_port_status(PortStatusPtr port) {
     return error::OK();
 }
 
+// get_hal_status_handler gets the port reactor object
+hal_status_handler_ptr_t get_hal_status_handler (void) {
+    return g_hal_status_handler;
+}
+
+// init_hal_status_handler creates a HAL status reactor
+Status init_hal_status_handler (delphi::SdkPtr sdk) {
+    // create the HalStatus reactor
+    g_hal_status_handler = std::make_shared<hal_status_handler>(sdk);
+
+    // mount objects
+    HalStatus::Mount(sdk, delphi::ReadMode);
+
+    // register HalStatus reactor
+    HalStatus::Watch(sdk, g_hal_status_handler);
+
+    return Status::OK;
+}
+
+// helper function to handle HalStatus update event
+static void
+handle_hal_up (void)
+{
+    NIC_LOG_DEBUG("Received HAL_STATUS_UP notification\n");
+    devicemanager_init();
+    // spawn thread to create mnets
+    nicmgrd_mnet_thread_init();
+    g_hal_up = true;
+}
+
+// OnHalStatusCreate gets called when HalStatus object is created
+error hal_status_handler::OnHalStatusCreate(HalStatusPtr halStatus) {
+    if (halStatus->state() == ::hal::HAL_STATE_UP) {
+        handle_hal_up();
+    }
+    return error::OK();
+}
+
+// OnHalStatusUpdate gets called when HalStatus object is updated
+error hal_status_handler::OnHalStatusUpdate(HalStatusPtr halStatus) {
+    if (halStatus->state() == ::hal::HAL_STATE_UP) {
+        handle_hal_up();
+    }
+    return error::OK();
+}
+
 // init_accel_objects mounts accelerator objects
 Status init_accel_objects (delphi::SdkPtr sdk) {
-
-    delphi::objects::AccelPfInfo::Mount(sdk, delphi::ReadWriteMode);
-    delphi::objects::AccelSeqQueueInfo::Mount(sdk, delphi::ReadWriteMode);
-    delphi::objects::AccelHwRingInfo::Mount(sdk, delphi::ReadWriteMode);
-
+    dobj::AccelPfInfo::Mount(sdk, delphi::ReadWriteMode);
+    dobj::AccelSeqQueueInfo::Mount(sdk, delphi::ReadWriteMode);
+    dobj::AccelHwRingInfo::Mount(sdk, delphi::ReadWriteMode);
     return Status::OK;
 }
 

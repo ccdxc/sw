@@ -36,7 +36,6 @@ LIFManager* LIFManager::factory(mpartition *mp,
                                 program_info *pinfo,
                                 const char *kHBMLabel) {
     assert(mp);
-    assert(pinfo);
 
     LIFManager *lm = new LIFManager();
     assert(lm);
@@ -124,6 +123,13 @@ int32_t LIFManager::WriteQStateImpl(
     }
 
     return 0;
+}
+
+
+void 
+LIFManager::set_program_info(program_info *pinfo)
+{
+    pinfo_ = pinfo;
 }
 
 int32_t LIFManager::GetPCOffset(const char *handle,

@@ -47,10 +47,12 @@ directmap::factory(char *name, uint32_t id,
     dm->stats_ = (uint64_t *)SDK_CALLOC(SDK_MEM_ALLOC_ID_DM_STATS,
                                         sizeof(uint64_t) * STATS_MAX);
 
+#if 0
     SDK_TRACE_DEBUG("directmap:: %-30s: tableid: %-4d swdata_len: %-4d "
                     "hwdata_len_: %-4d sharing_en:%d",
                     dm->name_, dm->id_, dm->swdata_len_, dm->hwdata_len_,
                     dm->sharing_en_);
+#endif
 
     return dm;
 }

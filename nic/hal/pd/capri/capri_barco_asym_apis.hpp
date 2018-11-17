@@ -5,7 +5,7 @@ namespace hal {
 namespace pd {
 
 
-#define _API_PARAM_DEBUG_
+//#define _API_PARAM_DEBUG_
 
 #ifdef _API_PARAM_DEBUG_
 

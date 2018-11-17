@@ -80,3 +80,9 @@ HalObject::HalObject()
 {
     hal = HalCommonClient::GetInstance();
 }
+
+void
+HalObject::PopulateHalCommonClient()
+{
+    hal = HalCommonClient::GetInstance();
+}

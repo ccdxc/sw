@@ -30,7 +30,7 @@
 
 #define HAL_HT_CREATE(name, htable, table_sz, ...)                             \
 do {                                                                           \
-    HAL_TRACE_DEBUG("Creating {} hash table with size {}", (name), (table_sz));\
+    /* HAL_TRACE_DEBUG("Creating {} hash table with size {}", (name), (table_sz)); */\
     (htable) = sdk::lib::ht::factory((table_sz), __VA_ARGS__);                 \
 } while (0)
 

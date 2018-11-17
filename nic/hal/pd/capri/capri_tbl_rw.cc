@@ -343,12 +343,12 @@ capri_toeplitz_init (int stage, int stage_tableid)
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) ETH_RSS_INDIR_PROGRAM,
                                    &pc) < 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) ETH_RSS_INDIR_PROGRAM);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) ETH_RSS_INDIR_PROGRAM,
                     pc);
@@ -411,12 +411,12 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_PROG,
                                    &capri_action_p4plus_asm_base) < 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_RXDMA_PROG);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_RXDMA_PROG,
                     capri_action_p4plus_asm_base);
@@ -439,12 +439,12 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
                                    &capri_action_p4plus_asm_base) < 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
                     capri_action_p4plus_asm_base);
@@ -466,12 +466,12 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_PROG,
                                    &capri_action_p4plus_asm_base) < 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_TXDMA_PROG);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_TXDMA_PROG,
                     capri_action_p4plus_asm_base);
@@ -493,12 +493,12 @@ capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
     if (capri_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
                                    (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG,
                                    &capri_action_p4plus_asm_base) < 0) {
-        HAL_TRACE_DEBUG("Could not resolve handle {} program {} \n",
+        HAL_TRACE_DEBUG("Could not resolve handle {} program {}",
                         (char *) CAPRI_P4PLUS_HANDLE,
                         (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG);
         return CAPRI_FAIL;
     }
-    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}\n",
+    HAL_TRACE_DEBUG("Resolved handle {} program {} to PC {:#x}",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_TXDMA_EXT_PROG,
                     capri_action_p4plus_asm_base);

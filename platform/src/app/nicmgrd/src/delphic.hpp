@@ -11,8 +11,11 @@
 #include "gen/proto/nicmgr/nicmgr.delphi.hpp"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 #include "gen/proto/port.delphi.hpp"
+#include "gen/proto/hal.delphi.hpp"
 #include "platform/src/lib/upgrade/upgrade.hpp"
 #include "platform/src/lib/sysmgr/sysmgr.hpp"
+
+namespace dobj = delphi::objects;
 
 namespace nicmgr {
 
@@ -20,8 +23,8 @@ using nicmgr::nicmgr_upg_hndlr;
 using nicmgr::sysmgr_client;
 using grpc::Status;
 using delphi::error;
-using port::PortOperStatus;
-using delphi::objects::PortStatusPtr;
+using dobj::PortStatusPtr;
+using dobj::HalStatusPtr;
 
 class NicMgrService : public delphi::Service,
                       public enable_shared_from_this<NicMgrService> {
@@ -36,10 +39,10 @@ public:
     void OnMountComplete(void); 
 };
 
-// port_svc is the reactor for the Port object
-class port_svc : public delphi::objects::PortStatusReactor {
+// port_status_handler is the reactor for the Port object
+class port_status_handler : public dobj::PortStatusReactor {
 public:
-    port_svc(delphi::SdkPtr sdk) {
+    port_status_handler(delphi::SdkPtr sdk) {
         this->sdk_ = sdk;
     }
 
@@ -55,12 +58,27 @@ public:
     // update_port_status updates port status in delphi
     error update_port_status(PortStatusPtr port);
 private:
-    delphi::SdkPtr sdk_;
+    delphi::SdkPtr    sdk_;
 };
-typedef std::shared_ptr<port_svc> port_svc_ptr_t;
+typedef std::shared_ptr<port_status_handler> port_status_handler_ptr_t;
 
-// init_port_reactors creates a port reactor
-Status init_port_reactors(delphi::SdkPtr sdk);
+// init_port_status_handler creates a port reactor
+Status init_port_status_handler(delphi::SdkPtr sdk);
+
+class hal_status_handler : public dobj::HalStatusReactor {
+public:
+    hal_status_handler(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
+    }
+    virtual error OnHalStatusCreate(HalStatusPtr port);
+    virtual error OnHalStatusUpdate(HalStatusPtr port);
+private:
+    delphi::SdkPtr    sdk_;
+};
+typedef std::shared_ptr<hal_status_handler> hal_status_handler_ptr_t;
+
+// init_hal_status_handler creates a reactor for HAL status
+Status init_hal_status_handler(delphi::SdkPtr sdk);
 
 // init_accel_objects mounts accelerator objects
 Status init_accel_objects(delphi::SdkPtr sdk);

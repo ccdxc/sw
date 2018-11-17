@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = device.proto
 MODULE_PREREQS      = gogo.proto
-MODULE_GEN_TYPES    = CC PY
+MODULE_GEN_TYPES    = CC PY DELPHI
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
                       ${TOPDIR}/vendor/github.com/gogo/protobuf/gogoproto \

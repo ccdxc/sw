@@ -19,6 +19,7 @@ public:
   static Uplink *Factory(uplink_id_t id, bool is_oob = false);
   static void Destroy(Uplink *uplink);
   int UpdateHalWithNativeL2seg(uint32_t native_l2seg_id);
+  void CreateVrf();
 
   // Get APIs
   uint32_t GetId();

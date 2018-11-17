@@ -181,8 +181,26 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
 /**
  * Accelerator PF Device
  */
+void Accel_PF::Update(void)
+{
+    uint8_t cosA = 1;
+    uint8_t cosB = 0;
+    uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+
+    // Acquire rings info as initialized by HAL
+    accel_ring_info_get_all();
+
+    // Establish sequencer queues metrics with Delphi
+    if (DelphiDeviceInit()) {
+        NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
+        return;
+    }
+
+    pd->program_qstate(qinfo, &info, coses);
+}
+
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
-                   const struct lif_info *nicmgr_lif_info,
+                   const hal_lif_info_t *nicmgr_lif_info,
                    PdClient *pd_client,
                    bool dol_integ) :
     seq_qid_init_high(0),
@@ -191,19 +209,20 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     uint64_t    hbm_addr;
     uint32_t    hbm_size;
     uint32_t    num_keys_max;
-    uint8_t     cosA = 1;
-    uint8_t     cosB = 0;
 
     hal = hal_client;
     spec = (accel_devspec_t *)dev_spec;
     pd = pd_client;
+    lif_init_done = false;
     memset(&info, 0, sizeof(info));
 
     NIC_LOG_INFO("In accel constructor: dol_integ {} intr_base {:#x}",
                  dol_integ, spec->intr_base);
 
     // Locate HBM region dedicated to crypto keys
-    if (hal->AllocHbmAddress(CAPRI_BARCO_KEY_DESC, &hbm_addr, &hbm_size)) {
+    hbm_addr = pd->mp_->start_addr(CAPRI_BARCO_KEY_DESC);
+    hbm_size = pd->mp_->size_kb(CAPRI_BARCO_KEY_DESC);
+    if (hbm_addr == INVALID_MEM_ADDRESS || hbm_size == 0) {
         NIC_LOG_ERR("Failed to get HBM base for {}", CAPRI_BARCO_KEY_DESC);
         return;
     }
@@ -227,10 +246,14 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     // Locate HBM region dedicated to STORAGE_SEQ_HBM_HANDLE
     memset(&pci_resources, 0, sizeof(pci_resources));
-    if (hal->AllocHbmAddress(STORAGE_SEQ_HBM_HANDLE, &hbm_addr, &hbm_size)) {
+
+    hbm_addr = pd->mp_->start_addr(STORAGE_SEQ_HBM_HANDLE);
+    hbm_size = pd->mp_->size_kb(STORAGE_SEQ_HBM_HANDLE);
+    if (hbm_addr == INVALID_MEM_ADDRESS || hbm_size == 0) {
         NIC_LOG_ERR("Failed to get HBM base for {}", STORAGE_SEQ_HBM_HANDLE);
         return;
     }
+
     hbm_size *= 1024;
 
     // First, ensure size is a power of 2, then per PCIe BAR mapping
@@ -249,7 +272,9 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     NIC_LOG_INFO("HBM address {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
 
     // Find devcmd/devcmddb, etc., area
-    if (hal->AllocHbmAddress(ACCEL_DEVCMD_HBM_HANDLE, &hbm_addr, &hbm_size)) {
+    hbm_addr = pd->mp_->start_addr(ACCEL_DEVCMD_HBM_HANDLE);
+    hbm_size = pd->mp_->size_kb(ACCEL_DEVCMD_HBM_HANDLE);
+    if (hbm_addr == INVALID_MEM_ADDRESS || hbm_size == 0) {
         NIC_LOG_ERR("Failed to get HBM base for {}", ACCEL_DEVCMD_HBM_HANDLE);
         return;
     }
@@ -270,15 +295,14 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     static_assert(sizeof(devcmd->cpl) == 16);
     static_assert((offsetof(dev_cmd_regs_t, data) % 4) == 0);
 
-    // Acquire rings info as initialized by HAL
-    accel_ring_info_get_all();
-
     // Create LIF
     qinfo[STORAGE_SEQ_QTYPE_SQ].entries = log_2(spec->seq_queue_count);
     spec->seq_created_count = 1 << qinfo[STORAGE_SEQ_QTYPE_SQ].entries;
-    info.lif_id = spec->lif_id;
+    info.pushed_to_hal = false;
+    info.id = spec->lif_id;
     info.hw_lif_id = spec->hw_lif_id;
     if (dol_integ) {
+#if 0
         if (hal->lif_map.find(spec->lif_id) != hal->lif_map.end()) {
             if (hal->LifDelete(spec->lif_id)) {
                 NIC_LOG_ERR("Failed to delete LIF, id = {}", spec->lif_id);
@@ -293,10 +317,10 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
          * the next id that HAL returns should match.
          */
         info.hw_lif_id = 0;
-        uint64_t lif_handle = hal->LifCreate(info.lif_id, qinfo, &info,
+        uint64_t lif_handle = hal->LifCreate(info.id, qinfo, &info,
                                              0, false, 0, 0, 0, 0);
         if (lif_handle == 0) {
-            NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.lif_id);
+            NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.id);
             return;
         }
         if (spec->hw_lif_id != info.hw_lif_id) {
@@ -304,21 +328,19 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                         spec->hw_lif_id, info.hw_lif_id);
             throw runtime_error("HAL nicmgr hw_lif_id mismatch");
         }
+#endif
 
     } else {
-        if (platform_is_hw(pd->platform_)) {
-            uint64_t ret = hal->LifCreate(spec->lif_id,  NULL, qinfo, &info);
-            if (ret != 0) {
-                NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.lif_id);
-                return;
-            }
-        }
-        uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
-        pd->program_qstate(qinfo, &info, coses);
+
+        info.id = spec->lif_id;
+        info.hw_lif_id = spec->hw_lif_id;
+        info.type = types::LIF_TYPE_NONE;
+        info.pinned_uplink = 0;
+        info.enable_rdma = false;
+        memcpy(info.queue_info, qinfo,
+               sizeof(info.queue_info));
     }
 
-    NIC_LOG_INFO("Accel lif id:{}, hw_lif_id: {}, seq_created_count: {}",
-                 info.lif_id, info.hw_lif_id, spec->seq_created_count);
     name = string_format("accel{}", spec->lif_id);
 
     // Configure PCI resources
@@ -652,6 +674,9 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     NIC_LOG_INFO("lif-{}: CMD_OPCODE_RESET", info.hw_lif_id);
 
+    // Init LIF.
+    LifInit();
+
     // Disable all sequencer queues
     for (qid = 0; qid < spec->seq_created_count; qid++) {
         qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
@@ -672,9 +697,9 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     // Wait for P4+ to quiesce all sequencer queues
     static_assert((offsetof(storage_seq_qstate_t, c_ndx) -
-                  offsetof(storage_seq_qstate_t, p_ndx)) > 0);
+                   offsetof(storage_seq_qstate_t, p_ndx)) > 0);
     static_assert((offsetof(storage_seq_qstate_t, abort) -
-                  offsetof(storage_seq_qstate_t, p_ndx)) > 0);
+                   offsetof(storage_seq_qstate_t, p_ndx)) > 0);
 
     auto seq_queues_quiesce_check = [this, &qid] () -> int
     {
@@ -688,7 +713,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
                      (offsetof(storage_seq_qstate_t, abort) -
                       offsetof(storage_seq_qstate_t, p_ndx) +
                       sizeof(seq_qstate.abort)),
-                      0);
+                     0);
 
             // As part of abort, P4+ would set c_ndx = p_ndx
             if (seq_qstate.c_ndx != seq_qstate.p_ndx) {
@@ -703,7 +728,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     Poller poll(ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US);
     poll(seq_queues_quiesce_check);
 
-    NIC_LOG_INFO("[lif{}: last qid quiesced: {} seq_qid_init_high: {}",
+    NIC_LOG_INFO("[lif-{}: last qid quiesced: {} seq_qid_init_high: {}",
                  info.hw_lif_id, qid, seq_qid_init_high);
 
     // Reset and reenable accelerator rings
@@ -722,7 +747,19 @@ Accel_PF::_DevcmdLifInit(void *req, void *req_data,
 {
     lif_init_cmd_t  *cmd = (lif_init_cmd_t *)req;
 
-    NIC_LOG_INFO("lif{}: lif_index {}", info.hw_lif_id, cmd->index);
+    NIC_LOG_INFO("lif-{}: lif_index {}", info.hw_lif_id, cmd->index);
+
+#if 0
+    // Trigger Hal for Lif create if this is the first time
+    if (!info.pushed_to_hal) {
+        uint64_t ret = hal->LifCreate(&info);
+        if (ret != 0) {
+            NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.id);
+            return (DEVCMD_ERROR);
+        }
+    }
+    Update();
+#endif
 
     return (DEVCMD_SUCCESS);
 }
@@ -795,7 +832,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
 
     cpl->qid = spec->adminq_base + cmd->index;
     cpl->qtype = STORAGE_SEQ_QTYPE_ADMIN;
-    NIC_LOG_INFO("lif-{}: qid {} qtype {}", 
+    NIC_LOG_INFO("lif-{}: qid {} qtype {}",
                  info.hw_lif_id, cpl->qid, cpl->qtype);
 
     return (DEVCMD_SUCCESS);
@@ -816,7 +853,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     enum DevcmdStatus       status = DEVCMD_ERROR;
 
     NIC_LOG_INFO("lif-{} CMD_OPCODE_SEQ_QUEUE_INIT: "
-                 "qgroup {} index {}", 
+                 "qgroup {} index {}",
                  info.hw_lif_id, cmd->qgroup, cmd->index);
 
     switch (cmd->qgroup) {
@@ -1570,6 +1607,29 @@ crypto_key_accum_del(uint32_t key_index)
     accel_crypto_key_map.erase(key_index);
 }
 
+void
+Accel_PF::LifInit()
+{
+    if (get_lif_init_done()) {
+        NIC_LOG_INFO("lif-{}: Already inited...skipping");
+        return;
+    }
+    NIC_LOG_INFO("lif-{}: Initing Lif", info.hw_lif_id);
+
+    // Trigger Hal for Lif create if this is the first time
+    if (!info.pushed_to_hal) {
+        uint64_t ret = hal->LifCreate(&info);
+        if (ret != 0) {
+            NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.id);
+            return;
+        }
+    }
+    Update();
+    set_lif_init_done(true);
+}
+
+
+
 /*
  * Poll with timeout
  */
@@ -1609,3 +1669,8 @@ ostream &operator<<(ostream& os, const Accel_PF& obj) {
     return os;
 }
 
+void
+Accel_PF::SetHalClient(HalClient *hal_client)
+{
+    hal = hal_client;
+}

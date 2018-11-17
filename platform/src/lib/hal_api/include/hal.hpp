@@ -63,6 +63,7 @@ public:
     // TODO: Cleanup. Why should this be static if its being assigned
     //       in the constructor, thereby assigning it for every hal object
     //       created (uplink, lif, etc);
+    void PopulateHalCommonClient();
     static HalCommonClient *hal;
 
 protected:

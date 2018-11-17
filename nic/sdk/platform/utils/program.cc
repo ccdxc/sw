@@ -32,14 +32,14 @@ program_info::init(const char *program_info_file, shmmgr *mmgr)
         std::string end_addr = pgm.second.get<std::string>(JSON_KEY_END_ADDRESS);
 
         if (program_map_.find(program) != program_map_.end()) {
-            SDK_TRACE_ERR("program %s info exists already !! duplicate ??",
+            SDK_TRACE_ERR("Program %s info exists already !! duplicate ??",
                           program.c_str());
             return false;
         }
         pinfo.base_addr = std::stol(base_addr);
         pinfo.end_addr = std::stol(end_addr);
         program_map_[program] = pinfo;
-        SDK_TRACE_DEBUG("added program %s to map", program.c_str());
+        //SDK_TRACE_DEBUG("Added program %s to map", program.c_str());
 
         // iterate through all the symbols now
         pt::ptree& symbols = pgm.second.get_child(JSON_KEY_SYMBOLS);
@@ -48,15 +48,15 @@ program_info::init(const char *program_info_file, shmmgr *mmgr)
             std::string addr = sym.second.get<std::string>(JSON_KEY_ADDRESS);
 
             if (symbol_map_.find(program + ":" + symbol) != symbol_map_.end()) {
-                SDK_TRACE_ERR("symbol %s:%s info exists already !! duplicate ??",
+                SDK_TRACE_ERR("Symbol %s:%s info exists already !! duplicate ??",
                               program.c_str(), symbol.c_str());
                 return false;
             }
             sinfo.addr = std::stol(addr);
             symbol_map_[(program + ":" + symbol)] = sinfo;
-            SDK_TRACE_DEBUG("added symbol %s to map with addr: %lu",
-                            (program + ":" + symbol).c_str(),
-                            sinfo.addr);
+            //SDK_TRACE_DEBUG("Added symbol %s to map with addr: %lu",
+                              //(program + ":" + symbol).c_str(),
+                              //sinfo.addr);
         }
     }
 

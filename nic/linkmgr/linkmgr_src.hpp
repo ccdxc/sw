@@ -11,7 +11,7 @@
 #include "linkmgr_svc.hpp"
 #include "linkmgr_debug_svc.hpp"
 #include "linkmgr_state.hpp"
-#include "gen/proto/hal_metrics.delphi.hpp"
+#include "gen/proto/mac_metrics.delphi.hpp"
 
 using hal::hal_handle_id_ht_entry_t;
 using hal::hal_handle_get_from_handle_id;

@@ -30,6 +30,7 @@ static string config_file;
 enum ForwardingMode fwd_mode = FWD_MODE_CLASSIC_NIC;
 platform_t platform = PLATFORM_NONE;
 static bool dol_integ;
+bool g_hal_up = false;
 extern void nicmgr_do_client_registration(void);
 
 static void
@@ -43,7 +44,9 @@ static void
 nicmgrd_poll(void *arg)
 {
     devmgr->DevcmdPoll();
-    devmgr->AdminQPoll();
+    if (g_hal_up) {
+        devmgr->AdminQPoll();
+    }
 
     fflush(stdout);
     fflush(stderr);
@@ -61,8 +64,8 @@ void *nicmgrd_create_mnets(void *ctxt)
 
 
 #define NICMGRD_THREAD_ID_MNET 0
-static void
-nicmgrd_mnet_thread_init()
+void
+nicmgrd_mnet_thread_init(void)
 {
 #ifdef __aarch64__
      sdk::lib::thread    *mnet_thread = NULL;
@@ -88,24 +91,20 @@ nicmgrd_mnet_thread_init()
 #endif
 }
 
-
 static void
-loop()
+loop(void)
 {
     if (platform_is_hw(platform)) {
         pciemgr = new class pciemgr("nicmgrd");
         pciemgr->initialize();
     }
 
-    devmgr = new DeviceManager(fwd_mode, platform, dol_integ);
+    devmgr = new DeviceManager(config_file, fwd_mode, platform, dol_integ);
     devmgr->LoadConfig(config_file);
 
     if (pciemgr) {
         pciemgr->finalize();
     }
-
-    // Initialize Mnet thread to create mnets
-    nicmgrd_mnet_thread_init();
 
     evutil_timer timer;
     evutil_timer_start(&timer, nicmgrd_poll, NULL, 0.1, 0.1);
@@ -117,7 +116,6 @@ loop()
     }
 }
 
-
 int main(int argc, char *argv[])
 {
     int opt;
@@ -126,7 +124,6 @@ int main(int argc, char *argv[])
 
     dol_integ_str = std::getenv("DOL");
     dol_integ = dol_integ_str ? !!atoi(dol_integ_str) : false;
-
     while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
         case 'c':

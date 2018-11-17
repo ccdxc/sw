@@ -7,6 +7,7 @@
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
+#include "nic/hal/iris/delphi/delphic.hpp"
 
 Status
 InterfaceServiceImpl::LifCreate(ServerContext *context,
@@ -146,6 +147,10 @@ InterfaceServiceImpl::InterfaceCreate(ServerContext* context,
         hal::interface_create(spec, response);
     }
     hal::hal_cfg_db_close();
+    // once batch of uplinks are created, we can declare that HAL is up
+    if (req->request(0).type() == intf::IF_TYPE_UPLINK) {
+        hal::svc::set_hal_status(hal::HAL_STATUS_UP);
+    }
     return Status::OK;
 }
 

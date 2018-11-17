@@ -6,13 +6,11 @@
 
 #include "delphic.hpp"
 
-
 #define NICMGR_DELPHI_REG_THREAD_ID 1
 
 using namespace std;
 using namespace nicmgr;
 using namespace upgrade;
-
 
 // this method is called from the pthread_create
 void *nicmgr_delphi_client_entry (void *ctxt)
@@ -25,21 +23,16 @@ void *nicmgr_delphi_client_entry (void *ctxt)
     // Register NicMgr as Delphi Service
     sdk->RegisterService(g_nicmgr_svc);
 
-    // init port reactor and other objects
-    init_port_reactors(sdk);
+    // init port status handler
+    init_port_status_handler(sdk);
+
+    // init hal status handler
+    init_hal_status_handler(sdk);
+
+    // init accel dev related handlers
     init_accel_objects(sdk);
 
     //  connect to delphi
     sdk->Connect();
     return NULL;
 }
-
-void nicmgr_do_client_registration (void)
-{
-    pthread_t ev_thread_id = 0;
-
-    // create a thread for delphi events
-    pthread_create(&ev_thread_id, 0, nicmgr_delphi_client_entry, (void*)NULL);
-    printf("\nInstantiated delphi thread ...\n");
-}
-

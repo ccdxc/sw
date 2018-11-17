@@ -377,10 +377,10 @@ def run_nicmgr(args, standalone=False):
     lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
     os.environ["DOL"] = "1"
     os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
     os.chdir(nic_dir)
-    cmd = [os.path.join(bin_dir, 'nicmgrd'), '-c',
-        os.path.join(nic_dir, '../platform/src/app/nicmgrd/etc/accel.json')]
+    cmd = [nic_dir + "/../platform/gen/x86_64/bin/nicmgrd", '-c', os.path.join(nic_dir, '../platform/src/app/nicmgrd/etc/accel.json')]
 
     global nicmgr_process
     nicmgr_process = Popen(cmd)
