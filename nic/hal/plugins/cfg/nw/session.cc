@@ -739,7 +739,7 @@ session_state_to_session_get_response (session_t *session,
         HAL_TRACE_DEBUG("valid rflow session");
         // rflow age
         create_ns = session_state->rflow_state.create_ts;
-        age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+        age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
         response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
         // Flow remaining inactivity timeout
@@ -747,7 +747,7 @@ session_state_to_session_get_response (session_t *session,
             response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_time_to_age(HAL_MAX_INACTIVTY_TIMEOUT);
         } else {
-            time_elapsed = (ctime_ns-session_state->rflow_state.last_pkt_ts);
+            time_elapsed = TIME_DIFF(ctime_ns, session_state->rflow_state.last_pkt_ts);
             time_remaining = (session_timeout > time_elapsed)?
                               ((session_timeout-time_elapsed)/TIME_NSECS_PER_SEC):0;
             response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
@@ -770,7 +770,7 @@ session_state_to_session_get_response (session_t *session,
         HAL_TRACE_DEBUG("valid iflow aug session");
         // aug iflow age
         create_ns = session_state->iflow_aug_state.create_ts;
-        age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+        age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
         response->mutable_spec()->mutable_peer_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
 
@@ -787,7 +787,7 @@ session_state_to_session_get_response (session_t *session,
         HAL_TRACE_DEBUG("valid rflow aug session");
         // aug iflow age
         create_ns = session_state->rflow_aug_state.create_ts;
-        age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+        age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
         response->mutable_spec()->mutable_peer_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
 
@@ -1699,6 +1699,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     }
 
    *session_state_p = session_state;
+   //HAL_TRACE_DEBUG("Session Aged: {}", retval);
 
    return retval;
 }
