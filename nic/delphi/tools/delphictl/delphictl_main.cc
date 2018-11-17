@@ -6,6 +6,7 @@
 #include "nic/delphi/shm/delphi_metrics.hpp"
 #include "argh/argh.h"
 #include "gen/proto/delphi_objects.hpp"
+#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 
 using namespace delphi;
 

@@ -27,6 +27,8 @@ using accelRGroup::AccelRGroupInfoGetRequest;
 using accelRGroup::AccelRGroupInfoGetResponse;
 using accelRGroup::AccelRGroupIndicesGetRequest;
 using accelRGroup::AccelRGroupIndicesGetResponse;
+using accelRGroup::AccelRGroupMetricsGetRequest;
+using accelRGroup::AccelRGroupMetricsGetResponse;
 
 namespace hal {
 
@@ -63,6 +65,20 @@ typedef struct {
 typedef void (*accel_rgroup_ring_indices_cb_t)(void *user_ctx,
                                                const accel_rgroup_ring_indices_t& indices);
 
+/*
+ * Ring metrics info
+ */
+typedef struct {
+    uint32_t    ring_handle;
+    uint32_t    sub_ring;
+    uint64_t    input_bytes;
+    uint64_t    output_bytes;
+    uint64_t    soft_resets;
+} accel_rgroup_ring_metrics_t;
+
+typedef void (*accel_rgroup_ring_metrics_cb_t)(void *user_ctx,
+                                               const accel_rgroup_ring_metrics_t& metrics);
+
 
 hal_ret_t AccelRGroupAdd(const AccelRGroupAddRequest& request,
                          AccelRGroupAddResponse *response);
@@ -82,6 +98,8 @@ hal_ret_t AccelRGroupInfoGet(const AccelRGroupInfoGetRequest& request,
                              AccelRGroupInfoGetResponse *response);
 hal_ret_t AccelRGroupIndicesGet(const AccelRGroupIndicesGetRequest& request,
                                 AccelRGroupIndicesGetResponse *response);
+hal_ret_t AccelRGroupMetricsGet(const AccelRGroupMetricsGetRequest& request,
+                                AccelRGroupMetricsGetResponse *response);
 }    // namespace hal
 
 #endif // __ACCEL_RGROUP_HPP__

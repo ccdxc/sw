@@ -43,9 +43,7 @@ cc_library(
               "-Iplatform/include/common",
               "-Iplatform/src/lib/misc/include",
               "-Iplatform/src/lib/cfgspace/include",
-              "-Iplatform/src/lib/pciehost/include",
               "-Iplatform/src/lib/pciehdevices/include",
-              "-Iplatform/src/lib/pciehw/include",
               "-Iplatform/src/lib/pcieport/include",
             ],
     deps = [
@@ -57,9 +55,7 @@ cc_library(
         "//platform/include/common:platformcommon_hdrs",
         "//platform/src/lib/misc/include:libmisc_hdrs",
         "//platform/src/lib/cfgspace/include:libcfgspace_hdrs",
-        "//platform/src/lib/pciehost/include:libpciehost_hdrs",
         "//platform/src/lib/pciehdevices/include:libpciehdevices_hdrs",
-        "//platform/src/lib/pciehw/include:libpciehw_hdrs",
         "//platform/src/lib/pcieport/include:libpcieport_hdrs",
         ":hal_if",
     ]

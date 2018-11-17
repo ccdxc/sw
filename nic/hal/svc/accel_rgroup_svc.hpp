@@ -46,6 +46,10 @@ using accelRGroup::AccelRGroupIndicesGetRequest;
 using accelRGroup::AccelRGroupIndicesGetRequestMsg;
 using accelRGroup::AccelRGroupIndicesGetResponse;
 using accelRGroup::AccelRGroupIndicesGetResponseMsg;
+using accelRGroup::AccelRGroupMetricsGetRequest;
+using accelRGroup::AccelRGroupMetricsGetRequestMsg;
+using accelRGroup::AccelRGroupMetricsGetResponse;
+using accelRGroup::AccelRGroupMetricsGetResponseMsg;
 
 class AccelRGroupServiceImpl final : public AccelRGroup::Service {
 
@@ -77,6 +81,9 @@ public:
     Status AccelRGroupIndicesGet(ServerContext *context,
                                  const AccelRGroupIndicesGetRequestMsg *request,
                                  AccelRGroupIndicesGetResponseMsg *response) override;
+    Status AccelRGroupMetricsGet(ServerContext *context,
+                                 const AccelRGroupMetricsGetRequestMsg *request,
+                                 AccelRGroupMetricsGetResponseMsg *response) override;
 };
 
 #endif  /* __ACCEL_RGROUP_SVC_HPP__ */

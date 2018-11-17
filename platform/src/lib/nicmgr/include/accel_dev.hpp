@@ -4,6 +4,7 @@
 
 #include <map>
 #include <unordered_map>
+#include <ev++.h>
 
 #include "dev.hpp"
 #include "hal_client.hpp"
@@ -65,6 +66,12 @@ enum {
     ((uint64_t)(ACCEL_LIF_DBADDR_UPD) << DB_UPD_SHFT) | \
     DB_ADDR_BASE_LOCAL)
 
+/*
+ * Default publish interval fraction
+ * e.g., 2 means 1/2 of a second
+ */
+#define ACCEL_DEV_PUB_INTV_FRAC_DFLT    2
+
 /**
  * Accelerator Device Spec
  */
@@ -79,6 +86,7 @@ typedef struct accel_devspec {
     uint32_t adminq_count;
     uint32_t intr_base;
     uint32_t intr_count;
+    uint32_t pub_intv_frac; // publishing interval in fraction of second
     // PCIe
     uint8_t  pcie_port;
 
@@ -138,12 +146,21 @@ typedef struct dev_cmd_regs {
 
 #endif /* ACCEL_DEV_CMD_ENUMERATE */
 
+#ifndef _NICMGR_IF_HPP_
+
+#include "gen/proto/nicmgr/accel_metrics.pb.h"
+#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
+
 /**
  * Accelerator device ring group ring info
  */
 typedef struct {
+    delphi::objects::AccelHwRingInfoPtr delphi_ring;
+    delphi::objects::AccelHwRingMetricsPtr delphi_metrics;
     accel_rgroup_rinfo_rsp_t    info;
     accel_rgroup_rindices_rsp_t indices;
+    accel_rgroup_rmetrics_rsp_t metrics;
+    uint64_t                    soft_resets;
 } accel_rgroup_ring_t;
 
 /*
@@ -199,8 +216,13 @@ private:
     /* Members */
     string                      name;
     accel_devspec_t             *spec;
+    ev::timer                   sync_timer;     // timer to sync to hub
+
     // Hardware Info
     static struct queue_info    qinfo[NUM_QUEUE_TYPES];
+    delphi::objects::AccelPfInfoPtr delphi_pf;
+    std::vector<delphi::objects::AccelSeqQueueInfoPtr> delphi_qinfo_vec;
+    std::vector<delphi::objects::AccelSeqQueueMetricsPtr> delphi_qmetrics_vec;
 
     // HAL Info
     HalClient                   *hal;
@@ -236,7 +258,7 @@ private:
     enum DevcmdStatus _DevcmdCryptoKeyUpdate(void *req, void *req_data,
                                              void *resp, void *resp_data);
 
-    int SeqQueueMetricsInit(void);
+    int DelphiDeviceInit(void);
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 
     int accel_ring_info_get_all(void);
@@ -250,11 +272,19 @@ private:
                               bool conditional);
     int accel_rgroup_rinfo_get(void);
     int accel_rgroup_rindices_get(void);
+    int accel_rgroup_rmetrics_get(void);
     uint32_t accel_ring_num_pendings_get(const accel_rgroup_ring_t& rgroup_ring);
     int accel_ring_max_pendings_get(uint32_t& max_pendings);
 
+    void periodic_sync(ev::timer &watcher, int revents);
+    void delphi_update(void);
+    void seq_queue_info_publish(uint32_t qid,
+                                storage_seq_qgroup_t qgroup,
+                                uint32_t core_id);
     friend ostream &operator<<(ostream&, const Accel_PF&);
     const char*opcode_to_str(enum cmd_opcode opcode);
 };
+
+#endif /* _NICMGR_IF_HPP_ */
 
 #endif

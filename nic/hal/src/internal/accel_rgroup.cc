@@ -240,4 +240,52 @@ AccelRGroupIndicesGet(const AccelRGroupIndicesGetRequest& request,
     return ret;
 }
 
+typedef struct {
+    AccelRGroupMetricsGetResponse   *response;
+    uint32_t                        rsp_count;
+} rgroup_metrics_get_ctx_t;
+
+static void
+rgroup_metrics_get_cb(void *user_ctx,
+                      const accel_rgroup_ring_metrics_t& metrics)
+{
+    rgroup_metrics_get_ctx_t        *ctx = (rgroup_metrics_get_ctx_t *)user_ctx;
+    AccelRGroupMetricsGetResponse   *response = ctx->response;
+
+    response->add_ring_metrics_spec();
+    response->mutable_ring_metrics_spec(ctx->rsp_count)->set_ring_handle(metrics.ring_handle);
+    response->mutable_ring_metrics_spec(ctx->rsp_count)->set_sub_ring(metrics.sub_ring);
+    response->mutable_ring_metrics_spec(ctx->rsp_count)->set_input_bytes(metrics.input_bytes);
+    response->mutable_ring_metrics_spec(ctx->rsp_count)->set_output_bytes(metrics.output_bytes);
+    response->mutable_ring_metrics_spec(ctx->rsp_count)->set_soft_resets(metrics.soft_resets);
+    ctx->rsp_count++;
+}
+
+hal_ret_t
+AccelRGroupMetricsGet(const AccelRGroupMetricsGetRequest& request,
+                      AccelRGroupMetricsGetResponse *response)
+{
+    pd::pd_capri_accel_rgroup_metrics_get_args_t    args = {0};
+    pd::pd_func_args_t                              pd_func_args = {0};
+    rgroup_metrics_get_ctx_t                        ctx = {0};
+    hal_ret_t                                       ret;
+
+    args.rgroup_name = request.rgroup_name().c_str();
+    args.sub_ring = request.sub_ring();
+    ctx.response = response;
+    args.cb_func = &rgroup_metrics_get_cb;
+    args.usr_ctx = &ctx;
+    pd_func_args.pd_capri_accel_rgroup_metrics_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_METRICS_GET, &pd_func_args);
+    if (ret == HAL_RET_OK) {
+        response->set_api_status(types::API_STATUS_OK);
+        return ret;
+    }
+
+    HAL_TRACE_ERR("{} rgroup_name {} error {}", __FUNCTION__,
+                  args.rgroup_name, ret);
+    response->set_api_status(types::API_STATUS_ERR);
+    return ret;
+}
+
 }    // namespace hal

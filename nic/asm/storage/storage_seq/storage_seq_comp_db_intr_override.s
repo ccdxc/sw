@@ -21,7 +21,7 @@ struct phv_ p;
 
 storage_seq_comp_db_intr_override:
 
-    // Bubble up to stage 4
+    // Bubble up to SEQ_INTR_OVERRIDE_STAGE for access to SEQ_KIVEC10
     mfspr       r_stage, spr_mpuid
     slt         c1, r_stage[4:2], SEQ_INTR_OVERRIDE_STAGE
     nop.c1.e

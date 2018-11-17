@@ -9,6 +9,7 @@
 #include <grpc++/grpc++.h>
 
 #include "gen/proto/nicmgr/nicmgr.delphi.hpp"
+#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 #include "gen/proto/port.delphi.hpp"
 #include "platform/src/lib/upgrade/upgrade.hpp"
 #include "platform/src/lib/sysmgr/sysmgr.hpp"
@@ -60,6 +61,9 @@ typedef std::shared_ptr<port_svc> port_svc_ptr_t;
 
 // init_port_reactors creates a port reactor
 Status init_port_reactors(delphi::SdkPtr sdk);
+
+// init_accel_objects mounts accelerator objects
+Status init_accel_objects(delphi::SdkPtr sdk);
 
 extern shared_ptr<NicMgrService> g_nicmgr_svc;
 }    // namespace nicmgr

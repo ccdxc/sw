@@ -527,6 +527,10 @@ DeviceManager::LoadConfig(string path)
             accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
             accel_spec->intr_base = intr_base;
             accel_spec->intr_count = val.get<uint32_t>("intr_count");
+            accel_spec->pub_intv_frac = ACCEL_DEV_PUB_INTV_FRAC_DFLT;
+            if (val.get_optional<string>("publish_interval")) {
+                accel_spec->pub_intv_frac = val.get<uint32_t>("publish_interval.sec_fraction");
+            }
 
             accel_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
             NIC_LOG_INFO("Creating accel device with lif_id: {}, hw_lif_id: {}",

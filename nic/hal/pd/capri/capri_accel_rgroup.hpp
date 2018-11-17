@@ -42,7 +42,10 @@ namespace pd {
                                   uint32_t sub_ring,                        \
                                   accel_rgroup_ring_indices_cb_t cb_func,   \
                                   void *usr_ctx) SUPPORT;                   \
-
+    virtual hal_ret_t metrics_get(uint32_t ring_handle,                     \
+                                  uint32_t sub_ring,                        \
+                                  accel_rgroup_ring_metrics_cb_t cb_func,   \
+                                  void *usr_ctx) SUPPORT;                   \
 
 /*
  * Ring operations base class
@@ -50,11 +53,13 @@ namespace pd {
 class accel_ring_ops_t
 {
 public:
-    accel_ring_ops_t(types::BarcoRings ring_type) : ring_type(ring_type) {}
+    accel_ring_ops_t(types::BarcoRings ring_type) :
+        ring_type(ring_type), soft_resets(0) {}
     ACCEL_RING_OPS_METHOD(ACCEL_RGROUP_NO_SUPP);
 
 protected:
     types::BarcoRings       ring_type;
+    uint64_t                soft_resets;
 };
 
 /*
@@ -167,6 +172,9 @@ public:
     hal_ret_t indices_get(uint32_t sub_ring,
                           accel_rgroup_ring_indices_cb_t cb_func,
                           void *user_ctx);
+    hal_ret_t metrics_get(uint32_t sub_ring,
+                          accel_rgroup_ring_metrics_cb_t cb_func,
+                          void *user_ctx);
 
 private:
     accel_rgroup_elem_map_t     elem_map;
@@ -210,6 +218,10 @@ hal_ret_t accel_rgroup_info_get(const char *rgroup_name,
 hal_ret_t accel_rgroup_indices_get(const char *rgroup_name,
                                    uint32_t sub_ring,
                                    accel_rgroup_ring_indices_cb_t cb_func,
+                                   void *user_ctx);
+hal_ret_t accel_rgroup_metrics_get(const char *rgroup_name,
+                                   uint32_t sub_ring,
+                                   accel_rgroup_ring_metrics_cb_t cb_func,
                                    void *user_ctx);
 
 }    // namespace pd

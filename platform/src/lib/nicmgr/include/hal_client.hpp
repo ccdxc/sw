@@ -124,6 +124,19 @@ typedef struct {
 
 typedef void (*accel_rgroup_rindices_rsp_cb_t)(void *user_ctx,
                                                const accel_rgroup_rindices_rsp_t& indices);
+/*
+ * Accelerator ring group ring metrics response structure
+ */
+typedef struct {
+    uint32_t    ring_handle;
+    uint32_t    sub_ring;
+    uint64_t    input_bytes;
+    uint64_t    output_bytes;
+    uint64_t    soft_resets;
+} accel_rgroup_rmetrics_rsp_t;
+
+typedef void (*accel_rgroup_rmetrics_rsp_cb_t)(void *user_ctx,
+                                               const accel_rgroup_rmetrics_rsp_t& indices);
 /**
  * Client for interacting with HAL
  */
@@ -319,6 +332,11 @@ public:
   int AccelRGroupIndicesGet(const std::string& rgroup_name,
                             uint32_t sub_ring,
                             accel_rgroup_rindices_rsp_cb_t rsp_cb_func,
+                            void *user_ctx,
+                            uint32_t& ret_num_entries);
+  int AccelRGroupMetricsGet(const std::string& rgroup_name,
+                            uint32_t sub_ring,
+                            accel_rgroup_rmetrics_rsp_cb_t rsp_cb_func,
                             void *user_ctx,
                             uint32_t& ret_num_entries);
   int crypto_key_index_update(uint32_t key_index,

@@ -29,6 +29,9 @@
 #include "accel_dev.hpp"
 #include "pd_client.hpp"
 #include "hal_client.hpp"
+#include "platform/src/app/nicmgrd/src/delphic.hpp"
+
+using namespace nicmgr;
 
 // Amount of time to wait for sequencer queues to be quiesced
 #define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    5000000
@@ -36,12 +39,12 @@
 #define ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US (10 * ACCEL_DEV_RING_OP_QUIESCE_TIME_US)
 #define ACCEL_DEV_NUM_CRYPTO_KEYS_MIN           512     // arbitrary low water mark
 
-// Invoke a function for each and every HW ring
-#define ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, func, arg)      \
-    for (csr = &accel_csr_tbl[0];                           \
-         csr < &accel_csr_tbl[ACCEL_RING_ID_MAX];           \
-         csr++) func(csr, arg)
+static void
+accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring);
 
+static accel_rgroup_ring_t&
+accel_pf_rgroup_find_create(uint32_t ring_handle,
+                            uint32_t sub_ring);
 static uint32_t log_2(uint32_t x);
 static uint64_t timestamp(void);
 
@@ -148,6 +151,36 @@ accel_ring_id2name_get(uint32_t ring_handle)
 
 static accel_rgroup_map_t   accel_pf_rgroup_map;
 
+/*
+ * Common accel ring group API return error checking
+ */
+#define ACCEL_RGROUP_GET_CB_HANDLE_CHECK(_handle)                               \
+    do {                                                                        \
+        if (_handle >= ACCEL_RING_ID_MAX) {                                     \
+            NIC_LOG_ERR("lif{}:: unrecognized ring_handle {}",                  \
+                        accel_pf->info.hw_lif_id, _handle);                     \
+        }                                                                       \
+    } while (false)
+
+#define ACCEL_RGROUP_GET_RET_CHECK(_ret_val, _num_rings, _name)                 \
+    do {                                                                        \
+        if (_ret_val != HAL_RET_OK) {                                           \
+            NIC_LOG_ERR("lif{}:: failed to getv" _name " for ring group {}",    \
+                        info.hw_lif_id, accel_pf_rgroup_name);                  \
+            return _ret_val;                                                    \
+        }                                                                       \
+        if (_num_rings < accel_pf_ring_vec.size()) {                            \
+            NIC_LOG_ERR("lif{}: {} too few num_rings {} expected at least {}",  \
+                        info.hw_lif_id, accel_pf_rgroup_name,                   \
+                        _num_rings, accel_pf_ring_vec.size());                  \
+            return HAL_RET_ERR;                                                 \
+        }                                                                       \
+    } while (false)
+
+
+/**
+ * Accelerator PF Device
+ */
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                    const struct lif_info *nicmgr_lif_info,
                    PdClient *pd_client,
@@ -288,12 +321,6 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                  info.lif_id, info.hw_lif_id, spec->seq_created_count);
     name = string_format("accel{}", spec->lif_id);
 
-    // Establish sequencer queues metrics with Delphi
-    if (SeqQueueMetricsInit()) {
-        NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
-        return;
-    }
-
     // Configure PCI resources
     pci_resources.lif_valid = 1;
     pci_resources.lif = info.hw_lif_id;
@@ -334,27 +361,58 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
             return;
         }
     }
+
+    // Establish sequencer queues info and metrics with Delphi
+    if (DelphiDeviceInit()) {
+        NIC_LOG_ERR("lif{}: Failed to establish Delphi device", info.hw_lif_id);
+        return;
+    }
+
+    if (spec->pub_intv_frac) {
+        float intv = 1.0 / (float)spec->pub_intv_frac;
+        sync_timer.set<Accel_PF, &Accel_PF::periodic_sync>(this);
+        sync_timer.start(intv, intv);
+    }
 }
 
 int
-Accel_PF::SeqQueueMetricsInit(void)
+Accel_PF::DelphiDeviceInit(void)
 {
-    accel_metrics::AccelSeqQueueKey     key;
+    accel_metrics::AccelSeqQueueKey     seq_qkey;
     uint64_t                            qmetrics_addr;
     uint32_t                            qid;
 
-    key.Clear();
-    key.set_lif_id(info.hw_lif_id);
-    for (qid = 0; qid < spec->seq_created_count; qid++) {
-        key.set_qid(qid);
-        qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
-                        offsetof(storage_seq_qstate_t, metrics);
-        auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
-                        NewDpAccelSeqQueueMetrics(key, qmetrics_addr);
-        if (!qmetrics) {
-            NIC_LOG_ERR("Failed qmetrics registration with delphi for "
-                        "lif {} qid {}", info.hw_lif_id, qid);
-            return -1;
+    if (g_nicmgr_svc) {
+        delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
+        delphi::objects::AccelPfInfoPtr shared_pf(delphi_pf);
+        shared_pf->set_key(info.hw_lif_id);
+        shared_pf->set_hw_lif_id(info.hw_lif_id);
+        shared_pf->set_num_seq_queues(spec->seq_created_count);
+        shared_pf->set_crypto_key_idx_base(crypto_key_idx_base);
+        shared_pf->set_num_crypto_keys_max(num_crypto_keys_max);
+        shared_pf->set_intr_base(pci_resources.intrb);
+        shared_pf->set_intr_count(pci_resources.intrc);
+        g_nicmgr_svc->sdk()->SetObject(shared_pf);
+
+        seq_qkey.set_lif_id(info.hw_lif_id);
+        for (qid = 0; qid < spec->seq_created_count; qid++) {
+            seq_qkey.set_qid(qid);
+            qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
+                            offsetof(storage_seq_qstate_t, metrics);
+            auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
+                            NewDpAccelSeqQueueMetrics(seq_qkey, qmetrics_addr);
+            delphi_qmetrics_vec.push_back(std::move(qmetrics));
+
+            /*
+             * Some of the fields below will be updated when driver
+             * issues _DevcmdSeqQueueInit().
+             */
+            auto qinfo = make_shared<delphi::objects::AccelSeqQueueInfo>();
+            qinfo->mutable_key()->set_lif_id(info.hw_lif_id);
+            qinfo->mutable_key()->set_qid(qid);
+            qinfo->set_qstate_addr(GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid));
+            delphi_qinfo_vec.push_back(std::move(qinfo));
+            seq_queue_info_publish(qid, STORAGE_SEQ_QGROUP_CPDC, 0);
         }
     }
 
@@ -842,6 +900,8 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     WRITE_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
     invalidate_txdma_cacheline(qstate_addr);
 
+    seq_queue_info_publish(qid, cmd->qgroup, cmd->core_id);
+
     cpl->qid = qid;
     cpl->qtype = STORAGE_SEQ_QTYPE_SQ;
     status = DEVCMD_SUCCESS;
@@ -1218,17 +1278,13 @@ static void
 accel_rgroup_rinfo_rsp_cb(void *user_ctx,
                           const accel_rgroup_rinfo_rsp_t& info)
 {
-    Accel_PF                *accel_pf = (Accel_PF *)user_ctx;
-    accel_rgroup_ring_key_t key;
+    Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
 
-    if (info.ring_handle >= ACCEL_RING_ID_MAX) {
-        NIC_LOG_ERR("lif{}:: unrecognized ring_handle {}",
-                    accel_pf->info.hw_lif_id, info.ring_handle);
-    }
-
-    key = accel_rgroup_ring_key_make(info.ring_handle, info.sub_ring);
-    accel_rgroup_ring_t& rgroup_ring = accel_pf_rgroup_map[key];
+    ACCEL_RGROUP_GET_CB_HANDLE_CHECK(info.ring_handle);
+    accel_rgroup_ring_t& rgroup_ring = 
+            accel_pf_rgroup_find_create(info.ring_handle, info.sub_ring);
     rgroup_ring.info = info;
+    accel_ring_info_publish(rgroup_ring);
 }
 
 /*
@@ -1243,17 +1299,7 @@ Accel_PF::accel_rgroup_rinfo_get(void)
     ret_val = hal->AccelRGroupInfoGet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
                                       accel_rgroup_rinfo_rsp_cb, this,
                                       num_rings);
-    if (ret_val) {
-        NIC_LOG_ERR("lif{}:: failed to get info for ring group {}",
-                    info.hw_lif_id, accel_pf_rgroup_name);
-        return ret_val;
-    }
-    if (num_rings < accel_pf_ring_vec.size()) {
-        NIC_LOG_ERR("lif{}: {} too few num_rings {} expected at least {}",
-                    info.hw_lif_id, accel_pf_rgroup_name,
-                    num_rings, accel_pf_ring_vec.size());
-        ret_val = -1;
-    }
+    ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "rinfo");
     return ret_val;
 }
 
@@ -1264,24 +1310,12 @@ static void
 accel_rgroup_rindices_rsp_cb(void *user_ctx,
                              const accel_rgroup_rindices_rsp_t& indices)
 {
-    Accel_PF                *accel_pf = (Accel_PF *)user_ctx;
-    accel_rgroup_ring_key_t key;
-    accel_rgroup_iter_t     iter;
+    Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
 
-    if (indices.ring_handle >= ACCEL_RING_ID_MAX) {
-        NIC_LOG_ERR("lif{}:: unrecognized ring_handle {}",
-                    accel_pf->info.hw_lif_id, indices.ring_handle);
-    }
-
-    key = accel_rgroup_ring_key_make(indices.ring_handle, indices.sub_ring);
-    iter = accel_pf_rgroup_map.find(key);
-    if (iter == accel_pf_rgroup_map.end()) {
-        NIC_LOG_ERR("lif{}:: ring_handle {} sub_ring {} not found",
-                    accel_pf->info.hw_lif_id, indices.ring_handle,
-                    indices.sub_ring);
-    } else {
-        iter->second.indices = indices;
-    }
+    ACCEL_RGROUP_GET_CB_HANDLE_CHECK(indices.ring_handle);
+    accel_rgroup_ring_t& rgroup_ring = 
+            accel_pf_rgroup_find_create(indices.ring_handle, indices.sub_ring);
+    rgroup_ring.indices = indices;
 }
 
 /*
@@ -1296,18 +1330,60 @@ Accel_PF::accel_rgroup_rindices_get(void)
     ret_val = hal->AccelRGroupIndicesGet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
                                          accel_rgroup_rindices_rsp_cb, this,
                                          num_rings);
-    if (ret_val) {
-        NIC_LOG_ERR("lif{}:: failed to get indices for ring group {}",
-                    info.hw_lif_id, accel_pf_rgroup_name);
-        return ret_val;
-    }
-    if (num_rings < accel_pf_ring_vec.size()) {
-        NIC_LOG_ERR("lif{}: {} too few num_rings {} expected at least {}",
-                    info.hw_lif_id, accel_pf_rgroup_name,
-                    num_rings, accel_pf_ring_vec.size());
-        ret_val = -1;
-    }
+    ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "indices");
     return ret_val;
+}
+
+/*
+ * Accelerator ring group ring metrics response callback handler
+ */
+static void
+accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
+                             const accel_rgroup_rmetrics_rsp_t& metrics)
+{
+    Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
+
+    ACCEL_RGROUP_GET_CB_HANDLE_CHECK(metrics.ring_handle);
+    accel_rgroup_ring_t& rgroup_ring = 
+            accel_pf_rgroup_find_create(metrics.ring_handle, metrics.sub_ring);
+    rgroup_ring.metrics = metrics;
+}
+
+/*
+ * Get ring group metrics
+ */
+int
+Accel_PF::accel_rgroup_rmetrics_get(void)
+{
+    uint32_t    num_rings;
+    int         ret_val;
+
+    ret_val = hal->AccelRGroupMetricsGet(accel_pf_rgroup_name, ACCEL_SUB_RING_ALL,
+                                         accel_rgroup_rmetrics_rsp_cb, this,
+                                         num_rings);
+    ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "metrics");
+    return ret_val;
+}
+
+/*
+ * Send Delphi updates for all rings
+ */
+void
+Accel_PF::delphi_update(void)
+{
+    accel_rgroup_iter_c     iter;
+
+    if (g_nicmgr_svc) {
+        accel_rgroup_rindices_get();
+        accel_rgroup_rmetrics_get();
+
+        for (iter  = accel_pf_rgroup_map.begin();
+             iter != accel_pf_rgroup_map.end();
+             iter++) {
+
+            accel_ring_info_publish(iter->second);
+        }
+    }
 }
 
 /*
@@ -1369,6 +1445,82 @@ Accel_PF::accel_ring_max_pendings_get(uint32_t& max_pendings)
     }
 
     return ret_val;
+}
+
+/*
+ * Periodic timer, mainly for metrics update
+ */
+void
+Accel_PF::periodic_sync(ev::timer &watcher, int revents)
+{
+    delphi_update();
+}
+
+/*
+ * Publish AccelSeqQueueInfo object to Delphi.
+ */
+void
+Accel_PF::seq_queue_info_publish(uint32_t qid,
+                                 storage_seq_qgroup_t qgroup,
+                                 uint32_t core_id)
+{
+    if (g_nicmgr_svc && (qid < delphi_qinfo_vec.size())) {
+        delphi::objects::AccelSeqQueueInfoPtr shared_q(delphi_qinfo_vec.at(qid));
+        shared_q->set_qgroup((::accel_metrics::AccelSeqQGroup)qgroup);
+        shared_q->set_core_id(core_id);
+        g_nicmgr_svc->sdk()->SetObject(shared_q);
+    }
+}
+
+/*
+ * Publish AccelHwRingInfo object to Delphi.
+ */
+static void
+accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring)
+{
+    if (g_nicmgr_svc) {
+        delphi::objects::AccelHwRingInfoPtr shared_ring(rgroup_ring.delphi_ring);
+        shared_ring->set_pindex(rgroup_ring.indices.pndx);
+        shared_ring->set_cindex(rgroup_ring.indices.cndx);
+        g_nicmgr_svc->sdk()->SetObject(shared_ring);
+
+        rgroup_ring.delphi_metrics->input_bytes()->
+                                    Set(rgroup_ring.metrics.input_bytes);
+        rgroup_ring.delphi_metrics->output_bytes()->
+                                    Set(rgroup_ring.metrics.output_bytes);
+        rgroup_ring.delphi_metrics->soft_resets()->
+                                    Set(rgroup_ring.metrics.soft_resets);
+    }
+}
+
+/*
+ * Find or create an accelerator ring group ring
+ */
+static accel_rgroup_ring_t&
+accel_pf_rgroup_find_create(uint32_t ring_handle,
+                            uint32_t sub_ring)
+{
+    accel_rgroup_ring_key_t         key;
+    accel_rgroup_iter_t             iter;
+    accel_metrics::AccelHwRingKey   delphi_key;
+
+    key = accel_rgroup_ring_key_make(ring_handle, sub_ring);
+    iter = accel_pf_rgroup_map.find(key);
+    if (iter != accel_pf_rgroup_map.end()) {
+        return iter->second;
+    }
+
+    accel_rgroup_ring_t& rgroup_ring = accel_pf_rgroup_map[key];
+    rgroup_ring.delphi_ring = make_shared<delphi::objects::AccelHwRingInfo>();
+    rgroup_ring.delphi_ring->mutable_key()->set_rid(/*(::accel_metrics::AccelHwRingId)*/
+                                                    ring_handle);
+    rgroup_ring.delphi_ring->mutable_key()->set_sub_rid(sub_ring);
+
+    delphi_key.set_rid(/*(::accel_metrics::AccelHwRingId)*/ring_handle);
+    delphi_key.set_sub_rid(sub_ring);
+    rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
+                                 NewAccelHwRingMetrics(delphi_key);
+    return rgroup_ring;
 }
 
 /*
@@ -1456,3 +1608,4 @@ ostream &operator<<(ostream& os, const Accel_PF& obj) {
 
     return os;
 }
+

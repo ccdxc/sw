@@ -2426,6 +2426,50 @@ HalClient::AccelRGroupIndicesGet(const std::string& rgroup_name,
 }
 
 int
+HalClient::AccelRGroupMetricsGet(const std::string& rgroup_name,
+                                 uint32_t sub_ring,
+                                 accel_rgroup_rmetrics_rsp_cb_t rsp_cb_func,
+                                 void *user_ctx,
+                                 uint32_t& ret_num_entries)
+{
+    AccelRGroupMetricsGetRequestMsg     req_msg;
+    AccelRGroupMetricsGetResponseMsg    rsp_msg;
+    ClientContext                       context;
+    Status                              status;
+    int                                 i;
+
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(rgroup_name);
+    req->set_sub_ring(sub_ring);
+    status = accel_rgroup_stub_->AccelRGroupMetricsGet(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {}",
+                     rsp.api_status(), rgroup_name);
+        return -1;
+    }
+
+    ret_num_entries = (uint32_t)rsp.ring_metrics_spec_size();
+    for (i = 0; i < (int)ret_num_entries; i++) {
+        accel_rgroup_rmetrics_rsp_t rmetrics = {0};
+        auto spec = rsp.ring_metrics_spec(i);
+
+        rmetrics.ring_handle = spec.ring_handle();
+        rmetrics.sub_ring = spec.sub_ring();
+        rmetrics.input_bytes = spec.input_bytes();
+        rmetrics.output_bytes = spec.output_bytes();
+        rmetrics.soft_resets = spec.soft_resets();
+        (*rsp_cb_func)(user_ctx, rmetrics);
+    }
+    return 0;
+}
+
+int
 HalClient::crypto_key_index_update(uint32_t key_index,
                                    types::CryptoKeyType key_type,
                                    void *key,

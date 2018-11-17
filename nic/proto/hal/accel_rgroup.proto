@@ -20,6 +20,7 @@ service AccelRGroup {
     rpc AccelRGroupPndxSet (AccelRGroupPndxSetRequestMsg) returns (AccelRGroupPndxSetResponseMsg) {}
     rpc AccelRGroupInfoGet (AccelRGroupInfoGetRequestMsg) returns (AccelRGroupInfoGetResponseMsg) {}
     rpc AccelRGroupIndicesGet (AccelRGroupIndicesGetRequestMsg) returns (AccelRGroupIndicesGetResponseMsg) {}
+    rpc AccelRGroupMetricsGet (AccelRGroupMetricsGetRequestMsg) returns (AccelRGroupMetricsGetResponseMsg) {}
 }
 
 message AccelRGroupAddRequest {
@@ -206,5 +207,31 @@ message AccelRGroupIndicesGetResponse {
 
 message AccelRGroupIndicesGetResponseMsg {
     repeated AccelRGroupIndicesGetResponse response = 1;
+}
+
+message AccelRGroupMetricsGetRequest {
+    string rgroup_name = 1;
+    uint32 sub_ring = 2;
+}
+
+message AccelRGroupMetricsGetRequestMsg {
+    repeated AccelRGroupMetricsGetRequest request = 1;
+}
+
+message AccelRGroupRingMetricsSpec {
+    uint32 ring_handle = 1;
+    uint32 sub_ring = 2;
+    uint64 input_bytes = 3;
+    uint64 output_bytes = 4;
+    uint64 soft_resets = 5;
+}
+
+message AccelRGroupMetricsGetResponse {
+    types.ApiStatus api_status = 1;
+    repeated AccelRGroupRingMetricsSpec ring_metrics_spec = 2;
+}
+
+message AccelRGroupMetricsGetResponseMsg {
+    repeated AccelRGroupMetricsGetResponse response = 1;
 }
 

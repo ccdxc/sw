@@ -445,11 +445,11 @@ int storage_tx_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin,
   printf("Initialized PVM Seq SQ %d \n", qid);
 
   // Setup the queue state in Capri:
-  if (qstate_if::setup_q_state(seq_lif, SQ_TYPE, qid, pgm_bin, 
-                               total_rings, host_rings, 
-                               kSeqNumEntries, q_ptr->mem->pa(),
-                               kDefaultEntrySize, false, 0, 0,
-                               0, 0, 0, storage_hbm_ssd_bm_addr, 0, 0, 0) < 0) {
+  // qgroup below is a dontcare in this case
+  if (qstate_if::setup_seq_q_state(seq_lif, SQ_TYPE, STORAGE_SEQ_QGROUP_CPDC,
+                                   qid, pgm_bin, total_rings, host_rings, 
+                                   kSeqNumEntries, q_ptr->mem->pa(),
+                                   kDefaultEntrySize) < 0) {
     printf("Failed to setup PVM Storage Tx SQ %d state \n", qid);
     return -1;
   }
