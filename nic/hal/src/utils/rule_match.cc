@@ -192,9 +192,6 @@ rule_match_app_spec_extract (const types::RuleMatch& spec, rule_match_t *match)
         if (ret != HAL_RET_OK) {
             return ret;
         }
-    } else if (app.App_case() == types::RuleMatch_AppMatch::kRpcInfo) {
-
-    } else if (app.App_case() == types::RuleMatch_AppMatch::kMsrpcInfo) {
 
     } else if (app.App_case() == types::RuleMatch_AppMatch::kEspInfo) {
 

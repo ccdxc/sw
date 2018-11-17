@@ -545,10 +545,12 @@ message AppData {
     uint32    query_response_timeout            = 6; // default 60 secs
   }
   message MSRPCOptions {
-    uint32 map_entry_timeout             = 1;
+    uint32 uuid                          = 1;
+    uint32 map_entry_timeout             = 2;
   }
   message SunRPCOptions {
-    uint32 map_entry_timeout             = 1;
+    uint32 program_number                = 1;
+    uint32 map_entry_timeout             = 2;
   }
   message SIPOptions {
     uint32 ctimeout                      = 1;
@@ -588,7 +590,7 @@ enum LogAction {
 message SecurityRuleAction {
   SecurityAction       sec_action = 1;  // Identifies the security action related to the rule
   LogAction            log_action = 2;  // Identifies log actions related to the rule
-  AppData              app_data   = 3;  // Contains app related data - data for ALG.
+  repeated AppData     app_data   = 3;  // Contains app related data - data for ALG.
 }
 
 message SecurityRule {

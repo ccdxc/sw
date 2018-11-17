@@ -379,13 +379,6 @@ message RuleMatch {
     uint32    icmpv6_type      = 1;  // Identify v6 icmp type
     uint32    icmpv6_code      = 2;  // Identify v6 icmp code
   }
-  message RPCAppInfo {
-    uint32    program_number   = 1;  // Program id to match for ALG -- do we need repeated
-  }
-  message MSRPCAppInfo {
-    uint32    uuid            = 1;  // uuid to match for uuid -- do we need repeated
-  }
-
   message ESPInfo {
     uint32 spi = 1;
   }
@@ -395,8 +388,6 @@ message RuleMatch {
       L4PortAppInfo   port_info               = 1;   // Matching port based apps
       ICMPAppInfo     icmp_info               = 2;   // Matching icmp based apps
       ICMPv6AppInfo   icmpv6_info             = 3;   // Matching icmpv6 based apps
-      RPCAppInfo      rpc_info                = 4;   // Matching rpc based apps
-      MSRPCAppInfo    msrpc_info              = 5;   // Matching msrpc based apps
       ESPInfo         esp_info                = 6;   // Matching esp based apps
     }
   }

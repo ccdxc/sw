@@ -222,7 +222,7 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
         }
 
         if (rule.app.alg) {
-            nwsec::AppData *app_data = rule_spec->mutable_action()->mutable_app_data();
+            nwsec::AppData *app_data = rule_spec->mutable_action()->add_app_data();
             app_data->set_alg(rule.app.alg);
             if (rule.app.has_alg_opts) {
                 if (rule.app.alg == nwsec::APP_SVC_FTP) {
