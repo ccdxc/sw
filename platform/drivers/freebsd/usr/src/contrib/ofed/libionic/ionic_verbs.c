@@ -1360,13 +1360,13 @@ static void ionic_v1_prep_base(struct ionic_qp *qp,
 	wqe->base.wqe_id = qp->sq.prod;
 
 	if (wr->send_flags & IBV_SEND_FENCE)
-		wqe->base.flags |= htobe32(IONIC_V1_FLAG_FENCE);
+		wqe->base.flags |= htobe16(IONIC_V1_FLAG_FENCE);
 
 	if (wr->send_flags & IBV_SEND_SOLICITED)
-		wqe->base.flags |= htobe32(IONIC_V1_FLAG_SOL);
+		wqe->base.flags |= htobe16(IONIC_V1_FLAG_SOL);
 
 	if (qp->sig_all || wr->send_flags & IBV_SEND_SIGNALED) {
-		wqe->base.flags |= htobe32(IONIC_V1_FLAG_SIG);
+		wqe->base.flags |= htobe16(IONIC_V1_FLAG_SIG);
 		meta->signal = true;
 	}
 
@@ -1384,9 +1384,9 @@ static void ionic_v1_prep_base(struct ionic_qp *qp,
 
 	ionic_stat_incr_idx(ctx->stats, post_send_op, wqe->base.op);
 	ionic_stat_add(ctx->stats, post_send_sig,
-		       !!(wqe->base.flags & htobe32(IONIC_V1_FLAG_SIG)));
+		       !!(wqe->base.flags & htobe16(IONIC_V1_FLAG_SIG)));
 	ionic_stat_add(ctx->stats, post_send_inl,
-		       !!(wqe->base.flags & htobe32(IONIC_V1_FLAG_INL)));
+		       !!(wqe->base.flags & htobe16(IONIC_V1_FLAG_INL)));
 
 	ionic_queue_produce(&qp->sq);
 }
@@ -1435,7 +1435,7 @@ static int ionic_v1_prep_common(struct ionic_qp *qp,
 
 	if (wr->send_flags & IBV_SEND_INLINE) {
 		wqe->base.num_sge_key = 0;
-		wqe->base.flags |= htobe32(IONIC_V1_FLAG_INL);
+		wqe->base.flags |= htobe16(IONIC_V1_FLAG_INL);
 		mval = ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 		signed_len = ionic_prep_inline(wqe->common.data, mval,
 					       wr->sg_list, wr->num_sge);
@@ -1937,12 +1937,11 @@ static int ionic_prep_one_rc(struct ionic_qp *qp,
 	if (ctx->xxx_try_v1) {
 		saved_sq = qp->sq;
 		saved_msn = qp->sq_msn_prod;
+		wqe = ionic_queue_at_prod(&qp->sq);
 
 		rc = ionic_v1_prep_one_rc(qp, wr);
 
-		wqe = ionic_queue_at_prod(&qp->sq);
-		ionic_dbg(ctx, "wqe->base.op %u", wqe->base.op);
-		if (0 && ctx->version == 1 && wqe->base.op < ctx->opcodes)
+		if (ctx->version == 1 && wqe->base.op < ctx->opcodes)
 			return rc;
 
 		qp->sq = saved_sq;
@@ -2003,10 +2002,10 @@ static int ionic_prep_one_ud(struct ionic_qp *qp,
 	if (ctx->xxx_try_v1) {
 		saved_sq = qp->sq;
 		saved_msn = qp->sq_msn_prod;
+		wqe = ionic_queue_at_prod(&qp->sq);
 
 		rc = ionic_v1_prep_one_ud(qp, wr);
 
-		wqe = ionic_queue_at_prod(&qp->sq);
 		if (ctx->version == 1 && wqe->base.op < ctx->opcodes)
 			return rc;
 
@@ -2226,7 +2225,7 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 	wqe = ionic_queue_at_prod(&qp->rq);
 
 	/* if wqe is owned by device, caller can try posting again soon */
-	if (wqe->base.flags & IONIC_V1_FLAG_FENCE)
+	if (wqe->base.flags & htobe16(IONIC_V1_FLAG_FENCE))
 		return -EAGAIN;
 
 	meta = qp->rq_meta_head;

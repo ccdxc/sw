@@ -4941,13 +4941,13 @@ static void ionic_v1_prep_base(struct ionic_qp *qp,
 	wqe->base.wqe_id = qp->sq.prod;
 
 	if (wr->send_flags & IB_SEND_FENCE)
-		wqe->base.flags |= cpu_to_be32(IONIC_V1_FLAG_FENCE);
+		wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_FENCE);
 
 	if (wr->send_flags & IB_SEND_SOLICITED)
-		wqe->base.flags |= cpu_to_be32(IONIC_V1_FLAG_SOL);
+		wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_SOL);
 
 	if (qp->sig_all || wr->send_flags & IB_SEND_SIGNALED) {
-		wqe->base.flags |= cpu_to_be32(IONIC_V1_FLAG_SIG);
+		wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_SIG);
 		meta->signal = true;
 	}
 
@@ -5013,7 +5013,7 @@ static int ionic_v1_prep_common(struct ionic_qp *qp,
 
 	if (wr->send_flags & IB_SEND_INLINE) {
 		wqe->base.num_sge_key = 0;
-		wqe->base.flags |= cpu_to_be32(IONIC_V1_FLAG_INL);
+		wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_INL);
 		mval = ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 		signed_len = ionic_prep_inline(wqe->common.data, mval,
 					       wr->sg_list, wr->num_sge);
@@ -5598,7 +5598,7 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 	wqe = ionic_queue_at_prod(&qp->rq);
 
 	/* if wqe is owned by device, caller can try posting again soon */
-	if (wqe->base.flags & IONIC_V1_FLAG_FENCE)
+	if (wqe->base.flags & cpu_to_be16(IONIC_V1_FLAG_FENCE))
 		return -EAGAIN;
 
 	meta = qp->rq_meta_head;
