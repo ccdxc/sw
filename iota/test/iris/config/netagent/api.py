@@ -84,7 +84,7 @@ def __hw_rest_api_handler(rest_api_path, obj, cfgOper = CfgOper.ADD):
             url = "http://1.0.0.2:9007/" + rest_api_path
             oper = "POST"
         elif cfgOper == CfgOper.UPDATE:
-            url = "http://1.0.0.2:9007/" + rest_api_path
+            url = __get_delete_url(obj, "http://1.0.0.2:9007/" + rest_api_path)
             oper = "PUT"
         else:
             print (oper)

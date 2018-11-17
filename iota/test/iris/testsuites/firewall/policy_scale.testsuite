@@ -1,10 +1,10 @@
 meta:
-    name        : firewall::policy
+    name        : firewall::policyscale
     description : Testcases for policy only tests
     mode        : hardware
     cfgmode     : netagent
     nicmode     : hostpin
-    cfgonly     : False
+    cfgonly     : True
     enable      : True
 
 packages:
@@ -16,7 +16,7 @@ images:
 #    drivers: /sw/platform/drivers.tgz
 
 setup:
-    topology: test/iris/topologies/1Naples_CTR/1Naples.topology
+    topology: test/iris/topologies/1Naples_BM/1Naples.topology
     
     config  : 
         - step : config.netagent.hw_push_config
@@ -27,7 +27,14 @@ common:
         #-   step    : verif.utils.verify_topology_health
 
 testcases:
-    -   name    : Policy local to local
-        testcase: testcases.security.policy_rules
+    -   name    : Policy Scale Add Del Loop
+        testcase: testcases.security.policy_scale_add_del_loop
+        disable : True
+        args    :
+            count : 1
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
