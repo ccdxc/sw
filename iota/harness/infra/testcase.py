@@ -22,6 +22,7 @@ class VerifStep:
         self.__spec = spec
         self.__timer = timeprofiler.TimeProfiler()
         self.__resolve()
+        self.__status = api.types.status.FAILURE
         return
 
     def __resolve(self):
@@ -35,18 +36,18 @@ class VerifStep:
 
     def Main(self):
         self.__timer.Start()
-        ret = self.__execute()
+        self.__status = self.__execute()
         self.__timer.Stop()
-        if ret != api.types.status.SUCCESS:
+        if self.__status != api.types.status.SUCCESS:
             return api.types.status.FAILURE
-        return ret
+        return self.__status
 
     def __get_owner(self):
         return get_owner(self.__mod.__file__)
 
     def PrintResultSummary(self):
         modname = "- %s" % self.__mod.__name__.split('.')[-1]
-        print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), "Pass", self.__timer.TotalTime()))
+        print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
         return types.status.SUCCESS
 
 
@@ -70,15 +71,25 @@ class TestcaseDataIters:
         return self.__summary
 
 class TestcaseData:
-    def __init__(self, tcinst, args):
+    def __init__(self, instid, args):
         self.__status = types.status.FAILURE
         self.__timer = timeprofiler.TimeProfiler()
-        self.__tcinst = tcinst
         self.args = args
         self.iterators = TestcaseDataIters()
-        self.__logs_dir = "%s/tcdata/%s/" % (api.GetTestsuiteLogsDir(), tcinst)
+        self.SetInstanceId(instid)
+        return
+
+    def SetInstanceId(self, instid):
+        self.__instid = instid
+        self.__logs_dir = "%s/tcdata/%s/" % (api.GetTestsuiteLogsDir(), instid)
         os.system("mkdir -p %s" % self.__logs_dir)
         return
+
+    def GetInstanceId(self):
+        return self.__instid
+
+    def GetInst(self):
+        return self.__instid
 
     def SetStatus(self, status):
         self.__status = status
@@ -102,7 +113,7 @@ class TestcaseData:
         return self.__timer.TotalTime()
 
     def Name(self):
-        return self.__tcinst
+        return self.__instid
 
 class Testcase:
     def __init__(self, spec):
@@ -125,13 +136,18 @@ class Testcase:
         self.__stats_error = 0
         return
 
-    def __get_iter_directory(self, iter_id):
+    def __get_instance_id(self, iter_id):
         return "%s_%d" % (self.__spec.name, iter_id)
 
-    def __new_TestcaseData(self):
+    def __new_TestcaseData(self, src = None):
         self.__iterid += 1
-        return TestcaseData(self.__get_iter_directory(self.__iterid), 
-                            getattr(self.__spec, 'args', None))
+        if src is None:
+            new = TestcaseData(self.__get_instance_id(self.__iterid), 
+                               getattr(self.__spec, 'args', None))
+        else:
+            new = copy.deepcopy(src)
+            new.SetInstanceId(self.__get_instance_id(self.__iterid))
+        return new
 
     def __setup_simple_iters(self, spec):
         Logger.debug("Setting up simple iterators.")
@@ -158,7 +174,7 @@ class Testcase:
         for val in values:
             if len(curr_data_list):
                 for data in curr_data_list:
-                    new_data = copy.deepcopy(data)
+                    new_data = self.__new_TestcaseData(data)
                     new_data.iterators.AddKV(key, val)
                     new_data_list.append(new_data)
             else:
@@ -246,21 +262,18 @@ class Testcase:
         ignored = getattr(self.__spec, "ignore", False)
         
         final_result = types.status.SUCCESS
-        iter_id = 1
         for iter_data in self.__iters:
             iter_data.StartTime()
 
             api.ChangeDirectory("")
-            Logger.SetTestcaseID(iter_id)
-            
-            tc_iter_directory = self.__get_iter_directory(iter_id)
-            Logger.debug("Testcase Iteration directory = %s", tc_iter_directory)
-            ret = self.__mk_testcase_directory(tc_iter_directory)
+            Logger.SetTestcaseID(iter_data.GetInstanceId())
+            Logger.debug("Testcase Iteration directory = %s", iter_data.GetInstanceId())
+            ret = self.__mk_testcase_directory(iter_data.GetInstanceId())
             if ret != types.status.SUCCESS: 
                 self.__update_stats(ret)
                 return ret
             
-            api.ChangeDirectory(tc_iter_directory)
+            api.ChangeDirectory(iter_data.GetInstanceId())
             
             result = types.status.SUCCESS
             setup_result = loader.RunCallback(self.__tc, 'Setup', False, iter_data)
@@ -300,7 +313,6 @@ class Testcase:
                     iter_data.SetStatus(types.status.IGNORED)
                 else:
                     final_result = result
-            iter_id = iter_id + 1
 
         api.ChangeDirectory("")
         return final_result

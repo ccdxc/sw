@@ -9,10 +9,9 @@ RDMA="$TOP/platform/src/third-party/rdma"
 : ${PERFTEST_SRC:="$RDMA/perftest"}
 
 # Products generated
-: ${GEN_DIR:="$TOP/platform/gen/pensando-freebsd"}
-: ${SONIC_GEN_DIR:="$TOP/platform/gen/pensando-freebsd/storage/"}
-date=$( date +%Y%m%d_%H%M%S )
-: ${GEN_PKG:=${GEN_DIR}-${date}.tar.xz}
+: ${GEN_DIR:="$TOP/platform/gen/drivers-freebsd"}
+: ${SONIC_GEN_DIR:="$GEN_DIR/storage/"}
+: ${GEN_PKG:=${GEN_DIR}.tar.xz}
 
 # Package will identify version of sources
 report_version() {

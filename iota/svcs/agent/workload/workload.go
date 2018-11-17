@@ -326,14 +326,13 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 
 	if macAddress != "" {
 		var setMacAddrCmd []string
-		if runtime.GOOS == "freebsd" {
-			setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
-		} else {
+		if runtime.GOOS != "freebsd" {
+			//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
 			setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
-		}
-		if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
-			return errors.Wrap(err, stdout)
-		}
+		    if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
+			    return errors.Wrap(err, stdout)
+		    }
+        }
 	}
 
 	if ipaddress != "" {

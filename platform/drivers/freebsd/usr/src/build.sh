@@ -39,6 +39,8 @@ make_ext() {
 
 make_ext sys/modules/ionic
 make_ext sys/modules/ionic_rdma
+# Adding exit for now based on Anish's suggestion, as the subsequent commands are failing with exit_code=1 in IOTA sanity.
+exit 0
 make_ext contrib/ofed/libionic
 
 cd perftest

@@ -11,9 +11,9 @@ def Setup(tc):
     for cfgfile in tc.args.cfg:
         tc.files.append("%s/%s/%s" % (api.GetTopDir(), tc.args.dir, cfgfile))
     tc.files.append("%s/%s/%s" % (api.GetTopDir(), tc.args.dir, tc.args.test))
-    tc.files.append("%s/iota/test/iris/testcases/storage/pnsotest.py" % api.GetTopDir())
 
     for n in tc.nodes:
+        tc.files.append("%s/iota/test/iris/testcases/storage/pnsotest_%s.py" % (api.GetTopDir(), api.GetNodeOs(n)))
         resp = api.CopyToHost(n, tc.files)
         if not api.IsApiResponseOk(resp):
             return api.types.status.FAILURE
@@ -21,7 +21,7 @@ def Setup(tc):
 
 def Trigger(tc):
     for n in tc.nodes:
-        cmd = "./pnsotest.py --wait %d --cfg " % tc.args.wait
+        cmd = "./pnsotest_%s.py --wait %d --cfg " % (api.GetNodeOs(n), tc.args.wait)
         for cfgfile in tc.args.cfg:
             cmd += "%s " % cfgfile
         cmd += " --test %s " % tc.args.test

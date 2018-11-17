@@ -35,10 +35,8 @@ parser.add_argument('--timeout', dest='timeout',
                     default=60, help='Naples Password.')
 parser.add_argument('--image', dest='image',
                     default='/sw/nic/naples_fw.tar', help='Naples Image.')
-parser.add_argument('--drivers-ionic-pkg', dest='drivers_ionic_pkg',
-                    default=None, help='IONIC Driver Package.')
-parser.add_argument('--drivers-sonic-pkg', dest='drivers_sonic_pkg',
-                    default=None, help='IONIC Driver Package.')
+parser.add_argument('--drivers-pkg', dest='drivers_pkg',
+                    default=None, help='Driver Package.')
 parser.add_argument('--host-username', dest='host_username',
                     default="root", help='Host Username')
 parser.add_argument('--host-password', dest='host_password',
@@ -56,11 +54,17 @@ parser.add_argument('--uuid', dest='uuid',
                     default="", help='Node UUID (Base MAC Address).')
 parser.add_argument('--mode-change', dest='mode_change',
                     action='store_true', help='Only change mode and reboot.')
+parser.add_argument('--os', dest='os',
+                    default="", help='Node OS (Freebsd or Linux).')
 
 GlobalOptions = parser.parse_args()
 
 GlobalOptions.console_port = int(GlobalOptions.console_port)
 GlobalOptions.timeout = int(GlobalOptions.timeout)
+
+ROOT_EXP_PROMPT="~#"
+if GlobalOptions.os == 'freebsd':
+    ROOT_EXP_PROMPT="~]#"
 
 def CimcReset():
     session = requests.Session()
@@ -142,17 +146,6 @@ class NaplesManagement:
             self.login()
         return
    
-    def __umount_mnt(self):
-        self.hdl.sendline("rm -rf /mnt/*.json")
-        self.hdl.expect_exact("#")
-        self.hdl.sendline("sync")
-        self.hdl.expect_exact("#")
-        self.hdl.sendline("sync")
-        self.hdl.expect_exact("#")
-        self.hdl.sendline("/etc/init.d/S22mount stop")
-        self.hdl.expect_exact("#")
-        return
-
     def __reset(self):
         self.hdl.sendline("sync")
         self.hdl.expect_exact("#")
@@ -164,14 +157,8 @@ class NaplesManagement:
         return
 
     def __get_capri_prompt(self):
-        #match_idx = self.hdl.expect_exact(["capri login:", "#", "Capri#"], timeout = 120)
-        #if match_idx == 2:
-        #    return
-        #if match_idx == 0:
-        #    self.login()
         CimcReset()
-        match_idx = self.hdl.expect(["Autoboot in 0 seconds",
-                                      pexpect.TIMEOUT], timeout = 120)
+        match_idx = self.hdl.expect(["Autoboot in 0 seconds", pexpect.TIMEOUT], timeout = 120)
         if match_idx == 1:
             print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
             CimcReset()
@@ -239,9 +226,11 @@ class HostManagement:
         self.hdl = pexpect.spawn("ssh -o StrictHostKeyChecking=no %s" % self.__ssh_host)
         self.hdl.timeout = GlobalOptions.timeout
         self.hdl.logfile = sys.stdout.buffer
-        self.hdl.expect_exact("Password:")
+        self.hdl.expect_exact(["Password:", "Password for root@"])
         self.hdl.sendline(GlobalOptions.host_password)
-        self.hdl.expect_exact("#")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.sendline("uptime")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
         return
  
 
@@ -293,11 +282,13 @@ class HostManagement:
 
     def reboot(self):
         self.hdl.sendline("sync")
-        self.hdl.expect_exact("#")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
         self.hdl.sendline("ls -l /root/")
-        self.hdl.expect_exact("#")
-        self.hdl.sendline("reboot")
-        self.hdl.expect_exact(["#",pexpect.TIMEOUT, pexpect.EOF], timeout=10)
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.sendline("uptime")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+        self.hdl.sendline("reboot && sleep 30")
+        match = self.hdl.expect_exact([ROOT_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
         self.hdl.close()
         
         # Wait for the host to start rebooting.
@@ -309,33 +300,28 @@ class HostManagement:
     def init(self):
         assert(self.run("lspci | grep 1dd8") == 0)
         self.hdl.sendline("%s/start_memtun.sh" % HOST_NAPLES_DIR)
-        self.hdl.expect_exact("#")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
         self.run("ping -c 5 1.0.0.2")
         self.run("rm -f /root/.ssh/known_hosts")
         return
 
     def install_drivers(self):
-        if GlobalOptions.drivers_ionic_pkg:
+        if GlobalOptions.drivers_pkg:
             # Install IONIC driver package.
-            self.copyin(GlobalOptions.drivers_ionic_pkg, HOST_NAPLES_DRIVERS_DIR)
-            self.run("cd %s && tar xaf %s" %\
-                     (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_ionic_pkg)))
-            self.run("cd %s/drivers-linux/ && ./setup_apt.sh" % HOST_NAPLES_DRIVERS_DIR)
-            self.run("cd %s/drivers-linux/ && ./build.sh" % HOST_NAPLES_DRIVERS_DIR)
-            self.run("rmmod ionic", ignore_result = True)
-            self.run("rmmod ionic_rdma", ignore_result = True)
-            self.run("cd %s/drivers-linux/ && insmod drivers/eth/ionic/ionic.ko" % HOST_NAPLES_DRIVERS_DIR)
+            self.copyin(GlobalOptions.drivers_pkg, HOST_NAPLES_DRIVERS_DIR)
+            self.run("cd %s && tar xf %s" %\
+                     (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_pkg)))
 
-        if GlobalOptions.drivers_sonic_pkg:
-            # Install SONIC driver package.
-            self.copyin(GlobalOptions.drivers_sonic_pkg, HOST_NAPLES_DRIVERS_DIR)
-            self.run("cd %s && tar xaf %s" %\
-                     (HOST_NAPLES_DRIVERS_DIR, os.path.basename(GlobalOptions.drivers_sonic_pkg)))
-            self.run("cd %s/storage-offload/ && make modules" % HOST_NAPLES_DRIVERS_DIR)
-            self.run("rmmod pencake", ignore_result = True)
-            self.run("rmmod sonic", ignore_result = True)
-            self.run("cd %s/storage-offload/ && insmod sonic.ko core_count=2" % HOST_NAPLES_DRIVERS_DIR)
-            self.run("cd %s/storage-offload/ && insmod pencake.ko repeat=1" % HOST_NAPLES_DRIVERS_DIR)
+            if GlobalOptions.os == 'linux':
+                self.run("cd %s/drivers-linux/ && ./setup_apt.sh" % HOST_NAPLES_DRIVERS_DIR)
+                self.run("cd %s/drivers-linux/ && ./build.sh" % HOST_NAPLES_DRIVERS_DIR)
+                self.run("rmmod ionic", ignore_result = True)
+                self.run("cd %s/drivers-linux/ && insmod drivers/eth/ionic/ionic.ko" % HOST_NAPLES_DRIVERS_DIR)
+            elif GlobalOptions.os == 'freebsd':
+                self.run("cd %s/drivers-freebsd/ && env OS_DIR=/usr/src ./build.sh" % HOST_NAPLES_DRIVERS_DIR)
+                self.run("kldunload ionic", ignore_result = True)
+                self.run("cd %s/drivers-freebsd/ && kldload sys/modules/ionic/ionic.ko" % HOST_NAPLES_DRIVERS_DIR)
+
         return
 
 def ChangeNicMode():
@@ -359,8 +345,8 @@ def Main():
     host.run("rm -rf %s" % HOST_NAPLES_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
-    host.copyin("../platform/hosttools/x86_64/linux/memtun", HOST_NAPLES_DIR)
-    host.copyin("scripts/linux/start_memtun.sh", HOST_NAPLES_DIR)
+    host.copyin("../platform/hosttools/x86_64/%s/memtun" % GlobalOptions.os, HOST_NAPLES_DIR)
+    host.copyin("scripts/%s/start_memtun.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
     host.reboot()
     host.init()
 

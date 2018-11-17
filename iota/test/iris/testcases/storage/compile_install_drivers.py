@@ -25,6 +25,8 @@ def Setup(tc):
     tc.dmesg_commands = []
     tc.output_commands = []
     tc.nodes = api.GetNaplesHostnames()
+    tc.os = api.GetNodeOs(tc.nodes[0])
+
     tc.sonicpkg = api.GetTopDir() + '/' + tc.args.package
     ret = __copy_sonic_to_all_naples(tc)
     if ret != api.types.status.SUCCESS:
@@ -36,27 +38,41 @@ def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
         api.Trigger_AddHostCommand(req, n, "tar xf %s" % pkgname)
-        api.Trigger_AddHostCommand(req, n, "make modules", rundir = pnsodefs.PNSO_DRIVER_DIR)
+        if tc.os == 'linux':
+            api.Trigger_AddHostCommand(req, n, "make modules", rundir = pnsodefs.PNSO_DRIVER_DIR)
+        else:
+            api.Trigger_AddHostCommand(req, n, "./freebsd_build.sh", rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "ls sonic.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "ls pencake.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "dmesg -c 2>&1 > /dev/null")
-        api.Trigger_AddHostCommand(req, n, "rmmod pencake", rundir = pnsodefs.PNSO_DRIVER_DIR)
-        api.Trigger_AddHostCommand(req, n, "rmmod sonic", rundir = pnsodefs.PNSO_DRIVER_DIR)
-        api.Trigger_AddHostCommand(req, n, 
-                    "insmod sonic.ko core_count=%d" % pnsodefs.PNSO_DRIVER_MAX_CORE_COUNT,
-                    rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = 300)
-        api.Trigger_AddHostCommand(req, n, "insmod pencake.ko repeat=1",
-                                   rundir = pnsodefs.PNSO_DRIVER_DIR)
+        
+        if tc.os == 'linux':
+            api.Trigger_AddHostCommand(req, n, "rmmod pencake || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
+            api.Trigger_AddHostCommand(req, n, "rmmod sonic || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
+            api.Trigger_AddHostCommand(req, n, 
+                        "insmod sonic.ko core_count=%d" % pnsodefs.PNSO_DRIVER_MAX_CORE_COUNT,
+                        rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = 300)
+            api.Trigger_AddHostCommand(req, n, "insmod pencake.ko repeat=1",
+                                       rundir = pnsodefs.PNSO_DRIVER_DIR)
+        else:
+            api.Trigger_AddHostCommand(req, n, "kldunload pencake || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
+            api.Trigger_AddHostCommand(req, n, "kldunload sonic || true", rundir = pnsodefs.PNSO_DRIVER_DIR)
+            api.Trigger_AddHostCommand(req, n, 
+                        "kenv compat.linuxkpi.sonic_core_count=%d" % pnsodefs.PNSO_DRIVER_MAX_CORE_COUNT,
+                        rundir = pnsodefs.PNSO_DRIVER_DIR)
+            api.Trigger_AddHostCommand(req, n, "kldload ./sonic.ko", rundir = pnsodefs.PNSO_DRIVER_DIR, timeout = 300)
+            api.Trigger_AddHostCommand(req, n, "kldload ./pencake.ko", rundir = pnsodefs.PNSO_DRIVER_DIR)
+
         api.Trigger_AddHostCommand(req, n, "sleep 10")
         cmd = api.Trigger_AddHostCommand(req, n, "dmesg | tail -n 100")
         tc.dmesg_commands.append(cmd)
 
-        for c in range(1, 5):
-            output = api.Trigger_AddHostCommand(req, n, "cat /sys/module/pencake/status/%d" % c)
-            tc.output_commands.append(output)
-
-        tc.succ_cmd = api.Trigger_AddHostCommand(req, n, "cat /sys/module/pencake/status/success")
-        tc.fail_cmd = api.Trigger_AddHostCommand(req, n, "cat /sys/module/pencake/status/fail")
+        if tc.os == 'linux':
+            for c in range(1, 5):
+                output = api.Trigger_AddHostCommand(req, n, "cat /sys/module/pencake/status/%d" % c)
+                tc.output_commands.append(output)
+            tc.succ_cmd = api.Trigger_AddHostCommand(req, n, "cat /sys/module/pencake/status/success")
+            tc.fail_cmd = api.Trigger_AddHostCommand(req, n, "cat /sys/module/pencake/status/fail")
 
     tc.resp = api.Trigger(req)
     return api.types.status.SUCCESS
@@ -79,19 +95,21 @@ def Verify(tc):
             api.Logger.error("ExpectedMessage = %s" % pnsodefs.PNSO_PENCAKE_SUCCESS_MSG)
             result = ret
 
-    for out_cmd in tc.output_commands:
-        obj = api.parser.ParseJsonStream(out_cmd.stdout)
-        if obj == None:
-            api.Logger.error("Failed to parse JSON output. Command = %s" % out_cmd.command)
+    
+    if tc.os == 'linux':
+        for out_cmd in tc.output_commands:
+            obj = api.parser.ParseJsonStream(out_cmd.stdout)
+            if obj == None:
+                api.Logger.error("Failed to parse JSON output. Command = %s" % out_cmd.command)
+                result = api.types.status.FAILURE
+
+        if int(tc.succ_cmd.stdout) != pnsodefs.PNSO_NUM_PENCAKE_TESTS:
+            api.Logger.error("PencakeTests Success count is not %d" % pnsodefs.NUM_PENCAKE_TESTS)
             result = api.types.status.FAILURE
 
-    if int(tc.succ_cmd.stdout) != pnsodefs.PNSO_NUM_PENCAKE_TESTS:
-        api.Logger.error("PencakeTests Success count is not %d" % pnsodefs.NUM_PENCAKE_TESTS)
-        result = api.types.status.FAILURE
-
-    if int(tc.fail_cmd.stdout) != 0:
-        api.Logger.error("PencakeTests Failure count is not 0")
-        result = api.types.status.FAILURE
+        if int(tc.fail_cmd.stdout) != 0:
+            api.Logger.error("PencakeTests Failure count is not 0")
+            result = api.types.status.FAILURE
 
     return result
 

@@ -176,6 +176,9 @@ class TestSuite:
         logcollector.CollectLogs(nodes)
         return
 
+    def __get_oss(self):
+        return getattr(self.__spec.meta, 'os', ['linux'])
+
     def Main(self):
         if not self.__enabled:
            return types.status.SUCCESS
@@ -188,7 +191,12 @@ class TestSuite:
         # Update logger
         Logger.SetTestsuite(self.Name())
         Logger.info("Starting Testsuite: %s" % self.Name())
-        
+    
+        if store.GetTestbed().GetOs() not in self.__get_oss():
+            Logger.info("Skipping Testsuite: %s due to OS mismatch." % self.Name())
+            self.__enabled = False
+            return types.status.SUCCESS
+
         # Initialize Testbed for this testsuite
         status = store.GetTestbed().InitForTestsuite(self)
         if status != types.status.SUCCESS:

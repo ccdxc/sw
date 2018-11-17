@@ -90,5 +90,4 @@ def Setup(tc):
     tc.files.append(tc.blocksize_yml)
     tc.files.append(tc.globals_yml)
     tc.files.append(tc.test_yml)
-    tc.files.append("%s/pnsotest.py" % tc.tcdir)
     return

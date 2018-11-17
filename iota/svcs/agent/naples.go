@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -27,6 +28,7 @@ const (
 	arpAgeTimeout           = 3000 //3000 seconds
 	sshPort                 = 22
 	naplesSimHostIntfPrefix = "lif"
+	naplesBsdHosIntfPrefix  = "ionic"
 	naplesPciDevicePrefix   = "Device"
 	mellanoxPciDevicePrefix = "Mellanox Technologies"
 	broadcomPciDevicePrefix = "Broadcom Limited"
@@ -679,6 +681,10 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 	}
 
 	in.GetNaplesConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(naplesPciDevicePrefix)
+
+	if len(in.GetNaplesConfig().HostIntfs) == 0 && runtime.GOOS == "freebsd" {
+		in.GetNaplesConfig().HostIntfs = Utils.GetIntfsMatchingPrefix(naplesBsdHosIntfPrefix)
+	}
 
 	naples.logger.Printf("Naples host interfaces : %v", in.GetNaplesConfig().HostIntfs)
 	for _, intf := range in.GetNaplesConfig().HostIntfs {

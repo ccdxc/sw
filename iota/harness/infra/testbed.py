@@ -23,10 +23,11 @@ class _Testbed:
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
         self.__node_ips = []
+        self.__os = None
 
         self.__fw_upgrade_done = False
         self.__read_warmd_json()
-        self.__derive_testbed_type()
+        self.__derive_testbed_attributes()
         return
 
     def GetTestbedType(self):
@@ -41,10 +42,14 @@ class _Testbed:
     def GetProvisionPassword(self):
         return self.tbspec.Provision.Password
 
-    def __derive_testbed_type(self):
+    def GetOs(self):
+        return self.__os
+
+    def __derive_testbed_attributes(self):
         self.__bm_count = 0
         self.__vm_count = 0
         for instance in self.tbspec.Instances:
+            self.__os = instance.NodeOs
             if instance.Type == "bm":
                 self.__bm_count += 1
             elif instance.Type == "vm":
@@ -137,9 +142,9 @@ class _Testbed:
             cmd.extend(["--cimc-ip", instance.NodeCimcIP])
             cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
             cmd.extend(["--mode", "%s" % api.GetNicMode()])
-            cmd.extend(["--drivers-ionic-pkg", "%s/platform/gen/drivers-linux.tar.xz" % GlobalOptions.topdir])
-            cmd.extend(["--drivers-sonic-pkg", "%s/storage/gen/storage-offload.tar.xz" % GlobalOptions.topdir])
+            cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
             cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
+            cmd.extend(["--os", "%s" % instance.NodeOs])
             if self.__fw_upgrade_done or GlobalOptions.only_reboot:
                 cmd.extend(["--mode-change"])
                 logfile = "%s-mode-change.log" % instance.Name
@@ -147,24 +152,27 @@ class _Testbed:
                 logfile = "%s-firmware-upgrade.log" % instance.Name
             logfiles.append(logfile)
             Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
-            Logger.info("Command = ", cmd)
+
+            cmdstring = ""
+            for c in cmd: cmdstring += "%s " % c
+            Logger.info("Command = ", cmdstring)
+            
             loghdl = open(logfile, "w")
             proc_hdl = subprocess.Popen(cmd, stdout=loghdl, stderr=loghdl)
             proc_hdls.append(proc_hdl)
 
         result = 0
-        for proc_hdl in proc_hdls:
+        for idx in range(len(proc_hdls)):
+            proc_hdl = proc_hdls[idx]
             while proc_hdl.poll() is None:
                 time.sleep(5)
                 continue
             if proc_hdl.returncode != 0:
                 result = proc_hdl.returncode
+                Logger.header("FIRMWARE UPGRADE FAILED: LOGFILE = %s" % logfiles[idx])
+                os.system("cat %s" % logfiles[idx])
 
         if result != 0:
-            Logger.error("Firmware upgrade failed.")
-            for logfile in logfiles:
-                Logger.header("FIRMWARE UPGRADE LOGFILE: %s" % logfile)
-                os.system("cat %s" % logfile)
             sys.exit(result)
 
         self.__fw_upgrade_done = True

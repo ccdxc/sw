@@ -12,6 +12,7 @@ def Setup(tc):
 
     tc.nodes = api.GetNaplesHostnames()
     for n in tc.nodes:
+        tc.files.append("%s/pnsotest_%s.py" % (tc.tcdir, api.GetNodeOs(n)))
         api.Logger.info("Copying testyml files to Node:%s" % n)
         resp = api.CopyToHost(n, tc.files)
         if not api.IsApiResponseOk(resp):
@@ -20,7 +21,7 @@ def Setup(tc):
 
 def Trigger(tc):
     for n in tc.nodes:
-        cmd = "./pnsotest.py --wait %d --cfg blocksize.yml globals.yml --test %s" % (tc.args.wait, tc.args.test)
+        cmd = "./pnsotest_%s.py --wait %d --cfg blocksize.yml globals.yml --test %s" % (api.GetNodeOs(n), tc.args.wait, tc.args.test)
     if getattr(tc.args, "failtest", False):
         cmd += " --failure-test"
 
