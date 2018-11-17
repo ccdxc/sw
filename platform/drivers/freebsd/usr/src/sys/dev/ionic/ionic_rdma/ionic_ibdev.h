@@ -43,6 +43,7 @@
 #include <ionic_api.h>
 
 #include "ionic_fw.h"
+#include "ionic_ibdebug.h"
 #include "ionic_queue.h"
 #include "res.h"
 #include "table.h"
@@ -150,16 +151,13 @@ struct ionic_ibdev {
 	char			*stats_buf;
 	const char		**stats_hdrs;
 
-	struct dentry		*debug;
-	struct dentry		*debug_ah;
-	struct dentry		*debug_aq;
-	struct dentry		*debug_cq;
-	struct dentry		*debug_eq;
-	struct dentry		*debug_mr;
-	struct dentry		*debug_mw;
-	struct dentry		*debug_pd;
-	struct dentry		*debug_qp;
-	struct dentry		*debug_srq;
+	struct sysctl_ctx_list	debug_ctx;
+	struct sysctl_oid	*debug;
+	struct sysctl_oid	*debug_aq;
+	struct sysctl_oid	*debug_cq;
+	struct sysctl_oid	*debug_eq;
+	struct sysctl_oid	*debug_mr;
+	struct sysctl_oid	*debug_qp;
 };
 
 struct ionic_eq {
@@ -177,6 +175,9 @@ struct ionic_eq {
 
 	int			irq;
 	char			name[32];
+
+	struct sysctl_ctx_list	debug_ctx;
+	struct sysctl_oid	*debug;
 };
 
 struct ionic_admin_wr {
@@ -198,6 +199,10 @@ struct ionic_aq {
 	struct ionic_admin_wr	**q_wr;
 	struct list_head	wr_prod;
 	struct list_head	wr_post;
+
+	struct sysctl_ctx_list	debug_ctx;
+	struct sysctl_oid	*debug;
+	struct ionic_admin_wr	*debug_wr;
 };
 
 struct ionic_ctx {
@@ -259,6 +264,9 @@ struct ionic_cq {
 
 	/* XXX xxx_notify */
 	struct delayed_work	notify_work;
+
+	struct sysctl_ctx_list	debug_ctx;
+	struct sysctl_oid	*debug;
 };
 
 struct ionic_sq_meta {
@@ -344,6 +352,9 @@ struct ionic_qp {
 	struct ionic_tbl_res	rrq_res;
 
 	u8			compat;
+
+	struct sysctl_ctx_list	debug_ctx;
+	struct sysctl_oid	*debug;
 };
 
 struct ionic_ah {
@@ -363,6 +374,9 @@ struct ionic_mr {
 	struct ib_umem		*umem;
 	struct ionic_tbl_res	res;
 	struct ionic_tbl_buf	buf;
+
+	struct sysctl_ctx_list	debug_ctx;
+	struct sysctl_oid	*debug;
 };
 
 static inline struct ionic_ibdev *to_ionic_ibdev(struct ib_device *ibdev)

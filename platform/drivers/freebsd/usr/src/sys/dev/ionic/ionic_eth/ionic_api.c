@@ -35,6 +35,12 @@ struct device *ionic_api_get_device(struct lif *lif)
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_device);
 
+struct sysctl_oid *ionic_api_get_debugfs(struct lif *lif)
+{
+	return lif->sysctl_ifnet;
+}
+EXPORT_SYMBOL_GPL(ionic_api_get_debugfs);
+
 void ionic_api_request_reset(struct lif *lif)
 {
 	netdev_warn(lif->netdev, "not implemented\n");

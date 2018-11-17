@@ -23,7 +23,7 @@
  */
 #define IONIC_API_VERSION "3"
 
-struct dentry;
+struct sysctl_oid;
 struct lif;
 
 /** enum ionic_api_prsn - personalities that can be applied to the lif. */
@@ -48,6 +48,15 @@ struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 
 /* (BSD) get linuxkpi device from lif instead of ifnet */
 struct device *ionic_api_get_device(struct lif *lif);
+
+/** ionic_api_get_debugfs - Get the debugfs dir (if any) for the lif.
+ * @lif:		Handle to lif.
+ *
+ * (BSD) this is oid of the lif in sysctl.
+ *
+ * Return: debugfs dir for the lif or NULL
+ */
+struct sysctl_oid *ionic_api_get_debugfs(struct lif *lif);
 
 /** ionic_api_request_reset - request reset or disable the device or lif.
  * @lif:		Handle to lif.

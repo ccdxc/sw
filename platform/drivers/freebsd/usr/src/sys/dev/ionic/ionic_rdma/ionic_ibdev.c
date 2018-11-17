@@ -73,65 +73,73 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 /* XXX remove this section for release */
 static bool ionic_xxx_pgtbl = true;
-module_param_named(xxx_pgtbl, ionic_xxx_pgtbl, bool, 0644);
-MODULE_PARM_DESC(xxx_pgtbl, "XXX Allocate pgtbl even for contiguous buffers that don't need it.");
+module_param_named(ionic_rdma_xxx_pgtbl, ionic_xxx_pgtbl, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_xxx_pgtbl, "XXX Allocate pgtbl even for contiguous buffers that don't need it.");
 static bool ionic_xxx_pgidx = true;
-module_param_named(xxx_pgidx, ionic_xxx_pgidx, bool, 0444);
-MODULE_PARM_DESC(xxx_pgidx, "XXX Tell device idx in eight byte blocks instead of cache line size blocks.");
+module_param_named(ionic_rdma_xxx_pgidx, ionic_xxx_pgidx, bool, 0444);
+MODULE_PARM_DESC(ionic_rdma_xxx_pgidx, "XXX Tell device idx in eight byte blocks instead of cache line size blocks.");
 static bool ionic_xxx_limits = false;
-module_param_named(xxx_limits, ionic_xxx_limits, bool, 0444);
-MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
+module_param_named(ionic_rdma_xxx_limits, ionic_xxx_limits, bool, 0444);
+MODULE_PARM_DESC(ionic_rdma_xxx_limits, "XXX Hardcode resource limits.");
 static bool ionic_xxx_kdbid = true;
-module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0644);
-MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
+module_param_named(ionic_rdma_xxx_kdbid, ionic_xxx_kdbid, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_xxx_kdbid, "XXX Kernel doorbell id in user space.");
 static bool ionic_xxx_udp = true;
-module_param_named(xxx_udp, ionic_xxx_udp, bool, 0644);
-MODULE_PARM_DESC(xxx_udp, "XXX Makeshift udp header in template.");
+module_param_named(ionic_rdma_xxx_udp, ionic_xxx_udp, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_xxx_udp, "XXX Makeshift udp header in template.");
 static bool ionic_xxx_noop = false;
-module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
-MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
+module_param_named(ionic_rdma_xxx_noop, ionic_xxx_noop, bool, 0444);
+MODULE_PARM_DESC(ionic_rdma_xxx_noop, "XXX Adminq noop after probing device.");
 static bool ionic_xxx_notify = false;
-module_param_named(xxx_notify, ionic_xxx_notify, bool, 0644);
-MODULE_PARM_DESC(xxx_notify, "XXX Workaround for inoperable EQ (kernel space).");
+module_param_named(ionic_rdma_xxx_notify, ionic_xxx_notify, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_xxx_notify, "XXX Workaround for inoperable EQ (kernel space).");
 static bool ionic_xxx_aq_idx = false;
-module_param_named(xxx_aq_idx, ionic_xxx_aq_idx, bool, 0644);
-MODULE_PARM_DESC(xxx_aq_idx, "XXX Check aq cindex matches polling completion.");
+module_param_named(ionic_rdma_xxx_aq_idx, ionic_xxx_aq_idx, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_xxx_aq_idx, "XXX Check aq cindex matches polling completion.");
 static bool ionic_xxx_aq_dbell = true;
-module_param_named(xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
-MODULE_PARM_DESC(xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling of aq failure).");
+module_param_named(ionic_rdma_xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling of aq failure).");
 /* XXX remove above section for release */
 
+bool ionic_dyndbg_enable;
+module_param_named(ionic_rdma_dyndbg_enable, ionic_dyndbg_enable, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_dyndbg_enable, "Print to dmesg for dev_dbg, et al.");
+
+static bool ionic_dbgfs_enable = true; /* XXX false for release */
+module_param_named(ionic_rdma_dbgfs_enable, ionic_dbgfs_enable, bool, 0444);
+MODULE_PARM_DESC(ionic_rdma_dbgfs_enable, "Expose resource info in debugfs.");
+
 static u16 ionic_aq_depth = 0x3f; /* XXX needs tuning */
-module_param_named(aq_depth, ionic_aq_depth, ushort, 0444);
-MODULE_PARM_DESC(aq_depth, "Min depth for admin queues.");
+module_param_named(ionic_rdma_aq_depth, ionic_aq_depth, ushort, 0444);
+MODULE_PARM_DESC(ionic_rdma_aq_depth, "Min depth for admin queues.");
 
 static u16 ionic_eq_depth = 0x1ff; /* XXX needs tuning */
-module_param_named(eq_depth, ionic_eq_depth, ushort, 0444);
-MODULE_PARM_DESC(eq_depth, "Min depth for event queues.");
+module_param_named(ionic_rdma_eq_depth, ionic_eq_depth, ushort, 0444);
+MODULE_PARM_DESC(ionic_rdma_eq_depth, "Min depth for event queues.");
 
 static u16 ionic_eq_isr_budget = 10; /* XXX needs tuning */
-module_param_named(isr_budget, ionic_eq_isr_budget, ushort, 0644);
-MODULE_PARM_DESC(isr_budget, "Max events to poll per round in isr context.");
+module_param_named(ionic_rdma_isr_budget, ionic_eq_isr_budget, ushort, 0644);
+MODULE_PARM_DESC(ionic_rdma_isr_budget, "Max events to poll per round in isr context.");
 
 static u16 ionic_eq_work_budget = 1000; /* XXX needs tuning */
-module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
-MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
+module_param_named(ionic_rdma_work_budget, ionic_eq_work_budget, ushort, 0644);
+MODULE_PARM_DESC(ionic_rdma_work_budget, "Max events to poll per round in work context.");
 
 static bool ionic_sqcmb_inline = true;
-module_param_named(sqcmb_inline, ionic_sqcmb_inline, bool, 0644);
-MODULE_PARM_DESC(sqcmb_inline, "Only alloc sq cmb for inline data capability.");
+module_param_named(ionic_rdma_sqcmb_inline, ionic_sqcmb_inline, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_sqcmb_inline, "Only alloc sq cmb for inline data capability.");
 
 static int ionic_sqcmb_order = 0; /* XXX needs tuning */
-module_param_named(sqcmb_order, ionic_sqcmb_order, int, 0644);
-MODULE_PARM_DESC(sqcmb_order, "Only alloc sq cmb less than order.");
+module_param_named(ionic_rdma_sqcmb_order, ionic_sqcmb_order, int, 0644);
+MODULE_PARM_DESC(ionic_rdma_sqcmb_order, "Only alloc sq cmb less than order.");
 
 static bool ionic_rqcmb_sqcmb = true;
-module_param_named(rqcmb_sqcmb, ionic_rqcmb_sqcmb, bool, 0644);
-MODULE_PARM_DESC(rqcmb_sqcmb, "Only alloc rq cmb if sq is cmb.");
+module_param_named(ionic_rdma_rqcmb_sqcmb, ionic_rqcmb_sqcmb, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_rqcmb_sqcmb, "Only alloc rq cmb if sq is cmb.");
 
 static int ionic_rqcmb_order = 0; /* XXX needs tuning */
-module_param_named(rqcmb_order, ionic_rqcmb_order, int, 0644);
-MODULE_PARM_DESC(rqcmb_order, "Only alloc rq cmb less than order.");
+module_param_named(ionic_rdma_rqcmb_order, ionic_rqcmb_order, int, 0644);
+MODULE_PARM_DESC(ionic_rdma_rqcmb_order, "Only alloc rq cmb less than order.");
 
 /* work queue for handling network events, managing ib devices */
 static struct workqueue_struct *ionic_dev_workq;
@@ -2618,6 +2626,8 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_resp;
 
+	ionic_dbgfs_add_cq(dev, cq);
+
 	mutex_lock(&dev->tbl_lock);
 	tbl_alloc_node(&dev->cq_tbl);
 	tbl_insert(&dev->cq_tbl, cq, cq->cqid);
@@ -2646,6 +2656,8 @@ static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	tbl_free_node(&dev->cq_tbl);
 	tbl_delete(&dev->cq_tbl, cq->cqid);
 	mutex_unlock(&dev->tbl_lock);
+
+	ionic_dbgfs_rm_cq(cq);
 
 	write_lock_irqsave(&dev->tbl_rcu, irqflags);
 	write_unlock_irqrestore(&dev->tbl_rcu, irqflags);
@@ -4415,6 +4427,8 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 		spin_unlock_irqrestore(&cq->lock, irqflags);
 	}
 
+	ionic_dbgfs_add_qp(dev, qp);
+
 	return &qp->ibqp;
 
 err_resp:
@@ -4725,6 +4739,8 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	rc = ionic_destroy_qp_cmd(dev, qp->qpid);
 	if (rc)
 		return rc;
+
+	ionic_dbgfs_rm_qp(qp);
 
 	mutex_lock(&dev->tbl_lock);
 	tbl_free_node(&dev->qp_tbl);
@@ -5839,6 +5855,8 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 		spin_unlock_irqrestore(&cq->lock, irqflags);
 	}
 
+	ionic_dbgfs_add_qp(dev, qp);
+
 	return &qp->ibsrq;
 
 err_resp:
@@ -5878,6 +5896,8 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 	rc = ionic_destroy_qp_cmd(dev, qp->qpid);
 	if (rc)
 		return rc;
+
+	ionic_dbgfs_rm_qp(qp);
 
 	if (qp->ibsrq.srq_type == IB_SRQT_XRC) {
 		mutex_lock(&dev->tbl_lock);
@@ -6212,6 +6232,8 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 
 	ionic_intr_mask(dev, eq->intr, IONIC_INTR_MASK_CLEAR);
 
+	ionic_dbgfs_add_eq(dev, eq);
+
 	return eq;
 
 err_cmd:
@@ -6231,6 +6253,8 @@ err_eq:
 static void ionic_destroy_eq(struct ionic_eq *eq)
 {
 	struct ionic_ibdev *dev = eq->dev;
+
+	ionic_dbgfs_rm_eq(eq);
 
 	eq->enable = false;
 	flush_work(&eq->work);
@@ -6334,6 +6358,8 @@ static struct ionic_aq *__ionic_create_rdma_adminq(struct ionic_ibdev *dev,
 	INIT_LIST_HEAD(&aq->wr_prod);
 	INIT_LIST_HEAD(&aq->wr_post);
 
+	ionic_dbgfs_add_aq(dev, aq);
+
 	return aq;
 
 err_wr:
@@ -6347,6 +6373,7 @@ err_aq:
 static void __ionic_destroy_rdma_adminq(struct ionic_ibdev *dev,
 					struct ionic_aq *aq)
 {
+	ionic_dbgfs_rm_aq(aq);
 
 	ionic_queue_destroy(&aq->q, dev->hwdev);
 	kfree(aq);
@@ -6540,6 +6567,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	kfree(dev->stats_buf);
 	kfree(dev->stats_hdrs);
 
+	ionic_dbgfs_rm_dev(dev);
 	resid_destroy(&dev->inuse_qpid);
 	resid_destroy(&dev->inuse_cqid);
 	resid_destroy(&dev->inuse_mrid);
@@ -6560,6 +6588,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
 	const union identity *ident;
+	struct sysctl_oid *lif_dbgfs;
 	int rc, lif_id, version, compat;
 
 	dev_hold(ndev);
@@ -6767,6 +6796,13 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	/* skip reserved SMI and GSI qpids */
 	dev->inuse_qpid.next_id = 2;
 
+	if (ionic_dbgfs_enable)
+		lif_dbgfs = ionic_api_get_debugfs(lif);
+	else
+		lif_dbgfs = NULL;
+
+	ionic_dbgfs_add_dev(dev, lif_dbgfs);
+
 	rc = ionic_rdma_reset_devcmd(dev);
 	if (rc)
 		goto err_reset;
@@ -6774,6 +6810,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	rc = ionic_create_rdma_admin(dev, le32_to_cpu(ident->dev.neqs_per_lif));
 	if (rc)
 		goto err_register;
+
+	ionic_dbgfs_add_dev_info(dev);
 
 	ibdev->owner = THIS_MODULE;
 	ibdev->dev.parent = dev->hwdev;
@@ -6910,6 +6948,7 @@ err_register:
 	kfree(dev->stats_buf);
 	kfree(dev->stats_hdrs);
 err_reset:
+	ionic_dbgfs_rm_dev(dev);
 	resid_destroy(&dev->inuse_qpid);
 err_qpid:
 	resid_destroy(&dev->inuse_cqid);

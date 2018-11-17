@@ -2,6 +2,7 @@
 
 KMOD=ionic_rdma
 SRCS= \
+ionic_ibdebug.c \
 ionic_ibdev.c \
 ionic_queue.c \
 res.c \
