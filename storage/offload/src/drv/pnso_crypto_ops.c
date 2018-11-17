@@ -413,9 +413,17 @@ crypto_poll(const struct service_info *svc_info)
 		goto out;
 
 	status_desc = svc_info->si_status_desc;
-	start_ts = osal_get_clock_nsec();
+
 	cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
 		CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
+
+	if (svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) {
+		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
+		goto out;
+	}
+
+	/* sync-mode ... */
+	start_ts = osal_get_clock_nsec();
 	while (1) {
 		err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
 		if (!err)
@@ -430,6 +438,7 @@ crypto_poll(const struct service_info *svc_info)
 			break;
 		}
 	}
+
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;

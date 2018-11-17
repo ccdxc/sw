@@ -53,8 +53,14 @@ cpdc_poll(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	start_ts = osal_get_clock_nsec();
 
+	if (svc_info->si_flags & CHAIN_SFLAG_MODE_POLL) {
+		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
+		goto out;
+	}
+
+	/* sync-mode ... */
+	start_ts = osal_get_clock_nsec();
 	while (1) {
 		err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 		if (!err)
@@ -70,6 +76,7 @@ cpdc_poll(const struct service_info *svc_info)
 		}
 	}
 
+out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
