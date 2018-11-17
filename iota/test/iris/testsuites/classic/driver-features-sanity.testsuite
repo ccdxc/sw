@@ -5,6 +5,7 @@ meta:
     cfgmode     : netagent
     nicmode     : classic
     enable      : True
+    os          : [ linux, freebsd ]
 
 packages:
     - iota.test.iris
@@ -32,7 +33,7 @@ testcases:
             proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            type         : remote_only
+            test-type         : host
             #capture_pcap : True
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
@@ -49,7 +50,7 @@ testcases:
             proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            type: remote_only
+            test-type    : host
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
@@ -65,7 +66,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            type: remote_only
+            test-type    : host
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
@@ -81,7 +82,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            type: remote_only
+            test-type    : host
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
@@ -97,7 +98,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            type: remote_only
+            test-type    : host
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
@@ -113,7 +114,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            type: remote_only
+            test-type    : host
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
@@ -134,7 +135,7 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            type: remote_only
+            test-type    : host
             #capture_pcap : true
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent

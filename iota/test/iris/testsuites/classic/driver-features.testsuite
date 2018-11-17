@@ -5,6 +5,7 @@ meta:
     cfgmode     : netagent
     nicmode     : classic
     enable      : False
+    os          : [ linux, freebsd ]
 
 packages:
     - iota.test.iris
