@@ -771,8 +771,7 @@ chn_execute_chain(struct service_chain *chain)
 	}
 
 	/* ring 'first' service door bell */
-	sc_entry = ce_first;
-	err = ce_first->ce_svc_info.si_ops.ring_db(&sc_entry->ce_svc_info);
+	err = ce_first->ce_svc_info.si_ops.ring_db(&ce_first->ce_svc_info);
 	PAS_START_HW_PERF();
 	if (err) {
 		OSAL_LOG_ERROR("failed to ring service door bell! svc_type: %d err: %d",
@@ -790,12 +789,14 @@ chn_execute_chain(struct service_chain *chain)
 	}
 
 	/* wait for 'last' service completion */
-	sc_entry = ce_last;
-	err = ce_last->ce_svc_info.si_ops.poll(&sc_entry->ce_svc_info);
+	err = ce_last->ce_svc_info.si_ops.poll(&ce_last->ce_svc_info);
 	PAS_END_HW_PERF(pcr);
-	if (err)
+	if (err) {
+		/* in sync-mode, poll() will return either OK or ETIMEDOUT */
 		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
 			       ce_last->ce_svc_info.si_type, err);
+		goto out;
+	}
 
 	/* update status of individual service(s) */
 	sc_entry = chain->sc_entry;

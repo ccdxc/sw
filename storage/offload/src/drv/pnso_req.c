@@ -827,6 +827,7 @@ submit_chain(struct request_params *req_params)
 	if (err) {
 		OSAL_LOG_ERROR("failed to complete request/chain! err: %d",
 				err);
+		PAS_INC_NUM_CHAIN_FAILURES(pcr);
 		goto out_chain;
 	}
 
@@ -839,7 +840,6 @@ submit_chain(struct request_params *req_params)
 
 out_chain:
 	chn_destroy_chain(chain);
-	PAS_INC_NUM_CHAIN_FAILURES(pcr);
 out:
 	return err;
 }
