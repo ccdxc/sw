@@ -550,6 +550,29 @@ chn_destroy_chain(struct service_chain *chain)
 	OSAL_LOG_DEBUG("exit!");
 }
 
+/* TODO-poll/async: Revisit to collapse flags after async in-place */
+static inline void
+set_chain_mode(uint16_t mode_flags, uint16_t *flags)
+{
+	if (mode_flags & REQUEST_RFLAG_MODE_SYNC)
+		*flags |= CHAIN_CFLAG_MODE_SYNC;
+	else if (mode_flags & REQUEST_RFLAG_MODE_POLL)
+		*flags |= CHAIN_CFLAG_MODE_POLL;
+	else if (mode_flags & REQUEST_RFLAG_MODE_ASYNC)
+		*flags |= CHAIN_CFLAG_MODE_ASYNC;
+}
+
+static inline void
+set_service_mode(uint16_t mode_flags, uint8_t *flags)
+{
+	if (mode_flags & REQUEST_RFLAG_MODE_SYNC)
+		*flags |= CHAIN_SFLAG_MODE_SYNC;
+	else if (mode_flags & REQUEST_RFLAG_MODE_POLL)
+		*flags |= CHAIN_SFLAG_MODE_POLL;
+	else if (mode_flags & REQUEST_RFLAG_MODE_ASYNC)
+		*flags |= CHAIN_SFLAG_MODE_ASYNC;
+}
+
 struct service_chain *
 chn_create_chain(struct request_params *req_params)
 {
@@ -599,12 +622,7 @@ chn_create_chain(struct request_params *req_params)
 
 	chain->sc_pcr = pcr;
 
-	if (req_params->rp_flags & REQUEST_RFLAG_MODE_SYNC)
-		chain->sc_flags |= CHAIN_CFLAG_MODE_SYNC;
-	else if (req_params->rp_flags & REQUEST_RFLAG_MODE_POLL)
-		chain->sc_flags |= CHAIN_CFLAG_MODE_POLL;
-	else if (req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC)
-		chain->sc_flags |= CHAIN_CFLAG_MODE_ASYNC;
+	set_chain_mode(req_params->rp_flags, &chain->sc_flags);
 
 	if ((req_params->rp_flags & REQUEST_RFLAG_TYPE_CHAIN) &&
 			((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) ||
@@ -635,12 +653,7 @@ chn_create_chain(struct request_params *req_params)
 		centry->ce_next = NULL;
 		svc_info = &centry->ce_svc_info;
 
-		if (req_params->rp_flags & REQUEST_RFLAG_MODE_SYNC)
-			svc_info->si_flags |= CHAIN_SFLAG_MODE_SYNC;
-		else if (req_params->rp_flags & REQUEST_RFLAG_MODE_POLL)
-			svc_info->si_flags |= CHAIN_SFLAG_MODE_POLL;
-		else if (req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC)
-			svc_info->si_flags |= CHAIN_SFLAG_MODE_ASYNC;
+		set_service_mode(req_params->rp_flags, &svc_info->si_flags);
 
 		if (i == 0) {
 			svc_info->si_flags = (chain->sc_num_services == 1) ?
