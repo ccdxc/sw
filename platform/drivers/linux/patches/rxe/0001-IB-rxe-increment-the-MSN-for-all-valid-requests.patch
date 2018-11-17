@@ -1,0 +1,45 @@
+From 5056ac33a8e6a53b634ce0b76a7a6e26dd580adb Mon Sep 17 00:00:00 2001
+Message-Id: <5056ac33a8e6a53b634ce0b76a7a6e26dd580adb.1542398515.git.allenbh@pensando.io>
+From: Allen Hubbe <allenbh@pensando.io>
+Date: Thu, 26 Apr 2018 09:36:14 -0700
+Subject: [PATCH 1/2] IB/rxe: increment the MSN for all valid requests
+
+As required by C9-148: "... The responder shall increment its MSN whenever it
+has successfully completed processing a new, valid request message. ..."
+
+The MSN was incremented when the RXE_COMP_FLAG was set, which is only the case
+when responding to SEND LAST or SEND ONLY.  The MSN was not incremented by the
+RXE responder for valid RDMA WRITE or ATOMIC requests.
+
+This change increments the MSN when the RXE_END_FLAG is set, which is the case
+when responding to the LAST or ONLY packet of any valid request.
+
+Signed-off-by: Allen Hubbe <allenbh@pensando.io>
+---
+ drivers/infiniband/sw/rxe/rxe_resp.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/infiniband/sw/rxe/rxe_resp.c b/drivers/infiniband/sw/rxe/rxe_resp.c
+index 955ff3b6da9c..69bf5ccba16b 100644
+--- a/drivers/infiniband/sw/rxe/rxe_resp.c
++++ b/drivers/infiniband/sw/rxe/rxe_resp.c
+@@ -819,11 +819,13 @@ static enum resp_states execute(struct rxe_qp *qp, struct rxe_pkt_info *pkt)
+ 	qp->resp.opcode = pkt->opcode;
+ 	qp->resp.status = IB_WC_SUCCESS;
+ 
+-	if (pkt->mask & RXE_COMP_MASK) {
+-		/* We successfully processed this new request. */
++	/* We successfully processed this new request. */
++	if (pkt->mask & RXE_END_MASK)
+ 		qp->resp.msn++;
++
++	if (pkt->mask & RXE_COMP_MASK)
+ 		return RESPST_COMPLETE;
+-	} else if (qp_type(qp) == IB_QPT_RC)
++	else if (qp_type(qp) == IB_QPT_RC)
+ 		return RESPST_ACKNOWLEDGE;
+ 	else
+ 		return RESPST_CLEANUP;
+-- 
+2.17.1
+

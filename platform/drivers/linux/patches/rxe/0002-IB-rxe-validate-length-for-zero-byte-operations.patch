@@ -1,0 +1,57 @@
+From 568366df6710567bb5055c5c7b588719bb06d797 Mon Sep 17 00:00:00 2001
+Message-Id: <568366df6710567bb5055c5c7b588719bb06d797.1542398515.git.allenbh@pensando.io>
+In-Reply-To: <5056ac33a8e6a53b634ce0b76a7a6e26dd580adb.1542398515.git.allenbh@pensando.io>
+References: <5056ac33a8e6a53b634ce0b76a7a6e26dd580adb.1542398515.git.allenbh@pensando.io>
+From: Allen Hubbe <allenbh@pensando.io>
+Date: Thu, 26 Apr 2018 10:57:25 -0700
+Subject: [PATCH 2/2] IB/rxe: validate length for zero byte operations
+
+If resid indicates a zero byte operation, then the mem resources will not be
+looked up.  Then, if the pktlen is nonzero, rxe will PANIC in execute(),
+calling rxe_mem_copy() with nonzero length, and dereferencing the NULL mem
+resource.
+
+This change tests that for zero byte operations, the pktlen is also zero.
+
+Signed-off-by: Allen Hubbe <allenbh@pensando.io>
+---
+ drivers/infiniband/sw/rxe/rxe_resp.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/infiniband/sw/rxe/rxe_resp.c b/drivers/infiniband/sw/rxe/rxe_resp.c
+index 69bf5ccba16b..4979c3bcec9b 100644
+--- a/drivers/infiniband/sw/rxe/rxe_resp.c
++++ b/drivers/infiniband/sw/rxe/rxe_resp.c
+@@ -447,18 +447,22 @@ static enum resp_states check_rkey(struct rxe_qp *qp,
+ 		return RESPST_EXECUTE;
+ 	}
+ 
+-	/* A zero-byte op is not required to set an addr or rkey. */
+-	if ((pkt->mask & (RXE_READ_MASK | RXE_WRITE_OR_SEND)) &&
+-	    (pkt->mask & RXE_RETH_MASK) &&
+-	    reth_len(pkt) == 0) {
+-		return RESPST_EXECUTE;
+-	}
+-
+ 	va	= qp->resp.va;
+ 	rkey	= qp->resp.rkey;
+ 	resid	= qp->resp.resid;
+ 	pktlen	= payload_size(pkt);
+ 
++	/* A zero-byte op is not required to set an addr or rkey. */
++	if (pkt->mask & (RXE_READ_MASK | RXE_WRITE_OR_SEND)) {
++		if (resid == 0) {
++			if (pktlen != 0) {
++				state = RESPST_ERR_LENGTH;
++				goto err;
++			}
++			return RESPST_EXECUTE;
++		}
++	}
++
+ 	mem = lookup_mem(qp->pd, access, rkey, lookup_remote);
+ 	if (!mem) {
+ 		state = RESPST_ERR_RKEY_VIOLATION;
+-- 
+2.17.1
+

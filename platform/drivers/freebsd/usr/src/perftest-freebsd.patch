@@ -1,3 +1,14 @@
+diff -ur perftest-orig/src/perftest_communication.h perftest/src/perftest_communication.h
+--- perftest-orig/src/perftest_communication.h	2018-11-15 02:26:28.000000000 +0000
++++ perftest/src/perftest_communication.h	2018-11-16 18:57:50.817237000 +0000
+@@ -43,6 +43,7 @@
+ #include <infiniband/verbs.h>
+ #include <rdma/rdma_cma.h>
+ #include "perftest_resources.h"
++#include <infiniband/endian.h>
+
+ /* Macro for 64 bit variables to switch to/from net */
+ #if __BYTE_ORDER == __BIG_ENDIAN || __BYTE_ORDER == __LITTLE_ENDIAN
 diff -ur perftest-orig/src/perftest_resources.c perftest/src/perftest_resources.c
 --- perftest-orig/src/perftest_resources.c	2018-11-07 06:57:14.131424000 -0800
 +++ perftest/src/perftest_resources.c	2018-11-07 06:59:55.928922000 -0800
