@@ -1,7 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 PKG_PREREQS:= all
 
-
 package-clean:
 	@rm -rf $(NICDIR)/../fake_root_target
 	@rm -f  $(NICDIR)/nic.tgz
@@ -72,5 +71,15 @@ ifneq ($(ARCH),aarch64)
 	${NICDIR}/tools/release.sh
 endif
 
+.PHONY: release-clean
 release-clean:
 	@rm -rf obj/release
+
+BRCTR="registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20181113.1458"
+.PHONY: firmware
+firmware: package
+    ifeq (${ARCH},aarch64)
+		docker run --rm -v ${TOPDIR}:/sw ${BRCTR} sh -c 'make BR2_ROOTFS_OVERLAY="board/pensando/capri/rootfs-overlay /sw/fake_root_target/aarch64" && cp /buildroot/output/images/naples_fw.tar /sw/nic'
+    else
+		$(error Target 'firmware' is only valid for ARCH=aarch64)
+    endif
