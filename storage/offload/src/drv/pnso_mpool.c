@@ -420,49 +420,6 @@ mpool_put_object(struct mem_pool *mpool, void *object)
 	spin_unlock(&mem_stack->mps_lock);
 }
 
-pnso_error_t
-mpool_get_index_by_object(struct mem_pool *mpool, void *object, uint32_t *index)
-{
-	uint32_t pool_size, obj_size;
-	bool in_range;
-
-	if (!mpool || !object)
-		return EINVAL;
-
-	if (!is_pool_valid(mpool))
-		return EINVAL;
-
-	switch(mpool->mp_config.mpc_type) {
-	case MPOOL_TYPE_SERVICE_CHAIN:
-	case MPOOL_TYPE_BATCH_INFO:
-		break;
-	default:
-		return EINVAL;
-	}
-	OSAL_LOG_DEBUG("mpool_type: %d object: 0x" PRIx64,
-			mpool->mp_config.mpc_type, (uint64_t) object);
-
-	obj_size = mpool->mp_config.mpc_object_size +
-		 mpool->mp_config.mpc_pad_size;
-	pool_size = mpool->mp_config.mpc_pool_size;
-
-	in_range = ((((char *) object - (char *) mpool->mp_objects) /
-				obj_size) < pool_size);
-	if (!in_range)
-		return EINVAL;
-
-	OSAL_LOG_DEBUG("mpool_type: %d object: 0x" PRIx64 "object_size: %u pool_size: %u",
-			mpool->mp_config.mpc_type, (uint64_t) object,
-			obj_size, pool_size);
-
-	*index = ((char *) object - (char *) mpool->mp_objects) / obj_size;
-
-	OSAL_LOG_DEBUG("mpool_type: %d object: 0x" PRIx64 "index: %u",
-			mpool->mp_config.mpc_type, (uint64_t) object, *index);
-
-	return PNSO_OK;
-}
-
 void __attribute__ ((unused))
 mpool_pprint(const struct mem_pool *mpool)
 {
