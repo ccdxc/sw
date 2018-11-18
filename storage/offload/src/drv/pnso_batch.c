@@ -409,13 +409,6 @@ bat_poller(void *pnso_poll_ctx)
 	 */
 	read_write_result_all_chains(batch_info);
 
-	/*
-	 * on success, read/write result from first to last chain's - first
-	 * to last service - of the entire batch
-	 *
-	 */
-	read_write_result_all_chains(batch_info);
-
 	if (batch_info->bi_req_cb) {
 		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
 				(uint64_t) batch_info->bi_req_cb_ctx, err);
