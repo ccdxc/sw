@@ -187,15 +187,16 @@ void Accel_PF::Update(void)
     uint8_t cosB = 0;
     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
 
-    // Acquire rings info as initialized by HAL
+    // acquire rings info as initialized by HAL
     accel_ring_info_get_all();
 
-    // Establish sequencer queues metrics with Delphi
+    // establish sequencer queues metrics with Delphi
     if (DelphiDeviceInit()) {
         NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
         return;
     }
 
+    // program the queue state
     pd->program_qstate(qinfo, &info, coses);
 }
 
@@ -384,6 +385,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         }
     }
 
+#if 0
     // Establish sequencer queues info and metrics with Delphi
     if (DelphiDeviceInit()) {
         NIC_LOG_ERR("lif{}: Failed to establish Delphi device", info.hw_lif_id);
@@ -395,6 +397,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         sync_timer.set<Accel_PF, &Accel_PF::periodic_sync>(this);
         sync_timer.start(intv, intv);
     }
+#endif
 }
 
 int
@@ -1318,7 +1321,7 @@ accel_rgroup_rinfo_rsp_cb(void *user_ctx,
     Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
 
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(info.ring_handle);
-    accel_rgroup_ring_t& rgroup_ring = 
+    accel_rgroup_ring_t& rgroup_ring =
             accel_pf_rgroup_find_create(info.ring_handle, info.sub_ring);
     rgroup_ring.info = info;
     accel_ring_info_publish(rgroup_ring);
@@ -1350,7 +1353,7 @@ accel_rgroup_rindices_rsp_cb(void *user_ctx,
     Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
 
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(indices.ring_handle);
-    accel_rgroup_ring_t& rgroup_ring = 
+    accel_rgroup_ring_t& rgroup_ring =
             accel_pf_rgroup_find_create(indices.ring_handle, indices.sub_ring);
     rgroup_ring.indices = indices;
 }
@@ -1381,7 +1384,7 @@ accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
     Accel_PF    *accel_pf = (Accel_PF *)user_ctx;
 
     ACCEL_RGROUP_GET_CB_HANDLE_CHECK(metrics.ring_handle);
-    accel_rgroup_ring_t& rgroup_ring = 
+    accel_rgroup_ring_t& rgroup_ring =
             accel_pf_rgroup_find_create(metrics.ring_handle, metrics.sub_ring);
     rgroup_ring.metrics = metrics;
 }
