@@ -34,11 +34,16 @@ struct batch_page {
 	} bp_entries[MAX_PAGE_ENTRIES];
 };
 
+/* batch flags */
+#define BATCH_BFLAG_MODE_SYNC		(1 << 12)
+#define BATCH_BFLAG_MODE_POLL		(1 << 13)
+#define BATCH_BFLAG_MODE_ASYNC		(1 << 14)
+#define BATCH_BFLAG_CHAIN_PRESENT	(1 << 15)
+
 struct batch_info {
+	uint16_t bi_flags;		/* for async/intr, must be 1st member */
 	uint16_t bi_svc_type;		/* to ensure homogeneous request */
 	enum mem_pool_type bi_mpool_type;	/* bulk desc */
-	bool bi_chain_exists;		/* at least one request chained */
-	bool bi_mode_sync;		/* false for async/poll mode */
 	struct per_core_resource *bi_pcr;
 
 	completion_cb_t	bi_req_cb;	/* caller supplied call-back */

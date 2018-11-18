@@ -39,11 +39,11 @@ pprint_batch_info(struct batch_info *batch_info)
 
 	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== batch_info",
 			(uint64_t) batch_info);
+	OSAL_LOG_INFO("%30s: %d", "bi_flags", batch_info->bi_flags);
 	OSAL_LOG_INFO("%30s: %d", "bi_svc_type", batch_info->bi_svc_type);
 	OSAL_LOG_INFO("%30s: %d", "bi_mpool_type", batch_info->bi_mpool_type);
 	OSAL_LOG_INFO("%30s: 0x" PRIx64, "bi_pcr",
 			(uint64_t) batch_info->bi_pcr);
-	OSAL_LOG_INFO("%30s: %d", "bi_mode_sync", batch_info->bi_mode_sync);
 
 	OSAL_LOG_INFO("%30s: %d", "bi_polled_idx", batch_info->bi_polled_idx);
 	OSAL_LOG_INFO("%30s: %d", "bi_num_entries", batch_info->bi_num_entries);
@@ -256,7 +256,6 @@ init_batch_info(struct pnso_service_request *req)
 	memset(batch_info, 0, sizeof(struct batch_info));
 
 	batch_info->bi_svc_type = req->svc[0].svc_type;
-	batch_info->bi_mode_sync = true;
 	batch_info->bi_mpool_type = mpool_type;
 	batch_info->bi_pcr = pcr;
 	batch_info->bi_polled_idx = 0;
@@ -302,7 +301,7 @@ deinit_batch(struct batch_info *batch_info)
 	OSAL_LOG_DEBUG("release pages/batch batch_info: 0x" PRIx64,
 			(uint64_t) batch_info);
 
-	if (batch_info->bi_chain_exists)
+	if (batch_info->bi_flags & BATCH_BFLAG_CHAIN_PRESENT)
 		destroy_batch_chain(batch_info);
 
 	pcr = batch_info->bi_pcr;
@@ -422,6 +421,17 @@ out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
+	
+static inline void
+set_batch_mode(uint16_t mode_flags, uint16_t *flags)
+{
+	if (mode_flags & REQUEST_RFLAG_MODE_SYNC)
+		*flags |= BATCH_BFLAG_MODE_SYNC;
+	else if (mode_flags & REQUEST_RFLAG_MODE_POLL)
+		*flags |= BATCH_BFLAG_MODE_POLL;
+	else if (mode_flags & REQUEST_RFLAG_MODE_ASYNC)
+		*flags |= BATCH_BFLAG_MODE_ASYNC;
+}
 
 static pnso_error_t
 build_batch(struct batch_info *batch_info, struct request_params *req_params)
@@ -434,10 +444,10 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 
 	OSAL_LOG_DEBUG("enter ...");
 
+	set_batch_mode(req_params->rp_flags, &batch_info->bi_flags);
+
 	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) ||
 			(req_params->rp_flags & REQUEST_RFLAG_MODE_POLL)) {
-		batch_info->bi_mode_sync = false;
-
 		batch_info->bi_req_cb = req_params->rp_cb;
 		batch_info->bi_req_cb_ctx = req_params->rp_cb_ctx;
 
@@ -474,7 +484,7 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 		page_entry->bpe_chain = chain;
 		PAS_INC_NUM_CHAINS(batch_info->bi_pcr);
 	}
-	batch_info->bi_chain_exists = true;
+	batch_info->bi_flags |= BATCH_BFLAG_CHAIN_PRESENT;
 
 	OSAL_LOG_DEBUG("added all entries batch! num_entries: %d", num_entries);
 	PPRINT_BATCH_INFO(batch_info);
@@ -605,7 +615,7 @@ execute_batch(struct batch_info *batch_info)
 			break;
 	}
 
-	if (!batch_info->bi_mode_sync) {
+	if (!(batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC)) {
 		OSAL_LOG_DEBUG("in non-sync mode ...");
 		goto done;
 	}
