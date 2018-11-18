@@ -304,16 +304,14 @@ chn_read_write_result(struct service_chain *chain)
 	while (sc_entry) {
 		svc_ops = &sc_entry->ce_svc_info.si_ops;
 		err = svc_ops->read_status(&sc_entry->ce_svc_info);
-		if (err) {
+		if (err)
 			OSAL_LOG_ERROR("read status failed svc_type: %d err: %d",
 				       sc_entry->ce_svc_info.si_type, err);
-		}
 
 		err = svc_ops->write_result(&sc_entry->ce_svc_info);
-		if (err) {
+		if (err)
 			OSAL_LOG_ERROR("write result failed svc_type: %d err: %d",
 				       sc_entry->ce_svc_info.si_type, err);
-		}
 
 		sc_entry = sc_entry->ce_next;
 	}
@@ -752,7 +750,6 @@ chn_execute_chain(struct service_chain *chain)
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct chain_entry *sc_entry;
 	struct chain_entry *ce_first, *ce_last;
-	struct service_ops *svc_ops;
 
 	PAS_DECL_HW_PERF();
 
@@ -799,23 +796,7 @@ chn_execute_chain(struct service_chain *chain)
 	}
 
 	/* update status of individual service(s) */
-	sc_entry = chain->sc_entry;
-	while (sc_entry) {
-		svc_ops = &sc_entry->ce_svc_info.si_ops;
-		err = svc_ops->read_status(&sc_entry->ce_svc_info);
-		if (err) {
-			OSAL_LOG_ERROR("read status failed svc_type: %d err: %d",
-				       sc_entry->ce_svc_info.si_type, err);
-			PAS_INC_NUM_SERVICE_FAILURES(pcr);
-		}
-
-		err = svc_ops->write_result(&sc_entry->ce_svc_info);
-		if (err)
-			OSAL_LOG_ERROR("write result failed svc_type: %d err: %d",
-				       sc_entry->ce_svc_info.si_type, err);
-
-		sc_entry = sc_entry->ce_next;
-	}
+	chn_read_write_result(chain);
 
 	/* update over all status of the chain */
 	chn_update_overall_result(chain);
