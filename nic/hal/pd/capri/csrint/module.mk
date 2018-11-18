@@ -8,6 +8,7 @@ MODULE_INCS     = ${NIC_CSR_INCS}
 MODULE_SRCS     = ${TOPDIR}/nic/asic/capri/model/cap_top/cap_top_csr.cc \
                   ${TOPDIR}/nic/asic/capri/model/utils/cap_csr_base.cc \
                   ${TOPDIR}/nic/asic/capri/model/utils/mem_access.cc \
+                  ${TOPDIR}/nic/asic/ip/verif/pcpp/pen_axi4_slave.cc \
                   ${TOPDIR}/nic/asic/ip/verif/pcpp/cpp_int_helper.cc \
                   ${TOPDIR}/nic/asic/ip/verif/pcpp/common_dpi.cc \
                   ${TOPDIR}/nic/asic/capri/design/common/gen/cap_qstate_decoders.cc \

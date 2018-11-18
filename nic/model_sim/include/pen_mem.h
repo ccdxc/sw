@@ -240,6 +240,7 @@ public:
 
     virtual bool burst_read(uint64_t addr, unsigned char * data, unsigned int len, bool secure = false, bool reverse_byte_order = false) {
         unsigned char * p = data;
+        //addr_t curr_page_num = get_page_num(addr);
         unsigned int curr_len = get_max_block_size(addr, len);
         unsigned int offset = get_page_offset(addr);
         bool retVal = true;

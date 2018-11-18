@@ -3,7 +3,7 @@
 #
 # -*- Mode: makefile -*-
 
-CC   = cc
-CXX  = c++
+CC   = gcc
+CXX  = g++
 AS   = as
 YACC = bison -y
