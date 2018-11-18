@@ -51,11 +51,11 @@ void mkdirs(const char *dir) {
 
     // if file exists bail out
     if (stat(dir, &sb) == 0) {
-	if (!S_ISDIR(sb.st_mode)) {
-	    ERR("%s is not a directory");
-	    exit(-1);
-	}
-	return;
+        if (!S_ISDIR(sb.st_mode)) {
+            ERR("%s is not a directory");
+            exit(-1);
+        }
+        return;
     }
     
     snprintf(tmp, sizeof(tmp), "%s", dir);
@@ -63,18 +63,18 @@ void mkdirs(const char *dir) {
 
     if(tmp[len - 1] == '/')
     {
-	tmp[len - 1] = 0;
+        tmp[len - 1] = 0;
     }
                 
     for(p = tmp + 1; *p; p++)
     {
-	if(*p == '/')
-	{
-	    *p = 0;
-	    mkdir(tmp, S_IRWXU);
-	    INFO("Creating directory {}", tmp);
-	    *p = '/';
-	}
+        if(*p == '/')
+        {
+            *p = 0;
+            mkdir(tmp, S_IRWXU);
+            INFO("Creating directory {}", tmp);
+            *p = '/';
+        }
     }
     INFO("Creating directory {}", tmp);
     mkdir(tmp, S_IRWXU);
@@ -147,7 +147,7 @@ void sigchld_handler(int sig)
 
     while ((pid = waitpid((pid_t)(-1), &status, WNOHANG)) > 0)
     {
-	struct died_pid_t dp = { .pid = pid, .status = status };
+        struct died_pid_t dp = { .pid = pid, .status = status };
         died_pids->pipe_write(&dp);
     }
 }
@@ -228,17 +228,17 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
                 scheduler.heartbeat(pid);
             }
         }
-	else if (events[i].data.fd == quit_pipe->raw_fd())
-	{
-	    int sig;
-	    while(quit_pipe->pipe_read(&sig) == 0)
-	    {
-		INFO("Signal {} received. Exiting", sig);
-		kill(-mypid, SIGTERM);
-		exit(-1);
-	    }
-	}
-	else
+        else if (events[i].data.fd == quit_pipe->raw_fd())
+        {
+            int sig;
+            while(quit_pipe->pipe_read(&sig) == 0)
+            {
+                INFO("Signal {} received. Exiting", sig);
+                kill(-mypid, SIGTERM);
+                exit(-1);
+            }
+        }
+        else
         {
             INFO("UNKOWN EVENT");
         }
@@ -258,7 +258,7 @@ void epollfd_register(int epollfd, int fd)
     }
 }
 
-void loop(Scheduler &scheduler)
+void loop(Scheduler &scheduler, shared_ptr<SysmgrService> delphi_svc)
 {
     int epollfd = epoll_create1(0);
     if (epollfd == -1)
@@ -282,7 +282,7 @@ void loop(Scheduler &scheduler)
             INFO("Launching services");
             for (auto service : action->launch_list)
             {
-	        INFO("Launching {}: {}", service->name, service->command);
+                INFO("Launching {}: {}", service->name, service->command);
                 pid_t pid = launch(service->name, service->command);
                 scheduler.service_launched(service, pid);
             }
@@ -294,9 +294,9 @@ void loop(Scheduler &scheduler)
         }
         else if (action->type == REBOOT)
         {
-            INFO("Rebooting");
-            kill(-mypid, SIGTERM);
-            exit(0);
+            INFO("Fault");
+            delphi_svc->set_system_fault();
+            wait_for_events(scheduler, epollfd, -1);
         }
     }
 }
@@ -304,11 +304,7 @@ void loop(Scheduler &scheduler)
 
 void *delphi_thread_run(void *ctx)
 {
-    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-
-    shared_ptr<SysmgrService> svc = make_shared<SysmgrService>(sdk, "SystemManager", started_pids, 
-        delphi_messages, heartbeats);
-    sdk->RegisterService(svc);
+    delphi::SdkPtr sdk = *reinterpret_cast<delphi::SdkPtr*>(ctx);
 
     INFO("Starting Delphi MainLoop()");
     sdk->MainLoop();
@@ -324,7 +320,7 @@ int main(int argc, char *argv[])
        return -1;
     }
     if (argc == 3) {
-	log_location = argv[2];
+        log_location = argv[2];
     }
     
     mkdirs(log_location.c_str());
@@ -337,11 +333,20 @@ int main(int argc, char *argv[])
     }
     redirect_stds("sysmgr", getpid());
 
-    auto spec = specs_from_json(argv[1]);
-    Scheduler scheduler(spec);
+    // The delphi client
+    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
+    shared_ptr<SysmgrService> svc = make_shared<SysmgrService>(sdk,
+        "SystemManager", started_pids, delphi_messages, heartbeats);
+    sdk->RegisterService(svc);
 
     pthread_t delphi_thread;
-    pthread_create(&delphi_thread, NULL, delphi_thread_run, NULL);
+    pthread_create(&delphi_thread, NULL, delphi_thread_run,
+        reinterpret_cast<void *>(&sdk));
+
+    // The scheduler
+    auto spec = specs_from_json(argv[1]);
+    Scheduler scheduler(spec);
+    scheduler.set_service_status_watcher(svc);
     
     install_sigchld_handler();
     signal(SIGQUIT, sig_handler);
@@ -349,7 +354,7 @@ int main(int argc, char *argv[])
     signal(SIGSEGV, sig_handler);
     signal(SIGINT, sig_handler);
 
-    loop(scheduler);
+    loop(scheduler, svc);
 
     return 0;
 }

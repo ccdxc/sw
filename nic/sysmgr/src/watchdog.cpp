@@ -12,7 +12,9 @@
 // better soon
 
 time_t now() {
-    return std::time(0);
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    return tp.tv_sec;
 }
 
 Watchdog::Watchdog() {

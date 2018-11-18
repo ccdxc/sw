@@ -41,3 +41,33 @@ message SysmgrServiceSpec {
     bool                   DelphiService = 7;
     bool                   Restartable   = 8;
 }
+
+enum ProcessState {
+    Waiting  = 0;
+    Ready    = 1;
+    Launched = 2;
+    Running  = 3;
+    Died     = 4;
+}
+
+message SysmgrProcessStatus {
+    option (delphi.update_event)      = true;
+    delphi.ObjectMeta      Meta       = 1;
+    string                 Key        = 2;
+    int32                  Pid        = 3;
+    ProcessState           State      = 4;
+    string                 ExitReason = 5;
+}
+
+enum SystemState {
+    Normal = 0;
+    Fault  = 1;
+}
+
+message SysmgrSystemStatus {
+    option (delphi.update_event)  = true;
+    option (delphi.singleton)     = true;
+    delphi.ObjectMeta      Meta   = 1;
+    SystemState            State  = 2;
+    string                 Reason = 3;
+}

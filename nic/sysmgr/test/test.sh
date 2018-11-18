@@ -37,20 +37,21 @@ runtest () {
     timeout $tm ${BUILD_DIR}/bin/sysmgr $json .
     cat *.log
     for ln in "${lines[@]}"
-    do grep -c "$ln" sysmgr*.out.log
+    do grep -c "$ln" *.out.log
        RET=$?
        if [ $RET -ne 0 ]
        then
-	   echo "Didn't find $ln in the logs"
-	   echo "$json failed"
-	   exit $RET
+           echo "Didn't find $ln in the logs"
+           echo "$json failed"
+           exit $RET
        fi
     done
 }
 
 runtest 10s test.json "example2 -> started"
 
-runtest 10s test-exit-code.json "example2 -> Exited normally with code: 12"
+runtest 10s test-exit-code.json "example2 -> Exited normally with code: 12" \
+        "ProcessStatus example2, .*, 4, Exited normally with code: 12"
 
 runtest 60s test-critical-watchdog.json "Expired watchdog process: example2" \
-	"Rebooting"
+        "sysmgr: Fault"
