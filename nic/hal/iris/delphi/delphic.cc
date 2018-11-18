@@ -49,8 +49,10 @@ delphi_client_start (void *ctxt)
 //------------------------------------------------------------------------------
 // delphi_client constructor
 //------------------------------------------------------------------------------
-delphi_client::delphi_client(delphi::SdkPtr &sdk) 
+delphi_client::delphi_client(delphi::SdkPtr &sdk)
 {
+    dobj::HalStatusPtr    status;
+
     sdk_ = sdk;
     sysmgr_ = hal::sysmgr::create_sysmgr_client(sdk_);
     upgsdk_ =
@@ -71,6 +73,13 @@ delphi_client::delphi_client(delphi::SdkPtr &sdk)
 
     // mount interface status objects
     delphi::objects::InterfaceStatus::Mount(sdk, delphi::ReadWriteMode);
+
+    // create HAL status (singleton) obj with STATUS_NONE
+    status = std::make_shared<dobj::HalStatus>();
+    if (status) {
+        status->set_state(::hal::HalState::HAL_STATE_NONE);
+        sdk_->SetObject(status);
+    }
 }
 
 // OnMountComplete gets called when all the objects are mounted
@@ -142,10 +151,11 @@ set_hal_status (hal::hal_status_t hal_status)
     status = dobj::HalStatus::FindObject(g_delphic->sdk());
     if (status) {
         status->set_state(state);
+        g_delphic->sdk()->QueueUpdate(status);
     } else {
         status = std::make_shared<dobj::HalStatus>();
         status->set_state(state);
-        g_delphic->sdk()->SetObject(status);
+        g_delphic->sdk()->QueueUpdate(status);
     }
 }
 

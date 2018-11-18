@@ -50,7 +50,7 @@ void NicMgrService::OnMountComplete() {
     vector <delphi::objects::PortStatusPtr> list =
         delphi::objects::PortStatus::List(sdk_);
     for (vector<delphi::objects::PortStatusPtr>::iterator port=list.begin();
-         port!=list.end(); ++port) {  
+         port!=list.end(); ++port) {
         g_port_status_handler->update_port_status(*port);
     }
 }
@@ -76,21 +76,21 @@ Status init_port_status_handler (delphi::SdkPtr sdk) {
 
 // OnPortStatusCreate gets called when PortStatus object is created
 error port_status_handler::OnPortStatusCreate(PortStatusPtr portStatus) {
-    NIC_LOG_DEBUG("Received port status create\n");
+    NIC_LOG_DEBUG("Rcvd port status create");
     update_port_status(portStatus);
     return error::OK();
 }
 
 // OnPortStatusUpdate gets called when PortStatus object is updated
 error port_status_handler::OnPortStatusUpdate(PortStatusPtr portStatus) {
-    NIC_LOG_DEBUG("Received port status update\n");
+    NIC_LOG_DEBUG("Rcvd port status update");
     update_port_status(portStatus);
     return error::OK();
 }
 
 // OnPortStatusDelete gets called when PortStatus object is deleted
 error port_status_handler::OnPortStatusDelete(PortStatusPtr portStatus) {
-    NIC_LOG_DEBUG("Received port status delete\n");
+    NIC_LOG_DEBUG("Rcvd port status delete");
     return error::OK();
 }
 
@@ -99,11 +99,11 @@ error port_status_handler::update_port_status(PortStatusPtr port) {
     // create port status object
     uint32_t port_id = port->mutable_key_or_handle()->port_id();
     port::PortOperStatus oper_status = port->oper_status();
-    NIC_LOG_DEBUG("Updating port %u status to %u\n",
+    NIC_LOG_DEBUG("Updating port {} status to {}",
                   port_id, oper_status);
 
     if (!devmgr) {
-        NIC_LOG_ERR("devmgr ptr is null\n");
+        NIC_LOG_ERR("devmgr ptr is null");
         return error::OK();    // TODO: rameshp, pleaes fix this ???
     }
     if (oper_status == port::PortOperStatus::PORT_OPER_STATUS_UP) {
@@ -138,7 +138,7 @@ Status init_hal_status_handler (delphi::SdkPtr sdk) {
 static void
 handle_hal_up (void)
 {
-    NIC_LOG_DEBUG("Received HAL_STATUS_UP notification\n");
+    NIC_LOG_DEBUG("Rcvd HAL_STATUS_UP notification");
     devicemanager_init();
     // spawn thread to create mnets
     nicmgrd_mnet_thread_init();
