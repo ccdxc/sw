@@ -81,26 +81,26 @@ qstate_queue_dump(int verbose, int qid, int rid, int rsize, int poll, u_int64_t 
 }
 
 void
-qstate_qtype_dump(int queue_type, int qid, int rid, int rsize, int poll, u_int64_t base, int len,
-                  int size, int verbose)
+qstate_qtype_dump(int queue_type, int qid_start, int qid_end, int rid, int rsize,
+                  int poll, u_int64_t base, int len, int size, int verbose)
 {
     int q = 0;
 
     printf(" type %u type_base = 0x%lx, length=%u entries, qstate_size=%u bytes\n", queue_type,
            base, len, size);
     for (q = 0; q < len; q++) {
-        if ((qid == -1) || (qid == q)) {
+        if ((q >= qid_start) && (q <= qid_end)) {
             qstate_queue_dump(verbose, q, rid, rsize, poll, base + (u_int64_t)(q * size));
         }
-        if (qid == q) {
+        if (q >= qid_end) {
             break;
         }
     }
 }
 
 void
-qstate_lif_dump(int lif_start, int lif_end, int queue_type, int qid, int rid, int rsize, int poll,
-                int verbose)
+qstate_lif_dump(int lif_start, int lif_end, int queue_type, int qid_start, int qid_end,
+                int rid, int rsize, int poll, int verbose)
 {
     u_int32_t cnt[4], size[8], length[8];
     u_int32_t valid, hint, hint_cos;
@@ -157,7 +157,8 @@ qstate_lif_dump(int lif_start, int lif_end, int queue_type, int qid, int rid, in
             this_len = 1 << length[type];
             this_size = 32 * (1 << size[type]);
             if ((queue_type == -1) || (queue_type == type)) {
-                qstate_qtype_dump(type, qid, rid, rsize, poll, base, this_len, this_size, verbose);
+                qstate_qtype_dump(type, qid_start, qid_end, rid, rsize, poll, base,
+                                  this_len, this_size, verbose);
             }
             if (queue_type == type) {
                 break;

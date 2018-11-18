@@ -40,9 +40,8 @@ void reset_counters();
 void qstate_lif_dump(int);
 void dump_qstate(int, int, uint64_t);
 void measure_pps(int);
-void qstate_lif_dump(int lif_start, int lif_end, int queue_type,
-                     int qid, int rid, int rsize, int poll,
-                     int verbose);
+void qstate_lif_dump(int lif_start, int lif_end, int queue_type, int qid_start,
+                     int qid_end, int rid, int rsize, int poll, int verbose);
 using namespace std;
 
 // Default options
@@ -57,13 +56,18 @@ main(int argc, char *argv[])
     int i = 1;
     int interval = 0;
     int queue_dump = 0;
-    int lif = -1;
     int qtype = -1;
-    int qid = -1;
+    int qid_max = 16000000;
+    int qid_start = 0;
+    int qid_end = qid_max - 1;
+    int rid_max = 8;
     int rid = -1;
     int poll = 0;
-    int rsize = 65536;
+    int rsize_max = 65536;
+    int rsize = rsize_max;
     int lif_max = 2048;
+    int lif_start = 0;
+    int lif_end = lif_max - 1;
 
     while (i < (argc)) {
         if (strcmp(argv[i], "-r") == 0) {
@@ -73,18 +77,31 @@ main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-q") == 0) {
             queue_dump = 1;
         } else if (strcmp(argv[i], "-l") == 0) {
+            int start = 0;
+            int end = 0;
+            int inputs = 0;
+
             i++;
-            if(i >= argc ) {
+            inputs = sscanf(argv[i], "%d:%d", &start, &end);
+            if(!inputs) {
                 printf("Error: -l requires a lif\n");
                 return(-1);
             }
+            lif_start = start;
+            
+            if(--inputs) {
+                lif_end = end;
+            } else {
+                // If the user hasn't provided a range, assume
+                // we are interested in only one lif.
+                lif_end = lif_start;
+            }
 
-            lif = atoi(argv[i]);
-            if((lif < 0) || (lif >= 2048)) {
-                printf("Error: Invalid lif %d\n", lif);
+            if((lif_start < 0) || (lif_end >= lif_max) || (lif_start > lif_end)) {
+                printf("Error: Invalid lif range %d:%d\n", lif_start, lif_end);
                 return(-1);
             }
-            printf("lif = %d\n", lif);
+            printf("lif = %d:%d\n", lif_start, lif_end);
         } else if (strcmp(argv[i], "-t") == 0) {
             i++;
             if(i >= argc ) {
@@ -99,18 +116,30 @@ main(int argc, char *argv[])
             }
             printf("qtype = %d\n", qtype);
         } else if (strcmp(argv[i], "-i") == 0) {
+            int start = 0;
+            int end = 0;
+            int inputs = 0;
+
             i++;
-            if(i >= argc ) {
-                printf("Error: -i requires a queue id\n");
+            inputs = sscanf(argv[i], "%d:%d", &start, &end);
+            if(!inputs) {
+                printf("Error: -i requires a lif\n");
                 return(-1);
             }
 
-            qid = atoi(argv[i]);
-            if((qid < 0) || (qid >= 16000000)) {
-                printf("Error: Invalid queue Id %d\n", qid);
+            qid_start = start;
+            if(--inputs) {
+                qid_end = end;
+            } else {
+                // If the user hasn't provided a range, assume
+                // we are interested in only one qid.
+                qid_end = qid_start;
+            }
+            if((qid_start < 0) || (qid_end >= qid_max) || (qid_start > qid_end)) {
+                printf("Error: Invalid qid range %d:%d\n", qid_start, qid_end);
                 return(-1);
             }
-            printf("qid = %d\n", qid);
+            printf("qid = %d:%d\n", qid_start, qid_end);
         } else if (strcmp(argv[i], "-R") == 0) {
             i++;
             if(i >= argc ) {
@@ -119,7 +148,7 @@ main(int argc, char *argv[])
             }
 
             rid = atoi(argv[i]);
-            if((rid < 0) || (rid >= 8)) {
+            if((rid < 0) || (rid >= rid_max)) {
                 printf("Error: Invalid ring id %d\n", rid);
                 return(-1);
             }
@@ -132,7 +161,7 @@ main(int argc, char *argv[])
             }
 
             rsize = atoi(argv[i]);
-            if((rsize < 0) || (rsize > 65536)) {
+            if((rsize < 0) || (rsize > rsize_max)) {
                 printf("Error: Invalid ring size %d\n", rsize);
                 return(-1);
             }
@@ -159,26 +188,26 @@ main(int argc, char *argv[])
             measure_pps(interval);
             return (0);
         } else {
-            printf("usage: capmon -v[erbose] -r[eset] -q[ueues] -p[cie] -b[wmon] -s[pps] -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]"
-                   "<interval>\n");
+            printf("usage: capmon -v[erbose] -r[eset] -q[ueues] -p[cie] -b[wmon]"
+                   " -s[pps] -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]"
+                   "<interval>\n\n");
+            printf("Example: capmon -q -l 1003:1005 -t 0 -i 0:5 -R 1 -p 100\n");
             return (0);
         }
         i++;
     }
 
-    if((poll != 0) && ((lif == -1) || (qtype == -1) || (qid == -1))) {
-      printf("Error: -p requires lif, qtype and qid to be specified.");
-      return(-1);
+    if((poll != 0) && ((lif_start != lif_end) || (qtype == -1) ||
+       (qid_start != qid_end))) {
+        printf("Error: -p requires just one lif, qtype and qid to be specified.\n");
+        return(-1);
     }
 
     if(queue_dump == 1) {
-      if(lif >= 0 ) {
-        qstate_lif_dump(lif, lif, qtype, qid, rid, rsize, poll, verbose);
-      } else {
-        qstate_lif_dump(0, (lif_max - 1), qtype, qid, rid, rsize, poll, verbose);
-      }
+        qstate_lif_dump(lif_start, lif_end, qtype, qid_start, qid_end, rid,
+                        rsize, poll, verbose);
     } else {
-      read_counters();
+        read_counters();
     }
 
     exit(0);
