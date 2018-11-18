@@ -17,39 +17,39 @@ type AccelSeqQueueKey struct {
 type AccelSeqQueueMetrics struct {
 	key AccelSeqQueueKey
 
-	interrupts_raised gometrics.Counter
+	InterruptsRaised gometrics.Counter
 
-	next_dbs_rung gometrics.Counter
+	NextDbsRung gometrics.Counter
 
-	seq_descs_processed gometrics.Counter
+	SeqDescsProcessed gometrics.Counter
 
-	seq_descs_aborted gometrics.Counter
+	SeqDescsAborted gometrics.Counter
 
-	status_pdma_xfers gometrics.Counter
+	StatusPdmaXfers gometrics.Counter
 
-	hw_desc_xfers gometrics.Counter
+	HwDescXfers gometrics.Counter
 
-	hw_batch_errors gometrics.Counter
+	HwBatchErrors gometrics.Counter
 
-	hw_op_errors gometrics.Counter
+	HwOpErrors gometrics.Counter
 
-	aol_pad_reqs gometrics.Counter
+	AolPadReqs gometrics.Counter
 
-	sgl_pad_reqs gometrics.Counter
+	SglPadReqs gometrics.Counter
 
-	sgl_pdma_xfers gometrics.Counter
+	SglPdmaXfers gometrics.Counter
 
-	sgl_pdma_errors gometrics.Counter
+	SglPdmaErrors gometrics.Counter
 
-	sgl_pad_only_xfers gometrics.Counter
+	SglPadOnlyXfers gometrics.Counter
 
-	sgl_pad_only_errors gometrics.Counter
+	SglPadOnlyErrors gometrics.Counter
 
-	alt_descs_taken gometrics.Counter
+	AltDescsTaken gometrics.Counter
 
-	alt_bufs_taken gometrics.Counter
+	AltBufsTaken gometrics.Counter
 
-	len_update_reqs gometrics.Counter
+	LenUpdateReqs gometrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -63,39 +63,39 @@ func (mtr *AccelSeqQueueMetrics) GetKey() AccelSeqQueueKey {
 func (mtr *AccelSeqQueueMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.interrupts_raised.Size()
+	sz += mtr.InterruptsRaised.Size()
 
-	sz += mtr.next_dbs_rung.Size()
+	sz += mtr.NextDbsRung.Size()
 
-	sz += mtr.seq_descs_processed.Size()
+	sz += mtr.SeqDescsProcessed.Size()
 
-	sz += mtr.seq_descs_aborted.Size()
+	sz += mtr.SeqDescsAborted.Size()
 
-	sz += mtr.status_pdma_xfers.Size()
+	sz += mtr.StatusPdmaXfers.Size()
 
-	sz += mtr.hw_desc_xfers.Size()
+	sz += mtr.HwDescXfers.Size()
 
-	sz += mtr.hw_batch_errors.Size()
+	sz += mtr.HwBatchErrors.Size()
 
-	sz += mtr.hw_op_errors.Size()
+	sz += mtr.HwOpErrors.Size()
 
-	sz += mtr.aol_pad_reqs.Size()
+	sz += mtr.AolPadReqs.Size()
 
-	sz += mtr.sgl_pad_reqs.Size()
+	sz += mtr.SglPadReqs.Size()
 
-	sz += mtr.sgl_pdma_xfers.Size()
+	sz += mtr.SglPdmaXfers.Size()
 
-	sz += mtr.sgl_pdma_errors.Size()
+	sz += mtr.SglPdmaErrors.Size()
 
-	sz += mtr.sgl_pad_only_xfers.Size()
+	sz += mtr.SglPadOnlyXfers.Size()
 
-	sz += mtr.sgl_pad_only_errors.Size()
+	sz += mtr.SglPadOnlyErrors.Size()
 
-	sz += mtr.alt_descs_taken.Size()
+	sz += mtr.AltDescsTaken.Size()
 
-	sz += mtr.alt_bufs_taken.Size()
+	sz += mtr.AltBufsTaken.Size()
 
-	sz += mtr.len_update_reqs.Size()
+	sz += mtr.LenUpdateReqs.Size()
 
 	return sz
 }
@@ -106,56 +106,56 @@ func (mtr *AccelSeqQueueMetrics) Unmarshal() error {
 
 	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
 
-	mtr.interrupts_raised = mtr.metrics.GetCounter(offset)
-	offset += mtr.interrupts_raised.Size()
+	mtr.InterruptsRaised = mtr.metrics.GetCounter(offset)
+	offset += mtr.InterruptsRaised.Size()
 
-	mtr.next_dbs_rung = mtr.metrics.GetCounter(offset)
-	offset += mtr.next_dbs_rung.Size()
+	mtr.NextDbsRung = mtr.metrics.GetCounter(offset)
+	offset += mtr.NextDbsRung.Size()
 
-	mtr.seq_descs_processed = mtr.metrics.GetCounter(offset)
-	offset += mtr.seq_descs_processed.Size()
+	mtr.SeqDescsProcessed = mtr.metrics.GetCounter(offset)
+	offset += mtr.SeqDescsProcessed.Size()
 
-	mtr.seq_descs_aborted = mtr.metrics.GetCounter(offset)
-	offset += mtr.seq_descs_aborted.Size()
+	mtr.SeqDescsAborted = mtr.metrics.GetCounter(offset)
+	offset += mtr.SeqDescsAborted.Size()
 
-	mtr.status_pdma_xfers = mtr.metrics.GetCounter(offset)
-	offset += mtr.status_pdma_xfers.Size()
+	mtr.StatusPdmaXfers = mtr.metrics.GetCounter(offset)
+	offset += mtr.StatusPdmaXfers.Size()
 
-	mtr.hw_desc_xfers = mtr.metrics.GetCounter(offset)
-	offset += mtr.hw_desc_xfers.Size()
+	mtr.HwDescXfers = mtr.metrics.GetCounter(offset)
+	offset += mtr.HwDescXfers.Size()
 
-	mtr.hw_batch_errors = mtr.metrics.GetCounter(offset)
-	offset += mtr.hw_batch_errors.Size()
+	mtr.HwBatchErrors = mtr.metrics.GetCounter(offset)
+	offset += mtr.HwBatchErrors.Size()
 
-	mtr.hw_op_errors = mtr.metrics.GetCounter(offset)
-	offset += mtr.hw_op_errors.Size()
+	mtr.HwOpErrors = mtr.metrics.GetCounter(offset)
+	offset += mtr.HwOpErrors.Size()
 
-	mtr.aol_pad_reqs = mtr.metrics.GetCounter(offset)
-	offset += mtr.aol_pad_reqs.Size()
+	mtr.AolPadReqs = mtr.metrics.GetCounter(offset)
+	offset += mtr.AolPadReqs.Size()
 
-	mtr.sgl_pad_reqs = mtr.metrics.GetCounter(offset)
-	offset += mtr.sgl_pad_reqs.Size()
+	mtr.SglPadReqs = mtr.metrics.GetCounter(offset)
+	offset += mtr.SglPadReqs.Size()
 
-	mtr.sgl_pdma_xfers = mtr.metrics.GetCounter(offset)
-	offset += mtr.sgl_pdma_xfers.Size()
+	mtr.SglPdmaXfers = mtr.metrics.GetCounter(offset)
+	offset += mtr.SglPdmaXfers.Size()
 
-	mtr.sgl_pdma_errors = mtr.metrics.GetCounter(offset)
-	offset += mtr.sgl_pdma_errors.Size()
+	mtr.SglPdmaErrors = mtr.metrics.GetCounter(offset)
+	offset += mtr.SglPdmaErrors.Size()
 
-	mtr.sgl_pad_only_xfers = mtr.metrics.GetCounter(offset)
-	offset += mtr.sgl_pad_only_xfers.Size()
+	mtr.SglPadOnlyXfers = mtr.metrics.GetCounter(offset)
+	offset += mtr.SglPadOnlyXfers.Size()
 
-	mtr.sgl_pad_only_errors = mtr.metrics.GetCounter(offset)
-	offset += mtr.sgl_pad_only_errors.Size()
+	mtr.SglPadOnlyErrors = mtr.metrics.GetCounter(offset)
+	offset += mtr.SglPadOnlyErrors.Size()
 
-	mtr.alt_descs_taken = mtr.metrics.GetCounter(offset)
-	offset += mtr.alt_descs_taken.Size()
+	mtr.AltDescsTaken = mtr.metrics.GetCounter(offset)
+	offset += mtr.AltDescsTaken.Size()
 
-	mtr.alt_bufs_taken = mtr.metrics.GetCounter(offset)
-	offset += mtr.alt_bufs_taken.Size()
+	mtr.AltBufsTaken = mtr.metrics.GetCounter(offset)
+	offset += mtr.AltBufsTaken.Size()
 
-	mtr.len_update_reqs = mtr.metrics.GetCounter(offset)
-	offset += mtr.len_update_reqs.Size()
+	mtr.LenUpdateReqs = mtr.metrics.GetCounter(offset)
+	offset += mtr.LenUpdateReqs.Size()
 
 	return nil
 }
@@ -164,193 +164,193 @@ func (mtr *AccelSeqQueueMetrics) Unmarshal() error {
 func (mtr *AccelSeqQueueMetrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "interrupts_raised" {
+	if fldName == "InterruptsRaised" {
 		return offset
 	}
-	offset += mtr.interrupts_raised.Size()
+	offset += mtr.InterruptsRaised.Size()
 
-	if fldName == "next_dbs_rung" {
+	if fldName == "NextDbsRung" {
 		return offset
 	}
-	offset += mtr.next_dbs_rung.Size()
+	offset += mtr.NextDbsRung.Size()
 
-	if fldName == "seq_descs_processed" {
+	if fldName == "SeqDescsProcessed" {
 		return offset
 	}
-	offset += mtr.seq_descs_processed.Size()
+	offset += mtr.SeqDescsProcessed.Size()
 
-	if fldName == "seq_descs_aborted" {
+	if fldName == "SeqDescsAborted" {
 		return offset
 	}
-	offset += mtr.seq_descs_aborted.Size()
+	offset += mtr.SeqDescsAborted.Size()
 
-	if fldName == "status_pdma_xfers" {
+	if fldName == "StatusPdmaXfers" {
 		return offset
 	}
-	offset += mtr.status_pdma_xfers.Size()
+	offset += mtr.StatusPdmaXfers.Size()
 
-	if fldName == "hw_desc_xfers" {
+	if fldName == "HwDescXfers" {
 		return offset
 	}
-	offset += mtr.hw_desc_xfers.Size()
+	offset += mtr.HwDescXfers.Size()
 
-	if fldName == "hw_batch_errors" {
+	if fldName == "HwBatchErrors" {
 		return offset
 	}
-	offset += mtr.hw_batch_errors.Size()
+	offset += mtr.HwBatchErrors.Size()
 
-	if fldName == "hw_op_errors" {
+	if fldName == "HwOpErrors" {
 		return offset
 	}
-	offset += mtr.hw_op_errors.Size()
+	offset += mtr.HwOpErrors.Size()
 
-	if fldName == "aol_pad_reqs" {
+	if fldName == "AolPadReqs" {
 		return offset
 	}
-	offset += mtr.aol_pad_reqs.Size()
+	offset += mtr.AolPadReqs.Size()
 
-	if fldName == "sgl_pad_reqs" {
+	if fldName == "SglPadReqs" {
 		return offset
 	}
-	offset += mtr.sgl_pad_reqs.Size()
+	offset += mtr.SglPadReqs.Size()
 
-	if fldName == "sgl_pdma_xfers" {
+	if fldName == "SglPdmaXfers" {
 		return offset
 	}
-	offset += mtr.sgl_pdma_xfers.Size()
+	offset += mtr.SglPdmaXfers.Size()
 
-	if fldName == "sgl_pdma_errors" {
+	if fldName == "SglPdmaErrors" {
 		return offset
 	}
-	offset += mtr.sgl_pdma_errors.Size()
+	offset += mtr.SglPdmaErrors.Size()
 
-	if fldName == "sgl_pad_only_xfers" {
+	if fldName == "SglPadOnlyXfers" {
 		return offset
 	}
-	offset += mtr.sgl_pad_only_xfers.Size()
+	offset += mtr.SglPadOnlyXfers.Size()
 
-	if fldName == "sgl_pad_only_errors" {
+	if fldName == "SglPadOnlyErrors" {
 		return offset
 	}
-	offset += mtr.sgl_pad_only_errors.Size()
+	offset += mtr.SglPadOnlyErrors.Size()
 
-	if fldName == "alt_descs_taken" {
+	if fldName == "AltDescsTaken" {
 		return offset
 	}
-	offset += mtr.alt_descs_taken.Size()
+	offset += mtr.AltDescsTaken.Size()
 
-	if fldName == "alt_bufs_taken" {
+	if fldName == "AltBufsTaken" {
 		return offset
 	}
-	offset += mtr.alt_bufs_taken.Size()
+	offset += mtr.AltBufsTaken.Size()
 
-	if fldName == "len_update_reqs" {
+	if fldName == "LenUpdateReqs" {
 		return offset
 	}
-	offset += mtr.len_update_reqs.Size()
+	offset += mtr.LenUpdateReqs.Size()
 
 	return offset
 }
 
-// Setinterrupts_raised sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setinterrupts_raised(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("interrupts_raised"))
+// SetInterruptsRaised sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetInterruptsRaised(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("InterruptsRaised"))
 	return nil
 }
 
-// Setnext_dbs_rung sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setnext_dbs_rung(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("next_dbs_rung"))
+// SetNextDbsRung sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetNextDbsRung(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("NextDbsRung"))
 	return nil
 }
 
-// Setseq_descs_processed sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setseq_descs_processed(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("seq_descs_processed"))
+// SetSeqDescsProcessed sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSeqDescsProcessed(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SeqDescsProcessed"))
 	return nil
 }
 
-// Setseq_descs_aborted sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setseq_descs_aborted(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("seq_descs_aborted"))
+// SetSeqDescsAborted sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSeqDescsAborted(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SeqDescsAborted"))
 	return nil
 }
 
-// Setstatus_pdma_xfers sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setstatus_pdma_xfers(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("status_pdma_xfers"))
+// SetStatusPdmaXfers sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetStatusPdmaXfers(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("StatusPdmaXfers"))
 	return nil
 }
 
-// Sethw_desc_xfers sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Sethw_desc_xfers(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("hw_desc_xfers"))
+// SetHwDescXfers sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetHwDescXfers(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("HwDescXfers"))
 	return nil
 }
 
-// Sethw_batch_errors sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Sethw_batch_errors(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("hw_batch_errors"))
+// SetHwBatchErrors sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetHwBatchErrors(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("HwBatchErrors"))
 	return nil
 }
 
-// Sethw_op_errors sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Sethw_op_errors(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("hw_op_errors"))
+// SetHwOpErrors sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetHwOpErrors(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("HwOpErrors"))
 	return nil
 }
 
-// Setaol_pad_reqs sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setaol_pad_reqs(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("aol_pad_reqs"))
+// SetAolPadReqs sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetAolPadReqs(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("AolPadReqs"))
 	return nil
 }
 
-// Setsgl_pad_reqs sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setsgl_pad_reqs(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("sgl_pad_reqs"))
+// SetSglPadReqs sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSglPadReqs(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SglPadReqs"))
 	return nil
 }
 
-// Setsgl_pdma_xfers sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setsgl_pdma_xfers(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("sgl_pdma_xfers"))
+// SetSglPdmaXfers sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSglPdmaXfers(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SglPdmaXfers"))
 	return nil
 }
 
-// Setsgl_pdma_errors sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setsgl_pdma_errors(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("sgl_pdma_errors"))
+// SetSglPdmaErrors sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSglPdmaErrors(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SglPdmaErrors"))
 	return nil
 }
 
-// Setsgl_pad_only_xfers sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setsgl_pad_only_xfers(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("sgl_pad_only_xfers"))
+// SetSglPadOnlyXfers sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSglPadOnlyXfers(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SglPadOnlyXfers"))
 	return nil
 }
 
-// Setsgl_pad_only_errors sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setsgl_pad_only_errors(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("sgl_pad_only_errors"))
+// SetSglPadOnlyErrors sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSglPadOnlyErrors(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SglPadOnlyErrors"))
 	return nil
 }
 
-// Setalt_descs_taken sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setalt_descs_taken(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("alt_descs_taken"))
+// SetAltDescsTaken sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetAltDescsTaken(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("AltDescsTaken"))
 	return nil
 }
 
-// Setalt_bufs_taken sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setalt_bufs_taken(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("alt_bufs_taken"))
+// SetAltBufsTaken sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetAltBufsTaken(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("AltBufsTaken"))
 	return nil
 }
 
-// Setlen_update_reqs sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) Setlen_update_reqs(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("len_update_reqs"))
+// SetLenUpdateReqs sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetLenUpdateReqs(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("LenUpdateReqs"))
 	return nil
 }
 
@@ -432,11 +432,11 @@ type AccelHwRingKey struct {
 type AccelHwRingMetrics struct {
 	key AccelHwRingKey
 
-	input_bytes gometrics.Counter
+	InputBytes gometrics.Counter
 
-	output_bytes gometrics.Counter
+	OutputBytes gometrics.Counter
 
-	soft_resets gometrics.Counter
+	SoftResets gometrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -450,11 +450,11 @@ func (mtr *AccelHwRingMetrics) GetKey() AccelHwRingKey {
 func (mtr *AccelHwRingMetrics) Size() int {
 	sz := 0
 
-	sz += mtr.input_bytes.Size()
+	sz += mtr.InputBytes.Size()
 
-	sz += mtr.output_bytes.Size()
+	sz += mtr.OutputBytes.Size()
 
-	sz += mtr.soft_resets.Size()
+	sz += mtr.SoftResets.Size()
 
 	return sz
 }
@@ -465,14 +465,14 @@ func (mtr *AccelHwRingMetrics) Unmarshal() error {
 
 	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
 
-	mtr.input_bytes = mtr.metrics.GetCounter(offset)
-	offset += mtr.input_bytes.Size()
+	mtr.InputBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.InputBytes.Size()
 
-	mtr.output_bytes = mtr.metrics.GetCounter(offset)
-	offset += mtr.output_bytes.Size()
+	mtr.OutputBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.OutputBytes.Size()
 
-	mtr.soft_resets = mtr.metrics.GetCounter(offset)
-	offset += mtr.soft_resets.Size()
+	mtr.SoftResets = mtr.metrics.GetCounter(offset)
+	offset += mtr.SoftResets.Size()
 
 	return nil
 }
@@ -481,39 +481,39 @@ func (mtr *AccelHwRingMetrics) Unmarshal() error {
 func (mtr *AccelHwRingMetrics) getOffset(fldName string) int {
 	var offset int
 
-	if fldName == "input_bytes" {
+	if fldName == "InputBytes" {
 		return offset
 	}
-	offset += mtr.input_bytes.Size()
+	offset += mtr.InputBytes.Size()
 
-	if fldName == "output_bytes" {
+	if fldName == "OutputBytes" {
 		return offset
 	}
-	offset += mtr.output_bytes.Size()
+	offset += mtr.OutputBytes.Size()
 
-	if fldName == "soft_resets" {
+	if fldName == "SoftResets" {
 		return offset
 	}
-	offset += mtr.soft_resets.Size()
+	offset += mtr.SoftResets.Size()
 
 	return offset
 }
 
-// Setinput_bytes sets cunter in shared memory
-func (mtr *AccelHwRingMetrics) Setinput_bytes(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("input_bytes"))
+// SetInputBytes sets cunter in shared memory
+func (mtr *AccelHwRingMetrics) SetInputBytes(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("InputBytes"))
 	return nil
 }
 
-// Setoutput_bytes sets cunter in shared memory
-func (mtr *AccelHwRingMetrics) Setoutput_bytes(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("output_bytes"))
+// SetOutputBytes sets cunter in shared memory
+func (mtr *AccelHwRingMetrics) SetOutputBytes(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("OutputBytes"))
 	return nil
 }
 
-// Setsoft_resets sets cunter in shared memory
-func (mtr *AccelHwRingMetrics) Setsoft_resets(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("soft_resets"))
+// SetSoftResets sets cunter in shared memory
+func (mtr *AccelHwRingMetrics) SetSoftResets(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SoftResets"))
 	return nil
 }
 

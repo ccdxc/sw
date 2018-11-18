@@ -27,9 +27,37 @@ testcases:
         iterators :
             type : simple
             option : ["nmd", "netagent", "tmagent"]
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : CHECK_EVENTS
+        testcase: testcases.penctl.events
+
+    -   name    : CHECK_CORES
+        testcase: testcases.penctl.cores
+
+    -   name    : CHECK_FIRMWARE
+        testcase: testcases.penctl.firmware
+
+    -   name    : CHECK_METRICS
+        testcase: testcases.penctl.metrics
+        iterators :
+            type : nested
+            kind : [" ", "-k "]
+            option : ["accelhwring", "accelseqqueue", "lif"]
+
+    -   name    : CHECK_EXECUTE
+        testcase: testcases.penctl.execute
+
+    -   name    : CHECK_DIAG
+        testcase: testcases.penctl.diag
+
+    -   name    : CHECK_TECH_SUPPORT
+        testcase: testcases.penctl.techsupport
+
+    -   name    : CHECK_MODE
+        testcase: testcases.penctl.mode
+
+    -   name    : CHECK_VERSION
+        testcase: testcases.penctl.version
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

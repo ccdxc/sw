@@ -33,4 +33,5 @@ penctl [flags]
 * [penctl show](penctl_show.md)	 - Show Object and Information
 * [penctl system](penctl_system.md)	 - System Operations
 * [penctl update](penctl_update.md)	 - Update Object
+* [penctl version](penctl_version.md)	 - Show version of penctl
 

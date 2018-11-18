@@ -40,4 +40,5 @@ SEE ALSO
 * `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
 * `penctl system <penctl_system.rst>`_ 	 - System Operations
 * `penctl update <penctl_update.rst>`_ 	 - Update Object
+* `penctl version <penctl_version.rst>`_ 	 - Show version of penctl
 

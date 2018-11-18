@@ -11,28 +11,30 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-
+    tc.cmd_cookies = []
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        common.AddPenctlCommand(req, n, "show logs -m %s | tail -n 20" % (tc.iterators.option))
+        common.AddPenctlCommand(req, n, "show events | tail -n 20")
+        tc.cmd_cookies.append("No events found")
+        #TODO: Trigger event
+        #common.AddPenctlCommand(req, n, "show events | tail -n 20")
 
     tc.resp = api.Trigger(req)
-
-    for n in tc.Nodes:
-        resp = api.CopyFromHost(n, [penctldefs.PENCTL_DEST_DIR + "/%s.log" %(tc.iterators.option)], "%s/%s_%s.log" % (tc.GetLogsDir(), n, tc.iterators.option))
-
-
     return api.types.status.SUCCESS
 
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
+    cookie_idx = 0
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
+	#TODO: Enable this code
+        #if cmd.stdout != tc.cmd_cookies[cookie_idx]:
+        #    return api.types.status.FAILURE
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
-
+        cookie_idx += 1
     return api.types.status.SUCCESS
 
 def Teardown(tc):

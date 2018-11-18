@@ -47,5 +47,4 @@ SEE ALSO
 * `penctl show running-firmware <penctl_show_running-firmware.rst>`_ 	 - Show running firmware from Naples
 * `penctl show startup-firmware <penctl_show_startup-firmware.rst>`_ 	 - Show startup firmware from Naples
 * `penctl show system-memory-usage <penctl_show_system-memory-usage.rst>`_ 	 - Show free/used memory on Naples
-* `penctl show version <penctl_show_version.rst>`_ 	 - Show version of penctl
 

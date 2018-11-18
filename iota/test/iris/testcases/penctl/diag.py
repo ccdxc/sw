@@ -14,13 +14,12 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        common.AddPenctlCommand(req, n, "show logs -m %s | tail -n 20" % (tc.iterators.option))
+        common.AddPenctlCommand(req, n, "show proc-meminfo")
+        common.AddPenctlCommand(req, n, "show system-memory-usage")
+        common.AddPenctlCommand(req, n, "rexec ls -al /nic/bin/ /nic/tools/")
+        common.AddPenctlCommand(req, n, "rexec")
 
     tc.resp = api.Trigger(req)
-
-    for n in tc.Nodes:
-        resp = api.CopyFromHost(n, [penctldefs.PENCTL_DEST_DIR + "/%s.log" %(tc.iterators.option)], "%s/%s_%s.log" % (tc.GetLogsDir(), n, tc.iterators.option))
-
 
     return api.types.status.SUCCESS
 

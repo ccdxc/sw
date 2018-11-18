@@ -493,6 +493,8 @@ func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
 	parts := strings.Fields(req.Opts)
 	cmd := exec.Command(req.Executable, parts...)
+	os.Setenv("PATH", os.Getenv("PATH")+":/platform/bin:/nic/bin:/platform/tools:/nic/tools")
+	log.Infof("Naples Cmd Execute New env: [%s]", os.Environ())
 	cmd.Env = os.Environ()
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {

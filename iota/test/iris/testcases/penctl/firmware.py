@@ -11,28 +11,31 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-
+    tc.cmd_cookies = []
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        common.AddPenctlCommand(req, n, "show logs -m %s | tail -n 20" % (tc.iterators.option))
+        common.AddPenctlCommand(req, n, "show firmware-version")
+        common.AddPenctlCommand(req, n, "show running-firmware")
+        common.AddPenctlCommand(req, n, "show startup-firmware")
+        #common.AddPenctlCommand(req, n, "update startup-firmware mainfwa")
+        common.AddPenctlCommand(req, n, "show startup-firmware")
+        #common.AddPenctlCommand(req, n, "update startup-firmware mainfwb")
+        common.AddPenctlCommand(req, n, "show startup-firmware")
+        #TODO install and save running-firmware variable/verify/etc
 
     tc.resp = api.Trigger(req)
-
-    for n in tc.Nodes:
-        resp = api.CopyFromHost(n, [penctldefs.PENCTL_DEST_DIR + "/%s.log" %(tc.iterators.option)], "%s/%s_%s.log" % (tc.GetLogsDir(), n, tc.iterators.option))
-
-
     return api.types.status.SUCCESS
 
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
+    cookie_idx = 0
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
-
+        cookie_idx += 1
     return api.types.status.SUCCESS
 
 def Teardown(tc):

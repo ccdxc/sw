@@ -11,28 +11,33 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-
+    tc.cmd_cookies = []
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        common.AddPenctlCommand(req, n, "show logs -m %s | tail -n 20" % (tc.iterators.option))
+        #common.AddPenctlCommand(req, n, "execute rm -rf /data/core/core*")
+        common.AddPenctlCommand(req, n, "list cores")
+        #TODO verify "No core files found"
+        #common.AddPenctlCommand(req, n, "execute kill -6 nmd")
+        #TODO we can't bring up NMD from here
+        #common.AddPenctlCommand(req, n, "execute /nic/bin/nmd -hostif lo")
+        common.AddPenctlCommand(req, n, "list cores")
+        #TODO verify nmd core file is present and delete it
+        #common.AddPenctlCommand(req, n, "delete core -f <name>")
+
 
     tc.resp = api.Trigger(req)
-
-    for n in tc.Nodes:
-        resp = api.CopyFromHost(n, [penctldefs.PENCTL_DEST_DIR + "/%s.log" %(tc.iterators.option)], "%s/%s_%s.log" % (tc.GetLogsDir(), n, tc.iterators.option))
-
-
     return api.types.status.SUCCESS
 
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
+    cookie_idx = 0
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
-
+        cookie_idx += 1
     return api.types.status.SUCCESS
 
 def Teardown(tc):

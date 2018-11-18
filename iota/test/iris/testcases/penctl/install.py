@@ -31,6 +31,19 @@ def __installPenCtl(node):
 
     return api.types.status.SUCCESS
 
+def __installNaplesFwImage(node):
+
+    fullpath = api.GetTopDir() + '/' + common.PENCTL_NAPLES_PKG
+
+    resp = api.CopyToHost(node, [fullpath], "")
+    if resp is None:
+        return api.types.status.FAILURE
+    if resp.api_response.api_status != types_pb2.API_STATUS_OK:
+        api.Logger.error("Failed to copy Drivers to Node: %s" % node)
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
+
 def Main(step):
     #time.sleep(120)
     naplesHosts = api.GetNaplesHostnames()
@@ -40,6 +53,9 @@ def Main(step):
     api.ChangeDirectory(common.PENCTL_ROOT_DIR)
     for naplesHost in naplesHosts:
         ret = __installPenCtl(naplesHost)
+        if ret != api.types.status.SUCCESS:
+            return ret
+        ret = __installNaplesFwImage(naplesHost)
         if ret != api.types.status.SUCCESS:
             return ret
 
