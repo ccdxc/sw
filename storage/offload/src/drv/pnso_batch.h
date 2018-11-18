@@ -44,6 +44,7 @@ struct batch_info {
 	completion_cb_t	bi_req_cb;	/* caller supplied call-back */
 	void *bi_req_cb_ctx;		/* caller supplied cb context */
 
+	uint32_t bi_polled_idx;		/* last chain polled successfully */
 	uint32_t bi_num_entries;	/* total # of requests */
 	void *bi_bulk_desc[MAX_NUM_DESCS];	/* cpdc/crypto desc */
 	struct batch_page *bi_pages[MAX_NUM_PAGES];

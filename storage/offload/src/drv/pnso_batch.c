@@ -45,7 +45,9 @@ pprint_batch_info(struct batch_info *batch_info)
 			(uint64_t) batch_info->bi_pcr);
 	OSAL_LOG_INFO("%30s: %d", "bi_mode_sync", batch_info->bi_mode_sync);
 
+	OSAL_LOG_INFO("%30s: %d", "bi_polled_idx", batch_info->bi_polled_idx);
 	OSAL_LOG_INFO("%30s: %d", "bi_num_entries", batch_info->bi_num_entries);
+
 	for (i = 0; i < batch_info->bi_num_entries;  i++) {
 		batch_page = GET_PAGE(batch_info, i);
 		page_entry = GET_PAGE_ENTRY(batch_page, i);
@@ -211,7 +213,28 @@ get_batch_mpool_type(enum pnso_service_type svc_type)
 static pnso_error_t
 poll_all_chains(struct batch_info *batch_info)
 {
-	return PNSO_OK;
+	pnso_error_t err = EINVAL;
+	struct batch_page *batch_page;
+	struct batch_page_entry *page_entry;
+	uint32_t idx;
+
+	OSAL_LOG_DEBUG("poll batch/chain bi_polled_idx: %d",
+			batch_info->bi_polled_idx);
+
+	for (idx = batch_info->bi_polled_idx;
+			idx < batch_info->bi_num_entries; idx++) {
+		batch_page = GET_PAGE(batch_info, idx);
+		page_entry = GET_PAGE_ENTRY(batch_page, idx);
+
+		OSAL_LOG_DEBUG("polling batch/chain idx: %d", idx);
+
+		err = chn_poll_all_services(page_entry->bpe_chain);
+		if (err)
+			break;
+	}
+	batch_info->bi_polled_idx = idx;
+
+	return err;
 }
 
 static struct batch_info *
@@ -231,10 +254,12 @@ init_batch_info(struct pnso_service_request *req)
 		goto out;
 
 	memset(batch_info, 0, sizeof(struct batch_info));
+
 	batch_info->bi_svc_type = req->svc[0].svc_type;
 	batch_info->bi_mode_sync = true;
 	batch_info->bi_mpool_type = mpool_type;
 	batch_info->bi_pcr = pcr;
+	batch_info->bi_polled_idx = 0;
 
 	pcr->batch_info = batch_info;
 out:
@@ -368,9 +393,12 @@ bat_poller(void *pnso_poll_ctx)
 	PPRINT_BATCH_INFO(batch_info);
 
 	err = poll_all_chains(batch_info);
-	if (err)
+	if (err) {
+		/* TODO-poll: retry then give-up after a limit to clean-up */
 		OSAL_LOG_ERROR("poll failed! batch_info: 0x" PRIx64 "err: %d",
 				(uint64_t) batch_info, err);
+		goto out;
+	}
 
 	/*
 	 * on success, read/write result from first to last chain's - first
@@ -388,6 +416,7 @@ bat_poller(void *pnso_poll_ctx)
 
 	deinit_batch(batch_info);
 
+out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
@@ -531,7 +560,6 @@ read_write_result_all_chains(struct batch_info *batch_info)
 	struct batch_page_entry *page_entry;
 	int i;
 
-	/* TODO-batch: handle error cases */
 	for (i = 0; i < batch_info->bi_num_entries;  i++) {
 		batch_page = GET_PAGE(batch_info, i);
 		page_entry = GET_PAGE_ENTRY(batch_page, i);
@@ -587,6 +615,7 @@ execute_batch(struct batch_info *batch_info)
 	/* poll on last chain's last service of the batch */
 	err = last_ce->ce_svc_info.si_ops.poll(&last_ce->ce_svc_info);
 	if (err) {
+		/* in sync-mode, poll() will return either OK or ETIMEDOUT */
 		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
 			       last_ce->ce_svc_info.si_type, err);
 		goto out;

@@ -267,9 +267,12 @@ chn_poller(void *pnso_poll_ctx)
 	PPRINT_CHAIN(chain);
 
 	err = chn_poll_all_services(chain);
-	if (err)
+	if (err) {
+		/* TODO-poll: retry then give-up after a limit to clean-up */
 		OSAL_LOG_ERROR("poll failed! chain: 0x" PRIx64 " err: %d",
 				(uint64_t) chain, err);
+		goto out;
+	}
 
 	chn_read_write_result(chain);
 
@@ -285,6 +288,7 @@ chn_poller(void *pnso_poll_ctx)
 
 	chn_destroy_chain(chain);
 
+out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
