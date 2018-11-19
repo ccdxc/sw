@@ -183,6 +183,7 @@ DeviceManager::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_clie
         if (dev->GetType() == ACCEL) {
             acc_dev = (Accel_PF *)dev;
             acc_dev->SetHalClient(hal_client);
+            acc_dev->LifInit();
         }
     }
 }

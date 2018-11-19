@@ -205,7 +205,6 @@ public:
              PdClient *pd_client,
              bool dol_integ);
 
-    void Update();
     void DevcmdHandler();
     void DevcmdPoll();
     enum DevcmdStatus CmdHandler(void *req, void *req_data,

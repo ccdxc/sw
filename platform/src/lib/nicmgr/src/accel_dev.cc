@@ -178,34 +178,6 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
     } while (false)
 
 
-/**
- * Accelerator PF Device
- */
-void Accel_PF::Update(void)
-{
-    int32_t     cosA = 1;
-    int32_t     cosB = 0;
-    cosB = HalClient::GetTxTrafficClassCos(spec->qos_group, 0);
-    if (cosB < 0) {
-        NIC_LOG_ERR("lif{}: Failed to get cosB for group {}",
-                    info.hw_lif_id, spec->qos_group);
-        throw runtime_error("Failed to get cosB for nicmgr LIF");
-    }
-    uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
-
-    // acquire rings info as initialized by HAL
-    accel_ring_info_get_all();
-
-    // establish sequencer queues metrics with Delphi
-    if (DelphiDeviceInit()) {
-        NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
-        return;
-    }
-
-    // program the queue state
-    pd->program_qstate(qinfo, &info, coses);
-}
-
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                    const hal_lif_info_t *nicmgr_lif_info,
                    PdClient *pd_client,
@@ -390,20 +362,6 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
             return;
         }
     }
-
-#if 0
-    // Establish sequencer queues info and metrics with Delphi
-    if (DelphiDeviceInit()) {
-        NIC_LOG_ERR("lif{}: Failed to establish Delphi device", info.hw_lif_id);
-        return;
-    }
-
-    if (spec->pub_intv_frac) {
-        float intv = 1.0 / (float)spec->pub_intv_frac;
-        sync_timer.set<Accel_PF, &Accel_PF::periodic_sync>(this);
-        sync_timer.start(intv, intv);
-    }
-#endif
 }
 
 int
@@ -658,7 +616,7 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     rsp->dev.num_intrs = spec->intr_count;
     rsp->dev.intr_assert_stride = intr_assert_stride();
     rsp->dev.intr_assert_data = intr_assert_data();
-    rsp->dev.intr_assert_addr = intr_assert_addr(0);
+    rsp->dev.intr_assert_addr = intr_assert_addr(spec->intr_base);
     rsp->dev.cm_base_pa = pci_resources.cmbpa;
     memcpy(rsp->dev.accel_ring_tbl, spec->accel_ring_tbl,
            sizeof(rsp->dev.accel_ring_tbl));
@@ -682,9 +640,6 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     uint8_t                 abort = 1;
 
     NIC_LOG_INFO("lif-{}: CMD_OPCODE_RESET", info.hw_lif_id);
-
-    // Init LIF.
-    LifInit();
 
     // Disable all sequencer queues
     for (qid = 0; qid < spec->seq_created_count; qid++) {
@@ -757,19 +712,6 @@ Accel_PF::_DevcmdLifInit(void *req, void *req_data,
     lif_init_cmd_t  *cmd = (lif_init_cmd_t *)req;
 
     NIC_LOG_INFO("lif-{}: lif_index {}", info.hw_lif_id, cmd->index);
-
-#if 0
-    // Trigger Hal for Lif create if this is the first time
-    if (!info.pushed_to_hal) {
-        uint64_t ret = hal->LifCreate(&info);
-        if (ret != 0) {
-            NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.id);
-            return (DEVCMD_ERROR);
-        }
-    }
-    Update();
-#endif
-
     return (DEVCMD_SUCCESS);
 }
 
@@ -1619,10 +1561,18 @@ crypto_key_accum_del(uint32_t key_index)
 void
 Accel_PF::LifInit()
 {
+    uint8_t cosA = 1;
+    uint8_t cosB = 0;
+    uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+
     if (get_lif_init_done()) {
         NIC_LOG_INFO("lif-{}: Already inited...skipping", info.hw_lif_id);
         return;
     }
+
+    // acquire rings info as initialized by HAL
+    accel_ring_info_get_all();
+
     NIC_LOG_INFO("lif-{}: Initing Lif", info.hw_lif_id);
 
     // Trigger Hal for Lif create if this is the first time
@@ -1633,7 +1583,21 @@ Accel_PF::LifInit()
             return;
         }
     }
-    Update();
+
+    // program the queue state
+    pd->program_qstate(qinfo, &info, coses);
+
+    // establish sequencer queues metrics with Delphi
+    if (DelphiDeviceInit()) {
+        NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
+        return;
+    }
+
+    if (spec->pub_intv_frac) {
+        float intv = 1.0 / (float)spec->pub_intv_frac;
+        sync_timer.set<Accel_PF, &Accel_PF::periodic_sync>(this);
+        sync_timer.start(intv, intv);
+    }
     set_lif_init_done(true);
 }
 
