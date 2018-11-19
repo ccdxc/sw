@@ -14,10 +14,11 @@ extern pal_info_t   gl_pal_info;
 typedef void (*hw_init_fn_t)(char *application_name);
 typedef void (*reg_read_fn_t)(uint64_t addr, uint32_t *data, uint32_t nw);
 typedef void (*reg_write_fn_t)(uint64_t addr, uint32_t *data, uint32_t nw);
+typedef void (*reg_write16_fn_t)(const uint64_t pa, const uint16_t val);
+typedef void (*reg_write32_fn_t)(const uint64_t pa, const uint32_t val);
 typedef void (*reg_write64_fn_t)(const uint64_t pa, const uint64_t val);
 typedef int (*mem_read_fn_t)(uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags);
 typedef int (*mem_write_fn_t)(uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags);
-typedef bool (*ring_doorbell_fn_t)(uint64_t addr, uint64_t data);
 typedef uint64_t (*mem_vtop_fn_t)(const void *va);
 typedef void *(*mem_ptov_fn_t)(const uint64_t pa);
 typedef int (*memset_fn_t)(const uint64_t pa, uint8_t c, const size_t sz, uint32_t flags);
@@ -37,6 +38,8 @@ typedef struct pal_hw_vectors_s {
     hw_init_fn_t                hw_init;
     reg_read_fn_t               reg_read;
     reg_write_fn_t              reg_write;
+    reg_write16_fn_t            reg_write16;
+    reg_write32_fn_t            reg_write32;
     reg_write64_fn_t            reg_write64;
     mem_read_fn_t               mem_read;
     mem_write_fn_t              mem_write;
@@ -67,6 +70,12 @@ pal_init_hw_vectors (void)
 
     gl_hw_vecs.reg_write = (reg_write_fn_t)dlsym(gl_lib_handle, "pal_reg_wr32w");
     SDK_ASSERT(gl_hw_vecs.reg_write);
+
+    gl_hw_vecs.reg_write16 = (reg_write16_fn_t)dlsym(gl_lib_handle, "pal_reg_wr16");
+    SDK_ASSERT(gl_hw_vecs.reg_write16);
+
+    gl_hw_vecs.reg_write32 = (reg_write32_fn_t)dlsym(gl_lib_handle, "pal_reg_wr32");
+    SDK_ASSERT(gl_hw_vecs.reg_write32);
 
     gl_hw_vecs.reg_write64 = (reg_write64_fn_t)dlsym(gl_lib_handle, "pal_reg_wr64");
     SDK_ASSERT(gl_hw_vecs.reg_write64);
@@ -171,7 +180,25 @@ pal_hw_mem_write (uint64_t addr, uint8_t *data, uint32_t size, uint32_t flags)
 }
 
 static pal_ret_t
-pal_hw_ring_doorbell (uint64_t addr, uint64_t data)
+pal_hw_ring_db16 (uint64_t addr, uint16_t data)
+{
+    uint64_t pa_doorbell = addr + 0x8000000;
+
+    (*gl_hw_vecs.reg_write16)(pa_doorbell, data);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_hw_ring_db32 (uint64_t addr, uint32_t data)
+{
+    uint64_t pa_doorbell = addr + 0x8000000;
+
+    (*gl_hw_vecs.reg_write32)(pa_doorbell, data);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_hw_ring_db64 (uint64_t addr, uint64_t data)
 {
     uint64_t pa_doorbell = addr + 0x8000000;
 
@@ -317,7 +344,9 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.reg_write = pal_hw_reg_write;
     gl_pal_info.rwvecs.mem_read = pal_hw_mem_read;
     gl_pal_info.rwvecs.mem_write = pal_hw_mem_write;
-    gl_pal_info.rwvecs.ring_doorbell = pal_hw_ring_doorbell;
+    gl_pal_info.rwvecs.ring_db16 = pal_hw_ring_db16;
+    gl_pal_info.rwvecs.ring_db32 = pal_hw_ring_db32;
+    gl_pal_info.rwvecs.ring_db64 = pal_hw_ring_db64;
     gl_pal_info.rwvecs.physical_addr_to_virtual_addr =
                         pal_hw_physical_addr_to_virtual_addr;
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =

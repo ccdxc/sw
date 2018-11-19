@@ -323,7 +323,7 @@ asic_ring_doorbell (uint64_t addr, uint64_t data, asic_write_mode_t mode)
     //HAL_TRACE_DEBUG("addr : {:#x}, data : {}, mode : {}", addr, data, mode);
     if ((is_asic_rw_thread() == true) || (mode == ASIC_WRITE_MODE_WRITE_THRU)) {
         // bypass asicrw thread
-        pal_ret_t prc = sdk::lib::pal_ring_doorbell(addr, data);
+        pal_ret_t prc = sdk::lib::pal_ring_db64(addr, data);
         rc = IS_PAL_API_SUCCESS(prc) ? HAL_RET_OK : HAL_RET_ERR;
     } else {
         // go thru asicrw thread
@@ -508,7 +508,7 @@ asic_rw_loop (void *ctxt)
                 break;
 
             case HAL_ASIC_RW_OPERATION_RING_DOORBELL:
-                rv = sdk::lib::pal_ring_doorbell(rw_entry->addr,
+                rv = sdk::lib::pal_ring_db64(rw_entry->addr,
                                                  *(uint64_t *)rw_entry->data);
                 break;
 

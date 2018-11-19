@@ -39,7 +39,19 @@ pal_mock_mem_set (uint64_t addr, uint8_t c, uint32_t size, uint32_t flags)
 }
 
 pal_ret_t
-pal_mock_ring_doorbell (uint64_t addr, uint64_t data)
+pal_mock_ring_db16 (uint64_t addr, uint16_t data)
+{
+    return PAL_RET_OK;
+}
+
+pal_ret_t
+pal_mock_ring_db32 (uint64_t addr, uint32_t data)
+{
+    return PAL_RET_OK;
+}
+
+pal_ret_t
+pal_mock_ring_db64 (uint64_t addr, uint64_t data)
 {
     return PAL_RET_OK;
 }
@@ -90,7 +102,9 @@ pal_mock_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_read      = pal_mock_mem_read;
     gl_pal_info.rwvecs.mem_write     = pal_mock_mem_write;
     gl_pal_info.rwvecs.mem_set     = pal_mock_mem_set;
-    gl_pal_info.rwvecs.ring_doorbell = pal_mock_ring_doorbell;
+    gl_pal_info.rwvecs.ring_db16 = pal_mock_ring_db16;
+    gl_pal_info.rwvecs.ring_db32 = pal_mock_ring_db32;
+    gl_pal_info.rwvecs.ring_db64 = pal_mock_ring_db64;
     gl_pal_info.rwvecs.physical_addr_to_virtual_addr =
                             pal_mock_physical_addr_to_virtual_addr;
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =

@@ -109,7 +109,7 @@ int main (int argc, char **argv)
 
         printf ("Addr: 0x%lx, data: 0x%lx\n", addr, data);
 
-        sdk::lib::pal_ring_doorbell(addr, data);
+        sdk::lib::pal_ring_db64(addr, data);
 
     } else if (!strcmp(argv[1], "loop_test")) {
         sscanf(argv[2], "%" SCNx64, &addr);

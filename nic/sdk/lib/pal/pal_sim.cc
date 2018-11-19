@@ -16,7 +16,7 @@ typedef bool (*read_reg_fn_t)(uint64_t addr, uint32_t& data);
 typedef bool (*write_reg_fn_t)(uint64_t addr, uint32_t  data);
 typedef bool (*read_mem_fn_t)(uint64_t addr, uint8_t * data, uint32_t size);
 typedef bool (*write_mem_fn_t)(uint64_t addr, uint8_t * data, uint32_t size);
-typedef bool (*ring_doorbell_fn_t)(uint64_t addr, uint64_t data);
+typedef bool (*ring_dbfn_t)(uint64_t addr, uint64_t data);
 typedef bool (*step_cpu_pkt_fn_t)(const uint8_t* pkt, size_t pkt_len);
 
 typedef struct pal_sim_vectors_s {
@@ -25,7 +25,7 @@ typedef struct pal_sim_vectors_s {
     write_reg_fn_t          write_reg;
     read_mem_fn_t           read_mem;
     write_mem_fn_t          write_mem;
-    ring_doorbell_fn_t      ring_doorbell;
+    ring_dbfn_t             ring_doorbell;
     step_cpu_pkt_fn_t       step_cpu_pkt;
 } pal_sim_vectors_t;
 
@@ -41,7 +41,7 @@ pal_init_sim_vectors ()
     gl_sim_vecs.read_mem = (read_mem_fn_t)dlsym(gl_lib_handle, "read_mem");
     gl_sim_vecs.write_mem = (write_mem_fn_t)dlsym(gl_lib_handle, "write_mem");
     gl_sim_vecs.ring_doorbell =
-            (ring_doorbell_fn_t)dlsym(gl_lib_handle, "step_doorbell");
+            (ring_dbfn_t)dlsym(gl_lib_handle, "step_doorbell");
     gl_sim_vecs.step_cpu_pkt =
             (step_cpu_pkt_fn_t)dlsym(gl_lib_handle, "step_cpu_pkt");
 
@@ -144,7 +144,21 @@ pal_sim_mem_set (uint64_t addr, uint8_t data, uint32_t size, uint32_t flags)
 }
 
 pal_ret_t
-pal_sim_ring_doorbell (uint64_t addr, uint64_t data)
+pal_sim_ring_db16 (uint64_t addr, uint16_t data)
+{
+    (*gl_sim_vecs.ring_doorbell)(addr, (uint64_t) data);
+    return PAL_RET_OK;
+}
+
+pal_ret_t
+pal_sim_ring_db32 (uint64_t addr, uint32_t data)
+{
+    (*gl_sim_vecs.ring_doorbell)(addr, (uint64_t) data);
+    return PAL_RET_OK;
+}
+
+pal_ret_t
+pal_sim_ring_db64 (uint64_t addr, uint64_t data)
 {
     (*gl_sim_vecs.ring_doorbell)(addr, data);
     return PAL_RET_OK;
@@ -204,7 +218,9 @@ pal_sim_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_read = pal_sim_mem_read;
     gl_pal_info.rwvecs.mem_write = pal_sim_mem_write;
     gl_pal_info.rwvecs.mem_set = pal_sim_mem_set;
-    gl_pal_info.rwvecs.ring_doorbell = pal_sim_ring_doorbell;
+    gl_pal_info.rwvecs.ring_db16 = pal_sim_ring_db16;
+    gl_pal_info.rwvecs.ring_db32 = pal_sim_ring_db32;
+    gl_pal_info.rwvecs.ring_db64 = pal_sim_ring_db64;
     gl_pal_info.rwvecs.step_cpu_pkt = pal_sim_step_cpu_pkt;
     gl_pal_info.rwvecs.physical_addr_to_virtual_addr =
                         pal_sim_physical_addr_to_virtual_addr;

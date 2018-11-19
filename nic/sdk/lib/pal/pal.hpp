@@ -39,7 +39,9 @@ typedef struct pal_rwvectors_s {
                             uint32_t size, uint32_t flags);
     pal_ret_t   (*mem_write)(uint64_t addr, uint8_t *data,
                              uint32_t size, uint32_t flags);
-    pal_ret_t   (*ring_doorbell)(uint64_t addr, uint64_t data);
+    pal_ret_t   (*ring_db16)(uint64_t addr, uint16_t data);
+    pal_ret_t   (*ring_db32)(uint64_t addr, uint32_t data);
+    pal_ret_t   (*ring_db64)(uint64_t addr, uint64_t data);
     pal_ret_t   (*step_cpu_pkt)(const uint8_t* pkt, size_t pkt_len);
     pal_ret_t   (*physical_addr_to_virtual_addr)(uint64_t phy_addr,
                                                  uint64_t *virtual_addr);
@@ -101,9 +103,21 @@ pal_mem_set (uint64_t paddr, uint8_t data, uint32_t size, uint32_t flags = 0)
 }
 
 static inline pal_ret_t
-pal_ring_doorbell (uint64_t addr, uint64_t data)
+pal_ring_db16 (uint64_t addr, uint16_t data)
 {
-    return gl_pal_info.rwvecs.ring_doorbell(addr, data);
+    return gl_pal_info.rwvecs.ring_db16(addr, data);
+}
+
+static inline pal_ret_t
+pal_ring_db32 (uint64_t addr, uint32_t data)
+{
+    return gl_pal_info.rwvecs.ring_db32(addr, data);
+}
+
+static inline pal_ret_t
+pal_ring_db64 (uint64_t addr, uint64_t data)
+{
+    return gl_pal_info.rwvecs.ring_db64(addr, data);
 }
 
 static inline pal_ret_t pal_step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)

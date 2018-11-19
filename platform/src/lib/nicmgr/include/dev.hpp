@@ -53,7 +53,7 @@ static inline uint64_t READ_REG64(uint64_t addr)
     sdk::lib::pal_reg_write(addr, (uint32_t *)&v, 2); \
 }
 
-#define WRITE_DB64      sdk::lib::pal_ring_doorbell
+#define WRITE_DB64      sdk::lib::pal_ring_db64
 
 #else
 #include "platform/src/lib/pal/include/pal.h"
