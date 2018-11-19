@@ -17,7 +17,7 @@ cd /
 ifconfig lo up
 
 # start memtun
-/platform/bin/memtun 0x13b000000 &
+/platform/bin/memtun &
 
 # check for all the binaries
 if [[ ! -f $NIC_DIR/bin/hal ]]; then

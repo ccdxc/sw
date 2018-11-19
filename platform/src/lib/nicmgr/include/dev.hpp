@@ -74,14 +74,15 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #ifdef __aarch64__
 #include "platform/src/lib/pciemgr/include/pciemgr.h"
 #endif
+#include "platform/include/common/memregion.h"
 #include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 #include "platform/src/lib/pciehdevices/include/pciehdevices.h"
 
 /**
  * Memory Regions
  */
-#define DEVCMD_BASE             roundup(0x0138096c00, 4096)
-#define NICMGR_BASE             roundup(0x013a096c00, 4096)
+#define DEVCMD_BASE             roundup(MEMREGION_DEVCMD_PA, 4096)
+#define NICMGR_BASE             roundup(MEMREGION_NICMGR_PA, 4096)
 
 /**
  * ADMINQ

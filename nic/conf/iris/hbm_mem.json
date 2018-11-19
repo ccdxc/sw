@@ -44,10 +44,15 @@
             "cc"     : "true"
         },
         {
-            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB including this region",
+            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
             "name" : "unused cache coherent",
-            "size_kb" : 30272,
+            "size_kb" : 29696,
             "cc"      : "true"
+        },
+        {
+            "_comment" : "memtun address is hardcoded to HBM base + 64MB(above cc regions)",
+             "name": "memtun",
+             "size_kb": 256
         },
         {
              "name": "ipsec-global-drop-stats",

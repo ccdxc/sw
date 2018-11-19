@@ -11,6 +11,8 @@
 #include <fcntl.h>
 #include "dtls.h"
 
+#include "platform/include/common/memregion.h"
+
 static char *progname;
 
 typedef struct {
@@ -100,7 +102,7 @@ memtun(off_t phys, char *info, uint32_t infosz)
 static int
 usage(void)
 {
-    fprintf(stderr, "usage: %s physaddr [name=value...]\n", progname);
+    fprintf(stderr, "usage: %s [physaddr] [name=value...]\n", progname);
     return 1;
 }
 
@@ -115,12 +117,16 @@ main(int argc, char *argv[])
 
     progname = argv[0];
 
-    if (argc < 2) {
-        return usage();
-    }
-    phys = strtoull(argv[1], &p, 0);
-    if (*p != '\0') {
-        return usage();
+    phys = MEMREGION_MEMTUN_PA;
+#if MEMREGION_MEMTUN_SZ < (256 * 1024)
+#   error "MEMREGION_MEMTUN_SZ < (256 * 1024)"
+#endif
+
+    if (argc >= 2) {
+        phys = strtoull(argv[1], &p, 0);
+        if (*p != '\0') {
+            return usage();
+        }
     }
     infosz = 0;
     for (pass = 1; pass <= 2; pass++) {
