@@ -22,7 +22,7 @@ struct sqcb2_t d;
 
 #define K_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, spec_cindex_sbit0_ebit7, spec_cindex_sbit8_ebit15)
 #define K_OP_TYPE     CAPRI_KEY_FIELD(IN_P, op_type)
-#define K_AH_HANDLE   CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_ah_handle_sbit0_ebit7, op_send_wr_ah_handle_sbit24_ebit31)
+#define K_AH_HANDLE   CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_ah_handle_sbit0_ebit7, op_send_wr_ah_handle_sbit8_ebit31)
 #define K_AH_SIZE     CAPRI_KEY_FIELD(IN_TO_S_P, ah_size)
 #define K_IMM_DATA    CAPRI_KEY_FIELD(IN_SEND_WR_P, op_send_wr_imm_data_or_inv_key)
 #define K_INV_KEY     K_IMM_DATA
@@ -74,11 +74,18 @@ req_tx_add_headers_process:
     nop
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
-
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS) // Branch Delay Slot
 
-    cmov           r2, c2, K_OP_TYPE, d.curr_op_type
+    bbne           d.need_credits, 1, add_headers
+    cmov           r2, c2, K_OP_TYPE, d.curr_op_type // Branch Delay Slot
+
+check_credits:
+    scwlt24        c5, d.lsn_rx, d.ssn
+    bcf            [c5], credit_check_fail
+    tblwr.!c5      d.need_credits, 0 // Branch Delay Slot
+
+add_headers:
     .brbegin
     br             r2[2:0]    
     // To start with, num_addr is 1 (bth)
@@ -465,10 +472,12 @@ inc_psn:
 
     scwlt24        c5, d.lsn, d.ssn
     bcf            [!c5], rrq_p_index_chk
+    phvwr.c5       BTH_ACK_REQ, 1
     // Disable TX scheduler for this QP until ack is received with credits to
     // send subsequent packets
+#if !(defined(HAPS) || defined(HW))
     DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r3, r5) // Branch Delay Slot
-    phvwr          BTH_ACK_REQ, 1
+#endif
 
 rrq_p_index_chk:
     // do we need to increment rrq_pindex ?
@@ -549,6 +558,8 @@ spec_fail:
     phvwr.e   p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_2_VALID(0)
 
+credit_check_fail:
+    phvwr     CAPRI_PHV_FIELD(IN_P, credit_check_failed), 1
 rrq_full:
 #if !(defined(HAPS) || defined(HW))
     // For Model, to avoid infinite loop, disable scheduler for this QP and upon

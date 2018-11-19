@@ -602,6 +602,22 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_FLOW_CREDITS_MULTI_PKT
+        enable  : True
+        package : test.rdma
+        module  : req_tx_flow_credits_multi_pkt
+        spec    : req_tx_flow_credits_multi_pkt.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_FLOW_CREDITS_ONLY_PKTS
+        enable  : True
+        package : test.rdma
+        module  : req_tx_flow_credits_only_pkts
+        spec    : req_tx_flow_credits_only_pkts.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_EQ
         enable  : True
         package : test.rdma

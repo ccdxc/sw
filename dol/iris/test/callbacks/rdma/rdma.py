@@ -39,7 +39,7 @@ def GetRqPreEpsnForTx (tc, pkt, args):
 
 
 def GetPktTxPsn (tc, pkt, args):
-    return (tc.pvtdata.sq_pre_qstate.tx_psn + args.pkt_num)
+    return (tc.pvtdata.sq_pre_qstate.tx_psn + int(args.pkt_num))
 
 def GetRqPindex (tc, pkt, args):
     log_num_rq_wqes = getattr(tc.pvtdata.rq_pre_qstate, 'log_num_wqes')

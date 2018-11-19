@@ -230,7 +230,7 @@ check_duplicate_resp:
     bcf            [!c2 | !c6], duplicate_resp
 
     // unsolicited ack i.e. duplicate of most recent p_ack is allowed
-    sub            r4, d.rexmit_psn, -1  // Branch Delay Slot
+    sub            r4, d.rexmit_psn, 1  // Branch Delay Slot
     mincr          r4, 24, r0
     seq            c3, r4, CAPRI_APP_DATA_BTH_PSN
     bcf            [!c3], duplicate_resp
@@ -268,8 +268,10 @@ post_msn_credits:
 
 post_rexmit_psn:
     phvwr          p.err_retry_ctr, d.err_retry_count
-    bcf            [c3], unsolicited_ack
-    phvwr          p.rnr_retry_ctr, d.rnr_retry_count // Branch Delay Slot
+    phvwr          p.rnr_retry_ctr, d.rnr_retry_count
+    bcf            [c3], set_arg
+    // if its unsolicted ack, just post credits, msn and exit, CQ posting not needed
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c3)
 
     bcf            [c6], set_arg
     DMA_HBM_PHV2MEM_PHV_END_SETUP_C(r6, ack_timestamp, c6) // Branch Delay Slot
@@ -307,13 +309,6 @@ recirc_work_done:
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back.
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
     
-unsolicited_ack:
-    // if its unsolicted ack, just post credits, msn and exit, CQ posting not needed
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
-    //phvwr          CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
-    // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
-
 duplicate_read_resp_mid:
 duplicate_resp:
 invalid_pkt_psn:

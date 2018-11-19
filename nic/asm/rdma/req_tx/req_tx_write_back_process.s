@@ -35,6 +35,9 @@ req_tx_write_back_process:
     bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
     nop           // Branch Delay Slot
 
+    bbeq          CAPRI_KEY_FIELD(IN_P, credit_check_failed), 1, credit_check_fail
+    nop           // Branch Delay Slot
+
 write_back:
     tblwr         d.busy, CAPRI_KEY_FIELD(IN_P, busy)
     tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
@@ -109,6 +112,7 @@ poll_fail:
     phvwr.e      p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_2_VALID(0)
 
+credit_check_fail:
 rate_enforce_fail:
     bbeq        d.dcqcn_rl_failure, 1, drop_phv
     nop // BD-slot

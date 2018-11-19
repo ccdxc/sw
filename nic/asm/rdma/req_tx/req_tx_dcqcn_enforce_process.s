@@ -24,7 +24,7 @@ struct req_tx_s4_t2_k k;
 
 #define K_SPEC_CINDEX CAPRI_KEY_FIELD(IN_TO_S_P, spec_cindex)
 #define K_PKT_LEN     CAPRI_KEY_RANGE(IN_TO_S_P, packet_len_sbit0_ebit7, packet_len_sbit8_ebit13)
-#define K_S2S_DATA    k.{common_t2_s2s_s2s_data_sbit0_ebit7...common_t2_s2s_s2s_data_sbit152_ebit159}
+#define K_S2S_DATA    k.{common_t2_s2s_s2s_data_sbit0_ebit7...common_t2_s2s_s2s_data_sbit136_ebit159}
 
 #define SECS_IN_KSEC         1000
 #define NUM_TOKENS_ACQUIRED  r6
