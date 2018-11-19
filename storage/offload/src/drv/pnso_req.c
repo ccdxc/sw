@@ -1018,3 +1018,50 @@ out:
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_flush_batch);
+
+static void
+get_poll_context_type(void *poll_ctx, bool *is_chain, bool *is_batch)
+{
+	struct service_chain *chain = (struct service_chain *) poll_ctx;
+	struct batch_info *batch_info = (struct batch_info *) poll_ctx;
+
+	if ((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) &&
+			!(chain->sc_flags & CHAIN_CFLAG_RESERVED))
+		*is_chain = true;
+
+	if ((batch_info->bi_flags & BATCH_BFLAG_MODE_ASYNC) &&
+			!(batch_info->bi_flags & BATCH_BFLAG_RESERVED))
+		*is_batch = true;
+
+	OSAL_LOG_DEBUG(" poll context! poll_ctx: 0x" PRIx64 " is_chain: %d is_batch: %d",
+				(uint64_t) poll_ctx, *is_chain, *is_batch);
+}
+
+pnso_error_t
+pnso_request_poller(void *poll_ctx)
+{
+	pnso_error_t err = EINVAL;
+	bool is_chain, is_batch;
+
+	if (!poll_ctx) {
+		OSAL_LOG_DEBUG("invalid poll context! poll_ctx: 0x" PRIx64 " err: %d",
+				(uint64_t) poll_ctx, err);
+		goto out;
+	}
+
+	is_chain = is_batch = false;
+	get_poll_context_type(poll_ctx, &is_chain, &is_batch);
+
+	if ((is_chain && is_batch) || (!is_chain && !is_batch)) {
+		OSAL_LOG_DEBUG("invalid poll context type! poll_ctx: 0x" PRIx64 " err: %d",
+				(uint64_t) poll_ctx, err);
+		goto out;
+	}
+
+	err = is_chain ? chn_poller(poll_ctx) : bat_poller(poll_ctx);
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+}
+OSAL_EXPORT_SYMBOL(pnso_request_poller);

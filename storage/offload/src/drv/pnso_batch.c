@@ -376,20 +376,18 @@ static void read_write_result_all_chains(struct batch_info *batch_info);
 pnso_error_t bat_poller(void *pnso_poll_ctx);
 
 pnso_error_t
-bat_poller(void *pnso_poll_ctx)
+bat_poller(void *poll_ctx)
 {
-	pnso_error_t err;
-	struct batch_info *batch_info = (struct batch_info *) pnso_poll_ctx;
+	pnso_error_t err = EINVAL;
+	struct batch_info *batch_info = (struct batch_info *) poll_ctx;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
 
-	if (!pnso_poll_ctx) {
-		err = EINVAL;
+	if (!poll_ctx) {
 		OSAL_LOG_ERROR("invalid poll context! err: %d", err);
-		OSAL_ASSERT(0);
-		return err;
+		goto out;
 	}
 	PPRINT_BATCH_INFO(batch_info);
 

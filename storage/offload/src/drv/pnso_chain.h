@@ -80,7 +80,7 @@ extern "C" {
 #define CHAIN_CFLAG_MODE_SYNC		(1 << 0)
 #define CHAIN_CFLAG_MODE_POLL		(1 << 1)
 #define CHAIN_CFLAG_MODE_ASYNC		(1 << 2)
-#define CHAIN_CFLAG_RESERVED		/* bit-3 rsvd for batch/poll-async */
+#define CHAIN_CFLAG_RESERVED		(1 << 3) /* rsvd for batch/poll-async */
 #define CHAIN_CFLAG_IN_BATCH		(1 << 4)
 #define CHAIN_CFLAG_POLLED		(1 << 5)
 
@@ -298,6 +298,8 @@ void chn_update_overall_result(struct service_chain *chain);
 void chn_notify_caller(struct service_chain *chain);
 
 bool chn_is_poll_done(struct service_chain *chain);
+
+pnso_error_t chn_poller(void *poll_ctx);
 
 void chn_pprint_chain(const struct service_chain *chain);
 

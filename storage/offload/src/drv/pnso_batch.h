@@ -37,7 +37,7 @@ struct batch_page {
 /* batch flags */
 #define BATCH_BFLAG_MODE_SYNC		(1 << 0)
 #define BATCH_BFLAG_MODE_POLL		(1 << 1)
-#define BATCH_BFLAG_RESERVED		/* bit-2 rsvd for chain/poll-async */
+#define BATCH_BFLAG_RESERVED		(1 << 2) /* rsvd for chain/poll-async */
 #define BATCH_BFLAG_MODE_ASYNC		(1 << 3)
 #define BATCH_BFLAG_CHAIN_PRESENT	(1 << 4)
 
@@ -62,6 +62,8 @@ pnso_error_t bat_add_to_batch(struct pnso_service_request *svc_req,
 pnso_error_t bat_flush_batch(struct request_params *req_params);
 
 void bat_destroy_batch(void);
+
+pnso_error_t bat_poller(void *poll_ctx);
 
 #ifdef __cplusplus
 }
