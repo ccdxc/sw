@@ -336,6 +336,9 @@ EthLif::AddVlan(vlan_t vlan)
 
     api_trace("Adding Vlan Filter");
     NIC_LOG_INFO("Adding Vlan filter: {}", vlan);
+    if (!vlan) {
+        vlan = 8192;
+    }
 
     if (vlan_table_.find(vlan) == vlan_table_.end()) {
         // Check if max limit reached
@@ -383,6 +386,10 @@ EthLif::DelVlan(vlan_t vlan)
 
     api_trace("Deleting Vlan Filter");
     NIC_LOG_INFO("Deleting Vlan filter: {}", vlan);
+    if (!vlan) {
+        NIC_LOG_INFO("Ignoring Delete of Vlan filter 0");
+        return HAL_IRISC_RET_SUCCESS;
+    }
 
     if (vlan_table_.find(vlan) != vlan_table_.end()) {
         if (IsClassicForwarding()) {

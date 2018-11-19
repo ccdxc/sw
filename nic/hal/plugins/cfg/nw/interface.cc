@@ -1597,68 +1597,88 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("Failed to update if pd, err  : {}", ret);
     }
 
-    // If lif changes on enic, we should trigger EP to reprogram ipsg entries.
-    if (pd_if_args.lif_change && hal_if->if_type == intf::IF_TYPE_ENIC) {
-        pd_ep_if_args.lif_change = pd_if_args.lif_change;
-        pd_ep_if_args.new_lif = pd_if_args.new_lif;
-        for (const void *ptr : *(hal_if->ep_list)) {
-            p_hdl = (hal_handle_t *)ptr;
-            ep = find_ep_by_handle(*p_hdl);
-            if (!ep) {
-                HAL_TRACE_ERR("Unable to find ep with handle  : {}",
-                              *p_hdl);
-                continue;
-            }
-            HAL_TRACE_DEBUG("Updating EP {} b'coz of lif_change",
-                            ep_l2_key_to_str(ep));
-            pd_ep_if_args.ep = ep;
-            pd_func_args.pd_ep_if_update = &pd_ep_if_args;
-            ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_IF_UPDATE, &pd_func_args);
+    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        // If l2seg list changes for classic enic
+        if (pd_if_args.l2seg_clsc_change) {
+            ret = enicif_clsc_l2seglist_change_update_oiflists(hal_if,
+                                                               pd_if_args.add_l2seg_clsclist,
+                                                               true);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Failed to update EP with if update, err  : {}",
+                HAL_TRACE_ERR("Not able to add new oifs to oiflists. ret: {}",
                               ret);
+                return ret;
+            }
+            ret = enicif_clsc_l2seglist_change_update_oiflists(hal_if,
+                                                               pd_if_args.del_l2seg_clsclist,
+                                                               false);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Not able to del old oifs from oiflists. ret: {}",
+                              ret);
+                return ret;
             }
         }
-
-        // Update mcast oiflist
-        if (hal_if->lif_handle == HAL_HANDLE_INVALID) {
-            if (pd_if_args.new_lif) {
-                // Add oif
-                ret = if_update_oif_lists(hal_if_clone, true);
+        // If lif changes on enic, we should trigger EP to reprogram ipsg entries.
+        if (pd_if_args.lif_change && hal_if->if_type == intf::IF_TYPE_ENIC) {
+            pd_ep_if_args.lif_change = pd_if_args.lif_change;
+            pd_ep_if_args.new_lif = pd_if_args.new_lif;
+            for (const void *ptr : *(hal_if->ep_list)) {
+                p_hdl = (hal_handle_t *)ptr;
+                ep = find_ep_by_handle(*p_hdl);
+                if (!ep) {
+                    HAL_TRACE_ERR("Unable to find ep with handle  : {}",
+                                  *p_hdl);
+                    continue;
+                }
+                HAL_TRACE_DEBUG("Updating EP {} b'coz of lif_change",
+                                ep_l2_key_to_str(ep));
+                pd_ep_if_args.ep = ep;
+                pd_func_args.pd_ep_if_update = &pd_ep_if_args;
+                ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_IF_UPDATE, &pd_func_args);
                 if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Unable to add Enic to oiflist. ret: {}",
+                    HAL_TRACE_ERR("Failed to update EP with if update, err  : {}",
                                   ret);
-                    goto end;
                 }
             }
-        } else {
-            if (!pd_if_args.new_lif) {
-                // Delete oif
-                ret = if_update_oif_lists(hal_if, false);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Unable to del Enic from oiflist. ret: {}",
-                                  ret);
-                    goto end;
+
+            // Update mcast oiflist
+            if (hal_if->lif_handle == HAL_HANDLE_INVALID) {
+                if (pd_if_args.new_lif) {
+                    // Add oif
+                    ret = if_update_oif_lists(hal_if_clone, true);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Unable to add Enic to oiflist. ret: {}",
+                                      ret);
+                        goto end;
+                    }
                 }
             } else {
-                // Delete
-                ret = if_update_oif_lists(hal_if, false);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Unable to del Enic from oiflist. ret: {}",
-                                  ret);
-                    goto end;
-                }
+                if (!pd_if_args.new_lif) {
+                    // Delete oif
+                    ret = if_update_oif_lists(hal_if, false);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Unable to del Enic from oiflist. ret: {}",
+                                      ret);
+                        goto end;
+                    }
+                } else {
+                    // Delete
+                    ret = if_update_oif_lists(hal_if, false);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Unable to del Enic from oiflist. ret: {}",
+                                      ret);
+                        goto end;
+                    }
 
-                // Add
-                ret = if_update_oif_lists(hal_if_clone, true);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Unable to add Enic to oiflist. ret: {}",
-                                  ret);
-                    goto end;
+                    // Add
+                    ret = if_update_oif_lists(hal_if_clone, true);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Unable to add Enic to oiflist. ret: {}",
+                                      ret);
+                        goto end;
+                    }
                 }
             }
         }
-
     }
 
     // Change Flood replication entry for change of native l2seg
@@ -4139,8 +4159,9 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
                 entry->l2seg_handle);
         for (i = 0; i < num_l2segs; i++) {
             l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
+            l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
             HAL_TRACE_DEBUG("grpc l2seg handle: {}", l2seg->hal_handle);
-            if (entry->l2seg_handle == l2seg_key_handle.l2segment_handle()) {
+            if (entry->l2seg_handle == l2seg->hal_handle) {
                 l2seg_exists = true;
                 break;
             } else {
@@ -4369,6 +4390,35 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
 
 end:
 
+    return ret;
+}
+
+hal_ret_t
+enicif_clsc_l2seglist_change_update_oiflists(if_t *hal_if,
+                                             dllist_ctxt_t *l2seg_list,
+                                             bool add)
+{
+    hal_ret_t        ret = HAL_RET_OK;
+    dllist_ctxt_t    *curr, *next;
+    if_l2seg_entry_t *entry = NULL;
+    l2seg_t          *l2seg = NULL;
+
+    lif_t *lif = find_lif_by_handle(hal_if->lif_handle);
+
+    dllist_for_each_safe(curr, next, l2seg_list) {
+        entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
+        l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
+
+        ret = enicif_classic_update_oif_lists(hal_if, l2seg, lif, add);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add if:{} to l2seg oiflists. ret: {}",
+                          if_keyhandle_to_str(hal_if),
+                          ret);
+            goto end;
+        }
+    }
+
+end:
     return ret;
 }
 

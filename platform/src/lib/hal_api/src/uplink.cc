@@ -77,7 +77,8 @@ Uplink::CreateVrf()
     }
     if (hal->GetMode() == FWD_MODE_CLASSIC || IsOOB()) {
         // Create VRF for each uplink
-        vrf = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_MANAGEMENT : types::VRF_TYPE_CUSTOMER);
+        vrf = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_MANAGEMENT : types::VRF_TYPE_CUSTOMER,
+                              this);
     }
 }
 

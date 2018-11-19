@@ -25,6 +25,7 @@
 #include "rdma_dev.hpp"
 #include "hal_client.hpp"
 #include "pd_client.hpp"
+#include "platform/src/lib/hal_api/include/print.hpp"
 
 using namespace nicmgr;
 using namespace nicmgr_status_msgs;
@@ -1511,8 +1512,8 @@ Eth::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         memcpy((uint8_t *)&mac_addr, (uint8_t *)&cmd->mac.addr, sizeof(cmd->mac.addr));
         mac_addr = be64toh(mac_addr) >> (8 * sizeof(mac_addr) - 8 * sizeof(cmd->mac.addr));
 
-        NIC_LOG_INFO("lif-{}: CMD_OPCODE_RX_FILTER_ADD: type RX_FILTER_MATCH_MAC mac {:#x}",
-                hal_lif_info_.id, mac_addr);
+        NIC_LOG_INFO("lif-{}: CMD_OPCODE_RX_FILTER_ADD: type RX_FILTER_MATCH_MAC mac:{}",
+                hal_lif_info_.id, macaddr2str(mac_addr));
 
         eth_lif->AddMac(mac_addr);
 
@@ -1575,15 +1576,16 @@ Eth::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
 
     if (match == RX_FILTER_MATCH_MAC) {
 
-        NIC_LOG_INFO("lif-{}: CMD_OPCODE_RX_FILTER_DEL: type RX_FILTER_MATCH_MAC filter_id {}",
-                     hal_lif_info_.hw_lif_id, cmd->filter_id);
+        NIC_LOG_INFO("lif-{}: CMD_OPCODE_RX_FILTER_DEL: type RX_FILTER_MATCH_MAC mac:{}",
+                     hal_lif_info_.hw_lif_id,
+                     macaddr2str(mac_addr));
 
         eth_lif->DelMac(mac_addr);
         mac_addrs.erase(cmd->filter_id);
     } else if (match == RX_FILTER_MATCH_VLAN) {
 
-        NIC_LOG_INFO("lif-{}: CMD_OPCODE_RX_FILTER_DEL: type RX_FILTER_MATCH_VLAN filter {}",
-                     hal_lif_info_.hw_lif_id, cmd->filter_id);
+        NIC_LOG_INFO("lif-{}: CMD_OPCODE_RX_FILTER_DEL: type RX_FILTER_MATCH_VLAN vlan {}",
+                     hal_lif_info_.hw_lif_id, vlan);
 
         eth_lif->DelVlan(vlan);
         vlans.erase(cmd->filter_id);

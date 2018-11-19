@@ -11,11 +11,12 @@
 
 #define VRF_ID_BASE 17
 
+class Uplink;
 
 class HalVrf : public HalObject
 {
 public:
-  static HalVrf *Factory(types::VrfType type = types::VRF_TYPE_CUSTOMER);
+  static HalVrf *Factory(types::VrfType type = types::VRF_TYPE_CUSTOMER, Uplink *uplink = NULL);
   static void Destroy(HalVrf *vrf);
 
 
@@ -23,14 +24,16 @@ public:
   uint64_t GetHandle();
 
   static void Probe();
+  Uplink *GetUplink() { return uplink; }
 
 private:
-  HalVrf(types::VrfType type = types::VRF_TYPE_CUSTOMER);
+  HalVrf(types::VrfType type = types::VRF_TYPE_CUSTOMER, Uplink *uplink = NULL);
   ~HalVrf();
 
   uint32_t id;
   uint64_t handle;
   types::VrfType type;
+  Uplink *uplink;
 
   // For vrf id
   static sdk::lib::indexer *allocator;

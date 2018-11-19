@@ -10,9 +10,9 @@ using namespace std;
 sdk::lib::indexer *HalVrf::allocator = sdk::lib::indexer::factory(HalVrf::max_vrfs, false, true);
 
 HalVrf *
-HalVrf::Factory(types::VrfType type)
+HalVrf::Factory(types::VrfType type, Uplink *uplink)
 {
-    HalVrf *vrf = new HalVrf(type);
+    HalVrf *vrf = new HalVrf(type, uplink);
 
     return vrf;
 }
@@ -25,7 +25,7 @@ HalVrf::Destroy(HalVrf *vrf)
     }
 }
 
-HalVrf::HalVrf(types::VrfType type)
+HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
 {
     grpc::ClientContext         context;
     grpc::Status                status;
@@ -41,6 +41,7 @@ HalVrf::HalVrf(types::VrfType type)
     }
 
     this->type = type;
+    this->uplink = uplink;
 
     id += VRF_ID_BASE;
 

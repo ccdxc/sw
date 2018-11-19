@@ -52,6 +52,13 @@ HalL2Segment::HalL2Segment(HalVrf *vrf, uint16_t vlan)
     NIC_LOG_INFO("L2seg create: vrf: {}, vlan: {}. id: {}",
                     vrf->GetId(), vlan, id);
 
+
+    this->_vlan = vlan;
+    this->vrf = vrf;
+    if (vrf->GetUplink()) {
+        uplink_refs[vrf->GetUplink()->GetId()] = vrf->GetUplink();
+    }
+
     req = req_msg.add_request();
     // req->mutable_meta()->set_vrf_id(vrf->GetId());
     req->mutable_key_or_handle()->set_segment_id(id);
@@ -63,6 +70,10 @@ HalL2Segment::HalL2Segment(HalVrf *vrf, uint16_t vlan)
     req->mutable_wire_encap()->set_encap_value(vlan);
 
     // status = hal->l2seg_stub_->HalL2SegmentCreate(&context, req_msg, &rsp_msg);
+    for (auto it = uplink_refs.begin(); it != uplink_refs.end(); ++it) {
+        req->add_if_key_handle()->set_interface_id(it->first);
+    }
+
     status = hal->l2segment_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -70,8 +81,6 @@ HalL2Segment::HalL2Segment(HalVrf *vrf, uint16_t vlan)
             handle = rsp.l2segment_status().l2segment_handle();
             NIC_LOG_INFO("L2 segment create succeeded id: {}, handle: {}",
                             id, handle);
-            _vlan = vlan;
-            this->vrf = vrf;
         } else {
             NIC_LOG_ERR("Failed to create l2segment: id: {} err: {}", id, rsp.api_status());
         }

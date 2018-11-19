@@ -356,6 +356,9 @@ hal_ret_t if_update_classic_oif_lists(if_t *hal_if,
                                       lif_update_app_ctxt_t *lif_upd);
 hal_ret_t enic_update_lif (if_t *hal_if, lif_t *new_lif,
                            if_t **new_hal_if);
+hal_ret_t enicif_clsc_l2seglist_change_update_oiflists(if_t *hal_if,
+                                                       dllist_ctxt_t *l2seg_list,
+                                                       bool add);
 
 }    // namespace hal
 
