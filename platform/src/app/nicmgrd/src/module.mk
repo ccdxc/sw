@@ -2,7 +2,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := nicmgrd.bin
 MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
-                    pciemgr_if pciemgr pciemgrutils pciehdevices pcieport pcietlp cfgspace \
+                    pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
                     intrutils pal misc evutils \
                     ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
                     commonproto nicmgrproto halproto \

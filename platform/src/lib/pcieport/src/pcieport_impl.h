@@ -38,11 +38,15 @@ struct pcieport_s {
     int cap_width;
     int cur_gen;
     int cur_width;
+    u_int8_t pribus;
+    u_int8_t secbus;
+    u_int8_t subbus;
     u_int32_t compliance:1;
     u_int32_t sris:1;
     u_int16_t lanemask;
     u_int16_t subvendorid;
     u_int16_t subdeviceid;
+    u_int32_t init:1;
     u_int32_t open:1;
     u_int32_t host:1;
     u_int32_t config:1;
@@ -51,6 +55,7 @@ struct pcieport_s {
     pcieportev_t event;
     char fault_reason[80];
     char last_fault_reason[80];
+    u_int64_t linkup;
     u_int64_t hostup;
     u_int64_t phypolllast;
     u_int64_t phypollmax;
@@ -68,11 +73,11 @@ typedef struct pcieport_s pcieport_t;
 
 struct pcieport_info_s {
     u_int32_t init:1;
+    u_int32_t serdes_init:1;
+    u_int32_t already_init:1;
     pcieport_t pcieport[PCIEPORT_NPORTS];
 };
 typedef struct pcieport_info_s pcieport_info_t;
-
-extern pcieport_info_t pcieport_info;
 
 static inline pcieport_info_t *
 pcieport_info_get(void)
@@ -82,8 +87,11 @@ pcieport_info_get(void)
 }
 
 int pcieport_onetime_init(void);
+int pcieport_onetime_portinit(pcieport_t *p);
+void pcieport_intr_init(pcieport_t *p);
 int pcieport_config(pcieport_t *p);
 void pcieport_fsm(pcieport_t *p, pcieportev_t ev);
+void pcieport_fsm_init(pcieport_t *p, pcieportst_t st);
 int pcieport_tgt_marker_rx_wait(pcieport_t *p);
 int pcieport_tgt_axi_pending_wait(pcieport_t *p);
 int pcieport_gate_open(pcieport_t *p);
@@ -91,6 +99,7 @@ void pcieport_set_crs(pcieport_t *p, const int on);
 void pcieport_set_serdes_reset(pcieport_t *p, const int on);
 void pcieport_set_pcs_reset(pcieport_t *p, const int on);
 void pcieport_set_mac_reset(pcieport_t *p, const int on);
+int pcieport_get_ltssm_en(pcieport_t *p);
 void pcieport_set_ltssm_en(pcieport_t *p, const int on);
 void pcieport_set_aer_common_en(pcieport_t *p, const int on);
 void pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq);

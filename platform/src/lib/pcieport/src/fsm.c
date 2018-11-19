@@ -11,7 +11,6 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <sys/time.h>
-#include <linux/pci_regs.h>
 
 #include "platform/src/lib/pal/include/pal.h"
 #include "platform/src/lib/pciemgrutils/include/pciesys.h"
@@ -71,7 +70,7 @@ pcieport_fault(pcieport_t *p, const char *fmt, ...)
         va_end(ap);
 
         p->state = PCIEPORTST_FAULT;
-        pciesys_logerror("port %d fault: %s\n", p->port, p->fault_reason);
+        pciesys_logerror("port%d fault: %s\n", p->port, p->fault_reason);
     }
 }
 
@@ -103,22 +102,48 @@ pcieport_drain(pcieport_t *p)
 }
 
 static void
+pcieport_update_linkinfo(pcieport_t *p)
+{
+    portcfg_read_genwidth(p->port, &p->cur_gen, &p->cur_width);
+    portcfg_read_bus(p->port, &p->pribus, &p->secbus, &p->subbus);
+    pciesys_logdebug("port%d: gen%dx%d pri %02x sec %02x sub %02x\n",
+                     p->port, p->cur_gen, p->cur_width,
+                     p->pribus, p->secbus, p->subbus);
+}
+
+static void
 pcieport_buschg(pcieport_t *p)
 {
-    const u_int8_t secbus = portcfg_readb(p->port, PCI_SECONDARY_BUS);
-    pcieport_event_buschg(p, secbus);
+    const u_int8_t secbus_prev = p->secbus;
+
+    pcieport_update_linkinfo(p);
+    /*
+     * Ignore changes to secbus=0 which happens at startup
+     * and doesn't give us much useful info.  It is transitory
+     * as the BIOS settles on the final bus allocation.
+     */
+    if (p->secbus && p->secbus != secbus_prev) {
+        pciesys_logdebug("port%d: secbus 0x%02x\n", p->port, p->secbus);
+        pcieport_event_buschg(p, p->secbus);
+    }
 }
 
 static void
 pcieport_hostup(pcieport_t *p)
 {
-    p->hostup++;
-    pcieport_event_hostup(p, p->hostup);
+    pcieport_event_hostup(p, ++p->hostup);
 }
 
 static void
 pcieport_hostdn(pcieport_t *p)
 {
+#if 0
+    /* XXX not yet -- no one to re-enable crs yet */
+    /* hostdn triggers automatic crs=1 */
+    p->crs = 1;
+    pcieport_set_crs(p, p->crs);
+#endif
+    p->secbus = 0;
     pcieport_event_hostdn(p, p->hostup);
 }
 
@@ -130,12 +155,14 @@ pcieport_linkup(pcieport_t *p)
         return;
     }
     pcieport_set_crs(p, p->crs);
+    pcieport_update_linkinfo(p);
+    pcieport_event_linkup(p, ++p->linkup);
 }
 
 static void
 pcieport_linkdn(pcieport_t *p)
 {
-    pcieport_set_crs(p, 1);
+    pcieport_event_linkdn(p, p->linkup);
 }
 
 static void
@@ -205,6 +232,7 @@ static void
 fsm_up(pcieport_t *p)
 {
     p->state = PCIEPORTST_UP;
+    pcieport_buschg(p);
     pcieport_hostup(p);
 }
 
@@ -238,7 +266,7 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
     [PCIEPORTST_OFF]    = { NOP, MCU, NOP, INV, NOP },
     [PCIEPORTST_DOWN]   = { NOP, MCU, NOP, INV, NOP },
     [PCIEPORTST_MACUP]  = { MCD, INV, NOP, LKU, NOP },
-    [PCIEPORTST_LINKUP] = { INV, INV, LKD, INV, UP_ },
+    [PCIEPORTST_LINKUP] = { INV, INV, LKD, LKU, UP_ },
     [PCIEPORTST_UP]     = { INV, INV, ULD, INV, BUS },
     [PCIEPORTST_FAULT]  = { MCD, NOP, NOP, NOP, NOP },
 
@@ -251,6 +279,10 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
      *                  before we saw LINKUP, intr() will always send LINKDN.
      * MACUP + LINKDN   Could happen if link goes up/down quickly.
      *                  before we saw LINKUP, intr() will always send LINKDN.
+     * LINKUP + LINKUP  Could happen if a link has gone up and back down and
+     *                  started coming back up before we started.
+     *                  Then we see LINKDN, MACDN, MACUP, LINKUP pending,
+     *                  *then* a LINKUP arrives.
      */
 };
 
@@ -268,9 +300,42 @@ pcieport_fsm(pcieport_t *p, pcieportev_t ev)
         struct timeval tv;
 
         gettimeofday(&tv, NULL);
-        pciesys_loginfo("[%ld.%.3ld] %d: %s + %s => %s\n",
+        pciesys_loginfo("[%ld.%.3ld] port%d: %s + %s => %s\n",
                         tv.tv_sec, tv.tv_usec / 1000,
                         p->port, stname(st), evname(ev), stname(p->state));
+    }
+}
+
+void
+pcieport_fsm_init(pcieport_t *p, pcieportst_t st)
+{
+    p->state = st;
+
+    switch (p->state) {
+    case PCIEPORTST_MACUP:
+        pcieport_macup(p);
+        break;
+    case PCIEPORTST_LINKUP:
+        pcieport_macup(p);
+        pcieport_linkup(p);
+        break;
+    case PCIEPORTST_UP:
+        pcieport_macup(p);
+        pcieport_linkup(p);
+        pcieport_buschg(p);
+        pcieport_hostup(p);
+        break;
+    default:
+        break;
+    }
+
+    if (fsm_verbose) {
+        struct timeval tv;
+
+        gettimeofday(&tv, NULL);
+        pciesys_loginfo("[%ld.%.3ld] port%d: init %s\n",
+                        tv.tv_sec, tv.tv_usec / 1000,
+                        p->port, stname(p->state));
     }
 }
 

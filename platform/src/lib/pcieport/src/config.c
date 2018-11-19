@@ -260,9 +260,9 @@ pcieport_config_host(pcieport_t *p)
         pcieport_set_serdes_reset(p, 0);
         pcieport_set_pcs_reset(p, 0);
     } else {
-        static int done_once;
+        pcieport_info_t *pi = pcieport_info_get();
 
-        if (!done_once) {
+        if (!pi->serdes_init) {
             int host_clock = 1;
             char *env = getenv("PCIEPORT_HOST_CLOCK");
 
@@ -280,7 +280,7 @@ pcieport_config_host(pcieport_t *p)
              * Saves about 20ns rx latency.
              */
             pcieport_pcsd_control_sris(p->sris);
-            done_once = 1;
+            pi->serdes_init = 1;
         }
         pcieport_set_pcs_reset(p, 1);
         pcieport_set_pcs_reset(p, 0);

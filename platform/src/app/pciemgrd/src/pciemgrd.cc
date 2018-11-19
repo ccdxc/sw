@@ -16,6 +16,7 @@
 
 #include "platform/include/common/pci_ids.h"
 #include "platform/src/lib/pal/include/pal.h"
+#include "platform/src/lib/pciemgr/include/pciemgr.h"
 #include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "platform/src/lib/pcieport/include/pcieport.h"
 
@@ -36,6 +37,7 @@ usage(void)
 "    -i                 interactive mode\n"
 "    -I <inherit-mode>  inherit or re-initialize hw/shmem\n"
 "    -P gen<G>x<W>      spec devices as pcie gen <G>, lane width <W>\n"
+"    -R <0|1>           reboot_on_hostdn=<0|1>\n"
 "    -V subvendorid     default subsystem vendor id\n"
 "    -D subdeviceid     default subsystem device id\n");
 }
@@ -68,6 +70,47 @@ parse_linkspec(const char *s, u_int8_t *genp, u_int8_t *widthp)
     return 1;
 }
 
+static void
+reboot_the_system(void)
+{
+    int r = system("/sbin/reboot -f");
+    if (r) pciesys_logerror("failed to reboot %d\n", r);
+}
+
+static void
+port_evhandler(pcieport_event_t *ev, void *arg)
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+
+    switch (ev->type) {
+    case PCIEPORT_EVENT_HOSTUP: {
+        pciesys_loginfo("port%d hostup gen%dx%d\n",
+                        ev->port, ev->hostup.gen, ev->hostup.width);
+        pciehw_event_hostup(ev->port, ev->hostup.gen, ev->hostup.width);
+        break;
+    }
+    case PCIEPORT_EVENT_HOSTDN: {
+        if (pme->reboot_on_hostdn) {
+            reboot_the_system();
+        }
+        pciesys_loginfo("port%d: hostdn\n", ev->port);
+        pciehw_event_hostdn(ev->port);
+        break;
+    }
+    case PCIEPORT_EVENT_BUSCHG: {
+        const int port = ev->port;
+        const u_int8_t secbus = ev->buschg.secbus;
+        pciesys_loginfo("port%d: buschg 0x%02x\n", ev->port, secbus);
+        pciehw_event_buschg(port, secbus);
+        break;
+    }
+    default:
+        /* Some event we don't need to handle. */
+        pciesys_loginfo("port%d: event %d ignored\n", ev->port, ev->type);
+        break;
+    }
+}
+
 int
 open_hostports(void)
 {
@@ -90,6 +133,9 @@ open_hostports(void)
                 goto close_error_out;
             }
         }
+    }
+    if ((r = pcieport_register_event_handler(port_evhandler, NULL)) < 0) {
+        goto close_error_out;
     }
     return r;
 
@@ -116,6 +162,34 @@ close_hostports(void)
     }
 }
 
+static u_int64_t
+getenv_override_ull(const char *label, const char *name, const u_int64_t def)
+{
+    const char *env = getenv(name);
+    if (env) {
+        u_int64_t val = strtoull(env, NULL, 0);
+        pciesys_loginfo("%s: $%s override %" PRIu64 " (%" PRIx64 ")\n",
+                        label, name, val, val);
+        return val;
+    }
+    return def;
+}
+
+static u_int64_t
+pciemgrd_param_ull(const char *name, const u_int64_t def)
+{
+    return getenv_override_ull("pciemgrd", name, def);
+}
+
+void
+pciemgrd_params(pciemgrenv_t *pme)
+{
+    pme->reboot_on_hostdn = pciemgrd_param_ull("PCIE_REBOOT_ON_HOSTDN",
+                                               pme->reboot_on_hostdn);
+    pme->enabled_ports = pciemgrd_param_ull("PCIE_ENABLED_PORTS",
+                                            pme->enabled_ports);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -124,7 +198,9 @@ main(int argc, char *argv[])
     int r, opt;
 
     pme->interactive = 1;
+    pme->reboot_on_hostdn = 1;
 
+    p->strict_crs = 1;
     p->fake_bios_scan = 1;
     p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
 
@@ -152,7 +228,7 @@ main(int argc, char *argv[])
 
     /* on asic single port, on haps 2 ports enabled */
     pme->enabled_ports = pal_is_asic() ? 0x1 : 0x5;
-    while ((opt = getopt(argc, argv, "b:Cde:FGiI:P:V:D:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:Cde:FGiI:P:V:D:R:")) != -1) {
         switch (opt) {
         case 'b':
             p->first_bus = strtoul(optarg, NULL, 0);
@@ -192,6 +268,9 @@ main(int argc, char *argv[])
                 printf("bad pcie spec: want gen%%dx%%d, got %s\n", optarg);
                 exit(1);
             }
+            break;
+        case 'R':
+            pme->reboot_on_hostdn = strtoul(optarg, NULL, 0);
             break;
         case 'V':
             p->subvendorid = strtoul(optarg, NULL, 0);

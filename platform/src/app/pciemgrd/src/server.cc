@@ -227,23 +227,7 @@ pciemgr_msg_cb(pmmsg_t *m)
 }
 
 static void
-server_poll(void *arg)
-{
-    pciemgrenv_t *pme = pciemgrenv_get();
-
-    // poll for port events
-    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->enabled_ports & (1 << port)) {
-            pcieport_poll(port);
-        }
-    }
-
-    // poll for device events
-    pciehdev_poll();
-}
-
-static void
-server_evhandler(const pciehdev_eventdata_t *evd)
+dev_evhandler(const pciehdev_eventdata_t *evd)
 {
     pmmsg_t *m;
     const size_t msglen = (sizeof(pmmsg_event_t) + 
@@ -275,6 +259,22 @@ server_evhandler(const pciehdev_eventdata_t *evd)
     pciemgrs_msgfree(m);
 }
 
+static void
+server_poll(void *arg)
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+
+    // poll for port events
+    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
+        if (pme->enabled_ports & (1 << port)) {
+            pcieport_poll(port);
+        }
+    }
+
+    // poll for device events
+    pciehdev_poll();
+}
+
 int
 server_loop(void)
 {
@@ -285,6 +285,7 @@ server_loop(void)
     logger_init();
     pciesys_loginfo("pciemgrd started\n");
 
+    pciemgrd_params(pme);
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }
@@ -292,8 +293,7 @@ server_loop(void)
         pciesys_logerror("pciehdev_open failed: %d\n", r);
         goto close_port_error_out;
     }
-
-    if ((r = pciehdev_register_event_handler(server_evhandler)) < 0) {
+    if ((r = pciehdev_register_event_handler(dev_evhandler)) < 0) {
         pciesys_logerror("pciehdev_register_event_handler failed %d\n", r);
         goto close_dev_error_out;
     }

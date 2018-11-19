@@ -14,10 +14,9 @@
 #include "platform/src/lib/pal/include/pal.h"
 #include "platform/src/lib/pciemgrutils/include/pciesys.h"
 #include "pcieport.h"
+#include "portcfg.h"
 #include "pcieport_impl.h"
 
-#define MAC_INTREGF_(REG) \
-    (CAP_PXC_CSR_INT_C_MAC_INTREG_ ##REG## _INTERRUPT_FIELD_MASK)
 /*
  * 3 conditions for link up
  *     1) PCIE clock (PERSTxN_DN2UP)
@@ -74,20 +73,48 @@ pcieport_intr(pcieport_t *p)
     return 0;
 }
 
+void
+pcieport_intr_init(pcieport_t *p)
+{
+    u_int32_t int_mac, sta_rst;
+    pcieportst_t initst = PCIEPORTST_OFF;
+    u_int8_t ltssm_st, secbus;
+
+    int_mac = pal_reg_rd32(PXC_(INT_C_MAC_INTREG, p->port));
+    sta_rst = pcieport_get_sta_rst(p);
+#ifdef __aarch64__
+    pal_reg_wr32(PXC_(INT_C_MAC_INTREG, p->port), int_mac);
+#endif
+
+    portcfg_read_bus(p->port, NULL, &secbus, NULL);
+    ltssm_st = sta_rst & 0x1f;
+
+    pciesys_logdebug("int_mac 0x%x sta_rst 0x%x secbus 0x%02x\n",
+                     int_mac, sta_rst, secbus);
+
+    if (sta_rst & STA_RSTF_(PERSTN)) {
+        if (ltssm_st != 0) {
+            initst = secbus ? PCIEPORTST_UP : PCIEPORTST_LINKUP;
+        } else {
+            initst = PCIEPORTST_MACUP;
+        }
+    }
+
+    pcieport_fsm_init(p, initst);
+}
+
 static void
 pcieport_poweron(pcieport_t *p)
 {
     int r;
 
+#ifdef __aarch64__
+    pciesys_loginfo("port%d: poweron\n", p->port);
+#endif
     pcieport_set_ltssm_st_cnt(p, 0);
     r = pcieport_config(p);
     if (r) pciesys_logerror("%d: poweron: %d\n", p->port, r);
 }
-
-#define INTREG_PERST0N \
-    CAP_PP_CSR_INT_PP_INTREG_PERST0N_DN2UP_INTERRUPT_FIELD_MASK
-#define INTREG_PERSTN(port) \
-    (INTREG_PERST0N >> (port))
 
 /*
  * PERSTxN indicates PCIe clock is good.
@@ -109,7 +136,7 @@ pcieport_poweron(pcieport_t *p)
 int
 pp_intr(void)
 {
-    pcieport_info_t *pi = &pcieport_info;
+    pcieport_info_t *pi = pcieport_info_get();
     u_int32_t int_pp;
     int port;
 
@@ -147,7 +174,7 @@ pp_intr(void)
 int
 pcieport_poll(const int port)
 {
-    pcieport_info_t *pi = &pcieport_info;
+    pcieport_info_t *pi = pcieport_info_get();
     pcieport_t *p;
 
     if (port < 0 || port >= PCIEPORT_NPORTS) {

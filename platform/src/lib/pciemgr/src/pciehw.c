@@ -20,11 +20,11 @@
 #include "platform/src/lib/misc/include/misc.h"
 #include "platform/src/lib/misc/include/bdf.h"
 #include "platform/src/lib/pal/include/pal.h"
-#include "platform/src/lib/pcieport/include/pcieport.h"
 #include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
 #include "platform/src/lib/cfgspace/include/cfgspace.h"
 #include "platform/src/lib/pciemgr/include/pciehw.h"
 #include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+
 #include "pciehw_impl.h"
 
 static pciehw_t pciehw;
@@ -212,33 +212,25 @@ pciehw_hostdn(pciehwdev_t *phwdev, void *arg)
     /* XXX reset cfg/bars */
 }
 
-static void
-pciehw_port_event_handler(pcieport_event_t *ev, void *arg)
+void
+pciehw_event_hostup(const int port, const int gen, const int width)
 {
-    switch (ev->type) {
-    case PCIEPORT_EVENT_HOSTUP: {
-        const int port = ev->hostup.port;
-        pciehw_foreach(port, pciehw_hostup, NULL);
-        break;
-    }
-    case PCIEPORT_EVENT_HOSTDN: {
-        const int port = ev->hostdn.port;
-        pciehw_foreach(port, pciehw_hostdn, NULL);
-        break;
-    }
-    case PCIEPORT_EVENT_BUSCHG: {
-        const int port = ev->buschg.port;
-        const u_int16_t secbus = ev->buschg.secbus;
-        pciehw_shmem_t *pshmem = pciehw_get_shmem();
-        pciehw_port_t *p = &pshmem->port[port];
+    pciehw_foreach(port, pciehw_hostup, NULL);
+}
 
-        p->secbus = secbus;
-        break;
-    }
-    default:
-        /* Some event we don't need to handle. */
-        break;
-    }
+void
+pciehw_event_hostdn(const int port)
+{
+    pciehw_foreach(port, pciehw_hostdn, NULL);
+}
+
+void
+pciehw_event_buschg(const int port, const u_int8_t secbus)
+{
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    pciehw_port_t *p = &pshmem->port[port];
+
+    p->secbus = secbus;
 }
 
 static int
@@ -392,7 +384,7 @@ pciehw_memopen(const pciehdev_initmode_t initmode)
     pshmem = pciehw_get_shmem();
 
     if (initmode == FORCE_INIT) {
-#ifdef __aarch64__
+#if 0
         pciesys_loginfo("memopen: force init magic %x version %d\n",
                         PCIEHW_MAGIC, PCIEHW_VERSION);
 #endif
@@ -410,9 +402,14 @@ pciehw_memopen(const pciehdev_initmode_t initmode)
             return -1;
         }
 
-        pciesys_logwarn("memopen: init magic %x version %d\n",
-                        PCIEHW_MAGIC, PCIEHW_VERSION);
+        pciesys_logwarn("memopen: reinit bad magic %x/%x (want %x) "
+                        "version %d/%d (want %d)\n",
+                        phwmem->magic, pshmem->magic, PCIEHW_MAGIC,
+                        phwmem->version, pshmem->version, PCIEHW_VERSION);
+
         pciehw_meminit();
+    } else {
+        /* don't log anything here, pcieutil uses this mode */
     }
     return 0;
 }
@@ -467,11 +464,6 @@ pciehw_open(pciehdev_params_t *params)
     if (phw->params.initmode == FORCE_INIT || !pshmem->hwinit) {
         pciehw_hwinit();
         pshmem->hwinit = 1;
-    }
-
-    if (pcieport_register_event_handler(pciehw_port_event_handler, NULL) < 0) {
-        pciehw_memclose();
-        return -EINVAL;
     }
 
     phw->open = 1;

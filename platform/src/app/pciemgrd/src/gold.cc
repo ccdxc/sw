@@ -43,6 +43,7 @@ gold_loop(void)
     logger_init();
     pciesys_loginfo("pciemgrd started in gold mode\n");
 
+    pciemgrd_params(pme);
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }

@@ -8,19 +8,14 @@
 #include <unistd.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <linux/pci_regs.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pp_c_hdr.h"
 
 #include "platform/src/lib/pal/include/pal.h"
+#include "pcieport.h"
 #include "portcfg.h"
-
-#ifndef PXC_
-#define PXC_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXC_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_C_ ##REG## _BYTE_ADDRESS)
-#endif
 
 typedef union {
     u_int32_t d;
@@ -102,4 +97,27 @@ portcfg_writed(const int port, const u_int16_t addr, const u_int32_t val)
 {
     assert((addr & 0x3) == 0);
     portcfg_writedw(port, addr, val);
+}
+
+void
+portcfg_read_bus(const int port,
+                 u_int8_t *pribus, u_int8_t *secbus, u_int8_t *subbus)
+{
+    cfgdata_t v;
+
+    v.d = portcfg_readdw(port, PCI_PRIMARY_BUS);
+
+    if (pribus) *pribus = v.b[0];
+    if (secbus) *secbus = v.b[1];
+    if (subbus) *subbus = v.b[2];
+}
+
+void
+portcfg_read_genwidth(const int port, int *gen, int *width)
+{
+    /* pcie cap at 0x80, link status at +0x12 */
+    const u_int16_t lnksta = portcfg_readw(port, 0x80 + 0x12);
+
+    if (gen) *gen = lnksta & 0xf;
+    if (width) *width = (lnksta >> 4) & 0x1f;
 }

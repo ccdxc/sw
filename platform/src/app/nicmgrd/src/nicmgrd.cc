@@ -16,7 +16,6 @@
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/pciemgr/include/pciehw_dev.h"
-#include "platform/src/lib/pcieport/include/pcieport.h"
 
 #include "delphic.hpp"
 

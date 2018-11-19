@@ -237,7 +237,7 @@ diff -uprN pciutils-3.5.6-orig/lib/pen-libpciehost.c pciutils-3.5.6/lib/pen-libp
 diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
 --- pciutils-3.5.6-orig/Makefile	2017-11-17 05:00:27.000000000 -0800
 +++ pciutils-3.5.6/Makefile	2018-02-10 23:05:23.232755294 -0800
-@@ -87,6 +87,26 @@ common.o: common.c pciutils.h $(PCIINC)
+@@ -87,6 +87,24 @@ common.o: common.c pciutils.h $(PCIINC)
  lspci: LDLIBS+=$(LIBKMOD_LIBS)
  ls-kernel.o: CFLAGS+=$(LIBKMOD_CFLAGS)
  
@@ -250,12 +250,10 @@ diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
 +	$(LIBPCIEDIR)/libpciemgr.so \
 +	$(LIBPCIEDIR)/libpciemgrutils.so \
 +	$(LIBPCIEDIR)/libpcietlp.so \
-+	$(LIBPCIEDIR)/libpcieport.so \
 +	$(LIBPCIEDIR)/libcfgspace.so \
 +	$(LIBPCIEDIR)/libpal.so \
 +	$(LIBPCIEDIR)/libmisc.so \
 +	$(LIBPCIEDIR)/libintrutils.so \
-+	$(BIN_OUT_DIR)/sbus_pcie_rom_submake/sbus_pcie_rom.o
 +lspci: LDLIBS+=$(LIBPCIE)
 +setpci: LDLIBS+=$(LIBPCIE)
 +example: LDLIBS+=$(LIBPCIE)

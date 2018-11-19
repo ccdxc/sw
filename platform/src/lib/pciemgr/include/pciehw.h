@@ -30,6 +30,10 @@ void pciehw_dev_show(int argc, char *argv[]);
 void pciehw_pmt_show(int argc, char *argv[]);
 void pciehw_bar_show(void);
 
+void pciehw_event_hostup(const int port, const int gen, const int width);
+void pciehw_event_hostdn(const int port);
+void pciehw_event_buschg(const int port, const u_int8_t secbus);
+
 #define AXIMSTF_TLP     0x1
 #define AXIMSTF_IND     0x2
 #define AXIMSTF_RAW     0x4

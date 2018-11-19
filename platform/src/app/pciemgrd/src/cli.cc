@@ -648,6 +648,7 @@ cli_loop(void)
     char *line, prompt[32], *av[16];
     int r, port, ac;
 
+    pciemgrd_params(pme);
     if ((r = open_hostports()) < 0) {
         goto error_out;
     }

@@ -43,6 +43,36 @@ send_event(pcieport_event_t *ev)
 }
 
 void
+pcieport_event_linkup(pcieport_t *p, const int genid)
+{
+    pcieport_event_t ev;
+    pcieport_event_linkup_t *linkup;
+
+    memset(&ev, 0, sizeof(ev));
+    ev.type = PCIEPORT_EVENT_LINKUP;
+    ev.port = p->port;
+    linkup = &ev.linkup;
+    linkup->gen = p->cur_gen;
+    linkup->width = p->cur_width;
+    linkup->genid = genid;
+    send_event(&ev);
+}
+
+void
+pcieport_event_linkdn(pcieport_t *p, const int genid)
+{
+    pcieport_event_t ev;
+    pcieport_event_linkdn_t *linkdn;
+
+    memset(&ev, 0, sizeof(ev));
+    ev.type = PCIEPORT_EVENT_LINKDN;
+    ev.port = p->port;
+    linkdn = &ev.linkdn;
+    linkdn->genid = genid;
+    send_event(&ev);
+}
+
+void
 pcieport_event_hostup(pcieport_t *p, const int genid)
 {
     pcieport_event_t ev;
@@ -50,8 +80,8 @@ pcieport_event_hostup(pcieport_t *p, const int genid)
 
     memset(&ev, 0, sizeof(ev));
     ev.type = PCIEPORT_EVENT_HOSTUP;
+    ev.port = p->port;
     hostup = &ev.hostup;
-    hostup->port = p->port;
     hostup->gen = p->cur_gen;
     hostup->width = p->cur_width;
     hostup->genid = genid;
@@ -66,8 +96,8 @@ pcieport_event_hostdn(pcieport_t *p, const int genid)
 
     memset(&ev, 0, sizeof(ev));
     ev.type = PCIEPORT_EVENT_HOSTDN;
+    ev.port = p->port;
     hostdn = &ev.hostdn;
-    hostdn->port = p->port;
     hostdn->genid = genid;
     send_event(&ev);
 }
@@ -80,8 +110,8 @@ pcieport_event_buschg(pcieport_t *p, const u_int8_t secbus)
 
     memset(&ev, 0, sizeof(ev));
     ev.type = PCIEPORT_EVENT_BUSCHG;
+    ev.port = p->port;
     buschg = &ev.buschg;
-    buschg->port = p->port;
     buschg->secbus = secbus;
     send_event(&ev);
 }

@@ -13,31 +13,34 @@ extern "C" {
 #endif
 
 typedef enum pcieport_event_type_e {
+    PCIEPORT_EVENT_LINKUP,
+    PCIEPORT_EVENT_LINKDN,
     PCIEPORT_EVENT_HOSTUP,
     PCIEPORT_EVENT_HOSTDN,
     PCIEPORT_EVENT_BUSCHG,
 } pcieport_event_type_t;
 
-typedef struct pcieport_event_hostup_s {
-    int port;                   /* pcie port number */
+typedef struct pcieport_event_linkinfo_s {
     int gen;                    /* pcie speed genX */
     int width;                  /* pcie width xX lanes */
-    int genid;                  /* port up generation id */
-} pcieport_event_hostup_t;
+    int genid;                  /* port event generation id */
+} pcieport_event_linkinfo_t;
 
-typedef struct pcieport_event_hostdn_s {
-    int port;                   /* pcie port number */
-    int genid;                  /* port down generation id */
-} pcieport_event_hostdn_t;
+typedef pcieport_event_linkinfo_t pcieport_event_linkup_t;
+typedef pcieport_event_linkinfo_t pcieport_event_linkdn_t;
+typedef pcieport_event_linkinfo_t pcieport_event_hostup_t;
+typedef pcieport_event_linkinfo_t pcieport_event_hostdn_t;
 
 typedef struct pcieport_event_buschg_s {
-    int port;                   /* pcie port number */
     u_int8_t secbus;            /* new secondary bus number */
 } pcieport_event_buschg_t;
 
 typedef struct pcieport_event_s {
     pcieport_event_type_t type;
+    int port;                   /* pcie port number */
     union {
+        pcieport_event_linkup_t linkup;
+        pcieport_event_linkdn_t linkdn;
         pcieport_event_hostup_t hostup;
         pcieport_event_hostdn_t hostdn;
         pcieport_event_buschg_t buschg;

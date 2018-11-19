@@ -12,6 +12,10 @@ extern "C" {
 #endif
 #endif
 
+void portcfg_read_bus(const int port,
+                      u_int8_t *pribus, u_int8_t *secbus, u_int8_t *subbus);
+void portcfg_read_genwidth(const int port, int *gen, int *width);
+
 u_int8_t  portcfg_readb(const int port, const u_int16_t addr);
 u_int16_t portcfg_readw(const int port, const u_int16_t addr);
 u_int32_t portcfg_readd(const int port, const u_int16_t addr);

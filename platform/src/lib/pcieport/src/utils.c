@@ -204,13 +204,23 @@ pcieport_set_mac_reset(pcieport_t *p, const int on)
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
 
+#define LTSSM_EN \
+    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_LTSSM_EN_FIELD_MASK
+
+int
+pcieport_get_ltssm_en(pcieport_t *p)
+{
+    const int pn = p->port;
+    u_int32_t reg = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, pn));
+
+    return (reg & LTSSM_EN) != 0;
+}
+
 void
 pcieport_set_ltssm_en(pcieport_t *p, const int on)
 {
     const int pn = p->port;
     u_int32_t reg = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, pn));
-#define LTSSM_EN \
-    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_LTSSM_EN_FIELD_MASK
 
     if (on) {
         reg |= LTSSM_EN;

@@ -12,14 +12,16 @@
 
 #include "platform/src/lib/pal/include/pal.h"
 #include "platform/src/lib/pcieport/include/pcieport.h"
+#include "platform/src/lib/pcieport/include/portcfg.h"
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
 #include "cap_pp_c_hdr.h"
+
 #include "cmd.h"
 
 static const char *
-ltssm_str(const int ltssm)
+ltssm_str(const unsigned int ltssm)
 {
     static const char *ltssm_strs[] = {
         [0x00] = "detect.quiet",
@@ -33,7 +35,7 @@ ltssm_str(const int ltssm)
         [0x08] = "config.lanenumaccept",
         [0x09] = "config.complete",
         [0x0a] = "config.idle",
-        [0x0b] = "recovery.recieverlock",
+        [0x0b] = "recovery.receiverlock",
         [0x0c] = "recovery.equalization",
         [0x0d] = "recovery.speed",
         [0x0e] = "recovery.receiverconfig",
@@ -76,16 +78,22 @@ linkpoll(int argc, char *argv[])
         unsigned int ltssm_st:5;
         unsigned int fifo_rd:8;
         unsigned int fifo_wr:8;
+        int gen;
+        int width;
     } ost, nst;
     u_int64_t otm, ntm;
-    int port, polltm_us, opt;
+    int port, polltm_us, opt, showall;
 
     port = 0;
     polltm_us = 0;
+    showall = 0;
 
     optind = 0;
-    while ((opt = getopt(argc, argv, "p:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "ap:t:")) != -1) {
         switch (opt) {
+        case 'a':
+            showall = 1;
+            break;
         case 'p':
             port = strtoul(optarg, NULL, 0);
             break;
@@ -103,7 +111,7 @@ linkpoll(int argc, char *argv[])
     printf("              |||cfg_retry\n");
     printf("              ||||ltssm_en\n");
     printf("              |||||  fifo\n");
-    printf(" +time (sec)  Ppgrl  rd/wr  ltssm\n");
+    printf(" +time (sec)  Ppgrl  rd/wr  genGxW  ltssm\n");
 
     memset(&ost, 0, sizeof(ost));
     memset(&nst, 0, sizeof(nst));
@@ -124,6 +132,7 @@ linkpoll(int argc, char *argv[])
         nst.ltssm_en = (cfg_mac & CFG_MACF_(0_2_LTSSM_EN)) != 0;
         nst.crs = (cfg_mac & CFG_MACF_(0_2_CFG_RETRY_EN)) != 0;
         nst.ltssm_st = (sta_mac & 0x1f);
+        portcfg_read_genwidth(port, &nst.gen, &nst.width);
 
         pal_reg_rd32w(PORTFIFO_DEPTH, (u_int32_t *)portfifo, 4);
         depths = portfifo[port];
@@ -132,17 +141,17 @@ linkpoll(int argc, char *argv[])
         nst.fifo_rd = depths >> 8;
 
         /* fold small depths to 0's */
-        if (nst.fifo_wr <= 2) nst.fifo_wr = 0;
-        if (nst.fifo_rd <= 2) nst.fifo_rd = 0;
+        if (!showall && nst.fifo_wr <= 2) nst.fifo_wr = 0;
+        if (!showall && nst.fifo_rd <= 2) nst.fifo_rd = 0;
 
         /* fold early detect states quiet/active, too many at start */
-        if (nst.ltssm_st == 1) nst.ltssm_st = 0;
+        if (!showall && nst.ltssm_st == 1) nst.ltssm_st = 0;
 
         if (memcmp(&nst, &ost, sizeof(nst)) != 0) {
             ntm = gettimestamp();
             if (otm == 0) otm = ntm;
 
-            printf("[+%010.6lf] %c%c%c%c%c %3u/%-3u 0x%02x %s\n",
+            printf("[+%010.6lf] %c%c%c%c%c %3u/%-3u gen%dx%-2d 0x%02x %s\n",
                    (ntm - otm) / 1000000.0,
                    nst.perstn ? 'P' : '-',
                    nst.phystatus ? 'p' :'-',
@@ -151,6 +160,8 @@ linkpoll(int argc, char *argv[])
                    nst.ltssm_en ? 'l' : '-',
                    nst.fifo_rd,
                    nst.fifo_wr,
+                   nst.gen,
+                   nst.width,
                    nst.ltssm_st,
                    ltssm_str(nst.ltssm_st));
 
@@ -161,4 +172,4 @@ linkpoll(int argc, char *argv[])
         if (polltm_us) usleep(polltm_us);
     }
 }
-CMDFUNC(linkpoll, "linkpoll [-p<port>][-t <polltm>]");
+CMDFUNC(linkpoll, "linkpoll [-a][-p<port>][-t <polltm>]");

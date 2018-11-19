@@ -23,7 +23,7 @@ pcieport_info_t pcieport_info;
 static pcieport_t *
 pcieport_get(const int port)
 {
-    pcieport_info_t *pi = &pcieport_info;
+    pcieport_info_t *pi = pcieport_info_get();
     pcieport_t *p = NULL;
 
     if (port >= 0 && port < PCIEPORT_NPORTS) {
@@ -35,19 +35,19 @@ pcieport_get(const int port)
 int
 pcieport_open(const int port)
 {
-    pcieport_info_t *pi = &pcieport_info;
+    pcieport_info_t *pi = pcieport_info_get();
     pcieport_t *p;
     int otrace;
 
     otrace = pal_reg_trace_control(getenv("PCIEPORT_INIT_TRACE") != NULL);
     pal_reg_trace("================ pcieport_open %d start\n", port);
 
-    if (port >= PCIEPORT_NPORTS) {
-        pciesys_logerror("pcieport_open port %d out of range\n", port);
-        return -EBADF;
-    }
     if (pcieport_onetime_init() < 0) {
         return -EIO;
+    }
+    if (port < 0 || port >= PCIEPORT_NPORTS) {
+        pciesys_logerror("pcieport_open port %d out of range\n", port);
+        return -EBADF;
     }
     p = &pi->pcieport[port];
     if (p->open) {
@@ -57,6 +57,9 @@ pcieport_open(const int port)
     p->open = 1;
     p->host = 0;
     p->config = 0;
+    if (pcieport_onetime_portinit(p) < 0) {
+        return -EFAULT;
+    }
     pal_reg_trace("================ pcieport_open %d end\n", port);
     pal_reg_trace_control(otrace);
     return 0;
@@ -178,24 +181,30 @@ pcieport_default_cap(pcieport_t *p, int *gen, int *width)
     }
 }
 
-static int
-pcieport_getenv_compliance(int *compliance)
+static u_int64_t
+getenv_override_ull(const char *label, const char *name, const u_int64_t def)
 {
-    char *env = getenv("PCIE_COMPLIANCE");
+    const char *env = getenv(name);
     if (env) {
-        *compliance = strtoul(env, NULL, 0);
-        pciesys_loginfo("pcieport: $PCIE_COMPLIANCE override %d\n",
-                        *compliance);
-        return 1;
+        u_int64_t val = strtoull(env, NULL, 0);
+        pciesys_loginfo("%s: $%s override %" PRIu64 " (%" PRIx64 ")\n",
+                        label, name, val, val);
+        return val;
     }
-    return 0;
+    return def;
+}
+
+static u_int64_t
+pcieport_param_ull(const char *name, const u_int64_t def)
+{
+    return getenv_override_ull("pcieport", name, def);
 }
 
 int
 pcieport_hostconfig(const int port, const pciehdev_params_t *params)
 {
     pcieport_t *p = pcieport_get(port);
-    int r, default_gen, default_width, compliance;
+    int r, default_gen, default_width;
 
     if (p == NULL) {
         return -EBADF;
@@ -210,7 +219,12 @@ pcieport_hostconfig(const int port, const pciehdev_params_t *params)
         p->subdeviceid = params->subdeviceid;
         p->compliance = params->compliance;
         p->sris = params->sris;
+        p->crs = params->strict_crs;
     }
+
+    p->sris       = pcieport_param_ull("PCIE_SRIS", p->sris);
+    p->crs        = pcieport_param_ull("PCIE_STRICT_CRS", p->crs);
+    p->compliance = pcieport_param_ull("PCIE_COMPLIANCE", p->compliance);
 
     /*
      * Provide default params for any unspecified.
@@ -226,9 +240,6 @@ pcieport_hostconfig(const int port, const pciehdev_params_t *params)
     }
     if (p->subdeviceid == 0) {
         p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
-    }
-    if (pcieport_getenv_compliance(&compliance)) {
-        p->compliance = compliance;
     }
 
     /*
@@ -246,9 +257,12 @@ pcieport_hostconfig(const int port, const pciehdev_params_t *params)
     case 16: p->lanemask = 0xffff << (p->port << 4); break;
     }
 
+    /*
+     * We are configed in host mode, host mode gets
+     * crs on by default (until _crs_off disables).
+     */
     p->host = 1;
     p->config = 1;
-
     return 0;
 }
 
@@ -260,6 +274,10 @@ pcieport_crs_off(const int port)
     if (p == NULL)  return -EBADF;
     if (!p->config) return -EIO;
     if (!p->host)   return -EINVAL;
+
+#ifdef __aarch64__
+    pciesys_loginfo("port%d: crs_off\n", port);
+#endif
     p->crs = 0;
     pcieport_set_crs(p, p->crs);
     return 0;
@@ -290,7 +308,6 @@ cmd_vga_support(int argc, char *argv[])
 static void
 cmd_port(int argc, char *argv[])
 {
-    pcieport_info_t *pi = &pcieport_info;
     pcieport_t *p;
     const int w = 20;
     int port;
@@ -305,7 +322,8 @@ cmd_port(int argc, char *argv[])
         return;
     }
 
-    p = &pi->pcieport[port];
+    p = pcieport_get(port);
+    assert(p != NULL);
 
 #define LOG(args, ...) \
     pciesys_loginfo(args, ##__VA_ARGS__)

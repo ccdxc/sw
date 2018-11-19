@@ -83,16 +83,64 @@ pcieport_link_init(void)
     }
 }
 
+static int
+pcieport_already_init(void)
+{
+    pcieport_info_t *pi = pcieport_info_get();
+    pcieport_t *p = &pi->pcieport[0];
+
+    /*
+     * Check port 0 for ltssm_en=1 indicating someone
+     * initialized the port already.
+     */
+    p->port = 0;
+    p->lanemask = 0xffff;
+    if (pcieport_get_ltssm_en(p)) {
+        return 1;
+    }
+    return 0;
+}
+
 int
 pcieport_onetime_init(void)
 {
-    pcieport_info_t *pi = &pcieport_info;
+    pcieport_info_t *pi = pcieport_info_get();
 
     if (pi->init) {
         /* already initialized */
         return 0;
     }
+    if (pcieport_already_init()) {
+        pciesys_loginfo("pcieport: inherited init\n");
+        pi->init = 1;
+        pi->serdes_init = 1;
+        pi->already_init = 1;
+        return 0;
+    }
+    pciesys_loginfo("pcieport: full init\n");
     pcieport_link_init();
     pi->init = 1;
+    return 0;
+}
+
+int
+pcieport_onetime_portinit(pcieport_t *p)
+{
+    pcieport_info_t *pi = pcieport_info_get();
+
+    if (p->init) {
+        /* port already been through here */
+        return 0;
+    }
+    /*
+     * We have inherited a system already initialized by
+     * uboot or an earlier instance of pcieport.
+     * This is a sign we should acquire the current state
+     * of this port to initialize the state machine.
+     */
+    if (pi->already_init) {
+        pcieport_intr_init(p);
+    }
+    p->init = 1;
     return 0;
 }

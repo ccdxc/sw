@@ -56,6 +56,15 @@ void pcieport_dbg(int argc, char *argv[]);
 #define CFG_MACF_(REG) \
     (CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_ ##REG## _FIELD_MASK)
 
+/* mac_intreg flags */
+#define MAC_INTREGF_(REG) \
+    (CAP_PXC_CSR_INT_C_MAC_INTREG_ ##REG## _INTERRUPT_FIELD_MASK)
+
+#define INTREG_PERST0N \
+    CAP_PP_CSR_INT_PP_INTREG_PERST0N_DN2UP_INTERRUPT_FIELD_MASK
+#define INTREG_PERSTN(port) \
+    (INTREG_PERST0N >> (port))
+
 #ifdef __cplusplus
 }
 #endif

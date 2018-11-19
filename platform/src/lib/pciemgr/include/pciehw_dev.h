@@ -41,6 +41,7 @@ typedef struct pciehdev_params_s {
     u_int32_t nomsixcap:1;      /* no msix cap */
     u_int32_t sris:1;           /* enable spread spectrum clk */
     u_int32_t compliance:1;     /* compliance test mode */
+    u_int32_t strict_crs:1;     /* enable crs=1 at open */
 } pciehdev_params_t;
 
 typedef enum pciehdev_event_e {
