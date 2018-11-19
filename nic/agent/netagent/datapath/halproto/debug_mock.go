@@ -186,6 +186,64 @@ func (mr *MockisHbmCacheRequest_CacheRegionsMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisHbmCacheRequest_CacheRegions)(nil).Size))
 }
 
+// MockisSchedulerActiveQRequest_NumOrRanges is a mock of isSchedulerActiveQRequest_NumOrRanges interface
+type MockisSchedulerActiveQRequest_NumOrRanges struct {
+	ctrl     *gomock.Controller
+	recorder *MockisSchedulerActiveQRequest_NumOrRangesMockRecorder
+}
+
+// MockisSchedulerActiveQRequest_NumOrRangesMockRecorder is the mock recorder for MockisSchedulerActiveQRequest_NumOrRanges
+type MockisSchedulerActiveQRequest_NumOrRangesMockRecorder struct {
+	mock *MockisSchedulerActiveQRequest_NumOrRanges
+}
+
+// NewMockisSchedulerActiveQRequest_NumOrRanges creates a new mock instance
+func NewMockisSchedulerActiveQRequest_NumOrRanges(ctrl *gomock.Controller) *MockisSchedulerActiveQRequest_NumOrRanges {
+	mock := &MockisSchedulerActiveQRequest_NumOrRanges{ctrl: ctrl}
+	mock.recorder = &MockisSchedulerActiveQRequest_NumOrRangesMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisSchedulerActiveQRequest_NumOrRanges) EXPECT() *MockisSchedulerActiveQRequest_NumOrRangesMockRecorder {
+	return m.recorder
+}
+
+// isSchedulerActiveQRequest_NumOrRanges mocks base method
+func (m *MockisSchedulerActiveQRequest_NumOrRanges) isSchedulerActiveQRequest_NumOrRanges() {
+	m.ctrl.Call(m, "isSchedulerActiveQRequest_NumOrRanges")
+}
+
+// isSchedulerActiveQRequest_NumOrRanges indicates an expected call of isSchedulerActiveQRequest_NumOrRanges
+func (mr *MockisSchedulerActiveQRequest_NumOrRangesMockRecorder) isSchedulerActiveQRequest_NumOrRanges() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isSchedulerActiveQRequest_NumOrRanges", reflect.TypeOf((*MockisSchedulerActiveQRequest_NumOrRanges)(nil).isSchedulerActiveQRequest_NumOrRanges))
+}
+
+// MarshalTo mocks base method
+func (m *MockisSchedulerActiveQRequest_NumOrRanges) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisSchedulerActiveQRequest_NumOrRangesMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisSchedulerActiveQRequest_NumOrRanges)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisSchedulerActiveQRequest_NumOrRanges) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisSchedulerActiveQRequest_NumOrRangesMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisSchedulerActiveQRequest_NumOrRanges)(nil).Size))
+}
+
 // MockDebugClient is a mock of DebugClient interface
 type MockDebugClient struct {
 	ctrl     *gomock.Controller
@@ -623,6 +681,42 @@ func (mr *MockDebugClientMockRecorder) HbmCacheSetup(ctx, in interface{}, opts .
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmCacheSetup", reflect.TypeOf((*MockDebugClient)(nil).HbmCacheSetup), varargs...)
 }
 
+// SchedulerStatsGet mocks base method
+func (m *MockDebugClient) SchedulerStatsGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SchedulerStatsResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SchedulerStatsGet", varargs...)
+	ret0, _ := ret[0].(*SchedulerStatsResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SchedulerStatsGet indicates an expected call of SchedulerStatsGet
+func (mr *MockDebugClientMockRecorder) SchedulerStatsGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedulerStatsGet", reflect.TypeOf((*MockDebugClient)(nil).SchedulerStatsGet), varargs...)
+}
+
+// SchedulerActiveQGet mocks base method
+func (m *MockDebugClient) SchedulerActiveQGet(ctx context.Context, in *SchedulerActiveQRequestMsg, opts ...grpc.CallOption) (*SchedulerActiveQResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SchedulerActiveQGet", varargs...)
+	ret0, _ := ret[0].(*SchedulerActiveQResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SchedulerActiveQGet indicates an expected call of SchedulerActiveQGet
+func (mr *MockDebugClientMockRecorder) SchedulerActiveQGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedulerActiveQGet", reflect.TypeOf((*MockDebugClient)(nil).SchedulerActiveQGet), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -943,4 +1037,30 @@ func (m *MockDebugServer) HbmCacheSetup(arg0 context.Context, arg1 *HbmCacheRequ
 // HbmCacheSetup indicates an expected call of HbmCacheSetup
 func (mr *MockDebugServerMockRecorder) HbmCacheSetup(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HbmCacheSetup", reflect.TypeOf((*MockDebugServer)(nil).HbmCacheSetup), arg0, arg1)
+}
+
+// SchedulerStatsGet mocks base method
+func (m *MockDebugServer) SchedulerStatsGet(arg0 context.Context, arg1 *Empty) (*SchedulerStatsResponseMsg, error) {
+	ret := m.ctrl.Call(m, "SchedulerStatsGet", arg0, arg1)
+	ret0, _ := ret[0].(*SchedulerStatsResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SchedulerStatsGet indicates an expected call of SchedulerStatsGet
+func (mr *MockDebugServerMockRecorder) SchedulerStatsGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedulerStatsGet", reflect.TypeOf((*MockDebugServer)(nil).SchedulerStatsGet), arg0, arg1)
+}
+
+// SchedulerActiveQGet mocks base method
+func (m *MockDebugServer) SchedulerActiveQGet(arg0 context.Context, arg1 *SchedulerActiveQRequestMsg) (*SchedulerActiveQResponseMsg, error) {
+	ret := m.ctrl.Call(m, "SchedulerActiveQGet", arg0, arg1)
+	ret0, _ := ret[0].(*SchedulerActiveQResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SchedulerActiveQGet indicates an expected call of SchedulerActiveQGet
+func (mr *MockDebugServerMockRecorder) SchedulerActiveQGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SchedulerActiveQGet", reflect.TypeOf((*MockDebugServer)(nil).SchedulerActiveQGet), arg0, arg1)
 }

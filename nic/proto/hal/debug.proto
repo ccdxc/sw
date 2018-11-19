@@ -8,6 +8,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "kh.proto";
+import "interface.proto";
 
 package debug;
 option go_package="halproto";
@@ -46,6 +47,9 @@ service Debug {
   rpc LlcSetup (LlcSetupRequestMsg) returns (LlcSetupResponseMsg) {}
   rpc LlcGet   (types.Empty)   returns (LlcGetResponseMsg)   {}
   rpc HbmCacheSetup (HbmCacheRequestMsg) returns (HbmCacheResponseMsg) {}
+
+  rpc SchedulerStatsGet (types.Empty) returns (SchedulerStatsResponseMsg) {}
+  rpc SchedulerActiveQGet (SchedulerActiveQRequestMsg) returns (SchedulerActiveQResponseMsg) {}
 }
 
 
@@ -580,4 +584,54 @@ message HbmCacheResponse {
 
 message HbmCacheResponseMsg {
   repeated HbmCacheResponse  response = 1;
+}
+
+message CosStats {
+  uint32 cos            = 1;
+  uint32 doorbell_count = 2;
+  bool   xon_status     = 3;
+}
+
+message SchedulerStatsResponse {
+  uint32 doorbell_set_count    = 1;
+  uint32 doorbell_clear_count  = 2;
+  uint32 ratelimit_start_count = 3;
+  uint32 ratelimit_stop_count  = 4;
+  repeated CosStats cos_entry  = 5;
+}
+
+message SchedulerStatsResponseMsg {
+  repeated SchedulerStatsResponse  response = 1;
+}
+
+message QRange {
+  // inclusive of both q_beg and q_end
+  uint32 q_beg = 1;
+  uint32 q_end = 2;
+}
+
+message QRanges {
+  repeated QRange range = 1;
+}
+
+message SchedulerActiveQRequest {
+  uint64            lif_id     = 1;
+  intf.LifQPurpose  q_type     = 2;
+  oneof num_or_ranges {
+    uint32          q_num      = 3;
+    QRanges         q_ranges   = 4;
+  }
+  uint32            poll_count = 5;
+}
+
+message SchedulerActiveQRequestMsg {
+  repeated SchedulerActiveQRequest  request = 1;
+}
+
+message SchedulerActiveQResponse {
+  repeated uint32  active_q_num = 1;
+}
+
+message SchedulerActiveQResponseMsg {
+  repeated SchedulerActiveQResponse response = 1;
 }
