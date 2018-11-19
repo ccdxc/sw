@@ -130,7 +130,8 @@ class _Testbed:
         return getattr(resource, "NICType", None)
 
     def __recover_testbed(self):
-        if GlobalOptions.skip_firmware_upgrade: return
+        if GlobalOptions.skip_firmware_upgrade or GlobalOptions.dryrun:
+            return
         proc_hdls = []
         logfiles = []
         for instance in self.tbspec.Instances:
@@ -147,7 +148,7 @@ class _Testbed:
             cmd.extend(["--os", "%s" % instance.NodeOs])
             if self.__fw_upgrade_done or GlobalOptions.only_reboot:
                 cmd.extend(["--mode-change"])
-                logfile = "%s-mode-change.log" % instance.Name
+                logfile = "%s-%s-reboot.log" % (self.curr_ts.Name(), instance.Name)
             else:
                 logfile = "%s-firmware-upgrade.log" % instance.Name
             logfiles.append(logfile)

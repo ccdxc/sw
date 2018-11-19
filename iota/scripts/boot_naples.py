@@ -66,29 +66,10 @@ ROOT_EXP_PROMPT="~#"
 if GlobalOptions.os == 'freebsd':
     ROOT_EXP_PROMPT="~]#"
 
-def CimcReset():
-    session = requests.Session()
-    session.auth = (GlobalOptions.cimc_username, GlobalOptions.cimc_password)
-    resp = session.get("https://%s/redfish/v1/Systems" % GlobalOptions.cimc_ip, verify=False)
-    obj = resp.json()
-    print("Login Response =", obj)
-    sysurl = "https://%s%s/Actions/System.Reset" % (GlobalOptions.cimc_ip, obj['Members'][0]['@odata.id'])
-    print("SysURL = ", sysurl)
-
-    ret = os.system("curl -vv %s -d \'{\"ResetType\":\"On\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
-    assert(ret == 0)
-    time.sleep(5)
-
-    ret = os.system("curl -vv %s -d \'{\"ResetType\":\"ForceOff\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
-    assert(ret == 0)
-    time.sleep(5)
-
-    ret = os.system("curl -vv %s -d \'{\"ResetType\":\"On\"}\' --insecure -u %s:%s" % (sysurl, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
-    assert(ret == 0)
-    time.sleep(5)
+def IpmiReset():
+    os.system("ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
+              (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
     return
-
-
 
 class NaplesManagement:
     def __init__(self):
@@ -157,11 +138,11 @@ class NaplesManagement:
         return
 
     def __get_capri_prompt(self):
-        CimcReset()
+        IpmiReset()
         match_idx = self.hdl.expect(["Autoboot in 0 seconds", pexpect.TIMEOUT], timeout = 120)
         if match_idx == 1:
             print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
-            CimcReset()
+            IpmiReset()
             self.hdl.expect_exact("Autoboot in 0 seconds", timeout = 120)
         self.hdl.sendcontrol('C')
         self.hdl.expect_exact("Capri#")
