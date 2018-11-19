@@ -1,10 +1,10 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = adminq_resp.asmbin
-MODULE_PREREQS      = adminq.p4bin
+MODULE_TARGET       = edma.asmbin
+MODULE_PREREQS      = edma.p4bin
 MODULE_PIPELINE     = iris gft
-MODULE_INCS         = ${BLD_P4GEN_DIR}/nicmgr_txdma_actions/asm_out \
-                      ${BLD_P4GEN_DIR}/nicmgr_txdma_actions/alt_asm_out \
+MODULE_INCS         = ${BLD_P4GEN_DIR}/edma_txdma_actions/asm_out \
+                      ${BLD_P4GEN_DIR}/edma_txdma_actions/alt_asm_out \
                       ${TOPDIR}/nic/asm/common-p4+/include \
                       ${TOPDIR}/nic/p4/include \
                       ${TOPDIR}/nic/include \

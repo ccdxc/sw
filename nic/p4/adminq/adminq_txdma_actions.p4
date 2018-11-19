@@ -34,7 +34,7 @@ action adminq_fetch_desc(PARAMS_ADMINQ_QSTATE)
     MODIFY_ADMINQ_QSTATE
 }
 
-action adminq_process_desc(opcode, rsvd, data)
+action adminq_process_desc(opcode, data)
 {
     // K + I
     MODIFY_ADMINQ_GLOBAL

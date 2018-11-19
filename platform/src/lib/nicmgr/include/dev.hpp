@@ -103,31 +103,6 @@ enum {
     NICMGR_TIMER_ID_MAX                      = 2,
 };
 
-#pragma pack(push, 1)
-struct nicmgr_req_desc {
-    uint16_t lif;
-    uint8_t qtype;
-    uint32_t qid;
-    uint16_t comp_index;
-    uint64_t adminq_qstate_addr;
-    uint8_t pad[47];
-    uint8_t cmd[64];
-};
-
-struct nicmgr_resp_desc {
-    uint16_t lif;
-    uint8_t qtype;
-    uint32_t qid;
-    uint16_t comp_index;
-    uint64_t adminq_qstate_addr;
-    uint8_t pad[47];
-    uint8_t comp[64];
-};
-#pragma pack(pop)
-
-static_assert(sizeof(struct nicmgr_req_desc) == 128, "");
-static_assert(sizeof(struct nicmgr_resp_desc) == 128, "");
-
 /**
  * Device Types
  */

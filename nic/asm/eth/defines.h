@@ -81,8 +81,8 @@ struct mem2mem {
     cache: 1;
     host_addr: 1;
     mem2mem_type: 2;
-    cmdeop: 1;
-    cmdtype: 3;
+    cmd_eop: 1;
+    cmd_type: 3;
 };
 
 #define CAPRI_RAW_TABLE_SIZE_MPU_ONLY      (7)
@@ -282,3 +282,45 @@ struct mem2mem {
     phvwrp      _r, offsetof(struct mem2pkt, addr), sizeof(struct mem2pkt.addr), _addr; \
     phvwrp      _r, offsetof(struct mem2pkt, size), sizeof(struct mem2pkt.size), _size; \
     phvwrp._c   _r, offsetof(struct mem2pkt, pkt_eop), sizeof(struct mem2pkt.pkt_eop), 1;
+
+/**
+ * MEM2MEM
+ */
+#define CAPRI_DMA_COMMAND_MEM_TO_MEM_SRC        0
+#define CAPRI_DMA_COMMAND_MEM_TO_MEM_DST        1
+#define CAPRI_DMA_COMMAND_MEM_TO_MEM_PHV2MEM    2     // RXDMA only
+
+
+#define DMA_MEM2MEM_SRC(_r, _c, _h, _addr, _size) \
+    phvwrp      _r, offsetof(struct mem2mem, cmd_type), sizeof(struct mem2mem.cmd_type), CAPRI_DMA_COMMAND_MEM_TO_MEM; \
+    phvwrp      _r, offsetof(struct mem2mem, mem2mem_type), sizeof(struct mem2mem.mem2mem_type), CAPRI_DMA_COMMAND_MEM_TO_MEM_SRC; \
+    phvwrp._h   _r, offsetof(struct mem2mem, host_addr), sizeof(struct mem2mem.host_addr), 1; \
+    phvwrp      _r, offsetof(struct mem2mem, addr), sizeof(struct mem2mem.addr), _addr; \
+    phvwrp      _r, offsetof(struct mem2mem, size), sizeof(struct mem2mem.size), _size;
+
+#define DMA_MEM2MEM_SRC_LIF(_r, _c, _h, _addr, _size, _lif) \
+    phvwrp      _r, offsetof(struct mem2mem, cmd_type), sizeof(struct mem2mem.cmd_type), CAPRI_DMA_COMMAND_MEM_TO_MEM; \
+    phvwrp      _r, offsetof(struct mem2mem, mem2mem_type), sizeof(struct mem2mem.mem2mem_type), CAPRI_DMA_COMMAND_MEM_TO_MEM_SRC; \
+    phvwrp      _r, offsetof(struct mem2mem, use_override_lif), sizeof(struct mem2mem.use_override_lif), 1; \
+    phvwrp      _r, offsetof(struct mem2mem, override_lif), sizeof(struct mem2mem.override_lif), _lif; \
+    phvwrp._h   _r, offsetof(struct mem2mem, host_addr), sizeof(struct mem2mem.host_addr), 1; \
+    phvwrp      _r, offsetof(struct mem2mem, addr), sizeof(struct mem2mem.addr), _addr; \
+    phvwrp      _r, offsetof(struct mem2mem, size), sizeof(struct mem2mem.size), _size;
+
+#define DMA_MEM2MEM_DST(_r, _c, _h, _addr, _size) \
+    phvwrp      _r, offsetof(struct mem2mem, cmd_type), sizeof(struct mem2mem.cmd_type), CAPRI_DMA_COMMAND_MEM_TO_MEM; \
+    phvwrp      _r, offsetof(struct mem2mem, mem2mem_type), sizeof(struct mem2mem.mem2mem_type), CAPRI_DMA_COMMAND_MEM_TO_MEM_DST; \
+    phvwrp._h   _r, offsetof(struct mem2mem, host_addr), sizeof(struct mem2mem.host_addr), 1; \
+    phvwrp      _r, offsetof(struct mem2mem, addr), sizeof(struct mem2mem.addr), _addr; \
+    phvwrp      _r, offsetof(struct mem2mem, size), sizeof(struct mem2mem.size), _size; \
+    phvwrp._c   _r, offsetof(struct mem2mem, cmd_eop), sizeof(struct mem2mem.cmd_eop), 1;
+
+#define DMA_MEM2MEM_DST_LIF(_r, _c, _h, _addr, _size, _lif) \
+    phvwrp      _r, offsetof(struct mem2mem, cmd_type), sizeof(struct mem2mem.cmd_type), CAPRI_DMA_COMMAND_MEM_TO_MEM; \
+    phvwrp      _r, offsetof(struct mem2mem, mem2mem_type), sizeof(struct mem2mem.mem2mem_type), CAPRI_DMA_COMMAND_MEM_TO_MEM_DST; \
+    phvwrp      _r, offsetof(struct mem2mem, use_override_lif), sizeof(struct mem2mem.use_override_lif), 1; \
+    phvwrp      _r, offsetof(struct mem2mem, override_lif), sizeof(struct mem2mem.override_lif), _lif; \
+    phvwrp._h   _r, offsetof(struct mem2mem, host_addr), sizeof(struct mem2mem.host_addr), 1; \
+    phvwrp      _r, offsetof(struct mem2mem, addr), sizeof(struct mem2mem.addr), _addr; \
+    phvwrp      _r, offsetof(struct mem2mem, size), sizeof(struct mem2mem.size), _size; \
+    phvwrp._c   _r, offsetof(struct mem2mem, cmd_eop), sizeof(struct mem2mem.cmd_eop), 1;
