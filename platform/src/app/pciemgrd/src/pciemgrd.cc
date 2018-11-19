@@ -198,7 +198,7 @@ main(int argc, char *argv[])
     int r, opt;
 
     pme->interactive = 1;
-    pme->reboot_on_hostdn = 1;
+    pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
 
     p->strict_crs = 1;
     p->fake_bios_scan = 1;
