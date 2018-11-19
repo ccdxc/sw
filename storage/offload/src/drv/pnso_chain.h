@@ -80,8 +80,9 @@ extern "C" {
 #define CHAIN_CFLAG_MODE_SYNC		(1 << 0)
 #define CHAIN_CFLAG_MODE_POLL		(1 << 1)
 #define CHAIN_CFLAG_MODE_ASYNC		(1 << 2)
-#define CHAIN_CFLAG_IN_BATCH		(1 << 3)
-#define CHAIN_CFLAG_POLLED		(1 << 4)
+#define CHAIN_CFLAG_RESERVED		/* bit-3 rsvd for batch/poll-async */
+#define CHAIN_CFLAG_IN_BATCH		(1 << 4)
+#define CHAIN_CFLAG_POLLED		(1 << 5)
 
 #ifdef NDEBUG
 #define PPRINT_CHAIN(c)
@@ -253,9 +254,9 @@ struct chain_entry {
 };
 
 struct service_chain {
+	uint16_t sc_flags;		/* chain flags (CFLAGS) */
 	uint32_t sc_req_id;		/* unique request id */
 	uint16_t sc_num_services;	/* number of services in the chain */
-	uint16_t sc_flags;		/* chain flags (CFLAGS) */
 
 	struct chain_entry *sc_entry;	/* list of services */
 	struct pnso_service_result *sc_res;	/* caller supplied result */

@@ -35,10 +35,11 @@ struct batch_page {
 };
 
 /* batch flags */
-#define BATCH_BFLAG_MODE_SYNC		(1 << 12)
-#define BATCH_BFLAG_MODE_POLL		(1 << 13)
-#define BATCH_BFLAG_MODE_ASYNC		(1 << 14)
-#define BATCH_BFLAG_CHAIN_PRESENT	(1 << 15)
+#define BATCH_BFLAG_MODE_SYNC		(1 << 0)
+#define BATCH_BFLAG_MODE_POLL		(1 << 1)
+#define BATCH_BFLAG_RESERVED		/* bit-2 rsvd for chain/poll-async */
+#define BATCH_BFLAG_MODE_ASYNC		(1 << 3)
+#define BATCH_BFLAG_CHAIN_PRESENT	(1 << 4)
 
 struct batch_info {
 	uint16_t bi_flags;		/* for async/intr, must be 1st member */
