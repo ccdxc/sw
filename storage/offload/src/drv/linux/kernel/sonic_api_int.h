@@ -43,4 +43,6 @@ void *sonic_phy_to_virt(uint64_t phy);
 uint64_t sonic_virt_to_phy(void *ptr);
 void *sonic_phy_to_virt(uint64_t phy);
 
+bool sonic_is_accel_dev_ready(void);
+
 #endif /* SONIC_API_INT_H */

@@ -110,9 +110,12 @@ int sonic_napi(struct napi_struct *napi, int budget, sonic_cq_cb cb,
 
 	work_done = sonic_cq_service(cq, budget, cb, cb_arg);
 
-	if (work_done > 0)
+	if (work_done > 0) {
 		sonic_intr_return_credits(cq->bound_intr, work_done,
 					  false, true);
+	} else {
+		OSAL_LOG_ERROR("No work_done but bottom half was scheduled");
+	}
 
 	if ((work_done < budget) && napi_complete_done(napi, work_done))
 		sonic_intr_mask(cq->bound_intr, false);
@@ -461,8 +464,18 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 	struct device *dev = q->lif->sonic->dev;
 #endif
 
-	if (WARN_ON(comp->cpl_index != desc_info->index))
+	if (WARN_ON(comp->cpl_index != desc_info->index)) {
+		OSAL_LOG_ERROR("cpl_index  %u comp 0x" PRIx64 " desc_info_index %u desc_info 0x" PRIx64, 
+				comp->cpl_index, (uint64_t)comp, desc_info->index, (uint64_t)desc_info); 
+		ctx->comp.cpl.status = -1;
+		dynamic_hex_dump("desc ", DUMP_PREFIX_OFFSET, 16, 1,
+			desc_info, sizeof(*desc_info), true); 
+		dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+			comp, sizeof(*comp), true); 
+		dynamic_hex_dump("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+			&ctx->cmd, sizeof(ctx->cmd), true); 
 		return;
+	}
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
@@ -470,7 +483,7 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 	dev_dbg(dev, "comp admin queue command:\n");
 #endif
 	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
-			 &ctx->comp, sizeof(ctx->comp), true);
+			&ctx->comp, sizeof(ctx->comp), true); 
 
 	complete_all(&ctx->work);
 }

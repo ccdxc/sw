@@ -270,7 +270,7 @@ pbuf_copy_buffer_list(const struct pnso_buffer_list *src_buf_list,
 				if (dst_buf_offset >= dst_buf->len) {
 					dst_buf = &dst_buf_list->buffers[dst_i++];
 					dst_buf_offset = 0;
-					if (dst_i >= dst_buf_list->count ||
+					if (dst_i > dst_buf_list->count ||
 					    dst_buf->len == 0) {
 						/* no more space in dst_buf_list */
 						goto done;

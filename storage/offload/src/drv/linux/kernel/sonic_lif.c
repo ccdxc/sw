@@ -18,6 +18,7 @@
 
 #include <linux/netdevice.h>
 #include <linux/interrupt.h>
+#include <linux/hardirq.h>
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
 
@@ -371,9 +372,7 @@ static void sonic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 	if (!(qcq->flags & QCQ_F_INITED))
 		return;
 	sonic_intr_mask(&qcq->intr, true);
-#ifndef __FreeBSD__
 	synchronize_irq(qcq->intr.vector);
-#endif
 	devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
 	netif_napi_del(&qcq->napi);
 	qcq->flags &= ~QCQ_F_INITED;
@@ -422,6 +421,14 @@ static void sonic_lif_deinit(struct lif *lif)
 	sonic_lif_per_core_resources_deinit(lif);
 }
 
+/*
+ * Global variable to track the lif
+ * Unlike network device driver, offload driver does not get lif handle
+ * as part of api. Tracking lif via global handle is a bit ugly but will make
+ * upper level interfaces less clumsy
+ */
+static struct lif *sonic_glif;
+
 void sonic_lifs_deinit(struct sonic *sonic)
 {
 	struct list_head *cur;
@@ -431,6 +438,7 @@ void sonic_lifs_deinit(struct sonic *sonic)
 		lif = list_entry(cur, struct lif, list);
 		sonic_lif_deinit(lif);
 	}
+	sonic_glif = NULL;
 }
 
 static int sonic_request_irq(struct lif *lif, struct qcq *qcq)
@@ -809,14 +817,6 @@ err_out_adminq_deinit:
 	return err;
 }
 
-/*
- * Global variable to track the lif
- * Unlike network device driver, offload driver does not get lif handle
- * as part of api. Tracking lif via global handle is a bit ugly but will make
- * upper level interfaces less clumsy
- */
-static struct lif *sonic_glif;
-
 int sonic_lifs_init(struct sonic *sonic)
 {
 	struct list_head *cur;
@@ -827,8 +827,10 @@ int sonic_lifs_init(struct sonic *sonic)
 		lif = list_entry(cur, struct lif, list);
 		sonic_glif = lif;
 		err = sonic_lif_init(lif);
-		if (err)
+		if (err) {
+			sonic_glif = NULL;
 			return err;
+		}
 	}
 
 	return 0;

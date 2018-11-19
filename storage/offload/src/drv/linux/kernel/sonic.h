@@ -63,9 +63,12 @@ extern unsigned int core_count;
 
 #define netif_napi_del(napi) do {	\
 	(void)(napi);			\
+	flush_scheduled_work();	\
 } while (0)
 
-#define napi_enable schedule_work
+#define napi_enable(napi) do {	\
+	(void)(napi);			\
+} while (0)
 #define napi_disable cancel_work_sync
 #define napi_schedule schedule_work
 #define napi_schedule_irqoff schedule_work

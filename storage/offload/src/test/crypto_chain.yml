@@ -1,0 +1,36 @@
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "Encrypt"
+      input:
+        pattern: aaabbbaaabbb
+        len: '$1block'
+      ops:
+        - encrypt:
+            key_idx: 1
+            iv_data: 000102030405060708090a0b0c0d0e0f
+            output_file: '%test_id%_encrypted.bin'
+        - decrypt:
+            key_idx: 1
+            iv_data: 000102030405060708090a0b0c0d0e0f
+            output_file: '%test_id%_decrypted.bin'
+tests:
+  - test:
+      idx: 1
+      svc_chains: 1
+      repeat: 64
+      batch_depth: 32
+      validations:
+        - size_compare:
+            idx: 1
+            file1: '1_encrypted.bin'
+            val: '$1block'
+        - size_compare:
+            idx: 2
+            file1: '1_decrypted.bin'
+            val: '$1block'
+        - data_compare:
+            idx: 1
+            file1: '1_decrypted.bin'
+            len: '$1block'
+            pattern: aaabbbaaabbb
