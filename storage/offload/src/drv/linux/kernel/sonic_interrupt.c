@@ -139,7 +139,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 
 	OSAL_LOG_NOTICE("sonic_ev_work_handler enter ...\n");
 
-	if (sonic_pnso_async_poll(swd->data)) {
+	if (pnso_request_poller((void *) swd->data)) {
 		/* Done, release it */
 		spin_lock_irqsave(&evl->inuse_lock, irqflags);
 		clear_bit(work_to_evid(evl, swd), evl->inuse_evid_bmp);
