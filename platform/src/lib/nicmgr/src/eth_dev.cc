@@ -152,7 +152,7 @@ void Eth::Update()
     uint64_t hbm_addr;
     uint32_t hbm_size;
 
-    pd->program_qstate(qinfo, &hal_lif_info_, coses);
+    pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info, &hal_lif_info_, coses);
 
     if (spec->enable_rdma) {
 
@@ -220,8 +220,11 @@ Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
         }
     }
 
-    NIC_LOG_INFO("lif created: id:{}, hw_lif_id: {}, mnic_id: {}, stats_mem_addr {:#x}",
-                 hal_lif_info_.id, hal_lif_info_.hw_lif_id, mnic_id, stats_mem_addr);
+    NIC_LOG_INFO("lif created: id:{}, hw_lif_id: {}, mnic_id: {}, stats_mem_addr {:#x}, rdma sqs: {}"
+                 " rqs: {} HAL: sqs: {} rqs: {}", hal_lif_info_.id, hal_lif_info_.hw_lif_id, mnic_id,
+                 stats_mem_addr, spec->rdma_sq_count, spec->rdma_rq_count, 
+                 hal_lif_info_.queue_info[ETH_QTYPE_SQ].entries, 
+                 hal_lif_info_.queue_info[ETH_QTYPE_RQ].entries);
 
     auto lif_stats =
         delphi::objects::LifMetrics::NewDpLifMetrics(spec->lif_id,
