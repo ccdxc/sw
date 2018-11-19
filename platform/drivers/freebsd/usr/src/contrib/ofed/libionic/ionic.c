@@ -206,6 +206,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 		ionic_set_ops(ibctx);
 	}
 
+	ctx->xxx_try_v1 = !ionic_env_xxx_v0();
 	ctx->lockfree = ionic_env_lockfree();
 
 	if (ionic_env_debug())
