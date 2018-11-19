@@ -2936,11 +2936,6 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	}
 
 	wc->byte_len = be32_to_cpu(st_len);
-
-	/* XXX byte_len must come from cqe */
-	if (!st_len)
-		wc->byte_len = meta->len;
-
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16_to_cpu(cqe->recv.pkey_index);
 
@@ -5573,11 +5568,7 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 
 	meta->wrid = wr->wr_id;
 
-	/* XXX bytes recvd should come from cqe */
-	meta->len = signed_len;
-
 	wqe->base.wqe_id = meta - qp->rq_meta;
-	wqe->base.op = wr->num_sge; /* XXX makeshift has num_sge in the opcode position */
 	wqe->base.num_sge_key = wr->num_sge;
 
 	/* total length for recv goes in base imm_data_key */

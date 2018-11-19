@@ -281,7 +281,6 @@ struct ionic_sq_meta {
 struct ionic_rq_meta {
 	struct ionic_rq_meta	*next;
 	u64			wrid;
-	u32			len; /* XXX byte_len must come from cqe */
 };
 
 struct ionic_qp {
