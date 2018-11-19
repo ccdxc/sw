@@ -1,11 +1,23 @@
 import iota.harness.api as api
+import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 
+
+PENCTL_EXEC =  {
+}
 
 PENCTL_ROOT_DIR   = 'penctl_bin'
+PENCTL_RUN_DIR   = '.'
 PENCTL_DEST_DIR   = 'nic/bin/'
 
 PENCTL_PKG = "nic/host.tar"
 PENCTL_NAPLES_PKG = "nic/naples_fw.tar"
+
+core_file_names = [
+    "core.delphi_hub.695",
+    "core.nicmgrd.905",
+    "core.sysmgr.695"
+]
+
 
 def GetNaplesMgmtIP(node):
     return  "1.0.0.2"
@@ -15,17 +27,67 @@ def GetNaplesTunIntf(node):
 
 def __get_pen_ctl_cmd(node):
     mgmt_intf = GetNaplesTunIntf(node)
-    if api.GetNodeOs(node) == "linux":
-        return "PENETHDEV=%s ./penctl.linux " % (mgmt_intf)
-    elif api.GetNodeOs(node) == "freebsd":
-        return "PENETHDEV=%s ./penctl.freebsd " % (mgmt_intf)
-    else:
-        api.Logger.error("Invalid node os type")
-        assert(0)
+    return "PENETHDEV=%s %s " % (mgmt_intf, PENCTL_EXEC[node])
 
 def AddPenctlCommand(req, node, cmd):
-    cur_dir = api.GetCurrentDirectory()
-    api.ChangeDirectory(PENCTL_ROOT_DIR)
     api.Trigger_AddHostCommand(req, node, __get_pen_ctl_cmd(node) + cmd, background = False,
-                               rundir = PENCTL_DEST_DIR, timeout = 60*120)
-    api.ChangeDirectory(cur_dir)
+                               timeout = 60*120)
+
+def SendTraffic(tc):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
+                   (tc.intf1.Name(), tc.intf1.GetIP(), tc.intf2.Name(), tc.intf2.GetIP())
+    api.Logger.info("Starting Iperf  from %s" % (tc.cmd_descr))
+
+    iperf_server_cmd = cmd_builder.iperf_server_cmd()
+    tc.intf1.AddCommand(req, iperf_server_cmd, background = True)
+    iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = tc.intf1.GetIP(),
+                            proto='tcp', pktsize=512, ipproto='v4')
+    tc.intf2.AddCommand(req, iperf_client_cmd)
+
+
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+
+    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    return api.types.status.SUCCESS
+
+
+
+def CreateNaplesCores(n):
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    for core_file in core_file_names:
+        api.Trigger_AddNaplesCommand(req, n, "touch /data/core/%s"%(core_file))
+    resp = api.Trigger(req)
+    for cmd_resp in resp.commands:
+        api.PrintCommandResults(cmd_resp)
+        if cmd_resp.exit_code != 0:
+            api.Logger.error("Creating core failed %s", cmd_resp.command)
+            return api.types.status.FAILURE
+    return api.types.status.SUCCESS
+
+def GetCores(n):
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    AddPenctlCommand(req, n, "list cores")
+    resp = api.Trigger(req)
+    cmd_resp = resp.commands[0]
+    api.PrintCommandResults(cmd_resp)
+    if "No core files found" in cmd_resp.stdout:
+        return []
+    return list(filter(None, cmd_resp.stdout.split("\n")))
+
+def CleanupCores(n):
+    cores = GetCores(n)
+    del_req = api.Trigger_CreateExecuteCommandsRequest()
+    for core in cores:
+        AddPenctlCommand(del_req, n, "delete core --file %s" % core)
+
+    if len(del_req.commands):
+        del_resp = api.Trigger(del_req)
+        for cmd in del_resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                api.Logger.error("Delete core failed : ", cmd.command)
+                return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS

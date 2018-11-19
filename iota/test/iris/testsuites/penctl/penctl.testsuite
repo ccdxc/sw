@@ -4,6 +4,8 @@ meta:
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
+    os          : [ linux, freebsd ]
+
 
 packages:
     - iota.test.iris
@@ -11,7 +13,7 @@ packages:
 images:
 
 setup:
-    topology: test/iris/topologies/1Naples_BM/1Naples.topology
+    topology: test/iris/topologies/2Naples_BM/2Naples.topology
     config  :
         - step : config.netagent.hw_push_config
         - step : testcases.penctl.install
@@ -46,6 +48,10 @@ testcases:
 
     -   name    : CHECK_EXECUTE
         testcase: testcases.penctl.execute
+        iterators :
+            type : simple
+            command : [ "/nic/bin/halctl show endpoint --yaml",
+                         "ls -al /nic/bin/ /nic/tools/" ]
 
     -   name    : CHECK_DIAG
         testcase: testcases.penctl.diag
@@ -59,5 +65,17 @@ testcases:
     -   name    : CHECK_VERSION
         testcase: testcases.penctl.version
 
+    -   name    : CHECK_TOP_HELP
+        testcase: testcases.penctl.help
+        iterators :
+            type   : nested
+            key    : [" "]
+            option : ["delete", "list", "show", "system", "update",
+                      "delete core",
+                      "list cores",
+                      "show events", "show firmware-version", "show logs", "show metrics", "show mode", "show proc-meminfo",
+                      "show running-firmware", "show startup-firmware", "show system-memory-usage",
+                      "show firmware-install", "show tech-support"
+                     ]
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

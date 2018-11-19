@@ -5,31 +5,132 @@ import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.penctldefs as penctldefs
 import iota.test.iris.testcases.penctl.common as common
 
+def_tech_support_file_name = "naples-tech-support.tar.gz"
+def_tech_support_dir_name = "NaplesTechSupport"
+tech_support_dirs = ["cores", "events", "logs"]
+def_tech_support_log_files = ["hal.log", "nicmgr.log", "pciemgrd.log", "asicrw.log", "linkmgr.log"]
+
 
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
+    for n in tc.Nodes:
+        ret = common.CleanupCores(n)
+        if ret != api.types.status.SUCCESS:
+            api.Logger.error("Setup failed")
+            return ret
+        ret = common.CreateNaplesCores(n)
+        if ret != api.types.status.SUCCESS:
+            api.Logger.error("Creating cores failed")
+            return ret
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        common.AddPenctlCommand(req, n, "execute ls -al /data/core/")
-        common.AddPenctlCommand(req, n, "execute du -sh /data/core/")
         common.AddPenctlCommand(req, n, "system tech-support")
-        #TODO do the above command with flags/options and check if tech-support got created
 
     tc.resp = api.Trigger(req)
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
+
     if tc.resp is None:
         return api.types.status.FAILURE
 
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
+            return api.types.status.FAILURE
+
+    supportDir = {}
+    def untar():
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        for n in tc.Nodes:
+            api.Trigger_AddHostCommand(req, n, "ls %s" % (def_tech_support_file_name))
+            api.Trigger_AddHostCommand(req, n, "tar -xvzf %s" % (def_tech_support_file_name))
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                return api.types.status.FAILURE
+        return api.types.status.SUCCESS
+
+    def findSupportDir():
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        for n in tc.Nodes:
+            api.Trigger_AddHostCommand(req, n, "find . -name \"%s*\"" % (def_tech_support_dir_name))
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                return api.types.status.FAILURE
+        for n, cmd in zip(tc.Nodes, resp.commands):
+            dirs = list(filter(None, cmd.stdout.split("\n")))
+            if len(dirs) != 1:
+                api.Logger.error("Mismatch of naples tech support directories!")
+                return api.types.status.FAILURE
+            supportDir[n] = dirs[0]
+        return api.types.status.SUCCESS
+
+    def check_sub_dirs():
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        for n in tc.Nodes:
+            api.Trigger_AddHostCommand(req, n, "ls %s" % (supportDir[n]))
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                return api.types.status.FAILURE
+        for n, cmd in zip(tc.Nodes, resp.commands):
+            sub_dirs = list(filter(None, cmd.stdout.split("\n")))
+            if set(sub_dirs) != set(tech_support_dirs):
+                api.Logger.error("Tech support dirs  don't match : expected %s, actual %s" %(tech_support_dirs, sub_dirs))
+                return api.types.status.FAILURE
+
+        return api.types.status.SUCCESS
+
+    def check_cores():
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        for n in tc.Nodes:
+            api.Trigger_AddHostCommand(req, n, "ls %s/%s" % (supportDir[n], "cores"))
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                return api.types.status.FAILURE
+        for n, cmd in zip(tc.Nodes, resp.commands):
+            cores_files = list(filter(None, cmd.stdout.split("\n")))
+            if set(cores_files) != set(common.core_file_names):
+                api.Logger.error("Tech support dirs  don't match : expected %s, actual %s" %(common.core_file_names, cores_files))
+                return api.types.status.FAILURE
+
+        return api.types.status.SUCCESS
+
+
+    def check_log_files():
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        for n in tc.Nodes:
+            api.Trigger_AddHostCommand(req, n, "ls %s/%s" % (supportDir[n], "logs"))
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                return api.types.status.FAILURE
+        for n, cmd in zip(tc.Nodes, resp.commands):
+            log_files = list(filter(None, cmd.stdout.split("\n")))
+            if not all(x in log_files for x in def_tech_support_log_files):
+                api.Logger.error("Tech support log files missing : %s" %(set(def_tech_support_log_files) - set(log_files)))
+                return api.types.status.FAILURE
+
+        return api.types.status.SUCCESS
+
+    validators = [untar, findSupportDir, check_sub_dirs, check_cores, check_log_files]
+    for validator in validators:
+        ret = validator()
+        if ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
 
     return api.types.status.SUCCESS

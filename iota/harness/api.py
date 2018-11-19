@@ -380,8 +380,19 @@ def CopyFromHost(node_name, files, dest_dir):
                         "%s_host" % node_name, files, dest_dir)
 
 def CopyToNaples(node_name, files, dest_dir):
-    return __CopyCommon(topo_svc.DIR_IN, node_name,
-                        "%s_naples" % node_name, files, dest_dir)
+    copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
+                        "%s_host" % node_name, files, dest_dir)
+    if copy_resp.api_response.api_status == types_pb2.API_STATUS_OK:
+        req = Trigger_CreateExecuteCommandsRequest()
+        for f in files:
+            copy_cmd = "sshpass -p %s scp -o StrictHostKeyChecking=no  %s %s@%s:/" % ("pen123", os.path.basename(f), 'root', "1.0.0.2")
+            Trigger_AddHostCommand(req, node_name, copy_cmd)
+        tresp = Trigger(req)
+        for cmd in tresp.commands:
+            if cmd.exit_code != 0:
+                Logger.error("Copy to failed %s" % cmd.command)
+
+    return copy_resp
 
 def CopyFromNaples(node_name, files, dest_dir):
     return __CopyCommon(topo_svc.DIR_OUT, node_name,

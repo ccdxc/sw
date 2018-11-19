@@ -4,28 +4,45 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.penctldefs as penctldefs
 import iota.test.iris.testcases.penctl.common as common
+import iota.test.iris.testcases.drivers.interface as interface
 
 
 def Setup(tc):
-    tc.Nodes = api.GetNaplesHostnames()
+    tc.nodes = api.GetNaplesHostnames()
+
+    tc.node_intfs = {}
+    for node in tc.nodes:
+        tc.node_intfs[node] = interface.GetNodeInterface(node)
+
+    ret = interface.ConfigureInterfaces(tc)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Error in setting up interfaces")
+        return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
-    for n in tc.Nodes:
-        #TODO trigger/verification pending
+    for n in tc.nodes:
         common.AddPenctlCommand(req, n, "show metrics %s %s " % (tc.iterators.kind, tc.iterators.option))
 
-    tc.resp = api.Trigger(req)
+    tc.lif_metrics_old = api.Trigger(req)
+
+    common.SendTraffic(tc)
+
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    for n in tc.nodes:
+        common.AddPenctlCommand(req, n, "show metrics %s %s " % (tc.iterators.kind, tc.iterators.option))
+
+    tc.lif_metrics_new = api.Trigger(req)
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    if tc.resp is None:
+    if tc.lif_metrics_new is None:
         return api.types.status.FAILURE
 
-    for cmd in tc.resp.commands:
+    for cmd in tc.lif_metrics_new.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
