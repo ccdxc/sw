@@ -6830,8 +6830,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->phys_port_cnt = 1;
 	ibdev->num_comp_vectors = dev->eq_count;
 
-	/* XXX init node_guid */
-	//addrconf_ifid_eui48((u8 *)&ibdev->node_guid, ndev);
+	addrconf_ifid_eui48((u8 *)&ibdev->node_guid, ndev);
 
 	ibdev->uverbs_abi_ver = IONIC_ABI_VERSION;
 	ibdev->uverbs_cmd_mask =

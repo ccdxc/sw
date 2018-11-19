@@ -62,6 +62,27 @@
 } while (0)
 #endif
 
+/* XXX : should go to linux/addrconf.h */
+
+//#include <linux/addrconf.h>
+
+#define addrconf_ifid_eui48 __addrconf_ifid_eui48
+static inline int __addrconf_ifid_eui48(u8 *eui, struct net_device *dev)
+{
+	const u8 *addr = IF_LLADDR(dev);
+
+	eui[0] = addr[0] ^ 2;
+	eui[1] = addr[1];
+	eui[2] = addr[2];
+	eui[3] = 0xff;
+	eui[4] = 0xfe;
+	eui[5] = addr[3];
+	eui[6] = addr[4];
+	eui[7] = addr[5];
+
+	return 0;
+}
+
 /* XXX : should go to linux/completion.h */
 
 #include <linux/completion.h>
