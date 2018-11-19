@@ -1839,6 +1839,13 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_ah_resp resp = {};
 	int rc;
 
+	/* XXX resolve dmac should be done in ib_uverbs_create_ah */
+	if (udata) {
+		rc = ib_resolve_eth_dmac(ibpd->device, attr);
+		if (rc)
+			goto err_ah;
+	}
+
 	if (ctx)
 		rc = ionic_validate_udata(udata, 0, sizeof(resp));
 	else
