@@ -375,15 +375,15 @@ Accel_PF::DelphiDeviceInit(void)
         delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
         delphi::objects::AccelPfInfoPtr shared_pf(delphi_pf);
         shared_pf->set_key(info.hw_lif_id);
-        shared_pf->set_hw_lif_id(info.hw_lif_id);
-        shared_pf->set_num_seq_queues(spec->seq_created_count);
-        shared_pf->set_crypto_key_idx_base(crypto_key_idx_base);
-        shared_pf->set_num_crypto_keys_max(num_crypto_keys_max);
-        shared_pf->set_intr_base(pci_resources.intrb);
-        shared_pf->set_intr_count(pci_resources.intrc);
+        shared_pf->set_hwlifid(info.hw_lif_id);
+        shared_pf->set_numseqqueues(spec->seq_created_count);
+        shared_pf->set_cryptokeyidxbase(crypto_key_idx_base);
+        shared_pf->set_numcryptokeysmax(num_crypto_keys_max);
+        shared_pf->set_intrbase(pci_resources.intrb);
+        shared_pf->set_intrcount(pci_resources.intrc);
         g_nicmgr_svc->sdk()->SetObject(shared_pf);
 
-        seq_qkey.set_lif_id(info.hw_lif_id);
+        seq_qkey.set_lifid(info.hw_lif_id);
         for (qid = 0; qid < spec->seq_created_count; qid++) {
             seq_qkey.set_qid(qid);
             qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
@@ -397,9 +397,9 @@ Accel_PF::DelphiDeviceInit(void)
              * issues _DevcmdSeqQueueInit().
              */
             auto qinfo = make_shared<delphi::objects::AccelSeqQueueInfo>();
-            qinfo->mutable_key()->set_lif_id(info.hw_lif_id);
+            qinfo->mutable_key()->set_lifid(info.hw_lif_id);
             qinfo->mutable_key()->set_qid(qid);
-            qinfo->set_qstate_addr(GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid));
+            qinfo->set_qstateaddr(GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid));
             delphi_qinfo_vec.push_back(std::move(qinfo));
             seq_queue_info_publish(qid, STORAGE_SEQ_QGROUP_CPDC, 0);
         }
@@ -1455,7 +1455,7 @@ Accel_PF::seq_queue_info_publish(uint32_t qid,
     if (g_nicmgr_svc && (qid < delphi_qinfo_vec.size())) {
         delphi::objects::AccelSeqQueueInfoPtr shared_q(delphi_qinfo_vec.at(qid));
         shared_q->set_qgroup((::accel_metrics::AccelSeqQGroup)qgroup);
-        shared_q->set_core_id(core_id);
+        shared_q->set_coreid(core_id);
         g_nicmgr_svc->sdk()->SetObject(shared_q);
     }
 }
@@ -1472,11 +1472,11 @@ accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring)
         shared_ring->set_cindex(rgroup_ring.indices.cndx);
         g_nicmgr_svc->sdk()->SetObject(shared_ring);
 
-        rgroup_ring.delphi_metrics->input_bytes()->
+        rgroup_ring.delphi_metrics->InputBytes()->
                                     Set(rgroup_ring.metrics.input_bytes);
-        rgroup_ring.delphi_metrics->output_bytes()->
+        rgroup_ring.delphi_metrics->OutputBytes()->
                                     Set(rgroup_ring.metrics.output_bytes);
-        rgroup_ring.delphi_metrics->soft_resets()->
+        rgroup_ring.delphi_metrics->SoftResets()->
                                     Set(rgroup_ring.metrics.soft_resets);
     }
 }
@@ -1502,10 +1502,10 @@ accel_pf_rgroup_find_create(uint32_t ring_handle,
     rgroup_ring.delphi_ring = make_shared<delphi::objects::AccelHwRingInfo>();
     rgroup_ring.delphi_ring->mutable_key()->set_rid(/*(::accel_metrics::AccelHwRingId)*/
                                                     ring_handle);
-    rgroup_ring.delphi_ring->mutable_key()->set_sub_rid(sub_ring);
+    rgroup_ring.delphi_ring->mutable_key()->set_subrid(sub_ring);
 
     delphi_key.set_rid(/*(::accel_metrics::AccelHwRingId)*/ring_handle);
-    delphi_key.set_sub_rid(sub_ring);
+    delphi_key.set_subrid(sub_ring);
     rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
                                  NewAccelHwRingMetrics(delphi_key);
     return rgroup_ring;

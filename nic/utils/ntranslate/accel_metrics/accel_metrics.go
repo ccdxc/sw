@@ -1,7 +1,10 @@
-package accel_metrics
+package accelmetrics
 
 import (
+	"fmt"
+
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	"github.com/pensando/sw/venice/utils/ntranslate"
 )
 
@@ -19,8 +22,8 @@ type accelPfTranslatorFns struct{}
 
 // KeyToMeta converts key to meta
 func (n *accelPfTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if lif_id, ok := key.(uint); ok {
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("Accel.lif_id..%d", lif_id)}
+	if lif_id, ok := key.(uint64); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("Accel.LifId.%d", lif_id)}
 	}
 	return nil
 }
@@ -34,8 +37,8 @@ type accelSeqQueueTranslatorFns struct{}
 
 // KeyToMeta converts key to meta
 func (n *accelSeqQueueTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if accel, ok := key.(AccelSeqQueueKey); ok {
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("AccelSeqQueue.lif_id.%d:qid.%d", accel.lif_id, accel.qid)}
+	if accel, ok := key.(goproto.AccelSeqQueueKey); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("AccelSeqQueue.LifId.%d:QId.%d", accel.LifId, accel.QId)}
 	}
 	return nil
 }
@@ -49,8 +52,8 @@ type accelHwRingTranslatorFns struct{}
 
 // KeyToMeta converts key to meta
 func (n *accelHwRingTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if ring, ok := key.(AccelHwRingKey); ok {
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("AccelHwRing.rid.%d:sub_rid.%d", ring.rid, ring.sub_rid)}
+	if ring, ok := key.(goproto.AccelHwRingKey); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("AccelHwRing.RId.%d:SubRId.%d", ring.RId, ring.SubRId)}
 	}
 	return nil
 }

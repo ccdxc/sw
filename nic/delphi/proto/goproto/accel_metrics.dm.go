@@ -9,9 +9,9 @@ import (
 )
 
 type AccelSeqQueueKey struct {
-	lif_id uint64
+	LifId uint64
 
-	qid uint32
+	QId uint32
 }
 
 type AccelSeqQueueMetrics struct {
@@ -19,7 +19,7 @@ type AccelSeqQueueMetrics struct {
 
 	InterruptsRaised gometrics.Counter
 
-	NextDbsRung gometrics.Counter
+	NextDBsRung gometrics.Counter
 
 	SeqDescsProcessed gometrics.Counter
 
@@ -65,7 +65,7 @@ func (mtr *AccelSeqQueueMetrics) Size() int {
 
 	sz += mtr.InterruptsRaised.Size()
 
-	sz += mtr.NextDbsRung.Size()
+	sz += mtr.NextDBsRung.Size()
 
 	sz += mtr.SeqDescsProcessed.Size()
 
@@ -109,8 +109,8 @@ func (mtr *AccelSeqQueueMetrics) Unmarshal() error {
 	mtr.InterruptsRaised = mtr.metrics.GetCounter(offset)
 	offset += mtr.InterruptsRaised.Size()
 
-	mtr.NextDbsRung = mtr.metrics.GetCounter(offset)
-	offset += mtr.NextDbsRung.Size()
+	mtr.NextDBsRung = mtr.metrics.GetCounter(offset)
+	offset += mtr.NextDBsRung.Size()
 
 	mtr.SeqDescsProcessed = mtr.metrics.GetCounter(offset)
 	offset += mtr.SeqDescsProcessed.Size()
@@ -169,10 +169,10 @@ func (mtr *AccelSeqQueueMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.InterruptsRaised.Size()
 
-	if fldName == "NextDbsRung" {
+	if fldName == "NextDBsRung" {
 		return offset
 	}
-	offset += mtr.NextDbsRung.Size()
+	offset += mtr.NextDBsRung.Size()
 
 	if fldName == "SeqDescsProcessed" {
 		return offset
@@ -258,9 +258,9 @@ func (mtr *AccelSeqQueueMetrics) SetInterruptsRaised(val gometrics.Counter) erro
 	return nil
 }
 
-// SetNextDbsRung sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) SetNextDbsRung(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("NextDbsRung"))
+// SetNextDBsRung sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetNextDBsRung(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("NextDBsRung"))
 	return nil
 }
 
@@ -424,9 +424,9 @@ func NewAccelSeqQueueMetricsIterator() (*AccelSeqQueueMetricsIterator, error) {
 }
 
 type AccelHwRingKey struct {
-	rid uint32
+	RId uint32
 
-	sub_rid uint32
+	SubRId uint32
 }
 
 type AccelHwRingMetrics struct {

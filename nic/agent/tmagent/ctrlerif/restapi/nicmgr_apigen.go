@@ -7,5 +7,5 @@
 package restapi
 
 import (
-	_ "github.com/pensando/sw/nic/utils/ntranslate"
+	_ "github.com/pensando/sw/nic/utils/ntranslate/nicmgr"
 )

@@ -13,7 +13,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/delphi/proto/goproto"
-	_ "github.com/pensando/sw/nic/utils/ntranslate"
+	_ "github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
