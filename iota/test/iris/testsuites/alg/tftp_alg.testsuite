@@ -15,7 +15,7 @@ images:
 #    drivers: /sw/platform/drivers.tgz
 
 setup:
-    topology: test/iris/topologies/1Naples_CTR_ALG/1Naples.topology
+    topology: test/iris/topologies/2Naples_CTR/2Naples.topology
     config  : 
         - step : config.netagent.hw_push_config
 

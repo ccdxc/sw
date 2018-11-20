@@ -58,13 +58,7 @@ def Setup(tc):
         w2 = pair[1]
         rule = get_rule(w1.ip_address, w2.ip_address, "udp", "59379","PERMIT")
         tc.policy_db[(w1, w2,"udp", "59379")] = "PERMIT"
-        
         policy_rules.append(rule)
-    print(tc.sgpolicy)
-    json_str   = json.dumps(tc.sgpolicy)
-    obj = api.parser.ParseJsonStream(json_str)
-    agent_api.ConfigureSecurityGroupPolicies(obj.sgpolicies, oper= agent_api.CfgOper.UPDATE)
-        
     return api.types.status.SUCCESS
 
 def Trigger(tc):
