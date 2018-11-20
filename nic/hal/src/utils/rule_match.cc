@@ -523,6 +523,7 @@ rule_lib_init(const char *name, acl_config_t *cfg)
         return NULL;
     }
     memcpy(&rcfg->acl_cfg, &ip_acl_config_glbl, sizeof(acl_config_t));
+    memcpy(cfg, &ip_acl_config_glbl, sizeof(acl_config_t));
     memcpy(&rcfg->name, name, 64);
     rcfg->acl_ctx = acl_create(name, (const acl_config_t *)&rcfg->acl_cfg);
 

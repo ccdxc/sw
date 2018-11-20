@@ -548,6 +548,33 @@ itree_t::walk(const itree_t::node_t *node, uint32_t low,
 }
 
 
+uint32_t
+itree_t::walk_all(const itree_t::node_t *node, const void *arg, cb_t cb)
+{
+    uint32_t matches = 0;
+
+    if (EMPTY(node)) {
+        return matches;
+    }
+
+    // left subtree can have any interval from 0 to current node's max
+    // so we need to walk the left subtree unconditionally
+    matches += walk_all(node->left, arg, cb);
+
+    if (node->has_list) {
+        node->list->walk(arg, cb);
+        matches += node->list->size();
+    } else {
+        cb(arg, node->entry);
+        matches++;
+    }
+
+    matches += walk_all(node->right, arg, cb);
+
+    return matches;
+}
+
+
 //------------------------------------------------------------------------
 // create a new itree
 //------------------------------------------------------------------------
@@ -603,6 +630,27 @@ uint32_t
 itree_t::walk(uint32_t low, uint32_t high, const void *arg, cb_t cb) const
 {
     return walk(root_, low, high, arg, cb);
+}
+
+
+//------------------------------------------------------------------------
+// walks the tree calling callback for each intersecting interval
+// callback may return false to abort the list walk
+//
+// note: entries are orderd by user defined match function (usually rule
+//       priority) only when inserted into the node's linked list. While looking
+//       for highest priority match, aborting the walk based on the priority
+//       makes sense only when walking the list entries.
+//       So this function will not abort the tree walk when
+//       the callback returns false, it only aborts the current list walk
+//       at the matching node and continues the tree walk.
+//
+// Returns no.of intervals matched
+//------------------------------------------------------------------------
+uint32_t
+itree_t::walk_all(const void *arg, cb_t cb) const
+{
+    return walk_all(root_, arg, cb);
 }
 
 //------------------------------------------------------------------------

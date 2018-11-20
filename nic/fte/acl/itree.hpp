@@ -23,7 +23,7 @@ public:
 
     uint32_t cost(uint32_t low, uint32_t high) const;
     uint32_t walk( uint32_t low, uint32_t high, const void *arg, cb_t cb) const;
-
+    uint32_t walk_all(const void *arg, cb_t cb) const;
     // itree update methods, updates the tree pointer
     static hal_ret_t insert(const itree_t **treep, uint32_t low, uint32_t high,
                             const ref_t *entry, const void *arg, cb_t match);
@@ -157,6 +157,9 @@ private:
     static const node_t *del(const node_t *node, uint32_t low, uint32_t high,
                              const void *arg, cb_t match);
     static uint32_t walk(const node_t *node, uint32_t low, uint32_t high,
+                         const void* arg, cb_t cb);
+    
+    static uint32_t walk_all(const node_t *node,
                          const void* arg, cb_t cb);
 };
 

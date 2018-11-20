@@ -23,6 +23,8 @@ public:
 
     hal_ret_t classify(const uint8_t *key, const acl_rule_t *rules[],
                        uint32_t categories) const;
+    
+    hal_ret_t dump(uint32_t categories, print_cb_t print_cb) const;
     static hal_ret_t add_rule(const acl_ctx_t **ctxp, const acl_rule_t *rule);
     static hal_ret_t del_rule(const acl_ctx_t **ctxp, const acl_rule_t *rule);
 

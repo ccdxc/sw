@@ -21,6 +21,7 @@ typedef struct fld_type_ops_s {
     hal_ret_t (*del_rule)(const acl_config_t *cfg, uint8_t fid, const void **table, const acl_rule_t *rule);
     hal_ret_t (*classify)(const acl_config_t *cfg, uint8_t fid, const void *table, const uint8_t *key,
                         const acl_rule_t *results[],  uint32_t categories);
+    hal_ret_t (*walk)(const acl_config_t *cfg, uint8_t fid, const void *table, uint32_t categories, print_cb_t print_cb);
 } fld_type_ops_t;
 
 
@@ -225,6 +226,7 @@ static fld_type_ops_t fld_type_ops_[] = {
         add_rule: acl_itree_add_rule,
         del_rule: acl_itree_del_rule,
         classify:acl_itree_classify,
+        walk    : acl_itree_walk,
     },
     /* ACL_FIELD_TYPE_RANGE */
     {
@@ -237,6 +239,7 @@ static fld_type_ops_t fld_type_ops_[] = {
         add_rule: acl_itree_add_rule,
         del_rule: acl_itree_del_rule,
         classify:acl_itree_classify,
+        walk: acl_itree_walk,
     },
     /* ACL_FIELD_TYPE_EXACT */
     {
@@ -249,6 +252,7 @@ static fld_type_ops_t fld_type_ops_[] = {
         add_rule: acl_itree_add_rule,
         del_rule: acl_itree_del_rule,
         classify:acl_itree_classify,
+        walk: acl_itree_walk,
     },
 };
 
@@ -281,6 +285,8 @@ static fld_type_ops_t fld_type_ops_[] = {
 #define ACL_TABLE_CLASSIFY(cfg, fid, table, key, rules, categories)    \
     ACL_FLD_OPS(cfg, fid).classify(cfg, fid, table, key, rules, categories)
 
+#define ACL_TABLE_WALK(cfg, fid, table, categories, print_cb)    \
+    ACL_FLD_OPS(cfg, fid).walk(cfg, fid, table, categories, print_cb)
 bool
 acl_rule_match(const acl_config_t *cfg, const acl_rule_t *rule, const uint8_t*key)
 {
@@ -447,6 +453,21 @@ acl_ctx_t::classify(const uint8_t *key, const acl_rule_t *rules[],
     }
 
     acl_list_classify(&cfg_, 0, def_list_, key, rules, categories);
+
+    return HAL_RET_OK;
+}
+
+
+hal_ret_t
+acl_ctx_t::dump(uint32_t categories, print_cb_t print_cb) const
+{
+    // TODO(goli) - handle multiple categories
+
+    for (uint8_t fid = 0; fid < cfg_.num_fields; fid ++) {
+        ACL_TABLE_WALK(&cfg_, fid, tables_[fid], categories, print_cb);
+    }
+
+    acl_list_walk(&cfg_, 0, def_list_, categories, print_cb);
 
     return HAL_RET_OK;
 }

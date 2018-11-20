@@ -114,5 +114,29 @@ hal_ret_t acl_itree_classify(const acl_config_t *cfg, uint8_t fid,
     return HAL_RET_OK;
 }
 
+hal_ret_t acl_itree_walk(const acl_config_t *cfg, uint8_t fid,
+                            const void *tree, 
+                            uint32_t categories,
+                            print_cb_t print_cb)
+{
+    struct cb_arg_t {
+        const acl_config_t *cfg;
+        uint32_t categories;
+        print_cb_t print_cb;
+    } arg = { cfg, categories, print_cb};
+
+    auto cb = [](const void* cb_arg, const ref_t *entry) {
+        const cb_arg_t *arg = (const cb_arg_t *) cb_arg;
+        const acl_rule_t *rule = acl_rule_from_ref(entry);
+        arg->print_cb((acl::acl_rule_t *)rule);
+        
+        return true; // continue walk
+    };
+
+    ((const itree_t*)tree)->walk_all(&arg, cb);
+
+    return HAL_RET_OK;
+}
+
 } // namespace acl
 

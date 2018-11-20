@@ -147,4 +147,10 @@ acl_classify(const acl_ctx_t *ctx, const uint8_t *key,
     return ctx->classify(key, rules, categories);
 }
 
+hal_ret_t
+acl_dump(const acl_ctx_t *ctx, uint32_t categories, print_cb_t print_cb)
+{
+    return ctx->dump(categories, print_cb);
+}
+
 } // namespace acl

@@ -96,12 +96,12 @@ void ctx_t::swap_flow_key(const hal::flow_key_t &key, hal::flow_key_t *rkey)
             rkey->dport = key.sport;
             break;
         case IP_PROTO_ICMP:
-            rkey->icmp_type = key.icmp_type ? 0 : 8; // flip echo to reply
+            rkey->icmp_type = key.icmp_type ==8 ? 0 : key.icmp_type; // flip echo to reply
             rkey->icmp_code = key.icmp_code;
             rkey->icmp_id = key.icmp_id;
             break;
         case IP_PROTO_ICMPV6:
-            rkey->icmp_type = key.icmp_type == 128 ? 129 : 128; // flip echo to reply
+            rkey->icmp_type = key.icmp_type == 128 ? 129 : key.icmp_type; // flip echo to reply
             rkey->icmp_code = key.icmp_code;
             rkey->icmp_id = key.icmp_id;
             break;

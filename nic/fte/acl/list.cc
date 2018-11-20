@@ -115,7 +115,7 @@ list_t::find(const void *arg, cb_t match) const
 // walks the list, calling callback for each item. Aborts the walk
 // if the callback returns false.
 //
-// returns flase if the walk is aborted
+// returns false if the walk is aborted
 //------------------------------------------------------------------------
 bool
 list_t::walk(const void *arg, cb_t cb) const

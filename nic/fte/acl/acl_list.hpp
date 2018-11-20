@@ -19,4 +19,8 @@ hal_ret_t acl_list_del_rule(const acl_config_t *cfg, uint8_t fid,
 hal_ret_t acl_list_classify(const acl_config_t *cfg, uint8_t fid,
                             const void *list, const uint8_t *key,
                             const acl_rule_t *rules[],  uint32_t categories);
+
+hal_ret_t acl_list_walk(const acl_config_t *cfg, uint8_t fid,
+                        const void *list, uint32_t categories,
+                        print_cb_t print_cb);
 } // namespace acl

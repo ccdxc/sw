@@ -142,7 +142,7 @@ typedef struct rule_ctr_s {
     dllist_entry(sg_entry, sg_list_elem_t, list_ctxt)
 
 #define PRINT_RULE_FIELDS(rule)  \
-            HAL_TRACE_DEBUG("Added rule with keys: src {}, src_range {}, dst {}, dst_range {}, mac_src {}, mac_src_range {}, mac_dst {}, mac_dst_range {}, port_src {}, port_src_mask {}, port_dst {}, port_dst_mask {}, src_sg {}, src_sg_mask {}, dst_sg {}, dst_sg_mask {} proto {}, proto_mask {}, ethertype {} ethertype_mask {} icmp_type {} icmp_code {}", \
+            HAL_TRACE_DEBUG("rule with keys: src {}, src_range {}, dst {}, dst_range {}, mac_src {}, mac_src_range {}, mac_dst {}, mac_dst_range {}, port_src {}, port_src_mask {}, port_dst {}, port_dst_mask {}, src_sg {}, src_sg_mask {}, dst_sg {}, dst_sg_mask {} proto {}, proto_mask {}, ethertype {} ethertype_mask {} icmp_type {} icmp_code {}", \
                         rule->field[IP_SRC].value.u32,rule->field[IP_SRC].mask_range.u32,                                            \
                         rule->field[IP_DST].value.u32,rule->field[IP_DST].mask_range.u32,                                            \
                         rule->field[MAC_SRC].value.u32,rule->field[MAC_SRC].mask_range.u32,                                          \

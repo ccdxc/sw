@@ -5,7 +5,7 @@ meta:
     cfgmode     : netagent
     nicmode     : hostpin
     cfgonly     : True
-    enable      : True
+    enable      : False
 
 packages:
     - iota.test.iris

@@ -19,4 +19,7 @@ hal_ret_t acl_itree_del_rule(const acl_config_t *cfg, uint8_t fid,
 hal_ret_t acl_itree_classify(const acl_config_t *cfg, uint8_t fid,
                             const void *tree, const uint8_t *key,
                             const acl_rule_t *rules[],  uint32_t categories);
+hal_ret_t acl_itree_walk(const acl_config_t *cfg, uint8_t fid,
+                            const void *tree, uint32_t categories, print_cb_t print_cb);
+
 } // namespace acl
