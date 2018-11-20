@@ -18,6 +18,7 @@ using namespace sdk::platform::capri;
 using namespace sdk::platform::utils;
 
 #define ENTRY_TRACE_EN      true
+#define QSTATE_INFO_FILE_NAME  "lif_qstate_info.json"
 
 const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 
@@ -511,6 +512,7 @@ int PdClient::program_qstate(struct queue_info* queue_info,
                      type, lif_info->qstate_addr[type]);
     }
 
+    DeviceManager::GetInstance()->GenerateQstateInfoJson(gen_dir_path_ + "/" + QSTATE_INFO_FILE_NAME);
     return 0;
 }
 

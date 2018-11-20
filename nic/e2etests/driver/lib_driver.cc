@@ -13,6 +13,7 @@
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/utils/host_mem/host_mem.hpp"
+#include "nic/sdk/include/sdk/platform/utils/qstate_mgr.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -21,54 +22,73 @@ using grpc::Status;
 using namespace grpc;
 using namespace intf;
 using namespace std;
-
+using namespace sdk::platform::utils;
 
 utils::HostMem *g_host_mem = NULL;
 map<tuple<uint64_t, uint32_t, uint32_t>, queue_info_t> queue_map;
 
 uint64_t get_qstate_addr(uint16_t lif, uint32_t qtype, uint32_t qid) {
-  char *grpc_port_env;
-  std::string grpc_ep = "localhost:";
-  if ((grpc_port_env = getenv("HAL_GRPC_PORT")) != NULL) {
-    grpc_ep.append(grpc_port_env);
-  } else {
-    grpc_ep.append("50054");
-  }
-  shared_ptr<Channel> channel =
-      CreateChannel(grpc_ep, InsecureChannelCredentials());
-  StubOptions options;
-
-  unique_ptr<Interface::Stub> svc = Interface::NewStub(channel, options);
-
-  // cout << "Lif = " << lif << " Qtype = " << qtype << " Qid = " << qid <<
-  // endl;
-
-  ClientContext context;
-  GetQStateRequestMsg request;
-  GetQStateResponseMsg response;
-
-  QStateGetReq *qstate_request = request.add_reqs();
-  qstate_request->set_lif_handle(lif);
-  qstate_request->set_type_num(qtype);
-  qstate_request->set_qid(qid);
-
-  Status status = svc->LifGetQState(&context, request, &response);
-  if (status.ok()) {
-    for (int i = 0; i < response.resps().size(); i++) {
-      QStateGetResp qstate_response = response.resps(i);
-      if (qstate_response.error_code()) {
-        cout << "Error Code = " << qstate_response.error_code() << endl;
-        return (0);
-      } else {
-        return qstate_response.q_addr();
-      }
+    // Cleanup: Move this to an one-time init function.
+    string hal_cfg_path = string(getenv("HAL_CONFIG_PATH"));
+    if (hal_cfg_path != "") {
+        qstate_mgr *qsm = qstate_mgr::factory((hal_cfg_path + "gen/lif_qstate_info.json").c_str(), NULL);
+        if (qsm) {
+            uint64_t qaddr = qsm->get_hwlifid_qstate_address(lif, qtype, qid);
+            if (qaddr != SDK_INVALID_HBM_ADDRESS) {
+                return qaddr;
+            } else {
+                printf("get_qstate_addr: qstate mgr returned invalid address\n");
+            }
+        } else {
+            printf("get_qstate_addr: Failed to create qstate mgr\n");
+        }
+    } else {
+        printf("get_qstate_addr: Failed to get HAL_CONFIG_PATH\n");
     }
-  } else {
-    cout << status.error_code() << ": " << status.error_message() << endl;
-    return (0);
-  }
 
-  return (0);
+    char *grpc_port_env;
+    std::string grpc_ep = "localhost:";
+    if ((grpc_port_env = getenv("HAL_GRPC_PORT")) != NULL) {
+      grpc_ep.append(grpc_port_env);
+    } else {
+      grpc_ep.append("50054");
+    }
+
+    shared_ptr<Channel> channel =
+            CreateChannel(grpc_ep, InsecureChannelCredentials());
+    StubOptions options;
+
+    unique_ptr<Interface::Stub> svc = Interface::NewStub(channel, options);
+
+    // cout << "Lif = " << lif << " Qtype = " << qtype << " Qid = " << qid <<
+    // endl;
+
+    ClientContext context;
+    GetQStateRequestMsg request;
+    GetQStateResponseMsg response;
+
+    QStateGetReq *qstate_request = request.add_reqs();
+    qstate_request->set_lif_handle(lif);
+    qstate_request->set_type_num(qtype);
+    qstate_request->set_qid(qid);
+
+    Status status = svc->LifGetQState(&context, request, &response);
+    if (status.ok()) {
+      for (int i = 0; i < response.resps().size(); i++) {
+        QStateGetResp qstate_response = response.resps(i);
+        if (qstate_response.error_code()) {
+          cout << "Error Code = " << qstate_response.error_code() << endl;
+          return (0);
+        } else {
+          return qstate_response.q_addr();
+        }
+      }
+    } else {
+      cout << status.error_code() << ": " << status.error_message() << endl;
+      return (0);
+    }
+
+    return (0);
 }
 
 void doorbell(uint8_t upd, uint16_t lif, queue_type type, uint32_t pid,

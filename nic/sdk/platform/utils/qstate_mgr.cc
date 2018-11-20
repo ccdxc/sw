@@ -8,7 +8,7 @@
 #define JSON_KEY_QSTATES         "qstates"
 #define JSON_KEY_QTYPE           "qtype"
 #define JSON_KEY_QSIZE           "qsize"
-#define JSON_KEY_ADDRESS         "addr"
+#define JSON_KEY_ADDRESS         "qaddr"
 
 namespace pt = boost::property_tree;
 

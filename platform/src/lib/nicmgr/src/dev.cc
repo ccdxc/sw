@@ -26,8 +26,6 @@
 
 namespace pt = boost::property_tree;
 
-#define QSTATE_INFO_FILE_NAME  "lif_qstate_info.json"
-
 sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
 DeviceManager *DeviceManager::instance;
 nicmgr_req_qstate_t qstate_req = { 0 };
@@ -795,12 +793,46 @@ DeviceManager::AdminQPoll()
 }
 
 int
+DeviceManager::DumpQstateInfo(pt::ptree &lifs)
+{
+    pt::ptree lif;
+    pt::ptree qstates;
+
+    NIC_LOG_INFO("lif-{}: Qstate Info to Json", hal_lif_info_.hw_lif_id);
+
+    lif.put("lif_id", hal_lif_info_.id);
+    lif.put("hw_lif_id", hal_lif_info_.hw_lif_id);
+
+    for (int j = 0; j < NUM_QUEUE_TYPES; j++) {
+        pt::ptree qs;
+        char numbuf[32];
+
+        if (qinfo[j].size < 1) continue;
+
+        qs.put("qtype", qinfo[j].type_num);
+        qs.put("qsize", qinfo[j].size);
+        qs.put("qaddr", hal_lif_info_.qstate_addr[qinfo[j].type_num]);
+        snprintf(numbuf, sizeof(numbuf), "0x%lx", hal_lif_info_.qstate_addr[qinfo[j].type_num]);
+        qs.put("qaddr_hex", numbuf);
+        qstates.push_back(std::make_pair("", qs));
+        qs.clear();
+    }
+
+    lif.add_child("qstates", qstates);
+    lifs.push_back(std::make_pair("", lif));
+    qstates.clear();
+    lif.clear();
+    return 0;
+}
+
+int
 DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
 {
     pt::ptree root, lifs;
 
     NIC_LOG_INFO("{}: file: {}", __FUNCTION__, qstate_info_file);
 
+    DumpQstateInfo(lifs);
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
         Device *dev = it->second;
         Eth *eth_dev = (Eth *) dev;

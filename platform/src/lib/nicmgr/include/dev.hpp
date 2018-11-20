@@ -240,6 +240,7 @@ public:
     Device *GetDevice(uint64_t id);
     void CreateUplinkVRFs();
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
+    int GenerateQstateInfoJson(std::string qstate_info_file);
 
 private:
     static DeviceManager *instance;
@@ -252,7 +253,7 @@ private:
     // Service Lif Info
     hal_lif_info_t hal_lif_info_;
     static struct queue_info qinfo[NUM_QUEUE_TYPES];
-    int GenerateQstateInfoJson(std::string qstate_info_file);
+    int DumpQstateInfo(boost::property_tree::ptree &lifs);
 
     // HAL Info
     HalClient *hal;
