@@ -1,0 +1,55 @@
+/*
+    NOTE: Do not move these defines, because these need to be defined
+          before including the common p4 defines.
+*/
+
+#include "nic/p4/common-p4+/common_txdma_dummy.p4"
+
+#define common_p4plus_stage0_app_header_table_action_dummy notify_fetch_desc
+#define tx_table_s0_t0_action notify_fetch_desc
+#define tx_table_s1_t0_action notify_process_desc
+#define tx_table_s2_t0_action notify_completion
+
+
+#include "nic/p4/common-p4+/common_txdma.p4"
+#include "notify_txdma.p4"
+#include "defines.h"
+
+/******************************************************************************
+ * Action functions
+ * - These action functions are used to generate k+i and d structures.
+ *****************************************************************************/
+
+action notify_fetch_desc(PARAMS_NOTIFY_QSTATE)
+{
+    // K+I
+    modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
+    modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
+    modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
+    modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
+
+    // D
+    MODIFY_NOTIFY_QSTATE
+}
+
+action notify_process_desc(data, color, rsvd0)
+{
+    // K + I
+    MODIFY_NOTIFY_GLOBAL
+    MODIFY_NOTIFY_T0_S2S
+
+    // D
+    modify_field(notify_event_desc.data, data);
+    modify_field(notify_event_desc.color, color);
+    modify_field(notify_event_desc.rsvd0, rsvd0);
+}
+
+action notify_completion()
+{
+    // K + I
+    MODIFY_NOTIFY_GLOBAL
+    MODIFY_NOTIFY_T0_S2S
+
+    // D
+}
