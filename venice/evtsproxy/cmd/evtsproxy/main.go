@@ -20,14 +20,14 @@ import (
 func main() {
 
 	var (
-		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.EvtsProxy)), "Path of the log file")
-		logToStdoutFlag = flag.Bool("logtostdout", false, "Enable logging to stdout")
 		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
-		evtsMgrURL      = flag.String("evts-mgr-url", fmt.Sprintf(":%s", globals.EvtsMgrRPCPort), "RPC listen URL of events manager")
-		dedupInterval   = flag.Duration("dedup-interval", 24*(60*time.Minute), "Events deduplication interval") // default dedup 24hrs
-		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching inteval")            // default batch 10s
 		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
+		dedupInterval   = flag.Duration("dedup-interval", 24*(60*time.Minute), "Events de-duplication interval") // default 24hrs
+		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching interval")            // default 10s
+		evtsMgrURL      = flag.String("evts-mgr-url", fmt.Sprintf(":%s", globals.EvtsMgrRPCPort), "RPC listen URL of events manager")
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		logToFile       = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.EvtsProxy)), "Path of the log file")
+		logToStdoutFlag = flag.Bool("log-to-stdout", false, "Enable logging to stdout")
 	)
 
 	flag.Parse()
@@ -52,11 +52,15 @@ func main() {
 	logger := log.SetConfig(config)
 
 	// create events proxy
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, *evtsMgrURL, nil,
-		*dedupInterval, *batchInterval, *evtsStoreDir, []evtsproxy.WriterType{evtsproxy.Venice}, logger)
+	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, nil,
+		*dedupInterval, *batchInterval, *evtsStoreDir, logger)
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)
 	}
+	if err := eps.RegisterEventsWriter(evtsproxy.Venice, *evtsMgrURL); err != nil {
+		log.Fatalf("failed to register venice writer with events proxy, err: %v", err)
+	}
+	eps.StartDispatch()
 
 	logger.Infof("%s is running {%+v}", globals.EvtsProxy, *eps)
 

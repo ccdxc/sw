@@ -136,6 +136,7 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 	// create dispatcher
 	evtsD, err := dispatcher.NewDispatcher(60*time.Second, 100*time.Millisecond, dir, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	evtsD.Start()
 	defer evtsD.Shutdown()
 
 	// create and start writer

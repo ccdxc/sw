@@ -47,6 +47,9 @@ type Dispatcher interface {
 	// removes the writer identified by given name from the list of registered writers.
 	UnregisterWriter(name string)
 
+	// start notifying the writers of the events
+	Start()
+
 	// dispatcher stops accepting any more events once shutdown is issued. And, it
 	// flushes all the pending(cached) events from the dispatcher to all the
 	// writers. This flushes all the sources and will be called during palnned maintence/upgrade.

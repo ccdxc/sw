@@ -347,8 +347,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	l := log.GetNewLogger(log.GetDefaultConfig("evts-prxy"))
 
 	it.epsDir = tmpDir
-	eps, err := evtsproxy.NewEventsProxy("venice_integ_evtsprxy", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "", rc,
-		5*time.Second, time.Second, it.epsDir, []evtsproxy.WriterType{}, l)
+	eps, err := evtsproxy.NewEventsProxy("venice_integ_evtsprxy", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), rc,
+		5*time.Second, time.Second, it.epsDir, l)
+	eps.StartDispatch()
 	c.Assert(err, IsNil)
 	it.eps = eps
 

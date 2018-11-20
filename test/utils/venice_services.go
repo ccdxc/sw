@@ -233,11 +233,14 @@ func StartEvtsProxy(serverAddr string, mr *mockresolver.ResolverClient, logger l
 	}
 
 	evtsProxy, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, serverAddr,
-		mr.GetURLs(globals.EvtsMgr)[0], nil, dedupInterval, batchInterval, proxyEventsStoreDir,
-		[]evtsproxy.WriterType{evtsproxy.Venice}, logger)
+		nil, dedupInterval, batchInterval, proxyEventsStoreDir, logger)
 	if err != nil {
 		return nil, "", "", fmt.Errorf("failed start events proxy, err: %v", err)
 	}
+	if err := evtsProxy.RegisterEventsWriter(evtsproxy.Venice, mr.GetURLs(globals.EvtsMgr)[0]); err != nil {
+		return nil, "", "", fmt.Errorf("failed to register venice writer with events proxy")
+	}
+	evtsProxy.StartDispatch()
 
 	return evtsProxy, evtsProxy.RPCServer.GetListenURL(), proxyEventsStoreDir, nil
 }

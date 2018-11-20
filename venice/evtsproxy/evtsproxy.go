@@ -3,6 +3,7 @@
 package evtsproxy
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -47,19 +48,20 @@ type EventsProxy struct {
 	RPCServer *rpcserver.RPCServer
 
 	// events dispatcher which dispatches the events to destinations (venice, syslog, etc..)
-	// after applying deduplication and batching
+	// after applying de-duplication and batching
 	evtsDispatcher events.Dispatcher
+
+	// resolver to connect with events manager or other services
+	resolverClient resolver.Interface
+
+	logger log.Logger // logger
 }
 
 // NewEventsProxy creates and returns a events proxy instance
-func NewEventsProxy(serverName, serverURL, evtsMgrURL string, resolverClient resolver.Interface, dedupInterval, batchInterval time.Duration,
-	eventsStoreDir string, defaultWriters []WriterType, logger log.Logger) (*EventsProxy, error) {
+func NewEventsProxy(serverName, serverURL string, resolverClient resolver.Interface, dedupInterval, batchInterval time.Duration,
+	eventsStoreDir string, logger log.Logger) (*EventsProxy, error) {
 	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || logger == nil {
 		return nil, errors.New("serverName, serverURL and logger is required")
-	}
-
-	if (!utils.IsEmpty(evtsMgrURL) && resolverClient != nil) || (utils.IsEmpty(evtsMgrURL) && resolverClient == nil) {
-		return nil, errors.New("provide either evtsMgrURL or resolverClient")
 	}
 
 	// create the events dispatcher
@@ -67,14 +69,6 @@ func NewEventsProxy(serverName, serverURL, evtsMgrURL string, resolverClient res
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating events proxy RPC server")
 	}
-
-	// add venice writer
-	if err = addDefaultWriters(defaultWriters, evtsDispatcher, evtsMgrURL, resolverClient, logger); err != nil {
-		return nil, errors.Wrap(err, "failed to register default writers with the dispatcher")
-	}
-
-	// start processing any pending/failed events
-	evtsDispatcher.ProcessFailedEvents()
 
 	// create RPC server
 	rpcServer, err := rpcserver.NewRPCServer(serverName, serverURL, evtsDispatcher, logger)
@@ -85,7 +79,17 @@ func NewEventsProxy(serverName, serverURL, evtsMgrURL string, resolverClient res
 	return &EventsProxy{
 		RPCServer:      rpcServer,
 		evtsDispatcher: evtsDispatcher,
+		resolverClient: resolverClient,
+		logger:         logger,
 	}, nil
+
+}
+
+// StartDispatch starts dispatching events to the registered writers
+func (ep *EventsProxy) StartDispatch() {
+	if ep.evtsDispatcher != nil {
+		ep.evtsDispatcher.Start()
+	}
 }
 
 // Stop stops events proxy
@@ -94,6 +98,11 @@ func (ep *EventsProxy) Stop() {
 		ep.RPCServer.Stop()
 		ep.RPCServer = nil
 	}
+
+	if ep.evtsDispatcher != nil {
+		ep.evtsDispatcher.Shutdown()
+		ep.evtsDispatcher = nil
+	}
 }
 
 // GetEventsDispatcher returns the underlying events dispatcher
@@ -101,26 +110,33 @@ func (ep *EventsProxy) GetEventsDispatcher() events.Dispatcher {
 	return ep.evtsDispatcher
 }
 
-// addDefaultWriters registers default writer with the dispatcher
-func addDefaultWriters(defaultWriters []WriterType, dispatcher events.Dispatcher, evtsMgrURL string,
-	resolverClient resolver.Interface, logger log.Logger) error {
-	for _, w := range defaultWriters {
-		switch w {
-		case Venice:
-			veniceWriter, err := writers.NewVeniceWriter(w.String(), writerChLen, evtsMgrURL, resolverClient, logger)
-			if err != nil {
-				return err
+// RegisterEventsWriter creates the writer of given type and registers it with the dispatcher
+func (ep *EventsProxy) RegisterEventsWriter(writerType WriterType, config interface{}) error {
+	switch writerType {
+	case Venice:
+		var evtsMgrURL string
+		if config != nil {
+			var ok bool
+			if evtsMgrURL, ok = config.(string); !ok {
+				ep.logger.Errorf("failed to read venice writer config, %v", config)
 			}
-
-			// register venice writer
-			eventsChan, offsetTracker, err := dispatcher.RegisterWriter(veniceWriter)
-			if err != nil {
-				return err
-			}
-
-			// start all the workers
-			veniceWriter.Start(eventsChan, offsetTracker)
 		}
+
+		veniceWriter, err := writers.NewVeniceWriter(writerType.String(), writerChLen, evtsMgrURL, ep.resolverClient, ep.logger)
+		if err != nil {
+			return err
+		}
+
+		// register venice writer
+		eventsChan, offsetTracker, err := ep.evtsDispatcher.RegisterWriter(veniceWriter)
+		if err != nil {
+			return err
+		}
+
+		// start all the workers
+		veniceWriter.Start(eventsChan, offsetTracker)
+	default:
+		return fmt.Errorf("unsupported writer type: %v", writerType)
 	}
 
 	return nil

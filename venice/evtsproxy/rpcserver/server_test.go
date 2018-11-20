@@ -61,6 +61,7 @@ func setup(t *testing.T, eventsStorePath string, dedupInterval, batchInterval ti
 	// create dispatcher
 	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	evtsDispatcher.Start()
 
 	// create mock writer; register it with the dispatcher and start the writer
 	mockWriter := writers.NewMockWriter("mock", mockWriterChLen, logger)

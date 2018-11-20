@@ -115,7 +115,7 @@ var _ = Describe("events test", func() {
 				return fmt.Errorf("could not find `NICAdmitted` events")
 			}
 			return nil
-		}, 60, 1).Should(BeNil(), "could not find `NICAdmitted` events in elasticsearch")
+		}, 100, 1).Should(BeNil(), "could not find `NICAdmitted` events in elasticsearch")
 	})
 
 	AfterEach(func() {

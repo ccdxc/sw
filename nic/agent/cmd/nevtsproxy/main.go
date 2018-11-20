@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -24,14 +25,15 @@ import (
 func main() {
 
 	var (
-		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
+		mode            = flag.String("mode", "host", "Specify the agent mode either host or network")
+		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
+		dedupInterval   = flag.Duration("dedup-interval", 24*(60*time.Minute), "Events de-duplication interval") // default 24hrs
+		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching interval")            // default 10s
+		resolverURLs    = flag.String("resolver-urls", "", "Comma separated list of resolver URLs of the form 'ip:port'")
+		debugflag       = flag.Bool("debug", false, "enable debug mode")
 		logToFile       = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.EvtsProxy)), "Path of the log file")
 		logToStdoutFlag = flag.Bool("log-to-stdout", false, "Enable logging to stdout")
-		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
-		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "Comma separated list of resolver URLs of the form 'ip:port'")
-		dedupInterval   = flag.Duration("dedup-interval", 100*time.Second, "Events deduplication interval")
-		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching interval")
-		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
 	)
 
 	flag.Parse()
@@ -56,25 +58,47 @@ func main() {
 	logger := log.SetConfig(config)
 
 	// create resolver client
-	resolverClient := resolver.New(&resolver.Config{
-		Name:    globals.EvtsProxy,
-		Servers: strings.Split(*resolverURLs, ",")})
+	var resolverClient resolver.Interface
+	if !utils.IsEmpty(*resolverURLs) {
+		resolverClient = resolver.New(&resolver.Config{
+			Name:    globals.EvtsProxy,
+			Servers: strings.Split(*resolverURLs, ",")})
+	}
 
 	// create events proxy
-	// FIXME: start venice writer only in managed mode
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, "", resolverClient,
-		*dedupInterval, *batchInterval, *evtsStoreDir, []evtsproxy.WriterType{evtsproxy.Venice}, logger)
-	if err != nil {
-		logger.Fatalf("error creating events proxy instance: %v", err)
+	var result interface{}
+	var err error
+	for {
+		result, err = utils.ExecuteWithRetry(func() (interface{}, error) {
+			return evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, resolverClient, *dedupInterval, *batchInterval,
+				*evtsStoreDir, logger)
+		}, 2*time.Second, 30)
+		if err != nil {
+			logger.Fatalf("error creating events proxy instance: %v", err)
+		}
+		if result != nil {
+			break
+		}
 	}
+
+	eps := result.(*evtsproxy.EventsProxy)
+	defer eps.Stop()
+
+	// handle different agent modes
+	handleModes(*mode, eps, logger)
+
+	// start dispatching events to its registered writers
+	eps.StartDispatch()
 
 	logger.Infof("%s is running {%+v}", globals.EvtsProxy, *eps)
 
 	// create shared memory events reader
 	shmEvtsReader := reader.NewReader(shm.GetSharedMemoryDirectory(), 50*time.Millisecond, eps.GetEventsDispatcher())
+	defer shmEvtsReader.Stop()
 	go func() {
 		for {
-			if err := shmEvtsReader.Start(); err == nil {
+			err := shmEvtsReader.Start()
+			if err == nil {
 				logger.Infof("shared memory events reader is running on dir: %s", shm.GetSharedMemoryDirectory())
 				return
 			}
@@ -101,5 +125,22 @@ func main() {
 	case <-eps.RPCServer.Done():
 		shmEvtsReader.Stop()
 		logger.Debug("server stopped serving, exiting")
+	}
+}
+
+// helper function to support different modes of operation
+func handleModes(mode string, eps *evtsproxy.EventsProxy, logger log.Logger) {
+	switch mode {
+	case "network": // managed; start venice exporter
+		logger.Infof("initializing network mode")
+		if err := eps.RegisterEventsWriter(evtsproxy.Venice, nil); err != nil {
+			log.Fatalf("failed to register venice writer with events proxy, err: %v", err)
+		}
+	case "host": // non-managed; start REST service
+		logger.Infof("initializing host mode")
+		// TODO: implement REST
+
+	default:
+		logger.Fatalf("unsupported mode: %s", mode)
 	}
 }

@@ -56,7 +56,8 @@ func (r *Reader) Start() error {
 		}
 
 		if err = fileWatcher.Add(r.dir); err != nil {
-			log.Debugf("failed to create file watcher, err: %v, retrying...", err)
+			log.Debugf("failed to add {%s} to the file watcher, err: %v, retrying...", r.dir, err)
+			fileWatcher.Close()
 			time.Sleep(1 * time.Second)
 			continue
 		}

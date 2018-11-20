@@ -55,6 +55,7 @@ func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.
 	// create events dispatcher
 	evtsDispatcher, err := dispatcher.NewDispatcher(testDedupInterval, testSendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	evtsDispatcher.Start()
 
 	// create mock writer
 	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock-%s", t.Name()), mockBufferLen, logger)
@@ -62,7 +63,6 @@ func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.
 	AssertOk(t, err, "failed to register mock writer")
 	mockWriter.Start(writerEventCh, offsetTracker)
 
-	evtsDispatcher.ProcessFailedEvents()
 	// create grpc server
 	rpcServer, err := epgrpc.NewRPCServer(globals.EvtsProxy, proxyURL, evtsDispatcher, logger)
 	AssertOk(t, err, "failed to create rpc server")
@@ -280,6 +280,7 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 		log.Errorf("failed to create events dispatcher, err: %v", err)
 		return
 	}
+	evtsDispatcher.Start()
 
 	proxyRPCServer, err = epgrpc.NewRPCServer(globals.EvtsProxy, proxyURL, evtsDispatcher, logger)
 	if err != nil {

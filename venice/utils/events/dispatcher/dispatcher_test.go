@@ -64,6 +64,8 @@ func TestEventsDispatcher(t *testing.T) {
 	// create dispatcher
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
+	dispatcher.Start() // start the dispatcher again; NO-OP
 	defer dispatcher.Shutdown()
 
 	// create and start writer
@@ -163,6 +165,7 @@ func TestEventsDispatcherShutdown(t *testing.T) {
 	// create dispatcher
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create and start mock writers
@@ -202,6 +205,7 @@ func TestEventsDispatcherFlush(t *testing.T) {
 
 	dispatcher, err := NewDispatcher(10*time.Second, interval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create and start writer
@@ -270,6 +274,7 @@ func TestEventsDispatcherRegisterWriter(t *testing.T) {
 
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create and start writer
@@ -341,6 +346,7 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 	// create dispatcher
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	numWriters := 3
@@ -480,6 +486,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 	// create dispatcher
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create and start writer
@@ -574,6 +581,7 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 	// dispatcher sends events to all the registered writers
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// copy event
@@ -690,6 +698,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	// create dispatcher
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create and start writer
@@ -734,6 +743,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	// create new dispatcher after a restart
 	dispatcher, err = NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create writers after a restart
@@ -813,6 +823,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	// create dispatcher; all the events should be expired after a second
 	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create writer
@@ -896,6 +907,7 @@ func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
 	// create dispatcher; all the events should be expired after a second
 	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create writer
@@ -995,6 +1007,7 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 	// create dispatcher; all the events should be expired after a second
 	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
+	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
 	// create mock writer

@@ -42,7 +42,8 @@ func NewRPCServer(serverName, listenURL string, evtsDispatcher events.Dispatcher
 	}
 
 	// create a gRPC server
-	rpcServer, err := rpckit.NewRPCServer(serverName, listenURL)
+	// evtsproxy does not need TLS as it is a local process
+	rpcServer, err := rpckit.NewRPCServer(serverName, listenURL, rpckit.WithTLSProvider(nil))
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating rpc server")
 	}

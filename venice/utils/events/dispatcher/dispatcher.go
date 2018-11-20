@@ -43,10 +43,12 @@ type dispatcherImpl struct {
 	// any operation on writers (events distribution, registration, un-registration) should not stall the events pipeline
 	writers *eventWriters // event writers
 
+	start sync.Once // used for starting the dispatcher
+
 	stop     sync.Once      // used for shutting down the dispatcher
 	shutdown chan struct{}  // to send shutdown signal to the daemon go routines (i.e. event distribution)
 	wg       sync.WaitGroup // used to wait for the graceful shutdown of daemon go routines
-	stopped  bool           // to stop receiving any more events/register requests once the dispatcher is shutdown
+	stopped  bool           // indicates whether the dispatcher is running or not
 }
 
 // upon registering the writer, each writers get a events channel to watch for
@@ -95,13 +97,21 @@ func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath st
 		shutdown:      make(chan struct{}),
 	}
 
-	// start notifying writers of the events every send interval
-	dispatcher.wg.Add(1)
-	go dispatcher.notifyWriters()
-
-	dispatcher.logger.Info("started events dispatcher")
-
 	return dispatcher, nil
+}
+
+// start notifying writers of the events every send interval
+func (d *dispatcherImpl) Start() {
+	d.start.Do(func() {
+		// start processing failed events
+		d.ProcessFailedEvents()
+
+		// start sending events from the cache
+		d.wg.Add(1)
+		go d.notifyWriters()
+
+		d.logger.Info("started events dispatcher")
+	})
 }
 
 // Action implements the action to be taken when the event reaches the dispatcher.
