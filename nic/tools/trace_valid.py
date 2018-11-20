@@ -41,6 +41,8 @@ def trace_valid():
                 validate_trace(fullpath, data, "HAL_TRACE_ERR")
                 validate_trace(fullpath, data, "HAL_TRACE_WARN")
                 validate_trace(fullpath, data, "HAL_TRACE_INFO")
+                validate_trace(fullpath, data, "NIC_LOG_INFO")
+                validate_trace(fullpath, data, "NIC_LOG_DEBUG")
 
 
 #------------------------------------------------------------------------------

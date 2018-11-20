@@ -297,7 +297,7 @@ void PdClient::init(void)
     NIC_LOG_INFO("Loading p4plus TxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
     ret = p4plus_txdma_init_tables();
     assert(ret == 0);
-    NIC_LOG_INFO("Initializing HBM Memory Partitions from: {}...");
+    NIC_LOG_INFO("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
     mp_ = mpartition::factory((hal_cfg_path_ +
                                     "/iris/hbm_mem.json").c_str(),
                                    CAPRI_HBM_BASE);

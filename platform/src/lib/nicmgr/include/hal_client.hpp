@@ -147,6 +147,7 @@ public:
 
   ForwardingMode get_fwd_mode() { return this->fwd_mode; }
 
+#if 0
   /* Segment APIs */
   int L2SegmentProbe();
 
@@ -204,6 +205,7 @@ public:
   /* LIF APIs */
   int LifProbe();
 
+#endif
   uint64_t LifGet(uint64_t lif_id, struct lif_info *lif_info);
 
   uint64_t LifCreate(uint64_t lif_id,

@@ -61,6 +61,7 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
     this->fwd_mode = fwd_mode;
 }
 
+#if 0
 /**
  * VRF APIs
  */
@@ -226,7 +227,9 @@ HalClient::UplinkDelete(uint64_t uplink_id)
 
     return InterfaceDelete(uplink_id);
 }
+#endif
 
+#if 0
 /**
  * L2Segment APIs
  */
@@ -693,6 +696,7 @@ HalClient::LifProbe()
 
     return -1;
 }
+#endif
 
 uint64_t
 HalClient::LifGet(uint64_t lif_id, struct lif_info *lif_info)

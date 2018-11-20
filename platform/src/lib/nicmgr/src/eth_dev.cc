@@ -235,8 +235,8 @@ Eth::Eth(HalClient *hal_client,
 
     NIC_LOG_INFO("lif created: id:{}, hw_lif_id: {}, mnic_id: {}, stats_mem_addr {:#x}, rdma sqs: {}"
                  " rqs: {} HAL: sqs: {} rqs: {}", hal_lif_info_.id, hal_lif_info_.hw_lif_id, mnic_id,
-                 stats_mem_addr, spec->rdma_sq_count, spec->rdma_rq_count, 
-                 hal_lif_info_.queue_info[ETH_QTYPE_SQ].entries, 
+                 stats_mem_addr, spec->rdma_sq_count, spec->rdma_rq_count,
+                 hal_lif_info_.queue_info[ETH_QTYPE_SQ].entries,
                  hal_lif_info_.queue_info[ETH_QTYPE_RQ].entries);
 
     auto lif_stats =
@@ -849,7 +849,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     comp->ver = IDENTITY_VERSION_1;
 
     NIC_LOG_INFO("lif-{} asic_type {} asic_rev {} serial_num {} fw_version {} "
-                 "ndbpgs_per_lif {} {} ntxqs_per_lif {} nrxqs_per_lif {} "
+                 "ndbpgs_per_lif {} ntxqs_per_lif {} nrxqs_per_lif {} "
                  "nintrs {} intr_coal_mult {} intr_coal_div {} "
                  "nucasts_per_lif {} nmcasts_per_lif {} nadminqs_per_lif {} "
                  "neqs_per_lif {} nrdmasqs_per_lif {} nrdmarqs_per_lif {} "
@@ -957,7 +957,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
     uint64_t addr;
 
-    NIC_LOG_INFO("lif-{}: CMD_OPCODE_LIF_INIT: lif_index {}, pushed_to_hal: {}", 
+    NIC_LOG_INFO("lif-{}: CMD_OPCODE_LIF_INIT: lif_index {}, pushed_to_hal: {}",
                  hal_lif_info_.hw_lif_id,
                  cmd->index,
                  hal_lif_info_.pushed_to_hal);
@@ -1765,8 +1765,8 @@ Eth::_CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data)
           " dest_qp_num {} q_key {}"
           " e_psn {} sq_psn {}"
           " header_template_ah_id {} header_template_size {}"
-          " path_mtu {}",
-          hal_lif_info_.hw_lif_id + cmd->lif_id,
+          " path_mtu {}. state: {}",
+          hal_lif_info_.hw_lif_id,
           cmd->qp_num, cmd->attr_mask,
           cmd->dest_qp_num, cmd->q_key,
           cmd->e_psn, cmd->sq_psn,

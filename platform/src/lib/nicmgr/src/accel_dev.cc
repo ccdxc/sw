@@ -1620,7 +1620,7 @@ void
 Accel_PF::LifInit()
 {
     if (get_lif_init_done()) {
-        NIC_LOG_INFO("lif-{}: Already inited...skipping");
+        NIC_LOG_INFO("lif-{}: Already inited...skipping", info.hw_lif_id);
         return;
     }
     NIC_LOG_INFO("lif-{}: Initing Lif", info.hw_lif_id);

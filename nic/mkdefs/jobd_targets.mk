@@ -258,6 +258,8 @@ jobd/halctl: ${JOBD_PREREQS}
 .PHONY: jobd/gtests
 jobd/gtests: ${JOBD_PREREQS}
 	${NICDIR}/tools/run_gtests.sh
+	${NICDIR}/tools/trace_valid.py
+	${NICDIR}/tools/trace_valid.py ${NICDIR}/../platform
 
 .PHONY: jobd/upgrade_manager/gtests
 jobd/upgrade_manager/gtests: ${JOBD_PREREQS}

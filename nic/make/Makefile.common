@@ -309,3 +309,4 @@ sanity_logs:
 
 check_traces:
 	@$(TOPDIR)/tools/trace_valid.py
+	@$(TOPDIR)/tools/trace_valid.py $(TOPDIR)/../platform
