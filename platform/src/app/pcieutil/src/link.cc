@@ -132,7 +132,16 @@ linkpoll(int argc, char *argv[])
         nst.ltssm_en = (cfg_mac & CFG_MACF_(0_2_LTSSM_EN)) != 0;
         nst.crs = (cfg_mac & CFG_MACF_(0_2_CFG_RETRY_EN)) != 0;
         nst.ltssm_st = (sta_mac & 0x1f);
-        portcfg_read_genwidth(port, &nst.gen, &nst.width);
+
+        // protect against mac reset events
+        // gen/width registers are inaccessible when mac is reset.
+        // (this is not perfect, still racy)
+        if (nst.perstn && nst.ltssm_st == 0x10) {
+            portcfg_read_genwidth(port, &nst.gen, &nst.width);
+        } else {
+            nst.gen = 0;
+            nst.width = 0;
+        }
 
         pal_reg_rd32w(PORTFIFO_DEPTH, (u_int32_t *)portfifo, 4);
         depths = portfifo[port];
