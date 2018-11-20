@@ -43,6 +43,20 @@ static auto quit_pipe = make_shared<Pipe<int>>();
 const pid_t mypid = getpid();
 string log_location = "/var/log/sysmgr";
 
+void exists_or_mkdir(const char *dir) {
+    struct stat sb;
+    if (stat(dir, &sb) == 0) {
+        if (!S_ISDIR(sb.st_mode)) {
+            ERR("%s is not a directory");
+            exit(-1);
+        }
+        return;
+    }
+    
+    mkdir(dir, S_IRWXU);
+    DEBUG("Creating directory {}", dir);
+}
+
 void mkdirs(const char *dir) {
     char tmp[PATH_MAX];
     char *p = NULL;
@@ -71,13 +85,11 @@ void mkdirs(const char *dir) {
         if(*p == '/')
         {
             *p = 0;
-            mkdir(tmp, S_IRWXU);
-            INFO("Creating directory {}", tmp);
+            exists_or_mkdir(tmp);
             *p = '/';
         }
     }
-    INFO("Creating directory {}", tmp);
-    mkdir(tmp, S_IRWXU);
+    exists_or_mkdir(tmp);
 }
 
 void redirect(const string &filename, int fd)
