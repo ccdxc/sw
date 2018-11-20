@@ -122,4 +122,4 @@ static_assert(sizeof(struct nicmgr_resp_desc) == 128, "");
 
 #pragma pack(pop)
 
-#endif
+#endif      /* __ADMINQ_H__ */

@@ -184,12 +184,16 @@ void Eth::Update()
     }
 }
 
-Eth::Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
-         void *dev_spec, PdClient *pd_client)
+Eth::Eth(HalClient *hal_client,
+         HalCommonClient *hal_common_client,
+         void *dev_spec,
+         hal_lif_info_t *nicmgr_lif_info,
+         PdClient *pd_client)
 {
     hal = hal_client;
     hal_common_client = hal_common_client;
     spec = (struct eth_devspec *)dev_spec;
+    Eth::nicmgr_lif_info = nicmgr_lif_info;
     pd = pd_client;
 
     memset(&pci_resources, 0, sizeof(pci_resources));
@@ -1102,7 +1106,9 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     admin_qstate.ring_size = cmd->ring_size;
     admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (64 << cmd->ring_size), 4096);
     admin_qstate.intr_assert_index = pci_resources.intrb + cmd->intr_index;
-    admin_qstate.nicmgr_qstate_addr = 0xc0084000;
+    if (nicmgr_lif_info) {
+        admin_qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
+    }
     WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
 
     invalidate_txdma_cacheline(addr);

@@ -206,7 +206,6 @@ void DeviceManager::Update()
     // Setting hal clients in all devices
     SetHalClient(hal, hal_common_client);
 
-
     // Create VRFs for uplinks
     NIC_LOG_INFO("Creating VRFs for uplinks");
     CreateUplinkVRFs();
@@ -233,12 +232,10 @@ void DeviceManager::Update()
     req_ring_base = hbm_base;
     resp_ring_base = hbm_base + (sizeof(struct nicmgr_req_desc) * ring_size);
 
-#if 0
-    NIC_LOG_INFO("nicmgr req qstate address {:#x}", info.qstate_addr[NICMGR_QTYPE_REQ]);
-    NIC_LOG_INFO("nicmgr resp qstate address {:#x}", info.qstate_addr[NICMGR_QTYPE_RESP]);
+    NIC_LOG_INFO("nicmgr req qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_REQ]);
+    NIC_LOG_INFO("nicmgr resp qstate address {:#x}", hal_lif_info_.qstate_addr[NICMGR_QTYPE_RESP]);
     NIC_LOG_INFO("nicmgr req queue address {:#x}", req_ring_base);
     NIC_LOG_INFO("nicmgr resp queue address {:#x}", resp_ring_base);
-#endif
 
     req_head = ring_size - 1;
     req_tail = 0;
@@ -404,22 +401,18 @@ DeviceManager::LoadConfig(string path)
 
             auto val = node.second;
 
-
-            // TODO: Refactor into resource allocator.
-            // TODO: For now interrupts must be 256 aligned. The allocator does not support
-            //       aligning resource ids, so allocate 256.
             eth_spec->dev_uuid     = val.get<uint64_t>("dev_uuid");
             eth_spec->rxq_count    = val.get<uint64_t>("rxq_count");
             eth_spec->txq_count    = val.get<uint64_t>("txq_count");
             eth_spec->eq_count     = val.get<uint64_t>("eq_count");
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
             eth_spec->intr_count   = val.get<uint64_t>("intr_count");
-            eth_spec->mac_addr     = sys_mac_base++;
             if (intr_allocator->alloc_block(&intr_base, eth_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
                 NIC_LOG_ERR("lif{}: Failed to allocate interrupts", hal_lif_info_.hw_lif_id);
                 return -1;
             }
             eth_spec->intr_base    = intr_base;
+            eth_spec->mac_addr     = sys_mac_base++;
             eth_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             eth_spec->lif_id = eth_spec->hw_lif_id;
             if (val.get_optional<string>("network")) {
@@ -460,21 +453,17 @@ DeviceManager::LoadConfig(string path)
 
             auto val = node.second;
 
-            // TODO: Refactor into resource allocator
-            // TODO: For now interrupts must be 256 aligned. The allocator does not support
-            //       aligning resource ids, so allocate 256.
-            if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", hal_lif_info_.hw_lif_id);
-                return -1;
-            }
-
             eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
             eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
             eth_spec->txq_count = val.get<uint64_t>("txq_count");
             eth_spec->eq_count = val.get<uint64_t>("eq_count");
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
-            eth_spec->intr_base = intr_base;
             eth_spec->intr_count = val.get<uint64_t>("intr_count");
+            if (intr_allocator->alloc_block(&intr_base, eth_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
+                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", hal_lif_info_.hw_lif_id);
+                return -1;
+            }
+            eth_spec->intr_base = intr_base;
             eth_spec->mac_addr = sys_mac_base++;
 
             if (val.get_optional<string>("rdma")) {
@@ -534,14 +523,6 @@ DeviceManager::LoadConfig(string path)
 
             auto val = node.second;
 
-            // TODO: Refactor into resource allocator
-            // TODO: For now interrupts must be 256 aligned. The allocator does not support
-            //       aligning resource ids, so allocate 256.
-            if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
-                NIC_LOG_ERR("Accel lif: Failed to allocate interrupts");
-                return -1;
-            }
-
             accel_spec->hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
             if (dol_integ) {
                     accel_spec->lif_id = STORAGE_SEQ_SW_LIF_ID;
@@ -550,8 +531,13 @@ DeviceManager::LoadConfig(string path)
             }
             accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
             accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
-            accel_spec->intr_base = intr_base;
             accel_spec->intr_count = val.get<uint32_t>("intr_count");
+            if (intr_allocator->alloc_block(&intr_base, accel_spec->intr_count) != sdk::lib::indexer::SUCCESS) {
+                NIC_LOG_ERR("Accel lif: Failed to allocate interrupts");
+                return -1;
+            }
+            accel_spec->intr_base = intr_base;
+
             accel_spec->pub_intv_frac = ACCEL_DEV_PUB_INTV_FRAC_DFLT;
             if (val.get_optional<string>("publish_interval")) {
                 accel_spec->pub_intv_frac = val.get<uint32_t>("publish_interval.sec_fraction");
@@ -591,7 +577,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         NIC_LOG_ERR("Unsupported Device Type DEBUG");
         return NULL;
     case ETH:
-        eth_dev = new Eth(hal, hal_common_client, dev_spec, pd);
+        eth_dev = new Eth(hal, hal_common_client, dev_spec, &hal_lif_info_, pd);
         eth_dev->SetType(type);
         devices[eth_dev->GetHalLifInfo()->hw_lif_id] = (Device *)eth_dev;
         return (Device *)eth_dev;

@@ -134,8 +134,14 @@ static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0);
  */
 class Eth : public Device {
 public:
-    Eth(HalClient *hal_client, HalCommonClient *hal_common_client,
-        void *dev_spec, PdClient *pd_client);
+    Eth(HalClient *hal_client,
+        HalCommonClient *hal_common_client,
+        void *dev_spec,
+        hal_lif_info_t *nicmgr_lif_info,
+        PdClient *pd_client);
+
+    struct lif_info info;
+    hal_lif_info_t lif_info;
     uint32_t uplink_id;
     struct dev_cmd_regs *devcmd;
     void DevcmdPoll();
@@ -171,6 +177,7 @@ private:
     // HAL Info
     HalClient *hal;
     HalCommonClient *hal_common_client;
+    hal_lif_info_t *nicmgr_lif_info;
     uint64_t lif_handle;    // TODO: Support multiple LIFs per ETH device
     // Coses
     uint8_t  coses; // {uint8_t CosA:4; uint8_t CosB:4;}

@@ -13,10 +13,6 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "nic/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
 
-struct eth_rx_qstate qstate_ethrx = {0};
-struct eth_tx_qstate qstate_ethtx = {0};
-struct admin_qstate qstate_ethaq = {0};
-
 typedef struct {
     uint64_t base;
     uint32_t size;
@@ -83,6 +79,9 @@ get_lif_qstate(uint16_t lif, queue_info_t qinfo[8])
 void
 eth_qpoll(uint16_t lif, uint8_t qtype)
 {
+    struct eth_rx_qstate qstate_ethrx = {0};
+    struct eth_tx_qstate qstate_ethtx = {0};
+    struct admin_qstate qstate_ethaq = {0};
     queue_info_t qinfo[8] = {0};
 
     assert(get_lif_qstate(lif, qinfo));
@@ -129,6 +128,9 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
 void
 eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 {
+    struct eth_rx_qstate qstate_ethrx = {0};
+    struct eth_tx_qstate qstate_ethtx = {0};
+    struct admin_qstate qstate_ethaq = {0};
     queue_info_t qinfo[8] = {0};
 
     assert(get_lif_qstate(lif, qinfo));
@@ -221,16 +223,126 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 }
 
 void
+nicmgr_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
+{
+    nicmgr_req_qstate_t qstate_req = {0};
+    nicmgr_resp_qstate_t qstate_resp = {0};
+    queue_info_t qinfo[8] = {0};
+
+    assert(get_lif_qstate(lif, qinfo));
+
+    if (qinfo[qtype].size == 0) {
+        printf("Invalid type %u for lif %u\n", qtype, lif);
+        return;
+    }
+
+    if (qid >= qinfo[qtype].length) {
+        printf("Invalid qid %u for lif %u qtype %u\n", qid, lif, qtype);
+        return;
+    }
+
+    uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
+    printf("addr: %lx\n\n", addr);
+
+    switch (qtype) {
+    case 0:
+        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_req, sizeof(qstate_req));
+        printf("pc_offset=0x%0x\n"
+               "rsvd0=0x%0x\n"
+               "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
+               "eval_last=0x%0x\n"
+               "host=0x%0x\ntotal=0x%0x\n"
+               "pid=0x%0x\n"
+               "p_index0=0x%0x\nc_index0=0x%0x\n"
+               "comp_index=0x%0x\nci_fetch=0x%0x\n"
+               "color=0x%0x\n"
+               "enable=0x%0x\nintr_enable=0x%0x\n"
+               "ring_base=0x%0lx\nring_size=0x%0x\n"
+               "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
+               qstate_req.pc_offset, qstate_req.rsvd0, qstate_req.cosA, qstate_req.cosB,
+               qstate_req.cos_sel, qstate_req.eval_last, qstate_req.host, qstate_req.total,
+               qstate_req.pid, qstate_req.p_index0, qstate_req.c_index0, qstate_req.comp_index,
+               qstate_req.ci_fetch, qstate_req.sta.color, qstate_req.cfg.enable,
+               qstate_req.cfg.intr_enable, qstate_req.ring_base, qstate_req.ring_size,
+               qstate_req.cq_ring_base, qstate_req.intr_assert_index);
+        break;
+    case 1:
+        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_resp, sizeof(qstate_resp));
+        printf("pc_offset=0x%0x\n"
+               "rsvd0=0x%0x\n"
+               "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
+               "eval_last=0x%0x\n"
+               "host=0x%0x\ntotal=0x%0x\n"
+               "pid=0x%0x\n"
+               "p_index0=0x%0x\nc_index0=0x%0x\n"
+               "comp_index=0x%0x\nci_fetch=0x%0x\n"
+               "color=0x%0x\n"
+               "enable=0x%0x\nintr_enable=0x%0x\n"
+               "ring_base=0x%0lx\nring_size=0x%0x\n"
+               "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
+               qstate_resp.pc_offset, qstate_resp.rsvd0, qstate_resp.cosA, qstate_resp.cosB,
+               qstate_resp.cos_sel, qstate_resp.eval_last, qstate_resp.host, qstate_resp.total,
+               qstate_resp.pid, qstate_resp.p_index0, qstate_resp.c_index0, qstate_resp.comp_index,
+               qstate_resp.ci_fetch, qstate_resp.sta.color, qstate_resp.cfg.enable,
+               qstate_resp.cfg.intr_enable, qstate_resp.ring_base, qstate_resp.ring_size,
+               qstate_resp.cq_ring_base, qstate_resp.intr_assert_index);
+        break;
+    default:
+        assert(0);
+    }
+}
+
+void
+nicmgr_qpoll(uint16_t lif, uint8_t qtype)
+{
+    nicmgr_req_qstate_t qstate_req = {0};
+    nicmgr_resp_qstate_t qstate_resp = {0};
+    queue_info_t qinfo[8] = {0};
+
+    assert(get_lif_qstate(lif, qinfo));
+
+    if (qinfo[qtype].size == 0) {
+        printf("Invalid type %u for lif %u\n", qtype, lif);
+        return;
+    }
+
+    for (uint32_t qid = 0; qid < qinfo[qtype].length; qid++) {
+        uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
+        uint32_t posted = 0;
+        switch (qtype) {
+        case 0:
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_req, sizeof(qstate_req));
+            posted =
+                NUM_POSTED(1 << qstate_req.ring_size, qstate_req.p_index0, qstate_req.c_index0);
+            printf("req%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+                   qstate_req.p_index0, qstate_req.c_index0, posted, qstate_req.comp_index,
+                   qstate_req.sta.color);
+            break;
+        case 1:
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_resp, sizeof(qstate_resp));
+            posted =
+                NUM_POSTED(1 << qstate_resp.ring_size, qstate_resp.p_index0, qstate_resp.c_index0);
+            printf("resp%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+                   qstate_resp.p_index0, qstate_resp.c_index0, posted, qstate_resp.comp_index,
+                   qstate_resp.sta.color);
+            break;
+        default:
+            assert(0);
+        }
+    }
+}
+
+void
 usage()
 {
     printf("Usage:\n");
     printf("   qinfo          <lif>\n");
     printf("   qstate         <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
+    printf("   nicmgr_qstate  <lif> <qtype> <qid>\n");
+    printf("   nicmgr_qpoll   <lif> <qtype>\n");
     printf("   memrd          <addr> <size_in_bytes>\n");
     printf("   memwr          <addr> <size_in_bytes> <bytes> ...\n");
-    printf("   memwr32        <addr> <32-bit value>\n");
-    printf("   memwr64        <addr> <64-bit value>\n");
     printf("   memdump        <addr> <size_in_bytes>\n");
     printf("   bzero          <addr> <size_in_bytes>\n");
     printf("   find           <addr> <size_in_bytes> <pattern>\n");
@@ -279,6 +391,21 @@ main(int argc, char **argv)
         uint16_t lif = std::strtoul(argv[2], NULL, 0);
         uint8_t qtype = std::strtoul(argv[3], NULL, 0);
         eth_qpoll(lif, qtype);
+    } else if (strcmp(argv[1], "nicmgr_qstate") == 0) {
+        if (argc != 5) {
+            usage();
+        }
+        uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        uint8_t qtype = std::strtoul(argv[3], NULL, 0);
+        uint32_t qid = std::strtoul(argv[4], NULL, 0);
+        nicmgr_qstate(lif, qtype, qid);
+    } else if (strcmp(argv[1], "nicmgr_qpoll") == 0) {
+        if (argc != 4) {
+            usage();
+        }
+        uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        uint8_t qtype = std::strtoul(argv[3], NULL, 0);
+        nicmgr_qpoll(lif, qtype);
     } else if (strcmp(argv[1], "memrd") == 0) {
         if (argc != 4) {
             usage();

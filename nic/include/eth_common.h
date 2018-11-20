@@ -3,6 +3,8 @@
 #ifndef __ETH_COMMON_H__
 #define __ETH_COMMON_H__
 
+#include <stdint.h>
+
 #pragma pack(push, 1)
 
 struct eth_tx_sta_qstate {
@@ -99,4 +101,4 @@ static_assert (sizeof(struct eth_rx_qstate) == 64, "");
 
 #pragma pack(pop)
 
-#endif    // __ETH_COMMON_H__
+#endif      /* __ETH_COMMON_H__ */
