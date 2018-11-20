@@ -1,6 +1,12 @@
 ---
+version: 2.0
 targets:
-  iota/infra    : ["sh", "-c", "cd /sw/iota && ./sanity.sh "]
+  iota/infra:
+    commands: ["sh", "-c", "cd /sw/iota && ./sanity.sh "]
+    owners: ["email:sudhiaithal@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
 cache:
   name: "sw"

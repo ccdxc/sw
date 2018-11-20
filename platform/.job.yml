@@ -1,7 +1,18 @@
 ---
+version: 2.0
 targets:
-  build_x86-64: [ "sh", "-c", "cd /sw/nic && make ARCH=x86_64" ]
-  build_aarch64: [ "sh", "-c", "cd /sw/nic && make ARCH=aarch64" ]
+  build_x86-64:
+    commands: [ "sh", "-c", "cd /sw/nic && make ARCH=x86_64" ]
+    owners: ["email:neel@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  build_aarch64:
+    commands: [ "sh", "-c", "cd /sw/nic && make ARCH=aarch64" ]
+    owners: ["email:neel@pensando.io"]
+    area:
+    sub-area:
+    feature:
   ##nicmgr_gtest: [ "sh", "-c", "make && cd /sw/nic && ./run.py --nicmgr_gtest" ]
   ##nicmgr_classic_gtest: [ "sh", "-c", "make && cd /sw/nic && ./run.py --nicmgr_gtest --classic" ]
 cache:
@@ -12,7 +23,12 @@ image:
   work_dir: "/sw/platform"
 rebase: true
 #warmd:
-#  target: [ "sh", "-c", "cd /sw && make e2e-turin && test/bin/e2e-turin  test --topo-file 2_naples_qemu_node.yaml" ]
+#  target:
+#    commands: [ "sh", "-c", "cd /sw && make e2e-turin && test/bin/e2e-turin  test --topo-file 2_naples_qemu_node.yaml" ]
+#    owners: ["email:neel@pensando.io"]
+#    area:
+#    sub-area:
+#    feature:
 #  create:
 #    image: build-38
 #    count: 2

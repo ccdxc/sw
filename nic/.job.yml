@@ -1,105 +1,451 @@
 ---
+version: 2.0
 targets:
-  platform/drivers      : ["make", "jobd/platform/drivers"]
-  gtests                : ["make", "jobd/gtests"]
-  halctl                : ["make", "jobd/halctl"]
+  platform/drivers:
+    commands: ["make", "jobd/platform/drivers"]
+    owners: ["email:dbarsky@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  gtests:
+    commands: ["make", "jobd/gtests"]
+    owners: ["email:saratk@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  halctl:
+    commands: ["make", "jobd/halctl"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== ARM Tests ===========================
-  arm/build             : ["make", "ARCH=aarch64"]
-  arm/build/haps        : ["make", "ARCH=aarch64", "PLATFORM=haps", "package-haps-dbg"]
+  arm/build:
+    commands: ["make", "ARCH=aarch64"]
+    owners: ["email:dbarsky@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  arm/build/haps:
+    commands: ["make", "ARCH=aarch64", "PLATFORM=haps", "package-haps-dbg"]
+    owners: ["email:dbarsky@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== Storage Tests ===========================
-  storage               : ["make", "jobd/storage"]
-  storage/perf          : ["make", "jobd/storage/perf"]
-  storage/nvme          : ["make", "jobd/storage/nvme"]
-  #storage/nvme_perf    : ["make", "jobd/storage/nvme_perf"]
-  #storage/nicmgr        : ["make", "jobd/storage/nicmgr"]
+  storage:
+    commands: ["make", "jobd/storage"]
+    owners: ["email:piraman@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  storage/perf:
+    commands: ["make", "jobd/storage/perf"]
+    owners: ["email:piraman@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  storage/nvme:
+    commands: ["make", "jobd/storage/nvme"]
+    owners: ["email:piraman@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  #storage/nvme_perf:
+  # commands: ["make", "jobd/storage/nvme_perf"]
+  # owners: ["email:piraman@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
+  #storage/nicmgr:
+  # commands: ["make", "jobd/storage/nicmgr"]
+  # owners: ["email:piraman@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
   #Test running into locking issues - disabling for now
-  #storage/combined     : ["make", "jobd/storage/combined"]
+  #storage/combined:
+  # commands: ["make", "jobd/storage/combined"]
+  # owners: ["email:piraman@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
 
   # ====================== Config Tests ===========================
-  #configtest           : ["make", "jobd/configtest"]
+  #configtest:
+  # commands: ["make", "jobd/configtest"]
+  # owners: ["email:dbarsky@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
 
   # ====================== DOL Tests ===========================
-  dol/rdma              : ["make", "jobd/dol/rdma"]
-  dol/rdma_ext          : ["make", "jobd/dol/rdma_ext"]
-  dol/fte               : ["make", "jobd/dol/fte"]
-  dol/fte2              : ["make", "jobd/dol/fte2"]
-  dol/ftevxlan          : ["make", "jobd/dol/ftevxlan"]
-  dol/alg               : ["make", "jobd/dol/alg"]
-  dol/norm              : ["make", "jobd/dol/norm"]
-  dol/eth               : ["make", "jobd/dol/eth"]
-  dol/acl               : ["make", "jobd/dol/acl"]
-  dol/proxy             : ["make", "jobd/dol/proxy"]
-  dol/ipsec             : ["make", "jobd/dol/ipsec"]
-  dol/networking        : ["make", "jobd/dol/networking"]
-  dol/vxlan             : ["make", "jobd/dol/vxlan"]
-  dol/ipsg              : ["make", "jobd/dol/ipsg"]
-  dol/firewall          : ["make", "jobd/dol/firewall"]
-  dol/pin               : ["make", "jobd/dol/pin"]
-  dol/multicast         : ["make", "jobd/dol/multicast"]
-  dol/pinl2mc           : ["make", "jobd/dol/pinl2mc"]
-  dol/l4lb              : ["make", "jobd/dol/l4lb"]
-  dol/dos               : ["make", "jobd/dol/dos"]
-  dol/recirc            : ["make", "jobd/dol/recirc"]
-  dol/classic           : ["make", "jobd/dol/classic"]
-  dol/classicl2mc       : ["make", "jobd/dol/classicl2mc"]
-  dol/parser            : ["make", "jobd/dol/parser"]
-  dol/telemetry         : ["make", "jobd/dol/telemetry"]
-  dol/p4pt              : ["make", "jobd/dol/p4pt"]
-  dol/app_redir         : ["make", "jobd/dol/app_redir"]
-  dol/basetopo          : ["make", "jobd/dol/basetopo"]
-  dol/swphv             : ["make", "jobd/dol/swphv"]
+  dol/rdma:
+    commands: ["make", "jobd/dol/rdma"]
+    owners: ["email:ksmurty@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/rdma_ext:
+    commands: ["make", "jobd/dol/rdma_ext"]
+    owners: ["email:ksmurty@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/fte:
+    commands: ["make", "jobd/dol/fte"]
+    owners: ["email:lseshan@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/fte2:
+    commands: ["make", "jobd/dol/fte2"]
+    owners: ["email:lseshan@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/ftevxlan:
+    commands: ["make", "jobd/dol/ftevxlan"]
+    owners: ["email:lseshan@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/alg:
+    commands: ["make", "jobd/dol/alg"]
+    owners: ["email:pavramas@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/norm:
+    commands: ["make", "jobd/dol/norm"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/eth:
+    commands: ["make", "jobd/dol/eth"]
+    owners: ["email:bharat@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/acl:
+    commands: ["make", "jobd/dol/acl"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/proxy:
+    commands: ["make", "jobd/dol/proxy"]
+    owners: ["email:raghava@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/ipsec:
+    commands: ["make", "jobd/dol/ipsec"]
+    owners: ["email:rameshp@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/networking:
+    commands: ["make", "jobd/dol/networking"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/vxlan:
+    commands: ["make", "jobd/dol/vxlan"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/ipsg:
+    commands: ["make", "jobd/dol/ipsg"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/firewall:
+    commands: ["make", "jobd/dol/firewall"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/pin:
+    commands: ["make", "jobd/dol/pin"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/multicast:
+    commands: ["make", "jobd/dol/multicast"]
+    owners: ["email:ajeer@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/pinl2mc:
+    commands: ["make", "jobd/dol/pinl2mc"]
+    owners: ["email:ajeer@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/l4lb:
+    commands: ["make", "jobd/dol/l4lb"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/dos:
+    commands: ["make", "jobd/dol/dos"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/recirc:
+    commands: ["make", "jobd/dol/recirc"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/classic:
+    commands: ["make", "jobd/dol/classic"]
+    owners: ["email:bharat@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/classicl2mc:
+    commands: ["make", "jobd/dol/classicl2mc"]
+    owners: ["email:ajeer@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/parser:
+    commands: ["make", "jobd/dol/parser"]
+    owners: ["email:pbhide@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/telemetry:
+    commands: ["make", "jobd/dol/telemetry"]
+    owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/p4pt:
+    commands: ["make", "jobd/dol/p4pt"]
+    owners: ["email:jainvipin@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/app_redir:
+    commands: ["make", "jobd/dol/app_redir"]
+    owners: ["email:tuyenq@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/basetopo:
+    commands: ["make", "jobd/dol/basetopo"]
+    owners: ["email:vikasd@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/swphv:
+    commands: ["make", "jobd/dol/swphv"]
+    owners: ["email:shaleman@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== GFT Tests ===========================
-  dol/gft               : ["make", "PIPELINE=gft", "jobd/dol/gft"]
-  dol/gft/rdma          : ["make", "PIPELINE=gft", "jobd/dol/gft/rdma"]
-  dol/gft/rdma_l2l      : ["make", "PIPELINE=gft", "jobd/dol/gft/rdma_l2l"]
-  gft/gtest             : ["make", "PIPELINE=gft", "jobd/gft/gtest"]
+  dol/gft:
+    commands: ["make", "PIPELINE=gft", "jobd/dol/gft"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/gft/rdma:
+    commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma"]
+    owners: ["email:ksmurty@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  dol/gft/rdma_l2l:
+    commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma_l2l"]
+    owners: ["email:ksmurty@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  gft/gtest:
+    commands: ["make", "PIPELINE=gft", "jobd/gft/gtest"]
+    owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== MBT Tests ===========================
-  mbt/base              : ["make", "jobd/mbt/base"]
-  mbt/networking        : ["make", "jobd/mbt/networking"]
-  mbt/firewall          : ["make", "jobd/mbt/firewall"]
-  mbt/alg               : ["make", "jobd/mbt/alg"]
+  mbt/base:
+    commands: ["make", "jobd/mbt/base"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  mbt/networking:
+    commands: ["make", "jobd/mbt/networking"]
+    owners: ["email:bharat@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  mbt/firewall:
+    commands: ["make", "jobd/mbt/firewall"]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  mbt/alg:
+    commands: ["make", "jobd/mbt/alg"]
+    owners: ["email:pavramas@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== Make Infra Tests ===========================
-  #make/sdk              : ["make", "jobd/make/sdk"]
-  #make/nic              : ["make", "jobd/make/nic"]
+  #make/sdk:
+  # commands: ["make", "jobd/make/sdk"]
+  # owners: ["email:statikon@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
+  #make/nic:
+  # commands: ["make", "jobd/make/nic"]
+  # owners: ["email:vikasd@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
 
-  codesync              : ["make", "jobd/codesync" ]
+  codesync:
+    commands: ["make", "jobd/codesync" ]
+    owners: ["email:statikon@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== Apollo2 Tests ===========================
-  apollo/gtest         : ["make", "PIPELINE=apollo", "jobd/apollo/gtest"]
+  apollo/gtest:
+    commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtest"]
+    owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== E2E DOL Tests ===========================
-  #dol/e2e/tlsproxy      : ["make", "jobd/dol/e2e/tlsproxy"]
-  #dol/e2e/tlsproxy/v6   : ["make", "jobd/dol/e2e/v6tlsproxy"]
-  dol/e2e/eplearn       : ["make", "jobd/dol/e2e/eplearn"]
-  #dol/e2e/alg           : ["make", "jobd/dol/e2e/alg"]
-  dol/e2e/l7            : ["make", "jobd/dol/e2e/l7"]
+  #dol/e2e/tlsproxy:
+  # commands: ["make", "jobd/dol/e2e/tlsproxy"]
+  # owners: ["email:raghava@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
+  #dol/e2e/tlsproxy/v6:
+  # commands: ["make", "jobd/dol/e2e/v6tlsproxy"]
+  # owners: ["email:raghava@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
+  dol/e2e/eplearn:
+    commands: ["make", "jobd/dol/e2e/eplearn"]
+    owners: ["email:sudhiaithal@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  #dol/e2e/alg:
+  # commands: ["make", "jobd/dol/e2e/alg"]
+  # owners: ["email:pavramas@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
+  dol/e2e/l7:
+    commands: ["make", "jobd/dol/e2e/l7"]
+    owners: ["email:piraman@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== Agent Tests ===========================
-  agent                 : ["make", "jobd/agent"]
-  e2e/naples-sim        : ["make", "jobd/e2e/naples-sim"]
+  agent:
+    commands: ["make", "jobd/agent"]
+    owners: ["email:abhi@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  e2e/naples-sim:
+    commands: ["make", "jobd/e2e/naples-sim"]
+    owners: ["email:sudhiaithal@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== IRIS-C Tests ===========================
   # iris-c gtests
-  #filter/gtest          : ["make", "jobd/filter/gtest"]
+  #filter/gtest:
+  # commands: ["make", "jobd/filter/gtest"]
+  # owners: ["email:saratk@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
 
   # ====================== Upg Mgr Tests ===========================
-  upgrade_manager/gtests   : ["make", "jobd/upgrade_manager/gtests"]
+  upgrade_manager/gtests:
+    commands: ["make", "jobd/upgrade_manager/gtests"]
+    owners: ["email:arathore@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
   # ====================== Nic Mgr Tests ===========================
-  #nicmgr/gtest          : ["make", "jobd/nicmgr/gtest"]
-  #nicmgr/gtest_classic  : ["make", "jobd/nicmgr/gtest_classic"]
+  #nicmgr/gtest:
+  # commands: ["make", "jobd/nicmgr/gtest"]
+  # owners: ["email:neel@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
+  #nicmgr/gtest_classic:
+  # commands: ["make", "jobd/nicmgr/gtest_classic"]
+  # owners: ["email:neel@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
 
-  #coremgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/sysmgr/coremgr/... && cd /sw/nic/sysmgr/coremgr/test && ./test.sh; ret=$? ; exit $ret" ]
+  #coremgr:
+  # commands: ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/sysmgr/coremgr/... && cd /sw/nic/sysmgr/coremgr/test && ./test.sh; ret=$? ; exit $ret" ]
+  # owners: ["email:dbarsky@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
 
-  delphi:  ["sh", "-c", "cd /sw/nic && make && cd ./delphi && make test && cd $GOPATH/src/github.com/pensando/sw && LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ go test -v ./nic/delphi/..." ]
-  # upgmgr:  ["sh", "-c", "cd /sw/nic && bazel build //nic/upgrade_manager/... && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all" ]
-  sysmgr:  ["sh", "-c", "cd /sw/nic/sysmgr/test && ./test.sh" ]
-  venice: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make ws-tools && make pull-assets && make checks && LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ TRACKER_URL=\"tracker.test.pensando.io\" make unit-test-cover; ret=$? ; make sanity_logs ; exit $ret" ]
+  delphi:
+    commands: ["sh", "-c", "cd /sw/nic && make && cd ./delphi && make test && cd $GOPATH/src/github.com/pensando/sw && LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ go test -v ./nic/delphi/..." ]
+    owners: ["email:shaleman@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  #upgmgr:
+  # commands: ["sh", "-c", "cd /sw/nic && bazel build //nic/upgrade_manager/... && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all" ]
+  # owners: ["email:arathore@pensando.io"]
+  # area:
+  # sub-area:
+  # feature:
+  sysmgr:
+    commands: ["sh", "-c", "cd /sw/nic/sysmgr/test && ./test.sh" ]
+    owners: ["email:stavros@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  venice:
+    commands: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make ws-tools && make pull-assets && make checks && LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ TRACKER_URL=\"tracker.test.pensando.io\" make unit-test-cover; ret=$? ; make sanity_logs ; exit $ret" ]
+    owners: ["email:abhi@pensando.io"]
+    area:
+    sub-area:
+    feature:
 
 cache:
   name: "sw"
@@ -112,7 +458,12 @@ logfiles:
   - /sw/nic/nic_sanity_logs.tar.gz
 
 #warmd:
-#  target: [ "make", "jobd/iota/base" ]
+#  target:
+#    commands: ["make", "jobd/iota/base"]
+#    owners: ["email:sudhiaithal@pensando.io"]
+#    area:
+#    sub-area:
+#    feature:
 #  create:
 #    image: build-100
 #    count: 6

@@ -1,7 +1,18 @@
 ---
+version: 2.0
 targets:
-  networking:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo up2up --feature networking ; ret=$? ; make sanity_logs ; exit $ret" ]
-  vxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo vxlan --feature vxlan ; ret=$? ; make sanity_logs ; exit $ret" ]
+  networking:
+    commands: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo up2up --feature networking ; ret=$? ; make sanity_logs ; exit $ret" ]
+    owners: ["email:vikasd@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  vxlan:
+    commands: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make nic && make sanity-tests && ./run.py  --topo vxlan --feature vxlan ; ret=$? ; make sanity_logs ; exit $ret" ]
+    owners: ["email:vikasd@pensando.io"]
+    area:
+    sub-area:
+    feature:
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

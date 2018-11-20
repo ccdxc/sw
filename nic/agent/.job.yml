@@ -1,5 +1,11 @@
+version: 2.0
 targets:
-  venice: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && go test -p 1 ./venice/... && go test -p 1 ./test/..." ]
+  venice:
+    commands: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && go test -p 1 ./venice/... && go test -p 1 ./test/..." ]
+    owners: ["email:abhi@pensando.io"]
+    area:
+    sub-area:
+    feature:
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"

@@ -1,6 +1,12 @@
 ---
+version: 2.0
 targets:
-  venice: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make && ./tools/scripts/check-local-files.sh" ]
+  venice:
+    commands: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make && ./tools/scripts/check-local-files.sh" ]
+    owners: ["email:ravi@pensando.io"]
+    area:
+    sub-area:
+    feature:
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"
