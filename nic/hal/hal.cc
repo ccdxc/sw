@@ -72,7 +72,8 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGINT:
     case SIGTERM:
     case SIGQUIT:
-        if (!getenv("DISABLE_FTE")) {
+        if (!getenv("DISABLE_FTE") && 
+            (hal::g_hal_cfg.shm_mode == true)) {
             ipc_logger::deinit();
         }
         HAL_GCOV_FLUSH();

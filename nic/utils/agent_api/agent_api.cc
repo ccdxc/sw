@@ -33,7 +33,8 @@ int ipc_logger::init (void)
 // deinit frees up the shared memory
 void ipc_logger::deinit (void)
 {
-    shm_->tear_down_shm();
+    if (shm_)
+        shm_->tear_down_shm();
 }
 
 // factory creates a new instance of ipc_logger
