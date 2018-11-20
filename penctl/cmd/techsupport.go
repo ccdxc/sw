@@ -210,6 +210,16 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println("No commands to run")
 	}
 
+	file = destDir + "/penctl.ver"
+	out, err = os.Create(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer out.Close()
+	w = bufio.NewWriter(out)
+	w.WriteString(getPenctlVer())
+	w.Flush()
+
 	if !cmd.Flags().Changed("tarball") {
 		tarFile = "naples-tech-support"
 	}

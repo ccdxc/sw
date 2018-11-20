@@ -46,8 +46,41 @@ import (
 
 	// run{{.GetName}}GetHandler is the Get Handler for {{.GetName}}
 	func (s *RestServer) run{{.GetName}}GetHandler(r *http.Request) (interface{}, error){
-		log.Infof("Got GET request {{.GetName}}/%s", mux.Vars(r)["Meta.Name"])
-		return nil, nil
+		tstr := ntranslate.MustGetTranslator()
+		key := tstr.GetKey("{{.GetName}}", &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: mux.Vars(r)["Meta.Name"]})
+		if key == nil {
+			key, _ = mux.Vars(r)["Meta.Name"]
+		}
+ 		{{$foundKey := false}}
+		{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
+		{{if (eq .GetName "Key") }}
+		{{$foundKey = true}}
+		keyVal, ok := key.({{GetGolangTypeName .GetType .GetTypeName}})
+		if !ok {
+			return "Key is not of type {{GetGolangTypeName .GetType .GetTypeName}}", errors.New("Key is not of type {{GetGolangTypeName .GetType .GetTypeName}}")
+		}
+		{{end}} {{end}}
+		{{if eq $foundKey false}} 
+		keyVal := 0
+		{{end}}
+		log.Infof("Got GET request {{.GetName}}/%s/%v", mux.Vars(r)["Meta.Name"], keyVal)
+
+		iter, err := goproto.New{{.GetName}}Iterator()
+		if err != nil {
+			return "Unable to get {{.GetName}}Iterator", err
+		}
+
+		{{if eq $foundKey false}} 
+		mtr, err := iter.Find()
+		{{else}}
+		mtr, err := iter.Find(keyVal)
+		{{end}}
+		if err != nil {
+			return "Unable to Find UpgradeMetrics Object", err
+		}
+		log.Infof("err %s", err.Error())
+		log.Infof("New {{.GetName}}: %+v", mtr)
+		return mtr, nil
 	}
     {{end}}
 {{end}}

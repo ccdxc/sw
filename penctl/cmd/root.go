@@ -24,10 +24,12 @@ var PenCtlVer string
 // BuiltTime is the built time of penctl
 var BuiltTime string
 
+func getPenctlVer() string {
+	return fmt.Sprintf("Sha:       %s\nVersion:   %s\nBuiltTime: %s\n", GitCommit, PenCtlVer, BuiltTime)
+}
+
 func printPenctlVer() {
-	fmt.Printf("Sha:       %s\n", GitCommit)
-	fmt.Printf("Version:   %s\n", PenCtlVer)
-	fmt.Printf("BuiltTime: %s\n", BuiltTime)
+	fmt.Println(getPenctlVer())
 }
 
 // rootCmd represents the base command when called without any subcommands

@@ -91,6 +91,17 @@ $${${1}_BLD_OUT_DIR}/${2}/%.proto_gometricsobj: ${2}/%.proto $${${1}_DEPS}
 	${AT}touch $$@
 endef
 
+define ADD_SRC_RULE_PROTO_GEN_PENMETRICS
+$${${1}_BLD_OUT_DIR}/${2}/%.proto_penmetricsobj: ${2}/%.proto $${${1}_DEPS}
+	${AT}mkdir -p $$(dir $$@)
+	${NAT}${AT}echo ${NAME_PROT2PENCTL} $$(call CANPATH,$$<)
+	${AT}$(strip ${CMD_PROTOC} --grpc-gateway_out=templates=${TMAGENT_PEN_IN_DIR}/rest.yml:${TMAGENT_PEN_OUT_DIR} ${${1}_INCS} ${${1}_DEFS} $$<)
+	${AT}$(strip ${CMD_PROTOC} --grpc-gateway_out=templates=${PEN_IN_DIR}/rest.yml:${PEN_OUT_DIR} ${${1}_INCS} ${${1}_DEFS} $$<)
+	${AT}$(strip ${CMD_GOIMPORTS} -w ${${1}_GOIMPORTS_OPTS} ${TMAGENT_PEN_OUT_DIR}/$$(basename $$(notdir $$(basename $$(call CANPATH,$$<))))_apigen.go) > $$(call CANPATH,$$@_apigen_build.log)
+	${AT}$(strip ${CMD_GOIMPORTS} -w ${${1}_GOIMPORTS_OPTS} ${PEN_OUT_DIR}/$$(basename $$(notdir $$(basename $$(call CANPATH,$$<))))_gen.go) > $$(call CANPATH,$$@_gen_build.log)
+	${AT}touch $$@
+endef
+
 define ADD_SRC_MOCKGEN_OBJECT_RULE
 ${2}/%_mock.go: ${2}/%.pb.go $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)

@@ -14,6 +14,11 @@ export BLD_PGMBIN_DIR      := ${BLD_ARCH_DIR}/pgm_bin
 export BLD_ASMBIN_DIR      := ${BLD_BIN_DIR}/asm
 export BLD_SYM_DIR         := ${BLD_ARCH_DIR}/sym
 
+export TMAGENT_PEN_IN_DIR  := ${GOPATH}/src/github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi/templates
+export TMAGENT_PEN_OUT_DIR := ${TOPDIR}/nic/agent/tmagent/ctrlerif/restapi
+export PEN_IN_DIR          := ${GOPATH}/src/github.com/pensando/sw/penctl/cmd/metrics/templates
+export PEN_OUT_DIR         := ${TOPDIR}/penctl/cmd
+
 include ${MKINFRA}/config_${ARCH}.mk
 
 CMD_NCC      := ${COMMON_CMD_NCC}
@@ -26,7 +31,7 @@ CMD_PROTOC_LDLIB_PATH   := ${TOPDIR}/nic/hal/third-party/google/x86_64/lib/
 CMD_PROTOC              := LC_ALL=C LD_LIBRARY_PATH=${CMD_PROTOC_LDLIB_PATH} ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/protoc
 CMD_PROTOC_C            := ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/protoc-c
 CMD_MOCKGEN             := mockgen
-CMD_GOIMPORTS           := goimports
+CMD_GOIMPORTS           := goimports -local "github.com/pensando/sw"
 CMD_SWIG                := swig
 
 CMD_PROTOC_CPP_OPTS     := --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
