@@ -14,6 +14,8 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 
+#define NUM_MAX_COSES 16
+
 #define CAPRI_TXS_MAX_TABLE_ENTRIES 2048
 // 2K * 8K scheduler
 #define CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES 2048
@@ -94,5 +96,19 @@ hal_ret_t capri_txs_scheduler_tx_dealloc(uint32_t alloc_offset,
  */     
 hal_ret_t capri_txs_policer_lif_params_update(uint32_t hw_lif_id,
                                  capri_txs_policer_lif_params_t *txs_hw_params);
+
+typedef struct capri_txs_scheduler_cos_stats_s {
+    uint32_t cos;
+    bool xon_status;
+    uint64_t doorbell_count;
+} capri_txs_scheduler_cos_stats_t;
+
+typedef struct capri_txs_scheduler_stats_s {
+    uint64_t doorbell_set_count;
+    uint64_t doorbell_clear_count;
+    uint32_t ratelimit_start_count;
+    uint32_t ratelimit_stop_count;
+    capri_txs_scheduler_cos_stats_t cos_stats[NUM_MAX_COSES];
+} capri_txs_scheduler_stats_t;
 
 #endif

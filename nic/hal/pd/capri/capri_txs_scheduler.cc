@@ -30,7 +30,6 @@
 #include "nic/asic/capri/verif/apis/cap_txs_api.h"
 #include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
 
-#define NUM_MAX_COSES 16
 #define CHECK_BIT(var,pos) ((var) & (1 << (pos)))
 #define DTDM_CALENDAR_SIZE 64
 
@@ -399,3 +398,84 @@ capri_txs_scheduler_tx_dealloc (uint32_t alloc_offset, uint32_t alloc_units)
     return ret;
 }
 
+hal_ret_t
+capri_txs_scheduler_stats_get (capri_txs_scheduler_stats_t *scheduler_stats)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t &txs_csr = cap0.txs.txs;
+    uint16_t xon_status;
+
+    txs_csr.cnt_sch_doorbell_set.read();
+    txs_csr.cnt_sch_doorbell_clr.read();
+    txs_csr.cnt_sch_rlid_stop.read();
+    txs_csr.cnt_sch_rlid_start.read();
+    txs_csr.sta_glb.read();
+    txs_csr.cnt_sch_txdma_cos0.read();
+    txs_csr.cnt_sch_txdma_cos1.read();
+    txs_csr.cnt_sch_txdma_cos2.read();
+    txs_csr.cnt_sch_txdma_cos3.read();
+    txs_csr.cnt_sch_txdma_cos4.read();
+    txs_csr.cnt_sch_txdma_cos5.read();
+    txs_csr.cnt_sch_txdma_cos6.read();
+    txs_csr.cnt_sch_txdma_cos7.read();
+    txs_csr.cnt_sch_txdma_cos8.read();
+    txs_csr.cnt_sch_txdma_cos9.read();
+    txs_csr.cnt_sch_txdma_cos10.read();
+    txs_csr.cnt_sch_txdma_cos11.read();
+    txs_csr.cnt_sch_txdma_cos12.read();
+    txs_csr.cnt_sch_txdma_cos13.read();
+    txs_csr.cnt_sch_txdma_cos14.read();
+    txs_csr.cnt_sch_txdma_cos15.read();
+
+    xon_status = txs_csr.sta_glb.pb_xoff().convert_to<uint16_t>();
+
+    scheduler_stats->doorbell_set_count =
+        txs_csr.cnt_sch_doorbell_set.val().convert_to<uint64_t>();
+    scheduler_stats->doorbell_clear_count =
+        txs_csr.cnt_sch_doorbell_clr.val().convert_to<uint64_t>();
+    scheduler_stats->ratelimit_start_count =
+        txs_csr.cnt_sch_rlid_stop.val().convert_to<uint32_t>();
+    scheduler_stats->ratelimit_stop_count =
+        txs_csr.cnt_sch_rlid_start.val().convert_to<uint32_t>();
+
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(scheduler_stats->cos_stats); i++) {
+        scheduler_stats->cos_stats[i].cos = i;
+        scheduler_stats->cos_stats[i].xon_status =
+                                        (xon_status >> i) & 0x1 ? true : false;
+    }
+
+    scheduler_stats->cos_stats[0].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos0.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[1].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos1.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[2].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos2.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[3].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos3.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[4].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos4.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[5].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos5.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[6].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos6.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[7].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos7.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[8].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos8.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[9].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos9.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[10].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos10.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[11].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos11.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[12].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos12.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[13].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos13.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[14].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos14.val().convert_to<uint64_t>();
+    scheduler_stats->cos_stats[15].doorbell_count =
+        txs_csr.cnt_sch_txdma_cos15.val().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
