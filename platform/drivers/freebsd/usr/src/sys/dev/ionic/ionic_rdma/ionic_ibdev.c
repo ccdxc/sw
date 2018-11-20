@@ -6005,6 +6005,86 @@ out:
 	read_unlock_irqrestore(&dev->tbl_rcu, irqflags);
 }
 
+static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
+{
+	struct ib_event ibev;
+	struct ionic_qp *qp;
+	unsigned long irqflags;
+
+	read_lock_irqsave(&dev->tbl_rcu, irqflags);
+
+	qp = tbl_lookup(&dev->qp_tbl, qpid);
+	if (!qp) {
+		dev_dbg(&dev->ibdev.dev, "missing qpid %#x code %u\n",
+			qpid, code);
+		goto out;
+	}
+
+	ibev.device = &dev->ibdev;
+
+	if (qp->is_srq) {
+		ibev.element.srq = &qp->ibsrq;
+
+		switch(code) {
+		case IONIC_V1_EQE_SRQ_LEVEL:
+			ibev.event = IB_EVENT_SRQ_LIMIT_REACHED;
+			break;
+
+		case IONIC_V1_EQE_QP_ERR:
+			ibev.event = IB_EVENT_SRQ_ERR;
+			break;
+
+		default:
+			dev_dbg(&dev->ibdev.dev,
+				"unrecognized srqid %#x code %u\n",
+				qpid, code);
+			goto out;
+		}
+
+		qp->ibsrq.event_handler(&ibev, qp->ibsrq.srq_context);
+	} else {
+		ibev.element.qp = &qp->ibqp;
+
+		switch(code) {
+		case IONIC_V1_EQE_SQ_DRAIN:
+			ibev.event = IB_EVENT_SQ_DRAINED;
+			break;
+
+		case IONIC_V1_EQE_QP_COMM_EST:
+			ibev.event = IB_EVENT_COMM_EST;
+			break;
+
+		case IONIC_V1_EQE_QP_LAST_WQE:
+			ibev.event = IB_EVENT_QP_LAST_WQE_REACHED;
+			break;
+
+		case IONIC_V1_EQE_QP_ERR:
+			ibev.event = IB_EVENT_QP_FATAL;
+			break;
+
+		case IONIC_V1_EQE_QP_ERR_REQUEST:
+			ibev.event = IB_EVENT_QP_REQ_ERR;
+			break;
+
+		case IONIC_V1_EQE_QP_ERR_ACCESS:
+			ibev.event = IB_EVENT_QP_ACCESS_ERR;
+			break;
+
+		default:
+			dev_dbg(&dev->ibdev.dev,
+				"unrecognized qpid %#x code %u\n",
+				qpid, code);
+			goto out;
+		}
+
+		qp->ibqp.event_handler(&ibev, qp->ibqp.qp_context);
+	}
+
+
+out:
+	read_unlock_irqrestore(&dev->tbl_rcu, irqflags);
+}
+
 static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
 {
 	struct ionic_v1_eqe *qeqe;
@@ -6061,7 +6141,8 @@ static u16 ionic_poll_eq(struct ionic_eq *eq, u16 budget)
 			break;
 
 		case IONIC_V1_EQE_TYPE_QP:
-			/* TODO - fall thru default case for now */
+			ionic_qp_event(dev, qid, code);
+			break;
 
 		default:
 			dev_dbg(&dev->ibdev.dev,

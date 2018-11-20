@@ -167,6 +167,9 @@ static inline int to_ionic_qp_flags(int access, bool sqd_notify,
 	if (access & IB_ACCESS_MW_BIND)
 		flags |= IONIC_QPF_MW_BIND;
 
+	if (sqd_notify)
+		flags |= IONIC_QPF_SQD_NOTIFY;
+
 	if (sq_is_cmb)
 		flags |= IONIC_QPF_SQ_CMB;
 
@@ -760,9 +763,8 @@ enum ionic_v1_eqe_evt_bits {
 	IONIC_V1_EQE_QP_LAST_WQE	= 3,
 	/* qp error events */
 	IONIC_V1_EQE_QP_ERR		= 8,
-	IONIC_V1_EQE_QP_ERR_NOCQE	= 9,
-	IONIC_V1_EQE_QP_ERR_REQUEST	= 10,
-	IONIC_V1_EQE_QP_ERR_ACCESS	= 11,
+	IONIC_V1_EQE_QP_ERR_REQUEST	= 9,
+	IONIC_V1_EQE_QP_ERR_ACCESS	= 10,
 };
 
 static inline bool ionic_v1_eqe_color(struct ionic_v1_eqe *eqe)
