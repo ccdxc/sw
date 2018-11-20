@@ -56,5 +56,5 @@ platform/src/third-party/lib/ncurses/aarch64/*.so                               
 # Misc
 platform/tools/start-nicmgr-haps.sh                                             /platform/tools/
 platform/src/app/nicmgrd/etc/*.json                                             /platform/etc/nicmgrd/
-platform/gen/aarch64/src/app/capview/builddb/capviewdb.bin                      /platform/etc/
+nic/build/aarch64/iris/out/capviewdb_submake/capviewdb.bin                      /platform/etc/
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                                  /platform/

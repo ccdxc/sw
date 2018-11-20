@@ -1,13 +1,14 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
 use lib "$ENV{'SEMIFORE_HOME'}/lib";
 use csrPerlAPI;
 
-die "usage: $0 capri_path BUILD VER\n" if @ARGV != 3;
+die "usage: $0 capri_path BUILD VER out_dir\n" if @ARGV != 4;
 my $root = $ARGV[0];
 my $build = $ARGV[1] + 0;
 my $ver = $ARGV[2] + 0;
+my $outdir = $ARGV[3];
 
 #
 # Parse the cap_top_csr_defines.h and create a map of
@@ -102,7 +103,7 @@ printf "Found %d registers\n", $reg_count;
 #
 # Dump the data
 #
-open(OUTTXT, ">capviewdb.txt") || die("capviewdb.txt: $!\n");
+open(OUTTXT, ">" . $outdir . "capviewdb.txt") || die("capviewdb.txt: $!\n");
 for my $ad (sort {$a <=> $b} keys(%addr_to_reg)) {
     my $r = $addr_to_reg{$ad};
     printf OUTTXT "0x%08x %5u %3u %3u %d %s\n",
@@ -210,7 +211,7 @@ printf "Register Array Size: %u\n", length($reg_array);
 # };
 #
 my $magic = 0xcaf1e0db;
-open(OUT, ">capviewdb.bin") || die("capviewdb.bin: $!\n");
+open(OUT, ">" . $outdir . "capviewdb.bin") || die("capviewdb.bin: $!\n");
 seek(OUT, 40, 0);
 my $reg_arr_offs = tell(OUT); print OUT $reg_array;
 my $field_arr_offs = tell(OUT); print OUT $field_array;
