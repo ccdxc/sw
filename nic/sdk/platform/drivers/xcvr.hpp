@@ -10,6 +10,7 @@
 #define XCVR_SPROM_CACHE_SIZE   512
 #define XCVR_MAX_PORTS          2
 #define XCVR_SPROM_READ_MAX     10
+#define XCVR_SPROM_READ_SIZE    128
 
 namespace sdk {
 namespace platform {

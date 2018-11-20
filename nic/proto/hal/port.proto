@@ -71,8 +71,9 @@ enum PortFecType {
 enum PortXcvrState {
   XCVR_STATE_REMOVED        = 0;
   XCVR_STATE_INSERTED       = 1;
-  XCVR_STATE_SPROM_READ     = 2;
-  XCVR_STATE_SPROM_READ_ERR = 3;
+  XCVR_STATE_PENDING        = 2;
+  XCVR_STATE_SPROM_READ     = 3;
+  XCVR_STATE_SPROM_READ_ERR = 4;
 }
 
 enum PortXcvrPid {

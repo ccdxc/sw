@@ -88,8 +88,10 @@ typedef enum xcvr_state_s {
 } xcvr_state_t;
 
 typedef enum xcvr_type_s {
+    XCVR_TYPE_UNKNOWN,
     XCVR_TYPE_SFP,
     XCVR_TYPE_QSFP,
+    XCVR_TYPE_QSFP28,
 } xcvr_type_t;
 
 typedef enum xcvr_cable_type_s {

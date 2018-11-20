@@ -96,7 +96,7 @@ cpld_reg_bit_reset(int reg, int bit) {
     }
 
     cpld_data = cpld_read(reg);
-    cpld_data &= mask;   
+    cpld_data &= ~mask;   
     cpld_write(reg, cpld_data);
 
 
@@ -136,7 +136,7 @@ pal_qsfp_set_port(int port)
 	return CPLD_FAIL;
     }
 
-    return cpld_reg_bit_set(0x02, bit);
+    return cpld_reg_bit_reset(0x02, bit);
 }
 
 int
@@ -152,7 +152,7 @@ pal_qsfp_reset_port(int port)
         return CPLD_FAIL;
     }
 
-    return cpld_reg_bit_reset(0x02, bit);
+    return cpld_reg_bit_set(0x02, bit);
 }
 
 /* Register: 0x2, bit 2 is qsfp port 1, bit 3 is qsfp port 2 */
@@ -185,7 +185,7 @@ pal_qsfp_reset_low_power_mode(int port)
         return CPLD_FAIL;
     }
 
-    return cpld_reg_bit_set(0x02, bit);
+    return cpld_reg_bit_reset(0x02, bit);
 }
 #endif
 

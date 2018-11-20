@@ -3,36 +3,24 @@
 #include "include/sdk/thread.hpp"
 #include "include/sdk/periodic.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"
+#include "lib/pal/pal.hpp"
 
 namespace sdk {
 namespace platform {
 
-bool
-is_xcvr_qsfp (uint8_t *data) {
-    return true;
-}
+using sdk::lib::pal_ret_t;
+using sdk::lib::qsfp_page_t;
 
 sdk_ret_t
-qsfp_write (int addr, int offset, uint8_t data, int num_bytes, int port) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-qsfp_read (int addr, int offset, int num_bytes, uint8_t *data, int port) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-qsfp_read_page (int addr, int pgno, int num_bytes, int port, uint8_t *data) {
-    sdk_ret_t ret = SDK_RET_OK;
-
-    // Write page number to Byte 127
-    ret = qsfp_write(addr, 127, pgno, 1, port);
-    if (ret == SDK_RET_OK) {
-        ret = qsfp_read(addr, 0, num_bytes, data, port);
+qsfp_read_page (int port, qsfp_page_t pgno, int offset, int num_bytes, uint8_t *data) {
+    pal_ret_t ret = sdk::lib::pal_qsfp_read(data, num_bytes,
+                                            offset, pgno,
+                                            1, port + 1);
+    if (ret == sdk::lib::PAL_RET_OK) {
+        return SDK_RET_OK;
+    } else {
+        return SDK_RET_ERR;
     }
-
-    return ret;
 }
 
 } // namespace platform

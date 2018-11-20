@@ -202,7 +202,7 @@ error port_svc::update_xcvr_status(google::protobuf::uint32 port_id,
     sdk_->QueueUpdate(port);
 
     HAL_TRACE_DEBUG("Updated port status object for xcvr port_id {} state {} pid {}"
-                    "port: {}", port_id, state, pid, port);
+                    " port: {}", port_id + 1, state, pid, port);
 
     return error::OK();
 }
@@ -212,24 +212,24 @@ xcvr_event_cb (uint32_t port_num, xcvr_state_t state, xcvr_pid_t pid)
 {
     switch (state) {
     case xcvr_state_t::XCVR_REMOVED:
-        HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num);
+        HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num + 1);
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_REMOVED, port::XCVR_PID_UNKNOWN);
         break;
 
     case xcvr_state_t::XCVR_INSERTED:
-        HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num);
+        HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num + 1);
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_INSERTED, port::XCVR_PID_UNKNOWN);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ:
-        HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num,
+        HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num + 1,
                         (pid == 0) ? "Unknown" : (pid == 1) ? "SFP-10G-CR" : "QSFP-100G-CR4");
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ,
                         (pid == 0) ? port::XCVR_PID_UNKNOWN : (pid == 1) ? port::XCVR_PID_SFP_10G_CR : port::XCVR_PID_QSFP_100G_CR4);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ_ERR:
-        HAL_TRACE_DEBUG("Xcvr sprom read error; port: {}", port_num);
+        HAL_TRACE_DEBUG("Xcvr sprom read error; port: {}", port_num + 1);
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ_ERR, port::XCVR_PID_UNKNOWN);
         break;
 

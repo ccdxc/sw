@@ -5,7 +5,6 @@
 #include "include/sdk/linkmgr.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"
-#include "platform/drivers/xcvr_sfp.hpp"
 #include "lib/pal/pal.hpp"
 
 namespace sdk {
@@ -16,9 +15,26 @@ using sdk::types::xcvr_type_t;
 using sdk::types::xcvr_cable_type_t;
 using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
+using sdk::types::xcvr_type_t;
 
 xcvr_t g_xcvr[XCVR_MAX_PORTS];
 xcvr_event_notify_t g_xcvr_notify_cb;
+
+xcvr_type_t
+xcvr_get_type (uint8_t first_byte) {
+    switch (first_byte) {
+    case 0x3:
+        return xcvr_type_t::XCVR_TYPE_SFP;
+    case 0xc:
+        return xcvr_type_t::XCVR_TYPE_QSFP;
+    case 0x11:
+        return xcvr_type_t::XCVR_TYPE_QSFP28;
+    default:
+        break;
+    }
+
+    return xcvr_type_t::XCVR_TYPE_UNKNOWN;
+}
 
 static bool
 xcvr_state_change (int port) {
@@ -65,23 +81,72 @@ xcvr_send_notification (int port) {
     return SDK_RET_OK;
 }
 
+static void
+xcvr_hex_dump (int port, uint8_t *buffer) {
+    char dump[100];
+    int len = 0;
+
+    SDK_TRACE_DEBUG("Xcvr port %d Hex dump", port + 1);
+
+    for (int i = 0; i < 256; i ++) {
+        if (!(i % 16)) {
+            len += sprintf(dump + len, "%#04x: ", i);
+        }
+        len += sprintf(dump + len, "%02x ", buffer[i]);
+        if ((i % 16) == 15) {
+            SDK_TRACE_DEBUG("%s", dump);
+            len = 0;
+        }
+    }
+}
+
 static uint8_t *
 xcvr_sprom_read (int port, bool cached) {
+    sdk_ret_t ret = SDK_RET_OK;
+    uint8_t   *buffer = NULL;
+
     if ((xcvr_state(port) == xcvr_state_t::XCVR_SPROM_READ) && cached) {
         return xcvr_cache(port);
     }
 
-    // Identify if qsfp or sfp by reading first 128 bytes
-    qsfp_read_page(0xA0, 0, 128, port, xcvr_cache(port));
+    buffer = xcvr_cache(port);
 
-    if (is_xcvr_qsfp(xcvr_cache(port))) {
-        xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_QSFP);
-    } else {
-        xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_SFP);
-        sfp_read_page(0xA0, 0, 256, port, xcvr_cache(port));
+    // Read first 128 bytes
+    ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_LOW, 0, XCVR_SPROM_READ_SIZE, &buffer[0]);
+    if (ret != SDK_RET_OK) {
+        return NULL;
     }
 
-    return xcvr_cache(port);
+    switch (xcvr_get_type(buffer[0])) {
+    case xcvr_type_t::XCVR_TYPE_QSFP:
+        xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_QSFP);
+        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_HIGH0, 0, XCVR_SPROM_READ_SIZE, &buffer[XCVR_SPROM_READ_SIZE]);
+        if (ret != SDK_RET_OK) {
+            return NULL;
+        }
+        break;
+    case xcvr_type_t::XCVR_TYPE_QSFP28:
+        xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_QSFP28);
+        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_HIGH0, 0, XCVR_SPROM_READ_SIZE, &buffer[XCVR_SPROM_READ_SIZE]);
+        if (ret != SDK_RET_OK) {
+            return NULL;
+        }
+        break;
+    case xcvr_type_t::XCVR_TYPE_SFP:
+        xcvr_set_type(port, xcvr_type_t::XCVR_TYPE_SFP);
+        ret = qsfp_read_page(port, sdk::lib::QSFP_PAGE_LOW, XCVR_SPROM_READ_SIZE, XCVR_SPROM_READ_SIZE, &buffer[XCVR_SPROM_READ_SIZE]);
+        if (ret != SDK_RET_OK) {
+            return NULL;
+        }
+        break;
+    default:
+        SDK_TRACE_DEBUG("Xcvr port %d Xcvr type unknown. First byte is %#x", port + 1, buffer[0]);
+        return NULL;
+    }
+
+    xcvr_hex_dump(port, buffer);
+    
+    return buffer;
 }
 
 static sdk_ret_t
@@ -120,6 +185,10 @@ xcvr_poll_timer (void)
                 // Continue to next port
                 break; 
             }
+            // Bring qsfp port out of reset
+            sdk::lib::pal_qsfp_set_port(port + 1); // 1-indexed
+            // Reset low-powered mode
+            sdk::lib::pal_qsfp_reset_low_power_mode(port + 1);
             // Set state as SPROM_PENDING
             xcvr_set_state(port, xcvr_state_t::XCVR_SPROM_PENDING);
             // fall-through
