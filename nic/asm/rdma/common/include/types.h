@@ -607,9 +607,9 @@ struct sqwqe_base_t {
 // send
 struct sqwqe_send_t {
     ah_handle          : 32;
-    q_key              : 32;
     rsvd               :  8;
     dst_qp             : 24;
+    q_key              : 32;
     length             : 32;
 };
 

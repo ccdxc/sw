@@ -35,9 +35,9 @@ class RdmaSqDescriptorBase(Packet):
 class RdmaSqDescriptorSend(Packet):
     fields_desc = [
         IntField("ah_handle", 0),
-        IntField("q_key", 0),
         ByteField("rsvd", 0),
         X3BytesField("dst_qp", 0),
+        IntField("q_key", 0),
         IntField("len", 0),
     ]
 

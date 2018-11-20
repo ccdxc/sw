@@ -258,21 +258,29 @@ zero_length:
     CAPRI_RESET_TABLE_2_ARG()
     //set first = 1, last_pkt = 1
     phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, op_type), r1, CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3
-    phvwrpair CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, hdr_template_inline), 1, \
-              CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data_or_inv_key), d.{base.imm_data}
-    phvwr.c1 CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_ah_handle), r2
+    phvwrpair.!c1 CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, hdr_template_inline), 1, \
+                  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data_or_inv_key), d.{base.imm_data}
+    phvwrpair.c1 CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_imm_data_or_inv_key), d.{base.imm_data}, \
+                 CAPRI_PHV_FIELD(SQCB_WRITE_BACK_SEND_WR_P, op_send_wr_ah_handle), r2
     phvwr CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, poll_in_progress, color), CAPRI_KEY_RANGE(IN_P, poll_in_progress, color)
     // leave rest of variables to FALSE
 
     add            r2, AH_ENTRY_T_SIZE_BYTES, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r2)
 
-    CAPRI_RESET_TABLE_0_ARG()
+    bcf            [c1], ud_exit // Do not optimize header load for UD
+    CAPRI_RESET_TABLE_0_ARG()    // BD slot
+
     // Load MPU only hdr_template_process. Actual hdr-template-address will be loaded in stage 5
     // table0 is free for inline/zero_length packets in stages 3,4 and 5 since sge processing doesn't happen.
     sll            r2, K_HEADER_TEMPLATE_ADDR, HDR_TEMP_ADDR_SHIFT //BD slot
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_load_hdr_template_process, r2)
 
+    nop.e
+    nop
+
+ud_exit:
+    CAPRI_SET_TABLE_0_VALID(0)
     nop.e
     nop
 
