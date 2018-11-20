@@ -1638,14 +1638,16 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     hal_ret_t                                  ret;
     session_aged_ret_t                         retval = SESSION_AGED_NONE;
     pd::pd_func_args_t                         pd_func_args = {0};
+    bool                                       tcp_session = false;
+
+    tcp_session = (session->iflow->config.key.proto == IPPROTO_TCP);
 
     // Check if its a TCP flow with connection tracking enabled.
     // And connection tracking timer is not NULL. This means the session
     // is one of connection establishment or connection close phase. Disable
     // aging at that time as the timer would eventually fire and clean up the
     // session anyway.
-    if (session->iflow->config.key.proto == IPPROTO_TCP &&
-        session->conn_track_en &&
+    if (tcp_session && session->conn_track_en &&
         session->tcp_cxntrack_timer != NULL) {
         HAL_TRACE_DEBUG("Session {} connection tracking timer is on -- bailing aging",
                         session->hal_handle);
@@ -1679,17 +1681,23 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
         return retval;
     }
 
-    // Check initiator flow
+    // Check initiator flow. Check for session state as we dont want to age half-closed
+    // connections if half-closed timeout is disabled.
     //HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
     //                session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
-    if (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) {
+    if ((tcp_session && (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
+        TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) ||
+        (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout)) {
         // session hasn't aged yet, move on
         retval = SESSION_AGED_IFLOW;
     }
 
     if (session->rflow) {
-        //check responder flow
-        if (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) {
+        //check responder flow. Check for session state as we dont want to age half-closed
+        //connections if half-closed timeout is disabled.
+        if ((tcp_session && (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
+            TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) ||
+            (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout)) {
             // responder flow seems to be active still
             if (retval == SESSION_AGED_IFLOW)
                 retval = SESSION_AGED_BOTH;
@@ -1732,14 +1740,25 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
     /*
      * We cannot rely on the timestamp here as our tickle would have
      * also incremented the timestamp and we have no way of making sure
-     * if we really got a response. Hence, look at the packet count per flow
+     * if we really got a response. Hence, look at the packet count per flow.
+     *
+     * If only IFLOW was aged, we would send tickle on the rflow to the initiator
+     * of the IFLOW hence the count on the iflow packets would need to more than
+     * what we saw before sending the tickle. If both IFLOW & RFLOW were aged, then
+     * we would generate tickles on both direction, in that case we would need to make
+     * sure the packet count is > (1+prev-packet-count) as tickle would also have 
+     * incremented the packet count and we should rely on that.
      */
-    if (session_state.iflow_state.packets <=
-                              (ctx->session_state.iflow_state.packets + 1)) {
+    if ((ctx->aged_flow == SESSION_AGED_IFLOW && 
+         session_state.iflow_state.packets < (ctx->session_state.iflow_state.packets + 1)) || 
+        (ctx->aged_flow == SESSION_AGED_BOTH &&
+         session_state.iflow_state.packets <= (ctx->session_state.iflow_state.packets + 1))) {
         ret = SESSION_AGED_IFLOW;
     }
-    if (session_state.rflow_state.packets <=
-                               (ctx->session_state.rflow_state.packets + 1)) {
+    if ((ctx->aged_flow == SESSION_AGED_RFLOW &&
+         session_state.iflow_state.packets < (ctx->session_state.iflow_state.packets + 1)) ||
+        (ctx->aged_flow == SESSION_AGED_BOTH &&
+         session_state.rflow_state.packets <= (ctx->session_state.rflow_state.packets + 1))) {
         if (ret == SESSION_AGED_IFLOW)
             ret = SESSION_AGED_BOTH;
         else
@@ -1786,60 +1805,67 @@ build_and_send_tcp_pkt (void *data)
     send_ts = ctxt->session_state.tcp_ts_option;
 
     if (ctxt->num_tickles <= MAX_TCP_TICKLES) {
-        // Send tickles to one or both flows
-        if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
-            ctxt->aged_flow == SESSION_AGED_BOTH) {
-            sz = build_tcp_packet(session->iflow, session->vrf_handle,
-                             ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
-                             pkt, send_ts);
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-            HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
-        }
-        if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
-            ctxt->aged_flow == SESSION_AGED_BOTH) {
+        /*
+         * Send tickles to one or both flows. Send tickles on the opposite direction
+         * so it reaches the initiator of the flow that is aged.
+         */
+        if ((ctxt->aged_flow == SESSION_AGED_IFLOW ||
+             ctxt->aged_flow == SESSION_AGED_BOTH) && (session->rflow)) {
             sz = build_tcp_packet(session->rflow, session->vrf_handle,
-                             ctxt->session_state.rflow_state, &cpu_header, &p4plus_header, 
+                             ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
                              pkt, send_ts);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_tickles_sent, 1);
         }
+        if ((ctxt->aged_flow == SESSION_AGED_RFLOW ||
+             ctxt->aged_flow == SESSION_AGED_BOTH)) {
+            sz = build_tcp_packet(session->iflow, session->vrf_handle,
+                             ctxt->session_state.iflow_state, &cpu_header, &p4plus_header, 
+                             pkt, send_ts);
+            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+            HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
+        }
 
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {}",
                          session->hal_handle);
-        ctxt->num_tickles++;
-        session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
+   
+        /*
+         * If Tickles were generated then we increment the tickle count
+         * and start a timer waiting for the idle host to respond.
+         */
+         ctxt->num_tickles++;
+         session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                               HAL_TIMER_ID_TCP_TICKLE_WAIT,
                                               SESSION_DEFAULT_TCP_TICKLE_TIMEOUT,
                                               (void *)ctxt,
                                               tcp_tickle_timeout_cb, false);
-        return;
-    } else {
-        // Send TCP RST to the flow if there is no response
-        if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
-            ctxt->aged_flow == SESSION_AGED_BOTH) {
-            sz = build_tcp_packet(session->iflow, session->vrf_handle,
+         return;
+    } 
+    // Send TCP RST to the flow if there is no response
+    if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
+        ctxt->aged_flow == SESSION_AGED_BOTH) {
+        sz = build_tcp_packet(session->iflow, session->vrf_handle,
                               ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
                               pkt, send_ts, true);
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-            HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
-        }
-        if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
-            ctxt->aged_flow == SESSION_AGED_BOTH) {
-            sz = build_tcp_packet(session->rflow, session->vrf_handle,
-                             ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
-                             pkt, send_ts, true);
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+        fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+        HAL_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
+    }
+    if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
+        ctxt->aged_flow == SESSION_AGED_BOTH) {
+        sz = build_tcp_packet(session->rflow, session->vrf_handle,
+                              ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
+                              pkt, send_ts, true);
+        fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
   
-            HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
-        }
+        HAL_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
+    }
 
-        HAL_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1);
-        // time to clean up the session
-        ret = fte::session_delete_in_fte(session->hal_handle);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to delete aged session {}",
-                          session->iflow->config.key);
-        }
+    HAL_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1);
+    // time to clean up the session
+    ret = fte::session_delete_in_fte(session->hal_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete aged session {}",
+                      session->iflow->config.key);
     }
 
 cleanup:
@@ -1970,8 +1996,8 @@ session_age_cb (void *entry, void *ctxt)
                                     process_hal_periodic_sess_delete,
                                     (void *)args->session_list[session->fte_id]);
                 HAL_ASSERT(ret == HAL_RET_OK);
-                HAL_TRACE_DEBUG("Enqueued session_list: {:p}",
-                                (void *)args->session_list[session->fte_id]);
+                //HAL_TRACE_DEBUG("Enqueued session_list: {:p}",
+                //                (void *)args->session_list[session->fte_id]);
 
                 args->session_list[session->fte_id] = (hal_handle_t *)HAL_CALLOC(
                                  HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
@@ -2216,9 +2242,15 @@ hal_ret_t
 schedule_tcp_close_timer (session_t *session)
 {
     flow_key_t  key = {};
-
+    uint32_t    timeout = 0;
 
     if (getenv("DISABLE_AGING")) {
+        return HAL_RET_OK;
+    }
+
+    timeout = get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT);
+    if (timeout == HAL_MAX_INACTIVTY_TIMEOUT) {
+        // No timeout configured so we bail out
         return HAL_RET_OK;
     }
 
@@ -2243,6 +2275,10 @@ schedule_tcp_close_timer (session_t *session)
 
 //------------------------------------------------------------------------------
 // Callback invoked when TCP half closed timer fires
+//
+// If the tcp close timeout is not configured then we get INT_MAX from agent
+// and we dont start any timer. The session will be aged out when it reaches
+// idle timeout
 //------------------------------------------------------------------------------
 void
 tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
@@ -2287,11 +2323,23 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 //------------------------------------------------------------------------------
 // API to start timer when TCP FIN is seen for the first time on the session
 // This is to give enough time for other side to send the FIN
+//
+// If the half_closed timeout is not configured then we get INT_MAX from agent
+// and we dont start any timer. The session will be aged out when it reaches
+// idle timeout
 //------------------------------------------------------------------------------
 hal_ret_t
 schedule_tcp_half_closed_timer (session_t *session)
 {
+    uint32_t  timeout = 0;
+
     if (getenv("DISABLE_AGING")) {
+        return HAL_RET_OK;
+    }
+
+    timeout = get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT);
+    if (timeout == HAL_MAX_INACTIVTY_TIMEOUT) { 
+        // No timeout configured so we bail out
         return HAL_RET_OK;
     }
 
