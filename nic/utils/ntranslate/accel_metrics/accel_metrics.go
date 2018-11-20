@@ -22,8 +22,8 @@ type accelPfTranslatorFns struct{}
 
 // KeyToMeta converts key to meta
 func (n *accelPfTranslatorFns) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if lif_id, ok := key.(uint64); ok {
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("Accel.LifId.%d", lif_id)}
+	if lifID, ok := key.(uint64); ok {
+		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: fmt.Sprintf("Accel.LifId.%d", lifID)}
 	}
 	return nil
 }

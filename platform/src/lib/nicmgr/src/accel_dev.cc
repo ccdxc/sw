@@ -178,6 +178,13 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
     } while (false)
 
 
+/*
+ * accel Delphi ring ID
+ * - with workaround for Delphi optimizing out key defaul value 0.
+ */
+#define ACCEL_HW_RING_RID(rid)          ((rid) + 1)
+#define ACCEL_HW_RING_SUB_RID(sub_rid)  ((sub_rid) + 1)
+
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                    const hal_lif_info_t *nicmgr_lif_info,
                    PdClient *pd_client,
@@ -1500,12 +1507,11 @@ accel_pf_rgroup_find_create(uint32_t ring_handle,
 
     accel_rgroup_ring_t& rgroup_ring = accel_pf_rgroup_map[key];
     rgroup_ring.delphi_ring = make_shared<delphi::objects::AccelHwRingInfo>();
-    rgroup_ring.delphi_ring->mutable_key()->set_rid(/*(::accel_metrics::AccelHwRingId)*/
-                                                    ring_handle);
-    rgroup_ring.delphi_ring->mutable_key()->set_subrid(sub_ring);
+    rgroup_ring.delphi_ring->mutable_key()->set_rid(ACCEL_HW_RING_RID(ring_handle));
+    rgroup_ring.delphi_ring->mutable_key()->set_subrid(ACCEL_HW_RING_SUB_RID(sub_ring));
 
-    delphi_key.set_rid(/*(::accel_metrics::AccelHwRingId)*/ring_handle);
-    delphi_key.set_subrid(sub_ring);
+    delphi_key.set_rid(ACCEL_HW_RING_RID(ring_handle));
+    delphi_key.set_subrid(ACCEL_HW_RING_SUB_RID(sub_ring));
     rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
                                  NewAccelHwRingMetrics(delphi_key);
     return rgroup_ring;
