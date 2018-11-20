@@ -57,7 +57,6 @@
 #include "gen/hal/svc/qos_svc_gen.hpp"
 #include "gen/hal/svc/descriptor_aol_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
-#include "gen/hal/svc/ipseccb_svc_gen.hpp"
 #include "gen/hal/svc/ipsec_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
 #include "gen/hal/svc/crypto_keys_svc_gen.hpp"
@@ -108,7 +107,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     DescrAolServiceImpl      descraol_svc;
     WRingServiceImpl         wring_svc;
     ProxyServiceImpl         proxy_svc;
-    IpsecCbServiceImpl       ipseccb_svc;
     IpsecServiceImpl         ipsec_svc;
     CpuCbServiceImpl         cpucb_svc;
     CryptoKeyServiceImpl     crypto_key_svc;
@@ -141,7 +139,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&descraol_svc);
         server_builder->RegisterService(&wring_svc);
         server_builder->RegisterService(&proxy_svc);
-        server_builder->RegisterService(&ipseccb_svc);
+        //server_builder->RegisterService(&ipsec_svc);
         server_builder->RegisterService(&cpucb_svc);
         server_builder->RegisterService(&crypto_key_svc);
         server_builder->RegisterService(&rawrcb_svc);

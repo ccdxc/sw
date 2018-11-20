@@ -429,7 +429,7 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponseMsg *resp)
 // process a IPSEC CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-ipseccb_delete (ipseccb::IpsecCbDeleteRequest& req, ipseccb::IpsecCbDeleteResponseMsg *rsp)
+ipseccb_delete (internal::IpsecCbDeleteRequest& req, internal::IpsecCbDeleteResponseMsg *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     ipseccb_t*               ipseccb;

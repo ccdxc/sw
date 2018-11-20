@@ -29,7 +29,6 @@ import wring_pb2            as wring_pb2
 import acl_pb2              as acl_pb2
 import qos_pb2              as qos_pb2
 import proxy_pb2            as proxy_pb2
-import ipseccb_pb2          as ipseccb_pb2
 import l4lb_pb2             as l4lb_pb2
 import crypto_keys_pb2      as crypto_keys_pb2
 import crypto_apis_pb2      as crypto_apis_pb2
@@ -45,6 +44,7 @@ import system_pb2           as system_pb2
 import gft_pb2              as gft_pb2
 import dos_pb2              as dos_pb2
 import nic_pb2              as nic_pb2
+import internal_pb2         as internal_pb2
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -266,8 +266,8 @@ def ConfigureTcpCbs(objlist):
 
 def ConfigureIpsecCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = ipseccb_pb2.IpsecCbStub(HalChannel)
-    __config(objlist, ipseccb_pb2.IpsecCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.IpsecCbRequestMsg,
              stub.IpsecCbCreate)
     return
 
@@ -287,8 +287,8 @@ def UpdateTlsCbs(objlist):
 
 def UpdateIpsecCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = ipseccb_pb2.IpsecCbStub(HalChannel)
-    __config(objlist, ipseccb_pb2.IpsecCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.IpsecCbRequestMsg,
              stub.IpsecCbUpdate)
     return
 
@@ -406,8 +406,8 @@ def GetTcpCbs(objlist):
 
 def GetIpsecCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = ipseccb_pb2.IpsecCbStub(HalChannel)
-    __config(objlist, ipseccb_pb2.IpsecCbGetRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.IpsecCbGetRequestMsg,
              stub.IpsecCbGet)
     return
 

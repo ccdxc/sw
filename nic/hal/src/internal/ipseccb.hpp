@@ -9,25 +9,25 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "gen/proto/ipseccb.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
-using ipseccb::IpsecCbSpec;
-using ipseccb::IpsecCbStatus;
-using ipseccb::IpsecCbResponse;
-using ipseccb::IpsecCbKeyHandle;
-using ipseccb::IpsecCbRequestMsg;
-using ipseccb::IpsecCbResponseMsg;
-using ipseccb::IpsecCbDeleteRequestMsg;
-using ipseccb::IpsecCbDeleteResponseMsg;
-using ipseccb::IpsecCbGetRequest;
-using ipseccb::IpsecCbGetRequestMsg;
-using ipseccb::IpsecCbGetResponse;
-using ipseccb::IpsecCbGetResponseMsg;
+using internal::IpsecCbSpec;
+using internal::IpsecCbStatus;
+using internal::IpsecCbResponse;
+using internal::IpsecCbKeyHandle;
+using internal::IpsecCbRequestMsg;
+using internal::IpsecCbResponseMsg;
+using internal::IpsecCbDeleteRequestMsg;
+using internal::IpsecCbDeleteResponseMsg;
+using internal::IpsecCbGetRequest;
+using internal::IpsecCbGetRequestMsg;
+using internal::IpsecCbGetResponse;
+using internal::IpsecCbGetResponseMsg;
 
 namespace hal {
 
@@ -152,17 +152,20 @@ extern void *ipseccb_get_handle_key_func(void *entry);
 extern uint32_t ipseccb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool ipseccb_compare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t ipseccb_create(ipseccb::IpsecCbSpec& spec,
-                       ipseccb::IpsecCbResponse *rsp);
+#if 0
+hal_ret_t ipseccb_create(IpsecCbSpec& spec,
+                       IpsecCbResponse *rsp);
 
-hal_ret_t ipseccb_update(ipseccb::IpsecCbSpec& spec,
-                       ipseccb::IpsecCbResponse *rsp);
+hal_ret_t ipseccb_update(IpsecCbSpec& spec,
+                       IpsecCbResponse *rsp);
 
-hal_ret_t ipseccb_delete(ipseccb::IpsecCbDeleteRequest& req,
-                       ipseccb::IpsecCbDeleteResponseMsg *rsp);
+hal_ret_t ipseccb_delete(IpsecCbDeleteRequest& req,
+                       IpsecCbDeleteResponseMsg *rsp);
 
-hal_ret_t ipseccb_get(ipseccb::IpsecCbGetRequest& req,
-                    ipseccb::IpsecCbGetResponseMsg *rsp);
+hal_ret_t ipseccb_get(IpsecCbGetRequest& req,
+                    IpsecCbGetResponseMsg *rsp);
+#endif
+
 }    // namespace hal
 
 #endif    // __IPSECCB_HPP__

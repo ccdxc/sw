@@ -46,7 +46,6 @@
 #include "gen/hal/svc/qos_svc_gen.hpp"
 #include "gen/hal/svc/descriptor_aol_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
-#include "gen/hal/svc/ipseccb_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
 #include "gen/hal/svc/crypto_keys_svc_gen.hpp"
 #include "gen/hal/svc/rawccb_svc_gen.hpp"

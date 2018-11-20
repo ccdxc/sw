@@ -33,6 +33,17 @@ hal_ret_t log_flow (fwlog::FWEvent &req, internal::LogFlowResponse *rsp);
 hal_ret_t quiesce_msg_snd(const types::Empty &request, types::Empty* rsp);
 hal_ret_t quiesce_start(const types::Empty &request, types::Empty* rsp);
 hal_ret_t quiesce_stop(const types::Empty &request, types::Empty* rsp);
+hal_ret_t ipseccb_create(internal::IpsecCbSpec& spec,
+                       internal::IpsecCbResponse *rsp);
+
+hal_ret_t ipseccb_update(internal::IpsecCbSpec& spec,
+                       internal::IpsecCbResponse *rsp);
+
+hal_ret_t ipseccb_delete(internal::IpsecCbDeleteRequest& req,
+                       internal::IpsecCbDeleteResponseMsg *rsp);
+
+hal_ret_t ipseccb_get(internal::IpsecCbGetRequest& req,
+                    internal::IpsecCbGetResponseMsg *rsp);
 
 }    // namespace hal
 
