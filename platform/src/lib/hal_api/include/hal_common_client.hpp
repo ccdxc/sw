@@ -14,6 +14,7 @@
 #include "gen/proto/l2segment.grpc.pb.h"
 #include "gen/proto/multicast.grpc.pb.h"
 #include "gen/proto/rdma.grpc.pb.h"
+#include "gen/proto/qos.grpc.pb.h"
 
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 
@@ -68,6 +69,8 @@ using multicast::MulticastEntryDeleteRequestMsg;
 using multicast::MulticastEntryDeleteResponseMsg;
 using multicast::MulticastEntryGetRequestMsg;
 using multicast::MulticastEntryGetResponseMsg;
+using qos::QosClassGetRequestMsg;
+using qos::QosClassGetResponseMsg;
 
 /**
  * Forwarding Modes
@@ -180,6 +183,9 @@ public:
                                  FilterDeleteResponseMsg &rsp_msg) = 0;
     virtual Status filter_get(FilterGetRequestMsg &req_msg,
                               FilterGetResponseMsg &rsp_msg) = 0;
+
+    virtual Status qos_class_get(QosClassGetRequestMsg &req_msg,
+                                 QosClassGetResponseMsg &rsp_msg) = 0;
 
     // Singleton
     HalCommonClient();

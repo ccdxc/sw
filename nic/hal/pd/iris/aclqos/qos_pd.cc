@@ -974,6 +974,11 @@ qos_class_pd_populate_status (pd_qos_class_t *qos_class_pd, QosClassStatusEpd *e
             output_queue->set_output_queue_idx(oqs[i].oq);
         }
     }
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(qos_class_pd->txdma); i++) {
+        if (capri_tm_q_valid(qos_class_pd->txdma[i].iq)) {
+            epd_status->add_tx_traffic_class_coses(qos_class_pd->txdma[i].iq);
+        }
+    }
 }
 
 static hal_ret_t

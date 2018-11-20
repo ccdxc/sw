@@ -191,8 +191,8 @@ DeviceManager::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_clie
 
 void DeviceManager::Update()
 {
-    uint8_t     cosA = 1;
-    uint8_t     cosB = 0;
+    int32_t     cosA = 1;
+    int32_t     cosB = 0;
 
     if (init_done) {
         return;
@@ -217,6 +217,11 @@ void DeviceManager::Update()
         return;
     }
 
+    cosB = HalClient::GetTxTrafficClassCos("DEFAULT", 0);
+    if (cosB < 0) {
+        NIC_LOG_ERR("Service Lif: Failed to get cosB for group default");
+        throw runtime_error("Failed to get cosB for nicmgr LIF");
+    }
     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
     pd->program_qstate(qinfo, &hal_lif_info_, coses);
 
@@ -432,14 +437,16 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->eth_type = ETH_UNKNOWN;
             }
             eth_spec->if_name = val.get<string>("name");
+            eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
             NIC_LOG_INFO("Creating mnic device with name: {} type: {}, lif_id: {}, hw_lif_id: {},"
-                         "pinned_uplink: {} intr_count: {}",
+                         "pinned_uplink: {} intr_count: {} qos_group {}",
                          eth_spec->if_name,
                          eth_dev_type_to_str(eth_spec->eth_type),
                          eth_spec->lif_id,
                          eth_spec->hw_lif_id,
                          eth_spec->uplink_id,
-                         eth_spec->intr_count);
+                         eth_spec->intr_count,
+                         eth_spec->qos_group);
             AddDevice(ETH, (void *)eth_spec);
         }
     }
@@ -503,13 +510,15 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->eth_type = ETH_UNKNOWN;
             }
             eth_spec->if_name = val.get<string>("name");
+            eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
             NIC_LOG_INFO("Creating eth device with name: {}, type: {}, lif_id: {}, hw_lif_id: {}, "
-                         "pinned_uplink: {}",
+                         "pinned_uplink: {}, qos_group {}",
                          eth_spec->if_name,
                          eth_dev_type_to_str(eth_spec->eth_type),
                          eth_spec->lif_id,
                          eth_spec->hw_lif_id,
-                         eth_spec->uplink_id);
+                         eth_spec->uplink_id,
+                         eth_spec->qos_group);
             AddDevice(ETH, (void *)eth_spec);
         }
     }
@@ -549,9 +558,12 @@ DeviceManager::LoadConfig(string path)
             }
 
             accel_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
-            NIC_LOG_INFO("Creating accel device with lif_id: {}, hw_lif_id: {}",
+            accel_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
+            NIC_LOG_INFO("Creating accel device with lif_id: {}, hw_lif_id: {} "
+                         "qos_group {}",
                          accel_spec->lif_id,
-                         accel_spec->hw_lif_id);
+                         accel_spec->hw_lif_id,
+                         accel_spec->qos_group);
             AddDevice(ACCEL, (void *)accel_spec);
         }
     }

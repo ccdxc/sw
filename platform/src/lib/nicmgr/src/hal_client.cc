@@ -2145,6 +2145,12 @@ HalClient::FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan)
     return -1;
 }
 
+int32_t
+HalClient::GetTxTrafficClassCos(const std::string &group, uint32_t uplink_port)
+{
+    return QosClass::GetTxTrafficClassCos(group, uplink_port);
+}
+
 int
 HalClient::AccelRGroupAdd(const std::string& rgroup_name)
 {

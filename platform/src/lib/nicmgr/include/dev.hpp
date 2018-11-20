@@ -172,6 +172,8 @@ struct eth_devspec {
     uint32_t rdma_pid_count;
     //in 8MB units
     uint32_t barmap_size;
+
+    std::string qos_group;
 };
 
 typedef struct dev_cmd_db {

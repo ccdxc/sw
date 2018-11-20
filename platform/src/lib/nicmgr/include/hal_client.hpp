@@ -21,6 +21,7 @@
 #include "gen/proto/crypto_keys.grpc.pb.h"
 
 #include "platform/src/lib/hal_api/include/ethlif.hpp"
+#include "platform/src/lib/hal_api/include/qos.hpp"
 
 
 using namespace kh;
@@ -344,6 +345,8 @@ public:
     /* Filter APIs */
   int FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan);
   int FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan);
+
+  static int32_t GetTxTrafficClassCos(const std::string &group, uint32_t uplink_port);
 
   /* State */
   map<uint64_t, LifSpec> lif_map;               /* lif_id to lif_spec */

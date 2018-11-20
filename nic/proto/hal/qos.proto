@@ -130,8 +130,10 @@ message QosClassOutputQueue {
 
 // QosClass oper state for enterprise pipeline
 message QosClassStatusEpd {
-  repeated QosClassInputQueue  input_queues  = 1; // List of input queues
-  repeated QosClassOutputQueue output_queues = 2; // List of output queues
+  repeated QosClassInputQueue  input_queues           = 1;    // List of input queues
+  repeated QosClassOutputQueue output_queues          = 2;    // List of output queues
+  repeated uint32              tx_traffic_class_coses = 3;    // List of tx traffic class coses
+                                                              // that can be used by applications
 }
 
 // QosClass oper state for cloud pipeline

@@ -78,6 +78,7 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
     l2segment_stub_ = l2segment::L2Segment::NewStub(channel);
     multicast_stub_ = multicast::Multicast::NewStub(channel);
     rdma_stub_ = rdma::Rdma::NewStub(channel);
+    qos_stub_ = qos::QOS::NewStub(channel);
 }
 
 #define HAL_CREATE_API(obj_api, obj_class, pkg)                             \
@@ -232,3 +233,6 @@ HAL_GET_API(multicast, MulticastEntry, multicast);
 HAL_CREATE_API(filter, Filter, endpoint);
 HAL_DELETE_API(filter, Filter, endpoint);
 HAL_GET_API(filter, Filter, endpoint);
+
+// Qos Calls
+HAL_GET_API(qos_class, QosClass, qos);

@@ -14,6 +14,7 @@
 #include "gen/proto/l2segment.grpc.pb.h"
 #include "gen/proto/multicast.grpc.pb.h"
 #include "gen/proto/rdma.grpc.pb.h"
+#include "gen/proto/qos.grpc.pb.h"
 
 #include "hal_common_client.hpp"
 
@@ -88,6 +89,7 @@ public:
     DELETE_API(filter, Filter);
     GET_API(filter, Filter);
 
+    GET_API(qos_class, QosClass);
 private:
     HalGRPCClient() {};
     HalGRPCClient(enum HalForwardingMode mode);
@@ -100,6 +102,7 @@ private:
     std::unique_ptr<l2segment::L2Segment::Stub> l2segment_stub_;
     std::unique_ptr<multicast::Multicast::Stub> multicast_stub_;
     std::unique_ptr<rdma::Rdma::Stub> rdma_stub_;
+    std::unique_ptr<qos::QOS::Stub> qos_stub_;
 
     std::shared_ptr<grpc::Channel> channel;
 };

@@ -183,8 +183,14 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
  */
 void Accel_PF::Update(void)
 {
-    uint8_t cosA = 1;
-    uint8_t cosB = 0;
+    int32_t     cosA = 1;
+    int32_t     cosB = 0;
+    cosB = HalClient::GetTxTrafficClassCos(spec->qos_group, 0);
+    if (cosB < 0) {
+        NIC_LOG_ERR("lif{}: Failed to get cosB for group {}",
+                    info.hw_lif_id, spec->qos_group);
+        throw runtime_error("Failed to get cosB for nicmgr LIF");
+    }
     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
 
     // acquire rings info as initialized by HAL

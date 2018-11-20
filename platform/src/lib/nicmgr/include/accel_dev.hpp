@@ -92,6 +92,8 @@ typedef struct accel_devspec {
 
     // HW rings
     accel_ring_t accel_ring_tbl[ACCEL_RING_ID_MAX];
+
+    std::string qos_group;
 } accel_devspec_t;
 
 

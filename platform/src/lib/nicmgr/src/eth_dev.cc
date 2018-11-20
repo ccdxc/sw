@@ -147,8 +147,16 @@ struct queue_info Eth::qinfo [NUM_QUEUE_TYPES] = {
 
 void Eth::Update()
 {
-    uint8_t cosA = 1;
-    uint8_t cosB = 0;
+    int32_t     cosA = 1;
+    int32_t     cosB = 0;
+    cosB = HalClient::GetTxTrafficClassCos(spec->qos_group, 
+                                           spec->uplink ? spec->uplink->GetPortNum() : 0);
+    if (cosB < 0) {
+        NIC_LOG_ERR("lif-{}: Failed to get cosB for group {}, uplink {}",
+                    hal_lif_info_.hw_lif_id, spec->qos_group, 
+                    spec->uplink ? spec->uplink->GetPortNum() : 0);
+        return;
+    }
     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
     uint64_t hbm_addr;
     uint32_t hbm_size;

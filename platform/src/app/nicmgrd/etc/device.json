@@ -69,6 +69,7 @@
             "eq_count" : 1,
             "adminq_count" : 16,
             "intr_count" : 34,
+            "qos_group" : "DEFAULT",
             "pcie" : {
                 "port" : 0,
                 "num_vfs" : 0
