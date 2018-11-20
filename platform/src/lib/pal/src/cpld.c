@@ -35,6 +35,11 @@ pal_qsfp_reset_low_power_mode(int port) {
     return -1;
 }
 
+int
+pal_qsfp_set_led(int port, pal_qsfp_led_color_t led) {
+    return -1;
+}
+
 #else
 #include "internal.h"
 #include "cpld_int.h"
@@ -187,5 +192,29 @@ pal_qsfp_reset_low_power_mode(int port)
 
     return cpld_reg_bit_reset(0x02, bit);
 }
+
+int
+pal_qsfp_set_led(int port, pal_qsfp_led_color_t led) {
+    int bit = 0;
+    if(port == 1 && led == QSFP_LED_COLOR_GREEN) {
+        bit = 0;
+    } else if (port == 1 && led == QSFP_LED_COLOR_YELLOW) {
+        bit = 1;
+    } else if (port == 2 && led == QSFP_LED_COLOR_GREEN) {
+        bit = 2;
+    } else if (port == 2 && led == QSFP_LED_COLOR_YELLOW) {
+        bit = 3;
+    } else if (port == 1 && led == QSFP_LED_COLOR_NONE) {
+        cpld_reg_bit_reset(0x05, 0);
+        cpld_reg_bit_reset(0x05, 1);
+    } else if (port == 2 && led == QSFP_LED_COLOR_NONE) {
+        cpld_reg_bit_reset(0x05, 2);
+        cpld_reg_bit_reset(0x05, 3);
+    } else {
+        return CPLD_FAIL;
+    }
+    return cpld_reg_bit_set(0x05, bit);
+}
+
 #endif
 

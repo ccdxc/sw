@@ -5,6 +5,7 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
+#include "platform/src/lib/pal/include/pal_types.h"
 
 namespace sdk {
 namespace lib {
@@ -62,6 +63,7 @@ typedef struct pal_rwvectors_s {
                              uint32_t nretry, uint32_t port);
     void*       (*mem_map)(uint64_t pa, uint32_t sz);
     void        (*mem_unmap)(void *va);
+    pal_ret_t   (*qsfp_set_led)(int port, pal_qsfp_led_color_t led);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
@@ -199,8 +201,14 @@ pal_mem_map(uint64_t pa, uint32_t sz) {
 // NOTE : Unmapping any valid VA within a block using
 // this API will result in the entire block being unmapped.
 static inline void
-pal_mem_map(void* va) {
+pal_mem_unmap(void* va) {
     return gl_pal_info.rwvecs.mem_unmap(va);
+}
+
+static inline pal_ret_t
+pal_qsfp_set_led(int port, pal_qsfp_led_color_t led)
+{
+    return gl_pal_info.rwvecs.qsfp_set_led(port, led);
 }
 
 }    // namespace lib

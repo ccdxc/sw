@@ -2,6 +2,7 @@
 
 #include "lib/pal/pal.hpp"
 #include "lib/pal/pal_internal.hpp"
+#include "platform/src/lib/pal/include/pal_types.h"
 
 namespace sdk {
 namespace lib {
@@ -149,6 +150,13 @@ pal_default_mem_unmap(void  *va)
     SDK_TRACE_DEBUG("PAL default pal_default_mem_unmap called.");
 }
 
+static pal_ret_t
+pal_default_qsfp_set_led(int port, pal_qsfp_led_color_t led)
+{
+    SDK_TRACE_DEBUG("PAL default pal_default_qsfp_set_led");
+    return PAL_RET_OK;
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -176,6 +184,7 @@ pal_default_init_rwvectors (void)
     gl_pal_info.rwvecs.qsfp_write = pal_default_qsfp_write;
     gl_pal_info.rwvecs.mem_map = pal_default_mem_map;
     gl_pal_info.rwvecs.mem_unmap = pal_default_mem_unmap;
+    gl_pal_info.rwvecs.qsfp_set_led = pal_default_qsfp_set_led;
 
     return PAL_RET_OK;
 }
