@@ -195,7 +195,7 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
 
         // get asq address
         wring_hw_id_t   asq_base;
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASQ, 0, &asq_base);
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASQ, cpucb_pd->cpucb->cb_id, &asq_base);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to receive asq base, ret: {}", ret);
         } else {
@@ -205,7 +205,7 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         
         // get ascq address 
         wring_hw_id_t   ascq_base;
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASCQ, 0, &ascq_base);
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASCQ, cpucb_pd->cpucb->cb_id, &ascq_base);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to receive ascq base, ret: {}", ret);
         } else {
@@ -214,8 +214,8 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         }
         
         // get ascq sem address
-        HAL_TRACE_DEBUG("ascq sem: {:#x}", CAPRI_SEM_ASCQ_INF_ADDR(0));
-        data.u.cpu_tx_initial_action_d.ascq_sem_inf_addr = CAPRI_SEM_ASCQ_INF_ADDR(0);
+        HAL_TRACE_DEBUG("ascq sem: {:#x}", CAPRI_SEM_ASCQ_INF_ADDR(cpucb_pd->cpucb->cb_id));
+        data.u.cpu_tx_initial_action_d.ascq_sem_inf_addr = CAPRI_SEM_ASCQ_INF_ADDR(cpucb_pd->cpucb->cb_id);
     }
 
     HAL_TRACE_DEBUG("Programming tx stage0 at hw-id: {:#x}", hwid);
