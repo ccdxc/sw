@@ -1,0 +1,82 @@
+meta:
+    name        : classic::driver-features-int_mgmt-sanity
+    description : Driver features Test Suite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    enable      : True
+    os          : [ linux, freebsd ]
+
+packages:
+    - iota.test.iris
+
+images:
+
+setup:
+    topology: test/iris/topologies/2Naples_BM/2Naples.topology
+    config  :
+        - step : config.netagent.hw_push_config
+        - step : testcases.drivers.install_iperf
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+
+testcases:
+    -   name    : DRIVER_FEATURES_TX_CHECKSUM
+        testcase: testcases.drivers.features
+        disable : False
+        iterators :
+            type               : nested
+            tx_check_sum       : [ 'off', 'on']
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            test-type    : int-mgmt
+            #capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_RX_CHECKSUM
+        testcase: testcases.drivers.features
+        disable : False
+        iterators :
+            type               : nested
+            rx_check_sum       : [ 'off', 'on']
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            test-type    : int-mgmt
+            #capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    -   name    : DRIVER_FEATURES_TSO
+        testcase: testcases.drivers.features
+        disable : False
+        iterators :
+            type               : nested
+            mtu                : [ '8192']
+            tso_offload        : [ 'off', 'on']
+            #Sg seems to be on for TSO testing.
+            sg_offload         : [ 'on']
+            #TSO requires rx and tx cheksum
+            rx_check_sum       : [ 'on']
+            tx_check_sum       : [ 'on']
+            pktsize            : [  8192 ]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            test-type    : int-mgmt
+            #capture_pcap : true
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

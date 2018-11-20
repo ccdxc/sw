@@ -5,7 +5,7 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.config.netagent.hw_push_config as cfg_api
-
+import iota.test.iris.utils.naples_host as utils
 
 feature_cmd_map = {
     "tx_ring_size"       :
@@ -97,7 +97,7 @@ def setup_features(tc):
             if not feature_value:
                 api.Logger.error("Feature %s not provided " % feature)
                 continue
-            os_type = api.GetNodeOs(n)
+            os_type = intfObj.OsType()
             callback = cmdBuilderDict[os_type]["cmd"]
             cmds = callback(intf, feature_value)
             if not isinstance(cmds, list):

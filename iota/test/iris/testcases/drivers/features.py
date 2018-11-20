@@ -6,7 +6,6 @@ import iota.test.iris.testcases.drivers.interface as interface
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.testcases.drivers.verify as verify
 
-
 def Setup(tc):
     tc.nodes = api.GetWorkloadNodeHostnames()
     tc.node_intfs = {}

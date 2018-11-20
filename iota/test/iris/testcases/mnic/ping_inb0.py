@@ -13,9 +13,9 @@ def Trigger(tc):
             (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
 
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "taskset 0x8 ifconfig inb_mnic0 20.20.20.20 netmask 255.255.255.0 up")
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "taskset 0x8 ifconfig inb_mnic0 20.20.20.21 netmask 255.255.255.0 up")
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I inb_mnic0 -c1 20.20.20.21")
+    api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig inb_mnic0 20.20.20.20 netmask 255.255.255.0 up")
+    api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig inb_mnic0 20.20.20.21 netmask 255.255.255.0 up")
+    api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I inb_mnic0 -c3 20.20.20.21")
 
     trig_resp = api.Trigger(req)
 

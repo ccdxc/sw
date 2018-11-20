@@ -15,27 +15,27 @@ def Trigger(tc):
             (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
 
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "taskset 0x8 ifconfig int_mnic0 40.40.40.40 netmask 255.255.255.0 up")
+    api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig int_mnic0 40.40.40.40 netmask 255.255.255.0 up")
 
-    host_mgmt_intfs = utils.GetWorkloadInternalMgmtInterfaces(w1.node_name)
+    host_mgmt_intfs = utils.GetHostInternalMgmtInterfaces(w1.node_name)
 
     #ToDo: Need to enhance this to iterate over N mgmt interfaces on host
-    w1_cmd = "taskset 0x8 ifconfig %s 40.40.40.41 netmask 255.255.255.0 up" % host_mgmt_intfs[0]
+    w1_cmd = "ifconfig %s 40.40.40.41 netmask 255.255.255.0 up" % host_mgmt_intfs[0]
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                            w1_cmd)
 
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "taskset 0x8 ifconfig int_mnic0 50.50.50.50 netmask 255.255.255.0 up")
+    api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig int_mnic0 50.50.50.50 netmask 255.255.255.0 up")
 
-    host_mgmt_intfs = utils.GetWorkloadInternalMgmtInterfaces(w1.node_name)
+    host_mgmt_intfs = utils.GetHostInternalMgmtInterfaces(w1.node_name)
 
     #ToDo: Need to enhance this to iterate over N mgmt interfaces on host
-    w2_cmd = "taskset 0x8 ifconfig %s 50.50.50.51 netmask 255.255.255.0 up" % host_mgmt_intfs[0]
+    w2_cmd = "ifconfig %s 50.50.50.51 netmask 255.255.255.0 up" % host_mgmt_intfs[0]
 
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            w2_cmd)
 
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I int_mnic0 -c1 40.40.40.41")
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "ping -I int_mnic0 -c1 50.50.50.51")
+    api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I int_mnic0 -c3 40.40.40.41")
+    api.Trigger_AddNaplesCommand(req, w2.node_name, "ping -I int_mnic0 -c3 50.50.50.51")
 
     trig_resp = api.Trigger(req)
 

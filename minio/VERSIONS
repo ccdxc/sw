@@ -8,6 +8,6 @@ asic_libs dcb81bc
 ncc_tools dcb81bc
 pbc_config dcb81bc
 upgrade 1.0.3
-iota 1.0.0
+iota 1.0.1
 host_tools 1.0.3
 delphi_lib 1.0.1

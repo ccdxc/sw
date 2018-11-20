@@ -5,6 +5,7 @@ meta:
     mode        : hardware
     cfgmode     : netagent
     nicmode     : hostpin
+    os          : [linux]
 packages:
     - iota.test.iris
 images:
@@ -28,16 +29,16 @@ testcases:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : Ping on MNIC Internal Mgmt interface
+    -   name    : ping_int_mnic0_intf
         testcase: testcases.mnic.ping_int_mnic0
-        ignore: True
+        ignore: False
         args    :
             mtu: 1500
         verifs:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : Ping on MNIC OOB interface
+    -   name    : ping_oob_mnic0_intf 
         testcase: testcases.mnic.ping_oob
         ignore: True
         args    :
@@ -46,7 +47,7 @@ testcases:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : Ping on MNIC Inband-0 interface
+    -   name    : ping_inb_mnic0_intf 
         testcase: testcases.mnic.ping_inb0
         ignore: True
         args    :
@@ -55,7 +56,7 @@ testcases:
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : Ping on MNIC Inband-1 interface
+    -   name    : ping_inb_mnic1_intf 
         testcase: testcases.mnic.ping_inb1
         ignore: True
         args    :
