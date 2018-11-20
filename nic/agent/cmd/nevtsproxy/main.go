@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/nevtsproxy/reader"
+	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -28,7 +30,7 @@ func main() {
 		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "Comma separated list of resolver URLs of the form 'ip:port'")
 		dedupInterval   = flag.Duration("dedup-interval", 100*time.Second, "Events deduplication interval")
-		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching inteval")
+		batchInterval   = flag.Duration("batch-interval", 10*time.Second, "Events batching interval")
 		evtsStoreDir    = flag.String("evts-store-dir", globals.EventsDir, "Local events store directory")
 	)
 
@@ -68,17 +70,36 @@ func main() {
 
 	logger.Infof("%s is running {%+v}", globals.EvtsProxy, *eps)
 
+	// create shared memory events reader
+	shmEvtsReader := reader.NewReader(shm.GetSharedMemoryDirectory(), 50*time.Millisecond, eps.GetEventsDispatcher())
+	go func() {
+		for {
+			if err := shmEvtsReader.Start(); err == nil {
+				logger.Infof("shared memory events reader is running on dir: %s", shm.GetSharedMemoryDirectory())
+				return
+			}
+
+			logger.Debugf("failed to start file watcher, err: %v, retrying...", err)
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
 	// channel to receive signal
 	gracefulStop := make(chan os.Signal, 1)
 	signal.Notify(gracefulStop, syscall.SIGTERM, syscall.SIGINT)
 
 	select {
 	case <-gracefulStop:
+		// stop shm reader
+		shmEvtsReader.Stop()
+
+		// stop evtsproxy RPC server
 		logger.Debug("got signal, exiting")
 		if err := eps.RPCServer.Stop(); err != nil {
 			logger.Errorf("failed to stop RPC server, err %v", err)
 		}
 	case <-eps.RPCServer.Done():
+		shmEvtsReader.Stop()
 		logger.Debug("server stopped serving, exiting")
 	}
 }

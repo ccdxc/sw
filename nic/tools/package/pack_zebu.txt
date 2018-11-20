@@ -2,7 +2,10 @@ nic/conf                                                            /nic/conf/
 nic/build/x86_64/iris/bin/hal                                       /nic/bin/
 
 nic/build/x86_64/iris/lib/libpacket_parser.so                       /nic/lib/
+nic/build/x86_64/iris/lib/libipc.so                                 /nic/lib/
 nic/build/x86_64/iris/lib/libagent_api.so                           /nic/lib/
+nic/build/x86_64/iris/lib/libevents_queue.so                        /nic/lib/
+nic/build/x86_64/iris/lib/libevents_recorder.so                     /nic/lib/
 nic/build/x86_64/iris/lib/libasicpd.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libbitmap.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libblock_list.so                          /nic/lib/

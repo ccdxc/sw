@@ -45,6 +45,10 @@ var (
 type EventsProxy struct {
 	// RPCServer that exposes the server implementation of event proxy APIs
 	RPCServer *rpcserver.RPCServer
+
+	// events dispatcher which dispatches the events to destinations (venice, syslog, etc..)
+	// after applying deduplication and batching
+	evtsDispatcher events.Dispatcher
 }
 
 // NewEventsProxy creates and returns a events proxy instance
@@ -79,7 +83,8 @@ func NewEventsProxy(serverName, serverURL, evtsMgrURL string, resolverClient res
 	}
 
 	return &EventsProxy{
-		RPCServer: rpcServer,
+		RPCServer:      rpcServer,
+		evtsDispatcher: evtsDispatcher,
 	}, nil
 }
 
@@ -89,6 +94,11 @@ func (ep *EventsProxy) Stop() {
 		ep.RPCServer.Stop()
 		ep.RPCServer = nil
 	}
+}
+
+// GetEventsDispatcher returns the underlying events dispatcher
+func (ep *EventsProxy) GetEventsDispatcher() events.Dispatcher {
+	return ep.evtsDispatcher
 }
 
 // addDefaultWriters registers default writer with the dispatcher

@@ -1,7 +1,8 @@
 package ipc
 
 import (
-	//#include "../../utils/agent_api/shared_constants.c"
+	//#include "../../utils/ipc/constants.h"
+	//#include "../../utils/agent_api/constants.h"
 	"C"
 	"context"
 	"encoding/binary"

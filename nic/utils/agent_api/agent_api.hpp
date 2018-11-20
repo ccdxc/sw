@@ -1,7 +1,7 @@
 #ifndef __AGENT_API_HPP__
 #define __AGENT_API_HPP__
 
-#include "nic/utils/agent_api/ipc.hpp"
+#include "nic/utils/ipc/ipc.hpp"
 
 // ipc_logger supports reporting fw events to the agent.
 // Multiple instances can be created using the factory method after init.

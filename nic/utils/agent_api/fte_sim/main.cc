@@ -1,6 +1,7 @@
 #include <iostream>
 #include "nic/utils/agent_api/agent_api.hpp"
-#include "nic/utils/agent_api/shared_constants.h"
+#include "nic/utils/agent_api/constants.h"
+#include "nic/utils/ipc/constants.h"
 #include "gen/proto/internal.grpc.pb.h"
 #include "nic/utils/agent_api/fte_sim/fwlogsim_svc.hpp"
 using namespace std;

@@ -38,7 +38,10 @@ nic/build/x86_64/apollo/lib/libsdkplatformutils.so              /nic/lib/
 nic/build/x86_64/apollo/lib/libpdcommon.so                      /nic/lib/
 nic/build/x86_64/apollo/lib/libcore.so                          /nic/lib/
 nic/build/x86_64/apollo/lib/libfte_mock.so                      /nic/lib/
+nic/build/x86_64/apollo/lib/libipc.so                           /nic/lib/
 nic/build/x86_64/apollo/lib/libagent_api.so                     /nic/lib/
+nic/build/x86_64/apollo/lib/libevents_queue.so                  /nic/lib/
+nic/build/x86_64/apollo/lib/libevents_recorder.so               /nic/lib/
 nic/build/x86_64/apollo/lib/libbm_allocator.so                  /nic/lib/
 nic/build/x86_64/apollo/lib/libbitmap.so                        /nic/lib/
 nic/build/x86_64/apollo/lib/libtrace.so                         /nic/lib/

@@ -1,0 +1,36 @@
+// protobuf definition for event
+
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+package events;
+
+enum Severity {
+  INFO      = 0;
+  WARNING   = 1;
+  CRITICAL  = 2;
+}
+
+message Event {
+    // INFO, WARNING or CRITICAL
+    Severity            severity    = 1;
+
+    // event type; this should be one of the event type from
+    // service proto. e.g nw::EventTypes_Name(nw::NETWORK_CREATE_FAILED)
+    string              type        = 2;
+
+    // free form event message
+    string              message     = 3;
+
+    // name of component producing event e.g. nicmgr, fte, etc.
+    string              component   = 4;
+
+    // number of seconds since the epoch (std::time(0))
+    uint64              time        = 5;
+
+    // kind of the affected object
+    string              object_kind = 6;
+
+    // protobuf message; key/id of the affected object. e.g. kh::NetworkKeyHandle
+    google.protobuf.Any object_key  = 7;
+}

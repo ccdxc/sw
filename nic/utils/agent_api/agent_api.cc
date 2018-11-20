@@ -1,8 +1,13 @@
+#include "nic/utils/ipc/ipc.hpp"
 #include "nic/utils/agent_api/agent_api.hpp"
-#include "nic/utils/agent_api/shared_constants.h"
+#include "nic/utils/agent_api/constants.h"
 #define IPv4_LEN 4
 #define IPv6_LEN 16
 #define L4PORT_LEN 2
+
+const char* FWLOG_SHM="/fwlog_ipc_shm";
+
+shm *shm_;
 
 void ipc_logger::set_ipc_instances (int numInst) 
 {
@@ -17,13 +22,18 @@ int ipc_logger::init (void)
     // that does a sizeof() operation for uninitialized 
     // proto class
     // set_ipc_buf_sz();
-    return ipc::setup_shm(IPC_MEM_SIZE, IPC_INSTANCES);
+    shm_ = shm::setup_shm(FWLOG_SHM, IPC_MEM_SIZE, IPC_INSTANCES, IPC_BUF_SIZE);
+    if (!shm_) {
+        return -1;
+    }
+
+    return 0;
 }
 
 // deinit frees up the shared memory
 void ipc_logger::deinit (void)
 {
-    ipc::tear_down_shm();
+    shm_->tear_down_shm();
 }
 
 // factory creates a new instance of ipc_logger
@@ -31,7 +41,7 @@ ipc_logger *ipc_logger::factory (void)
 {
     ipc *ipc_inst;
 
-    ipc_inst = ipc::factory();
+    ipc_inst = shm_->factory();
     if (!ipc_inst) {
         return nullptr;
     }

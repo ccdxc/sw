@@ -37,7 +37,10 @@ nic/build/x86_64/gft/lib/libsdkplatformutils.so                 /nic/lib/
 nic/build/x86_64/gft/lib/libpdcommon.so                         /nic/lib/
 nic/build/x86_64/gft/lib/libcore.so                             /nic/lib/
 nic/build/x86_64/gft/lib/libfte_mock.so                         /nic/lib/
+nic/build/x86_64/gft/lib/libipc.so                              /nic/lib/
 nic/build/x86_64/gft/lib/libagent_api.so                        /nic/lib/
+nic/build/x86_64/gft/lib/libevents_queue.so                     /nic/lib/
+nic/build/x86_64/gft/lib/libevents_recorder.so                  /nic/lib/
 nic/build/x86_64/gft/lib/libbm_allocator.so                     /nic/lib/
 nic/build/x86_64/gft/lib/libbitmap.so                           /nic/lib/
 nic/build/x86_64/gft/lib/libtrace.so                            /nic/lib/

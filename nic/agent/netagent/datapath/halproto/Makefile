@@ -18,7 +18,7 @@ hal-proto: clean-proto
 	-I../../../../../nic/delphi/proto/delphi \
 	-I$(TOP_DIR)/hal/third-party/google/include \
 	-I../../../../../vendor/github.com/gogo/protobuf/gogoproto \
-	--gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,plugins=grpc:. types.proto ${HAL_PROTO_FILES}
+	--gogofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,plugins=grpc:. types.proto ${HAL_PROTO_FILES} events.proto
 
 clean-proto:
 	# Regenerate all .pb.go. This avoids conflicts due to file renames in nic/proto/hal

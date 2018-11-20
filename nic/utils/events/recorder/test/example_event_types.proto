@@ -1,0 +1,15 @@
+// protobuf definition for example event types
+
+syntax = "proto3";
+
+import public "gogo.proto";
+
+package example_event_types;
+
+enum EventTypes {
+	option (gogoproto.goproto_enum_stringer) = false;
+	option (gogoproto.enum_stringer) = true;
+	EVENT_TYPE1 = 0;
+	EVENT_TYPE2 = 1;
+}
+

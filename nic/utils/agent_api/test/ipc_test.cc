@@ -3,12 +3,12 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <unistd.h>
 #include <sys/types.h>
-#include <string.h>
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <iostream>
 #include "nic/utils/agent_api/agent_api.hpp"
-#include "nic/utils/agent_api/shared_constants.h"
+#include "nic/utils/agent_api/constants.h"
+#include "nic/utils/ipc/constants.h"
 #include "nic/sdk/include/sdk/thread.hpp"
 #include "gen/proto/nwsec.pb.h"
 #include "gen/proto/fwlog.pb.h"
@@ -17,7 +17,8 @@
 #define TEST_IPC_SIZE 256 
 #define EXP_BUF_COUNT (TEST_IPC_SIZE/TEST_ALLOC_SIZE - 1)
 #define FWLOG_SHM "/fwlog_ipc_shm"
-#define TEST_SHM_SIZE 2048 
+#define TEST_SHM_SIZE 2048
+#define TEST_SHM_BUF_SIZE 256
 #define TEST_QSIZE 7
 #define TEST_FW_SHM_SIZE 64*1024
 
@@ -93,9 +94,9 @@ TEST_F(ipc_test, basic) {
     uint8_t *buf;
     int ix;
 
-    ret = ipc::setup_shm(TEST_SHM_SIZE, 1);
-    ASSERT_EQ(ret, 0);
-    ipc *ipc1 = ipc::factory();
+    shm *shm_inst = shm::setup_shm(FWLOG_SHM, TEST_SHM_SIZE, 1, TEST_SHM_BUF_SIZE);
+    ASSERT_NE(shm_inst, nullptr);
+    ipc *ipc1 = shm_inst->factory();
     ASSERT_NE(ipc1, nullptr);
 
     for (ix = 0; ix < (TEST_QSIZE-1); ix++) {
@@ -130,25 +131,24 @@ TEST_F(ipc_test, basic) {
         ASSERT_EQ(buf, nullptr);
     }
 
-    ipc::tear_down_shm();
+    shm_inst->tear_down_shm();
 }
 
 // Multi-instance Test
 // Init ipc
 // Verify operation with three instances
 TEST_F(ipc_test, multi) {
-    int ret;
     int ix;
     ipc *ipc_inst[3];
 
-    ret = ipc::setup_shm(TEST_SHM_SIZE*3, 3);
-    ASSERT_EQ(ret, 0);
+    shm *shm_inst = shm::setup_shm(FWLOG_SHM, TEST_SHM_SIZE*3, 3, TEST_SHM_BUF_SIZE);
+    ASSERT_NE(shm_inst, nullptr);
     for (ix = 0; ix < 3; ix++) {
-        ipc_inst[ix] = ipc::factory();
+        ipc_inst[ix] = shm_inst->factory();
         ASSERT_NE(ipc_inst[ix], nullptr);
     }
     // next instance should fail.
-    ipc *ipc1 = ipc::factory();
+    ipc *ipc1 = shm_inst->factory();
     ASSERT_EQ(ipc1, nullptr);
 
     // open shared mem
@@ -161,7 +161,7 @@ TEST_F(ipc_test, multi) {
     for (ix = 0; ix < 3; ix++) {
         verify_snd_rcv(ipc_inst[ix], (volatile uint32_t *)&p8[ix*TEST_SHM_SIZE]);
     }
-    ipc::tear_down_shm();
+    shm_inst->tear_down_shm();
 }
 
 void verify_fw_log(fwlog::FWEvent fwlog, volatile uint8_t *shm) {
