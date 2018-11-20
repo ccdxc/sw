@@ -83,7 +83,7 @@ logger_init(void)
     auto rotating_sink =
 #ifdef __aarch64__
         std::make_shared<spdlog::sinks::rotating_file_sink_mt>
-        ("/var/log/pciemgrd.log", 1*1024*1024, 3);
+        ("/var/log/pensando/pciemgrd.log", 1*1024*1024, 3);
 #else
         std::make_shared<spdlog::sinks::rotating_file_sink_mt>
         ("pciemgrd.log", 1*1024*1024, 3);

@@ -30,6 +30,7 @@ func init() {
 	str += "\t\t\t\t" + strings.TrimPrefix(globals.Nmd, "pen-") + "\n"
 	str += "\t\t\t\t" + strings.TrimPrefix(globals.Netagent, "pen-") + "\n"
 	str += "\t\t\t\t" + strings.TrimPrefix(globals.Tmagent, "pen-") + "\n"
+	str += "\t\t\t\t" + "pciemgrd" + "\n"
 	logsShowCmd.Flags().StringVarP(&module, "module", "m", "", "Module to show logs for\n"+str)
 	logsShowCmd.MarkFlagRequired("module")
 }
@@ -43,6 +44,8 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		moduleVal = globals.Netagent
 	case strings.TrimPrefix(globals.Tmagent, "pen-"):
 		moduleVal = globals.Tmagent
+	case "pciemgrd":
+		moduleVal = "pciemgrd"
 	}
 	moduleVal += ".log"
 	resp, err := restGet(revProxyPort, "monitoring/v1/naples/logs/pensando/"+moduleVal)
@@ -63,7 +66,8 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 func logsShowCmdArgsValidator(cmd *cobra.Command, args []string) error {
 	if strings.Compare(module, strings.TrimPrefix(globals.Nmd, "pen-")) != 0 &&
 		strings.Compare(module, strings.TrimPrefix(globals.Netagent, "pen-")) != 0 &&
-		strings.Compare(module, strings.TrimPrefix(globals.Tmagent, "pen-")) != 0 {
+		strings.Compare(module, strings.TrimPrefix(globals.Tmagent, "pen-")) != 0 &&
+		strings.Compare(module, "pciemgrd") != 0 {
 		if cmd.Flags().Changed("module") {
 			str := "Not valid module: " + module + "\n"
 			return errors.New(str)

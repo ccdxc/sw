@@ -7,6 +7,7 @@ package cmd
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -27,9 +28,25 @@ var getProcMemInfoCmd = &cobra.Command{
 	RunE:  getProcMemInfoCmdHandler,
 }
 
+var getSystemCmd = &cobra.Command{
+	Use:   "system",
+	Short: "show system information",
+	Long:  "\n------------------------------------\n show system information \n------------------------------------\n",
+}
+
+var getSystemStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Show current system status",
+	Long:  "\n------------------------------------\n Show current system status \n------------------------------------\n",
+	RunE:  getSystemStatusCmdCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(getSysMemCmd)
 	showCmd.AddCommand(getProcMemInfoCmd)
+	showCmd.AddCommand(getSystemCmd)
+	getSystemCmd.AddCommand(getSystemStatusCmd)
+
 }
 
 func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
@@ -71,5 +88,39 @@ func getProcMemInfoCmdHandler(cmd *cobra.Command, args []string) error {
 	if verbose {
 		fmt.Println(string(resp))
 	}
+	return nil
+}
+
+func getSystemStatusCmdCmdHandler(cmd *cobra.Command, args []string) error {
+	resp, err := restGet(revProxyPort, "monitoring/v1/naples/logs/pensando/pciemgrd.log")
+	if err != nil {
+		return err
+	}
+
+	var pciemgrd, port0 string
+	var pyr, phr, pmin, psec, pmilsec int
+	var eyr, ehr, emin, esec, emilsec int
+	var starttime, endtime time.Duration
+	for _, line := range strings.Split(string(resp), "\n") {
+		if strings.Contains(line, "pciemgrd ready") {
+			fmt.Sscanf(line, "[%d-%d:%d:%d.%d]%s", &pyr, &phr, &pmin, &psec, &pmilsec, &pciemgrd)
+			starttime = time.Duration(phr)*time.Hour +
+				time.Duration(pmin)*time.Minute +
+				time.Duration(psec)*time.Second +
+				time.Duration(pmilsec)*time.Millisecond
+		} else if strings.Contains(line, "port 0 ready") {
+			fmt.Sscanf(line, "[%d-%d:%d:%d.%d]%s", &eyr, &ehr, &emin, &esec, &emilsec, &port0)
+			endtime = time.Duration(ehr)*time.Hour +
+				time.Duration(emin)*time.Minute +
+				time.Duration(esec)*time.Second +
+				time.Duration(emilsec)*time.Millisecond
+		}
+	}
+	pcietime := endtime - starttime
+	fmt.Printf("The PCIE up time duration is %d:%d:%d.%d\n",
+		int64(pcietime/time.Hour),
+		int64(pcietime/time.Minute),
+		int64(pcietime/time.Second),
+		int64(pcietime/time.Millisecond))
 	return nil
 }
