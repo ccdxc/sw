@@ -18,7 +18,9 @@ container_tag = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 def ExecuteCommand(cmd):
     print cmd
-    return os.system(cmd)
+    retval=os.system(cmd)
+    if retval != 0:
+        raise Exception("command " + cmd + "failed with retval " +  str(retval))
 
 # Each InstallationItem is looked into during the installation time. Each entry has a name, type
 #   (thus implying pre-defined actions to be taken by installer and (optionally) data
@@ -51,14 +53,13 @@ static_images = {
     'pen-etcd' : 'registry.test.pensando.io:5000/coreos/etcd:v3.3.2',
     'pen-filebeat' : 'registry.test.pensando.io:5000/beats/filebeat:6.3.0',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.4',
-    'pen-influx' : 'registry.test.pensando.io:5000/influxdb:1.4.2',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.6',
     'pen-pause' : 'gcr.io/google_containers/pause-amd64:3.0',
 }
 
 # images which are compiled every time
 dynamic_images = [
-    "cmd", "apiserver", "apigw",  "npm",  "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator", "vos", "citadel", "rollout"
+    "cmd", "apiserver", "apigw",  "npm",  "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator", "vos", "citadel", "rollout"
 ]
 
 # dictionary of module name(specified in venice/globals/modules.go )  to containerImage
@@ -101,8 +102,8 @@ imageConfig = {}
 imageConfig['imageMap'] = imageMap
 
 # the order in which the services get upgraded. For now fill up with some random order.
-imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw',  'pen-npm', 'pen-collector', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
-                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp', 'pen-influx', 'pen-elastic', 'pen-aggregator', "pen-vos", "pen-citadel"]
+imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw',  'pen-npm', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
+                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp',  'pen-elastic', 'pen-aggregator', "pen-vos", "pen-citadel"]
 
 # installInfo is used by the installer during installation of this image.
 # This has 2 steps. Preload and LoadAndInstall.

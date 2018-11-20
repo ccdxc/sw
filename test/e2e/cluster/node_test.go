@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -81,13 +82,30 @@ var _ = Describe("node tests", func() {
 				}, 95, 1).ShouldNot(BeEmpty(), "service %s should be running on %s", service, nonQnode)
 			}
 
-		})
-
-		AfterEach(func() {
+			// Now remove the node from the cluster
 			obj := api.ObjectMeta{Name: nonQnode}
 			n, err2 := nodeIf.Delete(ts.tu.NewLoggedInContext(context.Background()), &obj)
 			Expect(err2).ShouldNot(HaveOccurred())
-			By(fmt.Sprintf("Disjoin %+v from cluster", n.Name))
+			By(fmt.Sprintf("Disjoin %+v from cluster at %s", n.Name, time.Now().Format(time.RFC3339Nano)))
+
+			Eventually(func() bool {
+				out := ts.tu.LocalCommandOutput("kubectl get pods  -o json")
+				json.Unmarshal([]byte(out), &kubeOut)
+				for _, i := range kubeOut.Items {
+					if i.Spec.NodeName == nonQnode {
+						return false
+					}
+				}
+				By(fmt.Sprintf("all pods of deleted Nodes disappeared from kube at %s", time.Now().Format(time.RFC3339Nano)))
+				return true
+			}, 95, 1).Should(BeTrue(), "disjoined node %s should not be present in k8s", nonQnode)
+
+		})
+
+		AfterEach(func() {
+			// fallback cleanup so that even if above function fails before calling delete, we always delete the node
+			obj := api.ObjectMeta{Name: nonQnode}
+			nodeIf.Delete(ts.tu.NewLoggedInContext(context.Background()), &obj)
 		})
 	})
 })

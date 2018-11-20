@@ -214,37 +214,6 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
-	globals.Influx: {
-		TypeMeta: api.TypeMeta{
-			Kind: "Module",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.Influx,
-		},
-		Spec: protos.ModuleSpec{
-			Type:      protos.ModuleSpec_Deployment,
-			NumCopies: 1,
-			Submodules: []protos.ModuleSpec_Submodule{
-				{
-					Name: globals.Influx,
-					Services: []protos.ModuleSpec_Submodule_Service{
-						{
-							Name: globals.Influx,
-							Port: runtime.MustUint32(globals.InfluxHTTPPort),
-						},
-					},
-					Args: []string{
-						"-config", "/etc/pensando/" + globals.Influx + "/influxdb.conf",
-					},
-				},
-			},
-			Volumes: []protos.ModuleSpec_Volume{
-				getComponentConfigVolume(globals.Influx),
-				logVolume,
-				eventsVolume,
-			},
-		},
-	},
 	globals.Aggregator: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",

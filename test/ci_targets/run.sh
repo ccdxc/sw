@@ -7,7 +7,7 @@ if [ $? -ne 0 ]; then
   mkdir -p /tmp/ClusterLogs
   for node in $(docker ps -f label=pens-dind --format '{{.Names}}'); do
     docker cp  $node:/var/log/pensando /tmp/ClusterLogs/$node.logs
-    docker exec  $node journalctl --no-pager > /tmp/ClusterLogs/$node.logs/journalctl
+    docker exec  $node journalctl -x --no-pager > /tmp/ClusterLogs/$node.logs/journalctl
   done
   for node in $(docker ps -f label=pens-naples --format '{{.Names}}'); do
     docker cp  $node:/var/log/pensando /tmp/ClusterLogs/$node.logs

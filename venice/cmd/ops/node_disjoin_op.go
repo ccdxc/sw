@@ -37,10 +37,12 @@ func (o *NodeDisjoinOp) Validate() error {
 func (o *NodeDisjoinOp) Run() (interface{}, error) {
 	_, err := sendDisjoins(nil, []string{o.node.Name})
 	if err != nil {
-		return nil, errors.NewInternalError(err)
+		log.Errorf("error %v sending disjoins to node %v", err, o.node.Name)
 	}
-	err = env.K8sService.DeleteNode(o.node.Name)
-	log.Infof("node %v disjoin from cluster. err %v", o.node.Name, err)
-	recorder.Event(cmd.NodeDisjoined, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s disjoined from cluster", o.node.Name), o.node)
+	err2 := env.K8sService.DeleteNode(o.node.Name)
+	log.Infof("node %v disjoin from cluster. err %v", o.node.Name, err2)
+	if err != nil || err2 != nil {
+		recorder.Event(cmd.NodeDisjoined, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s disjoined from cluster", o.node.Name), o.node)
+	}
 	return o.node.Name, err
 }
