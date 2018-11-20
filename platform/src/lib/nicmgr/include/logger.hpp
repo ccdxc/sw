@@ -18,7 +18,7 @@ namespace logger {
 #define NIC_HEADER_TRACE(arg_str) \
     utils::logger::nicmgr_api_trace(arg_str);
 
-// Syslog Macros
+// syslog macros
 #define NIC_SYSLOG_CRIT(args...) \
 do { \
     if (utils::logger::syslogger()) { \
@@ -47,7 +47,7 @@ do { \
     } \
 } while (0)
 
-// Log Macros
+// log macros
 #define NIC_LOG_CRIT(args...) \
 do { \
     if (utils::logger::logger()) { \
@@ -59,7 +59,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->error(args); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -74,7 +73,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->info(args); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -82,7 +80,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->debug(args); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -90,16 +87,14 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->trace(args); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
-// Function Logging Macros
+// function logging macros
 #define NIC_FUNC_CRIT(fmt, args...) \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->critical("[{}:{}] " fmt, __FUNCTION__, __LINE__, args); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -107,7 +102,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->error("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -115,7 +109,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->warn("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -123,7 +116,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->info("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -131,7 +123,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->debug("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 
@@ -139,7 +130,6 @@ do { \
 do { \
     if (utils::logger::logger()) { \
         utils::logger::logger()->trace("[{}:{}] " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-        utils::logger::logger()->flush(); \
     } \
 } while (0)
 

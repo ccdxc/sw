@@ -37,6 +37,49 @@ sigusr1_handler(int sig)
 {
     fflush(stdout);
     fflush(stderr);
+    utils::logger::logger();
+}
+
+static int
+sdk_error_logger (const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    NIC_LOG_DEBUG("{}", logbuf);
+    va_end(args);
+
+    return 0;
+}
+
+static int
+sdk_debug_logger (const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    NIC_LOG_DEBUG("{}", logbuf);
+    va_end(args);
+
+    return 0;
+}
+
+static void
+sdk_init (void)
+{
+    sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
+}
+
+static void
+atexit_handler (void)
+{
+    if (utils::logger::logger()) {
+        utils::logger::logger()->flush();
+    }
 }
 
 static void
@@ -156,11 +199,15 @@ int main(int argc, char *argv[])
         exit(1);
     }
     osigusr1 = signal(SIGUSR1, sigusr1_handler);
+    // install atexit() handler
+    atexit(atexit_handler);
 
     // instantiate the logger
     utils::logger::init(dol_integ);
+    // initialize sdk logger
+    sdk_init();
     if (platform_is_hw(platform)) {
-        nicmgr_delphi_client_entry(NULL);
+        nicmgr::delphi_init();
     }
     loop();
 

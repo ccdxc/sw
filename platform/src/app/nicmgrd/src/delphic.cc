@@ -31,7 +31,7 @@ port_status_handler_ptr_t g_port_status_handler;
 hal_status_handler_ptr_t g_hal_status_handler;
 shared_ptr<NicMgrService> g_nicmgr_svc;
 
-// nicMgr delphi service
+// nicmgr delphi service
 NicMgrService::NicMgrService(delphi::SdkPtr sk) {
     sdk_ = sk;
     upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<nicmgr_upg_hndlr>(),
@@ -167,6 +167,32 @@ Status init_accel_objects (delphi::SdkPtr sdk) {
     dobj::AccelSeqQueueInfo::Mount(sdk, delphi::ReadWriteMode);
     dobj::AccelHwRingInfo::Mount(sdk, delphi::ReadWriteMode);
     return Status::OK;
+}
+
+// initialization function for delphi
+void
+delphi_init (void)
+{
+    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
+    g_nicmgr_svc = make_shared<NicMgrService>(sdk);
+
+    // override delphi's logger with our logger
+    delphi::SetLogger(std::shared_ptr<spdlog::logger>(utils::logger::logger()));
+
+    // register NicMgr as Delphi Service
+    sdk->RegisterService(g_nicmgr_svc);
+
+    // init port status handler
+    init_port_status_handler(sdk);
+
+    // init hal status handler
+    init_hal_status_handler(sdk);
+
+    // init accel dev related handlers
+    init_accel_objects(sdk);
+
+    // connect to delphi
+    sdk->Connect();
 }
 
 }    // namespace nicmgr

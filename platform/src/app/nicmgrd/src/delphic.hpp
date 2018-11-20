@@ -84,8 +84,9 @@ Status init_hal_status_handler(delphi::SdkPtr sdk);
 Status init_accel_objects(delphi::SdkPtr sdk);
 
 extern shared_ptr<NicMgrService> g_nicmgr_svc;
-}    // namespace nicmgr
 
-void *nicmgr_delphi_client_entry(void *ctxt);
+void delphi_init(void);
+
+}    // namespace nicmgr
 
 #endif
