@@ -11,6 +11,7 @@
 
 #include "nic/include/mpu_trace.hpp"
 #include "nic/sdk/include/sdk/pal.hpp"
+#include "platform/include/common/memregion.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -18,9 +19,9 @@ using grpc::Status;
 
 using debug::Debug;
 
-// TODO: Alloc from PAL
-#define TRACE_BASE          roundup(0x0124656c00, 4096)
-#define TRACE_END           0x012c656c00
+
+#define TRACE_BASE          roundup(MEMREGION_MPUTRACE_PA, 4096)
+#define TRACE_END           (MEMREGION_MPUTRACE_PA + MEMREGION_MPUTRACE_SZ)
 #define TRACE_ENTRY_SIZE    (64)
 
 std::string svc_endpoint = "localhost:50054";
@@ -50,18 +51,16 @@ std::map<std::string, int> trace_options = {
     {"instr_enable", 5},
     {"wrap", 6},
     {"watch_pc", 7},
-    {"trace_addr", 8},
-    {"trace_size", 9},
+    {"trace_size", 8},
 };
 
-int mpu_trace(
-    std::shared_ptr<Channel> channel,
-    debug::MpuTraceRequestMsg &req_msg
-)
+int mpu_trace(debug::MpuTraceRequestMsg &req_msg)
 {
     ClientContext context;
     Status status;
     debug::MpuTraceResponseMsg rsp_msg;
+    std::shared_ptr<Channel> channel =
+        grpc::CreateChannel(svc_endpoint, grpc::InsecureChannelCredentials());
 
     auto debug_stub_ = Debug::NewStub(channel);
     status = debug_stub_->MpuTraceUpdate(&context, req_msg, &rsp_msg);
@@ -81,27 +80,89 @@ int mpu_trace(
     return -1;
 }
 
+void parse_options(std::shared_ptr<mpu_trace_record_t> record)
+{
+    char *option, *value;
+
+    assert(record != NULL);
+
+    record->trace_enable = false;
+    record->phv_debug = false;
+    record->phv_error = false;
+    record->table_key = false;
+    record->instructions = false;
+    record->wrap = false;
+    record->watch_pc = 0;
+    record->trace_addr = 0;
+    record->trace_size = 4096;
+
+    // Parse and validate options
+    while (option != NULL) {
+
+        option = strtok(NULL, "=");
+        if (option == NULL) {
+            break;
+        }
+        // printf("option: %s\n", option);
+
+        value = strtok(NULL, ",");
+        if (value == NULL) {
+            break;
+        }
+        // printf("value: %s\n", value);
+
+        switch (trace_options[std::string((const char *)option)]) {
+        case 0:
+            printf("Invalid option '%s' ... ignoring!\n", option);
+            break;
+        case 1:
+            record->trace_enable = atoi(value);
+            break;
+        case 2:
+            record->phv_debug = atoi(value);
+            break;
+        case 3:
+            record->phv_error = atoi(value);
+            break;
+        case 4:
+            record->table_key = atoi(value);
+            break;
+        case 5:
+            record->instructions = atoi(value);
+            break;
+        case 6:
+            record->wrap = atoi(value);
+            break;
+        case 7:
+            record->watch_pc = strtoul(value, NULL, 16);
+            break;
+        case 8:
+            record->trace_size = atoi(value);
+            assert(record->trace_size > 0);
+            break;
+        default:
+            printf("Invalid option '%s' ... ignoring!\n", option);
+            break;
+        }
+    }
+
+    return;
+}
+
 int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
 {
     FILE *fp = NULL;
     int ret = 0;
     char * line = NULL;
     size_t len = 0;
-    char *token, *option, *value;
+    char *token;
     char *pipeline_name;
     int stage;
     int mpu;
-    bool config = true;
-    bool trace_enable = false;
-    bool phv_debug = false;
-    bool phv_error = false;
-    bool table_key_enable = false;
-    bool instr_enable = false;
-    bool wrap = false;
-    uint64_t watch_pc = 0;
+    bool enable;
     uint64_t trace_addr = TRACE_BASE;
-    uint32_t trace_size = 0;
     int line_num = -1, col_num = 0;
+    std::shared_ptr<mpu_trace_record_t> record;
 
     debug::MpuTracePipelineType pipeline;
     debug::MpuTraceRequestMsg req_msg;
@@ -112,10 +173,10 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
         return -1;
     }
 
-    std::shared_ptr<Channel> channel =
-        grpc::CreateChannel(svc_endpoint, grpc::InsecureChannelCredentials());
+    std::map<std::tuple<int, int, int>, std::shared_ptr<mpu_trace_record_t>> config;
 
     while ((getline(&line, &len, fp)) != -1) {
+
         ++line_num;
         col_num = 0;
         if (line[0] == '#') {// comment
@@ -182,89 +243,19 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
         col_num++;
 
         // Parse and validate options
-        do {
-            option = strtok(NULL, "=");
-            if (option == NULL) {
-                break;
-            }
-
-            value = strtok(NULL, ",");
-            if (value == NULL) {
-                break;
-            }
-
-            col_num++;
-
-            switch (trace_options[std::string((const char *)option)]) {
-            case 0:
-                printf("Invalid option '%s' ... ignoring!\n", option);
-                break;
-            case 1:
-                trace_enable = atoi(value);
-                break;
-            case 2:
-                phv_debug = atoi(value);
-                break;
-            case 3:
-                phv_error = atoi(value);
-                break;
-            case 4:
-                table_key_enable = atoi(value);
-                break;
-            case 5:
-                instr_enable = atoi(value);
-                break;
-            case 6:
-                wrap = atoi(value);
-                break;
-            case 7:
-                watch_pc = strtoul(value, NULL, 16);
-                break;
-            case 8:
-                trace_addr = strtoul(value, NULL, 16);
-                break;
-            case 9:
-                trace_size = atoi(value);
-                assert(trace_size > 0);
-                break;
-            default:
-                printf("Invalid option '%s' ... ignoring!\n", option);
-                break;
-            }
-        } while(token != NULL);
+        record = std::make_shared<mpu_trace_record_t>();
+        parse_options(record);
 
         for (int p = 1; p < MAX_NUM_PIPELINE; p++) {
             for (int s = 0; s <= max_stages[(debug::MpuTracePipelineType)p]; s++) {
                 for (int m = 0; m < MAX_MPU; m++) {
-
-                    config = (pipeline == (int)debug::MPU_TRACE_PIPELINE_NONE || p == pipeline) &&
+                    enable = (pipeline == (int)debug::MPU_TRACE_PIPELINE_NONE || p == pipeline) &&
                                 (stage == -1 || s == stage) && (mpu == -1 || m == mpu);
-
-                    debug::MpuTraceRequest *req = req_msg.add_request();
-
-                    req->set_pipeline_type((debug::MpuTracePipelineType)p);
-                    req->set_stage_id(s);
-                    req->set_mpu(m);
-
-                    if (config) {
-                        assert(trace_addr + (trace_size * TRACE_ENTRY_SIZE) < TRACE_END);
-                        assert((trace_addr & 0x3f) == 0x0);
-
-                        // Erase trace buffer
-                        sdk::lib::pal_mem_set(trace_addr, 0, trace_size);
-
-                        req->mutable_spec()->set_enable(true);
-                        req->mutable_spec()->set_trace_enable(trace_enable);
-                        req->mutable_spec()->set_phv_debug(phv_debug);
-                        req->mutable_spec()->set_phv_error(phv_error);
-                        req->mutable_spec()->set_watch_pc(watch_pc);
-                        req->mutable_spec()->set_table_key(table_key_enable | instr_enable);
-                        req->mutable_spec()->set_instructions(instr_enable);
-                        req->mutable_spec()->set_wrap(wrap);
-                        req->mutable_spec()->set_base_addr(trace_addr);
-                        req->mutable_spec()->set_buf_size(trace_size);
-                        req->mutable_spec()->set_reset(false);
-                        trace_addr += (trace_size * TRACE_ENTRY_SIZE);
+                    std::tuple<int, int, int>key (p, s, m);
+                    if (enable) {
+                        config[key] = record;
+                    } else if (config.find(key) == config.cend()) {
+                        config[key] = NULL;
                     }
                 }
             }
@@ -273,7 +264,37 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
         line_num++;
     }
 
-    mpu_trace(channel, req_msg);
+    for (auto it = config.cbegin(); it != config.cend(); it++) {
+        auto req = req_msg.add_request();
+        std::shared_ptr<mpu_trace_record_t> record = it->second;
+
+        req->set_pipeline_type((debug::MpuTracePipelineType)std::get<0>(it->first));
+        req->set_stage_id(std::get<1>(it->first));
+        req->set_mpu(std::get<2>(it->first));
+
+        if (record) {
+            assert(trace_addr + (record->trace_size * TRACE_ENTRY_SIZE) < TRACE_END);
+            assert((trace_addr & 0x3f) == 0x0);
+
+            // Erase trace buffer
+            sdk::lib::pal_mem_set(trace_addr, 0, record->trace_size * TRACE_ENTRY_SIZE);
+
+            req->mutable_spec()->set_enable(true);
+            req->mutable_spec()->set_trace_enable(record->trace_enable);
+            req->mutable_spec()->set_phv_debug(record->phv_debug);
+            req->mutable_spec()->set_phv_error(record->phv_error);
+            req->mutable_spec()->set_watch_pc(record->watch_pc);
+            req->mutable_spec()->set_table_key(record->table_key | record->instructions);
+            req->mutable_spec()->set_instructions(record->instructions);
+            req->mutable_spec()->set_wrap(record->wrap);
+            req->mutable_spec()->set_base_addr(trace_addr);
+            req->mutable_spec()->set_buf_size(record->trace_size);
+            req->mutable_spec()->set_reset(false);
+            trace_addr += (record->trace_size * TRACE_ENTRY_SIZE);
+        }
+    }
+
+    mpu_trace(req_msg);
 
     std::fstream output(cfg_proto, std::ios::out | std::ios::trunc | std::ios::binary);
     if (!req_msg.SerializeToOstream(&output)) {
@@ -292,8 +313,6 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
 int mpu_trace_enable(std::string cfg_proto)
 {
     debug::MpuTraceRequestMsg req_msg;
-    std::shared_ptr<Channel> channel =
-        grpc::CreateChannel(svc_endpoint, grpc::InsecureChannelCredentials());
 
     std::fstream input(cfg_proto, std::ios::in | std::ios::binary);
     if (!req_msg.ParseFromIstream(&input)) {
@@ -308,7 +327,7 @@ int mpu_trace_enable(std::string cfg_proto)
         }
     }
 
-    mpu_trace(channel, req_msg);
+    mpu_trace(req_msg);
 
     std::fstream output(cfg_proto, std::ios::out | std::ios::trunc | std::ios::binary);
     if (!req_msg.SerializeToOstream(&output)) {
@@ -322,8 +341,6 @@ int mpu_trace_enable(std::string cfg_proto)
 int mpu_trace_disable(std::string cfg_proto)
 {
     debug::MpuTraceRequestMsg req_msg;
-    std::shared_ptr<Channel> channel =
-        grpc::CreateChannel(svc_endpoint, grpc::InsecureChannelCredentials());
 
     std::fstream input(cfg_proto, std::ios::in | std::ios::binary);
     if (!req_msg.ParseFromIstream(&input)) {
@@ -338,7 +355,7 @@ int mpu_trace_disable(std::string cfg_proto)
         }
     }
 
-    mpu_trace(channel, req_msg);
+    mpu_trace(req_msg);
 
     std::fstream output(cfg_proto, std::ios::out | std::ios::trunc | std::ios::binary);
     if (!req_msg.SerializeToOstream(&output)) {
@@ -352,8 +369,6 @@ int mpu_trace_disable(std::string cfg_proto)
 int mpu_trace_reset(std::string cfg_proto)
 {
     debug::MpuTraceRequestMsg req_msg;
-    std::shared_ptr<Channel> channel =
-        grpc::CreateChannel(svc_endpoint, grpc::InsecureChannelCredentials());
 
     std::fstream input(cfg_proto, std::ios::in | std::ios::binary);
     if (!req_msg.ParseFromIstream(&input)) {
@@ -369,7 +384,7 @@ int mpu_trace_reset(std::string cfg_proto)
         }
     }
 
-    mpu_trace(channel, req_msg);
+    mpu_trace(req_msg);
 
     // Erase trace buffer
     for (int i = 0; i < req_msg.request().size(); i++) {
@@ -389,7 +404,7 @@ int mpu_trace_reset(std::string cfg_proto)
         }
     }
 
-    mpu_trace(channel, req_msg);
+    mpu_trace(req_msg);
 
     std::fstream output(cfg_proto, std::ios::out | std::ios::trunc | std::ios::binary);
     if (!req_msg.SerializeToOstream(&output)) {
@@ -435,19 +450,18 @@ int mpu_trace_dump(const char *dump_file, std::string cfg_proto)
         record.table_key     = req.spec().table_key();
         record.instructions  = req.spec().instructions();
         record.wrap          = req.spec().wrap();
-        record.base_addr     = req.spec().base_addr();
-        record.buf_size      = req.spec().buf_size();
-        record.mpu_trace_size = TRACE_ENTRY_SIZE * req.spec().buf_size();
+        record.trace_addr    = req.spec().base_addr();
+        record.trace_size    = req.spec().buf_size();
 
         if (req.has_spec()) {
             // Write header
             fwrite(&record, sizeof(uint8_t), sizeof(record), fp);
-
+            auto trace_addr = record.trace_addr;
             // Write trace buffer
-            for (unsigned int i = 0; i < record.buf_size; i++) {
-                sdk::lib::pal_mem_read(record.base_addr, buf, sizeof(buf));
+            for (unsigned int i = 0; i < record.trace_size; i++) {
+                sdk::lib::pal_mem_read(trace_addr, buf, sizeof(buf));
                 fwrite(buf, sizeof(buf[0]), sizeof(buf), fp);
-                record.base_addr += sizeof(buf);
+                trace_addr += sizeof(buf);
             }
         }
     }
