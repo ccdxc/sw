@@ -615,7 +615,7 @@ message QRanges {
 }
 
 message SchedulerActiveQRequest {
-  uint64            lif_id     = 1;
+  kh.LifKeyHandle   lif        = 1;
   intf.LifQPurpose  q_type     = 2;
   oneof num_or_ranges {
     uint32          q_num      = 3;

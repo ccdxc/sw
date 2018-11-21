@@ -125,62 +125,68 @@ func schedulerActiveQShowCmdHandler(cmd *cobra.Command, args []string) {
 		var start uint32
 		var end uint32
 
-		n, _ := fmt.Sscanf(qRange, "%d-%d%s", start, end, qRange)
-		for n >= 2 {
-			qStart = append(qStart, start)
-			qEnd = append(qEnd, end)
-			n, err = fmt.Sscanf(qRange, ",%d-%d%s", start, end, qRange)
+		n, _ := fmt.Sscanf(qRange, "%d-%d,%s", &start, &end, &qRange)
+		if n != 3 {
+			n, _ = fmt.Sscanf(qRange, "%d-%d", &start, &end)
+			if n != 2 {
+				fmt.Printf("Queue range is invalid\n")
+				return
+			}
+		}
+		if start > end {
+			fmt.Printf("Queue range is invalid\n")
+			return
+		}
+		qStart = append(qStart, start)
+		qEnd = append(qEnd, end)
+		for n > 2 {
+			n, _ = fmt.Sscanf(qRange, "%d-%d,%s", &start, &end, &qRange)
+			if n >= 2 {
+				if start > end {
+					fmt.Printf("Queue range is invalid\n")
+					return
+				}
+				qStart = append(qStart, start)
+				qEnd = append(qEnd, end)
+			}
 		}
 
-		if len(qStart) == 1 {
-			req = &halproto.SchedulerActiveQRequest{
-				LifId: sLifID,
-				QType: qTypeEnum,
-				NumOrRanges: &halproto.SchedulerActiveQRequest_QRanges{
-					QRanges: &halproto.QRanges{
-						Range: []*halproto.QRange{
-							{QBeg: qStart[0], QEnd: qEnd[0]},
-						},
-					},
-				},
-				PollCount: pollCount,
-			}
-		} else if len(qStart) == 2 {
-			req = &halproto.SchedulerActiveQRequest{
-				LifId: sLifID,
-				QType: qTypeEnum,
-				NumOrRanges: &halproto.SchedulerActiveQRequest_QRanges{
-					QRanges: &halproto.QRanges{
-						Range: []*halproto.QRange{
-							{QBeg: qStart[0], QEnd: qEnd[0]},
-							{QBeg: qStart[1], QEnd: qEnd[1]},
-						},
-					},
-				},
-				PollCount: pollCount,
-			}
-		} else if len(qStart) == 3 {
-			req = &halproto.SchedulerActiveQRequest{
-				LifId: sLifID,
-				QType: qTypeEnum,
-				NumOrRanges: &halproto.SchedulerActiveQRequest_QRanges{
-					QRanges: &halproto.QRanges{
-						Range: []*halproto.QRange{
-							{QBeg: qStart[0], QEnd: qEnd[0]},
-							{QBeg: qStart[1], QEnd: qEnd[1]},
-							{QBeg: qStart[2], QEnd: qEnd[2]},
-						},
-					},
-				},
-				PollCount: pollCount,
-			}
-		} else {
-			fmt.Printf("Too many queue ranges. Max of 3 supported\n")
+		if len(qStart) == 0 {
+			fmt.Printf("Queue range is invalid\n")
 			return
+		}
+
+		index := 0
+		qRangeArray := make([]*halproto.QRange, len(qStart))
+		for index < len(qStart) {
+			var qRangeArrayIndex halproto.QRange
+			qRangeArrayIndex.QBeg = qStart[index]
+			qRangeArrayIndex.QEnd = qEnd[index]
+			qRangeArray[index] = &qRangeArrayIndex
+			index++
+		}
+
+		req = &halproto.SchedulerActiveQRequest{
+			Lif: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: sLifID,
+				},
+			},
+			QType: qTypeEnum,
+			NumOrRanges: &halproto.SchedulerActiveQRequest_QRanges{
+				QRanges: &halproto.QRanges{
+					Range: qRangeArray,
+				},
+			},
+			PollCount: pollCount,
 		}
 	} else if cmd.Flags().Changed("queue-num") {
 		req = &halproto.SchedulerActiveQRequest{
-			LifId: sLifID,
+			Lif: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: sLifID,
+				},
+			},
 			QType: qTypeEnum,
 			NumOrRanges: &halproto.SchedulerActiveQRequest_QNum{
 				QNum: qNum,
@@ -191,8 +197,6 @@ func schedulerActiveQShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Either queue-num or queue-range needs to be provided\n")
 		return
 	}
-
-	fmt.Printf("%+v\n", req)
 
 	reqMsg := &halproto.SchedulerActiveQRequestMsg{
 		Request: []*halproto.SchedulerActiveQRequest{req},
