@@ -14,6 +14,7 @@
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 // TODO: Need to remove capri references and use lib symbols instead
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 
 namespace hal {
@@ -681,6 +682,31 @@ hal_ret_t
 asic_pd_llc_get (pd_llc_get_args_t *llc_args)
 {
     return capri_nx_get_llc_counters(llc_args->data);
+}
+
+hal_ret_t
+asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args)
+{
+    hal_ret_t ret;
+    capri_txs_scheduler_stats_t asic_stats = {};
+    debug::SchedulerStatsResponse *response = scheduler_stats_args->response;
+
+    ret = capri_txs_scheduler_stats_get(&asic_stats);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    response->set_doorbell_set_count(asic_stats.doorbell_set_count);
+    response->set_doorbell_clear_count(asic_stats.doorbell_clear_count);
+    response->set_ratelimit_start_count(asic_stats.ratelimit_start_count);
+    response->set_ratelimit_stop_count(asic_stats.ratelimit_stop_count);
+    for (unsigned i = 0; i < HAL_ARRAY_SIZE(asic_stats.cos_stats); i++) {
+        auto cos_entry = response->add_cos_entry();
+        cos_entry->set_cos(asic_stats.cos_stats[i].cos);
+        cos_entry->set_doorbell_count(asic_stats.cos_stats[i].doorbell_count);
+        cos_entry->set_xon_status(asic_stats.cos_stats[i].xon_status);
+    }
+    return HAL_RET_OK;
 }
 
 }    // namespace pd

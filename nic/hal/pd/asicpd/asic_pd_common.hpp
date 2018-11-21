@@ -6,6 +6,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
+#include "gen/proto/debug.pb.h"
 
 #define HAL_LOG_TBL_UPDATES 1
 
@@ -66,6 +67,10 @@ typedef struct pd_llc_get_args_s {
     uint32_t data[16];
 } pd_llc_get_args_t;
 
+typedef struct pd_scheduler_stats_get_args_s {
+    debug::SchedulerStatsResponse *response;
+} pd_scheduler_stats_get_args_t;
+
 int asicpd_table_entry_write(uint32_t tableid, uint32_t index,
                              uint8_t  *hwentry, uint16_t hwentry_bit_len, 
                              uint8_t  *hwentry_mask);
@@ -122,6 +127,9 @@ asic_pd_llc_setup (pd_llc_get_args_t *llc_args);
 
 hal_ret_t
 asic_pd_llc_get (pd_llc_get_args_t *llc_args);
+
+hal_ret_t
+asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args);
 
 }    // namespace pd
 }    // namespace hal

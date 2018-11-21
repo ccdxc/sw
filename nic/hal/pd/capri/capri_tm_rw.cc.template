@@ -1223,6 +1223,7 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
                     ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq")}
                     pbc_csr.port_${p}.cfg_oq.write();
                 }
+                break;
             }
 //::    #endif
 //:: #endfor

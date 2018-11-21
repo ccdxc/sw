@@ -593,11 +593,12 @@ message CosStats {
 }
 
 message SchedulerStatsResponse {
-  uint32 doorbell_set_count    = 1;
-  uint32 doorbell_clear_count  = 2;
-  uint32 ratelimit_start_count = 3;
-  uint32 ratelimit_stop_count  = 4;
-  repeated CosStats cos_entry  = 5;
+  types.ApiStatus   api_status            = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  uint32            doorbell_set_count    = 2;
+  uint32            doorbell_clear_count  = 3;
+  uint32            ratelimit_start_count = 4;
+  uint32            ratelimit_stop_count  = 5;
+  repeated CosStats cos_entry             = 6;
 }
 
 message SchedulerStatsResponseMsg {

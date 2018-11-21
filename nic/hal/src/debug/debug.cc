@@ -877,4 +877,24 @@ hbm_cache_setup(HbmCacheRequest *req, HbmCacheResponse *rsp)
     return ret;
 }
 
+hal_ret_t
+scheduler_stats_get(debug::SchedulerStatsResponse *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_scheduler_stats_get_args_t scheduler_stats_args;
+
+    scheduler_stats_args.response = rsp;
+
+    ret = pd::asic_pd_scheduler_stats_get(&scheduler_stats_args);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_ERR);
+        return ret;
+    }
+
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return ret;
+}
+
+
 }    // namespace hal

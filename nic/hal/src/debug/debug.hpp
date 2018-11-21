@@ -38,6 +38,7 @@ using debug::HbmCacheRequest;
 using debug::HbmCacheRequestMsg;
 using debug::HbmCacheResponse;
 using debug::HbmCacheResponseMsg;
+using debug::SchedulerStatsResponse;
 
 namespace hal {
 
@@ -99,6 +100,9 @@ hal_ret_t fte_span_update(FteSpanRequest& req,
                           FteSpanResponse *rsp);
 hal_ret_t fte_span_get(FteSpanResponseMsg *rsp_msg);
 hal_ret_t clock_get(ClockResponse *response);
+
+hal_ret_t
+scheduler_stats_get(SchedulerStatsResponse *rsp);
 
 }    // namespace hal
 

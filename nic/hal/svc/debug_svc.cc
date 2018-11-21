@@ -483,3 +483,21 @@ DebugServiceImpl::HbmCacheSetup(ServerContext *context,
 
     return Status::OK;
 }
+
+Status
+DebugServiceImpl::SchedulerStatsGet(ServerContext *context,
+                                    const Empty *req,
+                                    SchedulerStatsResponseMsg *rsp)
+{
+    SchedulerStatsResponse *response;
+
+    HAL_TRACE_DEBUG("Received Scheduler Stats Get Request");
+
+    response = rsp->add_response();
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal::scheduler_stats_get(response);
+    hal::hal_cfg_db_close();
+
+    return Status::OK;
+}

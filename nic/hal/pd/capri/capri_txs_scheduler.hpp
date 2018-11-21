@@ -111,4 +111,7 @@ typedef struct capri_txs_scheduler_stats_s {
     capri_txs_scheduler_cos_stats_t cos_stats[NUM_MAX_COSES];
 } capri_txs_scheduler_stats_t;
 
+hal_ret_t
+capri_txs_scheduler_stats_get(capri_txs_scheduler_stats_t *scheduler_stats);
+
 #endif

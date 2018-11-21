@@ -66,6 +66,8 @@ using debug::HbmCacheRequest;
 using debug::HbmCacheRequestMsg;
 using debug::HbmCacheResponse;
 using debug::HbmCacheResponseMsg;
+using debug::SchedulerStatsResponse;
+using debug::SchedulerStatsResponseMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -135,6 +137,9 @@ public:
     Status HbmCacheSetup(ServerContext *context,
                          const HbmCacheRequestMsg *req,
                          HbmCacheResponseMsg *rsp);
+    Status SchedulerStatsGet(ServerContext *context,
+                             const Empty *req,
+                             SchedulerStatsResponseMsg *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__
