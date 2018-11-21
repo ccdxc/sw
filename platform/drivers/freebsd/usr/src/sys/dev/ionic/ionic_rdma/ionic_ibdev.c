@@ -7012,6 +7012,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 			dev_err(&dev->ibdev.dev, "admin queue may be inoperable\n");
 	}
 
+	/* XXX FreeBSD ib_register_device does not set ibdev->dma_device */
+	ibdev->dma_device = ibdev->dev.parent;
+
 	rc = ib_register_device(ibdev, NULL);
 	if (rc)
 		goto err_register;
