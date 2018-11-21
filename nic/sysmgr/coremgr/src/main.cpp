@@ -230,8 +230,8 @@ int main(int argc, char *argv[])
     ensure_path(path);
     
     dest_filename = get_filename(path, exec_name, pid);
-    gzFile out = gzopen(dest_filename.c_str(), "w");
     INFO("Dumping core to {}", dest_filename);
+    gzFile out = gzopen(dest_filename.c_str(), "w");
     while (true) {
         char buffer[CHUNK_SIZE];
         ssize_t n = read(STDIN_FILENO, buffer, CHUNK_SIZE);
