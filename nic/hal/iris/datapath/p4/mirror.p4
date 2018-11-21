@@ -31,7 +31,6 @@ action local_span(dst_lport, truncate_len, span_tm_oq, qid, qid_en) {
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.dest_tm_oq, span_tm_oq);
     modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
-    modify_field(tunnel_metadata.tunnel_originate_egress, FALSE);
     mirror_truncate(truncate_len, FALSE);
 }
 

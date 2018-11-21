@@ -30,7 +30,6 @@ local_span:
   phvwr         p.control_metadata_dst_lport, d.u.local_span_d.dst_lport
   seq           c1, d.u.local_span_d.qid_en, TRUE
   phvwr.c1      p.control_metadata_qid, d.u.local_span_d.qid
-  phvwr         p.tunnel_metadata_tunnel_originate_egress, FALSE
   sne           c7, r0, r0
   bne           r1, r0, span_truncation
   phvwrpair     p.rewrite_metadata_tunnel_rewrite_index, 0, \

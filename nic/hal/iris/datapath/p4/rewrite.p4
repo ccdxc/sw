@@ -88,10 +88,10 @@ table rewrite {
 }
 
 control process_rewrites {
+    apply(replica);
     if (control_metadata.span_copy == TRUE) {
         apply(mirror);
     } else {
-        apply(replica);
         if (tunnel_metadata.tunnel_terminate_egress == TRUE) {
             apply(tunnel_decap_copy_inner);
             apply(tunnel_decap);
