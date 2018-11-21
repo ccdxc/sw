@@ -262,10 +262,10 @@ PdClient::create_dirs() {
 
     if (hal_cfg_path_ == "") {
         // use the current dir
-        hal_cfg_path_ = ".";
-        gen_dir_path_ = ".";
+        hal_cfg_path_ = "./";
+        gen_dir_path_ = "./";
     } else {
-        gen_dir_path_ = string(hal_cfg_path_ + "/gen");
+        gen_dir_path_ = string(hal_cfg_path_ + "gen/");
         // check if the gen dir exists
         if (stat(gen_dir_path_.c_str(), &st) == -1) {
             // doesn't exist, try to create
@@ -300,7 +300,7 @@ void PdClient::init(void)
     assert(ret == 0);
     NIC_LOG_INFO("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
     mp_ = mpartition::factory((hal_cfg_path_ +
-                                    "/iris/hbm_mem.json").c_str(),
+                                    "iris/hbm_mem.json").c_str(),
                                    CAPRI_HBM_BASE);
     assert(mp_);
     NIC_LOG_INFO("Initializing NIC LIF Mgr ...");
@@ -512,7 +512,7 @@ int PdClient::program_qstate(struct queue_info* queue_info,
                      type, lif_info->qstate_addr[type]);
     }
 
-    DeviceManager::GetInstance()->GenerateQstateInfoJson(gen_dir_path_ + "/" + QSTATE_INFO_FILE_NAME);
+    DeviceManager::GetInstance()->GenerateQstateInfoJson(gen_dir_path_ + QSTATE_INFO_FILE_NAME);
     return 0;
 }
 
@@ -1104,8 +1104,8 @@ void
 PdClient::set_program_info()
 {
     NIC_LOG_INFO("Initializing Program Info ...");
-    pinfo_ = program_info::factory((hal_cfg_path_ +
-                                    "/gen/mpu_prog_info.json").c_str());
+    pinfo_ = program_info::factory((gen_dir_path_ +
+                                    "mpu_prog_info.json").c_str());
     assert(pinfo_);
     lm_->set_program_info(pinfo_);
 }
