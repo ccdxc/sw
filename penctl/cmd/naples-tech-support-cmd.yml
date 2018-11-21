@@ -1,7 +1,7 @@
 Cmds:
  -
    cmd: /nic/tools/fwupdate -l
-   ofile: fw_version.out
+   outputfile: fw_version.out
  -
    cmd: ls -al
-   ofile: ls.out
+   outputfile: ls.out

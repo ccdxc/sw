@@ -188,6 +188,15 @@ func setStartupFirmwareMainfwbCmdHandler(cmd *cobra.Command, args []string) erro
 	return nil
 }
 
+func canOpen(f string) error {
+	r, err := os.Open(f)
+	if err != nil {
+		return err
+	}
+	r.Close()
+	return nil
+}
+
 func mustOpen(f string) *os.File {
 	r, err := os.Open(f)
 	if err != nil {
@@ -197,6 +206,9 @@ func mustOpen(f string) *os.File {
 }
 
 func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
+	if errF := canOpen(uploadFile); errF != nil {
+		return errF
+	}
 	//prepare the reader instances to encode
 	values := map[string]io.Reader{
 		"uploadFile": mustOpen(uploadFile),

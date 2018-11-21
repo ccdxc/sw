@@ -36,7 +36,6 @@ var tarFile string
 func init() {
 	sysCmd.AddCommand(showTechCmd)
 
-	showTechCmd.Flags().StringVarP(&destDir, "dest-dir", "d", "", "Destination directory to copy Naples tech-support to")
 	showTechCmd.Flags().StringVarP(&cmdFile, "cmds", "c", "", "YML file with list of commands to run on Naples")
 	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create (without .tar.gz)")
 }
@@ -44,8 +43,8 @@ func init() {
 // NaplesCmds is the format of the yaml file used to run commands on Naples for tech-support
 type NaplesCmds struct {
 	Cmds []struct {
-		Cmd   string `yaml:"cmd"`
-		Ofile string `yaml:"ofile"`
+		Cmd        string `yaml:"cmd"`
+		Outputfile string `yaml:"outputfile"`
 	} `yaml:"Cmds"`
 }
 
@@ -82,9 +81,15 @@ func createDestDir(destDir string) {
 func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	timeStr := time.Now().Format(time.UnixDate)
 	timeStr = strings.Replace(timeStr, " ", "-", -1)
-	if !cmd.Flags().Changed("dest") {
-		destDir = "./"
+
+	destDir = "/tmp"
+	if val, ok := os.LookupEnv("TMPDIR"); ok {
+		destDir = val
+		if verbose {
+			fmt.Printf("$TMPDIR set to %s\n", val)
+		}
 	}
+
 	destDir = destDir + "/NaplesTechSupport-" + timeStr + "/"
 	fmt.Println("Collecting tech-support from Naples")
 
@@ -175,12 +180,16 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			fmt.Println(err)
 			return err
 		}
-		err = yaml.Unmarshal(source, &naplesCmds)
+		err = yaml.UnmarshalStrict(source, &naplesCmds)
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
 		for _, naplesCmd := range naplesCmds.Cmds {
+			if naplesCmd.Outputfile == "" || naplesCmd.Cmd == "" {
+				fmt.Printf("\nMissing command attributes %+v\n", naplesCmd)
+				continue
+			}
 			cmd := strings.Fields(naplesCmd.Cmd)
 			opts := strings.Join(cmd[1:], " ")
 			v := &nmd.NaplesCmdExecute{
@@ -194,7 +203,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			if len(resp) > 3 {
 				fmt.Printf(".")
 				s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-				file = cmdDestDir + "/" + naplesCmd.Ofile
+				file = cmdDestDir + "/" + naplesCmd.Outputfile
 				out, err := os.Create(file)
 				if err != nil {
 					fmt.Println(err)

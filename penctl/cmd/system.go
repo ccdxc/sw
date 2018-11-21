@@ -15,8 +15,8 @@ import (
 
 var getSysMemCmd = &cobra.Command{
 	Use:   "system-memory-usage",
-	Short: "Show free/used memory on Naples",
-	Long:  "\n---------------------------------\n Show Free/Used Memory on Naples \n---------------------------------\n",
+	Short: "Show free/used memory on Naples (in MB)",
+	Long:  "\n-----------------------------------------\n Show Free/Used Memory on Naples (in MB)\n-----------------------------------------\n",
 	RunE:  getSysMemCmdHandler,
 }
 

@@ -1,14 +1,14 @@
 ## penctl show system-memory-usage
 
-Show free/used memory on Naples
+Show free/used memory on Naples (in MB)
 
 ### Synopsis
 
 
 
----------------------------------
- Show Free/Used Memory on Naples 
----------------------------------
+-----------------------------------------
+ Show Free/Used Memory on Naples (in MB)
+-----------------------------------------
 
 
 ```

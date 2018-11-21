@@ -74,7 +74,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 		if verbose {
 			fmt.Println("PENETHDEV flag not set")
 		}
-		err = errors.New("naples unreachable. please set PENETHDEV variable or use -e/--interface flag")
+		err = errors.New("naples unreachable. please set PENETHDEV variable or use -i/--interface flag")
 	} else {
 		naplesIP, err = getNaplesIPFromIntf(val)
 	}

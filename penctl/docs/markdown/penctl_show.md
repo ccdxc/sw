@@ -38,5 +38,5 @@ Show Object and Information
 * [penctl show proc-meminfo](penctl_show_proc-meminfo.md)	 - Check /proc/meminfo file on Naples
 * [penctl show running-firmware](penctl_show_running-firmware.md)	 - Show running firmware from Naples
 * [penctl show startup-firmware](penctl_show_startup-firmware.md)	 - Show startup firmware from Naples
-* [penctl show system-memory-usage](penctl_show_system-memory-usage.md)	 - Show free/used memory on Naples
+* [penctl show system-memory-usage](penctl_show_system-memory-usage.md)	 - Show free/used memory on Naples (in MB)
 

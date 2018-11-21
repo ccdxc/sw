@@ -24,10 +24,9 @@ Options
 
 ::
 
-  -c, --cmds string       YML file with list of commands to run on Naples
-  -d, --dest-dir string   Destination directory to copy Naples tech-support to
-  -h, --help              help for tech-support
-  -b, --tarball string    Name of tarball to create (without .tar.gz)
+  -c, --cmds string      YML file with list of commands to run on Naples
+  -h, --help             help for tech-support
+  -b, --tarball string   Name of tarball to create (without .tar.gz)
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
