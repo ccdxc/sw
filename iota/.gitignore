@@ -4,5 +4,6 @@ protos/*pygen*
 bin/
 test_data/
 images/raw.tar.gz
+images/arm-iperf
 *.log
 logs
