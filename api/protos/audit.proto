@@ -1,0 +1,123 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package audit;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/protos/auth.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/fields/selector.proto";
+
+// Level to control amount of audit information logged
+enum Level {
+    // Basic provides minimal level of audit logging. It doesn't log the contents of request and response. For example
+    //
+    //			{
+    //				TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
+    //				ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default"},
+    //				EventAttributes: audit.EventAttributes{
+    //					Level:       audit.Level_RequestResponse.String(),
+    //					Stage:       audit.Stage_RequestProcessing.String(),
+    //					User:        &api.ObjectRef{Kind: "User", Namespace: "default", Tenant: "default", Name: "admin"},
+    //					Resource:    &api.ObjectRef{Kind: "Network", Tenant: "default", Namespace: "default", Name: "network1"},
+    //					ClientIPs:   []string{"192.168.75.133"},
+    //					Action:      auth.Permission_Create.String(),
+    //					Outcome:     audit.Outcome_Unknown.String(),
+    //					GatewayNode: "node1",
+    //					GatewayIP:   "192.168.75.136",
+    //				},
+    //			}
+    //
+    Basic           = 0;
+    // Request logs object from the request in addition to Basic level of audit logging
+    Request         = 1;
+    // RequestResponse logs object from the response in addition to Request level of audit logging
+    RequestResponse = 2;
+}
+
+// Stage defines the stages in request handling for which audit logs may be generated
+enum Stage {
+    // Log if authorization fails
+    RequestAuthorization  = 0;
+    // Log when request processing starts after authorization check has succeeded
+    RequestProcessing     = 1;
+    // Log when request has been processed
+    RequestCompleted      = 2;
+}
+
+// Outcome of an operation (action on resource)
+enum Outcome {
+    // Unknown if result of the operation is not known at the time of audit log creation
+    Unknown = 0;
+    // Success if operation completed successfully
+    Success = 1;
+    // Failure if operation failed
+    Failure = 2;
+}
+
+message Event {
+    api.TypeMeta T              = 1 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = ",inline"];
+
+    // ObjectMeta.Name will be the UUID for an audit log object.
+    api.ObjectMeta O            = 2 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Attributes contains the attributes of an audit log.
+    EventAttributes Attributes  = 3 [(gogoproto.embed) = true,
+                                    (gogoproto.nullable) = false,
+                                    (gogoproto.jsontag) = ",inline"];
+}
+
+// Attributes contains all the audit log attributes
+message EventAttributes {
+
+    // Request handling stage at which audit log was generated
+    string Stage              = 1 [(venice.check) = "StrEnum(Stage)", (gogoproto.jsontag) = "stage,omitempty"];
+
+    // Level to control amount of audit information logged
+    string Level              = 2 [(venice.check) = "StrEnum(Level)", (gogoproto.jsontag) = "level,omitempty"];
+
+    // User who initiated an action on the referred object (resource)
+    // User role and group is part of user status. User object in login response will be logged in ResponseObject field.
+    api.ObjectRef User        = 3 [(gogoproto.jsontag) = "user,omitempty"];
+
+    // IP addresses of client and intermediate proxies from where API request was made
+    repeated string ClientIPs = 4 [(gogoproto.jsontag) = "client-ips,omitempty"];
+
+    // ObjectRef is the reference to the object on which action was performed
+    api.ObjectRef Resource    = 5 [(gogoproto.jsontag) = "resource,omitempty"];
+
+    // Action that was requested/performed on the referred object. For non API server resources, it is the http method
+    string Action             = 6 [(gogoproto.jsontag) = "action,omitempty"];
+
+    // Outcome represents the outcome of action on resource
+    string Outcome            = 7 [(venice.check) = "StrEnum(Outcome)", (gogoproto.jsontag) = "outcome,omitempty"];
+
+    // RequestURI is the request URI as sent by the client
+    string RequestURI         = 8 [(venice.check) = "URI()", (gogoproto.jsontag) = "request-uri,omitempty"];
+
+    // Object from the request in JSON format
+    string RequestObject      = 9 [(gogoproto.jsontag) = "request-object,omitempty"];
+
+    // Object from the response in JSON format to be sent to the client
+    string ResponseObject     = 10 [(gogoproto.jsontag) = "response-object,omitempty"];
+
+    // Name of the venice node where action was observed
+    string GatewayNode        = 11 [(gogoproto.jsontag) = "gateway-node,omitempty"];
+
+    // IP address of API Gateway where action was observed
+    string GatewayIP          = 12 [(gogoproto.jsontag) = "gateway-ip,omitempty"];
+
+    // Name of service that handled the request and performed the requested operation for ex: search, events etc
+    string ServiceName        = 13 [(gogoproto.jsontag) = "service-name,omitempty"];
+
+    // Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in
+    // JWS compact serialization format in this map. Data in this map will not be signed.
+    map<string, string> Data  = 14 [(gogoproto.jsontag) = "data,omitempty"];
+}

@@ -1,6 +1,7 @@
 
 alerts.proto monitoring true
 app.proto security true
+audit.proto audit true
 auth.proto auth true
 cluster.proto cluster true
 endpoint.proto workload true

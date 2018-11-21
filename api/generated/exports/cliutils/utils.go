@@ -6,6 +6,8 @@ Package cliutils is a auto generated package.
 package cliutils
 
 import (
+	// blank import to pull in audit service into cli utils
+	_ "github.com/pensando/sw/api/generated/audit/cli"
 	// blank import to pull in auth service into cli utils
 	_ "github.com/pensando/sw/api/generated/auth/cli"
 	// blank import to pull in bookstore service into cli utils

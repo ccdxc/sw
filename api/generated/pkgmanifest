@@ -1,4 +1,5 @@
 
+true audit audit.proto 
 true auth auth.proto svc_auth.proto 
 true bookstore example.proto 
 true cluster cluster.proto smartnic.proto svc_cluster.proto tenant.proto 

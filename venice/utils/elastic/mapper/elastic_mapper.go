@@ -54,6 +54,19 @@ var fieldOrTypeOverride = map[string]map[string]string{
 		// special types mapping
 		"Timestamp": "date",
 	},
+	// AuditLogs DocType
+	elastic.GetDocType(globals.AuditLogs): {
+		// fields that need aggregations should map to keyword
+		"tenant":  "keyword",
+		"kind":    "keyword",
+		"stage":   "keyword",
+		"action":  "keyword",
+		"outcome": "keyword",
+		"name":    "keyword",
+
+		// special types mapping
+		"Timestamp": "date",
+	},
 }
 
 func defaultOptions() *options {

@@ -117,7 +117,7 @@ func GetDocType(dtype globals.DataType) string {
 // GetTemplateName returns the template name for the given data type
 func GetTemplateName(dtype globals.DataType) string {
 	switch dtype {
-	case globals.Events:
+	case globals.Events, globals.AuditLogs:
 		return fmt.Sprintf("%s-template", GetDocType(dtype))
 	}
 

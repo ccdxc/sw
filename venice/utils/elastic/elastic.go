@@ -173,8 +173,8 @@ func (e *Client) Version() (string, error) {
 // CreateIndexTemplate creates the requested index template with given setting and name.
 // Once the template is created, elasticsearch will automatically apply the properties for
 // new indices that matches the index pattern given in template. This helps to
-// avoid creating repeative/daily based indices explicitly as the index call will
-// automatically create new indices if it does not exists already. Internally, it will utlize
+// avoid creating repetitive/daily based indices explicitly as the index call will
+// automatically create new indices if it does not exists already. Internally, it will utilize
 // the templates to apply properties to new indices.
 func (e *Client) CreateIndexTemplate(ctx context.Context, name, settings string) error {
 	retryCount := 0
