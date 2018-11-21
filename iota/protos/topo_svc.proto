@@ -25,6 +25,12 @@ service TopologyApi {
     // AddNodes brings up the nodes with their corresponding personalities
     rpc AddNodes (NodeMsg) returns (NodeMsg) {};
 
+    // Save Node will save context on node for possible node reboot
+    rpc SaveNode (NodeMsg) returns (NodeMsg) {};
+
+    // Load Node will save, reboot and load context
+    rpc ReloadNode (NodeMsg) returns (NodeMsg) {};
+
     // DeleteNodes removes a node from the e2e cluster
     rpc DeleteNodes (NodeMsg) returns (NodeMsg) {};
 

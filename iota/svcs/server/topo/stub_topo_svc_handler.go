@@ -42,6 +42,18 @@ func (ts *StubTopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) 
 	return req, nil
 }
 
+// SaveNode save node personality for reboot
+func (*StubTopologyService) SaveNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+	resp := &iota.NodeMsg{}
+	return resp, nil
+}
+
+// ReloadNode saves and loads node personality
+func (*StubTopologyService) ReloadNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+	resp := &iota.NodeMsg{}
+	return resp, nil
+}
+
 // DeleteNodes deletes a node from the topology
 func (ts *StubTopologyService) DeleteNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | DeleteNodes. Received Request Msg: %v", req)

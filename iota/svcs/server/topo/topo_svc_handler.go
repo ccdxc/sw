@@ -236,6 +236,18 @@ func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	return req, nil
 }
 
+// SaveNode save node personality for reboot
+func (*TopologyService) SaveNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+	resp := &iota.NodeMsg{}
+	return resp, nil
+}
+
+// ReloadNode saves and loads node personality
+func (*TopologyService) ReloadNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+	resp := &iota.NodeMsg{}
+	return resp, nil
+}
+
 // AddWorkloads adds a workload on a given node
 func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | AddWorkloads. Received Request Msg: %v", req)

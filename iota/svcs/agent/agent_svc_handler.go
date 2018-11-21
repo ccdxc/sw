@@ -76,6 +76,18 @@ func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, e
 	return resp, nil
 }
 
+// SaveNode save node personality for reboot
+func (*Service) SaveNode(ctx context.Context, req *iota.Node) (*iota.Node, error) {
+	resp := &iota.Node{}
+	return resp, nil
+}
+
+// ReloadNode saves and loads node personality
+func (*Service) ReloadNode(ctx context.Context, req *iota.Node) (*iota.Node, error) {
+	resp := &iota.Node{}
+	return resp, nil
+}
+
 // DeleteNode remove the personaltiy set
 func (agent *Service) DeleteNode(ctx context.Context, in *iota.Node) (*iota.Node, error) {
 
