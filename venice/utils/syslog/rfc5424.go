@@ -2,12 +2,13 @@ package syslog
 
 import (
 	"fmt"
-	"log/syslog"
 	"net"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	syslog "github.com/RackSec/srslog"
 
 	"github.com/pensando/sw/venice/utils"
 )
@@ -49,7 +50,7 @@ func WithConn(conn net.Conn) Option {
 }
 
 // NewRfc5424 creates instance to write syslog in RFC5424 format
-func NewRfc5424(network, raddr string, facility syslog.Priority, hostName, appName string, opts ...Option) (Writer, error) {
+func NewRfc5424(network, raddr string, facility Priority, hostName, appName string, opts ...Option) (Writer, error) {
 	if appName == "" {
 		appName = "-"
 	}
@@ -65,7 +66,7 @@ func NewRfc5424(network, raddr string, facility syslog.Priority, hostName, appNa
 
 	w := &rfc5424{
 		version:  1,
-		facility: facility,
+		facility: syslog.Priority(facility),
 		appName:  appName,
 		hostname: hostName,
 		procID:   os.Getpid(),

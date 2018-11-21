@@ -97,7 +97,13 @@ func (m *SyslogExportConfig) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *SyslogExportConfig) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.FacilityOverride = "SyslogFacility_LOG_USER"
+	}
+	return ret
 }
 
 // Validators
@@ -137,6 +143,19 @@ func (m *ExternalCred) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *SyslogExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapExport["SyslogExportConfig"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapExport["SyslogExportConfig"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -154,6 +173,16 @@ func init() {
 
 		if _, ok := ExportAuthType_value[m.AuthType]; !ok {
 			return errors.New("ExternalCred.AuthType did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapExport["SyslogExportConfig"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExport["SyslogExportConfig"]["all"] = append(validatorMapExport["SyslogExportConfig"]["all"], func(path string, i interface{}) error {
+		m := i.(*SyslogExportConfig)
+
+		if _, ok := SyslogFacility_value[m.FacilityOverride]; !ok {
+			return errors.New("SyslogExportConfig.FacilityOverride did not match allowed strings")
 		}
 		return nil
 	})

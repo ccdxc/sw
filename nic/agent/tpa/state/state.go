@@ -680,3 +680,30 @@ func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.Flo
 
 	return flowExpList, nil
 }
+
+// dummy functions, these polcies are handled in tmagent
+
+// CreateFwLogPolicy is the POST entry point
+func (s *PolicyState) CreateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+	return nil
+}
+
+// GetFwLogPolicy is the GET entry point
+func (s *PolicyState) GetFwLogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error) {
+	return &tpmprotos.FwlogPolicy{}, nil
+}
+
+// ListFwLogPolicy is the LIST entry point
+func (s *PolicyState) ListFwLogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error) {
+	return []*tpmprotos.FwlogPolicy{}, nil
+}
+
+// UpdateFwLogPolicy is the PUT entry point
+func (s *PolicyState) UpdateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+	return nil
+}
+
+// DeleteFwLogPolicy is the DEL entry points
+func (s *PolicyState) DeleteFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+	return nil
+}

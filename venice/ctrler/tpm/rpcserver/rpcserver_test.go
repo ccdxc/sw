@@ -173,8 +173,8 @@ func TestWatchFwlogPolicy(t *testing.T) {
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-1"},
 			Spec: monitoring.FwlogPolicySpec{
 				Filter: []string{
-					monitoring.FwlogFilter_FWLOG_ACCEPT.String(),
-					monitoring.FwlogFilter_FWLOG_DENY.String(),
+					monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String(),
+					monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String(),
 				},
 				Exports: []*monitoring.FwlogExport{
 					{
@@ -185,7 +185,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 							},
 						},
 						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-						Filter: []string{monitoring.FwlogFilter_FWLOG_ALL.String()},
+						Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 						SyslogConfig: &monitoring.SyslogExportConfig{
 							Prefix:           "prefix1",
 							FacilityOverride: "test-override1",
@@ -199,8 +199,8 @@ func TestWatchFwlogPolicy(t *testing.T) {
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-2"},
 			Spec: monitoring.FwlogPolicySpec{
 				Filter: []string{
-					monitoring.FwlogFilter_FWLOG_ACCEPT.String(),
-					monitoring.FwlogFilter_FWLOG_DENY.String(),
+					monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String(),
+					monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String(),
 				},
 				Exports: []*monitoring.FwlogExport{
 					{
@@ -211,7 +211,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 							},
 						},
 						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
-						Filter: []string{monitoring.FwlogFilter_FWLOG_ALL.String()},
+						Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 						SyslogConfig: &monitoring.SyslogExportConfig{
 							Prefix:           "prefix2",
 							FacilityOverride: "test-override2",

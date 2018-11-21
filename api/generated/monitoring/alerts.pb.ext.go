@@ -792,6 +792,16 @@ func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.Config != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Config"
+		if errs := m.Config.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if m.Target != nil {
 		dlmtr := "."
 		if path == "" {

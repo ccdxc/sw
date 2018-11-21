@@ -3,7 +3,8 @@ package syslog
 import (
 	"encoding/json"
 	"fmt"
-	"log/syslog"
+
+	syslog "github.com/RackSec/srslog"
 )
 
 // TODO: handle connection failure
@@ -16,11 +17,12 @@ type bsd struct {
 }
 
 // NewBsd is a wrapper around bsd syslog
-func NewBsd(network, raddr string, priority syslog.Priority, tag string) (Writer, error) {
-	sw, err := syslog.Dial(network, raddr, priority, tag)
+func NewBsd(network, raddr string, priority Priority, tag string) (Writer, error) {
+	sw, err := syslog.Dial(network, raddr, syslog.Priority(priority), tag)
 	if err != nil {
 		return nil, err
 	}
+	sw.SetFormatter(syslog.RFC3164Formatter)
 
 	return &bsd{sw: sw, network: network, raddr: raddr}, nil
 }

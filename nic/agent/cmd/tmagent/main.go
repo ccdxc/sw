@@ -9,23 +9,24 @@ import (
 	"strings"
 	"time"
 
+	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
+
+	"github.com/pensando/sw/nic/agent/tmagent/state"
+	"github.com/pensando/sw/nic/agent/tpa/ctrlerif"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/nodewatcher"
 
 	"github.com/pensando/sw/nic/agent/ipc"
-	ipcproto "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/venice/utils/ntsdb"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
-
-var fwTable ntsdb.Table
 
 type service struct {
 	name         string
@@ -59,13 +60,20 @@ func reportMetrics(nodeUUID string, rc resolver.Interface) error {
 	return nodewatcher.NewNodeWatcher(context.Background(), node, rc, 30, log.WithContext("pkg", "nodewatcher"))
 }
 
+// TelemetryAgent keeps the telementry agent state
+type TelemetryAgent struct {
+	tpCtrler *state.PolicyState
+	tpClient *ctrlerif.TpClient
+	nodeUUID string
+}
+
 func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		primaryMAC      = flag.String("primary-mac", "", "Primary MAC address")
 		hostIf          = flag.String("hostif", "ntrunk0", "Host facing interface")
-		mode            = flag.String("mode", "classic", "specify the agent mode either classic or managed")
+		mode            = flag.String("mode", "host", "specify the agent mode either host or network")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tmagent)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
@@ -109,6 +117,10 @@ func main() {
 		macAddr = mac
 	}
 
+	tmAgent := &TelemetryAgent{
+		nodeUUID: macAddr.String(),
+	}
+
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
 	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
 	shm, err := ipc.NewSharedMem(mSize, instCount, "/fwlog_ipc_shm")
@@ -116,30 +128,49 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if *mode == "managed" {
-		rList := strings.Split(*resolverURLs, ",")
-		cfg := &resolver.Config{
-			Name:    globals.Tmagent,
-			Servers: rList,
-		}
+	rList := strings.Split(*resolverURLs, ",")
+	cfg := &resolver.Config{
+		Name:    globals.Tmagent,
+		Servers: rList,
+	}
 
-		rc := resolver.New(cfg)
+	rc := resolver.New(cfg)
 
-		if err := reportMetrics(macAddr.String(), rc); err != nil {
-			log.Fatal(err)
-		}
+	opts := &tsdb.Opts{
+		ClientName:              macAddr.String(),
+		ResolverClient:          rc,
+		Collector:               globals.Collector,
+		DBName:                  "default",
+		SendInterval:            time.Duration(30) * time.Second,
+		ConnectionRetryInterval: 100 * time.Millisecond,
+	}
 
-		fwTable, err = ntsdb.NewObj("firewall", map[string]string{}, &ntsdb.TableOpts{})
+	ctx, cancel := context.WithCancel(context.Background())
+	// Init the TSDB
+	tsdb.Init(ctx, opts)
+
+	tmAgent.tpCtrler, err = state.NewTpAgent(ctx, globals.AgentRESTPort)
+	if err != nil {
+		log.Fatalf("failed to init tmagent state, err: %v", err)
+	}
+	defer tmAgent.tpCtrler.Close()
+	defer cancel()
+
+	if *mode == "network" {
+
+		tmAgent.tpClient, err = ctrlerif.NewTpClient(tmAgent.tpCtrler, "", rc)
 		if err != nil {
+			log.Fatalf("failed to init tmagent controller, err: %v", err)
+		}
+
+		if err := reportMetrics(tmAgent.nodeUUID, rc); err != nil {
 			log.Fatal(err)
 		}
+	}
 
-		for ix := 0; ix < instCount; ix++ {
-			ipc := shm.IPCInstance()
-			go ipc.Receive(context.Background(), processFWEvent)
-		}
-
-	} else { // todo: fwlog export to external syslog server
+	for ix := 0; ix < instCount; ix++ {
+		ipc := shm.IPCInstance()
+		go ipc.Receive(context.Background(), tmAgent.tpCtrler.ProcessFWEvent)
 	}
 
 	_, err = restapi.NewRestServer(*restURL)
@@ -158,20 +189,4 @@ func main() {
 
 	// wait forever
 	select {}
-}
-
-func processFWEvent(ev *ipcproto.FWEvent, ts time.Time) {
-	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
-	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
-	dPort := fmt.Sprintf("%v", ev.GetDport())
-	ipProt := fmt.Sprintf("%v", ev.GetIpProt())
-	action := fmt.Sprintf("%v", ev.GetFlowaction())
-	dir := fmt.Sprintf("%v", ev.GetDirection())
-	unixnano := ev.GetTimestamp()
-	if unixnano != 0 {
-		// if a timestamp was specified in the msg, use it
-		ts = time.Unix(0, unixnano)
-	}
-	fwTable.Point(map[string]string{"src": ipSrc, "dest": ipDest, "dPort": dPort, "ipProt": ipProt, "action": action, "direction": dir},
-		map[string]interface{}{"sPort": int64(ev.GetSport())}, ts)
 }

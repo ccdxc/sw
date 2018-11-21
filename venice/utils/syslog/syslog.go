@@ -1,13 +1,20 @@
 package syslog
 
-import "log/syslog"
+import (
+	"fmt"
+
+	syslog "github.com/RackSec/srslog"
+)
 
 // StrData represents structured data within a log message
 type StrData map[string]map[string]string
 
+// Priority is the syslog priority
+type Priority syslog.Priority
+
 // Severity.
 const (
-	LogEmerg syslog.Priority = iota
+	LogEmerg Priority = iota
 	LogAlert
 	LogCrit
 	LogErr
@@ -19,7 +26,7 @@ const (
 
 // Facility.
 const (
-	LogKern syslog.Priority = iota << 3
+	LogKern Priority = iota << 3
 	LogUser
 	LogMail
 	LogDaemon
@@ -63,4 +70,12 @@ type Writer interface {
 	Info(*Message) error
 	Debug(*Message) error
 	Close() error
+}
+
+// ValidateFacility vaidates syslog facility
+func ValidateFacility(p Priority) error {
+	if p < 0 || p > LogLocal7 {
+		return fmt.Errorf("log/syslog: invalid facility")
+	}
+	return nil
 }

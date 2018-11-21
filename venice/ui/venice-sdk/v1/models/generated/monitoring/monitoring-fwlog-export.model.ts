@@ -36,7 +36,7 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
         },
         'export-filter': {
             enum: MonitoringFwlogExport_export_filter_uihint,
-            default: 'FWLOG_ALL',
+            default: 'FIREWALL_ACTION_NONE',
             type: 'Array<string>'
         },
         'syslog-config': {

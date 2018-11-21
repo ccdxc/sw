@@ -14,22 +14,22 @@ func TestValidateSyslogMessageFormat(t *testing.T) {
 		expectedSuccess bool
 	}{
 		{
-			"<134>2018-09-21T17:45:16-07:00 hostname tag1[74544]: test2",
+			"<134>Nov 19 10:55:07 hostname tag1[74544]: test2",
 			monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			true,
 		},
 		{
-			"<134>2018-09-21T17:45:16-07:00 hostname tag1[56789]: test2",
+			"<134>Nov 19 10:55:07 hostname tag1[56789]: test2",
 			monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			true,
 		},
 		{ // invalid priority
-			"<invalid134>2018-09-21T17:45:16-07:00 hostname tag1[74544]: test2",
+			"<invalid134>Nov 19 10:55:07 hostname tag1[74544]: test2",
 			monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			false,
 		},
 		{ // invalid PID
-			"<134>2018-09-21T17:45:16-07:00 hostname tag1[74544invalid]: test2",
+			"<134>Nov 19 10:55:07 hostname tag1[74544invalid]: test2",
 			monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			false,
 		},
@@ -40,6 +40,11 @@ func TestValidateSyslogMessageFormat(t *testing.T) {
 		},
 		{
 			"<94>1 2018-09-24T14:16:21-07:00 host1 app1 78990 msgid [id1 k1=\"v1\"] test1",
+			monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			true,
+		},
+		{
+			"<94>1 2018-11-19T21:05:36Z host1 app1 78990 msgid [id1 k1=\"v1\"] test1",
 			monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			true,
 		},
@@ -91,6 +96,6 @@ func TestValidateSyslogMessageFormat(t *testing.T) {
 
 	for i, tc := range tcs {
 		match := ValidateSyslogMessage(tc.format, tc.msg)
-		Assert(t, match == tc.expectedSuccess, "tc #%v failed: expected: %v, got: %v", i, tc.expectedSuccess, match)
+		Assert(t, match == tc.expectedSuccess, "tc #%v(%s) failed: expected: %v, got: %v", i, tc.msg, tc.expectedSuccess, match)
 	}
 }

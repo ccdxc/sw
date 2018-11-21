@@ -74,14 +74,16 @@ message FwlogPolicyStatus {
 }
 
 enum FwlogFilter {
-    // ui-hint: All Logs
-    FWLOG_ALL = 0;
-    // ui-hint: Accept Logs
-    FWLOG_ACCEPT = 1;
-    // ui-hint: Reject Logs
-    FWLOG_REJECT= 2;
+    // ui-hint: No Logs
+    FIREWALL_ACTION_NONE = 0;
+    // ui-hint: Allow Logs
+    FIREWALL_ACTION_ALLOW = 1;
     // ui-hint: Deny Logs
-    FWLOG_DENY = 3;
+    FIREWALL_ACTION_DENY= 2;
+    // ui-hint: Reject Logs
+    FIREWALL_ACTION_REJECT = 3;
+    // ui-hint: All Logs
+    FIREWALL_ACTION_ALL = 4;
 }
 
 // firewall log export config

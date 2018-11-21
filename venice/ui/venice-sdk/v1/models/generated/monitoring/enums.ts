@@ -62,17 +62,19 @@ export enum MonitoringFwlogExport_format {
 }
 
 export enum MonitoringFwlogExport_export_filter {
-    'FWLOG_ALL' = "FWLOG_ALL",
-    'FWLOG_ACCEPT' = "FWLOG_ACCEPT",
-    'FWLOG_REJECT' = "FWLOG_REJECT",
-    'FWLOG_DENY' = "FWLOG_DENY",
+    'FIREWALL_ACTION_NONE' = "FIREWALL_ACTION_NONE",
+    'FIREWALL_ACTION_ALLOW' = "FIREWALL_ACTION_ALLOW",
+    'FIREWALL_ACTION_DENY' = "FIREWALL_ACTION_DENY",
+    'FIREWALL_ACTION_REJECT' = "FIREWALL_ACTION_REJECT",
+    'FIREWALL_ACTION_ALL' = "FIREWALL_ACTION_ALL",
 }
 
 export enum MonitoringFwlogPolicySpec_filter {
-    'FWLOG_ALL' = "FWLOG_ALL",
-    'FWLOG_ACCEPT' = "FWLOG_ACCEPT",
-    'FWLOG_REJECT' = "FWLOG_REJECT",
-    'FWLOG_DENY' = "FWLOG_DENY",
+    'FIREWALL_ACTION_NONE' = "FIREWALL_ACTION_NONE",
+    'FIREWALL_ACTION_ALLOW' = "FIREWALL_ACTION_ALLOW",
+    'FIREWALL_ACTION_DENY' = "FIREWALL_ACTION_DENY",
+    'FIREWALL_ACTION_REJECT' = "FIREWALL_ACTION_REJECT",
+    'FIREWALL_ACTION_ALL' = "FIREWALL_ACTION_ALL",
 }
 
 export enum MonitoringMatchedRequirement_operator {
@@ -119,6 +121,29 @@ export enum MonitoringSNMPTrapServer_version {
 export enum MonitoringSyslogExport_format {
     'SYSLOG_BSD' = "SYSLOG_BSD",
     'SYSLOG_RFC5424' = "SYSLOG_RFC5424",
+}
+
+export enum MonitoringSyslogExportConfig_facility_override {
+    'LOG_KERN' = "LOG_KERN",
+    'LOG_USER' = "LOG_USER",
+    'LOG_MAIL' = "LOG_MAIL",
+    'LOG_DAEMON' = "LOG_DAEMON",
+    'LOG_AUTH' = "LOG_AUTH",
+    'LOG_SYSLOG' = "LOG_SYSLOG",
+    'LOG_LPR' = "LOG_LPR",
+    'LOG_NEWS' = "LOG_NEWS",
+    'LOG_UUCP' = "LOG_UUCP",
+    'LOG_CRON' = "LOG_CRON",
+    'LOG_AUTHPRIV' = "LOG_AUTHPRIV",
+    'LOG_FTP' = "LOG_FTP",
+    'LOG_LOCAL0' = "LOG_LOCAL0",
+    'LOG_LOCAL1' = "LOG_LOCAL1",
+    'LOG_LOCAL2' = "LOG_LOCAL2",
+    'LOG_LOCAL3' = "LOG_LOCAL3",
+    'LOG_LOCAL4' = "LOG_LOCAL4",
+    'LOG_LOCAL5' = "LOG_LOCAL5",
+    'LOG_LOCAL6' = "LOG_LOCAL6",
+    'LOG_LOCAL7' = "LOG_LOCAL7",
 }
 
 export enum MonitoringTroubleshootingSessionStatus_state {
@@ -173,17 +198,19 @@ export enum MonitoringFwlogExport_format_uihint {
 }
 
 export enum MonitoringFwlogExport_export_filter_uihint {
-    'FWLOG_ACCEPT' = "Accept Logs",
-    'FWLOG_ALL' = "All Logs",
-    'FWLOG_DENY' = "Deny Logs",
-    'FWLOG_REJECT' = "Reject Logs",
+    'FIREWALL_ACTION_ALL' = "All Logs",
+    'FIREWALL_ACTION_ALLOW' = "Allow Logs",
+    'FIREWALL_ACTION_DENY' = "Deny Logs",
+    'FIREWALL_ACTION_NONE' = "No Logs",
+    'FIREWALL_ACTION_REJECT' = "Reject Logs",
 }
 
 export enum MonitoringFwlogPolicySpec_filter_uihint {
-    'FWLOG_ACCEPT' = "Accept Logs",
-    'FWLOG_ALL' = "All Logs",
-    'FWLOG_DENY' = "Deny Logs",
-    'FWLOG_REJECT' = "Reject Logs",
+    'FIREWALL_ACTION_ALL' = "All Logs",
+    'FIREWALL_ACTION_ALLOW' = "Allow Logs",
+    'FIREWALL_ACTION_DENY' = "Deny Logs",
+    'FIREWALL_ACTION_NONE' = "No Logs",
+    'FIREWALL_ACTION_REJECT' = "Reject Logs",
 }
 
 export enum MonitoringMatchedRequirement_operator_uihint {
@@ -274,6 +301,7 @@ export class AllEnums {
     MonitoringPrivacyConfig_algo = MonitoringPrivacyConfig_algo;
     MonitoringSNMPTrapServer_version = MonitoringSNMPTrapServer_version;
     MonitoringSyslogExport_format = MonitoringSyslogExport_format;
+    MonitoringSyslogExportConfig_facility_override = MonitoringSyslogExportConfig_facility_override;
     MonitoringTroubleshootingSessionStatus_state = MonitoringTroubleshootingSessionStatus_state;
 
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;

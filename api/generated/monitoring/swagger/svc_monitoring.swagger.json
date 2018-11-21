@@ -12314,17 +12314,19 @@
             "type": "string"
           },
           "enum": [
-            "FWLOG_ALL",
-            "FWLOG_ACCEPT",
-            "FWLOG_REJECT",
-            "FWLOG_DENY"
+            "FIREWALL_ACTION_NONE",
+            "FIREWALL_ACTION_ALLOW",
+            "FIREWALL_ACTION_DENY",
+            "FIREWALL_ACTION_REJECT",
+            "FIREWALL_ACTION_ALL"
           ],
-          "default": "FWLOG_ALL",
+          "default": "FIREWALL_ACTION_NONE",
           "x-ui-hints": {
-            "FWLOG_ACCEPT": "Accept Logs",
-            "FWLOG_ALL": "All Logs",
-            "FWLOG_DENY": "Deny Logs",
-            "FWLOG_REJECT": "Reject Logs"
+            "FIREWALL_ACTION_ALL": "All Logs",
+            "FIREWALL_ACTION_ALLOW": "Allow Logs",
+            "FIREWALL_ACTION_DENY": "Deny Logs",
+            "FIREWALL_ACTION_NONE": "No Logs",
+            "FIREWALL_ACTION_REJECT": "Reject Logs"
           },
           "title": "filter firewall logs, FWLOG_ALL default"
         },
@@ -12393,17 +12395,19 @@
             "type": "string"
           },
           "enum": [
-            "FWLOG_ALL",
-            "FWLOG_ACCEPT",
-            "FWLOG_REJECT",
-            "FWLOG_DENY"
+            "FIREWALL_ACTION_NONE",
+            "FIREWALL_ACTION_ALLOW",
+            "FIREWALL_ACTION_DENY",
+            "FIREWALL_ACTION_REJECT",
+            "FIREWALL_ACTION_ALL"
           ],
-          "default": "FWLOG_ALL",
+          "default": "FIREWALL_ACTION_NONE",
           "x-ui-hints": {
-            "FWLOG_ACCEPT": "Accept Logs",
-            "FWLOG_ALL": "All Logs",
-            "FWLOG_DENY": "Deny Logs",
-            "FWLOG_REJECT": "Reject Logs"
+            "FIREWALL_ACTION_ALL": "All Logs",
+            "FIREWALL_ACTION_ALLOW": "Allow Logs",
+            "FIREWALL_ACTION_DENY": "Deny Logs",
+            "FIREWALL_ACTION_NONE": "No Logs",
+            "FIREWALL_ACTION_REJECT": "Reject Logs"
           },
           "title": "filter firewall logs for venice, FWLOG_ALL default"
         },
@@ -12830,6 +12834,29 @@
       "properties": {
         "facility-override": {
           "type": "string",
+          "enum": [
+            "LOG_KERN",
+            "LOG_USER",
+            "LOG_MAIL",
+            "LOG_DAEMON",
+            "LOG_AUTH",
+            "LOG_SYSLOG",
+            "LOG_LPR",
+            "LOG_NEWS",
+            "LOG_UUCP",
+            "LOG_CRON",
+            "LOG_AUTHPRIV",
+            "LOG_FTP",
+            "LOG_LOCAL0",
+            "LOG_LOCAL1",
+            "LOG_LOCAL2",
+            "LOG_LOCAL3",
+            "LOG_LOCAL4",
+            "LOG_LOCAL5",
+            "LOG_LOCAL6",
+            "LOG_LOCAL7"
+          ],
+          "default": "SyslogFacility_LOG_USER",
           "title": "override default facility with this in exported logs"
         },
         "prefix": {

@@ -322,3 +322,11 @@ noverify = ["github.com/docker/docker"]
 [[constraint]]
   name = "github.com/fsnotify/fsnotify"
   version = "1.4.7"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/jeromer/syslogparser"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/RackSec/srslog"

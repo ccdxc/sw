@@ -82,6 +82,14 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
+  branch = "master"
+  digest = "1:c668f286fb18ce4b7c20afcc0ee312ca7c259cdb9900cedca3ba27f160623b9d"
+  name = "github.com/RackSec/srslog"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "a4725f04ec91af1a91b380da679d6e0c2f061e59"
+
+[[projects]]
   digest = "1:67afce7b66942eead5623306465279d08e146ae640ee7e2a94f6cfaf21c77efd"
   name = "github.com/Shopify/sarama"
   packages = ["."]
@@ -1164,6 +1172,18 @@
   ]
   pruneopts = "NUT"
   revision = "fdd7e84bf38b2005289b3a0bd0d66dde5a423096"
+
+[[projects]]
+  branch = "master"
+  digest = "1:80a0822356f7c683e34c14dd7d8c1b3eeca282d346132b5645b2bf894c453612"
+  name = "github.com/jeromer/syslogparser"
+  packages = [
+    ".",
+    "rfc3164",
+    "rfc5424",
+  ]
+  pruneopts = "NUT"
+  revision = "323c7ad120db2aab828d97a9633b6dffcb977bb7"
 
 [[projects]]
   digest = "1:914f8eaa63b88fe6bcd656d81b3f3ccd2e8422df1787a6abe32554e4b75c0556"
@@ -2543,6 +2563,7 @@
     "github.com/GeertJohan/go.rice",
     "github.com/GeertJohan/go.rice/embedded",
     "github.com/GeertJohan/go.rice/rice",
+    "github.com/RackSec/srslog",
     "github.com/appc/cni/pkg/types",
     "github.com/appc/cni/pkg/version",
     "github.com/asaskevich/govalidator",
@@ -2632,6 +2653,9 @@
     "github.com/influxdata/influxdb/tsdb/index/inmem",
     "github.com/influxdata/influxdb/uuid",
     "github.com/influxdata/influxql",
+    "github.com/jeromer/syslogparser",
+    "github.com/jeromer/syslogparser/rfc3164",
+    "github.com/jeromer/syslogparser/rfc5424",
     "github.com/juju/ratelimit",
     "github.com/miekg/pkcs11",
     "github.com/minio/minio-go",

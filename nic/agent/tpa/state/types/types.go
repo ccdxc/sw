@@ -13,4 +13,10 @@ type CtrlerIntf interface {
 	ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.FlowExportPolicy, error)
 	UpdateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error
 	DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error
+
+	CreateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
+	GetFwLogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error)
+	ListFwLogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error)
+	UpdateFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
+	DeleteFwLogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
 }

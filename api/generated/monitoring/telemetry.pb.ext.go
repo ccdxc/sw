@@ -180,7 +180,7 @@ func (m *FwlogExport) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Filter {
-			m.Filter[k] = "FWLOG_ALL"
+			m.Filter[k] = "FIREWALL_ACTION_NONE"
 		}
 		m.Format = "SYSLOG_BSD"
 	}
@@ -241,7 +241,7 @@ func (m *FwlogPolicySpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		for k := range m.Filter {
-			m.Filter[k] = "FWLOG_ALL"
+			m.Filter[k] = "FIREWALL_ACTION_NONE"
 		}
 		m.RetentionTime = "48h"
 	}
@@ -426,6 +426,16 @@ func (m *FlowExportTarget) Validate(ver, path string, ignoreStatus bool) []error
 
 func (m *FwlogExport) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.SyslogConfig != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "SyslogConfig"
+		if errs := m.SyslogConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	for k, v := range m.Targets {
 		dlmtr := "."
 		if path == "" {

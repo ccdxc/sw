@@ -7,18 +7,21 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { MonitoringSyslogExportConfig_facility_override,  } from './enums';
 
 export interface IMonitoringSyslogExportConfig {
-    'facility-override'?: string;
+    'facility-override'?: MonitoringSyslogExportConfig_facility_override;
     'prefix'?: string;
 }
 
 
 export class MonitoringSyslogExportConfig extends BaseModel implements IMonitoringSyslogExportConfig {
-    'facility-override': string = null;
+    'facility-override': MonitoringSyslogExportConfig_facility_override = null;
     'prefix': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'facility-override': {
+            enum: MonitoringSyslogExportConfig_facility_override,
+            default: 'SyslogFacility_LOG_USER',
             type: 'string'
         },
         'prefix': {
@@ -56,7 +59,7 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
         if (values && values['facility-override'] != null) {
             this['facility-override'] = values['facility-override'];
         } else if (fillDefaults && MonitoringSyslogExportConfig.hasDefaultValue('facility-override')) {
-            this['facility-override'] = MonitoringSyslogExportConfig.propInfo['facility-override'].default;
+            this['facility-override'] = <MonitoringSyslogExportConfig_facility_override>  MonitoringSyslogExportConfig.propInfo['facility-override'].default;
         }
         if (values && values['prefix'] != null) {
             this['prefix'] = values['prefix'];
@@ -70,7 +73,7 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'facility-override': new FormControl(this['facility-override']),
+                'facility-override': new FormControl(this['facility-override'], [enumValidator(MonitoringSyslogExportConfig_facility_override), ]),
                 'prefix': new FormControl(this['prefix']),
             });
         }

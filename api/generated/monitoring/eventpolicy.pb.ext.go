@@ -153,6 +153,16 @@ func (m *EventExport) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
+	if m.SyslogConfig != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "SyslogConfig"
+		if errs := m.SyslogConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if m.Target != nil {
 		dlmtr := "."
 		if path == "" {
