@@ -131,7 +131,7 @@ fi
 # wait for HAL to open gRPC port before spawning agent(s)
 HAL_WAIT_TIMEOUT=1
 HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
-HAL_SERVER="localhost:$HAL_GRPC_PORT"
+HAL_SERVER="localhost/$HAL_GRPC_PORT"
 HAL_UP=-1
 MAX_RETRIES=600
 i=0
@@ -139,7 +139,7 @@ until (( HAL_UP == 0 )) || (( i == MAX_RETRIES ))
 do
     echo "Waiting for HAL GRPC server to be up ..."
     sleep "$HAL_WAIT_TIMEOUT"
-    curl "$HAL_SERVER"
+    timeout 1 bash -c "cat < /dev/null > /dev/tcp/$HAL_SERVER"
     HAL_UP="$?"
     if [ "$HAL_UP" -eq 0 ]; then
         echo "HAL is up"
