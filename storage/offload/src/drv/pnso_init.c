@@ -51,6 +51,9 @@ pnso_init(struct pnso_init_params *pnso_init)
 	uint32_t			i;
 	pnso_error_t			err = PNSO_OK;
 
+	if(!sonic_is_accel_dev_ready())
+		return EAGAIN;
+
 	if (pnso_initialized) {
 		if ((pnso_init->per_core_qdepth ==
 		     pnso_initialized_params.per_core_qdepth) &&
