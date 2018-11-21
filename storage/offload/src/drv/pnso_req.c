@@ -855,9 +855,6 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	uint32_t req_flags = 0;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 
-	if(!sonic_is_accel_dev_ready())
-		return EAGAIN;
-
 	PAS_DECL_PERF();
 
 	OSAL_LOG_DEBUG("enter...");
