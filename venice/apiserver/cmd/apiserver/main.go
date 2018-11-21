@@ -70,7 +70,7 @@ func main() {
 	kvstoreTLSConfig, err := etcd.GetEtcdClientCredentials()
 	if err != nil {
 		// try to continue anyway
-		pl.Infof("Failed to load etcd credentials")
+		pl.Infof("Failed to load etcd credentials (%s)", err)
 	}
 
 	if _, err = recorder.NewRecorder(&recorder.Config{

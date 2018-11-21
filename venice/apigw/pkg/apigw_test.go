@@ -736,7 +736,7 @@ func TestProxyDirector(t *testing.T) {
 	}
 
 	var node1, node2 bool
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1000; i++ {
 		p.director(req)
 		if req.Host == "" || req.URL.Host == "" {
 			t.Fatalf("req not set to resolved service[%v][%v]", req.Host, req.URL.Host)
