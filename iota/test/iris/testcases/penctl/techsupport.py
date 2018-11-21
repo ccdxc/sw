@@ -75,6 +75,17 @@ def Verify(tc):
             supportDir[n] = dirs[0]
         return api.types.status.SUCCESS
 
+    def deleteSupportDir():
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        for n in tc.Nodes:
+            api.Trigger_AddHostCommand(req, n, "rm -rf \"%s*\"" % (def_tech_support_dir_name))
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                return api.types.status.FAILURE
+        return api.types.status.SUCCESS
+
     def check_sub_dirs():
         req = api.Trigger_CreateExecuteCommandsRequest()
         for n in tc.Nodes:
@@ -127,7 +138,7 @@ def Verify(tc):
 
         return api.types.status.SUCCESS
 
-    validators = [untar, findSupportDir, check_sub_dirs, check_cores, check_log_files]
+    validators = [untar, findSupportDir, check_sub_dirs, check_cores, check_log_files, deleteSupportDir]
     for validator in validators:
         ret = validator()
         if ret != api.types.status.SUCCESS:
