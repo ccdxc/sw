@@ -12,6 +12,7 @@ images:
 
 setup:
     topology: test/iris/topologies/2Naples_BM/2Naples.topology
+    #topology: test/iris/topologies/1Naples_1Mellanox_BM/1Naples_1Mellanox.topology
     config  :
         - step : config.netagent.hw_push_config
 

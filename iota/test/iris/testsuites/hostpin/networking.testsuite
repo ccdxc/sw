@@ -16,6 +16,7 @@ images:
 
 setup:
     topology: test/iris/topologies/2Naples_CTR/2Naples.topology
+    #topology: test/iris/topologies/1Naples_1Mellanox_BM/1Naples_1Mellanox.topology
     config  : 
         - step : config.netagent.hw_push_config
 
@@ -55,6 +56,17 @@ testcases:
             bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
         args    :
             type: remote_only
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+    
+    -   name    : Ping_Mirror_Remote_Workloads
+        testcase: testcases.telemetry.ping_mirror
+        args    :
+            type: remote_only
+        iterators :
+            type    : simple
+            pktsize : [128]
         verifs  :
             #-   step    : verif.operstate.verify_stats_agent
             #-   step    : verif.operstate.verify_stats_hw

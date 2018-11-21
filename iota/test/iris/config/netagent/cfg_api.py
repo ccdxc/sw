@@ -36,6 +36,12 @@ def ReadJsons():
 
     global gl_port_json_obj
     gl_port_json_obj = __read_one_json('ports.json')
+    
+    global gl_tunnel_json_obj
+    gl_tunnel_json_obj = __read_one_json('tunnels.json')
+
+    global gl_mirror_json_obj
+    gl_mirror_json_obj = __read_one_json('mirrors.json')
     return
 
 
@@ -44,6 +50,8 @@ def PushConfig():
         agent_api.ConfigureNetworks(gl_nw_json_obj.networks)
         agent_api.ConfigureEndpoints(gl_ep_json_obj.endpoints)
         agent_api.ConfigureSecurityGroupPolicies(gl_sg_json_obj.sgpolicies)
+        #agent_api.ConfigureTunnels(gl_tunnel_json_obj.tunnels)
+        #agent_api.ConfigureMirror(gl_mirror_json_obj.mirrors)
     return api.types.status.SUCCESS
 
 

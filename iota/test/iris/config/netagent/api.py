@@ -133,6 +133,13 @@ def ConfigureNetworks(objlist, oper = CfgOper.ADD):
     __config(objlist, 'api/networks/', oper)
     return
 
+def ConfigureTunnels(objlist, oper = CfgOper.ADD):
+    __config(objlist, 'api/tunnels/', oper)
+    return
+
+def ConfigureMirror(objlist, oper = CfgOper.ADD):
+    __config(objlist, 'api/mirror/sessions/', oper)
+    return
 
 def ConfigureEndpoints(objlist, oper = CfgOper.ADD):
     newOjList = []
