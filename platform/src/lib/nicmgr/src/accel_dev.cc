@@ -178,33 +178,12 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
     } while (false)
 
 
-/**
- * Accelerator PF Device
+/*
+ * accel Delphi ring ID
+ * - with workaround for Delphi optimizing out key defaul value 0.
  */
-void Accel_PF::Update(void)
-{
-    int32_t     cosA = 1;
-    int32_t     cosB = 0;
-    cosB = HalClient::GetTxTrafficClassCos(spec->qos_group, 0);
-    if (cosB < 0) {
-        NIC_LOG_ERR("lif{}: Failed to get cosB for group {}",
-                    info.hw_lif_id, spec->qos_group);
-        throw runtime_error("Failed to get cosB for nicmgr LIF");
-    }
-    uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
-
-    // acquire rings info as initialized by HAL
-    accel_ring_info_get_all();
-
-    // establish sequencer queues metrics with Delphi
-    if (DelphiDeviceInit()) {
-        NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
-        return;
-    }
-
-    // program the queue state
-    pd->program_qstate(qinfo, &info, coses);
-}
+#define ACCEL_HW_RING_RID(rid)          ((rid) + 1)
+#define ACCEL_HW_RING_SUB_RID(sub_rid)  ((sub_rid) + 1)
 
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                    const hal_lif_info_t *nicmgr_lif_info,
@@ -390,20 +369,6 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
             return;
         }
     }
-
-#if 0
-    // Establish sequencer queues info and metrics with Delphi
-    if (DelphiDeviceInit()) {
-        NIC_LOG_ERR("lif{}: Failed to establish Delphi device", info.hw_lif_id);
-        return;
-    }
-
-    if (spec->pub_intv_frac) {
-        float intv = 1.0 / (float)spec->pub_intv_frac;
-        sync_timer.set<Accel_PF, &Accel_PF::periodic_sync>(this);
-        sync_timer.start(intv, intv);
-    }
-#endif
 }
 
 int
@@ -417,15 +382,15 @@ Accel_PF::DelphiDeviceInit(void)
         delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
         delphi::objects::AccelPfInfoPtr shared_pf(delphi_pf);
         shared_pf->set_key(info.hw_lif_id);
-        shared_pf->set_hw_lif_id(info.hw_lif_id);
-        shared_pf->set_num_seq_queues(spec->seq_created_count);
-        shared_pf->set_crypto_key_idx_base(crypto_key_idx_base);
-        shared_pf->set_num_crypto_keys_max(num_crypto_keys_max);
-        shared_pf->set_intr_base(pci_resources.intrb);
-        shared_pf->set_intr_count(pci_resources.intrc);
+        shared_pf->set_hwlifid(info.hw_lif_id);
+        shared_pf->set_numseqqueues(spec->seq_created_count);
+        shared_pf->set_cryptokeyidxbase(crypto_key_idx_base);
+        shared_pf->set_numcryptokeysmax(num_crypto_keys_max);
+        shared_pf->set_intrbase(pci_resources.intrb);
+        shared_pf->set_intrcount(pci_resources.intrc);
         g_nicmgr_svc->sdk()->SetObject(shared_pf);
 
-        seq_qkey.set_lif_id(info.hw_lif_id);
+        seq_qkey.set_lifid(info.hw_lif_id);
         for (qid = 0; qid < spec->seq_created_count; qid++) {
             seq_qkey.set_qid(qid);
             qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
@@ -439,9 +404,9 @@ Accel_PF::DelphiDeviceInit(void)
              * issues _DevcmdSeqQueueInit().
              */
             auto qinfo = make_shared<delphi::objects::AccelSeqQueueInfo>();
-            qinfo->mutable_key()->set_lif_id(info.hw_lif_id);
+            qinfo->mutable_key()->set_lifid(info.hw_lif_id);
             qinfo->mutable_key()->set_qid(qid);
-            qinfo->set_qstate_addr(GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid));
+            qinfo->set_qstateaddr(GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid));
             delphi_qinfo_vec.push_back(std::move(qinfo));
             seq_queue_info_publish(qid, STORAGE_SEQ_QGROUP_CPDC, 0);
         }
@@ -658,7 +623,7 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     rsp->dev.num_intrs = spec->intr_count;
     rsp->dev.intr_assert_stride = intr_assert_stride();
     rsp->dev.intr_assert_data = intr_assert_data();
-    rsp->dev.intr_assert_addr = intr_assert_addr(0);
+    rsp->dev.intr_assert_addr = intr_assert_addr(spec->intr_base);
     rsp->dev.cm_base_pa = pci_resources.cmbpa;
     memcpy(rsp->dev.accel_ring_tbl, spec->accel_ring_tbl,
            sizeof(rsp->dev.accel_ring_tbl));
@@ -682,9 +647,6 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     uint8_t                 abort = 1;
 
     NIC_LOG_INFO("lif-{}: CMD_OPCODE_RESET", info.hw_lif_id);
-
-    // Init LIF.
-    LifInit();
 
     // Disable all sequencer queues
     for (qid = 0; qid < spec->seq_created_count; qid++) {
@@ -757,19 +719,6 @@ Accel_PF::_DevcmdLifInit(void *req, void *req_data,
     lif_init_cmd_t  *cmd = (lif_init_cmd_t *)req;
 
     NIC_LOG_INFO("lif-{}: lif_index {}", info.hw_lif_id, cmd->index);
-
-#if 0
-    // Trigger Hal for Lif create if this is the first time
-    if (!info.pushed_to_hal) {
-        uint64_t ret = hal->LifCreate(&info);
-        if (ret != 0) {
-            NIC_LOG_ERR("Failed to create HAL Accel LIF {}", info.id);
-            return (DEVCMD_ERROR);
-        }
-    }
-    Update();
-#endif
-
     return (DEVCMD_SUCCESS);
 }
 
@@ -1513,7 +1462,7 @@ Accel_PF::seq_queue_info_publish(uint32_t qid,
     if (g_nicmgr_svc && (qid < delphi_qinfo_vec.size())) {
         delphi::objects::AccelSeqQueueInfoPtr shared_q(delphi_qinfo_vec.at(qid));
         shared_q->set_qgroup((::accel_metrics::AccelSeqQGroup)qgroup);
-        shared_q->set_core_id(core_id);
+        shared_q->set_coreid(core_id);
         g_nicmgr_svc->sdk()->SetObject(shared_q);
     }
 }
@@ -1530,11 +1479,11 @@ accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring)
         shared_ring->set_cindex(rgroup_ring.indices.cndx);
         g_nicmgr_svc->sdk()->SetObject(shared_ring);
 
-        rgroup_ring.delphi_metrics->input_bytes()->
+        rgroup_ring.delphi_metrics->InputBytes()->
                                     Set(rgroup_ring.metrics.input_bytes);
-        rgroup_ring.delphi_metrics->output_bytes()->
+        rgroup_ring.delphi_metrics->OutputBytes()->
                                     Set(rgroup_ring.metrics.output_bytes);
-        rgroup_ring.delphi_metrics->soft_resets()->
+        rgroup_ring.delphi_metrics->SoftResets()->
                                     Set(rgroup_ring.metrics.soft_resets);
     }
 }
@@ -1558,12 +1507,11 @@ accel_pf_rgroup_find_create(uint32_t ring_handle,
 
     accel_rgroup_ring_t& rgroup_ring = accel_pf_rgroup_map[key];
     rgroup_ring.delphi_ring = make_shared<delphi::objects::AccelHwRingInfo>();
-    rgroup_ring.delphi_ring->mutable_key()->set_rid(/*(::accel_metrics::AccelHwRingId)*/
-                                                    ring_handle);
-    rgroup_ring.delphi_ring->mutable_key()->set_sub_rid(sub_ring);
+    rgroup_ring.delphi_ring->mutable_key()->set_rid(ACCEL_HW_RING_RID(ring_handle));
+    rgroup_ring.delphi_ring->mutable_key()->set_subrid(ACCEL_HW_RING_SUB_RID(sub_ring));
 
-    delphi_key.set_rid(/*(::accel_metrics::AccelHwRingId)*/ring_handle);
-    delphi_key.set_sub_rid(sub_ring);
+    delphi_key.set_rid(ACCEL_HW_RING_RID(ring_handle));
+    delphi_key.set_subrid(ACCEL_HW_RING_SUB_RID(sub_ring));
     rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
                                  NewAccelHwRingMetrics(delphi_key);
     return rgroup_ring;
@@ -1619,10 +1567,18 @@ crypto_key_accum_del(uint32_t key_index)
 void
 Accel_PF::LifInit()
 {
+    uint8_t cosA = 1;
+    uint8_t cosB = 0;
+    uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
+
     if (get_lif_init_done()) {
         NIC_LOG_INFO("lif-{}: Already inited...skipping", info.hw_lif_id);
         return;
     }
+
+    // acquire rings info as initialized by HAL
+    accel_ring_info_get_all();
+
     NIC_LOG_INFO("lif-{}: Initing Lif", info.hw_lif_id);
 
     // Trigger Hal for Lif create if this is the first time
@@ -1633,7 +1589,21 @@ Accel_PF::LifInit()
             return;
         }
     }
-    Update();
+
+    // program the queue state
+    pd->program_qstate(qinfo, &info, coses);
+
+    // establish sequencer queues metrics with Delphi
+    if (DelphiDeviceInit()) {
+        NIC_LOG_ERR("lif{}: Failed to establish qmetrics", info.hw_lif_id);
+        return;
+    }
+
+    if (spec->pub_intv_frac) {
+        float intv = 1.0 / (float)spec->pub_intv_frac;
+        sync_timer.set<Accel_PF, &Accel_PF::periodic_sync>(this);
+        sync_timer.start(intv, intv);
+    }
     set_lif_init_done(true);
 }
 

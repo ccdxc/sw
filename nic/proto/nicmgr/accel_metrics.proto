@@ -6,17 +6,17 @@ import "delphi.proto";
 message AccelPfInfo {
     delphi.ObjectMeta   Meta                 = 1;
     uint64              Key                  = 2;
-    uint64              hw_lif_id            = 3;
-    uint32              num_seq_queues       = 4;
-    uint32              crypto_key_idx_base  = 5;
-    uint32              num_crypto_keys_max  = 6;
-    uint32              intr_base            = 7;
-    uint32              intr_count           = 8;
+    uint64              HwLifId              = 3;
+    uint32              NumSeqQueues         = 4;
+    uint32              CryptoKeyIdxBase     = 5;
+    uint32              NumCryptoKeysMax     = 6;
+    uint32              IntrBase             = 7;
+    uint32              IntrCount            = 8;
 }
     
 message AccelSeqQueueKey {
-    fixed64             lif_id               = 1;     // Lif id
-    uint32              qid                  = 2;     // Queue id
+    fixed64             LifId                = 1;     // Lif id
+    uint32              QId                  = 2;     // Queue id
 }
 
 enum AccelSeqQGroup {
@@ -29,31 +29,31 @@ enum AccelSeqQGroup {
 message AccelSeqQueueInfo {
     delphi.ObjectMeta   Meta                 = 1;
     AccelSeqQueueKey    Key                  = 2;
-    uint64              qstate_addr          = 3;
-    AccelSeqQGroup      qgroup               = 4;
-    uint32              core_id              = 5;
+    uint64              QStateAddr           = 3;
+    AccelSeqQGroup      QGroup               = 4;
+    uint32              CoreId               = 5;
 }
 
 message AccelSeqQueueMetrics {
     AccelSeqQueueKey    Key                  = 1;
 
-    delphi.Counter interrupts_raised         = 2;     // Interrupts raised
-    delphi.Counter next_dbs_rung             = 3;     // Next doorbells rung
-    delphi.Counter seq_descs_processed       = 4;     // SeqSQ descriptors processed
-    delphi.Counter seq_descs_aborted         = 5;     // SeqSQ descriptors aborted
-    delphi.Counter status_pdma_xfers         = 6;     // Status PDMA transfers
-    delphi.Counter hw_desc_xfers             = 7;    // HW descriptor transfers
-    delphi.Counter hw_batch_errors           = 8;    // HW batch transfer errors
-    delphi.Counter hw_op_errors              = 9;    // HW operation errors
-    delphi.Counter aol_pad_reqs              = 10;    // AOL padding requests processed
-    delphi.Counter sgl_pad_reqs              = 11;    // SGL padding requests processed
-    delphi.Counter sgl_pdma_xfers            = 12;    // SGL PDMA transfers taken
-    delphi.Counter sgl_pdma_errors           = 13;    // SGL PDMA errors
-    delphi.Counter sgl_pad_only_xfers        = 14;    // SGL PDMA pad-only transfers taken
-    delphi.Counter sgl_pad_only_errors       = 15;    // SGL PDMA pad-only errors
-    delphi.Counter alt_descs_taken           = 16;    // Times an alternate descriptor were used
-    delphi.Counter alt_bufs_taken            = 17;    // Times an alternate source buffer were used
-    delphi.Counter len_update_reqs           = 18;    // CP/DC length updates after decrypt
+    delphi.Counter InterruptsRaised          = 2;     // Interrupts raised
+    delphi.Counter NextDBsRung               = 3;     // Next doorbells rung
+    delphi.Counter SeqDescsProcessed         = 4;     // SeqSQ descriptors processed
+    delphi.Counter SeqDescsAborted           = 5;     // SeqSQ descriptors aborted
+    delphi.Counter StatusPdmaXfers           = 6;     // Status PDMA transfers
+    delphi.Counter HwDescXfers               = 7;    // HW descriptor transfers
+    delphi.Counter HwBatchErrors             = 8;    // HW batch transfer errors
+    delphi.Counter HwOpErrors                = 9;    // HW operation errors
+    delphi.Counter AolPadReqs                = 10;    // AOL padding requests processed
+    delphi.Counter SglPadReqs                = 11;    // SGL padding requests processed
+    delphi.Counter SglPdmaXfers              = 12;    // SGL PDMA transfers taken
+    delphi.Counter SglPdmaErrors             = 13;    // SGL PDMA errors
+    delphi.Counter SglPadOnlyXfers           = 14;    // SGL PDMA pad-only transfers taken
+    delphi.Counter SglPadOnlyErrors          = 15;    // SGL PDMA pad-only errors
+    delphi.Counter AltDescsTaken             = 16;    // Times an alternate descriptor were used
+    delphi.Counter AltBufsTaken              = 17;    // Times an alternate source buffer were used
+    delphi.Counter LenUpdateReqs             = 18;    // CP/DC length updates after decrypt
 }
 
 //enum temporarily commented out since the new goproto tool does not
@@ -70,22 +70,22 @@ message AccelSeqQueueMetrics {
 //}
 
 message AccelHwRingKey {
-//    AccelHwRingId       rid                  = 1;     // Ring id
-    uint32              rid                  = 1;     // Ring id
-    uint32              sub_rid              = 2;     // Sub-ring id
+//    AccelHwRingId       RId                  = 1;     // Ring id
+    uint32              RId                  = 1;     // Ring id
+    uint32              SubRId               = 2;     // Sub-ring id
 }
 
 message AccelHwRingInfo {
     delphi.ObjectMeta   Meta                 = 1;
     AccelHwRingKey      Key                  = 2;
-    uint32              pindex               = 3;     // Producer index
-    uint32              cindex               = 4;     // Consumer index
+    uint32              PIndex               = 3;     // Producer index
+    uint32              CIndex               = 4;     // Consumer index
 }
 
 message AccelHwRingMetrics {
     AccelHwRingKey      Key                  = 1;
-    delphi.Counter      input_bytes          = 2;     // Total input bytes (not available on some rings)
-    delphi.Counter      output_bytes         = 3;     // Total output bytes (not available on some rings)
-    delphi.Counter      soft_resets          = 4;     // # soft resets executed
+    delphi.Counter      InputBytes           = 2;     // Total input bytes (not available on some rings)
+    delphi.Counter      OutputBytes          = 3;     // Total output bytes (not available on some rings)
+    delphi.Counter      SoftResets           = 4;     // # soft resets executed
 }
 
