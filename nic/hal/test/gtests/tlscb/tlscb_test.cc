@@ -1,16 +1,17 @@
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
-#include "gen/proto/tls_proxy_cb.pb.h"
+#include "nic/hal/src/internal/internal.hpp"
+#include "gen/proto/internal.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "nic/hal/test/utils/hal_base_test.hpp"
 
-using tlscb::TlsCbSpec;
-using tlscb::TlsCbResponse;
-using tlscb::TlsCbKeyHandle;
-using tlscb::TlsCbGetRequest;
-using tlscb::TlsCbGetResponse;
+using internal::TlsCbSpec;
+using internal::TlsCbResponse;
+using internal::TlsCbKeyHandle;
+using internal::TlsCbGetRequest;
+using internal::TlsCbGetResponse;
 
 
 class tlscb_test : public hal_base_test {

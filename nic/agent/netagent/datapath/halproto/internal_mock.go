@@ -70,6 +70,122 @@ func (mr *MockisIpsecCbKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisIpsecCbKeyHandle_KeyOrHandle)(nil).Size))
 }
 
+// MockisTcpCbKeyHandle_KeyOrHandle is a mock of isTcpCbKeyHandle_KeyOrHandle interface
+type MockisTcpCbKeyHandle_KeyOrHandle struct {
+	ctrl     *gomock.Controller
+	recorder *MockisTcpCbKeyHandle_KeyOrHandleMockRecorder
+}
+
+// MockisTcpCbKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisTcpCbKeyHandle_KeyOrHandle
+type MockisTcpCbKeyHandle_KeyOrHandleMockRecorder struct {
+	mock *MockisTcpCbKeyHandle_KeyOrHandle
+}
+
+// NewMockisTcpCbKeyHandle_KeyOrHandle creates a new mock instance
+func NewMockisTcpCbKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisTcpCbKeyHandle_KeyOrHandle {
+	mock := &MockisTcpCbKeyHandle_KeyOrHandle{ctrl: ctrl}
+	mock.recorder = &MockisTcpCbKeyHandle_KeyOrHandleMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisTcpCbKeyHandle_KeyOrHandle) EXPECT() *MockisTcpCbKeyHandle_KeyOrHandleMockRecorder {
+	return m.recorder
+}
+
+// isTcpCbKeyHandle_KeyOrHandle mocks base method
+func (m *MockisTcpCbKeyHandle_KeyOrHandle) isTcpCbKeyHandle_KeyOrHandle() {
+	m.ctrl.Call(m, "isTcpCbKeyHandle_KeyOrHandle")
+}
+
+// isTcpCbKeyHandle_KeyOrHandle indicates an expected call of isTcpCbKeyHandle_KeyOrHandle
+func (mr *MockisTcpCbKeyHandle_KeyOrHandleMockRecorder) isTcpCbKeyHandle_KeyOrHandle() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isTcpCbKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisTcpCbKeyHandle_KeyOrHandle)(nil).isTcpCbKeyHandle_KeyOrHandle))
+}
+
+// MarshalTo mocks base method
+func (m *MockisTcpCbKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisTcpCbKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisTcpCbKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisTcpCbKeyHandle_KeyOrHandle) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisTcpCbKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisTcpCbKeyHandle_KeyOrHandle)(nil).Size))
+}
+
+// MockisTlsCbKeyHandle_KeyOrHandle is a mock of isTlsCbKeyHandle_KeyOrHandle interface
+type MockisTlsCbKeyHandle_KeyOrHandle struct {
+	ctrl     *gomock.Controller
+	recorder *MockisTlsCbKeyHandle_KeyOrHandleMockRecorder
+}
+
+// MockisTlsCbKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisTlsCbKeyHandle_KeyOrHandle
+type MockisTlsCbKeyHandle_KeyOrHandleMockRecorder struct {
+	mock *MockisTlsCbKeyHandle_KeyOrHandle
+}
+
+// NewMockisTlsCbKeyHandle_KeyOrHandle creates a new mock instance
+func NewMockisTlsCbKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisTlsCbKeyHandle_KeyOrHandle {
+	mock := &MockisTlsCbKeyHandle_KeyOrHandle{ctrl: ctrl}
+	mock.recorder = &MockisTlsCbKeyHandle_KeyOrHandleMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisTlsCbKeyHandle_KeyOrHandle) EXPECT() *MockisTlsCbKeyHandle_KeyOrHandleMockRecorder {
+	return m.recorder
+}
+
+// isTlsCbKeyHandle_KeyOrHandle mocks base method
+func (m *MockisTlsCbKeyHandle_KeyOrHandle) isTlsCbKeyHandle_KeyOrHandle() {
+	m.ctrl.Call(m, "isTlsCbKeyHandle_KeyOrHandle")
+}
+
+// isTlsCbKeyHandle_KeyOrHandle indicates an expected call of isTlsCbKeyHandle_KeyOrHandle
+func (mr *MockisTlsCbKeyHandle_KeyOrHandleMockRecorder) isTlsCbKeyHandle_KeyOrHandle() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isTlsCbKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisTlsCbKeyHandle_KeyOrHandle)(nil).isTlsCbKeyHandle_KeyOrHandle))
+}
+
+// MarshalTo mocks base method
+func (m *MockisTlsCbKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisTlsCbKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisTlsCbKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisTlsCbKeyHandle_KeyOrHandle) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisTlsCbKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisTlsCbKeyHandle_KeyOrHandle)(nil).Size))
+}
+
 // MockInternalClient is a mock of InternalClient interface
 type MockInternalClient struct {
 	ctrl     *gomock.Controller
@@ -327,6 +443,150 @@ func (mr *MockInternalClientMockRecorder) IpsecCbGet(ctx, in interface{}, opts .
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbGet", reflect.TypeOf((*MockInternalClient)(nil).IpsecCbGet), varargs...)
 }
 
+// TcpCbCreate mocks base method
+func (m *MockInternalClient) TcpCbCreate(ctx context.Context, in *TcpCbRequestMsg, opts ...grpc.CallOption) (*TcpCbResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TcpCbCreate", varargs...)
+	ret0, _ := ret[0].(*TcpCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpCbCreate indicates an expected call of TcpCbCreate
+func (mr *MockInternalClientMockRecorder) TcpCbCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpCbCreate", reflect.TypeOf((*MockInternalClient)(nil).TcpCbCreate), varargs...)
+}
+
+// TcpCbUpdate mocks base method
+func (m *MockInternalClient) TcpCbUpdate(ctx context.Context, in *TcpCbRequestMsg, opts ...grpc.CallOption) (*TcpCbResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TcpCbUpdate", varargs...)
+	ret0, _ := ret[0].(*TcpCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpCbUpdate indicates an expected call of TcpCbUpdate
+func (mr *MockInternalClientMockRecorder) TcpCbUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpCbUpdate", reflect.TypeOf((*MockInternalClient)(nil).TcpCbUpdate), varargs...)
+}
+
+// TcpCbDelete mocks base method
+func (m *MockInternalClient) TcpCbDelete(ctx context.Context, in *TcpCbDeleteRequestMsg, opts ...grpc.CallOption) (*TcpCbDeleteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TcpCbDelete", varargs...)
+	ret0, _ := ret[0].(*TcpCbDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpCbDelete indicates an expected call of TcpCbDelete
+func (mr *MockInternalClientMockRecorder) TcpCbDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpCbDelete", reflect.TypeOf((*MockInternalClient)(nil).TcpCbDelete), varargs...)
+}
+
+// TcpCbGet mocks base method
+func (m *MockInternalClient) TcpCbGet(ctx context.Context, in *TcpCbGetRequestMsg, opts ...grpc.CallOption) (*TcpCbGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TcpCbGet", varargs...)
+	ret0, _ := ret[0].(*TcpCbGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpCbGet indicates an expected call of TcpCbGet
+func (mr *MockInternalClientMockRecorder) TcpCbGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpCbGet", reflect.TypeOf((*MockInternalClient)(nil).TcpCbGet), varargs...)
+}
+
+// TlsCbCreate mocks base method
+func (m *MockInternalClient) TlsCbCreate(ctx context.Context, in *TlsCbRequestMsg, opts ...grpc.CallOption) (*TlsCbResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TlsCbCreate", varargs...)
+	ret0, _ := ret[0].(*TlsCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TlsCbCreate indicates an expected call of TlsCbCreate
+func (mr *MockInternalClientMockRecorder) TlsCbCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbCreate", reflect.TypeOf((*MockInternalClient)(nil).TlsCbCreate), varargs...)
+}
+
+// TlsCbUpdate mocks base method
+func (m *MockInternalClient) TlsCbUpdate(ctx context.Context, in *TlsCbRequestMsg, opts ...grpc.CallOption) (*TlsCbResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TlsCbUpdate", varargs...)
+	ret0, _ := ret[0].(*TlsCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TlsCbUpdate indicates an expected call of TlsCbUpdate
+func (mr *MockInternalClientMockRecorder) TlsCbUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbUpdate", reflect.TypeOf((*MockInternalClient)(nil).TlsCbUpdate), varargs...)
+}
+
+// TlsCbDelete mocks base method
+func (m *MockInternalClient) TlsCbDelete(ctx context.Context, in *TlsCbDeleteRequestMsg, opts ...grpc.CallOption) (*TlsCbDeleteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TlsCbDelete", varargs...)
+	ret0, _ := ret[0].(*TlsCbDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TlsCbDelete indicates an expected call of TlsCbDelete
+func (mr *MockInternalClientMockRecorder) TlsCbDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbDelete", reflect.TypeOf((*MockInternalClient)(nil).TlsCbDelete), varargs...)
+}
+
+// TlsCbGet mocks base method
+func (m *MockInternalClient) TlsCbGet(ctx context.Context, in *TlsCbGetRequestMsg, opts ...grpc.CallOption) (*TlsCbGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TlsCbGet", varargs...)
+	ret0, _ := ret[0].(*TlsCbGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TlsCbGet indicates an expected call of TlsCbGet
+func (mr *MockInternalClientMockRecorder) TlsCbGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbGet", reflect.TypeOf((*MockInternalClient)(nil).TlsCbGet), varargs...)
+}
+
 // MockInternalServer is a mock of InternalServer interface
 type MockInternalServer struct {
 	ctrl     *gomock.Controller
@@ -517,6 +777,110 @@ func (m *MockInternalServer) IpsecCbGet(arg0 context.Context, arg1 *IpsecCbGetRe
 // IpsecCbGet indicates an expected call of IpsecCbGet
 func (mr *MockInternalServerMockRecorder) IpsecCbGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IpsecCbGet", reflect.TypeOf((*MockInternalServer)(nil).IpsecCbGet), arg0, arg1)
+}
+
+// TcpCbCreate mocks base method
+func (m *MockInternalServer) TcpCbCreate(arg0 context.Context, arg1 *TcpCbRequestMsg) (*TcpCbResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TcpCbCreate", arg0, arg1)
+	ret0, _ := ret[0].(*TcpCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpCbCreate indicates an expected call of TcpCbCreate
+func (mr *MockInternalServerMockRecorder) TcpCbCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpCbCreate", reflect.TypeOf((*MockInternalServer)(nil).TcpCbCreate), arg0, arg1)
+}
+
+// TcpCbUpdate mocks base method
+func (m *MockInternalServer) TcpCbUpdate(arg0 context.Context, arg1 *TcpCbRequestMsg) (*TcpCbResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TcpCbUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*TcpCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpCbUpdate indicates an expected call of TcpCbUpdate
+func (mr *MockInternalServerMockRecorder) TcpCbUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpCbUpdate", reflect.TypeOf((*MockInternalServer)(nil).TcpCbUpdate), arg0, arg1)
+}
+
+// TcpCbDelete mocks base method
+func (m *MockInternalServer) TcpCbDelete(arg0 context.Context, arg1 *TcpCbDeleteRequestMsg) (*TcpCbDeleteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TcpCbDelete", arg0, arg1)
+	ret0, _ := ret[0].(*TcpCbDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpCbDelete indicates an expected call of TcpCbDelete
+func (mr *MockInternalServerMockRecorder) TcpCbDelete(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpCbDelete", reflect.TypeOf((*MockInternalServer)(nil).TcpCbDelete), arg0, arg1)
+}
+
+// TcpCbGet mocks base method
+func (m *MockInternalServer) TcpCbGet(arg0 context.Context, arg1 *TcpCbGetRequestMsg) (*TcpCbGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TcpCbGet", arg0, arg1)
+	ret0, _ := ret[0].(*TcpCbGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TcpCbGet indicates an expected call of TcpCbGet
+func (mr *MockInternalServerMockRecorder) TcpCbGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TcpCbGet", reflect.TypeOf((*MockInternalServer)(nil).TcpCbGet), arg0, arg1)
+}
+
+// TlsCbCreate mocks base method
+func (m *MockInternalServer) TlsCbCreate(arg0 context.Context, arg1 *TlsCbRequestMsg) (*TlsCbResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TlsCbCreate", arg0, arg1)
+	ret0, _ := ret[0].(*TlsCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TlsCbCreate indicates an expected call of TlsCbCreate
+func (mr *MockInternalServerMockRecorder) TlsCbCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbCreate", reflect.TypeOf((*MockInternalServer)(nil).TlsCbCreate), arg0, arg1)
+}
+
+// TlsCbUpdate mocks base method
+func (m *MockInternalServer) TlsCbUpdate(arg0 context.Context, arg1 *TlsCbRequestMsg) (*TlsCbResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TlsCbUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*TlsCbResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TlsCbUpdate indicates an expected call of TlsCbUpdate
+func (mr *MockInternalServerMockRecorder) TlsCbUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbUpdate", reflect.TypeOf((*MockInternalServer)(nil).TlsCbUpdate), arg0, arg1)
+}
+
+// TlsCbDelete mocks base method
+func (m *MockInternalServer) TlsCbDelete(arg0 context.Context, arg1 *TlsCbDeleteRequestMsg) (*TlsCbDeleteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TlsCbDelete", arg0, arg1)
+	ret0, _ := ret[0].(*TlsCbDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TlsCbDelete indicates an expected call of TlsCbDelete
+func (mr *MockInternalServerMockRecorder) TlsCbDelete(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbDelete", reflect.TypeOf((*MockInternalServer)(nil).TlsCbDelete), arg0, arg1)
+}
+
+// TlsCbGet mocks base method
+func (m *MockInternalServer) TlsCbGet(arg0 context.Context, arg1 *TlsCbGetRequestMsg) (*TlsCbGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TlsCbGet", arg0, arg1)
+	ret0, _ := ret[0].(*TlsCbGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TlsCbGet indicates an expected call of TlsCbGet
+func (mr *MockInternalServerMockRecorder) TlsCbGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbGet", reflect.TypeOf((*MockInternalServer)(nil).TlsCbGet), arg0, arg1)
 }
 
 // MockSoftwarePhvClient is a mock of SoftwarePhvClient interface

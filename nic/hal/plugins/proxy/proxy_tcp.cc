@@ -9,6 +9,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
+#include "nic/hal/src/internal/internal.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"

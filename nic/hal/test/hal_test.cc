@@ -23,8 +23,8 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "gen/proto/proxy.grpc.pb.h"
-#include "gen/proto/tcp_proxy_cb.grpc.pb.h"
 #include "gen/proto/crypto_apis.grpc.pb.h"
+#include "gen/proto/internal.grpc.pb.h"
 #include "gen/proto/tcp_proxy.grpc.pb.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -226,13 +226,13 @@ using proxy::ProxyGlobalCfgRequest;
 using proxy::ProxyGlobalCfgRequestMsg;
 using proxy::ProxyGlobalCfgResponseMsg;
 
-using tcpcb::TcpCb;
-using tcpcb::TcpCbGetRequest;
-using tcpcb::TcpCbGetRequestMsg;
-using tcpcb::TcpCbGetResponseMsg;
-using tcpcb::TcpCbGetResponse;
-using tcpcb::TcpCbStats;
-using tcpcb::TcpCbSpec;
+using internal::Internal;
+using internal::TcpCbGetRequest;
+using internal::TcpCbGetRequestMsg;
+using internal::TcpCbGetResponseMsg;
+using internal::TcpCbGetResponse;
+using internal::TcpCbStats;
+using internal::TcpCbSpec;
 
 using cryptoapis::CryptoApiType;
 using cryptoapis::CryptoApis;
@@ -277,7 +277,7 @@ public:
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)),
     telemetry_stub_(Telemetry::NewStub(channel)),
     proxy_stub_(Proxy::NewStub(channel)),
-    tcpcb_stub_(TcpCb::NewStub(channel)),
+    tcpcb_stub_(Internal::NewStub(channel)),
     crypto_apis_stub_(CryptoApis::NewStub(channel)),
     tcp_proxy_stub_(TcpProxy::NewStub(channel)),
     qos_stub_(QOS::NewStub(channel)) {}
@@ -2550,7 +2550,7 @@ private:
     std::unique_ptr<Session::Stub> session_stub_;
     std::unique_ptr<Telemetry::Stub> telemetry_stub_;
     std::unique_ptr<Proxy::Stub> proxy_stub_;
-    std::unique_ptr<TcpCb::Stub> tcpcb_stub_;
+    std::unique_ptr<Internal::Stub> tcpcb_stub_;
     std::unique_ptr<CryptoApis::Stub> crypto_apis_stub_;
     std::unique_ptr<TcpProxy::Stub> tcp_proxy_stub_;
     std::unique_ptr<QOS::Stub> qos_stub_;

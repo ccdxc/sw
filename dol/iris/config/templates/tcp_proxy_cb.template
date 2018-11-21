@@ -3,7 +3,7 @@ meta:
     id: TCPCB
     grpc:
         package                       : tcpcb
-        service                       : TcpCb
+        service                       : Internal 
         apis:
             create:
                 name                  : TcpCbCreate

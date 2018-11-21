@@ -152,20 +152,6 @@ extern void *ipseccb_get_handle_key_func(void *entry);
 extern uint32_t ipseccb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool ipseccb_compare_handle_key_func(void *key1, void *key2);
 
-#if 0
-hal_ret_t ipseccb_create(IpsecCbSpec& spec,
-                       IpsecCbResponse *rsp);
-
-hal_ret_t ipseccb_update(IpsecCbSpec& spec,
-                       IpsecCbResponse *rsp);
-
-hal_ret_t ipseccb_delete(IpsecCbDeleteRequest& req,
-                       IpsecCbDeleteResponseMsg *rsp);
-
-hal_ret_t ipseccb_get(IpsecCbGetRequest& req,
-                    IpsecCbGetResponseMsg *rsp);
-#endif
-
 }    // namespace hal
 
 #endif    // __IPSECCB_HPP__

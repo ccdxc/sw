@@ -8,6 +8,7 @@
 #include "nic/include/tcp_common.h"
 #include "nic/hal/tls/tls_api.hpp"
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
+#include "nic/hal/src/internal/internal.hpp"
 
 #define TLS_DDOL_ARM_LOOP_CTRL_PKTS     16   /* Loopback control packets in ARM */
 

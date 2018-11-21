@@ -22,8 +22,6 @@ import session_pb2          as session_pb2
 import nwsec_pb2            as nwsec_pb2
 import nw_pb2               as nw_pb2
 import telemetry_pb2        as telemetry_pb2
-import tcp_proxy_cb_pb2     as tcpcb_pb2
-import tls_proxy_cb_pb2     as tlscb_pb2
 import descriptor_aol_pb2   as descriptor_aol_pb2
 import wring_pb2            as wring_pb2
 import acl_pb2              as acl_pb2
@@ -259,8 +257,8 @@ def GetTenants(objlist):
 
 def ConfigureTcpCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = tcpcb_pb2.TcpCbStub(HalChannel)
-    __config(objlist, tcpcb_pb2.TcpCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.TcpCbRequestMsg,
              stub.TcpCbCreate)
     return
 
@@ -273,15 +271,15 @@ def ConfigureIpsecCbs(objlist):
 
 def UpdateTcpCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = tcpcb_pb2.TcpCbStub(HalChannel)
-    __config(objlist, tcpcb_pb2.TcpCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.TcpCbRequestMsg,
              stub.TcpCbUpdate)
     return
 
 def UpdateTlsCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = tlscb_pb2.TlsCbStub(HalChannel)
-    __config(objlist, tlscb_pb2.TlsCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.TlsCbRequestMsg,
              stub.TlsCbUpdate)
     return
 
@@ -399,8 +397,8 @@ def GetProxycCbs(objlist):
 
 def GetTcpCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = tcpcb_pb2.TcpCbStub(HalChannel)
-    __config(objlist, tcpcb_pb2.TcpCbGetRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.TcpCbGetRequestMsg,
              stub.TcpCbGet)
     return
 
@@ -413,8 +411,8 @@ def GetIpsecCbs(objlist):
 
 def GetTlsCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = tlscb_pb2.TlsCbStub(HalChannel)
-    __config(objlist, tlscb_pb2.TlsCbGetRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.TlsCbGetRequestMsg,
              stub.TlsCbGet)
     return
 
@@ -427,8 +425,8 @@ def ConfigureProxyService(objlist):
 
 def ConfigureTlsCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = tlscb_pb2.TlsCbStub(HalChannel)
-    __config(objlist, tlscb_pb2.TlsCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.TlsCbRequestMsg,
              stub.TlsCbCreate)
     return
 

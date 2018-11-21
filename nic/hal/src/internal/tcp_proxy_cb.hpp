@@ -9,7 +9,7 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "gen/proto/tcp_proxy_cb.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 
@@ -17,18 +17,18 @@ using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
 
-using tcpcb::TcpCbSpec;
-using tcpcb::TcpCbStatus;
-using tcpcb::TcpCbResponse;
-using tcpcb::TcpCbKeyHandle;
-using tcpcb::TcpCbRequestMsg;
-using tcpcb::TcpCbResponseMsg;
-using tcpcb::TcpCbDeleteRequestMsg;
-using tcpcb::TcpCbDeleteResponseMsg;
-using tcpcb::TcpCbGetRequest;
-using tcpcb::TcpCbGetRequestMsg;
-using tcpcb::TcpCbGetResponse;
-using tcpcb::TcpCbGetResponseMsg;
+using internal::TcpCbSpec;
+using internal::TcpCbStatus;
+using internal::TcpCbResponse;
+using internal::TcpCbKeyHandle;
+using internal::TcpCbRequestMsg;
+using internal::TcpCbResponseMsg;
+using internal::TcpCbDeleteRequestMsg;
+using internal::TcpCbDeleteResponseMsg;
+using internal::TcpCbGetRequest;
+using internal::TcpCbGetRequestMsg;
+using internal::TcpCbGetResponse;
+using internal::TcpCbGetResponseMsg;
 
 #define INVALID_HEADER_TEMPLATE_LEN ((uint32_t)-1)
 
@@ -197,17 +197,6 @@ extern void *tcpcb_get_handle_key_func(void *entry);
 extern uint32_t tcpcb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool tcpcb_compare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t tcpcb_create(tcpcb::TcpCbSpec& spec,
-                       tcpcb::TcpCbResponse *rsp);
-
-hal_ret_t tcpcb_update(tcpcb::TcpCbSpec& spec,
-                       tcpcb::TcpCbResponse *rsp);
-
-hal_ret_t tcpcb_delete(tcpcb::TcpCbDeleteRequest& req,
-                       tcpcb::TcpCbDeleteResponseMsg *rsp);
-
-hal_ret_t tcpcb_get(tcpcb::TcpCbGetRequest& req,
-                    tcpcb::TcpCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __TCPCB_HPP__

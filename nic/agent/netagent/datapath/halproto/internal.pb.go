@@ -1221,6 +1221,1662 @@ func (m *IpsecCbGetResponseMsg) GetResponse() []*IpsecCbGetResponse {
 	return nil
 }
 
+// TcpCbKeyHandle is used to operate on a tcp_cb either by its key or handle
+type TcpCbKeyHandle struct {
+	// Types that are valid to be assigned to KeyOrHandle:
+	//	*TcpCbKeyHandle_TcpcbId
+	//	*TcpCbKeyHandle_TcpcbHandle
+	KeyOrHandle isTcpCbKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
+}
+
+func (m *TcpCbKeyHandle) Reset()                    { *m = TcpCbKeyHandle{} }
+func (m *TcpCbKeyHandle) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbKeyHandle) ProtoMessage()               {}
+func (*TcpCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{40} }
+
+type isTcpCbKeyHandle_KeyOrHandle interface {
+	isTcpCbKeyHandle_KeyOrHandle()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type TcpCbKeyHandle_TcpcbId struct {
+	TcpcbId uint32 `protobuf:"varint,1,opt,name=tcpcb_id,json=tcpcbId,proto3,oneof"`
+}
+type TcpCbKeyHandle_TcpcbHandle struct {
+	TcpcbHandle uint64 `protobuf:"fixed64,2,opt,name=tcpcb_handle,json=tcpcbHandle,proto3,oneof"`
+}
+
+func (*TcpCbKeyHandle_TcpcbId) isTcpCbKeyHandle_KeyOrHandle()     {}
+func (*TcpCbKeyHandle_TcpcbHandle) isTcpCbKeyHandle_KeyOrHandle() {}
+
+func (m *TcpCbKeyHandle) GetKeyOrHandle() isTcpCbKeyHandle_KeyOrHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *TcpCbKeyHandle) GetTcpcbId() uint32 {
+	if x, ok := m.GetKeyOrHandle().(*TcpCbKeyHandle_TcpcbId); ok {
+		return x.TcpcbId
+	}
+	return 0
+}
+
+func (m *TcpCbKeyHandle) GetTcpcbHandle() uint64 {
+	if x, ok := m.GetKeyOrHandle().(*TcpCbKeyHandle_TcpcbHandle); ok {
+		return x.TcpcbHandle
+	}
+	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*TcpCbKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _TcpCbKeyHandle_OneofMarshaler, _TcpCbKeyHandle_OneofUnmarshaler, _TcpCbKeyHandle_OneofSizer, []interface{}{
+		(*TcpCbKeyHandle_TcpcbId)(nil),
+		(*TcpCbKeyHandle_TcpcbHandle)(nil),
+	}
+}
+
+func _TcpCbKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*TcpCbKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *TcpCbKeyHandle_TcpcbId:
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.TcpcbId))
+	case *TcpCbKeyHandle_TcpcbHandle:
+		_ = b.EncodeVarint(2<<3 | proto.WireFixed64)
+		_ = b.EncodeFixed64(uint64(x.TcpcbHandle))
+	case nil:
+	default:
+		return fmt.Errorf("TcpCbKeyHandle.KeyOrHandle has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _TcpCbKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*TcpCbKeyHandle)
+	switch tag {
+	case 1: // key_or_handle.tcpcb_id
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.KeyOrHandle = &TcpCbKeyHandle_TcpcbId{uint32(x)}
+		return true, err
+	case 2: // key_or_handle.tcpcb_handle
+		if wire != proto.WireFixed64 {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeFixed64()
+		m.KeyOrHandle = &TcpCbKeyHandle_TcpcbHandle{x}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _TcpCbKeyHandle_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*TcpCbKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *TcpCbKeyHandle_TcpcbId:
+		n += proto.SizeVarint(1<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.TcpcbId))
+	case *TcpCbKeyHandle_TcpcbHandle:
+		n += proto.SizeVarint(2<<3 | proto.WireFixed64)
+		n += 8
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// TcpCbSpec captures all the tcp_cb level configuration
+type TcpCbSpec struct {
+	KeyOrHandle        *TcpCbKeyHandle `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+	RcvNxt             uint32          `protobuf:"varint,2,opt,name=rcv_nxt,json=rcvNxt,proto3" json:"rcv_nxt,omitempty"`
+	SndNxt             uint32          `protobuf:"varint,3,opt,name=snd_nxt,json=sndNxt,proto3" json:"snd_nxt,omitempty"`
+	SndUna             uint32          `protobuf:"varint,4,opt,name=snd_una,json=sndUna,proto3" json:"snd_una,omitempty"`
+	RcvTsval           uint32          `protobuf:"varint,5,opt,name=rcv_tsval,json=rcvTsval,proto3" json:"rcv_tsval,omitempty"`
+	TsRecent           uint32          `protobuf:"varint,6,opt,name=ts_recent,json=tsRecent,proto3" json:"ts_recent,omitempty"`
+	SerqBase           uint64          `protobuf:"fixed64,7,opt,name=serq_base,json=serqBase,proto3" json:"serq_base,omitempty"`
+	DebugDol           uint32          `protobuf:"varint,8,opt,name=debug_dol,json=debugDol,proto3" json:"debug_dol,omitempty"`
+	SesqBase           uint64          `protobuf:"fixed64,9,opt,name=sesq_base,json=sesqBase,proto3" json:"sesq_base,omitempty"`
+	SesqPi             uint32          `protobuf:"varint,10,opt,name=sesq_pi,json=sesqPi,proto3" json:"sesq_pi,omitempty"`
+	SesqCi             uint32          `protobuf:"varint,11,opt,name=sesq_ci,json=sesqCi,proto3" json:"sesq_ci,omitempty"`
+	SndWnd             uint32          `protobuf:"varint,12,opt,name=snd_wnd,json=sndWnd,proto3" json:"snd_wnd,omitempty"`
+	SndCwnd            uint32          `protobuf:"varint,13,opt,name=snd_cwnd,json=sndCwnd,proto3" json:"snd_cwnd,omitempty"`
+	RcvMss             uint32          `protobuf:"varint,14,opt,name=rcv_mss,json=rcvMss,proto3" json:"rcv_mss,omitempty"`
+	SourcePort         uint32          `protobuf:"varint,15,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty"`
+	DestPort           uint32          `protobuf:"varint,16,opt,name=dest_port,json=destPort,proto3" json:"dest_port,omitempty"`
+	HeaderTemplate     []byte          `protobuf:"bytes,17,opt,name=header_template,json=headerTemplate,proto3" json:"header_template,omitempty"`
+	State              uint32          `protobuf:"varint,18,opt,name=state,proto3" json:"state,omitempty"`
+	SourceLif          uint32          `protobuf:"varint,19,opt,name=source_lif,json=sourceLif,proto3" json:"source_lif,omitempty"`
+	AsesqBase          uint64          `protobuf:"fixed64,20,opt,name=asesq_base,json=asesqBase,proto3" json:"asesq_base,omitempty"`
+	AsesqPi            uint32          `protobuf:"varint,21,opt,name=asesq_pi,json=asesqPi,proto3" json:"asesq_pi,omitempty"`
+	AsesqCi            uint32          `protobuf:"varint,22,opt,name=asesq_ci,json=asesqCi,proto3" json:"asesq_ci,omitempty"`
+	DebugDolTx         uint32          `protobuf:"varint,23,opt,name=debug_dol_tx,json=debugDolTx,proto3" json:"debug_dol_tx,omitempty"`
+	HeaderLen          uint32          `protobuf:"varint,24,opt,name=header_len,json=headerLen,proto3" json:"header_len,omitempty"`
+	PendingAckSend     bool            `protobuf:"varint,25,opt,name=pending_ack_send,json=pendingAckSend,proto3" json:"pending_ack_send,omitempty"`
+	L7ProxyType        AppRedirType    `protobuf:"varint,26,opt,name=l7_proxy_type,json=l7ProxyType,proto3,enum=types.AppRedirType" json:"l7_proxy_type,omitempty"`
+	SesqRetxCi         uint32          `protobuf:"varint,27,opt,name=sesq_retx_ci,json=sesqRetxCi,proto3" json:"sesq_retx_ci,omitempty"`
+	RetxSndUna         uint64          `protobuf:"varint,28,opt,name=retx_snd_una,json=retxSndUna,proto3" json:"retx_snd_una,omitempty"`
+	RxTs               uint64          `protobuf:"varint,29,opt,name=rx_ts,json=rxTs,proto3" json:"rx_ts,omitempty"`
+	Rto                uint64          `protobuf:"varint,30,opt,name=rto,proto3" json:"rto,omitempty"`
+	SndCwndCnt         uint32          `protobuf:"varint,31,opt,name=snd_cwnd_cnt,json=sndCwndCnt,proto3" json:"snd_cwnd_cnt,omitempty"`
+	DebugDolTblsetaddr uint32          `protobuf:"varint,32,opt,name=debug_dol_tblsetaddr,json=debugDolTblsetaddr,proto3" json:"debug_dol_tblsetaddr,omitempty"`
+	SerqPi             uint32          `protobuf:"varint,33,opt,name=serq_pi,json=serqPi,proto3" json:"serq_pi,omitempty"`
+	PredFlags          uint32          `protobuf:"varint,34,opt,name=pred_flags,json=predFlags,proto3" json:"pred_flags,omitempty"`
+	OtherQid           uint32          `protobuf:"varint,35,opt,name=other_qid,json=otherQid,proto3" json:"other_qid,omitempty"`
+	PacketsOut         uint32          `protobuf:"varint,36,opt,name=packets_out,json=packetsOut,proto3" json:"packets_out,omitempty"`
+	RtoPi              uint32          `protobuf:"varint,37,opt,name=rto_pi,json=rtoPi,proto3" json:"rto_pi,omitempty"`
+	RetxTimerCi        uint32          `protobuf:"varint,38,opt,name=retx_timer_ci,json=retxTimerCi,proto3" json:"retx_timer_ci,omitempty"`
+	RtoBackoff         uint32          `protobuf:"varint,39,opt,name=rto_backoff,json=rtoBackoff,proto3" json:"rto_backoff,omitempty"`
+	CpuId              uint32          `protobuf:"varint,40,opt,name=cpu_id,json=cpuId,proto3" json:"cpu_id,omitempty"`
+	SerqCi             uint32          `protobuf:"varint,41,opt,name=serq_ci,json=serqCi,proto3" json:"serq_ci,omitempty"`
+}
+
+func (m *TcpCbSpec) Reset()                    { *m = TcpCbSpec{} }
+func (m *TcpCbSpec) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbSpec) ProtoMessage()               {}
+func (*TcpCbSpec) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{41} }
+
+func (m *TcpCbSpec) GetKeyOrHandle() *TcpCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *TcpCbSpec) GetRcvNxt() uint32 {
+	if m != nil {
+		return m.RcvNxt
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSndNxt() uint32 {
+	if m != nil {
+		return m.SndNxt
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSndUna() uint32 {
+	if m != nil {
+		return m.SndUna
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetRcvTsval() uint32 {
+	if m != nil {
+		return m.RcvTsval
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetTsRecent() uint32 {
+	if m != nil {
+		return m.TsRecent
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSerqBase() uint64 {
+	if m != nil {
+		return m.SerqBase
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetDebugDol() uint32 {
+	if m != nil {
+		return m.DebugDol
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSesqBase() uint64 {
+	if m != nil {
+		return m.SesqBase
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSesqPi() uint32 {
+	if m != nil {
+		return m.SesqPi
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSesqCi() uint32 {
+	if m != nil {
+		return m.SesqCi
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSndWnd() uint32 {
+	if m != nil {
+		return m.SndWnd
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSndCwnd() uint32 {
+	if m != nil {
+		return m.SndCwnd
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetRcvMss() uint32 {
+	if m != nil {
+		return m.RcvMss
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSourcePort() uint32 {
+	if m != nil {
+		return m.SourcePort
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetDestPort() uint32 {
+	if m != nil {
+		return m.DestPort
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetHeaderTemplate() []byte {
+	if m != nil {
+		return m.HeaderTemplate
+	}
+	return nil
+}
+
+func (m *TcpCbSpec) GetState() uint32 {
+	if m != nil {
+		return m.State
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSourceLif() uint32 {
+	if m != nil {
+		return m.SourceLif
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetAsesqBase() uint64 {
+	if m != nil {
+		return m.AsesqBase
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetAsesqPi() uint32 {
+	if m != nil {
+		return m.AsesqPi
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetAsesqCi() uint32 {
+	if m != nil {
+		return m.AsesqCi
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetDebugDolTx() uint32 {
+	if m != nil {
+		return m.DebugDolTx
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetHeaderLen() uint32 {
+	if m != nil {
+		return m.HeaderLen
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetPendingAckSend() bool {
+	if m != nil {
+		return m.PendingAckSend
+	}
+	return false
+}
+
+func (m *TcpCbSpec) GetL7ProxyType() AppRedirType {
+	if m != nil {
+		return m.L7ProxyType
+	}
+	return AppRedirType_APP_REDIR_TYPE_NONE
+}
+
+func (m *TcpCbSpec) GetSesqRetxCi() uint32 {
+	if m != nil {
+		return m.SesqRetxCi
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetRetxSndUna() uint64 {
+	if m != nil {
+		return m.RetxSndUna
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetRxTs() uint64 {
+	if m != nil {
+		return m.RxTs
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetRto() uint64 {
+	if m != nil {
+		return m.Rto
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSndCwndCnt() uint32 {
+	if m != nil {
+		return m.SndCwndCnt
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetDebugDolTblsetaddr() uint32 {
+	if m != nil {
+		return m.DebugDolTblsetaddr
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSerqPi() uint32 {
+	if m != nil {
+		return m.SerqPi
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetPredFlags() uint32 {
+	if m != nil {
+		return m.PredFlags
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetOtherQid() uint32 {
+	if m != nil {
+		return m.OtherQid
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetPacketsOut() uint32 {
+	if m != nil {
+		return m.PacketsOut
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetRtoPi() uint32 {
+	if m != nil {
+		return m.RtoPi
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetRetxTimerCi() uint32 {
+	if m != nil {
+		return m.RetxTimerCi
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetRtoBackoff() uint32 {
+	if m != nil {
+		return m.RtoBackoff
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetCpuId() uint32 {
+	if m != nil {
+		return m.CpuId
+	}
+	return 0
+}
+
+func (m *TcpCbSpec) GetSerqCi() uint32 {
+	if m != nil {
+		return m.SerqCi
+	}
+	return 0
+}
+
+// TcpCbRequestMsg is batched add or modify tcpcb request
+type TcpCbRequestMsg struct {
+	Request []*TcpCbSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TcpCbRequestMsg) Reset()                    { *m = TcpCbRequestMsg{} }
+func (m *TcpCbRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbRequestMsg) ProtoMessage()               {}
+func (*TcpCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{42} }
+
+func (m *TcpCbRequestMsg) GetRequest() []*TcpCbSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TcpCbStatus is the operational status of a given tcpcb
+type TcpCbStatus struct {
+	TcpcbHandle uint64 `protobuf:"fixed64,1,opt,name=tcpcb_handle,json=tcpcbHandle,proto3" json:"tcpcb_handle,omitempty"`
+}
+
+func (m *TcpCbStatus) Reset()                    { *m = TcpCbStatus{} }
+func (m *TcpCbStatus) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbStatus) ProtoMessage()               {}
+func (*TcpCbStatus) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{43} }
+
+func (m *TcpCbStatus) GetTcpcbHandle() uint64 {
+	if m != nil {
+		return m.TcpcbHandle
+	}
+	return 0
+}
+
+// TcpCbResponse is response to TcpCbSpec
+type TcpCbResponse struct {
+	ApiStatus   ApiStatus    `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	TcpcbStatus *TcpCbStatus `protobuf:"bytes,2,opt,name=tcpcb_status,json=tcpcbStatus" json:"tcpcb_status,omitempty"`
+}
+
+func (m *TcpCbResponse) Reset()                    { *m = TcpCbResponse{} }
+func (m *TcpCbResponse) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbResponse) ProtoMessage()               {}
+func (*TcpCbResponse) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{44} }
+
+func (m *TcpCbResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *TcpCbResponse) GetTcpcbStatus() *TcpCbStatus {
+	if m != nil {
+		return m.TcpcbStatus
+	}
+	return nil
+}
+
+// TcpCbResponseMsg is batched response to TcpCbRequestMsg
+type TcpCbResponseMsg struct {
+	Response []*TcpCbResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *TcpCbResponseMsg) Reset()                    { *m = TcpCbResponseMsg{} }
+func (m *TcpCbResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbResponseMsg) ProtoMessage()               {}
+func (*TcpCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{45} }
+
+func (m *TcpCbResponseMsg) GetResponse() []*TcpCbResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// TcpCbDeleteRequest is used to delete a tcpcb
+type TcpCbDeleteRequest struct {
+	KeyOrHandle *TcpCbKeyHandle `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *TcpCbDeleteRequest) Reset()                    { *m = TcpCbDeleteRequest{} }
+func (m *TcpCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbDeleteRequest) ProtoMessage()               {}
+func (*TcpCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{46} }
+
+func (m *TcpCbDeleteRequest) GetKeyOrHandle() *TcpCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// TcpCbDeleteRequestMsg is used to delete a batch of tcpcbs
+type TcpCbDeleteRequestMsg struct {
+	Request []*TcpCbDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TcpCbDeleteRequestMsg) Reset()                    { *m = TcpCbDeleteRequestMsg{} }
+func (m *TcpCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbDeleteRequestMsg) ProtoMessage()               {}
+func (*TcpCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{47} }
+
+func (m *TcpCbDeleteRequestMsg) GetRequest() []*TcpCbDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TcpCbDeleteResponseMsg is batched response to TcpCbDeleteRequestMsg
+type TcpCbDeleteResponseMsg struct {
+	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
+}
+
+func (m *TcpCbDeleteResponseMsg) Reset()                    { *m = TcpCbDeleteResponseMsg{} }
+func (m *TcpCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbDeleteResponseMsg) ProtoMessage()               {}
+func (*TcpCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{48} }
+
+func (m *TcpCbDeleteResponseMsg) GetApiStatus() []ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return nil
+}
+
+// TcpCbGetRequest is used to get information about a tcpcb
+type TcpCbGetRequest struct {
+	KeyOrHandle *TcpCbKeyHandle `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *TcpCbGetRequest) Reset()                    { *m = TcpCbGetRequest{} }
+func (m *TcpCbGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbGetRequest) ProtoMessage()               {}
+func (*TcpCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{49} }
+
+func (m *TcpCbGetRequest) GetKeyOrHandle() *TcpCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// TcpCbGetRequestMsg is batched GET requests for tcpcbs
+type TcpCbGetRequestMsg struct {
+	Request []*TcpCbGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TcpCbGetRequestMsg) Reset()                    { *m = TcpCbGetRequestMsg{} }
+func (m *TcpCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbGetRequestMsg) ProtoMessage()               {}
+func (*TcpCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{50} }
+
+func (m *TcpCbGetRequestMsg) GetRequest() []*TcpCbGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TcpCbStats is the statistics object for each tcpcb
+type TcpCbStats struct {
+	BytesRcvd            uint64 `protobuf:"varint,1,opt,name=bytes_rcvd,json=bytesRcvd,proto3" json:"bytes_rcvd,omitempty"`
+	PktsRcvd             uint64 `protobuf:"varint,2,opt,name=pkts_rcvd,json=pktsRcvd,proto3" json:"pkts_rcvd,omitempty"`
+	PagesAlloced         uint64 `protobuf:"varint,3,opt,name=pages_alloced,json=pagesAlloced,proto3" json:"pages_alloced,omitempty"`
+	DescAlloced          uint64 `protobuf:"varint,4,opt,name=desc_alloced,json=descAlloced,proto3" json:"desc_alloced,omitempty"`
+	DebugNumPktToMem     uint64 `protobuf:"varint,5,opt,name=debug_num_pkt_to_mem,json=debugNumPktToMem,proto3" json:"debug_num_pkt_to_mem,omitempty"`
+	DebugNumPhvToMem     uint64 `protobuf:"varint,6,opt,name=debug_num_phv_to_mem,json=debugNumPhvToMem,proto3" json:"debug_num_phv_to_mem,omitempty"`
+	DebugAtomicDelta     uint32 `protobuf:"varint,8,opt,name=debug_atomic_delta,json=debugAtomicDelta,proto3" json:"debug_atomic_delta,omitempty"`
+	DebugAtomic0Incr1247 uint32 `protobuf:"varint,9,opt,name=debug_atomic0_incr1247,json=debugAtomic0Incr1247,proto3" json:"debug_atomic0_incr1247,omitempty"`
+	DebugAtomic1Incr247  uint32 `protobuf:"varint,10,opt,name=debug_atomic1_incr247,json=debugAtomic1Incr247,proto3" json:"debug_atomic1_incr247,omitempty"`
+	DebugAtomic2Incr47   uint32 `protobuf:"varint,11,opt,name=debug_atomic2_incr47,json=debugAtomic2Incr47,proto3" json:"debug_atomic2_incr47,omitempty"`
+	DebugAtomic3Incr47   uint32 `protobuf:"varint,12,opt,name=debug_atomic3_incr47,json=debugAtomic3Incr47,proto3" json:"debug_atomic3_incr47,omitempty"`
+	DebugAtomic4Incr7    uint32 `protobuf:"varint,13,opt,name=debug_atomic4_incr7,json=debugAtomic4Incr7,proto3" json:"debug_atomic4_incr7,omitempty"`
+	DebugAtomic5Incr7    uint32 `protobuf:"varint,14,opt,name=debug_atomic5_incr7,json=debugAtomic5Incr7,proto3" json:"debug_atomic5_incr7,omitempty"`
+	DebugAtomic6Incr7    uint32 `protobuf:"varint,15,opt,name=debug_atomic6_incr7,json=debugAtomic6Incr7,proto3" json:"debug_atomic6_incr7,omitempty"`
+	BytesAcked           uint64 `protobuf:"varint,16,opt,name=bytes_acked,json=bytesAcked,proto3" json:"bytes_acked,omitempty"`
+	SlowPathCnt          uint64 `protobuf:"varint,17,opt,name=slow_path_cnt,json=slowPathCnt,proto3" json:"slow_path_cnt,omitempty"`
+	SerqFullCnt          uint64 `protobuf:"varint,18,opt,name=serq_full_cnt,json=serqFullCnt,proto3" json:"serq_full_cnt,omitempty"`
+	OooCnt               uint64 `protobuf:"varint,19,opt,name=ooo_cnt,json=oooCnt,proto3" json:"ooo_cnt,omitempty"`
+	BytesSent            uint64 `protobuf:"varint,10001,opt,name=bytes_sent,json=bytesSent,proto3" json:"bytes_sent,omitempty"`
+	PktsSent             uint64 `protobuf:"varint,10002,opt,name=pkts_sent,json=pktsSent,proto3" json:"pkts_sent,omitempty"`
+	DebugNumPhvToPkt     uint64 `protobuf:"varint,10003,opt,name=debug_num_phv_to_pkt,json=debugNumPhvToPkt,proto3" json:"debug_num_phv_to_pkt,omitempty"`
+	DebugNumMemToPkt     uint64 `protobuf:"varint,10004,opt,name=debug_num_mem_to_pkt,json=debugNumMemToPkt,proto3" json:"debug_num_mem_to_pkt,omitempty"`
+	SesqPi               uint32 `protobuf:"varint,10005,opt,name=sesq_pi,json=sesqPi,proto3" json:"sesq_pi,omitempty"`
+	SesqCi               uint32 `protobuf:"varint,10006,opt,name=sesq_ci,json=sesqCi,proto3" json:"sesq_ci,omitempty"`
+	SendAckPi            uint32 `protobuf:"varint,10007,opt,name=send_ack_pi,json=sendAckPi,proto3" json:"send_ack_pi,omitempty"`
+	SendAckCi            uint32 `protobuf:"varint,10008,opt,name=send_ack_ci,json=sendAckCi,proto3" json:"send_ack_ci,omitempty"`
+	DelAckPi             uint32 `protobuf:"varint,10009,opt,name=del_ack_pi,json=delAckPi,proto3" json:"del_ack_pi,omitempty"`
+	DelAckCi             uint32 `protobuf:"varint,10010,opt,name=del_ack_ci,json=delAckCi,proto3" json:"del_ack_ci,omitempty"`
+	RetxTimerPi          uint32 `protobuf:"varint,10011,opt,name=retx_timer_pi,json=retxTimerPi,proto3" json:"retx_timer_pi,omitempty"`
+	RetxTimerCi          uint32 `protobuf:"varint,10012,opt,name=retx_timer_ci,json=retxTimerCi,proto3" json:"retx_timer_ci,omitempty"`
+	AsesqPi              uint32 `protobuf:"varint,10013,opt,name=asesq_pi,json=asesqPi,proto3" json:"asesq_pi,omitempty"`
+	AsesqCi              uint32 `protobuf:"varint,10014,opt,name=asesq_ci,json=asesqCi,proto3" json:"asesq_ci,omitempty"`
+	PendingTxPi          uint32 `protobuf:"varint,10015,opt,name=pending_tx_pi,json=pendingTxPi,proto3" json:"pending_tx_pi,omitempty"`
+	PendingTxCi          uint32 `protobuf:"varint,10016,opt,name=pending_tx_ci,json=pendingTxCi,proto3" json:"pending_tx_ci,omitempty"`
+	FastRetransPi        uint32 `protobuf:"varint,10017,opt,name=fast_retrans_pi,json=fastRetransPi,proto3" json:"fast_retrans_pi,omitempty"`
+	FastRetransCi        uint32 `protobuf:"varint,10018,opt,name=fast_retrans_ci,json=fastRetransCi,proto3" json:"fast_retrans_ci,omitempty"`
+	CleanRetxPi          uint32 `protobuf:"varint,10019,opt,name=clean_retx_pi,json=cleanRetxPi,proto3" json:"clean_retx_pi,omitempty"`
+	CleanRetxCi          uint32 `protobuf:"varint,10020,opt,name=clean_retx_ci,json=cleanRetxCi,proto3" json:"clean_retx_ci,omitempty"`
+	PacketsOut           uint32 `protobuf:"varint,10021,opt,name=packets_out,json=packetsOut,proto3" json:"packets_out,omitempty"`
+	RtoPi                uint32 `protobuf:"varint,10022,opt,name=rto_pi,json=rtoPi,proto3" json:"rto_pi,omitempty"`
+	SesqRetxCi           uint32 `protobuf:"varint,10023,opt,name=sesq_retx_ci,json=sesqRetxCi,proto3" json:"sesq_retx_ci,omitempty"`
+	AsesqRetxCi          uint32 `protobuf:"varint,10024,opt,name=asesq_retx_ci,json=asesqRetxCi,proto3" json:"asesq_retx_ci,omitempty"`
+	TxRingPi             uint32 `protobuf:"varint,10025,opt,name=tx_ring_pi,json=txRingPi,proto3" json:"tx_ring_pi,omitempty"`
+	PartialAckCnt        uint32 `protobuf:"varint,10026,opt,name=partial_ack_cnt,json=partialAckCnt,proto3" json:"partial_ack_cnt,omitempty"`
+}
+
+func (m *TcpCbStats) Reset()                    { *m = TcpCbStats{} }
+func (m *TcpCbStats) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbStats) ProtoMessage()               {}
+func (*TcpCbStats) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{51} }
+
+func (m *TcpCbStats) GetBytesRcvd() uint64 {
+	if m != nil {
+		return m.BytesRcvd
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetPktsRcvd() uint64 {
+	if m != nil {
+		return m.PktsRcvd
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetPagesAlloced() uint64 {
+	if m != nil {
+		return m.PagesAlloced
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDescAlloced() uint64 {
+	if m != nil {
+		return m.DescAlloced
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugNumPktToMem() uint64 {
+	if m != nil {
+		return m.DebugNumPktToMem
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugNumPhvToMem() uint64 {
+	if m != nil {
+		return m.DebugNumPhvToMem
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugAtomicDelta() uint32 {
+	if m != nil {
+		return m.DebugAtomicDelta
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugAtomic0Incr1247() uint32 {
+	if m != nil {
+		return m.DebugAtomic0Incr1247
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugAtomic1Incr247() uint32 {
+	if m != nil {
+		return m.DebugAtomic1Incr247
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugAtomic2Incr47() uint32 {
+	if m != nil {
+		return m.DebugAtomic2Incr47
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugAtomic3Incr47() uint32 {
+	if m != nil {
+		return m.DebugAtomic3Incr47
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugAtomic4Incr7() uint32 {
+	if m != nil {
+		return m.DebugAtomic4Incr7
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugAtomic5Incr7() uint32 {
+	if m != nil {
+		return m.DebugAtomic5Incr7
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugAtomic6Incr7() uint32 {
+	if m != nil {
+		return m.DebugAtomic6Incr7
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetBytesAcked() uint64 {
+	if m != nil {
+		return m.BytesAcked
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetSlowPathCnt() uint64 {
+	if m != nil {
+		return m.SlowPathCnt
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetSerqFullCnt() uint64 {
+	if m != nil {
+		return m.SerqFullCnt
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetOooCnt() uint64 {
+	if m != nil {
+		return m.OooCnt
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetBytesSent() uint64 {
+	if m != nil {
+		return m.BytesSent
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetPktsSent() uint64 {
+	if m != nil {
+		return m.PktsSent
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugNumPhvToPkt() uint64 {
+	if m != nil {
+		return m.DebugNumPhvToPkt
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDebugNumMemToPkt() uint64 {
+	if m != nil {
+		return m.DebugNumMemToPkt
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetSesqPi() uint32 {
+	if m != nil {
+		return m.SesqPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetSesqCi() uint32 {
+	if m != nil {
+		return m.SesqCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetSendAckPi() uint32 {
+	if m != nil {
+		return m.SendAckPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetSendAckCi() uint32 {
+	if m != nil {
+		return m.SendAckCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDelAckPi() uint32 {
+	if m != nil {
+		return m.DelAckPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetDelAckCi() uint32 {
+	if m != nil {
+		return m.DelAckCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetRetxTimerPi() uint32 {
+	if m != nil {
+		return m.RetxTimerPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetRetxTimerCi() uint32 {
+	if m != nil {
+		return m.RetxTimerCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetAsesqPi() uint32 {
+	if m != nil {
+		return m.AsesqPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetAsesqCi() uint32 {
+	if m != nil {
+		return m.AsesqCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetPendingTxPi() uint32 {
+	if m != nil {
+		return m.PendingTxPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetPendingTxCi() uint32 {
+	if m != nil {
+		return m.PendingTxCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetFastRetransPi() uint32 {
+	if m != nil {
+		return m.FastRetransPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetFastRetransCi() uint32 {
+	if m != nil {
+		return m.FastRetransCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetCleanRetxPi() uint32 {
+	if m != nil {
+		return m.CleanRetxPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetCleanRetxCi() uint32 {
+	if m != nil {
+		return m.CleanRetxCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetPacketsOut() uint32 {
+	if m != nil {
+		return m.PacketsOut
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetRtoPi() uint32 {
+	if m != nil {
+		return m.RtoPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetSesqRetxCi() uint32 {
+	if m != nil {
+		return m.SesqRetxCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetAsesqRetxCi() uint32 {
+	if m != nil {
+		return m.AsesqRetxCi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetTxRingPi() uint32 {
+	if m != nil {
+		return m.TxRingPi
+	}
+	return 0
+}
+
+func (m *TcpCbStats) GetPartialAckCnt() uint32 {
+	if m != nil {
+		return m.PartialAckCnt
+	}
+	return 0
+}
+
+// TcpCbGetResponse captures all the information about a tcpcb
+// only if api_status indicates success, other fields are valid
+type TcpCbGetResponse struct {
+	ApiStatus ApiStatus    `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	Spec      *TcpCbSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Status    *TcpCbStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+	Stats     *TcpCbStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *TcpCbGetResponse) Reset()                    { *m = TcpCbGetResponse{} }
+func (m *TcpCbGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbGetResponse) ProtoMessage()               {}
+func (*TcpCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{52} }
+
+func (m *TcpCbGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *TcpCbGetResponse) GetSpec() *TcpCbSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *TcpCbGetResponse) GetStatus() *TcpCbStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *TcpCbGetResponse) GetStats() *TcpCbStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// TcpCbGetResponseMsg is batched response to TcpCbGetRequestMsg
+type TcpCbGetResponseMsg struct {
+	Response []*TcpCbGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *TcpCbGetResponseMsg) Reset()                    { *m = TcpCbGetResponseMsg{} }
+func (m *TcpCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*TcpCbGetResponseMsg) ProtoMessage()               {}
+func (*TcpCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{53} }
+
+func (m *TcpCbGetResponseMsg) GetResponse() []*TcpCbGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// TlsCbKeyHandle is used to operate on a tlscb either by its key or handle
+type TlsCbKeyHandle struct {
+	// Types that are valid to be assigned to KeyOrHandle:
+	//	*TlsCbKeyHandle_TlscbId
+	//	*TlsCbKeyHandle_TlscbHandle
+	KeyOrHandle isTlsCbKeyHandle_KeyOrHandle `protobuf_oneof:"key_or_handle"`
+}
+
+func (m *TlsCbKeyHandle) Reset()                    { *m = TlsCbKeyHandle{} }
+func (m *TlsCbKeyHandle) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbKeyHandle) ProtoMessage()               {}
+func (*TlsCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{54} }
+
+type isTlsCbKeyHandle_KeyOrHandle interface {
+	isTlsCbKeyHandle_KeyOrHandle()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type TlsCbKeyHandle_TlscbId struct {
+	TlscbId uint32 `protobuf:"varint,1,opt,name=tlscb_id,json=tlscbId,proto3,oneof"`
+}
+type TlsCbKeyHandle_TlscbHandle struct {
+	TlscbHandle uint64 `protobuf:"fixed64,2,opt,name=tlscb_handle,json=tlscbHandle,proto3,oneof"`
+}
+
+func (*TlsCbKeyHandle_TlscbId) isTlsCbKeyHandle_KeyOrHandle()     {}
+func (*TlsCbKeyHandle_TlscbHandle) isTlsCbKeyHandle_KeyOrHandle() {}
+
+func (m *TlsCbKeyHandle) GetKeyOrHandle() isTlsCbKeyHandle_KeyOrHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *TlsCbKeyHandle) GetTlscbId() uint32 {
+	if x, ok := m.GetKeyOrHandle().(*TlsCbKeyHandle_TlscbId); ok {
+		return x.TlscbId
+	}
+	return 0
+}
+
+func (m *TlsCbKeyHandle) GetTlscbHandle() uint64 {
+	if x, ok := m.GetKeyOrHandle().(*TlsCbKeyHandle_TlscbHandle); ok {
+		return x.TlscbHandle
+	}
+	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*TlsCbKeyHandle) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _TlsCbKeyHandle_OneofMarshaler, _TlsCbKeyHandle_OneofUnmarshaler, _TlsCbKeyHandle_OneofSizer, []interface{}{
+		(*TlsCbKeyHandle_TlscbId)(nil),
+		(*TlsCbKeyHandle_TlscbHandle)(nil),
+	}
+}
+
+func _TlsCbKeyHandle_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*TlsCbKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *TlsCbKeyHandle_TlscbId:
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.TlscbId))
+	case *TlsCbKeyHandle_TlscbHandle:
+		_ = b.EncodeVarint(2<<3 | proto.WireFixed64)
+		_ = b.EncodeFixed64(uint64(x.TlscbHandle))
+	case nil:
+	default:
+		return fmt.Errorf("TlsCbKeyHandle.KeyOrHandle has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _TlsCbKeyHandle_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*TlsCbKeyHandle)
+	switch tag {
+	case 1: // key_or_handle.tlscb_id
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.KeyOrHandle = &TlsCbKeyHandle_TlscbId{uint32(x)}
+		return true, err
+	case 2: // key_or_handle.tlscb_handle
+		if wire != proto.WireFixed64 {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeFixed64()
+		m.KeyOrHandle = &TlsCbKeyHandle_TlscbHandle{x}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _TlsCbKeyHandle_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*TlsCbKeyHandle)
+	// key_or_handle
+	switch x := m.KeyOrHandle.(type) {
+	case *TlsCbKeyHandle_TlscbId:
+		n += proto.SizeVarint(1<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.TlscbId))
+	case *TlsCbKeyHandle_TlscbHandle:
+		n += proto.SizeVarint(2<<3 | proto.WireFixed64)
+		n += 8
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// TlsCbSpec captures all the tlscb level configuration
+type TlsCbSpec struct {
+	KeyOrHandle             *TlsCbKeyHandle `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+	NicDecHead              uint32          `protobuf:"varint,2,opt,name=nic_dec_head,json=nicDecHead,proto3" json:"nic_dec_head,omitempty"`
+	NicDecTail              uint32          `protobuf:"varint,3,opt,name=nic_dec_tail,json=nicDecTail,proto3" json:"nic_dec_tail,omitempty"`
+	Command                 uint32          `protobuf:"varint,4,opt,name=command,proto3" json:"command,omitempty"`
+	DebugDol                uint32          `protobuf:"varint,5,opt,name=debug_dol,json=debugDol,proto3" json:"debug_dol,omitempty"`
+	SerqPi                  uint32          `protobuf:"varint,6,opt,name=serq_pi,json=serqPi,proto3" json:"serq_pi,omitempty"`
+	SerqCi                  uint32          `protobuf:"varint,7,opt,name=serq_ci,json=serqCi,proto3" json:"serq_ci,omitempty"`
+	BsqPi                   uint32          `protobuf:"varint,8,opt,name=bsq_pi,json=bsqPi,proto3" json:"bsq_pi,omitempty"`
+	BsqCi                   uint32          `protobuf:"varint,9,opt,name=bsq_ci,json=bsqCi,proto3" json:"bsq_ci,omitempty"`
+	CryptoKeyIdx            uint32          `protobuf:"varint,10,opt,name=crypto_key_idx,json=cryptoKeyIdx,proto3" json:"crypto_key_idx,omitempty"`
+	SerqBase                uint32          `protobuf:"varint,11,opt,name=serq_base,json=serqBase,proto3" json:"serq_base,omitempty"`
+	SesqBase                uint32          `protobuf:"varint,12,opt,name=sesq_base,json=sesqBase,proto3" json:"sesq_base,omitempty"`
+	TnmdrAlloc              uint64          `protobuf:"fixed64,13,opt,name=tnmdr_alloc,json=tnmdrAlloc,proto3" json:"tnmdr_alloc,omitempty"`
+	TnmprAlloc              uint64          `protobuf:"fixed64,14,opt,name=tnmpr_alloc,json=tnmprAlloc,proto3" json:"tnmpr_alloc,omitempty"`
+	RnmdrFree               uint64          `protobuf:"fixed64,15,opt,name=rnmdr_free,json=rnmdrFree,proto3" json:"rnmdr_free,omitempty"`
+	RnmprFree               uint64          `protobuf:"fixed64,16,opt,name=rnmpr_free,json=rnmprFree,proto3" json:"rnmpr_free,omitempty"`
+	EncRequests             uint64          `protobuf:"fixed64,17,opt,name=enc_requests,json=encRequests,proto3" json:"enc_requests,omitempty"`
+	EncCompletions          uint64          `protobuf:"fixed64,18,opt,name=enc_completions,json=encCompletions,proto3" json:"enc_completions,omitempty"`
+	EncFailures             uint64          `protobuf:"fixed64,19,opt,name=enc_failures,json=encFailures,proto3" json:"enc_failures,omitempty"`
+	DecRequests             uint64          `protobuf:"fixed64,20,opt,name=dec_requests,json=decRequests,proto3" json:"dec_requests,omitempty"`
+	DecCompletions          uint64          `protobuf:"fixed64,21,opt,name=dec_completions,json=decCompletions,proto3" json:"dec_completions,omitempty"`
+	DecFailures             uint64          `protobuf:"fixed64,22,opt,name=dec_failures,json=decFailures,proto3" json:"dec_failures,omitempty"`
+	Salt                    uint32          `protobuf:"varint,23,opt,name=salt,proto3" json:"salt,omitempty"`
+	ExplicitIv              uint64          `protobuf:"varint,24,opt,name=explicit_iv,json=explicitIv,proto3" json:"explicit_iv,omitempty"`
+	PreDebugStage0_7Thread  uint32          `protobuf:"varint,25,opt,name=pre_debug_stage0_7_thread,json=preDebugStage07Thread,proto3" json:"pre_debug_stage0_7_thread,omitempty"`
+	PostDebugStage0_7Thread uint32          `protobuf:"varint,26,opt,name=post_debug_stage0_7_thread,json=postDebugStage07Thread,proto3" json:"post_debug_stage0_7_thread,omitempty"`
+	IsDecryptFlow           bool            `protobuf:"varint,27,opt,name=is_decrypt_flow,json=isDecryptFlow,proto3" json:"is_decrypt_flow,omitempty"`
+	OtherFid                uint32          `protobuf:"varint,28,opt,name=other_fid,json=otherFid,proto3" json:"other_fid,omitempty"`
+	L7ProxyType             AppRedirType    `protobuf:"varint,29,opt,name=l7_proxy_type,json=l7ProxyType,proto3,enum=types.AppRedirType" json:"l7_proxy_type,omitempty"`
+	CryptoHmacKeyIdx        uint32          `protobuf:"varint,30,opt,name=crypto_hmac_key_idx,json=cryptoHmacKeyIdx,proto3" json:"crypto_hmac_key_idx,omitempty"`
+	MacRequests             uint64          `protobuf:"fixed64,31,opt,name=mac_requests,json=macRequests,proto3" json:"mac_requests,omitempty"`
+	MacCompletions          uint64          `protobuf:"fixed64,32,opt,name=mac_completions,json=macCompletions,proto3" json:"mac_completions,omitempty"`
+	MacFailures             uint64          `protobuf:"fixed64,33,opt,name=mac_failures,json=macFailures,proto3" json:"mac_failures,omitempty"`
+	CpuId                   uint32          `protobuf:"varint,34,opt,name=cpu_id,json=cpuId,proto3" json:"cpu_id,omitempty"`
+}
+
+func (m *TlsCbSpec) Reset()                    { *m = TlsCbSpec{} }
+func (m *TlsCbSpec) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbSpec) ProtoMessage()               {}
+func (*TlsCbSpec) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{55} }
+
+func (m *TlsCbSpec) GetKeyOrHandle() *TlsCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+func (m *TlsCbSpec) GetNicDecHead() uint32 {
+	if m != nil {
+		return m.NicDecHead
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetNicDecTail() uint32 {
+	if m != nil {
+		return m.NicDecTail
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetCommand() uint32 {
+	if m != nil {
+		return m.Command
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetDebugDol() uint32 {
+	if m != nil {
+		return m.DebugDol
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetSerqPi() uint32 {
+	if m != nil {
+		return m.SerqPi
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetSerqCi() uint32 {
+	if m != nil {
+		return m.SerqCi
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetBsqPi() uint32 {
+	if m != nil {
+		return m.BsqPi
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetBsqCi() uint32 {
+	if m != nil {
+		return m.BsqCi
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetCryptoKeyIdx() uint32 {
+	if m != nil {
+		return m.CryptoKeyIdx
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetSerqBase() uint32 {
+	if m != nil {
+		return m.SerqBase
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetSesqBase() uint32 {
+	if m != nil {
+		return m.SesqBase
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetTnmdrAlloc() uint64 {
+	if m != nil {
+		return m.TnmdrAlloc
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetTnmprAlloc() uint64 {
+	if m != nil {
+		return m.TnmprAlloc
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetRnmdrFree() uint64 {
+	if m != nil {
+		return m.RnmdrFree
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetRnmprFree() uint64 {
+	if m != nil {
+		return m.RnmprFree
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetEncRequests() uint64 {
+	if m != nil {
+		return m.EncRequests
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetEncCompletions() uint64 {
+	if m != nil {
+		return m.EncCompletions
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetEncFailures() uint64 {
+	if m != nil {
+		return m.EncFailures
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetDecRequests() uint64 {
+	if m != nil {
+		return m.DecRequests
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetDecCompletions() uint64 {
+	if m != nil {
+		return m.DecCompletions
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetDecFailures() uint64 {
+	if m != nil {
+		return m.DecFailures
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetSalt() uint32 {
+	if m != nil {
+		return m.Salt
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetExplicitIv() uint64 {
+	if m != nil {
+		return m.ExplicitIv
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetPreDebugStage0_7Thread() uint32 {
+	if m != nil {
+		return m.PreDebugStage0_7Thread
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetPostDebugStage0_7Thread() uint32 {
+	if m != nil {
+		return m.PostDebugStage0_7Thread
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetIsDecryptFlow() bool {
+	if m != nil {
+		return m.IsDecryptFlow
+	}
+	return false
+}
+
+func (m *TlsCbSpec) GetOtherFid() uint32 {
+	if m != nil {
+		return m.OtherFid
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetL7ProxyType() AppRedirType {
+	if m != nil {
+		return m.L7ProxyType
+	}
+	return AppRedirType_APP_REDIR_TYPE_NONE
+}
+
+func (m *TlsCbSpec) GetCryptoHmacKeyIdx() uint32 {
+	if m != nil {
+		return m.CryptoHmacKeyIdx
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetMacRequests() uint64 {
+	if m != nil {
+		return m.MacRequests
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetMacCompletions() uint64 {
+	if m != nil {
+		return m.MacCompletions
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetMacFailures() uint64 {
+	if m != nil {
+		return m.MacFailures
+	}
+	return 0
+}
+
+func (m *TlsCbSpec) GetCpuId() uint32 {
+	if m != nil {
+		return m.CpuId
+	}
+	return 0
+}
+
+// TlsCbRequestMsg is batched add or modify tlscb request
+type TlsCbRequestMsg struct {
+	Request []*TlsCbSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TlsCbRequestMsg) Reset()                    { *m = TlsCbRequestMsg{} }
+func (m *TlsCbRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbRequestMsg) ProtoMessage()               {}
+func (*TlsCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{56} }
+
+func (m *TlsCbRequestMsg) GetRequest() []*TlsCbSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TlsCbStatus is the operational status of a given tlscb
+type TlsCbStatus struct {
+	TlscbHandle uint64 `protobuf:"fixed64,1,opt,name=tlscb_handle,json=tlscbHandle,proto3" json:"tlscb_handle,omitempty"`
+}
+
+func (m *TlsCbStatus) Reset()                    { *m = TlsCbStatus{} }
+func (m *TlsCbStatus) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbStatus) ProtoMessage()               {}
+func (*TlsCbStatus) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{57} }
+
+func (m *TlsCbStatus) GetTlscbHandle() uint64 {
+	if m != nil {
+		return m.TlscbHandle
+	}
+	return 0
+}
+
+// TlsCbResponse is response to TlsCbSpec
+type TlsCbResponse struct {
+	ApiStatus   ApiStatus    `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	TlscbStatus *TlsCbStatus `protobuf:"bytes,2,opt,name=tlscb_status,json=tlscbStatus" json:"tlscb_status,omitempty"`
+}
+
+func (m *TlsCbResponse) Reset()                    { *m = TlsCbResponse{} }
+func (m *TlsCbResponse) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbResponse) ProtoMessage()               {}
+func (*TlsCbResponse) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{58} }
+
+func (m *TlsCbResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *TlsCbResponse) GetTlscbStatus() *TlsCbStatus {
+	if m != nil {
+		return m.TlscbStatus
+	}
+	return nil
+}
+
+// TlsCbResponseMsg is batched response to TlsCbRequestMsg
+type TlsCbResponseMsg struct {
+	Response []*TlsCbResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *TlsCbResponseMsg) Reset()                    { *m = TlsCbResponseMsg{} }
+func (m *TlsCbResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbResponseMsg) ProtoMessage()               {}
+func (*TlsCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{59} }
+
+func (m *TlsCbResponseMsg) GetResponse() []*TlsCbResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+// TlsCbDeleteRequest is used to delete a tlscb
+type TlsCbDeleteRequest struct {
+	KeyOrHandle *TlsCbKeyHandle `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *TlsCbDeleteRequest) Reset()                    { *m = TlsCbDeleteRequest{} }
+func (m *TlsCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbDeleteRequest) ProtoMessage()               {}
+func (*TlsCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{60} }
+
+func (m *TlsCbDeleteRequest) GetKeyOrHandle() *TlsCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// TlsCbDeleteRequestMsg is used to delete a batch of tlscbs
+type TlsCbDeleteRequestMsg struct {
+	Request []*TlsCbDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TlsCbDeleteRequestMsg) Reset()                    { *m = TlsCbDeleteRequestMsg{} }
+func (m *TlsCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbDeleteRequestMsg) ProtoMessage()               {}
+func (*TlsCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{61} }
+
+func (m *TlsCbDeleteRequestMsg) GetRequest() []*TlsCbDeleteRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TlsCbDeleteResponseMsg is batched response to TlsCbDeleteRequestMsg
+type TlsCbDeleteResponseMsg struct {
+	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
+}
+
+func (m *TlsCbDeleteResponseMsg) Reset()                    { *m = TlsCbDeleteResponseMsg{} }
+func (m *TlsCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbDeleteResponseMsg) ProtoMessage()               {}
+func (*TlsCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{62} }
+
+func (m *TlsCbDeleteResponseMsg) GetApiStatus() []ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return nil
+}
+
+// TlsCbGetRequest is used to get information about a tlscb
+type TlsCbGetRequest struct {
+	KeyOrHandle *TlsCbKeyHandle `protobuf:"bytes,1,opt,name=key_or_handle,json=keyOrHandle" json:"key_or_handle,omitempty"`
+}
+
+func (m *TlsCbGetRequest) Reset()                    { *m = TlsCbGetRequest{} }
+func (m *TlsCbGetRequest) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbGetRequest) ProtoMessage()               {}
+func (*TlsCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{63} }
+
+func (m *TlsCbGetRequest) GetKeyOrHandle() *TlsCbKeyHandle {
+	if m != nil {
+		return m.KeyOrHandle
+	}
+	return nil
+}
+
+// TlsCbGetRequestMsg is batched GET requests for tlscbs
+type TlsCbGetRequestMsg struct {
+	Request []*TlsCbGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *TlsCbGetRequestMsg) Reset()                    { *m = TlsCbGetRequestMsg{} }
+func (m *TlsCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbGetRequestMsg) ProtoMessage()               {}
+func (*TlsCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{64} }
+
+func (m *TlsCbGetRequestMsg) GetRequest() []*TlsCbGetRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// TlsCbStats is the statistics object for each tlscb
+type TlsCbStats struct {
+}
+
+func (m *TlsCbStats) Reset()                    { *m = TlsCbStats{} }
+func (m *TlsCbStats) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbStats) ProtoMessage()               {}
+func (*TlsCbStats) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{65} }
+
+// TlsCbGetResponse captures all the information about a tlscb
+// only if api_status indicates success, other fields are valid
+type TlsCbGetResponse struct {
+	ApiStatus ApiStatus    `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	Spec      *TlsCbSpec   `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
+	Status    *TlsCbStatus `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+	Stats     *TlsCbStats  `protobuf:"bytes,4,opt,name=stats" json:"stats,omitempty"`
+}
+
+func (m *TlsCbGetResponse) Reset()                    { *m = TlsCbGetResponse{} }
+func (m *TlsCbGetResponse) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbGetResponse) ProtoMessage()               {}
+func (*TlsCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{66} }
+
+func (m *TlsCbGetResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *TlsCbGetResponse) GetSpec() *TlsCbSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return nil
+}
+
+func (m *TlsCbGetResponse) GetStatus() *TlsCbStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *TlsCbGetResponse) GetStats() *TlsCbStats {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
+// TlsCbGetResponseMsg is batched response to TlsCbGetRequestMsg
+type TlsCbGetResponseMsg struct {
+	Response []*TlsCbGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *TlsCbGetResponseMsg) Reset()                    { *m = TlsCbGetResponseMsg{} }
+func (m *TlsCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*TlsCbGetResponseMsg) ProtoMessage()               {}
+func (*TlsCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorInternal, []int{67} }
+
+func (m *TlsCbGetResponseMsg) GetResponse() []*TlsCbGetResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ProgramAddressReq)(nil), "internal.ProgramAddressReq")
 	proto.RegisterType((*ProgramAddressResp)(nil), "internal.ProgramAddressResp")
@@ -1262,6 +2918,34 @@ func init() {
 	proto.RegisterType((*IpsecCbStats)(nil), "internal.IpsecCbStats")
 	proto.RegisterType((*IpsecCbGetResponse)(nil), "internal.IpsecCbGetResponse")
 	proto.RegisterType((*IpsecCbGetResponseMsg)(nil), "internal.IpsecCbGetResponseMsg")
+	proto.RegisterType((*TcpCbKeyHandle)(nil), "internal.TcpCbKeyHandle")
+	proto.RegisterType((*TcpCbSpec)(nil), "internal.TcpCbSpec")
+	proto.RegisterType((*TcpCbRequestMsg)(nil), "internal.TcpCbRequestMsg")
+	proto.RegisterType((*TcpCbStatus)(nil), "internal.TcpCbStatus")
+	proto.RegisterType((*TcpCbResponse)(nil), "internal.TcpCbResponse")
+	proto.RegisterType((*TcpCbResponseMsg)(nil), "internal.TcpCbResponseMsg")
+	proto.RegisterType((*TcpCbDeleteRequest)(nil), "internal.TcpCbDeleteRequest")
+	proto.RegisterType((*TcpCbDeleteRequestMsg)(nil), "internal.TcpCbDeleteRequestMsg")
+	proto.RegisterType((*TcpCbDeleteResponseMsg)(nil), "internal.TcpCbDeleteResponseMsg")
+	proto.RegisterType((*TcpCbGetRequest)(nil), "internal.TcpCbGetRequest")
+	proto.RegisterType((*TcpCbGetRequestMsg)(nil), "internal.TcpCbGetRequestMsg")
+	proto.RegisterType((*TcpCbStats)(nil), "internal.TcpCbStats")
+	proto.RegisterType((*TcpCbGetResponse)(nil), "internal.TcpCbGetResponse")
+	proto.RegisterType((*TcpCbGetResponseMsg)(nil), "internal.TcpCbGetResponseMsg")
+	proto.RegisterType((*TlsCbKeyHandle)(nil), "internal.TlsCbKeyHandle")
+	proto.RegisterType((*TlsCbSpec)(nil), "internal.TlsCbSpec")
+	proto.RegisterType((*TlsCbRequestMsg)(nil), "internal.TlsCbRequestMsg")
+	proto.RegisterType((*TlsCbStatus)(nil), "internal.TlsCbStatus")
+	proto.RegisterType((*TlsCbResponse)(nil), "internal.TlsCbResponse")
+	proto.RegisterType((*TlsCbResponseMsg)(nil), "internal.TlsCbResponseMsg")
+	proto.RegisterType((*TlsCbDeleteRequest)(nil), "internal.TlsCbDeleteRequest")
+	proto.RegisterType((*TlsCbDeleteRequestMsg)(nil), "internal.TlsCbDeleteRequestMsg")
+	proto.RegisterType((*TlsCbDeleteResponseMsg)(nil), "internal.TlsCbDeleteResponseMsg")
+	proto.RegisterType((*TlsCbGetRequest)(nil), "internal.TlsCbGetRequest")
+	proto.RegisterType((*TlsCbGetRequestMsg)(nil), "internal.TlsCbGetRequestMsg")
+	proto.RegisterType((*TlsCbStats)(nil), "internal.TlsCbStats")
+	proto.RegisterType((*TlsCbGetResponse)(nil), "internal.TlsCbGetResponse")
+	proto.RegisterType((*TlsCbGetResponseMsg)(nil), "internal.TlsCbGetResponseMsg")
 	proto.RegisterEnum("internal.SoftwarePhvPipeline", SoftwarePhvPipeline_name, SoftwarePhvPipeline_value)
 }
 
@@ -1297,6 +2981,16 @@ type InternalClient interface {
 	IpsecCbUpdate(ctx context.Context, in *IpsecCbRequestMsg, opts ...grpc.CallOption) (*IpsecCbResponseMsg, error)
 	IpsecCbDelete(ctx context.Context, in *IpsecCbDeleteRequestMsg, opts ...grpc.CallOption) (*IpsecCbDeleteResponseMsg, error)
 	IpsecCbGet(ctx context.Context, in *IpsecCbGetRequestMsg, opts ...grpc.CallOption) (*IpsecCbGetResponseMsg, error)
+	// TcpCb
+	TcpCbCreate(ctx context.Context, in *TcpCbRequestMsg, opts ...grpc.CallOption) (*TcpCbResponseMsg, error)
+	TcpCbUpdate(ctx context.Context, in *TcpCbRequestMsg, opts ...grpc.CallOption) (*TcpCbResponseMsg, error)
+	TcpCbDelete(ctx context.Context, in *TcpCbDeleteRequestMsg, opts ...grpc.CallOption) (*TcpCbDeleteResponseMsg, error)
+	TcpCbGet(ctx context.Context, in *TcpCbGetRequestMsg, opts ...grpc.CallOption) (*TcpCbGetResponseMsg, error)
+	// TlsCb
+	TlsCbCreate(ctx context.Context, in *TlsCbRequestMsg, opts ...grpc.CallOption) (*TlsCbResponseMsg, error)
+	TlsCbUpdate(ctx context.Context, in *TlsCbRequestMsg, opts ...grpc.CallOption) (*TlsCbResponseMsg, error)
+	TlsCbDelete(ctx context.Context, in *TlsCbDeleteRequestMsg, opts ...grpc.CallOption) (*TlsCbDeleteResponseMsg, error)
+	TlsCbGet(ctx context.Context, in *TlsCbGetRequestMsg, opts ...grpc.CallOption) (*TlsCbGetResponseMsg, error)
 }
 
 type internalClient struct {
@@ -1424,6 +3118,78 @@ func (c *internalClient) IpsecCbGet(ctx context.Context, in *IpsecCbGetRequestMs
 	return out, nil
 }
 
+func (c *internalClient) TcpCbCreate(ctx context.Context, in *TcpCbRequestMsg, opts ...grpc.CallOption) (*TcpCbResponseMsg, error) {
+	out := new(TcpCbResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/TcpCbCreate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *internalClient) TcpCbUpdate(ctx context.Context, in *TcpCbRequestMsg, opts ...grpc.CallOption) (*TcpCbResponseMsg, error) {
+	out := new(TcpCbResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/TcpCbUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *internalClient) TcpCbDelete(ctx context.Context, in *TcpCbDeleteRequestMsg, opts ...grpc.CallOption) (*TcpCbDeleteResponseMsg, error) {
+	out := new(TcpCbDeleteResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/TcpCbDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *internalClient) TcpCbGet(ctx context.Context, in *TcpCbGetRequestMsg, opts ...grpc.CallOption) (*TcpCbGetResponseMsg, error) {
+	out := new(TcpCbGetResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/TcpCbGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *internalClient) TlsCbCreate(ctx context.Context, in *TlsCbRequestMsg, opts ...grpc.CallOption) (*TlsCbResponseMsg, error) {
+	out := new(TlsCbResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/TlsCbCreate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *internalClient) TlsCbUpdate(ctx context.Context, in *TlsCbRequestMsg, opts ...grpc.CallOption) (*TlsCbResponseMsg, error) {
+	out := new(TlsCbResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/TlsCbUpdate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *internalClient) TlsCbDelete(ctx context.Context, in *TlsCbDeleteRequestMsg, opts ...grpc.CallOption) (*TlsCbDeleteResponseMsg, error) {
+	out := new(TlsCbDeleteResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/TlsCbDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *internalClient) TlsCbGet(ctx context.Context, in *TlsCbGetRequestMsg, opts ...grpc.CallOption) (*TlsCbGetResponseMsg, error) {
+	out := new(TlsCbGetResponseMsg)
+	err := grpc.Invoke(ctx, "/internal.Internal/TlsCbGet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Internal service
 
 type InternalServer interface {
@@ -1448,6 +3214,16 @@ type InternalServer interface {
 	IpsecCbUpdate(context.Context, *IpsecCbRequestMsg) (*IpsecCbResponseMsg, error)
 	IpsecCbDelete(context.Context, *IpsecCbDeleteRequestMsg) (*IpsecCbDeleteResponseMsg, error)
 	IpsecCbGet(context.Context, *IpsecCbGetRequestMsg) (*IpsecCbGetResponseMsg, error)
+	// TcpCb
+	TcpCbCreate(context.Context, *TcpCbRequestMsg) (*TcpCbResponseMsg, error)
+	TcpCbUpdate(context.Context, *TcpCbRequestMsg) (*TcpCbResponseMsg, error)
+	TcpCbDelete(context.Context, *TcpCbDeleteRequestMsg) (*TcpCbDeleteResponseMsg, error)
+	TcpCbGet(context.Context, *TcpCbGetRequestMsg) (*TcpCbGetResponseMsg, error)
+	// TlsCb
+	TlsCbCreate(context.Context, *TlsCbRequestMsg) (*TlsCbResponseMsg, error)
+	TlsCbUpdate(context.Context, *TlsCbRequestMsg) (*TlsCbResponseMsg, error)
+	TlsCbDelete(context.Context, *TlsCbDeleteRequestMsg) (*TlsCbDeleteResponseMsg, error)
+	TlsCbGet(context.Context, *TlsCbGetRequestMsg) (*TlsCbGetResponseMsg, error)
 }
 
 func RegisterInternalServer(s *grpc.Server, srv InternalServer) {
@@ -1688,6 +3464,150 @@ func _Internal_IpsecCbGet_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Internal_TcpCbCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TcpCbRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).TcpCbCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/TcpCbCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).TcpCbCreate(ctx, req.(*TcpCbRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Internal_TcpCbUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TcpCbRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).TcpCbUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/TcpCbUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).TcpCbUpdate(ctx, req.(*TcpCbRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Internal_TcpCbDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TcpCbDeleteRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).TcpCbDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/TcpCbDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).TcpCbDelete(ctx, req.(*TcpCbDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Internal_TcpCbGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TcpCbGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).TcpCbGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/TcpCbGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).TcpCbGet(ctx, req.(*TcpCbGetRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Internal_TlsCbCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TlsCbRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).TlsCbCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/TlsCbCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).TlsCbCreate(ctx, req.(*TlsCbRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Internal_TlsCbUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TlsCbRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).TlsCbUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/TlsCbUpdate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).TlsCbUpdate(ctx, req.(*TlsCbRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Internal_TlsCbDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TlsCbDeleteRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).TlsCbDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/TlsCbDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).TlsCbDelete(ctx, req.(*TlsCbDeleteRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Internal_TlsCbGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TlsCbGetRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InternalServer).TlsCbGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/internal.Internal/TlsCbGet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InternalServer).TlsCbGet(ctx, req.(*TlsCbGetRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Internal_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "internal.Internal",
 	HandlerType: (*InternalServer)(nil),
@@ -1743,6 +3663,38 @@ var _Internal_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "IpsecCbGet",
 			Handler:    _Internal_IpsecCbGet_Handler,
+		},
+		{
+			MethodName: "TcpCbCreate",
+			Handler:    _Internal_TcpCbCreate_Handler,
+		},
+		{
+			MethodName: "TcpCbUpdate",
+			Handler:    _Internal_TcpCbUpdate_Handler,
+		},
+		{
+			MethodName: "TcpCbDelete",
+			Handler:    _Internal_TcpCbDelete_Handler,
+		},
+		{
+			MethodName: "TcpCbGet",
+			Handler:    _Internal_TcpCbGet_Handler,
+		},
+		{
+			MethodName: "TlsCbCreate",
+			Handler:    _Internal_TlsCbCreate_Handler,
+		},
+		{
+			MethodName: "TlsCbUpdate",
+			Handler:    _Internal_TlsCbUpdate_Handler,
+		},
+		{
+			MethodName: "TlsCbDelete",
+			Handler:    _Internal_TlsCbDelete_Handler,
+		},
+		{
+			MethodName: "TlsCbGet",
+			Handler:    _Internal_TlsCbGet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -3216,6 +5168,1694 @@ func (m *IpsecCbGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *TcpCbKeyHandle) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbKeyHandle) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		nn14, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn14
+	}
+	return i, nil
+}
+
+func (m *TcpCbKeyHandle_TcpcbId) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintInternal(dAtA, i, uint64(m.TcpcbId))
+	return i, nil
+}
+func (m *TcpCbKeyHandle_TcpcbHandle) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x11
+	i++
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TcpcbHandle))
+	i += 8
+	return i, nil
+}
+func (m *TcpCbSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n15, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n15
+	}
+	if m.RcvNxt != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RcvNxt))
+	}
+	if m.SndNxt != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SndNxt))
+	}
+	if m.SndUna != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SndUna))
+	}
+	if m.RcvTsval != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RcvTsval))
+	}
+	if m.TsRecent != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.TsRecent))
+	}
+	if m.SerqBase != 0 {
+		dAtA[i] = 0x39
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SerqBase))
+		i += 8
+	}
+	if m.DebugDol != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugDol))
+	}
+	if m.SesqBase != 0 {
+		dAtA[i] = 0x49
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.SesqBase))
+		i += 8
+	}
+	if m.SesqPi != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SesqPi))
+	}
+	if m.SesqCi != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SesqCi))
+	}
+	if m.SndWnd != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SndWnd))
+	}
+	if m.SndCwnd != 0 {
+		dAtA[i] = 0x68
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SndCwnd))
+	}
+	if m.RcvMss != 0 {
+		dAtA[i] = 0x70
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RcvMss))
+	}
+	if m.SourcePort != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SourcePort))
+	}
+	if m.DestPort != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DestPort))
+	}
+	if len(m.HeaderTemplate) > 0 {
+		dAtA[i] = 0x8a
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(len(m.HeaderTemplate)))
+		i += copy(dAtA[i:], m.HeaderTemplate)
+	}
+	if m.State != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.State))
+	}
+	if m.SourceLif != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SourceLif))
+	}
+	if m.AsesqBase != 0 {
+		dAtA[i] = 0xa1
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.AsesqBase))
+		i += 8
+	}
+	if m.AsesqPi != 0 {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.AsesqPi))
+	}
+	if m.AsesqCi != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.AsesqCi))
+	}
+	if m.DebugDolTx != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugDolTx))
+	}
+	if m.HeaderLen != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.HeaderLen))
+	}
+	if m.PendingAckSend {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.PendingAckSend {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.L7ProxyType != 0 {
+		dAtA[i] = 0xd0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.L7ProxyType))
+	}
+	if m.SesqRetxCi != 0 {
+		dAtA[i] = 0xd8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SesqRetxCi))
+	}
+	if m.RetxSndUna != 0 {
+		dAtA[i] = 0xe0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RetxSndUna))
+	}
+	if m.RxTs != 0 {
+		dAtA[i] = 0xe8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RxTs))
+	}
+	if m.Rto != 0 {
+		dAtA[i] = 0xf0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Rto))
+	}
+	if m.SndCwndCnt != 0 {
+		dAtA[i] = 0xf8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SndCwndCnt))
+	}
+	if m.DebugDolTblsetaddr != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugDolTblsetaddr))
+	}
+	if m.SerqPi != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SerqPi))
+	}
+	if m.PredFlags != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PredFlags))
+	}
+	if m.OtherQid != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.OtherQid))
+	}
+	if m.PacketsOut != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PacketsOut))
+	}
+	if m.RtoPi != 0 {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RtoPi))
+	}
+	if m.RetxTimerCi != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RetxTimerCi))
+	}
+	if m.RtoBackoff != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RtoBackoff))
+	}
+	if m.CpuId != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.CpuId))
+	}
+	if m.SerqCi != 0 {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SerqCi))
+	}
+	return i, nil
+}
+
+func (m *TcpCbRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TcpCbStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.TcpcbHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TcpcbHandle))
+		i += 8
+	}
+	return i, nil
+}
+
+func (m *TcpCbResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.TcpcbStatus != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.TcpcbStatus.Size()))
+		n16, err := m.TcpcbStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n16
+	}
+	return i, nil
+}
+
+func (m *TcpCbResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TcpCbDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n17, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n17
+	}
+	return i, nil
+}
+
+func (m *TcpCbDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TcpCbDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		dAtA19 := make([]byte, len(m.ApiStatus)*10)
+		var j18 int
+		for _, num := range m.ApiStatus {
+			for num >= 1<<7 {
+				dAtA19[j18] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j18++
+			}
+			dAtA19[j18] = uint8(num)
+			j18++
+		}
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(j18))
+		i += copy(dAtA[i:], dAtA19[:j18])
+	}
+	return i, nil
+}
+
+func (m *TcpCbGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n20, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n20
+	}
+	return i, nil
+}
+
+func (m *TcpCbGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TcpCbStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.BytesRcvd != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.BytesRcvd))
+	}
+	if m.PktsRcvd != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PktsRcvd))
+	}
+	if m.PagesAlloced != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PagesAlloced))
+	}
+	if m.DescAlloced != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DescAlloced))
+	}
+	if m.DebugNumPktToMem != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugNumPktToMem))
+	}
+	if m.DebugNumPhvToMem != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugNumPhvToMem))
+	}
+	if m.DebugAtomicDelta != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugAtomicDelta))
+	}
+	if m.DebugAtomic0Incr1247 != 0 {
+		dAtA[i] = 0x48
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugAtomic0Incr1247))
+	}
+	if m.DebugAtomic1Incr247 != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugAtomic1Incr247))
+	}
+	if m.DebugAtomic2Incr47 != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugAtomic2Incr47))
+	}
+	if m.DebugAtomic3Incr47 != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugAtomic3Incr47))
+	}
+	if m.DebugAtomic4Incr7 != 0 {
+		dAtA[i] = 0x68
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugAtomic4Incr7))
+	}
+	if m.DebugAtomic5Incr7 != 0 {
+		dAtA[i] = 0x70
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugAtomic5Incr7))
+	}
+	if m.DebugAtomic6Incr7 != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugAtomic6Incr7))
+	}
+	if m.BytesAcked != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.BytesAcked))
+	}
+	if m.SlowPathCnt != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SlowPathCnt))
+	}
+	if m.SerqFullCnt != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SerqFullCnt))
+	}
+	if m.OooCnt != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.OooCnt))
+	}
+	if m.BytesSent != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.BytesSent))
+	}
+	if m.PktsSent != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PktsSent))
+	}
+	if m.DebugNumPhvToPkt != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugNumPhvToPkt))
+	}
+	if m.DebugNumMemToPkt != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugNumMemToPkt))
+	}
+	if m.SesqPi != 0 {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SesqPi))
+	}
+	if m.SesqCi != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SesqCi))
+	}
+	if m.SendAckPi != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SendAckPi))
+	}
+	if m.SendAckCi != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SendAckCi))
+	}
+	if m.DelAckPi != 0 {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DelAckPi))
+	}
+	if m.DelAckCi != 0 {
+		dAtA[i] = 0xd0
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DelAckCi))
+	}
+	if m.RetxTimerPi != 0 {
+		dAtA[i] = 0xd8
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RetxTimerPi))
+	}
+	if m.RetxTimerCi != 0 {
+		dAtA[i] = 0xe0
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RetxTimerCi))
+	}
+	if m.AsesqPi != 0 {
+		dAtA[i] = 0xe8
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.AsesqPi))
+	}
+	if m.AsesqCi != 0 {
+		dAtA[i] = 0xf0
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.AsesqCi))
+	}
+	if m.PendingTxPi != 0 {
+		dAtA[i] = 0xf8
+		i++
+		dAtA[i] = 0xf1
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PendingTxPi))
+	}
+	if m.PendingTxCi != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PendingTxCi))
+	}
+	if m.FastRetransPi != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.FastRetransPi))
+	}
+	if m.FastRetransCi != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.FastRetransCi))
+	}
+	if m.CleanRetxPi != 0 {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.CleanRetxPi))
+	}
+	if m.CleanRetxCi != 0 {
+		dAtA[i] = 0xa0
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.CleanRetxCi))
+	}
+	if m.PacketsOut != 0 {
+		dAtA[i] = 0xa8
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PacketsOut))
+	}
+	if m.RtoPi != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.RtoPi))
+	}
+	if m.SesqRetxCi != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SesqRetxCi))
+	}
+	if m.AsesqRetxCi != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.AsesqRetxCi))
+	}
+	if m.TxRingPi != 0 {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.TxRingPi))
+	}
+	if m.PartialAckCnt != 0 {
+		dAtA[i] = 0xd0
+		i++
+		dAtA[i] = 0xf2
+		i++
+		dAtA[i] = 0x4
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PartialAckCnt))
+	}
+	return i, nil
+}
+
+func (m *TcpCbGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Spec.Size()))
+		n21, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n21
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Status.Size()))
+		n22, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n22
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Stats.Size()))
+		n23, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n23
+	}
+	return i, nil
+}
+
+func (m *TcpCbGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TcpCbGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TlsCbKeyHandle) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbKeyHandle) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		nn24, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn24
+	}
+	return i, nil
+}
+
+func (m *TlsCbKeyHandle_TlscbId) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	i = encodeVarintInternal(dAtA, i, uint64(m.TlscbId))
+	return i, nil
+}
+func (m *TlsCbKeyHandle_TlscbHandle) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x11
+	i++
+	encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TlscbHandle))
+	i += 8
+	return i, nil
+}
+func (m *TlsCbSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n25, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n25
+	}
+	if m.NicDecHead != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.NicDecHead))
+	}
+	if m.NicDecTail != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.NicDecTail))
+	}
+	if m.Command != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Command))
+	}
+	if m.DebugDol != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.DebugDol))
+	}
+	if m.SerqPi != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SerqPi))
+	}
+	if m.SerqCi != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SerqCi))
+	}
+	if m.BsqPi != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.BsqPi))
+	}
+	if m.BsqCi != 0 {
+		dAtA[i] = 0x48
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.BsqCi))
+	}
+	if m.CryptoKeyIdx != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.CryptoKeyIdx))
+	}
+	if m.SerqBase != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SerqBase))
+	}
+	if m.SesqBase != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.SesqBase))
+	}
+	if m.TnmdrAlloc != 0 {
+		dAtA[i] = 0x69
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TnmdrAlloc))
+		i += 8
+	}
+	if m.TnmprAlloc != 0 {
+		dAtA[i] = 0x71
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TnmprAlloc))
+		i += 8
+	}
+	if m.RnmdrFree != 0 {
+		dAtA[i] = 0x79
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.RnmdrFree))
+		i += 8
+	}
+	if m.RnmprFree != 0 {
+		dAtA[i] = 0x81
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.RnmprFree))
+		i += 8
+	}
+	if m.EncRequests != 0 {
+		dAtA[i] = 0x89
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.EncRequests))
+		i += 8
+	}
+	if m.EncCompletions != 0 {
+		dAtA[i] = 0x91
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.EncCompletions))
+		i += 8
+	}
+	if m.EncFailures != 0 {
+		dAtA[i] = 0x99
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.EncFailures))
+		i += 8
+	}
+	if m.DecRequests != 0 {
+		dAtA[i] = 0xa1
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DecRequests))
+		i += 8
+	}
+	if m.DecCompletions != 0 {
+		dAtA[i] = 0xa9
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DecCompletions))
+		i += 8
+	}
+	if m.DecFailures != 0 {
+		dAtA[i] = 0xb1
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.DecFailures))
+		i += 8
+	}
+	if m.Salt != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Salt))
+	}
+	if m.ExplicitIv != 0 {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.ExplicitIv))
+	}
+	if m.PreDebugStage0_7Thread != 0 {
+		dAtA[i] = 0xc8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PreDebugStage0_7Thread))
+	}
+	if m.PostDebugStage0_7Thread != 0 {
+		dAtA[i] = 0xd0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.PostDebugStage0_7Thread))
+	}
+	if m.IsDecryptFlow {
+		dAtA[i] = 0xd8
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.IsDecryptFlow {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.OtherFid != 0 {
+		dAtA[i] = 0xe0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.OtherFid))
+	}
+	if m.L7ProxyType != 0 {
+		dAtA[i] = 0xe8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.L7ProxyType))
+	}
+	if m.CryptoHmacKeyIdx != 0 {
+		dAtA[i] = 0xf0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.CryptoHmacKeyIdx))
+	}
+	if m.MacRequests != 0 {
+		dAtA[i] = 0xf9
+		i++
+		dAtA[i] = 0x1
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MacRequests))
+		i += 8
+	}
+	if m.MacCompletions != 0 {
+		dAtA[i] = 0x81
+		i++
+		dAtA[i] = 0x2
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MacCompletions))
+		i += 8
+	}
+	if m.MacFailures != 0 {
+		dAtA[i] = 0x89
+		i++
+		dAtA[i] = 0x2
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.MacFailures))
+		i += 8
+	}
+	if m.CpuId != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x2
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.CpuId))
+	}
+	return i, nil
+}
+
+func (m *TlsCbRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TlsCbStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.TlscbHandle != 0 {
+		dAtA[i] = 0x9
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.TlscbHandle))
+		i += 8
+	}
+	return i, nil
+}
+
+func (m *TlsCbResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.TlscbStatus != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.TlscbStatus.Size()))
+		n26, err := m.TlscbStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n26
+	}
+	return i, nil
+}
+
+func (m *TlsCbResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TlsCbDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n27, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n27
+	}
+	return i, nil
+}
+
+func (m *TlsCbDeleteRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbDeleteRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TlsCbDeleteResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbDeleteResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		dAtA29 := make([]byte, len(m.ApiStatus)*10)
+		var j28 int
+		for _, num := range m.ApiStatus {
+			for num >= 1<<7 {
+				dAtA29[j28] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j28++
+			}
+			dAtA29[j28] = uint8(num)
+			j28++
+		}
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(j28))
+		i += copy(dAtA[i:], dAtA29[:j28])
+	}
+	return i, nil
+}
+
+func (m *TlsCbGetRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbGetRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.KeyOrHandle.Size()))
+		n30, err := m.KeyOrHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n30
+	}
+	return i, nil
+}
+
+func (m *TlsCbGetRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbGetRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *TlsCbStats) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbStats) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	return i, nil
+}
+
+func (m *TlsCbGetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbGetResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Spec.Size()))
+		n31, err := m.Spec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n31
+	}
+	if m.Status != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Status.Size()))
+		n32, err := m.Status.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n32
+	}
+	if m.Stats != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintInternal(dAtA, i, uint64(m.Stats.Size()))
+		n33, err := m.Stats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n33
+	}
+	return i, nil
+}
+
+func (m *TlsCbGetResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TlsCbGetResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintInternal(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeVarintInternal(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -3805,6 +7445,704 @@ func (m *IpsecCbGetResponse) Size() (n int) {
 }
 
 func (m *IpsecCbGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpCbKeyHandle) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		n += m.KeyOrHandle.Size()
+	}
+	return n
+}
+
+func (m *TcpCbKeyHandle_TcpcbId) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovInternal(uint64(m.TcpcbId))
+	return n
+}
+func (m *TcpCbKeyHandle_TcpcbHandle) Size() (n int) {
+	var l int
+	_ = l
+	n += 9
+	return n
+}
+func (m *TcpCbSpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	if m.RcvNxt != 0 {
+		n += 1 + sovInternal(uint64(m.RcvNxt))
+	}
+	if m.SndNxt != 0 {
+		n += 1 + sovInternal(uint64(m.SndNxt))
+	}
+	if m.SndUna != 0 {
+		n += 1 + sovInternal(uint64(m.SndUna))
+	}
+	if m.RcvTsval != 0 {
+		n += 1 + sovInternal(uint64(m.RcvTsval))
+	}
+	if m.TsRecent != 0 {
+		n += 1 + sovInternal(uint64(m.TsRecent))
+	}
+	if m.SerqBase != 0 {
+		n += 9
+	}
+	if m.DebugDol != 0 {
+		n += 1 + sovInternal(uint64(m.DebugDol))
+	}
+	if m.SesqBase != 0 {
+		n += 9
+	}
+	if m.SesqPi != 0 {
+		n += 1 + sovInternal(uint64(m.SesqPi))
+	}
+	if m.SesqCi != 0 {
+		n += 1 + sovInternal(uint64(m.SesqCi))
+	}
+	if m.SndWnd != 0 {
+		n += 1 + sovInternal(uint64(m.SndWnd))
+	}
+	if m.SndCwnd != 0 {
+		n += 1 + sovInternal(uint64(m.SndCwnd))
+	}
+	if m.RcvMss != 0 {
+		n += 1 + sovInternal(uint64(m.RcvMss))
+	}
+	if m.SourcePort != 0 {
+		n += 1 + sovInternal(uint64(m.SourcePort))
+	}
+	if m.DestPort != 0 {
+		n += 2 + sovInternal(uint64(m.DestPort))
+	}
+	l = len(m.HeaderTemplate)
+	if l > 0 {
+		n += 2 + l + sovInternal(uint64(l))
+	}
+	if m.State != 0 {
+		n += 2 + sovInternal(uint64(m.State))
+	}
+	if m.SourceLif != 0 {
+		n += 2 + sovInternal(uint64(m.SourceLif))
+	}
+	if m.AsesqBase != 0 {
+		n += 10
+	}
+	if m.AsesqPi != 0 {
+		n += 2 + sovInternal(uint64(m.AsesqPi))
+	}
+	if m.AsesqCi != 0 {
+		n += 2 + sovInternal(uint64(m.AsesqCi))
+	}
+	if m.DebugDolTx != 0 {
+		n += 2 + sovInternal(uint64(m.DebugDolTx))
+	}
+	if m.HeaderLen != 0 {
+		n += 2 + sovInternal(uint64(m.HeaderLen))
+	}
+	if m.PendingAckSend {
+		n += 3
+	}
+	if m.L7ProxyType != 0 {
+		n += 2 + sovInternal(uint64(m.L7ProxyType))
+	}
+	if m.SesqRetxCi != 0 {
+		n += 2 + sovInternal(uint64(m.SesqRetxCi))
+	}
+	if m.RetxSndUna != 0 {
+		n += 2 + sovInternal(uint64(m.RetxSndUna))
+	}
+	if m.RxTs != 0 {
+		n += 2 + sovInternal(uint64(m.RxTs))
+	}
+	if m.Rto != 0 {
+		n += 2 + sovInternal(uint64(m.Rto))
+	}
+	if m.SndCwndCnt != 0 {
+		n += 2 + sovInternal(uint64(m.SndCwndCnt))
+	}
+	if m.DebugDolTblsetaddr != 0 {
+		n += 2 + sovInternal(uint64(m.DebugDolTblsetaddr))
+	}
+	if m.SerqPi != 0 {
+		n += 2 + sovInternal(uint64(m.SerqPi))
+	}
+	if m.PredFlags != 0 {
+		n += 2 + sovInternal(uint64(m.PredFlags))
+	}
+	if m.OtherQid != 0 {
+		n += 2 + sovInternal(uint64(m.OtherQid))
+	}
+	if m.PacketsOut != 0 {
+		n += 2 + sovInternal(uint64(m.PacketsOut))
+	}
+	if m.RtoPi != 0 {
+		n += 2 + sovInternal(uint64(m.RtoPi))
+	}
+	if m.RetxTimerCi != 0 {
+		n += 2 + sovInternal(uint64(m.RetxTimerCi))
+	}
+	if m.RtoBackoff != 0 {
+		n += 2 + sovInternal(uint64(m.RtoBackoff))
+	}
+	if m.CpuId != 0 {
+		n += 2 + sovInternal(uint64(m.CpuId))
+	}
+	if m.SerqCi != 0 {
+		n += 2 + sovInternal(uint64(m.SerqCi))
+	}
+	return n
+}
+
+func (m *TcpCbRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpCbStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.TcpcbHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *TcpCbResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovInternal(uint64(m.ApiStatus))
+	}
+	if m.TcpcbStatus != nil {
+		l = m.TcpcbStatus.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	return n
+}
+
+func (m *TcpCbResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpCbDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	return n
+}
+
+func (m *TcpCbDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpCbDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		l = 0
+		for _, e := range m.ApiStatus {
+			l += sovInternal(uint64(e))
+		}
+		n += 1 + sovInternal(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *TcpCbGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	return n
+}
+
+func (m *TcpCbGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TcpCbStats) Size() (n int) {
+	var l int
+	_ = l
+	if m.BytesRcvd != 0 {
+		n += 1 + sovInternal(uint64(m.BytesRcvd))
+	}
+	if m.PktsRcvd != 0 {
+		n += 1 + sovInternal(uint64(m.PktsRcvd))
+	}
+	if m.PagesAlloced != 0 {
+		n += 1 + sovInternal(uint64(m.PagesAlloced))
+	}
+	if m.DescAlloced != 0 {
+		n += 1 + sovInternal(uint64(m.DescAlloced))
+	}
+	if m.DebugNumPktToMem != 0 {
+		n += 1 + sovInternal(uint64(m.DebugNumPktToMem))
+	}
+	if m.DebugNumPhvToMem != 0 {
+		n += 1 + sovInternal(uint64(m.DebugNumPhvToMem))
+	}
+	if m.DebugAtomicDelta != 0 {
+		n += 1 + sovInternal(uint64(m.DebugAtomicDelta))
+	}
+	if m.DebugAtomic0Incr1247 != 0 {
+		n += 1 + sovInternal(uint64(m.DebugAtomic0Incr1247))
+	}
+	if m.DebugAtomic1Incr247 != 0 {
+		n += 1 + sovInternal(uint64(m.DebugAtomic1Incr247))
+	}
+	if m.DebugAtomic2Incr47 != 0 {
+		n += 1 + sovInternal(uint64(m.DebugAtomic2Incr47))
+	}
+	if m.DebugAtomic3Incr47 != 0 {
+		n += 1 + sovInternal(uint64(m.DebugAtomic3Incr47))
+	}
+	if m.DebugAtomic4Incr7 != 0 {
+		n += 1 + sovInternal(uint64(m.DebugAtomic4Incr7))
+	}
+	if m.DebugAtomic5Incr7 != 0 {
+		n += 1 + sovInternal(uint64(m.DebugAtomic5Incr7))
+	}
+	if m.DebugAtomic6Incr7 != 0 {
+		n += 1 + sovInternal(uint64(m.DebugAtomic6Incr7))
+	}
+	if m.BytesAcked != 0 {
+		n += 2 + sovInternal(uint64(m.BytesAcked))
+	}
+	if m.SlowPathCnt != 0 {
+		n += 2 + sovInternal(uint64(m.SlowPathCnt))
+	}
+	if m.SerqFullCnt != 0 {
+		n += 2 + sovInternal(uint64(m.SerqFullCnt))
+	}
+	if m.OooCnt != 0 {
+		n += 2 + sovInternal(uint64(m.OooCnt))
+	}
+	if m.BytesSent != 0 {
+		n += 3 + sovInternal(uint64(m.BytesSent))
+	}
+	if m.PktsSent != 0 {
+		n += 3 + sovInternal(uint64(m.PktsSent))
+	}
+	if m.DebugNumPhvToPkt != 0 {
+		n += 3 + sovInternal(uint64(m.DebugNumPhvToPkt))
+	}
+	if m.DebugNumMemToPkt != 0 {
+		n += 3 + sovInternal(uint64(m.DebugNumMemToPkt))
+	}
+	if m.SesqPi != 0 {
+		n += 3 + sovInternal(uint64(m.SesqPi))
+	}
+	if m.SesqCi != 0 {
+		n += 3 + sovInternal(uint64(m.SesqCi))
+	}
+	if m.SendAckPi != 0 {
+		n += 3 + sovInternal(uint64(m.SendAckPi))
+	}
+	if m.SendAckCi != 0 {
+		n += 3 + sovInternal(uint64(m.SendAckCi))
+	}
+	if m.DelAckPi != 0 {
+		n += 3 + sovInternal(uint64(m.DelAckPi))
+	}
+	if m.DelAckCi != 0 {
+		n += 3 + sovInternal(uint64(m.DelAckCi))
+	}
+	if m.RetxTimerPi != 0 {
+		n += 3 + sovInternal(uint64(m.RetxTimerPi))
+	}
+	if m.RetxTimerCi != 0 {
+		n += 3 + sovInternal(uint64(m.RetxTimerCi))
+	}
+	if m.AsesqPi != 0 {
+		n += 3 + sovInternal(uint64(m.AsesqPi))
+	}
+	if m.AsesqCi != 0 {
+		n += 3 + sovInternal(uint64(m.AsesqCi))
+	}
+	if m.PendingTxPi != 0 {
+		n += 3 + sovInternal(uint64(m.PendingTxPi))
+	}
+	if m.PendingTxCi != 0 {
+		n += 3 + sovInternal(uint64(m.PendingTxCi))
+	}
+	if m.FastRetransPi != 0 {
+		n += 3 + sovInternal(uint64(m.FastRetransPi))
+	}
+	if m.FastRetransCi != 0 {
+		n += 3 + sovInternal(uint64(m.FastRetransCi))
+	}
+	if m.CleanRetxPi != 0 {
+		n += 3 + sovInternal(uint64(m.CleanRetxPi))
+	}
+	if m.CleanRetxCi != 0 {
+		n += 3 + sovInternal(uint64(m.CleanRetxCi))
+	}
+	if m.PacketsOut != 0 {
+		n += 3 + sovInternal(uint64(m.PacketsOut))
+	}
+	if m.RtoPi != 0 {
+		n += 3 + sovInternal(uint64(m.RtoPi))
+	}
+	if m.SesqRetxCi != 0 {
+		n += 3 + sovInternal(uint64(m.SesqRetxCi))
+	}
+	if m.AsesqRetxCi != 0 {
+		n += 3 + sovInternal(uint64(m.AsesqRetxCi))
+	}
+	if m.TxRingPi != 0 {
+		n += 3 + sovInternal(uint64(m.TxRingPi))
+	}
+	if m.PartialAckCnt != 0 {
+		n += 3 + sovInternal(uint64(m.PartialAckCnt))
+	}
+	return n
+}
+
+func (m *TcpCbGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovInternal(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	return n
+}
+
+func (m *TcpCbGetResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TlsCbKeyHandle) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		n += m.KeyOrHandle.Size()
+	}
+	return n
+}
+
+func (m *TlsCbKeyHandle_TlscbId) Size() (n int) {
+	var l int
+	_ = l
+	n += 1 + sovInternal(uint64(m.TlscbId))
+	return n
+}
+func (m *TlsCbKeyHandle_TlscbHandle) Size() (n int) {
+	var l int
+	_ = l
+	n += 9
+	return n
+}
+func (m *TlsCbSpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	if m.NicDecHead != 0 {
+		n += 1 + sovInternal(uint64(m.NicDecHead))
+	}
+	if m.NicDecTail != 0 {
+		n += 1 + sovInternal(uint64(m.NicDecTail))
+	}
+	if m.Command != 0 {
+		n += 1 + sovInternal(uint64(m.Command))
+	}
+	if m.DebugDol != 0 {
+		n += 1 + sovInternal(uint64(m.DebugDol))
+	}
+	if m.SerqPi != 0 {
+		n += 1 + sovInternal(uint64(m.SerqPi))
+	}
+	if m.SerqCi != 0 {
+		n += 1 + sovInternal(uint64(m.SerqCi))
+	}
+	if m.BsqPi != 0 {
+		n += 1 + sovInternal(uint64(m.BsqPi))
+	}
+	if m.BsqCi != 0 {
+		n += 1 + sovInternal(uint64(m.BsqCi))
+	}
+	if m.CryptoKeyIdx != 0 {
+		n += 1 + sovInternal(uint64(m.CryptoKeyIdx))
+	}
+	if m.SerqBase != 0 {
+		n += 1 + sovInternal(uint64(m.SerqBase))
+	}
+	if m.SesqBase != 0 {
+		n += 1 + sovInternal(uint64(m.SesqBase))
+	}
+	if m.TnmdrAlloc != 0 {
+		n += 9
+	}
+	if m.TnmprAlloc != 0 {
+		n += 9
+	}
+	if m.RnmdrFree != 0 {
+		n += 9
+	}
+	if m.RnmprFree != 0 {
+		n += 10
+	}
+	if m.EncRequests != 0 {
+		n += 10
+	}
+	if m.EncCompletions != 0 {
+		n += 10
+	}
+	if m.EncFailures != 0 {
+		n += 10
+	}
+	if m.DecRequests != 0 {
+		n += 10
+	}
+	if m.DecCompletions != 0 {
+		n += 10
+	}
+	if m.DecFailures != 0 {
+		n += 10
+	}
+	if m.Salt != 0 {
+		n += 2 + sovInternal(uint64(m.Salt))
+	}
+	if m.ExplicitIv != 0 {
+		n += 2 + sovInternal(uint64(m.ExplicitIv))
+	}
+	if m.PreDebugStage0_7Thread != 0 {
+		n += 2 + sovInternal(uint64(m.PreDebugStage0_7Thread))
+	}
+	if m.PostDebugStage0_7Thread != 0 {
+		n += 2 + sovInternal(uint64(m.PostDebugStage0_7Thread))
+	}
+	if m.IsDecryptFlow {
+		n += 3
+	}
+	if m.OtherFid != 0 {
+		n += 2 + sovInternal(uint64(m.OtherFid))
+	}
+	if m.L7ProxyType != 0 {
+		n += 2 + sovInternal(uint64(m.L7ProxyType))
+	}
+	if m.CryptoHmacKeyIdx != 0 {
+		n += 2 + sovInternal(uint64(m.CryptoHmacKeyIdx))
+	}
+	if m.MacRequests != 0 {
+		n += 10
+	}
+	if m.MacCompletions != 0 {
+		n += 10
+	}
+	if m.MacFailures != 0 {
+		n += 10
+	}
+	if m.CpuId != 0 {
+		n += 2 + sovInternal(uint64(m.CpuId))
+	}
+	return n
+}
+
+func (m *TlsCbRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TlsCbStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.TlscbHandle != 0 {
+		n += 9
+	}
+	return n
+}
+
+func (m *TlsCbResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovInternal(uint64(m.ApiStatus))
+	}
+	if m.TlscbStatus != nil {
+		l = m.TlscbStatus.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	return n
+}
+
+func (m *TlsCbResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TlsCbDeleteRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	return n
+}
+
+func (m *TlsCbDeleteRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TlsCbDeleteResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.ApiStatus) > 0 {
+		l = 0
+		for _, e := range m.ApiStatus {
+			l += sovInternal(uint64(e))
+		}
+		n += 1 + sovInternal(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *TlsCbGetRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.KeyOrHandle != nil {
+		l = m.KeyOrHandle.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	return n
+}
+
+func (m *TlsCbGetRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovInternal(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TlsCbStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *TlsCbGetResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovInternal(uint64(m.ApiStatus))
+	}
+	if m.Spec != nil {
+		l = m.Spec.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	if m.Status != nil {
+		l = m.Status.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	if m.Stats != nil {
+		l = m.Stats.Size()
+		n += 1 + l + sovInternal(uint64(l))
+	}
+	return n
+}
+
+func (m *TlsCbGetResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -7895,6 +12233,4553 @@ func (m *IpsecCbGetResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *TcpCbKeyHandle) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbKeyHandle: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpcbId", wireType)
+			}
+			var v uint32
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.KeyOrHandle = &TcpCbKeyHandle_TcpcbId{v}
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpcbHandle", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.KeyOrHandle = &TcpCbKeyHandle_TcpcbHandle{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TcpCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RcvNxt", wireType)
+			}
+			m.RcvNxt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RcvNxt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndNxt", wireType)
+			}
+			m.SndNxt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndNxt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndUna", wireType)
+			}
+			m.SndUna = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndUna |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RcvTsval", wireType)
+			}
+			m.RcvTsval = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RcvTsval |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TsRecent", wireType)
+			}
+			m.TsRecent = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TsRecent |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqBase", wireType)
+			}
+			m.SerqBase = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SerqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugDol", wireType)
+			}
+			m.DebugDol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugDol |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqBase", wireType)
+			}
+			m.SesqBase = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SesqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqPi", wireType)
+			}
+			m.SesqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqCi", wireType)
+			}
+			m.SesqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndWnd", wireType)
+			}
+			m.SndWnd = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndWnd |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndCwnd", wireType)
+			}
+			m.SndCwnd = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndCwnd |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RcvMss", wireType)
+			}
+			m.RcvMss = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RcvMss |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourcePort", wireType)
+			}
+			m.SourcePort = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourcePort |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DestPort", wireType)
+			}
+			m.DestPort = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DestPort |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderTemplate", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HeaderTemplate = append(m.HeaderTemplate[:0], dAtA[iNdEx:postIndex]...)
+			if m.HeaderTemplate == nil {
+				m.HeaderTemplate = []byte{}
+			}
+			iNdEx = postIndex
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			m.State = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.State |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SourceLif", wireType)
+			}
+			m.SourceLif = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SourceLif |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 20:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqBase", wireType)
+			}
+			m.AsesqBase = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AsesqBase = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 21:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqPi", wireType)
+			}
+			m.AsesqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AsesqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 22:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqCi", wireType)
+			}
+			m.AsesqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AsesqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 23:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugDolTx", wireType)
+			}
+			m.DebugDolTx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugDolTx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 24:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HeaderLen", wireType)
+			}
+			m.HeaderLen = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HeaderLen |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 25:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingAckSend", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.PendingAckSend = bool(v != 0)
+		case 26:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field L7ProxyType", wireType)
+			}
+			m.L7ProxyType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.L7ProxyType |= (AppRedirType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 27:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqRetxCi", wireType)
+			}
+			m.SesqRetxCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqRetxCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 28:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetxSndUna", wireType)
+			}
+			m.RetxSndUna = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RetxSndUna |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 29:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxTs", wireType)
+			}
+			m.RxTs = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxTs |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 30:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Rto", wireType)
+			}
+			m.Rto = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Rto |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 31:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SndCwndCnt", wireType)
+			}
+			m.SndCwndCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SndCwndCnt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 32:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugDolTblsetaddr", wireType)
+			}
+			m.DebugDolTblsetaddr = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugDolTblsetaddr |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 33:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqPi", wireType)
+			}
+			m.SerqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 34:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PredFlags", wireType)
+			}
+			m.PredFlags = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PredFlags |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 35:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OtherQid", wireType)
+			}
+			m.OtherQid = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OtherQid |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 36:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PacketsOut", wireType)
+			}
+			m.PacketsOut = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PacketsOut |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 37:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RtoPi", wireType)
+			}
+			m.RtoPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RtoPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 38:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetxTimerCi", wireType)
+			}
+			m.RetxTimerCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RetxTimerCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 39:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RtoBackoff", wireType)
+			}
+			m.RtoBackoff = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RtoBackoff |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 40:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CpuId", wireType)
+			}
+			m.CpuId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CpuId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 41:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqCi", wireType)
+			}
+			m.SerqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TcpCbSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpcbHandle", wireType)
+			}
+			m.TcpcbHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TcpcbHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TcpcbStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TcpcbStatus == nil {
+				m.TcpcbStatus = &TcpCbStatus{}
+			}
+			if err := m.TcpcbStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &TcpCbResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TcpCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TcpCbDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v ApiStatus
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowInternal
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (ApiStatus(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.ApiStatus = append(m.ApiStatus, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowInternal
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthInternal
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v ApiStatus
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowInternal
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (ApiStatus(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ApiStatus = append(m.ApiStatus, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TcpCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TcpCbGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BytesRcvd", wireType)
+			}
+			m.BytesRcvd = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BytesRcvd |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PktsRcvd", wireType)
+			}
+			m.PktsRcvd = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PktsRcvd |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PagesAlloced", wireType)
+			}
+			m.PagesAlloced = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PagesAlloced |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DescAlloced", wireType)
+			}
+			m.DescAlloced = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DescAlloced |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugNumPktToMem", wireType)
+			}
+			m.DebugNumPktToMem = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugNumPktToMem |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugNumPhvToMem", wireType)
+			}
+			m.DebugNumPhvToMem = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugNumPhvToMem |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomicDelta", wireType)
+			}
+			m.DebugAtomicDelta = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomicDelta |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic0Incr1247", wireType)
+			}
+			m.DebugAtomic0Incr1247 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic0Incr1247 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic1Incr247", wireType)
+			}
+			m.DebugAtomic1Incr247 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic1Incr247 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic2Incr47", wireType)
+			}
+			m.DebugAtomic2Incr47 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic2Incr47 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic3Incr47", wireType)
+			}
+			m.DebugAtomic3Incr47 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic3Incr47 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic4Incr7", wireType)
+			}
+			m.DebugAtomic4Incr7 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic4Incr7 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic5Incr7", wireType)
+			}
+			m.DebugAtomic5Incr7 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic5Incr7 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugAtomic6Incr7", wireType)
+			}
+			m.DebugAtomic6Incr7 = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugAtomic6Incr7 |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BytesAcked", wireType)
+			}
+			m.BytesAcked = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BytesAcked |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SlowPathCnt", wireType)
+			}
+			m.SlowPathCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SlowPathCnt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqFullCnt", wireType)
+			}
+			m.SerqFullCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqFullCnt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OooCnt", wireType)
+			}
+			m.OooCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OooCnt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10001:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BytesSent", wireType)
+			}
+			m.BytesSent = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BytesSent |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10002:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PktsSent", wireType)
+			}
+			m.PktsSent = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PktsSent |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10003:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugNumPhvToPkt", wireType)
+			}
+			m.DebugNumPhvToPkt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugNumPhvToPkt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10004:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugNumMemToPkt", wireType)
+			}
+			m.DebugNumMemToPkt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugNumMemToPkt |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10005:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqPi", wireType)
+			}
+			m.SesqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10006:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqCi", wireType)
+			}
+			m.SesqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10007:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SendAckPi", wireType)
+			}
+			m.SendAckPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SendAckPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10008:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SendAckCi", wireType)
+			}
+			m.SendAckCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SendAckCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10009:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelAckPi", wireType)
+			}
+			m.DelAckPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelAckPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10010:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelAckCi", wireType)
+			}
+			m.DelAckCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DelAckCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10011:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetxTimerPi", wireType)
+			}
+			m.RetxTimerPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RetxTimerPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10012:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetxTimerCi", wireType)
+			}
+			m.RetxTimerCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RetxTimerCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10013:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqPi", wireType)
+			}
+			m.AsesqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AsesqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10014:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqCi", wireType)
+			}
+			m.AsesqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AsesqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10015:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingTxPi", wireType)
+			}
+			m.PendingTxPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PendingTxPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10016:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingTxCi", wireType)
+			}
+			m.PendingTxCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PendingTxCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10017:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FastRetransPi", wireType)
+			}
+			m.FastRetransPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FastRetransPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10018:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FastRetransCi", wireType)
+			}
+			m.FastRetransCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FastRetransCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10019:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CleanRetxPi", wireType)
+			}
+			m.CleanRetxPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CleanRetxPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10020:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CleanRetxCi", wireType)
+			}
+			m.CleanRetxCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CleanRetxCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10021:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PacketsOut", wireType)
+			}
+			m.PacketsOut = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PacketsOut |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10022:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RtoPi", wireType)
+			}
+			m.RtoPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RtoPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10023:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqRetxCi", wireType)
+			}
+			m.SesqRetxCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqRetxCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10024:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AsesqRetxCi", wireType)
+			}
+			m.AsesqRetxCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AsesqRetxCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10025:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxRingPi", wireType)
+			}
+			m.TxRingPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxRingPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10026:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PartialAckCnt", wireType)
+			}
+			m.PartialAckCnt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PartialAckCnt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &TcpCbSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &TcpCbStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &TcpCbStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TcpCbGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TcpCbGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TcpCbGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &TcpCbGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbKeyHandle) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbKeyHandle: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbKeyHandle: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TlscbId", wireType)
+			}
+			var v uint32
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.KeyOrHandle = &TlsCbKeyHandle_TlscbId{v}
+		case 2:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TlscbHandle", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.KeyOrHandle = &TlsCbKeyHandle_TlscbHandle{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TlsCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NicDecHead", wireType)
+			}
+			m.NicDecHead = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NicDecHead |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NicDecTail", wireType)
+			}
+			m.NicDecTail = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NicDecTail |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Command", wireType)
+			}
+			m.Command = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Command |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DebugDol", wireType)
+			}
+			m.DebugDol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DebugDol |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqPi", wireType)
+			}
+			m.SerqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqCi", wireType)
+			}
+			m.SerqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BsqPi", wireType)
+			}
+			m.BsqPi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BsqPi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BsqCi", wireType)
+			}
+			m.BsqCi = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BsqCi |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CryptoKeyIdx", wireType)
+			}
+			m.CryptoKeyIdx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CryptoKeyIdx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SerqBase", wireType)
+			}
+			m.SerqBase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SerqBase |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SesqBase", wireType)
+			}
+			m.SesqBase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SesqBase |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 13:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TnmdrAlloc", wireType)
+			}
+			m.TnmdrAlloc = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TnmdrAlloc = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 14:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TnmprAlloc", wireType)
+			}
+			m.TnmprAlloc = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TnmprAlloc = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 15:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RnmdrFree", wireType)
+			}
+			m.RnmdrFree = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RnmdrFree = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 16:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RnmprFree", wireType)
+			}
+			m.RnmprFree = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RnmprFree = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 17:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EncRequests", wireType)
+			}
+			m.EncRequests = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EncRequests = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 18:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EncCompletions", wireType)
+			}
+			m.EncCompletions = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EncCompletions = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 19:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EncFailures", wireType)
+			}
+			m.EncFailures = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EncFailures = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 20:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DecRequests", wireType)
+			}
+			m.DecRequests = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DecRequests = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 21:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DecCompletions", wireType)
+			}
+			m.DecCompletions = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DecCompletions = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 22:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DecFailures", wireType)
+			}
+			m.DecFailures = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DecFailures = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 23:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Salt", wireType)
+			}
+			m.Salt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Salt |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 24:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExplicitIv", wireType)
+			}
+			m.ExplicitIv = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ExplicitIv |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 25:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PreDebugStage0_7Thread", wireType)
+			}
+			m.PreDebugStage0_7Thread = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PreDebugStage0_7Thread |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 26:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PostDebugStage0_7Thread", wireType)
+			}
+			m.PostDebugStage0_7Thread = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PostDebugStage0_7Thread |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 27:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IsDecryptFlow", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IsDecryptFlow = bool(v != 0)
+		case 28:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OtherFid", wireType)
+			}
+			m.OtherFid = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OtherFid |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 29:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field L7ProxyType", wireType)
+			}
+			m.L7ProxyType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.L7ProxyType |= (AppRedirType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 30:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CryptoHmacKeyIdx", wireType)
+			}
+			m.CryptoHmacKeyIdx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CryptoHmacKeyIdx |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 31:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MacRequests", wireType)
+			}
+			m.MacRequests = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MacRequests = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 32:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MacCompletions", wireType)
+			}
+			m.MacCompletions = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MacCompletions = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 33:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MacFailures", wireType)
+			}
+			m.MacFailures = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MacFailures = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		case 34:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CpuId", wireType)
+			}
+			m.CpuId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CpuId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TlsCbSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TlscbHandle", wireType)
+			}
+			m.TlscbHandle = 0
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TlscbHandle = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TlscbStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TlscbStatus == nil {
+				m.TlscbStatus = &TlsCbStatus{}
+			}
+			if err := m.TlscbStatus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &TlsCbResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TlsCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbDeleteRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbDeleteRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbDeleteRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TlsCbDeleteRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbDeleteResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbDeleteResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbDeleteResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v ApiStatus
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowInternal
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (ApiStatus(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.ApiStatus = append(m.ApiStatus, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowInternal
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthInternal
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				for iNdEx < postIndex {
+					var v ApiStatus
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowInternal
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (ApiStatus(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ApiStatus = append(m.ApiStatus, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbGetRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbGetRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyOrHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.KeyOrHandle == nil {
+				m.KeyOrHandle = &TlsCbKeyHandle{}
+			}
+			if err := m.KeyOrHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbGetRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbGetRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbGetRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &TlsCbGetRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbStats) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbStats: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbStats: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbGetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbGetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Spec == nil {
+				m.Spec = &TlsCbSpec{}
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Status == nil {
+				m.Status = &TlsCbStatus{}
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Stats == nil {
+				m.Stats = &TlsCbStats{}
+			}
+			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TlsCbGetResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowInternal
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TlsCbGetResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TlsCbGetResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowInternal
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthInternal
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &TlsCbGetResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipInternal(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthInternal
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipInternal(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -8003,119 +16888,255 @@ var (
 func init() { proto.RegisterFile("internal.proto", fileDescriptorInternal) }
 
 var fileDescriptorInternal = []byte{
-	// 1823 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0x5b, 0x53, 0x1b, 0xc9,
-	0x15, 0x46, 0x60, 0x90, 0x38, 0x42, 0x02, 0x9a, 0xdb, 0x20, 0x6c, 0xc0, 0xb3, 0x37, 0x72, 0xb3,
-	0x13, 0xd6, 0x4b, 0xad, 0xab, 0x92, 0x4d, 0xb8, 0xd9, 0x10, 0x63, 0xcc, 0x8e, 0x6c, 0xbc, 0x49,
-	0xaa, 0x32, 0x35, 0x9a, 0x69, 0x41, 0x87, 0xd1, 0xcc, 0x78, 0xba, 0x11, 0xd2, 0x3e, 0x26, 0xef,
-	0xf9, 0x43, 0x79, 0xc9, 0x63, 0xde, 0x92, 0x5f, 0x90, 0xda, 0xf2, 0x63, 0x7e, 0x45, 0xaa, 0x2f,
-	0x73, 0x97, 0x84, 0x63, 0xf2, 0xa4, 0xe9, 0x73, 0xf9, 0xfa, 0xdc, 0xfa, 0x9c, 0x6e, 0x41, 0x9d,
-	0x78, 0x0c, 0x87, 0x9e, 0xe5, 0x3e, 0x0a, 0x42, 0x9f, 0xf9, 0xa8, 0x12, 0xad, 0x1b, 0x55, 0xd6,
-	0x0f, 0x30, 0x95, 0xe4, 0x46, 0xb5, 0x7d, 0xe3, 0xfa, 0x17, 0x72, 0xa1, 0xff, 0xa5, 0x04, 0xf3,
-	0x67, 0xa1, 0x7f, 0x11, 0x5a, 0x9d, 0x5d, 0xc7, 0x09, 0x31, 0xa5, 0x06, 0x7e, 0x87, 0x96, 0x61,
-	0xea, 0xd2, 0xf2, 0x1c, 0x17, 0x6b, 0xa5, 0xcd, 0xd2, 0xd6, 0xb4, 0xa1, 0x56, 0x68, 0x0d, 0xa6,
-	0x83, 0xd0, 0xbf, 0x30, 0x3d, 0xab, 0x83, 0xb5, 0x71, 0xc1, 0xaa, 0x70, 0xc2, 0xa9, 0xd5, 0xc1,
-	0xe8, 0x13, 0xa8, 0x85, 0x98, 0xfa, 0x6e, 0x17, 0x9b, 0xae, 0xd5, 0xc2, 0xae, 0x36, 0xb1, 0x59,
-	0xda, 0xaa, 0x18, 0x33, 0x8a, 0x78, 0xc2, 0x69, 0x68, 0x11, 0x26, 0x25, 0xf3, 0x9e, 0xd0, 0x96,
-	0x0b, 0x7d, 0x0b, 0x50, 0xde, 0x08, 0x1a, 0x20, 0x04, 0xf7, 0x2c, 0xc7, 0x09, 0x85, 0x0d, 0x13,
-	0x86, 0xf8, 0xd6, 0x5f, 0xc3, 0xda, 0x73, 0xcc, 0x0a, 0x16, 0x5f, 0x63, 0xca, 0x5e, 0xd2, 0x0b,
-	0xf4, 0x15, 0x94, 0x43, 0xb9, 0xd2, 0x4a, 0x9b, 0x13, 0x5b, 0xd5, 0xed, 0xb5, 0x47, 0x71, 0x50,
-	0x0a, 0x4a, 0x46, 0x24, 0xab, 0xbf, 0x81, 0xd5, 0xe2, 0xfe, 0xbe, 0x47, 0x31, 0xc7, 0xfc, 0x1a,
-	0x2a, 0xa1, 0x5a, 0x2a, 0xd0, 0xfb, 0xc3, 0x41, 0x69, 0x60, 0xc4, 0xd2, 0xfa, 0x17, 0x50, 0x3b,
-	0x6a, 0x7d, 0x40, 0x5c, 0xf5, 0xaf, 0xa1, 0x9e, 0x16, 0x1c, 0xec, 0x3b, 0xa7, 0x51, 0xf2, 0xbd,
-	0x0c, 0x7c, 0xcd, 0x10, 0xdf, 0xfa, 0x29, 0xac, 0xee, 0xba, 0xae, 0x6f, 0x67, 0xf6, 0x89, 0xa2,
-	0xf1, 0x8b, 0x7c, 0x34, 0x56, 0x12, 0xc3, 0x33, 0x0a, 0x49, 0x24, 0x0c, 0x68, 0x14, 0xf0, 0x92,
-	0x50, 0x3c, 0x29, 0x84, 0x42, 0x1b, 0x8c, 0x98, 0x09, 0xc3, 0x63, 0x98, 0x3e, 0x21, 0xed, 0x3d,
-	0xa7, 0xcd, 0x43, 0x30, 0x07, 0x13, 0x2e, 0x69, 0x0b, 0xbf, 0x6a, 0x06, 0xff, 0xe4, 0x94, 0x96,
-	0xd3, 0x56, 0x5e, 0xf1, 0x4f, 0xfd, 0x08, 0x20, 0x52, 0xa0, 0xc1, 0x87, 0x68, 0xf0, 0xc0, 0x52,
-	0x66, 0xb1, 0x6b, 0x2a, 0x8a, 0x6e, 0xd2, 0x50, 0x2b, 0xfd, 0xb7, 0xb0, 0xba, 0xef, 0x7b, 0x6d,
-	0x72, 0x71, 0x1d, 0xe2, 0xd8, 0x86, 0x28, 0x3c, 0x3f, 0xcb, 0x87, 0x67, 0x21, 0x71, 0x26, 0x16,
-	0x4e, 0x42, 0x73, 0x0a, 0x8d, 0x02, 0x56, 0x12, 0x9a, 0x9f, 0x17, 0x42, 0xb3, 0x58, 0x44, 0xcb,
-	0x84, 0xe5, 0xef, 0x25, 0x98, 0x6f, 0xfa, 0x6d, 0x76, 0x63, 0x85, 0xf8, 0xec, 0xb2, 0xdb, 0x14,
-	0x16, 0xa3, 0xa7, 0x50, 0x09, 0x48, 0x80, 0x5d, 0xe2, 0xc9, 0x22, 0xa9, 0x6f, 0x3f, 0x48, 0x70,
-	0x52, 0xe2, 0x67, 0x4a, 0xc8, 0x88, 0xc5, 0x91, 0x06, 0x65, 0xec, 0x59, 0x2d, 0x17, 0x3b, 0x22,
-	0x34, 0x15, 0x23, 0x5a, 0xf2, 0xca, 0x71, 0x7c, 0x0f, 0xab, 0x13, 0x29, 0xbe, 0xd1, 0x43, 0x98,
-	0xb1, 0xaf, 0xc3, 0x10, 0x7b, 0xcc, 0xb4, 0x3d, 0x16, 0x8a, 0x03, 0x59, 0x33, 0xaa, 0x8a, 0xb6,
-	0xef, 0xb1, 0x10, 0x6d, 0x40, 0x95, 0x78, 0x7f, 0xc2, 0xb6, 0x92, 0x98, 0x14, 0x12, 0x20, 0x49,
-	0x5c, 0x40, 0x3f, 0x87, 0x85, 0x94, 0x49, 0x51, 0x38, 0xd0, 0xaf, 0x01, 0xac, 0x80, 0x98, 0x2a,
-	0x23, 0xd2, 0x8b, 0xb9, 0x47, 0xb2, 0x07, 0xed, 0x06, 0x44, 0x7a, 0xba, 0x57, 0xff, 0xcf, 0xbf,
-	0x37, 0x52, 0x72, 0xc6, 0xb4, 0x15, 0xb1, 0xf4, 0x26, 0x2c, 0x0f, 0xc0, 0xe5, 0x61, 0x7e, 0x5a,
-	0x08, 0xf3, 0xe0, 0xf0, 0x44, 0x3a, 0xa9, 0x78, 0x1b, 0xb0, 0x94, 0x12, 0x78, 0x8e, 0x99, 0x2a,
-	0x85, 0x3b, 0x84, 0x5c, 0x7f, 0x03, 0xda, 0x40, 0x4c, 0x69, 0x6a, 0xae, 0xbc, 0x36, 0x06, 0xa2,
-	0x26, 0x4a, 0x49, 0xa9, 0xfd, 0xb5, 0x94, 0x09, 0x80, 0x10, 0xf9, 0x3f, 0xc5, 0x16, 0x7d, 0x19,
-	0x1f, 0x15, 0x5e, 0x24, 0x99, 0x0e, 0x59, 0xa8, 0xc6, 0xf8, 0x1c, 0xfd, 0x0e, 0x56, 0x07, 0xdb,
-	0xc3, 0x1d, 0xfd, 0x65, 0x21, 0x27, 0x9b, 0xc3, 0x3d, 0x2d, 0xa4, 0xe5, 0x34, 0x73, 0x0a, 0x8e,
-	0x45, 0x71, 0xdd, 0x25, 0x25, 0x2f, 0x61, 0xb1, 0x80, 0x77, 0xdb, 0x68, 0x28, 0x28, 0x24, 0xa9,
-	0xf8, 0x15, 0xcc, 0x9f, 0xf8, 0x17, 0xcf, 0x5c, 0xff, 0x26, 0x95, 0xda, 0xad, 0x3c, 0x56, 0xfd,
-	0x91, 0x1c, 0xaa, 0xcf, 0xde, 0x1e, 0x76, 0xb1, 0x97, 0x52, 0x7f, 0x01, 0x28, 0x56, 0x4f, 0x22,
-	0xf6, 0x55, 0x21, 0x62, 0xab, 0xa9, 0x66, 0x91, 0x95, 0xcf, 0x54, 0xf0, 0x6c, 0x8e, 0x79, 0xf7,
-	0xa3, 0xb6, 0x03, 0x33, 0x87, 0x9d, 0x80, 0xf5, 0xa3, 0xc3, 0xf0, 0x79, 0xde, 0xb5, 0x19, 0x85,
-	0x26, 0xa5, 0x62, 0xc7, 0x9e, 0x42, 0x4d, 0xe9, 0x29, 0x4b, 0xb6, 0x0a, 0x3e, 0x65, 0x35, 0x13,
-	0x37, 0x3a, 0x30, 0x77, 0x1c, 0x50, 0x6c, 0xef, 0xb7, 0x5e, 0xe0, 0xfe, 0x91, 0xbc, 0x59, 0x6c,
-	0x00, 0x10, 0x4e, 0xb3, 0x5b, 0x26, 0x71, 0x64, 0xaf, 0x3f, 0x1a, 0x33, 0xa6, 0x15, 0xed, 0xd8,
-	0x41, 0x5f, 0x40, 0x3d, 0x12, 0x50, 0x23, 0x94, 0x97, 0xef, 0xd4, 0xd1, 0x98, 0x51, 0x53, 0x74,
-	0x89, 0xb4, 0x37, 0x0b, 0xb5, 0x2b, 0xdc, 0x37, 0xfd, 0x50, 0xc9, 0xe9, 0x3f, 0x94, 0xa1, 0xaa,
-	0xf6, 0x6b, 0x06, 0xd8, 0x46, 0xdf, 0xe4, 0x04, 0xc4, 0x6e, 0xd5, 0xed, 0x46, 0x92, 0x81, 0xbc,
-	0x75, 0x46, 0xf5, 0x0a, 0xf7, 0x5f, 0x85, 0xca, 0xd4, 0x3a, 0x8c, 0x07, 0x44, 0x0d, 0x9f, 0xf1,
-	0x80, 0xf0, 0xb5, 0x4d, 0x44, 0x6b, 0xad, 0x19, 0xe3, 0x36, 0xe1, 0x5d, 0x93, 0x5d, 0x7b, 0x1e,
-	0x76, 0x4d, 0x4a, 0x82, 0x27, 0xaa, 0xaf, 0x82, 0x24, 0x35, 0x49, 0xf0, 0x24, 0x25, 0xe0, 0x70,
-	0x81, 0xc9, 0xb4, 0xc0, 0x01, 0x17, 0x58, 0x81, 0x32, 0xe9, 0x9a, 0x62, 0xd6, 0x4f, 0x09, 0xe6,
-	0x14, 0xe9, 0x36, 0xc9, 0xf7, 0x18, 0xad, 0x42, 0x85, 0xd8, 0x8a, 0x53, 0x16, 0x9c, 0x32, 0xb1,
-	0x25, 0xeb, 0x01, 0x40, 0xcb, 0xf5, 0xed, 0x2b, 0xc9, 0xac, 0x08, 0xe6, 0xb4, 0xa0, 0x08, 0xf6,
-	0x1a, 0x4c, 0x73, 0xa7, 0x89, 0xe7, 0xe0, 0x9e, 0x36, 0x2d, 0xb8, 0x95, 0x2b, 0xdc, 0x3f, 0xe6,
-	0x6b, 0xa4, 0x43, 0xad, 0x65, 0x85, 0xb6, 0x6f, 0x62, 0xcf, 0x36, 0xed, 0x8e, 0xa3, 0x81, 0x9c,
-	0x05, 0x82, 0x78, 0xe8, 0xd9, 0xfb, 0x1d, 0x87, 0x7b, 0x49, 0xba, 0x5a, 0x95, 0xc7, 0xdc, 0x18,
-	0x27, 0xdd, 0xc8, 0x46, 0xcb, 0x65, 0xda, 0x4c, 0x6c, 0xa3, 0xe5, 0x32, 0xb4, 0x04, 0x53, 0x98,
-	0x7a, 0xe6, 0x25, 0xd1, 0x6a, 0x82, 0x3e, 0x89, 0xa9, 0x77, 0x44, 0x22, 0xb2, 0xeb, 0x6b, 0xf5,
-	0x98, 0x7c, 0xe2, 0xf3, 0x51, 0x4e, 0x03, 0xa2, 0xcd, 0xca, 0x51, 0x4e, 0x03, 0x82, 0x3e, 0x87,
-	0x59, 0xdc, 0x0b, 0xb0, 0xcd, 0xb0, 0x63, 0x52, 0xfc, 0xce, 0xf4, 0x7c, 0x6d, 0x4e, 0x70, 0x6b,
-	0x11, 0xb9, 0x89, 0xdf, 0x9d, 0xfa, 0xe8, 0x3e, 0x80, 0x64, 0x9b, 0xad, 0x4e, 0xa0, 0xcd, 0x0b,
-	0xc3, 0x2a, 0x94, 0xb3, 0xf6, 0x3a, 0x01, 0xfa, 0x94, 0xdf, 0x95, 0x82, 0x1d, 0x0d, 0x89, 0xdc,
-	0x46, 0x27, 0xe2, 0xf8, 0x2c, 0xba, 0xa1, 0x08, 0x2e, 0x97, 0x72, 0xb8, 0xd4, 0xc2, 0x30, 0x29,
-	0xce, 0x45, 0x0b, 0x30, 0x49, 0xa8, 0xd9, 0xdd, 0xd1, 0x16, 0xe5, 0xc5, 0x8b, 0xd0, 0xf3, 0x1d,
-	0x9e, 0x8a, 0x6e, 0xd8, 0x36, 0xbb, 0xae, 0xe5, 0x69, 0x4b, 0x32, 0x15, 0xdd, 0xb0, 0x7d, 0xee,
-	0x5a, 0x1e, 0xfa, 0x09, 0x20, 0xd7, 0xa2, 0xcc, 0x0c, 0x71, 0xe0, 0x5a, 0xfd, 0xc8, 0x89, 0x65,
-	0x21, 0x34, 0xcb, 0x39, 0x86, 0x60, 0x48, 0x37, 0x56, 0xa0, 0xec, 0xe1, 0x1b, 0x93, 0x07, 0x61,
-	0x45, 0xc6, 0xd1, 0xc3, 0x37, 0xcd, 0x80, 0xf0, 0xa4, 0x70, 0x46, 0x92, 0x35, 0x4d, 0x26, 0xc5,
-	0xc3, 0x37, 0x2f, 0xa2, 0xc4, 0x69, 0x50, 0x21, 0xd4, 0xf4, 0x2c, 0x66, 0x32, 0x6d, 0x55, 0x65,
-	0x81, 0x9e, 0x5a, 0xec, 0x35, 0xbf, 0x67, 0xb7, 0x5d, 0xeb, 0x82, 0x6a, 0x0d, 0x19, 0x6d, 0xb1,
-	0xe0, 0x55, 0x40, 0xa8, 0x19, 0x5a, 0x9e, 0xe3, 0x77, 0xb4, 0x35, 0x59, 0x05, 0x84, 0x1a, 0x62,
-	0xcd, 0x99, 0xb8, 0xc7, 0x42, 0xcb, 0x0c, 0x2c, 0x47, 0xbb, 0x2f, 0x99, 0x82, 0x70, 0x66, 0x39,
-	0xdc, 0xcc, 0xb0, 0x67, 0x06, 0x57, 0x8c, 0x6a, 0x0f, 0xe4, 0x46, 0x61, 0xef, 0xec, 0x8a, 0x51,
-	0x1e, 0x87, 0xb0, 0x67, 0xb6, 0xfa, 0x0c, 0x53, 0x6d, 0x5d, 0x24, 0xa1, 0x1c, 0xf6, 0xf6, 0xf8,
-	0x52, 0xb1, 0x9c, 0xd0, 0x0f, 0xa8, 0xb6, 0x11, 0xb1, 0x0e, 0xf8, 0x92, 0xc3, 0x31, 0x05, 0xb7,
-	0x29, 0x38, 0x53, 0x2c, 0x86, 0x63, 0x11, 0xdc, 0x43, 0xa9, 0xc3, 0x12, 0x38, 0x16, 0xc1, 0xe9,
-	0x11, 0x4b, 0xc0, 0xe9, 0x07, 0x30, 0xaf, 0xce, 0x6c, 0xaa, 0x49, 0x3f, 0xce, 0x77, 0xb2, 0xa5,
-	0xc2, 0x09, 0xe7, 0xfd, 0x20, 0x69, 0x69, 0x3b, 0x50, 0x8b, 0xe8, 0x72, 0x54, 0x7e, 0x56, 0xe8,
-	0x39, 0x25, 0xb1, 0x6f, 0xb6, 0xe3, 0xe8, 0x7f, 0x2e, 0xc1, 0x6c, 0xbc, 0xbd, 0xea, 0x86, 0x8f,
-	0x3f, 0xa4, 0x2f, 0xa7, 0xc7, 0xf2, 0x37, 0xc9, 0x5e, 0x99, 0xf1, 0xbc, 0x52, 0x34, 0x5a, 0xea,
-	0x46, 0x46, 0xa8, 0x3e, 0xfe, 0x02, 0x50, 0xce, 0x86, 0x5b, 0x07, 0x4d, 0x4e, 0x3e, 0xd5, 0xa1,
-	0xcf, 0x61, 0x51, 0x31, 0x0f, 0xb0, 0x8b, 0x19, 0x8e, 0x86, 0xc3, 0x1d, 0x5b, 0xa7, 0xde, 0x84,
-	0x95, 0x41, 0xb8, 0xf2, 0x95, 0x95, 0xcb, 0xd6, 0x7a, 0x01, 0x34, 0xa3, 0x93, 0x1e, 0xb1, 0x5a,
-	0x4e, 0x20, 0xf1, 0x3f, 0x9f, 0x86, 0x89, 0x5b, 0xd2, 0xa0, 0x37, 0xe3, 0x4a, 0x4a, 0x5d, 0x10,
-	0xef, 0xea, 0xf6, 0xcb, 0x38, 0x9c, 0xd9, 0x1b, 0xe2, 0xa8, 0x2b, 0x49, 0x41, 0x21, 0x71, 0xb8,
-	0x0e, 0x33, 0xa9, 0x52, 0xa0, 0xfa, 0x3f, 0x4b, 0x71, 0xee, 0xd3, 0x37, 0xc5, 0xff, 0xb9, 0x04,
-	0x7f, 0x04, 0xf7, 0x68, 0x80, 0x6d, 0x55, 0x78, 0x43, 0x4e, 0x8b, 0x10, 0x41, 0x8f, 0x33, 0xef,
-	0xad, 0x11, 0x55, 0xaa, 0xc4, 0xd0, 0x4f, 0x61, 0x92, 0x7f, 0x51, 0x31, 0x0e, 0xab, 0xdb, 0xcb,
-	0x03, 0xe5, 0xa9, 0x21, 0x85, 0xf4, 0x6f, 0x61, 0xa9, 0xe8, 0xd0, 0xad, 0x6f, 0xf1, 0xa2, 0x4a,
-	0x52, 0xd2, 0x3f, 0xee, 0x65, 0x9e, 0x2a, 0xd1, 0xbd, 0x11, 0x2d, 0x03, 0x6a, 0xbe, 0x7a, 0xf6,
-	0xfa, 0xed, 0xae, 0x71, 0x68, 0x9e, 0x1d, 0x9d, 0x9b, 0xc6, 0x77, 0x07, 0x2f, 0x77, 0xe7, 0xc6,
-	0x0a, 0xf4, 0xd7, 0x82, 0x5e, 0x42, 0x1a, 0x2c, 0x66, 0xe8, 0xc7, 0xa7, 0xcf, 0x8d, 0xc3, 0x66,
-	0x73, 0x6e, 0x1c, 0xad, 0xc0, 0x42, 0x86, 0x73, 0x28, 0x19, 0x13, 0xdb, 0x7f, 0xab, 0x40, 0xe5,
-	0x58, 0xd9, 0x88, 0x2c, 0x98, 0x2f, 0xfc, 0x7f, 0x81, 0x3e, 0x4b, 0x7c, 0x18, 0xf1, 0xe7, 0x46,
-	0xe3, 0x93, 0x51, 0x7f, 0x3b, 0xa8, 0x08, 0xe9, 0x63, 0xe8, 0x8f, 0x30, 0x9b, 0x7b, 0xc2, 0xa3,
-	0x94, 0xe6, 0xd0, 0x7f, 0x0b, 0x1a, 0x9f, 0x8e, 0x10, 0xca, 0xe1, 0xe7, 0xde, 0xc1, 0x69, 0xfc,
-	0xa1, 0xcf, 0xed, 0x34, 0xfe, 0xf0, 0x77, 0xb4, 0x3e, 0x86, 0xde, 0x0e, 0x7a, 0x10, 0xac, 0x8f,
-	0xb8, 0xac, 0x73, 0xf0, 0xcd, 0x91, 0xaf, 0x40, 0x09, 0xfc, 0x07, 0xa8, 0x67, 0x5f, 0x23, 0x48,
-	0xbf, 0xe5, 0x45, 0x96, 0x8b, 0xfa, 0xd0, 0x27, 0x90, 0x3e, 0x86, 0x9e, 0x41, 0x59, 0xdd, 0xcd,
-	0xd1, 0xda, 0x80, 0xbb, 0x7c, 0x0c, 0x77, 0x7f, 0xe8, 0x45, 0x5f, 0xe2, 0xec, 0x41, 0xed, 0xdb,
-	0x6b, 0x82, 0xa9, 0xcd, 0xd7, 0x4d, 0xcf, 0x41, 0xa9, 0xa3, 0x92, 0xbe, 0xa8, 0x37, 0x56, 0x0a,
-	0x74, 0xd5, 0xbc, 0xc7, 0xd0, 0x2e, 0xcc, 0x28, 0x8c, 0x26, 0xb3, 0x42, 0xf6, 0x31, 0x10, 0xbf,
-	0x81, 0x6a, 0x0c, 0xe1, 0x07, 0x1f, 0x83, 0x70, 0x12, 0x4f, 0xd3, 0xfd, 0x10, 0x5b, 0x0c, 0xa3,
-	0xb5, 0x01, 0x93, 0x67, 0x50, 0x58, 0x8a, 0x63, 0x2c, 0x83, 0xf6, 0x26, 0x70, 0xee, 0x8c, 0xf6,
-	0x5d, 0x8c, 0x26, 0x47, 0x06, 0x7a, 0x38, 0x7a, 0xd8, 0x70, 0x4c, 0x7d, 0xa8, 0x48, 0x1a, 0xf9,
-	0x15, 0x40, 0xd2, 0x86, 0xd0, 0xfa, 0x88, 0x7e, 0xce, 0x31, 0x37, 0x46, 0x35, 0x2f, 0x01, 0xb8,
-	0x5d, 0x83, 0x6a, 0xaa, 0xec, 0xf6, 0x96, 0xff, 0xf1, 0x7e, 0xbd, 0xf4, 0xaf, 0xf7, 0xeb, 0xa5,
-	0x1f, 0xde, 0xaf, 0x97, 0x7e, 0x5f, 0xb9, 0xb4, 0x5c, 0xf1, 0x3f, 0x6e, 0x6b, 0x4a, 0xfc, 0x7c,
-	0xf9, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6b, 0xc7, 0x7e, 0x81, 0x04, 0x16, 0x00, 0x00,
+	// 3995 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x7b, 0x59, 0x73, 0xdc, 0x48,
+	0x72, 0x3f, 0x29, 0xf1, 0x68, 0x66, 0x1f, 0xa4, 0xc0, 0x0b, 0x24, 0x25, 0x1e, 0xad, 0x99, 0x91,
+	0x76, 0xff, 0x3b, 0x92, 0x86, 0xd2, 0x48, 0x33, 0xff, 0x58, 0xaf, 0x97, 0x87, 0x38, 0x6c, 0x4b,
+	0x6a, 0xf5, 0xa0, 0x39, 0x9a, 0xb5, 0x1d, 0x61, 0x04, 0x08, 0x54, 0x93, 0x65, 0xa2, 0x01, 0x08,
+	0x55, 0xdd, 0x6c, 0xce, 0xa3, 0xed, 0x67, 0x47, 0xf8, 0xf6, 0xfa, 0xbe, 0xaf, 0x4f, 0xb1, 0x6f,
+	0xf6, 0x9b, 0xfd, 0x09, 0x1c, 0x1b, 0xf3, 0xe8, 0x8f, 0xe0, 0x27, 0x47, 0x56, 0x15, 0xee, 0x6e,
+	0x52, 0x1a, 0xee, 0x13, 0x1b, 0x99, 0xbf, 0xcc, 0xaa, 0xca, 0x4a, 0x54, 0xfe, 0x12, 0x00, 0xa1,
+	0x46, 0x3d, 0x4e, 0x42, 0xcf, 0x72, 0x1f, 0x04, 0xa1, 0xcf, 0x7d, 0xad, 0x14, 0x5d, 0xaf, 0x96,
+	0xf9, 0x45, 0x40, 0x98, 0x14, 0xaf, 0x96, 0x3b, 0xe7, 0xae, 0x7f, 0x22, 0x2f, 0xea, 0xbf, 0x3d,
+	0x0e, 0xb7, 0x5a, 0xa1, 0x7f, 0x12, 0x5a, 0xdd, 0x1d, 0xc7, 0x09, 0x09, 0x63, 0x06, 0x79, 0xab,
+	0x2d, 0xc1, 0xd4, 0xa9, 0xe5, 0x39, 0x2e, 0xd1, 0xc7, 0x37, 0xc7, 0xef, 0xcf, 0x18, 0xea, 0x4a,
+	0x5b, 0x83, 0x99, 0x20, 0xf4, 0x4f, 0x4c, 0xcf, 0xea, 0x12, 0xfd, 0x86, 0x50, 0x95, 0x50, 0xd0,
+	0xb4, 0xba, 0x44, 0xbb, 0x0b, 0xd5, 0x90, 0x30, 0xdf, 0xed, 0x13, 0xd3, 0xb5, 0x8e, 0x89, 0xab,
+	0xdf, 0xdc, 0x1c, 0xbf, 0x5f, 0x32, 0x2a, 0x4a, 0xf8, 0x12, 0x65, 0xda, 0x02, 0x4c, 0x4a, 0xe5,
+	0x84, 0xb0, 0x96, 0x17, 0xf5, 0xfb, 0xa0, 0xe5, 0x27, 0xc1, 0x02, 0x4d, 0x83, 0x09, 0xcb, 0x71,
+	0x42, 0x31, 0x87, 0x9b, 0x86, 0xf8, 0x5d, 0x3f, 0x82, 0xb5, 0x2f, 0x08, 0x2f, 0xcc, 0xb8, 0x47,
+	0x18, 0x7f, 0xc5, 0x4e, 0xb4, 0x4f, 0x61, 0x3a, 0x94, 0x57, 0xfa, 0xf8, 0xe6, 0xcd, 0xfb, 0xe5,
+	0xed, 0xb5, 0x07, 0x71, 0x50, 0x0a, 0x46, 0x46, 0x84, 0xad, 0x7f, 0x05, 0x2b, 0xc5, 0xf1, 0x7d,
+	0x8f, 0x11, 0xf4, 0xf9, 0x19, 0x94, 0x42, 0x75, 0xa9, 0x9c, 0xde, 0x1e, 0xed, 0x94, 0x05, 0x46,
+	0x8c, 0xae, 0xdf, 0x83, 0xea, 0xe1, 0xf1, 0x3b, 0xc4, 0xb5, 0xfe, 0x19, 0xd4, 0xd2, 0xc0, 0xe1,
+	0x6b, 0x47, 0x19, 0xa3, 0xdf, 0xc8, 0xc0, 0x57, 0x0d, 0xf1, 0xbb, 0xde, 0x84, 0x95, 0x1d, 0xd7,
+	0xf5, 0xed, 0xcc, 0x38, 0x51, 0x34, 0x3e, 0xc9, 0x47, 0x63, 0x39, 0x99, 0x78, 0xc6, 0x20, 0x89,
+	0x84, 0x01, 0xab, 0x05, 0x7f, 0x49, 0x28, 0x9e, 0x14, 0x42, 0xa1, 0x0f, 0xf7, 0x98, 0x09, 0xc3,
+	0x43, 0x98, 0x79, 0x49, 0x3b, 0xbb, 0x4e, 0x07, 0x43, 0x30, 0x07, 0x37, 0x5d, 0xda, 0x11, 0xeb,
+	0xaa, 0x1a, 0xf8, 0x13, 0x25, 0xc7, 0x4e, 0x47, 0xad, 0x0a, 0x7f, 0xd6, 0x0f, 0x01, 0x22, 0x03,
+	0x16, 0xbc, 0x8b, 0x05, 0x06, 0x96, 0x71, 0x8b, 0xf7, 0x98, 0x48, 0xba, 0x49, 0x43, 0x5d, 0xd5,
+	0x7f, 0x05, 0x56, 0xf6, 0x7c, 0xaf, 0x43, 0x4f, 0x7a, 0x21, 0x89, 0xe7, 0x10, 0x85, 0xe7, 0xe3,
+	0x7c, 0x78, 0xe6, 0x93, 0xc5, 0xc4, 0xe0, 0x24, 0x34, 0x4d, 0x58, 0x2d, 0xf8, 0x4a, 0x42, 0xf3,
+	0xa8, 0x10, 0x9a, 0x85, 0xa2, 0xb7, 0x4c, 0x58, 0x7e, 0x36, 0x0e, 0xb7, 0xda, 0x7e, 0x87, 0x9f,
+	0x5b, 0x21, 0x69, 0x9d, 0xf6, 0xdb, 0x62, 0xc6, 0xda, 0xe7, 0x50, 0x0a, 0x68, 0x40, 0x5c, 0xea,
+	0xc9, 0x24, 0xa9, 0x6d, 0xdf, 0x49, 0xfc, 0xa4, 0xe0, 0x2d, 0x05, 0x32, 0x62, 0xb8, 0xa6, 0xc3,
+	0x34, 0xf1, 0xac, 0x63, 0x97, 0x38, 0x22, 0x34, 0x25, 0x23, 0xba, 0xc4, 0xcc, 0x71, 0x7c, 0x8f,
+	0xa8, 0x3b, 0x52, 0xfc, 0xd6, 0xb6, 0xa0, 0x62, 0xf7, 0xc2, 0x90, 0x78, 0xdc, 0xb4, 0x3d, 0x1e,
+	0x8a, 0x1b, 0xb2, 0x6a, 0x94, 0x95, 0x6c, 0xcf, 0xe3, 0xa1, 0xb6, 0x01, 0x65, 0xea, 0xfd, 0x26,
+	0xb1, 0x15, 0x62, 0x52, 0x20, 0x40, 0x8a, 0x10, 0x50, 0x7f, 0x03, 0xf3, 0xa9, 0x29, 0x45, 0xe1,
+	0xd0, 0x7e, 0x19, 0xc0, 0x0a, 0xa8, 0xa9, 0x76, 0x44, 0xae, 0x62, 0xee, 0x81, 0x3c, 0x83, 0x76,
+	0x02, 0x2a, 0x57, 0xba, 0x5b, 0xfb, 0x9f, 0xff, 0xde, 0x48, 0xe1, 0x8c, 0x19, 0x2b, 0x52, 0xd5,
+	0xdb, 0xb0, 0x34, 0xc4, 0x2f, 0x86, 0xf9, 0xf3, 0x42, 0x98, 0x87, 0x87, 0x27, 0xb2, 0x49, 0xc5,
+	0xdb, 0x80, 0xc5, 0x14, 0xe0, 0x0b, 0xc2, 0x55, 0x2a, 0x5c, 0x23, 0xe4, 0xf5, 0xaf, 0x40, 0x1f,
+	0xea, 0x53, 0x4e, 0x35, 0x97, 0x5e, 0x1b, 0x43, 0xbd, 0x26, 0x46, 0x49, 0xaa, 0xfd, 0xee, 0x78,
+	0x26, 0x00, 0x02, 0xf2, 0x0b, 0x8a, 0xad, 0xf6, 0x38, 0xbe, 0x55, 0x30, 0x49, 0x32, 0x27, 0x64,
+	0x21, 0x1b, 0xe3, 0xfb, 0xe8, 0x57, 0x61, 0x65, 0xf8, 0x7c, 0x70, 0xa1, 0x3f, 0x2c, 0xec, 0xc9,
+	0xe6, 0xe8, 0x95, 0x16, 0xb6, 0xa5, 0x99, 0xb9, 0x0b, 0x1a, 0x22, 0xb9, 0xae, 0xb3, 0x25, 0xaf,
+	0x60, 0xa1, 0xe0, 0xef, 0xaa, 0xd2, 0x50, 0x30, 0x48, 0xb6, 0xe2, 0x97, 0xe0, 0xd6, 0x4b, 0xff,
+	0xe4, 0xc0, 0xf5, 0xcf, 0x53, 0x5b, 0x7b, 0x3f, 0xef, 0xab, 0xf6, 0x40, 0x16, 0xd5, 0x83, 0xaf,
+	0x9f, 0xf7, 0x89, 0x97, 0x32, 0x7f, 0x01, 0x5a, 0x6c, 0x9e, 0x44, 0xec, 0xd3, 0x42, 0xc4, 0x56,
+	0x52, 0x87, 0x45, 0x16, 0x9f, 0xc9, 0xe0, 0xd9, 0x9c, 0xf2, 0xfa, 0xb7, 0xda, 0x53, 0xa8, 0x3c,
+	0xef, 0x06, 0xfc, 0x22, 0xba, 0x19, 0x3e, 0xca, 0x2f, 0xad, 0xa2, 0xbc, 0x49, 0x54, 0xbc, 0xb0,
+	0xcf, 0xa1, 0xaa, 0xec, 0xd4, 0x4c, 0xee, 0x17, 0xd6, 0x94, 0xb5, 0x4c, 0x96, 0xd1, 0x85, 0xb9,
+	0x46, 0xc0, 0x88, 0xbd, 0x77, 0xfc, 0x82, 0x5c, 0x1c, 0x4a, 0x66, 0xb1, 0x01, 0x40, 0x51, 0x66,
+	0x1f, 0x9b, 0xd4, 0x91, 0x67, 0xfd, 0xe1, 0x98, 0x31, 0xa3, 0x64, 0x0d, 0x47, 0xbb, 0x07, 0xb5,
+	0x08, 0xa0, 0x4a, 0x28, 0xa6, 0xef, 0xd4, 0xe1, 0x98, 0x51, 0x55, 0x72, 0xe9, 0x69, 0x77, 0x16,
+	0xaa, 0x67, 0xe4, 0xc2, 0xf4, 0x43, 0x85, 0xab, 0xff, 0x7c, 0x1a, 0xca, 0x6a, 0xbc, 0x76, 0x40,
+	0x6c, 0xed, 0x47, 0x39, 0x80, 0x18, 0xad, 0xbc, 0xbd, 0x9a, 0xec, 0x40, 0x7e, 0x76, 0x46, 0xf9,
+	0x8c, 0x5c, 0xbc, 0x0e, 0xd5, 0x54, 0x6b, 0x70, 0x23, 0xa0, 0xaa, 0xf8, 0xdc, 0x08, 0x28, 0x5e,
+	0xdb, 0x54, 0x1c, 0xad, 0x55, 0xe3, 0x86, 0x4d, 0xf1, 0xd4, 0xe4, 0x3d, 0xcf, 0x23, 0xae, 0xc9,
+	0x68, 0xf0, 0x44, 0x9d, 0xab, 0x20, 0x45, 0x6d, 0x1a, 0x3c, 0x49, 0x01, 0x1c, 0x04, 0x4c, 0xa6,
+	0x01, 0xfb, 0x08, 0x58, 0x86, 0x69, 0xda, 0x37, 0x45, 0xad, 0x9f, 0x12, 0xca, 0x29, 0xda, 0x6f,
+	0xd3, 0x6f, 0x88, 0xb6, 0x02, 0x25, 0x6a, 0x2b, 0xcd, 0xb4, 0xd0, 0x4c, 0x53, 0x5b, 0xaa, 0xee,
+	0x00, 0x1c, 0xbb, 0xbe, 0x7d, 0x26, 0x95, 0x25, 0xa1, 0x9c, 0x11, 0x12, 0xa1, 0x5e, 0x83, 0x19,
+	0x5c, 0x34, 0xf5, 0x1c, 0x32, 0xd0, 0x67, 0x84, 0xb6, 0x74, 0x46, 0x2e, 0x1a, 0x78, 0xad, 0xd5,
+	0xa1, 0x7a, 0x6c, 0x85, 0xb6, 0x6f, 0x12, 0xcf, 0x36, 0xed, 0xae, 0xa3, 0x83, 0xac, 0x05, 0x42,
+	0xf8, 0xdc, 0xb3, 0xf7, 0xba, 0x0e, 0xae, 0x92, 0xf6, 0xf5, 0x32, 0xc6, 0xdc, 0xb8, 0x41, 0xfb,
+	0xd1, 0x1c, 0x2d, 0x97, 0xeb, 0x95, 0x78, 0x8e, 0x96, 0xcb, 0xb5, 0x45, 0x98, 0x22, 0xcc, 0x33,
+	0x4f, 0xa9, 0x5e, 0x15, 0xf2, 0x49, 0xc2, 0xbc, 0x43, 0x1a, 0x89, 0x5d, 0x5f, 0xaf, 0xc5, 0xe2,
+	0x97, 0x3e, 0x96, 0x72, 0x16, 0x50, 0x7d, 0x56, 0x96, 0x72, 0x16, 0x50, 0xed, 0x23, 0x98, 0x25,
+	0x83, 0x80, 0xd8, 0x9c, 0x38, 0x26, 0x23, 0x6f, 0x4d, 0xcf, 0xd7, 0xe7, 0x84, 0xb6, 0x1a, 0x89,
+	0xdb, 0xe4, 0x6d, 0xd3, 0xd7, 0x6e, 0x03, 0x48, 0xb5, 0x79, 0xdc, 0x0d, 0xf4, 0x5b, 0x62, 0x62,
+	0x25, 0x86, 0xaa, 0xdd, 0x6e, 0xa0, 0x7d, 0x80, 0x5c, 0x29, 0x78, 0xaa, 0x6b, 0x62, 0x6f, 0xa3,
+	0x3b, 0xa2, 0xd1, 0x8a, 0x18, 0x8a, 0xd0, 0x22, 0xca, 0x41, 0xd4, 0xfc, 0x28, 0x14, 0x6a, 0xb5,
+	0x79, 0x98, 0xa4, 0xcc, 0xec, 0x3f, 0xd5, 0x17, 0x24, 0xf1, 0xa2, 0xec, 0xcd, 0x53, 0xdc, 0x8a,
+	0x7e, 0xd8, 0x31, 0xfb, 0xae, 0xe5, 0xe9, 0x8b, 0x72, 0x2b, 0xfa, 0x61, 0xe7, 0x8d, 0x6b, 0x79,
+	0xda, 0xff, 0x03, 0xcd, 0xb5, 0x18, 0x37, 0x43, 0x12, 0xb8, 0xd6, 0x45, 0xb4, 0x88, 0x25, 0x01,
+	0x9a, 0x45, 0x8d, 0x21, 0x14, 0x72, 0x19, 0xcb, 0x30, 0xed, 0x91, 0x73, 0x13, 0x83, 0xb0, 0x2c,
+	0xe3, 0xe8, 0x91, 0xf3, 0x76, 0x40, 0x71, 0x53, 0x50, 0x91, 0xec, 0x9a, 0x2e, 0x37, 0xc5, 0x23,
+	0xe7, 0x2f, 0xa2, 0x8d, 0xd3, 0xa1, 0x44, 0x99, 0xe9, 0x59, 0xdc, 0xe4, 0xfa, 0x8a, 0xda, 0x05,
+	0xd6, 0xb4, 0xf8, 0x11, 0xf2, 0xec, 0x8e, 0x6b, 0x9d, 0x30, 0x7d, 0x55, 0x46, 0x5b, 0x5c, 0x60,
+	0x16, 0x50, 0x66, 0x86, 0x96, 0xe7, 0xf8, 0x5d, 0x7d, 0x4d, 0x66, 0x01, 0x65, 0x86, 0xb8, 0x46,
+	0x25, 0x19, 0xf0, 0xd0, 0x32, 0x03, 0xcb, 0xd1, 0x6f, 0x4b, 0xa5, 0x10, 0xb4, 0x2c, 0x07, 0xa7,
+	0x19, 0x0e, 0xcc, 0xe0, 0x8c, 0x33, 0xfd, 0x8e, 0x1c, 0x28, 0x1c, 0xb4, 0xce, 0x38, 0xc3, 0x38,
+	0x84, 0x03, 0xf3, 0xf8, 0x82, 0x13, 0xa6, 0xaf, 0x8b, 0x4d, 0x98, 0x0e, 0x07, 0xbb, 0x78, 0xa9,
+	0x54, 0x4e, 0xe8, 0x07, 0x4c, 0xdf, 0x88, 0x54, 0xfb, 0x78, 0x89, 0xee, 0xb8, 0x72, 0xb7, 0x29,
+	0x34, 0x53, 0x3c, 0x76, 0xc7, 0x23, 0x77, 0x5b, 0xd2, 0x86, 0x27, 0xee, 0x78, 0xe4, 0xae, 0x1e,
+	0xa9, 0x84, 0xbb, 0xfa, 0x3e, 0xdc, 0x52, 0xf7, 0x6c, 0xea, 0x90, 0x7e, 0x98, 0x3f, 0xc9, 0x16,
+	0x0b, 0x77, 0x38, 0x9e, 0x07, 0xc9, 0x91, 0xf6, 0x14, 0xaa, 0x91, 0x5c, 0x96, 0xca, 0x0f, 0x0b,
+	0x67, 0xce, 0xb8, 0x18, 0x37, 0x7b, 0xe2, 0xd4, 0x7f, 0x6b, 0x1c, 0x66, 0xe3, 0xe1, 0xd5, 0x69,
+	0xf8, 0xf0, 0x5d, 0xce, 0xe5, 0x74, 0x59, 0xfe, 0x51, 0x32, 0x56, 0xa6, 0x3c, 0x2f, 0x17, 0x27,
+	0x2d, 0x6d, 0xa3, 0x49, 0xa8, 0x73, 0xfc, 0x05, 0x68, 0xb9, 0x39, 0x5c, 0x59, 0x68, 0x72, 0xf8,
+	0xd4, 0x09, 0xfd, 0x06, 0x16, 0x94, 0x72, 0x9f, 0xb8, 0x84, 0x93, 0xa8, 0x38, 0x5c, 0xf3, 0xe8,
+	0xac, 0xb7, 0x61, 0x79, 0x98, 0x5f, 0xd9, 0x65, 0xe5, 0x76, 0x6b, 0xbd, 0xe0, 0x34, 0x63, 0x93,
+	0x2e, 0xb1, 0x7a, 0x0e, 0x90, 0xac, 0x3f, 0xbf, 0x0d, 0x37, 0xaf, 0xd8, 0x86, 0x7a, 0x3b, 0xce,
+	0xa4, 0x14, 0x41, 0xbc, 0xee, 0xb2, 0x5f, 0xc5, 0xe1, 0xcc, 0x32, 0xc4, 0xcb, 0x28, 0x49, 0xc1,
+	0x20, 0x59, 0x70, 0x0d, 0x2a, 0xa9, 0x54, 0x60, 0xf5, 0xff, 0x1c, 0x8f, 0xf7, 0x3e, 0xcd, 0x14,
+	0xdf, 0x3b, 0x05, 0xbf, 0x07, 0x13, 0x2c, 0x20, 0xb6, 0x4a, 0xbc, 0x11, 0x77, 0x8b, 0x80, 0x68,
+	0x0f, 0x33, 0xfd, 0xd6, 0x25, 0x59, 0xaa, 0x60, 0xda, 0x0f, 0x60, 0x12, 0x7f, 0x31, 0x51, 0x0e,
+	0xcb, 0xdb, 0x4b, 0x43, 0xf1, 0xcc, 0x90, 0xa0, 0xfa, 0x97, 0xb0, 0x58, 0x5c, 0xd0, 0x95, 0xbd,
+	0x78, 0xd1, 0x24, 0x95, 0xd2, 0x36, 0xd4, 0x8e, 0xec, 0x20, 0x4d, 0x39, 0xd6, 0xa0, 0xc4, 0xed,
+	0x20, 0x4b, 0x38, 0xa6, 0x85, 0xa4, 0xe1, 0x68, 0x77, 0xa1, 0x22, 0x95, 0x39, 0xb2, 0x51, 0x16,
+	0xd2, 0x51, 0x54, 0xe3, 0x7f, 0x67, 0x60, 0x46, 0x8c, 0x22, 0x88, 0xc6, 0x0f, 0x87, 0xa7, 0x4d,
+	0xaa, 0x65, 0xce, 0xce, 0x28, 0x4b, 0x33, 0xf0, 0xc4, 0xb5, 0xfb, 0xa6, 0x37, 0xe0, 0x8a, 0x6b,
+	0x4c, 0x85, 0x76, 0xbf, 0x39, 0xe0, 0xa8, 0x60, 0x9e, 0x23, 0x14, 0x92, 0x74, 0x4c, 0x31, 0xcf,
+	0x49, 0x29, 0x7a, 0x9e, 0xa5, 0x48, 0x07, 0x2a, 0xbe, 0xf2, 0x2c, 0x3c, 0xd9, 0xd1, 0x15, 0x67,
+	0x7d, 0xcb, 0x55, 0x74, 0xa3, 0x14, 0xda, 0xfd, 0x23, 0xbc, 0x46, 0x25, 0x67, 0x66, 0x48, 0x6c,
+	0xe2, 0x71, 0x45, 0x37, 0x4a, 0x9c, 0x19, 0xe2, 0x1a, 0x95, 0x8c, 0x84, 0x6f, 0xcd, 0x63, 0x8b,
+	0x49, 0xc6, 0x21, 0x6a, 0x6c, 0xf8, 0x76, 0xd7, 0x62, 0x82, 0x53, 0x38, 0xe4, 0xb8, 0x77, 0x62,
+	0x3a, 0xbe, 0xab, 0x18, 0x47, 0x49, 0x08, 0xf6, 0x7d, 0x57, 0x5a, 0x32, 0x65, 0x39, 0x13, 0x59,
+	0x32, 0x69, 0x89, 0x33, 0x45, 0x65, 0x40, 0x15, 0xd5, 0x98, 0xc2, 0xcb, 0x16, 0x8d, 0x15, 0x36,
+	0x15, 0x54, 0x43, 0x29, 0xf6, 0x68, 0xb4, 0xb6, 0x73, 0xcf, 0x89, 0xe8, 0x06, 0xf3, 0x9c, 0xaf,
+	0x3d, 0x07, 0xab, 0x02, 0x2a, 0x6c, 0xd4, 0x48, 0xc2, 0x81, 0xc0, 0xbd, 0x73, 0xcf, 0x89, 0x22,
+	0xd8, 0x65, 0x4c, 0x71, 0x0e, 0x8c, 0xe0, 0x2b, 0xc6, 0x90, 0x80, 0x31, 0xbf, 0x17, 0xda, 0xc4,
+	0x0c, 0xfc, 0x90, 0x2b, 0xf2, 0x01, 0x52, 0xd4, 0xf2, 0x43, 0x2e, 0x57, 0xc6, 0xb8, 0x54, 0xcf,
+	0x45, 0x2b, 0x63, 0x5c, 0x28, 0xef, 0xc1, 0xec, 0x29, 0xb1, 0x1c, 0x12, 0x9a, 0x9c, 0x74, 0x03,
+	0xd7, 0xe2, 0x44, 0xb0, 0x8f, 0x8a, 0x51, 0x93, 0xe2, 0x23, 0x25, 0xc5, 0x1a, 0x8c, 0xe9, 0x4c,
+	0x04, 0x09, 0xa9, 0xca, 0xdc, 0x16, 0x44, 0x4d, 0x0d, 0xee, 0xd2, 0x8e, 0x60, 0x1e, 0x55, 0x63,
+	0x46, 0x4a, 0x5e, 0xd2, 0x0e, 0xaa, 0xad, 0x24, 0x70, 0x0b, 0x22, 0x70, 0x33, 0x56, 0x1c, 0xb9,
+	0x15, 0x28, 0x59, 0x51, 0xe8, 0x14, 0xed, 0xb0, 0x54, 0xec, 0x62, 0x95, 0x4d, 0x15, 0xd9, 0x90,
+	0xaa, 0x3d, 0xaa, 0x6d, 0x42, 0x25, 0xde, 0x29, 0x93, 0x0f, 0x14, 0xd3, 0x80, 0x68, 0xb3, 0x8e,
+	0x06, 0x38, 0xac, 0x5a, 0x94, 0x4b, 0x3c, 0x45, 0x35, 0x66, 0xa4, 0xe4, 0x25, 0xf1, 0xb4, 0xfb,
+	0x30, 0x17, 0x10, 0xcf, 0xa1, 0xde, 0x89, 0x69, 0x21, 0xc7, 0x24, 0x9e, 0x23, 0x08, 0x47, 0xc9,
+	0xa8, 0x29, 0xf9, 0x8e, 0x7d, 0xd6, 0x26, 0x9e, 0xa3, 0x3d, 0x83, 0xaa, 0xfb, 0xcc, 0x0c, 0x42,
+	0x7f, 0x70, 0x61, 0xe2, 0x59, 0x23, 0x08, 0x48, 0x6d, 0x7b, 0x3e, 0x3e, 0x78, 0x02, 0x83, 0x38,
+	0x34, 0x3c, 0xba, 0x08, 0x88, 0x51, 0x76, 0x9f, 0xb5, 0x10, 0x88, 0x17, 0x38, 0x47, 0x31, 0xfb,
+	0x90, 0xf0, 0x01, 0x2e, 0x61, 0x4d, 0xed, 0x0a, 0x61, 0x6f, 0x0d, 0xc2, 0x07, 0x72, 0x15, 0x42,
+	0x19, 0x25, 0x39, 0x72, 0x94, 0x09, 0x03, 0x50, 0xd6, 0x96, 0x89, 0x3e, 0x0f, 0x93, 0xe1, 0xc0,
+	0x54, 0x1c, 0x65, 0xc2, 0x98, 0x08, 0x07, 0x47, 0x0c, 0x29, 0x66, 0xc8, 0x7d, 0x41, 0x4e, 0x26,
+	0x0c, 0xfc, 0x29, 0x86, 0x52, 0x39, 0x63, 0xda, 0x1e, 0x17, 0xe4, 0x04, 0x87, 0x92, 0x79, 0xb3,
+	0xe7, 0x71, 0xed, 0x11, 0x2c, 0xa4, 0x02, 0x76, 0xec, 0x32, 0xc2, 0xc5, 0xe3, 0xb8, 0x4d, 0x81,
+	0xd4, 0xe2, 0xc0, 0xc5, 0x1a, 0x99, 0xb9, 0xa1, 0xd8, 0x97, 0xad, 0x28, 0x73, 0x43, 0xdc, 0x96,
+	0x3b, 0x00, 0x41, 0x48, 0x1c, 0x53, 0xd2, 0xb1, 0xba, 0x8c, 0x2c, 0x4a, 0x0e, 0x22, 0x4a, 0xe6,
+	0xf3, 0x53, 0x12, 0x9a, 0x6f, 0xa9, 0xa3, 0xdf, 0x95, 0xa9, 0x26, 0x04, 0x5f, 0x52, 0x07, 0x13,
+	0x35, 0xb0, 0xec, 0x33, 0xc2, 0x99, 0xe9, 0xf7, 0xb8, 0xfe, 0x81, 0x9c, 0xa7, 0x12, 0xbd, 0xee,
+	0x09, 0xb2, 0x1d, 0x72, 0x1f, 0x07, 0xfd, 0x50, 0xe6, 0x58, 0xc8, 0xfd, 0x96, 0xe0, 0x8e, 0x22,
+	0x52, 0x9c, 0x76, 0x49, 0x88, 0xc1, 0xfc, 0x48, 0x72, 0x47, 0x14, 0x1e, 0xa1, 0x6c, 0x4f, 0xb4,
+	0x29, 0x68, 0x7a, 0x6c, 0xd9, 0x67, 0x7e, 0xa7, 0xa3, 0xdf, 0x93, 0xbe, 0x43, 0xee, 0xef, 0x4a,
+	0x09, 0xfa, 0xb6, 0x83, 0x1e, 0x9e, 0x8e, 0xf7, 0xa5, 0x6f, 0x3b, 0xe8, 0x35, 0x9c, 0x78, 0xa1,
+	0x36, 0xd5, 0xbf, 0x97, 0x2c, 0x74, 0x8f, 0xd6, 0x7f, 0x0c, 0xb3, 0xe2, 0x3c, 0x7b, 0xc7, 0x27,
+	0x6c, 0xf1, 0x39, 0x99, 0x14, 0xb6, 0x47, 0x50, 0x96, 0x52, 0x59, 0x33, 0xb6, 0x72, 0x67, 0xb0,
+	0x24, 0x5f, 0xe9, 0x13, 0xb8, 0xfe, 0x0d, 0x54, 0xd5, 0x98, 0xdf, 0xb5, 0xe8, 0x7d, 0x16, 0x0d,
+	0x92, 0x61, 0x5d, 0x8b, 0xf9, 0x79, 0x4a, 0x3b, 0x39, 0xb6, 0xa2, 0x0a, 0x5f, 0xc0, 0x5c, 0x66,
+	0x6c, 0x5c, 0xf0, 0xe3, 0x42, 0x7d, 0x5a, 0xce, 0x79, 0x1a, 0xda, 0xd6, 0x6b, 0x42, 0x95, 0xe5,
+	0x5a, 0xd7, 0xaa, 0x1e, 0xf5, 0xd7, 0xb0, 0x58, 0xf4, 0x89, 0x33, 0x7c, 0x9a, 0xdf, 0x92, 0xdb,
+	0x39, 0x87, 0x23, 0x58, 0x56, 0x03, 0x96, 0x32, 0xea, 0x6b, 0x70, 0xac, 0xd7, 0x2a, 0x51, 0x52,
+	0x0c, 0xeb, 0x7a, 0x8b, 0x6d, 0xa8, 0x00, 0x66, 0xd9, 0xd5, 0xe3, 0xfc, 0x4a, 0x57, 0x72, 0xde,
+	0x86, 0x71, 0xab, 0xdf, 0xa9, 0x02, 0xc4, 0x3b, 0xce, 0x44, 0x57, 0x8d, 0xcd, 0x87, 0x19, 0xda,
+	0x7d, 0xc9, 0x12, 0x26, 0x8c, 0x19, 0x21, 0x31, 0xec, 0xbe, 0x23, 0xde, 0x87, 0x9c, 0x71, 0xa5,
+	0xbd, 0x21, 0xb4, 0x25, 0x14, 0x08, 0xe5, 0x5d, 0xa8, 0x06, 0xd6, 0x09, 0x61, 0xa6, 0xe5, 0xba,
+	0xbe, 0x4d, 0x1c, 0x51, 0xad, 0x27, 0x8c, 0x8a, 0x10, 0xee, 0x48, 0x19, 0xe6, 0xb8, 0x43, 0x98,
+	0x1d, 0x63, 0x26, 0x04, 0xa6, 0x8c, 0xb2, 0x08, 0xf2, 0x20, 0x3a, 0x8b, 0xbc, 0x5e, 0x17, 0x5b,
+	0x26, 0x93, 0xfb, 0x66, 0x97, 0x74, 0x45, 0x21, 0x9f, 0x30, 0xe6, 0x84, 0xae, 0xd9, 0xeb, 0xb6,
+	0xce, 0xf8, 0x91, 0xff, 0x8a, 0x74, 0x73, 0xf8, 0xd3, 0x7e, 0x84, 0x9f, 0xca, 0xe1, 0x4f, 0xfb,
+	0x12, 0xff, 0x03, 0x90, 0xe7, 0x99, 0x69, 0x71, 0xbf, 0x4b, 0x6d, 0xd3, 0x21, 0x2e, 0xb7, 0x54,
+	0x3d, 0x97, 0xe8, 0x1d, 0xa1, 0xd8, 0x47, 0xb9, 0xf6, 0x04, 0x96, 0xd2, 0xe8, 0x47, 0x26, 0xf5,
+	0xec, 0xf0, 0x93, 0xed, 0x27, 0xcf, 0xd4, 0x53, 0x85, 0x85, 0x94, 0xc5, 0xa3, 0x86, 0xd2, 0x69,
+	0xdb, 0xb0, 0x98, 0xb6, 0xfa, 0x44, 0x58, 0xa1, 0x91, 0x2c, 0xff, 0xf3, 0x29, 0xa3, 0x4f, 0x1a,
+	0x52, 0x95, 0x9c, 0xc1, 0xd2, 0x66, 0x5b, 0xd8, 0x3c, 0x79, 0xa6, 0x88, 0x81, 0x96, 0x32, 0xd9,
+	0x6e, 0x08, 0x4d, 0xde, 0xe2, 0x71, 0x64, 0x51, 0x29, 0x58, 0x3c, 0x56, 0x16, 0x0f, 0x60, 0x3e,
+	0x6d, 0xf1, 0x44, 0x58, 0x3c, 0x53, 0x44, 0xe2, 0x56, 0xca, 0xe0, 0x09, 0x1a, 0x14, 0xf0, 0x9f,
+	0x2a, 0x7c, 0xad, 0x80, 0xff, 0x74, 0x28, 0xfe, 0xa9, 0xc2, 0xcf, 0x16, 0xf0, 0x4f, 0x25, 0x7e,
+	0x03, 0xca, 0x32, 0xdf, 0xf0, 0x88, 0x77, 0x04, 0xf5, 0x98, 0x30, 0x64, 0x0a, 0xee, 0xa0, 0x04,
+	0x4f, 0x76, 0xe6, 0xfa, 0xe7, 0x66, 0x60, 0xf1, 0x53, 0x51, 0xbb, 0x6e, 0xc9, 0x84, 0x41, 0x61,
+	0xcb, 0xe2, 0xa7, 0x58, 0xbc, 0x10, 0x83, 0x27, 0x74, 0xa7, 0xe7, 0xba, 0x02, 0xa3, 0x29, 0x0c,
+	0x09, 0xdf, 0x1e, 0xf4, 0x5c, 0x17, 0x31, 0xcb, 0x30, 0xed, 0xfb, 0xbe, 0xd0, 0xce, 0x0b, 0xed,
+	0x94, 0xef, 0xfb, 0xa8, 0x58, 0x8f, 0x32, 0x9e, 0x21, 0x1f, 0xfc, 0xbd, 0x66, 0x2a, 0xe5, 0xdb,
+	0xc8, 0x08, 0x6f, 0xab, 0x94, 0x17, 0xea, 0xdf, 0x6f, 0x26, 0x39, 0x2f, 0xb4, 0x0f, 0x87, 0xe4,
+	0x5e, 0x70, 0xc6, 0xf5, 0x3f, 0x68, 0x0e, 0x49, 0xbe, 0xd6, 0x59, 0xce, 0xa0, 0x4b, 0xba, 0x91,
+	0xc1, 0x1f, 0xe6, 0x0c, 0x5e, 0x91, 0xae, 0x34, 0xd0, 0x13, 0xea, 0xf8, 0x47, 0xcd, 0x0c, 0x77,
+	0xd4, 0x13, 0xee, 0xf8, 0xc7, 0xcd, 0x0c, 0x79, 0x44, 0xbe, 0x47, 0x3c, 0x47, 0x50, 0x97, 0x80,
+	0xea, 0x7f, 0xd2, 0x54, 0xa4, 0x8b, 0x78, 0xce, 0x8e, 0x7d, 0xd6, 0xca, 0x02, 0x6c, 0xaa, 0xff,
+	0x69, 0x16, 0xb0, 0x27, 0x8a, 0xb8, 0x43, 0xdc, 0xc8, 0xc1, 0x4f, 0x9b, 0x11, 0x25, 0x74, 0xa5,
+	0x7d, 0x4a, 0x6d, 0x53, 0xfd, 0xcf, 0x32, 0xea, 0x3d, 0x2a, 0xdf, 0x8c, 0xc6, 0xe5, 0x38, 0xa0,
+	0xfa, 0x9f, 0x37, 0x73, 0xf5, 0xb8, 0x95, 0x07, 0xd9, 0x54, 0xff, 0x8b, 0x66, 0xb1, 0x68, 0xaf,
+	0xa6, 0xe8, 0xdf, 0x5f, 0x36, 0xb3, 0xfc, 0x6f, 0x35, 0xc5, 0xff, 0xfe, 0xaa, 0x99, 0x25, 0x80,
+	0x78, 0x16, 0x29, 0xfe, 0xc6, 0x07, 0x68, 0xfc, 0xd7, 0xca, 0xb9, 0x92, 0x1e, 0x0d, 0x5a, 0x79,
+	0x90, 0x4d, 0xf5, 0xbf, 0xc9, 0x83, 0xf6, 0x28, 0xb2, 0xdf, 0x8e, 0x7c, 0xb8, 0xc5, 0x43, 0xcb,
+	0x63, 0xe8, 0xeb, 0x6f, 0x25, 0xac, 0xda, 0x11, 0x8f, 0xb6, 0x84, 0xb8, 0x55, 0x04, 0xda, 0x54,
+	0xff, 0xbb, 0x22, 0x50, 0xce, 0xcd, 0x76, 0x89, 0xe5, 0x49, 0xe6, 0x17, 0x50, 0xfd, 0xef, 0xd5,
+	0xb0, 0x42, 0x8a, 0xdc, 0xaf, 0x95, 0x07, 0xd9, 0x54, 0xff, 0x87, 0x3c, 0x48, 0x10, 0xc4, 0x0c,
+	0x5d, 0xfa, 0xc7, 0x66, 0x81, 0x2f, 0x2d, 0xc5, 0x7c, 0xe9, 0x9f, 0x9a, 0x69, 0xc2, 0xb4, 0x95,
+	0x23, 0x9f, 0xff, 0xdc, 0x2c, 0xb0, 0xcf, 0xbb, 0x50, 0xb5, 0x32, 0x98, 0x7f, 0x51, 0x33, 0xb0,
+	0x52, 0xa0, 0x3b, 0x00, 0x7c, 0x60, 0x86, 0x18, 0xc2, 0x80, 0xea, 0xff, 0xaa, 0x12, 0x81, 0x0f,
+	0x0c, 0xea, 0x9d, 0xc8, 0x98, 0x04, 0x56, 0xc8, 0xa9, 0xa5, 0x72, 0xc5, 0xe3, 0xfa, 0xbf, 0xa9,
+	0x98, 0x28, 0x39, 0x26, 0x8c, 0xc7, 0xeb, 0xff, 0x3e, 0xae, 0xc8, 0xc5, 0xb5, 0x1a, 0xfa, 0x7b,
+	0x99, 0x86, 0x7e, 0x28, 0xf7, 0x92, 0xed, 0xfc, 0xc7, 0xb9, 0x76, 0x7e, 0x04, 0xfd, 0x89, 0x9a,
+	0xf9, 0xef, 0x67, 0x9b, 0xf9, 0x85, 0x21, 0xe8, 0xb8, 0x95, 0x7f, 0x05, 0xf3, 0xf9, 0x85, 0x48,
+	0x1a, 0x92, 0x27, 0x4a, 0xab, 0xc3, 0xaa, 0xf3, 0xd0, 0x36, 0xde, 0x65, 0xf9, 0x36, 0xde, 0x65,
+	0xf9, 0x36, 0x1e, 0x25, 0xaa, 0x8d, 0x17, 0xca, 0x42, 0x1b, 0x8f, 0xd2, 0x51, 0x6d, 0xfc, 0xcf,
+	0xb0, 0x8d, 0xc7, 0x51, 0xde, 0xb5, 0x8d, 0xcf, 0xcc, 0x28, 0xdb, 0xc6, 0x6f, 0x42, 0xc5, 0x13,
+	0x45, 0xd5, 0x36, 0xb1, 0x9d, 0x52, 0xbd, 0x3c, 0x78, 0x58, 0x4f, 0xed, 0x43, 0x62, 0x39, 0x69,
+	0x04, 0xb7, 0xa8, 0xab, 0x9a, 0x7a, 0x85, 0x38, 0xb2, 0xa8, 0x8b, 0x27, 0x9b, 0xed, 0x77, 0xbb,
+	0x96, 0xe7, 0xa8, 0xc6, 0x3e, 0xba, 0xcc, 0xb6, 0xe0, 0x93, 0xb9, 0x16, 0x3c, 0xd5, 0x92, 0x4c,
+	0x65, 0x5a, 0x92, 0x14, 0x85, 0x9f, 0x4e, 0x53, 0x78, 0xa4, 0xfc, 0xc7, 0xf2, 0x70, 0x91, 0xe5,
+	0x7f, 0xf2, 0x58, 0x9c, 0x2c, 0x4a, 0x6c, 0x53, 0x55, 0xe3, 0x51, 0xbc, 0x47, 0xb5, 0x0f, 0xa0,
+	0x66, 0x87, 0x17, 0x01, 0xf7, 0xe5, 0x43, 0x6a, 0x67, 0xa0, 0xaa, 0x79, 0x45, 0x4a, 0x5f, 0x90,
+	0x8b, 0x86, 0x33, 0xc8, 0x3e, 0x42, 0x90, 0xb5, 0x3b, 0xf3, 0x08, 0x21, 0x69, 0x76, 0x2b, 0x91,
+	0x52, 0xf5, 0xba, 0x1b, 0x50, 0xe6, 0x5e, 0xd7, 0x09, 0x25, 0x39, 0x12, 0x45, 0x79, 0xca, 0x00,
+	0x21, 0x12, 0xdc, 0x48, 0x01, 0x82, 0x08, 0x50, 0x8b, 0x01, 0x81, 0x02, 0xdc, 0x01, 0x08, 0x85,
+	0x87, 0x4e, 0x48, 0x88, 0xa8, 0xba, 0x53, 0xc6, 0x8c, 0x90, 0x1c, 0x84, 0x84, 0x28, 0x75, 0xa0,
+	0xd4, 0x73, 0xb1, 0x3a, 0x90, 0xea, 0x2d, 0xa8, 0x10, 0xcf, 0x36, 0x15, 0x35, 0x64, 0xea, 0x1d,
+	0x43, 0x99, 0x78, 0xb6, 0xa2, 0x8d, 0x78, 0x87, 0xcd, 0x8a, 0x77, 0x26, 0x7e, 0x37, 0x70, 0x09,
+	0xa7, 0xbe, 0xc7, 0x44, 0xb1, 0x9d, 0x32, 0x6a, 0xc4, 0xb3, 0xf7, 0x12, 0x69, 0xe4, 0xab, 0x63,
+	0x51, 0xb7, 0x17, 0x12, 0x26, 0x8a, 0xae, 0xf4, 0x75, 0xa0, 0x44, 0x92, 0x0a, 0xa6, 0x86, 0x93,
+	0xbd, 0x7f, 0xd9, 0x21, 0x99, 0xe1, 0x10, 0x92, 0x1e, 0x6e, 0x51, 0x0e, 0xe7, 0x90, 0xfc, 0x70,
+	0x08, 0x8c, 0x87, 0x5b, 0x8a, 0x7d, 0xc5, 0xc3, 0x69, 0x30, 0x21, 0xde, 0xde, 0x2c, 0xab, 0xaf,
+	0x49, 0x2c, 0x97, 0x63, 0x40, 0xc9, 0x20, 0x70, 0xa9, 0x4d, 0xb9, 0x49, 0xfb, 0xe2, 0x31, 0xc0,
+	0x84, 0x01, 0x91, 0xa8, 0xd1, 0xd7, 0x3e, 0x83, 0x95, 0x20, 0x24, 0xa6, 0xcc, 0x39, 0xc6, 0xad,
+	0x13, 0xf2, 0xc8, 0x7c, 0x66, 0xf2, 0xd3, 0x10, 0x53, 0x5b, 0xbe, 0x81, 0x58, 0x0c, 0x42, 0xb2,
+	0x8f, 0xfa, 0xb6, 0x50, 0x3f, 0x3b, 0x12, 0x4a, 0xed, 0xff, 0xc3, 0x6a, 0xe0, 0x33, 0x3e, 0xc2,
+	0x54, 0xbe, 0xa5, 0x58, 0x42, 0xc4, 0x10, 0xdb, 0x8f, 0x60, 0x96, 0x32, 0xbc, 0x41, 0x30, 0xaf,
+	0xcc, 0x8e, 0xeb, 0x9f, 0x8b, 0xa7, 0x03, 0x25, 0xa3, 0x4a, 0xd9, 0xbe, 0x94, 0x1e, 0xb8, 0xfe,
+	0x79, 0xd2, 0x4b, 0x77, 0x68, 0xfc, 0x06, 0x43, 0x08, 0x0e, 0xe8, 0x90, 0x07, 0x13, 0x77, 0xde,
+	0xf1, 0xc1, 0xc4, 0xc7, 0x30, 0xaf, 0xd2, 0xfc, 0xb4, 0x6b, 0xd9, 0x71, 0xae, 0xaf, 0x4b, 0x82,
+	0x2c, 0x55, 0x87, 0x5d, 0xcb, 0x56, 0xf9, 0xbe, 0x05, 0x15, 0x84, 0xc5, 0xdb, 0x28, 0xdf, 0x7c,
+	0x94, 0xbb, 0x56, 0x66, 0x1b, 0x11, 0x92, 0xde, 0x46, 0xf9, 0x16, 0xa4, 0xd6, 0xb5, 0xf2, 0xdb,
+	0x88, 0xc0, 0x78, 0x1b, 0xb7, 0x62, 0x5f, 0xf1, 0x36, 0x26, 0x5d, 0x7a, 0x3d, 0xd5, 0xa5, 0x8b,
+	0x66, 0x1c, 0x4f, 0xa5, 0x77, 0x6d, 0xc6, 0xa3, 0xd3, 0x2e, 0xdb, 0x8c, 0x0b, 0x69, 0xd2, 0x8c,
+	0xa7, 0x4f, 0xd2, 0xa8, 0x19, 0x4f, 0xce, 0x51, 0xd1, 0x8c, 0xcb, 0x31, 0xaf, 0xd3, 0x8c, 0x8b,
+	0x41, 0x46, 0x36, 0xe3, 0xc9, 0x8c, 0xd4, 0xd8, 0xa9, 0x66, 0x3c, 0x3d, 0xf6, 0xd5, 0xcd, 0x78,
+	0x1a, 0x9d, 0x6b, 0xc6, 0x51, 0xf5, 0xde, 0xcd, 0xf8, 0xe8, 0x1a, 0x20, 0x9a, 0xf1, 0x82, 0xcf,
+	0x2b, 0x9b, 0xf1, 0x82, 0x45, 0xb6, 0x19, 0x4f, 0xab, 0xaf, 0xd9, 0x8c, 0xa3, 0xab, 0xf7, 0x6b,
+	0xc6, 0x2f, 0x59, 0x6c, 0x43, 0x05, 0xf0, 0x3d, 0x9a, 0xf1, 0x2c, 0x3c, 0x59, 0x66, 0x05, 0x20,
+	0xde, 0x70, 0x26, 0x39, 0x51, 0x0c, 0xfd, 0xc5, 0x73, 0xa2, 0xf8, 0x16, 0xb8, 0x9a, 0x13, 0xa5,
+	0xb2, 0xf0, 0x1d, 0x38, 0x51, 0xbc, 0x84, 0x34, 0x27, 0xca, 0x2d, 0xe4, 0x6a, 0x4e, 0x94, 0x33,
+	0x48, 0x52, 0xf6, 0xfb, 0x83, 0xcc, 0x57, 0x58, 0xd1, 0x27, 0x31, 0xda, 0x12, 0x68, 0xed, 0xd7,
+	0x07, 0x47, 0x5f, 0xef, 0x18, 0xcf, 0xcd, 0xd6, 0xe1, 0x1b, 0xd3, 0xf8, 0xc9, 0xfe, 0xab, 0x9d,
+	0xb9, 0xb1, 0x82, 0xfc, 0x48, 0xc8, 0xc7, 0x35, 0x1d, 0x16, 0x32, 0xf2, 0x46, 0xf3, 0x0b, 0xe3,
+	0x79, 0xbb, 0x3d, 0x77, 0x43, 0x5b, 0x86, 0xf9, 0x8c, 0xe6, 0xb9, 0x54, 0xdc, 0xdc, 0xfe, 0x69,
+	0x15, 0x4a, 0x0d, 0x35, 0x43, 0xcd, 0x82, 0x5b, 0x85, 0x4f, 0x33, 0xb5, 0x0f, 0x93, 0x15, 0x5c,
+	0xf2, 0xdd, 0xe6, 0xea, 0xdd, 0xcb, 0xbe, 0xa8, 0x54, 0xf1, 0xa9, 0x8f, 0x69, 0xbf, 0x01, 0xb3,
+	0xb9, 0xaf, 0x13, 0xb5, 0x94, 0xe5, 0xc8, 0x0f, 0x21, 0x57, 0x3f, 0xb8, 0x04, 0x94, 0xf3, 0x9f,
+	0xfb, 0xc4, 0x2f, 0xed, 0x7f, 0xe4, 0x97, 0x84, 0x69, 0xff, 0xa3, 0x3f, 0x11, 0xac, 0x8f, 0x69,
+	0x5f, 0x0f, 0xfb, 0xd6, 0x69, 0xfd, 0x92, 0xef, 0x90, 0xd0, 0xf9, 0xe6, 0xa5, 0x1f, 0xb8, 0x49,
+	0xc7, 0xbf, 0x0e, 0xb5, 0xec, 0x87, 0x56, 0x5a, 0xfd, 0x8a, 0x8f, 0xcd, 0x72, 0x51, 0x1f, 0xf9,
+	0x75, 0x57, 0x7d, 0x4c, 0x3b, 0x80, 0x69, 0xf5, 0xd9, 0x91, 0xb6, 0x36, 0xe4, 0x33, 0xa5, 0xd8,
+	0xdd, 0xed, 0x91, 0xdf, 0x30, 0x49, 0x3f, 0xbb, 0x50, 0xfd, 0xb2, 0x47, 0x09, 0xb3, 0xf1, 0xba,
+	0xed, 0x39, 0x5a, 0xea, 0x2d, 0x60, 0xfa, 0x1b, 0xa4, 0xd5, 0xe5, 0x82, 0x5c, 0x1d, 0xce, 0x63,
+	0xda, 0x0e, 0x54, 0x94, 0x8f, 0x36, 0xb7, 0x42, 0xfe, 0x5d, 0x5c, 0xfc, 0x18, 0xca, 0xb1, 0x0b,
+	0x3f, 0xf8, 0x2e, 0x1e, 0x5e, 0xc6, 0x1f, 0x0a, 0xec, 0x85, 0xc4, 0xe2, 0x44, 0x5b, 0x1b, 0xf2,
+	0x52, 0x7d, 0x58, 0x58, 0x8a, 0x6f, 0xe8, 0x33, 0xde, 0xbe, 0x0a, 0x9c, 0x6b, 0x7b, 0xfb, 0x49,
+	0xec, 0x4d, 0x16, 0x07, 0x6d, 0xeb, 0xf2, 0xf7, 0xe8, 0xe8, 0xb3, 0x3e, 0x12, 0x92, 0xf6, 0xfc,
+	0x1a, 0x20, 0x79, 0xc3, 0xaa, 0xad, 0x5f, 0xf2, 0xaa, 0x1a, 0x7d, 0x6e, 0x5c, 0xf6, 0x5e, 0x36,
+	0xca, 0x2b, 0xf9, 0xb8, 0x5f, 0x05, 0x71, 0xa5, 0xf0, 0xa4, 0x3c, 0x76, 0xb6, 0x3a, 0xe2, 0x21,
+	0x7a, 0xd6, 0x8f, 0x0a, 0xdf, 0x77, 0xf6, 0x63, 0x28, 0x3f, 0x2a, 0x70, 0x1b, 0x97, 0x3d, 0x18,
+	0xcf, 0xdd, 0x98, 0xc3, 0x1f, 0x8d, 0xd7, 0xc7, 0xb4, 0x06, 0x94, 0xa2, 0x6e, 0x56, 0xbb, 0x3d,
+	0xf2, 0xf9, 0x33, 0x7a, 0xbb, 0x33, 0xba, 0xff, 0x4d, 0x96, 0x89, 0x45, 0x60, 0x48, 0xb8, 0xb2,
+	0x4c, 0x6f, 0x75, 0x75, 0x04, 0xcd, 0xc9, 0xfa, 0x19, 0x12, 0xae, 0xf7, 0xf2, 0x63, 0x28, 0x3f,
+	0x43, 0xc2, 0x35, 0x8c, 0xec, 0x64, 0xc2, 0x35, 0x94, 0xbc, 0xa8, 0x70, 0xa9, 0x42, 0xa7, 0xdd,
+	0x1e, 0xc9, 0x10, 0xf2, 0xe1, 0x2a, 0xd6, 0xd2, 0xfa, 0xd8, 0x76, 0x15, 0xca, 0xa9, 0x43, 0x6d,
+	0x77, 0xe9, 0x3f, 0xbe, 0x5d, 0x1f, 0xff, 0xaf, 0x6f, 0xd7, 0xc7, 0x7f, 0xfe, 0xed, 0xfa, 0xf8,
+	0xaf, 0x95, 0x4e, 0x2d, 0x57, 0xfc, 0x03, 0xc4, 0xf1, 0x94, 0xf8, 0xf3, 0xf8, 0xff, 0x02, 0x00,
+	0x00, 0xff, 0xff, 0x0f, 0x0f, 0x05, 0x21, 0x3d, 0x31, 0x00, 0x00,
 }

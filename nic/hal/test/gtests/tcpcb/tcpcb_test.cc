@@ -1,16 +1,17 @@
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
-#include "gen/proto/tcp_proxy_cb.pb.h"
+#include "nic/hal/src/internal/internal.hpp"
+#include "gen/proto/internal.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "nic/hal/test/utils/hal_base_test.hpp"
 
-using tcpcb::TcpCbSpec;
-using tcpcb::TcpCbResponse;
-using tcpcb::TcpCbKeyHandle;
-using tcpcb::TcpCbGetRequest;
-using tcpcb::TcpCbGetResponse;
+using internal::TcpCbSpec;
+using internal::TcpCbResponse;
+using internal::TcpCbKeyHandle;
+using internal::TcpCbGetRequest;
+using internal::TcpCbGetResponse;
 
 
 class tcpcb_test : public hal_base_test {

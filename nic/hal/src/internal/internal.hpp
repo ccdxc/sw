@@ -45,6 +45,31 @@ hal_ret_t ipseccb_delete(internal::IpsecCbDeleteRequest& req,
 hal_ret_t ipseccb_get(internal::IpsecCbGetRequest& req,
                     internal::IpsecCbGetResponseMsg *rsp);
 
+hal_ret_t tcpcb_create(internal::TcpCbSpec& spec,
+                       internal::TcpCbResponse *rsp);
+
+hal_ret_t tcpcb_update(internal::TcpCbSpec& spec,
+                       internal::TcpCbResponse *rsp);
+
+hal_ret_t tcpcb_delete(internal::TcpCbDeleteRequest& req,
+                       internal::TcpCbDeleteResponseMsg *rsp);
+
+hal_ret_t tcpcb_get(internal::TcpCbGetRequest& req,
+                    internal::TcpCbGetResponseMsg *rsp);
+
+hal_ret_t tlscb_create(internal::TlsCbSpec& spec,
+                       internal::TlsCbResponse *rsp);
+
+hal_ret_t tlscb_update(internal::TlsCbSpec& spec,
+                       internal::TlsCbResponse *rsp);
+
+hal_ret_t tlscb_delete(internal::TlsCbDeleteRequest& req,
+                       internal::TlsCbDeleteResponseMsg *rsp);
+
+hal_ret_t tlscb_get(internal::TlsCbGetRequest& req,
+                    internal::TlsCbGetResponseMsg *rsp);
+
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

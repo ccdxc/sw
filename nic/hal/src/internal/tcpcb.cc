@@ -389,7 +389,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
 // process a TCP CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-tcpcb_delete (tcpcb::TcpCbDeleteRequest& req, tcpcb::TcpCbDeleteResponseMsg *rsp)
+tcpcb_delete (internal::TcpCbDeleteRequest& req, internal::TcpCbDeleteResponseMsg *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     tcpcb_t*               tcpcb;

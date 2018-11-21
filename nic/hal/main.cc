@@ -47,8 +47,7 @@
 #include "gen/hal/svc/session_svc_gen.hpp"
 #include "gen/hal/svc/telemetry_svc_gen.hpp"
 #include "gen/hal/svc/tls_proxy_cb2_svc_gen.hpp"
-#include "gen/hal/svc/tls_proxy_cb_svc_gen.hpp"
-#include "gen/hal/svc/tcp_proxy_cb_svc_gen.hpp"
+#include "gen/hal/svc/internal_svc_gen.hpp"
 #include "gen/hal/svc/proxyccb_svc_gen.hpp"
 #include "gen/hal/svc/proxyrcb_svc_gen.hpp"
 #include "gen/hal/svc/internal_svc_gen.hpp"
@@ -101,9 +100,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     QOSServiceImpl           qos_svc;
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
-    TlsCbServiceImpl         tlscb_svc;
     TlsProxyCbServiceImpl    tls_proxy_cb_svc;
-    TcpCbServiceImpl         tcpcb_svc;
     DescrAolServiceImpl      descraol_svc;
     WRingServiceImpl         wring_svc;
     ProxyServiceImpl         proxy_svc;
@@ -134,8 +131,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&debug_svc);
         server_builder->RegisterService(&table_svc);
         server_builder->RegisterService(&nic_svc);
-        server_builder->RegisterService(&tlscb_svc);
-        server_builder->RegisterService(&tcpcb_svc);
         server_builder->RegisterService(&descraol_svc);
         server_builder->RegisterService(&wring_svc);
         server_builder->RegisterService(&proxy_svc);

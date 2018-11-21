@@ -9,25 +9,25 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "gen/proto/tls_proxy_cb.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
-using tlscb::TlsCbSpec;
-using tlscb::TlsCbStatus;
-using tlscb::TlsCbResponse;
-using tlscb::TlsCbKeyHandle;
-using tlscb::TlsCbRequestMsg;
-using tlscb::TlsCbResponseMsg;
-using tlscb::TlsCbDeleteRequestMsg;
-using tlscb::TlsCbDeleteResponseMsg;
-using tlscb::TlsCbGetRequest;
-using tlscb::TlsCbGetRequestMsg;
-using tlscb::TlsCbGetResponse;
-using tlscb::TlsCbGetResponseMsg;
+using internal::TlsCbSpec;
+using internal::TlsCbStatus;
+using internal::TlsCbResponse;
+using internal::TlsCbKeyHandle;
+using internal::TlsCbRequestMsg;
+using internal::TlsCbResponseMsg;
+using internal::TlsCbDeleteRequestMsg;
+using internal::TlsCbDeleteResponseMsg;
+using internal::TlsCbGetRequest;
+using internal::TlsCbGetRequestMsg;
+using internal::TlsCbGetResponse;
+using internal::TlsCbGetResponseMsg;
 
 namespace hal {
 
@@ -140,17 +140,6 @@ extern void *tlscb_get_handle_key_func(void *entry);
 extern uint32_t tlscb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool tlscb_compare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t tlscb_create(tlscb::TlsCbSpec& spec,
-                       tlscb::TlsCbResponse *rsp);
-
-hal_ret_t tlscb_update(tlscb::TlsCbSpec& spec,
-                       tlscb::TlsCbResponse *rsp);
-
-hal_ret_t tlscb_delete(tlscb::TlsCbDeleteRequest& req,
-                       tlscb::TlsCbDeleteResponseMsg *rsp);
-
-hal_ret_t tlscb_get(tlscb::TlsCbGetRequest& req,
-                    tlscb::TlsCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __TLSCB_HPP__

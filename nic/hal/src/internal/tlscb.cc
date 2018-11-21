@@ -295,7 +295,7 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponseMsg *resp)
 // process a TLS CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-tlscb_delete (tlscb::TlsCbDeleteRequest& req, tlscb::TlsCbDeleteResponseMsg *rsp)
+tlscb_delete (internal::TlsCbDeleteRequest& req, internal::TlsCbDeleteResponseMsg *rsp)
 {
     hal_ret_t              ret = HAL_RET_OK;
     tlscb_t*               tlscb;

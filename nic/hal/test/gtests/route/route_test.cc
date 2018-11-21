@@ -38,8 +38,6 @@
 
 #include "gen/hal/svc/telemetry_svc_gen.hpp"
 #include "gen/hal/svc/nw_svc_gen.hpp"
-#include "gen/hal/svc/tls_proxy_cb_svc_gen.hpp"
-#include "gen/hal/svc/tcp_proxy_cb_svc_gen.hpp"
 #include "gen/hal/svc/proxyccb_svc_gen.hpp"
 #include "gen/hal/svc/proxyrcb_svc_gen.hpp"
 #include "gen/hal/svc/vrf_svc_gen.hpp"
@@ -113,8 +111,6 @@ svc_reg (const std::string& server_addr,
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
     ServerBuilder            server_builder;
-    TlsCbServiceImpl         tlscb_svc;
-    TcpCbServiceImpl         tcpcb_svc;
     DescrAolServiceImpl      descraol_svc;
     WRingServiceImpl         wring_svc;
     ProxyServiceImpl         proxy_svc;
@@ -154,8 +150,6 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&l4lb_svc);
         server_builder.RegisterService(&nwsec_svc);
         server_builder.RegisterService(&dos_svc);
-        server_builder.RegisterService(&tlscb_svc);
-        server_builder.RegisterService(&tcpcb_svc);
         server_builder.RegisterService(&qos_svc);
         server_builder.RegisterService(&descraol_svc);
         server_builder.RegisterService(&wring_svc);
