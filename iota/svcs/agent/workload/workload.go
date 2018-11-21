@@ -280,6 +280,8 @@ func (app *containerWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx
 	time.Sleep(1 * time.Second)
 
 	delete(app.bgCmds, commandHandle)
+	//For bg command, always return exit code 0
+	cmdInfo.Ctx.ExitCode = 0
 	return cmdInfo.Ctx, nil
 }
 
@@ -329,10 +331,10 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 		if runtime.GOOS != "freebsd" {
 			//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
 			setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
-		    if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
-			    return errors.Wrap(err, stdout)
-		    }
-        }
+			if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
+				return errors.Wrap(err, stdout)
+			}
+		}
 	}
 
 	if ipaddress != "" {
@@ -361,11 +363,8 @@ func (app *bareMetalWorkload) RunCommand(cmd []string, dir string, timeout uint3
 
 	fmt.Println("base dir ", runDir, dir)
 
-	runCmd := []string{"cd", runDir, "&&"}
-	runCmd = append(runCmd, cmd...)
-
-	app.logger.Println("Running cmd ", strings.Join(runCmd, " "))
-	cmdInfo, _ := Cmd.ExecCmd(runCmd, (int)(timeout), background, shell, nil)
+	app.logger.Println("Running cmd ", strings.Join(cmd, " "))
+	cmdInfo, _ := Cmd.ExecCmd(cmd, runDir, (int)(timeout), background, shell, nil)
 
 	if background {
 		handleKey = fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
@@ -451,6 +450,8 @@ func (app *remoteWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, e
 	time.Sleep(2 * time.Second)
 
 	delete(app.bgCmds, commandHandle)
+	//For bg command, always return exit code 0
+	cmdInfo.Ctx.ExitCode = 0
 	return cmdInfo.Ctx, nil
 }
 

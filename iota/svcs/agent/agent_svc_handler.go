@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 
 	"github.com/pensando/sw/iota/svcs/common"
 )
@@ -42,6 +43,15 @@ func (agent *Service) init() {
 		os.Mkdir(common.DstIotaEntitiesDir, 0755)
 		//os.Chmod(common.DstIotaEntitiesDir, 0766)
 	}
+
+	cmdOutDir := common.DstIotaAgentDir + "/cmdOut"
+	if _, err := os.Stat(cmdOutDir); err != nil || !os.IsNotExist(err) {
+		agent.logger.Println("Creating directory for command outputs..")
+		os.Mkdir(cmdOutDir, 0755)
+	}
+
+	Cmd.SetOutputDirectory(cmdOutDir)
+
 	agent.logger.Println("Agent initialized...")
 }
 

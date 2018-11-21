@@ -7,6 +7,7 @@ type CommandCtx struct {
 	TimedOut bool
 	Stderr   string
 	ExitCode int32
+	status   chan error
 }
 
 //CommandInfo has all information and handle to cancel later

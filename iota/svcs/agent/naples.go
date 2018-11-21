@@ -384,7 +384,6 @@ func (dnode *dataNode) setupWorkload(wload Workload.Workload, in *iota.Workload)
 	return dnode.configureWorkload(wload, in)
 }
 
-
 // AddWorkload brings up a workload type on a given node
 func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 
@@ -400,7 +399,7 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 	if wload, ok := dnode.entityMap[wloadKey]; ok {
 		msg := fmt.Sprintf("Trying to add workload %s, which already exists ", wloadKey)
 		dnode.logger.Error(msg)
-                return dnode.configureWorkload(wload, in)
+		return dnode.configureWorkload(wload, in)
 	}
 
 	wlType, ok := workloadTypeMap[in.GetWorkloadType()]
@@ -520,7 +519,7 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 
 		} else {
 			cmdResp, err = dnode.entityMap[wloadKey].StopCommand(cmd.Handle)
-
+			cmdKey = cmd.Handle
 		}
 
 		cmd.ExitCode, cmd.Stdout, cmd.Stderr, cmd.Handle, cmd.TimedOut = cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr, cmdKey, cmdResp.TimedOut

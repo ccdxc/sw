@@ -859,7 +859,7 @@ func TestAgentService_baremetal_Workload_Trigger(t *testing.T) {
 	}
 
 	TestUtils.Assert(t, triggeResp.GetApiResponse().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Trigger msg failed!")
-	TestUtils.Assert(t, triggeResp.GetCommands()[0].GetHandle() == "", "Handle not set")
+	TestUtils.Assert(t, triggeResp.GetCommands()[0].GetHandle() != "", "Handle not set")
 	TestUtils.Assert(t, triggeResp.GetCommands()[0].GetTimedOut() == false, "Handle set")
 
 	triggerMsg = iota.TriggerMsg{TriggerOp: iota.TriggerOp_EXEC_CMDS,
