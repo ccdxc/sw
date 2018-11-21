@@ -48,6 +48,11 @@ testcases:
         args    :
             type: remote_only
 
+    -   name    : Ud_PingPong
+        testcase: testcases.rdma.ud_pingpong
+        args    :
+            type: remote_only
+
     #=======================================
     # Send
     #=======================================
