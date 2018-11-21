@@ -146,7 +146,12 @@ poll_for_work:
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, poll_in_progress), d.poll_in_progress
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), r4, \
                   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, color), d.color
-        phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), d.read_req_adjust
+        // read_req_adjust is valid only for the first retransmit read request, if
+        // retransmission has to be from middle of a multi-pkt read. Subsequent reads
+        // are complete reads and so set the adjust to zero
+        seq       c1, SPEC_SQ_C_INDEX, SQ_C_INDEX
+        cmov      r1, c1, d.read_req_adjust, 0
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), r1
 
         phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX 
@@ -196,8 +201,13 @@ pt_process:
                   CAPRI_PHV_FIELD(SQCB_TO_PT_P, pd), d.pd
         phvwrpair CAPRI_PHV_FIELD(SQCB_TO_PT_P, poll_in_progress), d.poll_in_progress, \
                   CAPRI_PHV_FIELD(SQCB_TO_PT_P, color), d.color
-        phvwrpair CAPRI_PHV_FIELD(SQCB_TO_PT_P, log_pmtu), d.log_pmtu, \
-                  CAPRI_PHV_FIELD(SQCB_TO_PT_P, read_req_adjust), d.read_req_adjust
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_PT_P, log_pmtu), d.log_pmtu
+        // read_req_adjust is valid only for the first retransmit read request, if
+        // retransmission has to be from middle of a multi-pkt read. Subsequent reads
+        // are complete reads and so set the adjust to zero
+        seq       c1, SPEC_SQ_C_INDEX, SQ_C_INDEX
+        cmov      r1, c1, d.read_req_adjust, 0
+        phvwr     CAPRI_PHV_FIELD(SQCB_TO_PT_P, read_req_adjust), r1
 
         // populate t0 PC and table address
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqpt_process, r3)
@@ -284,6 +294,9 @@ end1:
 
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
+        seq            c1, d.dcqcn_rl_failure, 1
+        tblwr.c1       SPEC_SQ_C_INDEX, SQ_C_INDEX
+        tblwr.c1       d.dcqcn_rl_failure, 0
 
         // start backtrack process only if there is no outstanding
         // phvs being speculated. If sqcb0's c_index is same as spec_cindex
@@ -450,8 +463,12 @@ fence:
                 CAPRI_PHV_FIELD(SQCB_TO_WQE_P, poll_in_progress), d.poll_in_progress
     phvwrpair   CAPRI_PHV_FIELD(SQCB_TO_WQE_P, remaining_payload_bytes), r4, \
                 CAPRI_PHV_FIELD(SQCB_TO_WQE_P, color), d.color
-    phvwr       CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), d.read_req_adjust
-
+    // read_req_adjust is valid only for the first retransmit read request, if
+    // retransmission has to be from middle of a multi-pkt read. Subsequent reads
+    // are complete reads and so set the adjust to zero
+    seq       c1, SPEC_SQ_C_INDEX, SQ_C_INDEX
+    cmov      r1, c1, d.read_req_adjust, 0
+    phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, current_sge_offset), r1
 
     // Invoke sqcb1 to fetch rrq_cindex
     add         r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)

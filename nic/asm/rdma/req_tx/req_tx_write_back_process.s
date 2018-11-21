@@ -66,6 +66,8 @@ skip_poll_success:
     tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
     seq           c2, SQ_C_INDEX, r0
     tblmincri.c2  d.color, 1, 1
+
+    tblwr.c1      d.read_req_adjust, 0
     // Update drain cindex every time first/only pkt is transmitted.
     // If state changes to SQD through admin Q, stage0 sends a sq_drain
     // feedback as a flush marker beyond which no phvs are sent from stage0

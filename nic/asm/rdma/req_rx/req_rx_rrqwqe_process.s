@@ -15,7 +15,6 @@ struct req_rx_s1_t0_k k;
 
 #define K_MSG_PSN CAPRI_KEY_RANGE(IN_P, msg_psn_sbit0_ebit15, msg_psn_sbit16_ebit23)
 #define K_SSN       CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit16_ebit23)
-#define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit7, msn_sbit16_ebit23)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit16_ebit31)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_RRQ_CINDEX CAPRI_KEY_RANGE(IN_P, rrq_cindex_sbit0_ebit0, rrq_cindex_sbit1_ebit7)
@@ -101,8 +100,6 @@ ack:
                    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
 
 nak_or_rnr:
-    scwlt24        c1, K_MSN, r2
-
     IS_MASKED_VAL_EQUAL_B(c3, r1, SYNDROME_MASK, NAK_SYNDROME)
     bcf            [!c3], rnr
     phvwr          p.rexmit_psn, K_BTH_PSN // Branch Delay Slot
@@ -135,7 +132,6 @@ nak:
     phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     // post err completion for msn one more than the one last completed
     // as specified in NAK
-    setcf          c1, [c0]
     add            r2, K_AETH_MSN, 1
     mincr          r2, 24, r0
     phvwr          p.cqe.send.msn, r2
@@ -145,7 +141,7 @@ nak:
 nak_completion:
     phvwrpair.e    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
                    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
-    phvwr.c1       CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 
 rnr:
     IS_MASKED_VAL_EQUAL_B(c3, r1, SYNDROME_MASK, RNR_SYNDROME)
@@ -157,7 +153,7 @@ rnr:
 
     phvwrpair.e    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), K_BTH_PSN, \
                    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
-    phvwr.c1       CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 
 read_or_atomic_or_implicit_nak:
     ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST) // Branch Delay Slot
@@ -187,8 +183,8 @@ read_or_atomic:
     phvwr          p.cqe.send.msn, r1
     add            r6, K_BTH_PSN, 1
     phvwr          p.rexmit_psn, r6
-    // If its mid packet, retain the last ack msn written in sqcb1
-    add.!c4        r1, K_MSN, 0
+    // If its mid packet, retain the msg msn stored in rrqwqe
+    add.!c4        r1, d.msn, 0
     
     seq            c2, d.read_rsp_or_atomic, RRQ_OP_TYPE_READ
     bcf            [!c2], atomic
@@ -216,7 +212,7 @@ read:
     // if read_resp contains already ack'ed msn, do not post CQ
     // ideally this should happen only with read_resp_first. For read_resp_last
     // or read_resp_only, msn should always be the un-acked msn
-    scwlt24.c4 c4, K_MSN, r1
+    IS_ANY_FLAG_SET(c4, r5, (REQ_RX_FLAG_ONLY|REQ_RX_FLAG_LAST))
     phvwr.!c4  CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, dma_cmd_eop), 1
 
     // Just in case if there are more than 2 sges to be processed for this
@@ -315,10 +311,8 @@ implicit_nak:
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
 
-    // If ack msn in implicit nak is already acked' do not post CQ
-    scwlt24        c2, K_MSN, r2
-    phvwr.c2       CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
-    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 
     // set cmd_eop if skip_to_eop cmd exists and cq is not posted
     setcf.e        c1, [c1 & !c2]

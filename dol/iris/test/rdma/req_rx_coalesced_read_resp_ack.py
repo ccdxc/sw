@@ -81,9 +81,10 @@ def TestCaseStepVerify(tc, step):
     elif step.step_id == 1:
         msn = tc.pvtdata.sq_pre_qstate.ssn - 2
 
+        # Commented out as read_response first doesn't post completion
         # verify that msn is incremented to ssn of msg before read_req
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
+        #    return False
 
         # verify that c_index of rrq is not incremented
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index4', tc.pvtdata.sq_post_qstate, 'c_index4'):
@@ -114,9 +115,10 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
      
+        # Commented out as read_response first doesn't post completion
         # validate cqcb pindex and color
-        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC_1'):
-            return False
+       # if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC_1'):
+       #     return False
 
     elif step.step_id == 2:
         msn = tc.pvtdata.sq_pre_qstate.ssn - 1

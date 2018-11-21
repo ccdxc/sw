@@ -45,11 +45,11 @@ req_rx_sqcb1_write_back_process:
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, error_drop_phv), 1, drop_phv
 
-    seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1 // BD-Slot
-
-    scwlt24        c2, K_REXMIT_PSN, d.rexmit_psn
+    scwlt24        c2, K_REXMIT_PSN, d.rexmit_psn // Branch Delay Slot
     bcf            [c2], drop_phv
-    tbladd.c1      d.nxt_to_go_token_id, 1 // BD-Slot
+
+    seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1 // BD-Slot
+    tbladd.c1      d.nxt_to_go_token_id, 1
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, sge_opt), 1, update_qstate
     tblwr          d.rexmit_psn, K_REXMIT_PSN // BD-Slot
@@ -75,9 +75,8 @@ update_qstate:
     add            r6, FIELD_OFFSET(sqcb2_t, rrq_cindex), r5
     memwr.b        r6, RRQ_C_INDEX
 post_cq:
-    bbne           K_POST_CQ, 1, check_bktrack
-
-    scwle24        c1, K_MSN, d.msn // BD-Slot
+    sne            c1, K_POST_CQ, 1
+    scwle24.!c1    c1, K_MSN, d.msn // BD-Slot
     bcf            [c1], check_bktrack
     // Re-load err_retry, rnr_retry counter and set rnr_timeout to 0 if
     // outstanding request is cleared. Otherwise, keep decrementing the
@@ -114,8 +113,9 @@ post_bktrack_ring:
     phvwr          p.db_data2, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r6, db_data2, db_data2, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
-    sslt           c1, r0, CAPRI_KEY_FIELD(IN_P, post_cq), K_REMAINING_PAYLOAD_BYTES
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, !c1)
+    // c1 set to TRUE if no completion AND no payload bytes to skip
+    seq.c1         c1, K_REMAINING_PAYLOAD_BYTES, r0
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c1)
     tblwr          d.bktrack_in_progress, 1
 
 check_sq_drain:

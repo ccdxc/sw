@@ -336,6 +336,7 @@ descriptors:
 
             sges:
 
+    # EXP_CQ_DESC_1 not used as read_response first doesn't post completion
     - descriptor:
         id      : EXP_CQ_DESC_1
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
@@ -357,7 +358,7 @@ descriptors:
             qid     : ref://testcase/config/rdmasession/lqp/id
             #op_type : 3
             status  : 0  #CQ_STATUS_SUCCESS
-            color   : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=1
+            color   : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             error   : 0
             type    : 2 #CQE_TYPE_SEND_MSN
 
@@ -404,10 +405,11 @@ session:
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
         expect:
-            descriptors:
-                - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC_1
-                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+            # Commented out as read_response first doesn't post completion
+            #descriptors:
+            #    - descriptor:
+            #        object  : ref://testcase/descriptors/id=EXP_CQ_DESC_1
+            #        ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
     - step:
         trigger:
