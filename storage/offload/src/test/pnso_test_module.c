@@ -609,7 +609,7 @@ body(void *not_used)
 		if (cfg && (ctl_repeat || ctl_state == CTL_STATE_START)) {
 			err = pnso_test_run_all(cfg);
 		}
-		osal_yield();
+		msleep(1);
 	}
 
 done:

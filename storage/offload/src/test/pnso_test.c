@@ -297,6 +297,7 @@ static pnso_error_t test_read_input(const char *path,
 #define POISIN_BYTE 'P'
 static struct pnso_buffer_list *test_alloc_buffer_list(uint32_t count,
 						       uint32_t total_bytes,
+						       uint32_t alignment,
 						       bool poisin)
 {
 	struct pnso_buffer_list *buflist;
@@ -313,7 +314,7 @@ static struct pnso_buffer_list *test_alloc_buffer_list(uint32_t count,
 	if (!buflist)
 		return NULL;
 
-	data = (uint8_t *) TEST_ALLOC_ALIGNED(FILE_NODE_BLOCK_SZ, count*block_size);
+	data = (uint8_t *) TEST_ALLOC_ALIGNED(alignment, count*block_size);
 	if (!data) {
 		TEST_FREE(buflist);
 		return NULL;
@@ -585,14 +586,18 @@ static pnso_error_t read_file_node_input(struct test_file_table *table,
 					 struct pnso_buffer_list *buflist)
 {
 	struct test_node_file *fnode;
+	uint32_t len;
 
 	fnode = lookup_file_node(table, filename, false);
 	if (!fnode)
 		return ENOENT;
 
 	osal_atomic_lock(&fnode->lock);
-	pbuf_copy_buffer_list(fnode->buflist, buflist);	
+	len = pbuf_copy_buffer_list(fnode->buflist, buflist);	
 	osal_atomic_unlock(&fnode->lock);
+
+	PNSO_LOG_DEBUG("Copied %u input bytes from file %s\n",
+		       len, filename);
 
 	return PNSO_OK;
 }
@@ -600,14 +605,25 @@ static pnso_error_t read_file_node_input(struct test_file_table *table,
 static pnso_error_t copy_file_node_data(struct test_node_file *fnode,
 					const struct pnso_buffer_list *buflist)
 {
-	size_t src_i, dst_i;
-	uint32_t len = pbuf_get_buffer_list_len(buflist);
-	uint32_t blk_count = (len + FILE_NODE_BLOCK_SZ - 1) / FILE_NODE_BLOCK_SZ;
-	uint32_t alloc_size = blk_count * FILE_NODE_BLOCK_SZ;
-	struct pnso_flat_buffer *fbuf = NULL;
+	uint32_t dst_i;
+	uint32_t len;
+	uint32_t blk_count;
+	uint32_t alloc_size;
+	struct pnso_flat_buffer *fbuf;
 
-	if (!alloc_size || !fnode || !buflist)
+	if (!fnode || !buflist)
 		return EINVAL;
+
+	len = pbuf_get_buffer_list_len(buflist);
+	if (fnode->padded_size && len > fnode->padded_size)
+		len = fnode->padded_size;
+	else if (len > fnode->file_size)
+		len = fnode->file_size;
+	if (!len)
+		return EINVAL;
+
+	blk_count = (len + fnode->block_size - 1) / fnode->block_size;
+	alloc_size = blk_count * fnode->block_size;
 
 	/* Resize if not enough room */
 	if (fnode->alloc_size < alloc_size) {
@@ -626,31 +642,24 @@ static pnso_error_t copy_file_node_data(struct test_node_file *fnode,
 		fnode->buflist->count = blk_count;
 	}
 
-	/* Copy data */
-	dst_i = 0;
-	for (src_i = 0; src_i < buflist->count; src_i++) {
-		memcpy(fnode->data+dst_i,
-		       (uint8_t*) buflist->buffers[src_i].buf,
-		       buflist->buffers[src_i].len);
-		dst_i += buflist->buffers[src_i].len;
-	}
-
 	/* Set buffer list info */
 	for (dst_i = 0; dst_i < fnode->buflist->count; dst_i++) {
 		fbuf = &fnode->buflist->buffers[dst_i];
-		if (dst_i >= blk_count) {
+		if (dst_i < blk_count) {
+			fbuf->len = fnode->block_size;
+			fbuf->buf = (uint64_t) fnode->data +
+				(dst_i * fnode->block_size);
+		} else {
 			fbuf->len = 0;
 			fbuf->buf = 0;
-		} else {
-			fbuf->len = FILE_NODE_BLOCK_SZ;
-			fbuf->buf = (uint64_t) fnode->data +
-				(dst_i * FILE_NODE_BLOCK_SZ);
 		}
 	}
-
 	/* Update last block to odd size */
 	fbuf = &fnode->buflist->buffers[blk_count - 1];
-	fbuf->len = len - (FILE_NODE_BLOCK_SZ * (blk_count - 1));
+	fbuf->len = len - (fnode->block_size * (blk_count - 1));	
+
+	/* Copy data */
+	pbuf_copy_buffer_list(buflist, fnode->buflist);
 
 	return PNSO_OK;
 
@@ -673,6 +682,7 @@ static pnso_error_t update_file_node(struct test_file_table *table,
 				     uint32_t file_size,
 				     uint64_t padded_checksum,
 				     uint32_t padded_size,
+				     uint32_t blk_sz,
 				     const struct pnso_buffer_list *buflist)
 {
 	pnso_error_t err = PNSO_OK;
@@ -695,6 +705,7 @@ static pnso_error_t update_file_node(struct test_file_table *table,
 		fnode->file_size = file_size;
 		fnode->padded_checksum = padded_checksum;
 		fnode->padded_size = padded_size;
+		fnode->block_size = blk_sz;
 		err = copy_file_node_data(fnode, buflist);
 	}
 
@@ -707,38 +718,46 @@ static void request_ctx_p2v(struct request_context *req_ctx)
 {
 	size_t i;
 
-	if (!req_ctx || !req_ctx->is_sgl_pa)
+	if (!req_ctx)
 		return;
 
 	/* Normalize sgls from physical to virtual addresses */
-	pbuf_convert_buffer_list_p2v(req_ctx->svc_req.sgl);
-	for (i = 0; i < req_ctx->svc_res.num_services; i++) {
-		if (pnso_svc_type_is_data(req_ctx->svc_res.svc[i].svc_type)) {
-			pbuf_convert_buffer_list_p2v(
-				req_ctx->svc_res.svc[i].u.dst.sgl);
-		}
+	if (req_ctx->is_req_sgl_pa) {
+		pbuf_convert_buffer_list_p2v(req_ctx->svc_req.sgl);
+		req_ctx->is_req_sgl_pa = false;
 	}
-
-	req_ctx->is_sgl_pa = false;
+	if (req_ctx->is_res_sgl_pa) {
+		for (i = 0; i < req_ctx->svc_res.num_services; i++) {
+			if (pnso_svc_type_is_data(req_ctx->svc_res.svc[i].svc_type)) {
+				pbuf_convert_buffer_list_p2v(
+					req_ctx->svc_res.svc[i].u.dst.sgl);
+			}
+		}
+		req_ctx->is_res_sgl_pa = false;
+	}
 }
 
 static void request_ctx_v2p(struct request_context *req_ctx)
 {
 	size_t i;
 
-	if (!req_ctx || req_ctx->is_sgl_pa)
+	if (!req_ctx)
 		return;
 
   	/* Normalize sgls from virtual to physical addresses */
-	pbuf_convert_buffer_list_v2p(req_ctx->svc_req.sgl);
-	for (i = 0; i < req_ctx->svc_res.num_services; i++) {
-		if (pnso_svc_type_is_data(req_ctx->svc_res.svc[i].svc_type)) {
-			pbuf_convert_buffer_list_v2p(
-				req_ctx->svc_res.svc[i].u.dst.sgl);
-		}
+	if (!req_ctx->is_req_sgl_pa) {
+		pbuf_convert_buffer_list_v2p(req_ctx->svc_req.sgl);
+		req_ctx->is_req_sgl_pa = true;
 	}
-
-	req_ctx->is_sgl_pa = true;
+	if (!req_ctx->is_res_sgl_pa) {
+		for (i = 0; i < req_ctx->svc_res.num_services; i++) {
+			if (pnso_svc_type_is_data(req_ctx->svc_res.svc[i].svc_type)) {
+				pbuf_convert_buffer_list_v2p(
+					req_ctx->svc_res.svc[i].u.dst.sgl);
+			}
+		}
+		req_ctx->is_res_sgl_pa = true;
+	}
 }
 
 static void batch_ctx_p2v(struct batch_context *batch_ctx)
@@ -806,6 +825,7 @@ static void output_results(struct request_context *req_ctx,
 						output_path, checksum,
 						file_size,
 						padded_checksum, padded_size,
+						blk_sz,
 						&buflist.bl);
 				}
 			} else if (svc_status->u.dst.sgl) {
@@ -830,6 +850,7 @@ static void output_results(struct request_context *req_ctx,
 					output_path, checksum,
 					file_size,
 					padded_checksum, padded_size,
+					blk_sz,
 					svc_status->u.dst.sgl);
 			}
 			if (err != PNSO_OK) {
@@ -855,6 +876,8 @@ static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_re
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
 	struct worker_context *worker_ctx;
 
+	PNSO_LOG_NOTICE("TODO: batch_completion_cb");
+
 	if (batch_ctx->req_rc == PNSO_OK)
 		batch_ctx->stats.agg_stats.total_latency =
 			osal_get_clock_nsec() - batch_ctx->start_time;
@@ -869,6 +892,8 @@ static void batch_completion_cb(void *cb_ctx, struct pnso_service_result *svc_re
 static void batch_completion_poll_cb(void *cb_ctx, struct pnso_service_result *svc_res)
 {
 	struct batch_context *batch_ctx = (struct batch_context *) cb_ctx;
+
+	PNSO_LOG_NOTICE("TODO: batch_completion_poll_cb");
 
 	if (batch_ctx->req_rc == PNSO_OK)
 		batch_ctx->stats.agg_stats.total_latency =
@@ -888,6 +913,9 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 	void *cb_ctx;
 	pnso_poll_fn_t *poll_fn;
 	void **poll_ctx;
+
+	PNSO_LOG_NOTICE("DEBUG: submitting request, mode %u\n",
+			(uint32_t) sync_mode);
 
 	/* Normalize sgls from virtual to physical addresses */
 	request_ctx_v2p(req_ctx);
@@ -988,7 +1016,8 @@ static pnso_error_t init_input_context(struct request_context *req_ctx,
 	if (input_len > req_ctx->input.alloc_sz) {
 		if (req_ctx->input.buf)
 			TEST_FREE(req_ctx->input.buf);
-		req_ctx->input.buf = TEST_ALLOC_ALIGNED(FILE_NODE_BLOCK_SZ, input_len);
+		req_ctx->input.buf = TEST_ALLOC_ALIGNED(
+			batch_ctx->desc->init_params.block_size, input_len);
 		if (!req_ctx->input.buf) {
 			PNSO_LOG_DEBUG("Failed to alloc %u bytes for input_buffer\n",
 				       input_len);
@@ -1157,6 +1186,7 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 						(output_len /
 						 batch_ctx->desc->init_params.block_size),
 						output_len,
+						batch_ctx->desc->init_params.block_size,
 						!testcase->turbo &&
 						svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS &&
 						(svc->svc.u.cp_desc.flags & PNSO_CP_DFLAG_ZERO_PAD));
@@ -1626,7 +1656,7 @@ static void reset_req_context(struct request_context *ctx)
 #endif
 
 	/* clear output buffers */
-	OSAL_ASSERT(!ctx->is_sgl_pa);
+	OSAL_ASSERT(!ctx->is_res_sgl_pa);
 	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
 		if (ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_HASH ||
 		    ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_CHKSUM) {
@@ -1647,6 +1677,8 @@ static void init_req_context(struct request_context *req_ctx,
 	reset_req_context(req_ctx);
 	req_ctx->batch_ctx = batch_ctx;
 	req_ctx->svc_chain = svc_chain;
+	req_ctx->is_req_sgl_pa = false;
+	req_ctx->is_res_sgl_pa = false;
 	memset(&req_ctx->svc_req, 0, sizeof(req_ctx->svc_req));
 	memset(req_ctx->req_svcs, 0, sizeof(req_ctx->req_svcs));
 	memset(&req_ctx->svc_res, 0, sizeof(req_ctx->svc_res));
@@ -1710,10 +1742,12 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 	/* Special handling for SYNC and POLL */
 	if (testcase->sync_mode == SYNC_MODE_SYNC) {
 		/* Manually call completion callback */
+		PNSO_LOG_NOTICE("TODO: batch_completion_cb for SYNC mode");
 		batch_completion_cb(batch_ctx,
 				    req_ctx ? &req_ctx->svc_res : NULL);
 	} else if (testcase->sync_mode == SYNC_MODE_POLL) {
 		/* Place on completion queue */
+		PNSO_LOG_NOTICE("TODO: NO batch_completion_cb for POLL mode");
 		if (!worker_queue_enqueue(worker_ctx->complete_q, batch_ctx))
 			PNSO_LOG_ERROR("Failed to enqueue polling batch_ctx to complete_q!\n");
 	}
@@ -1727,6 +1761,7 @@ error:
 	batch_ctx->stats.io_stats[0].failures++;
 	batch_ctx->poll_fn = NULL; /* prevent polling on error */
 	/* Manually call completion callback */
+	PNSO_LOG_NOTICE("TODO: batch_completion_cb for error %d", err);
 	batch_completion_cb(batch_ctx,
 			    req_ctx ? &req_ctx->svc_res : NULL);
 
@@ -1857,8 +1892,8 @@ static int worker_loop(void *param)
 #endif
 			ctx->last_active_ts = osal_get_clock_nsec();
 			run_testcase_batch(batch_ctx);
-			osal_yield();
 		}
+		osal_yield();
 	}
 
 	return 0;
@@ -2073,7 +2108,11 @@ static bool need_rate_limit(struct testcase_context *ctx, uint64_t elapsed_time)
 	return (in_rate > ctx->desc->limit_rate || out_rate > ctx->desc->limit_rate);
 }
 
+#if 0
 #define TESTCASE_IDLE_LOOP_TIMEOUT (5 * OSAL_NSEC_PER_SEC)
+#else
+#define TESTCASE_IDLE_LOOP_TIMEOUT (50000 * OSAL_NSEC_PER_SEC)
+#endif
 #define TESTCASE_LOOP_RESOLUTION_MASK ((1 << 8) - 1)
 
 static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
@@ -2422,7 +2461,9 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 	struct pnso_buffer_list *buflists[UNIT_TEST_BUFLIST_COUNT] = { NULL };
 
 	for (i = 0; i < UNIT_TEST_BUFLIST_COUNT; i++) {
-		buflists[i] = test_alloc_buffer_list((i+1)*2, UNIT_TEST_BUFLIST_SIZE, false);
+		buflists[i] = test_alloc_buffer_list((i+1)*2, UNIT_TEST_BUFLIST_SIZE,
+						     desc->init_params.block_size,
+						     false);
 		if (!buflists[i]) {
 			err = ENOMEM;
 			safe_strcpy(reason, "test_alloc_buffer_list",

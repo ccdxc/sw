@@ -101,7 +101,8 @@ struct request_context {
 
 	struct input_buffer_context input;
 
-	bool is_sgl_pa; /* physical addr or not */
+	bool is_req_sgl_pa; /* physical addr or not */
+	bool is_res_sgl_pa; /* physical addr or not */
 
 	/* MUST keep these 2 in order, due to zero-length array */
 	struct pnso_service_request svc_req;
@@ -269,13 +270,13 @@ struct testcase_context {
 	uint32_t vars[TEST_VAR_MAX];
 };
 
-#define FILE_NODE_BLOCK_SZ 4096
-struct test_node_block {
-	struct test_node node;
-	uint64_t file_offset;
-	struct pnso_flat_buffer buf;
-	uint8_t data[FILE_NODE_BLOCK_SZ];
-};
+//#define FILE_NODE_BLOCK_SZ 4096
+//struct test_node_block {
+//	struct test_node node;
+//	uint64_t file_offset;
+//	struct pnso_flat_buffer buf;
+//	uint8_t data[FILE_NODE_BLOCK_SZ];
+//};
 
 struct test_node_file {
 	struct test_node node;
@@ -285,6 +286,7 @@ struct test_node_file {
 	uint32_t file_size;
 	uint32_t padded_size;
 	uint32_t alloc_size;
+	uint32_t block_size;
 	char filename[TEST_MAX_FULL_PATH_LEN+1];
 
 	struct pnso_buffer_list *buflist;

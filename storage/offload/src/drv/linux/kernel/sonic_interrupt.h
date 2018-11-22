@@ -34,11 +34,12 @@
 #define SONIC_INTERRUPT_H
 
 #include <linux/device.h>
-#include <linux/netdevice.h>
+#include <linux/workqueue.h>
 #include "sonic_dev.h"
 
 #define MAX_PER_CORE_EVENTS MAX_PER_QUEUE_SQ_ENTRIES
-#define SONIC_ASYNC_BUDGET 10
+//#define SONIC_ASYNC_BUDGET 10
+#define SONIC_ASYNC_BUDGET 1
 
 enum sonic_intr_bits {
 	/* mask (and mask-on-assert) values */
@@ -63,6 +64,9 @@ struct sonic_event_list {
 	int			irq;
 	char			name[32];
 
+	struct workqueue_struct *wq;
+	struct sonic_work_data *work_data;
+
 	spinlock_t inuse_lock;
 	int next_evid;
 	int next_used_evid;
@@ -71,9 +75,6 @@ struct sonic_event_list {
 	uint32_t db_total_size;
 	void *db_base;
 	dma_addr_t db_base_pa;
-
-	struct workqueue_struct *wq;
-	struct sonic_work_data *work_data;
 };
 
 int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count);

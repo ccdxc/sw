@@ -74,8 +74,6 @@ fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 
 	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_CP_STATUS_DATA;
-
-	CPDC_PPRINT_DESC(desc);
 }
 
 static pnso_error_t
@@ -122,12 +120,19 @@ compress_setup(struct service_info *svc_info,
 	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl,
 			svc_info->si_dst_sgl.sgl, status_desc,
 			svc_info->si_src_blist.len, threshold_len);
+
 #if 1
-	cp_desc->cd_db_addr = (uint64_t) sonic_intr_get_db_addr(pcr);
+	cp_desc->u.cd_bits.cc_db_on = 1;
+	cp_desc->u.cd_bits.cc_otag_on = 1;
+	cp_desc->cd_db_addr = sonic_intr_get_db_addr(pcr);
 	cp_desc->cd_db_data = (uint64_t) svc_info->si_centry->ce_chain_head;
 	cp_desc->cd_otag_addr = sonic_get_per_core_intr_assert_addr(pcr);
 	cp_desc->cd_otag_data = sonic_get_intr_assert_data();
+	OSAL_LOG_NOTICE("Setting ASYNC mode for compression request, db_addr=0x%llx db_data=0x%llx",
+			(unsigned long long) cp_desc->cd_db_addr, (unsigned long long) cp_desc->cd_db_data);
 #endif
+
+	CPDC_PPRINT_DESC(cp_desc);
 
 	clear_insert_header(flags, cp_desc);
 #if 0

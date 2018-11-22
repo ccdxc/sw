@@ -753,7 +753,7 @@ static int per_core_resource_request_irq(struct per_core_resource *res)
 		 "%d", res->idx);//q->name);
 #endif
 	return devm_request_irq(dev, intr->vector, sonic_async_ev_isr,
-				0, intr->name, NULL /*napi*/);
+				0, intr->name, res->evl);
 }
 
 static int sonic_lif_per_core_resource_init(struct lif *lif,
@@ -810,7 +810,10 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	}
 	res->intr.vector = err;
 	err = 0;
+	sonic_intr_mask(&res->intr, true);
 	sonic_intr_mask_on_assertion(&res->intr);
+	sonic_intr_coal_set(&res->intr, 0);
+	sonic_intr_return_credits(&res->intr, 0, false, false);
 	err = per_core_resource_request_irq(res);
 	if (err) {
 		OSAL_LOG_ERROR("Failed to request irq");
