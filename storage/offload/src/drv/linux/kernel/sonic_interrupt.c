@@ -180,7 +180,6 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 	struct sonic_event_list *evl = (struct sonic_event_list *) evlptr;
 	int npolled;
 	bool was_armed;
-	struct sonic_work_data *work;
 
 	was_armed = xchg(&evl->armed, false);
 
@@ -208,12 +207,12 @@ uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res)
 
 	if (!evl || !evl->db_base) {
 		OSAL_LOG_WARN("Invalid evl\n");
-		return NULL;
+		return 0;
 	}
 
 	if (sonic_get_evid(evl, &evid) != 0) {
 		OSAL_LOG_WARN("Cannot find free evid\n");
-		return NULL;
+		return 0;
 	}
 
 	OSAL_LOG_WARN("Successfully allocated evid %u\n", evid);
