@@ -33,18 +33,17 @@ rx_stage0_load_rdma_params:
     seq c1, r5, r0
     bcf [c1], done
 
-    # is it sq or rq ?
-    seq c2, k.p4_rxdma_intr_qtype, d.u.rx_stage0_load_rdma_params_d.sq_qtype
-
-    add r1, r0, offsetof(struct phv_, common_global_global_data)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.pt_base_addr_page_id)
-    bcf [c2], sq
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.rx_stage0_load_rdma_params_d.log_num_pt_entries)   //BD Slot
-
     # is it aq ?
     seq c3, k.p4_rxdma_intr_qtype, d.u.rx_stage0_load_rdma_params_d.aq_qtype
     bcf         [c3], aq
-    nop
+
+    add r1, r0, offsetof(struct phv_, common_global_global_data)    // BD slot
+    # is it sq or rq ?
+    seq c2, k.p4_rxdma_intr_qtype, d.u.rx_stage0_load_rdma_params_d.sq_qtype
+
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.pt_base_addr_page_id)
+    bcf [c2], sq
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.rx_stage0_load_rdma_params_d.log_num_pt_entries)   //BD Slot
 
 rq:
     #add r1, r0, offsetof(struct phv_, to_stage_2_to_stage_data)
@@ -71,13 +70,20 @@ rq:
     nop
 
 aq:
+    add r2, r0, k.p4_rxdma_intr_qid
+    add r3, r0, RDMA_AQ_QID_START
+    # Ethernet uses admin_qid 0. Skip the following for the same
+    blt r2, r3, done
+
+    add r2, r0, offsetof(struct phv_, to_stage_5_to_stage_data)     // BD slot
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.u.rx_stage0_load_rdma_params_d.pt_base_addr_page_id)
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.rx_stage0_load_rdma_params_d.log_num_pt_entries)
     // stage 3 for rqwqe
     phvwr p.to_stage_3_to_stage_data[127:96], k.ext_app_header_app_data3[31:0]
     // stage 2 for rqrkey
     phvwr p.to_stage_2_to_stage_data[127:64], k.ext_app_header_app_data3[95:32]
 
     // copy to stage 5 and 6
-    add r2, r0, offsetof(struct phv_, to_stage_5_to_stage_data)
     CAPRI_SET_FIELD(r2, AQ_RX_TO_S5_T, cqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_hi)
     CAPRI_SET_FIELD(r2, AQ_RX_TO_S5_T, log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
 

@@ -1119,6 +1119,10 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
                                  barmap_base_addr,
                                  barmap_size,
                                  reserved) {
+    if (p4_txdma_intr.qid > 0) {
+        modify_field(scratch_rdma.reserved, reserved);
+    }
+
     if (((1 << p4_txdma_intr.qtype) & rdma_en_qtype_mask)  != 0) {
         modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
         modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);

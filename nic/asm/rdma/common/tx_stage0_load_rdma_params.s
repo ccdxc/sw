@@ -26,24 +26,31 @@ tx_stage0_load_rdma_params:
 
     # is it adminq ?
     seq c2, k.p4_txdma_intr_qtype, d.u.tx_stage0_lif_rdma_params_d.aq_qtype // BD slot
+    bcf [c2], aq
 
-    add r1, r0, offsetof(struct phv_, common_global_global_data)
+    add r1, r0, offsetof(struct phv_, common_global_global_data)    // BD slot
+
+sq:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.pt_base_addr_page_id)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_pt_entries)
 
-    bcf [c2], aq
-
-sq:
     add r1, r0, offsetof(struct phv_, to_stage_2_to_stage_data) //BD Slot
     CAPRI_SET_FIELD(r1, REQ_TX_TO_S2_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)
     b done
     nop // BD slot
 
 aq:
-    #TODO: Ethernet uses admin_qid 0. Skip the following for the same
-    #blt k.p4_txdma_intr_qid, RDMA_AQ_QID_START, done
+    add r2, r0, k.p4_txdma_intr_qid
+    add r3, r0, RDMA_AQ_QID_START
+    // Ethernet uses admin_qid 0. Skip the following for the same
+    blt r2, r3, done
 
-    add r2, r0, offsetof(struct phv_, to_stage_1_to_stage_data)
+    add r2, r0, offsetof(struct phv_, to_stage_1_to_stage_data) // BD slot
+
+    // All PHV writes should happen only after we ensure we are handling a RDMA AdminQ only
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pt_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.pt_base_addr_page_id)
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_pt_entries)
+
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, cqcb_base_addr_hi, d.u.tx_stage0_lif_rdma_params_d.cqcb_base_addr_hi)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, sqcb_base_addr_hi, d.u.tx_stage0_lif_rdma_params_d.sqcb_base_addr_hi)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, rqcb_base_addr_hi, d.u.tx_stage0_lif_rdma_params_d.rqcb_base_addr_hi)

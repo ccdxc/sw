@@ -964,6 +964,9 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
                                   rq_qtype,
                                   aq_qtype,
                                   reserved) {
+    if (p4_rxdma_intr.qid > 0) {
+        modify_field(scratch_rdma.reserved, reserved);
+    }
 
     if (p4_intr.recirc == 0) {
 
