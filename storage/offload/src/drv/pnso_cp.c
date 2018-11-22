@@ -49,6 +49,65 @@ clear_list_bits_in_desc(struct cpdc_desc *desc)
 	desc->u.cd_bits.cc_dst_is_list = 0;
 }
 
+static bool
+shadow_dst_sgl(uint64_t src_sgl_pa, uint64_t dst_sgl_pa)
+{
+	struct cpdc_sgl *src_sgl, *dst_sgl;
+	bool flag = false;
+
+	src_sgl = (struct cpdc_sgl *) sonic_phy_to_virt(src_sgl_pa);
+	if (!src_sgl)
+		return flag;
+
+	dst_sgl = (struct cpdc_sgl *) sonic_phy_to_virt(dst_sgl_pa);
+	if (!dst_sgl)
+		return flag;
+
+	while (dst_sgl) {
+		if (!src_sgl->cs_next)
+			break;
+
+
+		dst_sgl = dst_sgl->cs_next ? sonic_phy_to_virt(dst_sgl->cs_next)
+			: NULL;
+		src_sgl->cs_rsvd_3 = (uint64_t) dst_sgl;
+
+		src_sgl = src_sgl->cs_next ? sonic_phy_to_virt(src_sgl->cs_next)
+			: NULL;
+
+		flag = true;
+	}
+
+	return flag;
+}
+
+static void
+restore_dst_sgl(uint64_t src_sgl_pa, uint64_t dst_sgl_pa)
+{
+	struct cpdc_sgl *src_sgl, *dst_sgl;
+
+	src_sgl = (struct cpdc_sgl *) sonic_phy_to_virt(src_sgl_pa);
+	if (!src_sgl)
+		return;
+
+	dst_sgl = (struct cpdc_sgl *) sonic_phy_to_virt(dst_sgl_pa);
+	if (!dst_sgl)
+		return;
+
+	while (src_sgl) {
+		if (!src_sgl->cs_rsvd_3)
+			break;
+
+		dst_sgl->cs_next = (uint64_t) sonic_virt_to_phy(
+					(struct cpdc_sgl *) src_sgl->cs_rsvd_3);
+
+		src_sgl = src_sgl->cs_next ? sonic_phy_to_virt(src_sgl->cs_next)
+			: NULL;
+
+		dst_sgl = sonic_phy_to_virt(dst_sgl->cs_next);
+	}
+}
+
 static void
 fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 		struct cpdc_sgl *dst_sgl, struct cpdc_status_desc *status_desc,
@@ -170,6 +229,11 @@ compress_chain(struct chain_entry *centry)
 				OSAL_LOG_ERROR("failed to setup cp/pad params! err: %d",
 						err);
 				goto out;
+			}
+
+			if (shadow_dst_sgl(cp_desc->cd_src, cp_desc->cd_dst)) {
+				svc_info->si_flags |= CHAIN_SFLAG_SGL_SHADOWED;
+				// CPDC_PPRINT_DESC(cp_desc);
 			}
 		}
 
@@ -462,6 +526,14 @@ compress_teardown(struct service_info *svc_info)
 
 	OSAL_ASSERT(svc_info);
 	CPDC_PPRINT_DESC(svc_info->si_desc);
+
+	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) &&
+		(is_dflag_zero_pad_enabled(svc_info->si_desc_flags)) &&
+		(svc_info->si_flags & CHAIN_SFLAG_SGL_SHADOWED)) {
+		cp_desc = (struct cpdc_desc *) svc_info->si_desc;
+		restore_dst_sgl(cp_desc->cd_src, cp_desc->cd_dst);
+		// CPDC_PPRINT_DESC(cp_desc);
+	}
 
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_dst_sgl);
 	pc_res_sgl_put(svc_info->si_pcr, &svc_info->si_src_sgl);

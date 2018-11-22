@@ -102,6 +102,7 @@ pnso_init(struct pnso_init_params *pnso_init)
 	pc_initialized_params.max_seq_sq_descs =
 		max((uint32_t)pnso_init->per_core_qdepth,
 		     seq_sq_descs_max_get(lif));
+
 	/*
 	 * We use 2 passes to initialize per-core resources:
 	 * Pass 1: allocate accelerator desc resources including any
@@ -294,6 +295,7 @@ seq_sq_descs_max_get(struct lif *lif)
 		max_descs = max(max_descs,
 				sonic_get_seq_sq_num_descs(lif, seq_sq_tbl[i]));
 	}
+	OSAL_LOG_DEBUG("max_descs: %u", max_descs);
 
 	return max_descs;
 }

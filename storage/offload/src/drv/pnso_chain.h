@@ -75,6 +75,7 @@ extern "C" {
 #define CHAIN_SFLAG_MODE_SYNC		(1 << 4)
 #define CHAIN_SFLAG_MODE_POLL		(1 << 5)
 #define CHAIN_SFLAG_MODE_ASYNC		(1 << 6)
+#define CHAIN_SFLAG_SGL_SHADOWED	(1 << 7)	/* TODO: keep to resolve conflict */
 
 /* chain flags */
 #define CHAIN_CFLAG_MODE_SYNC		(1 << 0)
