@@ -45,19 +45,23 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 	uint32_t total_len;
 	pnso_error_t err;
 
-	if (!svc_blist->blist || svc_blist->blist->count == 0)
-		return EINVAL;
+	if (!svc_blist->blist || svc_blist->blist->count == 0) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("buffer list null/empty! err: %d", err);
+		return err;
+	}
 
 	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+
 	svc_sgl->mpool_type = mpool_type;
 	svc_sgl->sgl = NULL;
 	total_len = 0;
 	while (iter) {
 		sgl = pc_res_mpool_object_get(pcr, mpool_type);
 		if (!sgl) {
-			OSAL_LOG_ERROR("cannot obtain sgl_vec from pool, current_len %u",
-				       total_len);
 			err = ENOMEM;
+			OSAL_LOG_ERROR("cannot obtain sgl_vec from pool, current_len %u err: %d",
+				       total_len, err);
 			goto out;
 		}
 		memset(sgl, 0, sizeof(*sgl));
@@ -96,8 +100,8 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 	 * Caller must have ensured that svc_blist had non-zero length to begin with.
 	 */
 	if (!total_len) {
-		OSAL_LOG_ERROR("buffer_list is empty");
 		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
 		goto out;
 	}
 	return PNSO_OK;
@@ -151,8 +155,11 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 	uint32_t cur_count;
 	pnso_error_t err;
 
-	if (!svc_blist->blist || svc_blist->blist->count == 0)
-		return EINVAL;
+	if (!svc_blist->blist || svc_blist->blist->count == 0) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("buffer list null/empty! err: %d", err);
+		return err;
+	}
 
 	total_len = 0;
 	svc_sgl->mpool_type = vec_type;
@@ -160,9 +167,9 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 		pc_res_mpool_object_get_with_num_vec_elems(pcr, vec_type,
 				&num_vec_elems);
 	if (!svc_sgl->sgl) {
-		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s",
-			       mpool_get_type_str(vec_type));
 		err = ENOMEM;
+		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s err: %d",
+			       mpool_get_type_str(vec_type), err);
 		goto out;
 	}
 
@@ -202,18 +209,20 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 	}
 
 	if (iter) {
-		OSAL_LOG_ERROR("buffer_list total length exceeds SGL vector, current_len %u",
-			       total_len);
 		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list total length exceeds SGL vector, current_len %u err: %d",
+			       total_len, err);
 		goto out;
 	}
 
 	/*
-	 * Caller must have ensured that svc_blist had non-zero length to begin with.
+	 * Caller must have ensured that svc_blist had non-zero length to
+	 * begin with.
+	 *
 	 */
 	if (!total_len) {
-		OSAL_LOG_ERROR("buffer_list is empty");
 		err = EINVAL;
+		OSAL_LOG_ERROR("buffer_list is empty! err: %d", err);
 		goto out;
 	}
 	return PNSO_OK;
