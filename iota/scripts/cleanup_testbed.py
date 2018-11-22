@@ -21,7 +21,7 @@ SCPCMD = "sshpass -p docker scp -o StrictHostKeyChecking=no"
 def cleanup_node(node_ip):
     print("Cleaning up %s" % node_ip)
     os.system("%s %s/iota/scripts/cleanup_node.sh root@%s:/tmp/" % (SCPCMD, topdir, node_ip))
-    os.system("%s root@%s /tmp/cleanup_node.sh > /dev/null 2>&1" % (SSHCMD, node_ip))
+    os.system("%s root@%s source /tmp/cleanup_node.sh 2>&1" % (SSHCMD, node_ip))
     return
 
 tbspec = parser.JsonParse(GlobalOptions.testbed_json)
