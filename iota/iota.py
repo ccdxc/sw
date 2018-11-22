@@ -69,6 +69,7 @@ def Main():
 if __name__ == '__main__':
     status = Main()
     overall_timer.Stop()
-    print("\n\nOverall Runtime  : " + overall_timer.TotalTime())
-    print("Overall Status   : %d" % status)
+    print("Overall Runtime  : " + overall_timer.TotalTime())
+    print("Overall Status   : %s" % types.status.str(status).title())
+    print("\n\n")
     sys.exit(status)

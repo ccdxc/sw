@@ -41,6 +41,7 @@ class TestSuite:
         self.__stats_ignored = 0
         self.__stats_error = 0
         self.__stats_total = 0
+        self.result = types.status.FAILURE
         return
 
     def Abort(self):
@@ -259,7 +260,7 @@ class TestSuite:
         self.__timer.Stop()
         return self.result
 
-    def PrintSummary(self):
+    def PrintReport(self):
         if not self.__enabled:
            return types.status.SUCCESS
         print("\nTestSuite: %s" % self.__spec.meta.name)
@@ -270,10 +271,14 @@ class TestSuite:
         for tc in self.__tcs:
             tc.PrintResultSummary()
         print(types.HEADER_SUMMARY)
-        stats = "Summary: Total=%d, Pass=%d, Fail=%d, Ignored=%d, Error=%d" %\
-                 (self.__stats_total, self.__stats_pass, self.__stats_fail,
-                  self.__stats_ignored, self.__stats_error)
-        print("%-119s %-7s %-8s" % (stats, types.status.str(self.result).title(), self.__timer.TotalTime())) 
+
+    def PrintSummary(self):
+        if not self.__enabled:
+           return types.status.SUCCESS
+        print(types.FORMAT_ALL_TESTSUITE_SUMMARY %\
+              (self.__spec.meta.name, self.__stats_pass, self.__stats_fail, self.__stats_ignored,
+               self.__stats_error, self.__stats_total, types.status.str(self.result).title(),
+               self.__timer.TotalTime()))
         return types.status.SUCCESS
 
     def SetAttr(self, attr, value):

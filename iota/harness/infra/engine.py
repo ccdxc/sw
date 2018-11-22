@@ -47,6 +47,16 @@ def Main():
                 break
 
     for ts in testsuites:
+        ts.PrintReport()
+
+   
+    print("\n\nOverall Run Summary")
+    print(types.HEADER_SHORT_SUMMARY)
+    print(types.FORMAT_ALL_TESTSUITE_SUMMARY %\
+          ("Testsuite", "Pass", "Fail", "Ignored", "Error", "Total", "Result", "Duration"))
+    print(types.HEADER_SHORT_SUMMARY)
+    for ts in testsuites:
         ts.PrintSummary()
+    print(types.HEADER_SHORT_SUMMARY)
 
     return result
