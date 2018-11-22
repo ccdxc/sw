@@ -44,7 +44,6 @@ struct rqwqe_base_t d;
 
 .align
 resp_rx_rqwqe_process:
-
     // current_sge_id = rqcb_to_wqe_info_p->current_sge_id;
     // current_sge_offset = rqcb_to_wqe_info_p->current_sge_offset; 
 
@@ -68,10 +67,22 @@ in_progress_init:
     add         NUM_VALID_SGES, r0, CAPRI_KEY_FIELD(IN_P, num_valid_sges)
     add         SGE_P, r0, (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
-    b           loop
+    b           pre_loop
     add         r7, r0, offsetof(struct rqwqe_base_t, rsvd2) //BD Slot
 
 fresh_init:
+    // fresh_init means it is a SEND_ONLY or SEND_FIRST
+    // If REM_PYLD_BYTES is 0, it means it is a zero length send and also it is SEND_ONLY.
+    // It is SEND_ONLY because, SEND_FIRST is always PMTU size and hence REM_PYLD_BYTES can't be 0.
+    // In this case, we do not need to execute the loop and fire lkey/pt tables etc.
+    seq         c5, REM_PYLD_BYTES, 0
+    bcf         [c5], send_only_zero_len
+    phvwr       p.cqe.recv.wrid, d.wrid //BD Slot
+
+    // store wrid into rqcb3
+    RQCB3_WRID_ADDR_GET(r6)
+    memwr.d     r6, d.wrid
+
     tblwr.l     d.rsvd[63:0], 0
     #tblwr.l     d.rsvd[127:64], 0
     #tblwr.l     d.rsvd[159:128], 0
@@ -79,16 +90,15 @@ fresh_init:
     add         NUM_VALID_SGES, r0, d.num_sges
     add         SGE_P, r0, (RQWQE_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
-    phvwr       p.cqe.recv.wrid, d.wrid
-    // store wrid into rqcb3
-    RQCB3_WRID_ADDR_GET(r6)
-    memwr.d     r6, d.wrid
-
     add         r7, r0, offsetof(struct rqwqe_base_t, rsvd)
 
+pre_loop:
+    beqi        NUM_VALID_SGES, 0, len_err_nak
+
 loop:
+
     // r6 <- sge_p->len
-    CAPRI_TABLE_GET_FIELD(r6, SGE_P, SGE_T, len)
+    CAPRI_TABLE_GET_FIELD(r6, SGE_P, SGE_T, len)    //BD Slot
 
     //sge_remaining_bytes = sge_p->len - current_sge_offset;
     sub         r6, r6, CURR_SGE_OFFSET
@@ -208,11 +218,15 @@ write_done:
 
 loop_exit:
 
+    CAPRI_SET_TABLE_0_VALID(1)
+    CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
+
+send_only_zero_len_join:
     seq         c2, K_GLOBAL_FLAG(_inv_rkey), 1 // BD Slot
     // skip_inv_rkey if remaining_payload_bytes > 0
     // or if NOT send with invalidate
     bcf         [!c5 | !c2], skip_inv_rkey
-    nop // BD Slot
+    add         r7, r0, K_GLOBAL_FLAGS  // BD Slot
 
     // if invalidate rkey is present, invoke it by loading appopriate
     // key entry, else load the same program as MPU only.
@@ -223,10 +237,6 @@ loop_exit:
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_validate_process, KEY_ADDR)
 
 skip_inv_rkey:
-    CAPRI_SET_TABLE_0_VALID(1)
-    CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
-
-    add         r7, r0, K_GLOBAL_FLAGS
 
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_UD|RESP_RX_FLAG_IMMDT)
     phvwr.c2    p.cqe.recv.smac[31:0], CAPRI_KEY_FIELD(IN_TO_S_P, ext_hdr_data)
@@ -284,20 +294,17 @@ recirc:
     // and if payload_bytes > 0,
     // there are no sges left. generate NAK
     sle     c6, NUM_VALID_SGES, 2
-    bcf     [c6], nak
-    phvwrpair.c6   p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1 // BD Slot
-
-    add     r2, CAPRI_KEY_FIELD(IN_P, dma_cmd_index), (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
+    bcf     [c6], len_err_nak
+    add     r2, CAPRI_KEY_FIELD(IN_P, dma_cmd_index), (MAX_PYLD_DMA_CMDS_PER_SGE * 2)   //BD Slot
 
     // if we reached to the max number of pyld DMA commands and still
     // pkt transfer is not complete, generate NAK 
     seq     c1, r2, RESP_RX_DMA_CMD_PYLD_BASE_END
-    bcf     [c1], nak
-    phvwrpair.c1   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1 // BD Slot
+    bcf     [c1], qp_oper_err_nak 
 
     // store recirc info so that stage 1 program upon recirculation
     // can access this info
-    CAPRI_SET_FIELD2_C(TO_S_RECIRC_P, curr_wqe_ptr, K_CURR_WQE_PTR, !c1)
+    CAPRI_SET_FIELD2(TO_S_RECIRC_P, curr_wqe_ptr, K_CURR_WQE_PTR)   //BD Slot
     CAPRI_SET_FIELD2(TO_S_RECIRC_P, current_sge_id, r1[63:32])
     CAPRI_SET_FIELD2(TO_S_RECIRC_P, current_sge_offset, CURR_SGE_OFFSET)
     phvwrpair   CAPRI_PHV_FIELD(TO_S_RECIRC_P, remaining_payload_bytes), REM_PYLD_BYTES, \
@@ -309,6 +316,14 @@ recirc:
     // set recirc
     phvwr.e p.common.p4_intr_recirc, 1
     phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING //Exit Slot
+
+qp_oper_err_nak:
+    b           nak
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1 // BD Slot
+
+len_err_nak:
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1
+    // fall thru
 
 nak:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
@@ -330,3 +345,9 @@ nak:
 
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+
+send_only_zero_len:
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+    b           send_only_zero_len_join
+    CAPRI_SET_TABLE_0_VALID(0)  //BD Slot

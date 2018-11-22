@@ -266,23 +266,24 @@ send_sge_non_opt:
 
     // populate PD in lkey's to_stage
     CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
-    phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
+    phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD
 
     crestore    [c7, c6, c5], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT)
     // c7: completion, c6: inv_rkey, c5: immdt
 
     // if SEND_FIRST, we simply need to checkout a descriptor
     bcf         [c1], rc_checkout 
-    setcf       c4, [c6 | c5] // BD Slot
+    phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable //BD Slot
+
+    setcf       c4, [c6 | c5]
 
     // if SEND_MIDDLE OR immediate/inv_rkey is not present, 
     // we simply need to go to in_progress path
     bcf         [c2 | !c4], send_in_progress
-    phvwr.c7    p.cqe.recv.op_type, OP_TYPE_SEND_RCVD  //BD Slot
+    seq         c7, CAPRI_RXDMA_BTH_IETH_R_KEY, RDMA_RESERVED_LKEY_ID //BD Slot
 
     bcf         [!c6], send_check_immdt
-    seq         c7, CAPRI_RXDMA_BTH_IETH_R_KEY, RDMA_RESERVED_LKEY_ID //BD Slot
-    phvwr.c7    CAPRI_PHV_FIELD(TO_S_LKEY_P, rsvd_key_err), 1
+    phvwr.c7    CAPRI_PHV_FIELD(TO_S_LKEY_P, rsvd_key_err), 1   //BD Slot
 
     phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
     phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY

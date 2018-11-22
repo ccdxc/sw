@@ -551,10 +551,12 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
 
         desc = RdmaRqDescriptorBase(wrid=self.wrid,
                                     num_sges=self.spec.fields.num_sges)
-        for sge in self.spec.fields.sges:
-            logger.info("sge: va: 0x%x len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
-            sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
-            desc = desc/sge_entry
+
+        if self.spec.fields.num_sges:
+            for sge in self.spec.fields.sges:
+                logger.info("sge: va: 0x%x len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))
+                sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
+                desc = desc/sge_entry
         
         logger.ShowScapyObject(desc)
 

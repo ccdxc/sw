@@ -13,6 +13,7 @@ struct rqwqe_base_t d;
 #define IN_TO_S_P     to_s3_wqe_info
 #define TO_S_WB1_P to_s5_wb1_info
 
+#define NUM_SGES        r3
 #define SGE_P           r4
 #define REM_PYLD_BYTES  r5
 #define CURR_SGE_OFFSET r1
@@ -39,8 +40,10 @@ struct rqwqe_base_t d;
 .align
 resp_rx_rqwqe_opt_process:
 
+    add         NUM_SGES, d.num_sges, r0
+    beqi        NUM_SGES, 0, nak
     // num_valid_sges == 2 ?
-    seq         c1, d.num_sges, 2
+    seq         c1, NUM_SGES, 2   //BD Slot
     // c1: num_sges == 2
 
     // curr_sge_offset = spec_psn << log_pmtu
@@ -213,6 +216,7 @@ nak:
     // since num_sges is <=2, we would have consumed all of them in this pass
     // and if payload_bytes > 0,
     // there are no sges left. generate NAK
+    phvwr          p.cqe.recv.wrid, d.wrid
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1 // BD Slot
     // turn on ACK req bit
     // set err_dis_qp and completion flags

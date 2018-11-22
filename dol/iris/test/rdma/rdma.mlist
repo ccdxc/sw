@@ -634,6 +634,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_SEND_ONLY_0_LEN
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_0_len
+        spec    : resp_rx_send_only_0_len.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_RSVD_LKEY
         enable  : True
         package : test.rdma
@@ -964,6 +972,46 @@ modules:
         package : test.rdma
         module  : resp_rx_send_only_insufficient_sges
         spec    : resp_rx_send_only_insufficient_sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_FIRST_INSUFFICIENT_SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_insufficient_sges
+        spec    : resp_rx_send_first_insufficient_sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_INSUFFICIENT_SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_insufficient_sges
+        spec    : resp_rx_send_first_mid_insufficient_sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_LAST_INSUFFICIENT_SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_last_insufficient_sges
+        spec    : resp_rx_send_first_mid_last_insufficient_sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_ONLY_0_SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_insufficient_sges
+        spec    : resp_rx_send_only_0_sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_FIRST_0_SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_insufficient_sges
+        spec    : resp_rx_send_first_0_sges.testspec
         ignore  : False
  
     # RNR testcases
