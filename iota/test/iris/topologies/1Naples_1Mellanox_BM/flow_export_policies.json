@@ -5,10 +5,7 @@
     "meta": {
       "name": "scale-flow-export-ipfix-0",
       "tenant": "default",
-      "namespace": "default",
-      "generation-id": "",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
+      "namespace": "default"
     },
     "spec": {
       "targets": [
@@ -17,14 +14,13 @@
           "format": "IPFIX",
           "exports": [
             {
-              "destination": "192.168.100.103",
+              "destination": "10.255.0.101",
               "transport": "UDP/2055"
             }
           ]
         }
       ]
-    },
-    "status": {}
+    }
   }
 ]
 }

@@ -21,7 +21,7 @@ class TestSuite:
         self.__spec = spec
         self.__tcs = []
 
-        if GlobalOptions.testsuite and GlobalOptions.testsuite != self.Name():
+        if GlobalOptions.testsuites and self.Name() not in GlobalOptions.testsuites:
             Logger.info("Skipping Testsuite: %s because of command-line filters." % self.Name())
             self.__enabled = False
             return
@@ -83,7 +83,7 @@ class TestSuite:
             if store.GetTestbed().GetOs() not in tcb.meta.os:
                 Logger.info("Skipping Testbundle: %s due to OS mismatch." % tcb.meta.name)
                 continue
-            if GlobalOptions.testbundle and tcb.meta.name != GlobalOptions.testbundle:
+            if GlobalOptions.testbundles and tcb.meta.name not in  GlobalOptions.testbundles:
                 Logger.info("Skipping Testbundle: %s due to cmdline filter." % tcb.meta.name)
                 continue
             self.__spec.testcases.extend(tcb.testcases)

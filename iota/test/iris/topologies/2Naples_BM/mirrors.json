@@ -5,10 +5,7 @@
     "meta": {
       "name": "mirror-0",
       "tenant": "default",
-      "namespace": "default",
-      "generation-id": "",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
+      "namespace": "default"
     },
     "spec": {
       "enable": true,
@@ -84,10 +81,7 @@
     "meta": {
       "name": "mirror-1",
       "tenant": "default",
-      "namespace": "default",
-      "generation-id": "",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
+      "namespace": "default"
     },
     "spec": {
       "enable": true,

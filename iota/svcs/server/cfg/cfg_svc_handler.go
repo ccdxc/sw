@@ -413,7 +413,6 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 			uSegVlanIdx++
 		}
 	}
-
 	// ToDO add more SG Policies here.
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},

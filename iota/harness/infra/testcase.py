@@ -135,6 +135,8 @@ class Testcase:
         self.__stats_fail = 0
         self.__stats_ignored = 0
         self.__stats_error = 0
+
+        self.__enable = True
         return
 
     def __get_instance_id(self, iter_id):
@@ -327,6 +329,8 @@ class Testcase:
         
 
     def PrintResultSummary(self):
+        if not self.__enable: return
+
         for iter_data in self.__iters:
             iters_str = iter_data.iterators.Summary()
             print(types.FORMAT_TESTCASE_SUMMARY %\
@@ -336,6 +340,7 @@ class Testcase:
             if iters_str: print("- Iterators: %s" % iters_str)
             for v in self.__verifs:
                 v.PrintResultSummary()
+        return
 
     def Name(self):
         return self.__spec.name
@@ -353,12 +358,14 @@ class Testcase:
         return
 
     def GetStats(self):
-        self.__aggregate_stats()
+        if self.__enable:
+            self.__aggregate_stats()
         return (self.__stats_pass, self.__stats_fail, self.__stats_ignored, self.__stats_error)
 
     def Main(self):
-        if GlobalOptions.testcase and self.Name() != GlobalOptions.testcase:
+        if GlobalOptions.testcases and self.Name() not in GlobalOptions.testcases:
             Logger.info("Skipping Testcase: %s due to cmdline filter." % self.Name())
+            self.__enable = False
             return types.status.SUCCESS
 
         Logger.info("Starting Testcase: %s" % self.Name())

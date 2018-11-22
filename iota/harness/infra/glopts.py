@@ -45,6 +45,18 @@ GlobalOptions = parser.parse_args()
 GlobalOptions.default_username = "vm"
 GlobalOptions.default_password = "vm"
 
+GlobalOptions.testsuites = None
+if GlobalOptions.testsuite != None:
+    GlobalOptions.testsuites = GlobalOptions.testsuite.split(',')
+
+GlobalOptions.testbundles = None
+if GlobalOptions.testbundle != None:
+    GlobalOptions.testbundles = GlobalOptions.testbundle.split(',')
+
+GlobalOptions.testcases = None
+if GlobalOptions.testcase != None:
+    GlobalOptions.testcases = GlobalOptions.testcase.split(',')
+
 def __validate():
     if GlobalOptions.debug:
         print("========================================================")
