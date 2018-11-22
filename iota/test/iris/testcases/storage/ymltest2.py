@@ -30,7 +30,7 @@ def Trigger(tc):
     api.Trigger_AddHostCommand(req, n, cmd)
     api.Trigger_AddHostCommand(req, n, "dmesg")
     api.Logger.info("Running PNSO test %s" % cmd)
-    
+
     tc.resp = api.Trigger(req)
     return api.types.status.SUCCESS
 
@@ -48,4 +48,11 @@ def Verify(tc):
     return result
 
 def Teardown(tc):
+    return api.types.status.SUCCESS
+
+def RunTest(tc):
+    if Setup(tc) == api.types.status.SUCCESS  and \
+         Trigger(tc) == api.types.status.SUCCESS  and Verify(tc) == api.types.status.SUCCESS:
+        return api.types.status.SUCCESS
+
     return api.types.status.SUCCESS

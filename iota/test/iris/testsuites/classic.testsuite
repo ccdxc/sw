@@ -17,6 +17,7 @@ setup:
     config  :
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
+        - step : testcases.penctl.install
 
 common:
     verifs:
@@ -28,6 +29,7 @@ testbundles:
     - networking/networking.testbundle
     - classic/rdma.testbundle
     - storage/storage.testbundle
+    - penctl/penctl.testbundle
     - mnic/mnic_classic.testbundle
     - classic/internal_mgmt.testbundle
     - classic/driver-features-int_mgmt-sanity.testbundle

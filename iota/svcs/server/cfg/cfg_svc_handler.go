@@ -373,11 +373,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 				Name: n.Name,
 			},
 			Spec: cluster.HostSpec{
-				Interfaces: map[string]cluster.HostIntfSpec{
-					n.Uuid: {
-						MacAddrs: []string{n.Uuid},
-					},
-				},
+				SmartNICs: []cluster.SmartNICID{cluster.SmartNICID{Name: n.Uuid, MACAddress: n.Uuid}},
 			},
 		}
 		hosts = append(hosts, &host)
@@ -404,10 +400,11 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 				},
 				Spec: workload.WorkloadSpec{
 					HostName: n.Name,
-					Interfaces: map[string]workload.WorkloadIntfSpec{
-						mac: {
-							MicroSegVlan: uSegVlanIdx,
+					Interfaces: []workload.WorkloadIntfSpec{
+						workload.WorkloadIntfSpec{
 							ExternalVlan: vlan,
+							MicroSegVlan: uSegVlanIdx,
+							MACAddress:   mac,
 						},
 					},
 				},

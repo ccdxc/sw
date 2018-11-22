@@ -24,7 +24,7 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
-        common.AddPenctlCommand(req, n, "show metrics %s %s " % (tc.iterators.kind, tc.iterators.option))
+        common.AddPenctlCommand(req, n, "show metrics lif")
 
     tc.lif_metrics_old = api.Trigger(req)
 
@@ -32,7 +32,7 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
-        common.AddPenctlCommand(req, n, "show metrics %s %s " % (tc.iterators.kind, tc.iterators.option))
+        common.AddPenctlCommand(req, n, "show metrics lif")
 
     tc.lif_metrics_new = api.Trigger(req)
 

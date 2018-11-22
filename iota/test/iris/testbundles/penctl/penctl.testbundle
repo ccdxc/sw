@@ -3,6 +3,17 @@ meta:
     os      : [ linux, freebsd ]
 
 testcases:
+    -   name: ACCEL_METRICS
+        testcase    : testcases.penctl.accel_metrics
+        iterators   :
+            type        : nested
+            #cpumask     : [ 1 ]
+            cpumask     :  [ 1 ]
+            batch_depth :  [ 16 ]
+        args    :
+            blocksize   : 4096
+            test        : cpdc.yml
+
     -   name    : CHECK_LOGS
         testcase: testcases.penctl.log
         iterators :
@@ -19,11 +30,7 @@ testcases:
         testcase: testcases.penctl.firmware
 
     -   name    : CHECK_METRICS
-        testcase: testcases.penctl.metrics
-        iterators :
-            type : nested
-            kind : [" ", "-k "]
-            option : ["accelhwring", "accelseqqueue", "lif"]
+        testcase: testcases.penctl.lif_metrics
 
     -   name    : CHECK_EXECUTE
         testcase: testcases.penctl.execute
