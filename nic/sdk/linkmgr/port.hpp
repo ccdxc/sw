@@ -286,8 +286,7 @@ private:
 
     int port_set_an_resolved_params_internal(port_speed_t speed,
                                              int num_lanes,
-                                             int fec_enable,
-                                             int rsfec_enable);
+                                             port_fec_type_t fec_type);
 
     port_speed_t port_speed_to_serdes_speed(port_speed_t port_speed);
 

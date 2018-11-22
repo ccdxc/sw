@@ -332,10 +332,10 @@ func handlePortClearStatsCmd(cmd *cobra.Command, ofile *os.File) {
 				},
 			},
 
-			PortType:      halproto.PortType_PORT_TYPE_NONE,
+			PortType:      resp.GetSpec().GetPortType(),
 			AdminState:    resp.GetSpec().GetAdminState(),
 			PortSpeed:     resp.GetSpec().GetPortSpeed(),
-			NumLanes:      0,
+			NumLanes:      resp.GetSpec().GetNumLanes(),
 			FecType:       resp.GetSpec().GetFecType(),
 			AutoNegEnable: resp.GetSpec().GetAutoNegEnable(),
 			DebounceTime:  resp.GetSpec().GetDebounceTime(),

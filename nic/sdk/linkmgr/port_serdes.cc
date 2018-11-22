@@ -14,13 +14,9 @@ namespace linkmgr {
 // global aapl info
 Aapl_t *aapl = NULL;
 
-#define SPICO_INT_ENABLE 0x1
-#define SPICO_INT_RESET  0x39
-
 #define serdes_spico_int_check_hw(sbus_addr, int_code, int_data)  \
     avago_spico_int_check(aapl, __func__, __LINE__,         \
                           sbus_addr, int_code, int_data);   \
-
 
 //---------------------------------------------------------------------------
 // HAPS platform methods
@@ -858,6 +854,7 @@ serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
     bool int_ret  = false;
     int  int_code = 0x0;
     int  int_data = 0x0;
+    FILE *d_fp = NULL;
 
     Avago_serdes_an_config_t *config = NULL;
 
@@ -888,9 +885,24 @@ serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info)
                           0x200 | // 25G  KR/CR-S
                           0x400;  // 25G  KR/CR
 
-    config->an_clk      = 0;     // 1.25Gbps
     config->fec_ability = 1;
     config->fec_request = 0x2;   // 25G RS-FEC
+
+    d_fp = fopen("/user_cap", "r");
+    if (d_fp) {
+        fscanf(d_fp, "%u %d %u",
+               &config->user_cap, &config->fec_ability, &config->fec_request);
+        fclose(d_fp);
+    }
+
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr: %d, user_cap: %u, "
+                            "fec_ability: %d, fec_request: %u",
+                            sbus_addr, config->user_cap,
+                            config->fec_ability, config->fec_request);
+
+    config->an_clk = 0;     // 1.25Gbps
+
+    config->np_continuous_load = 1;
 
     avago_serdes_an_start(aapl, sbus_addr, config);
 
@@ -940,30 +952,17 @@ serdes_an_rsfec_enable_read_hw (uint32_t sbus_addr)
 int
 serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
 {
-    int      ret      = 0;
-    int      tx_width = 0;
-    int      rx_width = 0;
-    uint32_t an_hcd   = 0;
+    int      ret       = 0;
+    int      tx_width  = 0;
+    int      rx_width  = 0;
+    uint32_t an_hcd    = 0;
+    uint8_t  num_lanes = 0;
 
     Avago_serdes_an_config_t  *config      = NULL;
     Avago_serdes_pmd_config_t *pmd_config  = NULL;
     Avago_addr_t              *addr_struct = NULL;
     Avago_addr_t              *head        = NULL;
     Avago_addr_t              *node        = NULL;
-
-    // construct AAPL addr_list
-    for (int i = 0; i < 4; ++i) {
-        node = avago_addr_new(aapl);
-        avago_addr_init(node);
-        node->sbus = sbus_addr_arr[i];
-
-        if (head == NULL) {
-            addr_struct = head = node;
-        } else {
-            head->next = node;
-            head = head->next;
-        }
-    }
 
     an_hcd =
         avago_serdes_an_read_status(aapl, sbus_addr, AVAGO_SERDES_AN_READ_HCD);
@@ -975,17 +974,31 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
     switch (an_hcd) {
         case 0x08: /* 100GBASE-KR4 */
         case 0x09: /* 100GBASE-CR4 */
+            tx_width = 40;
+            rx_width = 40;
+            num_lanes = 4;
+            break;
+
         case 0x0a: /* 25GBASE-KRCR-S */
         case 0x0b: /* 25GBASE-KRCR */
             tx_width = 40;
             rx_width = 40;
+            num_lanes = 1;
             break;
+
         case 0x03: /* 40GBASE-KR4 */
         case 0x04: /* 40GBASE-CR4 */
+            tx_width = 20;
+            rx_width = 20;
+            num_lanes = 4;
+            break;
+
         case 0x02: /* 10GBASE-KR */
             tx_width = 20;
             rx_width = 20;
+            num_lanes = 1;
             break;
+
             // unsupported modes
         case 0x00: /* 1000BASE-KX */
         case 0x01: /* 10GBASE-KX4 */
@@ -1012,6 +1025,20 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
 
     if (ret == -1) {
         goto cleanup;
+    }
+
+    // construct AAPL addr_list
+    for (int i = 0; i < num_lanes; ++i) {
+        node = avago_addr_new(aapl);
+        avago_addr_init(node);
+        node->sbus = sbus_addr_arr[i];
+
+        if (head == NULL) {
+            addr_struct = head = node;
+        } else {
+            head->next = node;
+            head = head->next;
+        }
     }
 
     avago_serdes_an_configure_to_hcd(

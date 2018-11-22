@@ -510,22 +510,11 @@ port::port_serdes_an_hcd_cfg (void)
 
 int
 port::port_set_an_resolved_params_internal (port_speed_t speed, int num_lanes,
-                                            int fec_enable, int rsfec_enable)
+                                            port_fec_type_t fec_type)
 {
     this->set_port_speed(speed);
-
     this->set_num_lanes(num_lanes);
-
-    if (fec_enable == 1) {
-        this->set_fec_type(port_fec_type_t::PORT_FEC_TYPE_FC);
-    } else if(rsfec_enable == 1) {
-        this->set_fec_type(port_fec_type_t::PORT_FEC_TYPE_RS);
-    } else {
-        this->set_fec_type(port_fec_type_t::PORT_FEC_TYPE_NONE);
-    }
-
-    // TODO rsfec_enable not being set for 100G AN
-    this->set_fec_type(port_fec_type_t::PORT_FEC_TYPE_RS);
+    this->set_fec_type(fec_type);
 
     return 0;
 }
@@ -534,29 +523,37 @@ int
 port::port_set_an_resolved_params (int an_hcd, int fec_enable, int rsfec_enable)
 {
     int ret = 0;
+    port_fec_type_t fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
 
     switch (an_hcd) {
     case 0x08: /* 100GBASE-KR4 */
     case 0x09: /* 100GBASE-CR4 */
+        fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
         port_set_an_resolved_params_internal(
-                port_speed_t::PORT_SPEED_100G, 4, fec_enable, rsfec_enable);
+                port_speed_t::PORT_SPEED_100G, 4, fec_type);
         break;
 
     case 0x03: /* 40GBASE-KR4 */
     case 0x04: /* 40GBASE-CR4 */
         port_set_an_resolved_params_internal(
-                port_speed_t::PORT_SPEED_40G, 4, fec_enable, rsfec_enable);
+                port_speed_t::PORT_SPEED_40G, 4, fec_type);
         break;
 
     case 0x0a: /* 25GBASE-KRCR-S */
     case 0x0b: /* 25GBASE-KRCR */
+        if (fec_enable == 1) {
+            fec_type = port_fec_type_t::PORT_FEC_TYPE_FC;
+        } else if(rsfec_enable == 1) {
+            fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
+        }
+
         port_set_an_resolved_params_internal(
-                port_speed_t::PORT_SPEED_25G, 1, fec_enable, rsfec_enable);
+                port_speed_t::PORT_SPEED_25G, 1, fec_type);
         break;
 
     case 0x02:  /* 10GBASE-KR */
         port_set_an_resolved_params_internal(
-                port_speed_t::PORT_SPEED_10G, 1, fec_enable, rsfec_enable);
+                port_speed_t::PORT_SPEED_10G, 1, fec_type);
         break;
 
     // unsupported modes
