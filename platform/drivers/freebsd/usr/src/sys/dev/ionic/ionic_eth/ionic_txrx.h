@@ -44,6 +44,7 @@ void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
 void ionic_rx_destroy_map(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
 
 /* sysctl variables. */
+extern int ionic_use_adminq;
 extern int ionic_enable_msix;
 extern int ionic_rx_stride;
 extern int ionic_rx_fill_threshold;

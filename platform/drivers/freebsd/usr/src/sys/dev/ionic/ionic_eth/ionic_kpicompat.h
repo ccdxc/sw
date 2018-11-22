@@ -24,10 +24,8 @@
 #include <linux/printk.h>
 
 #ifndef print_hex_dump_debug
-#define print_hex_dump_debug(...) do {			\
-	if (0)						\
-		print_hex_dump(NULL, __VA_ARGS__);	\
-} while (0)
+#define print_hex_dump_debug(...) 			\
+		print_hex_dump(NULL, __VA_ARGS__)
 #endif
 
 /* XXX : should go to linux/device.h */

@@ -198,7 +198,6 @@ void ionic_api_put_dbid(struct lif *lif, int dbid)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 
-#ifndef ADMINQ
 #define XXX_DEVCMD_HALF_PAGE 0x800
 
 // XXX temp func to get side-band data from 2nd half page of dev_cmd reg space.
@@ -248,7 +247,6 @@ static int SBD_put(struct ionic_dev *idev, void *src, size_t len)
 
 	return 0;
 }
-#else
 
 static void ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
 {
@@ -267,46 +265,16 @@ static bool ionic_adminq_avail(struct adminq *adminq, int want)
 
 	return (avail > want);
 }
-#endif
 
-int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
+static int ionic_api_do_devcmd(struct lif* lif, struct ionic_admin_ctx *ctx)
 {
-	struct adminq *adminq = lif->adminqcq;
-#ifdef ADMINQ
-	struct admin_cmd *cmd;
-	int err = 0;
-
-	IONIC_ADMIN_LOCK(adminq);
-
-	if (!ionic_adminq_avail(adminq, 1)) {
-		err = ENOSPC;
-		IONIC_QUE_ERROR(adminq, "adminq is hung!\n");
-		IONIC_ADMIN_UNLOCK(adminq);
-
-		return (err);
-	}
-
-	cmd =  &adminq->cmd_ring[adminq->head_index];
-	memcpy(cmd, &ctx->cmd, sizeof(ctx->cmd));
-
-	IONIC_QUE_INFO(adminq, "post admin queue command:\n");
-	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-			     &ctx->cmd, sizeof(ctx->cmd), true);
-
-
-	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
-	ionic_adminq_ring_doorbell(adminq, adminq->head_index);
-
-
-	ionic_adminq_clean(adminq, adminq->num_descs);
-	IONIC_ADMIN_UNLOCK(adminq);
-
-	return err;
-#else
+	struct adminq *adminq = lif->adminq;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
 
 	IONIC_ADMIN_LOCK(adminq);
+	lif->num_dev_cmds++;
+
 #ifdef IONIC_DEBUG
 	IONIC_NETDEV_INFO(lif->netdev, "post admin dev command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
@@ -360,6 +328,47 @@ err_out:
 	}
 
 	return err;
-#endif
+}
+
+static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
+{
+	struct adminq *adminq = lif->adminq;
+
+	struct admin_cmd *cmd;
+	int err = 0;
+
+	IONIC_ADMIN_LOCK(adminq);
+
+	if (!ionic_adminq_avail(adminq, 1)) {
+		err = ENOSPC;
+		IONIC_QUE_ERROR(adminq, "adminq is hung!\n");
+		IONIC_ADMIN_UNLOCK(adminq);
+		return (err);
+	}
+
+	adminq->ctx_ring[adminq->head_index] = ctx;
+	cmd =  &adminq->cmd_ring[adminq->head_index];
+	memcpy(cmd, &ctx->cmd, sizeof(ctx->cmd));
+
+	IONIC_QUE_INFO(adminq, "post admin queue command %d@%d:\n",
+		cmd->opcode, adminq->head_index);
+	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+			     &ctx->cmd, sizeof(ctx->cmd), true);
+
+	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
+	ionic_adminq_ring_doorbell(adminq, adminq->head_index);
+
+	IONIC_ADMIN_UNLOCK(adminq);
+
+	return err;
+}
+
+int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
+{
+
+	if (ionic_use_adminq)
+		return (ionic_api_do_adminq(lif, ctx));
+	else
+		return ionic_api_do_devcmd(lif, ctx);
 }
 EXPORT_SYMBOL_GPL(ionic_api_adminq_post);

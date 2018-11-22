@@ -16,9 +16,9 @@ device_if.h bus_if.h vnode_if.h pci_if.h \
         opt_inet.h opt_inet6.h opt_rss.h
 
 # AdminQ disabled for now till fixed in Naples.
-CFLAGS+= -DHAPS -DOVERRIDE_KASSERT -DDADMINQ
+CFLAGS+= -DHAPS -DOVERRIDE_KASSERT
 # To enable debugging
-#CFLAGS+= -DIONIC_DEBUG -DIONIC_ENABLE_TRACING -DIONIC_DEBUG_PKT
+#CFLAGS+= -DIONIC_DEBUG -DDIONIC_ENABLE_TRACING -DDIONIC_DEBUG_PKT
 # To have seperate TX and Rx interrupt.
 CFLAGS+= -DIONIC_SEPERATE_TX_INTR
 

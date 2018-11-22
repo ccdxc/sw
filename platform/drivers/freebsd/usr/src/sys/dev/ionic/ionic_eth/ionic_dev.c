@@ -214,8 +214,9 @@ void ionic_intr_mask(struct intr *intr, bool mask)
 		.mask = mask ? 1 : 0,
 	};
 
-	IONIC_INFO("%s index: %d vector: %d %s\n",
-		intr->name, intr->index, intr->vector, mask ? "masked" : "unmasked");
+	IONIC_INFO("%s index: %d vector: %d credit: %d %s\n",
+		intr->name, intr->index, intr->vector, intr->ctrl->int_credits,
+		mask ? "masked" : "unmasked");
 
 	iowrite32(*(u32 *)intr_to_mask(&ctrl),
 		  intr_to_mask(intr->ctrl));

@@ -72,6 +72,11 @@ TUNABLE_INT("hw.ionic.enable_msix", &ionic_enable_msix);
 SYSCTL_INT(_hw_ionic, OID_AUTO, enable_msix, CTLFLAG_RWTUN,
     &ionic_enable_msix, 0, "Enable MSI/X");
 
+int ionic_use_adminq = 1;
+TUNABLE_INT("hw.ionic.use_adminq", &ionic_use_adminq);
+SYSCTL_INT(_hw_ionic, OID_AUTO, use_adminq, CTLFLAG_RDTUN,
+    &ionic_use_adminq, 0, "Enable adminQ");
+
 int adminq_descs = 16;
 TUNABLE_INT("hw.ionic.adminq_descs", &adminq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, adminq_descs, CTLFLAG_RDTUN,
@@ -1221,7 +1226,6 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 	struct lif* lif = if_getsoftc(ifp);
 	uint64_t val = 0;
 	int i;
-
 	struct tx_stats* txstat;
 	struct rx_stats* rxstat;
 
@@ -1284,6 +1288,7 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 	default:
 		return (if_get_counter_default(ifp, cnt));
 	}
+
 }
 
 static void 
@@ -1653,7 +1658,7 @@ ionic_setup_device_stats(struct lif *lif)
 
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
-	struct adminq* adminq = lif->adminqcq;
+	struct adminq* adminq = lif->adminq;
 	struct notifyq* notifyq = lif->notifyq;
 	int i;
 
@@ -1665,7 +1670,9 @@ ionic_setup_device_stats(struct lif *lif)
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "hw_capabilities", CTLFLAG_RD,
        &lif->hw_features, 0, "Hardware features enabled like checksum, TSO etc");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "legacy_spurious_interrupts", CTLFLAG_RD,
-       &lif->spurious, "Legacy interrupt count");   
+       &lif->spurious, "Legacy interrupt count");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "dev_cmds", CTLFLAG_RD,
+       &lif->num_dev_cmds, "dev commands used");
 	ionic_setup_hw_stats(lif, ctx, child);
 
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "coal_usecs",
@@ -1685,6 +1692,8 @@ ionic_setup_device_stats(struct lif *lif)
         &adminq->tail_index, 0, "Tail index");
     SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
         &adminq->comp_index, 0, "Completion index");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "comp_err", CTLFLAG_RD,
+        &adminq->stats.comp_err, "Completions with error");
 
 	snprintf(namebuf, QUEUE_NAME_LEN, "nq");
 	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,

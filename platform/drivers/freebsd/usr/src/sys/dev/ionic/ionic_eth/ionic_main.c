@@ -35,7 +35,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 {
 	struct net_device *netdev = lif->netdev;
 	static struct cmds {
-		unsigned int cmd;
+		unsigned int opcode;
 		char *name;
 	} cmds[] = {
 		{ CMD_OPCODE_TXQ_INIT, "CMD_OPCODE_TXQ_INIT" },
@@ -61,7 +61,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	int i;
 
 	for (i = 0; i < list_len; i++) {
-		if (cmd[i].cmd == ctx->cmd.cmd.opcode) {
+		if (cmd[i].opcode == ctx->cmd.cmd.opcode) {
 			name = cmd[i].name;
 			break;
 		}
@@ -137,7 +137,8 @@ static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
 	status = ionic_dev_cmd_status(idev);
 
 	if (status) {
-		IONIC_ERROR("DEVCMD failed, status: 0x%x\n", status);
+		IONIC_ERROR("DEVCMD(%d) failed, status: 0x%x\n",
+					idev->dev_cmd->cmd.cmd.opcode, status);
 		return (EIO);
 	}
 

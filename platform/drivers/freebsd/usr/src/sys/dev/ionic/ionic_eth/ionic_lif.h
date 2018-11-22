@@ -30,6 +30,10 @@
 #define QUEUE_NAME_MAX_SZ		8
 #define MAX_VLAN_TAG 			4095
 
+struct adminq_stats {
+	u64 comp_err;
+};
+
 struct tx_stats {
 	u64 dma_map_err;
 	u64 pkts;
@@ -111,8 +115,10 @@ struct adminq {
 	int comp_index;						/* Index for completion descriptors. */
 	int done_color; 					/* Expected comletion color. */
 
+	struct adminq_stats stats;
 	struct intr intr;
 
+	struct ionic_admin_ctx **ctx_ring;
 	/*
 	 * H/w command and completion descriptor rings.
 	 * Points to area allocated by DMA.
@@ -241,11 +247,12 @@ struct lif {
 
 	unsigned int index;
 
+	u64 num_dev_cmds;
 	unsigned int kern_pid;
 	struct doorbell __iomem *kern_dbpage;
 
 	struct workqueue_struct *adminq_wq;
-	struct adminq *adminqcq;
+	struct adminq *adminq;
 
 	struct notifyq *notifyq;
 	struct txque **txqs;

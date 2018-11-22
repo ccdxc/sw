@@ -108,7 +108,7 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 		return ENOTSUPP;
 	}
 
-	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
+//	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 
 	head = &lif->rx_filters.by_hash[key];
 	hlist_add_head(&f->by_hash, head);
@@ -117,7 +117,7 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 	head = &lif->rx_filters.by_id[key];
 	hlist_add_head(&f->by_id, head);
 
-	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+//	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
 	return 0;
 }
