@@ -1,0 +1,8 @@
+meta:
+    name    : cruds
+
+testcases:
+    -   name    : DeleteConfig
+        testcase: testcases.config.add_delete
+        args    :
+            op: delete

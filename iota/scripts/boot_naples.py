@@ -309,7 +309,7 @@ def ChangeNicMode():
     nap = NaplesManagement()
     nap.connect()
     nap.set_mode()
-    nap.reboot()
+    #nap.reboot()
 
     host = HostManagement()
     host.reboot()

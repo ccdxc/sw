@@ -39,7 +39,7 @@ __tbtype = [
 tbtype = utils.List2Enum(__tbtype)
 
 
-HEADER_SUMMARY = "-" * 120
-FORMAT_TESTCASE_SUMMARY = "%-70s %-32s %-7s %-8s"
+HEADER_SUMMARY = "-" * 136
+FORMAT_TESTCASE_SUMMARY = "%-15s %-70s %-32s %-7s %-8s"
 
 HOST_TOOLS_DIR = "/tmp/iota/tools"

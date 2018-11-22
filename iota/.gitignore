@@ -5,5 +5,6 @@ bin/
 test_data/
 images/raw.tar.gz
 images/arm-iperf
+images/*
 *.log
 logs

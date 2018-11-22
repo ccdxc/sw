@@ -1,0 +1,6 @@
+meta:
+    name    : normalization
+
+testcases:
+    -   name    : IP normalization tests
+        testcase: testcases.security.ip_norm

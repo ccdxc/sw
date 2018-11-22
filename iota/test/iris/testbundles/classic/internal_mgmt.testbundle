@@ -1,0 +1,12 @@
+meta:
+    name    : internalmgmt
+
+testcases:
+    -   name    : PingInternalMgmt
+        testcase: testcases.networking.ping
+        iterators :
+            type    : simple
+            pktsize : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+        args    :
+            type: local_only
+

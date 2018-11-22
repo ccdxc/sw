@@ -15,6 +15,10 @@ parser.add_argument('--dryrun', dest='dryrun', action='store_true',
                     help='Dry-Run mode. (No communication with HAL & Model)')
 parser.add_argument('--testsuite', dest='testsuite', default=None,
                     help='Run single Testsuite.')
+parser.add_argument('--testbundle', dest='testbundle', default=None,
+                    help='Run single Testbundle.')
+parser.add_argument('--testcase', dest='testcase', default=None,
+                    help='Run single Testcase.')
 parser.add_argument('--coverage', dest='coverage',
                     action='store_true', help='Collect code coverage data.')
 parser.add_argument('--svcport', dest='svcport', default=60000,

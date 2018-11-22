@@ -71,7 +71,6 @@ class _Logger:
         self.logfile        = logfile
         self.tsname         = None
         self.tcname         = None
-        self.tcid           = None
 
         if stdout:
             global StdoutLoggerSink
@@ -95,7 +94,7 @@ class _Logger:
         if self.tsname:
             prefix += "[TS:%s]" % self.tsname
         if self.tcname:
-            prefix += "[TC:%s_%s]" % (self.tcname, str(self.tcid))
+            prefix += "[TC:%s]" % (self.tcname)
         if level:
             prefix += "[%s]" % prefixes[level]
         else:
@@ -165,15 +164,10 @@ class _Logger:
         self.tsname = tsname
         # Reset the tcname everytime tsname changes.
         self.tcname = None
-        self.tcid = None
         return
 
     def SetTestcase(self, tcname):
         self.tcname = tcname
-        return
-
-    def SetTestcaseID(self, tcid):
-        self.tcid = tcid
         return
 
     def GetLogPrefix(self):

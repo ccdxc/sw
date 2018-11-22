@@ -1,24 +1,5 @@
 meta:
-    name        : classic::rdma
-    description : RDMA Test Suite
-    mode        : hardware
-    cfgmode     : netagent
-    nicmode     : classic
-
-packages:
-    - iota.test.iris
-
-images:
-
-setup:
-    topology: test/iris/topologies/2Naples_BM/2Naples.topology
-    config  : 
-        - step : config.netagent.hw_push_config
-
-common:
-    verifs:
-        #-   step    : verif.utils.verify_cores
-        #-   step    : verif.utils.verify_topology_health
+    name    : rdma
 
 testcases:
 
@@ -201,6 +182,3 @@ testcases:
     #    testcase: testcases.rdma.rc_atomic_bw
     #    args    :
     #        type: remote_only
-
-teardown:
-    #- step      : verif.utils.collect_logs_and_cores

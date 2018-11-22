@@ -1,0 +1,9 @@
+meta:
+    name    : policyscale
+
+testcases:
+    -   name    : PolicyScaleAddDelLoop
+        testcase: testcases.security.policy_scale_add_del_loop
+        disable : True
+        args    :
+            count : 1

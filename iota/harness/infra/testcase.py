@@ -3,13 +3,14 @@ import pdb
 import copy
 import os
 import subprocess
-from iota.harness.infra.utils.logger import Logger as Logger
 
 import iota.harness.infra.utils.timeprofiler as timeprofiler
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.loader as loader
 import iota.harness.api as api
 
+from iota.harness.infra.utils.logger import Logger as Logger
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 def get_owner(file):
     result = subprocess.run([ "git", "log", "-n", "1", "--format=%an",
 			  "%s" % file], stdout=subprocess.PIPE)
@@ -225,7 +226,7 @@ class Testcase:
         return types.status.SUCCESS
 
     def __mk_testcase_directory(self, newdir):
-        Logger.info("Creating Testcase directory: %s" % newdir)
+        Logger.debug("Creating Testcase directory: %s" % newdir)
         command = "mkdir -p %s && chmod 777 %s" % (newdir, newdir)
         req = api.Trigger_CreateExecuteCommandsRequest()
         for nodename in api.GetNaplesHostnames():
@@ -266,11 +267,11 @@ class Testcase:
             iter_data.StartTime()
 
             api.ChangeDirectory("")
-            Logger.SetTestcaseID(iter_data.GetInstanceId())
+            Logger.SetTestcase(iter_data.GetInstanceId())
             Logger.debug("Testcase Iteration directory = %s", iter_data.GetInstanceId())
             ret = self.__mk_testcase_directory(iter_data.GetInstanceId())
             if ret != types.status.SUCCESS: 
-                self.__update_stats(ret)
+                iter_data.SetStatus(ret)
                 return ret
             
             api.ChangeDirectory(iter_data.GetInstanceId())
@@ -305,8 +306,12 @@ class Testcase:
 
                     if self.__aborted:
                         iter_data.SetStatus(types.status.ABORTED)
-                        self.__update_stats(types.status.ABORTED)
                         return types.status.FAILURE
+
+                    if result != types.status.SUCCESS and GlobalOptions.no_keep_going:
+                        Logger.error("Error: STOPPING ON FIRST FAILURE.")
+                        iter_data.SetStatus(result)
+                        return ret
  
             if result != types.status.SUCCESS:
                 if ignored:
@@ -325,7 +330,7 @@ class Testcase:
         for iter_data in self.__iters:
             iters_str = iter_data.iterators.Summary()
             print(types.FORMAT_TESTCASE_SUMMARY %\
-                  (iter_data.Name(), self.__get_owner(),
+                  (self.Bundle(), iter_data.Name(), self.__get_owner(),
                    types.status.str(iter_data.GetStatus()).title(), 
                    iter_data.TotalTime()))
             if iters_str: print("- Iterators: %s" % iters_str)
@@ -335,10 +340,12 @@ class Testcase:
     def Name(self):
         return self.__spec.name
 
+    def Bundle(self):
+        return self.__spec.bundle
+
     def Abort(self):
         self.__aborted = True
         return
-
     
     def __aggregate_stats(self):
         for iter_data in self.__iters:
@@ -346,14 +353,17 @@ class Testcase:
         return
 
     def GetStats(self):
+        self.__aggregate_stats()
         return (self.__stats_pass, self.__stats_fail, self.__stats_ignored, self.__stats_error)
 
     def Main(self):
-        Logger.SetTestcase(self.Name())
+        if GlobalOptions.testcase and self.Name() != GlobalOptions.testcase:
+            Logger.info("Skipping Testcase: %s due to cmdline filter." % self.Name())
+            return types.status.SUCCESS
+
         Logger.info("Starting Testcase: %s" % self.Name())
         self.__timer.Start()
         self.status = self.__execute()
-        self.__aggregate_stats()
         self.__timer.Stop()
         Logger.info("Testcase %s FINAL RESULT = %d" % (self.Name(), self.status))
         return self.status

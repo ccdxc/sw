@@ -115,6 +115,7 @@ def setup_features(tc):
 
     resp = api.Trigger(req)
     for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             api.Logger.error("Error running cmd : %s " % cmd.command)
             api.Logger.error("Std Output : %s " % cmd.stdout)

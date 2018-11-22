@@ -1,0 +1,6 @@
+meta:
+    name    : policy
+
+testcases:
+    -   name    : PolicyLocalToLocal
+        testcase: testcases.security.policy_rules

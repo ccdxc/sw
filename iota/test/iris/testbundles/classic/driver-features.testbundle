@@ -1,29 +1,9 @@
 meta:
-    name        : classic::driver-features
-    description : Driver features Test Suite
-    mode        : hardware
-    cfgmode     : netagent
-    nicmode     : classic
-    enable      : False
-    os          : [ linux, freebsd ]
-
-packages:
-    - iota.test.iris
-
-images:
-
-setup:
-    topology: test/iris/topologies/2Naples_BM/2Naples.topology
-    config  :
-        - step : config.netagent.hw_push_config
-
-common:
-    verifs:
-        #-   step    : verif.utils.verify_cores
-        #-   step    : verif.utils.verify_topology_health
+    name    : ionicdrv_regr
+    os      : [ linux, freebsd ]
 
 testcases:
-    -   name    : DRIVER_FEATURES_TX_RING_SIZE
+    -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -36,11 +16,8 @@ testcases:
         args    :
             type         : remote_only
             #capture_pcap : True
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
 
-    -   name    : DRIVER_FEATURES_RX_RING_SIZE
+    -   name    : UplinkIntf_RX_RING_SIZE
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -53,10 +30,7 @@ testcases:
         args    :
             type: remote_only
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_TX_QUEUE_SIZE
+    -   name    : UplinkIntf_TX_QUEUE_SIZE
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -69,10 +43,7 @@ testcases:
         args    :
             type: remote_only
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_RX_QUEUE_SIZE
+    -   name    : UplinkIntf_RX_QUEUE_SIZE
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -85,10 +56,7 @@ testcases:
         args    :
             type: remote_only
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_TX_CHECKSUM
+    -   name    : UplinkIntf_TX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -101,10 +69,7 @@ testcases:
         args    :
             type: remote_only
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_RX_CHECKSUM
+    -   name    : UplinkIntf_RX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -117,10 +82,7 @@ testcases:
         args    :
             type: remote_only
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_TSO
+    -   name    : UplinkIntf_TSO
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -138,10 +100,7 @@ testcases:
         args    :
             type: remote_only
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_PKT_FILTER
+    -   name    : UplinkIntf_PKT_FILTER
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -156,9 +115,3 @@ testcases:
         args    :
             type: remote_only
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-
-teardown:
-    #- step      : verif.utils.collect_logs_and_cores

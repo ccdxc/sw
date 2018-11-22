@@ -1,30 +1,9 @@
 meta:
-    name        : classic::driver-features-int_mgmt-sanity
-    description : Driver features Test Suite
-    mode        : hardware
-    cfgmode     : netagent
-    nicmode     : classic
-    enable      : True
-    os          : [ linux, freebsd ]
-
-packages:
-    - iota.test.iris
-
-images:
-
-setup:
-    topology: test/iris/topologies/2Naples_BM/2Naples.topology
-    config  :
-        - step : config.netagent.hw_push_config
-        - step : testcases.drivers.install_iperf
-
-common:
-    verifs:
-        #-   step    : verif.utils.verify_cores
-        #-   step    : verif.utils.verify_topology_health
+    name    : internalmgmt
+    os      : [ linux, freebsd ]
 
 testcases:
-    -   name    : DRIVER_FEATURES_TX_CHECKSUM
+    -   name    : InternalMgmt_TX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -37,10 +16,8 @@ testcases:
         args    :
             test-type    : int-mgmt
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_RX_CHECKSUM
+
+    -   name    : InternalMgmt_RX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -53,10 +30,8 @@ testcases:
         args    :
             test-type    : int-mgmt
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_TSO
+
+    -   name    : InternalMgmt_TSO
         testcase: testcases.drivers.features
         disable : False
         iterators :
@@ -74,9 +49,3 @@ testcases:
         args    :
             test-type    : int-mgmt
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-
-teardown:
-    #- step      : verif.utils.collect_logs_and_cores

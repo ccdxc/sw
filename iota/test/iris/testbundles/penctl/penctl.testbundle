@@ -1,27 +1,6 @@
 meta:
-    name        : penctl
-    description : PenCtl Test Suite
-    mode        : hardware
-    cfgmode     : netagent
-    nicmode     : classic
-    os          : [ linux, freebsd ]
-
-
-packages:
-    - iota.test.iris
-
-images:
-
-setup:
-    topology: test/iris/topologies/2Naples_BM/2Naples.topology
-    config  :
-        - step : config.netagent.hw_push_config
-        - step : testcases.penctl.install
-
-common:
-    verifs:
-        #-   step    : verif.utils.verify_cores
-        #-   step    : verif.utils.verify_topology_health
+    name    : penctl
+    os      : [ linux, freebsd ]
 
 testcases:
     -   name    : CHECK_LOGS
@@ -77,5 +56,3 @@ testcases:
                       "show running-firmware", "show startup-firmware", "show system-memory-usage",
                       "show firmware-install", "show tech-support"
                      ]
-teardown:
-    #- step      : verif.utils.collect_logs_and_cores

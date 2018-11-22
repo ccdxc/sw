@@ -11,6 +11,7 @@ import iota.harness.infra.testcase as testcase
 import iota.harness.infra.topology as topology
 import iota.harness.infra.logcollector as logcollector
 import iota.harness.infra.utils.utils as utils
+import iota.harness.infra.utils.timeprofiler as timeprofiler
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -33,6 +34,7 @@ class TestSuite:
         self.__enabled = getattr(self.__spec.meta, 'enable', True)
         self.__aborted = False
         self.__attrs = {}
+        self.__timer = timeprofiler.TimeProfiler()
 
         self.__stats_pass = 0
         self.__stats_fail = 0
@@ -69,6 +71,25 @@ class TestSuite:
  
     def DoConfig(self):
         return self.__setup_config()
+
+    def __import_testbundles(self):
+        if getattr(self.__spec, 'testcases', None) == None:
+            self.__spec.testcases = []
+
+        for imp in self.__spec.testbundles:
+            filename = "%s/iota/test/iris/testbundles/%s" % (api.GetTopDir(), imp)
+            tcb = parser.YmlParse(filename)
+            tcb.meta.os = getattr(tcb.meta, 'os', [ 'linux' ])
+            if store.GetTestbed().GetOs() not in tcb.meta.os:
+                Logger.info("Skipping Testbundle: %s due to OS mismatch." % tcb.meta.name)
+                continue
+            if GlobalOptions.testbundle and tcb.meta.name != GlobalOptions.testbundle:
+                Logger.info("Skipping Testbundle: %s due to cmdline filter." % tcb.meta.name)
+                continue
+            self.__spec.testcases.extend(tcb.testcases)
+            for tc in tcb.testcases:
+                tc.bundle = tcb.meta.name
+        return
 
     def __resolve_testcases(self):
         for tc_spec in self.__spec.testcases:
@@ -145,8 +166,9 @@ class TestSuite:
             self.__stats_fail += f
             self.__stats_ignored += i
             self.__stats_error += e
-            self.__stats_total = self.__stats_pass + self.__stats_fail +\
-                                 self.__stats_ignored + self.__stats_error
+            
+        self.__stats_total = (self.__stats_pass + self.__stats_fail +\
+                              self.__stats_ignored + self.__stats_error)
         return
 
     def __execute_testcases(self):
@@ -188,31 +210,39 @@ class TestSuite:
            Logger.info("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
            self.__enabled = False
            return types.status.SUCCESS
-        # Update logger
-        Logger.SetTestsuite(self.Name())
-        Logger.info("Starting Testsuite: %s" % self.Name())
-    
+
         if store.GetTestbed().GetOs() not in self.__get_oss():
             Logger.info("Skipping Testsuite: %s due to OS mismatch." % self.Name())
             self.__enabled = False
             return types.status.SUCCESS
+        
+        # Start the testsuite timer
+        self.__timer.Start()
+        
+        # Update logger
+        Logger.SetTestsuite(self.Name())
+        Logger.info("Starting Testsuite: %s" % self.Name())
 
         # Initialize Testbed for this testsuite
         status = store.GetTestbed().InitForTestsuite(self)
         if status != types.status.SUCCESS:
+            self.__timer.Stop()
             return status
         
         # Use try/except block to not let testcase crash the overall run.
+        self.__import_testbundles()
         self.__resolve_testcases()
         self.__resolve_teardown()
         self.__expand_iterators()
 
         status = self.__parse_setup()
         if status != types.status.SUCCESS:
+            self.__timer.Stop()
             return status
 
         status = self.__setup()
         if status != types.status.SUCCESS:
+            self.__timer.Stop()
             return status
     
         try:
@@ -226,6 +256,7 @@ class TestSuite:
         Logger.info("Testsuite %s FINAL STATUS = %d" % (self.Name(), self.result))
         
         self.__collect_logs()
+        self.__timer.Stop()
         return self.result
 
     def PrintSummary(self):
@@ -234,18 +265,19 @@ class TestSuite:
         print("\nTestSuite: %s" % self.__spec.meta.name)
         print(types.HEADER_SUMMARY)
         print(types.FORMAT_TESTCASE_SUMMARY %\
-              ("Testcase", "Owner", "Result", "Duration"))
+              ("Testbundle", "Testcase", "Owner", "Result", "Duration"))
         print(types.HEADER_SUMMARY)
         for tc in self.__tcs:
             tc.PrintResultSummary()
         print(types.HEADER_SUMMARY)
-        print("Summary: Total=%d, Pass=%d, Fail=%d, Ignored=%d, Error=%d" %\
-              (self.__stats_total, self.__stats_pass, self.__stats_fail,
-               self.__stats_ignored, self.__stats_error))
-               
+        stats = "Summary: Total=%d, Pass=%d, Fail=%d, Ignored=%d, Error=%d" %\
+                 (self.__stats_total, self.__stats_pass, self.__stats_fail,
+                  self.__stats_ignored, self.__stats_error)
+        print("%-119s %-7s %-8s" % (stats, types.status.str(self.result).title(), self.__timer.TotalTime())) 
         return types.status.SUCCESS
 
     def SetAttr(self, attr, value):
+        Logger.info("Adding new Testsuite attribute: %s = " % attr, value)
         self.__attrs[attr] = value
         return
 

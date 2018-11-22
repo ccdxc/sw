@@ -1,24 +1,6 @@
 meta:
-    name        : storage
-    description : Storage Hardware Test Suite
-    mode        : hardware
-    cfgmode     : netagent
-    nicmode     : classic
-    os          : [ linux, freebsd ]
-
-packages:
-    - iota.test.iris
-
-images:
-
-setup:
-    topology: test/iris/topologies/1Naples_BM/1Naples.topology
-    config  : 
-        - step : config.netagent.hw_push_config
-
-common:
-    verifs:
-        - step    : verif.utils.verify_dmesg
+    name    : storage
+    os      : [ linux, freebsd ]
 
 aliases:
     - &STORAGE_TEST_DIR storage/offload/src/test
@@ -149,6 +131,3 @@ testcases:
 #            wait: 5 # Wait in seconds.
 #            cfg : [ 4k.yml, globals.yml ]
 #            test: test3.yml
-
-teardown:
-    #- step      : verif.utils.collect_logs_and_cores

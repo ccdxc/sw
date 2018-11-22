@@ -1,0 +1,12 @@
+meta:
+    name        : networking
+
+testcases:
+    -   name    : Ping_Mirror_Remote_Workloads
+        testcase: testcases.telemetry.ping_mirror
+        args    :
+            type: remote_only
+        iterators :
+            type    : simple
+            pktsize : [128]
+

@@ -1,33 +1,11 @@
 meta:
-    name        : classic::driver-features-oob-1g-sanity
-    description : Driver features Test Suite
-    mode        : hardware
-    cfgmode     : netagent
-    nicmode     : classic
-    enable      : True
-    os          : [ linux, freebsd ]
-
-packages:
-    - iota.test.iris
-
-images:
-
-setup:
-    topology: test/iris/topologies/2Naples_BM/2Naples.topology
-    config  :
-        - step : config.netagent.hw_push_config
-        - step : testcases.drivers.install_iperf
-
-common:
-    verifs:
-        #-   step    : verif.utils.verify_cores
-        #-   step    : verif.utils.verify_topology_health
+    name    : inband100g
+    os      : [ linux, freebsd ]
 
 testcases:
-    -   name    : DRIVER_FEATURES_TX_CHECKSUM
+    -   name    : Inband100G_TX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
-        ignore: True
         iterators :
             type               : nested
             tx_check_sum       : [ 'off', 'on']
@@ -36,15 +14,12 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            test-type    : oob-1g
+            test-type    : inb-100g
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_RX_CHECKSUM
+    
+    -   name    : Inband100G_RX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
-        ignore: True
         iterators :
             type               : nested
             rx_check_sum       : [ 'off', 'on']
@@ -53,15 +28,12 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            test-type    : oob-1g
+            test-type    : inb-100g
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-    -   name    : DRIVER_FEATURES_TSO
+    
+    -   name    : Inband100G_TSO
         testcase: testcases.drivers.features
         disable : False
-        ignore: True
         iterators :
             type               : nested
             mtu                : [ '8192']
@@ -75,11 +47,5 @@ testcases:
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
-            test-type    : oob-1g
+            test-type    : inb-100g
             #capture_pcap : true
-        verifs  :
-            #-   step    : verif.operstate.verify_stats_agent
-            #-   step    : verif.operstate.verify_stats_hw
-
-teardown:
-    #- step      : verif.utils.collect_logs_and_cores

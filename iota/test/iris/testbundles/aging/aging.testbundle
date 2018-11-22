@@ -1,0 +1,13 @@
+meta:
+    name    : aging
+
+testcases:
+    -   name    : AgingICMPSessions
+        testcase: testcases.aging.ping
+        args    :
+            type: remote_only
+
+    -   name    : AgingTcpSessions
+        testcase: testcases.aging.iperf
+        args    :
+            type: local_only
