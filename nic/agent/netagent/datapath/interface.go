@@ -37,7 +37,7 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 		//hd.Unlock()
 		return nil
 
-	case "UPLINK_ETH", "UPLINK_MGMT":
+	case "UPLINK_ETH":
 		var portID uint32
 
 		// TODO remove hack once hal/dol is fixed with correct mapping
@@ -57,6 +57,30 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 			IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
 				IfUplinkInfo: &halproto.IfUplinkInfo{
 					PortNum: uint32(portID),
+				},
+			},
+		}
+	case "UPLINK_MGMT":
+		var portID uint32
+
+		// TODO remove hack once hal/dol is fixed with correct mapping
+		if port.Status.PortID == 5 {
+			portID = 2
+		} else {
+			portID = uint32(port.Status.PortID)
+		}
+
+		ifSpec = &halproto.InterfaceSpec{
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
+			},
+			Type: halproto.IfType_IF_TYPE_UPLINK,
+			IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+				IfUplinkInfo: &halproto.IfUplinkInfo{
+					PortNum:         uint32(portID),
+					IsOobManagement: true,
 				},
 			},
 		}
