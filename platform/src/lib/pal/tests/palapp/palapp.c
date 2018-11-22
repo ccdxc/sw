@@ -8,8 +8,8 @@
 #include <string.h>
 #include <inttypes.h>
 #include <ctype.h>
-
 #include "platform/src/lib/pal/include/pal.h"
+#include <assert.h>
 
 #define MAXAPPNAME 64
 #define MAXREGIONNAME 64
@@ -21,6 +21,77 @@
 
 #define RANDOMDATA "01234567"
 #define RANDOMDATASIZE 8 //bytes
+
+struct random_struct
+{
+    u_int16_t b;
+    u_int32_t c;
+    u_int64_t d;
+    u_int8_t a;
+}__attribute__((packed));
+
+void
+pal_mem_general()
+{
+    u_int8_t uint8     = 0xAB;
+    u_int16_t uint16   = 0xBEBA;
+    u_int32_t uint32   = 0xDEADBEEF;
+    u_int64_t uint64   = 0xBEEFBABADEADBEBE;
+    u_int64_t uint128[2] = {0x1234567812345678, 0xBABABEBEDEADBEEF};
+
+    u_int8_t uint8_check = 0;
+    u_int16_t uint16_check = 0;
+    u_int32_t uint32_check = 0;
+    u_int64_t uint64_check = 0;
+    u_int64_t uint128_check[2] = {0, 0};
+
+    struct random_struct r = {.a = 0xAB, .b = 0xBEBE, .c = 0xDEADBEEF, .d = 0xCECEDADABABABEBE};
+    struct random_struct r_check;
+
+    u_int64_t pa = 0xc0000000;
+
+    printf("Writing 1 byte = %x\n", uint8);
+    pal_mem_wr(pa, (void*)&uint8, sizeof(uint8), 1);
+    pal_mem_rd(pa, (void*)&uint8_check, sizeof(uint8_check), 1);
+    printf("Read 1 byte = %x\n", uint8_check);
+    assert(uint8 == uint8_check);
+
+    printf("Writing 2 bytes = %x\n", uint16);
+    pal_mem_wr(pa, (void*)&uint16, sizeof(uint16), 1);
+    pal_mem_rd(pa, (void*)&uint16_check, sizeof(uint16_check), 1);
+    printf("Read 2 bytes = %x\n", uint16_check);
+    assert(uint16 == uint16_check);
+
+    printf("Writing 4 bytes = %x\n", uint32);
+    pal_mem_wr(pa, (void*)&uint32, sizeof(uint32), 1);
+    pal_mem_rd(pa, (void*)&uint32_check, sizeof(uint32_check), 1);
+    printf("Read 4 bytes = %x\n", uint32_check);
+    assert(uint32 == uint32_check);
+
+    printf("Writing 8 bytes = %lx\n", uint64);
+    pal_mem_wr(pa, (void*)&uint64, sizeof(uint64), 1);
+    pal_mem_rd(pa, (void*)&uint64_check, sizeof(uint64_check), 1);
+    printf("Read 8 bytes = %lx\n", uint64_check);
+    assert(uint64 == uint64_check);
+    
+    printf("Writing 16 bytes = %lx %lx\n", uint128[0], uint128[1]);
+    pal_mem_wr(pa, (void*)uint128, sizeof(uint128), 1);
+    pal_mem_rd(pa, (void*)&uint128_check, sizeof(uint128_check), 1);
+    printf("Read 16 bytes = %lx %lx\n", uint128_check[0], uint128_check[1]);
+    assert(uint128[0] == uint128_check[0]);
+    assert(uint128[1] == uint128_check[1]);
+
+    printf("Writing random struct of size : %ld bytes\n", sizeof(r));
+    pal_mem_wr(pa, (void*)&r, sizeof(r), 1);
+    pal_mem_rd(pa, (void*)&r_check, sizeof(r_check), 1);
+    printf("Read random struct = %x %x %x %lx\n", r_check.a, r_check.b, r_check.c, r_check.d);
+    assert(r.a == r_check.a);
+    assert(r.b == r_check.b);
+    assert(r.c == r_check.c);
+    assert(r.d == r_check.d);
+
+    printf("All pal_mem_* APIs tested successfuly.\n");
+}
 
 #define HELP() {\
               printf("palmm <application_name> <operation> <options>\n"); \
@@ -87,10 +158,11 @@ int main(int argc, char* argv[]) {
 
     if(application_name == NULL) {
 	if(print != 1)  {
-	    HELP();
+            printf("Running pal_mem general tests.\n");
+	    pal_mem_general();
 	    return 0;
         } else {
-	    pal_print_metadata();
+	    HELP();
 	    return 0;
 	}
     } else {

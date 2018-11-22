@@ -53,13 +53,51 @@ pal_mem_ptov(const u_int64_t pa)
 void *
 pal_memcpy(void *dst, const void *src, size_t n)
 {
-    volatile u_int8_t *d = dst;
-    const u_int8_t *s = src;
     int i;
+    volatile u_int8_t *d = (u_int8_t*)dst;
+    u_int8_t *s = (u_int8_t*)src;
+    u_int64_t bytes_left = n;
 
     if (src != NULL) {
-        for (i = 0; i < n; i++) {
-            *d++ = *s++;
+        if (bytes_left >= 8 &&
+            (((intptr_t)src | (intptr_t)dst) & 0x07) == 0) {
+            u_int64_t ndwords = bytes_left >> 3;
+            volatile u_int64_t *d = (u_int64_t*)dst;
+            u_int64_t *d_end = (u_int64_t*)d + ndwords;
+            u_int64_t *s = (u_int64_t*)src;
+
+            while(d != d_end) {
+                *d++ = *s++;
+                bytes_left -= 8;
+            }
+
+            dst = (void*) d;
+            src = (void*) s;
+        }
+
+        if (bytes_left >= 4 &&
+            (((intptr_t)src | (intptr_t)dst) & 0x03) == 0) {
+            u_int32_t nwords = bytes_left >> 2;
+            volatile u_int32_t *d = (u_int32_t*)dst;
+            u_int32_t *d_end = (u_int32_t*)d + nwords;
+            u_int32_t *s = (u_int32_t*)src;
+
+            while(d != d_end) {
+                *d++ = *s++;
+                bytes_left -= 4;
+            }
+
+            dst = (void*) d;
+            src = (void*) s;
+        } 
+
+        if(bytes_left > 0) {
+            d = (u_int8_t*)dst;
+            s = (u_int8_t*)src;
+
+            for (i = 0; i < bytes_left; i++) {
+                *d++ = *s++;
+            }
         }
     } else {
         /* TODO : Remove this.
@@ -93,7 +131,6 @@ pal_mem_rd(const u_int64_t pa, void *buf, const size_t sz, u_int32_t flags)
         printf("No permission to perform this operation.\n");
         return 0;
     }
-
 }
 
 int
