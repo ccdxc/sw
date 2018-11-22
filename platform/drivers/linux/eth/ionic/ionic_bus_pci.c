@@ -140,13 +140,13 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = ionic_set_dma_mask(ionic);
 	if (err) {
-		dev_err(dev, "Cannot set DMA mask, aborting\n");
+		dev_err(dev, "Cannot set DMA mask: %d, aborting\n", err);
 		return err;
 	}
 
 	err = ionic_debugfs_add_dev(ionic);
 	if (err) {
-		dev_err(dev, "Cannot add device debugfs, aborting\n");
+		dev_err(dev, "Cannot add device debugfs: %d , aborting\n", err);
 		return err;
 	}
 
@@ -155,13 +155,13 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = pci_enable_device_mem(pdev);
 	if (err) {
-		dev_err(dev, "Cannot enable PCI device, aborting\n");
+		dev_err(dev, "Cannot enable PCI device: %d, aborting\n", err);
 		goto err_out_debugfs_del_dev;
 	}
 
 	err = pci_request_regions(pdev, DRV_NAME);
 	if (err) {
-		dev_err(dev, "Cannot request PCI regions, aborting\n");
+		dev_err(dev, "Cannot request PCI regions: %d, aborting\n", err);
 		goto err_out_disable_device;
 	}
 
@@ -176,19 +176,19 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = ionic_setup(ionic);
 	if (err) {
-		dev_err(dev, "Cannot setup device, aborting\n");
+		dev_err(dev, "Cannot setup device: %d, aborting\n", err);
 		goto err_out_unmap_bars;
 	}
 
 	err = ionic_reset(ionic);
 	if (err) {
-		dev_err(dev, "Cannot reset device, aborting\n");
+		dev_err(dev, "Cannot reset device: %d, aborting\n", err);
 		goto err_out_unmap_bars;
 	}
 
 	err = ionic_identify(ionic);
 	if (err) {
-		dev_err(dev, "Cannot identify device, aborting\n");
+		dev_err(dev, "Cannot identify device: %d, aborting\n", err);
 		goto err_out_unmap_bars;
 	}
 
@@ -202,25 +202,25 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = ionic_lifs_size(ionic);
 	if (err) {
-		dev_err(dev, "Cannot size LIFs, aborting\n");
+		dev_err(dev, "Cannot size LIFs: %d, aborting\n", err);
 		goto err_out_forget_identity;
 	}
 
 	err = ionic_lifs_alloc(ionic);
 	if (err) {
-		dev_err(dev, "Cannot allocate LIFs, aborting\n");
+		dev_err(dev, "Cannot allocate LIFs: %d, aborting\n", err);
 		goto err_out_free_lifs;
 	}
 
 	err = ionic_lifs_init(ionic);
 	if (err) {
-		dev_err(dev, "Cannot init LIFs, aborting\n");
+		dev_err(dev, "Cannot init LIFs: %d, aborting\n", err);
 		goto err_out_deinit_lifs;
 	}
 
 	err = ionic_lifs_register(ionic);
 	if (err) {
-		dev_err(dev, "Cannot register LIFs, aborting\n");
+		dev_err(dev, "Cannot register LIFs: %d, aborting\n", err);
 		goto err_out_unregister_lifs;
 	}
 

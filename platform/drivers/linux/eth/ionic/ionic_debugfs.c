@@ -385,8 +385,7 @@ static const struct debugfs_reg32 intr_ctrl_regs[] = {
 	{ .name = "coal_timer", .offset = 16, },
 };
 
-int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
-			  struct qcq *qcq)
+int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 {
 	struct device *dev = lif->ionic->dev;
 	struct dentry *qcq_dentry, *q_dentry, *cq_dentry, *intr_dentry;
@@ -397,7 +396,7 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct dentry *lif_dentry,
 	struct debugfs_regset32 *intr_ctrl_regset;
 	struct debugfs_blob_wrapper *desc_blob;
 
-	qcq_dentry = debugfs_create_dir(q->name, lif_dentry);
+	qcq_dentry = debugfs_create_dir(q->name, lif->dentry);
 	if (IS_ERR_OR_NULL(qcq_dentry))
 		return PTR_ERR(qcq_dentry);
 
@@ -542,35 +541,16 @@ single(netdev);
 
 int ionic_debugfs_add_lif(struct lif *lif)
 {
-	struct dentry *lif_dentry, *netdev_dentry;
-	unsigned int i;
-	int err;
+	struct dentry *netdev_dentry;
 
-	lif_dentry = debugfs_create_dir(lif->name, lif->ionic->dentry);
-	lif->debugfs = lif_dentry;
-	if (IS_ERR_OR_NULL(lif_dentry))
-		return PTR_ERR(lif_dentry);
+	lif->dentry = debugfs_create_dir(lif->name, lif->ionic->dentry);
+	if (IS_ERR_OR_NULL(lif->dentry))
+		return PTR_ERR(lif->dentry);
 
-	netdev_dentry = debugfs_create_file("netdev", 0400, lif_dentry,
+	netdev_dentry = debugfs_create_file("netdev", 0400, lif->dentry,
 					    lif->netdev, &netdev_fops);
 	if (IS_ERR_OR_NULL(netdev_dentry))
 		return PTR_ERR(netdev_dentry);
-
-	err = ionic_debugfs_add_qcq(lif, lif_dentry, lif->adminqcq);
-	if (err)
-		return err;
-
-	for (i = 0; i < lif->ntxqcqs; i++) {
-		err = ionic_debugfs_add_qcq(lif, lif_dentry, lif->txqcqs[i]);
-		if (err)
-			return err;
-	}
-
-	for (i = 0; i < lif->nrxqcqs; i++) {
-		err = ionic_debugfs_add_qcq(lif, lif_dentry, lif->rxqcqs[i]);
-		if (err)
-			return err;
-	}
 
 	return 0;
 }

@@ -61,7 +61,7 @@ EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
 struct dentry *ionic_api_get_debugfs(struct lif *lif)
 {
-	return lif->debugfs;
+	return lif->dentry;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_debugfs);
 

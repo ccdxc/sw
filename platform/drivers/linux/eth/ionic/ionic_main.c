@@ -67,19 +67,23 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 		{ CMD_OPCODE_RX_MODE_SET, "CMD_OPCODE_RX_MODE_SET" },
 		{ CMD_OPCODE_RX_FILTER_ADD, "CMD_OPCODE_RX_FILTER_ADD" },
 		{ CMD_OPCODE_RX_FILTER_DEL, "CMD_OPCODE_RX_FILTER_DEL" },
-		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
-		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
 		{ CMD_OPCODE_STATS_DUMP_START, "CMD_OPCODE_STATS_DUMP_START" },
 		{ CMD_OPCODE_STATS_DUMP_STOP, "CMD_OPCODE_STATS_DUMP_STOP" },
-		{ 0, 0 }, /* keep last */
+		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
+		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
 	};
+	int list_len = ARRAY_SIZE(cmds);
 	struct cmds *cmd = cmds;
 	char *name = "UNKNOWN";
+	int i;
 
 	if (ctx->comp.comp.status) {
-		while ((++cmd)->cmd)
-			if (cmd->cmd == ctx->cmd.cmd.opcode)
-				name = cmd->name;
+		for (i = 0; i < list_len; i++) {
+			if (cmd[i].cmd == ctx->cmd.cmd.opcode) {
+				name = cmd[i].name;
+				break;
+			}
+		}
 		netdev_err(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
 			   name, ctx->comp.comp.status);
 		return -EIO;
@@ -93,8 +97,14 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	int err;
 
 	err = ionic_api_adminq_post(lif, ctx);
-	if (err)
+	if (err) {
+		struct net_device *netdev = lif->netdev;
+
+		netdev_err(netdev, "adminq_post cmd %d failed: %d\n",
+			   ctx->cmd.cmd.opcode, err);
+
 		return err;
+	}
 
 	wait_for_completion(&ctx->work);
 
@@ -139,8 +149,10 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		done = ionic_dev_cmd_done(idev);
 #ifdef HAPS
 		if (done)
-			printk(KERN_ERR "DEVCMD done took %ld secs (%ld jiffies)\n",
-			       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
+			printk(KERN_ERR "DEVCMD %d done took %ld secs (%ld jiffies)\n",
+			       idev->dev_cmd->cmd.cmd.opcode,
+			       (jiffies + max_wait - time)/HZ,
+			       jiffies + max_wait - time);
 #endif
 		if (done)
 			return 0;
@@ -157,7 +169,9 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 	} while (time_after(time, jiffies));
 
 #ifdef HAPS
-	printk(KERN_ERR "DEVCMD timeout after %ld secs\n", max_wait/HZ);
+	printk(KERN_ERR "DEVCMD %d timeout after %ld secs\n",
+	       idev->dev_cmd->cmd.cmd.opcode,
+	       max_wait/HZ);
 #endif
 	return -ETIMEDOUT;
 }

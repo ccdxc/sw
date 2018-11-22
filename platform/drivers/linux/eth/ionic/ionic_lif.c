@@ -1045,6 +1045,11 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	qcq->flags |= QCQ_F_INITED;
 
+	err = ionic_debugfs_add_qcq(lif, qcq);
+	if (err)
+		netdev_warn(lif->netdev, "debugfs add for adminq failed %d\n",
+			    err);
+
 	return 0;
 }
 
@@ -1216,6 +1221,11 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	netdev_info(lif->netdev, "txq->qtype %d\n", q->qtype);
 	netdev_info(lif->netdev, "txq->db %p\n", q->db);
 
+	err = ionic_debugfs_add_qcq(lif, qcq);
+	if (err)
+		netdev_warn(lif->netdev, "debugfs add for txq %d failed %d\n",
+			    q->qid, err);
+
 	return 0;
 }
 
@@ -1290,6 +1300,11 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	netdev_info(lif->netdev, "rxq->qtype %d\n", q->qtype);
 	netdev_info(lif->netdev, "rxq->db %p\n", q->db);
 
+	err = ionic_debugfs_add_qcq(lif, qcq);
+	if (err)
+		netdev_warn(lif->netdev, "debugfs add for rxq %d failed %d\n",
+			    q->qid, err);
+
 	return 0;
 }
 
@@ -1346,6 +1361,10 @@ static int ionic_lif_init(struct lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
+
+	err = ionic_debugfs_add_lif(lif);
+	if (err)
+		return err;
 
 	ionic_dev_cmd_lif_init(idev, lif->index);
 	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
@@ -1429,10 +1448,6 @@ int ionic_lif_register(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
 	int err;
-
-	err = ionic_debugfs_add_lif(lif);
-	if (err)
-		return err;
 
 	err = register_netdev(lif->netdev);
 	if (err) {

@@ -181,7 +181,6 @@ static void ionic_sw_stats_get_values(struct lif *lif, u64 **buf)
 {
 	struct lif_stats lif_stats;
 	struct qcq *txqcq, *rxqcq;
-	struct queue *txq, *rxq;
 	int i, q_num;
 
 	ionic_get_lif_stats(lif, &lif_stats);

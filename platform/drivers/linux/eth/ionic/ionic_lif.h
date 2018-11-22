@@ -157,7 +157,7 @@ struct lif {
 	unsigned int dbid_count;
 	void *api_private;
 	void (*api_reset_cb)(void *api_private);
-	struct dentry *debugfs;
+	struct dentry *dentry;
 };
 
 #define lif_to_txqcq(lif, i)	(lif->txqcqs[i])
