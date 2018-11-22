@@ -586,6 +586,7 @@ chn_create_chain(struct request_params *req_params)
 	struct pnso_service_result *res;
 	struct service_chain *chain = NULL;
 	struct chain_entry *centry = NULL;
+	struct chain_entry *last_ce;
 	struct chain_entry *centry_prev = NULL;
 	struct service_info *svc_info;
 	struct service_params svc_params;
@@ -707,6 +708,13 @@ chn_create_chain(struct request_params *req_params)
 	err = svc_info->si_ops.chain(centry);
 	if (err)
 		goto out_chain;
+
+	/* setup interrupt params in last chain's last service */
+	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) && chain) {
+		last_ce = chn_get_last_centry(chain);
+		svc_info = &last_ce->ce_svc_info;
+		svc_info->si_ops.enable_interrupt(svc_info, chain);
+	}
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");

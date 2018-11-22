@@ -143,6 +143,8 @@ compress_setup(struct service_info *svc_info,
 		goto out_status_desc;
 	}
 
+	CPDC_PPRINT_DESC(cp_desc);
+
 	PAS_INC_NUM_CP_REQUESTS(pcr);
 	PAS_INC_NUM_CP_BYTES_IN(pcr, svc_info->si_src_blist.len);
 

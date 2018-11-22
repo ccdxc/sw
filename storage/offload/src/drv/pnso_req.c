@@ -840,7 +840,7 @@ submit_chain(struct request_params *req_params)
 
 out_chain:
 	chn_destroy_chain(chain);
-	return;
+	return err;
 out:
 	return err;
 }
