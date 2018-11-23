@@ -34,7 +34,7 @@ func getKvsValue(path, mapKeyPath string, obj reflect.Value, kvs map[string]cliF
 			getKvsValue(path, fmt.Sprintf("%s%s%s", mapKeyPath, mapKey, kvSplitter), mapValue, kvs)
 		}
 	case reflect.Slice:
-		path = strings.TrimSuffix(path, ".") + "[]."
+		path = strings.TrimSuffix(path, ".")
 		path = path + "[]."
 		for i := 0; i < obj.Len(); i++ {
 			getKvsValue(path, mapKeyPath, obj.Index(i), kvs)

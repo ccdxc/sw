@@ -111,48 +111,49 @@ ts=2018-08-28T18:16:33.264618214Z module=Default pid=3725 caller=new_logger.go:1
 
 func TestFindJsonRecord(t *testing.T) {
 	jsonRecs := `
-	{
-  		"kind": "Workload",
-		"meta": {
-		    "name": "TestFindJsonRecordVm1"
-		},
-		"spec": {
-		    "host-name": "esx-node12",
-		    "interfaces": [
-		      {
-				"mac-address": "00:11:22:33:44:55",
-		        "micro-seg-vlan": 1001,
-		        "external-vlan": 101
-		      },
-			    "mac-address": "00:22:33:44:55:66",
-		        "micro-seg-vlan": 2001,
-		        "external-vlan": 201
-		      }
-		    ]
-		  }
-	}
-	{
-  		"kind": "Workload",
-		"meta": {
-		    "name": "TestFindJsonRecordVm2"
-		},
-		"spec": {
-		    "host-name": "esx-node12",
-		    "interfaces": [
-		      {
-				"mac-address": 00:11:22:33:00:55",
-		        "micro-seg-vlan": 1002,
-		        "external-vlan": 102
-		      },
-		      {
-				"mac-address": 00:22:33:44:00:66",
-		        "micro-seg-vlan": 2002,
-		        "external-vlan": 202
-		      }
-		    ]
-		}
-	}
-		`
+        {
+                "kind": "Workload",
+                "meta": {
+                    "name": "TestFindJsonRecordVm1"
+                },
+                "spec": {
+                    "host-name": "esx-node12",
+                    "interfaces": [
+                      {
+                        "mac-address": "00:11:22:33:44:55",
+                        "micro-seg-vlan": 1001,
+                        "external-vlan": 101
+                      },
+                      {
+                        "mac-address": "00:22:33:44:55:66",
+                        "micro-seg-vlan": 2001,
+                        "external-vlan": 201
+                      }
+                    ]
+                  }
+        }
+        {
+                "kind": "Workload",
+                "meta": {
+                    "name": "TestFindJsonRecordVm2"
+                },
+                "spec": {
+                    "host-name": "esx-node12",
+                    "interfaces": [
+                      {
+                        "mac-address": "00:11:22:33:00:55",
+                        "micro-seg-vlan": 1002,
+                        "external-vlan": 102
+                      },
+                      {
+                        "mac-address": "00:22:33:44:00:66",
+                        "micro-seg-vlan": 2002,
+                        "external-vlan": 202
+                      }
+                    ]
+                }
+        }
+`
 	jsonRec, nextIdx := findJSONRecord(jsonRecs, 0)
 	if jsonRec == "" || nextIdx < 0 {
 		t.Fatalf("unable to local json record: %s", jsonRecs)

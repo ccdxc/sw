@@ -79,6 +79,7 @@ message WorkloadIntfSpec {
 message WorkloadIntfStatus {
 
     // MACAddress contains the MAC address of the interface as seen by the workload
+    // cli-tags: id=mac-address-status
     string MACAddress    = 1 [(gogoproto.jsontag) = "mac-address,omitempty"];
 
     // List of all IP addresses configured and discovered on a Workload Interface

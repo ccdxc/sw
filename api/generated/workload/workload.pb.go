@@ -95,6 +95,7 @@ func (m *WorkloadIntfSpec) GetExternalVlan() uint32 {
 // Status of a Workload interface
 type WorkloadIntfStatus struct {
 	// MACAddress contains the MAC address of the interface as seen by the workload
+	// cli-tags: id=mac-address-status
 	MACAddress string `protobuf:"bytes,1,opt,name=MACAddress,json=mac-address,omitempty,proto3" json:"mac-address,omitempty"`
 	// List of all IP addresses configured and discovered on a Workload Interface
 	IpAddrs []string `protobuf:"bytes,2,rep,name=IpAddrs,json=ip-addresses,omitempty" json:"ip-addresses,omitempty"`

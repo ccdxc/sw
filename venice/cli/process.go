@@ -54,7 +54,7 @@ func createCmdInternal(c *cli.Context, cmd string) {
 	}
 
 	if len(ctx.names) != 1 {
-		log.Fatalf("%s object name not provided", ctx.subcmd)
+		log.Fatalf("%s - invalid object name(s) %s", ctx.subcmd, ctx.names)
 	}
 
 	obj := getNewObj(ctx)

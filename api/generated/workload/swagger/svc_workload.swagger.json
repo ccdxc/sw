@@ -3324,7 +3324,7 @@
       "properties": {
         "mac-address": {
           "type": "string",
-          "title": "MACAddress contains the MAC address of the interface as seen by the workload"
+          "title": "MACAddress contains the MAC address of the interface as seen by the workload\ncli-tags: id=mac-address-status"
         },
         "ip-addresses": {
           "type": "array",

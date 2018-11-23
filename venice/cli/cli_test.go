@@ -1,14 +1,19 @@
 package vcli
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/cli/mock"
 )
 
@@ -42,20 +47,11 @@ func TestLogin(t *testing.T) {
 	veniceLogin()
 }
 
-/*
- * TODO: Enable these tests
- *
- * Commenting out tests as slice handling didn't work for workload object - mac-address was not being generated
- *
 func TestCreate(t *testing.T) {
 	veniceLogin()
 
 	out := veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 66 --micro-seg-vlan 3333 TestCreateVm")
 	obj := &workload.Workload{}
-	if err := lookForJSON(out, obj); err != nil {
-		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
-	}
-
 	out = veniceCLI("read workload -j TestCreateVm")
 	obj = &workload.Workload{}
 	if err := lookForJSON(out, obj); err != nil {
@@ -103,7 +99,7 @@ func TestUpdate(t *testing.T) {
 func TestPatch(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 00:de:ed:de:ed:d0 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 66  --micro-seg-vlan 3333 TestPatchVm")
+	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00:f0:0d:f0:0d:d0 --external-vlan 66  --micro-seg-vlan 3333 TestPatchVm")
 
 	out := veniceCLI("read workload -j TestPatchVm")
 	obj := &workload.Workload{}
@@ -129,13 +125,15 @@ func TestPatch(t *testing.T) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 
-	veniceCLI("patch workload --external-vlan 00:f0:0d:f0:0d:d0=77 TestPatchVm")
+	// patching on arrays needs more support to specify the index that is being patched
+	// when index is not specified it updates the first index
+	veniceCLI("patch workload --mac-address 00:de:ed:de:ed:d0 --external-vlan 77 TestPatchVm")
 	out = veniceCLI("read workload -j TestPatchVm")
 	if err := lookForJSON(out, obj); err != nil {
 		t.Fatalf("error %s reading the object - out\n%s\n", err, out)
 	}
 	for ii := range obj.Spec.Interfaces {
-		if obj.Spec.Interfaces[ii].MACAddress == "00:f0:0d:f0:0d:d0" {
+		if obj.Spec.Interfaces[ii].MACAddress == "00:de:ed:de:ed:d0" {
 			if obj.Spec.Interfaces[ii].ExternalVlan != 77 {
 				t.Fatalf("invalid Interfaces update: %+v", obj.Spec.Interfaces)
 			}
@@ -196,7 +194,7 @@ func TestDelete(t *testing.T) {
 func TestEdit(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create workload --label key1=val1 --label key2=val2 --host-name dc12_rack3_bm4 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2223 TestEditVm")
+	veniceCLI("create workload --label key1=val1 --label key2=val2 --host-name dc12_rack3_bm4 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2223 TestEditVm")
 	// change the editor to cat and replace
 	oldEditor := os.Getenv("VENICE_EDITOR")
 	os.Setenv("VENICE_EDITOR", "sed -i s/55/77/g")
@@ -216,8 +214,8 @@ func TestEdit(t *testing.T) {
 		t.Fatalf("invalid hostname in obj: %+v", obj)
 	}
 	if len(obj.Spec.Interfaces) != 1 || !reflect.DeepEqual(obj.Spec.Interfaces,
-		map[string]workload.WorkloadIntfSpec{
-			"00:de:ed:de:ed:d0": workload.WorkloadIntfSpec{ExternalVlan: 77, MicroSegVlan: 2223}}) {
+		[]workload.WorkloadIntfSpec{
+			{MACAddress: "00:de:ed:de:ed:d0", ExternalVlan: 77, MicroSegVlan: 2223}}) {
 		t.Fatalf("invalid Interfaces: %+v", obj.Spec.Interfaces)
 	}
 
@@ -279,7 +277,7 @@ func TestUpdateFromFile(t *testing.T) {
 func TestLabel(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create workload --label key1=val1 --host-name r2d2 --external-vlan 00:de:ed:de:ed:d0=55 --micro-seg-vlan 00:de:ed:de:ed:d0=2223 TestLabelVm")
+	veniceCLI("create workload --label key1=val1 --host-name r2d2 --mac-address 00:de:ed:de:ed:d0 --external-vlan 55 --micro-seg-vlan 2223 TestLabelVm")
 
 	out := veniceCLI("label workload --update-label key1=val2 TestLabelVm")
 
@@ -608,11 +606,17 @@ func TestLogout(t *testing.T) {
 	}
 }
 
-*/
-
 func veniceCLI(cmdStr string) string {
 	cmdStr = veniceCmd + "--server http://localhost:" + tinfo.VenicePort + " " + cmdStr
-	cmdArgs := strings.Split(cmdStr, " ")
+	splitStrs := strings.Split(cmdStr, " ")
+	cmdArgs := []string{}
+	// remove empty words from splitStrs
+	for _, cmd := range splitStrs {
+		if len(strings.Trim(cmd, " ")) != 0 {
+			cmdArgs = append(cmdArgs, cmd)
+		}
+	}
+
 	fmt.Printf(">>> issuing cmd: '%s'\n", cmdStr)
 
 	logInitOnce.Do(func() {

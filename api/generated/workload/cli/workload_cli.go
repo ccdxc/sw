@@ -28,6 +28,13 @@ var CreateWorkloadFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "mac-address",
+		Type:   "StringSlice",
+		Help:   "MAC address of the interface as seen by the workload",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "micro-seg-vlan",
 		Type:   "StringSlice",
 		Help:   "Vlan identifying host unique vlan id",
