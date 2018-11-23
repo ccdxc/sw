@@ -646,7 +646,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     uint8_t                 enable = 0;
     uint8_t                 abort = 1;
 
-    NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_RESET", info.hw_lif_id);
+    NIC_LOG_INFO("lif-{}: CMD_OPCODE_RESET", info.hw_lif_id);
 
     // Disable all sequencer queues
     for (qid = 0; qid < spec->seq_created_count; qid++) {
@@ -718,7 +718,7 @@ Accel_PF::_DevcmdLifInit(void *req, void *req_data,
 {
     lif_init_cmd_t  *cmd = (lif_init_cmd_t *)req;
 
-    NIC_LOG_DEBUG("lif-{}: lif_index {}", info.hw_lif_id, cmd->index);
+    NIC_LOG_INFO("lif-{}: lif_index {}", info.hw_lif_id, cmd->index);
     return (DEVCMD_SUCCESS);
 }
 
@@ -1572,7 +1572,7 @@ Accel_PF::LifInit()
     uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
 
     if (get_lif_init_done()) {
-        NIC_LOG_DEBUG("lif-{}: Already inited...skipping", info.hw_lif_id);
+        NIC_LOG_INFO("lif-{}: Already inited...skipping", info.hw_lif_id);
         return;
     }
 

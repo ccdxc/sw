@@ -10,9 +10,9 @@ import (
 )
 
 type AccelSeqQueueKey struct {
-	LifId uint64 `protobuf:"fixed64,1,opt,name=LifId,json=LifId" json:"LifId,omitempty"`
+	LifId uint64
 
-	QId uint32 `protobuf:"varint,2,opt,name=QId,json=QId" json:"QId,omitempty"`
+	QId uint32
 }
 
 func (m *AccelSeqQueueKey) Reset()         { *m = AccelSeqQueueKey{} }
@@ -431,9 +431,9 @@ func NewAccelSeqQueueMetricsIterator() (*AccelSeqQueueMetricsIterator, error) {
 }
 
 type AccelHwRingKey struct {
-	RId uint32 `protobuf:"varint,1,opt,name=RId,json=RId" json:"RId,omitempty"`
+	RId uint32
 
-	SubRId uint32 `protobuf:"varint,2,opt,name=SubRId,json=SubRId" json:"SubRId,omitempty"`
+	SubRId uint32
 }
 
 func (m *AccelHwRingKey) Reset()         { *m = AccelHwRingKey{} }
