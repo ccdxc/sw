@@ -33,6 +33,7 @@ testbundles:
     - alg/tftp_alg.testbundle
     - firewall/policy_scale.testbundle
     - firewall/policy.testbundle
+    - firewall/conntrack.testbundle
     - firewall/normalization.testbundle
     - cruds/cruds.testbundle
 
