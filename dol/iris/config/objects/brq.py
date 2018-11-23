@@ -15,8 +15,7 @@ import types_pb2            as types_pb2
 from iris.config.store               import Store
 from infra.common.logging       import logger
 
-import wring_pb2            as wring_pb2
-#import wring_pb2_grpc           as wring_pb2_grpc
+import internal_pb2            as internal_pb2
 
 class BRQEntryObject(base.ConfigObjectBase):
     def __init__(self, brq_ring_name, brq_ring_type, brq_entry_defn, entry_idx):

@@ -24,7 +24,6 @@
 
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
-#include "nic/hal/svc/wring_svc.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
@@ -120,7 +119,6 @@ svc_reg (const std::string& server_addr,
     AclServiceImpl           acl_svc;
     ServerBuilder            server_builder;
     DescrAolServiceImpl      descraol_svc;
-    WRingServiceImpl         wring_svc;
     IpsecServiceImpl         ipsec_svc;
     CpuCbServiceImpl         cpucb_svc;
     CryptoKeyServiceImpl     crypto_key_svc;
@@ -160,7 +158,6 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&dos_svc);
         server_builder.RegisterService(&qos_svc);
         server_builder.RegisterService(&descraol_svc);
-        server_builder.RegisterService(&wring_svc);
         server_builder.RegisterService(&acl_svc);
         server_builder.RegisterService(&ipsec_svc);
         server_builder.RegisterService(&cpucb_svc);

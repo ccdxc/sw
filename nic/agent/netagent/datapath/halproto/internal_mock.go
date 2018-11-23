@@ -186,6 +186,122 @@ func (mr *MockisTlsCbKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisTlsCbKeyHandle_KeyOrHandle)(nil).Size))
 }
 
+// MockisWRingKeyHandle_KeyOrHandle is a mock of isWRingKeyHandle_KeyOrHandle interface
+type MockisWRingKeyHandle_KeyOrHandle struct {
+	ctrl     *gomock.Controller
+	recorder *MockisWRingKeyHandle_KeyOrHandleMockRecorder
+}
+
+// MockisWRingKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisWRingKeyHandle_KeyOrHandle
+type MockisWRingKeyHandle_KeyOrHandleMockRecorder struct {
+	mock *MockisWRingKeyHandle_KeyOrHandle
+}
+
+// NewMockisWRingKeyHandle_KeyOrHandle creates a new mock instance
+func NewMockisWRingKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisWRingKeyHandle_KeyOrHandle {
+	mock := &MockisWRingKeyHandle_KeyOrHandle{ctrl: ctrl}
+	mock.recorder = &MockisWRingKeyHandle_KeyOrHandleMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisWRingKeyHandle_KeyOrHandle) EXPECT() *MockisWRingKeyHandle_KeyOrHandleMockRecorder {
+	return m.recorder
+}
+
+// isWRingKeyHandle_KeyOrHandle mocks base method
+func (m *MockisWRingKeyHandle_KeyOrHandle) isWRingKeyHandle_KeyOrHandle() {
+	m.ctrl.Call(m, "isWRingKeyHandle_KeyOrHandle")
+}
+
+// isWRingKeyHandle_KeyOrHandle indicates an expected call of isWRingKeyHandle_KeyOrHandle
+func (mr *MockisWRingKeyHandle_KeyOrHandleMockRecorder) isWRingKeyHandle_KeyOrHandle() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isWRingKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisWRingKeyHandle_KeyOrHandle)(nil).isWRingKeyHandle_KeyOrHandle))
+}
+
+// MarshalTo mocks base method
+func (m *MockisWRingKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisWRingKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisWRingKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisWRingKeyHandle_KeyOrHandle) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisWRingKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisWRingKeyHandle_KeyOrHandle)(nil).Size))
+}
+
+// MockisWRingGetEntriesResponse_WRingSlotInfo is a mock of isWRingGetEntriesResponse_WRingSlotInfo interface
+type MockisWRingGetEntriesResponse_WRingSlotInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder
+}
+
+// MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder is the mock recorder for MockisWRingGetEntriesResponse_WRingSlotInfo
+type MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder struct {
+	mock *MockisWRingGetEntriesResponse_WRingSlotInfo
+}
+
+// NewMockisWRingGetEntriesResponse_WRingSlotInfo creates a new mock instance
+func NewMockisWRingGetEntriesResponse_WRingSlotInfo(ctrl *gomock.Controller) *MockisWRingGetEntriesResponse_WRingSlotInfo {
+	mock := &MockisWRingGetEntriesResponse_WRingSlotInfo{ctrl: ctrl}
+	mock.recorder = &MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisWRingGetEntriesResponse_WRingSlotInfo) EXPECT() *MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder {
+	return m.recorder
+}
+
+// isWRingGetEntriesResponse_WRingSlotInfo mocks base method
+func (m *MockisWRingGetEntriesResponse_WRingSlotInfo) isWRingGetEntriesResponse_WRingSlotInfo() {
+	m.ctrl.Call(m, "isWRingGetEntriesResponse_WRingSlotInfo")
+}
+
+// isWRingGetEntriesResponse_WRingSlotInfo indicates an expected call of isWRingGetEntriesResponse_WRingSlotInfo
+func (mr *MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder) isWRingGetEntriesResponse_WRingSlotInfo() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isWRingGetEntriesResponse_WRingSlotInfo", reflect.TypeOf((*MockisWRingGetEntriesResponse_WRingSlotInfo)(nil).isWRingGetEntriesResponse_WRingSlotInfo))
+}
+
+// MarshalTo mocks base method
+func (m *MockisWRingGetEntriesResponse_WRingSlotInfo) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisWRingGetEntriesResponse_WRingSlotInfo)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisWRingGetEntriesResponse_WRingSlotInfo) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisWRingGetEntriesResponse_WRingSlotInfo)(nil).Size))
+}
+
 // MockInternalClient is a mock of InternalClient interface
 type MockInternalClient struct {
 	ctrl     *gomock.Controller
@@ -587,6 +703,96 @@ func (mr *MockInternalClientMockRecorder) TlsCbGet(ctx, in interface{}, opts ...
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbGet", reflect.TypeOf((*MockInternalClient)(nil).TlsCbGet), varargs...)
 }
 
+// WRingCreate mocks base method
+func (m *MockInternalClient) WRingCreate(ctx context.Context, in *WRingRequestMsg, opts ...grpc.CallOption) (*WRingResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "WRingCreate", varargs...)
+	ret0, _ := ret[0].(*WRingResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingCreate indicates an expected call of WRingCreate
+func (mr *MockInternalClientMockRecorder) WRingCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingCreate", reflect.TypeOf((*MockInternalClient)(nil).WRingCreate), varargs...)
+}
+
+// WRingUpdate mocks base method
+func (m *MockInternalClient) WRingUpdate(ctx context.Context, in *WRingRequestMsg, opts ...grpc.CallOption) (*WRingResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "WRingUpdate", varargs...)
+	ret0, _ := ret[0].(*WRingResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingUpdate indicates an expected call of WRingUpdate
+func (mr *MockInternalClientMockRecorder) WRingUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingUpdate", reflect.TypeOf((*MockInternalClient)(nil).WRingUpdate), varargs...)
+}
+
+// WRingGetEntries mocks base method
+func (m *MockInternalClient) WRingGetEntries(ctx context.Context, in *WRingGetEntriesRequestMsg, opts ...grpc.CallOption) (*WRingGetEntriesResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "WRingGetEntries", varargs...)
+	ret0, _ := ret[0].(*WRingGetEntriesResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingGetEntries indicates an expected call of WRingGetEntries
+func (mr *MockInternalClientMockRecorder) WRingGetEntries(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingGetEntries", reflect.TypeOf((*MockInternalClient)(nil).WRingGetEntries), varargs...)
+}
+
+// WRingGetMeta mocks base method
+func (m *MockInternalClient) WRingGetMeta(ctx context.Context, in *WRingRequestMsg, opts ...grpc.CallOption) (*WRingGetMetaResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "WRingGetMeta", varargs...)
+	ret0, _ := ret[0].(*WRingGetMetaResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingGetMeta indicates an expected call of WRingGetMeta
+func (mr *MockInternalClientMockRecorder) WRingGetMeta(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingGetMeta", reflect.TypeOf((*MockInternalClient)(nil).WRingGetMeta), varargs...)
+}
+
+// WRingSetMeta mocks base method
+func (m *MockInternalClient) WRingSetMeta(ctx context.Context, in *WRingRequestMsg, opts ...grpc.CallOption) (*WRingSetMetaResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "WRingSetMeta", varargs...)
+	ret0, _ := ret[0].(*WRingSetMetaResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingSetMeta indicates an expected call of WRingSetMeta
+func (mr *MockInternalClientMockRecorder) WRingSetMeta(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingSetMeta", reflect.TypeOf((*MockInternalClient)(nil).WRingSetMeta), varargs...)
+}
+
 // MockInternalServer is a mock of InternalServer interface
 type MockInternalServer struct {
 	ctrl     *gomock.Controller
@@ -881,6 +1087,71 @@ func (m *MockInternalServer) TlsCbGet(arg0 context.Context, arg1 *TlsCbGetReques
 // TlsCbGet indicates an expected call of TlsCbGet
 func (mr *MockInternalServerMockRecorder) TlsCbGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TlsCbGet", reflect.TypeOf((*MockInternalServer)(nil).TlsCbGet), arg0, arg1)
+}
+
+// WRingCreate mocks base method
+func (m *MockInternalServer) WRingCreate(arg0 context.Context, arg1 *WRingRequestMsg) (*WRingResponseMsg, error) {
+	ret := m.ctrl.Call(m, "WRingCreate", arg0, arg1)
+	ret0, _ := ret[0].(*WRingResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingCreate indicates an expected call of WRingCreate
+func (mr *MockInternalServerMockRecorder) WRingCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingCreate", reflect.TypeOf((*MockInternalServer)(nil).WRingCreate), arg0, arg1)
+}
+
+// WRingUpdate mocks base method
+func (m *MockInternalServer) WRingUpdate(arg0 context.Context, arg1 *WRingRequestMsg) (*WRingResponseMsg, error) {
+	ret := m.ctrl.Call(m, "WRingUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*WRingResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingUpdate indicates an expected call of WRingUpdate
+func (mr *MockInternalServerMockRecorder) WRingUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingUpdate", reflect.TypeOf((*MockInternalServer)(nil).WRingUpdate), arg0, arg1)
+}
+
+// WRingGetEntries mocks base method
+func (m *MockInternalServer) WRingGetEntries(arg0 context.Context, arg1 *WRingGetEntriesRequestMsg) (*WRingGetEntriesResponseMsg, error) {
+	ret := m.ctrl.Call(m, "WRingGetEntries", arg0, arg1)
+	ret0, _ := ret[0].(*WRingGetEntriesResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingGetEntries indicates an expected call of WRingGetEntries
+func (mr *MockInternalServerMockRecorder) WRingGetEntries(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingGetEntries", reflect.TypeOf((*MockInternalServer)(nil).WRingGetEntries), arg0, arg1)
+}
+
+// WRingGetMeta mocks base method
+func (m *MockInternalServer) WRingGetMeta(arg0 context.Context, arg1 *WRingRequestMsg) (*WRingGetMetaResponseMsg, error) {
+	ret := m.ctrl.Call(m, "WRingGetMeta", arg0, arg1)
+	ret0, _ := ret[0].(*WRingGetMetaResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingGetMeta indicates an expected call of WRingGetMeta
+func (mr *MockInternalServerMockRecorder) WRingGetMeta(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingGetMeta", reflect.TypeOf((*MockInternalServer)(nil).WRingGetMeta), arg0, arg1)
+}
+
+// WRingSetMeta mocks base method
+func (m *MockInternalServer) WRingSetMeta(arg0 context.Context, arg1 *WRingRequestMsg) (*WRingSetMetaResponseMsg, error) {
+	ret := m.ctrl.Call(m, "WRingSetMeta", arg0, arg1)
+	ret0, _ := ret[0].(*WRingSetMetaResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WRingSetMeta indicates an expected call of WRingSetMeta
+func (mr *MockInternalServerMockRecorder) WRingSetMeta(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingSetMeta", reflect.TypeOf((*MockInternalServer)(nil).WRingSetMeta), arg0, arg1)
 }
 
 // MockSoftwarePhvClient is a mock of SoftwarePhvClient interface

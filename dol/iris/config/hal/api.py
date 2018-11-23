@@ -23,7 +23,6 @@ import nwsec_pb2            as nwsec_pb2
 import nw_pb2               as nw_pb2
 import telemetry_pb2        as telemetry_pb2
 import descriptor_aol_pb2   as descriptor_aol_pb2
-import wring_pb2            as wring_pb2
 import acl_pb2              as acl_pb2
 import qos_pb2              as qos_pb2
 import proxy_pb2            as proxy_pb2
@@ -595,22 +594,22 @@ def GetDscrAolObjectState(objlist):
 
 def GetRingEntries(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = wring_pb2.WRingStub(HalChannel)
-    __config(objlist, wring_pb2.WRingGetEntriesRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.WRingGetEntriesRequestMsg,
              stub.WRingGetEntries)
     return
 
 def GetRingMeta(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = wring_pb2.WRingStub(HalChannel)
-    __get(objlist, wring_pb2.WRingRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __get(objlist, internal_pb2.WRingRequestMsg,
              stub.WRingGetMeta)
     return
 
 def SetRingMeta(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = wring_pb2.WRingStub(HalChannel)
-    __config(objlist, wring_pb2.WRingRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.WRingRequestMsg,
              stub.WRingSetMeta)
     return
 

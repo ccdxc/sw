@@ -30,7 +30,6 @@
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
 #include "nic/hal/svc/rdma_svc.hpp"
-#include "nic/hal/svc/wring_svc.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
@@ -102,7 +101,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     TelemetryServiceImpl     telemetry_svc;
     TlsProxyCbServiceImpl    tls_proxy_cb_svc;
     DescrAolServiceImpl      descraol_svc;
-    WRingServiceImpl         wring_svc;
     ProxyServiceImpl         proxy_svc;
     IpsecServiceImpl         ipsec_svc;
     CpuCbServiceImpl         cpucb_svc;
@@ -132,7 +130,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&table_svc);
         server_builder->RegisterService(&nic_svc);
         server_builder->RegisterService(&descraol_svc);
-        server_builder->RegisterService(&wring_svc);
         server_builder->RegisterService(&proxy_svc);
         //server_builder->RegisterService(&ipsec_svc);
         server_builder->RegisterService(&cpucb_svc);

@@ -7,6 +7,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/internal/wring.hpp"
+#include "nic/hal/src/internal/internal.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 
@@ -161,12 +162,13 @@ wring_update (WRingSpec& spec, WRingResponse *rsp)
 // process a WRing get request
 //------------------------------------------------------------------------------
 hal_ret_t
-wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
+wring_get_entries(WRingGetEntriesRequest& req, WRingGetEntriesResponseMsg *rsp1)
 {
     hal_ret_t               ret = HAL_RET_OK;
     wring_t                 wring;
     pd::pd_wring_get_entry_args_t     pd_wring_args;
     pd::pd_func_args_t          pd_func_args = {0};
+    WRingGetEntriesResponse *rsp = rsp1->add_response();
 
     if(req.type() <= types::WRING_TYPE_NONE) {
         HAL_TRACE_ERR("Invalid wring type");
@@ -225,16 +227,19 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
     return HAL_RET_OK;
 }
 
+
 //------------------------------------------------------------------------------
 // process a WRing get Meta request
 //------------------------------------------------------------------------------
 hal_ret_t
-wring_get_meta (WRingSpec& spec, WRingGetMetaResponse *rsp)
+wring_get_meta(WRingSpec& spec, WRingGetMetaResponseMsg *rsp1)
 {
     hal_ret_t               ret = HAL_RET_OK;
     wring_t                 wring;
     pd::pd_wring_get_meta_args_t     pd_wring_args;
     pd::pd_func_args_t          pd_func_args = {0};
+    WRingGetMetaResponse *rsp = rsp1->add_response();
+
 
     if(spec.type() <= types::WRING_TYPE_NONE) {
         HAL_TRACE_ERR("Invalid wring type");
@@ -313,4 +318,6 @@ wring_set_meta (WRingSpec& spec, WRingSetMetaResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
+
+
 }    // namespace hal

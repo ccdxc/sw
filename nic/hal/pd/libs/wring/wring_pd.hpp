@@ -2,7 +2,7 @@
 #define __HAL_PD_WRING_HPP__
 
 #include "nic/include/pd.hpp"
-#include "gen/proto/wring.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/hal/src/internal/wring.hpp"
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"

@@ -9,29 +9,29 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "gen/proto/wring.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
-using wring::WRingSpec;
-using wring::WRingStatus;
-using wring::WRingResponse;
-using wring::WRingKeyHandle;
-using wring::WRingRequestMsg;
-using wring::WRingResponseMsg;
-using wring::WRingDeleteRequestMsg;
-using wring::WRingDeleteResponseMsg;
-using wring::WRingGetEntriesRequest;
-using wring::WRingGetEntriesRequestMsg;
-using wring::WRingGetEntriesResponse;
-using wring::WRingGetEntriesResponseMsg;
-using wring::WRingGetMetaResponseMsg;
-using wring::WRingGetMetaResponse;
-using wring::WRingSetMetaResponseMsg;
-using wring::WRingSetMetaResponse;
+using internal::WRingSpec;
+using internal::WRingStatus;
+using internal::WRingResponse;
+using internal::WRingKeyHandle;
+using internal::WRingRequestMsg;
+using internal::WRingResponseMsg;
+using internal::WRingDeleteRequestMsg;
+using internal::WRingDeleteResponseMsg;
+using internal::WRingGetEntriesRequest;
+using internal::WRingGetEntriesRequestMsg;
+using internal::WRingGetEntriesResponse;
+using internal::WRingGetEntriesResponseMsg;
+using internal::WRingGetMetaResponseMsg;
+using internal::WRingGetMetaResponse;
+using internal::WRingSetMetaResponseMsg;
+using internal::WRingSetMetaResponse;
 
 namespace hal {
 
@@ -137,20 +137,6 @@ extern void *wring_get_handle_key_func(void *entry);
 extern uint32_t wring_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool wring_compare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t wring_create(wring::WRingSpec& spec,
-                       wring::WRingResponse *rsp);
-
-hal_ret_t wring_update(wring::WRingSpec& spec,
-                       wring::WRingResponse *rsp);
-
-hal_ret_t wring_get_entries(wring::WRingGetEntriesRequest& req,
-                    wring::WRingGetEntriesResponse *rsp);
-
-hal_ret_t wring_get_meta(wring::WRingSpec& req,
-                    wring::WRingGetMetaResponse *rsp);
-
-hal_ret_t wring_set_meta(wring::WRingSpec& req,
-                    wring::WRingSetMetaResponse *rsp);
 }    // namespace hal
 
 #endif    // __WRING_HPP__

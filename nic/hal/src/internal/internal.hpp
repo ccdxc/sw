@@ -69,6 +69,18 @@ hal_ret_t tlscb_delete(internal::TlsCbDeleteRequest& req,
 hal_ret_t tlscb_get(internal::TlsCbGetRequest& req,
                     internal::TlsCbGetResponseMsg *rsp);
 
+hal_ret_t wring_create(internal::WRingSpec& spec,
+                       internal::WRingResponse *rsp);
+
+hal_ret_t wring_update(internal::WRingSpec& spec,
+                       internal::WRingResponse *rsp);
+
+hal_ret_t wring_get_entries(internal::WRingGetEntriesRequest& req, internal::WRingGetEntriesResponseMsg *rsp);
+
+hal_ret_t wring_get_meta(internal::WRingSpec& spec, internal::WRingGetMetaResponseMsg *rsp);
+
+hal_ret_t wring_set_meta (internal::WRingSpec& spec, internal::WRingSetMetaResponse *rsp);
+
 
 }    // namespace hal
 
