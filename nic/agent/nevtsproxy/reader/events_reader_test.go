@@ -12,6 +12,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/satori/go.uuid"
 
+	google_protobuf1 "github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/utils/events"
@@ -119,7 +121,7 @@ func TestEventsReaderReceiveInvalidObjectType(t *testing.T) {
 // TestEventsReader tests the events reader by sending some events to shared memory and
 // reading it off from the shared memory.
 func TestEventsReader(t *testing.T) {
-	totalEventsSent := testEventsReader(t, nil)
+	totalEventsSent := testEventsReader(t, nil, 2)
 	Assert(t, totalEventsSent > 0, "0 events sent?!! something went wrong")
 }
 
@@ -144,7 +146,7 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 	defer mockWriter.Stop()
 	defer evtsD.UnregisterWriter(mockWriter.Name())
 
-	totalEventsSent := testEventsReader(t, evtsD)
+	totalEventsSent := testEventsReader(t, evtsD, 0)
 	Assert(t, totalEventsSent > 0, "0 events sent?!! something went wrong")
 
 	// ensure the mock writer received all the events through events dispatcher
@@ -160,7 +162,7 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 
 // testEventsReader helper function to read and write some events and return
 // the total number of events sent.
-func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher) uint64 {
+func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, wantedErrors int) uint64 {
 	dir, err := ioutil.TempDir("", "shm")
 	AssertOk(t, err, "failed to create temp dir")
 	defer os.RemoveAll(dir)
@@ -176,7 +178,7 @@ func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher) uint64 {
 	go func() {
 		// writer creates the shared memory and starts sending events until it is stopped.
 		defer wg.Done()
-		totalEventsSent = startEventWriter(shmName, 1024, stopWriter)
+		totalEventsSent = startEventWriter(shmName, 1024, stopWriter, wantedErrors)
 	}()
 
 	go func() {
@@ -197,7 +199,7 @@ func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher) uint64 {
 		}, "unexpected number of events at the shm. events reader", string("5ms"), string("5s"))
 
 		// ensure there is no error
-		Assert(t, eRdr.TotalErrCount() == 0, "expected 0 err count, got: %d", eRdr.TotalErrCount())
+		Assert(t, eRdr.TotalErrCount() == uint64(wantedErrors), "expected %d err count, got: %d", wantedErrors, eRdr.TotalErrCount())
 	}()
 
 	<-time.After(3 * time.Second)
@@ -236,7 +238,7 @@ func startEventReader(shmName string, evtsDispatcher events.Dispatcher) *EvtRead
 // - create shared memory with the given name and size
 // - start recording events to shared memory
 // - stop upon receiving signal from stopCh
-func startEventWriter(shmName string, size int, stopCh chan struct{}) uint64 {
+func startEventWriter(shmName string, size int, stopCh chan struct{}, fakeErrors int) uint64 {
 	sm, err := shm.CreateSharedMem(shmName, size)
 	if err != nil {
 		log.Errorf("failed to create shared memory: %s, err: %v", shmName, err)
@@ -257,6 +259,10 @@ func startEventWriter(shmName string, size int, stopCh chan struct{}) uint64 {
 				Type:      "DUMMY",
 				Component: "reader-test",
 				Message:   fmt.Sprintf("test msg - %d", totalEventsSent),
+			}
+			if fakeErrors > 0 {
+				hEvt.ObjectKey = &google_protobuf1.Any{}
+				fakeErrors--
 			}
 
 			msgSize := hEvt.Size()
