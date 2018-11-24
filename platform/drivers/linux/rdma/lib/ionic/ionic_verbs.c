@@ -753,6 +753,8 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 			if (rc < 0)
 				goto out;
 
+			npolled += rc;
+
 			if (peek) {
 				list_del(&qp->cq_poll_sq);
 				list_add_tail(&cq->poll_sq, &qp->cq_poll_sq);

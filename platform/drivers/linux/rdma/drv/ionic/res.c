@@ -108,10 +108,12 @@ int buddy_get(struct buddy_bits *buddy, int order)
 	rc = bitmap_find_free_region(buddy->inuse + first_long,
 				     buddy->inuse_size - pos,
 				     order);
-	if (rc < 0)
+	if (rc < 0) {
 		pos = buddy->inuse_size;
-	else
+	} else {
 		pos += rc;
+		rc = pos;
+	}
 
 	/* On success and also on failure, update the next indices.
 	 *

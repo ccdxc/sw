@@ -3269,6 +3269,7 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 				goto out;
 
 			npolled += rc;
+
 			break;
 
 		case IONIC_V1_CQE_TYPE_SEND_MSN:
@@ -3284,6 +3285,8 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 
 			if (rc < 0)
 				goto out;
+
+			npolled += rc;
 
 			if (peek)
 				list_move_tail(&qp->cq_poll_sq, &cq->poll_sq);
@@ -3302,6 +3305,8 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 
 			if (rc < 0)
 				goto out;
+
+			npolled += rc;
 
 			if (peek)
 				list_move_tail(&qp->cq_poll_sq, &cq->poll_sq);
