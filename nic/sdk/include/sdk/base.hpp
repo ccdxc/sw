@@ -19,6 +19,8 @@ namespace sdk {
 #define TRUE                                         1
 #define FALSE                                        0
 
+#define SDK_MAX_NAME_LEN                             16
+
 #define _In_
 #define _Out_
 #define _Inout_

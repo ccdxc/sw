@@ -9,41 +9,41 @@ namespace sdk {
 namespace table {
 
 //---------------------------------------------------------------------------
-// allocate a rw entry instance
+// allocate a directmap entry instance
 //---------------------------------------------------------------------------
-static inline directmap_entry_t*
+static inline directmap_entry_t *
 directmap_entry_alloc (void)
 {
-    directmap_entry_t *rwe;
+    directmap_entry_t *dme;
 
-    rwe = (directmap_entry_t *)SDK_CALLOC(SDK_MEM_ALLOC_ID_DM_ENTRY,
+    dme = (directmap_entry_t *)SDK_CALLOC(SDK_MEM_ALLOC_LIB_DIRECT_MAP_ENTRY,
                                           sizeof(directmap_entry_t));
-    if (rwe == NULL) {
+    if (dme == NULL) {
         return NULL;
     }
 
-    return rwe;
+    return dme;
 }
 
 //---------------------------------------------------------------------------
-// initialize a rwe instance
+// initialize a directmap entry instance
 //---------------------------------------------------------------------------
 directmap_entry_t *
-directmap_entry_init (directmap_entry_t *rwe)
+directmap_entry_init (directmap_entry_t *dme)
 {
-    if (!rwe) {
+    if (!dme) {
         return NULL;
     }
-    memset(rwe, 0, sizeof(directmap_entry_t));
+    memset(dme, 0, sizeof(directmap_entry_t));
 
     // initialize meta information
-    rwe->ht_ctxt.reset();
+    dme->ht_ctxt.reset();
 
-    return rwe;
+    return dme;
 }
 
 //---------------------------------------------------------------------------
-// allocate and initialize a rw entry instance
+// allocate and initialize a directmap entry instance
 //---------------------------------------------------------------------------
 directmap_entry_t *
 directmap_entry_alloc_init (void)
@@ -52,12 +52,12 @@ directmap_entry_alloc_init (void)
 }
 
 //---------------------------------------------------------------------------
-// free rw entry instance
+// free directmap entry instance
 //---------------------------------------------------------------------------
 sdk_ret_t
-directmap_entry_free (directmap_entry_t *rwe)
+directmap_entry_free (directmap_entry_t *dme)
 {
-    SDK_FREE(SDK_MEM_ALLOC_ID_DM_ENTRY, rwe);
+    SDK_FREE(SDK_MEM_ALLOC_LIB_DIRECT_MAP_ENTRY, dme);
     return SDK_RET_OK;
 }
 

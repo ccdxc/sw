@@ -8,10 +8,6 @@
 namespace hal {
 namespace pd {
 
-#if 0
-hal_ret_t pd_twice_nat_add(pd_twice_nat_entry_args_t *args,
-                           uint32_t *twice_nat_idx)
-#endif
 hal_ret_t
 pd_twice_nat_add(pd_func_args_t *pd_func_args)
 {

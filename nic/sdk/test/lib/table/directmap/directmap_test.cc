@@ -243,8 +243,7 @@ TEST_F(dm_test, test3) {
     rt = test_dm->update(index + 1000, &dm);
     ASSERT_TRUE(rt == SDK_RET_INVALID_ARG);
 
-    rt = test_dm->fetch_stats(&stats);
-    ASSERT_TRUE(rt == SDK_RET_OK);
+    test_dm->fetch_stats(&stats);
 
 #if 0
     printf("Insert SUCCESS: %lu, UPD SUCC: %lu, FAIL_ENF: %lu, FAIL_INV: %lu\n",
@@ -475,8 +474,7 @@ TEST_F(dm_test, test9) {
             ASSERT_TRUE(rt == SDK_RET_NO_RESOURCE);
         }
     }
-    rt = test_dm->fetch_stats(&stats);
-    ASSERT_TRUE(rt == SDK_RET_OK);
+    test_dm->fetch_stats(&stats);
 
     ASSERT_TRUE(stats[directmap::STATS_INS_SUCCESS] == 100);
     ASSERT_TRUE(stats[directmap::STATS_INS_FAIL_NO_RES] == 1);
@@ -493,7 +491,6 @@ TEST_F(dm_test, test9) {
 
     rt = test_dm->insert_withid(&dm, 1000);
     ASSERT_TRUE(rt == SDK_RET_OOB);
-
 
     rt = test_dm->update(index, &dm);
     ASSERT_TRUE(rt == SDK_RET_OK);
