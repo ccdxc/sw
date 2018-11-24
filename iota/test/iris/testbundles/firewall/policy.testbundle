@@ -3,4 +3,10 @@ meta:
 
 testcases:
     -   name    : PolicyLocalToLocal
-        testcase: testcases.security.policy_rules
+        testcase: testcases.security.policy_rules_udp
+
+    -   name    : PolicyLocalToLocal
+        testcase: testcases.security.policy_rules_icmp
+    
+    -   name    : PolicyLocalToLocal
+        testcase: testcases.security.policy_rules_tcp
