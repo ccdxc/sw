@@ -13,7 +13,7 @@ images:
     naples: nic/naples_fw.tar
 
 setup:
-    topology: test/iris/topologies/2Naples_BM/2Naples.topology
+    topology: test/iris/topologies/baremetal/baremetal.topology
     config  :
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf

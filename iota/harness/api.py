@@ -316,10 +316,12 @@ def Trigger_AggregateCommandsResponse(trig_resp, term_resp):
     for cmd in trig_resp.commands:
         if not Trigger_IsBackgroundCommand(cmd): continue
         for term_cmd in term_resp.commands:
-            if cmd.handle != term_cmd.handle: continue
-            cmd.stdout = term_cmd.stdout
-            cmd.stderr = term_cmd.stderr
-            cmd.exit_code = term_cmd.exit_code
+            if cmd.handle == term_cmd.handle and\
+               cmd.entity_name == term_cmd.entity_name and\
+               cmd.node_name == term_cmd.node_name:
+                cmd.stdout = term_cmd.stdout
+                cmd.stderr = term_cmd.stderr
+                cmd.exit_code = term_cmd.exit_code
     return trig_resp
 
 def Trigger_IsSuccess(resp):

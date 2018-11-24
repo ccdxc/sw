@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import os
+import pdb
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -19,8 +20,12 @@ class Node(object):
     def __init__(self, spec):
         self.__spec = spec
         self.__name = spec.name
-        self.__ip_address,self.__os = store.GetTestbed().ReserveNodeIpAddress()
-        self.__role = topo_pb2.PersonalityType.Value(spec.role)
+        self.__inst = store.GetTestbed().AllocateInstance()
+
+        self.__ip_address = self.__inst.NodeMgmtIP
+        self.__os = self.__inst.NodeOs
+
+        self.__role = self.__get_instance_role(spec.role)
 
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
         self.__control_intf = "eth1"
@@ -32,8 +37,24 @@ class Node(object):
         if self.IsWorkloadNode():
             self.__workload_type = topo_pb2.WorkloadType.Value(spec.workloads.type)
             self.__workload_image = spec.workloads.image
-        Logger.info("- New Node: %s: %s (%s)" % (spec.name, self.__ip_address, spec.role))
+        Logger.info("- New Node: %s: %s (%s)" %\
+                    (spec.name, self.__ip_address, topo_pb2.PersonalityType.Name(self.__role)))
         return
+
+    def __get_instance_role(self, role):
+        if role != 'auto':
+            return topo_pb2.PersonalityType.Value(role)
+
+        nic_type = self.__inst.Resource.NICType
+        if nic_type == 'pensando':
+            return topo_pb2.PERSONALITY_NAPLES
+        elif nic_type == 'mellanox':
+            return topo_pb2.PERSONALITY_MELLANOX
+        elif nic_type == 'broadcom':
+            return topo_pb2.PERSONALITY_BROADCOM
+        else:
+            Logger.error("Unknown NIC Type : %s" % nic_type)
+            sys.exit(1)
 
     def Name(self):
         return self.__name

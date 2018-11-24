@@ -1,0 +1,18 @@
+meta:
+    name: BM
+    description: Baremetal Topology
+
+nodes:
+    - node: node1
+      name: node1
+      role: auto
+      workloads:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "ubuntu18.04"
+
+    - node: node2
+      name: node2
+      role: auto
+      workloads:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "ubuntu18.04"

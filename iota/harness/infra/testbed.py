@@ -26,7 +26,7 @@ class _Testbed:
         self.__os = None
 
         self.__fw_upgrade_done = False
-        self.__read_warmd_json()
+        self.__read_testbed_json()
         self.__derive_testbed_attributes()
         return
 
@@ -37,10 +37,10 @@ class _Testbed:
         return self.curr_ts
 
     def GetProvisionUsername(self):
-        return self.tbspec.Provision.Username
+        return self.__tbspec.Provision.Username
 
     def GetProvisionPassword(self):
-        return self.tbspec.Provision.Password
+        return self.__tbspec.Provision.Password
 
     def GetOs(self):
         return self.__os
@@ -48,7 +48,7 @@ class _Testbed:
     def __derive_testbed_attributes(self):
         self.__bm_count = 0
         self.__vm_count = 0
-        for instance in self.tbspec.Instances:
+        for instance in self.__tbspec.Instances:
             self.__os = instance.NodeOs
             if instance.Type == "bm":
                 self.__bm_count += 1
@@ -68,10 +68,8 @@ class _Testbed:
             self.__type = types.tbtype.SIMULATION
         return
 
-    def __read_warmd_json(self):
-        self.tbspec = parser.JsonParse(GlobalOptions.testbed_json)
-        for instance in self.tbspec.Instances:
-            self.__node_ips.append((instance.NodeMgmtIP, instance.NodeOs))
+    def __read_testbed_json(self):
+        self.__tbspec = parser.JsonParse(GlobalOptions.testbed_json)
         return
 
     def __get_full_path(self, path):
@@ -90,11 +88,11 @@ class _Testbed:
             if ven_img:
                 msg.venice_image = self.__get_full_path(ven_img)
 
-        msg.username = self.tbspec.Provision.Username
-        msg.password = self.tbspec.Provision.Password
+        msg.username = self.__tbspec.Provision.Username
+        msg.password = self.__tbspec.Provision.Password
         msg.testbed_id = self.__tbid
 
-        for instance in self.tbspec.Instances:
+        for instance in self.__tbspec.Instances:
             node_msg = msg.nodes.add()
             node_msg.type = topo_pb2.TESTBED_NODE_TYPE_SIM
             node_msg.ip_address = instance.NodeMgmtIP
@@ -134,7 +132,7 @@ class _Testbed:
             return
         proc_hdls = []
         logfiles = []
-        for instance in self.tbspec.Instances:
+        for instance in self.__tbspec.Instances:
             if self.__get_instance_nic_type(instance) != "pensando": continue
             cmd = [ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ]
             cmd.extend(["--console-ip", instance.NicConsoleIP])
@@ -184,8 +182,8 @@ class _Testbed:
 
 
     def __init_testbed(self):
-        self.__tbid = getattr(self.tbspec, 'TestbedID', 1)
-        self.__node_ip_pool = iter(self.__node_ips)
+        self.__tbid = getattr(self.__tbspec, 'TestbedID', 1)
+        self.__instpool = iter(self.__tbspec.Instances)
         self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__tbid, api.GetNicMode())
         self.__recover_testbed()
         msg = self.__prepare_TestBedMsg(self.curr_ts)
@@ -214,14 +212,13 @@ class _Testbed:
         status = self.__init_testbed()
         return status
 
-    def ReserveNodeIpAddress(self):
+    def AllocateInstance(self):
         try:
-            node_ip_os = next(self.__node_ip_pool)
+            inst = next(self.__instpool)
         except:
             Logger.error("No Nodes available in Testbed.")
-            assert(0)
-            node_ip_os = None
-        return node_ip_os
+            sys.exit(1)
+        return inst
 
     def GetDataVlans(self):
         return copy.deepcopy(self.__vlans)
