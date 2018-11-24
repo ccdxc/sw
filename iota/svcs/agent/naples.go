@@ -187,9 +187,9 @@ func (naples *naplesSimNode) addNodeEntities(in *iota.Node) error {
 	for _, entityEntry := range in.GetEntities() {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_NAPLES {
-			wload = Workload.NewWorkload(Workload.WorkloadTypeContainer, naples.logger)
+			wload = Workload.NewWorkload(Workload.WorkloadTypeContainer, entityEntry.GetName(), naples.name, naples.logger)
 		} else if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_HOST {
-			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, naples.logger)
+			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, entityEntry.GetName(), naples.name, naples.logger)
 		}
 
 		wDir := Common.DstIotaEntitiesDir + "/" + entityEntry.GetName()
@@ -410,7 +410,7 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 		return resp, nil
 	}
 
-	wload = Workload.NewWorkload(wlType, dnode.logger)
+	wload = Workload.NewWorkload(wlType, in.GetWorkloadName(), dnode.name, dnode.logger)
 
 	if wload == nil {
 		msg := fmt.Sprintf("Trying to add workload of invalid type : %v", wlType)
@@ -626,10 +626,10 @@ func (naples *naplesHwNode) addNodeEntities(in *iota.Node) error {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_NAPLES {
 			/*It is like running in a vm as its accesible only by ssh */
-			wload = Workload.NewWorkload(Workload.WorkloadTypeRemote, naples.logger)
+			wload = Workload.NewWorkload(Workload.WorkloadTypeRemote, entityEntry.GetName(), naples.name, naples.logger)
 			naples.naplesEntityKey = entityEntry.GetName()
 		} else if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_HOST {
-			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, naples.logger)
+			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, entityEntry.GetName(), naples.name, naples.logger)
 			naples.hostEntityKey = entityEntry.GetName()
 		}
 
@@ -753,7 +753,7 @@ func (dnode *dataNode) addNodeEntities(in *iota.Node) error {
 	for _, entityEntry := range in.GetEntities() {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_HOST {
-			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, dnode.logger)
+			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, entityEntry.GetName(), dnode.name, dnode.logger)
 			dnode.hostEntityKey = entityEntry.GetName()
 		}
 

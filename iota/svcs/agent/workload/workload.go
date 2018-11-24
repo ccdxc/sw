@@ -48,6 +48,7 @@ type workload interface {
 
 type workloadBase struct {
 	name       string
+	parent     string
 	bgCmds     map[string]*Cmd.CommandInfo
 	logger     *log.Logger
 	bgCmdIndex uint32
@@ -93,6 +94,12 @@ func (app *workloadBase) SetBaseDir(dir string) error {
 	os.Chmod(dir, 0777)
 	app.baseDir = dir
 	return nil
+}
+
+func (app *workloadBase) genBgCmdHandle() string {
+	handleKey := fmt.Sprintf("%s-%s-%s-%v", app.parent, app.name, bgCmdHandlePrefix, app.bgCmdIndex)
+	app.bgCmdIndex++
+	return handleKey
 }
 
 func (app *workloadBase) AddVlanInterface(parentIntf string, parentMacAddress string, vlan int) (string, error) {
@@ -253,8 +260,7 @@ func (app *containerWorkload) RunCommand(cmd []string, dir string, timeout uint3
 		cmdCtx.Stderr = cmdResp.Stderr
 	}(cmdCtx)
 
-	handleKey := fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
-	app.bgCmdIndex++
+	handleKey := app.genBgCmdHandle()
 	cmdInfo := &Cmd.CommandInfo{Ctx: cmdCtx}
 	cmdInfo.Handle = (string)(containerCmdHandle)
 	app.bgCmds[handleKey] = cmdInfo
@@ -367,8 +373,7 @@ func (app *bareMetalWorkload) RunCommand(cmd []string, dir string, timeout uint3
 	cmdInfo, _ := Cmd.ExecCmd(cmd, runDir, (int)(timeout), background, shell, nil)
 
 	if background {
-		handleKey = fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
-		app.bgCmdIndex++
+		handleKey = app.genBgCmdHandle()
 		app.bgCmds[handleKey] = cmdInfo
 	}
 
@@ -405,8 +410,7 @@ func (app *remoteWorkload) RunCommand(cmd []string, dir string, timeout uint32, 
 	}
 
 	cmdInfo, _ := Cmd.StartSSHBgCommand(app.sshHandle, runCmd)
-	handleKey := fmt.Sprintf("%s-%v", bgCmdHandlePrefix, app.bgCmdIndex)
-	app.bgCmdIndex++
+	handleKey := app.genBgCmdHandle()
 	app.bgCmds[handleKey] = cmdInfo
 
 	return cmdInfo.Ctx, handleKey, nil
@@ -455,32 +459,33 @@ func (app *remoteWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx, e
 	return cmdInfo.Ctx, nil
 }
 
-func newContainerWorkload(logger *log.Logger) Workload {
-	return &containerWorkload{workloadBase: workloadBase{logger: logger}}
+func newContainerWorkload(name string, parent string, logger *log.Logger) Workload {
+	return &containerWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
 }
 
-func newBareMetalWorkload(logger *log.Logger) Workload {
-	return &bareMetalWorkload{workloadBase: workloadBase{logger: logger}}
+func newBareMetalWorkload(name string, parent string, logger *log.Logger) Workload {
+	return &bareMetalWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
 }
 
-func newVMWorkload(logger *log.Logger) Workload {
-	return &vmWorkload{workloadBase: workloadBase{logger: logger}}
+func newVMWorkload(name string, parent string, logger *log.Logger) Workload {
+	return &vmWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
 }
 
-func newRemoteWorkload(logger *log.Logger) Workload {
-	return &remoteWorkload{workloadBase: workloadBase{logger: logger}}
+func newRemoteWorkload(name string, parent string, logger *log.Logger) Workload {
+	return &remoteWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
 }
 
-var iotaWorkloads = map[string]func(logger *log.Logger) Workload{
+var iotaWorkloads = map[string]func(name string, parent string, logger *log.Logger) Workload{
 	WorkloadTypeContainer: newContainerWorkload,
 	WorkloadTypeVM:        newVMWorkload,
 	WorkloadTypeBareMetal: newBareMetalWorkload,
 	WorkloadTypeRemote:    newRemoteWorkload,
 }
 
-func NewWorkload(workloadType string, logger *log.Logger) Workload {
+//NewWorkload creates a workload
+func NewWorkload(workloadType string, name string, parent string, logger *log.Logger) Workload {
 	if _, ok := iotaWorkloads[workloadType]; ok {
-		return iotaWorkloads[workloadType](logger)
+		return iotaWorkloads[workloadType](name, parent, logger)
 	}
 
 	return nil
