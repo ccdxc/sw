@@ -56,6 +56,9 @@ class Node(object):
             Logger.error("Unknown NIC Type : %s" % nic_type)
             sys.exit(1)
 
+    def GetNicType(self):
+        return self.__inst.Resource.NICType
+
     def Name(self):
         return self.__name
     def Role(self):
@@ -151,8 +154,15 @@ class Node(object):
         elif self.IsNaples():
             self.__host_intfs = resp.naples_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
-        if GlobalOptions.dryrun and len(self.__host_intfs) == 0:
-            self.__host_intfs = ["dummy_intf0", "dummy_intf1"]
+
+        if len(self.__host_intfs) == 0:
+            if GlobalOptions.dryrun:
+                self.__host_intfs = ["dummy_intf0", "dummy_intf1"]
+            else:
+                Logger.error("Interfaces not found on Host: ", self.__ip_addresss)
+                if self.IsNaples():
+                    Logger.error("Check if IONIC driver is installed.")
+                sys.exit(1)
         return
 
 class Topology(object):
@@ -257,3 +267,6 @@ class Topology(object):
 
     def GetNodeOs(self, node_name):
         return self.__nodes[node_name].GetOs()
+
+    def GetNicType(self, node_name):
+        return self.__nodes[node_name].GetNicType()

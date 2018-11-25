@@ -2,7 +2,7 @@ meta:
     name    : mnichostpin
 
 testcases:
-    -   name    : MNIC_interface Up
+    -   name    : MnicInterfaceUp
         testcase: testcases.mnic.if_up
         ignore: False
         verifs:

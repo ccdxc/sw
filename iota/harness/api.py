@@ -231,6 +231,9 @@ def IsSimulation():
 def GetNicMode():
     return store.GetTestbed().GetCurrentTestsuite().GetNicMode()
 
+def GetNicType(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(node_name)
+
 def IsConfigOnly():
     return store.GetTestbed().GetCurrentTestsuite().IsConfigOnly()
 
@@ -313,6 +316,8 @@ def Trigger_TerminateAllCommands(exec_cmd_resp = None):
     return Trigger(term_req)
 
 def Trigger_AggregateCommandsResponse(trig_resp, term_resp):
+    if trig_resp == None or term_resp == None:
+        return None
     for cmd in trig_resp.commands:
         if not Trigger_IsBackgroundCommand(cmd): continue
         for term_cmd in term_resp.commands:

@@ -119,6 +119,7 @@ class TestcaseData:
 class Testcase:
     def __init__(self, spec):
         self.__spec = spec
+        self.__spec.name = self.__spec.name.replace(' ', '_')
         self.__tc = None
         self.__verifs = []
         self.__iterid = 0
@@ -270,7 +271,7 @@ class Testcase:
 
             api.ChangeDirectory("")
             Logger.SetTestcase(iter_data.GetInstanceId())
-            Logger.debug("Testcase Iteration directory = %s", iter_data.GetInstanceId())
+            Logger.debug("Testcase Iteration directory = %s" % iter_data.GetInstanceId())
             ret = self.__mk_testcase_directory(iter_data.GetInstanceId())
             if ret != types.status.SUCCESS: 
                 iter_data.SetStatus(ret)
@@ -368,6 +369,7 @@ class Testcase:
             self.__enable = False
             return types.status.SUCCESS
 
+        Logger.SetTestcase(self.Name())
         Logger.info("Starting Testcase: %s" % self.Name())
         self.__timer.Start()
         self.status = self.__execute()

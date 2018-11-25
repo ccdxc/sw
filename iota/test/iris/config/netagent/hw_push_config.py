@@ -59,8 +59,11 @@ def __add_workloads():
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
         if api.GetNicMode() != 'classic':
             wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
-            encap_vlan = getattr(ep.spec, 'useg-vlan', None)
-            wl_msg.encap_vlan = encap_vlan if encap_vlan else wl_msg.uplink_vlan
+            if api.GetNicType(wl_msg.node_name) == 'pensando':
+                encap_vlan = getattr(ep.spec, 'useg-vlan', None)
+                wl_msg.encap_vlan = encap_vlan if encap_vlan else wl_msg.uplink_vlan
+            else:
+                wl_msg.encap_vlan = wl_msg.uplink_vlan
 
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)

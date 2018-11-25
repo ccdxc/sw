@@ -114,7 +114,7 @@ class _Testbed:
     def __cleanup_testbed_script(self):
         logfile = "%s_cleanup.log" % self.curr_ts.Name()
         Logger.info("Cleaning up Testbed, Logfile = %s" % logfile)
-        cmd = "./scripts/cleanup_testbed.py --testbed %s" % GlobalOptions.testbed_json
+        cmd = "timeout 60 ./scripts/cleanup_testbed.py --testbed %s" % GlobalOptions.testbed_json
         if GlobalOptions.rerun:
             cmd = cmd + " --rerun"
         if os.system("%s > %s 2>&1" % (cmd, logfile)) != 0:
@@ -133,25 +133,34 @@ class _Testbed:
         proc_hdls = []
         logfiles = []
         for instance in self.__tbspec.Instances:
-            if self.__get_instance_nic_type(instance) != "pensando": continue
-            cmd = [ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ]
-            cmd.extend(["--console-ip", instance.NicConsoleIP])
-            cmd.extend(["--console-port", instance.NicConsolePort])
-            cmd.extend(["--host-ip", instance.NodeMgmtIP])
-            cmd.extend(["--cimc-ip", instance.NodeCimcIP])
-            cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
-            cmd.extend(["--mode", "%s" % api.GetNicMode()])
-            cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
-            cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
-            cmd.extend(["--os", "%s" % instance.NodeOs])
-            if self.__fw_upgrade_done or GlobalOptions.only_reboot:
-                cmd.extend(["--mode-change"])
-                logfile = "%s-%s-reboot.log" % (self.curr_ts.Name(), instance.Name)
+            cmd = ["timeout", "1200"]
+            if self.__get_instance_nic_type(instance) == "pensando":
+                cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
+                cmd.extend(["--console-ip", instance.NicConsoleIP])
+                cmd.extend(["--console-port", instance.NicConsolePort])
+                cmd.extend(["--host-ip", instance.NodeMgmtIP])
+                cmd.extend(["--cimc-ip", instance.NodeCimcIP])
+                cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
+                cmd.extend(["--mode", "%s" % api.GetNicMode()])
+                cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
+                cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
+                cmd.extend(["--os", "%s" % instance.NodeOs])
+                if self.__fw_upgrade_done or GlobalOptions.only_reboot:
+                    logfile = "%s-%s-reboot.log" % (self.curr_ts.Name(), instance.Name)
+                    Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
+                    cmd.extend(["--mode-change"])
+                else:
+                    logfile = "%s-firmware-upgrade.log" % instance.Name
+                    Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
             else:
-                logfile = "%s-firmware-upgrade.log" % instance.Name
-            logfiles.append(logfile)
-            Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
+                cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
+                cmd.extend(["--host-ip", instance.NodeMgmtIP])
+                cmd.extend(["--cimc-ip", instance.NodeCimcIP])
+                cmd.extend(["--os", "%s" % instance.NodeOs])
+                logfile = "%s-%s-reboot.log" % (self.curr_ts.Name(), instance.Name)
+                Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
 
+            logfiles.append(logfile)
             cmdstring = ""
             for c in cmd: cmdstring += "%s " % c
             Logger.info("Command = ", cmdstring)
@@ -168,7 +177,7 @@ class _Testbed:
                 continue
             if proc_hdl.returncode != 0:
                 result = proc_hdl.returncode
-                Logger.header("FIRMWARE UPGRADE FAILED: LOGFILE = %s" % logfiles[idx])
+                Logger.header("FIRMWARE UPGRADE / MODE CHANGE / REBOOT FAILED: LOGFILE = %s" % logfiles[idx])
                 os.system("cat %s" % logfiles[idx])
 
         if result != 0:
