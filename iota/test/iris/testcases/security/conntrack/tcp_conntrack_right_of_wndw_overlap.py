@@ -3,6 +3,7 @@
 import iota.harness.api as api
 import yaml
 
+
 def get_conntrackinfo(cmd):
     yaml_out = yaml.load_all(cmd.stdout)
     print(type(yaml_out))
@@ -67,18 +68,13 @@ def Trigger(tc):
     cmd = trig_resp1.commands[-1] 
     print(trig_resp1)
     print(cmd)
-    
     iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
     new_seq_num = iseq_num + rwindo_sz * (2 ** rwinscale)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    #hping3 -c 1 -s 52252 -p 1234 -M 0 -L 0 --ack --tcp-timestamp 192.168.100.102
-    #left out of window - retransmit
-    #cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num - 200, iack_num, server.ip_address)    
-    #within the window - outoforder
-    #cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num + 100, iack_num, server.ip_address)    
-    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(new_seq_num, iack_num, server.ip_address)    
+    #right of window overlap
+    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d {}".format(iseq_num + 100, iack_num, server.ip_address,rwindo_sz * (2 ** rwinscale) + 200)    
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, cmd_cookie)
     tc.cmd_cookies['fail ping'] = cmd_cookie
 
@@ -90,6 +86,7 @@ def Trigger(tc):
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    
     return api.types.status.SUCCESS    
         
 def Verify(tc):

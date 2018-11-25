@@ -2,11 +2,20 @@ meta:
     name        : conntrack
 
 testcases:
-    -   name    : TDL_NZ_ROW
-        testcase: testcases.security.tcp_conntrack_right_of_wndw
-
     -   name    : TDL_NZ_LOW_OUTSIDE
-        testcase: testcases.security.tcp_conntrack_left_of_wndw
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw
 
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN
-        testcase: testcases.security.tcp_conntrack_in_window_not_left_aligned
+        testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned
+
+    -   name    : TDL_NZ_LOW_ON_BORDER
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_border
+
+    -   name    : TDL_NZ_LOW_OVLP
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_ovlp
+    
+    -   name    : TDL_NZ_ROW_OVLP
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap
+
+    -   name    : TDL_NZ_ROW
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw
