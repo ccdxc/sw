@@ -9,7 +9,7 @@
 #if !defined (__OCI_VNIC_HPP_)
 #define __OCI_VNIC_HPP_
 
-#include <oci_types.h>
+#include "nic/hal/apollo/include/api/oci.hpp"
 
 /**
  * @defgroup OCI_VNIC - VNIC specific API definitions

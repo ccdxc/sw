@@ -15,6 +15,24 @@
  * @{
  */
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <sys/types.h>
+
+/**
+ * @brief API status codes
+ */
+
+typedef enum oci_status_e {
+    OCI_STAUS_OK,
+    OCI_STATUS_EXISTS,
+    OCI_STATUS_NOT_FOUND,
+    OCI_STATUS_OOM,
+    OCI_STATUS_INVALID_OPERATION,
+    OCI_STATUS_HW_PROGRAMMING_ERR,
+    OCI_STAUS_ERR,
+} oci_status_t;
+
 /**
  * @brief Defined API sets have assigned IDs.
  */
@@ -30,6 +48,8 @@ typedef enum oci_class_id_e {
     OCI_CLASS_ID_MAX              =  8,    /**< total number of class-id */
 } oci_class_id_t;
 
+// TODO:
+// all log related APIs should be wrapped in oci_init() API
 /**
  * @brief Defines log level
  */
@@ -52,9 +72,14 @@ typedef enum oci_log_level_e {
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-oci_status_t oci_log_set(
-    _In_ oci_class_id_t oci_class_id,
-    _In_ oci_log_level_t log_level);
+oci_status_t oci_log_set(_In_ oci_class_id_t oci_class_id,
+                         _In_ oci_log_level_t log_level);
+
+typedef uint64_t  oci_vcn_id_t;
+typedef uint64_t  oci_subnet_id_t;
+typedef uint64_t  oci_vnic_id_t;
+typedef uint64_t  oci_rule_id_t;
+typedef uint64_t  oci_rsrc_pool_id_t;
 
 /**
  * @}

@@ -9,7 +9,7 @@
 #if !defined (__OCI_ROUTE_H_)
 #define __OCI_ROUTE_H_
 
-#include <oci_types.h>
+#include "nic/hal/apollo/include/api/oci.hpp"
 
 /**
  * @defgroup OCI_ROUTE - Route specific API definitions

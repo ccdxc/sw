@@ -10,7 +10,7 @@
 #define __OCI_TEP_H_
 
 #include "nic/sdk/include/sdk/ip.hpp"
-#include <nic/apollo/include/api/oci_types.hpp>
+#include "nic/hal/apollo/include/api/oci.hpp"
 
 /**
  * @defgroup OCI_TEP - Tunnel specific API definitions

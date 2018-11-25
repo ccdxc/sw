@@ -9,7 +9,7 @@
 #if !defined (__OCI_SWITCHPORT_H_)
 #define __OCI_SWITCHPORT_H_
 
-#include <oci_types.h>
+#include "nic/hal/apollo/include/api/oci.hpp"
 
 /**
  * @defgroup OCI_SWITCHPORT - Switchport Params specific API definitions

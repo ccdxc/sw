@@ -9,7 +9,7 @@
 #if !defined (__OCI_SECRULE_H_)
 #define __OCI_SECRULE_H_
 
-#include <oci_types.h>
+#include "nic/hal/apollo/include/api/types.hpp"
 
 /**
  * @defgroup OCI_SECRULE - Security Rule specific API definitions

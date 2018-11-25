@@ -3,7 +3,7 @@
  *
  * @file    tep.cc
  *
- * @brief   This file deals with OCI TEP API handling
+ * @brief   This file deals with OCI Tunnel EndPoint (TEP) API handling
  */
 
 #include <stdio.h>
@@ -11,10 +11,11 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/apollo/include/api/oci_tep.hpp"
-#include "nic/apollo/api/tep.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "nic/hal/apollo/include/api/oci_tep.hpp"
 
-using namespace sdk;
+using sdk::lib::ht;
+using sdk::lib::indexer;
 
 namespace api {
 
@@ -39,9 +40,8 @@ static inline void oci_int_tep_db_init (void);
 typedef struct oci_int_tep_gstate_s
 {
     //slab *slab[MAX];   /**< Memory slab */
-    sdk::lib::ht *ht;              /**< Hash table root */
-    sdk::lib::indexer *id_idxr;    /**< Indexer to allocate internal id */
-
+    ht      *ht;         /**< Hash table root */
+    indexer *id_idxr;    /**< Indexer to allocate internal id */
 } oci_int_tep_gstate_t;
 
 oci_int_tep_gstate_t g_int_tep_state;

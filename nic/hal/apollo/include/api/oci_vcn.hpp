@@ -10,13 +10,15 @@
 #define __OCI_VCN_H_
 
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/include/api/oci_types.hpp"
+#include "nic/hal/apollo/include/api/oci.hpp"
 
 /**
  * @defgroup OCI_VCN - Virtual Cloud Network specific API definitions
  *
  * @{
  */
+
+#define OCI_MAX_VCN        1024
 
 /**
  * @brief VCN Key
@@ -46,8 +48,7 @@ typedef struct oci_vcn_s {
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t oci_vcn_create (
-    _In_ oci_vcn_t *vcn);
+sdk_ret_t oci_vcn_create(_In_ oci_vcn_t *vcn);
 
 
 /**
@@ -57,8 +58,7 @@ sdk_ret_t oci_vcn_create (
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t oci_vcn_delete (
-    _In_ oci_vcn_key_t *vcn_key);
+sdk_ret_t oci_vcn_delete(_In_ oci_vcn_key_t *vcn_key);
 
 /**
  * @}

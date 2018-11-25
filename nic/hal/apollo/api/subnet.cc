@@ -11,8 +11,8 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/apollo/include/api/oci_subnet.hpp"
-#include "nic/apollo/api/subnet.hpp"
+#include "nic/hal/apollo/include/api/oci_subnet.hpp"
+#include "nic/hal/apollo/api/subnet.hpp"
 
 using namespace sdk;
 

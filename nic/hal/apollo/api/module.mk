@@ -1,6 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libapi_apollo.so
+MODULE_TARGET   = libapolloapi.so
 MODULE_PIPELINE = apollo
-MODULES_SRCS    = ${MODULE_SRC_DIR}/*.cc
+MODULE_SRCS     = ${MODULE_SRC_DIR}/vcn.cc
 include ${MKDEFS}/post.mk

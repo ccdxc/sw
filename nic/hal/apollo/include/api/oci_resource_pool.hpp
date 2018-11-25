@@ -9,7 +9,7 @@
 #if !defined (__OCI_RSRC_POOL_H_)
 #define __OCI_RSRC_POOL_H_
 
-#include <oci_types.h>
+#include "nic/hal/apollo/include/api/oci.hpp"
 
 /**
  * @defgroup OCI_RSRC_POOL - Resource pool specific API definitions

@@ -2,5 +2,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libasicpd_common.so
 #MODULE_PIPELINE = iris gft
-MODULES_SRCS    = ${MODULE_SRC_DIR}/asic_pd.cc
+MODULE_SRCS    = ${MODULE_SRC_DIR}/asic_pd.cc
 include ${MKDEFS}/post.mk
