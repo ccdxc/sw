@@ -374,6 +374,8 @@ out:
 
 static void read_write_result_all_chains(struct batch_info *batch_info);
 
+pnso_error_t bat_poller(void *pnso_poll_ctx);
+
 pnso_error_t
 bat_poller(void *pnso_poll_ctx)
 {

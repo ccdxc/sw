@@ -248,6 +248,8 @@ chn_poll_all_services(struct service_chain *chain)
 	return err;
 }
 
+pnso_error_t chn_poller(void *pnso_poll_ctx);
+
 pnso_error_t
 chn_poller(void *pnso_poll_ctx)
 {
