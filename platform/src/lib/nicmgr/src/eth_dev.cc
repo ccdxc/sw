@@ -240,8 +240,7 @@ Eth::Eth(HalClient *hal_client,
                  hal_lif_info_.queue_info[ETH_QTYPE_RQ].entries);
 
     auto lif_stats =
-        delphi::objects::LifMetrics::NewDpLifMetrics(spec->lif_id,
-                                                     stats_mem_addr);
+        delphi::objects::LifMetrics::NewLifMetrics(spec->lif_id, stats_mem_addr);
     if (lif_stats == NULL) {
         NIC_LOG_ERR("Failed lif metrics registration with delphi lif {}",
                     spec->lif_id);

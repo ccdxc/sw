@@ -11,6 +11,7 @@ var (
 #include "nic/delphi/shm/delphi_metrics.hpp"
 #include "{{.FilePrefix}}.pb.h"
 #include <google/protobuf/text_format.h>
+#include "nic/sdk/include/sdk/pal.hpp"
 
 namespace delphi {
 namespace objects {
@@ -19,13 +20,21 @@ namespace objects {
 {{$pkgName := .Package}}
 {{$msgs := .Messages}}
 {{range $msgs}}
+  {{$msgName := .GetName}}
+  {{$msg := .}}
   {{if not (HasSuffix .GetName "Metrics")}}
-  {{if .HasFieldType ".delphi.ObjectMeta" }}
-    {{if .HasField "Key" }} {{if or (.HasField "key_or_handle") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
-    {{else if .HasField "key_or_handle"}} {{if or (.HasField "Key") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
-    {{else if .HasExtOption "delphi.singleton" }} {{if or (.HasField "key_or_handle") (.HasField "key_or_handle")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}}
-    {{else}} {{ ThrowError "does not have Key field" $fileName .GetName }}
-    {{end}}
+    {{if .HasFieldType ".delphi.ObjectMeta" }}
+      {{if .HasField "Key" }}
+        {{if or (.HasField "key_or_handle") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }}
+        {{end}}
+      {{else if .HasField "key_or_handle"}}
+        {{if or (.HasField "Key") (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }}
+        {{end}}
+      {{else if .HasExtOption "delphi.singleton" }}
+        {{if or (.HasField "key_or_handle") (.HasField "key_or_handle")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }}
+        {{end}}
+      {{else}} {{ ThrowError "does not have Key field" $fileName .GetName }}
+      {{end}}
 
 class {{.GetName}};
 typedef std::shared_ptr<{{.GetName}}> {{.GetName}}Ptr;
@@ -55,29 +64,38 @@ public:
     virtual delphi::ObjectMeta *GetMeta() {
         return this->mutable_meta();
     };
-    {{if .HasExtOption "delphi.singleton" }}
+      {{if .HasExtOption "delphi.singleton" }}
     virtual string GetKey() {
         return "default";
     }
-    {{end}}
-    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}} {{if (eq .GetName "Key") }} {{if .IsRepeated }} {{ ThrowError "Key field can not be repeated" $fileName $msgName .GetName }} {{end}}{{ if .TypeIsMessage }}
+      {{end}}
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{if (eq .GetName "Key") }}
+          {{if .IsRepeated }} {{ ThrowError "Key field can not be repeated" $fileName $msgName .GetName }}
+          {{end}}
+          {{ if .TypeIsMessage }}
     virtual string GetKey() {
         return this->key().ShortDebugString();
-    } {{else}}
+    }
+          {{else}}
     virtual string GetKey() {
         string out_str;
         const google::protobuf::FieldDescriptor *fld =  this->GetDescriptor()->FindFieldByName("Key");
         google::protobuf::TextFormat::PrintFieldValueToString(*this, fld, -1, &out_str);
         return out_str;
     }
-    {{end}} {{end}}
-      {{if (eq .GetName "key_or_handle") }} {{ if .TypeIsMessage }}
+          {{end}}
+        {{end}}
+        {{if (eq .GetName "key_or_handle") }}
+          {{ if .TypeIsMessage }}
       virtual string GetKey() {
           return this->key_or_handle().ShortDebugString();
       }
-      {{else}} {{ ThrowError "does not have Key field" $fileName $msgName .GetName }}
-      {{end}} {{end}}
-    {{end}}
+          {{else}} {{ ThrowError "does not have Key field" $fileName $msgName .GetName }}
+          {{end}}
+        {{end}}
+      {{end}}
 
     virtual ::google::protobuf::Message *GetMessage() {
         return this;
@@ -92,7 +110,7 @@ public:
     static vector<{{.GetName}}Ptr> List(SdkPtr sdk);
     virtual error TriggerEvent(BaseObjectPtr oldObj, ObjectOperation op, ReactorListPtr rl);
 
-    {{if .HasExtOption "delphi.singleton" }}
+      {{if .HasExtOption "delphi.singleton" }}
     // FindObject finds the object for singletons
     static inline {{.GetName}}Ptr FindObject(SdkPtr sdk) {
         {{.GetName}}Ptr objkey = make_shared<{{.GetName}}>();
@@ -100,7 +118,8 @@ public:
         {{.GetName}}Ptr obj = static_pointer_cast<{{.GetName}}>(base_obj);
 
         return obj;
-    } {{else}}
+    }
+      {{else}}
     // FindObject finds the object by key
     static inline {{.GetName}}Ptr FindObject(SdkPtr sdk, {{.GetName}}Ptr objkey) {
         BaseObjectPtr base_obj = sdk->FindObject(objkey);
@@ -108,7 +127,7 @@ public:
 
         return obj;
     }
-    {{end}}
+      {{end}}
 };
 
 class {{.GetName}}Reactor : public BaseReactor {
@@ -119,23 +138,40 @@ public:
     virtual error On{{.GetName}}Delete({{.GetName}}Ptr obj) {
         return error::OK();
     }
-    {{if .HasExtOption "delphi.update_event" }} {{$upd_ext := .GetExtOption "delphi.update_event"}} {{if IsTrue $upd_ext}}
+      {{if .HasExtOption "delphi.update_event" }} {{$upd_ext := .GetExtOption "delphi.update_event"}}
+        {{if IsTrue $upd_ext}}
     virtual error On{{ .GetName }}Update({{.GetName}}Ptr obj) {
         return error::OK();
     }
-    {{end}} {{end}}
-    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}} {{if and (eq .GetTypeName ".delphi.ObjectMeta") (ne .GetName "Meta") }} {{ ThrowError "invalid name for ObjectMeta field" $fileName $msgName .GetName }} {{end}} {{if and (ne .GetName "Meta") (ne .GetName "Key")}} {{ if .HasExtOption "delphi.event"}} {{$evt_ext := .GetExtOption "delphi.event"}} {{if IsTrue $evt_ext}}
+        {{end}} 
+      {{end}}
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{if and (eq .GetTypeName ".delphi.ObjectMeta") (ne .GetName "Meta") }} {{ ThrowError "invalid name for ObjectMeta field" $fileName $msgName .GetName }}
+        {{end}}
+        {{if and (ne .GetName "Meta") (ne .GetName "Key")}}
+          {{ if .HasExtOption "delphi.event"}} {{$evt_ext := .GetExtOption "delphi.event"}}
+            {{if IsTrue $evt_ext}}
     virtual error On{{ .GetName }}({{$msgName}}Ptr obj) {
         return error::OK();
     }
-    {{end}} {{end}} {{end}} {{end}}
+            {{end}}
+          {{end}}
+        {{end}}
+      {{end}}
 };
 
 REGISTER_KIND({{.GetName}});
-{{end}}
-{{else}}
-  {{if not (.HasField "Key")}} {{if not (.HasExtOption "delphi.singleton")}} {{ ThrowError "metrics does not have Key field" $fileName .GetName }} {{end}} {{end}}
-  {{if .HasField "Key" }} {{if (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }} {{end}} {{end}}
+    {{end}}
+  {{else}}
+    {{if not (.HasField "Key")}} 
+      {{if not (.HasExtOption "delphi.singleton")}} {{ ThrowError "metrics does not have Key field" $fileName .GetName }}
+      {{end}}
+    {{end}}
+    {{if .HasField "Key" }}
+      {{if (.HasExtOption "delphi.singleton")}} {{ ThrowError "multiple key fields or singleton" $fileName .GetName }}
+      {{end}}
+    {{end}}
 
 // forward declaration
 class {{.GetName}};
@@ -144,12 +180,13 @@ class {{.GetName}}Iterator;
 
 // {{.GetName | ToLower}}_t: c-struct for {{.GetName}}
 typedef struct {{.GetName | ToLower}}_ {
-    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-    {{if (eq .GetTypeName ".delphi.Counter") }}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if (eq .GetTypeName ".delphi.Counter") }}
     uint64_t    {{.GetName}};
-    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+      {{else if (eq .GetTypeName ".delphi.Gauge") }}
     double      {{.GetName}};
-    {{end}}
+      {{end}}
     {{end}}
 } {{.GetName | ToLower}}_t;
 
@@ -157,26 +194,32 @@ typedef struct {{.GetName | ToLower}}_ {
 class {{.GetName}} : public delphi::metrics::DelphiMetrics {
 private:
     char                          *shm_ptr_;
-	{{if (.HasExtOption "delphi.singleton")}}
+    uint64_t                      pal_addr_;
+    {{if (.HasExtOption "delphi.singleton")}}
 	uint32_t                            key_ = 0;
-	{{end}}
-    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-    {{if (eq .GetName "Key") }} {{if .IsRepeated }} {{ ThrowError "Key field can not be repeated" $fileName $msgName .GetName }} {{end}}
-    {{ if .TypeIsMessage }} {{if or (eq .GetTypeName ".delphi.Counter") (eq .GetTypeName ".delphi.Gauge") }} {{ ThrowError "Key field type can not be counter or gauge" $fileName $msgName .GetName }} {{end}}
+    {{end}}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if (eq .GetName "Key") }}
+        {{if .IsRepeated }} {{ ThrowError "Key field can not be repeated" $fileName $msgName .GetName }}
+        {{end}}
+        {{ if .TypeIsMessage }}
+          {{if or (eq .GetTypeName ".delphi.Counter") (eq .GetTypeName ".delphi.Gauge") }} {{ ThrowError "Key field type can not be counter or gauge" $fileName $msgName .GetName }} 
+          {{end}}
     {{$pkgName}}::{{.GetCppTypeName}}      key_;
-    {{else}}
+        {{else}}
     {{.GetCppTypeName}}                       key_;
-    {{end}}
-    {{else}}
-    {{if (eq .GetTypeName ".delphi.Counter") }}
+        {{end}}
+      {{else}}
+        {{if (eq .GetTypeName ".delphi.Counter") }}
     delphi::metrics::CounterPtr   {{.GetName}}_;
-    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+        {{else if (eq .GetTypeName ".delphi.Gauge") }}
     delphi::metrics::GaugePtr     {{.GetName}}_;
-    {{else if (eq .GetTypeName ".delphi.ObjectMeta") }}
+        {{else if (eq .GetTypeName ".delphi.ObjectMeta") }}
     delphi::ObjectMeta            {{.GetName}}_;
-    {{else}} {{ ThrowError "Invalid field type for" $fileName $msgName .GetName .GetCppTypeName }}
-    {{end}}
-    {{end}}
+        {{else}} {{ ThrowError "Invalid field type for" $fileName $msgName .GetName .GetCppTypeName }}
+        {{end}}
+      {{end}}
     {{end}}
 
 public:
@@ -187,42 +230,58 @@ public:
     void * Raw() { return shm_ptr_; };
 	static delphi::error  CreateTable();
 
-	{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
+    {{if (.HasExtOption "delphi.singleton")}}
 	{{$msgName}}(char *ptr);
+        {{$msgName}}(uint64_t pal_addr);
 	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(vptr){ };
+	{{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(pal_addr){ };
     uint32_t GetKey() { return 0; };
+      {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+    static {{$msgName}}Ptr New{{$msgName}}(uint64_t pal_addr);
+      {{else}}
     static {{$msgName}}Ptr New{{$msgName}}();
-    static {{$msgName}}Ptr NewDp{{$msgName}}(uint64_t pal_addr);
+      {{end}}
 	static delphi::error Publish({{$msgName | ToLower}}_t *mptr);
 	static {{$msgName}}Ptr Find();
-	{{end}}
-    {{$fields := .Fields}}{{range $fields}}
-    {{if (eq .GetName "Key") }}
-    {{ if .TypeIsMessage }}
+    {{end}}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if (eq .GetName "Key") }}
+        {{ if .TypeIsMessage }}
     {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *ptr);
+    {{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
 	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{$pkgName}}::{{.GetCppTypeName}} *)kptr, vptr){ };
+	{{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(*({{$pkgName}}::{{.GetCppTypeName}} *)kptr, pal_addr){ };
     {{$pkgName}}::{{.GetCppTypeName}} GetKey() { return key_; };
+          {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+    static {{$msgName}}Ptr New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
+          {{else}}
     static {{$msgName}}Ptr New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key);
-    static {{$msgName}}Ptr NewDp{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
+          {{end}}
 	static delphi::error Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
 	static {{$msgName}}Ptr Find({{$pkgName}}::{{.GetCppTypeName}} key);
-    {{else}}
+        {{else}}
     {{$msgName}}({{.GetCppTypeName}} key, char *ptr);
+    {{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
 	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, vptr){ };
+	{{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, pal_addr){ };
     {{.GetCppTypeName}} GetKey() { return key_; };
+          {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+    static {{$msgName}}Ptr New{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
+          {{else}}
     static {{$msgName}}Ptr New{{$msgName}}({{.GetCppTypeName}} key);
-    static {{$msgName}}Ptr NewDp{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
+          {{end}}
 	static delphi::error Publish({{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
 	static {{$msgName}}Ptr Find({{.GetCppTypeName}} key);
-    {{end}}
-    {{end}}
+        {{end}}
+      {{end}}
 
-    {{if (eq .GetTypeName ".delphi.Counter") }}
+      {{if (eq .GetTypeName ".delphi.Counter") }}
     delphi::metrics::CounterPtr {{.GetName}}() { return {{.GetName}}_; };
 
-    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+      {{else if (eq .GetTypeName ".delphi.Gauge") }}
     delphi::metrics::GaugePtr {{.GetName}}() { return {{.GetName}}_; };
-    {{end}}
+      {{end}}
     {{end}}
 };
 REGISTER_METRICS({{.GetName}});
@@ -236,17 +295,31 @@ public:
         tbl_iter_.Next();
     }
     inline {{.GetName}}Ptr Get() {
-		{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
-		return make_shared<{{$msgName}}>(tbl_iter_.Value());
-		{{end}}
-        {{$msgName := .GetName}}{{$fields := .Fields}}{{range $fields}} {{if (eq .GetName "Key") }}
-		{{ if .TypeIsMessage }}
+    {{if (.HasExtOption "delphi.singleton")}}
+                if (!tbl_iter_.IsDpstats()) {
+                    return make_shared<{{$msgName}}>(tbl_iter_.Value());
+                } else {
+                    uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
+                    return make_shared<{{$msgName}}>(pal_addr);
+                }
+    {{end}}
+    {{$fields := .Fields}}
+    {{range $fields}} 
+      {{if (eq .GetName "Key") }}
+        {{ if .TypeIsMessage }}
         {{$pkgName}}::{{.GetCppTypeName}} *key = ({{$pkgName}}::{{.GetCppTypeName}} *)tbl_iter_.Key();
-		return make_shared<{{$msgName}}>(*key, tbl_iter_.Value());
-		{{else}}
+	{{else}}
 		{{.GetCppTypeName}} *key = ({{.GetCppTypeName}} *)tbl_iter_.Key();
-		return make_shared<{{$msgName}}>(*key, tbl_iter_.Value());
-        {{end}} {{end}} {{end}}
+        {{end}}
+                if (!tbl_iter_.IsDpstats()) {
+                    return make_shared<{{$msgName}}>(*key, tbl_iter_.Value());
+                } else {
+                    uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
+                    return make_shared<{{$msgName}}>(*key, pal_addr);
+                }
+
+      {{end}} 
+    {{end}} 
     }
     inline bool IsNil() {
         return tbl_iter_.IsNil();
@@ -258,7 +331,7 @@ private:
     delphi::shm::TableIterator tbl_iter_;
 };
 
-{{end}}
+  {{end}}
 {{end}}
 } // namespace objects
 } // namespace delphi
@@ -276,9 +349,14 @@ private:
 namespace delphi {
 namespace objects {
 
-{{$fileName := .GetName}} {{$pkgName := .Package}} {{$msgs := .Messages}}{{range $msgs}}
-{{if not (HasSuffix .GetName "Metrics")}}
-{{if .HasFieldType ".delphi.ObjectMeta" }}
+{{$fileName := .GetName}}
+{{$pkgName := .Package}}
+{{$msgs := .Messages}}
+{{range $msgs}}
+  {{$msgName := .GetName}}
+  {{$msg := .}}
+  {{if not (HasSuffix .GetName "Metrics")}}
+    {{if .HasFieldType ".delphi.ObjectMeta" }}
 // Watch watches a kind of objects
 error {{.GetName}}::Watch(SdkPtr sdk, {{.GetName}}ReactorPtr reactor) {
     return sdk->WatchKind("{{.GetName}}", reactor);
@@ -301,13 +379,19 @@ error {{.GetName}}::TriggerEvent(BaseObjectPtr oldObj, ObjectOperation op, React
                 // if nothing changed, we are done
                 return error::OK();
             } else {
-                {{if .HasExtOption "delphi.update_event" }} {{$upd_ext := .GetExtOption "delphi.update_event"}} {{if IsTrue $upd_ext}}
+      {{if .HasExtOption "delphi.update_event" }} {{$upd_ext := .GetExtOption "delphi.update_event"}} 
+        {{if IsTrue $upd_ext}}
                 // Trigger update event
                 RETURN_IF_FAILED(rctr->On{{ .GetName }}Update(shared_from_this()));
-                {{end}} {{end}}
+        {{end}} 
+      {{end}}
                 // see which field changed
-                {{$fields := .Fields}} {{range $fields}} {{if and (ne .GetName "Meta") (ne .GetName "Key")}} {{ if .HasExtOption "delphi.event"}} {{$evt_ext := .GetExtOption "delphi.event"}} {{if IsTrue $evt_ext}}
-                {{ if .IsRepeated }}
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{if and (ne .GetName "Meta") (ne .GetName "Key")}} 
+          {{ if .HasExtOption "delphi.event"}} {{$evt_ext := .GetExtOption "delphi.event"}} 
+            {{if IsTrue $evt_ext}}
+              {{if .IsRepeated }}
                 {
                     string new_str;
                     string old_str;
@@ -319,14 +403,20 @@ error {{.GetName}}::TriggerEvent(BaseObjectPtr oldObj, ObjectOperation op, React
                     if (new_str != old_str) {
                         RETURN_IF_FAILED(rctr->On{{ .GetName }}(shared_from_this()));
                     }
-                } {{ else if .TypeIsMessage }}
+                } 
+              {{else if .TypeIsMessage }}
                 if (this->{{ .GetName | ToLower }}().ShortDebugString() != exObj->{{ .GetName | ToLower }}().ShortDebugString()) {
                     RETURN_IF_FAILED(rctr->On{{ .GetName }}(shared_from_this()));
-                } {{ else }}
+                } 
+              {{else}}
                 if (this->{{ .GetName | ToLower }}() != exObj->{{ .GetName | ToLower }}()) {
                     RETURN_IF_FAILED(rctr->On{{ .GetName }}(shared_from_this()));
                 }
-                {{end}} {{end}} {{end}} {{end}} {{end}}
+              {{end}} 
+            {{end}} 
+          {{end}} 
+        {{end}} 
+      {{end}}
             }
         // Handle deletes
         } else if (op == delphi::DeleteOp) {
@@ -350,16 +440,17 @@ vector<{{.GetName}}Ptr> {{.GetName}}::List(SdkPtr sdk) {
 
     return objlist;
 }
-{{end}}
-{{else}}
+    {{end}}
+  {{else}}
 // {{.GetName}} metrics constructor
-	{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
+    {{if (.HasExtOption "delphi.singleton")}}
 {{$msgName}}::{{$msgName}}(char *ptr) {
 	shm_ptr_ = ptr;
     key_ = 0;
-	{{end}}
-    {{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-    {{if (eq .GetName "Key") }}
+    {{end}}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if (eq .GetName "Key") }}
 	{{ if .TypeIsMessage }}
 {{$msgName}}::{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, char *ptr) {
 	{{else}}
@@ -367,15 +458,43 @@ vector<{{.GetName}}Ptr> {{.GetName}}::List(SdkPtr sdk) {
 	{{end}}
     shm_ptr_ = ptr;
     key_ = key;
-    {{end}}
+      {{end}}
 
-    {{if (eq .GetTypeName ".delphi.Counter") }}
+      {{if (eq .GetTypeName ".delphi.Counter") }}
     {{.GetName}}_ = make_shared<delphi::metrics::Counter>((uint64_t *)ptr);
     ptr += delphi::metrics::Counter::Size();
-    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+      {{else if (eq .GetTypeName ".delphi.Gauge") }}
     {{.GetName}}_ = make_shared<delphi::metrics::Gauge>((double *)ptr);
     ptr += delphi::metrics::Gauge::Size();
+      {{end}}
     {{end}}
+}
+
+// {{.GetName}} metrics constructor
+    {{if (.HasExtOption "delphi.singleton")}}
+{{$msgName}}::{{$msgName}}(uint64_t pal_addr) {
+    pal_addr_ = pal_addr;
+    key_ = 0;
+    {{end}}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if (eq .GetName "Key") }}
+	{{ if .TypeIsMessage }}
+{{$msgName}}::{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr) {
+	{{else}}
+{{$msgName}}::{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr) {
+	{{end}}
+    pal_addr_ = pal_addr;
+    key_ = key;
+      {{end}}
+
+      {{if (eq .GetTypeName ".delphi.Counter") }}
+    {{.GetName}}_ = make_shared<delphi::metrics::Counter>(pal_addr);
+    pal_addr += delphi::metrics::Counter::Size();
+      {{else if (eq .GetTypeName ".delphi.Gauge") }}
+    {{.GetName}}_ = make_shared<delphi::metrics::Gauge>(pal_addr);
+    pal_addr += delphi::metrics::Gauge::Size();
+      {{end}}
     {{end}}
 }
 
@@ -383,14 +502,15 @@ int32_t {{.GetName}}::Size() {
     int32_t sz = 0;
 
     // calculate the shared memory size
-    {{$fields := .Fields}}{{range $fields}}
-    {{if not (eq .GetName "Key") }}
-    {{if (eq .GetTypeName ".delphi.Counter") }}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if not (eq .GetName "Key") }}
+        {{if (eq .GetTypeName ".delphi.Counter") }}
     sz += delphi::metrics::Counter::Size();
-    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+        {{else if (eq .GetTypeName ".delphi.Gauge") }}
     sz += delphi::metrics::Gauge::Size();
-    {{end}}
-    {{end}}
+        {{end}}
+      {{end}}
     {{end}}
 
     return sz;
@@ -408,8 +528,27 @@ delphi::error  {{.GetName}}::CreateTable() {
     return delphi::error::OK();
 }
 
+    {{if (.HasExtOption "delphi.singleton")}}
+      {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+// New{{.GetName}} creates a new metrics instance in PAL memory
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}(uint64_t pal_addr) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // create the table in shared memory
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
+
+    // create an entry in hash table
+    uint32_t key = 0;
+    auto err = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, {{$msgName}}::Size());
+    assert(err.IsOK());
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(pal_addr);
+}
+      {{else}}
 // New{{.GetName}} creates a new metrics instance
-{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
 {{$msgName}}Ptr {{$msgName}}::New{{$msgName}}() {
 	uint32_t key = 0;
 	// get the shared memory object
@@ -425,14 +564,32 @@ delphi::error  {{.GetName}}::CreateTable() {
     // return an instance of {{.GetName}}
     return make_shared<{{.GetName}}>(shmptr);
 }
-{{end}}
-{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-{{if (eq .GetName "Key") }}
-{{ if .TypeIsMessage }}
+      {{end}} 
+    {{end}}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if (eq .GetName "Key") }}
+        {{ if .TypeIsMessage }}
+          {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+// New{{.GetName}} creates a new metrics instance in PAL memory
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // create the table in shared memory
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
+
+    // create an entry in hash table
+    auto err = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, {{$msgName}}::Size());
+    assert(err.IsOK());
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(key, pal_addr);
+}
+          {{else}}
+// New{{.GetName}} creates a new metrics instance
 {{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key) {
-{{else}}
-{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{.GetCppTypeName}} key) {
-{{end}}
 
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
@@ -447,8 +604,47 @@ delphi::error  {{.GetName}}::CreateTable() {
     // return an instance of {{$msgName}}
     return make_shared<{{$msgName}}>(key, shmptr);
 }
-{{end}} {{end}}
-{{$msgName := .GetName}}{{if (.HasExtOption "delphi.singleton")}}
+          {{end}}
+        {{else}}
+          {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+// New{{.GetName}} creates a new metrics instance in PAL memory
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr) {
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // create the table in shared memory
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
+
+    // create an entry in hash table
+    auto err = tbl->CreateDpstats((char *)&key, sizeof(key), pal_addr, {{$msgName}}::Size());
+    assert(err.IsOK());
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(key, pal_addr);
+}
+          {{else}}
+// New{{.GetName}} creates a new metrics instance
+{{$msgName}}Ptr {{$msgName}}::New{{$msgName}}({{.GetCppTypeName}} key) {
+
+    // get the shared memory object
+    delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
+    assert(shm != NULL);
+
+    // create the table in shared memory
+    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->CreateTable("{{$msgName}}", DEFAULT_METRIC_TBL_SIZE);
+
+    // create an entry in hash table
+    char *shmptr = (char *)tbl->Create((char *)&key, sizeof(key), {{$msgName}}::Size());
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(key, shmptr);
+}
+          {{end}}
+        {{end}} 
+      {{end}} 
+    {{end}}
+    {{if (.HasExtOption "delphi.singleton")}}
 // Publish publishes a metric atomically
 delphi::error {{$msgName}}::Publish({{$msgName | ToLower}}_t *mptr) {
 	// get the shared memory object
@@ -473,6 +669,15 @@ delphi::error {{$msgName}}::Publish({{$msgName | ToLower}}_t *mptr) {
     // find the key
 	uint32_t key = 0;
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+      {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+    uint64_t *pal_addr = (uint64_t *)tbl->Find((char *)&key, sizeof(key));
+    if (pal_addr == NULL) {
+        return NULL;
+    }
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(*pal_addr);
+      {{else}}
     char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
     if (shmptr == NULL) {
         return NULL;
@@ -480,18 +685,15 @@ delphi::error {{$msgName}}::Publish({{$msgName | ToLower}}_t *mptr) {
 
     // return an instance of {{$msgName}}
     return make_shared<{{$msgName}}>(shmptr);
+      {{end}}
 }
 
-// NewDp{{.GetName}} creates a new metrics instance in PAL memory
-{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}(uint64_t pal_addr) {
-	// FIXME: need to implement this using PAL memory.
-    // for now, just return a metrics object
-    return {{$msgName}}::New{{$msgName}}();
-}
-{{end}}
-{{$msgName := .GetName}} {{$fields := .Fields}}{{range $fields}}
-{{if (eq .GetName "Key") }}
-{{ if .TypeIsMessage }}
+
+    {{end}}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if (eq .GetName "Key") }}
+        {{ if .TypeIsMessage }}
 // Publish publishes a metric atomically
 delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr) {
 	// get the shared memory object
@@ -514,6 +716,15 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
 
     // find the key
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+          {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+    uint64_t *pal_addr = (uint64_t *)tbl->Find((char *)&key, sizeof(key));
+    if (pal_addr == NULL) {
+        return NULL;
+    }
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(key, *pal_addr);
+          {{else}}
     char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
     if (shmptr == NULL) {
         return NULL;
@@ -521,15 +732,10 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
 
     // return an instance of {{$msgName}}
     return make_shared<{{$msgName}}>(key, shmptr);
+          {{end}}
 }
 
-// NewDp{{.GetName}} creates a new metrics instance in PAL memory
-{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr) {
-	// FIXME: need to implement this using PAL memory.
-    // for now, just return a metrics object
-    return {{$msgName}}::New{{$msgName}}(key);
-}
-{{else}}
+        {{else}}
 // Publish publishes a metric atomically
 delphi::error {{$msgName}}::Publish({{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr) {
 	// get the shared memory object
@@ -552,6 +758,15 @@ delphi::error {{$msgName}}::Publish({{.GetCppTypeName}} key, {{$msgName | ToLowe
 
     // find the key
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+          {{if $msg.HasExtOption "delphi.datapath_metrics" }}
+    uint64_t *pal_addr = (uint64_t *)tbl->Find((char *)&key, sizeof(key));
+    if (pal_addr == NULL) {
+        return NULL;
+    }
+
+    // return an instance of {{$msgName}}
+    return make_shared<{{$msgName}}>(key, *pal_addr);
+          {{else}}
     char *shmptr = (char *)tbl->Find((char *)&key, sizeof(key));
     if (shmptr == NULL) {
         return NULL;
@@ -559,15 +774,12 @@ delphi::error {{$msgName}}::Publish({{.GetCppTypeName}} key, {{$msgName | ToLowe
 
     // return an instance of {{$msgName}}
     return make_shared<{{$msgName}}>(key, shmptr);
+          {{end}}
 }
 
-// NewDp{{.GetName}} creates a new metrics instance in PAL memory
-{{$msgName}}Ptr {{$msgName}}::NewDp{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr) {
-	// FIXME: need to implement this using PAL memory.
-    // for now, just return a metrics object
-    return {{$msgName}}::New{{$msgName}}(key);
-}
-{{end}} {{end}} {{end}}
+        {{end}} 
+      {{end}} 
+    {{end}}
 
 
 // Delete deletes the metric instance
@@ -602,25 +814,26 @@ string {{.GetName}}::DebugString() {
     stringstream outstr;
     outstr << "{{.GetName}} {" << endl;
 
-    {{$fields := .Fields}}{{range $fields}}
-    {{if (eq .GetName "Key") }}
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if (eq .GetName "Key") }}
 	{{ if .TypeIsMessage }}
 	outstr << "    Key: " << key_.DebugString() << endl;
 	{{else}}
 	outstr << "    Key: " << key_ << endl;
 	{{end}}
-    {{else if (eq .GetTypeName ".delphi.Counter") }}
+      {{else if (eq .GetTypeName ".delphi.Counter") }}
     outstr << "    {{.GetName}}: " << {{.GetName}}()->Get() << endl;
-    {{else if (eq .GetTypeName ".delphi.Gauge") }}
+      {{else if (eq .GetTypeName ".delphi.Gauge") }}
     outstr << "    {{.GetName}}: " << {{.GetName}}()->Get() << endl;
-    {{end}}
+      {{end}}
     {{end}}
     outstr << "}" << endl;
 
     return outstr.str();
 }
 
-{{end}}
+  {{end}}
 {{end}}
 } // namespace objects
 } // namespace delphi
@@ -631,7 +844,10 @@ string {{.GetName}}::DebugString() {
 #include "{{.FilePrefix}}.delphi.hpp"
 #include "nic/delphi/sdk/delphi_utest.hpp"
 
-{{$fileName := .GetName}} {{$msgs := .Messages}}{{range $msgs}}{{if .HasFieldType ".delphi.ObjectMeta" }}
+{{$fileName := .GetName}} 
+{{$msgs := .Messages}}
+{{range $msgs}}
+  {{if .HasFieldType ".delphi.ObjectMeta" }}
 #define {{ .GetName | ToUpper }}_REACTOR_TEST(test_name, reactor_class) \
 class {{.GetName}}Service : public delphi::Service, public enable_shared_from_this<{{.GetName}}Service> { \
 public: \
@@ -653,7 +869,7 @@ public: \
 }; \
 DELPHI_SERVICE_TEST(test_name, {{.GetName}}Service);
 
-{{end}}
+  {{end}}
 {{end}}
 
 `

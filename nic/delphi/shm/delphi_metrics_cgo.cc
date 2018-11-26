@@ -5,15 +5,37 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <cstdint>
+#include <map>
+#include <iostream>
+#include <string>
 
 #include "nic/delphi/shm/delphi_metrics_cgo.h"
 #include "nic/delphi/shm/delphi_metrics.hpp"
+#ifdef __x86_64__
+#elif __aarch64__
+#include "nic/sdk/include/sdk/pal.hpp"
+#endif
 
 using namespace delphi::shm;
+using std::string;
+
+// IteratorCtx is a temporary struct used to hold the iterator context
+class IteratorCtx {
+public:
+    delphi::shm::TableMgrUptr     tbl_;
+    delphi::shm::TableIterator    iter_;
+};
+
+void DelphiMetricsInit_cgo() {
+    // initialize pal
+#ifdef __x86_64__
+#elif __aarch64__
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+#endif
+
+}
 
 DelphiMetricsIterator_cgo NewMetricsIterator_cgo(const char *kind) {
-    fprintf(stderr, "Cgo NewMetricsIterator_cgo got called for kind %s\n", kind);
-
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = delphi::metrics::DelphiMetrics::GetDelphiShm();
     assert(shm != NULL);
@@ -21,51 +43,52 @@ DelphiMetricsIterator_cgo NewMetricsIterator_cgo(const char *kind) {
     // create the table if it doesnt exist already
     MetricsCreateTable(kind);
 
-    // FIXME: need to find a way to keep the unique_ptr alive while iterator is in use
-    static delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table(kind);
-    assert(tbl != NULL);
+    // create temporary context
+    // FIXME: when to free this memory?
+    IteratorCtx *metr = new IteratorCtx();
+
+    // find the table
+    metr->tbl_ = std::move(shm->Kvstore()->Table(kind));
+    assert(metr->tbl_ != NULL);
 
     // create the iterator
-    delphi::shm::TableIterator *tbl_iter = new delphi::shm::TableIterator();
-    *tbl_iter = tbl->Iterator();
+    metr->iter_ = metr->tbl_->Iterator();
 
-    return (void *)tbl_iter;
+    return (void *)metr;
 }
 
-bool MetricsIteratorIsNotNil_cgo(DelphiMetricsIterator_cgo iter) {
-    // fprintf(stderr, "Cgo MetricsIteratorIsNotNil_cgo returning %d\n", ((delphi::shm::TableIterator *)iter)->IsNotNil());
-
-    return ((delphi::shm::TableIterator *)iter)->IsNotNil();
+bool MetricsIteratorIsNotNil_cgo(DelphiMetricsIterator_cgo metr) {
+    return ((IteratorCtx *)metr)->iter_.IsNotNil();
 }
 
-bool MetricsIteratorIsNil_cgo(DelphiMetricsIterator_cgo iter) {
-    return ((delphi::shm::TableIterator *)iter)->IsNil();
+bool MetricsIteratorIsNil_cgo(DelphiMetricsIterator_cgo metr) {
+    return ((IteratorCtx *)metr)->iter_.IsNil();
 }
 
-DelphiMetrics_cgo MetricsIteratorNext_cgo(DelphiMetricsIterator_cgo iter) {
+DelphiMetrics_cgo MetricsIteratorNext_cgo(DelphiMetricsIterator_cgo metr) {
     // get current value
-    auto *mptr = ((delphi::shm::TableIterator *)iter)->Value();
+    auto *mptr = ((IteratorCtx *)metr)->iter_.Value();
 
     // move the iterator
-    ((delphi::shm::TableIterator *)iter)->Next();
+    ((IteratorCtx *)metr)->iter_.Next();
 
     // return current value
     return (void *)mptr;
 }
 
-DelphiMetrics_cgo MetricsIteratorFind_cgo(DelphiMetricsIterator_cgo iter, char *key, int keylen) {
+DelphiMetrics_cgo MetricsIteratorFind_cgo(DelphiMetricsIterator_cgo metr, char *key, int keylen) {
     // return the current value
-    auto *mptr = ((delphi::shm::TableIterator *)iter)->Find(key, keylen);
+    auto *mptr = ((IteratorCtx *)metr)->iter_.Find(key, keylen);
     return (void *)mptr;
 }
 
-void MetricsIteratorDelete_cgo(DelphiMetricsIterator_cgo iter, char *key, int keylen) {
-    ((delphi::shm::TableIterator *)iter)->Delete(key, keylen);
+void MetricsIteratorDelete_cgo(DelphiMetricsIterator_cgo metr, char *key, int keylen) {
+    ((IteratorCtx *)metr)->iter_.Delete(key, keylen);
 }
 
-DelphiMetrics_cgo MetricsIteratorGet_cgo(DelphiMetricsIterator_cgo iter) {
+DelphiMetrics_cgo MetricsIteratorGet_cgo(DelphiMetricsIterator_cgo metr) {
     // return the current value
-    auto *mptr = ((delphi::shm::TableIterator *)iter)->Value();
+    auto *mptr = ((IteratorCtx *)metr)->iter_.Value();
     return (void *)mptr;
 }
 
@@ -86,8 +109,6 @@ int MetricsEntryVallen(DelphiMetrics_cgo mtr) {
 }
 
 void MetricsCreateTable(const char *kind) {
-    fprintf(stderr, "Cgo MetricsCreateTable got called for kind %s\n", kind);
-
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = delphi::metrics::DelphiMetrics::GetDelphiShm();
     assert(shm != NULL);
@@ -103,8 +124,6 @@ void MetricsCreateTable(const char *kind) {
 }
 
 DelphiMetrics_cgo MetricsCreateEntry(const char *kind, char *key, int keylen, int vallen) {
-    fprintf(stderr, "Cgo MetricsCreateEntry got called for kind %s, key(%d): %s\n", kind, keylen, key);
-
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = delphi::metrics::DelphiMetrics::GetDelphiShm();
     assert(shm != NULL);
@@ -121,6 +140,24 @@ DelphiMetrics_cgo MetricsCreateEntry(const char *kind, char *key, int keylen, in
 }
 
 int GetCounter(DelphiMetrics_cgo mtr, int offset) {
+    auto entry = HASH_ENTRY_FROM_VAL_PTR(mtr, delphi::metrics::DelphiMetrics::GetDelphiShm());
+    // check if this is a dpstats coming from PAL memory
+    if (entry->flags & HT_ENTRY_FLAG_DPSTATS) {
+        int data = 0;
+#ifdef __x86_64__
+#elif __aarch64__
+        uint64_t pal_addr = *(uint64_t *)mtr + offset;
+        auto rc = sdk::lib::pal_reg_read(pal_addr, (uint32_t *)&data, 2);
+        if (rc != sdk::lib::PAL_RET_OK) {
+            LogError("Error reading from PAL. Err: %d\n", rc);
+            return 0;
+        }
+#endif
+
+        return data;
+    }
+
+    // return from shared memory
     void *ptr = (void *)((intptr_t)mtr + offset);
     return *(int *)ptr;
 }
@@ -131,6 +168,24 @@ void SetCounter(DelphiMetrics_cgo mtr, int val, int offset) {
 }
 
 double GetGauge(DelphiMetrics_cgo mtr, int offset) {
+    auto entry = HASH_ENTRY_FROM_VAL_PTR(mtr, delphi::metrics::DelphiMetrics::GetDelphiShm());
+    // check if this is a dpstats coming from PAL memory
+    if (entry->flags & HT_ENTRY_FLAG_DPSTATS) {
+        double data = 0;
+#ifdef __x86_64__
+#elif __aarch64__
+        uint64_t pal_addr = *(uint64_t *)mtr + offset;
+        auto rc = sdk::lib::pal_reg_read(pal_addr, (uint32_t *)&data, 2);
+        if (rc != sdk::lib::PAL_RET_OK) {
+            LogError("Error reading from PAL. Err: %d\n", rc);
+            return 0;
+        }
+#endif
+
+        return data;
+    }
+
+    // return value from shared memory
     void *ptr = (void *)((intptr_t)mtr + offset);
     return *(double *)ptr;
 }

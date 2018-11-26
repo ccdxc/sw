@@ -4,7 +4,7 @@ package gometrics
 
 // #cgo CFLAGS: -I${SRCDIR} -I${SRCDIR}/../../../../
 // #cgo CXXFLAGS: -std=c++11
-// #cgo LDFLAGS: ${SRCDIR}/../../../build/x86_64/iris/out/libdelphishm_a/libdelphishm.a ${SRCDIR}/../../../build/x86_64/iris/out/libdelphiutils_a/libdelphiutils.a ${SRCDIR}/../../../hal/third-party/google/x86_64/lib/libprotobuf.a -lstdc++ -lm -lrt
+// #cgo LDFLAGS: ${SRCDIR}/../../../build/x86_64/iris/out/libdelphishm_a/libdelphishm.a ${SRCDIR}/../../../build/x86_64/iris/out/libdelphiutils_a/libdelphiutils.a ${SRCDIR}/../../../hal/third-party/google/x86_64/lib/libprotobuf.a -L${SRCDIR}/../../../build/x86_64/iris/lib/ -lstdc++ -lm -lrt
 // #include "nic/delphi/shm/delphi_metrics_cgo.h"
 import "C"
 import (
@@ -123,4 +123,8 @@ func (m *delphiMetrics) GetGauge(offset int) Gauge {
 
 func (m *delphiMetrics) SetGauge(gge Gauge, offset int) {
 	C.SetGauge(m.entry, C.double(gge), C.int(offset))
+}
+
+func init() {
+	C.DelphiMetricsInit_cgo()
 }

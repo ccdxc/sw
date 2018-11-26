@@ -5,6 +5,7 @@ package goproto
 import (
 	"encoding/json"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
 )
 
@@ -15,6 +16,8 @@ type AccelSeqQueueKey struct {
 }
 
 type AccelSeqQueueMetrics struct {
+	ObjectMeta api.ObjectMeta
+
 	key AccelSeqQueueKey
 
 	InterruptsRaised gometrics.Counter
@@ -430,6 +433,8 @@ type AccelHwRingKey struct {
 }
 
 type AccelHwRingMetrics struct {
+	ObjectMeta api.ObjectMeta
+
 	key AccelHwRingKey
 
 	InputBytes gometrics.Counter

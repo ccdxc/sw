@@ -5,10 +5,13 @@ package goproto
 import (
 	"github.com/golang/protobuf/proto"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
 )
 
 type LifMetrics struct {
+	ObjectMeta api.ObjectMeta
+
 	key uint64
 
 	RxUnicastPackets gometrics.Counter

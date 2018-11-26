@@ -18,6 +18,9 @@ namespace shm {
 // TABLE_NAME_LEN is max length of table name (including '\0')
 #define TABLE_NAME_LEN 128
 
+// maximum key size
+#define MAX_KEY_LEN 1024
+
 // ht_entry_t represents an entry in the hash table
 // if a hash bucket has multiple entries, they'll be linked using a linked list
 //
@@ -33,9 +36,10 @@ namespace shm {
 //   +--------------+
 //
 typedef struct ht_entry_ {
-    int32_t    next_entry; // next entry in the hash bucket
-    int16_t    key_len;    // length of the key
-    int16_t    val_len;    // length of the value
+    int32_t    next_entry;  // next entry in the hash bucket
+    int16_t    flags:    6; // flags for this hash entry
+    int16_t    key_len: 10; // length of the key
+    int16_t    val_len;     // length of the value
 } PACKED ht_entry_t;
 
 // ht_entry_trailer_t is used for getting hash entry from value pointer
@@ -44,6 +48,10 @@ typedef struct ht_entry_trailer_ {
     int32_t    ht_entry;     // offset back to ht entry
 } PACKED ht_entry_trailer_t;
 
+// ht_entry flags
+#define HT_ENTRY_FLAG_DPSTATS  0x1
+
+// KEY_PTR_FROM_HASH_ENTRY returns key pointer from hash entry
 #define KEY_PTR_FROM_HASH_ENTRY(entry) ((char *)entry + sizeof(ht_entry_t))
 
 // VAL_PTR_FROM_HASH_ENTRY returns a pointer to value part of hash entry
@@ -137,8 +145,10 @@ class TableMgr {
 public:
     TableMgr(htable_t *htable, DelphiShmPtr shm_ptr);
     void *Create(const char *key, int16_t keylen, int16_t val_len);   // create an entry for the key in hash table
+    error CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr, int16_t val_len);  // create an entry and point it to PAL memory
     error Publish(const char *key, int16_t keylen, const char *val, int16_t val_len); // atomically publish kev,val into hash table
     void *Find(const char *key, int16_t keylen);     // finds an entry by key
+    uint64_t FindDpstats(const char *key, int16_t keylen); // find dpstats by key
     error Release(void *val_ptr);                    // release a hash entry from use
     error Delete(const char *key, int16_t keylen);   // delete an entry
     int32_t RefCount(void *val_ptr);                 // returns ref count of hash entry (for tetsing only)
@@ -199,17 +209,15 @@ public:
     inline bool IsNotNil() {
         return (entry_ != NULL);
     }
+    inline bool IsDpstats() {
+        return (bool)(entry_->flags & HT_ENTRY_FLAG_DPSTATS);
+    }
     inline void *Find(const char *key, int16_t keylen) {
         return tbl_->Find(key, keylen);
     }
     inline error Delete(const char *key, int16_t keylen) {
         return tbl_->Delete(key, keylen);
     }
-    /*
-    HtableEntry operator*() const;
-    TableIterator & operator++();
-    TableIterator operator++(int);
-    */
 private:
     TableMgr *tbl_;
     ht_entry_t *entry_;

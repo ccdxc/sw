@@ -22,7 +22,7 @@ if [ "$1" == "single-threaded" ]; then
 fi
 if [ "$1" == "stand-alone" ]; then
   export E2E_AGENT_DATAPATH=HAL
-  go test -v ./nic/agent/tests/standalone || cleanup $?
+  LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ go test -v ./nic/agent/tests/standalone || cleanup $?
   cleanup
 fi
 go test -v ./test/integ/venice_integ -run TestVeniceInteg -datapath=hal -agents=1 || cleanup $?

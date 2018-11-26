@@ -28,7 +28,8 @@ CMD_CAPAS       := ${COMMON_CMD_CAPAS}
 CMD_CAPAS_OPTS  := ${COMMON_CAPAS_OPTS}
 
 CMD_PROTOC_LDLIB_PATH   := ${TOPDIR}/nic/hal/third-party/google/x86_64/lib/
-CMD_PROTOC              := LC_ALL=C LD_LIBRARY_PATH=${CMD_PROTOC_LDLIB_PATH} ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/protoc
+CMD_PROTOC_PLUGIN_PATH   := ${TOPDIR}/nic/build/x86_64/iris/bin/
+CMD_PROTOC              := LC_ALL=C PATH=${CMD_PROTOC_PLUGIN_PATH}:$$(PATH) LD_LIBRARY_PATH=${CMD_PROTOC_LDLIB_PATH} ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/protoc
 CMD_PROTOC_C            := ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/protoc-c
 CMD_MOCKGEN             := mockgen
 CMD_GOIMPORTS           := goimports -local "github.com/pensando/sw"

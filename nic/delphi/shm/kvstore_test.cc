@@ -267,6 +267,52 @@ TEST_F(KvstoreTest, KvPublishTest) {
     tbl->DumpTable();
 }
 
+TEST_F(KvstoreTest, DpstatsTest) {
+    error err;
+
+    // create a table
+    TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);
+    ASSERT_TRUE(tbl != NULL) << "Failed to create table";
+    printf("After creating table:\n");
+    client_shm_->Kvstore()->DumpInfo();
+    client_shm_->DumpMeta();
+
+    // create a dpstats entry in table
+    const char *key = "test_key";
+    uint64_t   pal_addr = 0x1234567812345678ll;
+    err = tbl->CreateDpstats(key, strlen(key), pal_addr, 3000);
+    ASSERT_TRUE(err.IsOK()) << "error creating key";
+
+    // get the key
+    uint64_t *gptr = (uint64_t *)tbl->Find(key, strlen(key));
+    ASSERT_TRUE(gptr != NULL) << "find failed";
+    ASSERT_EQ(*gptr, pal_addr) << "pal address did not match";
+    ASSERT_EQ(tbl->RefCount(gptr), 2) << "refcount for hash entry is incorrect";
+
+    // dump kvstore info
+    printf("After creating entry:\n");
+    tbl->DumpTable();
+    tbl->DumpEntry(key, strlen(key));
+    client_shm_->DumpMeta();
+
+    // delete the key
+    err = tbl->Delete(key, strlen(key));
+    ASSERT_EQ(err, error::OK()) << "Error deleting the key";
+    ASSERT_EQ(tbl->RefCount(gptr), 1) << "refcount for hash entry is incorrect";
+
+    // dump kvstore info
+    printf("After deleting entry:\n");
+    tbl->DumpTable();
+
+    // verify find returns error
+    char * gptr3 = (char *)tbl->Find(key, strlen(key));
+    ASSERT_TRUE(gptr3 == NULL) << "find suceeded after delete";
+
+    // release memory
+    tbl->Release(gptr);
+    tbl->DumpTable();
+}
+
 TEST_F(KvstoreTest, KvstoreBenchmark) {
     // create a table
     TableMgrUptr tbl = client_shm_->Kvstore()->CreateTable("test_kind", 100);

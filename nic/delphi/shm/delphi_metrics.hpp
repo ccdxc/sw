@@ -15,13 +15,18 @@ namespace metrics {
 class Counter {
 public:
     Counter(uint64_t *ptr);
+    Counter(uint64_t pal_addr);
     error Add(uint64_t addn);
     error Incr();
     error Set(uint64_t val);
-    inline uint64_t Get() { return *valptr_; };
+    uint64_t Get();
     static inline int32_t Size() { return sizeof(uint64_t);};
 private:
     uint64_t   *valptr_;
+    bool       isDpstats_;
+#ifdef __x86_64__
+    uint64_t   valcache_; // mock values for testing purposes
+#endif
 };
 typedef std::shared_ptr<Counter> CounterPtr;
 
@@ -29,11 +34,16 @@ typedef std::shared_ptr<Counter> CounterPtr;
 class Gauge {
 public:
     Gauge(double *ptr);
+    Gauge(uint64_t pal_addr);
     error Set(double val);
-    inline double Get() { return *valptr_; };
+    double Get();
     static inline int32_t Size() { return sizeof(double);};
 private:
-    double *valptr_;
+    double     *valptr_;
+    bool       isDpstats_;
+#ifdef __x86_64__
+    double     valcache_; // mock values for testing purposes
+#endif
 };
 typedef std::shared_ptr<Gauge> GaugePtr;
 
@@ -45,6 +55,7 @@ class MetricsFactory
 {
 public:
     virtual DelphiMetricsPtr Create(char *key, char *val) = 0;
+    virtual DelphiMetricsPtr Create(char *key, uint64_t pal_addr) = 0;
 };
 
 
@@ -58,6 +69,9 @@ public:
         } \
         delphi::metrics::DelphiMetricsPtr Create(char *key, char *val) { \
             return make_shared<klass>(key, val); \
+        } \
+        delphi::metrics::DelphiMetricsPtr Create(char *key, uint64_t pal_addr) { \
+            return make_shared<klass>(key, pal_addr); \
         } \
     }; \
     static klass##MetricsFactory global_##klass##MetricsFactory;
@@ -91,6 +105,13 @@ public:
 
         return fctry->Create(key, val);
     }
+    static inline DelphiMetricsPtr Create(const string &name, char *key, uint64_t pal_addr) {
+        map<string, MetricsFactory*> fctries = *(DelphiMetrics::GetFactoryMap());
+        MetricsFactory *fctry = fctries[name];
+        assert(fctry != NULL);
+
+        return fctry->Create(key, pal_addr);
+    }
 };
 
 
@@ -112,7 +133,12 @@ public:
         tbl_iter_.Next();
     }
     inline DelphiMetricsPtr Get() {
-        return DelphiMetrics::Create(met_name_, tbl_iter_.Key(), tbl_iter_.Value());
+        if (!tbl_iter_.IsDpstats()) {
+            return DelphiMetrics::Create(met_name_, tbl_iter_.Key(), tbl_iter_.Value());
+        } else {
+            uint64_t pal_addr = *(uint64_t *)tbl_iter_.Value();
+            return DelphiMetrics::Create(met_name_, tbl_iter_.Key(), pal_addr);
+        }
     }
     inline bool IsNil() {
         return tbl_iter_.IsNil();

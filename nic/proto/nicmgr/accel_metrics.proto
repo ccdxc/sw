@@ -35,6 +35,7 @@ message AccelSeqQueueInfo {
 }
 
 message AccelSeqQueueMetrics {
+    option (delphi.datapath_metrics) = true;
     AccelSeqQueueKey    Key                  = 1;
 
     delphi.Counter InterruptsRaised          = 2;     // Interrupts raised

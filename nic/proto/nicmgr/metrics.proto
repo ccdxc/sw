@@ -4,6 +4,7 @@ package metrics;
 import "delphi.proto";
 
 message LifMetrics {
+    option (delphi.datapath_metrics) = true;
     fixed64        Key                       = 1;     // Lif id
 
     delphi.Counter rx_unicast_packets        = 2;     // Unicast packets received at LIF

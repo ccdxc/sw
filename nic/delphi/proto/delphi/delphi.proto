@@ -63,6 +63,9 @@ extend google.protobuf.MessageOptions {
 
     // table_size: will determine the hash table size for metrics entries
     int32 metrics_table_size = 70002;
+
+    // datapath_metrics: will determine if the metrics is in datapath memory(PAL)
+    bool datapath_metrics = 70003;
 }
 
 // Delphi options applied at the field level

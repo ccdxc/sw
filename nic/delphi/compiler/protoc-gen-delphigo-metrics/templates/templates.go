@@ -8,6 +8,7 @@ package goproto
 
 import (
 	"github.com/golang/protobuf/proto"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
 )
 
@@ -17,6 +18,7 @@ import (
 {{range $msgs}}
   {{if (HasSuffix .GetName "Metrics")}}
 type {{.GetName}} struct {
+	ObjectMeta      api.ObjectMeta
 	{{if (.HasExtOption "delphi.singleton")}}
 	key 	        int
 	{{end}}

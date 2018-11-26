@@ -7,7 +7,7 @@ MODULE_INCS     = /usr/local/include \
                   ${TOPDIR}/nic/hal/third-party/google/include \
                   ${TOPDIR}/hal/third-party/grpc/include
 MODULE_LDLIBS   = pthread
-MODULE_SOLIBS   = delphisdk
+MODULE_SOLIBS   = delphisdk sdkpal logger
 MODULE_ARLIBS   = delphishm
 MODULE_FLAGS    = -O3
 MODULE_EXCLUDE_FLAGS = -O2

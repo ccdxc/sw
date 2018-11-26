@@ -396,7 +396,7 @@ Accel_PF::DelphiDeviceInit(void)
             qmetrics_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid) +
                             offsetof(storage_seq_qstate_t, metrics);
             auto qmetrics = delphi::objects::AccelSeqQueueMetrics::
-                            NewDpAccelSeqQueueMetrics(seq_qkey, qmetrics_addr);
+                            NewAccelSeqQueueMetrics(seq_qkey, qmetrics_addr);
             delphi_qmetrics_vec.push_back(std::move(qmetrics));
 
             /*

@@ -4,3 +4,7 @@ nic/build/x86_64/iris/out/libdelphiutils_a/libdelphiutils.a
 nic/build/aarch64/iris/out/libdelphiutils_a/libdelphiutils.a
 nic/build/x86_64/iris/out/libdelphisdk_so/libdelphisdk.so
 nic/build/aarch64/iris/out/libdelphisdk_so/libdelphisdk.so
+nic/build/x86_64/iris/out/libsdkpal_so/libsdkpal.so
+nic/build/aarch64/iris/out/libsdkpal_so/libsdkpal.so
+nic/build/aarch64/iris/out/liblogger_so/liblogger.so
+nic/build/x86_64/iris/out/liblogger_so/liblogger.so

@@ -2,9 +2,9 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = exampleupgapp.bin
-MODULE_SOLIBS   = delphisdk utils upgrade_app upgradeproto
+MODULE_SOLIBS   = delphisdk utils upgrade_app upgradeproto sdkpal logger
 MODULE_ARLIBS   = delphishm
-MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
+MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev dl
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*example*.cc)
 MODULE_SRCS     = $(filter-out $(ALL_TEST_FILES), $(ALL_CC_FILES))
 

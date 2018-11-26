@@ -38,6 +38,8 @@ void SetCounter(DelphiMetrics_cgo mtr, int val, int offset);
 double GetGauge(DelphiMetrics_cgo mtr, int offset);
 void SetGauge(DelphiMetrics_cgo mtr, double val, int offset);
 
+void DelphiMetricsInit_cgo();
+
 #ifdef __cplusplus
 }
 #endif

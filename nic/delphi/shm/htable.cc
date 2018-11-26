@@ -84,6 +84,12 @@ error TableMgr::insertHashEntry(const char *key, int16_t keylen, ht_entry_t *ent
 // Create creates an entry in the hash table for a key
 // its caller's responsibility to fill the value
 void * TableMgr::Create(const char *key, int16_t keylen, int16_t val_len) {
+    // basic validation
+    if ((key == NULL) || (keylen <= 0) || (keylen > MAX_KEY_LEN)) {
+        LogError("Invalid key {p} or keylen {}", key, keylen);
+        return NULL;
+    }
+
     // check if the key already exists
     // FIXME: this is little inefficient(i.e, lookup twice)
     void *val = this->Find(key, keylen);
@@ -105,13 +111,59 @@ void * TableMgr::Create(const char *key, int16_t keylen, int16_t val_len) {
     error err = this->insertHashEntry(key, keylen, entry);
     assert(err.IsOK());
 
-
     return (void *)VAL_PTR_FROM_HASH_ENTRY(entry);
+}
+
+// CreateDpstats creates hash entry pointing to datapath stats in PAL memory
+error TableMgr::CreateDpstats(const char *key, int16_t keylen, uint64_t pal_addr,
+                               int16_t val_len) {
+    // basic validation
+    if ((key == NULL) || (keylen <= 0) || (keylen > MAX_KEY_LEN)) {
+        LogError("Invalid key {p} or keylen {}", key, keylen);
+        return error::New("Invalid key");
+    }
+
+    // check if the key already exists
+    // FIXME: this is little inefficient(i.e, lookup twice)
+    void *val = this->Find(key, keylen);
+    if (val != NULL) {
+        this->Release(val); // so that we dont double ref count it
+        return error::OK();
+    }
+
+    // create hash entry
+    ht_entry_t *entry = this->createHashEntry(key, keylen, sizeof(pal_addr));
+    if (entry == NULL) {
+        LogError("Error allocating space in shared memory");
+        return error::New("Error allocating space in shared memory");
+    }
+
+    // set ht_entry params
+    entry->flags |= HT_ENTRY_FLAG_DPSTATS;
+    entry->val_len = val_len; // write PAL stats len here
+
+    LogDebug("Creating key {} in table {}, offset 0x{}", key, ht_->tbl_name, OFFSET_FROM_PTR(shm_ptr_->GetBase(), entry));
+
+    // insert the hash entry into table
+    error err = this->insertHashEntry(key, keylen, entry);
+    assert(err.IsOK());
+
+    // copy the pal address into value part
+    uint64_t *val_ptr = (uint64_t *)VAL_PTR_FROM_HASH_ENTRY(entry);
+    *val_ptr = pal_addr;
+
+   return error::OK();
 }
 
 // Publish atomically publishes an entry into hash table
 error TableMgr::Publish(const char *key, int16_t keylen, const char *val, int16_t val_len) {
     error err;
+
+    // basic validation
+    if ((key == NULL) || (keylen <= 0) || (keylen > MAX_KEY_LEN)) {
+        LogError("Invalid key {p} or keylen {}", key, keylen);
+        return NULL;
+    }
 
     // check if the key already exists
     void *oldVal = this->Find(key, keylen);
@@ -156,6 +208,7 @@ ht_entry_t *TableMgr::createHashEntry(const char *key, int16_t keylen, int16_t v
     // initialize the hash entry
     ht_entry_t *entry = (ht_entry_t *)ptr;
     entry->next_entry = 0;
+    entry->flags   = 0;
     entry->key_len = keylen;
     entry->val_len = val_len;
     // copy the key at the end of the hash entry
@@ -171,12 +224,39 @@ ht_entry_t *TableMgr::createHashEntry(const char *key, int16_t keylen, int16_t v
 
 // Find finds an entry in the hash table by its key
 void * TableMgr::Find(const char *key, int16_t keylen) {
+    // basic validation
+    if ((key == NULL) || (keylen <= 0) || (keylen > MAX_KEY_LEN)) {
+        LogError("Invalid key {p} or keylen {}", key, keylen);
+        return NULL;
+    }
+
+    // find the entry
     ht_entry_t *entry = this->findEntry(key, keylen);
     if (entry != NULL) {
         return (void *)VAL_PTR_FROM_HASH_ENTRY(entry);
     }
 
     return NULL;
+}
+
+// FindDpstats returns PAL address for Dpstats
+// This is meant for stats stored in PAL memory by datapath
+uint64_t TableMgr::FindDpstats(const char *key, int16_t keylen) {
+    // basic validation
+    if ((key == NULL) || (keylen <= 0) || (keylen > MAX_KEY_LEN)) {
+        LogError("Invalid key {p} or keylen {}", key, keylen);
+        return 0;
+    }
+
+    // find the entry
+    ht_entry_t *entry = this->findEntry(key, keylen);
+    if ((entry != NULL) && (entry->flags & HT_ENTRY_FLAG_DPSTATS)) {
+        uint64_t *vptr = (uint64_t *)VAL_PTR_FROM_HASH_ENTRY(entry);
+        return *vptr;
+    }
+
+    // this is error case, returning 0 means we didnt find the entry
+    return 0;
 }
 
 ht_entry_t * TableMgr::findEntry(const char *key, int16_t keylen) {
@@ -264,6 +344,12 @@ int32_t TableMgr::RefCount(void *val_ptr) {
 // Delete deletes an entry by key
 error TableMgr::Delete(const char *key, int16_t keylen) {
     error err;
+
+    // basic validation
+    if ((key == NULL) || (keylen <= 0) || (keylen > MAX_KEY_LEN)) {
+        LogError("Invalid key {p} or keylen {}", key, keylen);
+        return NULL;
+    }
 
     LogDebug("Deleting key {} in table {}", key, ht_->tbl_name);
 
@@ -417,7 +503,6 @@ TableIterator::TableIterator(TableMgr *tbl) {
     entry_ = tbl->GetNext(NULL);
 }
 
-
 // Next gets next entry in the table
 void TableIterator::Next() {
     entry_ = tbl_->GetNext(entry_);
@@ -435,11 +520,15 @@ void TableMgr::DumpEntry(const char *key, int16_t keylen) {
         for (int i = 0; i < entry->key_len; i++) {
             printf("%02x ", keyptr[i]);
         }
-        printf("\nValue: ");
-        for (int i = 0; i < entry->val_len; i++) {
-            printf("%02x ", valptr[i]);
+        if (entry->flags & HT_ENTRY_FLAG_DPSTATS) {
+            printf("\nPal addr: 0x%lx\n", *(uint64_t *)valptr);
+        } else {
+            printf("\nValue: ");
+            for (int i = 0; i < entry->val_len; i++) {
+                printf("%02x ", valptr[i]);
+            }
+            printf("\n");
         }
-        printf("\n");
         Release(valptr);
     } else {
         printf("hash entry not found\n");
@@ -458,6 +547,7 @@ void TableMgr::DumpTable() {
         uint32_t hash = fnv_hash(KEY_PTR_FROM_HASH_ENTRY(entry), entry->key_len);
         int32_t idx = (int32_t)(hash % ht_->num_buckets);
         uint8_t *keyptr = (uint8_t *)entry + sizeof(ht_entry_t);
+        uint8_t *valptr = (uint8_t *)VAL_PTR_FROM_HASH_ENTRY(entry);
         ht_entry_trailer_t *trailer = TRAILER_FROM_HASH_ENTRY(entry);
         printf("  Idx: %d, Keylen: %d, Vallen: %d, refcnt: %d\n", idx, entry->key_len, entry->val_len, trailer->refcnt);
         printf("    key: ");
@@ -465,6 +555,15 @@ void TableMgr::DumpTable() {
             printf("%02x ", keyptr[i]);
         }
         printf("\n");
+        if (entry->flags & HT_ENTRY_FLAG_DPSTATS) {
+            printf("    Pal addr: 0x%lx\n", *(uint64_t *)valptr);
+        } else {
+            printf("    Value: ");
+            for (int i = 0; i < entry->val_len; i++) {
+                printf("%02x ", valptr[i]);
+            }
+            printf("\n");
+        }
     }
 }
 

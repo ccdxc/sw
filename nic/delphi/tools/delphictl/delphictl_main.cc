@@ -7,6 +7,9 @@
 #include "argh/argh.h"
 #include "gen/proto/delphi_objects.hpp"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
+#include "gen/proto/nicmgr/metrics.delphi.hpp"
+#include "gen/proto/nicmgr/nicmgr.delphi.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
 
 using namespace delphi;
 
@@ -58,6 +61,14 @@ void DelphictlService::DumpKvstore(string tbl_name) {
 
 // DumpMetrics dumps a metric of a kind
 void DelphictlService::DumpMetrics(string met_name) {
+    // initialize pal
+#ifdef __x86_64__
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
+#elif __aarch64__
+    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+#endif
+
+    // metrics iterator
     delphi::metrics::DelphiMetricsIterator miter(met_name);
     for (; miter.IsNotNil(); miter.Next()) {
         auto tmp = miter.Get();

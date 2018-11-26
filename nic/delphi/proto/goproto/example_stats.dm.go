@@ -7,10 +7,13 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
 )
 
 type ExampleMetrics struct {
+	ObjectMeta api.ObjectMeta
+
 	key uint32
 
 	RxPkts gometrics.Counter
@@ -224,6 +227,8 @@ type ExampleKey struct {
 }
 
 type NestedKeyExampleMetrics struct {
+	ObjectMeta api.ObjectMeta
+
 	key ExampleKey
 
 	RxPkts gometrics.Counter
@@ -435,6 +440,8 @@ func NewNestedKeyExampleMetricsIterator() (*NestedKeyExampleMetricsIterator, err
 }
 
 type SingletonExampleMetrics struct {
+	ObjectMeta api.ObjectMeta
+
 	key int
 
 	RxPkts gometrics.Counter
@@ -637,4 +644,428 @@ func NewSingletonExampleMetricsIterator() (*SingletonExampleMetricsIterator, err
 	}
 
 	return &SingletonExampleMetricsIterator{iter: iter}, nil
+}
+
+type DpExampleMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint32
+
+	RxPkts gometrics.Counter
+
+	TxPkts gometrics.Counter
+
+	RxPktRate gometrics.Gauge
+
+	TxPktRate gometrics.Gauge
+
+	RxErrors gometrics.Counter
+
+	TxErrors gometrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *DpExampleMetrics) GetKey() uint32 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *DpExampleMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.RxPkts.Size()
+
+	sz += mtr.TxPkts.Size()
+
+	sz += mtr.RxPktRate.Size()
+
+	sz += mtr.TxPktRate.Size()
+
+	sz += mtr.RxErrors.Size()
+
+	sz += mtr.TxErrors.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *DpExampleMetrics) Unmarshal() error {
+	var offset int
+
+	val, _ := proto.DecodeVarint([]byte(mtr.metrics.GetKey()))
+	mtr.key = uint32(val)
+
+	mtr.RxPkts = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxPkts.Size()
+
+	mtr.TxPkts = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxPkts.Size()
+
+	mtr.RxPktRate = mtr.metrics.GetGauge(offset)
+	offset += mtr.RxPktRate.Size()
+
+	mtr.TxPktRate = mtr.metrics.GetGauge(offset)
+	offset += mtr.TxPktRate.Size()
+
+	mtr.RxErrors = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxErrors.Size()
+
+	mtr.TxErrors = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxErrors.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *DpExampleMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "RxPkts" {
+		return offset
+	}
+	offset += mtr.RxPkts.Size()
+
+	if fldName == "TxPkts" {
+		return offset
+	}
+	offset += mtr.TxPkts.Size()
+
+	if fldName == "RxPktRate" {
+		return offset
+	}
+	offset += mtr.RxPktRate.Size()
+
+	if fldName == "TxPktRate" {
+		return offset
+	}
+	offset += mtr.TxPktRate.Size()
+
+	if fldName == "RxErrors" {
+		return offset
+	}
+	offset += mtr.RxErrors.Size()
+
+	if fldName == "TxErrors" {
+		return offset
+	}
+	offset += mtr.TxErrors.Size()
+
+	return offset
+}
+
+// SetRxPkts sets cunter in shared memory
+func (mtr *DpExampleMetrics) SetRxPkts(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxPkts"))
+	return nil
+}
+
+// SetTxPkts sets cunter in shared memory
+func (mtr *DpExampleMetrics) SetTxPkts(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxPkts"))
+	return nil
+}
+
+// SetRxPktRate sets gauge in shared memory
+func (mtr *DpExampleMetrics) SetRxPktRate(val gometrics.Gauge) error {
+	mtr.metrics.SetGauge(val, mtr.getOffset("RxPktRate"))
+	return nil
+}
+
+// SetTxPktRate sets gauge in shared memory
+func (mtr *DpExampleMetrics) SetTxPktRate(val gometrics.Gauge) error {
+	mtr.metrics.SetGauge(val, mtr.getOffset("TxPktRate"))
+	return nil
+}
+
+// SetRxErrors sets cunter in shared memory
+func (mtr *DpExampleMetrics) SetRxErrors(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxErrors"))
+	return nil
+}
+
+// SetTxErrors sets cunter in shared memory
+func (mtr *DpExampleMetrics) SetTxErrors(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxErrors"))
+	return nil
+}
+
+// DpExampleMetricsIterator is the iterator object
+type DpExampleMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *DpExampleMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *DpExampleMetricsIterator) Next() *DpExampleMetrics {
+	mtr := it.iter.Next()
+	tmtr := &DpExampleMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *DpExampleMetricsIterator) Find(key uint32) (*DpExampleMetrics, error) {
+
+	mtr, err := it.iter.Find(string(proto.EncodeVarint(uint64(key))))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &DpExampleMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *DpExampleMetricsIterator) Create(key uint32) (*DpExampleMetrics, error) {
+	tmtr := &DpExampleMetrics{}
+
+	mtr := it.iter.Create(string(proto.EncodeVarint(uint64(key))), tmtr.Size())
+
+	tmtr = &DpExampleMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *DpExampleMetricsIterator) Delete(key uint32) error {
+
+	return it.iter.Delete(string(proto.EncodeVarint(uint64(key))))
+
+}
+
+// NewDpExampleMetricsIterator returns an iterator
+func NewDpExampleMetricsIterator() (*DpExampleMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("DpExampleMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &DpExampleMetricsIterator{iter: iter}, nil
+}
+
+type NestedKeyDpExampleMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key ExampleKey
+
+	RxPkts gometrics.Counter
+
+	TxPkts gometrics.Counter
+
+	RxPktRate gometrics.Gauge
+
+	TxPktRate gometrics.Gauge
+
+	RxErrors gometrics.Counter
+
+	TxErrors gometrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *NestedKeyDpExampleMetrics) GetKey() ExampleKey {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *NestedKeyDpExampleMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.RxPkts.Size()
+
+	sz += mtr.TxPkts.Size()
+
+	sz += mtr.RxPktRate.Size()
+
+	sz += mtr.TxPktRate.Size()
+
+	sz += mtr.RxErrors.Size()
+
+	sz += mtr.TxErrors.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *NestedKeyDpExampleMetrics) Unmarshal() error {
+	var offset int
+
+	json.Unmarshal([]byte(mtr.metrics.GetKey()), &mtr.key)
+
+	mtr.RxPkts = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxPkts.Size()
+
+	mtr.TxPkts = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxPkts.Size()
+
+	mtr.RxPktRate = mtr.metrics.GetGauge(offset)
+	offset += mtr.RxPktRate.Size()
+
+	mtr.TxPktRate = mtr.metrics.GetGauge(offset)
+	offset += mtr.TxPktRate.Size()
+
+	mtr.RxErrors = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxErrors.Size()
+
+	mtr.TxErrors = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxErrors.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *NestedKeyDpExampleMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "RxPkts" {
+		return offset
+	}
+	offset += mtr.RxPkts.Size()
+
+	if fldName == "TxPkts" {
+		return offset
+	}
+	offset += mtr.TxPkts.Size()
+
+	if fldName == "RxPktRate" {
+		return offset
+	}
+	offset += mtr.RxPktRate.Size()
+
+	if fldName == "TxPktRate" {
+		return offset
+	}
+	offset += mtr.TxPktRate.Size()
+
+	if fldName == "RxErrors" {
+		return offset
+	}
+	offset += mtr.RxErrors.Size()
+
+	if fldName == "TxErrors" {
+		return offset
+	}
+	offset += mtr.TxErrors.Size()
+
+	return offset
+}
+
+// SetRxPkts sets cunter in shared memory
+func (mtr *NestedKeyDpExampleMetrics) SetRxPkts(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxPkts"))
+	return nil
+}
+
+// SetTxPkts sets cunter in shared memory
+func (mtr *NestedKeyDpExampleMetrics) SetTxPkts(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxPkts"))
+	return nil
+}
+
+// SetRxPktRate sets gauge in shared memory
+func (mtr *NestedKeyDpExampleMetrics) SetRxPktRate(val gometrics.Gauge) error {
+	mtr.metrics.SetGauge(val, mtr.getOffset("RxPktRate"))
+	return nil
+}
+
+// SetTxPktRate sets gauge in shared memory
+func (mtr *NestedKeyDpExampleMetrics) SetTxPktRate(val gometrics.Gauge) error {
+	mtr.metrics.SetGauge(val, mtr.getOffset("TxPktRate"))
+	return nil
+}
+
+// SetRxErrors sets cunter in shared memory
+func (mtr *NestedKeyDpExampleMetrics) SetRxErrors(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxErrors"))
+	return nil
+}
+
+// SetTxErrors sets cunter in shared memory
+func (mtr *NestedKeyDpExampleMetrics) SetTxErrors(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxErrors"))
+	return nil
+}
+
+// NestedKeyDpExampleMetricsIterator is the iterator object
+type NestedKeyDpExampleMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *NestedKeyDpExampleMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *NestedKeyDpExampleMetricsIterator) Next() *NestedKeyDpExampleMetrics {
+	mtr := it.iter.Next()
+	tmtr := &NestedKeyDpExampleMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *NestedKeyDpExampleMetricsIterator) Find(key ExampleKey) (*NestedKeyDpExampleMetrics, error) {
+
+	buf, _ := json.Marshal(key)
+	mtr, err := it.iter.Find(string(buf))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &NestedKeyDpExampleMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *NestedKeyDpExampleMetricsIterator) Create(key ExampleKey) (*NestedKeyDpExampleMetrics, error) {
+	tmtr := &NestedKeyDpExampleMetrics{}
+
+	buf, _ := json.Marshal(key)
+	mtr := it.iter.Create(string(buf), tmtr.Size())
+
+	tmtr = &NestedKeyDpExampleMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *NestedKeyDpExampleMetricsIterator) Delete(key ExampleKey) error {
+
+	buf, _ := json.Marshal(key)
+	return it.iter.Delete(string(buf))
+
+}
+
+// NewNestedKeyDpExampleMetricsIterator returns an iterator
+func NewNestedKeyDpExampleMetricsIterator() (*NestedKeyDpExampleMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("NestedKeyDpExampleMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &NestedKeyDpExampleMetricsIterator{iter: iter}, nil
 }

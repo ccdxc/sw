@@ -3,8 +3,8 @@ include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = delphi_example.bin
 MODULE_ARCH     = x86_64
-MODULE_SOLIBS   = delphisdk
-MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev
+MODULE_SOLIBS   = delphisdk sdkpal logger
+MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev dl
 MODULE_ARLIBS   = delphiexampleproto delphishm
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cc)
