@@ -25,9 +25,11 @@ namespace api {
  * @brief Internal SUBNET structure
  */
 typedef struct oci_int_subnet_s {
-    oci_subnet_key_t key;    /**< SUBNET Key */
-    uint32_t id;             /**< Internal ID */
-    ht_ctxt_t ht_ctxt;       /**< Hash table context */
+    oci_subnet_key_t    key;        /**< SUBNET Key */
+    ht_ctxt_t           ht_ctxt;    /**< Hash table context */
+
+    /**< P4 datapath specific state */
+    uint32_t hw_id;                 /**< Internal ID */
 } __PACK__ oci_int_subnet_t;
 
 /** * @} */ // end of OCI_INT_SUBNET

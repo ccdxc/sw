@@ -3,8 +3,7 @@
  *
  * @file    vcn.hpp
  *
- * @brief   This file deals with OCI VCN functionality required internally by
- *          other modules
+ * @brief   This file deals with OCI VCN functionality
  */
 
 #if !defined (__VCN_HPP_)
@@ -22,7 +21,6 @@ using sdk::lib::indexer;
 using sdk::lib::slab;
 using sdk::lib::hash_algo;
 
-
 namespace api {
 
 /**
@@ -35,8 +33,10 @@ namespace api {
  */
 typedef struct vcn_s {
     oci_vcn_key_t    key;        /**< VCN Key */
-    uint32_t         id;         /**< Internal ID */
     ht_ctxt_t        ht_ctxt;    /**< Hash table context */
+
+    /**< P4 datapath specific state */
+    uint16_t         hw_id;      /**< hardware ID */
 } __PACK__ vcn_t;
 
 /**
@@ -74,7 +74,7 @@ private:
     /**
      * @brief Add VCN to database
      *
-     * @param[in] vcn VCN  
+     * @param[in] vcn VCN
      */ 
     sdk_ret_t vcn_add_to_db(vcn_t *vcn);
 

@@ -1094,7 +1094,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     return HAL_RET_OK;
 }
 
-sdk::platform::utils::mem_addr_t
+mem_addr_t
 PdClient::mem_start_addr (const char *region)
 {
     return mp_->start_addr(region);

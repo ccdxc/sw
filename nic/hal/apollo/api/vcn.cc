@@ -82,8 +82,8 @@ vcn_state::vcn_delete(_In_ oci_vcn_key_t *vcn_key) {
 /**
  * @brief Add VCN to database
  *
- * @param[in] vcn VCN  
- */ 
+ * @param[in] vcn VCN
+ */
 sdk_ret_t
 vcn_state::vcn_add_to_db(vcn_t *vcn) {
     return ht_->insert_with_key(&vcn->key, vcn,
@@ -131,7 +131,7 @@ vcn_state::vcn_init(vcn_t *vcn, oci_vcn_t *oci_vcn) {
     //SDK_SPINLOCK_INIT(&vcn->slock, PTHREAD_PROCESS_SHARED);
     memcpy(&vcn->key, &oci_vcn->key, sizeof(oci_vcn_key_t));
     vcn->ht_ctxt.reset();
-    if (idxr_->alloc(&vcn->id) != sdk::lib::indexer::SUCCESS) {
+    if (idxr_->alloc((uint32_t *)&vcn->hw_id) != sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
     return sdk::SDK_RET_OK;
@@ -163,7 +163,7 @@ void
 vcn_state::vcn_cleanup(vcn_t *vcn) {
     // TODO: fix me
     //SDK_SPINLOCK_DESTROY(&vcn->slock);
-    idxr_->free(vcn->id);
+    idxr_->free(vcn->hw_id);
 }
 
 /**
@@ -228,4 +228,4 @@ oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
 
 /** @} */ // end of OCI_VCN_API
 
-}    // namespace api 
+}    // namespace api

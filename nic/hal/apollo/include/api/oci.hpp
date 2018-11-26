@@ -6,8 +6,8 @@
  * @brief   This module defines an entry point into OCI API
  */
 
-#if !defined (__OCI_H_)
-#define __OCI_H_
+#if !defined (__OCI_HPP__)
+#define __OCI_HPP__
 
 /**
  * @defgroup OCI - Entry point specific API definitions.
@@ -22,7 +22,6 @@
 /**
  * @brief API status codes
  */
-
 typedef enum oci_status_e {
     OCI_STAUS_OK,
     OCI_STATUS_EXISTS,
@@ -36,6 +35,7 @@ typedef enum oci_status_e {
 /**
  * @brief Defined API sets have assigned IDs.
  */
+// TODO: what is the use of this ?
 typedef enum oci_class_id_e {
     OCI_CLASS_ID_UNSPECIFIED      =  0,    /**< unspecified */
     OCI_CLASS_ID_VCN              =  1,    /**< vnc */
@@ -48,40 +48,51 @@ typedef enum oci_class_id_e {
     OCI_CLASS_ID_MAX              =  8,    /**< total number of class-id */
 } oci_class_id_t;
 
-// TODO:
-// all log related APIs should be wrapped in oci_init() API
 /**
- * @brief Defines log level
+ * @brief Defines trace levels
  */
-typedef enum oci_log_level_e {
-    OCI_LOG_LEVEL_DEBUG            = 0,    /**< Log level debug */
-    OCI_LOG_LEVEL_INFO             = 1,    /**< Log level info */
-    OCI_LOG_LEVEL_NOTICE           = 2,    /**< Log level notice */
-    OCI_LOG_LEVEL_WARN             = 3,    /**< Log level warn */
-    OCI_LOG_LEVEL_ERROR            = 4,    /**< Log level error */
-    OCI_LOG_LEVEL_CRITICAL         = 5     /**< Log level critical */
-} oci_log_level_t;
+typedef enum oci_trace_level_e {
+    OCI_TRACE_LEVEL_DEBUG            = 0,    /**< trace level debug */
+    OCI_TRACE_LEVEL_INFO             = 1,    /**< trace level info */
+    OCI_TRACE_LEVEL_NOTICE           = 2,    /**< trace level notice */
+    OCI_TRACE_LEVEL_WARN             = 3,    /**< trace level warn */
+    OCI_TRACE_LEVEL_ERROR            = 4,    /**< trace level error */
+    OCI_TRACE_LEVEL_CRITICAL         = 5     /**< trace level critical */
+} oci_trace_level_t;
 
 /**
- * @brief Set log level for OCI API module
- *
- * The default log level is #OCI_LOG_LEVEL_WARN.
- *
- * @param[in] oci_api_id OCI CLASS ID
- * @param[in] log_level Log level
- *
- * @return #SDK_RET_OK on success, failure status code on error
+ * @brief    invalid epoch
  */
-oci_status_t oci_log_set(_In_ oci_class_id_t oci_class_id,
-                         _In_ oci_log_level_t log_level);
+#define OCI_EPOCH_INVALID        0x0
 
-typedef uint64_t  oci_vcn_id_t;
-typedef uint64_t  oci_subnet_id_t;
-typedef uint64_t  oci_vnic_id_t;
-typedef uint64_t  oci_rule_id_t;
-typedef uint64_t  oci_rsrc_pool_id_t;
+/**
+ * @brief    OCI library initialization modes
+ */
+typedef enum oci_init_mode_e {
+    OCI_INIT_MODE_NONE,                 /**< invalid mode */
+    OCI_INIT_MODE_FRESH_START,          /**< initialize from scratch, ignore
+                                          any state if preserved previously */
+    OCI_INIT_MODE_POST_UPGRADE,         /**< initialize using state preserved,
+                                              if any */
+} oci_init_mode_t;
+
+/**
+ * @brief    OCI library initialization time parameters
+ */
+typedef struct oci_init_params_s {
+    oci_init_mode_t      init_mode;
+    oci_trace_level_t    log_level;
+} oci_init_params_t;
+oci_status_t oci_init(oci_init_params_t *params);
+
+typedef uint32_t  oci_vcn_id_t;
+typedef uint32_t  oci_subnet_id_t;
+typedef uint16_t  oci_vnic_id_t;
+typedef uint32_t  oci_rule_id_t;
+typedef uint32_t  oci_rsrc_pool_id_t;
+typedef uint32_t  oci_epoch_t;
 
 /**
  * @}
  */
-#endif /** __OCI_H_ */
+#endif    /** __OCI_HPP__ */

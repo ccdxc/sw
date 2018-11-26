@@ -81,7 +81,7 @@ public:
                         uint8_t *rss_key, uint8_t *rss_indir,
                         uint16_t num_queues);
 
-    sdk::platform::utils::mem_addr_t mem_start_addr(const char *region);
+    mem_addr_t mem_start_addr(const char *region);
 
 /* RDMA routines */
     int rdma_lif_init(uint32_t lif, uint32_t max_keys,

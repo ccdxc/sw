@@ -7,8 +7,13 @@
 #ifndef __SDK_TYPES_HPP__
 #define __SDK_TYPES_HPP__
 
+#include <inttypes.h>
+
 namespace sdk {
 namespace types {
+
+typedef uint64_t    hbm_addr_t;
+typedef uint64_t    mem_addr_t;
 
 enum class port_event_t {
     PORT_EVENT_LINK_NONE = 0,
@@ -117,6 +122,8 @@ using sdk::types::port_fec_type_t;
 using sdk::types::port_pause_type_t;
 using sdk::types::port_event_t;
 using sdk::types::port_breakout_mode_t;
+using sdk::types::mem_addr_t;
+using sdk::types::hbm_addr_t;
 
 #endif    // __SDK_TYPES_HPP__
 

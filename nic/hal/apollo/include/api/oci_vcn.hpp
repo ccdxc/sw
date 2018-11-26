@@ -50,7 +50,6 @@ typedef struct oci_vcn_s {
  */
 sdk_ret_t oci_vcn_create(_In_ oci_vcn_t *vcn);
 
-
 /**
  * @brief Delete VCN
  *
@@ -63,4 +62,5 @@ sdk_ret_t oci_vcn_delete(_In_ oci_vcn_key_t *vcn_key);
 /**
  * @}
  */
+
 #endif /** __OCI_VCN_H_ */

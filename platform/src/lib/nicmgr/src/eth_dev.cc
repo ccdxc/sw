@@ -217,7 +217,7 @@ Eth::Eth(HalClient *hal_client,
     memcpy(hal_lif_info_.queue_info, qinfo,
            sizeof(hal_lif_info_.queue_info));
 
-    sdk::platform::utils::mem_addr_t stats_mem_addr =
+    mem_addr_t stats_mem_addr =
         pd->mem_start_addr(CAPRI_HBM_REG_LIF_STATS);
     if (stats_mem_addr == INVALID_MEM_ADDRESS) {
         NIC_LOG_ERR("Failed to get stats address lif {}", spec->lif_id);

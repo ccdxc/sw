@@ -10,6 +10,7 @@
 
 #include "nic/include/base.hpp"
 #include "include/sdk/base.hpp"
+#include "include/sdk/types.hpp"
 #include "include/sdk/shmmgr.hpp"
 
 namespace sdk {
@@ -26,8 +27,6 @@ namespace utils {
 #define JKEY_CACHE_PIPE         "cache"
 #define JKEY_RESET_REGION       "reset"
 #define JKEY_START_OFF          "start_offset"
-
-typedef uint64_t mem_addr_t;
 
 /**
  * @brief Memory mpartition cache pipes

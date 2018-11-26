@@ -16,8 +16,6 @@
 namespace sdk {
 namespace platform {
 
-typedef uint64_t    hbm_addr_t;
-
 }    // namespace platform
 }    // namespace sdk
 

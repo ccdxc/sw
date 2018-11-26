@@ -8,6 +8,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/mem.hpp"
 #include "include/sdk/shmmgr.hpp"
+#include "include/sdk/types.hpp"
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
