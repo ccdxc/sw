@@ -74,6 +74,7 @@ typedef struct rpc_info_ {
             uint8_t    rpcvers;
         } __PACK__;
         struct { /* MSRPC Info */
+            uint8_t    data_rep;
             uint32_t   call_id;
             uint8_t    act_id[16];
             uint8_t    uuid[16];

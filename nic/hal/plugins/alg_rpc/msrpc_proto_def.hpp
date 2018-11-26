@@ -24,7 +24,7 @@
 #define EPM_PROTO_UDP  0x08
 #define EPM_PROTO_IP   0x09
 #define MSRPC_DEFAULT_FLOORS 3
-#define MAX_FLOORS     65535
+#define MAX_FLOORS     1024 
 #define MAX_CONTEXT    255
 #define UUID_PROTO_SZ    6
 #define L4_PROTO_SZ      4
