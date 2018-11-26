@@ -66,8 +66,7 @@ func execBinCmdHandler(cmd *cobra.Command, args []string) error {
 
 func execBinCmdArgsValidator(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		str := "No command to execute\n"
-		return errors.New(str)
+		return errors.New("No command to execute")
 	}
 	return nil
 }

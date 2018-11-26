@@ -17,7 +17,6 @@ def Trigger(tc):
         common.AddPenctlCommand(req, n, "show proc-meminfo")
         common.AddPenctlCommand(req, n, "show system-memory-usage")
         common.AddPenctlCommand(req, n, "rexec ls -al /nic/bin/ /nic/tools/")
-        common.AddPenctlCommand(req, n, "rexec")
 
     tc.resp = api.Trigger(req)
 

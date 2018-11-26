@@ -21,6 +21,7 @@ var sshCmd = &cobra.Command{
 	Run:                sshCmdHandler,
 	DisableFlagParsing: true,
 	Hidden:             true,
+	Args:               execBinCmdArgsValidator,
 }
 
 func init() {

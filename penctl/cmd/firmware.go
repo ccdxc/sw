@@ -301,7 +301,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 
 	v = &nmd.NaplesCmdExecute{
 		Executable: "rm",
-		Opts:       strings.Join([]string{"-rf ", "/tmp/multipart-*"}, ""),
+		Opts:       strings.Join([]string{"-rf ", "/tmp/multipart-*", "/tmp/update*"}, ""),
 	}
 
 	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
