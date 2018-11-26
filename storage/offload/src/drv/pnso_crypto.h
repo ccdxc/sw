@@ -37,7 +37,7 @@
  * @ca_len_2: specifies length in bytes.
  * @ca_next: specifies the address of the next descriptor in the chained list
  * of descriptors; a NULL indicates the end of the list.
- * @ca_rsvd: specifies a 'reserved' field for future use.
+ * @ca_rsvd_swlink: 'reserved' field used for software linkage
  *
  */
 #define CRYPTO_AOL_TUPLE_LEN_MAX	((1 << 28) - 1)
@@ -53,9 +53,15 @@ struct crypto_aol {
 	uint32_t ca_off_2;
 	uint32_t ca_len_2;
 	uint64_t ca_next;	/* next aol */
-	uint64_t ca_rsvd;
+	uint64_t ca_rsvd_swlink;
 } __attribute__((__packed__));
 
+#define CRYPTO_AOL_SWLINK_SET(aol, linkage)	\
+	(aol)->ca_rsvd_swlink = (uint64_t)(linkage)
+
+#define CRYPTO_AOL_SWLINK_GET(linkage, aol)	\
+	linkage = (typeof(linkage))(aol)->ca_rsvd_swlink
+        
 enum crypto_algo_cmd_hi {
 	CRYPTO_ALGO_CMD_HI_AES_GCM = 3,
 	CRYPTO_ALGO_CMD_HI_AES_XTS = 4,

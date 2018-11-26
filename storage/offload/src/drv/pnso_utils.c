@@ -86,8 +86,10 @@ pc_res_sgl_packed_get(const struct per_core_resource *pcr,
 
 		if (!svc_sgl->sgl)
 			svc_sgl->sgl = sgl;
-		else
+                else {
 			sgl_prev->cs_next = sonic_virt_to_phy(sgl);
+			CPDC_SGL_SWLINK_SET(sgl_prev, sgl);
+		}
 		sgl_prev = sgl;
 	}
 
@@ -117,9 +119,7 @@ pc_res_sgl_put(const struct per_core_resource *pcr,
 
 	case MPOOL_TYPE_CPDC_SGL:
 		while (sgl) {
-			sgl_next = sgl->cs_next ?
-				sonic_phy_to_virt(sgl->cs_next) :
-				NULL;
+			CPDC_SGL_SWLINK_GET(sgl_next, sgl);
 			pc_res_mpool_object_put(pcr, svc_sgl->mpool_type, sgl);
 			sgl = sgl_next;
 		}
@@ -190,8 +190,10 @@ pc_res_sgl_vec_packed_get(const struct per_core_resource *pcr,
 
 		total_len += sgl_vec->cs_len_0 + sgl_vec->cs_len_1 +
 			     sgl_vec->cs_len_2;
-		if (sgl_prev)
+		if (sgl_prev) {
 			sgl_prev->cs_next = sonic_virt_to_phy(sgl_vec);
+			CPDC_SGL_SWLINK_SET(sgl_prev, sgl_vec);
+		}
 
 		sgl_prev = sgl_vec++;
 		cur_count++;

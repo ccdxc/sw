@@ -134,6 +134,7 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 	 * Produce output to intermediate buffers if there is a chain subordinate.
 	 */
 	if (chn_service_has_sub_chain(svc_info)) {
+		orig_dst_blist = svc_info->si_dst_blist;
 		err = svc_interm_buf_list_get(svc_info);
 		if (err) {
 			OSAL_LOG_ERROR("failed to obtain intermediate buffers");
@@ -148,12 +149,7 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 			return ENOMEM;
 		}
 
-		if (chn_service_has_interm_blist(svc_info) &&
-		    svc_params->sp_dst_blist) {
-
-			orig_dst_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
-			orig_dst_blist.len = svc_info->si_dst_blist.len;
-			orig_dst_blist.blist = svc_params->sp_dst_blist;
+		if (chn_service_has_interm_blist(svc_info) && orig_dst_blist.len) {
 			svc_info->si_sgl_pdma =
 				pc_res_sgl_pdma_packed_get(pcr,
 						&orig_dst_blist);
@@ -286,18 +282,13 @@ crypto_chain(struct chain_entry *centry)
 	pnso_error_t			err = PNSO_OK;
 
 	if (chn_service_has_sub_chain(svc_info)) {
+		OSAL_ASSERT(chn_service_has_interm_blist(svc_info));
+		iblist = &svc_info->si_iblist;
+		crypto_chain->ccp_crypto_buf_addr = iblist->blist.buffers[0].buf;
+		crypto_chain->ccp_data_len = iblist->blist.buffers[0].len;
 		if (svc_info->si_sgl_pdma) {
-			OSAL_ASSERT(chn_service_has_interm_blist(svc_info));
-
-			iblist = &svc_info->si_iblist;
-			crypto_chain->ccp_crypto_buf_addr =
-				iblist->blist.buffers[0].buf;
-			crypto_chain->ccp_data_len =
-				iblist->blist.buffers[0].len;
-
 			crypto_chain->ccp_sgl_pdma_dst_addr =
 				sonic_virt_to_phy(svc_info->si_sgl_pdma);
-
 			crypto_chain->ccp_cmd.ccpc_sgl_pdma_en = true;
 			crypto_chain->ccp_cmd.ccpc_sgl_pdma_len_from_desc =
 				true;

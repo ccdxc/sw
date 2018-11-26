@@ -276,6 +276,41 @@ submit_requests(struct thread_state *tstate)
 }
 
 static int
+verify_service_overall_err(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_result *svc_res = NULL;
+
+	OSAL_LOG_INFO("verify overall err ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+			svc_res = &rstate->res.res;
+			if (svc_res->err) {
+				OSAL_LOG_INFO("IO: service overall error %d", svc_res->err);
+				err = svc_res->err;
+			} else
+				count++;
+		}
+	}
+
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: service overall passed");
+	} else {
+		OSAL_LOG_ERROR("IO: service overall failed");
+	}
+	return err;
+}
+
+static int
 verify_cp_dc_result(void)
 {
 	int i, err = 0;
@@ -1222,6 +1257,10 @@ exec_cp_dc_test(void *arg)
 		goto error;
 	}
 
+	err = verify_service_overall_err();
+	if (err)
+		goto error;
+
 	/* TODO: two requests involved, so decrement to keep the count intact */
 	osal_atomic_fetch_sub(
 			&tstate->reqs[PNSO_TEST_BATCH_DEPTH-1].req_done, 1);
@@ -1243,6 +1282,10 @@ exec_cp_dc_test(void *arg)
 		err = EINVAL;
 		goto error;
 	}
+
+	err = verify_service_overall_err();
+	if (err)
+		goto error;
 
 	err = verify_cp_dc_result();
 	if (err)
@@ -1529,6 +1572,10 @@ exec_crypto_test(void *arg)
 		goto error;
 	}
 
+	err = verify_service_overall_err();
+	if (err)
+		goto error;
+
 	/* TODO: two requests involved, so decrement to keep the count intact */
 	osal_atomic_fetch_sub(
 			&tstate->reqs[PNSO_TEST_BATCH_DEPTH-1].req_done, 1);
@@ -1545,6 +1592,10 @@ exec_crypto_test(void *arg)
 		 osal_get_coreid());
 
 	osal_yield();
+	err = verify_service_overall_err();
+	if (err)
+		goto error;
+
 	err = verify_crypto_result();
 	if (err)
 		goto error;
@@ -1587,6 +1638,10 @@ exec_cp_crypto_dc_test(void *arg)
 		goto error;
 	}
 
+	err = verify_service_overall_err();
+	if (err)
+		goto error;
+
 	/* TODO: two requests involved, so decrement to keep the count intact */
 	osal_atomic_fetch_sub(
 			&tstate->reqs[PNSO_TEST_BATCH_DEPTH-1].req_done, 1);
@@ -1603,6 +1658,10 @@ exec_cp_crypto_dc_test(void *arg)
 		 osal_get_coreid());
 
 	osal_yield();
+	err = verify_service_overall_err();
+	if (err)
+		goto error;
+
 	err = verify_crypto_result();
 	if (err)
 		goto error;
@@ -1643,6 +1702,10 @@ exec_encrypt_decrypt_test(void *arg)
 		err = EINVAL;
 		goto error;
 	}
+
+	err = verify_service_overall_err();
+	if (err)
+		goto error;
 
 	err = verify_crypto_result();
 	if (err)
