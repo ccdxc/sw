@@ -1,7 +1,7 @@
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/include/hal.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "gen/proto/types.pb.h"

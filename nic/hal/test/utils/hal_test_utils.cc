@@ -1,5 +1,5 @@
 #include "nic/hal/test/utils/hal_test_utils.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include <gtest/gtest.h>
 

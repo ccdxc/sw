@@ -5,7 +5,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_api.hpp"

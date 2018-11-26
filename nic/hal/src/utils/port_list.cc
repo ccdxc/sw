@@ -7,7 +7,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/proto/types.pb.h"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "utils.hpp"

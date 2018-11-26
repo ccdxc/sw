@@ -6,7 +6,7 @@
 
 #include <google/protobuf/util/json_util.h>
 #include "nic/include/hal_cfg.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"

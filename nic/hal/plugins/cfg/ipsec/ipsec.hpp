@@ -7,7 +7,7 @@
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "gen/proto/ipsec.pb.h"
 #include "nic/include/pd.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 

@@ -4,7 +4,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/src/debug/table.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 
 using sdk::lib::slab;

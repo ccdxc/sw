@@ -5,7 +5,7 @@
 #ifndef __NETWORK_HPP__
 #define __NETWORK_HPP__
 
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "gen/proto/nw.pb.h"
 #include "nic/sdk/include/sdk/ip.hpp"

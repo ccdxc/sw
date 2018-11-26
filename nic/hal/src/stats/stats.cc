@@ -4,7 +4,7 @@
 
 #include "nic/hal/src/stats/stats.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 

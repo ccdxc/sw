@@ -20,7 +20,7 @@
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/pd/cpupkt_headers.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"

@@ -5,7 +5,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include "nic/hal/hal.hpp"
 #include "nic/include/base.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"

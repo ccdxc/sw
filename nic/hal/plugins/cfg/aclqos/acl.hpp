@@ -6,7 +6,7 @@
 #define __ACL_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "gen/proto/acl.pb.h"

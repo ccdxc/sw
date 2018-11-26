@@ -5,7 +5,7 @@
 #ifndef __ROUTE_HPP__
 #define __ROUTE_HPP__
 
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/proto/nw.pb.h"
 #include "gen/proto/kh.pb.h"
 #include "nic/utils/block_list/block_list.hpp"

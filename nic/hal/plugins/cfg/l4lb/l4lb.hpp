@@ -7,7 +7,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "gen/proto/l4lb.pb.h"

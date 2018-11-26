@@ -5,7 +5,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/proto/types.pb.h"
 #include "utils.hpp"
 #include "addr_list.hpp"

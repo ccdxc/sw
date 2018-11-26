@@ -6,7 +6,7 @@
 #define __NAT_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "gen/proto/nat.pb.h"

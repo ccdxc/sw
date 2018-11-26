@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "nic/hal/pd/iris/nw/rw_pd.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"

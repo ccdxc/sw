@@ -11,7 +11,7 @@
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "gen/proto/tls_proxy_cb2.pb.h"
 #include "nic/include/pd.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;

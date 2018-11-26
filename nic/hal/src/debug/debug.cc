@@ -7,7 +7,7 @@
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/sdk/include/sdk/catalog.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"

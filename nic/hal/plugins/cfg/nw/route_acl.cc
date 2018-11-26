@@ -4,7 +4,7 @@
 // Handles Route ACL
 //-----------------------------------------------------------------------------
 
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/route_acl.hpp"
 #include "nic/hal/plugins/cfg/nw/route.hpp"
 

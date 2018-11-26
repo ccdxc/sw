@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 
 using intf::InterfaceSpec;

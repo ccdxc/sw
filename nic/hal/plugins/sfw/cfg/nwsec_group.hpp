@@ -6,7 +6,7 @@
 #define __NWSEC_GROUP_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "gen/proto/nwsec.pb.h"
 #include "gen/proto/types.pb.h"

@@ -6,7 +6,7 @@
 #define __BARCO_RINGS_HPP__
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/proto/barco_rings.pb.h"
 #include "gen/proto/types.pb.h"
 

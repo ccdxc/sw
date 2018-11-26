@@ -4,7 +4,7 @@
 
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_cfg.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"

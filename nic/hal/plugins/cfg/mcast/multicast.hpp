@@ -7,7 +7,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/encap.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"

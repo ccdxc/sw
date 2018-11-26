@@ -6,7 +6,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/include/pd_api.hpp"

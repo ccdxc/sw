@@ -9,7 +9,7 @@
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/hal.hpp"
 

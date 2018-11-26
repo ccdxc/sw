@@ -4,7 +4,7 @@
 // configuration handlers for types::RuleMatch
 //-----------------------------------------------------------------------------
 
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "rule_match.hpp"
 #include "utils.hpp"
 #include "nic/fte/acl/acl_ctx.hpp"

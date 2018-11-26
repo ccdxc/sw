@@ -9,7 +9,7 @@
 #include <netinet/if_ether.h>
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/fte/fte.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/sdk/include/sdk/twheel.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"

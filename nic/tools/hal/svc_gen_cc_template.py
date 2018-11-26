@@ -5,7 +5,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/hal_trace.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 //::
 //::  file_name_prefix = fileName.replace('_pb2.py', '')
 //::  hdr_file = file_name_prefix + '_svc_gen.hpp'

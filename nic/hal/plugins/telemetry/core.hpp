@@ -5,7 +5,7 @@
 #pragma once
 
 #include "nic/include/fte.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 
 namespace hal {

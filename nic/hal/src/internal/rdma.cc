@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"

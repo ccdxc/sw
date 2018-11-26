@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 
 namespace hal {

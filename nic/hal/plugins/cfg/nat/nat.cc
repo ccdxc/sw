@@ -6,10 +6,10 @@
 
 #include <google/protobuf/util/json_util.h>
 #include "nic/include/base.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nat/nat.hpp"

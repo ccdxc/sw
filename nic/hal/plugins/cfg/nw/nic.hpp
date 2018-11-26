@@ -5,7 +5,7 @@
 #ifndef __NIC_HPP__
 #define __NIC_HPP__
 
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/proto/nic.pb.h"
 
 using device::DeviceMode;

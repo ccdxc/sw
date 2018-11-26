@@ -11,7 +11,7 @@
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "gen/proto/cpucb.pb.h"
 #include "nic/include/pd.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 

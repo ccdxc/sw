@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 
 #include "hal_handle.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 
 namespace hal {
 

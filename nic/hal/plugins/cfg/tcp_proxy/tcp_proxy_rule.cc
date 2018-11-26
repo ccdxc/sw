@@ -3,7 +3,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/include/fte.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"

@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"

@@ -2,7 +2,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"

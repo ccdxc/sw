@@ -2,7 +2,7 @@
 
 #include "nic/utils/eventmgr/eventmgr.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 
 using sdk::lib::dllist_reset;
 using sdk::lib::dllist_del;

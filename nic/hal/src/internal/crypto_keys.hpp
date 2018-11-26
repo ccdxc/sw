@@ -6,7 +6,7 @@
 #define __CRYPTO_SESSION_KEYS_HPP__
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/proto/crypto_keys.pb.h"
 #include "gen/proto/types.pb.h"
 
