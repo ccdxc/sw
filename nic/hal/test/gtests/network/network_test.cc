@@ -136,7 +136,7 @@ TEST_F(nw_test, test1)
         ret = hal::network_create(nw_spec, &nw_rsp);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        nw_v4handles[i] = nw_rsp.mutable_status()->nw_handle();
+        nw_v4handles[i] = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
         // Create v6 network
         nw_spec_v6.set_rmac(0x0000DEADBEEF);
@@ -149,7 +149,7 @@ TEST_F(nw_test, test1)
         ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        nw_v6handles[i] = nw_rsp_v6.mutable_status()->nw_handle();
+        nw_v6handles[i] = nw_rsp_v6.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     }
 

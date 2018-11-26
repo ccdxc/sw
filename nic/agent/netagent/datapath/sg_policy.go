@@ -42,7 +42,7 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 	sgPolicyReqMsg := &halproto.SecurityPolicyRequestMsg{
 		Request: []*halproto.SecurityPolicySpec{
 			{
-				PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle{
+				KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 					PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 						SecurityPolicyKey: &halproto.SecurityPolicyKey{
 							SecurityPolicyId: sgp.Status.SGPolicyID,
@@ -110,7 +110,7 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 	sgPolicyUpdateReqMsg := &halproto.SecurityPolicyRequestMsg{
 		Request: []*halproto.SecurityPolicySpec{
 			{
-				PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle{
+				KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 					PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 						SecurityPolicyKey: &halproto.SecurityPolicyKey{
 							SecurityPolicyId: sgp.Status.SGPolicyID,
@@ -160,7 +160,7 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 	sgPolicyDelReq := &halproto.SecurityPolicyDeleteRequestMsg{
 		Request: []*halproto.SecurityPolicyDeleteRequest{
 			{
-				PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle{
+				KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 					PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
 						SecurityPolicyKey: &halproto.SecurityPolicyKey{
 							SecurityPolicyId: sgp.Status.SGPolicyID,

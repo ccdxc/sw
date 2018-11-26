@@ -56,7 +56,7 @@ HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            handle = rsp.vrf_status().vrf_handle();
+            handle = rsp.vrf_status().key_or_handle().vrf_handle();
             NIC_LOG_INFO("HalVrf Create: id: {}, handle: {}", id, handle);
             cout << "[INFO] VRF create succeeded,"
                  << " id = " << id << " handle = " << handle
@@ -65,7 +65,7 @@ HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
             NIC_LOG_ERR("VRF already exists with id: {}", id);
             allocator->free(id);
             id = 0;  // TODO: HAL should return this
-            handle = rsp.vrf_status().vrf_handle();
+            handle = rsp.vrf_status().key_or_handle().vrf_handle();
         } else {
             cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
             throw ("Failed to create VRF");

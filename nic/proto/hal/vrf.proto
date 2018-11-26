@@ -8,6 +8,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "kh.proto";
+import "delphi.proto";
 
 package vrf;
 option go_package="halproto";
@@ -22,12 +23,15 @@ service Vrf {
 
 // VrfSpec captures all the vrf level configuration
 message VrfSpec {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta              Meta                = 1;
+
   // key_or_handle is vrf's unique identifier
-  kh.VrfKeyHandle                key_or_handle       = 1 [(gogoproto.moretags) = "venice:key"];
-  kh.SecurityProfileKeyHandle    security_key_handle = 2 [(gogoproto.moretags) = "venice:ref"];    // security profile, if any
-  types.VrfType                  vrf_type            = 3 [(gogoproto.moretags) = "venice:immutable,venice:mandatory"];
-  types.IPAddress                mytep_ip            = 4;    // Local VTEP IP address for vxlan tunnels
-  types.IPPrefix                 gipo_prefix         = 5;    // GIPo prefix
+  kh.VrfKeyHandle                key_or_handle       = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityProfileKeyHandle    security_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];    // security profile, if any
+  types.VrfType                  vrf_type            = 4 [(gogoproto.moretags) = "venice:immutable,venice:mandatory"];
+  types.IPAddress                mytep_ip            = 5;    // Local VTEP IP address for vxlan tunnels
+  types.IPPrefix                 gipo_prefix         = 6;    // GIPo prefix
 }
 
 // VrfRequestMsg is batched add or modify vrf request
@@ -54,10 +58,13 @@ message VrfStatusCpd {
 
 // VrfStatus is the operational status of a given vrf
 message VrfStatus {
-  fixed64           vrf_handle          = 1;    // id of vrf returned by HAL
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta Meta                = 1;
+
+  kh.VrfKeyHandle   key_or_handle       = 2 [(gogoproto.moretags) = "venice:key"];
   oneof vrf_pd_status {
-      VrfStatusEpd  epd_status          = 2;    // Vrf oper state for enterprise pipeline
-      VrfStatusCpd  cpd_status          = 3;    // Vrf oper state for cloud pipeline
+      VrfStatusEpd  epd_status          = 3;    // Vrf oper state for enterprise pipeline
+      VrfStatusCpd  cpd_status          = 4;    // Vrf oper state for cloud pipeline
   }
 }
 

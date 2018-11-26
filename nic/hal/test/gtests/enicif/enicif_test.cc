@@ -122,7 +122,7 @@ TEST_F(enicif_test, test1)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create a lif
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
@@ -258,7 +258,7 @@ TEST_F(enicif_test, test2)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -317,7 +317,7 @@ TEST_F(enicif_test, test2)
         ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        l2seg_hdls[i] = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+        l2seg_hdls[i] = l2seg_rsp.mutable_l2segment_status()->mutable_key_or_handle()->l2segment_handle();
     }
 
 
@@ -558,7 +558,7 @@ TEST_F(enicif_test, test3)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -690,7 +690,7 @@ TEST_F(enicif_test, test4)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -735,7 +735,7 @@ TEST_F(enicif_test, test4)
         ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        l2seg_hdls[i] = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+        l2seg_hdls[i] = l2seg_rsp.mutable_l2segment_status()->mutable_key_or_handle()->l2segment_handle();
     }
 
     // Adding L2segment on Uplink

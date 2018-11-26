@@ -762,7 +762,7 @@ ep_prepare_rsp (EndpointResponse *rsp, hal_ret_t ret,
                 hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_endpoint_status()->set_endpoint_handle(hal_handle);
+        rsp->mutable_endpoint_status()->mutable_key_or_handle()->set_endpoint_handle(hal_handle);
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));
@@ -2315,7 +2315,7 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     if (ret == HAL_RET_OK) {
         response->mutable_status()->mutable_enic_pinned_uplink_if_key_handle()->set_if_handle(uplink_if->hal_handle);
     }
-    response->mutable_status()->set_endpoint_handle(ep->hal_handle);
+    response->mutable_status()->mutable_key_or_handle()->set_endpoint_handle(ep->hal_handle);
     response->mutable_status()->set_learn_source_config(ep->ep_flags & EP_FLAGS_LEARN_SRC_CFG);
     response->mutable_status()->set_is_endpoint_local(ep->ep_flags & EP_FLAGS_LOCAL);
 
@@ -2699,7 +2699,7 @@ ep_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 static hal_ret_t
 ep_init_from_status (ep_t *ep, const EndpointStatus& status)
 {
-    ep->hal_handle = status.endpoint_handle();
+    ep->hal_handle = status.key_or_handle().endpoint_handle();
     if (status.learn_source_config()) {
         ep->ep_flags |= EP_FLAGS_LEARN_SRC_CFG;
     }

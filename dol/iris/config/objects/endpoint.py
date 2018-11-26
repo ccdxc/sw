@@ -273,7 +273,7 @@ class EndpointObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        self.hal_handle = resp_spec.endpoint_status.endpoint_handle
+        self.hal_handle = resp_spec.endpoint_status.key_or_handle.endpoint_handle
         if self.attachif is not None:
             self.pinintf = self.attachif.pinnedif
         logger.info("- Endpoint %s = %s (HDL = 0x%x) (Pinned Uplink = %s)" %\

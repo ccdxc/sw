@@ -65,7 +65,7 @@ hal_handle_t fte_base_test::add_vrf()
 
     EXPECT_EQ(ret, HAL_RET_OK);
 
-    return resp.mutable_vrf_status()->vrf_handle();
+    return resp.mutable_vrf_status()->key_or_handle().vrf_handle();
 }
 
 hal_handle_t fte_base_test::add_network(hal_handle_t vrfh, uint32_t v4_addr, uint8_t prefix_len, uint64_t rmac)
@@ -89,7 +89,7 @@ hal_handle_t fte_base_test::add_network(hal_handle_t vrfh, uint32_t v4_addr, uin
 
     EXPECT_EQ(ret, HAL_RET_OK);
 
-    return resp.mutable_status()->nw_handle();
+    return resp.mutable_status()->key_or_handle().nw_handle();
 }
 
 hal_handle_t fte_base_test::add_l2segment(hal_handle_t nwh, uint16_t vlan_id)
@@ -111,7 +111,7 @@ hal_handle_t fte_base_test::add_l2segment(hal_handle_t nwh, uint16_t vlan_id)
     hal::hal_cfg_db_close();
     EXPECT_EQ(ret, HAL_RET_OK);
 
-    return resp.mutable_l2segment_status()->l2segment_handle();
+    return resp.mutable_l2segment_status()->key_or_handle().l2segment_handle();
 }
 
 hal_handle_t fte_base_test::add_uplink(uint8_t port_num)
@@ -168,10 +168,10 @@ hal_handle_t fte_base_test::add_endpoint(hal_handle_t l2segh, hal_handle_t intfh
             ep.vlan = l2seg->wire_encap.val;
         else
             ep.vlan = 0;
-        eps.insert(std::pair<hal_handle_t, ep_info_t>(resp.endpoint_status().endpoint_handle(),ep));
+        eps.insert(std::pair<hal_handle_t, ep_info_t>(resp.endpoint_status().key_or_handle().endpoint_handle(),ep));
     }
 
-    return resp.endpoint_status().endpoint_handle();
+    return resp.endpoint_status().key_or_handle().endpoint_handle();
 }
 
 hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_base_test::v4_rule_t> &rules)
@@ -183,9 +183,9 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
     hal::vrf_t *vrf = hal::vrf_lookup_by_handle(vrfh);
     EXPECT_NE(vrf, nullptr);
 
-    spec.mutable_policy_key_or_handle()->mutable_security_policy_key()->
+    spec.mutable_key_or_handle()->mutable_security_policy_key()->
         set_security_policy_id(++nwsec_id_);
-    spec.mutable_policy_key_or_handle()->mutable_security_policy_key()->
+    spec.mutable_key_or_handle()->mutable_security_policy_key()->
         mutable_vrf_id_or_handle()->set_vrf_id(vrf->vrf_id);
 
     uint32_t rule_id = 0;
@@ -255,7 +255,7 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
     hal::hal_cfg_db_close();
     EXPECT_EQ(ret, HAL_RET_OK);
 
-    return resp.policy_status().security_policy_handle();
+    return resp.policy_status().key_or_handle().security_policy_handle();
 }
 
 hal_handle_t fte_base_test::add_flowmon_policy(hal_handle_t vrfh, std::vector<fte_base_test::v4_rule_t> &rules)

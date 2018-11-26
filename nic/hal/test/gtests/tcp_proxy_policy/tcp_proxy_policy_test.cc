@@ -83,7 +83,7 @@ tcp_proxy_test_vrf_create (int vrf_id, hal_handle_t *vrf_hdl)
     ret = hal::vrf_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    *vrf_hdl = rsp.vrf_status().vrf_handle();
+    *vrf_hdl = rsp.vrf_status().key_or_handle().vrf_handle();
 }
 
 static inline void

@@ -79,9 +79,6 @@ func (c *client) Run() {
 		log.Fatalf("Error sending mount request to hub. Err: %v", err)
 	}
 
-	// remember we are already connected
-	c.isConnected = true
-
 	// run the event loop in the background
 	c.loop()
 }
@@ -299,8 +296,14 @@ func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerE
 
 // Implementing the messegner.Handler interface
 func (c *client) HandleMountResp(svcID uint16, status string, objlist []*delphi_messenger.ObjectData) error {
+	// save the objects
 	c.id = svcID
 	c.updateSubtrees(objlist, false)
+
+	// remember we are already connected
+	c.isConnected = true
+
+	// trigger mount complete callbacks
 	c.service.OnMountComplete()
 	for _, l := range c.mountListeners {
 		l.OnMountComplete()

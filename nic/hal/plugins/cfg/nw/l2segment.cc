@@ -1050,7 +1050,7 @@ l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
                                                               l2seg->hal_handle :
                                                               HAL_HANDLE_INVALID);
 #endif
-        rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg->hal_handle);
+        rsp->mutable_l2segment_status()->mutable_key_or_handle()->set_l2segment_handle(l2seg->hal_handle);
         // TODO: REMOVE DOL test only
         args.l2seg = l2seg;
         pd_func_args.pd_l2seg_get_flow_lkupid = &args;
@@ -1316,7 +1316,7 @@ end:
 static hal_ret_t
 l2seg_init_from_status(l2seg_t *l2seg, const L2SegmentStatus& status)
 {
-    l2seg->hal_handle = status.l2segment_handle();
+    l2seg->hal_handle = status.key_or_handle().l2segment_handle();
     return HAL_RET_OK;
 }
 
@@ -2433,7 +2433,7 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     }
 #endif
     // fill operational state of this L2 segment
-    rsp->mutable_status()->set_l2segment_handle(l2seg->hal_handle);
+    rsp->mutable_status()->mutable_key_or_handle()->set_l2segment_handle(l2seg->hal_handle);
     if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
         rsp->mutable_status()->set_bcast_idx(l2seg_get_bcast_oif_list(l2seg));
         rsp->mutable_status()->set_mcast_idx(l2seg_get_mcast_oif_list(l2seg));

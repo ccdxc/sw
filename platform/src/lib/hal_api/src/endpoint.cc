@@ -80,7 +80,7 @@ HalEndpoint::HalEndpoint(HalL2Segment *l2seg, mac_t mac, Enic *enic)
                           rsp.api_status());
         } else {
             NIC_LOG_INFO("Created EP L2seg: {}, Mac: {}", l2seg->GetId(), macaddr2str(mac));
-            handle = rsp.endpoint_status().endpoint_handle();
+            handle = rsp.endpoint_status().key_or_handle().endpoint_handle();
         }
     } else {
         NIC_LOG_ERR("Failed to create EP L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),

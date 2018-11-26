@@ -415,7 +415,7 @@ class SegmentObject(base.ConfigObjectBase):
         logger.info("- Segment %s = %s, vrf_id 0x%x" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),
                            resp_spec.l2segment_status.vrf_id))
-        self.hal_handle = resp_spec.l2segment_status.l2segment_handle
+        self.hal_handle = resp_spec.l2segment_status.key_or_handle.l2segment_handle
         self.vrf_id = resp_spec.l2segment_status.vrf_id
         return
 

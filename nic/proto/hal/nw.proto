@@ -11,6 +11,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "kh.proto";
+import "delphi.proto";
 
 package nw;
 option go_package="halproto";
@@ -35,11 +36,14 @@ service Network {
 
 // NetworkSpec is used to add or modify a network object
 message NetworkSpec {
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta                  Meta              = 1;
+
   // key_or_handle is the network being create or updated
-  kh.NetworkKeyHandle                key_or_handle     = 1 [(gogoproto.moretags) = "venice:key"];
-  uint64                             rmac              = 2;    // router mac for this network
-  types.IPAddress                    gateway_ip        = 3;
-  repeated kh.SecurityGroupKeyHandle sg_key_handle     = 4 [(gogoproto.moretags) = "venice:ref"];    // list of security group handles
+  kh.NetworkKeyHandle                key_or_handle     = 2 [(gogoproto.moretags) = "venice:key"];
+  uint64                             rmac              = 3;    // router mac for this network
+  types.IPAddress                    gateway_ip        = 4;
+  repeated kh.SecurityGroupKeyHandle sg_key_handle     = 5 [(gogoproto.moretags) = "venice:ref"];    // list of security group handles
 }
 
 // NetworkRequestMsg is batched request message used to create/update network
@@ -50,7 +54,10 @@ message NetworkRequestMsg {
 
 // NetworkStatus represents the current status of the network policy object
 message NetworkStatus {
-  fixed64    nw_handle = 1;    // id of the network policy object returned by HAL
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta          Meta              = 1;
+
+  kh.NetworkKeyHandle        key_or_handle     = 2 [(gogoproto.moretags) = "venice:key"];
 }
 
 // NetworkResponse is response to one NetworkSpec

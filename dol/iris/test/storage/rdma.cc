@@ -204,7 +204,7 @@ int CreateL2Segment(uint32_t ten_id, uint32_t l2_seg_id, uint64_t *handle) {
   if (!status.ok()) return -1;
 
   auto resp = resp_msg.response(0);
-  *handle = resp.mutable_l2segment_status()->l2segment_handle();
+  *handle = resp.mutable_l2segment_status()->key_or_handle().l2segment_handle();
   return 0;
 }
 

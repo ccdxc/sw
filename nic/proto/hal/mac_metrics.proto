@@ -5,6 +5,7 @@
 
 syntax = "proto3";
 package metrics;
+option go_package="halproto";
 
 import "delphi.proto";
 

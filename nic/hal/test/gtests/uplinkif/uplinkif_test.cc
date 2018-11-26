@@ -196,7 +196,7 @@ TEST_F(uplinkif_test, test3)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -370,7 +370,7 @@ TEST_F(uplinkif_test, test5)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     pre = hal_test_utils_collect_slab_stats();
     pre_minfo = hal_test_utils_collect_mtrack_stats();
@@ -515,7 +515,7 @@ TEST_F(uplinkif_test, test6)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);

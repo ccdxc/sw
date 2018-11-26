@@ -5,7 +5,7 @@ package delphidp
 import (
 	"errors"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/goproto"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/halproto"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 )
 
@@ -25,13 +25,17 @@ func (dp *DelphiDatapath) CreateInterface(intf *netproto.Interface, lif *netprot
 		}
 
 		// build interface spec
-		ifSpec := &goproto.InterfaceSpec{
-			KeyOrHandle: &goproto.InterfaceKeyHandle{
-				InterfaceId: intf.Status.InterfaceID,
+		ifSpec := &halproto.InterfaceSpec{
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
 			},
-			IfType: goproto.IntfType_IF_TYPE_UPLINK,
-			IfUplinkInfo: &goproto.IfUplinkInfo{
-				PortNum: uint32(portID),
+			Type: halproto.IfType_IF_TYPE_UPLINK,
+			IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+				IfUplinkInfo: &halproto.IfUplinkInfo{
+					PortNum: uint32(portID),
+				},
 			},
 		}
 
@@ -40,16 +44,22 @@ func (dp *DelphiDatapath) CreateInterface(intf *netproto.Interface, lif *netprot
 
 	case "ENIC":
 		// build the spec
-		ifSpec := &goproto.InterfaceSpec{
-			KeyOrHandle: &goproto.InterfaceKeyHandle{
-				InterfaceId: intf.Status.InterfaceID,
+		ifSpec := &halproto.InterfaceSpec{
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
 			},
-			IfType: goproto.IntfType_IF_TYPE_ENIC,
+			Type: halproto.IfType_IF_TYPE_ENIC,
 			// associate the lif id
-			IfEnicInfo: &goproto.IfEnicInfo{
-				EnicType: goproto.IntfEnicType_IF_ENIC_TYPE_USEG,
-				LifKeyOrHandle: &goproto.LifKeyHandle{
-					LifId: lif.Status.InterfaceID,
+			IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+				IfEnicInfo: &halproto.IfEnicInfo{
+					EnicType: halproto.IfEnicType_IF_ENIC_TYPE_USEG,
+					LifKeyOrHandle: &halproto.LifKeyHandle{
+						KeyOrHandle: &halproto.LifKeyHandle_LifId{
+							LifId: lif.Status.InterfaceID,
+						},
+					},
 				},
 			},
 		}
@@ -73,17 +83,21 @@ func (dp *DelphiDatapath) UpdateInterface(intf *netproto.Interface, ns *netproto
 func (dp *DelphiDatapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error {
 	switch intf.Spec.Type {
 	case "UPLINK_ETH", "UPLINK_MGMT":
-		ifSpec := &goproto.InterfaceSpec{
-			KeyOrHandle: &goproto.InterfaceKeyHandle{
-				InterfaceId: intf.Status.InterfaceID,
+		ifSpec := &halproto.InterfaceSpec{
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
 			},
 		}
 		dp.delphiClient.DeleteObject(ifSpec)
 
 	case "ENIC":
-		ifSpec := &goproto.InterfaceSpec{
-			KeyOrHandle: &goproto.InterfaceKeyHandle{
-				InterfaceId: intf.Status.InterfaceID,
+		ifSpec := &halproto.InterfaceSpec{
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: intf.Status.InterfaceID,
+				},
 			},
 		}
 		dp.delphiClient.DeleteObject(ifSpec)
@@ -101,19 +115,19 @@ func (dp *DelphiDatapath) ListInterfaces() ([]*netproto.Interface, []*netproto.P
 //--------------------------- Delphi reactors ---------------------------
 
 // OnInterfaceStatusCreate event handler
-func (dp *DelphiDatapath) OnInterfaceStatusCreate(obj *goproto.InterfaceStatus) {
+func (dp *DelphiDatapath) OnInterfaceStatusCreate(obj *halproto.InterfaceStatus) {
 	dp.incrEventStats("OnInterfaceStatusCreate")
 	return
 }
 
 // OnInterfaceStatusUpdate event handler
-func (dp *DelphiDatapath) OnInterfaceStatusUpdate(old, obj *goproto.InterfaceStatus) {
+func (dp *DelphiDatapath) OnInterfaceStatusUpdate(old, obj *halproto.InterfaceStatus) {
 	dp.incrEventStats("OnInterfaceStatusUpdate")
 	return
 }
 
 // OnInterfaceStatusDelete event handler
-func (dp *DelphiDatapath) OnInterfaceStatusDelete(obj *goproto.InterfaceStatus) {
+func (dp *DelphiDatapath) OnInterfaceStatusDelete(obj *halproto.InterfaceStatus) {
 	dp.incrEventStats("OnInterfaceStatusDelete")
 	return
 }

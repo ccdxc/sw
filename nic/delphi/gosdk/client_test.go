@@ -93,6 +93,9 @@ func TestClientBasic(t *testing.T) {
 
 	_ = <-s2.mountDone
 	log.Printf("### Client 2 Mount done")
+	AssertEventually(t, func() (bool, interface{}) {
+		return c2.IsConnected(), c2
+	}, "client did not connect")
 
 	spec := &TestInterfaceSpec{
 		Key: &IntfIndex{
@@ -147,6 +150,7 @@ func TestClientBasic(t *testing.T) {
 	c2.DumpSubtrees()
 
 	h.Stop()
+	time.Sleep(time.Millisecond * 10) // wait a little for hub to fully stop
 }
 
 // this tests if hub starts after client, client will retry for it..
@@ -161,9 +165,6 @@ func TestClientRetry(t *testing.T) {
 	c1, err := NewClient(s1)
 	AssertOk(t, err, "Error creating delphi client")
 
-	err = c1.WatchMount(s1)
-	AssertOk(t, err, "Error watching mount")
-
 	// try to connect in the background
 	go c1.Run()
 
@@ -176,5 +177,7 @@ func TestClientRetry(t *testing.T) {
 
 	AssertEventually(t, func() (bool, interface{}) {
 		return c1.IsConnected(), c1
-	}, "client did not connect")
+	}, "client did not connect", "1s", "30s")
+	c1.Close()
+	time.Sleep(time.Millisecond * 10)
 }

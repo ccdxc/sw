@@ -422,7 +422,7 @@ static hal_ret_t
 vrf_prepare_rsp (VrfResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
 {
     if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
-        rsp->mutable_vrf_status()->set_vrf_handle(hal_handle);
+        rsp->mutable_vrf_status()->mutable_key_or_handle()->set_vrf_handle(hal_handle);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     return HAL_RET_OK;
@@ -485,7 +485,7 @@ vrf_init_from_spec (vrf_t *vrf, const VrfSpec& spec)
 static hal_ret_t
 vrf_init_from_status (vrf_t *vrf, const VrfStatus& status)
 {
-    vrf->hal_handle = status.vrf_handle();
+    vrf->hal_handle = status.key_or_handle().vrf_handle();
     return HAL_RET_OK;
 }
 
@@ -1049,7 +1049,7 @@ vrf_process_get (vrf_t *vrf, VrfGetResponse *rsp)
     }
 
     // fill operational state of this vrf
-    rsp->mutable_status()->set_vrf_handle(vrf->hal_handle);
+    rsp->mutable_status()->mutable_key_or_handle()->set_vrf_handle(vrf->hal_handle);
 
     // fill stats of this vrf
     rsp->mutable_stats()->set_num_l2_segments(vrf->l2seg_list->num_elems());

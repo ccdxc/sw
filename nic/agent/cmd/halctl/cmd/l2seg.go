@@ -294,7 +294,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 
 	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-15s%-10d%-20s%-10d\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
-		resp.GetStatus().GetL2SegmentHandle(),
+		resp.GetStatus().GetKeyOrHandle().GetL2SegmentHandle(),
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
 		weStr, teStr,
 		mcastFwdPolToStr(resp.GetSpec().GetMcastFwdPolicy()),

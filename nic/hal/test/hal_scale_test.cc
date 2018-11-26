@@ -149,9 +149,9 @@ public:
             assert((rsp_msg.response(0).api_status() == types::API_STATUS_OK) ||
                    (rsp_msg.response(0).api_status() == types::API_STATUS_EXISTS_ALREADY));
             std::cout << "Vrf create succeeded, handle = "
-                      << rsp_msg.response(0).vrf_status().vrf_handle()
+                      << rsp_msg.response(0).vrf_status().key_or_handle().vrf_handle()
                       << std::endl;
-            return rsp_msg.response(0).vrf_status().vrf_handle();
+            return rsp_msg.response(0).vrf_status().key_or_handle().vrf_handle();
         }
         std::cout << "Vrf create failed, error = "
                   << rsp_msg.response(0).api_status()
@@ -172,9 +172,9 @@ public:
         if (status.ok()) {
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
             std::cout << "SG create succeeded, handle = "
-                      << rsp_msg.response(0).status().sg_handle()
+                      << rsp_msg.response(0).status().key_or_handle().security_group_handle()
                       << std::endl;
-            return rsp_msg.response(0).status().sg_handle();
+            return rsp_msg.response(0).status().key_or_handle().security_group_handle();
         }
         std::cout << "SG create failed, error = "
                   << rsp_msg.response(0).api_status()
@@ -243,9 +243,9 @@ public:
         if (status.ok()) {
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
             std::cout << "Endpoint create succeeded, handle = "
-                      << rsp_msg.response(0).endpoint_status().endpoint_handle()
+                      << rsp_msg.response(0).endpoint_status().key_or_handle().endpoint_handle()
                       << std::endl;
-            return rsp_msg.response(0).endpoint_status().endpoint_handle();
+            return rsp_msg.response(0).endpoint_status().key_or_handle().endpoint_handle();
         }
         std::cout << "Endpoint create failed, error = "
                   << rsp_msg.response(0).api_status()
@@ -355,9 +355,9 @@ public:
         if (status.ok()) {
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
             std::cout << "Network create succeeded, handle = "
-                      << rsp_msg.response(0).status().nw_handle()
+                      << rsp_msg.response(0).status().key_or_handle().nw_handle()
                       << std::endl;
-            return rsp_msg.response(0).status().nw_handle();
+            return rsp_msg.response(0).status().key_or_handle().nw_handle();
         }
         std::cout << "Network create failed, error = "
                   << rsp_msg.response(0).api_status()
@@ -377,9 +377,9 @@ public:
         status = vrf_stub_->VrfGet(&context, req_msg, &rsp_msg);
         if (status.ok()) {
             std::cout << "Vrf get succeeded, handle = "
-                      << rsp_msg.response(0).status().vrf_handle()
+                      << rsp_msg.response(0).status().key_or_handle().vrf_handle()
                       << std::endl;
-            return rsp_msg.response(0).status().vrf_handle();
+            return rsp_msg.response(0).status().key_or_handle().vrf_handle();
         }
         std::cout << "Vrf get failed, error = "
                   << rsp_msg.response(0).api_status()
@@ -399,9 +399,9 @@ public:
         status = vrf_stub_->VrfGet(&context, req_msg, &rsp_msg);
         if (status.ok()) {
             std::cout << "Vrf get succeeded, handle = "
-                      << rsp_msg.response(0).status().vrf_handle()
+                      << rsp_msg.response(0).status().key_or_handle().vrf_handle()
                       << std::endl;
-            return rsp_msg.response(0).status().vrf_handle();
+            return rsp_msg.response(0).status().key_or_handle().vrf_handle();
         }
         std::cout << "Vrf get failed, error = "
                   << rsp_msg.response(0).api_status()
@@ -474,9 +474,9 @@ public:
         if (status.ok()) {
             assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
             std::cout << "L2 segment create succeeded, handle = "
-                      << rsp_msg.response(0).l2segment_status().l2segment_handle()
+                      << rsp_msg.response(0).l2segment_status().key_or_handle().l2segment_handle()
                       << std::endl;
-            return rsp_msg.response(0).l2segment_status().l2segment_handle();
+            return rsp_msg.response(0).l2segment_status().key_or_handle().l2segment_handle();
         }
         std::cout << "L2 segment create failed, error = "
                   << rsp_msg.response(0).api_status()

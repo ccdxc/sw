@@ -6,6 +6,7 @@ import "nat.proto";
 import "types.proto";
 
 package fwlog;
+option go_package="halproto";
 
 // Type of action on the flow while the log was generated
 enum FlowLogEventType {

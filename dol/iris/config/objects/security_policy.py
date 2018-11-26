@@ -119,13 +119,13 @@ class SecurityGroupPolicyObject(base.ConfigObjectBase):
         pl_id = haldefs.kh.SecurityPolicyKey()
         pl_id.security_policy_id = self.pol_id
         pl_id.vrf_id_or_handle.vrf_id = self.tenant.id
-        req_spec.policy_key_or_handle.security_policy_key.CopyFrom(pl_id)
+        req_spec.key_or_handle.security_policy_key.CopyFrom(pl_id)
         #print("Generate policy with key policy id:{} vrf id:{}", self.pol_id, self.tenant.id)
         self.sg_pair.PrepareHALRequestSpec(req_spec)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        self.hal_handle = resp_spec.policy_status.security_policy_handle
+        self.hal_handle = resp_spec.policy_status.key_or_handle.security_policy_handle
         logger.info(" - SecurityPolicy %s = %s (HDL = 0x%x)" %\
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),

@@ -229,7 +229,7 @@ nwsec_group_prepare_rsp(SecurityGroupResponse  *rsp,
                         hal_handle_t           hal_handle)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_status()->set_sg_handle(hal_handle);
+        rsp->mutable_status()->mutable_key_or_handle()->set_security_group_handle(hal_handle);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     return HAL_RET_OK;
@@ -1229,7 +1229,7 @@ nwsec_policy_prepare_rsp(nwsec::SecurityPolicyResponse *rsp,
                          hal_handle_t                   hal_handle)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_policy_status()->set_security_policy_handle(hal_handle);
+        rsp->mutable_policy_status()->mutable_key_or_handle()->set_security_policy_handle(hal_handle);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     return HAL_RET_OK;
@@ -1304,13 +1304,13 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
         goto end;
     }
 
-    nwsec_policy->key.policy_id = spec.policy_key_or_handle().security_policy_key().security_policy_id();
-    if (spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
-        nwsec_policy->key.vrf_id = spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().vrf_id();
+    nwsec_policy->key.policy_id = spec.key_or_handle().security_policy_key().security_policy_id();
+    if (spec.key_or_handle().security_policy_key().vrf_id_or_handle().key_or_handle_case() == kh::VrfKeyHandle::kVrfId) {
+        nwsec_policy->key.vrf_id = spec.key_or_handle().security_policy_key().vrf_id_or_handle().vrf_id();
     } else {
-        vrf_t *vrf = vrf_lookup_by_handle(spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().vrf_handle());
+        vrf_t *vrf = vrf_lookup_by_handle(spec.key_or_handle().security_policy_key().vrf_id_or_handle().vrf_handle());
         if (!vrf) {
-            HAL_TRACE_ERR("Invalid vrf handle {}", spec.policy_key_or_handle().security_policy_key().vrf_id_or_handle().vrf_handle());
+            HAL_TRACE_ERR("Invalid vrf handle {}", spec.key_or_handle().security_policy_key().vrf_id_or_handle().vrf_handle());
             nwsec_policy_free(nwsec_policy);
             ret = HAL_RET_HANDLE_INVALID;
             goto end;
@@ -1460,7 +1460,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
     dhl_entry_t                 dhl_entry = { 0 };
     nwsec_policy_upd_app_ctxt_t app_ctx = { 0 };
     const char                  *ctx_name = NULL;
-    SecurityPolicyKeyHandle kh = spec.policy_key_or_handle();
+    SecurityPolicyKeyHandle kh = spec.key_or_handle();
 
     HAL_TRACE_DEBUG("---------------------- API Start-------------------");
     nwsec_spec_dump(&spec);
@@ -1599,7 +1599,7 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
     dhl_entry_t      dhl_entry = { 0 };
     const char       *ctx_name = NULL;
     //const acl_ctx_t  *acl_ctx = NULL;
-    SecurityPolicyKeyHandle kh = req.policy_key_or_handle();
+    SecurityPolicyKeyHandle kh = req.key_or_handle();
 
     ret = validate_nwsec_policy_delete(req, res);
     if (ret != HAL_RET_OK) {
@@ -1679,8 +1679,8 @@ security_policy_spec_build (nwsec_policy_t               *policy,
 {
     hal_ret_t               ret = HAL_RET_OK;
 
-    spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(policy->key.policy_id);
-    spec->mutable_policy_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(policy->key.vrf_id);
+    spec->mutable_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(policy->key.policy_id);
+    spec->mutable_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(policy->key.vrf_id);
 
     const char *ctx_name = nwsec_acl_ctx_name(policy->key.vrf_id);
     rule_cfg_t *rcfg = rule_cfg_get(ctx_name);

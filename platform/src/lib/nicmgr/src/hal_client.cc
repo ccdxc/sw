@@ -84,8 +84,8 @@ HalClient::VrfProbe()
             if (rsp.api_status() == types::API_STATUS_OK) {
                 NIC_FUNC_INFO("Discovered, id {} handle {}",
                     rsp.spec().key_or_handle().vrf_id(),
-                    rsp.status().vrf_handle());
-                vrf_id2handle[rsp.spec().key_or_handle().vrf_id()] = rsp.status().vrf_handle();
+                    rsp.status().key_or_handle().vrf_handle());
+                vrf_id2handle[rsp.spec().key_or_handle().vrf_id()] = rsp.status().key_or_handle().vrf_handle();
             } else {
                 NIC_FUNC_ERR("API status {}", rsp.api_status());
                 err = -1;
@@ -120,7 +120,7 @@ HalClient::VrfGet(uint64_t vrf_id)
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() == types::API_STATUS_OK) {
-                vrf_handle = rsp.status().vrf_handle();
+                vrf_handle = rsp.status().key_or_handle().vrf_handle();
                 assert(rsp.spec().key_or_handle().vrf_id() == vrf_id);
                 NIC_FUNC_INFO("API status {}, id {} handle {}",
                     rsp.api_status(), vrf_id, vrf_handle);
@@ -161,9 +161,9 @@ HalClient::VrfCreate(uint64_t vrf_id)
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             NIC_FUNC_INFO("API status {}, id {} handle {}", vrf_id,
-                rsp.api_status(), rsp.vrf_status().vrf_handle());
-            vrf_id2handle[vrf_id] = rsp.vrf_status().vrf_handle();
-            return rsp.vrf_status().vrf_handle();
+                rsp.api_status(), rsp.vrf_status().key_or_handle().vrf_handle());
+            vrf_id2handle[vrf_id] = rsp.vrf_status().key_or_handle().vrf_handle();
+            return rsp.vrf_status().key_or_handle().vrf_handle();
         } else {
             NIC_FUNC_ERR("API status {}, id {}", rsp.api_status(), vrf_id);
         }
@@ -253,7 +253,7 @@ HalClient::L2SegmentProbe()
             rsp = rsp_msg.response(i);
             if (rsp.api_status() == types::API_STATUS_OK) {
                 if (rsp.spec().wire_encap().encap_type() == ENCAP_TYPE_DOT1Q) {
-                    l2seg_handle = rsp.status().l2segment_handle();
+                    l2seg_handle = rsp.status().key_or_handle().l2segment_handle();
                     l2seg_id = rsp.spec().key_or_handle().segment_id();
                     vlan_id = rsp.spec().wire_encap().encap_value();
                     NIC_FUNC_INFO("Discovered, id {} handle {} vlan {}",
@@ -294,7 +294,7 @@ HalClient::L2SegmentGet(uint64_t l2seg_id)
             rsp = rsp_msg.response(i);
             if (rsp.api_status() == types::API_STATUS_OK) {
                 if (rsp.spec().wire_encap().encap_type() == ENCAP_TYPE_DOT1Q) {
-                    l2seg_handle = rsp.status().l2segment_handle();
+                    l2seg_handle = rsp.status().key_or_handle().l2segment_handle();
                     l2seg_id = rsp.spec().key_or_handle().segment_id();
                     vlan_id = rsp.spec().wire_encap().encap_value();
                     NIC_FUNC_INFO("Discovered, id {} handle {} vlan {}",
@@ -342,7 +342,7 @@ HalClient::L2SegmentCreate(uint64_t vrf_id, uint64_t l2seg_id, uint16_t vlan_id)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            l2seg_handle = rsp.l2segment_status().l2segment_handle();
+            l2seg_handle = rsp.l2segment_status().key_or_handle().l2segment_handle();
             NIC_FUNC_INFO("API status {}, id {} handle {}",
                 rsp.api_status(), l2seg_id, l2seg_handle);
             l2seg_id2handle[l2seg_id] = l2seg_handle;
@@ -482,10 +482,10 @@ HalClient::EndpointProbe()
             if (rsp.api_status() == types::API_STATUS_OK) {
                 enic_id = rsp.spec().endpoint_attrs().interface_key_handle().interface_id();
                 NIC_FUNC_INFO("Discovered, handle {} enic id {} mac {:#x} l2seg id {}",
-                    rsp.status().endpoint_handle(), enic_id,
+                    rsp.status().key_or_handle().endpoint_handle(), enic_id,
                     rsp.spec().key_or_handle().endpoint_key().l2_key().mac_address(),
                     rsp.spec().key_or_handle().endpoint_key().l2_key().l2segment_key_handle().segment_id());
-                enic2ep_map[enic_id].push_back(rsp.status().endpoint_handle());
+                enic2ep_map[enic_id].push_back(rsp.status().key_or_handle().endpoint_handle());
             } else {
                 NIC_FUNC_ERR("API status {}", rsp.api_status());
                 err = -1;
@@ -525,8 +525,8 @@ HalClient::EndpointCreate(uint64_t vrf_id, uint64_t l2seg_id,
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             NIC_FUNC_INFO("succeeded, enic {} mac {:#x} l2seg id {} handle {}",
-                mac_addr, l2seg_id, rsp.endpoint_status().endpoint_handle());
-            return rsp.endpoint_status().endpoint_handle();
+                mac_addr, l2seg_id, rsp.endpoint_status().key_or_handle().endpoint_handle());
+            return rsp.endpoint_status().key_or_handle().endpoint_handle();
         } else {
             NIC_FUNC_ERR("API status {}", rsp.api_status());
         }

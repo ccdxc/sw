@@ -215,5 +215,5 @@ func nwSpecShowOneResp(resp *halproto.NetworkGetResponse) {
 
 func nwStatusShowOneResp(resp *halproto.NetworkGetResponse) {
 	status := resp.GetStatus()
-	fmt.Printf("%-15d\n", status.GetNwHandle())
+	fmt.Printf("%-15d\n", status.GetKeyOrHandle().GetNwHandle())
 }

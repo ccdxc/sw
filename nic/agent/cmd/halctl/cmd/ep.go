@@ -319,7 +319,7 @@ func epShowOneResp(resp *halproto.EndpointGetResponse) {
 	macStr := utils.MactoStr(resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetMacAddress())
 
 	fmt.Printf("%-12d%-12d%-24s%-10d%-10t%-5d%-10d%-20s\n",
-		resp.GetStatus().GetEndpointHandle(),
+		resp.GetStatus().GetKeyOrHandle().GetEndpointHandle(),
 		resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId(),
 		macStr,
 		resp.GetSpec().GetEndpointAttrs().GetInterfaceKeyHandle().GetInterfaceId(),
@@ -370,7 +370,7 @@ func epStatusShowOneResp(uplink uint64, resp *halproto.EndpointGetResponse) {
 	}
 
 	fmt.Printf("%-12d%-13d%-12d%-12s%-36s\n",
-		resp.GetStatus().GetEndpointHandle(),
+		resp.GetStatus().GetKeyOrHandle().GetEndpointHandle(),
 		uplink,
 		resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId(),
 		regMacTblStr,

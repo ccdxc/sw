@@ -78,7 +78,7 @@ HalL2Segment::HalL2Segment(HalVrf *vrf, uint16_t vlan)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            handle = rsp.l2segment_status().l2segment_handle();
+            handle = rsp.l2segment_status().key_or_handle().l2segment_handle();
             NIC_LOG_INFO("L2 segment create succeeded id: {}, handle: {}",
                             id, handle);
         } else {
@@ -198,7 +198,7 @@ HalL2Segment::TriggerHalUpdate()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            handle = rsp.l2segment_status().l2segment_handle();
+            handle = rsp.l2segment_status().key_or_handle().l2segment_handle();
             NIC_LOG_INFO("L2 segment update succeeded id: {}, handle: {}",
                             id, handle);
         } else {

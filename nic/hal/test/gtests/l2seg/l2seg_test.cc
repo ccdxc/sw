@@ -127,7 +127,7 @@ TEST_F(l2seg_test, test1)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create a lif
     lif_spec.mutable_key_or_handle()->set_lif_id(21);
@@ -291,7 +291,7 @@ TEST_F(l2seg_test, test2)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     pre = hal_test_utils_collect_slab_stats();
 
@@ -397,7 +397,7 @@ TEST_F(l2seg_test, test3)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create a lif
     lif_spec.mutable_key_or_handle()->set_lif_id(31);
@@ -532,7 +532,7 @@ TEST_F(l2seg_test, test4)
         ret = hal::network_create(nw_spec, &nw_rsp);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        nw_v4handles[i] = nw_rsp.mutable_status()->nw_handle();
+        nw_v4handles[i] = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
         // Create v6 network
         nw_spec_v6.set_rmac(0x0000DEADBEEF);
@@ -545,7 +545,7 @@ TEST_F(l2seg_test, test4)
         ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        nw_v6handles[i] = nw_rsp_v6.mutable_status()->nw_handle();
+        nw_v6handles[i] = nw_rsp_v6.mutable_status()->mutable_key_or_handle()->nw_handle();
     }
 
     // Create 10 l2segs
@@ -731,7 +731,7 @@ TEST_F(l2seg_test, test5)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
 
     // Create l2seg with network that doesnt exist
@@ -825,7 +825,7 @@ TEST_F(l2seg_test, test5)
     HAL_TRACE_DEBUG("ret: {}", ret);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->key_or_handle().l2segment_handle();
 
     // Create l2seg which already exists, this should be idempotent and return the old
     // handle
@@ -840,7 +840,7 @@ TEST_F(l2seg_test, test5)
     HAL_TRACE_DEBUG("ret: {}", ret);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ASSERT_TRUE(l2seg_hdl == l2seg_rsp.mutable_l2segment_status()->l2segment_handle());
+    ASSERT_TRUE(l2seg_hdl == l2seg_rsp.mutable_l2segment_status()->key_or_handle().l2segment_handle());
 
     // Create the max number of HAL_MAX_HW_L2SEGMENTS
     // Create l2seg resulting in no resource

@@ -304,7 +304,7 @@ network_prepare_rsp (NetworkResponse *rsp, hal_ret_t ret,
                      hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_status()->set_nw_handle(hal_handle);
+        rsp->mutable_status()->mutable_key_or_handle()->set_nw_handle(hal_handle);
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));
@@ -1093,7 +1093,7 @@ network_process_get (network_t *nw, NetworkGetResponse *response)
     ip_pfx_to_spec(response->mutable_spec()->mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix(), &nw->nw_key.ip_pfx);
     ip_addr_to_spec(response->mutable_spec()->mutable_gateway_ip(), &nw->gw_ip);
     response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
-    response->mutable_status()->set_nw_handle(nw->hal_handle);
+    response->mutable_status()->mutable_key_or_handle()->set_nw_handle(nw->hal_handle);
 
     return HAL_RET_OK;
 }
@@ -1114,7 +1114,7 @@ network_get_ht_cb (void *ht_entry, void *ctxt)
         nw_key->mutable_vrf_key_handle()->set_vrf_id(nw->nw_key.vrf_id);
         ip_pfx_to_spec(nw_key->mutable_ip_prefix(), &nw->nw_key.ip_pfx);
         rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
-        rsp->mutable_status()->set_nw_handle(nw->hal_handle);
+        rsp->mutable_status()->mutable_key_or_handle()->set_nw_handle(nw->hal_handle);
         rsp->set_api_status(types::API_STATUS_OK);
     }
 
@@ -1597,7 +1597,7 @@ nw_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 hal_ret_t
 nw_init_from_status (network_t *nw, const NetworkStatus& status)
 {
-    nw->hal_handle = status.nw_handle();
+    nw->hal_handle = status.key_or_handle().nw_handle();
     return HAL_RET_OK;
 }
 

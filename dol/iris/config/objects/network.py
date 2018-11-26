@@ -103,7 +103,7 @@ class NetworkObject(base.ConfigObjectBase):
     def ProcessHALResponse(self, req_spec, resp_spec):
         logger.info("- Network %s = %s" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
-        self.hal_handle = resp_spec.status.nw_handle
+        self.hal_handle = resp_spec.status.key_or_handle.nw_handle
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):

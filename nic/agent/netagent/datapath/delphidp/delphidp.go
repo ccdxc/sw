@@ -5,7 +5,7 @@ package delphidp
 import (
 	"sync"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/goproto"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/delphidp/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -47,13 +47,13 @@ func NewDelphiDatapath() (*DelphiDatapath, error) {
 	dp.delphiClient = cl
 
 	// mount objects
-	goproto.InterfaceSpecMount(cl, delphi.MountMode_ReadWriteMode)
-	goproto.InterfaceStatusMount(cl, delphi.MountMode_ReadMode)
-	goproto.LifSpecMount(cl, delphi.MountMode_ReadWriteMode)
-	goproto.LifStatusMount(cl, delphi.MountMode_ReadMode)
+	halproto.InterfaceSpecMount(cl, delphi.MountMode_ReadWriteMode)
+	halproto.InterfaceStatusMount(cl, delphi.MountMode_ReadMode)
+	halproto.LifSpecMount(cl, delphi.MountMode_ReadWriteMode)
+	halproto.LifStatusMount(cl, delphi.MountMode_ReadMode)
 
 	// setup watches
-	goproto.InterfaceStatusWatch(cl, &dp)
+	halproto.InterfaceStatusWatch(cl, &dp)
 
 	// connect to delphi hub
 	go cl.Run()

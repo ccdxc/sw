@@ -12,6 +12,7 @@ syntax = "proto3";
 import "types.proto";
 import "kh.proto";
 import "eplearn.proto";
+import "delphi.proto";
 
 package endpoint;
 option go_package="halproto";
@@ -51,9 +52,12 @@ message EndpointAttributes {
 
 // EndpointSpec is used to add or update an endpoint
 message EndpointSpec {
-    kh.EndpointKeyHandle    key_or_handle     = 1 [(gogoproto.moretags) = "venice:key"];
-    kh.VrfKeyHandle         vrf_key_handle    = 2 [(gogoproto.moretags) = "venice:ref"];
-    EndpointAttributes      endpoint_attrs    = 3;    // endpoint's attributes
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta       Meta              = 1;
+
+    kh.EndpointKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:key"];
+    kh.VrfKeyHandle         vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
+    EndpointAttributes      endpoint_attrs    = 4;    // endpoint's attributes
 }
 
 // EndpointRequestMsg is batched add or modify endpoint request
@@ -83,14 +87,17 @@ message EndpointStatusCpd {
 // EndpointStatus has the current status of an endpoint
 // TODO: capturing aging information, if any
 message EndpointStatus {
-  fixed64                         endpoint_handle                  = 1;    // id of endpoint returned by HAL
-  kh.InterfaceKeyHandle           enic_pinned_uplink_if_key_handle = 2 [(gogoproto.moretags) = "venice:ref"]; // uplink this enic is pinned to
-  repeated EndpointIpAddress      ip_address                       = 3;    // IP addresses learnt, if any
-  bool                            is_endpoint_local                = 4;    // TRUE if endpoint is local
-  bool							  learn_source_config              = 5;    // TRUE if ep entry was created by config.
+  option (delphi.update_event) = true;
+  delphi.ObjectMeta               Meta                             = 1;
+
+  kh.EndpointKeyHandle            key_or_handle                    = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.InterfaceKeyHandle           enic_pinned_uplink_if_key_handle = 3 [(gogoproto.moretags) = "venice:ref"]; // uplink this enic is pinned to
+  repeated EndpointIpAddress      ip_address                       = 4;    // IP addresses learnt, if any
+  bool                            is_endpoint_local                = 5;    // TRUE if endpoint is local
+  bool                            learn_source_config              = 6;    // TRUE if ep entry was created by config.
   oneof ep_pd_status {
-      EndpointStatusEpd  epd_status                                = 6;    // Endpoint oper state for enterprise pipeline
-      EndpointStatusCpd  cpd_status                                = 7;    // Endpoint oper state for cloud pipeline
+      EndpointStatusEpd  epd_status                                = 7;    // Endpoint oper state for enterprise pipeline
+      EndpointStatusCpd  cpd_status                                = 8;    // Endpoint oper state for cloud pipeline
   }
 }
 

@@ -132,7 +132,7 @@ protected:
         ret = hal::network_create(nw_spec, &nw_rsp);
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
-        uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+        uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
         // Create an l2seg
         l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(VRF_ID1);

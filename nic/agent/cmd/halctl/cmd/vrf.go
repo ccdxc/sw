@@ -249,7 +249,7 @@ func vrfShowHeader() {
 func vrfShowOneResp(resp *halproto.VrfGetResponse) {
 	fmt.Printf("%-10d%-10d%-10s%-10d%-10d%-10d%-10d%-7d\n",
 		resp.GetSpec().GetKeyOrHandle().GetVrfId(),
-		resp.GetStatus().GetVrfHandle(),
+		resp.GetStatus().GetKeyOrHandle().GetVrfHandle(),
 		utils.VrfTypeToStr(resp.GetSpec().GetVrfType()),
 		resp.GetStats().GetNumL2Segments(),
 		resp.GetStats().GetNumSecurityGroups(),
@@ -314,7 +314,7 @@ func vrfEPdShowOneResp(resp *halproto.VrfGetResponse) {
 	epdStatus := resp.GetStatus().GetEpdStatus()
 	fmt.Printf("%-10d%-10d%-10s%-10d%-11d%-10d%-10d%-10s%-10s\n",
 		resp.GetSpec().GetKeyOrHandle().GetVrfId(),
-		resp.GetStatus().GetVrfHandle(),
+		resp.GetStatus().GetKeyOrHandle().GetVrfHandle(),
 		utils.VrfTypeToStr(resp.GetSpec().GetVrfType()),
 		epdStatus.GetHwVrfId(),
 		epdStatus.GetVrfLookupId(),

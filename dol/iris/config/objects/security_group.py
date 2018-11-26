@@ -79,7 +79,7 @@ class SecurityGroupObject(base.ConfigObjectBase):
     def ProcessHALResponse(self, req_spec, resp_spec):
         logger.info("- SecurityGroup %s = %s" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
-        self.hal_handle = resp_spec.status.sg_handle
+        self.hal_handle = resp_spec.status.key_or_handle.security_group_handle
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):

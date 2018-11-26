@@ -45,4 +45,5 @@ test-only:
 			exit 1; \
 		 fi; \
 	done
-
+	@echo "============= Running go test ========================"; \
+	go test github.com/pensando/sw/nic/delphi/...  -count 1 -v

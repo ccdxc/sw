@@ -307,7 +307,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t vrf2_handle = ten_rsp.mutable_vrf_status()->vrf_handle();
+    uint64_t vrf2_handle = ten_rsp.mutable_vrf_status()->mutable_key_or_handle()->vrf_handle();
 
     // Create network
     nw_spec.set_rmac(0x0000EEFF0002);
@@ -319,7 +319,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     nw_spec1.set_rmac(0x0000EEFF0003);
     nw_spec1.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(24);
@@ -330,7 +330,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     nw_spec.set_rmac(0x0000EEFF0008);
     nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(24);
@@ -341,7 +341,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     nw_spec1.set_rmac(0x0000EEFF0009);
     nw_spec1.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(24);
@@ -352,7 +352,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
+    nw_hdl1 = nw_rsp1.mutable_status()->mutable_key_or_handle()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
@@ -365,7 +365,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->mutable_key_or_handle()->l2segment_handle();
 
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     nkh = l2seg_spec.add_network_key_handle();
@@ -389,7 +389,7 @@ TEST_F(ipsec_encrypt_test, test1)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->mutable_key_or_handle()->l2segment_handle();
 
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nkh = l2seg_spec.add_network_key_handle();
