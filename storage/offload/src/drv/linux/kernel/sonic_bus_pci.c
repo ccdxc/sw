@@ -72,14 +72,14 @@ int sonic_bus_alloc_irq_vectors(struct sonic *sonic, unsigned int nintrs)
 	int avail, ret;
 
 	avail = pci_msix_count(sonic->pdev->dev.bsddev);
-	dev_err(sonic->dev, "count nintrs %u avail %u\n", nintrs, avail);
+	OSAL_LOG_INFO("count nintrs %u avail %u\n", nintrs, avail);
 	if (avail < nintrs)
 		return -EINVAL;
 
 	avail = nintrs;
 
 	ret = -pci_alloc_msix(sonic->pdev->dev.bsddev, &avail);
-	dev_err(sonic->dev, "try alloc nintrs %u avail %u ret %u\n", nintrs, avail, ret);
+	OSAL_LOG_INFO("try alloc nintrs %u avail %u ret %u\n", nintrs, avail, ret);
 	if (ret)
 		return ret;
 
@@ -98,7 +98,6 @@ void sonic_bus_free_irq_vectors(struct sonic *sonic)
 static int sonic_map_bars(struct sonic *sonic)
 {
 	struct pci_dev *pdev = sonic->pdev;
-	struct device *dev = sonic->dev;
 	struct sonic_dev_bar *bars = sonic->bars;
 	unsigned int i, j;
 
@@ -114,7 +113,7 @@ static int sonic_map_bars(struct sonic *sonic)
 		bars[j].vaddr = ioremap(bars[j].bus_addr, bars[j].len);
 #endif
 		if (!bars[j].vaddr) {
-			dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
+			OSAL_LOG_ERROR( "Cannot memory-map BAR %d, aborting\n", j);
 			return -ENODEV;
 		}
 		sonic->num_bars++;
@@ -150,13 +149,13 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_set_dma_mask(sonic);
 	if (err) {
-		dev_err(dev, "Cannot set DMA mask, aborting\n");
+		OSAL_LOG_ERROR( "Cannot set DMA mask, aborting\n");
 		return err;
 	}
 
 	err = sonic_debugfs_add_dev(sonic);
 	if (err) {
-		dev_err(dev, "Cannot add device debugfs, aborting\n");
+		OSAL_LOG_ERROR( "Cannot add device debugfs, aborting\n");
 		return err;
 	}
 
@@ -166,13 +165,13 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	err = pci_enable_device_mem(pdev);
 #endif
 	if (err) {
-		dev_err(dev, "Cannot enable PCI device, aborting\n");
+		OSAL_LOG_ERROR( "Cannot enable PCI device, aborting\n");
 		goto err_out_debugfs_del_dev;
 	}
 
 	err = pci_request_regions(pdev, DRV_NAME);
 	if (err) {
-		dev_err(dev, "Cannot request PCI regions, aborting\n");
+		OSAL_LOG_ERROR( "Cannot request PCI regions, aborting\n");
 		goto err_out_disable_device;
 	}
 
@@ -187,23 +186,23 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_setup(sonic);
 	if (err) {
-		dev_err(dev, "Cannot setup device, aborting\n");
+		OSAL_LOG_ERROR( "Cannot setup device, aborting\n");
 		goto err_out_unmap_bars;
 	}
 
 	err = sonic_reset(sonic);
 	if (err) {
-		dev_err(dev, "Cannot reset device, aborting\n");
+		OSAL_LOG_ERROR( "Cannot reset device, aborting\n");
 		goto err_out_unmap_bars;
 	}
 
 	err = sonic_identify(sonic);
 	if (err) {
-		dev_err(dev, "Cannot identify device, aborting\n");
+		OSAL_LOG_ERROR( "Cannot identify device, aborting\n");
 		goto err_out_unmap_bars;
 	}
 
-	dev_info(dev, "ASIC %s rev 0x%X serial num %s fw version %s\n",
+	OSAL_LOG_INFO("ASIC %s rev 0x%X serial num %s fw version %s\n",
 		 sonic_dev_asic_name(sonic->ident->dev.asic_type),
 		 sonic->ident->dev.asic_rev, sonic->ident->dev.serial_num,
 		 sonic->ident->dev.fw_version);
@@ -213,25 +212,25 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_lifs_size(sonic);
 	if (err) {
-		dev_err(dev, "Cannot size LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR( "Cannot size LIFs, aborting, err=%d\n", err);
 		goto err_out_forget_identity;
 	}
 
 	err = sonic_lifs_alloc(sonic);
 	if (err) {
-		dev_err(dev, "Cannot allocate LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR( "Cannot allocate LIFs, aborting, err=%d\n", err);
 		goto err_out_free_lifs;
 	}
 
 	err = sonic_lifs_init(sonic);
 	if (err) {
-		dev_err(dev, "Cannot init LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR( "Cannot init LIFs, aborting, err=%d\n", err);
 		goto err_out_deinit_lifs;
 	}
 
 	err = sonic_lifs_register(sonic);
 	if (err) {
-		dev_err(dev, "Cannot register LIFs, aborting, err=%d\n", err);
+		OSAL_LOG_ERROR( "Cannot register LIFs, aborting, err=%d\n", err);
 		goto err_out_deinit_lifs;
 	}
 
@@ -288,7 +287,7 @@ static int sonic_sriov_configure(struct pci_dev *pdev, int numvfs)
 	if (numvfs > 0) {
 		err = pci_enable_sriov(pdev, numvfs);
 		if (err) {
-			dev_err(&pdev->dev, "Cannot enable SRIOV, err=%d\n",
+			OSAL_LOG_ERROR( "Cannot enable SRIOV, err=%d\n",
 				err);
 			return err;
 		}

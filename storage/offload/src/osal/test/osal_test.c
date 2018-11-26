@@ -562,7 +562,7 @@ finit:
 static int
 test_init(void)
 {
-	return osal_log_init(OSAL_LOG_LEVEL_DEBUG);
+	return osal_log_init(OSAL_LOG_LEVEL_DEBUG, "sonic");
 }
 
 static int

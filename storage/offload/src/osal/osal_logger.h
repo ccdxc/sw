@@ -33,6 +33,8 @@ enum osal_log_level {
 };
 
 extern enum osal_log_level g_osal_log_level;
+#define PREFIX_STR_LEN 16
+extern char g_osal_log_prefix[PREFIX_STR_LEN];
 
 #ifndef __KERNEL__
 #define USPACE_LOG(log_fp, level, format, ...)				\
@@ -67,29 +69,29 @@ extern enum osal_log_level g_osal_log_level;
 		printk(__VA_ARGS__)
 
 #define OSAL_LOG_EMERG(fmt, ...)					\
-	KSPACE_LOG(OSAL_LOG_LEVEL_EMERGENCY, KERN_EMERG "%30s:%d:> " fmt, \
-			__func__, __LINE__, ##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_EMERGENCY, KERN_EMERG "%s:%30s:%d:> " fmt, \
+			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_ALERT(fmt, ...)					\
-	KSPACE_LOG(OSAL_LOG_LEVEL_ALERT, KERN_ALERT "%30s:%d:> " fmt, \
-			__func__, __LINE__, ##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_ALERT, KERN_ALERT "%s:%30s:%d:> " fmt, \
+			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_CRITICAL(fmt, ...)					\
-	KSPACE_LOG(OSAL_LOG_LEVEL_CRITICAL, KERN_CRIT "%30s:%d:> " fmt, \
-			__func__, __LINE__, ##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_CRITICAL, KERN_CRIT "%s:%30s:%d:> " fmt, \
+			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_ERROR(fmt, ...)					\
-	KSPACE_LOG(OSAL_LOG_LEVEL_ERROR, KERN_ERR "%30s:%d:> " fmt, \
-			__func__, __LINE__, ##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_ERROR, KERN_ERR "%s:%30s:%d:> " fmt, \
+			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_WARN(fmt, ...)						\
-	KSPACE_LOG(OSAL_LOG_LEVEL_WARNING, KERN_WARNING "%30s:%d:> " fmt, \
-			__func__, __LINE__, ##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_WARNING, KERN_WARNING "%s:%30s:%d:> " fmt, \
+			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_NOTICE(fmt, ...)					\
-	KSPACE_LOG(OSAL_LOG_LEVEL_NOTICE, KERN_NOTICE "%30s:%d:> " fmt, \
-			__func__, __LINE__, ##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_NOTICE, KERN_NOTICE "%s:%30s:%d:> " fmt, \
+			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_INFO(fmt, ...)					\
-	KSPACE_LOG(OSAL_LOG_LEVEL_INFO, KERN_INFO "%30s:%d:> " fmt, \
-			__func__, __LINE__, ##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_INFO, KERN_INFO "%s:%30s:%d:> " fmt, \
+			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG_DEBUG(fmt, ...)					\
-	KSPACE_LOG(OSAL_LOG_LEVEL_DEBUG, KERN_DEBUG "%30s:%d:> " fmt, \
-			__func__, __LINE__, ##__VA_ARGS__)
+	KSPACE_LOG(OSAL_LOG_LEVEL_DEBUG, KERN_DEBUG "%s:%30s:%d:> " fmt, \
+			g_osal_log_prefix, __func__, __LINE__, ##__VA_ARGS__)
 #define OSAL_LOG printk
 #endif
 
@@ -106,7 +108,7 @@ extern enum osal_log_level g_osal_log_level;
  *	-EINVAL	- if invalid log level is specified
  *
  */
-pnso_error_t osal_log_init(const enum osal_log_level level);
+pnso_error_t osal_log_init(const enum osal_log_level level, const char* prefix);
 
 /**
  * osal_log_deinit() - uninitializes the log library.

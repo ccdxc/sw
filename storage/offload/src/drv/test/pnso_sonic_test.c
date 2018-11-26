@@ -1826,7 +1826,7 @@ body(void)
 	struct req_state *rstate;
 	struct pnso_init_params init_params;
 
-	osal_log_init(OSAL_LOG_LEVEL_DEBUG);
+	osal_log_init(OSAL_LOG_LEVEL_DEBUG, "sonic");
 
 	/* Initialize session */
 	memset(&init_params, 0, sizeof(init_params));
@@ -1911,7 +1911,7 @@ test_init(void)
 {
 	int err;
 
-	err = osal_log_init(OSAL_LOG_LEVEL_DEBUG);
+	err = osal_log_init(OSAL_LOG_LEVEL_DEBUG, "sonic");
 
 	return err;
 }

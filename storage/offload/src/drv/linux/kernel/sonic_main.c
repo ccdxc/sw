@@ -81,7 +81,7 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 		while ((cmd++)->cmd)
 			if (cmd->cmd == ctx->cmd.cmd.opcode)
 				name = cmd->name;
-		dev_err(lif->sonic->dev, "(%d) %s failed: %d\n",
+		OSAL_LOG_ERROR("(%d) %s failed: %d\n",
 			ctx->cmd.cmd.opcode, name, ctx->comp.cpl.status);
 		return -EIO;
 	}
@@ -142,7 +142,7 @@ static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_wait)
 		done = sonic_dev_cmd_done(idev);
 #ifdef HAPS
 		if (done)
-			printk(KERN_ERR "DEVCMD done took %ld secs (%ld jiffies)\n",
+			OSAL_LOG_INFO("DEVCMD done took %ld secs (%ld jiffies)\n",
 			       (jiffies + max_wait - time)/HZ,
 			       jiffies + max_wait - time);
 #endif
@@ -156,7 +156,7 @@ static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_wait)
 	} while (time_after(time, jiffies));
 
 #ifdef HAPS
-	printk(KERN_ERR "DEVCMD timeout after %ld secs\n", max_wait/HZ);
+	OSAL_LOG_ERROR("DEVCMD timeout after %ld secs\n", max_wait/HZ);
 #endif
 	return -ETIMEDOUT;
 }
@@ -194,13 +194,13 @@ int sonic_set_dma_mask(struct sonic *sonic)
 
 	err = dma_set_mask(dev, DMA_BIT_MASK(64));
 	if (err) {
-		dev_err(dev, "No usable 64-bit DMA configuration, aborting\n");
+		OSAL_LOG_ERROR("No usable 64-bit DMA configuration, aborting\n");
 		return err;
 	}
 
 	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(64));
 	if (err)
-		dev_err(dev, "Unable to obtain 64-bit DMA for consistent allocations, aborting\n");
+		OSAL_LOG_ERROR("Unable to obtain 64-bit DMA for consistent allocations, aborting\n");
 
 	return err;
 }
@@ -274,13 +274,17 @@ static void sonic_dev_cmd_work(struct work_struct *work)
 	list_del(&ctx->list);
 	spin_unlock_irqrestore(&sonic->cmd_lock, irqflags);
 
-	dev_dbg(sonic->dev, "post admin dev command:\n");
-	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-			     &ctx->cmd, sizeof(ctx->cmd), true);
+	OSAL_LOG_DEBUG("post admin dev command:\n");
+	if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+		print_hex_dump_debug("sonic: cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+						 &ctx->cmd, sizeof(ctx->cmd), true);
+	}
 
 	if (ctx->side_data) {
-		dynamic_hex_dump("data ", DUMP_PREFIX_OFFSET, 16, 1,
-				 ctx->side_data, ctx->side_data_len, true);
+		if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+			dynamic_hex_dump("sonic: data ", DUMP_PREFIX_OFFSET, 16, 1,
+					 ctx->side_data, ctx->side_data_len, true);
+		}
 
 		err = SBD_put(&sonic->idev, ctx->side_data, ctx->side_data_len);
 		if (err)
@@ -301,9 +305,11 @@ static void sonic_dev_cmd_work(struct work_struct *work)
 			goto err_out;
 	}
 
-	dev_dbg(sonic->dev, "comp admin dev command:\n");
-	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
-			     &ctx->comp, sizeof(ctx->comp), true);
+	OSAL_LOG_DEBUG("comp admin dev command:\n");
+	if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+		print_hex_dump_debug("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
+						 &ctx->comp, sizeof(ctx->comp), true);
+	}
 
 err_out:
 	if (WARN_ON(err))
@@ -428,7 +434,7 @@ static int __init sonic_init_module(void)
 {
 	int err;
 
-	osal_log_init(log_level);
+	osal_log_init(log_level, "sonic");
 	if (core_count <= 0)
 		core_count = 1;
 	else if (core_count > SONIC_MAX_CORES)
@@ -468,22 +474,22 @@ static void sonic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 		OSAL_LOG_ERROR("cpl_index  %u comp 0x" PRIx64 " desc_info_index %u desc_info 0x" PRIx64, 
 				comp->cpl_index, (uint64_t)comp, desc_info->index, (uint64_t)desc_info); 
 		ctx->comp.cpl.status = -1;
-		dynamic_hex_dump("desc ", DUMP_PREFIX_OFFSET, 16, 1,
+		dynamic_hex_dump("sonic: desc ", DUMP_PREFIX_OFFSET, 16, 1,
 			desc_info, sizeof(*desc_info), true); 
-		dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+		dynamic_hex_dump("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			comp, sizeof(*comp), true); 
-		dynamic_hex_dump("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+		dynamic_hex_dump("sonic: cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			&ctx->cmd, sizeof(ctx->cmd), true); 
 		return;
 	}
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
-#ifndef __FreeBSD__
-	dev_dbg(dev, "comp admin queue command:\n");
-#endif
-	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
-			&ctx->comp, sizeof(ctx->comp), true); 
+	OSAL_LOG_DEBUG("comp admin queue command:\n");
+	if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+		dynamic_hex_dump("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
+				&ctx->comp, sizeof(ctx->comp), true); 
+	}
 
 	complete_all(&ctx->work);
 }
@@ -505,9 +511,11 @@ int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx)
 
 	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
 
-	dev_dbg(lif->sonic->dev, "post admin queue command:\n");
-	dynamic_hex_dump("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-			 &ctx->cmd, sizeof(ctx->cmd), true);
+	OSAL_LOG_DEBUG("post admin queue command:\n");
+	if(g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
+		dynamic_hex_dump("sonic: cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+				 &ctx->cmd, sizeof(ctx->cmd), true);
+	}
 
 	sonic_q_post(adminq, true, sonic_api_adminq_cb, ctx);
 
@@ -564,9 +572,9 @@ int sonic_crypto_key_index_update(const void *key1,
 		},
 	};
 
-	dev_info(lif->sonic->dev, "crypto_key_update.key_index %u\n",
+	OSAL_LOG_INFO("crypto_key_update.key_index %u\n",
 		 ctx0.cmd.crypto_key_update.key_index);
-	dev_info(lif->sonic->dev, "crypto_key_update.key_size %u\n",
+	OSAL_LOG_INFO("crypto_key_update.key_size %u\n",
 		 ctx0.cmd.crypto_key_update.key_size);
 
 	switch (key_size) {
@@ -582,7 +590,7 @@ int sonic_crypto_key_index_update(const void *key1,
 		break;
 
 	default:
-		dev_err(lif->sonic->dev, "invalid key_size %u\n",
+		OSAL_LOG_ERROR("invalid key_size %u\n",
 			ctx0.cmd.crypto_key_update.key_size);
 		return EINVAL;
 	}

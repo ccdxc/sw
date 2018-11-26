@@ -546,7 +546,7 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 
 	ring = &res->lif->sonic->ident->dev.accel_ring_tbl[ring_id];
 
-	dev_dbg(res->lif->sonic->dev, "get_seq_q_desc_count: hw ring %u: size=%u, desc_size=%u.\n",
+	OSAL_LOG_DEBUG("get_seq_q_desc_count: hw ring %u: size=%u, desc_size=%u.\n",
 		ring_id, ring->ring_size, ring->ring_desc_size);
 
 	*desc_count = rounddown_pow_of_two(ring->ring_size /
@@ -558,12 +558,12 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 		*desc_count = MAX_PER_QUEUE_SQ_ENTRIES;
 
 	if (*desc_count == 0) {
-		dev_err(res->lif->sonic->dev, "No descs available for hw ring %d, ring_size=%u.\n",
+		OSAL_LOG_ERROR("No descs available for hw ring %d, ring_size=%u.\n",
 			ring_id, ring->ring_size);
 		goto done;
 	}
 
-	dev_info(res->lif->sonic->dev, "get_seq_q_desc_count: hw ring %u: q_entries_per_core=%u.\n",
+	OSAL_LOG_INFO("get_seq_q_desc_count: hw ring %u: q_entries_per_core=%u.\n",
 		 ring_id, *desc_count);
 
 	err = 0;
@@ -579,7 +579,6 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	int i;
 	uint32_t status_q_count;
 	uint32_t desc_count;
-	struct device *dev = res->lif->sonic->dev;
 
 	if (q_count < 4)
 		return -EINVAL;
@@ -598,7 +597,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	err = sonic_cpdc_q_init(res, &res->cp_seq_q, 0, STORAGE_SEQ_QGROUP_CPDC,
 				desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
-		dev_err(dev, "sonic_cpdc_q_init failed for CP, err=%d\n", err);
+		OSAL_LOG_ERROR("sonic_cpdc_q_init failed for CP, err=%d\n", err);
 		goto done;
 	}
 
@@ -610,7 +609,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	err = sonic_cpdc_q_init(res, &res->dc_seq_q, 0, STORAGE_SEQ_QGROUP_CPDC,
 				desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
-		dev_err(dev, "sonic_cpdc_q_init failed for DC, err=%d\n", err);
+		OSAL_LOG_ERROR("sonic_cpdc_q_init failed for DC, err=%d\n", err);
 		goto done;
 	}
 
@@ -621,7 +620,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 					MAX_PER_QUEUE_STATUS_ENTRIES,
 					SONIC_SEQ_STATUS_Q_DESC_SIZE);
 		if (err) {
-			dev_err(dev, "sonic_cpdc_q_init failed for CPDC status queue %d, err=%d\n",
+			OSAL_LOG_ERROR("sonic_cpdc_q_init failed for CPDC status queue %d, err=%d\n",
 				i, err);
 			goto done;
 		}
@@ -758,7 +757,7 @@ sonic_lif_per_core_resources_init(struct lif *lif)
 	int i;
 	int q_count = lif->sonic->ident->dev.seq_queues_per_lif;
 
-	dev_info(lif->sonic->dev, "Init per-core-resources, %u seq_queues_per_lif, %u num_per_core_resources.\n",
+	OSAL_LOG_INFO("Init per-core-resources, %u seq_queues_per_lif, %u num_per_core_resources.\n",
 		 lif->sonic->ident->dev.seq_queues_per_lif,
 		 lif->sonic->num_per_core_resources);
 
@@ -1109,11 +1108,11 @@ static int sonic_lif_seq_q_init(struct queue *q)
 	};
 	int err;
 
-	dev_info(lif->sonic->dev, "seq_q_init.pid %d\n", ctx.cmd.seq_queue_init.pid);
-	dev_info(lif->sonic->dev, "seq_q_init.index %d\n", ctx.cmd.seq_queue_init.index);
-	dev_info(lif->sonic->dev, "seq_q_init.wring_base 0x" PRIx64 "\n",
+	OSAL_LOG_INFO("seq_q_init.pid %d\n", ctx.cmd.seq_queue_init.pid);
+	OSAL_LOG_INFO("seq_q_init.index %d\n", ctx.cmd.seq_queue_init.index);
+	OSAL_LOG_INFO("seq_q_init.wring_base 0x" PRIx64 "\n",
 		   ctx.cmd.seq_queue_init.wring_base);
-	dev_info(lif->sonic->dev, "seq_q_init.wring_size %d\n",
+	OSAL_LOG_INFO("seq_q_init.wring_size %d\n",
 		   ctx.cmd.seq_queue_init.wring_size);
 
 	err = sonic_adminq_post_wait(lif, &ctx);
@@ -1129,9 +1128,9 @@ static int sonic_lif_seq_q_init(struct queue *q)
 
 	//q->flags |= QCQ_F_INITED;
 
-	dev_info(lif->sonic->dev, "seq_q->qid %d\n", q->qid);
-	dev_info(lif->sonic->dev, "seq_q->qtype %d\n", q->qtype);
-	dev_info(lif->sonic->dev, "seq_q->db " PRIx64 "\n", (u64) q->db);
+	OSAL_LOG_INFO("seq_q->qid %d\n", q->qid);
+	OSAL_LOG_INFO("seq_q->qtype %d\n", q->qtype);
+	OSAL_LOG_INFO("seq_q->db " PRIx64 "\n", (u64) q->db);
 	// err = sonic_debugfs_add_q(lif, q);
 	return err;
 }
@@ -1219,18 +1218,18 @@ sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
 	BUG_ON(opcode != CMD_OPCODE_SEQ_QUEUE_ENABLE &&
 	       opcode != CMD_OPCODE_SEQ_QUEUE_DISABLE);
 
-	dev_info(lif->sonic->dev, "seq_q_control.qid %d\n",
+	OSAL_LOG_INFO("seq_q_control.qid %d\n",
 			ctx.cmd.seq_queue_control.qid);
-	dev_info(lif->sonic->dev, "seq_q_control.opcode %d\n",
+	OSAL_LOG_INFO("seq_q_control.opcode %d\n",
 			ctx.cmd.seq_queue_control.opcode);
 
 	err = sonic_adminq_post_wait(lif, &ctx);
 	if (err) {
-		dev_info(lif->sonic->dev, "seq_q_control failed\n");
+		OSAL_LOG_INFO("seq_q_control failed\n");
 		return err;
 	}
 
-	dev_info(lif->sonic->dev, "seq_q_control successful\n");
+	OSAL_LOG_INFO("seq_q_control successful\n");
 
 	return err;
 }
@@ -1294,15 +1293,15 @@ sonic_lif_hang_notify(struct lif *lif)
 	};
 	int err;
 
-	dev_info(lif->sonic->dev, "hang_notify query\n");
+	OSAL_LOG_INFO "hang_notify query\n");
 
 	err = sonic_adminq_post_wait(lif, &ctx);
 	if (err) {
-		dev_info(lif->sonic->dev, "hang_notify query failed\n");
+		OSAL_LOG_INFO "hang_notify query failed\n");
 		return err;
 	}
 
-	dev_info(lif->sonic->dev, "hang_notify query successful, status %u\n",
+	OSAL_LOG_INFO "hang_notify query successful, status %u\n",
 		 ctx.comp.hang_notify.status);
 	err = ctx.comp.hang_notify.status ? -EFAULT : 0; /* TODO */
 

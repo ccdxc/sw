@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 	char filename[256];
 	char last_opt = '\0';
 
-	osal_log_init(OSAL_LOG_LEVEL_NOTICE);
+	osal_log_init(OSAL_LOG_LEVEL_NOTICE, "pencake");
 	pnso_test_init_fns(pnso_submit_request, status_output_func,
 			   osal_alloc, osal_free, osal_realloc);
 
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 				break;
 			case 'v':
 				/* verbose */
-				osal_log_init(OSAL_LOG_LEVEL_DEBUG);
+				osal_log_init(OSAL_LOG_LEVEL_DEBUG, "pencake");
 				break;
 			default:
 				PNSO_LOG_ERROR("Unsupported parameter %s\n", arg);

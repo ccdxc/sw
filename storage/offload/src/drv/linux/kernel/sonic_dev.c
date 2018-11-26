@@ -51,7 +51,7 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 	 */
 
 	if (num_bars < 1 || bar->len != BAR0_SIZE) {
-		printk(KERN_ERR "Bar size mismatch exp %d actual %ld", BAR0_SIZE, bar->len);
+		OSAL_LOG_ERROR("Bar size mismatch exp %d actual %ld", BAR0_SIZE, bar->len);
 		return -EFAULT;
 	}
 
@@ -65,7 +65,7 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 
 	sig = ioread32(&idev->dev_cmd->signature);
 	if (sig != DEV_CMD_SIGNATURE) {
-		printk(KERN_ERR "Dev cmd Sig mismatch exp %u actual %u", DEV_CMD_SIGNATURE, sig);
+		OSAL_LOG_ERROR("Dev cmd Sig mismatch exp %u actual %u", DEV_CMD_SIGNATURE, sig);
 		return -EFAULT;
 	}
 
@@ -74,7 +74,7 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 
 	bar++;
 	if (num_bars < 2) {
-		printk(KERN_ERR "Num Bars mismatch");
+		OSAL_LOG_ERROR("Num Bars mismatch");
 		return -EFAULT;
 	}
 
@@ -346,7 +346,7 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 	q->head = q->tail = q->info;
 	q->pid = pid;
 
-	printk(KERN_ERR "sonic_q_init q: " PRIx64 " q->head " PRIx64 " index %d",
+	OSAL_LOG_INFO("sonic_q_init q: " PRIx64 " q->head " PRIx64 " index %d",
 			(u64) q, (u64) q->head, index);
 
 	snprintf(q->name, sizeof(q->name), "%s%u", base, index);
@@ -374,7 +374,7 @@ void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
 	q->base = base;
 	q->base_pa = base_pa;
 
-	printk(KERN_ERR "sonic_q_map base " PRIx64 " base_pa " PRIx64,
+	OSAL_LOG_INFO("sonic_q_map base " PRIx64 " base_pa " PRIx64,
 			(u64) base, (u64) base_pa);
 
 	for (i = 0, cur = q->info; i < q->num_descs; i++, cur++)

@@ -74,7 +74,7 @@ pnso_test_mod_init(void)
 {
 	int rv;
 
-	rv = osal_log_init(log_level);
+	rv = osal_log_init(log_level, "pencake");
 	if (rv)
 		goto done;
 #ifndef __FreeBSD__ 

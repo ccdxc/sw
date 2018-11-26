@@ -20,6 +20,7 @@
 #define MAX_LOG_FNAME_STR 256
 
 enum osal_log_level g_osal_log_level = OSAL_LOG_LEVEL_WARNING;
+char g_osal_log_prefix[PREFIX_STR_LEN] = "";
 bool g_osal_log_enabled;
 static pid_t prog_id;
 
@@ -44,7 +45,7 @@ get_level_name(enum osal_log_level level)
 }
 
 pnso_error_t
-osal_log_init(const enum osal_log_level level)
+osal_log_init(const enum osal_log_level level, const char* prefix)
 {
 	pnso_error_t err = PNSO_OK;
 
@@ -55,6 +56,7 @@ osal_log_init(const enum osal_log_level level)
 	g_osal_log_enabled = true;
 	g_osal_log_level = level;
 	prog_id = getpid();
+	strncpy(g_osal_log_prefix, prefix, PREFIX_STR_LEN);
 
 	return err;
 }

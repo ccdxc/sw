@@ -290,7 +290,7 @@ TEST_F(pnso_pbuf_test, ut_pbuf_pad_flat_buffer_with_zeros) {
 
 int main(int argc, char **argv) {
     int ret;
-    osal_log_init(OSAL_LOG_LEVEL_INFO);
+    osal_log_init(OSAL_LOG_LEVEL_INFO, "sonic");
     ::testing::InitGoogleTest(&argc, argv);
     ret = RUN_ALL_TESTS();
     osal_log_deinit();
