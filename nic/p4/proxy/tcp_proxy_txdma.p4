@@ -495,13 +495,8 @@ metadata ring_entry_t ring_entry7;
 metadata ring_entry_t ring_entry8;
 @pragma dont_trim
 metadata doorbell_data_t db_data;
-header_type txdma_pad_before_dma_t {
-    fields {
-        pad            : 112;
-    }
-}
-@pragma dont_trim
-metadata txdma_pad_before_dma_t dma_pad;
+
+@pragma pa_align 128
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 1
 @pragma dont_trim

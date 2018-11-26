@@ -69,6 +69,7 @@ typedef struct tcpcb_s {
     uint32_t              pred_flags;
     uint32_t              rto_backoff;
     uint8_t               cpu_id;
+    bool                  bypass_tls;
 
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle

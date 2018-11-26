@@ -96,5 +96,6 @@
 #define TCP_PROXY_STATS_RETX_PARTIAL_ACK        (3 << 3)
 #define TCP_PROXY_STATS_RETX_NOP_SCHEDULE       (4 << 3)
 #define TCP_PROXY_STATS_GC_FULL                 (5 << 3)
+#define TCP_PROXY_STATS_TLS_GC_FULL             (6 << 3)
 
 #endif /* #ifndef __TCP_COMMON_H__ */

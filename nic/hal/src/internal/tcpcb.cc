@@ -125,9 +125,11 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
     if (hal::tls::proxy_tls_bypass_mode) {
+        tcpcb->bypass_tls = true;
         tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_BYPASS_BARCO;
         tcpcb->debug_dol_tx = spec.debug_dol_tx() | TCP_TX_DDOL_BYPASS_BARCO;
     } else {
+        tcpcb->bypass_tls = false;
         tcpcb->debug_dol = spec.debug_dol();
         tcpcb->debug_dol_tx = spec.debug_dol_tx();
     }
@@ -207,9 +209,11 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
     if (hal::tls::proxy_tls_bypass_mode) {
+        tcpcb->bypass_tls = true;
         tcpcb->debug_dol = spec.debug_dol() | TCP_DDOL_BYPASS_BARCO;
         tcpcb->debug_dol_tx = spec.debug_dol_tx() | TCP_TX_DDOL_BYPASS_BARCO;
     } else {
+        tcpcb->bypass_tls = false;
         tcpcb->debug_dol = spec.debug_dol();
         tcpcb->debug_dol_tx = spec.debug_dol_tx();
     }

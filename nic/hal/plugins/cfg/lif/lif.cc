@@ -292,7 +292,8 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
         qs_params.type[ent.type_num()].entries = ent.entries();
 
         // Set both cosA,cosB to admin_cos(cosA) value for admin-qtype.
-        if (ent.purpose() != intf::LIF_QUEUE_PURPOSE_ADMIN) {
+        if (ent.purpose() != intf::LIF_QUEUE_PURPOSE_ADMIN ||
+                (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END)) {
             qs_params.type[ent.type_num()].cosA    = (lif->qos_info.coses & 0x0f);
             qs_params.type[ent.type_num()].cosB    = (lif->qos_info.coses & 0xf0) >> 4;
         } else {

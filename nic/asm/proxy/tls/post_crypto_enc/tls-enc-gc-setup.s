@@ -22,13 +22,18 @@ struct tx_table_s7_t2_d     d;
 %%
     .align
     .param          RNMDR_TLS_GC_TABLE_BASE
+    .param          TCP_PROXY_STATS
 
 tls_enc_gc_setup:
     CAPRI_CLEAR_TABLE_VALID(3)
+    add             r1, d.u.tls_gc_setup_d.sw_pi, 1
+    and             r1, r1, CAPRI_HBM_GC_PER_PRODUCER_RING_MASK
+    seq             c1, r1, d.u.tls_gc_setup_d.sw_ci
+    b.c1            fatal_error
+    add             r2, d.u.tls_gc_setup_d.sw_pi, r0
+    tblmincri.f     d.u.tls_gc_setup_d.sw_pi, CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT, 1
 
     phvwr           p.gc_ring_entry_descr_addr , k.s2s_t2_idesc
-
-    and             r2, d.{u.tls_gc_setup_d.token}.wx, CAPRI_HBM_GC_PER_PRODUCER_RING_MASK
 
     addui           r1, r0, hiword(RNMDR_TLS_GC_TABLE_BASE)
     addi            r1, r1, loword(RNMDR_TLS_GC_TABLE_BASE)
@@ -47,3 +52,12 @@ tls_enc_gc_setup:
 tls_enc_gc_setup_done:
 	nop.e
 	nop
+
+fatal_error:
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_TLS_GC_FULL, 1)
+    phvwri p.p4_intr_global_drop, 1
+    nop.e
+    nop
+

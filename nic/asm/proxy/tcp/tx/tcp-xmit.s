@@ -40,11 +40,9 @@ tcp_xmit_process_start:
 
     bcf             [c_snd_una], tcp_tx_xmit_snd_una_update
 
-    seq             c1, k.common_phv_pending_rto, 1
-    bcf             [c1], tcp_tx_retransmit
+    bbeq            k.common_phv_pending_rto, 1, tcp_tx_retransmit
 
-    seq             c1, k.common_phv_pending_fast_retx, 1
-    bcf             [c1], rearm_rto
+    bbeq            k.common_phv_pending_fast_retx, 1, rearm_rto
 
 tcp_tx_enqueue:
     /*
@@ -209,8 +207,7 @@ tcp_snd_wnd_test:
     /* r1 = snd_wnd - bytes_sent */
     sub             r1, k.t0_s2s_snd_wnd, r1
     /* r1 = (snd_wnd - bytes_sent) / mss_cache */
-    add             r5, k.to_s5_rcv_mss_shft, r0
-    srlv            r6, r1, r5
+    srl             r6, r1, k.to_s5_rcv_mss_shft
     sne             c4, r7, r0
     jr.c4           r7
     add             r7, r0, r0

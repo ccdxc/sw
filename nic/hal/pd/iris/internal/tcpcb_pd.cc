@@ -785,8 +785,15 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.retx_snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
 
         // get gc address
-        gc_base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC, 0,
-                    CAPRI_RNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
+        if (tcpcb_pd->tcpcb->bypass_tls) {
+            gc_base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC,
+					CAPRI_HBM_GC_RNMDR_QTYPE,
+					CAPRI_RNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
+        } else {
+            gc_base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC,
+					CAPRI_HBM_GC_TNMDR_QTYPE,
+					CAPRI_TNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
+        }
         HAL_TRACE_DEBUG("gc_base: {:#x}", gc_base);
         data.gc_base = htonll(gc_base);
     }

@@ -21,6 +21,7 @@ struct tx_table_s2_t0_tls_rx_bsq_d d	;
 	
 tls_enc_rx_bsq_enc_process:	
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s7_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
+    phvwr           p.to_s6_gc_base, d.gc_base
     /* Release the descriptor from the tls cb decrypt queue */
 	/*
 	   DEQ_DESC(*dtlsp, dec, idesc);

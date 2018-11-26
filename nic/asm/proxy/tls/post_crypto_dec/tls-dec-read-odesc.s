@@ -59,8 +59,8 @@ tls_dec_post_read_odesc:
     bcf         [c5], tls_dec_post_read_odesc_skip_gc
     nop
 
-    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tls_dec_gc_setup,
-                        CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR, TABLE_SIZE_32_BITS)
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, tls_dec_gc_setup,
+                        k.to_s6_gc_base, TABLE_SIZE_32_BITS)
 
 tls_dec_post_read_odesc_skip_gc:
 

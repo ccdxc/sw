@@ -28,6 +28,7 @@ header_type tlscb_0_t {
 
         /* TLS Record Ring Management */
         recq_base                       : HBM_ADDRESS_WIDTH;
+        gc_base                         : HBM_ADDRESS_WIDTH;
         recq_pi                         : 16;
         recq_ci                         : 16;
 
@@ -36,7 +37,7 @@ header_type tlscb_0_t {
         /* Flags */
         dec_flow                        : 8;
         active_segment                  : 1;
-        pad                             : 63;
+        pad                             : 31;
         // TBD: Total used   : 449 bits, pending: 63
     }
 }
@@ -44,7 +45,7 @@ header_type tlscb_0_t {
 #define TLSCB_0_PARAMS                                                                                              \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, pi_2, ci_2,                         \
 debug_dol, barco_command, serq_base, sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci,              \
-recq_base, recq_pi, recq_ci, l7_proxy_type, dec_flow, active_segment,  pad
+recq_base, gc_base, recq_pi, recq_ci, l7_proxy_type, dec_flow, active_segment, pad
 
 #define GENERATE_TLSCB_0_D                                                                               \
     modify_field(tlscb_0_d.rsvd, rsvd);                                                                  \
@@ -70,6 +71,7 @@ recq_base, recq_pi, recq_ci, l7_proxy_type, dec_flow, active_segment,  pad
     modify_field(tlscb_0_d.sw_sesq_pi, sw_sesq_pi);                                                      \
     modify_field(tlscb_0_d.sw_sesq_ci, sw_sesq_ci);                                                      \
     modify_field(tlscb_0_d.recq_base, recq_base);                                                        \
+    modify_field(tlscb_0_d.gc_base, gc_base);                                                            \
     modify_field(tlscb_0_d.recq_pi, recq_pi);                                                            \
     modify_field(tlscb_0_d.recq_ci, recq_ci);                                                            \
     modify_field(tlscb_0_d.l7_proxy_type, l7_proxy_type);                                                \
@@ -416,11 +418,28 @@ header_type token_t {
         pad                             : 480;
     }
 }
+
 #define TOKEN_ACTION_PARAMS token, pad
 #define TOKEN_SCRATCH   token_scratch
 #define GENERATE_TOKEN_D                                                                                \
     modify_field(TOKEN_SCRATCH.token, token);                                                           \
     modify_field(TOKEN_SCRATCH.pad, pad);
+
+
+/* Used by GC producer */
+header_type gc_token_t {
+    fields {
+        sw_pi                           : 16;
+        sw_ci                           : 16;
+    }
+}
+
+#define GC_TOKEN_ACTION_PARAMS sw_pi, sw_ci
+#define GC_TOKEN_SCRATCH   gc_token_scratch
+#define GC_GENERATE_TOKEN_D                                                                                \
+    modify_field(GC_TOKEN_SCRATCH.sw_pi, sw_pi);                                                           \
+    modify_field(GC_TOKEN_SCRATCH.sw_ci, sw_ci);
+
 
 #define PKT_DESCR_AOL_ACTION_PARAMS                                                                     \
 A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt 

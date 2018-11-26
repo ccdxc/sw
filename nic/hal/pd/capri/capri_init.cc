@@ -970,17 +970,21 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     i++;
 
     symbols[i].name = "tls-enc-gc-setup.bin";
-    symbols[i].num_params = 1;
+    symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMDR_TLS_GC_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC) +
         CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE * CAPRI_HBM_RNMDR_ENTRY_SIZE * CAPRI_RNMDR_GC_TLS_RING_PRODUCER;
+    symbols[i].params[1].name = TCP_PROXY_STATS;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TCP_PROXY_STATS);
     i++;
 
     symbols[i].name = "tls-dec-gc-setup.bin";
-    symbols[i].num_params = 1;
+    symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMDR_TLS_GC_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC) +
         CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE * CAPRI_HBM_RNMDR_ENTRY_SIZE * CAPRI_RNMDR_GC_TLS_RING_PRODUCER;
+    symbols[i].params[1].name = TCP_PROXY_STATS;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TCP_PROXY_STATS);
     i++;
 
     HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);

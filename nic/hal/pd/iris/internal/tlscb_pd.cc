@@ -12,6 +12,8 @@
 #include "nic/sdk/include/sdk/platform/capri/capri_lif_manager.hpp"
 #include "gen/p4gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
+#include "nic/include/capri_common.h"
+#include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
 
 namespace hal {
@@ -306,6 +308,13 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         HAL_TRACE_DEBUG("qid {:#x} serq_prod_ci_addr {:#x}",
                 tlscb_pd->tlscb->cb_id,
                 ntohl(data.u.read_tls_stg0_d.serq_prod_ci_addr));
+
+        uint64_t                gc_base;
+        // get gc address
+        gc_base = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_GC, CAPRI_HBM_GC_RNMDR_QTYPE,
+                    CAPRI_RNMDR_GC_TLS_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
+        HAL_TRACE_DEBUG("gc_base: {:#x}", gc_base);
+        data.u.read_tls_stg0_d.gc_base = htonl(gc_base);
     }
 
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{:x}", hwid);

@@ -66,8 +66,8 @@ tls_enc_post_read_odesc:
     bcf         [c1], tls_enc_post_read_odesc_done
     nop
 
-    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tls_enc_gc_setup,
-                        CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR, TABLE_SIZE_32_BITS)
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, tls_enc_gc_setup,
+                        k.to_s6_gc_base, TABLE_SIZE_32_BITS)
 
 
 tls_enc_post_read_odesc_done:
@@ -119,8 +119,8 @@ tls_enc_post_read_odesc_do_ccm:
     bcf         [c1], tls_enc_post_read_odesc_do_ccm_done
     nop
 
-    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tls_enc_gc_setup,
-                        CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR, TABLE_SIZE_32_BITS)
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, tls_enc_gc_setup,
+                        k.to_s6_gc_base, TABLE_SIZE_32_BITS)
 
 
 tls_enc_post_read_odesc_do_ccm_done:
@@ -159,8 +159,8 @@ tls_enc_post_read_odesc_do_cbc:
     bcf         [c1], tls_enc_post_read_odesc_do_cbc_done
     nop
 
-    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tls_enc_gc_setup,
-                        CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR, TABLE_SIZE_32_BITS)
+    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, tls_enc_gc_setup,
+                        k.to_s6_gc_base, TABLE_SIZE_32_BITS)
 
 tls_enc_post_read_odesc_do_cbc_done:
     nop.e

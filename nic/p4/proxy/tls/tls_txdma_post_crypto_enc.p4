@@ -103,11 +103,13 @@ header_type to_stage_5_phv_t {
 
 header_type to_stage_6_phv_t {
     fields {
+        gc_base                         : HBM_ADDRESS_WIDTH;
         do_post_ccm_enc                 : 1;
     }
 }
 
 #define GENERATE_TO_S6_K                                                                                \
+    modify_field(to_s6_scratch.gc_base, to_s6.gc_base);                                                 \
     modify_field(to_s6_scratch.do_post_ccm_enc, to_s6.do_post_ccm_enc);                                 \
 
 header_type to_stage_7_phv_t {
@@ -192,7 +194,7 @@ metadata to_stage_7_phv_t to_s7_scratch;
 metadata s2s_t2_phv_t   s2s_t2_scratch;
 
 @pragma scratch_metadata
-metadata token_t        TOKEN_SCRATCH;
+metadata gc_token_t     GC_TOKEN_SCRATCH;
 
 
 @pragma pa_header_union ingress to_stage_3
@@ -363,11 +365,11 @@ action tls_read_aad(AAD_ACTION_PARAMS) {
 
 /* Stage 7 Table 2 action */
 
-action tls_gc_setup(TOKEN_ACTION_PARAMS) {
+action tls_gc_setup(GC_TOKEN_ACTION_PARAMS) {
 
     GENERATE_S2S_T2_K
 
-    GENERATE_TOKEN_D
+    GC_GENERATE_TOKEN_D
 }
 
 /* Stage 7 Table 3 action */
