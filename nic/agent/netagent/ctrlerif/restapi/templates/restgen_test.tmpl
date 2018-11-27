@@ -930,6 +930,10 @@ import (
                                             break
                                   }
                                }
+                               // Rule hashes are expected to change during update, so mask rule-id hashes here
+                               for idx := range actualSGPolicySpec.Rules {
+                                 actualSGPolicySpec.Rules[idx].ID = 0
+                               }
                                AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
 
                              {{else if strEq $crudObject "Tunnel"}}

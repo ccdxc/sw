@@ -183,6 +183,10 @@ func TestSGPolicyUpdate(t *testing.T) {
 			break
 		}
 	}
+	// Rule hashes are expected to change during update, so mask rule-id hashes here
+	for idx := range actualSGPolicySpec.Rules {
+		actualSGPolicySpec.Rules[idx].ID = 0
+	}
 	AssertEquals(t, updatedSGPolicySpec, actualSGPolicySpec, "Could not validate updated spec.")
 
 }

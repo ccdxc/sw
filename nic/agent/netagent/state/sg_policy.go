@@ -158,6 +158,11 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	// Populate the ID from existing sg policy to ensure that HAL recognizes this.
 	sgp.Status.SGPolicyID = existingSgp.Status.SGPolicyID
 
+	// Recompute hash
+	for i, r := range sgp.Spec.Rules {
+		sgp.Spec.Rules[i].ID = generateHash(&r)
+	}
+
 	err = na.Datapath.UpdateSGPolicy(sgp, ns.Status.NamespaceID)
 	if err != nil {
 		log.Errorf("Error updating the SG Policy {%+v} in datapath. Err: %v", existingSgp, err)
