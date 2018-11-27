@@ -1,0 +1,80 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for control plane policer
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imcontrol plane policers.
+
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// ---------------------------- ControlPlanePolicer API ----------------------------
+// ControlPlanePolicer controller api
+service ControlPlanePolicerApi {
+    // options for auto generating rest endpoints
+    // Allow only list and update methods
+    option(venice.naplesRestService) = {
+        Object: "ControlPlanePolicer",
+        Method: ["list", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/qos/policers"
+    };
+
+    rpc GetControlPlanePolicer (api.ObjectMeta) returns (ControlPlanePolicer) {};
+    rpc ListControlPlanePoliceres (api.ObjectMeta) returns (ControlPlanePolicerList) {};
+    rpc WatchControlPlanePoliceres (api.ObjectMeta) returns (stream ControlPlanePolicerEvent) {};
+}
+
+// ControlPlanePolicer object
+message ControlPlanePolicer {
+    api.TypeMeta                TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta              ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    ControlPlanePolicerSpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    ControlPlanePolicerStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// ControlPlanePolicerSpec captures all the control plane policer level configuration
+message ControlPlanePolicerSpec {
+    enum Type {
+        POLICER_NONE    = 0;
+        PPS_POLICER     = 1;
+        BPS_POLICER     = 2;
+    }
+
+    // Type of Control Plane Policer. One of PPS or BPS
+    string PolicerType          = 1 [(venice.check) = "StrEnum(ControlPlanePolicerSpec.Type",
+                                     (gogoproto.jsontag) = "policer-type,omitempty"];
+
+    // PPS Policer Packets/Sec. Range 4000 - 2000000000
+    uint32 PacketsPerSecond     = 2 [(gogoproto.jsontag) = "packets-per-second,omitempty"];
+
+    // BPS Policer Bytes/Sec. Range 4000 - 125000000000
+    uint64 BytesPerSecond       = 3 [(gogoproto.jsontag) = "bytes-per-second,omitempty"];
+
+    // Burst Count to absorb. Range 0 - 2000000000 packets for PPS Policer and 0 - 125000000000 bytes for BPS Policer
+    uint64 BurstCount           = 4 [(gogoproto.jsontag) = "burst-count,omitempty"];
+
+}
+
+// ControlPlanePolicer Status
+message ControlPlanePolicerStatus {
+    // ControlPlanePolicer in the datapath
+    uint64 ControlPlanePolicerID           = 1 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+message ControlPlanePolicerList {
+    repeated ControlPlanePolicer Policers  = 1;
+}
+
+// control plane policer watch event
+message ControlPlanePolicerEvent {
+    api.EventType           EventType           = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    ControlPlanePolicer     ControlPlanePolicer = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "copp,omitempty"];
+}

@@ -7,6 +7,7 @@
 	It is generated from these files:
 		app.proto
 		endpoint.proto
+		copp.proto
 		interface.proto
 		ipsec.proto
 		match.proto
@@ -43,6 +44,11 @@
 		EndpointStatus
 		EndpointList
 		EndpointEvent
+		ControlPlanePolicer
+		ControlPlanePolicerSpec
+		ControlPlanePolicerStatus
+		ControlPlanePolicerList
+		ControlPlanePolicerEvent
 		Interface
 		InterfaceSpec
 		InterfaceStatus
