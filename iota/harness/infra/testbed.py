@@ -49,7 +49,7 @@ class _Testbed:
         self.__bm_count = 0
         self.__vm_count = 0
         for instance in self.__tbspec.Instances:
-            self.__os = instance.NodeOs
+            self.__os = getattr(instance, "NodeOs", "linux")
             if instance.Type == "bm":
                 self.__bm_count += 1
             elif instance.Type == "vm":
@@ -90,7 +90,7 @@ class _Testbed:
 
         msg.username = self.__tbspec.Provision.Username
         msg.password = self.__tbspec.Provision.Password
-        msg.testbed_id = self.__tbid
+        msg.testbed_id = getattr(self, "__tbid", 1)
 
         for instance in self.__tbspec.Instances:
             node_msg = msg.nodes.add()
@@ -206,16 +206,16 @@ class _Testbed:
         self.prev_ts = self.curr_ts
         self.curr_ts = ts
 
-        #status = self.__cleanup_testbed()
-        #if status != types.status.SUCCESS:
-        #    return status
 
         if GlobalOptions.dryrun:
             status = types.status.SUCCESS
         else:
-            status = self.__cleanup_testbed_script()
+            status = self.__cleanup_testbed()
             if status != types.status.SUCCESS:
                 return status
+            #status = self.__cleanup_testbed_script()
+            #if status != types.status.SUCCESS:
+            #    return status
 
         store.Cleanup()
         status = self.__init_testbed()

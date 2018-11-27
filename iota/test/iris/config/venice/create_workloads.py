@@ -19,10 +19,10 @@ def Main(tc):
         wl.workload_name = obj["meta"]["name"]
         
         wl.node_name = obj["spec"]["host-name"]
-        ifid = list(obj["spec"]["interfaces"].keys())[0]
-        wl.mac_address = ifid
-        wl.encap_vlan = obj["spec"]["interfaces"][ifid]["micro-seg-vlan"]
-        wl.uplink_vlan = obj["spec"]["interfaces"][ifid]["external-vlan"]
+        if_obj = obj["spec"]["interfaces"][0]
+        wl.mac_address = if_obj["mac-address"]
+        wl.encap_vlan = if_obj["micro-seg-vlan"]
+        wl.uplink_vlan = if_obj["external-vlan"]
         wl.ip_prefix = "192.168.%d.%d/24" % (wl.uplink_vlan, ip_index)
         wl.interface = 'lif100'
         wl.pinned_port = 1

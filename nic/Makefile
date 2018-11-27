@@ -4,6 +4,7 @@ export ARCH         ?= x86_64
 export PIPELINE     ?= iris
 export TOPDIR       := ${realpath ${CURDIR}/../}
 export NICDIR       := ${TOPDIR}/nic
+export IOTADIR      := ${TOPDIR}/iota
 export SDKDIR       := ${NICDIR}/sdk
 export BLDTOP       := ${realpath .}
 export MKINFRA      := ${SDKDIR}/mkinfra

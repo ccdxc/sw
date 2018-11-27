@@ -1,0 +1,38 @@
+meta:                                               
+    name    : venicepolicy                                    
+                                                             
+testcases:                                                
+    -   name    : Ping_Local_Workloads
+        testcase: testcases.networking.ping                                
+        args    :                                  
+            type: local_only
+        iterators :
+            type    : simple
+            pktsize : [512]                                            
+                                                                        
+    -   name    : Ping_Remote_Workloads
+        testcase: testcases.networking.ping
+        args    :                      
+            type: remote_only                  
+        iterators :
+            type    : simple
+            pktsize : [512]                                            
+        verifs  :                                        
+            #-   step    : verif.operstate.verify_stats_venice
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+                              
+#    -   name    : Firewall_Permit
+#        testcase: testcases.security.firewall_permit
+#        verifs  :                                   
+#            -   step    : verif.operstate.verify_stats_venice
+#            -   step    : verif.operstate.verify_stats_agent
+#            -   step    : verif.operstate.verify_stats_hw
+
+#    -   name    : Firewall_Deny
+#        testcase: testcases.security.firewall_deny
+#        verifs  :
+#            -   step    : verif.operstate.verify_stats_venice
+#            -   step    : verif.operstate.verify_stats_agent
+#            -   step    : verif.operstate.verify_stats_hw
+#            -   step    : verif.operstate.verify_syslogs

@@ -1,2 +1,4 @@
 bazel-cache/
+nic/
+platform/
 .git

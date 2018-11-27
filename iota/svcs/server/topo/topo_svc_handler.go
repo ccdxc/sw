@@ -110,10 +110,10 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("Request must include a user name and password")
 		return req, nil
 	}
-	ts.TestBedInfo.Username = req.Username
-	ts.TestBedInfo.Password = req.Password
+	//ts.TestBedInfo.Username = req.Username
+	//ts.TestBedInfo.Password = req.Password
 
-	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
+	ts.SSHConfig = testbed.InitSSHConfig(req.Username, req.Password)
 	// Run clean up
 	cleanupTestBed := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
@@ -135,9 +135,9 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 	err := cleanupTestBed(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | CleanupTestBed | Cleanup Test Bed Call Failed. %v", err)
-		ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-		ts.TestBedInfo.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC CleanupTestBed | Clean up Test Bed Call Failed. %s", err.Error())
-		return ts.TestBedInfo, nil
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC CleanupTestBed | Clean up Test Bed Call Failed. %s", err.Error())
+		return req, nil
 	}
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK

@@ -1,0 +1,35 @@
+meta:
+    name        : venice
+    description : Simulation Test Suite
+    mode        : simulation
+    cfgmode     : venice
+    nicmode     : hostpin
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: /sw/nic/obj/images/naples-release-v1.tgz
+    venice: /sw/bin/venice.tgz
+
+setup:
+    topology: test/iris/topologies/3Naples_3Venice/3Naples_3Venice.topology
+
+    config  :
+        - step : config.venice.make_cluster
+        - step : config.venice.generate_base_config
+          spec : test/iris/venice/baseconfig/sample_baseconfig.spec
+        - step : config.venice.push_config
+        - step : config.venice.create_workloads
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+
+testbundles:
+    # Relative paths from iota/test/iris/testbundles/
+    - venice/policy.testbundle
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

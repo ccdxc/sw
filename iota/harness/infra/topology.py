@@ -23,7 +23,7 @@ class Node(object):
         self.__inst = store.GetTestbed().AllocateInstance()
 
         self.__ip_address = self.__inst.NodeMgmtIP
-        self.__os = self.__inst.NodeOs
+        self.__os = getattr(self.__inst, "NodeOs", "linux")
 
         self.__role = self.__get_instance_role(spec.role)
 
@@ -68,6 +68,8 @@ class Node(object):
         return self.__role
     def GetOs(self):
         return self.__os
+    def IsVenice(self):
+        return self.__role == topo_pb2.PERSONALITY_VENICE
     def IsNaplesSim(self):
         return self.__role == topo_pb2.PERSONALITY_NAPLES_SIM
     def IsNaplesHw(self):
@@ -168,7 +170,7 @@ class Node(object):
             self.__host_intfs = resp.intel_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
 
-        if len(self.__host_intfs) == 0:
+        if len(self.__host_intfs) == 0 and  not self.IsVenice():
             if GlobalOptions.dryrun:
                 self.__host_intfs = ["dummy_intf0", "dummy_intf1"]
             else:
