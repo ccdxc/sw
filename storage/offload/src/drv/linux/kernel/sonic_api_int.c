@@ -322,5 +322,6 @@ sonic_phy_to_virt(uint64_t phy)
 bool 
 sonic_is_accel_dev_ready()
 {
-	return sonic_get_lif() ? true : false;
+	struct lif *glif = sonic_get_lif();
+	return (glif && (glif->flags & LIF_F_INITED)) ? true : false;
 }

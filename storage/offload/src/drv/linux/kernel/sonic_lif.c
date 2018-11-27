@@ -804,6 +804,7 @@ static int sonic_lif_init(struct lif *lif)
 	lif->api_private = NULL;
 
 	lif->flags |= LIF_F_INITED;
+	OSAL_LOG_WARN("sonic lif init successful");
 
 	return 0;
 
@@ -1225,7 +1226,7 @@ sonic_lif_seq_q_control(struct queue *q, uint16_t opcode)
 
 	err = sonic_adminq_post_wait(lif, &ctx);
 	if (err) {
-		OSAL_LOG_INFO("seq_q_control failed\n");
+		OSAL_LOG_ERROR("seq_q_control failed\n");
 		return err;
 	}
 
@@ -1293,15 +1294,15 @@ sonic_lif_hang_notify(struct lif *lif)
 	};
 	int err;
 
-	OSAL_LOG_INFO "hang_notify query\n");
+	OSAL_LOG_INFO("hang_notify query\n");
 
 	err = sonic_adminq_post_wait(lif, &ctx);
 	if (err) {
-		OSAL_LOG_INFO "hang_notify query failed\n");
+		OSAL_LOG_INFO("hang_notify query failed\n");
 		return err;
 	}
 
-	OSAL_LOG_INFO "hang_notify query successful, status %u\n",
+	OSAL_LOG_INFO("hang_notify query successful, status %u\n",
 		 ctx.comp.hang_notify.status);
 	err = ctx.comp.hang_notify.status ? -EFAULT : 0; /* TODO */
 
