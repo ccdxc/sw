@@ -22,7 +22,7 @@ class TestSuite:
         self.__tcs = []
 
         if GlobalOptions.testsuites and self.Name() not in GlobalOptions.testsuites:
-            Logger.info("Skipping Testsuite: %s because of command-line filters." % self.Name())
+            Logger.debug("Skipping Testsuite: %s because of command-line filters." % self.Name())
             self.__enabled = False
             return
 
@@ -82,7 +82,7 @@ class TestSuite:
             tcb = parser.YmlParse(filename)
             tcb.meta.os = getattr(tcb.meta, 'os', [ 'linux' ])
             if store.GetTestbed().GetOs() not in tcb.meta.os:
-                Logger.info("Skipping Testbundle: %s due to OS mismatch." % tcb.meta.name)
+                Logger.debug("Skipping Testbundle: %s due to OS mismatch." % tcb.meta.name)
                 continue
             if GlobalOptions.testbundles and tcb.meta.name not in  GlobalOptions.testbundles:
                 Logger.info("Skipping Testbundle: %s due to cmdline filter." % tcb.meta.name)
@@ -194,11 +194,6 @@ class TestSuite:
     def LogsDir(self):
         return "%s/iota/logs/%s" % (api.GetTopDir(), self.Name())
 
-    def __collect_logs(self):
-        nodes = api.GetWorkloadNodeHostnames()
-        logcollector.CollectLogs(nodes)
-        return
-
     def __get_oss(self):
         return getattr(self.__spec.meta, 'os', ['linux'])
 
@@ -256,7 +251,7 @@ class TestSuite:
         self.__update_stats()
         Logger.info("Testsuite %s FINAL STATUS = %d" % (self.Name(), self.result))
         
-        self.__collect_logs()
+        logcollector.CollectLogs()
         self.__timer.Stop()
         return self.result
 

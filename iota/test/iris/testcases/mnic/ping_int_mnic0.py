@@ -15,7 +15,8 @@ def Trigger(tc):
             (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
 
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig int_mnic0 40.40.40.40 netmask 255.255.255.0 up")
+    if w1.IsNaples():
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig int_mnic0 40.40.40.40 netmask 255.255.255.0 up")
 
     host_mgmt_intfs = utils.GetHostInternalMgmtInterfaces(w1.node_name)
 
@@ -24,7 +25,8 @@ def Trigger(tc):
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                            w1_cmd)
 
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig int_mnic0 50.50.50.50 netmask 255.255.255.0 up")
+    if w2.IsNaples():
+        api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig int_mnic0 50.50.50.50 netmask 255.255.255.0 up")
 
     host_mgmt_intfs = utils.GetHostInternalMgmtInterfaces(w1.node_name)
 
@@ -34,8 +36,9 @@ def Trigger(tc):
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            w2_cmd)
 
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I int_mnic0 -c3 40.40.40.41")
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "ping -I int_mnic0 -c3 50.50.50.51")
+    if w1.IsNaples() and w2.IsNaples():
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I int_mnic0 -c3 40.40.40.41")
+        api.Trigger_AddNaplesCommand(req, w2.node_name, "ping -I int_mnic0 -c3 50.50.50.51")
 
     trig_resp = api.Trigger(req)
 

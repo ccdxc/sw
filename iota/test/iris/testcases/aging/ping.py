@@ -21,27 +21,29 @@ def Trigger(tc):
                      (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
         api.Logger.info("Starting Ping test from %s" % (cmd_cookie))
 
-        cmd_cookie = "halctl clear session"
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl clear session")
-        tc.cmd_cookies.append(cmd_cookie)
+        if w1.IsNaples():
+            cmd_cookie = "halctl clear session"
+            api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl clear session")
+            tc.cmd_cookies.append(cmd_cookie)
 
         cmd_cookie = "ping -c 10"
         api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
                                "ping -c 10 %s" % w2.ip_address)
         tc.cmd_cookies.append(cmd_cookie)
 
-        cmd_cookie = "Before aging show session ICMP"
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show session | grep ICMP")
-        tc.cmd_cookies.append(cmd_cookie)         
+        if w1.IsNaples():
+            cmd_cookie = "Before aging show session ICMP"
+            api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show session | grep ICMP")
+            tc.cmd_cookies.append(cmd_cookie)         
 
-        #Get it from the config
-        cmd_cookie = "sleep 12"
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "sleep 12")
-        tc.cmd_cookies.append(cmd_cookie)
-
-        cmd_cookie = "After aging show session"
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show session | grep ICMP")
-        tc.cmd_cookies.append(cmd_cookie)
+            #Get it from the config
+            cmd_cookie = "sleep 12"
+            api.Trigger_AddNaplesCommand(req, w1.node_name, "sleep 12")
+            tc.cmd_cookies.append(cmd_cookie)
+        
+            cmd_cookie = "After aging show session"
+            api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show session | grep ICMP")
+            tc.cmd_cookies.append(cmd_cookie)
 
     tc.resp = api.Trigger(req)
     return api.types.status.SUCCESS

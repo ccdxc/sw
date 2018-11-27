@@ -155,6 +155,9 @@ def GetVeniceMgmtIpAddresses():
 def GetNaplesMgmtIpAddresses():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesMgmtIpAddresses()
 
+def GetWorkloadNodeMgmtIpAddresses():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesMgmtIpAddresses()
+
 def GetNaplesNodeUuidMap():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesUuidMap()
 

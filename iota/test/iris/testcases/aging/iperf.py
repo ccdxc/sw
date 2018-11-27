@@ -17,9 +17,10 @@ def Trigger(tc):
                 (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting Ping test from %s" % (cmd_cookie))
 
-    cmd_cookie = "halctl clear session"
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl clear session")
-    tc.cmd_cookies.append(cmd_cookie)
+    if w1.IsNaples():
+        cmd_cookie = "halctl clear session"
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl clear session")
+        tc.cmd_cookies.append(cmd_cookie)
 
     cmd_cookie = "iperf -s"
     api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
@@ -31,18 +32,19 @@ def Trigger(tc):
                            "iperf -c %s -u" % w1.ip_address)
     tc.cmd_cookies.append(cmd_cookie)
 
-    cmd_cookie = "Before aging show session UDP"
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show session | grep UDP")
-    tc.cmd_cookies.append(cmd_cookie)
+    if w1.IsNaples():
+        cmd_cookie = "Before aging show session UDP"
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show session | grep UDP")
+        tc.cmd_cookies.append(cmd_cookie)
 
-    #Get it from the config
-    cmd_cookie = "sleep 60"
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "sleep 60")
-    tc.cmd_cookies.append(cmd_cookie)
+        #Get it from the config
+        cmd_cookie = "sleep 60"
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "sleep 60")
+        tc.cmd_cookies.append(cmd_cookie)
 
-    cmd_cookie = "After aging show session"
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show session | grep UDP")
-    tc.cmd_cookies.append(cmd_cookie)
+        cmd_cookie = "After aging show session"
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show session | grep UDP")
+        tc.cmd_cookies.append(cmd_cookie)
 
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)

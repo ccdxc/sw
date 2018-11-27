@@ -270,3 +270,6 @@ class Topology(object):
 
     def GetNicType(self, node_name):
         return self.__nodes[node_name].GetNicType()
+
+    def GetNodes(self):
+        return list(self.__nodes.values())

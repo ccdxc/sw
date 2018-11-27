@@ -227,7 +227,7 @@ class HostManagement:
 
     def init(self):
         assert(self.run("lspci | grep 1dd8") == 0)
-        self.hdl.sendline("/root/start_memtun.sh")
+        self.hdl.sendline("/root/nodeinit.sh")
         self.hdl.expect_exact("#")
         self.run("ping -c 5 1.0.0.2")
         self.run("rm -f /root/.ssh/known_hosts")

@@ -280,7 +280,7 @@ class HostManagement:
 
     def init(self):
         assert(self.run("lspci | grep 1dd8") == 0)
-        self.hdl.sendline("%s/start_memtun.sh" % HOST_NAPLES_DIR)
+        self.hdl.sendline("%s/nodeinit.sh" % HOST_NAPLES_DIR)
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
         self.run("ping -c 5 1.0.0.2")
         self.run("rm -f /root/.ssh/known_hosts")
@@ -327,7 +327,7 @@ def Main():
     host.run("mkdir -p %s" % HOST_NAPLES_DRIVERS_DIR)
     host.run("mkdir -p %s" % HOST_NAPLES_IMAGES_DIR)
     host.copyin("../platform/hosttools/x86_64/%s/memtun" % GlobalOptions.os, HOST_NAPLES_DIR)
-    host.copyin("scripts/%s/start_memtun.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
+    host.copyin("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
     host.reboot()
     host.init()
 

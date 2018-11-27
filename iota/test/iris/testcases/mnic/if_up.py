@@ -13,22 +13,25 @@ def Trigger(tc):
             (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
     api.Logger.info("Starting If_Up test from %s" % (tc.cmd_descr))
 
-    #oob interface
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig oob_mnic0 10.10.10.10 netmask 255.255.255.0 up")
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig oob_mnic0 10.10.10.11 netmask 255.255.255.0 up")
-
-    #inb0 interface
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig inb_mnic0 20.20.20.20 netmask 255.255.255.0 up")
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig inb_mnic0 20.20.20.21 netmask 255.255.255.0 up")
-
-    #inb1 interface
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig inb_mnic1 30.30.30.30 netmask 255.255.255.0 up")
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig inb_mnic1 30.30.30.31 netmask 255.255.255.0 up")
-
-    #int_mnic0 interface
-    api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig int_mnic0 40.40.40.40 netmask 255.255.255.0 up")
-    api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig int_mnic0 40.40.40.41 netmask 255.255.255.0 up")
-
+    if w1.IsNaples():
+        #oob interface
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig oob_mnic0 10.10.10.10 netmask 255.255.255.0 up")
+        #inb0 interface
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig inb_mnic0 20.20.20.20 netmask 255.255.255.0 up")
+        #inb1 interface
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig inb_mnic1 30.30.30.30 netmask 255.255.255.0 up")
+        #int_mnic0 interface
+        api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig int_mnic0 40.40.40.40 netmask 255.255.255.0 up")
+    
+    if w2.IsNaples():
+        #oob interface
+        api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig oob_mnic0 10.10.10.11 netmask 255.255.255.0 up")
+        #inb0 interface
+        api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig inb_mnic0 20.20.20.21 netmask 255.255.255.0 up")
+        #inb1 interface
+        api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig inb_mnic1 30.30.30.31 netmask 255.255.255.0 up")
+        #int_mnic0 interface
+        api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig int_mnic0 40.40.40.41 netmask 255.255.255.0 up")
 
     trig_resp = api.Trigger(req)
 

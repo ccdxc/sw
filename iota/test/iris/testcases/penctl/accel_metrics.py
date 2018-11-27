@@ -12,8 +12,8 @@ def Setup(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
-        common.AddPenctlCommand(req, n, "show metrics accelhwring")
-        common.AddPenctlCommand(req, n, "show metrics accelseqqueue")
+        common.AddPenctlCommand(req, n, "show metrics accelhwring > metrics_accelhwring.out.before")
+        common.AddPenctlCommand(req, n, "show metrics accelseqqueue > metrics_accelseqqueue.out.before")
 
     tc.storage_metrics_old = api.Trigger(req)
 
@@ -31,8 +31,8 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
-        common.AddPenctlCommand(req, n, "show metrics accelhwring")
-        common.AddPenctlCommand(req, n, "show metrics accelseqqueue")
+        common.AddPenctlCommand(req, n, "show metrics accelhwring > metrics_accelhwring.out.after")
+        common.AddPenctlCommand(req, n, "show metrics accelseqqueue > metrics_accelseqqueue.out.after")
 
     tc.storage_metrics_new = api.Trigger(req)
 

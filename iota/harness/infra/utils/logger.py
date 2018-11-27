@@ -19,8 +19,9 @@ prefixes = {
 }
 
 class LoggerSink:
-    def __init__(self, stdout = None, logfile = None):
+    def __init__(self, level, stdout = None, logfile = None):
         self.sink = None
+        self.level = level
         self.lock = threading.Lock()
         if stdout:
             self.sink = sys.stdout
@@ -43,9 +44,13 @@ class LoggerSink:
         self.log(text)
         return
 
-    def log(self, text):
+    def log(self, text, level):
         #if not self.__is_logger_print(text):
         #    return
+
+        if self.level < level:
+            return None
+
         self.lock.acquire()
         self.sink.write(text)
         self.lock.release()
@@ -59,12 +64,12 @@ class LoggerSink:
     def isatty(self):
         return True
 
-StdoutLoggerSink = LoggerSink(stdout = True)
+StdoutLoggerSink = LoggerSink(types.loglevel.INFO, stdout = True)
 #sys.stdout = StdoutLoggerSink
 #sys.stderr = StdoutLoggerSink
 
 class _Logger:
-    def __init__(self, level, stdout=True, logfile=None):
+    def __init__(self, level, stdout=True, logfile='iota_detailed.log'):
         self.sinks          = []
         self.indent_enable  = False
         self.level          = level
@@ -77,12 +82,12 @@ class _Logger:
             self.sinks.append(StdoutLoggerSink)
 
         if logfile:
-            self.sinks.append(LoggerSink(logfile = self.logfile))
+            self.sinks.append(LoggerSink(types.loglevel.MAX, logfile = self.logfile))
         return
 
-    def __flush(self, text):
+    def __flush(self, text, **kwargs):
         for s in self.sinks:
-            s.log(text)
+            s.log(text, kwargs['level'])
         return
 
     def __get_timestamp(self):
@@ -116,11 +121,7 @@ class _Logger:
             if indent >= defs.LOGGING_DEFAULT_REV_OFFSET:
                 indent = indent - defs.LOGGING_DEFAULT_REV_OFFSET
 
-        level = kwargs['level']
-        if self.level < level:
-            return None
-
-        text = self.__get_log_prefix(level)
+        text = self.__get_log_prefix(kwargs['level'])
         if indent:
             text = text + "  " * indent
         for a in args:
@@ -132,8 +133,7 @@ class _Logger:
 
     def __log(self, *args, **kwargs):
         text = self.__format(*args, **kwargs)
-        if text != None:
-            self.__flush(text)
+        self.__flush(text, **kwargs)
         return
 
     def info(self, *args, **kwargs):

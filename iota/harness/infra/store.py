@@ -32,6 +32,9 @@ class Workload:
         self.uplink_vlan = msg.uplink_vlan
         return
 
+    def IsNaples(self):
+        return GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(self.node_name) == 'pensando'
+
 def AddWorkloads(req):
     global __gl_workloads
     for wlmsg in req.workloads:
