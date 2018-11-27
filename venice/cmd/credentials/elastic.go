@@ -128,3 +128,13 @@ func GenElasticAuth(nodeID string, csrSigner certs.CSRSigner, trustRoots []*x509
 	}
 	return nil
 }
+
+// RemoveElasticAuth removes all Elastic credentials from the node
+func RemoveElasticAuth() []error {
+	return []error{
+		os.RemoveAll(globals.ElasticNodeAuthDir),
+		os.RemoveAll(globals.ElasticHTTPSAuthDir),
+		os.RemoveAll(globals.ElasticClientAuthDir),
+	}
+
+}

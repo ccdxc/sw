@@ -274,15 +274,29 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.LeaderService.Register(env.ServiceTracker)
 
 	} else {
+		// Generate quorum client credentials even if this is a non-quorum node, because some service
+		// (ApiServer for example) may still need to contact quorum services or KVStore.
+		err := credentials.GenQuorumClientAuth(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
+		if err != nil {
+			log.Errorf("Failed to obtain client auth credentials for quorum with error: %v", err)
+			return nil, err
+		}
+
+		err = credentials.GenVosAuth(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustChain())
+		if err != nil {
+			log.Errorf("Failed to generate VOS credentials, error: %v", err)
+			// try to proceed anyway
+		}
+
 		// Generate Kubelet credentials only. Try to continue anyway in case of failure.
-		err := credentials.GenKubeletCredentials(req.NodeId, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
+		err = credentials.GenKubeletCredentials(req.NodeId, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
 		if err != nil {
 			log.Errorf("Failed to generate Kubelet credentials, error: %v", err)
 			err2 := credentials.RemoveKubeletCredentials()
 			if err2 != nil {
 				log.Errorf("Error removing Kubelet credentials: %v", err2)
 			}
-			return nil, err
+			// try to proceed anyway
 		}
 		env.NtpService = services.NewNtpService(req.NTPServers)
 		env.NtpService.NtpConfigFile([]string{req.VirtualIp})
@@ -371,6 +385,25 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 		env.SystemdService.Stop()
 		env.SystemdService = nil
 	}
+
+	// Cleanup all credentials
+	cerrs := credentials.RemoveQuorumAuth()
+	if err != nil {
+		env.Logger.Errorf("Error removing quorum credentials: %v", cerrs)
+	}
+	cerr := credentials.RemoveKubernetesCredentials()
+	if err != nil {
+		env.Logger.Errorf("Error removing kubernetes credentials: %v", cerr)
+	}
+	cerrs = credentials.RemoveElasticAuth()
+	if err != nil {
+		env.Logger.Errorf("Error removing elastic credentials: %v", cerrs)
+	}
+	cerr = credentials.RemoveVosAuth()
+	if err != nil {
+		env.Logger.Errorf("Error removing Vos credentials: %v", cerr)
+	}
+
 	return &grpc.ClusterDisjoinResp{}, err
 }
 

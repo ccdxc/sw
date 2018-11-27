@@ -14,6 +14,7 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // GenKubeletCredentials generate credentials for the Kubelet to authenticate itself:
@@ -80,20 +81,42 @@ func GenKubernetesCredentials(nodeID string, csrSigner certs.CSRSigner, trustRoo
 	// This is the certificate that API Server serves to clients (including kubelet, scheduler,
 	// controller-manager), so it must have the right DNS name and/or IP address (VIP) for the host,
 	// otherwise the TLS handshake will fail.
+	//
 	// We use whatever node ID user has provided (hostname, FQDN or IP) and virtual IPs if available.
-	// "127.0.0.1" is needed by kube-controller-manager and kube-scheduler, as they try to connect to "127.0.0.1:6443"
+	// If user provides hostname or FQDN and we can succesfully resolve it, we add the corresponding IP.
+	// This is not needed by the system but is a courtesy to engineers debugging the system who may run
+	// kubectl and other tools on a remote machine which does not have DNS configured to resolve the name
+	// of the Venice node where K8s APIServer is running
+	//
+	// Finally, "127.0.0.1" is needed by kube-controller-manager and kube-scheduler, as they try to connect to "127.0.0.1:6443"
 	// We use "127.0.0.1" instead of "localhost" to avoid issues with Go DNS resolver that does not consult /etc/hosts by default
-	dnsNames := []string{globals.KubeAPIServer}
-	ipAddrs := []net.IP{net.IPv4(127, 0, 0, 1)}
+
+	dnsNames := []string{globals.KubeAPIServer} // expected by Venice components
+	ipAddrs := []net.IP{net.IPv4(127, 0, 0, 1)} // expected by kubernetes components
+
+	// Add VIPs if any
 	for _, i := range vips {
 		a := net.ParseIP(i)
 		if a != nil {
 			ipAddrs = append(ipAddrs, a)
 		}
 	}
+
+	// Add nodeID to the identifiers. If nodeID is an IP address it gets added to ipAddrs, otherwise to dnsNames.
 	dnsNames, ipAddrs = certs.AddNodeSANIDs(nodeID, dnsNames, ipAddrs)
 
-	// It is also used as a client certificate when API Server contacts directly the kubelet or
+	// If nodeID is a DNS name and we can resolve it, add the corresponding IPs as well
+	if net.ParseIP(nodeID) == nil {
+		// nodeID is not an IP address, so we assume it's a DNS name
+		nodeIPs, err := net.LookupIP(nodeID)
+		if err != nil {
+			for _, ip := range nodeIPs {
+				netutils.AppendIPIfNotPresent(ip, ipAddrs)
+			}
+		}
+	}
+
+	// The certificate is also used as a client certificate when API Server contacts directly the kubelet or
 	// admission controllers. For that, it needs the right CN.
 	apiServerSubj := pkix.Name{
 		CommonName:   globals.KubernetesAPIServerUserName,

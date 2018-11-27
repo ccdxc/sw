@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"net"
+	"os"
 
 	"github.com/pkg/errors"
 
@@ -99,4 +100,12 @@ func SetQuorumInstanceAuth(c *quorum.Config, csrSigner certs.CSRSigner, trustRoo
 // trustRoots is the certificate bundle used by client to verify server certificate
 func GenQuorumClientAuth(csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
 	return certs.CreateTLSCredentials(globals.EtcdClientAuthDir, nil, []string{globals.Etcd + "-client"}, nil, trustRoots, csrSigner)
+}
+
+// RemoveQuorumAuth removes quorum instances and clients credentials
+func RemoveQuorumAuth() []error {
+	return []error{
+		os.RemoveAll(globals.EtcdPKIDir),
+		os.RemoveAll(globals.EtcdClientAuthDir),
+	}
 }

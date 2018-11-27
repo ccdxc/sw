@@ -73,3 +73,8 @@ func GenVosAuth(csrSigner certs.CSRSigner, caTrustChain []*x509.Certificate) err
 	}
 	return nil
 }
+
+// RemoveVosAuth removes Vos instance credentials
+func RemoveVosAuth() error {
+	return os.RemoveAll(globals.VosHTTPSAuthDir)
+}
