@@ -37,7 +37,7 @@ var EpLearnType_value = map[string]int32{
 func (x EpLearnType) String() string {
 	return proto.EnumName(EpLearnType_name, int32(x))
 }
-func (EpLearnType) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{0} }
+func (EpLearnType) EnumDescriptor() ([]byte, []int) { return fileDescriptor7, []int{0} }
 
 type DhcpTransactionState int32
 
@@ -70,7 +70,7 @@ var DhcpTransactionState_value = map[string]int32{
 func (x DhcpTransactionState) String() string {
 	return proto.EnumName(DhcpTransactionState_name, int32(x))
 }
-func (DhcpTransactionState) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{1} }
+func (DhcpTransactionState) EnumDescriptor() ([]byte, []int) { return fileDescriptor7, []int{1} }
 
 // DhcpSpec Cfg
 type EplearnDhcpCfg struct {
@@ -80,7 +80,7 @@ type EplearnDhcpCfg struct {
 func (m *EplearnDhcpCfg) Reset()                    { *m = EplearnDhcpCfg{} }
 func (m *EplearnDhcpCfg) String() string            { return proto.CompactTextString(m) }
 func (*EplearnDhcpCfg) ProtoMessage()               {}
-func (*EplearnDhcpCfg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{0} }
+func (*EplearnDhcpCfg) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{0} }
 
 func (m *EplearnDhcpCfg) GetTrustedServers() []*IPAddress {
 	if m != nil {
@@ -98,7 +98,7 @@ type EplearnArpCfg struct {
 func (m *EplearnArpCfg) Reset()                    { *m = EplearnArpCfg{} }
 func (m *EplearnArpCfg) String() string            { return proto.CompactTextString(m) }
 func (*EplearnArpCfg) ProtoMessage()               {}
-func (*EplearnArpCfg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{1} }
+func (*EplearnArpCfg) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{1} }
 
 func (m *EplearnArpCfg) GetEntryTimeout() uint32 {
 	if m != nil {
@@ -122,7 +122,7 @@ type EplearnDataPacketCfg struct {
 func (m *EplearnDataPacketCfg) Reset()                    { *m = EplearnDataPacketCfg{} }
 func (m *EplearnDataPacketCfg) String() string            { return proto.CompactTextString(m) }
 func (*EplearnDataPacketCfg) ProtoMessage()               {}
-func (*EplearnDataPacketCfg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{2} }
+func (*EplearnDataPacketCfg) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{2} }
 
 func (m *EplearnDataPacketCfg) GetEnabled() bool {
 	if m != nil {
@@ -142,7 +142,7 @@ type EplearnCfg struct {
 func (m *EplearnCfg) Reset()                    { *m = EplearnCfg{} }
 func (m *EplearnCfg) String() string            { return proto.CompactTextString(m) }
 func (*EplearnCfg) ProtoMessage()               {}
-func (*EplearnCfg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{3} }
+func (*EplearnCfg) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{3} }
 
 func (m *EplearnCfg) GetLearnType() EpLearnType {
 	if m != nil {
@@ -188,7 +188,7 @@ type ArpStats struct {
 func (m *ArpStats) Reset()                    { *m = ArpStats{} }
 func (m *ArpStats) String() string            { return proto.CompactTextString(m) }
 func (*ArpStats) ProtoMessage()               {}
-func (*ArpStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{4} }
+func (*ArpStats) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{4} }
 
 func (m *ArpStats) GetNumIpLearnt() uint32 {
 	if m != nil {
@@ -219,7 +219,7 @@ type DhcpStats struct {
 func (m *DhcpStats) Reset()                    { *m = DhcpStats{} }
 func (m *DhcpStats) String() string            { return proto.CompactTextString(m) }
 func (*DhcpStats) ProtoMessage()               {}
-func (*DhcpStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{5} }
+func (*DhcpStats) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{5} }
 
 func (m *DhcpStats) GetNumIpLearnt() uint32 {
 	if m != nil {
@@ -244,7 +244,7 @@ type L2EplearnStats struct {
 func (m *L2EplearnStats) Reset()                    { *m = L2EplearnStats{} }
 func (m *L2EplearnStats) String() string            { return proto.CompactTextString(m) }
 func (*L2EplearnStats) ProtoMessage()               {}
-func (*L2EplearnStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{6} }
+func (*L2EplearnStats) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{6} }
 
 func (m *L2EplearnStats) GetL2SegmentKeyHandle() *L2SegmentKeyHandle {
 	if m != nil {
@@ -280,7 +280,7 @@ type DhcpStatus struct {
 func (m *DhcpStatus) Reset()                    { *m = DhcpStatus{} }
 func (m *DhcpStatus) String() string            { return proto.CompactTextString(m) }
 func (*DhcpStatus) ProtoMessage()               {}
-func (*DhcpStatus) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{7} }
+func (*DhcpStatus) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{7} }
 
 func (m *DhcpStatus) GetState() DhcpTransactionState {
 	if m != nil {
@@ -339,7 +339,7 @@ type ArpStatus struct {
 func (m *ArpStatus) Reset()                    { *m = ArpStatus{} }
 func (m *ArpStatus) String() string            { return proto.CompactTextString(m) }
 func (*ArpStatus) ProtoMessage()               {}
-func (*ArpStatus) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{8} }
+func (*ArpStatus) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{8} }
 
 func (m *ArpStatus) GetEntryActive() bool {
 	if m != nil {
@@ -365,7 +365,7 @@ type EplearnStats struct {
 func (m *EplearnStats) Reset()                    { *m = EplearnStats{} }
 func (m *EplearnStats) String() string            { return proto.CompactTextString(m) }
 func (*EplearnStats) ProtoMessage()               {}
-func (*EplearnStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{9} }
+func (*EplearnStats) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{9} }
 
 func (m *EplearnStats) GetNumDhcpTrans() uint32 {
 	if m != nil {
@@ -403,7 +403,7 @@ type EplearnStatus struct {
 func (m *EplearnStatus) Reset()                    { *m = EplearnStatus{} }
 func (m *EplearnStatus) String() string            { return proto.CompactTextString(m) }
 func (*EplearnStatus) ProtoMessage()               {}
-func (*EplearnStatus) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{10} }
+func (*EplearnStatus) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{10} }
 
 func (m *EplearnStatus) GetDhcpStatus() *DhcpStatus {
 	if m != nil {
@@ -435,9 +435,9 @@ func init() {
 	proto.RegisterEnum("halproto.DhcpTransactionState", DhcpTransactionState_name, DhcpTransactionState_value)
 }
 
-func init() { proto.RegisterFile("eplearn.proto", fileDescriptor10) }
+func init() { proto.RegisterFile("eplearn.proto", fileDescriptor7) }
 
-var fileDescriptor10 = []byte{
+var fileDescriptor7 = []byte{
 	// 910 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x95, 0xdd, 0x6e, 0x1a, 0x47,
 	0x14, 0xc7, 0xbb, 0x80, 0x6d, 0x38, 0xcb, 0x57, 0xc6, 0x34, 0x45, 0x91, 0x2c, 0xd1, 0xed, 0x87,

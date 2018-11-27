@@ -20,7 +20,7 @@ type ICMPMsg struct {
 func (m *ICMPMsg) Reset()                    { *m = ICMPMsg{} }
 func (m *ICMPMsg) String() string            { return proto.CompactTextString(m) }
 func (*ICMPMsg) ProtoMessage()               {}
-func (*ICMPMsg) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{0} }
+func (*ICMPMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0} }
 
 func (m *ICMPMsg) GetType() ICMPMsgType {
 	if m != nil {
@@ -47,7 +47,7 @@ type DoSService struct {
 func (m *DoSService) Reset()                    { *m = DoSService{} }
 func (m *DoSService) String() string            { return proto.CompactTextString(m) }
 func (*DoSService) ProtoMessage()               {}
-func (*DoSService) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{1} }
+func (*DoSService) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{1} }
 
 type isDoSService_L4Info interface{ isDoSService_L4Info() }
 
@@ -168,7 +168,7 @@ type DoSSessionLimits struct {
 func (m *DoSSessionLimits) Reset()                    { *m = DoSSessionLimits{} }
 func (m *DoSSessionLimits) String() string            { return proto.CompactTextString(m) }
 func (*DoSSessionLimits) ProtoMessage()               {}
-func (*DoSSessionLimits) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{2} }
+func (*DoSSessionLimits) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{2} }
 
 func (m *DoSSessionLimits) GetMaxSessions() uint32 {
 	if m != nil {
@@ -194,7 +194,7 @@ type DoSPolicer struct {
 func (m *DoSPolicer) Reset()                    { *m = DoSPolicer{} }
 func (m *DoSPolicer) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicer) ProtoMessage()               {}
-func (*DoSPolicer) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{3} }
+func (*DoSPolicer) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{3} }
 
 func (m *DoSPolicer) GetBytesPerSecond() uint32 {
 	if m != nil {
@@ -226,7 +226,7 @@ type DoSFloodLimits struct {
 func (m *DoSFloodLimits) Reset()                    { *m = DoSFloodLimits{} }
 func (m *DoSFloodLimits) String() string            { return proto.CompactTextString(m) }
 func (*DoSFloodLimits) ProtoMessage()               {}
-func (*DoSFloodLimits) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{4} }
+func (*DoSFloodLimits) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{4} }
 
 func (m *DoSFloodLimits) GetRestrictLimits() *DoSFloodLimits_RestrictLimits {
 	if m != nil {
@@ -253,7 +253,7 @@ func (m *DoSFloodLimits_RestrictLimits) Reset()         { *m = DoSFloodLimits_Re
 func (m *DoSFloodLimits_RestrictLimits) String() string { return proto.CompactTextString(m) }
 func (*DoSFloodLimits_RestrictLimits) ProtoMessage()    {}
 func (*DoSFloodLimits_RestrictLimits) Descriptor() ([]byte, []int) {
-	return fileDescriptor8, []int{4, 0}
+	return fileDescriptor5, []int{4, 0}
 }
 
 func (m *DoSFloodLimits_RestrictLimits) GetPps() uint32 {
@@ -287,7 +287,7 @@ type DoSFloodLimits_ProtectLimits struct {
 func (m *DoSFloodLimits_ProtectLimits) Reset()                    { *m = DoSFloodLimits_ProtectLimits{} }
 func (m *DoSFloodLimits_ProtectLimits) String() string            { return proto.CompactTextString(m) }
 func (*DoSFloodLimits_ProtectLimits) ProtoMessage()               {}
-func (*DoSFloodLimits_ProtectLimits) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{4, 1} }
+func (*DoSFloodLimits_ProtectLimits) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{4, 1} }
 
 func (m *DoSFloodLimits_ProtectLimits) GetPps() uint32 {
 	if m != nil {
@@ -330,7 +330,7 @@ type DoSProtectionSpec struct {
 func (m *DoSProtectionSpec) Reset()                    { *m = DoSProtectionSpec{} }
 func (m *DoSProtectionSpec) String() string            { return proto.CompactTextString(m) }
 func (*DoSProtectionSpec) ProtoMessage()               {}
-func (*DoSProtectionSpec) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{5} }
+func (*DoSProtectionSpec) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{5} }
 
 func (m *DoSProtectionSpec) GetSvc() *DoSService {
 	if m != nil {
@@ -403,7 +403,7 @@ type IngressDoSPolicy struct {
 func (m *IngressDoSPolicy) Reset()                    { *m = IngressDoSPolicy{} }
 func (m *IngressDoSPolicy) String() string            { return proto.CompactTextString(m) }
 func (*IngressDoSPolicy) ProtoMessage()               {}
-func (*IngressDoSPolicy) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{6} }
+func (*IngressDoSPolicy) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{6} }
 
 func (m *IngressDoSPolicy) GetDosProtection() *DoSProtectionSpec {
 	if m != nil {
@@ -420,7 +420,7 @@ type EgressDoSPolicy struct {
 func (m *EgressDoSPolicy) Reset()                    { *m = EgressDoSPolicy{} }
 func (m *EgressDoSPolicy) String() string            { return proto.CompactTextString(m) }
 func (*EgressDoSPolicy) ProtoMessage()               {}
-func (*EgressDoSPolicy) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{7} }
+func (*EgressDoSPolicy) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{7} }
 
 func (m *EgressDoSPolicy) GetDosProtection() *DoSProtectionSpec {
 	if m != nil {
@@ -444,7 +444,7 @@ type DoSPolicySpec struct {
 func (m *DoSPolicySpec) Reset()                    { *m = DoSPolicySpec{} }
 func (m *DoSPolicySpec) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicySpec) ProtoMessage()               {}
-func (*DoSPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{8} }
+func (*DoSPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{8} }
 
 func (m *DoSPolicySpec) GetVrfKeyHandle() *VrfKeyHandle {
 	if m != nil {
@@ -489,7 +489,7 @@ type DoSPolicyRequestMsg struct {
 func (m *DoSPolicyRequestMsg) Reset()                    { *m = DoSPolicyRequestMsg{} }
 func (m *DoSPolicyRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyRequestMsg) ProtoMessage()               {}
-func (*DoSPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{9} }
+func (*DoSPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{9} }
 
 func (m *DoSPolicyRequestMsg) GetRequest() []*DoSPolicySpec {
 	if m != nil {
@@ -506,7 +506,7 @@ type DoSPolicyStatus struct {
 func (m *DoSPolicyStatus) Reset()                    { *m = DoSPolicyStatus{} }
 func (m *DoSPolicyStatus) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyStatus) ProtoMessage()               {}
-func (*DoSPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{10} }
+func (*DoSPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{10} }
 
 func (m *DoSPolicyStatus) GetDosHandle() uint64 {
 	if m != nil {
@@ -524,7 +524,7 @@ type DoSPolicyResponse struct {
 func (m *DoSPolicyResponse) Reset()                    { *m = DoSPolicyResponse{} }
 func (m *DoSPolicyResponse) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyResponse) ProtoMessage()               {}
-func (*DoSPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{11} }
+func (*DoSPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{11} }
 
 func (m *DoSPolicyResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -548,7 +548,7 @@ type DoSPolicyResponseMsg struct {
 func (m *DoSPolicyResponseMsg) Reset()                    { *m = DoSPolicyResponseMsg{} }
 func (m *DoSPolicyResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyResponseMsg) ProtoMessage()               {}
-func (*DoSPolicyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{12} }
+func (*DoSPolicyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{12} }
 
 func (m *DoSPolicyResponseMsg) GetResponse() []*DoSPolicyResponse {
 	if m != nil {
@@ -565,7 +565,7 @@ type DoSPolicyDeleteRequest struct {
 func (m *DoSPolicyDeleteRequest) Reset()                    { *m = DoSPolicyDeleteRequest{} }
 func (m *DoSPolicyDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyDeleteRequest) ProtoMessage()               {}
-func (*DoSPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{13} }
+func (*DoSPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{13} }
 
 func (m *DoSPolicyDeleteRequest) GetDosHandle() uint64 {
 	if m != nil {
@@ -582,7 +582,7 @@ type DoSPolicyDeleteRequestMsg struct {
 func (m *DoSPolicyDeleteRequestMsg) Reset()                    { *m = DoSPolicyDeleteRequestMsg{} }
 func (m *DoSPolicyDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyDeleteRequestMsg) ProtoMessage()               {}
-func (*DoSPolicyDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{14} }
+func (*DoSPolicyDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{14} }
 
 func (m *DoSPolicyDeleteRequestMsg) GetRequest() []*DoSPolicyDeleteRequest {
 	if m != nil {
@@ -598,7 +598,7 @@ type DoSPolicyDeleteResponse struct {
 func (m *DoSPolicyDeleteResponse) Reset()                    { *m = DoSPolicyDeleteResponse{} }
 func (m *DoSPolicyDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyDeleteResponse) ProtoMessage()               {}
-func (*DoSPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{15} }
+func (*DoSPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{15} }
 
 func (m *DoSPolicyDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -616,7 +616,7 @@ type DoSPolicyDeleteResponseMsg struct {
 func (m *DoSPolicyDeleteResponseMsg) Reset()                    { *m = DoSPolicyDeleteResponseMsg{} }
 func (m *DoSPolicyDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyDeleteResponseMsg) ProtoMessage()               {}
-func (*DoSPolicyDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{16} }
+func (*DoSPolicyDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{16} }
 
 func (m *DoSPolicyDeleteResponseMsg) GetResponse() []*DoSPolicyDeleteResponse {
 	if m != nil {
@@ -633,7 +633,7 @@ type DoSPolicyGetRequest struct {
 func (m *DoSPolicyGetRequest) Reset()                    { *m = DoSPolicyGetRequest{} }
 func (m *DoSPolicyGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyGetRequest) ProtoMessage()               {}
-func (*DoSPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{17} }
+func (*DoSPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{17} }
 
 func (m *DoSPolicyGetRequest) GetDosHandle() uint64 {
 	if m != nil {
@@ -650,7 +650,7 @@ type DoSPolicyGetRequestMsg struct {
 func (m *DoSPolicyGetRequestMsg) Reset()                    { *m = DoSPolicyGetRequestMsg{} }
 func (m *DoSPolicyGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyGetRequestMsg) ProtoMessage()               {}
-func (*DoSPolicyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{18} }
+func (*DoSPolicyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{18} }
 
 func (m *DoSPolicyGetRequestMsg) GetRequest() []*DoSPolicyGetRequest {
 	if m != nil {
@@ -666,7 +666,7 @@ type DoSPolicyStats struct {
 func (m *DoSPolicyStats) Reset()                    { *m = DoSPolicyStats{} }
 func (m *DoSPolicyStats) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyStats) ProtoMessage()               {}
-func (*DoSPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{19} }
+func (*DoSPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{19} }
 
 // DoSGetResponse captures all the information about a security group
 type DoSPolicyGetResponse struct {
@@ -679,7 +679,7 @@ type DoSPolicyGetResponse struct {
 func (m *DoSPolicyGetResponse) Reset()                    { *m = DoSPolicyGetResponse{} }
 func (m *DoSPolicyGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyGetResponse) ProtoMessage()               {}
-func (*DoSPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{20} }
+func (*DoSPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{20} }
 
 func (m *DoSPolicyGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -717,7 +717,7 @@ type DoSPolicyGetResponseMsg struct {
 func (m *DoSPolicyGetResponseMsg) Reset()                    { *m = DoSPolicyGetResponseMsg{} }
 func (m *DoSPolicyGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*DoSPolicyGetResponseMsg) ProtoMessage()               {}
-func (*DoSPolicyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{21} }
+func (*DoSPolicyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{21} }
 
 func (m *DoSPolicyGetResponseMsg) GetResponse() []*DoSPolicyGetResponse {
 	if m != nil {
@@ -753,9 +753,9 @@ func init() {
 	proto.RegisterType((*DoSPolicyGetResponseMsg)(nil), "halproto.DoSPolicyGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("dos.proto", fileDescriptor8) }
+func init() { proto.RegisterFile("dos.proto", fileDescriptor5) }
 
-var fileDescriptor8 = []byte{
+var fileDescriptor5 = []byte{
 	// 1147 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xdd, 0x6e, 0x1a, 0x47,
 	0x14, 0x0e, 0x86, 0x18, 0x38, 0xc0, 0xb2, 0x9e, 0x24, 0x2e, 0xc6, 0x49, 0x83, 0x57, 0x55, 0x84,

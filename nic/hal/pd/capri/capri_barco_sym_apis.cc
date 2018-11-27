@@ -11,7 +11,7 @@
 namespace hal {
 namespace pd {
 
-hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType hash_type, bool generate,
+hal_ret_t capri_barco_sym_hash_process_request (internal::CryptoApiHashType hash_type, bool generate,
 						unsigned char *key, int key_len,
 						unsigned char *data, int data_len,
 						uint8_t *digest,
@@ -178,49 +178,49 @@ hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType ha
     sym_req_descr.output_list_addr = olist_msg_descr_addr;
 
     switch (hash_type) {
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA1:
+    case internal::CRYPTOAPI_HASHTYPE_SHA1:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA1_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA1_Verify_Hash;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA224:
+    case internal::CRYPTOAPI_HASHTYPE_SHA224:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA224_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA224_Verify_Hash;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA256:
+    case internal::CRYPTOAPI_HASHTYPE_SHA256:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA256_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA256_Verify_Hash;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA384:
+    case internal::CRYPTOAPI_HASHTYPE_SHA384:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA384_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA384_Verify_Hash;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA512:
+    case internal::CRYPTOAPI_HASHTYPE_SHA512:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA512_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA512_Verify_Hash;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA1:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA1:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA1_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA1_Verify_HMAC;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA224:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA224:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA224_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA224_Verify_HMAC;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA256:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA256:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA256_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA256_Verify_HMAC;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA384:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA384:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA384_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA384_Verify_HMAC;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA512:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA512:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA512_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA512_Verify_HMAC;
       break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_MD5:
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA512_224:
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA512_256:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_MD5:
+    case internal::CRYPTOAPI_HASHTYPE_SHA512_224:
+    case internal::CRYPTOAPI_HASHTYPE_SHA512_256:
     default:
         HAL_TRACE_ERR("SYM Hash {}-{}: Invalid Hash request",
 		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");

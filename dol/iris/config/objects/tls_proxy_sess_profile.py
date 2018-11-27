@@ -11,7 +11,7 @@ from infra.common.logging       import logger
 
 import iris.config.hal.defs          as haldefs
 import iris.config.hal.api           as halapi
-import crypto_apis_pb2          as crypto_apis_pb2
+import internal_pb2          as internal_pb2
 
 class CryptoCertObject(base.ConfigObjectBase):
     def __init__(self):
@@ -35,8 +35,8 @@ class CryptoCertObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, reqspec):
         if reqspec.__class__.__name__ == 'CryptoApiRequest':
-            reqspec.api_type = crypto_apis_pb2.ASYMAPI_SETUP_CERT
-            reqspec.setup_cert.update_type = crypto_apis_pb2.ADD_UPDATE 
+            reqspec.api_type = internal_pb2.ASYMAPI_SETUP_CERT
+            reqspec.setup_cert.update_type = internal_pb2.ADD_UPDATE 
             reqspec.setup_cert.cert_id = self.id
             reqspec.setup_cert.body = self.cert_body
             #reqspec.setup_cert.next_cert_id = None
@@ -100,7 +100,7 @@ class CryptoAsymKeyObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, reqspec):
         if reqspec.__class__.__name__ == 'CryptoApiRequest':
-            reqspec.api_type = crypto_apis_pb2.ASYMAPI_SETUP_PRIV_KEY
+            reqspec.api_type = internal_pb2.ASYMAPI_SETUP_PRIV_KEY
             reqspec.setup_priv_key.key = self.key
         return
 

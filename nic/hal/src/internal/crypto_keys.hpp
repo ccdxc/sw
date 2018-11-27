@@ -6,38 +6,37 @@
 #define __CRYPTO_SESSION_KEYS_HPP__
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/hal/iris/include/hal_state.hpp"
-#include "gen/proto/crypto_keys.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "gen/proto/types.pb.h"
 
 
-using cryptokey::CryptoKeySpec;
+using internal::CryptoKeySpec;
 
-using cryptokey::CryptoKeyCreateRequest;
-using cryptokey::CryptoKeyCreateRequestMsg;
-using cryptokey::CryptoKeyCreateResponse;
-using cryptokey::CryptoKeyCreateResponseMsg;
+using internal::CryptoKeyCreateRequest;
+using internal::CryptoKeyCreateRequestMsg;
+using internal::CryptoKeyCreateResponse;
+using internal::CryptoKeyCreateResponseMsg;
 
-using cryptokey::CryptoKeyCreateWithIdRequest;
-using cryptokey::CryptoKeyCreateWithIdRequestMsg;
-using cryptokey::CryptoKeyCreateWithIdResponse;
-using cryptokey::CryptoKeyCreateWithIdResponseMsg;
+using internal::CryptoKeyCreateWithIdRequest;
+using internal::CryptoKeyCreateWithIdRequestMsg;
+using internal::CryptoKeyCreateWithIdResponse;
+using internal::CryptoKeyCreateWithIdResponseMsg;
 
-using cryptokey::CryptoKeyReadRequest;
-using cryptokey::CryptoKeyReadRequestMsg;
-using cryptokey::CryptoKeyReadResponse;
-using cryptokey::CryptoKeyReadResponseMsg;
+using internal::CryptoKeyReadRequest;
+using internal::CryptoKeyReadRequestMsg;
+using internal::CryptoKeyReadResponse;
+using internal::CryptoKeyReadResponseMsg;
 
-using cryptokey::CryptoKeyUpdateRequest;
-using cryptokey::CryptoKeyUpdateRequestMsg;
-using cryptokey::CryptoKeyUpdateResponse;
-using cryptokey::CryptoKeyUpdateResponseMsg;
+using internal::CryptoKeyUpdateRequest;
+using internal::CryptoKeyUpdateRequestMsg;
+using internal::CryptoKeyUpdateResponse;
+using internal::CryptoKeyUpdateResponseMsg;
 
 
-using cryptokey::CryptoKeyDeleteRequest;
-using cryptokey::CryptoKeyDeleteRequestMsg;
-using cryptokey::CryptoKeyDeleteResponse;
-using cryptokey::CryptoKeyDeleteResponseMsg;
+using internal::CryptoKeyDeleteRequest;
+using internal::CryptoKeyDeleteRequestMsg;
+using internal::CryptoKeyDeleteResponse;
+using internal::CryptoKeyDeleteResponseMsg;
 
 namespace hal {
 
@@ -49,22 +48,6 @@ typedef struct crypto_key_s {
     uint32_t                key_size;
     uint8_t                 key[CRYPTO_KEY_SIZE_MAX];
 } __PACK__ crypto_key_t;
-
-hal_ret_t   cryptokey_create(cryptokey::CryptoKeyCreateRequest &request,
-        cryptokey::CryptoKeyCreateResponse *response);
-
-hal_ret_t   cryptokeycreatewith_id(cryptokey::CryptoKeyCreateWithIdRequest &request,
-        cryptokey::CryptoKeyCreateWithIdResponse *response);
-
-hal_ret_t   cryptokey_read(cryptokey::CryptoKeyReadRequest &request,
-        cryptokey::CryptoKeyReadResponse *response);
-
-hal_ret_t   cryptokey_update(cryptokey::CryptoKeyUpdateRequest &request,
-        cryptokey::CryptoKeyUpdateResponse *response);
-
-hal_ret_t   cryptokey_delete(cryptokey::CryptoKeyDeleteRequest &request,
-        cryptokey::CryptoKeyDeleteResponse *response);
-
 
 
 typedef struct crypto_asym_key_s {

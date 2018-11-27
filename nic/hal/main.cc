@@ -33,7 +33,6 @@
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
-#include "nic/hal/svc/barco_rings_svc.hpp"
 #include "nic/hal/svc/accel_rgroup_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 #include "nic/hal/svc/nic_svc.hpp"
@@ -49,7 +48,6 @@
 #include "gen/hal/svc/internal_svc_gen.hpp"
 #include "gen/hal/svc/proxyccb_svc_gen.hpp"
 #include "gen/hal/svc/proxyrcb_svc_gen.hpp"
-#include "gen/hal/svc/internal_svc_gen.hpp"
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
 #include "gen/hal/svc/nat_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"
@@ -57,12 +55,10 @@
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/ipsec_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
-#include "gen/hal/svc/crypto_keys_svc_gen.hpp"
 #include "gen/hal/svc/rawccb_svc_gen.hpp"
 #include "gen/hal/svc/proxyrcb_svc_gen.hpp"
 #include "gen/hal/svc/proxyccb_svc_gen.hpp"
 #include "gen/hal/svc/tcp_proxy_svc_gen.hpp"
-#include "gen/hal/svc/crypto_apis_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
 #include "gen/hal/svc/gft_svc_gen.hpp"
 #include "gen/hal/svc/dos_svc_gen.hpp"
@@ -104,15 +100,12 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     ProxyServiceImpl         proxy_svc;
     IpsecServiceImpl         ipsec_svc;
     CpuCbServiceImpl         cpucb_svc;
-    CryptoKeyServiceImpl     crypto_key_svc;
     RawrCbServiceImpl        rawrcb_svc;
     RawcCbServiceImpl        rawccb_svc;
     ProxyrCbServiceImpl      proxyrcb_svc;
     ProxycCbServiceImpl      proxyccb_svc;
     TcpProxyServiceImpl      tcp_proxy_svc;
-    CryptoApisServiceImpl    crypto_apis_svc;
     EventServiceImpl         event_svc;
-    BarcoRingsServiceImpl    barco_rings_svc;
     AccelRGroupServiceImpl   accel_rgroup_svc;
     MulticastServiceImpl     multicast_svc;
     GftServiceImpl           gft_svc;
@@ -133,16 +126,13 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&proxy_svc);
         //server_builder->RegisterService(&ipsec_svc);
         server_builder->RegisterService(&cpucb_svc);
-        server_builder->RegisterService(&crypto_key_svc);
         server_builder->RegisterService(&rawrcb_svc);
         server_builder->RegisterService(&rawccb_svc);
         server_builder->RegisterService(&proxyrcb_svc);
         server_builder->RegisterService(&proxyccb_svc);
         server_builder->RegisterService(&tcp_proxy_svc);
         server_builder->RegisterService(&tls_proxy_cb_svc);
-        server_builder->RegisterService(&crypto_apis_svc);
         server_builder->RegisterService(&event_svc);
-        server_builder->RegisterService(&barco_rings_svc);
         server_builder->RegisterService(&accel_rgroup_svc);
         server_builder->RegisterService(&system_svc);
         server_builder->RegisterService(&swphv_svc);

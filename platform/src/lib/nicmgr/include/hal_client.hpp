@@ -17,8 +17,7 @@
 #include "gen/proto/rdma.grpc.pb.h"
 #include "gen/proto/accel_rgroup.grpc.pb.h"
 #include "gen/proto/internal.grpc.pb.h"
-#include "gen/proto/crypto_keys.pb.h"
-#include "gen/proto/crypto_keys.grpc.pb.h"
+#include "gen/proto/internal.pb.h"
 
 #include "platform/src/lib/hal_api/include/ethlif.hpp"
 #include "platform/src/lib/hal_api/include/qos.hpp"
@@ -34,7 +33,6 @@ using namespace l2segment;
 using namespace multicast;
 using namespace rdma;
 using namespace accelRGroup;
-using namespace cryptokey;
 
 using namespace grpc;
 using namespace std;
@@ -382,7 +380,7 @@ private:
   std::unique_ptr<Multicast::Stub> multicast_stub_;
   std::unique_ptr<Rdma::Stub> rdma_stub_;
   std::unique_ptr<AccelRGroup::Stub> accel_rgroup_stub_;
-  std::unique_ptr<CryptoKey::Stub> crypto_stub_;
+  std::unique_ptr<Internal::Stub> crypto_stub_;
 };
 
 #define   IB_QP_STATE        (1 << 0)

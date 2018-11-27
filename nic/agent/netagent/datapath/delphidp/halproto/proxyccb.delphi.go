@@ -23,7 +23,7 @@ type ProxycCbKeyHandle struct {
 func (m *ProxycCbKeyHandle) Reset()                    { *m = ProxycCbKeyHandle{} }
 func (m *ProxycCbKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbKeyHandle) ProtoMessage()               {}
-func (*ProxycCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{0} }
+func (*ProxycCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{0} }
 
 type isProxycCbKeyHandle_KeyOrHandle interface{ isProxycCbKeyHandle_KeyOrHandle() }
 
@@ -157,7 +157,7 @@ type ProxycCbSpec struct {
 func (m *ProxycCbSpec) Reset()                    { *m = ProxycCbSpec{} }
 func (m *ProxycCbSpec) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbSpec) ProtoMessage()               {}
-func (*ProxycCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{1} }
+func (*ProxycCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{1} }
 
 func (m *ProxycCbSpec) GetKeyOrHandle() *ProxycCbKeyHandle {
 	if m != nil {
@@ -335,7 +335,7 @@ type ProxycCbRequestMsg struct {
 func (m *ProxycCbRequestMsg) Reset()                    { *m = ProxycCbRequestMsg{} }
 func (m *ProxycCbRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbRequestMsg) ProtoMessage()               {}
-func (*ProxycCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{2} }
+func (*ProxycCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{2} }
 
 func (m *ProxycCbRequestMsg) GetRequest() []*ProxycCbSpec {
 	if m != nil {
@@ -352,7 +352,7 @@ type ProxycCbStatus struct {
 func (m *ProxycCbStatus) Reset()                    { *m = ProxycCbStatus{} }
 func (m *ProxycCbStatus) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbStatus) ProtoMessage()               {}
-func (*ProxycCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{3} }
+func (*ProxycCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{3} }
 
 func (m *ProxycCbStatus) GetProxyccbHandle() uint64 {
 	if m != nil {
@@ -370,7 +370,7 @@ type ProxycCbResponse struct {
 func (m *ProxycCbResponse) Reset()                    { *m = ProxycCbResponse{} }
 func (m *ProxycCbResponse) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbResponse) ProtoMessage()               {}
-func (*ProxycCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{4} }
+func (*ProxycCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{4} }
 
 func (m *ProxycCbResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -394,7 +394,7 @@ type ProxycCbResponseMsg struct {
 func (m *ProxycCbResponseMsg) Reset()                    { *m = ProxycCbResponseMsg{} }
 func (m *ProxycCbResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbResponseMsg) ProtoMessage()               {}
-func (*ProxycCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{5} }
+func (*ProxycCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{5} }
 
 func (m *ProxycCbResponseMsg) GetResponse() []*ProxycCbResponse {
 	if m != nil {
@@ -411,7 +411,7 @@ type ProxycCbDeleteRequest struct {
 func (m *ProxycCbDeleteRequest) Reset()                    { *m = ProxycCbDeleteRequest{} }
 func (m *ProxycCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbDeleteRequest) ProtoMessage()               {}
-func (*ProxycCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{6} }
+func (*ProxycCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{6} }
 
 func (m *ProxycCbDeleteRequest) GetKeyOrHandle() *ProxycCbKeyHandle {
 	if m != nil {
@@ -428,7 +428,7 @@ type ProxycCbDeleteRequestMsg struct {
 func (m *ProxycCbDeleteRequestMsg) Reset()                    { *m = ProxycCbDeleteRequestMsg{} }
 func (m *ProxycCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbDeleteRequestMsg) ProtoMessage()               {}
-func (*ProxycCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{7} }
+func (*ProxycCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{7} }
 
 func (m *ProxycCbDeleteRequestMsg) GetRequest() []*ProxycCbDeleteRequest {
 	if m != nil {
@@ -445,7 +445,7 @@ type ProxycCbDeleteResponseMsg struct {
 func (m *ProxycCbDeleteResponseMsg) Reset()                    { *m = ProxycCbDeleteResponseMsg{} }
 func (m *ProxycCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbDeleteResponseMsg) ProtoMessage()               {}
-func (*ProxycCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{8} }
+func (*ProxycCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{8} }
 
 func (m *ProxycCbDeleteResponseMsg) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -462,7 +462,7 @@ type ProxycCbGetRequest struct {
 func (m *ProxycCbGetRequest) Reset()                    { *m = ProxycCbGetRequest{} }
 func (m *ProxycCbGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbGetRequest) ProtoMessage()               {}
-func (*ProxycCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{9} }
+func (*ProxycCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{9} }
 
 func (m *ProxycCbGetRequest) GetKeyOrHandle() *ProxycCbKeyHandle {
 	if m != nil {
@@ -479,7 +479,7 @@ type ProxycCbGetRequestMsg struct {
 func (m *ProxycCbGetRequestMsg) Reset()                    { *m = ProxycCbGetRequestMsg{} }
 func (m *ProxycCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbGetRequestMsg) ProtoMessage()               {}
-func (*ProxycCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{10} }
+func (*ProxycCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{10} }
 
 func (m *ProxycCbGetRequestMsg) GetRequest() []*ProxycCbGetRequest {
 	if m != nil {
@@ -495,7 +495,7 @@ type ProxycCbStats struct {
 func (m *ProxycCbStats) Reset()                    { *m = ProxycCbStats{} }
 func (m *ProxycCbStats) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbStats) ProtoMessage()               {}
-func (*ProxycCbStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{11} }
+func (*ProxycCbStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{11} }
 
 // ProxycCbGetResponse captures all the information about a proxyccb
 // only if api_status indicates success, other fields are valid
@@ -509,7 +509,7 @@ type ProxycCbGetResponse struct {
 func (m *ProxycCbGetResponse) Reset()                    { *m = ProxycCbGetResponse{} }
 func (m *ProxycCbGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbGetResponse) ProtoMessage()               {}
-func (*ProxycCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{12} }
+func (*ProxycCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{12} }
 
 func (m *ProxycCbGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -547,7 +547,7 @@ type ProxycCbGetResponseMsg struct {
 func (m *ProxycCbGetResponseMsg) Reset()                    { *m = ProxycCbGetResponseMsg{} }
 func (m *ProxycCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxycCbGetResponseMsg) ProtoMessage()               {}
-func (*ProxycCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{13} }
+func (*ProxycCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{13} }
 
 func (m *ProxycCbGetResponseMsg) GetResponse() []*ProxycCbGetResponse {
 	if m != nil {
@@ -573,9 +573,9 @@ func init() {
 	proto.RegisterType((*ProxycCbGetResponseMsg)(nil), "halproto.ProxycCbGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("proxyccb.proto", fileDescriptor29) }
+func init() { proto.RegisterFile("proxyccb.proto", fileDescriptor26) }
 
-var fileDescriptor29 = []byte{
+var fileDescriptor26 = []byte{
 	// 968 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x5d, 0x6f, 0xdb, 0x36,
 	0x14, 0xad, 0x93, 0xd4, 0x75, 0xae, 0xfc, 0x91, 0x30, 0x8b, 0xc3, 0xa6, 0xcd, 0xea, 0x69, 0x5f,

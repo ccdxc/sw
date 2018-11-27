@@ -56,6 +56,20 @@ service Internal {
   rpc WRingGetMeta (WRingRequestMsg) returns (WRingGetMetaResponseMsg) {}
   rpc WRingSetMeta (WRingRequestMsg) returns (WRingSetMetaResponseMsg) {}
 
+  // barco
+  rpc GetOpaqueTagAddr (GetOpaqueTagAddrRequestMsg) returns (GetOpaqueTagAddrResponseMsg) {}
+  rpc BarcoGetReqDescrEntry (BarcoGetReqDescrEntryRequestMsg) returns (BarcoGetReqDescrEntryResponseMsg) {}
+  rpc BarcoGetRingMeta      (BarcoGetRingMetaRequestMsg) returns (BarcoGetRingMetaResponseMsg) {}
+
+  // Crypto keys
+  rpc CryptoKeyCreate (CryptoKeyCreateRequestMsg) returns (CryptoKeyCreateResponseMsg) {}
+  rpc CryptoKeyCreateWithId (CryptoKeyCreateWithIdRequestMsg) returns (CryptoKeyCreateWithIdResponseMsg) {}
+  rpc CryptoKeyRead (CryptoKeyReadRequestMsg) returns (CryptoKeyReadResponseMsg) {}
+  rpc CryptoKeyUpdate (CryptoKeyUpdateRequestMsg) returns (CryptoKeyUpdateResponseMsg) {}
+  rpc CryptoKeyDelete (CryptoKeyDeleteRequestMsg) returns (CryptoKeyDeleteResponseMsg) {}
+
+  //CryptoApi
+  rpc CryptoApiInvoke (CryptoApiRequestMsg) returns (CryptoApiResponseMsg) {}
 }
 
 message ProgramAddressReq {
@@ -719,5 +733,445 @@ message WRingSetMetaResponse {
 // WRingSetMetaResponse is batched response to WRingSetMetaResponseMsg
 message WRingSetMetaResponseMsg {
   repeated WRingSetMetaResponse    response = 1;    // batch set response
+}
+
+message GetOpaqueTagAddrRequest {
+    types.BarcoRings ring_type = 1;
+}
+
+message GetOpaqueTagAddrRequestMsg {
+    repeated  GetOpaqueTagAddrRequest request = 1;
+}
+
+message GetOpaqueTagAddrResponse {
+    uint64 opaque_tag_addr = 1;
+    types.ApiStatus api_status = 2;    // API status code
+}
+
+message GetOpaqueTagAddrResponseMsg {
+    repeated  GetOpaqueTagAddrResponse response = 1;
+}
+
+// BarcoGetReqDescrEntryRequest - get request descriptor entry from a barco ring slot
+message BarcoGetReqDescrEntryRequest {
+  types.BarcoRings     ring_type     = 1;    // Barco Ring Type
+  uint32               slot_index    = 2;    // Index of the slot in the ring
+}
+
+// BarcoGetReqDescrEntryRequestMsg is batched GET requests for barco rings
+message BarcoGetReqDescrEntryRequestMsg {
+  repeated BarcoGetReqDescrEntryRequest    request = 1;    // batched get request
+}
+
+// Required fields of the Barco Symmetric crypto Request descriptor
+message BarcoSymmReqDescrMsg {
+  fixed64           ilist_addr            = 1;
+  fixed64           olist_addr            = 2;
+  uint32            command               = 3;
+  uint32            key_desc_index        = 4;
+  fixed64           iv_addr               = 5;
+  fixed64           status_addr           = 6;
+  fixed64           doorbell_addr         = 7;
+  fixed64           doorbell_data         = 8;
+  uint32            salt                  = 9;
+  fixed64           explicit_iv           = 10;
+  uint32            header_size           = 11;
+  uint32            barco_status          = 12;
+  uint32            second_key_desc_index = 13;
+}
+
+// Required fields of the Barco ASymmetric crypto Request descriptor
+message BarcoASymReqDescrMsg {
+  fixed64           ilist_addr          = 1;
+  fixed64           olist_addr          = 2;
+  uint32            key_desc_index      = 3;
+  fixed64           status_addr         = 4;
+  uint32            opaque_tag_value    = 5;
+  uint32            opaque_tag_wr_en    = 6;
+  uint32            flag_a              = 7;
+  uint32            flag_b              = 8;
+}
+
+// BarcoGetReqDescrEntryResponse returns the barco request descriptor content
+// only if api_status indicates success, other fields are valid
+message BarcoGetReqDescrEntryResponse {
+  types.ApiStatus    api_status     = 1;    // API status code
+  types.BarcoRings   ring_type      = 2;    // Barco Ring Type
+  uint32             slot_index     = 3;    // Index of the slot in the ring
+  oneof ReqDescrMsg {
+     BarcoSymmReqDescrMsg  symm_req_descr = 4;  // Symmetric Request Descriptor content
+     BarcoASymReqDescrMsg  asym_req_descr = 5;  // ASymmetric Request Descriptor content
+  }
+}
+
+// BarcoGetReqDescrEntryResponseMsg is batched response to BarcoGetReqDescrEntryRequestMsg
+message BarcoGetReqDescrEntryResponseMsg {
+  repeated BarcoGetReqDescrEntryResponse    response = 1;    // batch get response
+}
+
+
+// BarcoGetRingMetaRequest - get ring meta data for a barco ring
+message BarcoGetRingMetaRequest {
+  types.BarcoRings     ring_type     = 1;    // Barco Ring Type
+}
+
+// BarcoGetRingMetaRequestMsg is batched GET requests for barco rings
+message BarcoGetRingMetaRequestMsg {
+  repeated BarcoGetRingMetaRequest    request = 1;    // batched get request
+}
+
+// BarcoGetRingMetaResponse returns the barco ring meta data
+// only if api_status indicates success, other fields are valid
+message BarcoGetRingMetaResponse {
+  types.ApiStatus    api_status     = 1;    // API status code
+  types.BarcoRings   ring_type      = 2;    // Barco Ring Type
+  uint32             pi             = 3;    // Current value of Hw producer idx in the ring
+  uint32             ci             = 4;    // Current value of Hw consumer ifx in the ring
+}
+
+// BarcoGetRingMetaResponseMsg is batched response to BarcoGetRingMetaRequestMsg
+message BarcoGetRingMetaResponseMsg {
+  repeated BarcoGetRingMetaResponse    response = 1;    // batch get response
+}
+
+message CryptoKeyCreateRequest {
+}
+message CryptoKeyCreateRequestMsg {
+    repeated CryptoKeyCreateRequest request     = 1;
+}
+message CryptoKeyCreateResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoKeyCreateResponseMsg {
+    repeated CryptoKeyCreateResponse response   = 1;
+}
+
+message CryptoKeyCreateWithIdRequest {
+  uint32                keyindex                = 1;
+  uint32                allow_dup_alloc         = 2;
+}
+message CryptoKeyCreateWithIdRequestMsg {
+    repeated CryptoKeyCreateWithIdRequest request = 1;
+}
+message CryptoKeyCreateWithIdResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoKeyCreateWithIdResponseMsg {
+    repeated CryptoKeyCreateWithIdResponse response   = 1;
+}
+
+message CryptoKeySpec {
+  uint32                keyindex                = 1;
+  types.CryptoKeyType   key_type                = 2;
+  uint32                key_size                = 3;
+  bytes                 key                     = 4;
+}
+
+
+message CryptoKeyReadRequest {
+  uint32                keyindex                = 1;
+}
+message CryptoKeyReadRequestMsg {
+    repeated CryptoKeyReadRequest request       = 1;
+}
+message CryptoKeyReadResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  CryptoKeySpec         key                     = 2;
+}
+message CryptoKeyReadResponseMsg {
+    repeated CryptoKeyReadResponse response     = 1;
+}
+
+
+message CryptoKeyUpdateRequest {
+  CryptoKeySpec         key                     = 1;
+}
+message CryptoKeyUpdateRequestMsg {
+    repeated CryptoKeyUpdateRequest request     = 1;
+}
+message CryptoKeyUpdateResponse{
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoKeyUpdateResponseMsg {
+    repeated CryptoKeyUpdateResponse response   = 1;
+}
+
+
+message CryptoKeyDeleteRequest {
+  uint32                keyindex                = 1;
+}
+message CryptoKeyDeleteRequestMsg {
+    repeated CryptoKeyDeleteRequest request     = 1;
+}
+message CryptoKeyDeleteResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoKeyDeleteResponseMsg {
+    repeated CryptoKeyDeleteResponse response   = 1;
+}
+
+// Types of Crypto Hash algos
+enum CryptoApiHashType {
+    CRYPTOAPI_HASHTYPE_NONE = 0 [(gogoproto.enumvalue_customname) = "none"];
+    CRYPTOAPI_HASHTYPE_MD5 = 1 [(gogoproto.enumvalue_customname) = "MD5"];
+    CRYPTOAPI_HASHTYPE_SHA1 = 2 [(gogoproto.enumvalue_customname) = "SHA1"];
+    CRYPTOAPI_HASHTYPE_SHA224 = 3 [(gogoproto.enumvalue_customname) = "SHA224"];
+    CRYPTOAPI_HASHTYPE_SHA256 = 4 [(gogoproto.enumvalue_customname) = "SHA256"];
+    CRYPTOAPI_HASHTYPE_SHA384 = 5 [(gogoproto.enumvalue_customname) = "SHA384"];
+    CRYPTOAPI_HASHTYPE_SHA512 = 6 [(gogoproto.enumvalue_customname) = "SHA512"];
+    CRYPTOAPI_HASHTYPE_SHA512_224 = 7 [(gogoproto.enumvalue_customname) = "SHA512_224"];
+    CRYPTOAPI_HASHTYPE_SHA512_256 = 8 [(gogoproto.enumvalue_customname) = "SHA512_256"];
+    CRYPTOAPI_HASHTYPE_HMAC_MD5 = 9 [(gogoproto.enumvalue_customname) = "HMAC_MD5"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA1 = 10 [(gogoproto.enumvalue_customname) = "HMAC_SHA1"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA224 = 11 [(gogoproto.enumvalue_customname) = "HMAC_SHA224"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA256 = 12 [(gogoproto.enumvalue_customname) = "HMAC_SHA256"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA384 = 13 [(gogoproto.enumvalue_customname) = "HMAC_SHA384"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA512 = 14 [(gogoproto.enumvalue_customname) = "HMAC_SHA512"];
+}
+
+enum CryptoApiType {
+  ASYMAPI_ECC_POINT_MUL_FP              = 0;
+  ASYMAPI_ECDSA_SIG_GEN_FP              = 1;
+  ASYMAPI_ECDSA_SIG_VERIFY_FP           = 2;
+  ASYMAPI_RSA_ENCRYPT                   = 3;
+  ASYMAPI_RSA_DECRYPT                   = 4;
+  ASYMAPI_RSA_CRT_DECRYPT               = 5;
+  SYMMAPI_HASH_GENERATE                 = 6;
+  SYMMAPI_HASH_VERIFY                   = 7;
+  ASYMAPI_RSA_SIG_GEN                   = 8;
+  ASYMAPI_RSA_SIG_VERIFY                = 9;
+  ASYMAPI_SETUP_PRIV_KEY                = 10;
+  ASYMAPI_SETUP_CERT                    = 11;
+}
+
+enum UpdateType {
+    ADD_UPDATE = 0;
+    DELETE     = 1;
+}
+
+message ECCPoint {
+  bytes         x                       = 1;
+  bytes         y                       = 2;
+}
+
+message CryptoAsymApiECCDomainParamsFp {
+  uint32        KeySize                 = 1;
+  bytes         p                       = 2;
+  bytes         a                       = 3;
+  bytes         b                       = 4;
+  ECCPoint      G                       = 5;
+  bytes         n                       = 6;
+//  bytes         h                       = 7;
+}
+
+//  ECC Point Multiplication 
+
+message CryptoAsymApiReqECCPointMulFp {
+  CryptoAsymApiECCDomainParamsFp    ecc_domain_params   = 1;
+  ECCPoint                          ecc_point           = 2;
+  bytes                             k                   = 3;
+}
+message CryptoAsymApiRespECCPointMulFp {
+  ECCPoint                          Q                   = 1;
+}
+
+
+// ESCDA Signature Generation
+message CryptoAsymApiReqECDSASignatureGenFp {
+  CryptoAsymApiECCDomainParamsFp    ecc_domain_params   = 1;
+  bytes                             da                  = 2;
+  bytes                             k                   = 3;
+  bytes                             h                   = 4;
+  int32                             key_idx             = 5;
+  bool                              async_en            = 6;
+}
+message CryptoAsymApiRespECDSASignatureGenFp {
+  bytes                             r                   = 1;
+  bytes                             s                   = 2;
+}
+
+// ECDSA Signature Verification
+message CryptoAsymApiReqECDSASignatureVerifyFp {
+  CryptoAsymApiECCDomainParamsFp    ecc_domain_params   = 1;
+  ECCPoint                          Q                   = 2;
+  bytes                             r                   = 3;
+  bytes                             s                   = 4;
+  bytes                             h                   = 5;
+  bool                              async_en            = 6;
+}
+
+// RSA Encryption
+message CryptoAsymApiReqRSAEncrypt {
+  uint32                            KeySize             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             e                   = 3;
+  bytes                             plain_text          = 4;
+  bool                              async_en            = 5;
+}
+
+message CryptoAsymApiRespRSAEncrypt {
+  bytes                             cipher_text         = 1;
+}
+
+// RSA Decryption
+message CryptoAsymApiReqRSADecrypt {
+  uint32                            KeySize             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             d                   = 3;
+  bytes                             cipher_text         = 4;
+}
+
+message CryptoAsymApiRespRSADecrypt {
+  bytes                             plain_text         = 1;
+}
+
+// RSA CRT Decryption
+message CryptoAsymApiReqRSACRTDecrypt {
+  uint32                            KeySize             = 1;
+  bytes                             p                   = 2;
+  bytes                             q                   = 3;
+  bytes                             dp                  = 4;
+  bytes                             dq                  = 5;
+  bytes                             qinv                = 6;
+  bytes                             cipher_text         = 7;
+  int32                             key_idx             = 8;
+  bool                              async_en            = 9;
+}
+
+message CryptoAsymApiRespRSACRTDecrypt {
+  bytes                             plain_text         = 1;
+}
+
+// Asymmetric Private Key Setup
+// Temp API as a workaround until securemon is ready
+message CryptoAsymApiReqSetupPrivateKey {
+    string                          key                 = 1;
+}
+
+message CryptoAsymApiRespECDSAKeyInfo {
+    int32                           sign_key_idx        = 1;
+}
+
+message CryptoAsymApiRespRSAKeyInfo {
+    int32                           sign_key_idx        = 1;
+    int32                           decrypt_key_idx     = 2;
+}
+
+message CryptoAsymApiRespSetupPrivateKey {
+    types.CryptoAsymKeyType             key_type            = 1;
+    oneof KeyInfo {
+        CryptoAsymApiRespECDSAKeyInfo   ecdsa_key_info  = 2;
+        CryptoAsymApiRespRSAKeyInfo     rsa_key_info    = 3;
+    }
+}
+
+// Certificate Setup
+message CryptoAsymApiReqSetupCert {
+    UpdateType                      update_type         = 1;    // Add/Update delete
+    int32                           cert_id             = 2;    // Cert id
+    string                          body                = 3;    // Body
+    int32                           next_cert_id        = 5;    // Next Cert in the chain
+}
+
+message CryptoAsymApiRespSetupCert {
+}
+
+// RSA Signature Generation
+message CryptoAsymApiReqRSASignatureGen {
+  uint32                            KeySize             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             d                   = 3;
+  bytes                             h                   = 4;
+  int32                             key_idx             = 5;
+  bool                              async_en            = 6;
+}
+
+message CryptoAsymApiRespRSASignatureGen {
+  bytes                             s                   = 1;
+}
+
+// RSA Signature Verification
+message CryptoAsymApiReqRSASignatureVerify {
+  uint32                            KeySize             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             e                   = 3;
+  bytes                             h                   = 4;
+  bytes                             s                   = 5;
+}
+
+// Crypto Hash digest generate request
+message CryptoSymmApiReqHashGenerate {
+  CryptoApiHashType                hashtype            = 1;
+  bytes                            key                 = 2;
+  int32                            key_len             = 3;
+  bytes                            data                = 4;
+  int32                            data_len            = 5;
+  int32                            digest_len          = 6;
+}
+
+message CryptoSymmApiRespHashGenerate {
+  bytes                            digest              = 1;
+}
+
+// Crypto Hash digest verify request
+message CryptoSymmApiReqHashVerify {
+  CryptoApiHashType                hashtype            = 1;
+  bytes                            key                 = 2;
+  int32                            key_len             = 3;
+  bytes                            data                = 4;
+  int32                            data_len            = 5;
+  bytes                            digest              = 6;
+  int32                            digest_len          = 7;
+}
+
+//message CryptoSymmApiRespHashVerify {
+//  bytes                            digest              = 1;
+//}
+
+// Top Level Request and Response message definition
+
+message CryptoApiRequest {
+  CryptoApiType                     api_type            = 1;
+  oneof CryptoApiReq {
+    CryptoAsymApiReqECCPointMulFp   ecc_point_mul_fp    = 2;
+    CryptoAsymApiReqECDSASignatureGenFp     ecdsa_sig_gen_fp        = 3;
+    CryptoAsymApiReqECDSASignatureVerifyFp  ecdsa_sig_verify_fp     = 4;
+    CryptoAsymApiReqRSAEncrypt      rsa_encrypt         = 5;
+    CryptoAsymApiReqRSADecrypt      rsa_decrypt         = 6;
+    CryptoAsymApiReqRSACRTDecrypt   rsa_crt_decrypt     = 7;
+    CryptoSymmApiReqHashGenerate    hash_generate       = 8;
+    CryptoSymmApiReqHashVerify      hash_verify         = 9;
+    CryptoAsymApiReqRSASignatureGen rsa_sig_gen         = 10;
+    CryptoAsymApiReqRSASignatureVerify  rsa_sig_verify  = 11;
+    CryptoAsymApiReqSetupPrivateKey setup_priv_key      = 12;
+    CryptoAsymApiReqSetupCert       setup_cert          = 13;
+  }
+}
+
+message CryptoApiResponse {
+  types.ApiStatus                   api_status          = 1;
+  oneof CryptoApiResp {
+    CryptoAsymApiRespECCPointMulFp  ecc_point_mul_fp    = 2;
+    CryptoAsymApiRespECDSASignatureGenFp    ecdsa_sig_gen_fp        = 3;
+    CryptoAsymApiRespRSAEncrypt     rsa_encrypt         = 4;
+    CryptoAsymApiRespRSADecrypt     rsa_decrypt         = 5;
+    CryptoAsymApiRespRSACRTDecrypt  rsa_crt_decrypt     = 6;
+    CryptoSymmApiRespHashGenerate   hash_generate       = 7;
+    CryptoAsymApiRespRSASignatureGen    rsa_sig_gen     = 8;
+    CryptoAsymApiRespSetupPrivateKey setup_priv_key     = 9;
+    CryptoAsymApiRespSetupCert       setup_cert         = 10;
+  }
+}
+
+message CryptoApiRequestMsg {
+    repeated CryptoApiRequest       request             = 1;
+}
+
+message CryptoApiResponseMsg {
+    repeated CryptoApiResponse      response            = 1;
 }
 

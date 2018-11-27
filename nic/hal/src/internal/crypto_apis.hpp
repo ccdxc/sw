@@ -7,13 +7,12 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/hal/iris/include/hal_state.hpp"
-#include "gen/proto/crypto_apis.pb.h"
+#include "gen/proto/internal.pb.h"
 
-using cryptoapis::CryptoApiRequest;
-using cryptoapis::CryptoApiRequestMsg;
-using cryptoapis::CryptoApiResponse;
-using cryptoapis::CryptoApiResponseMsg;
+using internal::CryptoApiRequest;
+using internal::CryptoApiRequestMsg;
+using internal::CryptoApiResponse;
+using internal::CryptoApiResponseMsg;
 
 
 namespace hal {
@@ -29,9 +28,6 @@ namespace hal {
 #define CRYPTO_SHA256_DIGEST_LEN 32
 #define CRYPTO_SHA384_DIGEST_LEN 48
 #define CRYPTO_SHA512_DIGEST_LEN 64
-
-hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp);
 
 }    // namespace hal
 

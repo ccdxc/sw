@@ -6,10 +6,8 @@
 #include "gen/proto/internal.grpc.pb.h"
 #include "gen/proto/interface.pb.h"
 #include "gen/proto/interface.grpc.pb.h"
-#include "gen/proto/crypto_keys.pb.h"
-#include "gen/proto/crypto_keys.grpc.pb.h"
-#include "gen/proto/barco_rings.pb.h"
-#include "gen/proto/barco_rings.grpc.pb.h"
+#include "gen/proto/internal.pb.h"
+#include "gen/proto/internal.grpc.pb.h"
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "gflags/gflags.h"
 #include "nic/include/storage_seq_common.h"
@@ -24,8 +22,7 @@ using grpc::ClientContext;
 using grpc::Status;
 using internal::Internal;
 using intf::Interface;
-using cryptokey::CryptoKey;
-using barcoRings::BarcoRings;
+using internal::Internal;
 
 std::shared_ptr<Channel> hal_channel;
 
@@ -33,8 +30,8 @@ namespace {
 
 std::unique_ptr<Internal::Stub> internal_stub;
 std::unique_ptr<Interface::Stub> interface_stub;
-std::unique_ptr<CryptoKey::Stub> crypto_stub;
-std::unique_ptr<BarcoRings::Stub> brings_stub;
+std::unique_ptr<Internal::Stub> crypto_stub;
+std::unique_ptr<Internal::Stub> brings_stub;
 
 }  // anonymous namespace
 
@@ -67,12 +64,12 @@ void init_hal_if() {
       Interface::NewStub(hal_channel));
   interface_stub = std::move(if_stub);
 
-  std::unique_ptr<CryptoKey::Stub> crypt_stub(
-    CryptoKey::NewStub(hal_channel));
+  std::unique_ptr<Internal::Stub> crypt_stub(
+    Internal::NewStub(hal_channel));
   crypto_stub = std::move(crypt_stub);
 
-  std::unique_ptr<BarcoRings::Stub> bring_stub(
-    BarcoRings::NewStub(hal_channel));
+  std::unique_ptr<Internal::Stub> bring_stub(
+    Internal::NewStub(hal_channel));
   brings_stub = std::move(bring_stub);
 }
 
@@ -369,8 +366,8 @@ int get_xts_ring_base_address(bool is_decr, uint64_t *addr, bool is_gcm) {
 int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, uint32_t* key_index) {
   grpc::ClientContext context, context2;
   *key_index = 0xffffffff;
-  cryptokey::CryptoKeyCreateRequestMsg cr_req_msg;
-  cryptokey::CryptoKeyCreateResponseMsg cr_resp_msg;
+  internal::CryptoKeyCreateRequestMsg cr_req_msg;
+  internal::CryptoKeyCreateResponseMsg cr_resp_msg;
   cr_req_msg.add_request();
 
   auto status = crypto_stub->CryptoKeyCreate(&context, cr_req_msg, &cr_resp_msg);
@@ -384,10 +381,10 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
   }
   *key_index = cr_resp_msg.response(0).keyindex();
 
-  cryptokey::CryptoKeyUpdateRequestMsg upd_req_msg;
-  cryptokey::CryptoKeyUpdateResponseMsg upd_resp_msg;
+  internal::CryptoKeyUpdateRequestMsg upd_req_msg;
+  internal::CryptoKeyUpdateResponseMsg upd_resp_msg;
   auto upd_req = upd_req_msg.add_request();
-  cryptokey::CryptoKeySpec* spec =   upd_req->mutable_key();
+  internal::CryptoKeySpec* spec =   upd_req->mutable_key();
   spec->set_key(key);
   spec->set_keyindex(*key_index);
   spec->set_key_size(key_size);
@@ -409,8 +406,8 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
 
 int delete_key(uint32_t key_index) {
   grpc::ClientContext context;
-  cryptokey::CryptoKeyDeleteRequestMsg del_req_msg;
-  cryptokey::CryptoKeyDeleteResponseMsg del_resp_msg;
+  internal::CryptoKeyDeleteRequestMsg del_req_msg;
+  internal::CryptoKeyDeleteResponseMsg del_resp_msg;
   auto req = del_req_msg.add_request();
   req->set_keyindex(key_index);
   auto status = crypto_stub->CryptoKeyDelete(&context, del_req_msg, &del_resp_msg);
@@ -425,8 +422,8 @@ int delete_key(uint32_t key_index) {
   return 0;
 }
 
-using barcoRings::GetOpaqueTagAddrRequestMsg;
-using barcoRings::GetOpaqueTagAddrResponseMsg;
+using internal::GetOpaqueTagAddrRequestMsg;
+using internal::GetOpaqueTagAddrResponseMsg;
 int get_xts_opaque_tag_addr(bool is_decr, uint64_t* addr, bool is_gcm) {
   grpc::ClientContext context;
   GetOpaqueTagAddrRequestMsg req_msg;

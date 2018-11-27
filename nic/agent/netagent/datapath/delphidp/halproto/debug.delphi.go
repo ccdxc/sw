@@ -34,7 +34,7 @@ var SchedPolicy_value = map[string]int32{
 func (x SchedPolicy) String() string {
 	return proto.EnumName(SchedPolicy_name, int32(x))
 }
-func (SchedPolicy) EnumDescriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
+func (SchedPolicy) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
 
 type ThreadRole int32
 
@@ -55,7 +55,7 @@ var ThreadRole_value = map[string]int32{
 func (x ThreadRole) String() string {
 	return proto.EnumName(ThreadRole_name, int32(x))
 }
-func (ThreadRole) EnumDescriptor() ([]byte, []int) { return fileDescriptor6, []int{1} }
+func (ThreadRole) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{1} }
 
 type TraceLevel int32
 
@@ -79,7 +79,7 @@ var TraceLevel_value = map[string]int32{
 func (x TraceLevel) String() string {
 	return proto.EnumName(TraceLevel_name, int32(x))
 }
-func (TraceLevel) EnumDescriptor() ([]byte, []int) { return fileDescriptor6, []int{2} }
+func (TraceLevel) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{2} }
 
 // pipeline type for MPU trace
 type MpuTracePipelineType int32
@@ -110,7 +110,7 @@ var MpuTracePipelineType_value = map[string]int32{
 func (x MpuTracePipelineType) String() string {
 	return proto.EnumName(MpuTracePipelineType_name, int32(x))
 }
-func (MpuTracePipelineType) EnumDescriptor() ([]byte, []int) { return fileDescriptor6, []int{3} }
+func (MpuTracePipelineType) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{3} }
 
 type CapriBlock int32
 
@@ -140,7 +140,7 @@ var CapriBlock_value = map[string]int32{
 func (x CapriBlock) String() string {
 	return proto.EnumName(CapriBlock_name, int32(x))
 }
-func (CapriBlock) EnumDescriptor() ([]byte, []int) { return fileDescriptor6, []int{4} }
+func (CapriBlock) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{4} }
 
 type LlcCounterType int32
 
@@ -188,7 +188,7 @@ var LlcCounterType_value = map[string]int32{
 func (x LlcCounterType) String() string {
 	return proto.EnumName(LlcCounterType_name, int32(x))
 }
-func (LlcCounterType) EnumDescriptor() ([]byte, []int) { return fileDescriptor6, []int{5} }
+func (LlcCounterType) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{5} }
 
 type HbmSramType int32
 
@@ -224,7 +224,7 @@ var HbmSramType_value = map[string]int32{
 func (x HbmSramType) String() string {
 	return proto.EnumName(HbmSramType_name, int32(x))
 }
-func (HbmSramType) EnumDescriptor() ([]byte, []int) { return fileDescriptor6, []int{6} }
+func (HbmSramType) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{6} }
 
 // FTE Span
 type FteSpanRequest struct {
@@ -249,7 +249,7 @@ type FteSpanRequest struct {
 func (m *FteSpanRequest) Reset()                    { *m = FteSpanRequest{} }
 func (m *FteSpanRequest) String() string            { return proto.CompactTextString(m) }
 func (*FteSpanRequest) ProtoMessage()               {}
-func (*FteSpanRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
+func (*FteSpanRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
 
 func (m *FteSpanRequest) GetSelector() uint32 {
 	if m != nil {
@@ -370,7 +370,7 @@ type FteSpanRequestMsg struct {
 func (m *FteSpanRequestMsg) Reset()                    { *m = FteSpanRequestMsg{} }
 func (m *FteSpanRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*FteSpanRequestMsg) ProtoMessage()               {}
-func (*FteSpanRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{1} }
+func (*FteSpanRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{1} }
 
 func (m *FteSpanRequestMsg) GetRequest() []*FteSpanRequest {
 	if m != nil {
@@ -387,7 +387,7 @@ type FteSpanResponse struct {
 func (m *FteSpanResponse) Reset()                    { *m = FteSpanResponse{} }
 func (m *FteSpanResponse) String() string            { return proto.CompactTextString(m) }
 func (*FteSpanResponse) ProtoMessage()               {}
-func (*FteSpanResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{2} }
+func (*FteSpanResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{2} }
 
 func (m *FteSpanResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -410,7 +410,7 @@ type FteSpanResponseMsg struct {
 func (m *FteSpanResponseMsg) Reset()                    { *m = FteSpanResponseMsg{} }
 func (m *FteSpanResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*FteSpanResponseMsg) ProtoMessage()               {}
-func (*FteSpanResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{3} }
+func (*FteSpanResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{3} }
 
 func (m *FteSpanResponseMsg) GetResponse() []*FteSpanResponse {
 	if m != nil {
@@ -430,7 +430,7 @@ type GenericOpnRequest struct {
 func (m *GenericOpnRequest) Reset()                    { *m = GenericOpnRequest{} }
 func (m *GenericOpnRequest) String() string            { return proto.CompactTextString(m) }
 func (*GenericOpnRequest) ProtoMessage()               {}
-func (*GenericOpnRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{4} }
+func (*GenericOpnRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{4} }
 
 func (m *GenericOpnRequest) GetOpn() uint32 {
 	if m != nil {
@@ -474,7 +474,7 @@ type GenericOpnRequestMsg struct {
 func (m *GenericOpnRequestMsg) Reset()                    { *m = GenericOpnRequestMsg{} }
 func (m *GenericOpnRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*GenericOpnRequestMsg) ProtoMessage()               {}
-func (*GenericOpnRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{5} }
+func (*GenericOpnRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{5} }
 
 func (m *GenericOpnRequestMsg) GetRequest() []*GenericOpnRequest {
 	if m != nil {
@@ -493,7 +493,7 @@ type GenericOpnStatus struct {
 func (m *GenericOpnStatus) Reset()                    { *m = GenericOpnStatus{} }
 func (m *GenericOpnStatus) String() string            { return proto.CompactTextString(m) }
 func (*GenericOpnStatus) ProtoMessage()               {}
-func (*GenericOpnStatus) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{6} }
+func (*GenericOpnStatus) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{6} }
 
 func (m *GenericOpnStatus) GetVal1() uint64 {
 	if m != nil {
@@ -531,7 +531,7 @@ type GenericOpnResponse struct {
 func (m *GenericOpnResponse) Reset()                    { *m = GenericOpnResponse{} }
 func (m *GenericOpnResponse) String() string            { return proto.CompactTextString(m) }
 func (*GenericOpnResponse) ProtoMessage()               {}
-func (*GenericOpnResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{7} }
+func (*GenericOpnResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{7} }
 
 func (m *GenericOpnResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -554,7 +554,7 @@ type GenericOpnResponseMsg struct {
 func (m *GenericOpnResponseMsg) Reset()                    { *m = GenericOpnResponseMsg{} }
 func (m *GenericOpnResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*GenericOpnResponseMsg) ProtoMessage()               {}
-func (*GenericOpnResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{8} }
+func (*GenericOpnResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{8} }
 
 func (m *GenericOpnResponseMsg) GetResponse() []*GenericOpnResponse {
 	if m != nil {
@@ -576,7 +576,7 @@ type RegisterRequest struct {
 func (m *RegisterRequest) Reset()                    { *m = RegisterRequest{} }
 func (m *RegisterRequest) String() string            { return proto.CompactTextString(m) }
 func (*RegisterRequest) ProtoMessage()               {}
-func (*RegisterRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{9} }
+func (*RegisterRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{9} }
 
 type isRegisterRequest_IdOrName interface{ isRegisterRequest_IdOrName() }
 
@@ -704,7 +704,7 @@ type RegisterRequestMsg struct {
 func (m *RegisterRequestMsg) Reset()                    { *m = RegisterRequestMsg{} }
 func (m *RegisterRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RegisterRequestMsg) ProtoMessage()               {}
-func (*RegisterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{10} }
+func (*RegisterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{10} }
 
 func (m *RegisterRequestMsg) GetRequest() []*RegisterRequest {
 	if m != nil {
@@ -721,7 +721,7 @@ type RegisterResponse struct {
 func (m *RegisterResponse) Reset()                    { *m = RegisterResponse{} }
 func (m *RegisterResponse) String() string            { return proto.CompactTextString(m) }
 func (*RegisterResponse) ProtoMessage()               {}
-func (*RegisterResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{11} }
+func (*RegisterResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{11} }
 
 func (m *RegisterResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -744,7 +744,7 @@ type RegisterResponseMsg struct {
 func (m *RegisterResponseMsg) Reset()                    { *m = RegisterResponseMsg{} }
 func (m *RegisterResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RegisterResponseMsg) ProtoMessage()               {}
-func (*RegisterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{12} }
+func (*RegisterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{12} }
 
 func (m *RegisterResponseMsg) GetResponse() []*RegisterResponse {
 	if m != nil {
@@ -767,7 +767,7 @@ type MemoryRequest struct {
 func (m *MemoryRequest) Reset()                    { *m = MemoryRequest{} }
 func (m *MemoryRequest) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRequest) ProtoMessage()               {}
-func (*MemoryRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{13} }
+func (*MemoryRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{13} }
 
 type isMemoryRequest_IdOrName interface{ isMemoryRequest_IdOrName() }
 
@@ -902,7 +902,7 @@ type MemoryRequestMsg struct {
 func (m *MemoryRequestMsg) Reset()                    { *m = MemoryRequestMsg{} }
 func (m *MemoryRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRequestMsg) ProtoMessage()               {}
-func (*MemoryRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{14} }
+func (*MemoryRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{14} }
 
 func (m *MemoryRequestMsg) GetRequest() []*MemoryRequest {
 	if m != nil {
@@ -922,7 +922,7 @@ type MemoryResponse struct {
 func (m *MemoryResponse) Reset()                    { *m = MemoryResponse{} }
 func (m *MemoryResponse) String() string            { return proto.CompactTextString(m) }
 func (*MemoryResponse) ProtoMessage()               {}
-func (*MemoryResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{15} }
+func (*MemoryResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{15} }
 
 func (m *MemoryResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -966,7 +966,7 @@ type MemoryResponseMsg struct {
 func (m *MemoryResponseMsg) Reset()                    { *m = MemoryResponseMsg{} }
 func (m *MemoryResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemoryResponseMsg) ProtoMessage()               {}
-func (*MemoryResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{16} }
+func (*MemoryResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{16} }
 
 func (m *MemoryResponseMsg) GetResponse() []*MemoryResponse {
 	if m != nil {
@@ -983,7 +983,7 @@ type MemoryRawRequest struct {
 func (m *MemoryRawRequest) Reset()                    { *m = MemoryRawRequest{} }
 func (m *MemoryRawRequest) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRawRequest) ProtoMessage()               {}
-func (*MemoryRawRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{17} }
+func (*MemoryRawRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{17} }
 
 func (m *MemoryRawRequest) GetAddress() uint64 {
 	if m != nil {
@@ -1006,7 +1006,7 @@ type MemoryRawRequestMsg struct {
 func (m *MemoryRawRequestMsg) Reset()                    { *m = MemoryRawRequestMsg{} }
 func (m *MemoryRawRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRawRequestMsg) ProtoMessage()               {}
-func (*MemoryRawRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{18} }
+func (*MemoryRawRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{18} }
 
 func (m *MemoryRawRequestMsg) GetRequest() []*MemoryRawRequest {
 	if m != nil {
@@ -1023,7 +1023,7 @@ type MemoryRawResponse struct {
 func (m *MemoryRawResponse) Reset()                    { *m = MemoryRawResponse{} }
 func (m *MemoryRawResponse) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRawResponse) ProtoMessage()               {}
-func (*MemoryRawResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{19} }
+func (*MemoryRawResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{19} }
 
 func (m *MemoryRawResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1046,7 +1046,7 @@ type MemoryRawResponseMsg struct {
 func (m *MemoryRawResponseMsg) Reset()                    { *m = MemoryRawResponseMsg{} }
 func (m *MemoryRawResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRawResponseMsg) ProtoMessage()               {}
-func (*MemoryRawResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{20} }
+func (*MemoryRawResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{20} }
 
 func (m *MemoryRawResponseMsg) GetResponse() []*MemoryRawResponse {
 	if m != nil {
@@ -1064,7 +1064,7 @@ type MemoryRawUpdateRequest struct {
 func (m *MemoryRawUpdateRequest) Reset()                    { *m = MemoryRawUpdateRequest{} }
 func (m *MemoryRawUpdateRequest) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRawUpdateRequest) ProtoMessage()               {}
-func (*MemoryRawUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{21} }
+func (*MemoryRawUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{21} }
 
 func (m *MemoryRawUpdateRequest) GetAddress() uint64 {
 	if m != nil {
@@ -1094,7 +1094,7 @@ type MemoryRawUpdateRequestMsg struct {
 func (m *MemoryRawUpdateRequestMsg) Reset()                    { *m = MemoryRawUpdateRequestMsg{} }
 func (m *MemoryRawUpdateRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRawUpdateRequestMsg) ProtoMessage()               {}
-func (*MemoryRawUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{22} }
+func (*MemoryRawUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{22} }
 
 func (m *MemoryRawUpdateRequestMsg) GetRequest() []*MemoryRawUpdateRequest {
 	if m != nil {
@@ -1110,7 +1110,7 @@ type MemoryRawUpdateResponse struct {
 func (m *MemoryRawUpdateResponse) Reset()                    { *m = MemoryRawUpdateResponse{} }
 func (m *MemoryRawUpdateResponse) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRawUpdateResponse) ProtoMessage()               {}
-func (*MemoryRawUpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{23} }
+func (*MemoryRawUpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{23} }
 
 func (m *MemoryRawUpdateResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1126,7 +1126,7 @@ type MemoryRawUpdateResponseMsg struct {
 func (m *MemoryRawUpdateResponseMsg) Reset()                    { *m = MemoryRawUpdateResponseMsg{} }
 func (m *MemoryRawUpdateResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemoryRawUpdateResponseMsg) ProtoMessage()               {}
-func (*MemoryRawUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{24} }
+func (*MemoryRawUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{24} }
 
 func (m *MemoryRawUpdateResponseMsg) GetResponse() []*MemoryRawUpdateResponse {
 	if m != nil {
@@ -1145,7 +1145,7 @@ type RegisterData struct {
 func (m *RegisterData) Reset()                    { *m = RegisterData{} }
 func (m *RegisterData) String() string            { return proto.CompactTextString(m) }
 func (*RegisterData) ProtoMessage()               {}
-func (*RegisterData) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{25} }
+func (*RegisterData) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{25} }
 
 func (m *RegisterData) GetRegName() string {
 	if m != nil {
@@ -1175,7 +1175,7 @@ type MemTrackSpec struct {
 func (m *MemTrackSpec) Reset()                    { *m = MemTrackSpec{} }
 func (m *MemTrackSpec) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackSpec) ProtoMessage()               {}
-func (*MemTrackSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{26} }
+func (*MemTrackSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{26} }
 
 func (m *MemTrackSpec) GetAllocId() uint32 {
 	if m != nil {
@@ -1192,7 +1192,7 @@ type MemTrackGetRequest struct {
 func (m *MemTrackGetRequest) Reset()                    { *m = MemTrackGetRequest{} }
 func (m *MemTrackGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackGetRequest) ProtoMessage()               {}
-func (*MemTrackGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{27} }
+func (*MemTrackGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{27} }
 
 func (m *MemTrackGetRequest) GetSpec() *MemTrackSpec {
 	if m != nil {
@@ -1209,7 +1209,7 @@ type MemTrackGetRequestMsg struct {
 func (m *MemTrackGetRequestMsg) Reset()                    { *m = MemTrackGetRequestMsg{} }
 func (m *MemTrackGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackGetRequestMsg) ProtoMessage()               {}
-func (*MemTrackGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{28} }
+func (*MemTrackGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{28} }
 
 func (m *MemTrackGetRequestMsg) GetRequest() []*MemTrackGetRequest {
 	if m != nil {
@@ -1225,7 +1225,7 @@ type MemTrackStatus struct {
 func (m *MemTrackStatus) Reset()                    { *m = MemTrackStatus{} }
 func (m *MemTrackStatus) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackStatus) ProtoMessage()               {}
-func (*MemTrackStatus) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{29} }
+func (*MemTrackStatus) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{29} }
 
 // stats per memory tracker object
 type MemTrackStats struct {
@@ -1236,7 +1236,7 @@ type MemTrackStats struct {
 func (m *MemTrackStats) Reset()                    { *m = MemTrackStats{} }
 func (m *MemTrackStats) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackStats) ProtoMessage()               {}
-func (*MemTrackStats) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{30} }
+func (*MemTrackStats) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{30} }
 
 func (m *MemTrackStats) GetNumAllocs() uint32 {
 	if m != nil {
@@ -1263,7 +1263,7 @@ type MemTrackGetResponse struct {
 func (m *MemTrackGetResponse) Reset()                    { *m = MemTrackGetResponse{} }
 func (m *MemTrackGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackGetResponse) ProtoMessage()               {}
-func (*MemTrackGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{31} }
+func (*MemTrackGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{31} }
 
 func (m *MemTrackGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1301,7 +1301,7 @@ type MemTrackGetResponseMsg struct {
 func (m *MemTrackGetResponseMsg) Reset()                    { *m = MemTrackGetResponseMsg{} }
 func (m *MemTrackGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MemTrackGetResponseMsg) ProtoMessage()               {}
-func (*MemTrackGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{32} }
+func (*MemTrackGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{32} }
 
 func (m *MemTrackGetResponseMsg) GetResponse() []*MemTrackGetResponse {
 	if m != nil {
@@ -1326,7 +1326,7 @@ type SlabSpec struct {
 func (m *SlabSpec) Reset()                    { *m = SlabSpec{} }
 func (m *SlabSpec) String() string            { return proto.CompactTextString(m) }
 func (*SlabSpec) ProtoMessage()               {}
-func (*SlabSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{33} }
+func (*SlabSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{33} }
 
 func (m *SlabSpec) GetName() string {
 	if m != nil {
@@ -1398,7 +1398,7 @@ type SlabStatus struct {
 func (m *SlabStatus) Reset()                    { *m = SlabStatus{} }
 func (m *SlabStatus) String() string            { return proto.CompactTextString(m) }
 func (*SlabStatus) ProtoMessage()               {}
-func (*SlabStatus) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{34} }
+func (*SlabStatus) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{34} }
 
 // per slab statistics
 type SlabStats struct {
@@ -1412,7 +1412,7 @@ type SlabStats struct {
 func (m *SlabStats) Reset()                    { *m = SlabStats{} }
 func (m *SlabStats) String() string            { return proto.CompactTextString(m) }
 func (*SlabStats) ProtoMessage()               {}
-func (*SlabStats) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{35} }
+func (*SlabStats) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{35} }
 
 func (m *SlabStats) GetNumElementsInUse() uint32 {
 	if m != nil {
@@ -1457,7 +1457,7 @@ type SlabGetRequest struct {
 func (m *SlabGetRequest) Reset()                    { *m = SlabGetRequest{} }
 func (m *SlabGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*SlabGetRequest) ProtoMessage()               {}
-func (*SlabGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{36} }
+func (*SlabGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{36} }
 
 func (m *SlabGetRequest) GetId() uint32 {
 	if m != nil {
@@ -1474,7 +1474,7 @@ type SlabGetRequestMsg struct {
 func (m *SlabGetRequestMsg) Reset()                    { *m = SlabGetRequestMsg{} }
 func (m *SlabGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SlabGetRequestMsg) ProtoMessage()               {}
-func (*SlabGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{37} }
+func (*SlabGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{37} }
 
 func (m *SlabGetRequestMsg) GetRequest() []*SlabGetRequest {
 	if m != nil {
@@ -1494,7 +1494,7 @@ type SlabGetResponse struct {
 func (m *SlabGetResponse) Reset()                    { *m = SlabGetResponse{} }
 func (m *SlabGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*SlabGetResponse) ProtoMessage()               {}
-func (*SlabGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{38} }
+func (*SlabGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{38} }
 
 func (m *SlabGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1532,7 +1532,7 @@ type SlabGetResponseMsg struct {
 func (m *SlabGetResponseMsg) Reset()                    { *m = SlabGetResponseMsg{} }
 func (m *SlabGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SlabGetResponseMsg) ProtoMessage()               {}
-func (*SlabGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{39} }
+func (*SlabGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{39} }
 
 func (m *SlabGetResponseMsg) GetResponse() []*SlabGetResponse {
 	if m != nil {
@@ -1553,7 +1553,7 @@ type HashTableSpec struct {
 func (m *HashTableSpec) Reset()                    { *m = HashTableSpec{} }
 func (m *HashTableSpec) String() string            { return proto.CompactTextString(m) }
 func (*HashTableSpec) ProtoMessage()               {}
-func (*HashTableSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{40} }
+func (*HashTableSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{40} }
 
 func (m *HashTableSpec) GetName() string {
 	if m != nil {
@@ -1597,7 +1597,7 @@ type HashTableStatus struct {
 func (m *HashTableStatus) Reset()                    { *m = HashTableStatus{} }
 func (m *HashTableStatus) String() string            { return proto.CompactTextString(m) }
 func (*HashTableStatus) ProtoMessage()               {}
-func (*HashTableStatus) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{41} }
+func (*HashTableStatus) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{41} }
 
 // per hash table statisitics
 type HashTableStats struct {
@@ -1612,7 +1612,7 @@ type HashTableStats struct {
 func (m *HashTableStats) Reset()                    { *m = HashTableStats{} }
 func (m *HashTableStats) String() string            { return proto.CompactTextString(m) }
 func (*HashTableStats) ProtoMessage()               {}
-func (*HashTableStats) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{42} }
+func (*HashTableStats) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{42} }
 
 func (m *HashTableStats) GetNumEntries() uint32 {
 	if m != nil {
@@ -1666,7 +1666,7 @@ type HashTableGetResponse struct {
 func (m *HashTableGetResponse) Reset()                    { *m = HashTableGetResponse{} }
 func (m *HashTableGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*HashTableGetResponse) ProtoMessage()               {}
-func (*HashTableGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{43} }
+func (*HashTableGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{43} }
 
 func (m *HashTableGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1703,7 +1703,7 @@ type HashTableGetResponseMsg struct {
 func (m *HashTableGetResponseMsg) Reset()                    { *m = HashTableGetResponseMsg{} }
 func (m *HashTableGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*HashTableGetResponseMsg) ProtoMessage()               {}
-func (*HashTableGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{44} }
+func (*HashTableGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{44} }
 
 func (m *HashTableGetResponseMsg) GetResponse() []*HashTableGetResponse {
 	if m != nil {
@@ -1726,7 +1726,7 @@ type ThreadSpec struct {
 func (m *ThreadSpec) Reset()                    { *m = ThreadSpec{} }
 func (m *ThreadSpec) String() string            { return proto.CompactTextString(m) }
 func (*ThreadSpec) ProtoMessage()               {}
-func (*ThreadSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{45} }
+func (*ThreadSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{45} }
 
 func (m *ThreadSpec) GetName() string {
 	if m != nil {
@@ -1791,7 +1791,7 @@ type ThreadStatus struct {
 func (m *ThreadStatus) Reset()                    { *m = ThreadStatus{} }
 func (m *ThreadStatus) String() string            { return proto.CompactTextString(m) }
 func (*ThreadStatus) ProtoMessage()               {}
-func (*ThreadStatus) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{46} }
+func (*ThreadStatus) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{46} }
 
 func (m *ThreadStatus) GetLastHb() uint64 {
 	if m != nil {
@@ -1806,7 +1806,7 @@ type ThreadStats struct {
 func (m *ThreadStats) Reset()                    { *m = ThreadStats{} }
 func (m *ThreadStats) String() string            { return proto.CompactTextString(m) }
 func (*ThreadStats) ProtoMessage()               {}
-func (*ThreadStats) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{47} }
+func (*ThreadStats) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{47} }
 
 type ThreadResponse struct {
 	ApiStatus       ApiStatus     `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -1820,7 +1820,7 @@ type ThreadResponse struct {
 func (m *ThreadResponse) Reset()                    { *m = ThreadResponse{} }
 func (m *ThreadResponse) String() string            { return proto.CompactTextString(m) }
 func (*ThreadResponse) ProtoMessage()               {}
-func (*ThreadResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{48} }
+func (*ThreadResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{48} }
 
 func (m *ThreadResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1871,7 +1871,7 @@ type ThreadResponseMsg struct {
 func (m *ThreadResponseMsg) Reset()                    { *m = ThreadResponseMsg{} }
 func (m *ThreadResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ThreadResponseMsg) ProtoMessage()               {}
-func (*ThreadResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{49} }
+func (*ThreadResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{49} }
 
 func (m *ThreadResponseMsg) GetResponse() []*ThreadResponse {
 	if m != nil {
@@ -1887,7 +1887,7 @@ type TraceSpec struct {
 func (m *TraceSpec) Reset()                    { *m = TraceSpec{} }
 func (m *TraceSpec) String() string            { return proto.CompactTextString(m) }
 func (*TraceSpec) ProtoMessage()               {}
-func (*TraceSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{50} }
+func (*TraceSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{50} }
 
 func (m *TraceSpec) GetTraceLevel() TraceLevel {
 	if m != nil {
@@ -1903,7 +1903,7 @@ type TraceRequestMsg struct {
 func (m *TraceRequestMsg) Reset()                    { *m = TraceRequestMsg{} }
 func (m *TraceRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TraceRequestMsg) ProtoMessage()               {}
-func (*TraceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{51} }
+func (*TraceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{51} }
 
 func (m *TraceRequestMsg) GetRequest() []*TraceSpec {
 	if m != nil {
@@ -1920,7 +1920,7 @@ type TraceResponse struct {
 func (m *TraceResponse) Reset()                    { *m = TraceResponse{} }
 func (m *TraceResponse) String() string            { return proto.CompactTextString(m) }
 func (*TraceResponse) ProtoMessage()               {}
-func (*TraceResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{52} }
+func (*TraceResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{52} }
 
 func (m *TraceResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1943,7 +1943,7 @@ type TraceResponseMsg struct {
 func (m *TraceResponseMsg) Reset()                    { *m = TraceResponseMsg{} }
 func (m *TraceResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TraceResponseMsg) ProtoMessage()               {}
-func (*TraceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{53} }
+func (*TraceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{53} }
 
 func (m *TraceResponseMsg) GetResponse() []*TraceResponse {
 	if m != nil {
@@ -1969,7 +1969,7 @@ type MpuTraceSpec struct {
 func (m *MpuTraceSpec) Reset()                    { *m = MpuTraceSpec{} }
 func (m *MpuTraceSpec) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceSpec) ProtoMessage()               {}
-func (*MpuTraceSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{54} }
+func (*MpuTraceSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{54} }
 
 func (m *MpuTraceSpec) GetEnable() bool {
 	if m != nil {
@@ -2059,7 +2059,7 @@ type MpuTraceRequest struct {
 func (m *MpuTraceRequest) Reset()                    { *m = MpuTraceRequest{} }
 func (m *MpuTraceRequest) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceRequest) ProtoMessage()               {}
-func (*MpuTraceRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{55} }
+func (*MpuTraceRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{55} }
 
 func (m *MpuTraceRequest) GetPipelineType() MpuTracePipelineType {
 	if m != nil {
@@ -2097,7 +2097,7 @@ type MpuTraceRequestMsg struct {
 func (m *MpuTraceRequestMsg) Reset()                    { *m = MpuTraceRequestMsg{} }
 func (m *MpuTraceRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceRequestMsg) ProtoMessage()               {}
-func (*MpuTraceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{56} }
+func (*MpuTraceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{56} }
 
 func (m *MpuTraceRequestMsg) GetRequest() []*MpuTraceRequest {
 	if m != nil {
@@ -2116,7 +2116,7 @@ type MpuTraceResponse struct {
 func (m *MpuTraceResponse) Reset()                    { *m = MpuTraceResponse{} }
 func (m *MpuTraceResponse) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceResponse) ProtoMessage()               {}
-func (*MpuTraceResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{57} }
+func (*MpuTraceResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{57} }
 
 func (m *MpuTraceResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2147,7 +2147,7 @@ type MpuTraceResponseMsg struct {
 func (m *MpuTraceResponseMsg) Reset()                    { *m = MpuTraceResponseMsg{} }
 func (m *MpuTraceResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MpuTraceResponseMsg) ProtoMessage()               {}
-func (*MpuTraceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{58} }
+func (*MpuTraceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{58} }
 
 func (m *MpuTraceResponseMsg) GetResponse() []*MpuTraceResponse {
 	if m != nil {
@@ -2164,7 +2164,7 @@ type FlushLogsResponse struct {
 func (m *FlushLogsResponse) Reset()                    { *m = FlushLogsResponse{} }
 func (m *FlushLogsResponse) String() string            { return proto.CompactTextString(m) }
 func (*FlushLogsResponse) ProtoMessage()               {}
-func (*FlushLogsResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{59} }
+func (*FlushLogsResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{59} }
 
 func (m *FlushLogsResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2181,7 +2181,7 @@ type FlushLogsResponseMsg struct {
 func (m *FlushLogsResponseMsg) Reset()                    { *m = FlushLogsResponseMsg{} }
 func (m *FlushLogsResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*FlushLogsResponseMsg) ProtoMessage()               {}
-func (*FlushLogsResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{60} }
+func (*FlushLogsResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{60} }
 
 func (m *FlushLogsResponseMsg) GetResponse() []*FlushLogsResponse {
 	if m != nil {
@@ -2199,7 +2199,7 @@ type ClockSpec struct {
 func (m *ClockSpec) Reset()                    { *m = ClockSpec{} }
 func (m *ClockSpec) String() string            { return proto.CompactTextString(m) }
 func (*ClockSpec) ProtoMessage()               {}
-func (*ClockSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{61} }
+func (*ClockSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{61} }
 
 func (m *ClockSpec) GetHardwareClock() uint64 {
 	if m != nil {
@@ -2228,7 +2228,7 @@ type ClockStatus struct {
 func (m *ClockStatus) Reset()                    { *m = ClockStatus{} }
 func (m *ClockStatus) String() string            { return proto.CompactTextString(m) }
 func (*ClockStatus) ProtoMessage()               {}
-func (*ClockStatus) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{62} }
+func (*ClockStatus) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{62} }
 
 type ClockStats struct {
 }
@@ -2236,7 +2236,7 @@ type ClockStats struct {
 func (m *ClockStats) Reset()                    { *m = ClockStats{} }
 func (m *ClockStats) String() string            { return proto.CompactTextString(m) }
 func (*ClockStats) ProtoMessage()               {}
-func (*ClockStats) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{63} }
+func (*ClockStats) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{63} }
 
 type ClockResponse struct {
 	ApiStatus ApiStatus    `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -2248,7 +2248,7 @@ type ClockResponse struct {
 func (m *ClockResponse) Reset()                    { *m = ClockResponse{} }
 func (m *ClockResponse) String() string            { return proto.CompactTextString(m) }
 func (*ClockResponse) ProtoMessage()               {}
-func (*ClockResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{64} }
+func (*ClockResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{64} }
 
 func (m *ClockResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2286,7 +2286,7 @@ type Bandwidth struct {
 func (m *Bandwidth) Reset()                    { *m = Bandwidth{} }
 func (m *Bandwidth) String() string            { return proto.CompactTextString(m) }
 func (*Bandwidth) ProtoMessage()               {}
-func (*Bandwidth) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{65} }
+func (*Bandwidth) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{65} }
 
 func (m *Bandwidth) GetRead() float64 {
 	if m != nil {
@@ -2310,7 +2310,7 @@ type HbmBwGetRequest struct {
 func (m *HbmBwGetRequest) Reset()                    { *m = HbmBwGetRequest{} }
 func (m *HbmBwGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*HbmBwGetRequest) ProtoMessage()               {}
-func (*HbmBwGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{66} }
+func (*HbmBwGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{66} }
 
 func (m *HbmBwGetRequest) GetNumSamples() uint32 {
 	if m != nil {
@@ -2333,7 +2333,7 @@ type HbmBwGetRequestMsg struct {
 func (m *HbmBwGetRequestMsg) Reset()                    { *m = HbmBwGetRequestMsg{} }
 func (m *HbmBwGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*HbmBwGetRequestMsg) ProtoMessage()               {}
-func (*HbmBwGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{67} }
+func (*HbmBwGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{67} }
 
 func (m *HbmBwGetRequestMsg) GetRequest() []*HbmBwGetRequest {
 	if m != nil {
@@ -2352,7 +2352,7 @@ type HbmBwGetResponse struct {
 func (m *HbmBwGetResponse) Reset()                    { *m = HbmBwGetResponse{} }
 func (m *HbmBwGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*HbmBwGetResponse) ProtoMessage()               {}
-func (*HbmBwGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{68} }
+func (*HbmBwGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{68} }
 
 func (m *HbmBwGetResponse) GetType() CapriBlock {
 	if m != nil {
@@ -2389,7 +2389,7 @@ type HbmBwGetResponseMsg struct {
 func (m *HbmBwGetResponseMsg) Reset()                    { *m = HbmBwGetResponseMsg{} }
 func (m *HbmBwGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*HbmBwGetResponseMsg) ProtoMessage()               {}
-func (*HbmBwGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{69} }
+func (*HbmBwGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{69} }
 
 func (m *HbmBwGetResponseMsg) GetResponse() []*HbmBwGetResponse {
 	if m != nil {
@@ -2405,7 +2405,7 @@ type LlcSetupRequest struct {
 func (m *LlcSetupRequest) Reset()                    { *m = LlcSetupRequest{} }
 func (m *LlcSetupRequest) String() string            { return proto.CompactTextString(m) }
 func (*LlcSetupRequest) ProtoMessage()               {}
-func (*LlcSetupRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{70} }
+func (*LlcSetupRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{70} }
 
 func (m *LlcSetupRequest) GetType() LlcCounterType {
 	if m != nil {
@@ -2421,7 +2421,7 @@ type LlcSetupRequestMsg struct {
 func (m *LlcSetupRequestMsg) Reset()                    { *m = LlcSetupRequestMsg{} }
 func (m *LlcSetupRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*LlcSetupRequestMsg) ProtoMessage()               {}
-func (*LlcSetupRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{71} }
+func (*LlcSetupRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{71} }
 
 func (m *LlcSetupRequestMsg) GetRequest() []*LlcSetupRequest {
 	if m != nil {
@@ -2437,7 +2437,7 @@ type LlcSetupResponse struct {
 func (m *LlcSetupResponse) Reset()                    { *m = LlcSetupResponse{} }
 func (m *LlcSetupResponse) String() string            { return proto.CompactTextString(m) }
 func (*LlcSetupResponse) ProtoMessage()               {}
-func (*LlcSetupResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{72} }
+func (*LlcSetupResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{72} }
 
 func (m *LlcSetupResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2453,7 +2453,7 @@ type LlcSetupResponseMsg struct {
 func (m *LlcSetupResponseMsg) Reset()                    { *m = LlcSetupResponseMsg{} }
 func (m *LlcSetupResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*LlcSetupResponseMsg) ProtoMessage()               {}
-func (*LlcSetupResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{73} }
+func (*LlcSetupResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{73} }
 
 func (m *LlcSetupResponseMsg) GetResponse() []*LlcSetupResponse {
 	if m != nil {
@@ -2471,7 +2471,7 @@ type LlcGetResponse struct {
 func (m *LlcGetResponse) Reset()                    { *m = LlcGetResponse{} }
 func (m *LlcGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*LlcGetResponse) ProtoMessage()               {}
-func (*LlcGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{74} }
+func (*LlcGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{74} }
 
 func (m *LlcGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2501,7 +2501,7 @@ type LlcGetResponseMsg struct {
 func (m *LlcGetResponseMsg) Reset()                    { *m = LlcGetResponseMsg{} }
 func (m *LlcGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*LlcGetResponseMsg) ProtoMessage()               {}
-func (*LlcGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{75} }
+func (*LlcGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{75} }
 
 func (m *LlcGetResponseMsg) GetResponse() []*LlcGetResponse {
 	if m != nil {
@@ -2518,7 +2518,7 @@ type HbmCacheSram struct {
 func (m *HbmCacheSram) Reset()                    { *m = HbmCacheSram{} }
 func (m *HbmCacheSram) String() string            { return proto.CompactTextString(m) }
 func (*HbmCacheSram) ProtoMessage()               {}
-func (*HbmCacheSram) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{76} }
+func (*HbmCacheSram) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{76} }
 
 func (m *HbmCacheSram) GetType() HbmSramType {
 	if m != nil {
@@ -2541,7 +2541,7 @@ type HbmCacheLlc struct {
 func (m *HbmCacheLlc) Reset()                    { *m = HbmCacheLlc{} }
 func (m *HbmCacheLlc) String() string            { return proto.CompactTextString(m) }
 func (*HbmCacheLlc) ProtoMessage()               {}
-func (*HbmCacheLlc) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{77} }
+func (*HbmCacheLlc) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{77} }
 
 func (m *HbmCacheLlc) GetEnable() bool {
 	if m != nil {
@@ -2560,7 +2560,7 @@ type HbmCacheRequest struct {
 func (m *HbmCacheRequest) Reset()                    { *m = HbmCacheRequest{} }
 func (m *HbmCacheRequest) String() string            { return proto.CompactTextString(m) }
 func (*HbmCacheRequest) ProtoMessage()               {}
-func (*HbmCacheRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{78} }
+func (*HbmCacheRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{78} }
 
 type isHbmCacheRequest_CacheRegions interface{ isHbmCacheRequest_CacheRegions() }
 
@@ -2676,7 +2676,7 @@ type HbmCacheRequestMsg struct {
 func (m *HbmCacheRequestMsg) Reset()                    { *m = HbmCacheRequestMsg{} }
 func (m *HbmCacheRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*HbmCacheRequestMsg) ProtoMessage()               {}
-func (*HbmCacheRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{79} }
+func (*HbmCacheRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{79} }
 
 func (m *HbmCacheRequestMsg) GetRequest() []*HbmCacheRequest {
 	if m != nil {
@@ -2692,7 +2692,7 @@ type HbmCacheResponse struct {
 func (m *HbmCacheResponse) Reset()                    { *m = HbmCacheResponse{} }
 func (m *HbmCacheResponse) String() string            { return proto.CompactTextString(m) }
 func (*HbmCacheResponse) ProtoMessage()               {}
-func (*HbmCacheResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{80} }
+func (*HbmCacheResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{80} }
 
 func (m *HbmCacheResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2708,7 +2708,7 @@ type HbmCacheResponseMsg struct {
 func (m *HbmCacheResponseMsg) Reset()                    { *m = HbmCacheResponseMsg{} }
 func (m *HbmCacheResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*HbmCacheResponseMsg) ProtoMessage()               {}
-func (*HbmCacheResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{81} }
+func (*HbmCacheResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{81} }
 
 func (m *HbmCacheResponseMsg) GetResponse() []*HbmCacheResponse {
 	if m != nil {
@@ -2726,7 +2726,7 @@ type CosStats struct {
 func (m *CosStats) Reset()                    { *m = CosStats{} }
 func (m *CosStats) String() string            { return proto.CompactTextString(m) }
 func (*CosStats) ProtoMessage()               {}
-func (*CosStats) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{82} }
+func (*CosStats) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{82} }
 
 func (m *CosStats) GetCos() uint32 {
 	if m != nil {
@@ -2761,7 +2761,7 @@ type SchedulerStatsResponse struct {
 func (m *SchedulerStatsResponse) Reset()                    { *m = SchedulerStatsResponse{} }
 func (m *SchedulerStatsResponse) String() string            { return proto.CompactTextString(m) }
 func (*SchedulerStatsResponse) ProtoMessage()               {}
-func (*SchedulerStatsResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{83} }
+func (*SchedulerStatsResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{83} }
 
 func (m *SchedulerStatsResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2812,7 +2812,7 @@ type SchedulerStatsResponseMsg struct {
 func (m *SchedulerStatsResponseMsg) Reset()                    { *m = SchedulerStatsResponseMsg{} }
 func (m *SchedulerStatsResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SchedulerStatsResponseMsg) ProtoMessage()               {}
-func (*SchedulerStatsResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{84} }
+func (*SchedulerStatsResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{84} }
 
 func (m *SchedulerStatsResponseMsg) GetResponse() []*SchedulerStatsResponse {
 	if m != nil {
@@ -2830,7 +2830,7 @@ type QRange struct {
 func (m *QRange) Reset()                    { *m = QRange{} }
 func (m *QRange) String() string            { return proto.CompactTextString(m) }
 func (*QRange) ProtoMessage()               {}
-func (*QRange) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{85} }
+func (*QRange) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{85} }
 
 func (m *QRange) GetQBeg() uint32 {
 	if m != nil {
@@ -2853,7 +2853,7 @@ type QRanges struct {
 func (m *QRanges) Reset()                    { *m = QRanges{} }
 func (m *QRanges) String() string            { return proto.CompactTextString(m) }
 func (*QRanges) ProtoMessage()               {}
-func (*QRanges) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{86} }
+func (*QRanges) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{86} }
 
 func (m *QRanges) GetRange() []*QRange {
 	if m != nil {
@@ -2875,7 +2875,7 @@ type SchedulerActiveQRequest struct {
 func (m *SchedulerActiveQRequest) Reset()                    { *m = SchedulerActiveQRequest{} }
 func (m *SchedulerActiveQRequest) String() string            { return proto.CompactTextString(m) }
 func (*SchedulerActiveQRequest) ProtoMessage()               {}
-func (*SchedulerActiveQRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{87} }
+func (*SchedulerActiveQRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{87} }
 
 type isSchedulerActiveQRequest_NumOrRanges interface{ isSchedulerActiveQRequest_NumOrRanges() }
 
@@ -3007,7 +3007,7 @@ type SchedulerActiveQRequestMsg struct {
 func (m *SchedulerActiveQRequestMsg) Reset()                    { *m = SchedulerActiveQRequestMsg{} }
 func (m *SchedulerActiveQRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SchedulerActiveQRequestMsg) ProtoMessage()               {}
-func (*SchedulerActiveQRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{88} }
+func (*SchedulerActiveQRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{88} }
 
 func (m *SchedulerActiveQRequestMsg) GetRequest() []*SchedulerActiveQRequest {
 	if m != nil {
@@ -3023,7 +3023,7 @@ type SchedulerActiveQResponse struct {
 func (m *SchedulerActiveQResponse) Reset()                    { *m = SchedulerActiveQResponse{} }
 func (m *SchedulerActiveQResponse) String() string            { return proto.CompactTextString(m) }
 func (*SchedulerActiveQResponse) ProtoMessage()               {}
-func (*SchedulerActiveQResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{89} }
+func (*SchedulerActiveQResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{89} }
 
 func (m *SchedulerActiveQResponse) GetActiveQNum() []uint32 {
 	if m != nil {
@@ -3039,7 +3039,7 @@ type SchedulerActiveQResponseMsg struct {
 func (m *SchedulerActiveQResponseMsg) Reset()                    { *m = SchedulerActiveQResponseMsg{} }
 func (m *SchedulerActiveQResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SchedulerActiveQResponseMsg) ProtoMessage()               {}
-func (*SchedulerActiveQResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{90} }
+func (*SchedulerActiveQResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{90} }
 
 func (m *SchedulerActiveQResponseMsg) GetResponse() []*SchedulerActiveQResponse {
 	if m != nil {
@@ -3149,9 +3149,9 @@ func init() {
 	proto.RegisterEnum("halproto.HbmSramType", HbmSramType_name, HbmSramType_value)
 }
 
-func init() { proto.RegisterFile("debug.proto", fileDescriptor6) }
+func init() { proto.RegisterFile("debug.proto", fileDescriptor3) }
 
-var fileDescriptor6 = []byte{
+var fileDescriptor3 = []byte{
 	// 4160 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x5b, 0xcd, 0x6f, 0xe3, 0x48,
 	0x76, 0x37, 0x25, 0xd9, 0x96, 0x9e, 0x24, 0x9b, 0x2e, 0xdb, 0x6d, 0xd9, 0x9e, 0x9e, 0xf6, 0x70,

@@ -126,7 +126,7 @@ type VrfSpecReactor interface {
 func (m *VrfSpec) Reset()                    { *m = VrfSpec{} }
 func (m *VrfSpec) String() string            { return proto.CompactTextString(m) }
 func (*VrfSpec) ProtoMessage()               {}
-func (*VrfSpec) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{0} }
+func (*VrfSpec) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{0} }
 
 func (m *VrfSpec) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -178,7 +178,7 @@ type VrfRequestMsg struct {
 func (m *VrfRequestMsg) Reset()                    { *m = VrfRequestMsg{} }
 func (m *VrfRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfRequestMsg) ProtoMessage()               {}
-func (*VrfRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{1} }
+func (*VrfRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{1} }
 
 func (m *VrfRequestMsg) GetRequest() []*VrfSpec {
 	if m != nil {
@@ -202,7 +202,7 @@ type VrfStatusEpd struct {
 func (m *VrfStatusEpd) Reset()                    { *m = VrfStatusEpd{} }
 func (m *VrfStatusEpd) String() string            { return proto.CompactTextString(m) }
 func (*VrfStatusEpd) ProtoMessage()               {}
-func (*VrfStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{2} }
+func (*VrfStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{2} }
 
 func (m *VrfStatusEpd) GetHwVrfId() uint32 {
 	if m != nil {
@@ -253,7 +253,7 @@ type VrfStatusCpd struct {
 func (m *VrfStatusCpd) Reset()                    { *m = VrfStatusCpd{} }
 func (m *VrfStatusCpd) String() string            { return proto.CompactTextString(m) }
 func (*VrfStatusCpd) ProtoMessage()               {}
-func (*VrfStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{3} }
+func (*VrfStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{3} }
 
 // VrfStatus is the operational status of a given vrf
 type VrfStatus struct {
@@ -366,7 +366,7 @@ type VrfStatusReactor interface {
 func (m *VrfStatus) Reset()                    { *m = VrfStatus{} }
 func (m *VrfStatus) String() string            { return proto.CompactTextString(m) }
 func (*VrfStatus) ProtoMessage()               {}
-func (*VrfStatus) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{4} }
+func (*VrfStatus) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{4} }
 
 type isVrfStatus_VrfPdStatus interface{ isVrfStatus_VrfPdStatus() }
 
@@ -498,7 +498,7 @@ type VrfResponse struct {
 func (m *VrfResponse) Reset()                    { *m = VrfResponse{} }
 func (m *VrfResponse) String() string            { return proto.CompactTextString(m) }
 func (*VrfResponse) ProtoMessage()               {}
-func (*VrfResponse) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{5} }
+func (*VrfResponse) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{5} }
 
 func (m *VrfResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -522,7 +522,7 @@ type VrfResponseMsg struct {
 func (m *VrfResponseMsg) Reset()                    { *m = VrfResponseMsg{} }
 func (m *VrfResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfResponseMsg) ProtoMessage()               {}
-func (*VrfResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{6} }
+func (*VrfResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{6} }
 
 func (m *VrfResponseMsg) GetResponse() []*VrfResponse {
 	if m != nil {
@@ -540,7 +540,7 @@ type VrfDeleteRequest struct {
 func (m *VrfDeleteRequest) Reset()                    { *m = VrfDeleteRequest{} }
 func (m *VrfDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*VrfDeleteRequest) ProtoMessage()               {}
-func (*VrfDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{7} }
+func (*VrfDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{7} }
 
 func (m *VrfDeleteRequest) GetKeyOrHandle() *VrfKeyHandle {
 	if m != nil {
@@ -558,7 +558,7 @@ type VrfDeleteResponse struct {
 func (m *VrfDeleteResponse) Reset()                    { *m = VrfDeleteResponse{} }
 func (m *VrfDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*VrfDeleteResponse) ProtoMessage()               {}
-func (*VrfDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{8} }
+func (*VrfDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{8} }
 
 func (m *VrfDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -582,7 +582,7 @@ type VrfDeleteRequestMsg struct {
 func (m *VrfDeleteRequestMsg) Reset()                    { *m = VrfDeleteRequestMsg{} }
 func (m *VrfDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfDeleteRequestMsg) ProtoMessage()               {}
-func (*VrfDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{9} }
+func (*VrfDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{9} }
 
 func (m *VrfDeleteRequestMsg) GetRequest() []*VrfDeleteRequest {
 	if m != nil {
@@ -599,7 +599,7 @@ type VrfDeleteResponseMsg struct {
 func (m *VrfDeleteResponseMsg) Reset()                    { *m = VrfDeleteResponseMsg{} }
 func (m *VrfDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfDeleteResponseMsg) ProtoMessage()               {}
-func (*VrfDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{10} }
+func (*VrfDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{10} }
 
 func (m *VrfDeleteResponseMsg) GetResponse() []*VrfDeleteResponse {
 	if m != nil {
@@ -616,7 +616,7 @@ type VrfGetRequest struct {
 func (m *VrfGetRequest) Reset()                    { *m = VrfGetRequest{} }
 func (m *VrfGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*VrfGetRequest) ProtoMessage()               {}
-func (*VrfGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{11} }
+func (*VrfGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{11} }
 
 func (m *VrfGetRequest) GetKeyOrHandle() *VrfKeyHandle {
 	if m != nil {
@@ -633,7 +633,7 @@ type VrfGetRequestMsg struct {
 func (m *VrfGetRequestMsg) Reset()                    { *m = VrfGetRequestMsg{} }
 func (m *VrfGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfGetRequestMsg) ProtoMessage()               {}
-func (*VrfGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{12} }
+func (*VrfGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{12} }
 
 func (m *VrfGetRequestMsg) GetRequest() []*VrfGetRequest {
 	if m != nil {
@@ -654,7 +654,7 @@ type VrfStats struct {
 func (m *VrfStats) Reset()                    { *m = VrfStats{} }
 func (m *VrfStats) String() string            { return proto.CompactTextString(m) }
 func (*VrfStats) ProtoMessage()               {}
-func (*VrfStats) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{13} }
+func (*VrfStats) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{13} }
 
 func (m *VrfStats) GetNumL2Segments() uint32 {
 	if m != nil {
@@ -703,7 +703,7 @@ type VrfGetResponse struct {
 func (m *VrfGetResponse) Reset()                    { *m = VrfGetResponse{} }
 func (m *VrfGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*VrfGetResponse) ProtoMessage()               {}
-func (*VrfGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{14} }
+func (*VrfGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{14} }
 
 func (m *VrfGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -741,7 +741,7 @@ type VrfGetResponseMsg struct {
 func (m *VrfGetResponseMsg) Reset()                    { *m = VrfGetResponseMsg{} }
 func (m *VrfGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VrfGetResponseMsg) ProtoMessage()               {}
-func (*VrfGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{15} }
+func (*VrfGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor39, []int{15} }
 
 func (m *VrfGetResponseMsg) GetResponse() []*VrfGetResponse {
 	if m != nil {
@@ -771,9 +771,9 @@ func init() {
 	proto.RegisterType((*VrfGetResponseMsg)(nil), "halproto.VrfGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("vrf.proto", fileDescriptor42) }
+func init() { proto.RegisterFile("vrf.proto", fileDescriptor39) }
 
-var fileDescriptor42 = []byte{
+var fileDescriptor39 = []byte{
 	// 1027 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x4b, 0x6f, 0xe3, 0x54,
 	0x14, 0x1e, 0x4f, 0xda, 0x26, 0x3d, 0x89, 0xd3, 0xe4, 0x66, 0x3a, 0xca, 0x54, 0x48, 0x0d, 0x1e,

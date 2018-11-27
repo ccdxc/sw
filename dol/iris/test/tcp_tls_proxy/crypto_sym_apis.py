@@ -12,7 +12,7 @@ from infra.common.glopts        import GlobalOptions
 import infra.config.base        as base
 import iris.config.hal.defs          as haldefs
 import iris.config.hal.api           as halapi
-import crypto_apis_pb2          as crypto_apis_pb2
+import internal_pb2          as internal_pb2
 
 '''
     HMAC SHA Tests
@@ -72,12 +72,12 @@ SHA1_params = {'key': '12345', 'keylen': 5, 'data':'My test data again', 'datale
 # Hash generate/verify API
 def crypto_hash_api_invoke(hashtype, generate, key, key_len, data, data_len, digest, digest_len):
 
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
     if generate:
-        req_spec.api_type = crypto_apis_pb2.SYMMAPI_HASH_GENERATE
+        req_spec.api_type = internal_pb2.SYMMAPI_HASH_GENERATE
         req_spec.hash_generate.hashtype = hashtype
         req_spec.hash_generate.key = str.encode(key)
         req_spec.hash_generate.key_len = key_len
@@ -85,10 +85,10 @@ def crypto_hash_api_invoke(hashtype, generate, key, key_len, data, data_len, dig
         req_spec.hash_generate.data_len = data_len
         req_spec.hash_generate.digest_len = digest_len
         print("Invoking CryptoAPI: %s-generate" % \
-              crypto_apis_pb2.CryptoApiHashType.Name(hashtype))
+              internal_pb2.CryptoApiHashType.Name(hashtype))
 
     else:
-        req_spec.api_type = crypto_apis_pb2.SYMMAPI_HASH_VERIFY
+        req_spec.api_type = internal_pb2.SYMMAPI_HASH_VERIFY
         req_spec.hash_verify.hashtype = hashtype
         req_spec.hash_verify.key = str.encode(key)
         req_spec.hash_verify.key_len = key_len
@@ -97,7 +97,7 @@ def crypto_hash_api_invoke(hashtype, generate, key, key_len, data, data_len, dig
         req_spec.hash_verify.digest = digest
         req_spec.hash_verify.digest_len = digest_len
         print("Invoking CryptoAPI: %s-verify" % \
-              crypto_apis_pb2.CryptoApiHashType.Name(hashtype))
+              internal_pb2.CryptoApiHashType.Name(hashtype))
 
     resp_msg = stub.CryptoApiInvoke(req_msg)
 
@@ -124,19 +124,19 @@ def symm_crypto_hash_request(hashtype, generate):
     global SHA384_params
     global SHA512_params
 
-    if hashtype == crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA1:
+    if hashtype == internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA1:
         params = SHA1_params
-    elif hashtype == crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA224:
+    elif hashtype == internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA224:
         params = SHA224_params
-    elif hashtype == crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA256:
+    elif hashtype == internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA256:
         params = SHA256_params
-    elif hashtype == crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA384:
+    elif hashtype == internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA384:
         params = SHA384_params
-    elif hashtype == crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA512:
+    elif hashtype == internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA512:
         params = SHA512_params
     else:
         print("FAIL: Unsupported Hash-type %s" % \
-              crypto_apis_pb2.CryptoApiHashType.Name(hashtype))
+              internal_pb2.CryptoApiHashType.Name(hashtype))
         return False
 
     ret, output_digest = crypto_hash_api_invoke(hashtype,
@@ -151,21 +151,21 @@ def symm_crypto_hash_request(hashtype, generate):
     if generate == False:
         if (ret != types_pb2.API_STATUS_OK):
             print("FAIL: API %s-Verify error" % \
-                  crypto_apis_pb2.CryptoApiHashType.Name(hashtype))
+                  internal_pb2.CryptoApiHashType.Name(hashtype))
             return False
         print("Verified digest: %s" % \
               binascii.hexlify(params['digest']))
         print("PASS: API %s-Verify digest accepted!" % \
-                  crypto_apis_pb2.CryptoApiHashType.Name(hashtype))
+                  internal_pb2.CryptoApiHashType.Name(hashtype))
         return True
 
     if (ret != types_pb2.API_STATUS_OK):
             print("FAIL: API %s-Generate error" % \
-                  crypto_apis_pb2.CryptoApiHashType.Name(hashtype))
+                  internal_pb2.CryptoApiHashType.Name(hashtype))
             return False
     else:
         print("PASS: API %s-Generate succeeded" % \
-                  crypto_apis_pb2.CryptoApiHashType.Name(hashtype))
+                  internal_pb2.CryptoApiHashType.Name(hashtype))
         print("Expected digest: %s" % \
               binascii.hexlify(params['digest']))
         print("Received digest: %s" % \
@@ -175,37 +175,37 @@ def symm_crypto_hash_request(hashtype, generate):
             return False
         else:
             print("PASS: %s-Generate digests match!" % \
-                  crypto_apis_pb2.CryptoApiHashType.Name(hashtype))
+                  internal_pb2.CryptoApiHashType.Name(hashtype))
             return True
 
 
 def hmac_sha1_generate_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA1, True)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA1, True)
 
 def hmac_sha1_verify_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA1, False)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA1, False)
 
 def hmac_sha224_generate_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA224, True)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA224, True)
 
 def hmac_sha224_verify_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA224, False)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA224, False)
 
 def hmac_sha256_generate_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA256, True)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA256, True)
 
 def hmac_sha256_verify_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA256, False)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA256, False)
 
 def hmac_sha384_generate_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA384, True)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA384, True)
 
 def hmac_sha384_verify_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA384, False)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA384, False)
 
 def hmac_sha512_generate_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA512, True)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA512, True)
 
 def hmac_sha512_verify_test():
-  return symm_crypto_hash_request(crypto_apis_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA512, False)
+  return symm_crypto_hash_request(internal_pb2.CRYPTOAPI_HASHTYPE_HMAC_SHA512, False)
   

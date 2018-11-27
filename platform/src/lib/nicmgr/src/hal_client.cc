@@ -26,7 +26,7 @@ using namespace endpoint;
 using namespace l2segment;
 using namespace multicast;
 using namespace accelRGroup;
-using namespace cryptokey;
+//using namespace internal;
 
 using namespace grpc;
 using namespace std;
@@ -57,7 +57,7 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
     multicast_stub_ = Multicast::NewStub(channel);
     rdma_stub_ = Rdma::NewStub(channel);
     accel_rgroup_stub_ = AccelRGroup::NewStub(channel);
-    crypto_stub_ = CryptoKey::NewStub(channel);
+    crypto_stub_ = Internal::NewStub(channel);
     this->fwd_mode = fwd_mode;
 }
 

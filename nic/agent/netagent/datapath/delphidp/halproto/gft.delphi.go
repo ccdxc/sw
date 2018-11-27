@@ -40,7 +40,7 @@ var GftTableType_value = map[string]int32{
 func (x GftTableType) String() string {
 	return proto.EnumName(GftTableType_name, int32(x))
 }
-func (GftTableType) EnumDescriptor() ([]byte, []int) { return fileDescriptor13, []int{0} }
+func (GftTableType) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{0} }
 
 type GftHeaderGroupTranspostionAction int32
 
@@ -71,7 +71,7 @@ func (x GftHeaderGroupTranspostionAction) String() string {
 	return proto.EnumName(GftHeaderGroupTranspostionAction_name, int32(x))
 }
 func (GftHeaderGroupTranspostionAction) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{1}
+	return fileDescriptor10, []int{1}
 }
 
 type GftEthFields struct {
@@ -86,7 +86,7 @@ type GftEthFields struct {
 func (m *GftEthFields) Reset()                    { *m = GftEthFields{} }
 func (m *GftEthFields) String() string            { return proto.CompactTextString(m) }
 func (*GftEthFields) ProtoMessage()               {}
-func (*GftEthFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{0} }
+func (*GftEthFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{0} }
 
 func (m *GftEthFields) GetDstMacAddr() uint64 {
 	if m != nil {
@@ -147,7 +147,7 @@ type GftHeaders struct {
 func (m *GftHeaders) Reset()                    { *m = GftHeaders{} }
 func (m *GftHeaders) String() string            { return proto.CompactTextString(m) }
 func (*GftHeaders) ProtoMessage()               {}
-func (*GftHeaders) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{1} }
+func (*GftHeaders) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{1} }
 
 func (m *GftHeaders) GetEthernetHeader() bool {
 	if m != nil {
@@ -252,7 +252,7 @@ type GftHeaderFields struct {
 func (m *GftHeaderFields) Reset()                    { *m = GftHeaderFields{} }
 func (m *GftHeaderFields) String() string            { return proto.CompactTextString(m) }
 func (*GftHeaderFields) ProtoMessage()               {}
-func (*GftHeaderFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{2} }
+func (*GftHeaderFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{2} }
 
 func (m *GftHeaderFields) GetDstMacAddr() bool {
 	if m != nil {
@@ -403,7 +403,7 @@ func (m *GftHeaderGroupExactMatchProfile) Reset()         { *m = GftHeaderGroupE
 func (m *GftHeaderGroupExactMatchProfile) String() string { return proto.CompactTextString(m) }
 func (*GftHeaderGroupExactMatchProfile) ProtoMessage()    {}
 func (*GftHeaderGroupExactMatchProfile) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{3}
+	return fileDescriptor10, []int{3}
 }
 
 func (m *GftHeaderGroupExactMatchProfile) GetHeaders() *GftHeaders {
@@ -430,7 +430,7 @@ type GftExactMatchProfileSpec struct {
 func (m *GftExactMatchProfileSpec) Reset()                    { *m = GftExactMatchProfileSpec{} }
 func (m *GftExactMatchProfileSpec) String() string            { return proto.CompactTextString(m) }
 func (*GftExactMatchProfileSpec) ProtoMessage()               {}
-func (*GftExactMatchProfileSpec) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{4} }
+func (*GftExactMatchProfileSpec) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{4} }
 
 func (m *GftExactMatchProfileSpec) GetKeyOrHandle() *GftExactMatchProfileKeyHandle {
 	if m != nil {
@@ -469,7 +469,7 @@ type GftExactMatchProfileRequestMsg struct {
 func (m *GftExactMatchProfileRequestMsg) Reset()                    { *m = GftExactMatchProfileRequestMsg{} }
 func (m *GftExactMatchProfileRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*GftExactMatchProfileRequestMsg) ProtoMessage()               {}
-func (*GftExactMatchProfileRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{5} }
+func (*GftExactMatchProfileRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{5} }
 
 func (m *GftExactMatchProfileRequestMsg) GetRequest() []*GftExactMatchProfileSpec {
 	if m != nil {
@@ -486,7 +486,7 @@ type GftExactMatchProfileStatus struct {
 func (m *GftExactMatchProfileStatus) Reset()                    { *m = GftExactMatchProfileStatus{} }
 func (m *GftExactMatchProfileStatus) String() string            { return proto.CompactTextString(m) }
 func (*GftExactMatchProfileStatus) ProtoMessage()               {}
-func (*GftExactMatchProfileStatus) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{6} }
+func (*GftExactMatchProfileStatus) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{6} }
 
 func (m *GftExactMatchProfileStatus) GetProfileHandle() uint64 {
 	if m != nil {
@@ -504,7 +504,7 @@ type GftExactMatchProfileResponse struct {
 func (m *GftExactMatchProfileResponse) Reset()                    { *m = GftExactMatchProfileResponse{} }
 func (m *GftExactMatchProfileResponse) String() string            { return proto.CompactTextString(m) }
 func (*GftExactMatchProfileResponse) ProtoMessage()               {}
-func (*GftExactMatchProfileResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{7} }
+func (*GftExactMatchProfileResponse) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{7} }
 
 func (m *GftExactMatchProfileResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -529,7 +529,7 @@ func (m *GftExactMatchProfileResponseMsg) Reset()         { *m = GftExactMatchPr
 func (m *GftExactMatchProfileResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*GftExactMatchProfileResponseMsg) ProtoMessage()    {}
 func (*GftExactMatchProfileResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{8}
+	return fileDescriptor10, []int{8}
 }
 
 func (m *GftExactMatchProfileResponseMsg) GetResponse() []*GftExactMatchProfileResponse {
@@ -547,7 +547,7 @@ type UdpMatchFields struct {
 func (m *UdpMatchFields) Reset()                    { *m = UdpMatchFields{} }
 func (m *UdpMatchFields) String() string            { return proto.CompactTextString(m) }
 func (*UdpMatchFields) ProtoMessage()               {}
-func (*UdpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{9} }
+func (*UdpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{9} }
 
 func (m *UdpMatchFields) GetSport() uint32 {
 	if m != nil {
@@ -572,7 +572,7 @@ type TcpMatchFields struct {
 func (m *TcpMatchFields) Reset()                    { *m = TcpMatchFields{} }
 func (m *TcpMatchFields) String() string            { return proto.CompactTextString(m) }
 func (*TcpMatchFields) ProtoMessage()               {}
-func (*TcpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{10} }
+func (*TcpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{10} }
 
 func (m *TcpMatchFields) GetSport() uint32 {
 	if m != nil {
@@ -603,7 +603,7 @@ type IcmpMatchFields struct {
 func (m *IcmpMatchFields) Reset()                    { *m = IcmpMatchFields{} }
 func (m *IcmpMatchFields) String() string            { return proto.CompactTextString(m) }
 func (*IcmpMatchFields) ProtoMessage()               {}
-func (*IcmpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{11} }
+func (*IcmpMatchFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{11} }
 
 func (m *IcmpMatchFields) GetType() uint32 {
 	if m != nil {
@@ -627,7 +627,7 @@ type EncapMatchFields struct {
 func (m *EncapMatchFields) Reset()                    { *m = EncapMatchFields{} }
 func (m *EncapMatchFields) String() string            { return proto.CompactTextString(m) }
 func (*EncapMatchFields) ProtoMessage()               {}
-func (*EncapMatchFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{12} }
+func (*EncapMatchFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{12} }
 
 func (m *EncapMatchFields) GetTenantId() uint32 {
 	if m != nil {
@@ -653,7 +653,7 @@ func (m *GftHeaderGroupTranspositionProfile) Reset()         { *m = GftHeaderGro
 func (m *GftHeaderGroupTranspositionProfile) String() string { return proto.CompactTextString(m) }
 func (*GftHeaderGroupTranspositionProfile) ProtoMessage()    {}
 func (*GftHeaderGroupTranspositionProfile) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{13}
+	return fileDescriptor10, []int{13}
 }
 
 func (m *GftHeaderGroupTranspositionProfile) GetAction() GftHeaderGroupTranspostionAction {
@@ -696,7 +696,7 @@ func (m *GftHeaderTranspositionProfileSpec) Reset()         { *m = GftHeaderTran
 func (m *GftHeaderTranspositionProfileSpec) String() string { return proto.CompactTextString(m) }
 func (*GftHeaderTranspositionProfileSpec) ProtoMessage()    {}
 func (*GftHeaderTranspositionProfileSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{14}
+	return fileDescriptor10, []int{14}
 }
 
 func (m *GftHeaderTranspositionProfileSpec) GetKeyOrHandle() *GftHeaderTranspositionProfileKeyHandle {
@@ -795,7 +795,7 @@ func (m *GftHeaderTranspositionProfileRequestMsg) Reset() {
 func (m *GftHeaderTranspositionProfileRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*GftHeaderTranspositionProfileRequestMsg) ProtoMessage()    {}
 func (*GftHeaderTranspositionProfileRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{15}
+	return fileDescriptor10, []int{15}
 }
 
 func (m *GftHeaderTranspositionProfileRequestMsg) GetRequest() []*GftHeaderTranspositionProfileSpec {
@@ -814,7 +814,7 @@ func (m *GftHeaderTranspositionProfileStatus) Reset()         { *m = GftHeaderTr
 func (m *GftHeaderTranspositionProfileStatus) String() string { return proto.CompactTextString(m) }
 func (*GftHeaderTranspositionProfileStatus) ProtoMessage()    {}
 func (*GftHeaderTranspositionProfileStatus) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{16}
+	return fileDescriptor10, []int{16}
 }
 
 func (m *GftHeaderTranspositionProfileStatus) GetProfileHandle() uint64 {
@@ -834,7 +834,7 @@ func (m *GftHeaderTranspositionProfileResponse) Reset()         { *m = GftHeader
 func (m *GftHeaderTranspositionProfileResponse) String() string { return proto.CompactTextString(m) }
 func (*GftHeaderTranspositionProfileResponse) ProtoMessage()    {}
 func (*GftHeaderTranspositionProfileResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{17}
+	return fileDescriptor10, []int{17}
 }
 
 func (m *GftHeaderTranspositionProfileResponse) GetApiStatus() ApiStatus {
@@ -862,7 +862,7 @@ func (m *GftHeaderTranspositionProfileResponseMsg) Reset() {
 func (m *GftHeaderTranspositionProfileResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*GftHeaderTranspositionProfileResponseMsg) ProtoMessage()    {}
 func (*GftHeaderTranspositionProfileResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{18}
+	return fileDescriptor10, []int{18}
 }
 
 func (m *GftHeaderTranspositionProfileResponseMsg) GetResponse() []*GftHeaderTranspositionProfileResponse {
@@ -884,7 +884,7 @@ type EncapOrTransportMatch struct {
 func (m *EncapOrTransportMatch) Reset()                    { *m = EncapOrTransportMatch{} }
 func (m *EncapOrTransportMatch) String() string            { return proto.CompactTextString(m) }
 func (*EncapOrTransportMatch) ProtoMessage()               {}
-func (*EncapOrTransportMatch) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{19} }
+func (*EncapOrTransportMatch) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{19} }
 
 type isEncapOrTransportMatch_EncapOrTransport interface{ isEncapOrTransportMatch_EncapOrTransport() }
 
@@ -1068,7 +1068,7 @@ type GftHeaderGroupExactMatch struct {
 func (m *GftHeaderGroupExactMatch) Reset()                    { *m = GftHeaderGroupExactMatch{} }
 func (m *GftHeaderGroupExactMatch) String() string            { return proto.CompactTextString(m) }
 func (*GftHeaderGroupExactMatch) ProtoMessage()               {}
-func (*GftHeaderGroupExactMatch) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{20} }
+func (*GftHeaderGroupExactMatch) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{20} }
 
 func (m *GftHeaderGroupExactMatch) GetHeaders() *GftHeaders {
 	if m != nil {
@@ -1141,7 +1141,7 @@ type UdpTranspositionFields struct {
 func (m *UdpTranspositionFields) Reset()                    { *m = UdpTranspositionFields{} }
 func (m *UdpTranspositionFields) String() string            { return proto.CompactTextString(m) }
 func (*UdpTranspositionFields) ProtoMessage()               {}
-func (*UdpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{21} }
+func (*UdpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{21} }
 
 func (m *UdpTranspositionFields) GetSport() uint32 {
 	if m != nil {
@@ -1165,7 +1165,7 @@ type TcpTranspositionFields struct {
 func (m *TcpTranspositionFields) Reset()                    { *m = TcpTranspositionFields{} }
 func (m *TcpTranspositionFields) String() string            { return proto.CompactTextString(m) }
 func (*TcpTranspositionFields) ProtoMessage()               {}
-func (*TcpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{22} }
+func (*TcpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{22} }
 
 func (m *TcpTranspositionFields) GetSport() uint32 {
 	if m != nil {
@@ -1189,7 +1189,7 @@ type IcmpTranspositionFields struct {
 func (m *IcmpTranspositionFields) Reset()                    { *m = IcmpTranspositionFields{} }
 func (m *IcmpTranspositionFields) String() string            { return proto.CompactTextString(m) }
 func (*IcmpTranspositionFields) ProtoMessage()               {}
-func (*IcmpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{23} }
+func (*IcmpTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{23} }
 
 func (m *IcmpTranspositionFields) GetType() uint32 {
 	if m != nil {
@@ -1213,7 +1213,7 @@ type EncapTranspositionFields struct {
 func (m *EncapTranspositionFields) Reset()                    { *m = EncapTranspositionFields{} }
 func (m *EncapTranspositionFields) String() string            { return proto.CompactTextString(m) }
 func (*EncapTranspositionFields) ProtoMessage()               {}
-func (*EncapTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{24} }
+func (*EncapTranspositionFields) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{24} }
 
 func (m *EncapTranspositionFields) GetTenantId() uint32 {
 	if m != nil {
@@ -1241,7 +1241,7 @@ type EncapOrTransportTransposition struct {
 func (m *EncapOrTransportTransposition) Reset()                    { *m = EncapOrTransportTransposition{} }
 func (m *EncapOrTransportTransposition) String() string            { return proto.CompactTextString(m) }
 func (*EncapOrTransportTransposition) ProtoMessage()               {}
-func (*EncapOrTransportTransposition) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{25} }
+func (*EncapOrTransportTransposition) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{25} }
 
 type isEncapOrTransportTransposition_EncapOrTransport interface{ isEncapOrTransportTransposition_EncapOrTransport() }
 
@@ -1426,7 +1426,7 @@ type GftHeaderGroupTransposition struct {
 func (m *GftHeaderGroupTransposition) Reset()                    { *m = GftHeaderGroupTransposition{} }
 func (m *GftHeaderGroupTransposition) String() string            { return proto.CompactTextString(m) }
 func (*GftHeaderGroupTransposition) ProtoMessage()               {}
-func (*GftHeaderGroupTransposition) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{26} }
+func (*GftHeaderGroupTransposition) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{26} }
 
 func (m *GftHeaderGroupTransposition) GetAction() GftHeaderGroupTranspostionAction {
 	if m != nil {
@@ -1526,7 +1526,7 @@ type GftExactMatchFlowEntrySpec struct {
 func (m *GftExactMatchFlowEntrySpec) Reset()                    { *m = GftExactMatchFlowEntrySpec{} }
 func (m *GftExactMatchFlowEntrySpec) String() string            { return proto.CompactTextString(m) }
 func (*GftExactMatchFlowEntrySpec) ProtoMessage()               {}
-func (*GftExactMatchFlowEntrySpec) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{27} }
+func (*GftExactMatchFlowEntrySpec) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{27} }
 
 func (m *GftExactMatchFlowEntrySpec) GetTableType() GftTableType {
 	if m != nil {
@@ -1692,7 +1692,7 @@ func (m *GftExactMatchFlowEntryRequestMsg) Reset()         { *m = GftExactMatchF
 func (m *GftExactMatchFlowEntryRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*GftExactMatchFlowEntryRequestMsg) ProtoMessage()    {}
 func (*GftExactMatchFlowEntryRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{28}
+	return fileDescriptor10, []int{28}
 }
 
 func (m *GftExactMatchFlowEntryRequestMsg) GetRequest() []*GftExactMatchFlowEntrySpec {
@@ -1712,7 +1712,7 @@ type GftExactMatchFlowEntryStatus struct {
 func (m *GftExactMatchFlowEntryStatus) Reset()                    { *m = GftExactMatchFlowEntryStatus{} }
 func (m *GftExactMatchFlowEntryStatus) String() string            { return proto.CompactTextString(m) }
 func (*GftExactMatchFlowEntryStatus) ProtoMessage()               {}
-func (*GftExactMatchFlowEntryStatus) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{29} }
+func (*GftExactMatchFlowEntryStatus) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{29} }
 
 func (m *GftExactMatchFlowEntryStatus) GetFlowEntryHandle() uint64 {
 	if m != nil {
@@ -1745,7 +1745,7 @@ func (m *GftExactMatchFlowEntryResponse) Reset()         { *m = GftExactMatchFlo
 func (m *GftExactMatchFlowEntryResponse) String() string { return proto.CompactTextString(m) }
 func (*GftExactMatchFlowEntryResponse) ProtoMessage()    {}
 func (*GftExactMatchFlowEntryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{30}
+	return fileDescriptor10, []int{30}
 }
 
 func (m *GftExactMatchFlowEntryResponse) GetApiStatus() ApiStatus {
@@ -1771,7 +1771,7 @@ func (m *GftExactMatchFlowEntryResponseMsg) Reset()         { *m = GftExactMatch
 func (m *GftExactMatchFlowEntryResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*GftExactMatchFlowEntryResponseMsg) ProtoMessage()    {}
 func (*GftExactMatchFlowEntryResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor13, []int{31}
+	return fileDescriptor10, []int{31}
 }
 
 func (m *GftExactMatchFlowEntryResponseMsg) GetResponse() []*GftExactMatchFlowEntryResponse {
@@ -1818,9 +1818,9 @@ func init() {
 	proto.RegisterEnum("halproto.GftHeaderGroupTranspostionAction", GftHeaderGroupTranspostionAction_name, GftHeaderGroupTranspostionAction_value)
 }
 
-func init() { proto.RegisterFile("gft.proto", fileDescriptor13) }
+func init() { proto.RegisterFile("gft.proto", fileDescriptor10) }
 
-var fileDescriptor13 = []byte{
+var fileDescriptor10 = []byte{
 	// 2436 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x59, 0xcd, 0x53, 0x1b, 0xc9,
 	0x15, 0xb7, 0x24, 0x10, 0xd2, 0xd3, 0x27, 0xc3, 0x87, 0x65, 0x30, 0x06, 0x06, 0x63, 0x13, 0x6a,

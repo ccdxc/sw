@@ -7,16 +7,16 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
-// #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 
 namespace hal {
 
-hal_ret_t   GetOpaqueTagAddr(const GetOpaqueTagAddrRequest& request,
-    GetOpaqueTagAddrResponse *response)
+hal_ret_t   get_opaque_tag_addr(GetOpaqueTagAddrRequest& request,
+    GetOpaqueTagAddrResponseMsg *response_msg)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint64_t addr;
     pd::pd_func_args_t          pd_func_args = {0};
+    GetOpaqueTagAddrResponse *response = response_msg->add_response();
 
     pd::pd_get_opaque_tag_addr_args_t args;
     args.ring_type = request.ring_type();
@@ -33,8 +33,8 @@ hal_ret_t   GetOpaqueTagAddr(const GetOpaqueTagAddrRequest& request,
     return ret;
 }
 
-hal_ret_t BarcoGetReqDescrEntry(const BarcoGetReqDescrEntryRequest& request,
-				BarcoGetReqDescrEntryResponse *response)
+hal_ret_t barco_get_req_descr_entry(BarcoGetReqDescrEntryRequest& request,
+				BarcoGetReqDescrEntryResponseMsg *response_msg)
 {
     hal_ret_t          ret = HAL_RET_OK;
     barco_symm_descr_t symm_req_descr;
@@ -42,6 +42,8 @@ hal_ret_t BarcoGetReqDescrEntry(const BarcoGetReqDescrEntryRequest& request,
     pd::pd_capri_barco_asym_req_descr_get_args_t args;
     pd::pd_capri_barco_symm_req_descr_get_args_t sym_args;
     pd::pd_func_args_t          pd_func_args = {0};
+
+    BarcoGetReqDescrEntryResponse *response = response_msg->add_response();
 
     switch (request.ring_type()) {
     case types::BARCO_RING_ASYM:
@@ -108,13 +110,14 @@ hal_ret_t BarcoGetReqDescrEntry(const BarcoGetReqDescrEntryRequest& request,
     return HAL_RET_OK;
 }
 
-hal_ret_t BarcoGetRingMeta(const BarcoGetRingMetaRequest& request,
-			   BarcoGetRingMetaResponse *response)
+hal_ret_t barco_get_ring_meta(BarcoGetRingMetaRequest& request,
+			                  BarcoGetRingMetaResponseMsg *response_msg)
 {
     hal_ret_t          ret = HAL_RET_OK;
     uint32_t           pi = 0, ci = 0;
     pd::pd_capri_barco_ring_meta_get_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
+    BarcoGetRingMetaResponse *response = response_msg->add_response();
 
     args.ring_type = request.ring_type();
     args.pi = &pi;

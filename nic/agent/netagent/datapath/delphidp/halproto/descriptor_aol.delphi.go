@@ -19,7 +19,7 @@ type DescrAolRequest struct {
 func (m *DescrAolRequest) Reset()                    { *m = DescrAolRequest{} }
 func (m *DescrAolRequest) String() string            { return proto.CompactTextString(m) }
 func (*DescrAolRequest) ProtoMessage()               {}
-func (*DescrAolRequest) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{0} }
+func (*DescrAolRequest) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
 
 func (m *DescrAolRequest) GetDescrAolHandle() uint64 {
 	if m != nil {
@@ -35,7 +35,7 @@ type DescrAolRequestMsg struct {
 func (m *DescrAolRequestMsg) Reset()                    { *m = DescrAolRequestMsg{} }
 func (m *DescrAolRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*DescrAolRequestMsg) ProtoMessage()               {}
-func (*DescrAolRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{1} }
+func (*DescrAolRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{1} }
 
 func (m *DescrAolRequestMsg) GetRequest() []*DescrAolRequest {
 	if m != nil {
@@ -62,7 +62,7 @@ type DescrAolSpec struct {
 func (m *DescrAolSpec) Reset()                    { *m = DescrAolSpec{} }
 func (m *DescrAolSpec) String() string            { return proto.CompactTextString(m) }
 func (*DescrAolSpec) ProtoMessage()               {}
-func (*DescrAolSpec) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{2} }
+func (*DescrAolSpec) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{2} }
 
 func (m *DescrAolSpec) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -155,7 +155,7 @@ type DescrAolResponseMsg struct {
 func (m *DescrAolResponseMsg) Reset()                    { *m = DescrAolResponseMsg{} }
 func (m *DescrAolResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*DescrAolResponseMsg) ProtoMessage()               {}
-func (*DescrAolResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor7, []int{3} }
+func (*DescrAolResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{3} }
 
 func (m *DescrAolResponseMsg) GetResponse() []*DescrAolSpec {
 	if m != nil {
@@ -171,9 +171,9 @@ func init() {
 	proto.RegisterType((*DescrAolResponseMsg)(nil), "halproto.DescrAolResponseMsg")
 }
 
-func init() { proto.RegisterFile("descriptor_aol.proto", fileDescriptor7) }
+func init() { proto.RegisterFile("descriptor_aol.proto", fileDescriptor4) }
 
-var fileDescriptor7 = []byte{
+var fileDescriptor4 = []byte{
 	// 365 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0xdb, 0x4b, 0xc3, 0x30,
 	0x14, 0xc6, 0xad, 0xd3, 0xb5, 0x3b, 0x1d, 0x73, 0xc4, 0x0b, 0x71, 0x28, 0x8c, 0x3e, 0xf5, 0xa9,

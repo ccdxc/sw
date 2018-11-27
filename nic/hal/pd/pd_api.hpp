@@ -37,7 +37,7 @@
 #include "nic/sdk/include/sdk/platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
-#include "gen/proto/crypto_apis.grpc.pb.h"
+#include "gen/proto/internal.grpc.pb.h"
 
 namespace hal {
 namespace pd {
@@ -2696,7 +2696,7 @@ typedef struct pd_capri_barco_asym_rsa2k_sig_verify_args_s {
 } __PACK__ pd_capri_barco_asym_rsa2k_sig_verify_args_t;
 
 typedef struct pd_capri_barco_sym_hash_process_request_args_s {
-    cryptoapis::CryptoApiHashType hash_type;
+    internal::CryptoApiHashType hash_type;
     bool generate;
     unsigned char *key;
     int key_len;

@@ -40,7 +40,7 @@ var NormalizationAction_value = map[string]int32{
 func (x NormalizationAction) String() string {
 	return proto.EnumName(NormalizationAction_name, int32(x))
 }
-func (NormalizationAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{0} }
+func (NormalizationAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor23, []int{0} }
 
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
 type ALGName int32
@@ -89,7 +89,7 @@ var ALGName_value = map[string]int32{
 func (x ALGName) String() string {
 	return proto.EnumName(ALGName_name, int32(x))
 }
-func (ALGName) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{1} }
+func (ALGName) EnumDescriptor() ([]byte, []int) { return fileDescriptor23, []int{1} }
 
 // Firewall policy actions
 type FirewallAction int32
@@ -117,7 +117,7 @@ var FirewallAction_value = map[string]int32{
 func (x FirewallAction) String() string {
 	return proto.EnumName(FirewallAction_name, int32(x))
 }
-func (FirewallAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{2} }
+func (FirewallAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor23, []int{2} }
 
 // Action to be takn on hitting a rule
 type SecurityAction int32
@@ -145,7 +145,7 @@ var SecurityAction_value = map[string]int32{
 func (x SecurityAction) String() string {
 	return proto.EnumName(SecurityAction_name, int32(x))
 }
-func (SecurityAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{3} }
+func (SecurityAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor23, []int{3} }
 
 type LogAction int32
 
@@ -172,7 +172,7 @@ var LogAction_value = map[string]int32{
 func (x LogAction) String() string {
 	return proto.EnumName(LogAction_name, int32(x))
 }
-func (LogAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{4} }
+func (LogAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor23, []int{4} }
 
 type AppData_TraceLevel int32
 
@@ -202,7 +202,7 @@ var AppData_TraceLevel_value = map[string]int32{
 func (x AppData_TraceLevel) String() string {
 	return proto.EnumName(AppData_TraceLevel_name, int32(x))
 }
-func (AppData_TraceLevel) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{46, 0} }
+func (AppData_TraceLevel) EnumDescriptor() ([]byte, []int) { return fileDescriptor23, []int{46, 0} }
 
 // ------------------------------------------------------------------------------
 // SecurityProfileSpec object captures feature knobs that are most likely
@@ -380,7 +380,7 @@ type SecurityProfileSpec struct {
 func (m *SecurityProfileSpec) Reset()                    { *m = SecurityProfileSpec{} }
 func (m *SecurityProfileSpec) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileSpec) ProtoMessage()               {}
-func (*SecurityProfileSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{0} }
+func (*SecurityProfileSpec) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{0} }
 
 func (m *SecurityProfileSpec) GetKeyOrHandle() *SecurityProfileKeyHandle {
 	if m != nil {
@@ -992,7 +992,7 @@ type SecurityProfileRequestMsg struct {
 func (m *SecurityProfileRequestMsg) Reset()                    { *m = SecurityProfileRequestMsg{} }
 func (m *SecurityProfileRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileRequestMsg) ProtoMessage()               {}
-func (*SecurityProfileRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{1} }
+func (*SecurityProfileRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{1} }
 
 func (m *SecurityProfileRequestMsg) GetRequest() []*SecurityProfileSpec {
 	if m != nil {
@@ -1009,7 +1009,7 @@ type SecurityProfileStatusEpd struct {
 func (m *SecurityProfileStatusEpd) Reset()                    { *m = SecurityProfileStatusEpd{} }
 func (m *SecurityProfileStatusEpd) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileStatusEpd) ProtoMessage()               {}
-func (*SecurityProfileStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{2} }
+func (*SecurityProfileStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{2} }
 
 func (m *SecurityProfileStatusEpd) GetHwSecProfileId() uint32 {
 	if m != nil {
@@ -1025,7 +1025,7 @@ type SecurityProfileStatusCpd struct {
 func (m *SecurityProfileStatusCpd) Reset()                    { *m = SecurityProfileStatusCpd{} }
 func (m *SecurityProfileStatusCpd) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileStatusCpd) ProtoMessage()               {}
-func (*SecurityProfileStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{3} }
+func (*SecurityProfileStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{3} }
 
 // SecurityProfile operational status
 type SecurityProfileStatus struct {
@@ -1039,7 +1039,7 @@ type SecurityProfileStatus struct {
 func (m *SecurityProfileStatus) Reset()                    { *m = SecurityProfileStatus{} }
 func (m *SecurityProfileStatus) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileStatus) ProtoMessage()               {}
-func (*SecurityProfileStatus) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{4} }
+func (*SecurityProfileStatus) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{4} }
 
 type isSecurityProfileStatus_ProfilePdStatus interface{ isSecurityProfileStatus_ProfilePdStatus() }
 
@@ -1164,7 +1164,7 @@ type SecurityProfileResponse struct {
 func (m *SecurityProfileResponse) Reset()                    { *m = SecurityProfileResponse{} }
 func (m *SecurityProfileResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileResponse) ProtoMessage()               {}
-func (*SecurityProfileResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{5} }
+func (*SecurityProfileResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{5} }
 
 func (m *SecurityProfileResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1188,7 +1188,7 @@ type SecurityProfileResponseMsg struct {
 func (m *SecurityProfileResponseMsg) Reset()                    { *m = SecurityProfileResponseMsg{} }
 func (m *SecurityProfileResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileResponseMsg) ProtoMessage()               {}
-func (*SecurityProfileResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{6} }
+func (*SecurityProfileResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{6} }
 
 func (m *SecurityProfileResponseMsg) GetResponse() []*SecurityProfileResponse {
 	if m != nil {
@@ -1206,7 +1206,7 @@ type SecurityProfileDeleteRequest struct {
 func (m *SecurityProfileDeleteRequest) Reset()                    { *m = SecurityProfileDeleteRequest{} }
 func (m *SecurityProfileDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileDeleteRequest) ProtoMessage()               {}
-func (*SecurityProfileDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{7} }
+func (*SecurityProfileDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{7} }
 
 func (m *SecurityProfileDeleteRequest) GetKeyOrHandle() *SecurityProfileKeyHandle {
 	if m != nil {
@@ -1224,7 +1224,7 @@ func (m *SecurityProfileDeleteRequestMsg) Reset()         { *m = SecurityProfile
 func (m *SecurityProfileDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityProfileDeleteRequestMsg) ProtoMessage()    {}
 func (*SecurityProfileDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{8}
+	return fileDescriptor23, []int{8}
 }
 
 func (m *SecurityProfileDeleteRequestMsg) GetRequest() []*SecurityProfileDeleteRequest {
@@ -1243,7 +1243,7 @@ type SecurityProfileDeleteResponse struct {
 func (m *SecurityProfileDeleteResponse) Reset()                    { *m = SecurityProfileDeleteResponse{} }
 func (m *SecurityProfileDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileDeleteResponse) ProtoMessage()               {}
-func (*SecurityProfileDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{9} }
+func (*SecurityProfileDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{9} }
 
 func (m *SecurityProfileDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1268,7 +1268,7 @@ func (m *SecurityProfileDeleteResponseMsg) Reset()         { *m = SecurityProfil
 func (m *SecurityProfileDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityProfileDeleteResponseMsg) ProtoMessage()    {}
 func (*SecurityProfileDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{10}
+	return fileDescriptor23, []int{10}
 }
 
 func (m *SecurityProfileDeleteResponseMsg) GetResponse() []*SecurityProfileDeleteResponse {
@@ -1287,7 +1287,7 @@ type SecurityProfileGetRequest struct {
 func (m *SecurityProfileGetRequest) Reset()                    { *m = SecurityProfileGetRequest{} }
 func (m *SecurityProfileGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileGetRequest) ProtoMessage()               {}
-func (*SecurityProfileGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{11} }
+func (*SecurityProfileGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{11} }
 
 func (m *SecurityProfileGetRequest) GetKeyOrHandle() *SecurityProfileKeyHandle {
 	if m != nil {
@@ -1304,7 +1304,7 @@ type SecurityProfileGetRequestMsg struct {
 func (m *SecurityProfileGetRequestMsg) Reset()                    { *m = SecurityProfileGetRequestMsg{} }
 func (m *SecurityProfileGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileGetRequestMsg) ProtoMessage()               {}
-func (*SecurityProfileGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{12} }
+func (*SecurityProfileGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{12} }
 
 func (m *SecurityProfileGetRequestMsg) GetRequest() []*SecurityProfileGetRequest {
 	if m != nil {
@@ -1320,7 +1320,7 @@ type SecurityProfileStats struct {
 func (m *SecurityProfileStats) Reset()                    { *m = SecurityProfileStats{} }
 func (m *SecurityProfileStats) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileStats) ProtoMessage()               {}
-func (*SecurityProfileStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{13} }
+func (*SecurityProfileStats) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{13} }
 
 // SecurityProfileGetResponse captures all the information about a SecurityProfile profile
 type SecurityProfileGetResponse struct {
@@ -1333,7 +1333,7 @@ type SecurityProfileGetResponse struct {
 func (m *SecurityProfileGetResponse) Reset()                    { *m = SecurityProfileGetResponse{} }
 func (m *SecurityProfileGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileGetResponse) ProtoMessage()               {}
-func (*SecurityProfileGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{14} }
+func (*SecurityProfileGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{14} }
 
 func (m *SecurityProfileGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1371,7 +1371,7 @@ type SecurityProfileGetResponseMsg struct {
 func (m *SecurityProfileGetResponseMsg) Reset()                    { *m = SecurityProfileGetResponseMsg{} }
 func (m *SecurityProfileGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityProfileGetResponseMsg) ProtoMessage()               {}
-func (*SecurityProfileGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{15} }
+func (*SecurityProfileGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{15} }
 
 func (m *SecurityProfileGetResponseMsg) GetResponse() []*SecurityProfileGetResponse {
 	if m != nil {
@@ -1395,7 +1395,7 @@ type Service struct {
 func (m *Service) Reset()                    { *m = Service{} }
 func (m *Service) String() string            { return proto.CompactTextString(m) }
 func (*Service) ProtoMessage()               {}
-func (*Service) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{16} }
+func (*Service) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{16} }
 
 type isService_L4Info interface{ isService_L4Info() }
 
@@ -1520,7 +1520,7 @@ type FirewallRuleSpec struct {
 func (m *FirewallRuleSpec) Reset()                    { *m = FirewallRuleSpec{} }
 func (m *FirewallRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*FirewallRuleSpec) ProtoMessage()               {}
-func (*FirewallRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{17} }
+func (*FirewallRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{17} }
 
 func (m *FirewallRuleSpec) GetSvc() []*Service {
 	if m != nil {
@@ -1559,7 +1559,7 @@ type SGPolicy struct {
 func (m *SGPolicy) Reset()                    { *m = SGPolicy{} }
 func (m *SGPolicy) String() string            { return proto.CompactTextString(m) }
 func (*SGPolicy) ProtoMessage()               {}
-func (*SGPolicy) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{18} }
+func (*SGPolicy) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{18} }
 
 func (m *SGPolicy) GetInFwRules() []*FirewallRuleSpec {
 	if m != nil {
@@ -1590,7 +1590,7 @@ type SecurityGroupPolicySpec struct {
 func (m *SecurityGroupPolicySpec) Reset()                    { *m = SecurityGroupPolicySpec{} }
 func (m *SecurityGroupPolicySpec) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicySpec) ProtoMessage()               {}
-func (*SecurityGroupPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{19} }
+func (*SecurityGroupPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{19} }
 
 func (m *SecurityGroupPolicySpec) GetKeyOrHandle() *SecurityGroupPolicyKeyHandle {
 	if m != nil {
@@ -1614,7 +1614,7 @@ type SecurityGroupPolicyRequestMsg struct {
 func (m *SecurityGroupPolicyRequestMsg) Reset()                    { *m = SecurityGroupPolicyRequestMsg{} }
 func (m *SecurityGroupPolicyRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyRequestMsg) ProtoMessage()               {}
-func (*SecurityGroupPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{20} }
+func (*SecurityGroupPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{20} }
 
 func (m *SecurityGroupPolicyRequestMsg) GetRequest() []*SecurityGroupPolicySpec {
 	if m != nil {
@@ -1631,7 +1631,7 @@ type SecurityGroupPolicyStatus struct {
 func (m *SecurityGroupPolicyStatus) Reset()                    { *m = SecurityGroupPolicyStatus{} }
 func (m *SecurityGroupPolicyStatus) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyStatus) ProtoMessage()               {}
-func (*SecurityGroupPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{21} }
+func (*SecurityGroupPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{21} }
 
 func (m *SecurityGroupPolicyStatus) GetPolicyHandle() uint64 {
 	if m != nil {
@@ -1649,7 +1649,7 @@ type SecurityGroupPolicyResponse struct {
 func (m *SecurityGroupPolicyResponse) Reset()                    { *m = SecurityGroupPolicyResponse{} }
 func (m *SecurityGroupPolicyResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyResponse) ProtoMessage()               {}
-func (*SecurityGroupPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{22} }
+func (*SecurityGroupPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{22} }
 
 func (m *SecurityGroupPolicyResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1674,7 +1674,7 @@ func (m *SecurityGroupPolicyResponseMsg) Reset()         { *m = SecurityGroupPol
 func (m *SecurityGroupPolicyResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyResponseMsg) ProtoMessage()    {}
 func (*SecurityGroupPolicyResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{23}
+	return fileDescriptor23, []int{23}
 }
 
 func (m *SecurityGroupPolicyResponseMsg) GetResponse() []*SecurityGroupPolicyResponse {
@@ -1694,7 +1694,7 @@ func (m *SecurityGroupPolicyDeleteRequest) Reset()         { *m = SecurityGroupP
 func (m *SecurityGroupPolicyDeleteRequest) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyDeleteRequest) ProtoMessage()    {}
 func (*SecurityGroupPolicyDeleteRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{24}
+	return fileDescriptor23, []int{24}
 }
 
 func (m *SecurityGroupPolicyDeleteRequest) GetKeyOrHandle() *SecurityGroupPolicyKeyHandle {
@@ -1713,7 +1713,7 @@ func (m *SecurityGroupPolicyDeleteRequestMsg) Reset()         { *m = SecurityGro
 func (m *SecurityGroupPolicyDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyDeleteRequestMsg) ProtoMessage()    {}
 func (*SecurityGroupPolicyDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{25}
+	return fileDescriptor23, []int{25}
 }
 
 func (m *SecurityGroupPolicyDeleteRequestMsg) GetRequest() []*SecurityGroupPolicyDeleteRequest {
@@ -1731,7 +1731,7 @@ func (m *SecurityGroupPolicyDeleteResponse) Reset()         { *m = SecurityGroup
 func (m *SecurityGroupPolicyDeleteResponse) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyDeleteResponse) ProtoMessage()    {}
 func (*SecurityGroupPolicyDeleteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{26}
+	return fileDescriptor23, []int{26}
 }
 
 func (m *SecurityGroupPolicyDeleteResponse) GetApiStatus() ApiStatus {
@@ -1751,7 +1751,7 @@ func (m *SecurityGroupPolicyDeleteResponseMsg) Reset()         { *m = SecurityGr
 func (m *SecurityGroupPolicyDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyDeleteResponseMsg) ProtoMessage()    {}
 func (*SecurityGroupPolicyDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{27}
+	return fileDescriptor23, []int{27}
 }
 
 func (m *SecurityGroupPolicyDeleteResponseMsg) GetResponse() []*SecurityGroupPolicyDeleteResponse {
@@ -1770,7 +1770,7 @@ type SecurityGroupPolicyGetRequest struct {
 func (m *SecurityGroupPolicyGetRequest) Reset()                    { *m = SecurityGroupPolicyGetRequest{} }
 func (m *SecurityGroupPolicyGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyGetRequest) ProtoMessage()               {}
-func (*SecurityGroupPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{28} }
+func (*SecurityGroupPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{28} }
 
 func (m *SecurityGroupPolicyGetRequest) GetKeyOrHandle() *SecurityGroupPolicyKeyHandle {
 	if m != nil {
@@ -1788,7 +1788,7 @@ func (m *SecurityGroupPolicyGetRequestMsg) Reset()         { *m = SecurityGroupP
 func (m *SecurityGroupPolicyGetRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyGetRequestMsg) ProtoMessage()    {}
 func (*SecurityGroupPolicyGetRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{29}
+	return fileDescriptor23, []int{29}
 }
 
 func (m *SecurityGroupPolicyGetRequestMsg) GetRequest() []*SecurityGroupPolicyGetRequest {
@@ -1805,7 +1805,7 @@ type SecurityGroupPolicyStats struct {
 func (m *SecurityGroupPolicyStats) Reset()                    { *m = SecurityGroupPolicyStats{} }
 func (m *SecurityGroupPolicyStats) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyStats) ProtoMessage()               {}
-func (*SecurityGroupPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{30} }
+func (*SecurityGroupPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{30} }
 
 // SecurityGroupGetResponse captures all the information about a security group
 type SecurityGroupPolicyGetResponse struct {
@@ -1819,7 +1819,7 @@ func (m *SecurityGroupPolicyGetResponse) Reset()         { *m = SecurityGroupPol
 func (m *SecurityGroupPolicyGetResponse) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyGetResponse) ProtoMessage()    {}
 func (*SecurityGroupPolicyGetResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{31}
+	return fileDescriptor23, []int{31}
 }
 
 func (m *SecurityGroupPolicyGetResponse) GetApiStatus() ApiStatus {
@@ -1860,7 +1860,7 @@ func (m *SecurityGroupPolicyGetResponseMsg) Reset()         { *m = SecurityGroup
 func (m *SecurityGroupPolicyGetResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupPolicyGetResponseMsg) ProtoMessage()    {}
 func (*SecurityGroupPolicyGetResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{32}
+	return fileDescriptor23, []int{32}
 }
 
 func (m *SecurityGroupPolicyGetResponseMsg) GetResponse() []*SecurityGroupPolicyGetResponse {
@@ -1984,7 +1984,7 @@ type SecurityGroupSpecReactor interface {
 func (m *SecurityGroupSpec) Reset()                    { *m = SecurityGroupSpec{} }
 func (m *SecurityGroupSpec) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupSpec) ProtoMessage()               {}
-func (*SecurityGroupSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{33} }
+func (*SecurityGroupSpec) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{33} }
 
 func (m *SecurityGroupSpec) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -2008,7 +2008,7 @@ type SecurityGroupRequestMsg struct {
 func (m *SecurityGroupRequestMsg) Reset()                    { *m = SecurityGroupRequestMsg{} }
 func (m *SecurityGroupRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupRequestMsg) ProtoMessage()               {}
-func (*SecurityGroupRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{34} }
+func (*SecurityGroupRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{34} }
 
 func (m *SecurityGroupRequestMsg) GetRequest() []*SecurityGroupSpec {
 	if m != nil {
@@ -2124,7 +2124,7 @@ type SecurityGroupStatusReactor interface {
 func (m *SecurityGroupStatus) Reset()                    { *m = SecurityGroupStatus{} }
 func (m *SecurityGroupStatus) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupStatus) ProtoMessage()               {}
-func (*SecurityGroupStatus) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{35} }
+func (*SecurityGroupStatus) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{35} }
 
 func (m *SecurityGroupStatus) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -2149,7 +2149,7 @@ type SecurityGroupResponse struct {
 func (m *SecurityGroupResponse) Reset()                    { *m = SecurityGroupResponse{} }
 func (m *SecurityGroupResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupResponse) ProtoMessage()               {}
-func (*SecurityGroupResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{36} }
+func (*SecurityGroupResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{36} }
 
 func (m *SecurityGroupResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2173,7 +2173,7 @@ type SecurityGroupResponseMsg struct {
 func (m *SecurityGroupResponseMsg) Reset()                    { *m = SecurityGroupResponseMsg{} }
 func (m *SecurityGroupResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupResponseMsg) ProtoMessage()               {}
-func (*SecurityGroupResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{37} }
+func (*SecurityGroupResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{37} }
 
 func (m *SecurityGroupResponseMsg) GetResponse() []*SecurityGroupResponse {
 	if m != nil {
@@ -2191,7 +2191,7 @@ type SecurityGroupDeleteRequest struct {
 func (m *SecurityGroupDeleteRequest) Reset()                    { *m = SecurityGroupDeleteRequest{} }
 func (m *SecurityGroupDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupDeleteRequest) ProtoMessage()               {}
-func (*SecurityGroupDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{38} }
+func (*SecurityGroupDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{38} }
 
 func (m *SecurityGroupDeleteRequest) GetKeyOrHandle() *SecurityGroupKeyHandle {
 	if m != nil {
@@ -2208,7 +2208,7 @@ type SecurityGroupDeleteRequestMsg struct {
 func (m *SecurityGroupDeleteRequestMsg) Reset()                    { *m = SecurityGroupDeleteRequestMsg{} }
 func (m *SecurityGroupDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupDeleteRequestMsg) ProtoMessage()               {}
-func (*SecurityGroupDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{39} }
+func (*SecurityGroupDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{39} }
 
 func (m *SecurityGroupDeleteRequestMsg) GetRequest() []*SecurityGroupDeleteRequest {
 	if m != nil {
@@ -2227,7 +2227,7 @@ func (m *SecurityGroupDeleteResponseMsg) Reset()         { *m = SecurityGroupDel
 func (m *SecurityGroupDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityGroupDeleteResponseMsg) ProtoMessage()    {}
 func (*SecurityGroupDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{40}
+	return fileDescriptor23, []int{40}
 }
 
 func (m *SecurityGroupDeleteResponseMsg) GetApiStatus() []ApiStatus {
@@ -2246,7 +2246,7 @@ type SecurityGroupGetRequest struct {
 func (m *SecurityGroupGetRequest) Reset()                    { *m = SecurityGroupGetRequest{} }
 func (m *SecurityGroupGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupGetRequest) ProtoMessage()               {}
-func (*SecurityGroupGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{41} }
+func (*SecurityGroupGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{41} }
 
 func (m *SecurityGroupGetRequest) GetKeyOrHandle() *SecurityGroupKeyHandle {
 	if m != nil {
@@ -2263,7 +2263,7 @@ type SecurityGroupGetRequestMsg struct {
 func (m *SecurityGroupGetRequestMsg) Reset()                    { *m = SecurityGroupGetRequestMsg{} }
 func (m *SecurityGroupGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupGetRequestMsg) ProtoMessage()               {}
-func (*SecurityGroupGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{42} }
+func (*SecurityGroupGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{42} }
 
 func (m *SecurityGroupGetRequestMsg) GetRequest() []*SecurityGroupGetRequest {
 	if m != nil {
@@ -2279,7 +2279,7 @@ type SecurityGroupStats struct {
 func (m *SecurityGroupStats) Reset()                    { *m = SecurityGroupStats{} }
 func (m *SecurityGroupStats) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupStats) ProtoMessage()               {}
-func (*SecurityGroupStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{43} }
+func (*SecurityGroupStats) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{43} }
 
 // SecurityGroupGetResponse captures all the information about a security group
 type SecurityGroupGetResponse struct {
@@ -2292,7 +2292,7 @@ type SecurityGroupGetResponse struct {
 func (m *SecurityGroupGetResponse) Reset()                    { *m = SecurityGroupGetResponse{} }
 func (m *SecurityGroupGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupGetResponse) ProtoMessage()               {}
-func (*SecurityGroupGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{44} }
+func (*SecurityGroupGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{44} }
 
 func (m *SecurityGroupGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2331,7 +2331,7 @@ type SecurityGroupGetResponseMsg struct {
 func (m *SecurityGroupGetResponseMsg) Reset()                    { *m = SecurityGroupGetResponseMsg{} }
 func (m *SecurityGroupGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityGroupGetResponseMsg) ProtoMessage()               {}
-func (*SecurityGroupGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{45} }
+func (*SecurityGroupGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{45} }
 
 func (m *SecurityGroupGetResponseMsg) GetResponse() []*SecurityGroupGetResponse {
 	if m != nil {
@@ -2365,7 +2365,7 @@ type AppData struct {
 func (m *AppData) Reset()                    { *m = AppData{} }
 func (m *AppData) String() string            { return proto.CompactTextString(m) }
 func (*AppData) ProtoMessage()               {}
-func (*AppData) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{46} }
+func (*AppData) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{46} }
 
 type isAppData_AppOptions interface{ isAppData_AppOptions() }
 
@@ -2599,7 +2599,7 @@ type AppData_TraceOptions struct {
 func (m *AppData_TraceOptions) Reset()                    { *m = AppData_TraceOptions{} }
 func (m *AppData_TraceOptions) String() string            { return proto.CompactTextString(m) }
 func (*AppData_TraceOptions) ProtoMessage()               {}
-func (*AppData_TraceOptions) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{46, 0} }
+func (*AppData_TraceOptions) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{46, 0} }
 
 func (m *AppData_TraceOptions) GetLevel() AppData_TraceLevel {
 	if m != nil {
@@ -2615,7 +2615,7 @@ type AppData_FTPOptions struct {
 func (m *AppData_FTPOptions) Reset()                    { *m = AppData_FTPOptions{} }
 func (m *AppData_FTPOptions) String() string            { return proto.CompactTextString(m) }
 func (*AppData_FTPOptions) ProtoMessage()               {}
-func (*AppData_FTPOptions) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{46, 1} }
+func (*AppData_FTPOptions) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{46, 1} }
 
 func (m *AppData_FTPOptions) GetAllowMismatchIpAddress() bool {
 	if m != nil {
@@ -2636,7 +2636,7 @@ type AppData_DNSOptions struct {
 func (m *AppData_DNSOptions) Reset()                    { *m = AppData_DNSOptions{} }
 func (m *AppData_DNSOptions) String() string            { return proto.CompactTextString(m) }
 func (*AppData_DNSOptions) ProtoMessage()               {}
-func (*AppData_DNSOptions) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{46, 2} }
+func (*AppData_DNSOptions) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{46, 2} }
 
 func (m *AppData_DNSOptions) GetDropMultiQuestionPackets() bool {
 	if m != nil {
@@ -2688,7 +2688,7 @@ type AppData_MSRPCOptions struct {
 func (m *AppData_MSRPCOptions) Reset()                    { *m = AppData_MSRPCOptions{} }
 func (m *AppData_MSRPCOptions) String() string            { return proto.CompactTextString(m) }
 func (*AppData_MSRPCOptions) ProtoMessage()               {}
-func (*AppData_MSRPCOptions) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{46, 3} }
+func (*AppData_MSRPCOptions) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{46, 3} }
 
 func (m *AppData_MSRPCOptions) GetUuid() uint32 {
 	if m != nil {
@@ -2712,7 +2712,7 @@ type AppData_SunRPCOptions struct {
 func (m *AppData_SunRPCOptions) Reset()                    { *m = AppData_SunRPCOptions{} }
 func (m *AppData_SunRPCOptions) String() string            { return proto.CompactTextString(m) }
 func (*AppData_SunRPCOptions) ProtoMessage()               {}
-func (*AppData_SunRPCOptions) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{46, 4} }
+func (*AppData_SunRPCOptions) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{46, 4} }
 
 func (m *AppData_SunRPCOptions) GetProgramNumber() uint32 {
 	if m != nil {
@@ -2740,7 +2740,7 @@ type AppData_SIPOptions struct {
 func (m *AppData_SIPOptions) Reset()                    { *m = AppData_SIPOptions{} }
 func (m *AppData_SIPOptions) String() string            { return proto.CompactTextString(m) }
 func (*AppData_SIPOptions) ProtoMessage()               {}
-func (*AppData_SIPOptions) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{46, 5} }
+func (*AppData_SIPOptions) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{46, 5} }
 
 func (m *AppData_SIPOptions) GetCtimeout() uint32 {
 	if m != nil {
@@ -2793,7 +2793,7 @@ type SecurityRuleAction struct {
 func (m *SecurityRuleAction) Reset()                    { *m = SecurityRuleAction{} }
 func (m *SecurityRuleAction) String() string            { return proto.CompactTextString(m) }
 func (*SecurityRuleAction) ProtoMessage()               {}
-func (*SecurityRuleAction) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{47} }
+func (*SecurityRuleAction) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{47} }
 
 func (m *SecurityRuleAction) GetSecAction() SecurityAction {
 	if m != nil {
@@ -2826,7 +2826,7 @@ type SecurityRule struct {
 func (m *SecurityRule) Reset()                    { *m = SecurityRule{} }
 func (m *SecurityRule) String() string            { return proto.CompactTextString(m) }
 func (*SecurityRule) ProtoMessage()               {}
-func (*SecurityRule) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{48} }
+func (*SecurityRule) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{48} }
 
 func (m *SecurityRule) GetRuleId() uint64 {
 	if m != nil {
@@ -2964,7 +2964,7 @@ type SecurityPolicySpecReactor interface {
 func (m *SecurityPolicySpec) Reset()                    { *m = SecurityPolicySpec{} }
 func (m *SecurityPolicySpec) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicySpec) ProtoMessage()               {}
-func (*SecurityPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{49} }
+func (*SecurityPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{49} }
 
 func (m *SecurityPolicySpec) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -2995,7 +2995,7 @@ type SecurityPolicyRequestMsg struct {
 func (m *SecurityPolicyRequestMsg) Reset()                    { *m = SecurityPolicyRequestMsg{} }
 func (m *SecurityPolicyRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyRequestMsg) ProtoMessage()               {}
-func (*SecurityPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{50} }
+func (*SecurityPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{50} }
 
 func (m *SecurityPolicyRequestMsg) GetRequest() []*SecurityPolicySpec {
 	if m != nil {
@@ -3110,7 +3110,7 @@ type SecurityPolicyStatusReactor interface {
 func (m *SecurityPolicyStatus) Reset()                    { *m = SecurityPolicyStatus{} }
 func (m *SecurityPolicyStatus) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyStatus) ProtoMessage()               {}
-func (*SecurityPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{51} }
+func (*SecurityPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{51} }
 
 func (m *SecurityPolicyStatus) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -3135,7 +3135,7 @@ type SecurityPolicyResponse struct {
 func (m *SecurityPolicyResponse) Reset()                    { *m = SecurityPolicyResponse{} }
 func (m *SecurityPolicyResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyResponse) ProtoMessage()               {}
-func (*SecurityPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{52} }
+func (*SecurityPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{52} }
 
 func (m *SecurityPolicyResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -3158,7 +3158,7 @@ type SecurityPolicyResponseMsg struct {
 func (m *SecurityPolicyResponseMsg) Reset()                    { *m = SecurityPolicyResponseMsg{} }
 func (m *SecurityPolicyResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyResponseMsg) ProtoMessage()               {}
-func (*SecurityPolicyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{53} }
+func (*SecurityPolicyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{53} }
 
 func (m *SecurityPolicyResponseMsg) GetResponse() []*SecurityPolicyResponse {
 	if m != nil {
@@ -3175,7 +3175,7 @@ type SecurityPolicyDeleteRequest struct {
 func (m *SecurityPolicyDeleteRequest) Reset()                    { *m = SecurityPolicyDeleteRequest{} }
 func (m *SecurityPolicyDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyDeleteRequest) ProtoMessage()               {}
-func (*SecurityPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{54} }
+func (*SecurityPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{54} }
 
 func (m *SecurityPolicyDeleteRequest) GetKeyOrHandle() *SecurityPolicyKeyHandle {
 	if m != nil {
@@ -3193,7 +3193,7 @@ func (m *SecurityPolicyDeleteRequestMsg) Reset()         { *m = SecurityPolicyDe
 func (m *SecurityPolicyDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityPolicyDeleteRequestMsg) ProtoMessage()    {}
 func (*SecurityPolicyDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{55}
+	return fileDescriptor23, []int{55}
 }
 
 func (m *SecurityPolicyDeleteRequestMsg) GetRequest() []*SecurityPolicyDeleteRequest {
@@ -3210,7 +3210,7 @@ type SecurityPolicyDeleteResponse struct {
 func (m *SecurityPolicyDeleteResponse) Reset()                    { *m = SecurityPolicyDeleteResponse{} }
 func (m *SecurityPolicyDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyDeleteResponse) ProtoMessage()               {}
-func (*SecurityPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{56} }
+func (*SecurityPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{56} }
 
 func (m *SecurityPolicyDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -3228,7 +3228,7 @@ func (m *SecurityPolicyDeleteResponseMsg) Reset()         { *m = SecurityPolicyD
 func (m *SecurityPolicyDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*SecurityPolicyDeleteResponseMsg) ProtoMessage()    {}
 func (*SecurityPolicyDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor26, []int{57}
+	return fileDescriptor23, []int{57}
 }
 
 func (m *SecurityPolicyDeleteResponseMsg) GetResponse() []*SecurityPolicyDeleteResponse {
@@ -3247,7 +3247,7 @@ type SecurityPolicyGetRequest struct {
 func (m *SecurityPolicyGetRequest) Reset()                    { *m = SecurityPolicyGetRequest{} }
 func (m *SecurityPolicyGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyGetRequest) ProtoMessage()               {}
-func (*SecurityPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{58} }
+func (*SecurityPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{58} }
 
 func (m *SecurityPolicyGetRequest) GetKeyOrHandle() *SecurityPolicyKeyHandle {
 	if m != nil {
@@ -3264,7 +3264,7 @@ type SecurityPolicyGetRequestMsg struct {
 func (m *SecurityPolicyGetRequestMsg) Reset()                    { *m = SecurityPolicyGetRequestMsg{} }
 func (m *SecurityPolicyGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyGetRequestMsg) ProtoMessage()               {}
-func (*SecurityPolicyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{59} }
+func (*SecurityPolicyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{59} }
 
 func (m *SecurityPolicyGetRequestMsg) GetRequest() []*SecurityPolicyGetRequest {
 	if m != nil {
@@ -3285,7 +3285,7 @@ type SecurityRuleStats struct {
 func (m *SecurityRuleStats) Reset()                    { *m = SecurityRuleStats{} }
 func (m *SecurityRuleStats) String() string            { return proto.CompactTextString(m) }
 func (*SecurityRuleStats) ProtoMessage()               {}
-func (*SecurityRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{60} }
+func (*SecurityRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{60} }
 
 func (m *SecurityRuleStats) GetRuleId() uint64 {
 	if m != nil {
@@ -3330,7 +3330,7 @@ type SecurityPolicyStats struct {
 func (m *SecurityPolicyStats) Reset()                    { *m = SecurityPolicyStats{} }
 func (m *SecurityPolicyStats) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyStats) ProtoMessage()               {}
-func (*SecurityPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{61} }
+func (*SecurityPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{61} }
 
 func (m *SecurityPolicyStats) GetRuleStats() []*SecurityRuleStats {
 	if m != nil {
@@ -3350,7 +3350,7 @@ type SecurityPolicyGetResponse struct {
 func (m *SecurityPolicyGetResponse) Reset()                    { *m = SecurityPolicyGetResponse{} }
 func (m *SecurityPolicyGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyGetResponse) ProtoMessage()               {}
-func (*SecurityPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{62} }
+func (*SecurityPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{62} }
 
 func (m *SecurityPolicyGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -3388,7 +3388,7 @@ type SecurityPolicyGetResponseMsg struct {
 func (m *SecurityPolicyGetResponseMsg) Reset()                    { *m = SecurityPolicyGetResponseMsg{} }
 func (m *SecurityPolicyGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SecurityPolicyGetResponseMsg) ProtoMessage()               {}
-func (*SecurityPolicyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{63} }
+func (*SecurityPolicyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor23, []int{63} }
 
 func (m *SecurityPolicyGetResponseMsg) GetResponse() []*SecurityPolicyGetResponse {
 	if m != nil {
@@ -3480,9 +3480,9 @@ func init() {
 	proto.RegisterEnum("halproto.AppData_TraceLevel", AppData_TraceLevel_name, AppData_TraceLevel_value)
 }
 
-func init() { proto.RegisterFile("nwsec.proto", fileDescriptor26) }
+func init() { proto.RegisterFile("nwsec.proto", fileDescriptor23) }
 
-var fileDescriptor26 = []byte{
+var fileDescriptor23 = []byte{
 	// 5292 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x5c, 0xe9, 0x6f, 0x1b, 0x49,
 	0x76, 0x37, 0x25, 0x59, 0x47, 0xe9, 0xa2, 0x5a, 0xb2, 0x4c, 0xc9, 0x07, 0x65, 0xda, 0xe3, 0xf1,

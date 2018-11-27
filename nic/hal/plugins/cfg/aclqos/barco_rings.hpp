@@ -7,22 +7,22 @@
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
-#include "gen/proto/barco_rings.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "gen/proto/types.pb.h"
 
 using std::string;
-using barcoRings::GetOpaqueTagAddrRequest;
-using barcoRings::GetOpaqueTagAddrResponse;
-using barcoRings::GetOpaqueTagAddrRequestMsg;
-using barcoRings::GetOpaqueTagAddrResponseMsg;
-using barcoRings::BarcoGetReqDescrEntryRequest;
-using barcoRings::BarcoGetReqDescrEntryRequestMsg;
-using barcoRings::BarcoGetReqDescrEntryResponse;
-using barcoRings::BarcoGetReqDescrEntryResponseMsg;
-using barcoRings::BarcoGetRingMetaRequest;
-using barcoRings::BarcoGetRingMetaRequestMsg;
-using barcoRings::BarcoGetRingMetaResponse;
-using barcoRings::BarcoGetRingMetaResponseMsg;
+using internal::GetOpaqueTagAddrRequest;
+using internal::GetOpaqueTagAddrResponse;
+using internal::GetOpaqueTagAddrRequestMsg;
+using internal::GetOpaqueTagAddrResponseMsg;
+using internal::BarcoGetReqDescrEntryRequest;
+using internal::BarcoGetReqDescrEntryRequestMsg;
+using internal::BarcoGetReqDescrEntryResponse;
+using internal::BarcoGetReqDescrEntryResponseMsg;
+using internal::BarcoGetRingMetaRequest;
+using internal::BarcoGetRingMetaRequestMsg;
+using internal::BarcoGetRingMetaResponse;
+using internal::BarcoGetRingMetaResponseMsg;
 
 namespace hal {
 
@@ -54,14 +54,6 @@ typedef struct barco_asym_descr_s {
     uint32_t                barco_status;
 } barco_asym_descr_t;
 
-hal_ret_t   GetOpaqueTagAddr(const GetOpaqueTagAddrRequest& request,
-    GetOpaqueTagAddrResponse *response);
-
-hal_ret_t   BarcoGetReqDescrEntry(const BarcoGetReqDescrEntryRequest& request,
-				  BarcoGetReqDescrEntryResponse *response);
-
-hal_ret_t   BarcoGetRingMeta(const BarcoGetRingMetaRequest& request,
-			     BarcoGetRingMetaResponse *response);
 
 }    // namespace hal
 #endif  /* __BARCO_RINGS_HPP__*/

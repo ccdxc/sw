@@ -42,7 +42,7 @@ var EndpointVMotionState_value = map[string]int32{
 func (x EndpointVMotionState) String() string {
 	return proto.EnumName(EndpointVMotionState_name, int32(x))
 }
-func (EndpointVMotionState) EnumDescriptor() ([]byte, []int) { return fileDescriptor9, []int{0} }
+func (EndpointVMotionState) EnumDescriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
 
 type EndpointAttributes struct {
 	InterfaceKeyHandle *InterfaceKeyHandle       `protobuf:"bytes,1,opt,name=interface_key_handle,json=interfaceKeyHandle" json:"interface_key_handle,omitempty"`
@@ -55,7 +55,7 @@ type EndpointAttributes struct {
 func (m *EndpointAttributes) Reset()                    { *m = EndpointAttributes{} }
 func (m *EndpointAttributes) String() string            { return proto.CompactTextString(m) }
 func (*EndpointAttributes) ProtoMessage()               {}
-func (*EndpointAttributes) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{0} }
+func (*EndpointAttributes) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
 
 func (m *EndpointAttributes) GetInterfaceKeyHandle() *InterfaceKeyHandle {
 	if m != nil {
@@ -201,7 +201,7 @@ type EndpointSpecReactor interface {
 func (m *EndpointSpec) Reset()                    { *m = EndpointSpec{} }
 func (m *EndpointSpec) String() string            { return proto.CompactTextString(m) }
 func (*EndpointSpec) ProtoMessage()               {}
-func (*EndpointSpec) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{1} }
+func (*EndpointSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{1} }
 
 func (m *EndpointSpec) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -239,7 +239,7 @@ type EndpointRequestMsg struct {
 func (m *EndpointRequestMsg) Reset()                    { *m = EndpointRequestMsg{} }
 func (m *EndpointRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointRequestMsg) ProtoMessage()               {}
-func (*EndpointRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{2} }
+func (*EndpointRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{2} }
 
 func (m *EndpointRequestMsg) GetRequest() []*EndpointSpec {
 	if m != nil {
@@ -262,7 +262,7 @@ type EndpointIpAddress struct {
 func (m *EndpointIpAddress) Reset()                    { *m = EndpointIpAddress{} }
 func (m *EndpointIpAddress) String() string            { return proto.CompactTextString(m) }
 func (*EndpointIpAddress) ProtoMessage()               {}
-func (*EndpointIpAddress) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{3} }
+func (*EndpointIpAddress) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{3} }
 
 func (m *EndpointIpAddress) GetIpAddress() *IPAddress {
 	if m != nil {
@@ -321,7 +321,7 @@ type EndpointStatusEpd struct {
 func (m *EndpointStatusEpd) Reset()                    { *m = EndpointStatusEpd{} }
 func (m *EndpointStatusEpd) String() string            { return proto.CompactTextString(m) }
 func (*EndpointStatusEpd) ProtoMessage()               {}
-func (*EndpointStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{4} }
+func (*EndpointStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{4} }
 
 func (m *EndpointStatusEpd) GetRegMacTblIdx() uint32 {
 	if m != nil {
@@ -343,7 +343,7 @@ type EndpointStatusCpd struct {
 func (m *EndpointStatusCpd) Reset()                    { *m = EndpointStatusCpd{} }
 func (m *EndpointStatusCpd) String() string            { return proto.CompactTextString(m) }
 func (*EndpointStatusCpd) ProtoMessage()               {}
-func (*EndpointStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{5} }
+func (*EndpointStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{5} }
 
 // EndpointStatus has the current status of an endpoint
 // TODO: capturing aging information, if any
@@ -461,7 +461,7 @@ type EndpointStatusReactor interface {
 func (m *EndpointStatus) Reset()                    { *m = EndpointStatus{} }
 func (m *EndpointStatus) String() string            { return proto.CompactTextString(m) }
 func (*EndpointStatus) ProtoMessage()               {}
-func (*EndpointStatus) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{6} }
+func (*EndpointStatus) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{6} }
 
 type isEndpointStatus_EpPdStatus interface{ isEndpointStatus_EpPdStatus() }
 
@@ -621,7 +621,7 @@ type EndpointResponse struct {
 func (m *EndpointResponse) Reset()                    { *m = EndpointResponse{} }
 func (m *EndpointResponse) String() string            { return proto.CompactTextString(m) }
 func (*EndpointResponse) ProtoMessage()               {}
-func (*EndpointResponse) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{7} }
+func (*EndpointResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{7} }
 
 func (m *EndpointResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -645,7 +645,7 @@ type EndpointResponseMsg struct {
 func (m *EndpointResponseMsg) Reset()                    { *m = EndpointResponseMsg{} }
 func (m *EndpointResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointResponseMsg) ProtoMessage()               {}
-func (*EndpointResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{8} }
+func (*EndpointResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{8} }
 
 func (m *EndpointResponseMsg) GetResponse() []*EndpointResponse {
 	if m != nil {
@@ -665,7 +665,7 @@ type EndpointUpdateRequest struct {
 func (m *EndpointUpdateRequest) Reset()                    { *m = EndpointUpdateRequest{} }
 func (m *EndpointUpdateRequest) String() string            { return proto.CompactTextString(m) }
 func (*EndpointUpdateRequest) ProtoMessage()               {}
-func (*EndpointUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{9} }
+func (*EndpointUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{9} }
 
 func (m *EndpointUpdateRequest) GetKeyOrHandle() *EndpointKeyHandle {
 	if m != nil {
@@ -696,7 +696,7 @@ type EndpointUpdateRequestMsg struct {
 func (m *EndpointUpdateRequestMsg) Reset()                    { *m = EndpointUpdateRequestMsg{} }
 func (m *EndpointUpdateRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointUpdateRequestMsg) ProtoMessage()               {}
-func (*EndpointUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{10} }
+func (*EndpointUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{10} }
 
 func (m *EndpointUpdateRequestMsg) GetRequest() []*EndpointUpdateRequest {
 	if m != nil {
@@ -713,7 +713,7 @@ type EndpointUpdateResponseMsg struct {
 func (m *EndpointUpdateResponseMsg) Reset()                    { *m = EndpointUpdateResponseMsg{} }
 func (m *EndpointUpdateResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointUpdateResponseMsg) ProtoMessage()               {}
-func (*EndpointUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{11} }
+func (*EndpointUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{11} }
 
 func (m *EndpointUpdateResponseMsg) GetResponse() []*EndpointResponse {
 	if m != nil {
@@ -735,7 +735,7 @@ type EndpointFilter struct {
 func (m *EndpointFilter) Reset()                    { *m = EndpointFilter{} }
 func (m *EndpointFilter) String() string            { return proto.CompactTextString(m) }
 func (*EndpointFilter) ProtoMessage()               {}
-func (*EndpointFilter) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{12} }
+func (*EndpointFilter) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{12} }
 
 func (m *EndpointFilter) GetVrfKeyHandle() *VrfKeyHandle {
 	if m != nil {
@@ -770,7 +770,7 @@ type EndpointDeleteRequest struct {
 func (m *EndpointDeleteRequest) Reset()                    { *m = EndpointDeleteRequest{} }
 func (m *EndpointDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*EndpointDeleteRequest) ProtoMessage()               {}
-func (*EndpointDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{13} }
+func (*EndpointDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{13} }
 
 type isEndpointDeleteRequest_DeleteBy interface{ isEndpointDeleteRequest_DeleteBy() }
 
@@ -894,7 +894,7 @@ type EndpointDeleteRequestMsg struct {
 func (m *EndpointDeleteRequestMsg) Reset()                    { *m = EndpointDeleteRequestMsg{} }
 func (m *EndpointDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointDeleteRequestMsg) ProtoMessage()               {}
-func (*EndpointDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{14} }
+func (*EndpointDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{14} }
 
 func (m *EndpointDeleteRequestMsg) GetRequest() []*EndpointDeleteRequest {
 	if m != nil {
@@ -910,7 +910,7 @@ type EndpointDeleteResponse struct {
 func (m *EndpointDeleteResponse) Reset()                    { *m = EndpointDeleteResponse{} }
 func (m *EndpointDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*EndpointDeleteResponse) ProtoMessage()               {}
-func (*EndpointDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{15} }
+func (*EndpointDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{15} }
 
 func (m *EndpointDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -927,7 +927,7 @@ type EndpointDeleteResponseMsg struct {
 func (m *EndpointDeleteResponseMsg) Reset()                    { *m = EndpointDeleteResponseMsg{} }
 func (m *EndpointDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointDeleteResponseMsg) ProtoMessage()               {}
-func (*EndpointDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{16} }
+func (*EndpointDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{16} }
 
 func (m *EndpointDeleteResponseMsg) GetResponse() []*EndpointDeleteResponse {
 	if m != nil {
@@ -946,7 +946,7 @@ type EndpointGetRequest struct {
 func (m *EndpointGetRequest) Reset()                    { *m = EndpointGetRequest{} }
 func (m *EndpointGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetRequest) ProtoMessage()               {}
-func (*EndpointGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{17} }
+func (*EndpointGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{17} }
 
 func (m *EndpointGetRequest) GetKeyOrHandle() *EndpointKeyHandle {
 	if m != nil {
@@ -970,7 +970,7 @@ type EndpointGetRequestMsg struct {
 func (m *EndpointGetRequestMsg) Reset()                    { *m = EndpointGetRequestMsg{} }
 func (m *EndpointGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetRequestMsg) ProtoMessage()               {}
-func (*EndpointGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{18} }
+func (*EndpointGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{18} }
 
 func (m *EndpointGetRequestMsg) GetRequest() []*EndpointGetRequest {
 	if m != nil {
@@ -987,7 +987,7 @@ type EndpointGetByInterfaceRequest struct {
 func (m *EndpointGetByInterfaceRequest) Reset()                    { *m = EndpointGetByInterfaceRequest{} }
 func (m *EndpointGetByInterfaceRequest) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetByInterfaceRequest) ProtoMessage()               {}
-func (*EndpointGetByInterfaceRequest) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{19} }
+func (*EndpointGetByInterfaceRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{19} }
 
 func (m *EndpointGetByInterfaceRequest) GetVrfKeyHandle() *VrfKeyHandle {
 	if m != nil {
@@ -1012,7 +1012,7 @@ func (m *EndpointGetByInterfaceRequestMsg) Reset()         { *m = EndpointGetByI
 func (m *EndpointGetByInterfaceRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*EndpointGetByInterfaceRequestMsg) ProtoMessage()    {}
 func (*EndpointGetByInterfaceRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor9, []int{20}
+	return fileDescriptor6, []int{20}
 }
 
 func (m *EndpointGetByInterfaceRequestMsg) GetRequest() []*EndpointGetByInterfaceRequest {
@@ -1029,7 +1029,7 @@ type EndpointGetAllRequestMsg struct {
 func (m *EndpointGetAllRequestMsg) Reset()                    { *m = EndpointGetAllRequestMsg{} }
 func (m *EndpointGetAllRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetAllRequestMsg) ProtoMessage()               {}
-func (*EndpointGetAllRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{21} }
+func (*EndpointGetAllRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{21} }
 
 // EndpointStats is the statistics object for each Endpoint
 type EndpointStats struct {
@@ -1039,7 +1039,7 @@ type EndpointStats struct {
 func (m *EndpointStats) Reset()                    { *m = EndpointStats{} }
 func (m *EndpointStats) String() string            { return proto.CompactTextString(m) }
 func (*EndpointStats) ProtoMessage()               {}
-func (*EndpointStats) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{22} }
+func (*EndpointStats) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{22} }
 
 func (m *EndpointStats) GetEpLearnStats() *EplearnStats {
 	if m != nil {
@@ -1059,7 +1059,7 @@ type EndpointGetResponse struct {
 func (m *EndpointGetResponse) Reset()                    { *m = EndpointGetResponse{} }
 func (m *EndpointGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetResponse) ProtoMessage()               {}
-func (*EndpointGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{23} }
+func (*EndpointGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{23} }
 
 func (m *EndpointGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1098,7 +1098,7 @@ type EndpointGetResponseMsg struct {
 func (m *EndpointGetResponseMsg) Reset()                    { *m = EndpointGetResponseMsg{} }
 func (m *EndpointGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*EndpointGetResponseMsg) ProtoMessage()               {}
-func (*EndpointGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{24} }
+func (*EndpointGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{24} }
 
 func (m *EndpointGetResponseMsg) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1122,7 +1122,7 @@ type FilterSpec struct {
 func (m *FilterSpec) Reset()                    { *m = FilterSpec{} }
 func (m *FilterSpec) String() string            { return proto.CompactTextString(m) }
 func (*FilterSpec) ProtoMessage()               {}
-func (*FilterSpec) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{25} }
+func (*FilterSpec) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{25} }
 
 func (m *FilterSpec) GetKeyOrHandle() *FilterKeyHandle {
 	if m != nil {
@@ -1139,7 +1139,7 @@ type FilterRequestMsg struct {
 func (m *FilterRequestMsg) Reset()                    { *m = FilterRequestMsg{} }
 func (m *FilterRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*FilterRequestMsg) ProtoMessage()               {}
-func (*FilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{26} }
+func (*FilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{26} }
 
 func (m *FilterRequestMsg) GetRequest() []*FilterSpec {
 	if m != nil {
@@ -1156,7 +1156,7 @@ type FilterStatus struct {
 func (m *FilterStatus) Reset()                    { *m = FilterStatus{} }
 func (m *FilterStatus) String() string            { return proto.CompactTextString(m) }
 func (*FilterStatus) ProtoMessage()               {}
-func (*FilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{27} }
+func (*FilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{27} }
 
 func (m *FilterStatus) GetFilterHandle() uint64 {
 	if m != nil {
@@ -1174,7 +1174,7 @@ type FilterResponse struct {
 func (m *FilterResponse) Reset()                    { *m = FilterResponse{} }
 func (m *FilterResponse) String() string            { return proto.CompactTextString(m) }
 func (*FilterResponse) ProtoMessage()               {}
-func (*FilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{28} }
+func (*FilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{28} }
 
 func (m *FilterResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1198,7 +1198,7 @@ type FilterResponseMsg struct {
 func (m *FilterResponseMsg) Reset()                    { *m = FilterResponseMsg{} }
 func (m *FilterResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*FilterResponseMsg) ProtoMessage()               {}
-func (*FilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{29} }
+func (*FilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{29} }
 
 func (m *FilterResponseMsg) GetResponse() []*FilterResponse {
 	if m != nil {
@@ -1215,7 +1215,7 @@ type FilterDeleteRequest struct {
 func (m *FilterDeleteRequest) Reset()                    { *m = FilterDeleteRequest{} }
 func (m *FilterDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*FilterDeleteRequest) ProtoMessage()               {}
-func (*FilterDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{30} }
+func (*FilterDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{30} }
 
 func (m *FilterDeleteRequest) GetKeyOrHandle() *FilterKeyHandle {
 	if m != nil {
@@ -1232,7 +1232,7 @@ type FilterDeleteRequestMsg struct {
 func (m *FilterDeleteRequestMsg) Reset()                    { *m = FilterDeleteRequestMsg{} }
 func (m *FilterDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*FilterDeleteRequestMsg) ProtoMessage()               {}
-func (*FilterDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{31} }
+func (*FilterDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{31} }
 
 func (m *FilterDeleteRequestMsg) GetRequest() []*FilterDeleteRequest {
 	if m != nil {
@@ -1248,7 +1248,7 @@ type FilterDeleteResponse struct {
 func (m *FilterDeleteResponse) Reset()                    { *m = FilterDeleteResponse{} }
 func (m *FilterDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*FilterDeleteResponse) ProtoMessage()               {}
-func (*FilterDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{32} }
+func (*FilterDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{32} }
 
 func (m *FilterDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1265,7 +1265,7 @@ type FilterDeleteResponseMsg struct {
 func (m *FilterDeleteResponseMsg) Reset()                    { *m = FilterDeleteResponseMsg{} }
 func (m *FilterDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*FilterDeleteResponseMsg) ProtoMessage()               {}
-func (*FilterDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{33} }
+func (*FilterDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{33} }
 
 func (m *FilterDeleteResponseMsg) GetResponse() []*FilterDeleteResponse {
 	if m != nil {
@@ -1283,7 +1283,7 @@ type FilterGetRequest struct {
 func (m *FilterGetRequest) Reset()                    { *m = FilterGetRequest{} }
 func (m *FilterGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*FilterGetRequest) ProtoMessage()               {}
-func (*FilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{34} }
+func (*FilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{34} }
 
 func (m *FilterGetRequest) GetKeyOrHandle() *FilterKeyHandle {
 	if m != nil {
@@ -1300,7 +1300,7 @@ type FilterGetRequestMsg struct {
 func (m *FilterGetRequestMsg) Reset()                    { *m = FilterGetRequestMsg{} }
 func (m *FilterGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*FilterGetRequestMsg) ProtoMessage()               {}
-func (*FilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{35} }
+func (*FilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{35} }
 
 func (m *FilterGetRequestMsg) GetRequest() []*FilterGetRequest {
 	if m != nil {
@@ -1319,7 +1319,7 @@ type FilterGetResponse struct {
 func (m *FilterGetResponse) Reset()                    { *m = FilterGetResponse{} }
 func (m *FilterGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*FilterGetResponse) ProtoMessage()               {}
-func (*FilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{36} }
+func (*FilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{36} }
 
 func (m *FilterGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1351,7 +1351,7 @@ type FilterGetResponseMsg struct {
 func (m *FilterGetResponseMsg) Reset()                    { *m = FilterGetResponseMsg{} }
 func (m *FilterGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*FilterGetResponseMsg) ProtoMessage()               {}
-func (*FilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{37} }
+func (*FilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{37} }
 
 func (m *FilterGetResponseMsg) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1411,9 +1411,9 @@ func init() {
 	proto.RegisterEnum("halproto.EndpointVMotionState", EndpointVMotionState_name, EndpointVMotionState_value)
 }
 
-func init() { proto.RegisterFile("endpoint.proto", fileDescriptor9) }
+func init() { proto.RegisterFile("endpoint.proto", fileDescriptor6) }
 
-var fileDescriptor9 = []byte{
+var fileDescriptor6 = []byte{
 	// 1635 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x59, 0xdd, 0x6e, 0xdb, 0x46,
 	0x16, 0x36, 0x65, 0xc5, 0x91, 0x8f, 0x7e, 0x2c, 0x8f, 0x1d, 0x47, 0x2b, 0xc7, 0xb1, 0x96, 0xc1,

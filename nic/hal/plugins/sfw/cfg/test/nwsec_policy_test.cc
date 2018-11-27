@@ -30,7 +30,6 @@
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
-#include "nic/hal/svc/barco_rings_svc.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 
@@ -49,11 +48,9 @@
 #include "gen/hal/svc/descriptor_aol_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
-#include "gen/hal/svc/crypto_keys_svc_gen.hpp"
 #include "gen/hal/svc/rawccb_svc_gen.hpp"
 #include "gen/hal/svc/proxyrcb_svc_gen.hpp"
 #include "gen/hal/svc/proxyccb_svc_gen.hpp"
-#include "gen/hal/svc/crypto_apis_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
 #include "gen/hal/svc/gft_svc_gen.hpp"
 //#include "nic/fte/test/acl_test.hpp"
@@ -113,14 +110,11 @@ svc_reg (const std::string& server_addr,
     DescrAolServiceImpl      descraol_svc;
     ProxyServiceImpl         proxy_svc;
     CpuCbServiceImpl         cpucb_svc;
-    CryptoKeyServiceImpl     crypto_key_svc;
     RawrCbServiceImpl        rawrcb_svc;
     RawcCbServiceImpl        rawccb_svc;
     ProxyrCbServiceImpl      proxyrcb_svc;
     ProxycCbServiceImpl      proxyccb_svc;
-    CryptoApisServiceImpl    crypto_apis_svc;
     EventServiceImpl         event_svc;
-    BarcoRingsServiceImpl    barco_rings_svc;
     MulticastServiceImpl     multicast_svc;
     GftServiceImpl           gft_svc;
     SystemServiceImpl        system_svc;
@@ -154,14 +148,11 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&acl_svc);
         server_builder.RegisterService(&telemetry_svc);
         server_builder.RegisterService(&cpucb_svc);
-        server_builder.RegisterService(&crypto_key_svc);
         server_builder.RegisterService(&rawrcb_svc);
         server_builder.RegisterService(&rawccb_svc);
         server_builder.RegisterService(&proxyrcb_svc);
         server_builder.RegisterService(&proxyccb_svc);
-        server_builder.RegisterService(&crypto_apis_svc);
         server_builder.RegisterService(&event_svc);
-        server_builder.RegisterService(&barco_rings_svc);
         server_builder.RegisterService(&multicast_svc);
         server_builder.RegisterService(&system_svc);
         server_builder.RegisterService(&swphv_svc);

@@ -5,8 +5,8 @@ import iris.test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 import iris.test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
 
 import types_pb2                as types_pb2
-import crypto_keys_pb2          as crypto_keys_pb2
-# import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
+import internal_pb2          as internal_pb2
+# import internal_pb2_grpc     as internal_pb2_grpc
 
 from iris.config.store                       import Store
 from iris.config.objects.proxycb_service     import ProxyCbServiceHelper

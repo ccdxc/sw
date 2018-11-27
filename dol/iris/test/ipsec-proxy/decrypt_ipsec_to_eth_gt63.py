@@ -4,7 +4,7 @@ import pdb
 import copy
 
 import types_pb2                as types_pb2
-import crypto_keys_pb2          as crypto_keys_pb2
+import internal_pb2          as internal_pb2
 import iris.test.callbacks.networking.modcbs as modcbs
 
 from iris.config.store               import Store

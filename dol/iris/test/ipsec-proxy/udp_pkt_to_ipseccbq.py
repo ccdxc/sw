@@ -4,8 +4,7 @@ import pdb
 import copy
 
 import types_pb2                as types_pb2
-import crypto_keys_pb2          as crypto_keys_pb2
-#import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
+import internal_pb2          as internal_pb2
 
 from iris.config.store               import Store
 from infra.common.objects import ObjectDatabase as ObjectDatabase

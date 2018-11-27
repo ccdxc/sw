@@ -38,7 +38,7 @@ var NatType_value = map[string]int32{
 func (x NatType) String() string {
 	return proto.EnumName(NatType_name, int32(x))
 }
-func (NatType) EnumDescriptor() ([]byte, []int) { return fileDescriptor35, []int{0} }
+func (NatType) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{0} }
 
 // Flow actions
 type FlowAction int32
@@ -63,7 +63,7 @@ var FlowAction_value = map[string]int32{
 func (x FlowAction) String() string {
 	return proto.EnumName(FlowAction_name, int32(x))
 }
-func (FlowAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor35, []int{1} }
+func (FlowAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{1} }
 
 // Flow TCP states
 // TODO: Srini, please define all other states
@@ -104,7 +104,7 @@ var FlowTCPState_value = map[string]int32{
 func (x FlowTCPState) String() string {
 	return proto.EnumName(FlowTCPState_name, int32(x))
 }
-func (FlowTCPState) EnumDescriptor() ([]byte, []int) { return fileDescriptor35, []int{2} }
+func (FlowTCPState) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{2} }
 
 // App Types ... In sync with p4/nw/include/defines.h
 // TODO: Revisit once we decide if flow drives app_id or service_lif
@@ -145,7 +145,7 @@ var FlowType_value = map[string]int32{
 func (x FlowType) String() string {
 	return proto.EnumName(FlowType_name, int32(x))
 }
-func (FlowType) EnumDescriptor() ([]byte, []int) { return fileDescriptor35, []int{3} }
+func (FlowType) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{3} }
 
 // flow direction
 type FlowDirection int32
@@ -170,7 +170,7 @@ var FlowDirection_value = map[string]int32{
 func (x FlowDirection) String() string {
 	return proto.EnumName(FlowDirection_name, int32(x))
 }
-func (FlowDirection) EnumDescriptor() ([]byte, []int) { return fileDescriptor35, []int{4} }
+func (FlowDirection) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{4} }
 
 // flow instance primary vs secondary
 type FlowInstance int32
@@ -195,7 +195,7 @@ var FlowInstance_value = map[string]int32{
 func (x FlowInstance) String() string {
 	return proto.EnumName(FlowInstance_name, int32(x))
 }
-func (FlowInstance) EnumDescriptor() ([]byte, []int) { return fileDescriptor35, []int{5} }
+func (FlowInstance) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{5} }
 
 // Key for L2 flows (i.e, non-IP flows)
 type FlowKeyL2 struct {
@@ -208,7 +208,7 @@ type FlowKeyL2 struct {
 func (m *FlowKeyL2) Reset()                    { *m = FlowKeyL2{} }
 func (m *FlowKeyL2) String() string            { return proto.CompactTextString(m) }
 func (*FlowKeyL2) ProtoMessage()               {}
-func (*FlowKeyL2) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{0} }
+func (*FlowKeyL2) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{0} }
 
 func (m *FlowKeyL2) GetSmac() uint64 {
 	if m != nil {
@@ -246,7 +246,7 @@ type FlowKeyTcpUdpInfo struct {
 func (m *FlowKeyTcpUdpInfo) Reset()                    { *m = FlowKeyTcpUdpInfo{} }
 func (m *FlowKeyTcpUdpInfo) String() string            { return proto.CompactTextString(m) }
 func (*FlowKeyTcpUdpInfo) ProtoMessage()               {}
-func (*FlowKeyTcpUdpInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{1} }
+func (*FlowKeyTcpUdpInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{1} }
 
 func (m *FlowKeyTcpUdpInfo) GetSport() uint32 {
 	if m != nil {
@@ -271,7 +271,7 @@ type FlowKeyICMPInfo struct {
 func (m *FlowKeyICMPInfo) Reset()                    { *m = FlowKeyICMPInfo{} }
 func (m *FlowKeyICMPInfo) String() string            { return proto.CompactTextString(m) }
 func (*FlowKeyICMPInfo) ProtoMessage()               {}
-func (*FlowKeyICMPInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{2} }
+func (*FlowKeyICMPInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{2} }
 
 func (m *FlowKeyICMPInfo) GetType() uint32 {
 	if m != nil {
@@ -301,7 +301,7 @@ type FlowKeyESPInfo struct {
 func (m *FlowKeyESPInfo) Reset()                    { *m = FlowKeyESPInfo{} }
 func (m *FlowKeyESPInfo) String() string            { return proto.CompactTextString(m) }
 func (*FlowKeyESPInfo) ProtoMessage()               {}
-func (*FlowKeyESPInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{3} }
+func (*FlowKeyESPInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{3} }
 
 func (m *FlowKeyESPInfo) GetSpi() uint32 {
 	if m != nil {
@@ -327,7 +327,7 @@ type FlowKeyV4 struct {
 func (m *FlowKeyV4) Reset()                    { *m = FlowKeyV4{} }
 func (m *FlowKeyV4) String() string            { return proto.CompactTextString(m) }
 func (*FlowKeyV4) ProtoMessage()               {}
-func (*FlowKeyV4) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{4} }
+func (*FlowKeyV4) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{4} }
 
 type isFlowKeyV4_L4Fields interface{ isFlowKeyV4_L4Fields() }
 
@@ -504,7 +504,7 @@ type FlowKeyV6 struct {
 func (m *FlowKeyV6) Reset()                    { *m = FlowKeyV6{} }
 func (m *FlowKeyV6) String() string            { return proto.CompactTextString(m) }
 func (*FlowKeyV6) ProtoMessage()               {}
-func (*FlowKeyV6) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{5} }
+func (*FlowKeyV6) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{5} }
 
 type isFlowKeyV6_L4Fields interface{ isFlowKeyV6_L4Fields() }
 
@@ -678,7 +678,7 @@ type FlowKey struct {
 func (m *FlowKey) Reset()                    { *m = FlowKey{} }
 func (m *FlowKey) String() string            { return proto.CompactTextString(m) }
 func (*FlowKey) ProtoMessage()               {}
-func (*FlowKey) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{6} }
+func (*FlowKey) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{6} }
 
 type isFlowKey_FlowKey interface{ isFlowKey_FlowKey() }
 
@@ -851,7 +851,7 @@ type FlowInfo struct {
 func (m *FlowInfo) Reset()                    { *m = FlowInfo{} }
 func (m *FlowInfo) String() string            { return proto.CompactTextString(m) }
 func (*FlowInfo) ProtoMessage()               {}
-func (*FlowInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{7} }
+func (*FlowInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{7} }
 
 func (m *FlowInfo) GetFlowAction() FlowAction {
 	if m != nil {
@@ -957,7 +957,7 @@ type ConnTrackExceptions struct {
 func (m *ConnTrackExceptions) Reset()                    { *m = ConnTrackExceptions{} }
 func (m *ConnTrackExceptions) String() string            { return proto.CompactTextString(m) }
 func (*ConnTrackExceptions) ProtoMessage()               {}
-func (*ConnTrackExceptions) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{8} }
+func (*ConnTrackExceptions) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{8} }
 
 func (m *ConnTrackExceptions) GetTcpSynRetransmit() bool {
 	if m != nil {
@@ -1077,7 +1077,7 @@ type ConnTrackInfo struct {
 func (m *ConnTrackInfo) Reset()                    { *m = ConnTrackInfo{} }
 func (m *ConnTrackInfo) String() string            { return proto.CompactTextString(m) }
 func (*ConnTrackInfo) ProtoMessage()               {}
-func (*ConnTrackInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{9} }
+func (*ConnTrackInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{9} }
 
 func (m *ConnTrackInfo) GetFlowCreateTs() uint64 {
 	if m != nil {
@@ -1179,7 +1179,7 @@ type FlowData struct {
 func (m *FlowData) Reset()                    { *m = FlowData{} }
 func (m *FlowData) String() string            { return proto.CompactTextString(m) }
 func (*FlowData) ProtoMessage()               {}
-func (*FlowData) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{10} }
+func (*FlowData) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{10} }
 
 func (m *FlowData) GetFlowInfo() *FlowInfo {
 	if m != nil {
@@ -1210,7 +1210,7 @@ type FlowSpec struct {
 func (m *FlowSpec) Reset()                    { *m = FlowSpec{} }
 func (m *FlowSpec) String() string            { return proto.CompactTextString(m) }
 func (*FlowSpec) ProtoMessage()               {}
-func (*FlowSpec) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{11} }
+func (*FlowSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{11} }
 
 func (m *FlowSpec) GetFlowKey() *FlowKey {
 	if m != nil {
@@ -1244,7 +1244,7 @@ type SessionSpec struct {
 func (m *SessionSpec) Reset()                    { *m = SessionSpec{} }
 func (m *SessionSpec) String() string            { return proto.CompactTextString(m) }
 func (*SessionSpec) ProtoMessage()               {}
-func (*SessionSpec) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{12} }
+func (*SessionSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{12} }
 
 func (m *SessionSpec) GetVrfKeyHandle() *VrfKeyHandle {
 	if m != nil {
@@ -1317,7 +1317,7 @@ type SessionRequestMsg struct {
 func (m *SessionRequestMsg) Reset()                    { *m = SessionRequestMsg{} }
 func (m *SessionRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SessionRequestMsg) ProtoMessage()               {}
-func (*SessionRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{13} }
+func (*SessionRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{13} }
 
 func (m *SessionRequestMsg) GetRequest() []*SessionSpec {
 	if m != nil {
@@ -1341,7 +1341,7 @@ type FlowStatus struct {
 func (m *FlowStatus) Reset()                    { *m = FlowStatus{} }
 func (m *FlowStatus) String() string            { return proto.CompactTextString(m) }
 func (*FlowStatus) ProtoMessage()               {}
-func (*FlowStatus) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{14} }
+func (*FlowStatus) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{14} }
 
 func (m *FlowStatus) GetFlowHandle() uint64 {
 	if m != nil {
@@ -1395,7 +1395,7 @@ type TFTPALGInfo struct {
 func (m *TFTPALGInfo) Reset()                    { *m = TFTPALGInfo{} }
 func (m *TFTPALGInfo) String() string            { return proto.CompactTextString(m) }
 func (*TFTPALGInfo) ProtoMessage()               {}
-func (*TFTPALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{15} }
+func (*TFTPALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{15} }
 
 func (m *TFTPALGInfo) GetIscontrol() bool {
 	if m != nil {
@@ -1430,7 +1430,7 @@ type RPCALGInfo struct {
 func (m *RPCALGInfo) Reset()                    { *m = RPCALGInfo{} }
 func (m *RPCALGInfo) String() string            { return proto.CompactTextString(m) }
 func (*RPCALGInfo) ProtoMessage()               {}
-func (*RPCALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{16} }
+func (*RPCALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{16} }
 
 func (m *RPCALGInfo) GetIscontrol() bool {
 	if m != nil {
@@ -1475,7 +1475,7 @@ type SIPALGInfo struct {
 func (m *SIPALGInfo) Reset()                    { *m = SIPALGInfo{} }
 func (m *SIPALGInfo) String() string            { return proto.CompactTextString(m) }
 func (*SIPALGInfo) ProtoMessage()               {}
-func (*SIPALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{17} }
+func (*SIPALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{17} }
 
 func (m *SIPALGInfo) GetParseError() uint32 {
 	if m != nil {
@@ -1493,7 +1493,7 @@ type FTPALGInfo struct {
 func (m *FTPALGInfo) Reset()                    { *m = FTPALGInfo{} }
 func (m *FTPALGInfo) String() string            { return proto.CompactTextString(m) }
 func (*FTPALGInfo) ProtoMessage()               {}
-func (*FTPALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{18} }
+func (*FTPALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{18} }
 
 func (m *FTPALGInfo) GetIscontrol() bool {
 	if m != nil {
@@ -1517,7 +1517,7 @@ type RTSPALGInfo struct {
 func (m *RTSPALGInfo) Reset()                    { *m = RTSPALGInfo{} }
 func (m *RTSPALGInfo) String() string            { return proto.CompactTextString(m) }
 func (*RTSPALGInfo) ProtoMessage()               {}
-func (*RTSPALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{19} }
+func (*RTSPALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{19} }
 
 func (m *RTSPALGInfo) GetIscontrol() bool {
 	if m != nil {
@@ -1536,7 +1536,7 @@ type DNSALGInfo struct {
 func (m *DNSALGInfo) Reset()                    { *m = DNSALGInfo{} }
 func (m *DNSALGInfo) String() string            { return proto.CompactTextString(m) }
 func (*DNSALGInfo) ProtoMessage()               {}
-func (*DNSALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{20} }
+func (*DNSALGInfo) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{20} }
 
 func (m *DNSALGInfo) GetParseErrors() uint32 {
 	if m != nil {
@@ -1582,7 +1582,7 @@ type SessionStatus struct {
 func (m *SessionStatus) Reset()                    { *m = SessionStatus{} }
 func (m *SessionStatus) String() string            { return proto.CompactTextString(m) }
 func (*SessionStatus) ProtoMessage()               {}
-func (*SessionStatus) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{21} }
+func (*SessionStatus) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{21} }
 
 type isSessionStatus_AlgInfo interface{ isSessionStatus_AlgInfo() }
 
@@ -1876,7 +1876,7 @@ type SessionResponse struct {
 func (m *SessionResponse) Reset()                    { *m = SessionResponse{} }
 func (m *SessionResponse) String() string            { return proto.CompactTextString(m) }
 func (*SessionResponse) ProtoMessage()               {}
-func (*SessionResponse) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{22} }
+func (*SessionResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{22} }
 
 func (m *SessionResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1900,7 +1900,7 @@ type SessionResponseMsg struct {
 func (m *SessionResponseMsg) Reset()                    { *m = SessionResponseMsg{} }
 func (m *SessionResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SessionResponseMsg) ProtoMessage()               {}
-func (*SessionResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{23} }
+func (*SessionResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{23} }
 
 func (m *SessionResponseMsg) GetResponse() []*SessionResponse {
 	if m != nil {
@@ -1922,7 +1922,7 @@ type SessionDeleteRequest struct {
 func (m *SessionDeleteRequest) Reset()                    { *m = SessionDeleteRequest{} }
 func (m *SessionDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*SessionDeleteRequest) ProtoMessage()               {}
-func (*SessionDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{24} }
+func (*SessionDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{24} }
 
 type isSessionDeleteRequest_GetBy interface{ isSessionDeleteRequest_GetBy() }
 
@@ -2034,7 +2034,7 @@ type SessionDeleteRequestMsg struct {
 func (m *SessionDeleteRequestMsg) Reset()                    { *m = SessionDeleteRequestMsg{} }
 func (m *SessionDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SessionDeleteRequestMsg) ProtoMessage()               {}
-func (*SessionDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{25} }
+func (*SessionDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{25} }
 
 func (m *SessionDeleteRequestMsg) GetRequest() []*SessionDeleteRequest {
 	if m != nil {
@@ -2052,7 +2052,7 @@ type SessionDeleteResponse struct {
 func (m *SessionDeleteResponse) Reset()                    { *m = SessionDeleteResponse{} }
 func (m *SessionDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*SessionDeleteResponse) ProtoMessage()               {}
-func (*SessionDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{26} }
+func (*SessionDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{26} }
 
 func (m *SessionDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2076,7 +2076,7 @@ type SessionDeleteResponseMsg struct {
 func (m *SessionDeleteResponseMsg) Reset()                    { *m = SessionDeleteResponseMsg{} }
 func (m *SessionDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SessionDeleteResponseMsg) ProtoMessage()               {}
-func (*SessionDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{27} }
+func (*SessionDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{27} }
 
 func (m *SessionDeleteResponseMsg) GetResponse() []*SessionDeleteResponse {
 	if m != nil {
@@ -2098,7 +2098,7 @@ type SessionFilter struct {
 func (m *SessionFilter) Reset()                    { *m = SessionFilter{} }
 func (m *SessionFilter) String() string            { return proto.CompactTextString(m) }
 func (*SessionFilter) ProtoMessage()               {}
-func (*SessionFilter) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{28} }
+func (*SessionFilter) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{28} }
 
 func (m *SessionFilter) GetSrcIp() *IPAddress {
 	if m != nil {
@@ -2162,7 +2162,7 @@ type SessionGetRequest struct {
 func (m *SessionGetRequest) Reset()                    { *m = SessionGetRequest{} }
 func (m *SessionGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*SessionGetRequest) ProtoMessage()               {}
-func (*SessionGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{29} }
+func (*SessionGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{29} }
 
 type isSessionGetRequest_GetBy interface{ isSessionGetRequest_GetBy() }
 
@@ -2274,7 +2274,7 @@ type SessionGetRequestMsg struct {
 func (m *SessionGetRequestMsg) Reset()                    { *m = SessionGetRequestMsg{} }
 func (m *SessionGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SessionGetRequestMsg) ProtoMessage()               {}
-func (*SessionGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{30} }
+func (*SessionGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{30} }
 
 func (m *SessionGetRequestMsg) GetRequest() []*SessionGetRequest {
 	if m != nil {
@@ -2296,7 +2296,7 @@ type FlowStats struct {
 func (m *FlowStats) Reset()                    { *m = FlowStats{} }
 func (m *FlowStats) String() string            { return proto.CompactTextString(m) }
 func (*FlowStats) ProtoMessage()               {}
-func (*FlowStats) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{31} }
+func (*FlowStats) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{31} }
 
 func (m *FlowStats) GetFlowPermittedPackets() uint64 {
 	if m != nil {
@@ -2351,7 +2351,7 @@ type SessionStats struct {
 func (m *SessionStats) Reset()                    { *m = SessionStats{} }
 func (m *SessionStats) String() string            { return proto.CompactTextString(m) }
 func (*SessionStats) ProtoMessage()               {}
-func (*SessionStats) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{32} }
+func (*SessionStats) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{32} }
 
 func (m *SessionStats) GetInitiatorFlowStats() *FlowStats {
 	if m != nil {
@@ -2392,7 +2392,7 @@ type SessionGetResponse struct {
 func (m *SessionGetResponse) Reset()                    { *m = SessionGetResponse{} }
 func (m *SessionGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*SessionGetResponse) ProtoMessage()               {}
-func (*SessionGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{33} }
+func (*SessionGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{33} }
 
 func (m *SessionGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2431,7 +2431,7 @@ type SessionGetResponseMsg struct {
 func (m *SessionGetResponseMsg) Reset()                    { *m = SessionGetResponseMsg{} }
 func (m *SessionGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SessionGetResponseMsg) ProtoMessage()               {}
-func (*SessionGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor35, []int{34} }
+func (*SessionGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{34} }
 
 func (m *SessionGetResponseMsg) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2491,9 +2491,9 @@ func init() {
 	proto.RegisterEnum("halproto.FlowInstance", FlowInstance_name, FlowInstance_value)
 }
 
-func init() { proto.RegisterFile("session.proto", fileDescriptor35) }
+func init() { proto.RegisterFile("session.proto", fileDescriptor32) }
 
-var fileDescriptor35 = []byte{
+var fileDescriptor32 = []byte{
 	// 3197 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x59, 0xcf, 0x6f, 0x1b, 0xc7,
 	0x77, 0x17, 0x29, 0xf1, 0x87, 0x1e, 0x45, 0x9a, 0x1a, 0x4b, 0xb6, 0xfc, 0xdb, 0x5e, 0x24, 0x48,

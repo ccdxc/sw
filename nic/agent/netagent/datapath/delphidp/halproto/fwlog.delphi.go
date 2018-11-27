@@ -32,7 +32,7 @@ var FlowLogEventType_value = map[string]int32{
 func (x FlowLogEventType) String() string {
 	return proto.EnumName(FlowLogEventType_name, int32(x))
 }
-func (FlowLogEventType) EnumDescriptor() ([]byte, []int) { return fileDescriptor12, []int{0} }
+func (FlowLogEventType) EnumDescriptor() ([]byte, []int) { return fileDescriptor9, []int{0} }
 
 // On receiver side, the enums can be converted back to strings using the
 // ##enum##_Name() APIs in the generated file for a better readability
@@ -68,7 +68,7 @@ type FWEvent struct {
 func (m *FWEvent) Reset()                    { *m = FWEvent{} }
 func (m *FWEvent) String() string            { return proto.CompactTextString(m) }
 func (*FWEvent) ProtoMessage()               {}
-func (*FWEvent) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{0} }
+func (*FWEvent) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{0} }
 
 func (m *FWEvent) GetFlowaction() FlowLogEventType {
 	if m != nil {
@@ -257,9 +257,9 @@ func init() {
 	proto.RegisterEnum("halproto.FlowLogEventType", FlowLogEventType_name, FlowLogEventType_value)
 }
 
-func init() { proto.RegisterFile("fwlog.proto", fileDescriptor12) }
+func init() { proto.RegisterFile("fwlog.proto", fileDescriptor9) }
 
-var fileDescriptor12 = []byte{
+var fileDescriptor9 = []byte{
 	// 520 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x93, 0x5d, 0x6f, 0xda, 0x30,
 	0x14, 0x86, 0x97, 0x51, 0xbe, 0x0e, 0x2b, 0x05, 0xaf, 0x2d, 0x2e, 0xea, 0xa6, 0x68, 0x57, 0xac,

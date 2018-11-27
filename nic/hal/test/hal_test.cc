@@ -23,7 +23,6 @@
 #include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "gen/proto/proxy.grpc.pb.h"
-#include "gen/proto/crypto_apis.grpc.pb.h"
 #include "gen/proto/internal.grpc.pb.h"
 #include "gen/proto/tcp_proxy.grpc.pb.h"
 #include <sys/socket.h>
@@ -234,12 +233,12 @@ using internal::TcpCbGetResponse;
 using internal::TcpCbStats;
 using internal::TcpCbSpec;
 
-using cryptoapis::CryptoApiType;
-using cryptoapis::CryptoApis;
-using cryptoapis::CryptoApiRequestMsg;
-using cryptoapis::CryptoApiRequest;
-using cryptoapis::CryptoApiResponseMsg;
-using cryptoapis::CryptoApiResponse;
+using internal::CryptoApiType;
+using internal::Internal;
+using internal::CryptoApiRequestMsg;
+using internal::CryptoApiRequest;
+using internal::CryptoApiResponseMsg;
+using internal::CryptoApiResponse;
 using grpc::ClientContext;
 
 
@@ -278,7 +277,7 @@ public:
     telemetry_stub_(Telemetry::NewStub(channel)),
     proxy_stub_(Proxy::NewStub(channel)),
     tcpcb_stub_(Internal::NewStub(channel)),
-    crypto_apis_stub_(CryptoApis::NewStub(channel)),
+    crypto_apis_stub_(Internal::NewStub(channel)),
     tcp_proxy_stub_(TcpProxy::NewStub(channel)),
     qos_stub_(QOS::NewStub(channel)) {}
 
@@ -1999,7 +1998,7 @@ public:
         Status                  status;
 
         req = req_msg.add_request();
-        req->set_api_type(cryptoapis::ASYMAPI_SETUP_PRIV_KEY);
+        req->set_api_type(internal::ASYMAPI_SETUP_PRIV_KEY);
         req->mutable_setup_priv_key()->set_key(read_file_contents(filename));
         status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
         if (status.ok()) {
@@ -2025,7 +2024,7 @@ public:
         Status                  status;
 
         req = req_msg.add_request();
-        req->set_api_type(cryptoapis::ASYMAPI_SETUP_PRIV_KEY);
+        req->set_api_type(internal::ASYMAPI_SETUP_PRIV_KEY);
         req->mutable_setup_priv_key()->set_key(read_file_contents(filename));
         status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
         if (status.ok()) {
@@ -2052,8 +2051,8 @@ public:
         Status                  status;
 
         req = req_msg.add_request();
-        req->set_api_type(cryptoapis::ASYMAPI_SETUP_CERT);
-        req->mutable_setup_cert()->set_update_type(cryptoapis::ADD_UPDATE);
+        req->set_api_type(internal::ASYMAPI_SETUP_CERT);
+        req->mutable_setup_cert()->set_update_type(internal::ADD_UPDATE);
         req->mutable_setup_cert()->set_cert_id(cert_id);
         req->mutable_setup_cert()->set_body(read_file_contents(filename));
         status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
@@ -2551,7 +2550,7 @@ private:
     std::unique_ptr<Telemetry::Stub> telemetry_stub_;
     std::unique_ptr<Proxy::Stub> proxy_stub_;
     std::unique_ptr<Internal::Stub> tcpcb_stub_;
-    std::unique_ptr<CryptoApis::Stub> crypto_apis_stub_;
+    std::unique_ptr<Internal::Stub> crypto_apis_stub_;
     std::unique_ptr<TcpProxy::Stub> tcp_proxy_stub_;
     std::unique_ptr<QOS::Stub> qos_stub_;
 };

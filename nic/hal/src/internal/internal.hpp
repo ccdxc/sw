@@ -81,6 +81,33 @@ hal_ret_t wring_get_meta(internal::WRingSpec& spec, internal::WRingGetMetaRespon
 
 hal_ret_t wring_set_meta (internal::WRingSpec& spec, internal::WRingSetMetaResponse *rsp);
 
+hal_ret_t   get_opaque_tag_addr(internal::GetOpaqueTagAddrRequest& request,
+                             internal::GetOpaqueTagAddrResponseMsg *response);
+
+hal_ret_t   barco_get_req_descr_entry(internal::BarcoGetReqDescrEntryRequest& request,
+                  internal::BarcoGetReqDescrEntryResponseMsg *response);
+
+hal_ret_t   barco_get_ring_meta(internal::BarcoGetRingMetaRequest& request,
+                 internal::BarcoGetRingMetaResponseMsg *response);
+
+
+hal_ret_t   cryptokey_create(internal::CryptoKeyCreateRequest &request,
+        internal::CryptoKeyCreateResponse *response);
+
+hal_ret_t   cryptokeycreatewith_id(internal::CryptoKeyCreateWithIdRequest &request,
+        internal::CryptoKeyCreateWithIdResponse *response);
+
+hal_ret_t   cryptokey_read(internal::CryptoKeyReadRequest &request,
+        internal::CryptoKeyReadResponse *response);
+
+hal_ret_t   cryptokey_update(internal::CryptoKeyUpdateRequest &request,
+        internal::CryptoKeyUpdateResponse *response);
+
+hal_ret_t   cryptokey_delete(internal::CryptoKeyDeleteRequest &request,
+        internal::CryptoKeyDeleteResponse *response);
+
+hal_ret_t cryptoapi_invoke(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp);
 
 }    // namespace hal
 

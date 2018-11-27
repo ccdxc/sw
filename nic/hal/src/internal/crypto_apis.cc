@@ -41,8 +41,8 @@ crypto_cert_store_compare_key_func(void *key1, void *key2)
 }
 
 /* Asym APIs */
-hal_ret_t crypto_asym_api_ecc_point_mul(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_ecc_point_mul(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
@@ -91,8 +91,8 @@ hal_ret_t crypto_asym_api_ecc_point_mul(cryptoapis::CryptoApiRequest &req,
 }
 
 
-hal_ret_t crypto_asym_api_ecdsa_sig_gen(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_ecdsa_sig_gen(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
@@ -142,8 +142,8 @@ hal_ret_t crypto_asym_api_ecdsa_sig_gen(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
-hal_ret_t crypto_asym_api_ecdsa_sig_verify(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_ecdsa_sig_verify(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
@@ -184,8 +184,8 @@ hal_ret_t crypto_asym_api_ecdsa_sig_verify(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
-hal_ret_t crypto_asym_api_rsa_encrypt(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_rsa_encrypt(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
@@ -222,8 +222,8 @@ hal_ret_t crypto_asym_api_rsa_encrypt(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
-hal_ret_t crypto_asym_api_rsa_decrypt(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_rsa_decrypt(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
@@ -259,8 +259,8 @@ hal_ret_t crypto_asym_api_rsa_decrypt(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
-hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_rsa_crt_decrypt(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
@@ -303,7 +303,7 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
 
 static hal_ret_t
 crypto_asym_api_setup_ec_priv_key(EVP_PKEY *pkey,
-                                  cryptoapis::CryptoAsymApiRespSetupPrivateKey *setup_key_resp)
+                                  internal::CryptoAsymApiRespSetupPrivateKey *setup_key_resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     EC_KEY              *ec_key = NULL;
@@ -491,7 +491,7 @@ crypto_asym_api_setup_rsa_decrypt_priv_key(RSA *rsa,
 
 static hal_ret_t
 crypto_asym_api_setup_rsa_priv_key(EVP_PKEY *pkey,
-                                   cryptoapis::CryptoAsymApiRespSetupPrivateKey *setup_key_resp)
+                                   internal::CryptoAsymApiRespSetupPrivateKey *setup_key_resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     RSA                 *rsa = NULL;
@@ -540,8 +540,8 @@ cleanup:
     //TODO: remove allocated keys
     return ret;
 }
-hal_ret_t crypto_asym_api_setup_priv_key(cryptoapis::CryptoApiRequest &req,
-					 cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_setup_priv_key(internal::CryptoApiRequest &req,
+					 internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     BIO                 *bio = NULL;
@@ -590,8 +590,8 @@ end:
     return ret;
 }
 
-hal_ret_t crypto_asym_api_rsa_sig_gen(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_rsa_sig_gen(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
@@ -629,8 +629,8 @@ hal_ret_t crypto_asym_api_rsa_sig_gen(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
-hal_ret_t crypto_asym_api_rsa_sig_verify(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_rsa_sig_verify(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
@@ -718,8 +718,8 @@ crypto_asym_extract_cert_pubkey_params(crypto_cert_t *cert)
 
     return ret;
 }
-hal_ret_t crypto_asym_api_setup_cert(cryptoapis::CryptoApiRequest &req,
-                                     cryptoapis::CryptoApiResponse *resp)
+hal_ret_t crypto_asym_api_setup_cert(internal::CryptoApiRequest &req,
+                                     internal::CryptoApiResponse *resp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     crypto_cert_t       *cert = NULL;
@@ -735,7 +735,7 @@ hal_ret_t crypto_asym_api_setup_cert(cryptoapis::CryptoApiRequest &req,
     //find cert with the id
     cert = find_cert_by_id(req.setup_cert().cert_id());
 
-    if(req.setup_cert().update_type() == cryptoapis::ADD_UPDATE) {
+    if(req.setup_cert().update_type() == internal::ADD_UPDATE) {
         if(!cert) {
             // Allocate a new cert
             cert = crypto_cert_alloc_init();
@@ -817,14 +817,14 @@ end:
 }
 
 
-hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
-				       cryptoapis::CryptoApiResponse *resp,
+hal_ret_t crypto_symm_api_hash_request(internal::CryptoApiRequest &req,
+				       internal::CryptoApiResponse *resp,
 				       bool generate)
 {
     hal_ret_t                     ret = HAL_RET_OK;
     int32_t                       digest_len, exp_digest_len;
     uint8_t                       digest[CRYPTO_MAX_HASH_DIGEST_LEN];
-    cryptoapis::CryptoApiHashType hashtype;
+    internal::CryptoApiHashType hashtype;
     pd::pd_capri_barco_sym_hash_process_request_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
 
@@ -837,24 +837,24 @@ hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
     }
 
     switch(hashtype) {
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA1:
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA1:
+    case internal::CRYPTOAPI_HASHTYPE_SHA1:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA1:
         exp_digest_len = CRYPTO_SHA1_DIGEST_LEN;
         break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA224:
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA224:
+    case internal::CRYPTOAPI_HASHTYPE_SHA224:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA224:
         exp_digest_len = CRYPTO_SHA224_DIGEST_LEN;
         break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA256:
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA256:
+    case internal::CRYPTOAPI_HASHTYPE_SHA256:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA256:
         exp_digest_len = CRYPTO_SHA256_DIGEST_LEN;
         break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA384:
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA384:
+    case internal::CRYPTOAPI_HASHTYPE_SHA384:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA384:
         exp_digest_len = CRYPTO_SHA384_DIGEST_LEN;
         break;
-    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA512:
-    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA512:
+    case internal::CRYPTOAPI_HASHTYPE_SHA512:
+    case internal::CRYPTOAPI_HASHTYPE_HMAC_SHA512:
         exp_digest_len = CRYPTO_SHA512_DIGEST_LEN;
         break;
     default:
@@ -895,47 +895,47 @@ hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
-hal_ret_t cryptoapi_invoke(cryptoapis::CryptoApiRequest &req,
-        cryptoapis::CryptoApiResponse *resp)
+hal_ret_t cryptoapi_invoke(internal::CryptoApiRequest &req,
+        internal::CryptoApiResponse *resp)
 {
 
     hal_ret_t           ret = HAL_RET_OK;
 
     switch (req.api_type()) {
-        case cryptoapis::ASYMAPI_ECC_POINT_MUL_FP:
+        case internal::ASYMAPI_ECC_POINT_MUL_FP:
             ret = crypto_asym_api_ecc_point_mul(req, resp);
             break;
-        case cryptoapis::ASYMAPI_ECDSA_SIG_GEN_FP:
+        case internal::ASYMAPI_ECDSA_SIG_GEN_FP:
             ret = crypto_asym_api_ecdsa_sig_gen(req, resp);
             break;
-        case cryptoapis::ASYMAPI_ECDSA_SIG_VERIFY_FP:
+        case internal::ASYMAPI_ECDSA_SIG_VERIFY_FP:
             ret = crypto_asym_api_ecdsa_sig_verify(req, resp);
             break;
-        case cryptoapis::ASYMAPI_RSA_ENCRYPT:
+        case internal::ASYMAPI_RSA_ENCRYPT:
             ret = crypto_asym_api_rsa_encrypt(req, resp);
             break;
-        case cryptoapis::ASYMAPI_RSA_DECRYPT:
+        case internal::ASYMAPI_RSA_DECRYPT:
             ret = crypto_asym_api_rsa_decrypt(req, resp);
             break;
-        case cryptoapis::ASYMAPI_RSA_CRT_DECRYPT:
+        case internal::ASYMAPI_RSA_CRT_DECRYPT:
             ret = crypto_asym_api_rsa_crt_decrypt(req, resp);
             break;
-        case cryptoapis::SYMMAPI_HASH_GENERATE:
+        case internal::SYMMAPI_HASH_GENERATE:
 	  ret = crypto_symm_api_hash_request(req, resp, true);
             break;
-        case cryptoapis::SYMMAPI_HASH_VERIFY:
+        case internal::SYMMAPI_HASH_VERIFY:
 	  ret = crypto_symm_api_hash_request(req, resp, false);
             break;
-        case cryptoapis::ASYMAPI_RSA_SIG_GEN:
+        case internal::ASYMAPI_RSA_SIG_GEN:
             ret = crypto_asym_api_rsa_sig_gen(req, resp);
             break;
-        case cryptoapis::ASYMAPI_RSA_SIG_VERIFY:
+        case internal::ASYMAPI_RSA_SIG_VERIFY:
             ret = crypto_asym_api_rsa_sig_verify(req, resp);
             break;
-        case cryptoapis::ASYMAPI_SETUP_PRIV_KEY:
+        case internal::ASYMAPI_SETUP_PRIV_KEY:
             ret = crypto_asym_api_setup_priv_key(req, resp);
             break;
-        case cryptoapis::ASYMAPI_SETUP_CERT:
+        case internal::ASYMAPI_SETUP_CERT:
             ret = crypto_asym_api_setup_cert(req, resp);
             break;
         default:

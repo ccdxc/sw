@@ -110,7 +110,7 @@ type MacMetrics struct {
 func (m *MacMetrics) Reset()                    { *m = MacMetrics{} }
 func (m *MacMetrics) String() string            { return proto.CompactTextString(m) }
 func (*MacMetrics) ProtoMessage()               {}
-func (*MacMetrics) Descriptor() ([]byte, []int) { return fileDescriptor21, []int{0} }
+func (*MacMetrics) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{0} }
 
 func (m *MacMetrics) GetKey() uint32 {
 	if m != nil {
@@ -746,9 +746,9 @@ func init() {
 	proto.RegisterType((*MacMetrics)(nil), "halproto.MacMetrics")
 }
 
-func init() { proto.RegisterFile("mac_metrics.proto", fileDescriptor21) }
+func init() { proto.RegisterFile("mac_metrics.proto", fileDescriptor18) }
 
-var fileDescriptor21 = []byte{
+var fileDescriptor18 = []byte{
 	// 1224 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x98, 0xfb, 0x77, 0xd4, 0x44,
 	0x14, 0xc7, 0x0f, 0xa2, 0x80, 0xa1, 0xcf, 0x14, 0xe4, 0x8a, 0xaf, 0x8a, 0xaf, 0x2a, 0x5a, 0x77,

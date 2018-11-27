@@ -302,6 +302,238 @@ func (mr *MockisWRingGetEntriesResponse_WRingSlotInfoMockRecorder) Size() *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisWRingGetEntriesResponse_WRingSlotInfo)(nil).Size))
 }
 
+// MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg is a mock of isBarcoGetReqDescrEntryResponse_ReqDescrMsg interface
+type MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg struct {
+	ctrl     *gomock.Controller
+	recorder *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsgMockRecorder
+}
+
+// MockisBarcoGetReqDescrEntryResponse_ReqDescrMsgMockRecorder is the mock recorder for MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg
+type MockisBarcoGetReqDescrEntryResponse_ReqDescrMsgMockRecorder struct {
+	mock *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg
+}
+
+// NewMockisBarcoGetReqDescrEntryResponse_ReqDescrMsg creates a new mock instance
+func NewMockisBarcoGetReqDescrEntryResponse_ReqDescrMsg(ctrl *gomock.Controller) *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg {
+	mock := &MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg{ctrl: ctrl}
+	mock.recorder = &MockisBarcoGetReqDescrEntryResponse_ReqDescrMsgMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg) EXPECT() *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsgMockRecorder {
+	return m.recorder
+}
+
+// isBarcoGetReqDescrEntryResponse_ReqDescrMsg mocks base method
+func (m *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg) isBarcoGetReqDescrEntryResponse_ReqDescrMsg() {
+	m.ctrl.Call(m, "isBarcoGetReqDescrEntryResponse_ReqDescrMsg")
+}
+
+// isBarcoGetReqDescrEntryResponse_ReqDescrMsg indicates an expected call of isBarcoGetReqDescrEntryResponse_ReqDescrMsg
+func (mr *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsgMockRecorder) isBarcoGetReqDescrEntryResponse_ReqDescrMsg() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isBarcoGetReqDescrEntryResponse_ReqDescrMsg", reflect.TypeOf((*MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg)(nil).isBarcoGetReqDescrEntryResponse_ReqDescrMsg))
+}
+
+// MarshalTo mocks base method
+func (m *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsgMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisBarcoGetReqDescrEntryResponse_ReqDescrMsgMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisBarcoGetReqDescrEntryResponse_ReqDescrMsg)(nil).Size))
+}
+
+// MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo is a mock of isCryptoAsymApiRespSetupPrivateKey_KeyInfo interface
+type MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder
+}
+
+// MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder is the mock recorder for MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo
+type MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder struct {
+	mock *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo
+}
+
+// NewMockisCryptoAsymApiRespSetupPrivateKey_KeyInfo creates a new mock instance
+func NewMockisCryptoAsymApiRespSetupPrivateKey_KeyInfo(ctrl *gomock.Controller) *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo {
+	mock := &MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo{ctrl: ctrl}
+	mock.recorder = &MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo) EXPECT() *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder {
+	return m.recorder
+}
+
+// isCryptoAsymApiRespSetupPrivateKey_KeyInfo mocks base method
+func (m *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo) isCryptoAsymApiRespSetupPrivateKey_KeyInfo() {
+	m.ctrl.Call(m, "isCryptoAsymApiRespSetupPrivateKey_KeyInfo")
+}
+
+// isCryptoAsymApiRespSetupPrivateKey_KeyInfo indicates an expected call of isCryptoAsymApiRespSetupPrivateKey_KeyInfo
+func (mr *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder) isCryptoAsymApiRespSetupPrivateKey_KeyInfo() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isCryptoAsymApiRespSetupPrivateKey_KeyInfo", reflect.TypeOf((*MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo)(nil).isCryptoAsymApiRespSetupPrivateKey_KeyInfo))
+}
+
+// MarshalTo mocks base method
+func (m *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisCryptoAsymApiRespSetupPrivateKey_KeyInfoMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisCryptoAsymApiRespSetupPrivateKey_KeyInfo)(nil).Size))
+}
+
+// MockisCryptoApiRequest_CryptoApiReq is a mock of isCryptoApiRequest_CryptoApiReq interface
+type MockisCryptoApiRequest_CryptoApiReq struct {
+	ctrl     *gomock.Controller
+	recorder *MockisCryptoApiRequest_CryptoApiReqMockRecorder
+}
+
+// MockisCryptoApiRequest_CryptoApiReqMockRecorder is the mock recorder for MockisCryptoApiRequest_CryptoApiReq
+type MockisCryptoApiRequest_CryptoApiReqMockRecorder struct {
+	mock *MockisCryptoApiRequest_CryptoApiReq
+}
+
+// NewMockisCryptoApiRequest_CryptoApiReq creates a new mock instance
+func NewMockisCryptoApiRequest_CryptoApiReq(ctrl *gomock.Controller) *MockisCryptoApiRequest_CryptoApiReq {
+	mock := &MockisCryptoApiRequest_CryptoApiReq{ctrl: ctrl}
+	mock.recorder = &MockisCryptoApiRequest_CryptoApiReqMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisCryptoApiRequest_CryptoApiReq) EXPECT() *MockisCryptoApiRequest_CryptoApiReqMockRecorder {
+	return m.recorder
+}
+
+// isCryptoApiRequest_CryptoApiReq mocks base method
+func (m *MockisCryptoApiRequest_CryptoApiReq) isCryptoApiRequest_CryptoApiReq() {
+	m.ctrl.Call(m, "isCryptoApiRequest_CryptoApiReq")
+}
+
+// isCryptoApiRequest_CryptoApiReq indicates an expected call of isCryptoApiRequest_CryptoApiReq
+func (mr *MockisCryptoApiRequest_CryptoApiReqMockRecorder) isCryptoApiRequest_CryptoApiReq() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isCryptoApiRequest_CryptoApiReq", reflect.TypeOf((*MockisCryptoApiRequest_CryptoApiReq)(nil).isCryptoApiRequest_CryptoApiReq))
+}
+
+// MarshalTo mocks base method
+func (m *MockisCryptoApiRequest_CryptoApiReq) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisCryptoApiRequest_CryptoApiReqMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisCryptoApiRequest_CryptoApiReq)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisCryptoApiRequest_CryptoApiReq) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisCryptoApiRequest_CryptoApiReqMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisCryptoApiRequest_CryptoApiReq)(nil).Size))
+}
+
+// MockisCryptoApiResponse_CryptoApiResp is a mock of isCryptoApiResponse_CryptoApiResp interface
+type MockisCryptoApiResponse_CryptoApiResp struct {
+	ctrl     *gomock.Controller
+	recorder *MockisCryptoApiResponse_CryptoApiRespMockRecorder
+}
+
+// MockisCryptoApiResponse_CryptoApiRespMockRecorder is the mock recorder for MockisCryptoApiResponse_CryptoApiResp
+type MockisCryptoApiResponse_CryptoApiRespMockRecorder struct {
+	mock *MockisCryptoApiResponse_CryptoApiResp
+}
+
+// NewMockisCryptoApiResponse_CryptoApiResp creates a new mock instance
+func NewMockisCryptoApiResponse_CryptoApiResp(ctrl *gomock.Controller) *MockisCryptoApiResponse_CryptoApiResp {
+	mock := &MockisCryptoApiResponse_CryptoApiResp{ctrl: ctrl}
+	mock.recorder = &MockisCryptoApiResponse_CryptoApiRespMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisCryptoApiResponse_CryptoApiResp) EXPECT() *MockisCryptoApiResponse_CryptoApiRespMockRecorder {
+	return m.recorder
+}
+
+// isCryptoApiResponse_CryptoApiResp mocks base method
+func (m *MockisCryptoApiResponse_CryptoApiResp) isCryptoApiResponse_CryptoApiResp() {
+	m.ctrl.Call(m, "isCryptoApiResponse_CryptoApiResp")
+}
+
+// isCryptoApiResponse_CryptoApiResp indicates an expected call of isCryptoApiResponse_CryptoApiResp
+func (mr *MockisCryptoApiResponse_CryptoApiRespMockRecorder) isCryptoApiResponse_CryptoApiResp() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isCryptoApiResponse_CryptoApiResp", reflect.TypeOf((*MockisCryptoApiResponse_CryptoApiResp)(nil).isCryptoApiResponse_CryptoApiResp))
+}
+
+// MarshalTo mocks base method
+func (m *MockisCryptoApiResponse_CryptoApiResp) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisCryptoApiResponse_CryptoApiRespMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisCryptoApiResponse_CryptoApiResp)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisCryptoApiResponse_CryptoApiResp) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisCryptoApiResponse_CryptoApiRespMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisCryptoApiResponse_CryptoApiResp)(nil).Size))
+}
+
 // MockInternalClient is a mock of InternalClient interface
 type MockInternalClient struct {
 	ctrl     *gomock.Controller
@@ -793,6 +1025,168 @@ func (mr *MockInternalClientMockRecorder) WRingSetMeta(ctx, in interface{}, opts
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingSetMeta", reflect.TypeOf((*MockInternalClient)(nil).WRingSetMeta), varargs...)
 }
 
+// GetOpaqueTagAddr mocks base method
+func (m *MockInternalClient) GetOpaqueTagAddr(ctx context.Context, in *GetOpaqueTagAddrRequestMsg, opts ...grpc.CallOption) (*GetOpaqueTagAddrResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetOpaqueTagAddr", varargs...)
+	ret0, _ := ret[0].(*GetOpaqueTagAddrResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOpaqueTagAddr indicates an expected call of GetOpaqueTagAddr
+func (mr *MockInternalClientMockRecorder) GetOpaqueTagAddr(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpaqueTagAddr", reflect.TypeOf((*MockInternalClient)(nil).GetOpaqueTagAddr), varargs...)
+}
+
+// BarcoGetReqDescrEntry mocks base method
+func (m *MockInternalClient) BarcoGetReqDescrEntry(ctx context.Context, in *BarcoGetReqDescrEntryRequestMsg, opts ...grpc.CallOption) (*BarcoGetReqDescrEntryResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "BarcoGetReqDescrEntry", varargs...)
+	ret0, _ := ret[0].(*BarcoGetReqDescrEntryResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BarcoGetReqDescrEntry indicates an expected call of BarcoGetReqDescrEntry
+func (mr *MockInternalClientMockRecorder) BarcoGetReqDescrEntry(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BarcoGetReqDescrEntry", reflect.TypeOf((*MockInternalClient)(nil).BarcoGetReqDescrEntry), varargs...)
+}
+
+// BarcoGetRingMeta mocks base method
+func (m *MockInternalClient) BarcoGetRingMeta(ctx context.Context, in *BarcoGetRingMetaRequestMsg, opts ...grpc.CallOption) (*BarcoGetRingMetaResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "BarcoGetRingMeta", varargs...)
+	ret0, _ := ret[0].(*BarcoGetRingMetaResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BarcoGetRingMeta indicates an expected call of BarcoGetRingMeta
+func (mr *MockInternalClientMockRecorder) BarcoGetRingMeta(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BarcoGetRingMeta", reflect.TypeOf((*MockInternalClient)(nil).BarcoGetRingMeta), varargs...)
+}
+
+// CryptoKeyCreate mocks base method
+func (m *MockInternalClient) CryptoKeyCreate(ctx context.Context, in *CryptoKeyCreateRequestMsg, opts ...grpc.CallOption) (*CryptoKeyCreateResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoKeyCreate", varargs...)
+	ret0, _ := ret[0].(*CryptoKeyCreateResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyCreate indicates an expected call of CryptoKeyCreate
+func (mr *MockInternalClientMockRecorder) CryptoKeyCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyCreate", reflect.TypeOf((*MockInternalClient)(nil).CryptoKeyCreate), varargs...)
+}
+
+// CryptoKeyCreateWithId mocks base method
+func (m *MockInternalClient) CryptoKeyCreateWithId(ctx context.Context, in *CryptoKeyCreateWithIdRequestMsg, opts ...grpc.CallOption) (*CryptoKeyCreateWithIdResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoKeyCreateWithId", varargs...)
+	ret0, _ := ret[0].(*CryptoKeyCreateWithIdResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyCreateWithId indicates an expected call of CryptoKeyCreateWithId
+func (mr *MockInternalClientMockRecorder) CryptoKeyCreateWithId(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyCreateWithId", reflect.TypeOf((*MockInternalClient)(nil).CryptoKeyCreateWithId), varargs...)
+}
+
+// CryptoKeyRead mocks base method
+func (m *MockInternalClient) CryptoKeyRead(ctx context.Context, in *CryptoKeyReadRequestMsg, opts ...grpc.CallOption) (*CryptoKeyReadResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoKeyRead", varargs...)
+	ret0, _ := ret[0].(*CryptoKeyReadResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyRead indicates an expected call of CryptoKeyRead
+func (mr *MockInternalClientMockRecorder) CryptoKeyRead(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyRead", reflect.TypeOf((*MockInternalClient)(nil).CryptoKeyRead), varargs...)
+}
+
+// CryptoKeyUpdate mocks base method
+func (m *MockInternalClient) CryptoKeyUpdate(ctx context.Context, in *CryptoKeyUpdateRequestMsg, opts ...grpc.CallOption) (*CryptoKeyUpdateResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoKeyUpdate", varargs...)
+	ret0, _ := ret[0].(*CryptoKeyUpdateResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyUpdate indicates an expected call of CryptoKeyUpdate
+func (mr *MockInternalClientMockRecorder) CryptoKeyUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyUpdate", reflect.TypeOf((*MockInternalClient)(nil).CryptoKeyUpdate), varargs...)
+}
+
+// CryptoKeyDelete mocks base method
+func (m *MockInternalClient) CryptoKeyDelete(ctx context.Context, in *CryptoKeyDeleteRequestMsg, opts ...grpc.CallOption) (*CryptoKeyDeleteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoKeyDelete", varargs...)
+	ret0, _ := ret[0].(*CryptoKeyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyDelete indicates an expected call of CryptoKeyDelete
+func (mr *MockInternalClientMockRecorder) CryptoKeyDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyDelete", reflect.TypeOf((*MockInternalClient)(nil).CryptoKeyDelete), varargs...)
+}
+
+// CryptoApiInvoke mocks base method
+func (m *MockInternalClient) CryptoApiInvoke(ctx context.Context, in *CryptoApiRequestMsg, opts ...grpc.CallOption) (*CryptoApiResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoApiInvoke", varargs...)
+	ret0, _ := ret[0].(*CryptoApiResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoApiInvoke indicates an expected call of CryptoApiInvoke
+func (mr *MockInternalClientMockRecorder) CryptoApiInvoke(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoApiInvoke", reflect.TypeOf((*MockInternalClient)(nil).CryptoApiInvoke), varargs...)
+}
+
 // MockInternalServer is a mock of InternalServer interface
 type MockInternalServer struct {
 	ctrl     *gomock.Controller
@@ -1152,6 +1546,123 @@ func (m *MockInternalServer) WRingSetMeta(arg0 context.Context, arg1 *WRingReque
 // WRingSetMeta indicates an expected call of WRingSetMeta
 func (mr *MockInternalServerMockRecorder) WRingSetMeta(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WRingSetMeta", reflect.TypeOf((*MockInternalServer)(nil).WRingSetMeta), arg0, arg1)
+}
+
+// GetOpaqueTagAddr mocks base method
+func (m *MockInternalServer) GetOpaqueTagAddr(arg0 context.Context, arg1 *GetOpaqueTagAddrRequestMsg) (*GetOpaqueTagAddrResponseMsg, error) {
+	ret := m.ctrl.Call(m, "GetOpaqueTagAddr", arg0, arg1)
+	ret0, _ := ret[0].(*GetOpaqueTagAddrResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOpaqueTagAddr indicates an expected call of GetOpaqueTagAddr
+func (mr *MockInternalServerMockRecorder) GetOpaqueTagAddr(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOpaqueTagAddr", reflect.TypeOf((*MockInternalServer)(nil).GetOpaqueTagAddr), arg0, arg1)
+}
+
+// BarcoGetReqDescrEntry mocks base method
+func (m *MockInternalServer) BarcoGetReqDescrEntry(arg0 context.Context, arg1 *BarcoGetReqDescrEntryRequestMsg) (*BarcoGetReqDescrEntryResponseMsg, error) {
+	ret := m.ctrl.Call(m, "BarcoGetReqDescrEntry", arg0, arg1)
+	ret0, _ := ret[0].(*BarcoGetReqDescrEntryResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BarcoGetReqDescrEntry indicates an expected call of BarcoGetReqDescrEntry
+func (mr *MockInternalServerMockRecorder) BarcoGetReqDescrEntry(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BarcoGetReqDescrEntry", reflect.TypeOf((*MockInternalServer)(nil).BarcoGetReqDescrEntry), arg0, arg1)
+}
+
+// BarcoGetRingMeta mocks base method
+func (m *MockInternalServer) BarcoGetRingMeta(arg0 context.Context, arg1 *BarcoGetRingMetaRequestMsg) (*BarcoGetRingMetaResponseMsg, error) {
+	ret := m.ctrl.Call(m, "BarcoGetRingMeta", arg0, arg1)
+	ret0, _ := ret[0].(*BarcoGetRingMetaResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BarcoGetRingMeta indicates an expected call of BarcoGetRingMeta
+func (mr *MockInternalServerMockRecorder) BarcoGetRingMeta(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BarcoGetRingMeta", reflect.TypeOf((*MockInternalServer)(nil).BarcoGetRingMeta), arg0, arg1)
+}
+
+// CryptoKeyCreate mocks base method
+func (m *MockInternalServer) CryptoKeyCreate(arg0 context.Context, arg1 *CryptoKeyCreateRequestMsg) (*CryptoKeyCreateResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoKeyCreate", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoKeyCreateResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyCreate indicates an expected call of CryptoKeyCreate
+func (mr *MockInternalServerMockRecorder) CryptoKeyCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyCreate", reflect.TypeOf((*MockInternalServer)(nil).CryptoKeyCreate), arg0, arg1)
+}
+
+// CryptoKeyCreateWithId mocks base method
+func (m *MockInternalServer) CryptoKeyCreateWithId(arg0 context.Context, arg1 *CryptoKeyCreateWithIdRequestMsg) (*CryptoKeyCreateWithIdResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoKeyCreateWithId", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoKeyCreateWithIdResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyCreateWithId indicates an expected call of CryptoKeyCreateWithId
+func (mr *MockInternalServerMockRecorder) CryptoKeyCreateWithId(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyCreateWithId", reflect.TypeOf((*MockInternalServer)(nil).CryptoKeyCreateWithId), arg0, arg1)
+}
+
+// CryptoKeyRead mocks base method
+func (m *MockInternalServer) CryptoKeyRead(arg0 context.Context, arg1 *CryptoKeyReadRequestMsg) (*CryptoKeyReadResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoKeyRead", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoKeyReadResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyRead indicates an expected call of CryptoKeyRead
+func (mr *MockInternalServerMockRecorder) CryptoKeyRead(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyRead", reflect.TypeOf((*MockInternalServer)(nil).CryptoKeyRead), arg0, arg1)
+}
+
+// CryptoKeyUpdate mocks base method
+func (m *MockInternalServer) CryptoKeyUpdate(arg0 context.Context, arg1 *CryptoKeyUpdateRequestMsg) (*CryptoKeyUpdateResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoKeyUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoKeyUpdateResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyUpdate indicates an expected call of CryptoKeyUpdate
+func (mr *MockInternalServerMockRecorder) CryptoKeyUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyUpdate", reflect.TypeOf((*MockInternalServer)(nil).CryptoKeyUpdate), arg0, arg1)
+}
+
+// CryptoKeyDelete mocks base method
+func (m *MockInternalServer) CryptoKeyDelete(arg0 context.Context, arg1 *CryptoKeyDeleteRequestMsg) (*CryptoKeyDeleteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoKeyDelete", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoKeyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyDelete indicates an expected call of CryptoKeyDelete
+func (mr *MockInternalServerMockRecorder) CryptoKeyDelete(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyDelete", reflect.TypeOf((*MockInternalServer)(nil).CryptoKeyDelete), arg0, arg1)
+}
+
+// CryptoApiInvoke mocks base method
+func (m *MockInternalServer) CryptoApiInvoke(arg0 context.Context, arg1 *CryptoApiRequestMsg) (*CryptoApiResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoApiInvoke", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoApiResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoApiInvoke indicates an expected call of CryptoApiInvoke
+func (mr *MockInternalServerMockRecorder) CryptoApiInvoke(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoApiInvoke", reflect.TypeOf((*MockInternalServer)(nil).CryptoApiInvoke), arg0, arg1)
 }
 
 // MockSoftwarePhvClient is a mock of SoftwarePhvClient interface

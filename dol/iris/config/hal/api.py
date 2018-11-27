@@ -27,8 +27,7 @@ import acl_pb2              as acl_pb2
 import qos_pb2              as qos_pb2
 import proxy_pb2            as proxy_pb2
 import l4lb_pb2             as l4lb_pb2
-import crypto_keys_pb2      as crypto_keys_pb2
-import crypto_apis_pb2      as crypto_apis_pb2
+import internal_pb2      as crypto_apis_pb2
 import rdma_pb2             as rdma_pb2
 import cpucb_pb2            as cpucb_pb2
 import rawrcb_pb2           as rawrcb_pb2
@@ -36,7 +35,6 @@ import rawccb_pb2           as rawccb_pb2
 import proxyrcb_pb2         as proxyrcb_pb2
 import proxyccb_pb2         as proxyccb_pb2
 import multicast_pb2        as multicast_pb2
-import barco_rings_pb2      as barco_rings_pb2
 import system_pb2           as system_pb2
 import gft_pb2              as gft_pb2
 import dos_pb2              as dos_pb2
@@ -648,35 +646,35 @@ def ConfigureL4LbServices(objlist):
 
 def GetCryptoAsymKey(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = crypto_apis_pb2.CryptoApisStub(HalChannel)
-    __config(objlist, crypto_apis_pb2.CryptoApiRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.CryptoApiRequestMsg,
              stub.CryptoApiInvoke)
     return
 
 def GetCryptoCert(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = crypto_apis_pb2.CryptoApisStub(HalChannel)
-    __config(objlist, crypto_apis_pb2.CryptoApiRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.CryptoApiRequestMsg,
              stub.CryptoApiInvoke)
     return
 
 def UpdateCryptoCerts(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = crypto_apis_pb2.CryptoApisStub(HalChannel)
-    __config(objlist, crypto_apis_pb2.CryptoApiRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.CryptoApiRequestMsg,
              stub.CryptoApiInvoke)
 
 def GetCryptoKey(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = crypto_keys_pb2.CryptoKeyStub(HalChannel)
-    __config(objlist, crypto_keys_pb2.CryptoKeyCreateRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.CryptoKeyCreateRequestMsg,
              stub.CryptoKeyCreate)
     return
 
 def UpdateCryptoKeys(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = crypto_keys_pb2.CryptoKeyStub(HalChannel)
-    __config(objlist, crypto_keys_pb2.CryptoKeyUpdateRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.CryptoKeyUpdateRequestMsg,
              stub.CryptoKeyUpdate)
     return
 
@@ -765,15 +763,15 @@ def ConfigureMulticastGroups(objlist, update = False):
 
 def GetBarcoRingEntries(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = barco_rings_pb2.BarcoRingsStub(HalChannel)
-    __config(objlist, barco_rings_pb2.BarcoGetReqDescrEntryRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.BarcoGetReqDescrEntryRequestMsg,
              stub.BarcoGetReqDescrEntry)
     return
 
 def GetBarcoRingMeta(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = barco_rings_pb2.BarcoRingsStub(HalChannel)
-    __get(objlist, barco_rings_pb2.BarcoGetRingMetaRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __get(objlist, internal_pb2.BarcoGetRingMetaRequestMsg,
              stub.BarcoGetRingMeta)
     return
 

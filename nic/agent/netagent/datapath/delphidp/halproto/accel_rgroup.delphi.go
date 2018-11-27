@@ -7,10 +7,7 @@ Package halproto is a generated protocol buffer package.
 It is generated from these files:
 	accel_rgroup.proto
 	acl.proto
-	barco_rings.proto
 	cpucb.proto
-	crypto_apis.proto
-	crypto_keys.proto
 	debug.proto
 	descriptor_aol.proto
 	dos.proto
@@ -118,20 +115,6 @@ It has these top-level messages:
 	AclStats
 	AclGetResponse
 	AclGetResponseMsg
-	GetOpaqueTagAddrRequest
-	GetOpaqueTagAddrRequestMsg
-	GetOpaqueTagAddrResponse
-	GetOpaqueTagAddrResponseMsg
-	BarcoGetReqDescrEntryRequest
-	BarcoGetReqDescrEntryRequestMsg
-	BarcoSymmReqDescrMsg
-	BarcoASymReqDescrMsg
-	BarcoGetReqDescrEntryResponse
-	BarcoGetReqDescrEntryResponseMsg
-	BarcoGetRingMetaRequest
-	BarcoGetRingMetaRequestMsg
-	BarcoGetRingMetaResponse
-	BarcoGetRingMetaResponseMsg
 	CpuCbKeyHandle
 	CpuCbSpec
 	CpuCbRequestMsg
@@ -147,56 +130,6 @@ It has these top-level messages:
 	CpuCbStats
 	CpuCbGetResponse
 	CpuCbGetResponseMsg
-	ECCPoint
-	CryptoAsymApiECCDomainParamsFp
-	CryptoAsymApiReqECCPointMulFp
-	CryptoAsymApiRespECCPointMulFp
-	CryptoAsymApiReqECDSASignatureGenFp
-	CryptoAsymApiRespECDSASignatureGenFp
-	CryptoAsymApiReqECDSASignatureVerifyFp
-	CryptoAsymApiReqRSAEncrypt
-	CryptoAsymApiRespRSAEncrypt
-	CryptoAsymApiReqRSADecrypt
-	CryptoAsymApiRespRSADecrypt
-	CryptoAsymApiReqRSACRTDecrypt
-	CryptoAsymApiRespRSACRTDecrypt
-	CryptoAsymApiReqSetupPrivateKey
-	CryptoAsymApiRespECDSAKeyInfo
-	CryptoAsymApiRespRSAKeyInfo
-	CryptoAsymApiRespSetupPrivateKey
-	CryptoAsymApiReqSetupCert
-	CryptoAsymApiRespSetupCert
-	CryptoAsymApiReqRSASignatureGen
-	CryptoAsymApiRespRSASignatureGen
-	CryptoAsymApiReqRSASignatureVerify
-	CryptoSymmApiReqHashGenerate
-	CryptoSymmApiRespHashGenerate
-	CryptoSymmApiReqHashVerify
-	CryptoApiRequest
-	CryptoApiResponse
-	CryptoApiRequestMsg
-	CryptoApiResponseMsg
-	CryptoKeyCreateRequest
-	CryptoKeyCreateRequestMsg
-	CryptoKeyCreateResponse
-	CryptoKeyCreateResponseMsg
-	CryptoKeyCreateWithIdRequest
-	CryptoKeyCreateWithIdRequestMsg
-	CryptoKeyCreateWithIdResponse
-	CryptoKeyCreateWithIdResponseMsg
-	CryptoKeySpec
-	CryptoKeyReadRequest
-	CryptoKeyReadRequestMsg
-	CryptoKeyReadResponse
-	CryptoKeyReadResponseMsg
-	CryptoKeyUpdateRequest
-	CryptoKeyUpdateRequestMsg
-	CryptoKeyUpdateResponse
-	CryptoKeyUpdateResponseMsg
-	CryptoKeyDeleteRequest
-	CryptoKeyDeleteRequestMsg
-	CryptoKeyDeleteResponse
-	CryptoKeyDeleteResponseMsg
 	FteSpanRequest
 	FteSpanRequestMsg
 	FteSpanResponse
@@ -556,6 +489,70 @@ It has these top-level messages:
 	WRingGetMetaResponseMsg
 	WRingSetMetaResponse
 	WRingSetMetaResponseMsg
+	GetOpaqueTagAddrRequest
+	GetOpaqueTagAddrRequestMsg
+	GetOpaqueTagAddrResponse
+	GetOpaqueTagAddrResponseMsg
+	BarcoGetReqDescrEntryRequest
+	BarcoGetReqDescrEntryRequestMsg
+	BarcoSymmReqDescrMsg
+	BarcoASymReqDescrMsg
+	BarcoGetReqDescrEntryResponse
+	BarcoGetReqDescrEntryResponseMsg
+	BarcoGetRingMetaRequest
+	BarcoGetRingMetaRequestMsg
+	BarcoGetRingMetaResponse
+	BarcoGetRingMetaResponseMsg
+	CryptoKeyCreateRequest
+	CryptoKeyCreateRequestMsg
+	CryptoKeyCreateResponse
+	CryptoKeyCreateResponseMsg
+	CryptoKeyCreateWithIdRequest
+	CryptoKeyCreateWithIdRequestMsg
+	CryptoKeyCreateWithIdResponse
+	CryptoKeyCreateWithIdResponseMsg
+	CryptoKeySpec
+	CryptoKeyReadRequest
+	CryptoKeyReadRequestMsg
+	CryptoKeyReadResponse
+	CryptoKeyReadResponseMsg
+	CryptoKeyUpdateRequest
+	CryptoKeyUpdateRequestMsg
+	CryptoKeyUpdateResponse
+	CryptoKeyUpdateResponseMsg
+	CryptoKeyDeleteRequest
+	CryptoKeyDeleteRequestMsg
+	CryptoKeyDeleteResponse
+	CryptoKeyDeleteResponseMsg
+	ECCPoint
+	CryptoAsymApiECCDomainParamsFp
+	CryptoAsymApiReqECCPointMulFp
+	CryptoAsymApiRespECCPointMulFp
+	CryptoAsymApiReqECDSASignatureGenFp
+	CryptoAsymApiRespECDSASignatureGenFp
+	CryptoAsymApiReqECDSASignatureVerifyFp
+	CryptoAsymApiReqRSAEncrypt
+	CryptoAsymApiRespRSAEncrypt
+	CryptoAsymApiReqRSADecrypt
+	CryptoAsymApiRespRSADecrypt
+	CryptoAsymApiReqRSACRTDecrypt
+	CryptoAsymApiRespRSACRTDecrypt
+	CryptoAsymApiReqSetupPrivateKey
+	CryptoAsymApiRespECDSAKeyInfo
+	CryptoAsymApiRespRSAKeyInfo
+	CryptoAsymApiRespSetupPrivateKey
+	CryptoAsymApiReqSetupCert
+	CryptoAsymApiRespSetupCert
+	CryptoAsymApiReqRSASignatureGen
+	CryptoAsymApiRespRSASignatureGen
+	CryptoAsymApiReqRSASignatureVerify
+	CryptoSymmApiReqHashGenerate
+	CryptoSymmApiRespHashGenerate
+	CryptoSymmApiReqHashVerify
+	CryptoApiRequest
+	CryptoApiResponse
+	CryptoApiRequestMsg
+	CryptoApiResponseMsg
 	Key
 	IpsecSAEncrypt
 	IpsecSADecrypt

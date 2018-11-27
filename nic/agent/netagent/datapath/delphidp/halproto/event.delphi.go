@@ -35,7 +35,7 @@ var EventId_value = map[string]int32{
 func (x EventId) String() string {
 	return proto.EnumName(EventId_name, int32(x))
 }
-func (EventId) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{0} }
+func (EventId) EnumDescriptor() ([]byte, []int) { return fileDescriptor8, []int{0} }
 
 type EventOp int32
 
@@ -59,7 +59,7 @@ var EventOp_value = map[string]int32{
 func (x EventOp) String() string {
 	return proto.EnumName(EventOp_name, int32(x))
 }
-func (EventOp) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{1} }
+func (EventOp) EnumDescriptor() ([]byte, []int) { return fileDescriptor8, []int{1} }
 
 // EventSpec captures the event of interest to the app
 type EventRequest struct {
@@ -70,7 +70,7 @@ type EventRequest struct {
 func (m *EventRequest) Reset()                    { *m = EventRequest{} }
 func (m *EventRequest) String() string            { return proto.CompactTextString(m) }
 func (*EventRequest) ProtoMessage()               {}
-func (*EventRequest) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{0} }
+func (*EventRequest) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{0} }
 
 func (m *EventRequest) GetEventId() EventId {
 	if m != nil {
@@ -94,7 +94,7 @@ type EndpointEvent struct {
 func (m *EndpointEvent) Reset()                    { *m = EndpointEvent{} }
 func (m *EndpointEvent) String() string            { return proto.CompactTextString(m) }
 func (*EndpointEvent) ProtoMessage()               {}
-func (*EndpointEvent) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{1} }
+func (*EndpointEvent) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{1} }
 
 func (m *EndpointEvent) GetL2SegmentHandle() uint64 {
 	if m != nil {
@@ -121,7 +121,7 @@ type EventResponse struct {
 func (m *EventResponse) Reset()                    { *m = EventResponse{} }
 func (m *EventResponse) String() string            { return proto.CompactTextString(m) }
 func (*EventResponse) ProtoMessage()               {}
-func (*EventResponse) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{2} }
+func (*EventResponse) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{2} }
 
 type isEventResponse_EventInfo interface{ isEventResponse_EventInfo() }
 
@@ -222,9 +222,9 @@ func init() {
 	proto.RegisterEnum("halproto.EventOp", EventOp_name, EventOp_value)
 }
 
-func init() { proto.RegisterFile("event.proto", fileDescriptor11) }
+func init() { proto.RegisterFile("event.proto", fileDescriptor8) }
 
-var fileDescriptor11 = []byte{
+var fileDescriptor8 = []byte{
 	// 394 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0xdf, 0xaf, 0xd2, 0x30,
 	0x1c, 0xc5, 0xe9, 0xf4, 0x5e, 0xf0, 0xbb, 0x0b, 0x77, 0x54, 0x34, 0x0b, 0x2f, 0x92, 0x3d, 0x21,

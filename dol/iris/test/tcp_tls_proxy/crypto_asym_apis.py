@@ -12,7 +12,7 @@ from infra.common.glopts        import GlobalOptions
 import infra.config.base        as base
 import iris.config.hal.defs          as haldefs
 import iris.config.hal.api           as halapi
-import crypto_apis_pb2          as crypto_apis_pb2
+import internal_pb2          as internal_pb2
 
 '''
     ECC Tests
@@ -57,11 +57,11 @@ n = \
 
 def ecc_point_mul_p256(p, n, a, b, gx, gy, k):
 
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
-    req_spec.api_type = crypto_apis_pb2.ASYMAPI_ECC_POINT_MUL_FP
+    req_spec.api_type = internal_pb2.ASYMAPI_ECC_POINT_MUL_FP
     req_spec.ecc_point_mul_fp.ecc_domain_params.KeySize = 32
     req_spec.ecc_point_mul_fp.ecc_domain_params.p = p
     req_spec.ecc_point_mul_fp.ecc_domain_params.a = a
@@ -134,11 +134,11 @@ def ecc_point_mul_p256_test():
 # ECDSA Signature Generate test
 
 def ecdsa_p256_sig_gen(key_idx, p, n, a, b, gx, gy, da, k, h):
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
-    req_spec.api_type = crypto_apis_pb2.ASYMAPI_ECDSA_SIG_GEN_FP
+    req_spec.api_type = internal_pb2.ASYMAPI_ECDSA_SIG_GEN_FP
     req_spec.ecdsa_sig_gen_fp.key_idx = key_idx
     req_spec.ecdsa_sig_gen_fp.ecc_domain_params.KeySize = 32
     req_spec.ecdsa_sig_gen_fp.ecc_domain_params.p = p
@@ -199,11 +199,11 @@ def ecdsa_p256_sig_gen_test():
 
 # ECDSA Signature Verify test
 def ecdsa_p256_sig_verify(p, n, a, b, gx, gy, qx, qy, r, s, h):
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
-    req_spec.api_type = crypto_apis_pb2.ASYMAPI_ECDSA_SIG_VERIFY_FP
+    req_spec.api_type = internal_pb2.ASYMAPI_ECDSA_SIG_VERIFY_FP
     req_spec.ecdsa_sig_verify_fp.ecc_domain_params.KeySize = 32
     req_spec.ecdsa_sig_verify_fp.ecc_domain_params.p = p
     req_spec.ecdsa_sig_verify_fp.ecc_domain_params.a = a
@@ -654,11 +654,11 @@ rsa_sig = \
 
 # RSA 2K Encrypt
 def rsa2k_encrypt(mod_n, e, plain_text):
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
-    req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_ENCRYPT
+    req_spec.api_type = internal_pb2.ASYMAPI_RSA_ENCRYPT
     req_spec.rsa_encrypt.KeySize = 256
     req_spec.rsa_encrypt.mod_n = mod_n
     req_spec.rsa_encrypt.e = e
@@ -703,11 +703,11 @@ def rsa2k_encrypt_test():
 
 # RSA 2K Decrypt
 def rsa2k_decrypt(mod_n, d, cipher_text):
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
-    req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_DECRYPT
+    req_spec.api_type = internal_pb2.ASYMAPI_RSA_DECRYPT
     req_spec.rsa_decrypt.KeySize = 256
     req_spec.rsa_decrypt.mod_n = mod_n
     req_spec.rsa_decrypt.d = d
@@ -751,11 +751,11 @@ def rsa2k_decrypt_test():
 
 # RSA 2K CRT Decrypt
 def rsa2k_crt_decrypt(key_idx, rsa_p, rsa_q, rsa_dp, rsa_dq, rsa_qinv, cipher_text):
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
-    req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_CRT_DECRYPT
+    req_spec.api_type = internal_pb2.ASYMAPI_RSA_CRT_DECRYPT
     req_spec.rsa_crt_decrypt.KeySize = 256
     req_spec.rsa_crt_decrypt.key_idx = key_idx
     req_spec.rsa_crt_decrypt.p = rsa_p
@@ -808,11 +808,11 @@ def rsa2k_crt_decrypt_test():
 
 # RSA 2K Signature Generation
 def rsa2k_sig_gen(key_idx, mod_n, d, h):
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
-    req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_SIG_GEN
+    req_spec.api_type = internal_pb2.ASYMAPI_RSA_SIG_GEN
     req_spec.rsa_sig_gen.key_idx = key_idx
     req_spec.rsa_sig_gen.KeySize = 256
     req_spec.rsa_sig_gen.mod_n = mod_n
@@ -856,11 +856,11 @@ def rsa2k_sig_gen_test():
 
 # RSA 2K Signature Verification
 def rsa2k_sig_verify(mod_n, e, h, s):
-    stub = crypto_apis_pb2.CryptoApisStub(halapi.HalChannel)
-    req_msg = crypto_apis_pb2.CryptoApiRequestMsg()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.CryptoApiRequestMsg()
     req_spec = req_msg.request.add()
 
-    req_spec.api_type = crypto_apis_pb2.ASYMAPI_RSA_SIG_VERIFY
+    req_spec.api_type = internal_pb2.ASYMAPI_RSA_SIG_VERIFY
     req_spec.rsa_sig_verify.KeySize = 256
     req_spec.rsa_sig_verify.mod_n = mod_n
     req_spec.rsa_sig_verify.e = e
