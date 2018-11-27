@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
-#include "nic/hal/apollo/api/mem.hpp"
+#include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/api/vcn.hpp"
 
 namespace api {
@@ -27,22 +27,22 @@ vcn_state g_vcn_state;
  */
 vcn_state::vcn_state() {
     // TODO: need to tune multi-threading related params later
-    ht_ = ht::factory(OCI_MAX_VCN >> 1,
-                      vcn_key_func_get,
-                      vcn_hash_func_compute,
-                      vcn_key_func_compare);
-    idxr_ = indexer::factory(OCI_MAX_VCN);
-    slab_ = slab::factory("vcn", OCI_SLAB_VCN, sizeof(vcn_t), 16,
-                          true, true, true, NULL);
+    vcn_ht_ = ht::factory(OCI_MAX_VCN >> 1,
+                          vcn_key_func_get,
+                          vcn_hash_func_compute,
+                          vcn_key_func_compare);
+    vcn_idxr_ = indexer::factory(OCI_MAX_VCN);
+    vcn_slab_ = slab::factory("vcn", OCI_SLAB_VCN, sizeof(vcn_t),
+                              16, true, true, NULL);
 }
 
 /**
  * destructor
  */
 vcn_state::~vcn_state() {
-    ht::destroy(ht_);
-    indexer::destroy(idxr_);
-    slab::destroy(slab_);
+    ht::destroy(vcn_ht_);
+    indexer::destroy(vcn_idxr_);
+    slab::destroy(vcn_slab_);
 }
 
 /**
@@ -86,8 +86,8 @@ vcn_state::vcn_delete(_In_ oci_vcn_key_t *vcn_key) {
  */
 sdk_ret_t
 vcn_state::vcn_add_to_db(vcn_t *vcn) {
-    return ht_->insert_with_key(&vcn->key, vcn,
-                                &vcn->ht_ctxt);
+    return vcn_ht_->insert_with_key(&vcn->key, vcn,
+                                    &vcn->ht_ctxt);
 }
 
 /**
@@ -97,7 +97,7 @@ vcn_state::vcn_add_to_db(vcn_t *vcn) {
  */
 vcn_t *
 vcn_state::vcn_del_from_db(oci_vcn_key_t *vcn_key) {
-    return (vcn_t *)(ht_->remove(vcn_key));
+    return (vcn_t *)(vcn_ht_->remove(vcn_key));
 }
 
 /**
@@ -107,7 +107,7 @@ vcn_state::vcn_del_from_db(oci_vcn_key_t *vcn_key) {
  */
 vcn_t *
 vcn_state::vcn_find(oci_vcn_key_t *vcn_key) const {
-    return (vcn_t *)(ht_->lookup(vcn_key));
+    return (vcn_t *)(vcn_ht_->lookup(vcn_key));
 }
 
 /**
@@ -117,7 +117,7 @@ vcn_state::vcn_find(oci_vcn_key_t *vcn_key) const {
  */
 vcn_t *
 vcn_state::vcn_alloc(void) {
-    return ((vcn_t *)slab_->alloc());
+    return ((vcn_t *)vcn_slab_->alloc());
 }
 
 /**
@@ -131,7 +131,8 @@ vcn_state::vcn_init(vcn_t *vcn, oci_vcn_t *oci_vcn) {
     //SDK_SPINLOCK_INIT(&vcn->slock, PTHREAD_PROCESS_SHARED);
     memcpy(&vcn->key, &oci_vcn->key, sizeof(oci_vcn_key_t));
     vcn->ht_ctxt.reset();
-    if (idxr_->alloc((uint32_t *)&vcn->hw_id) != sdk::lib::indexer::SUCCESS) {
+    if (vcn_idxr_->alloc((uint32_t *)&vcn->hw_id) !=
+            sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
     return sdk::SDK_RET_OK;
@@ -163,7 +164,7 @@ void
 vcn_state::vcn_cleanup(vcn_t *vcn) {
     // TODO: fix me
     //SDK_SPINLOCK_DESTROY(&vcn->slock);
-    idxr_->free(vcn->hw_id);
+    vcn_idxr_->free(vcn->hw_id);
 }
 
 /**

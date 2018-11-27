@@ -15,6 +15,10 @@
  * @{
  */
 
+// TODO: there is a case where epoch can rollover and new epoch is actually
+//       less than old epoch, how does datapath handle this ? In s/w if we
+//       detect this, we can set old epoch to OCI_INVALID_EPOCH in all table
+//       entries we are touching
 typedef struct oci_batch_params_s {
     oci_epoch_t    epoch;    /**< epoch value for this batch
                                   NOTE: OCI_EPOCH_INVALID is reserved */

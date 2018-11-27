@@ -29,7 +29,10 @@ typedef struct oci_int_subnet_s {
     ht_ctxt_t           ht_ctxt;    /**< Hash table context */
 
     /**< P4 datapath specific state */
-    uint32_t hw_id;                 /**< Internal ID */
+    uint32_t     hw_id;             /**< Internal ID */
+    mem_addr_t   lpm_base_addr;     /**< LPM base address for current epoch */
+    mem_addr_t   policy_base_addr;  /**< security policy rules base address for
+                                         current epoch */
 } __PACK__ oci_int_subnet_t;
 
 /** * @} */ // end of OCI_INT_SUBNET

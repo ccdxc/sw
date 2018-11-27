@@ -6,9 +6,10 @@
  * @brief   This file contains generic memory handling for OCI
  */
 
-#include "nic/hal/apollo/api/mem.hpp"
-#include "nic/hal/apollo/api/trace.hpp"
 #include "nic/sdk/lib/periodic/periodic.hpp"
+#include "nic/hal/apollo/core/mem.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
+#include "nic/hal/apollo/api/vcn.hpp"
 
 namespace api {
 
@@ -24,7 +25,7 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 {
     switch (slab_id) {
     case OCI_SLAB_VCN:
-        g_vcn_state->slab()->free(elem);
+        g_vcn_state.vcn_slab()->free(elem);
         break;
 
     default:

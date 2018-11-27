@@ -23,15 +23,6 @@ enum {
 #define OCI_DELAY_DELETE_MSECS       (TIME_MSECS_PER_SEC << 1)
 
 /**
- * @brief callback invoked by the timerwheel to release an object to its slab
- *
- * @param[in]    timer      timer context
- * @param[in]    slab_id    identifier of the slab to free the element to
- * @param[in]    elem       element to free to the given slab
- */
-void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
-
-/**
  * @brief wrapper function to delay delete slab elements
  *
  * @param[in]     slab_id    identifier of the slab to free the element to

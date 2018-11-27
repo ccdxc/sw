@@ -41,6 +41,8 @@ typedef struct oci_vnic_key_s {
  * @brief VNIC
  */
 typedef struct oci_vnic_s {
+    // TODO: kalyan, why are these not oci_vcn_key_t and
+    // oci_subnet_key_t ???
     oci_vcn_id_t       vcn_id;                   /**< VCN ID */
     oci_subnet_id_t    subnet_id;                /**< Subnet ID */
     oci_vnic_key_t     key;                      /**< VNIC Key */

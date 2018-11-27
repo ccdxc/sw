@@ -70,6 +70,11 @@ public:
      */
     sdk_ret_t vcn_delete(_In_ oci_vcn_key_t *vcn_key);
 
+    /**
+     * @brief   return vcn slab
+     */
+    slab *vcn_slab(void) const { return vcn_slab_; }
+
 private:
     /**
      * @brief Add VCN to database
@@ -163,9 +168,9 @@ private:
     }
 
 private:
-    ht      *ht_;      /**< Hash table root */
-    indexer *idxr_;    /**< Indexer to allocate hw VCN id */
-    slab    *slab_;    /**< slab for allocating VCN state */
+    ht      *vcn_ht_;      /**< Hash table root */
+    indexer *vcn_idxr_;    /**< Indexer to allocate hw VCN id */
+    slab    *vcn_slab_;    /**< slab for allocating VCN state */
 };
 extern vcn_state g_vcn_state;
 
