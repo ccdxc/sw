@@ -18,7 +18,7 @@ type CryptoKeyCreateRequest struct {
 func (m *CryptoKeyCreateRequest) Reset()                    { *m = CryptoKeyCreateRequest{} }
 func (m *CryptoKeyCreateRequest) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyCreateRequest) ProtoMessage()               {}
-func (*CryptoKeyCreateRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{0} }
+func (*CryptoKeyCreateRequest) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0} }
 
 type CryptoKeyCreateRequestMsg struct {
 	Request []*CryptoKeyCreateRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
@@ -27,7 +27,7 @@ type CryptoKeyCreateRequestMsg struct {
 func (m *CryptoKeyCreateRequestMsg) Reset()                    { *m = CryptoKeyCreateRequestMsg{} }
 func (m *CryptoKeyCreateRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyCreateRequestMsg) ProtoMessage()               {}
-func (*CryptoKeyCreateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{1} }
+func (*CryptoKeyCreateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{1} }
 
 func (m *CryptoKeyCreateRequestMsg) GetRequest() []*CryptoKeyCreateRequest {
 	if m != nil {
@@ -44,7 +44,7 @@ type CryptoKeyCreateResponse struct {
 func (m *CryptoKeyCreateResponse) Reset()                    { *m = CryptoKeyCreateResponse{} }
 func (m *CryptoKeyCreateResponse) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyCreateResponse) ProtoMessage()               {}
-func (*CryptoKeyCreateResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{2} }
+func (*CryptoKeyCreateResponse) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{2} }
 
 func (m *CryptoKeyCreateResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -67,7 +67,7 @@ type CryptoKeyCreateResponseMsg struct {
 func (m *CryptoKeyCreateResponseMsg) Reset()                    { *m = CryptoKeyCreateResponseMsg{} }
 func (m *CryptoKeyCreateResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyCreateResponseMsg) ProtoMessage()               {}
-func (*CryptoKeyCreateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{3} }
+func (*CryptoKeyCreateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{3} }
 
 func (m *CryptoKeyCreateResponseMsg) GetResponse() []*CryptoKeyCreateResponse {
 	if m != nil {
@@ -84,7 +84,7 @@ type CryptoKeyCreateWithIdRequest struct {
 func (m *CryptoKeyCreateWithIdRequest) Reset()                    { *m = CryptoKeyCreateWithIdRequest{} }
 func (m *CryptoKeyCreateWithIdRequest) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyCreateWithIdRequest) ProtoMessage()               {}
-func (*CryptoKeyCreateWithIdRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{4} }
+func (*CryptoKeyCreateWithIdRequest) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{4} }
 
 func (m *CryptoKeyCreateWithIdRequest) GetKeyindex() uint32 {
 	if m != nil {
@@ -104,12 +104,10 @@ type CryptoKeyCreateWithIdRequestMsg struct {
 	Request []*CryptoKeyCreateWithIdRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
 }
 
-func (m *CryptoKeyCreateWithIdRequestMsg) Reset()         { *m = CryptoKeyCreateWithIdRequestMsg{} }
-func (m *CryptoKeyCreateWithIdRequestMsg) String() string { return proto.CompactTextString(m) }
-func (*CryptoKeyCreateWithIdRequestMsg) ProtoMessage()    {}
-func (*CryptoKeyCreateWithIdRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor19, []int{5}
-}
+func (m *CryptoKeyCreateWithIdRequestMsg) Reset()                    { *m = CryptoKeyCreateWithIdRequestMsg{} }
+func (m *CryptoKeyCreateWithIdRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*CryptoKeyCreateWithIdRequestMsg) ProtoMessage()               {}
+func (*CryptoKeyCreateWithIdRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{5} }
 
 func (m *CryptoKeyCreateWithIdRequestMsg) GetRequest() []*CryptoKeyCreateWithIdRequest {
 	if m != nil {
@@ -126,7 +124,7 @@ type CryptoKeyCreateWithIdResponse struct {
 func (m *CryptoKeyCreateWithIdResponse) Reset()                    { *m = CryptoKeyCreateWithIdResponse{} }
 func (m *CryptoKeyCreateWithIdResponse) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyCreateWithIdResponse) ProtoMessage()               {}
-func (*CryptoKeyCreateWithIdResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{6} }
+func (*CryptoKeyCreateWithIdResponse) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{6} }
 
 func (m *CryptoKeyCreateWithIdResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -150,7 +148,7 @@ func (m *CryptoKeyCreateWithIdResponseMsg) Reset()         { *m = CryptoKeyCreat
 func (m *CryptoKeyCreateWithIdResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyCreateWithIdResponseMsg) ProtoMessage()    {}
 func (*CryptoKeyCreateWithIdResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor19, []int{7}
+	return fileDescriptor5, []int{7}
 }
 
 func (m *CryptoKeyCreateWithIdResponseMsg) GetResponse() []*CryptoKeyCreateWithIdResponse {
@@ -170,7 +168,7 @@ type CryptoKeySpec struct {
 func (m *CryptoKeySpec) Reset()                    { *m = CryptoKeySpec{} }
 func (m *CryptoKeySpec) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeySpec) ProtoMessage()               {}
-func (*CryptoKeySpec) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{8} }
+func (*CryptoKeySpec) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{8} }
 
 func (m *CryptoKeySpec) GetKeyindex() uint32 {
 	if m != nil {
@@ -207,7 +205,7 @@ type CryptoKeyReadRequest struct {
 func (m *CryptoKeyReadRequest) Reset()                    { *m = CryptoKeyReadRequest{} }
 func (m *CryptoKeyReadRequest) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyReadRequest) ProtoMessage()               {}
-func (*CryptoKeyReadRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{9} }
+func (*CryptoKeyReadRequest) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{9} }
 
 func (m *CryptoKeyReadRequest) GetKeyindex() uint32 {
 	if m != nil {
@@ -223,7 +221,7 @@ type CryptoKeyReadRequestMsg struct {
 func (m *CryptoKeyReadRequestMsg) Reset()                    { *m = CryptoKeyReadRequestMsg{} }
 func (m *CryptoKeyReadRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyReadRequestMsg) ProtoMessage()               {}
-func (*CryptoKeyReadRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{10} }
+func (*CryptoKeyReadRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{10} }
 
 func (m *CryptoKeyReadRequestMsg) GetRequest() []*CryptoKeyReadRequest {
 	if m != nil {
@@ -240,7 +238,7 @@ type CryptoKeyReadResponse struct {
 func (m *CryptoKeyReadResponse) Reset()                    { *m = CryptoKeyReadResponse{} }
 func (m *CryptoKeyReadResponse) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyReadResponse) ProtoMessage()               {}
-func (*CryptoKeyReadResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{11} }
+func (*CryptoKeyReadResponse) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{11} }
 
 func (m *CryptoKeyReadResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -263,7 +261,7 @@ type CryptoKeyReadResponseMsg struct {
 func (m *CryptoKeyReadResponseMsg) Reset()                    { *m = CryptoKeyReadResponseMsg{} }
 func (m *CryptoKeyReadResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyReadResponseMsg) ProtoMessage()               {}
-func (*CryptoKeyReadResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{12} }
+func (*CryptoKeyReadResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{12} }
 
 func (m *CryptoKeyReadResponseMsg) GetResponse() []*CryptoKeyReadResponse {
 	if m != nil {
@@ -279,7 +277,7 @@ type CryptoKeyUpdateRequest struct {
 func (m *CryptoKeyUpdateRequest) Reset()                    { *m = CryptoKeyUpdateRequest{} }
 func (m *CryptoKeyUpdateRequest) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyUpdateRequest) ProtoMessage()               {}
-func (*CryptoKeyUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{13} }
+func (*CryptoKeyUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{13} }
 
 func (m *CryptoKeyUpdateRequest) GetKey() *CryptoKeySpec {
 	if m != nil {
@@ -295,7 +293,7 @@ type CryptoKeyUpdateRequestMsg struct {
 func (m *CryptoKeyUpdateRequestMsg) Reset()                    { *m = CryptoKeyUpdateRequestMsg{} }
 func (m *CryptoKeyUpdateRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyUpdateRequestMsg) ProtoMessage()               {}
-func (*CryptoKeyUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{14} }
+func (*CryptoKeyUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{14} }
 
 func (m *CryptoKeyUpdateRequestMsg) GetRequest() []*CryptoKeyUpdateRequest {
 	if m != nil {
@@ -312,7 +310,7 @@ type CryptoKeyUpdateResponse struct {
 func (m *CryptoKeyUpdateResponse) Reset()                    { *m = CryptoKeyUpdateResponse{} }
 func (m *CryptoKeyUpdateResponse) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyUpdateResponse) ProtoMessage()               {}
-func (*CryptoKeyUpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{15} }
+func (*CryptoKeyUpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{15} }
 
 func (m *CryptoKeyUpdateResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -335,7 +333,7 @@ type CryptoKeyUpdateResponseMsg struct {
 func (m *CryptoKeyUpdateResponseMsg) Reset()                    { *m = CryptoKeyUpdateResponseMsg{} }
 func (m *CryptoKeyUpdateResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyUpdateResponseMsg) ProtoMessage()               {}
-func (*CryptoKeyUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{16} }
+func (*CryptoKeyUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{16} }
 
 func (m *CryptoKeyUpdateResponseMsg) GetResponse() []*CryptoKeyUpdateResponse {
 	if m != nil {
@@ -351,7 +349,7 @@ type CryptoKeyDeleteRequest struct {
 func (m *CryptoKeyDeleteRequest) Reset()                    { *m = CryptoKeyDeleteRequest{} }
 func (m *CryptoKeyDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyDeleteRequest) ProtoMessage()               {}
-func (*CryptoKeyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{17} }
+func (*CryptoKeyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{17} }
 
 func (m *CryptoKeyDeleteRequest) GetKeyindex() uint32 {
 	if m != nil {
@@ -367,7 +365,7 @@ type CryptoKeyDeleteRequestMsg struct {
 func (m *CryptoKeyDeleteRequestMsg) Reset()                    { *m = CryptoKeyDeleteRequestMsg{} }
 func (m *CryptoKeyDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyDeleteRequestMsg) ProtoMessage()               {}
-func (*CryptoKeyDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{18} }
+func (*CryptoKeyDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{18} }
 
 func (m *CryptoKeyDeleteRequestMsg) GetRequest() []*CryptoKeyDeleteRequest {
 	if m != nil {
@@ -384,7 +382,7 @@ type CryptoKeyDeleteResponse struct {
 func (m *CryptoKeyDeleteResponse) Reset()                    { *m = CryptoKeyDeleteResponse{} }
 func (m *CryptoKeyDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyDeleteResponse) ProtoMessage()               {}
-func (*CryptoKeyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{19} }
+func (*CryptoKeyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{19} }
 
 func (m *CryptoKeyDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -407,7 +405,7 @@ type CryptoKeyDeleteResponseMsg struct {
 func (m *CryptoKeyDeleteResponseMsg) Reset()                    { *m = CryptoKeyDeleteResponseMsg{} }
 func (m *CryptoKeyDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyDeleteResponseMsg) ProtoMessage()               {}
-func (*CryptoKeyDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{20} }
+func (*CryptoKeyDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{20} }
 
 func (m *CryptoKeyDeleteResponseMsg) GetResponse() []*CryptoKeyDeleteResponse {
 	if m != nil {
@@ -440,9 +438,9 @@ func init() {
 	proto.RegisterType((*CryptoKeyDeleteResponseMsg)(nil), "halproto.CryptoKeyDeleteResponseMsg")
 }
 
-func init() { proto.RegisterFile("crypto_keys.proto", fileDescriptor19) }
+func init() { proto.RegisterFile("crypto_keys.proto", fileDescriptor5) }
 
-var fileDescriptor19 = []byte{
+var fileDescriptor5 = []byte{
 	// 617 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xdf, 0x6f, 0xd3, 0x3c,
 	0x14, 0x5d, 0xbe, 0x4e, 0xdf, 0xda, 0x5b, 0xba, 0x0d, 0x6b, 0x40, 0x5a, 0x81, 0x16, 0xcc, 0xaf,

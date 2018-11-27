@@ -71,7 +71,7 @@ var CryptoApiHashType_value = map[string]int32{
 func (x CryptoApiHashType) String() string {
 	return proto.EnumName(CryptoApiHashType_name, int32(x))
 }
-func (CryptoApiHashType) EnumDescriptor() ([]byte, []int) { return fileDescriptor16, []int{0} }
+func (CryptoApiHashType) EnumDescriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
 
 type CryptoApiType int32
 
@@ -122,7 +122,7 @@ var CryptoApiType_value = map[string]int32{
 func (x CryptoApiType) String() string {
 	return proto.EnumName(CryptoApiType_name, int32(x))
 }
-func (CryptoApiType) EnumDescriptor() ([]byte, []int) { return fileDescriptor16, []int{1} }
+func (CryptoApiType) EnumDescriptor() ([]byte, []int) { return fileDescriptor4, []int{1} }
 
 type UpdateType int32
 
@@ -143,7 +143,7 @@ var UpdateType_value = map[string]int32{
 func (x UpdateType) String() string {
 	return proto.EnumName(UpdateType_name, int32(x))
 }
-func (UpdateType) EnumDescriptor() ([]byte, []int) { return fileDescriptor16, []int{2} }
+func (UpdateType) EnumDescriptor() ([]byte, []int) { return fileDescriptor4, []int{2} }
 
 type ECCPoint struct {
 	X []byte `protobuf:"bytes,1,opt,name=x,proto3" json:"x,omitempty"`
@@ -153,7 +153,7 @@ type ECCPoint struct {
 func (m *ECCPoint) Reset()                    { *m = ECCPoint{} }
 func (m *ECCPoint) String() string            { return proto.CompactTextString(m) }
 func (*ECCPoint) ProtoMessage()               {}
-func (*ECCPoint) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{0} }
+func (*ECCPoint) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
 
 func (m *ECCPoint) GetX() []byte {
 	if m != nil {
@@ -181,7 +181,7 @@ type CryptoAsymApiECCDomainParamsFp struct {
 func (m *CryptoAsymApiECCDomainParamsFp) Reset()                    { *m = CryptoAsymApiECCDomainParamsFp{} }
 func (m *CryptoAsymApiECCDomainParamsFp) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiECCDomainParamsFp) ProtoMessage()               {}
-func (*CryptoAsymApiECCDomainParamsFp) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{1} }
+func (*CryptoAsymApiECCDomainParamsFp) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{1} }
 
 func (m *CryptoAsymApiECCDomainParamsFp) GetKeySize() uint32 {
 	if m != nil {
@@ -234,7 +234,7 @@ type CryptoAsymApiReqECCPointMulFp struct {
 func (m *CryptoAsymApiReqECCPointMulFp) Reset()                    { *m = CryptoAsymApiReqECCPointMulFp{} }
 func (m *CryptoAsymApiReqECCPointMulFp) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqECCPointMulFp) ProtoMessage()               {}
-func (*CryptoAsymApiReqECCPointMulFp) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{2} }
+func (*CryptoAsymApiReqECCPointMulFp) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{2} }
 
 func (m *CryptoAsymApiReqECCPointMulFp) GetEccDomainParams() *CryptoAsymApiECCDomainParamsFp {
 	if m != nil {
@@ -264,7 +264,7 @@ type CryptoAsymApiRespECCPointMulFp struct {
 func (m *CryptoAsymApiRespECCPointMulFp) Reset()                    { *m = CryptoAsymApiRespECCPointMulFp{} }
 func (m *CryptoAsymApiRespECCPointMulFp) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespECCPointMulFp) ProtoMessage()               {}
-func (*CryptoAsymApiRespECCPointMulFp) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{3} }
+func (*CryptoAsymApiRespECCPointMulFp) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{3} }
 
 func (m *CryptoAsymApiRespECCPointMulFp) GetQ() *ECCPoint {
 	if m != nil {
@@ -287,7 +287,7 @@ func (m *CryptoAsymApiReqECDSASignatureGenFp) Reset()         { *m = CryptoAsymA
 func (m *CryptoAsymApiReqECDSASignatureGenFp) String() string { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqECDSASignatureGenFp) ProtoMessage()    {}
 func (*CryptoAsymApiReqECDSASignatureGenFp) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{4}
+	return fileDescriptor4, []int{4}
 }
 
 func (m *CryptoAsymApiReqECDSASignatureGenFp) GetEccDomainParams() *CryptoAsymApiECCDomainParamsFp {
@@ -341,7 +341,7 @@ func (m *CryptoAsymApiRespECDSASignatureGenFp) Reset()         { *m = CryptoAsym
 func (m *CryptoAsymApiRespECDSASignatureGenFp) String() string { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespECDSASignatureGenFp) ProtoMessage()    {}
 func (*CryptoAsymApiRespECDSASignatureGenFp) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{5}
+	return fileDescriptor4, []int{5}
 }
 
 func (m *CryptoAsymApiRespECDSASignatureGenFp) GetR() []byte {
@@ -374,7 +374,7 @@ func (m *CryptoAsymApiReqECDSASignatureVerifyFp) Reset() {
 func (m *CryptoAsymApiReqECDSASignatureVerifyFp) String() string { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqECDSASignatureVerifyFp) ProtoMessage()    {}
 func (*CryptoAsymApiReqECDSASignatureVerifyFp) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{6}
+	return fileDescriptor4, []int{6}
 }
 
 func (m *CryptoAsymApiReqECDSASignatureVerifyFp) GetEccDomainParams() *CryptoAsymApiECCDomainParamsFp {
@@ -431,7 +431,7 @@ type CryptoAsymApiReqRSAEncrypt struct {
 func (m *CryptoAsymApiReqRSAEncrypt) Reset()                    { *m = CryptoAsymApiReqRSAEncrypt{} }
 func (m *CryptoAsymApiReqRSAEncrypt) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqRSAEncrypt) ProtoMessage()               {}
-func (*CryptoAsymApiReqRSAEncrypt) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{7} }
+func (*CryptoAsymApiReqRSAEncrypt) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{7} }
 
 func (m *CryptoAsymApiReqRSAEncrypt) GetKeySize() uint32 {
 	if m != nil {
@@ -475,7 +475,7 @@ type CryptoAsymApiRespRSAEncrypt struct {
 func (m *CryptoAsymApiRespRSAEncrypt) Reset()                    { *m = CryptoAsymApiRespRSAEncrypt{} }
 func (m *CryptoAsymApiRespRSAEncrypt) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespRSAEncrypt) ProtoMessage()               {}
-func (*CryptoAsymApiRespRSAEncrypt) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{8} }
+func (*CryptoAsymApiRespRSAEncrypt) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{8} }
 
 func (m *CryptoAsymApiRespRSAEncrypt) GetCipherText() []byte {
 	if m != nil {
@@ -495,7 +495,7 @@ type CryptoAsymApiReqRSADecrypt struct {
 func (m *CryptoAsymApiReqRSADecrypt) Reset()                    { *m = CryptoAsymApiReqRSADecrypt{} }
 func (m *CryptoAsymApiReqRSADecrypt) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqRSADecrypt) ProtoMessage()               {}
-func (*CryptoAsymApiReqRSADecrypt) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{9} }
+func (*CryptoAsymApiReqRSADecrypt) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{9} }
 
 func (m *CryptoAsymApiReqRSADecrypt) GetKeySize() uint32 {
 	if m != nil {
@@ -532,7 +532,7 @@ type CryptoAsymApiRespRSADecrypt struct {
 func (m *CryptoAsymApiRespRSADecrypt) Reset()                    { *m = CryptoAsymApiRespRSADecrypt{} }
 func (m *CryptoAsymApiRespRSADecrypt) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespRSADecrypt) ProtoMessage()               {}
-func (*CryptoAsymApiRespRSADecrypt) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{10} }
+func (*CryptoAsymApiRespRSADecrypt) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{10} }
 
 func (m *CryptoAsymApiRespRSADecrypt) GetPlainText() []byte {
 	if m != nil {
@@ -557,7 +557,7 @@ type CryptoAsymApiReqRSACRTDecrypt struct {
 func (m *CryptoAsymApiReqRSACRTDecrypt) Reset()                    { *m = CryptoAsymApiReqRSACRTDecrypt{} }
 func (m *CryptoAsymApiReqRSACRTDecrypt) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqRSACRTDecrypt) ProtoMessage()               {}
-func (*CryptoAsymApiReqRSACRTDecrypt) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{11} }
+func (*CryptoAsymApiReqRSACRTDecrypt) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{11} }
 
 func (m *CryptoAsymApiReqRSACRTDecrypt) GetKeySize() uint32 {
 	if m != nil {
@@ -626,12 +626,10 @@ type CryptoAsymApiRespRSACRTDecrypt struct {
 	PlainText []byte `protobuf:"bytes,1,opt,name=plain_text,json=plainText,proto3" json:"plain_text,omitempty"`
 }
 
-func (m *CryptoAsymApiRespRSACRTDecrypt) Reset()         { *m = CryptoAsymApiRespRSACRTDecrypt{} }
-func (m *CryptoAsymApiRespRSACRTDecrypt) String() string { return proto.CompactTextString(m) }
-func (*CryptoAsymApiRespRSACRTDecrypt) ProtoMessage()    {}
-func (*CryptoAsymApiRespRSACRTDecrypt) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{12}
-}
+func (m *CryptoAsymApiRespRSACRTDecrypt) Reset()                    { *m = CryptoAsymApiRespRSACRTDecrypt{} }
+func (m *CryptoAsymApiRespRSACRTDecrypt) String() string            { return proto.CompactTextString(m) }
+func (*CryptoAsymApiRespRSACRTDecrypt) ProtoMessage()               {}
+func (*CryptoAsymApiRespRSACRTDecrypt) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{12} }
 
 func (m *CryptoAsymApiRespRSACRTDecrypt) GetPlainText() []byte {
 	if m != nil {
@@ -650,7 +648,7 @@ func (m *CryptoAsymApiReqSetupPrivateKey) Reset()         { *m = CryptoAsymApiRe
 func (m *CryptoAsymApiReqSetupPrivateKey) String() string { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqSetupPrivateKey) ProtoMessage()    {}
 func (*CryptoAsymApiReqSetupPrivateKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{13}
+	return fileDescriptor4, []int{13}
 }
 
 func (m *CryptoAsymApiReqSetupPrivateKey) GetKey() string {
@@ -667,7 +665,7 @@ type CryptoAsymApiRespECDSAKeyInfo struct {
 func (m *CryptoAsymApiRespECDSAKeyInfo) Reset()                    { *m = CryptoAsymApiRespECDSAKeyInfo{} }
 func (m *CryptoAsymApiRespECDSAKeyInfo) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespECDSAKeyInfo) ProtoMessage()               {}
-func (*CryptoAsymApiRespECDSAKeyInfo) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{14} }
+func (*CryptoAsymApiRespECDSAKeyInfo) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{14} }
 
 func (m *CryptoAsymApiRespECDSAKeyInfo) GetSignKeyIdx() int32 {
 	if m != nil {
@@ -684,7 +682,7 @@ type CryptoAsymApiRespRSAKeyInfo struct {
 func (m *CryptoAsymApiRespRSAKeyInfo) Reset()                    { *m = CryptoAsymApiRespRSAKeyInfo{} }
 func (m *CryptoAsymApiRespRSAKeyInfo) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespRSAKeyInfo) ProtoMessage()               {}
-func (*CryptoAsymApiRespRSAKeyInfo) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{15} }
+func (*CryptoAsymApiRespRSAKeyInfo) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{15} }
 
 func (m *CryptoAsymApiRespRSAKeyInfo) GetSignKeyIdx() int32 {
 	if m != nil {
@@ -712,7 +710,7 @@ func (m *CryptoAsymApiRespSetupPrivateKey) Reset()         { *m = CryptoAsymApiR
 func (m *CryptoAsymApiRespSetupPrivateKey) String() string { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespSetupPrivateKey) ProtoMessage()    {}
 func (*CryptoAsymApiRespSetupPrivateKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{16}
+	return fileDescriptor4, []int{16}
 }
 
 type isCryptoAsymApiRespSetupPrivateKey_KeyInfo interface{ isCryptoAsymApiRespSetupPrivateKey_KeyInfo() }
@@ -840,7 +838,7 @@ type CryptoAsymApiReqSetupCert struct {
 func (m *CryptoAsymApiReqSetupCert) Reset()                    { *m = CryptoAsymApiReqSetupCert{} }
 func (m *CryptoAsymApiReqSetupCert) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqSetupCert) ProtoMessage()               {}
-func (*CryptoAsymApiReqSetupCert) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{17} }
+func (*CryptoAsymApiReqSetupCert) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{17} }
 
 func (m *CryptoAsymApiReqSetupCert) GetUpdateType() UpdateType {
 	if m != nil {
@@ -876,7 +874,7 @@ type CryptoAsymApiRespSetupCert struct {
 func (m *CryptoAsymApiRespSetupCert) Reset()                    { *m = CryptoAsymApiRespSetupCert{} }
 func (m *CryptoAsymApiRespSetupCert) String() string            { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespSetupCert) ProtoMessage()               {}
-func (*CryptoAsymApiRespSetupCert) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{18} }
+func (*CryptoAsymApiRespSetupCert) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{18} }
 
 // RSA Signature Generation
 type CryptoAsymApiReqRSASignatureGen struct {
@@ -892,7 +890,7 @@ func (m *CryptoAsymApiReqRSASignatureGen) Reset()         { *m = CryptoAsymApiRe
 func (m *CryptoAsymApiReqRSASignatureGen) String() string { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqRSASignatureGen) ProtoMessage()    {}
 func (*CryptoAsymApiReqRSASignatureGen) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{19}
+	return fileDescriptor4, []int{19}
 }
 
 func (m *CryptoAsymApiReqRSASignatureGen) GetKeySize() uint32 {
@@ -945,7 +943,7 @@ func (m *CryptoAsymApiRespRSASignatureGen) Reset()         { *m = CryptoAsymApiR
 func (m *CryptoAsymApiRespRSASignatureGen) String() string { return proto.CompactTextString(m) }
 func (*CryptoAsymApiRespRSASignatureGen) ProtoMessage()    {}
 func (*CryptoAsymApiRespRSASignatureGen) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{20}
+	return fileDescriptor4, []int{20}
 }
 
 func (m *CryptoAsymApiRespRSASignatureGen) GetS() []byte {
@@ -968,7 +966,7 @@ func (m *CryptoAsymApiReqRSASignatureVerify) Reset()         { *m = CryptoAsymAp
 func (m *CryptoAsymApiReqRSASignatureVerify) String() string { return proto.CompactTextString(m) }
 func (*CryptoAsymApiReqRSASignatureVerify) ProtoMessage()    {}
 func (*CryptoAsymApiReqRSASignatureVerify) Descriptor() ([]byte, []int) {
-	return fileDescriptor16, []int{21}
+	return fileDescriptor4, []int{21}
 }
 
 func (m *CryptoAsymApiReqRSASignatureVerify) GetKeySize() uint32 {
@@ -1019,7 +1017,7 @@ type CryptoSymmApiReqHashGenerate struct {
 func (m *CryptoSymmApiReqHashGenerate) Reset()                    { *m = CryptoSymmApiReqHashGenerate{} }
 func (m *CryptoSymmApiReqHashGenerate) String() string            { return proto.CompactTextString(m) }
 func (*CryptoSymmApiReqHashGenerate) ProtoMessage()               {}
-func (*CryptoSymmApiReqHashGenerate) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{22} }
+func (*CryptoSymmApiReqHashGenerate) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{22} }
 
 func (m *CryptoSymmApiReqHashGenerate) GetHashtype() CryptoApiHashType {
 	if m != nil {
@@ -1070,7 +1068,7 @@ type CryptoSymmApiRespHashGenerate struct {
 func (m *CryptoSymmApiRespHashGenerate) Reset()                    { *m = CryptoSymmApiRespHashGenerate{} }
 func (m *CryptoSymmApiRespHashGenerate) String() string            { return proto.CompactTextString(m) }
 func (*CryptoSymmApiRespHashGenerate) ProtoMessage()               {}
-func (*CryptoSymmApiRespHashGenerate) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{23} }
+func (*CryptoSymmApiRespHashGenerate) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{23} }
 
 func (m *CryptoSymmApiRespHashGenerate) GetDigest() []byte {
 	if m != nil {
@@ -1093,7 +1091,7 @@ type CryptoSymmApiReqHashVerify struct {
 func (m *CryptoSymmApiReqHashVerify) Reset()                    { *m = CryptoSymmApiReqHashVerify{} }
 func (m *CryptoSymmApiReqHashVerify) String() string            { return proto.CompactTextString(m) }
 func (*CryptoSymmApiReqHashVerify) ProtoMessage()               {}
-func (*CryptoSymmApiReqHashVerify) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{24} }
+func (*CryptoSymmApiReqHashVerify) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{24} }
 
 func (m *CryptoSymmApiReqHashVerify) GetHashtype() CryptoApiHashType {
 	if m != nil {
@@ -1165,7 +1163,7 @@ type CryptoApiRequest struct {
 func (m *CryptoApiRequest) Reset()                    { *m = CryptoApiRequest{} }
 func (m *CryptoApiRequest) String() string            { return proto.CompactTextString(m) }
 func (*CryptoApiRequest) ProtoMessage()               {}
-func (*CryptoApiRequest) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{25} }
+func (*CryptoApiRequest) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{25} }
 
 type isCryptoApiRequest_CryptoApiReq interface{ isCryptoApiRequest_CryptoApiReq() }
 
@@ -1599,7 +1597,7 @@ type CryptoApiResponse struct {
 func (m *CryptoApiResponse) Reset()                    { *m = CryptoApiResponse{} }
 func (m *CryptoApiResponse) String() string            { return proto.CompactTextString(m) }
 func (*CryptoApiResponse) ProtoMessage()               {}
-func (*CryptoApiResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{26} }
+func (*CryptoApiResponse) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{26} }
 
 type isCryptoApiResponse_CryptoApiResp interface{ isCryptoApiResponse_CryptoApiResp() }
 
@@ -1932,7 +1930,7 @@ type CryptoApiRequestMsg struct {
 func (m *CryptoApiRequestMsg) Reset()                    { *m = CryptoApiRequestMsg{} }
 func (m *CryptoApiRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoApiRequestMsg) ProtoMessage()               {}
-func (*CryptoApiRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{27} }
+func (*CryptoApiRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{27} }
 
 func (m *CryptoApiRequestMsg) GetRequest() []*CryptoApiRequest {
 	if m != nil {
@@ -1948,7 +1946,7 @@ type CryptoApiResponseMsg struct {
 func (m *CryptoApiResponseMsg) Reset()                    { *m = CryptoApiResponseMsg{} }
 func (m *CryptoApiResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CryptoApiResponseMsg) ProtoMessage()               {}
-func (*CryptoApiResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{28} }
+func (*CryptoApiResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{28} }
 
 func (m *CryptoApiResponseMsg) GetResponse() []*CryptoApiResponse {
 	if m != nil {
@@ -1992,9 +1990,9 @@ func init() {
 	proto.RegisterEnum("halproto.UpdateType", UpdateType_name, UpdateType_value)
 }
 
-func init() { proto.RegisterFile("crypto_apis.proto", fileDescriptor16) }
+func init() { proto.RegisterFile("crypto_apis.proto", fileDescriptor4) }
 
-var fileDescriptor16 = []byte{
+var fileDescriptor4 = []byte{
 	// 1976 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x59, 0x4f, 0x6f, 0xdb, 0xc8,
 	0x15, 0x37, 0x65, 0xeb, 0xdf, 0x93, 0x6c, 0x33, 0x93, 0x6d, 0x22, 0x2b, 0xf6, 0x46, 0xe0, 0x76,

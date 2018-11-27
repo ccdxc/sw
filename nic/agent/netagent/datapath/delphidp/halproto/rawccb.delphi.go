@@ -23,7 +23,7 @@ type RawcCbKeyHandle struct {
 func (m *RawcCbKeyHandle) Reset()                    { *m = RawcCbKeyHandle{} }
 func (m *RawcCbKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbKeyHandle) ProtoMessage()               {}
-func (*RawcCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{0} }
+func (*RawcCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{0} }
 
 type isRawcCbKeyHandle_KeyOrHandle interface{ isRawcCbKeyHandle_KeyOrHandle() }
 
@@ -156,7 +156,7 @@ type RawcCbSpec struct {
 func (m *RawcCbSpec) Reset()                    { *m = RawcCbSpec{} }
 func (m *RawcCbSpec) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbSpec) ProtoMessage()               {}
-func (*RawcCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{1} }
+func (*RawcCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{1} }
 
 func (m *RawcCbSpec) GetKeyOrHandle() *RawcCbKeyHandle {
 	if m != nil {
@@ -327,7 +327,7 @@ type RawcCbRequestMsg struct {
 func (m *RawcCbRequestMsg) Reset()                    { *m = RawcCbRequestMsg{} }
 func (m *RawcCbRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbRequestMsg) ProtoMessage()               {}
-func (*RawcCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{2} }
+func (*RawcCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{2} }
 
 func (m *RawcCbRequestMsg) GetRequest() []*RawcCbSpec {
 	if m != nil {
@@ -344,7 +344,7 @@ type RawcCbStatus struct {
 func (m *RawcCbStatus) Reset()                    { *m = RawcCbStatus{} }
 func (m *RawcCbStatus) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbStatus) ProtoMessage()               {}
-func (*RawcCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{3} }
+func (*RawcCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{3} }
 
 func (m *RawcCbStatus) GetRawccbHandle() uint64 {
 	if m != nil {
@@ -362,7 +362,7 @@ type RawcCbResponse struct {
 func (m *RawcCbResponse) Reset()                    { *m = RawcCbResponse{} }
 func (m *RawcCbResponse) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbResponse) ProtoMessage()               {}
-func (*RawcCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{4} }
+func (*RawcCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{4} }
 
 func (m *RawcCbResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -386,7 +386,7 @@ type RawcCbResponseMsg struct {
 func (m *RawcCbResponseMsg) Reset()                    { *m = RawcCbResponseMsg{} }
 func (m *RawcCbResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbResponseMsg) ProtoMessage()               {}
-func (*RawcCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{5} }
+func (*RawcCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{5} }
 
 func (m *RawcCbResponseMsg) GetResponse() []*RawcCbResponse {
 	if m != nil {
@@ -403,7 +403,7 @@ type RawcCbDeleteRequest struct {
 func (m *RawcCbDeleteRequest) Reset()                    { *m = RawcCbDeleteRequest{} }
 func (m *RawcCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbDeleteRequest) ProtoMessage()               {}
-func (*RawcCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{6} }
+func (*RawcCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{6} }
 
 func (m *RawcCbDeleteRequest) GetKeyOrHandle() *RawcCbKeyHandle {
 	if m != nil {
@@ -420,7 +420,7 @@ type RawcCbDeleteRequestMsg struct {
 func (m *RawcCbDeleteRequestMsg) Reset()                    { *m = RawcCbDeleteRequestMsg{} }
 func (m *RawcCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbDeleteRequestMsg) ProtoMessage()               {}
-func (*RawcCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{7} }
+func (*RawcCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{7} }
 
 func (m *RawcCbDeleteRequestMsg) GetRequest() []*RawcCbDeleteRequest {
 	if m != nil {
@@ -436,7 +436,7 @@ type RawcCbDeleteResponse struct {
 func (m *RawcCbDeleteResponse) Reset()                    { *m = RawcCbDeleteResponse{} }
 func (m *RawcCbDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbDeleteResponse) ProtoMessage()               {}
-func (*RawcCbDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{8} }
+func (*RawcCbDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{8} }
 
 func (m *RawcCbDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -453,7 +453,7 @@ type RawcCbDeleteResponseMsg struct {
 func (m *RawcCbDeleteResponseMsg) Reset()                    { *m = RawcCbDeleteResponseMsg{} }
 func (m *RawcCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbDeleteResponseMsg) ProtoMessage()               {}
-func (*RawcCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{9} }
+func (*RawcCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{9} }
 
 func (m *RawcCbDeleteResponseMsg) GetResponse() []*RawcCbDeleteResponse {
 	if m != nil {
@@ -470,7 +470,7 @@ type RawcCbGetRequest struct {
 func (m *RawcCbGetRequest) Reset()                    { *m = RawcCbGetRequest{} }
 func (m *RawcCbGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbGetRequest) ProtoMessage()               {}
-func (*RawcCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{10} }
+func (*RawcCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{10} }
 
 func (m *RawcCbGetRequest) GetKeyOrHandle() *RawcCbKeyHandle {
 	if m != nil {
@@ -487,7 +487,7 @@ type RawcCbGetRequestMsg struct {
 func (m *RawcCbGetRequestMsg) Reset()                    { *m = RawcCbGetRequestMsg{} }
 func (m *RawcCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbGetRequestMsg) ProtoMessage()               {}
-func (*RawcCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{11} }
+func (*RawcCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{11} }
 
 func (m *RawcCbGetRequestMsg) GetRequest() []*RawcCbGetRequest {
 	if m != nil {
@@ -503,7 +503,7 @@ type RawcCbStats struct {
 func (m *RawcCbStats) Reset()                    { *m = RawcCbStats{} }
 func (m *RawcCbStats) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbStats) ProtoMessage()               {}
-func (*RawcCbStats) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{12} }
+func (*RawcCbStats) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{12} }
 
 // RawcCbGetResponse captures all the information about a rawccb
 // only if api_status indicates success, other fields are valid
@@ -517,7 +517,7 @@ type RawcCbGetResponse struct {
 func (m *RawcCbGetResponse) Reset()                    { *m = RawcCbGetResponse{} }
 func (m *RawcCbGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbGetResponse) ProtoMessage()               {}
-func (*RawcCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{13} }
+func (*RawcCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{13} }
 
 func (m *RawcCbGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -555,7 +555,7 @@ type RawcCbGetResponseMsg struct {
 func (m *RawcCbGetResponseMsg) Reset()                    { *m = RawcCbGetResponseMsg{} }
 func (m *RawcCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawcCbGetResponseMsg) ProtoMessage()               {}
-func (*RawcCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor42, []int{14} }
+func (*RawcCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{14} }
 
 func (m *RawcCbGetResponseMsg) GetResponse() []*RawcCbGetResponse {
 	if m != nil {
@@ -582,9 +582,9 @@ func init() {
 	proto.RegisterType((*RawcCbGetResponseMsg)(nil), "halproto.RawcCbGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("rawccb.proto", fileDescriptor42) }
+func init() { proto.RegisterFile("rawccb.proto", fileDescriptor32) }
 
-var fileDescriptor42 = []byte{
+var fileDescriptor32 = []byte{
 	// 953 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xdd, 0x52, 0x1b, 0x37,
 	0x14, 0x8e, 0x0d, 0x31, 0xf8, 0xd8, 0x6b, 0x83, 0x20, 0xb6, 0x80, 0x34, 0x75, 0xb7, 0x6d, 0x86,

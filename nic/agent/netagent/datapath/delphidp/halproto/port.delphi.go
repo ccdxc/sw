@@ -40,7 +40,7 @@ var PortBreakoutMode_value = map[string]int32{
 func (x PortBreakoutMode) String() string {
 	return proto.EnumName(PortBreakoutMode_name, int32(x))
 }
-func (PortBreakoutMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{0} }
+func (PortBreakoutMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{0} }
 
 // PortOperStatus reflects the current status of the port
 type PortOperStatus int32
@@ -65,7 +65,7 @@ var PortOperStatus_value = map[string]int32{
 func (x PortOperStatus) String() string {
 	return proto.EnumName(PortOperStatus_name, int32(x))
 }
-func (PortOperStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{1} }
+func (PortOperStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{1} }
 
 // PortAdminState specifies if the port is enabled (admin up) or disabled (admin down)
 type PortAdminState int32
@@ -90,7 +90,7 @@ var PortAdminState_value = map[string]int32{
 func (x PortAdminState) String() string {
 	return proto.EnumName(PortAdminState_name, int32(x))
 }
-func (PortAdminState) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{2} }
+func (PortAdminState) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{2} }
 
 // PortType specifies the type of port
 type PortType int32
@@ -115,7 +115,7 @@ var PortType_value = map[string]int32{
 func (x PortType) String() string {
 	return proto.EnumName(PortType_name, int32(x))
 }
-func (PortType) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{3} }
+func (PortType) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{3} }
 
 // PortSpeed specifies the speed of the port
 type PortSpeed int32
@@ -152,7 +152,7 @@ var PortSpeed_value = map[string]int32{
 func (x PortSpeed) String() string {
 	return proto.EnumName(PortSpeed_name, int32(x))
 }
-func (PortSpeed) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{4} }
+func (PortSpeed) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{4} }
 
 type PortFecType int32
 
@@ -176,7 +176,7 @@ var PortFecType_value = map[string]int32{
 func (x PortFecType) String() string {
 	return proto.EnumName(PortFecType_name, int32(x))
 }
-func (PortFecType) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{5} }
+func (PortFecType) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{5} }
 
 type PortXcvrState int32
 
@@ -206,7 +206,7 @@ var PortXcvrState_value = map[string]int32{
 func (x PortXcvrState) String() string {
 	return proto.EnumName(PortXcvrState_name, int32(x))
 }
-func (PortXcvrState) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{6} }
+func (PortXcvrState) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{6} }
 
 type PortXcvrPid int32
 
@@ -230,7 +230,7 @@ var PortXcvrPid_value = map[string]int32{
 func (x PortXcvrPid) String() string {
 	return proto.EnumName(PortXcvrPid_name, int32(x))
 }
-func (PortXcvrPid) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{7} }
+func (PortXcvrPid) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{7} }
 
 type PortPauseType int32
 
@@ -254,7 +254,7 @@ var PortPauseType_value = map[string]int32{
 func (x PortPauseType) String() string {
 	return proto.EnumName(PortPauseType_name, int32(x))
 }
-func (PortPauseType) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{8} }
+func (PortPauseType) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{8} }
 
 // ------------------------------------------------------------------------------
 // MacStats consists of MacStatsType and count
@@ -539,7 +539,7 @@ var MacStatsType_value = map[string]int32{
 func (x MacStatsType) String() string {
 	return proto.EnumName(MacStatsType_name, int32(x))
 }
-func (MacStatsType) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{9} }
+func (MacStatsType) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{9} }
 
 type PortXcvrStatus struct {
 	State PortXcvrState `protobuf:"varint,1,opt,name=state,enum=port.PortXcvrState" json:"state,omitempty"`
@@ -549,7 +549,7 @@ type PortXcvrStatus struct {
 func (m *PortXcvrStatus) Reset()                    { *m = PortXcvrStatus{} }
 func (m *PortXcvrStatus) String() string            { return proto.CompactTextString(m) }
 func (*PortXcvrStatus) ProtoMessage()               {}
-func (*PortXcvrStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{0} }
+func (*PortXcvrStatus) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{0} }
 
 func (m *PortXcvrStatus) GetState() PortXcvrState {
 	if m != nil {
@@ -685,7 +685,7 @@ type PortSpecReactor interface {
 func (m *PortSpec) Reset()                    { *m = PortSpec{} }
 func (m *PortSpec) String() string            { return proto.CompactTextString(m) }
 func (*PortSpec) ProtoMessage()               {}
-func (*PortSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{1} }
+func (*PortSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{1} }
 
 func (m *PortSpec) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -893,7 +893,7 @@ type PortStatusReactor interface {
 func (m *PortStatus) Reset()                    { *m = PortStatus{} }
 func (m *PortStatus) String() string            { return proto.CompactTextString(m) }
 func (*PortStatus) ProtoMessage()               {}
-func (*PortStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{2} }
+func (*PortStatus) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{2} }
 
 func (m *PortStatus) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -933,7 +933,7 @@ type PortRequestMsg struct {
 func (m *PortRequestMsg) Reset()                    { *m = PortRequestMsg{} }
 func (m *PortRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*PortRequestMsg) ProtoMessage()               {}
-func (*PortRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{3} }
+func (*PortRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{3} }
 
 func (m *PortRequestMsg) GetRequest() []*PortSpec {
 	if m != nil {
@@ -951,7 +951,7 @@ type PortResponse struct {
 func (m *PortResponse) Reset()                    { *m = PortResponse{} }
 func (m *PortResponse) String() string            { return proto.CompactTextString(m) }
 func (*PortResponse) ProtoMessage()               {}
-func (*PortResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{4} }
+func (*PortResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{4} }
 
 func (m *PortResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -977,7 +977,7 @@ type PortResponseMsg struct {
 func (m *PortResponseMsg) Reset()                    { *m = PortResponseMsg{} }
 func (m *PortResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*PortResponseMsg) ProtoMessage()               {}
-func (*PortResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{5} }
+func (*PortResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{5} }
 
 func (m *PortResponseMsg) GetResponse() []*PortResponse {
 	if m != nil {
@@ -995,7 +995,7 @@ type PortDeleteRequest struct {
 func (m *PortDeleteRequest) Reset()                    { *m = PortDeleteRequest{} }
 func (m *PortDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*PortDeleteRequest) ProtoMessage()               {}
-func (*PortDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{6} }
+func (*PortDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{6} }
 
 func (m *PortDeleteRequest) GetKeyOrHandle() *PortKeyHandle {
 	if m != nil {
@@ -1014,7 +1014,7 @@ type PortDeleteRequestMsg struct {
 func (m *PortDeleteRequestMsg) Reset()                    { *m = PortDeleteRequestMsg{} }
 func (m *PortDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*PortDeleteRequestMsg) ProtoMessage()               {}
-func (*PortDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{7} }
+func (*PortDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{7} }
 
 func (m *PortDeleteRequestMsg) GetRequest() []*PortDeleteRequest {
 	if m != nil {
@@ -1033,7 +1033,7 @@ type PortDeleteResponse struct {
 func (m *PortDeleteResponse) Reset()                    { *m = PortDeleteResponse{} }
 func (m *PortDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*PortDeleteResponse) ProtoMessage()               {}
-func (*PortDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{8} }
+func (*PortDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{8} }
 
 func (m *PortDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1052,7 +1052,7 @@ type PortDeleteResponseMsg struct {
 func (m *PortDeleteResponseMsg) Reset()                    { *m = PortDeleteResponseMsg{} }
 func (m *PortDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*PortDeleteResponseMsg) ProtoMessage()               {}
-func (*PortDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{9} }
+func (*PortDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{9} }
 
 func (m *PortDeleteResponseMsg) GetResponse() []*PortDeleteResponse {
 	if m != nil {
@@ -1069,7 +1069,7 @@ type MacStats struct {
 func (m *MacStats) Reset()                    { *m = MacStats{} }
 func (m *MacStats) String() string            { return proto.CompactTextString(m) }
 func (*MacStats) ProtoMessage()               {}
-func (*MacStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{10} }
+func (*MacStats) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{10} }
 
 func (m *MacStats) GetType() MacStatsType {
 	if m != nil {
@@ -1093,7 +1093,7 @@ type PortStats struct {
 func (m *PortStats) Reset()                    { *m = PortStats{} }
 func (m *PortStats) String() string            { return proto.CompactTextString(m) }
 func (*PortStats) ProtoMessage()               {}
-func (*PortStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{11} }
+func (*PortStats) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{11} }
 
 func (m *PortStats) GetMacStats() []*MacStats {
 	if m != nil {
@@ -1111,7 +1111,7 @@ type PortGetRequest struct {
 func (m *PortGetRequest) Reset()                    { *m = PortGetRequest{} }
 func (m *PortGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*PortGetRequest) ProtoMessage()               {}
-func (*PortGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{12} }
+func (*PortGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{12} }
 
 func (m *PortGetRequest) GetKeyOrHandle() *PortKeyHandle {
 	if m != nil {
@@ -1130,7 +1130,7 @@ type PortGetRequestMsg struct {
 func (m *PortGetRequestMsg) Reset()                    { *m = PortGetRequestMsg{} }
 func (m *PortGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*PortGetRequestMsg) ProtoMessage()               {}
-func (*PortGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{13} }
+func (*PortGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{13} }
 
 func (m *PortGetRequestMsg) GetRequest() []*PortGetRequest {
 	if m != nil {
@@ -1151,7 +1151,7 @@ type PortGetResponse struct {
 func (m *PortGetResponse) Reset()                    { *m = PortGetResponse{} }
 func (m *PortGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*PortGetResponse) ProtoMessage()               {}
-func (*PortGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{14} }
+func (*PortGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{14} }
 
 func (m *PortGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1191,7 +1191,7 @@ type PortGetResponseMsg struct {
 func (m *PortGetResponseMsg) Reset()                    { *m = PortGetResponseMsg{} }
 func (m *PortGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*PortGetResponseMsg) ProtoMessage()               {}
-func (*PortGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{15} }
+func (*PortGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{15} }
 
 func (m *PortGetResponseMsg) GetResponse() []*PortGetResponse {
 	if m != nil {
@@ -1208,7 +1208,7 @@ type PortInfoGetRequest struct {
 func (m *PortInfoGetRequest) Reset()                    { *m = PortInfoGetRequest{} }
 func (m *PortInfoGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*PortInfoGetRequest) ProtoMessage()               {}
-func (*PortInfoGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{16} }
+func (*PortInfoGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{16} }
 
 func (m *PortInfoGetRequest) GetKeyOrHandle() *PortKeyHandle {
 	if m != nil {
@@ -1224,7 +1224,7 @@ type PortInfoGetRequestMsg struct {
 func (m *PortInfoGetRequestMsg) Reset()                    { *m = PortInfoGetRequestMsg{} }
 func (m *PortInfoGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*PortInfoGetRequestMsg) ProtoMessage()               {}
-func (*PortInfoGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{17} }
+func (*PortInfoGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{17} }
 
 func (m *PortInfoGetRequestMsg) GetRequest() []*PortInfoGetRequest {
 	if m != nil {
@@ -1244,7 +1244,7 @@ type PortInfoSpec struct {
 func (m *PortInfoSpec) Reset()                    { *m = PortInfoSpec{} }
 func (m *PortInfoSpec) String() string            { return proto.CompactTextString(m) }
 func (*PortInfoSpec) ProtoMessage()               {}
-func (*PortInfoSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{18} }
+func (*PortInfoSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{18} }
 
 func (m *PortInfoSpec) GetKeyOrHandle() *PortKeyHandle {
 	if m != nil {
@@ -1282,7 +1282,7 @@ type PortInfoGetResponse struct {
 func (m *PortInfoGetResponse) Reset()                    { *m = PortInfoGetResponse{} }
 func (m *PortInfoGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*PortInfoGetResponse) ProtoMessage()               {}
-func (*PortInfoGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{19} }
+func (*PortInfoGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{19} }
 
 func (m *PortInfoGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1305,7 +1305,7 @@ type PortInfoGetResponseMsg struct {
 func (m *PortInfoGetResponseMsg) Reset()                    { *m = PortInfoGetResponseMsg{} }
 func (m *PortInfoGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*PortInfoGetResponseMsg) ProtoMessage()               {}
-func (*PortInfoGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{20} }
+func (*PortInfoGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{20} }
 
 func (m *PortInfoGetResponseMsg) GetResponse() []*PortInfoGetResponse {
 	if m != nil {
@@ -1327,7 +1327,7 @@ type PortEvent struct {
 func (m *PortEvent) Reset()                    { *m = PortEvent{} }
 func (m *PortEvent) String() string            { return proto.CompactTextString(m) }
 func (*PortEvent) ProtoMessage()               {}
-func (*PortEvent) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{21} }
+func (*PortEvent) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{21} }
 
 func (m *PortEvent) GetKeyOrHandle() *PortKeyHandle {
 	if m != nil {
@@ -1394,9 +1394,9 @@ func init() {
 	proto.RegisterEnum("halproto.MacStatsType", MacStatsType_name, MacStatsType_value)
 }
 
-func init() { proto.RegisterFile("port.proto", fileDescriptor25) }
+func init() { proto.RegisterFile("port.proto", fileDescriptor27) }
 
-var fileDescriptor25 = []byte{
+var fileDescriptor27 = []byte{
 	// 2166 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x59, 0x4d, 0x73, 0xdb, 0xb8,
 	0x19, 0x5e, 0xca, 0xb2, 0x23, 0x43, 0xfe, 0x80, 0x19, 0x3b, 0x51, 0x9c, 0xdd, 0xc6, 0x55, 0xba,

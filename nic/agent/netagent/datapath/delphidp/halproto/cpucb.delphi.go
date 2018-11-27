@@ -23,7 +23,7 @@ type CpuCbKeyHandle struct {
 func (m *CpuCbKeyHandle) Reset()                    { *m = CpuCbKeyHandle{} }
 func (m *CpuCbKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbKeyHandle) ProtoMessage()               {}
-func (*CpuCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{0} }
+func (*CpuCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
 
 type isCpuCbKeyHandle_KeyOrHandle interface{ isCpuCbKeyHandle_KeyOrHandle() }
 
@@ -132,7 +132,7 @@ type CpuCbSpec struct {
 func (m *CpuCbSpec) Reset()                    { *m = CpuCbSpec{} }
 func (m *CpuCbSpec) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbSpec) ProtoMessage()               {}
-func (*CpuCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{1} }
+func (*CpuCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{1} }
 
 func (m *CpuCbSpec) GetKeyOrHandle() *CpuCbKeyHandle {
 	if m != nil {
@@ -163,7 +163,7 @@ type CpuCbRequestMsg struct {
 func (m *CpuCbRequestMsg) Reset()                    { *m = CpuCbRequestMsg{} }
 func (m *CpuCbRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbRequestMsg) ProtoMessage()               {}
-func (*CpuCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{2} }
+func (*CpuCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{2} }
 
 func (m *CpuCbRequestMsg) GetRequest() []*CpuCbSpec {
 	if m != nil {
@@ -180,7 +180,7 @@ type CpuCbStatus struct {
 func (m *CpuCbStatus) Reset()                    { *m = CpuCbStatus{} }
 func (m *CpuCbStatus) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbStatus) ProtoMessage()               {}
-func (*CpuCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{3} }
+func (*CpuCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{3} }
 
 func (m *CpuCbStatus) GetCpucbHandle() uint64 {
 	if m != nil {
@@ -198,7 +198,7 @@ type CpuCbResponse struct {
 func (m *CpuCbResponse) Reset()                    { *m = CpuCbResponse{} }
 func (m *CpuCbResponse) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbResponse) ProtoMessage()               {}
-func (*CpuCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{4} }
+func (*CpuCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{4} }
 
 func (m *CpuCbResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -222,7 +222,7 @@ type CpuCbResponseMsg struct {
 func (m *CpuCbResponseMsg) Reset()                    { *m = CpuCbResponseMsg{} }
 func (m *CpuCbResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbResponseMsg) ProtoMessage()               {}
-func (*CpuCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{5} }
+func (*CpuCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{5} }
 
 func (m *CpuCbResponseMsg) GetResponse() []*CpuCbResponse {
 	if m != nil {
@@ -239,7 +239,7 @@ type CpuCbDeleteRequest struct {
 func (m *CpuCbDeleteRequest) Reset()                    { *m = CpuCbDeleteRequest{} }
 func (m *CpuCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbDeleteRequest) ProtoMessage()               {}
-func (*CpuCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{6} }
+func (*CpuCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{6} }
 
 func (m *CpuCbDeleteRequest) GetKeyOrHandle() *CpuCbKeyHandle {
 	if m != nil {
@@ -256,7 +256,7 @@ type CpuCbDeleteRequestMsg struct {
 func (m *CpuCbDeleteRequestMsg) Reset()                    { *m = CpuCbDeleteRequestMsg{} }
 func (m *CpuCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbDeleteRequestMsg) ProtoMessage()               {}
-func (*CpuCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{7} }
+func (*CpuCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{7} }
 
 func (m *CpuCbDeleteRequestMsg) GetRequest() []*CpuCbDeleteRequest {
 	if m != nil {
@@ -272,7 +272,7 @@ type CpuCbDeleteResponse struct {
 func (m *CpuCbDeleteResponse) Reset()                    { *m = CpuCbDeleteResponse{} }
 func (m *CpuCbDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbDeleteResponse) ProtoMessage()               {}
-func (*CpuCbDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{8} }
+func (*CpuCbDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{8} }
 
 func (m *CpuCbDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -289,7 +289,7 @@ type CpuCbDeleteResponseMsg struct {
 func (m *CpuCbDeleteResponseMsg) Reset()                    { *m = CpuCbDeleteResponseMsg{} }
 func (m *CpuCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbDeleteResponseMsg) ProtoMessage()               {}
-func (*CpuCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{9} }
+func (*CpuCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{9} }
 
 func (m *CpuCbDeleteResponseMsg) GetResponse() []*CpuCbDeleteResponse {
 	if m != nil {
@@ -306,7 +306,7 @@ type CpuCbGetRequest struct {
 func (m *CpuCbGetRequest) Reset()                    { *m = CpuCbGetRequest{} }
 func (m *CpuCbGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbGetRequest) ProtoMessage()               {}
-func (*CpuCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{10} }
+func (*CpuCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{10} }
 
 func (m *CpuCbGetRequest) GetKeyOrHandle() *CpuCbKeyHandle {
 	if m != nil {
@@ -323,7 +323,7 @@ type CpuCbGetRequestMsg struct {
 func (m *CpuCbGetRequestMsg) Reset()                    { *m = CpuCbGetRequestMsg{} }
 func (m *CpuCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbGetRequestMsg) ProtoMessage()               {}
-func (*CpuCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{11} }
+func (*CpuCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{11} }
 
 func (m *CpuCbGetRequestMsg) GetRequest() []*CpuCbGetRequest {
 	if m != nil {
@@ -339,7 +339,7 @@ type CpuCbStats struct {
 func (m *CpuCbStats) Reset()                    { *m = CpuCbStats{} }
 func (m *CpuCbStats) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbStats) ProtoMessage()               {}
-func (*CpuCbStats) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{12} }
+func (*CpuCbStats) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{12} }
 
 // CpuCbGetResponse captures all the information about a cpucb
 // only if api_status indicates success, other fields are valid
@@ -353,7 +353,7 @@ type CpuCbGetResponse struct {
 func (m *CpuCbGetResponse) Reset()                    { *m = CpuCbGetResponse{} }
 func (m *CpuCbGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbGetResponse) ProtoMessage()               {}
-func (*CpuCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{13} }
+func (*CpuCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{13} }
 
 func (m *CpuCbGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -391,7 +391,7 @@ type CpuCbGetResponseMsg struct {
 func (m *CpuCbGetResponseMsg) Reset()                    { *m = CpuCbGetResponseMsg{} }
 func (m *CpuCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CpuCbGetResponseMsg) ProtoMessage()               {}
-func (*CpuCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor12, []int{14} }
+func (*CpuCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{14} }
 
 func (m *CpuCbGetResponseMsg) GetResponse() []*CpuCbGetResponse {
 	if m != nil {
@@ -418,9 +418,9 @@ func init() {
 	proto.RegisterType((*CpuCbGetResponseMsg)(nil), "halproto.CpuCbGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("cpucb.proto", fileDescriptor12) }
+func init() { proto.RegisterFile("cpucb.proto", fileDescriptor3) }
 
-var fileDescriptor12 = []byte{
+var fileDescriptor3 = []byte{
 	// 590 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0x5d, 0x6f, 0xda, 0x30,
 	0x14, 0x25, 0x7c, 0x15, 0x6e, 0x4a, 0x4b, 0xbd, 0x96, 0x52, 0xb6, 0x49, 0xcc, 0x9b, 0x34, 0xd4,

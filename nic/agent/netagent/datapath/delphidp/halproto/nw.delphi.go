@@ -125,7 +125,7 @@ type NetworkSpecReactor interface {
 func (m *NetworkSpec) Reset()                    { *m = NetworkSpec{} }
 func (m *NetworkSpec) String() string            { return proto.CompactTextString(m) }
 func (*NetworkSpec) ProtoMessage()               {}
-func (*NetworkSpec) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{0} }
+func (*NetworkSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{0} }
 
 func (m *NetworkSpec) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -171,7 +171,7 @@ type NetworkRequestMsg struct {
 func (m *NetworkRequestMsg) Reset()                    { *m = NetworkRequestMsg{} }
 func (m *NetworkRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NetworkRequestMsg) ProtoMessage()               {}
-func (*NetworkRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{1} }
+func (*NetworkRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{1} }
 
 func (m *NetworkRequestMsg) GetRequest() []*NetworkSpec {
 	if m != nil {
@@ -287,7 +287,7 @@ type NetworkStatusReactor interface {
 func (m *NetworkStatus) Reset()                    { *m = NetworkStatus{} }
 func (m *NetworkStatus) String() string            { return proto.CompactTextString(m) }
 func (*NetworkStatus) ProtoMessage()               {}
-func (*NetworkStatus) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{2} }
+func (*NetworkStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{2} }
 
 func (m *NetworkStatus) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -312,7 +312,7 @@ type NetworkResponse struct {
 func (m *NetworkResponse) Reset()                    { *m = NetworkResponse{} }
 func (m *NetworkResponse) String() string            { return proto.CompactTextString(m) }
 func (*NetworkResponse) ProtoMessage()               {}
-func (*NetworkResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{3} }
+func (*NetworkResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{3} }
 
 func (m *NetworkResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -336,7 +336,7 @@ type NetworkResponseMsg struct {
 func (m *NetworkResponseMsg) Reset()                    { *m = NetworkResponseMsg{} }
 func (m *NetworkResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NetworkResponseMsg) ProtoMessage()               {}
-func (*NetworkResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{4} }
+func (*NetworkResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{4} }
 
 func (m *NetworkResponseMsg) GetResponse() []*NetworkResponse {
 	if m != nil {
@@ -355,7 +355,7 @@ type NetworkDeleteRequest struct {
 func (m *NetworkDeleteRequest) Reset()                    { *m = NetworkDeleteRequest{} }
 func (m *NetworkDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*NetworkDeleteRequest) ProtoMessage()               {}
-func (*NetworkDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{5} }
+func (*NetworkDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{5} }
 
 func (m *NetworkDeleteRequest) GetKeyOrHandle() *NetworkKeyHandle {
 	if m != nil {
@@ -379,7 +379,7 @@ type NetworkDeleteRequestMsg struct {
 func (m *NetworkDeleteRequestMsg) Reset()                    { *m = NetworkDeleteRequestMsg{} }
 func (m *NetworkDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NetworkDeleteRequestMsg) ProtoMessage()               {}
-func (*NetworkDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{6} }
+func (*NetworkDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{6} }
 
 func (m *NetworkDeleteRequestMsg) GetRequest() []*NetworkDeleteRequest {
 	if m != nil {
@@ -396,7 +396,7 @@ type NetworkDeleteResponse struct {
 func (m *NetworkDeleteResponse) Reset()                    { *m = NetworkDeleteResponse{} }
 func (m *NetworkDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*NetworkDeleteResponse) ProtoMessage()               {}
-func (*NetworkDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{7} }
+func (*NetworkDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{7} }
 
 func (m *NetworkDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -413,7 +413,7 @@ type NetworkDeleteResponseMsg struct {
 func (m *NetworkDeleteResponseMsg) Reset()                    { *m = NetworkDeleteResponseMsg{} }
 func (m *NetworkDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NetworkDeleteResponseMsg) ProtoMessage()               {}
-func (*NetworkDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{8} }
+func (*NetworkDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{8} }
 
 func (m *NetworkDeleteResponseMsg) GetResponse() []*NetworkDeleteResponse {
 	if m != nil {
@@ -429,7 +429,7 @@ type NetworkStats struct {
 func (m *NetworkStats) Reset()                    { *m = NetworkStats{} }
 func (m *NetworkStats) String() string            { return proto.CompactTextString(m) }
 func (*NetworkStats) ProtoMessage()               {}
-func (*NetworkStats) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{9} }
+func (*NetworkStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{9} }
 
 // NetworkGetRequest is used to get information about a network
 type NetworkGetRequest struct {
@@ -441,7 +441,7 @@ type NetworkGetRequest struct {
 func (m *NetworkGetRequest) Reset()                    { *m = NetworkGetRequest{} }
 func (m *NetworkGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*NetworkGetRequest) ProtoMessage()               {}
-func (*NetworkGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{10} }
+func (*NetworkGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{10} }
 
 func (m *NetworkGetRequest) GetKeyOrHandle() *NetworkKeyHandle {
 	if m != nil {
@@ -465,7 +465,7 @@ type NetworkGetRequestMsg struct {
 func (m *NetworkGetRequestMsg) Reset()                    { *m = NetworkGetRequestMsg{} }
 func (m *NetworkGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NetworkGetRequestMsg) ProtoMessage()               {}
-func (*NetworkGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{11} }
+func (*NetworkGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{11} }
 
 func (m *NetworkGetRequestMsg) GetRequest() []*NetworkGetRequest {
 	if m != nil {
@@ -485,7 +485,7 @@ type NetworkGetResponse struct {
 func (m *NetworkGetResponse) Reset()                    { *m = NetworkGetResponse{} }
 func (m *NetworkGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*NetworkGetResponse) ProtoMessage()               {}
-func (*NetworkGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{12} }
+func (*NetworkGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{12} }
 
 func (m *NetworkGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -523,7 +523,7 @@ type NetworkGetResponseMsg struct {
 func (m *NetworkGetResponseMsg) Reset()                    { *m = NetworkGetResponseMsg{} }
 func (m *NetworkGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NetworkGetResponseMsg) ProtoMessage()               {}
-func (*NetworkGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{13} }
+func (*NetworkGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{13} }
 
 func (m *NetworkGetResponseMsg) GetResponse() []*NetworkGetResponse {
 	if m != nil {
@@ -541,7 +541,7 @@ type RouteSpec struct {
 func (m *RouteSpec) Reset()                    { *m = RouteSpec{} }
 func (m *RouteSpec) String() string            { return proto.CompactTextString(m) }
 func (*RouteSpec) ProtoMessage()               {}
-func (*RouteSpec) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{14} }
+func (*RouteSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{14} }
 
 func (m *RouteSpec) GetKeyOrHandle() *RouteKeyHandle {
 	if m != nil {
@@ -566,7 +566,7 @@ type RouteRequestMsg struct {
 func (m *RouteRequestMsg) Reset()                    { *m = RouteRequestMsg{} }
 func (m *RouteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RouteRequestMsg) ProtoMessage()               {}
-func (*RouteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{15} }
+func (*RouteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{15} }
 
 func (m *RouteRequestMsg) GetRequest() []*RouteSpec {
 	if m != nil {
@@ -583,7 +583,7 @@ type RouteStatus struct {
 func (m *RouteStatus) Reset()                    { *m = RouteStatus{} }
 func (m *RouteStatus) String() string            { return proto.CompactTextString(m) }
 func (*RouteStatus) ProtoMessage()               {}
-func (*RouteStatus) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{16} }
+func (*RouteStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{16} }
 
 func (m *RouteStatus) GetRouteHandle() uint64 {
 	if m != nil {
@@ -601,7 +601,7 @@ type RouteResponse struct {
 func (m *RouteResponse) Reset()                    { *m = RouteResponse{} }
 func (m *RouteResponse) String() string            { return proto.CompactTextString(m) }
 func (*RouteResponse) ProtoMessage()               {}
-func (*RouteResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{17} }
+func (*RouteResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{17} }
 
 func (m *RouteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -625,7 +625,7 @@ type RouteResponseMsg struct {
 func (m *RouteResponseMsg) Reset()                    { *m = RouteResponseMsg{} }
 func (m *RouteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RouteResponseMsg) ProtoMessage()               {}
-func (*RouteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{18} }
+func (*RouteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{18} }
 
 func (m *RouteResponseMsg) GetResponse() []*RouteResponse {
 	if m != nil {
@@ -642,7 +642,7 @@ type RouteDeleteRequest struct {
 func (m *RouteDeleteRequest) Reset()                    { *m = RouteDeleteRequest{} }
 func (m *RouteDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*RouteDeleteRequest) ProtoMessage()               {}
-func (*RouteDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{19} }
+func (*RouteDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{19} }
 
 func (m *RouteDeleteRequest) GetKeyOrHandle() *RouteKeyHandle {
 	if m != nil {
@@ -659,7 +659,7 @@ type RouteDeleteRequestMsg struct {
 func (m *RouteDeleteRequestMsg) Reset()                    { *m = RouteDeleteRequestMsg{} }
 func (m *RouteDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RouteDeleteRequestMsg) ProtoMessage()               {}
-func (*RouteDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{20} }
+func (*RouteDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{20} }
 
 func (m *RouteDeleteRequestMsg) GetRequest() []*RouteDeleteRequest {
 	if m != nil {
@@ -676,7 +676,7 @@ type RouteDeleteResponse struct {
 func (m *RouteDeleteResponse) Reset()                    { *m = RouteDeleteResponse{} }
 func (m *RouteDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*RouteDeleteResponse) ProtoMessage()               {}
-func (*RouteDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{21} }
+func (*RouteDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{21} }
 
 func (m *RouteDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -693,7 +693,7 @@ type RouteDeleteResponseMsg struct {
 func (m *RouteDeleteResponseMsg) Reset()                    { *m = RouteDeleteResponseMsg{} }
 func (m *RouteDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RouteDeleteResponseMsg) ProtoMessage()               {}
-func (*RouteDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{22} }
+func (*RouteDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{22} }
 
 func (m *RouteDeleteResponseMsg) GetResponse() []*RouteDeleteResponse {
 	if m != nil {
@@ -709,7 +709,7 @@ type RouteStats struct {
 func (m *RouteStats) Reset()                    { *m = RouteStats{} }
 func (m *RouteStats) String() string            { return proto.CompactTextString(m) }
 func (*RouteStats) ProtoMessage()               {}
-func (*RouteStats) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{23} }
+func (*RouteStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{23} }
 
 // RouteGetRequest is used to get information about a route
 type RouteGetRequest struct {
@@ -719,7 +719,7 @@ type RouteGetRequest struct {
 func (m *RouteGetRequest) Reset()                    { *m = RouteGetRequest{} }
 func (m *RouteGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*RouteGetRequest) ProtoMessage()               {}
-func (*RouteGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{24} }
+func (*RouteGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{24} }
 
 func (m *RouteGetRequest) GetKeyOrHandle() *RouteKeyHandle {
 	if m != nil {
@@ -736,7 +736,7 @@ type RouteGetRequestMsg struct {
 func (m *RouteGetRequestMsg) Reset()                    { *m = RouteGetRequestMsg{} }
 func (m *RouteGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RouteGetRequestMsg) ProtoMessage()               {}
-func (*RouteGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{25} }
+func (*RouteGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{25} }
 
 func (m *RouteGetRequestMsg) GetRequest() []*RouteGetRequest {
 	if m != nil {
@@ -756,7 +756,7 @@ type RouteGetResponse struct {
 func (m *RouteGetResponse) Reset()                    { *m = RouteGetResponse{} }
 func (m *RouteGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*RouteGetResponse) ProtoMessage()               {}
-func (*RouteGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{26} }
+func (*RouteGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{26} }
 
 func (m *RouteGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -794,7 +794,7 @@ type RouteGetResponseMsg struct {
 func (m *RouteGetResponseMsg) Reset()                    { *m = RouteGetResponseMsg{} }
 func (m *RouteGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RouteGetResponseMsg) ProtoMessage()               {}
-func (*RouteGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{27} }
+func (*RouteGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{27} }
 
 func (m *RouteGetResponseMsg) GetResponse() []*RouteGetResponse {
 	if m != nil {
@@ -815,7 +815,7 @@ type NexthopSpec struct {
 func (m *NexthopSpec) Reset()                    { *m = NexthopSpec{} }
 func (m *NexthopSpec) String() string            { return proto.CompactTextString(m) }
 func (*NexthopSpec) ProtoMessage()               {}
-func (*NexthopSpec) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{28} }
+func (*NexthopSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{28} }
 
 type isNexthopSpec_IfOrEp interface{ isNexthopSpec_IfOrEp() }
 
@@ -940,7 +940,7 @@ type NexthopRequestMsg struct {
 func (m *NexthopRequestMsg) Reset()                    { *m = NexthopRequestMsg{} }
 func (m *NexthopRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NexthopRequestMsg) ProtoMessage()               {}
-func (*NexthopRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{29} }
+func (*NexthopRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{29} }
 
 func (m *NexthopRequestMsg) GetRequest() []*NexthopSpec {
 	if m != nil {
@@ -957,7 +957,7 @@ type NexthopStatus struct {
 func (m *NexthopStatus) Reset()                    { *m = NexthopStatus{} }
 func (m *NexthopStatus) String() string            { return proto.CompactTextString(m) }
 func (*NexthopStatus) ProtoMessage()               {}
-func (*NexthopStatus) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{30} }
+func (*NexthopStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{30} }
 
 func (m *NexthopStatus) GetNexthopHandle() uint64 {
 	if m != nil {
@@ -975,7 +975,7 @@ type NexthopResponse struct {
 func (m *NexthopResponse) Reset()                    { *m = NexthopResponse{} }
 func (m *NexthopResponse) String() string            { return proto.CompactTextString(m) }
 func (*NexthopResponse) ProtoMessage()               {}
-func (*NexthopResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{31} }
+func (*NexthopResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{31} }
 
 func (m *NexthopResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -999,7 +999,7 @@ type NexthopResponseMsg struct {
 func (m *NexthopResponseMsg) Reset()                    { *m = NexthopResponseMsg{} }
 func (m *NexthopResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NexthopResponseMsg) ProtoMessage()               {}
-func (*NexthopResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{32} }
+func (*NexthopResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{32} }
 
 func (m *NexthopResponseMsg) GetResponse() []*NexthopResponse {
 	if m != nil {
@@ -1016,7 +1016,7 @@ type NexthopDeleteRequest struct {
 func (m *NexthopDeleteRequest) Reset()                    { *m = NexthopDeleteRequest{} }
 func (m *NexthopDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*NexthopDeleteRequest) ProtoMessage()               {}
-func (*NexthopDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{33} }
+func (*NexthopDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{33} }
 
 func (m *NexthopDeleteRequest) GetKeyOrHandle() *NexthopKeyHandle {
 	if m != nil {
@@ -1033,7 +1033,7 @@ type NexthopDeleteRequestMsg struct {
 func (m *NexthopDeleteRequestMsg) Reset()                    { *m = NexthopDeleteRequestMsg{} }
 func (m *NexthopDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NexthopDeleteRequestMsg) ProtoMessage()               {}
-func (*NexthopDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{34} }
+func (*NexthopDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{34} }
 
 func (m *NexthopDeleteRequestMsg) GetRequest() []*NexthopDeleteRequest {
 	if m != nil {
@@ -1050,7 +1050,7 @@ type NexthopDeleteResponse struct {
 func (m *NexthopDeleteResponse) Reset()                    { *m = NexthopDeleteResponse{} }
 func (m *NexthopDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*NexthopDeleteResponse) ProtoMessage()               {}
-func (*NexthopDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{35} }
+func (*NexthopDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{35} }
 
 func (m *NexthopDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1067,7 +1067,7 @@ type NexthopDeleteResponseMsg struct {
 func (m *NexthopDeleteResponseMsg) Reset()                    { *m = NexthopDeleteResponseMsg{} }
 func (m *NexthopDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NexthopDeleteResponseMsg) ProtoMessage()               {}
-func (*NexthopDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{36} }
+func (*NexthopDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{36} }
 
 func (m *NexthopDeleteResponseMsg) GetResponse() []*NexthopDeleteResponse {
 	if m != nil {
@@ -1083,7 +1083,7 @@ type NexthopStats struct {
 func (m *NexthopStats) Reset()                    { *m = NexthopStats{} }
 func (m *NexthopStats) String() string            { return proto.CompactTextString(m) }
 func (*NexthopStats) ProtoMessage()               {}
-func (*NexthopStats) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{37} }
+func (*NexthopStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{37} }
 
 // NexthopGetRequest is used to get information about a nexthop
 type NexthopGetRequest struct {
@@ -1093,7 +1093,7 @@ type NexthopGetRequest struct {
 func (m *NexthopGetRequest) Reset()                    { *m = NexthopGetRequest{} }
 func (m *NexthopGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*NexthopGetRequest) ProtoMessage()               {}
-func (*NexthopGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{38} }
+func (*NexthopGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{38} }
 
 func (m *NexthopGetRequest) GetKeyOrHandle() *NexthopKeyHandle {
 	if m != nil {
@@ -1110,7 +1110,7 @@ type NexthopGetRequestMsg struct {
 func (m *NexthopGetRequestMsg) Reset()                    { *m = NexthopGetRequestMsg{} }
 func (m *NexthopGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NexthopGetRequestMsg) ProtoMessage()               {}
-func (*NexthopGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{39} }
+func (*NexthopGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{39} }
 
 func (m *NexthopGetRequestMsg) GetRequest() []*NexthopGetRequest {
 	if m != nil {
@@ -1130,7 +1130,7 @@ type NexthopGetResponse struct {
 func (m *NexthopGetResponse) Reset()                    { *m = NexthopGetResponse{} }
 func (m *NexthopGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*NexthopGetResponse) ProtoMessage()               {}
-func (*NexthopGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{40} }
+func (*NexthopGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{40} }
 
 func (m *NexthopGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1168,7 +1168,7 @@ type NexthopGetResponseMsg struct {
 func (m *NexthopGetResponseMsg) Reset()                    { *m = NexthopGetResponseMsg{} }
 func (m *NexthopGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NexthopGetResponseMsg) ProtoMessage()               {}
-func (*NexthopGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{41} }
+func (*NexthopGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{41} }
 
 func (m *NexthopGetResponseMsg) GetResponse() []*NexthopGetResponse {
 	if m != nil {
@@ -1224,9 +1224,9 @@ func init() {
 	proto.RegisterType((*NexthopGetResponseMsg)(nil), "halproto.NexthopGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("nw.proto", fileDescriptor17) }
+func init() { proto.RegisterFile("nw.proto", fileDescriptor25) }
 
-var fileDescriptor17 = []byte{
+var fileDescriptor25 = []byte{
 	// 1236 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcd, 0x6e, 0xdb, 0x46,
 	0x17, 0x35, 0x6d, 0xc5, 0x91, 0xaf, 0x2c, 0xd9, 0x1e, 0x5b, 0xb2, 0xac, 0xef, 0x03, 0xe2, 0xb0,

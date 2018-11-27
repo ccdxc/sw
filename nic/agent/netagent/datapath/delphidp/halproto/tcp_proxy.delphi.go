@@ -34,7 +34,7 @@ var TcpProxyActionType_value = map[string]int32{
 func (x TcpProxyActionType) String() string {
 	return proto.EnumName(TcpProxyActionType_name, int32(x))
 }
-func (TcpProxyActionType) EnumDescriptor() ([]byte, []int) { return fileDescriptor22, []int{0} }
+func (TcpProxyActionType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{0} }
 
 type TlsProxyECDSAKey struct {
 	SignKeyIdx uint32 `protobuf:"varint,1,opt,name=sign_key_idx,json=signKeyIdx" json:"sign_key_idx,omitempty"`
@@ -43,7 +43,7 @@ type TlsProxyECDSAKey struct {
 func (m *TlsProxyECDSAKey) Reset()                    { *m = TlsProxyECDSAKey{} }
 func (m *TlsProxyECDSAKey) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyECDSAKey) ProtoMessage()               {}
-func (*TlsProxyECDSAKey) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{0} }
+func (*TlsProxyECDSAKey) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{0} }
 
 func (m *TlsProxyECDSAKey) GetSignKeyIdx() uint32 {
 	if m != nil {
@@ -60,7 +60,7 @@ type TlsProxyRSAKey struct {
 func (m *TlsProxyRSAKey) Reset()                    { *m = TlsProxyRSAKey{} }
 func (m *TlsProxyRSAKey) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyRSAKey) ProtoMessage()               {}
-func (*TlsProxyRSAKey) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{1} }
+func (*TlsProxyRSAKey) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{1} }
 
 func (m *TlsProxyRSAKey) GetSignKeyIdx() uint32 {
 	if m != nil {
@@ -90,7 +90,7 @@ type TlsProxyAction struct {
 func (m *TlsProxyAction) Reset()                    { *m = TlsProxyAction{} }
 func (m *TlsProxyAction) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyAction) ProtoMessage()               {}
-func (*TlsProxyAction) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{2} }
+func (*TlsProxyAction) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{2} }
 
 type isTlsProxyAction_Keys interface{ isTlsProxyAction_Keys() }
 
@@ -238,7 +238,7 @@ type TcpProxyAction struct {
 func (m *TcpProxyAction) Reset()                    { *m = TcpProxyAction{} }
 func (m *TcpProxyAction) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyAction) ProtoMessage()               {}
-func (*TcpProxyAction) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{3} }
+func (*TcpProxyAction) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{3} }
 
 type isTcpProxyAction_ProxyConfig interface{ isTcpProxyAction_ProxyConfig() }
 
@@ -340,7 +340,7 @@ type TcpProxyRuleMatchSpec struct {
 func (m *TcpProxyRuleMatchSpec) Reset()                    { *m = TcpProxyRuleMatchSpec{} }
 func (m *TcpProxyRuleMatchSpec) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleMatchSpec) ProtoMessage()               {}
-func (*TcpProxyRuleMatchSpec) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{4} }
+func (*TcpProxyRuleMatchSpec) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{4} }
 
 func (m *TcpProxyRuleMatchSpec) GetRuleId() uint64 {
 	if m != nil {
@@ -373,7 +373,7 @@ type TcpProxyRuleSpec struct {
 func (m *TcpProxyRuleSpec) Reset()                    { *m = TcpProxyRuleSpec{} }
 func (m *TcpProxyRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleSpec) ProtoMessage()               {}
-func (*TcpProxyRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{5} }
+func (*TcpProxyRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{5} }
 
 func (m *TcpProxyRuleSpec) GetKeyOrHandle() *TcpProxyRuleKeyHandle {
 	if m != nil {
@@ -404,7 +404,7 @@ type TcpProxyRuleRequestMsg struct {
 func (m *TcpProxyRuleRequestMsg) Reset()                    { *m = TcpProxyRuleRequestMsg{} }
 func (m *TcpProxyRuleRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleRequestMsg) ProtoMessage()               {}
-func (*TcpProxyRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{6} }
+func (*TcpProxyRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{6} }
 
 func (m *TcpProxyRuleRequestMsg) GetRequest() []*TcpProxyRuleSpec {
 	if m != nil {
@@ -421,7 +421,7 @@ type TcpProxyRuleStatus struct {
 func (m *TcpProxyRuleStatus) Reset()                    { *m = TcpProxyRuleStatus{} }
 func (m *TcpProxyRuleStatus) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleStatus) ProtoMessage()               {}
-func (*TcpProxyRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{7} }
+func (*TcpProxyRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{7} }
 
 func (m *TcpProxyRuleStatus) GetHandle() uint64 {
 	if m != nil {
@@ -439,7 +439,7 @@ type TcpProxyRuleResponse struct {
 func (m *TcpProxyRuleResponse) Reset()                    { *m = TcpProxyRuleResponse{} }
 func (m *TcpProxyRuleResponse) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleResponse) ProtoMessage()               {}
-func (*TcpProxyRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{8} }
+func (*TcpProxyRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{8} }
 
 func (m *TcpProxyRuleResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -463,7 +463,7 @@ type TcpProxyRuleResponseMsg struct {
 func (m *TcpProxyRuleResponseMsg) Reset()                    { *m = TcpProxyRuleResponseMsg{} }
 func (m *TcpProxyRuleResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleResponseMsg) ProtoMessage()               {}
-func (*TcpProxyRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{9} }
+func (*TcpProxyRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{9} }
 
 func (m *TcpProxyRuleResponseMsg) GetResponse() []*TcpProxyRuleResponse {
 	if m != nil {
@@ -480,7 +480,7 @@ type TcpProxyRuleDeleteRequest struct {
 func (m *TcpProxyRuleDeleteRequest) Reset()                    { *m = TcpProxyRuleDeleteRequest{} }
 func (m *TcpProxyRuleDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleDeleteRequest) ProtoMessage()               {}
-func (*TcpProxyRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{10} }
+func (*TcpProxyRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{10} }
 
 func (m *TcpProxyRuleDeleteRequest) GetKeyOrHandle() *TcpProxyRuleKeyHandle {
 	if m != nil {
@@ -497,7 +497,7 @@ type TcpProxyRuleDeleteRequestMsg struct {
 func (m *TcpProxyRuleDeleteRequestMsg) Reset()                    { *m = TcpProxyRuleDeleteRequestMsg{} }
 func (m *TcpProxyRuleDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleDeleteRequestMsg) ProtoMessage()               {}
-func (*TcpProxyRuleDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{11} }
+func (*TcpProxyRuleDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{11} }
 
 func (m *TcpProxyRuleDeleteRequestMsg) GetRequest() []*TcpProxyRuleDeleteRequest {
 	if m != nil {
@@ -514,7 +514,7 @@ type TcpProxyRuleDeleteResponse struct {
 func (m *TcpProxyRuleDeleteResponse) Reset()                    { *m = TcpProxyRuleDeleteResponse{} }
 func (m *TcpProxyRuleDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleDeleteResponse) ProtoMessage()               {}
-func (*TcpProxyRuleDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{12} }
+func (*TcpProxyRuleDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{12} }
 
 func (m *TcpProxyRuleDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -531,7 +531,7 @@ type TcpProxyRuleDeleteResponseMsg struct {
 func (m *TcpProxyRuleDeleteResponseMsg) Reset()                    { *m = TcpProxyRuleDeleteResponseMsg{} }
 func (m *TcpProxyRuleDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleDeleteResponseMsg) ProtoMessage()               {}
-func (*TcpProxyRuleDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{13} }
+func (*TcpProxyRuleDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{13} }
 
 func (m *TcpProxyRuleDeleteResponseMsg) GetResponse() []*TcpProxyRuleDeleteResponse {
 	if m != nil {
@@ -548,7 +548,7 @@ type TcpProxyRuleGetRequest struct {
 func (m *TcpProxyRuleGetRequest) Reset()                    { *m = TcpProxyRuleGetRequest{} }
 func (m *TcpProxyRuleGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleGetRequest) ProtoMessage()               {}
-func (*TcpProxyRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{14} }
+func (*TcpProxyRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{14} }
 
 func (m *TcpProxyRuleGetRequest) GetKeyOrHandle() *TcpProxyRuleKeyHandle {
 	if m != nil {
@@ -565,7 +565,7 @@ type TcpProxyRuleGetRequestMsg struct {
 func (m *TcpProxyRuleGetRequestMsg) Reset()                    { *m = TcpProxyRuleGetRequestMsg{} }
 func (m *TcpProxyRuleGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleGetRequestMsg) ProtoMessage()               {}
-func (*TcpProxyRuleGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{15} }
+func (*TcpProxyRuleGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{15} }
 
 func (m *TcpProxyRuleGetRequestMsg) GetRequest() []*TcpProxyRuleGetRequest {
 	if m != nil {
@@ -583,7 +583,7 @@ type TcpProxyRuleEntryStats struct {
 func (m *TcpProxyRuleEntryStats) Reset()                    { *m = TcpProxyRuleEntryStats{} }
 func (m *TcpProxyRuleEntryStats) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleEntryStats) ProtoMessage()               {}
-func (*TcpProxyRuleEntryStats) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{16} }
+func (*TcpProxyRuleEntryStats) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{16} }
 
 func (m *TcpProxyRuleEntryStats) GetNumTcpSessions() uint32 {
 	if m != nil {
@@ -607,7 +607,7 @@ type TcpProxyRuleStats struct {
 func (m *TcpProxyRuleStats) Reset()                    { *m = TcpProxyRuleStats{} }
 func (m *TcpProxyRuleStats) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleStats) ProtoMessage()               {}
-func (*TcpProxyRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{17} }
+func (*TcpProxyRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{17} }
 
 func (m *TcpProxyRuleStats) GetStats() []*TcpProxyRuleEntryStats {
 	if m != nil {
@@ -627,7 +627,7 @@ type TcpProxyRuleGetResponse struct {
 func (m *TcpProxyRuleGetResponse) Reset()                    { *m = TcpProxyRuleGetResponse{} }
 func (m *TcpProxyRuleGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleGetResponse) ProtoMessage()               {}
-func (*TcpProxyRuleGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{18} }
+func (*TcpProxyRuleGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{18} }
 
 func (m *TcpProxyRuleGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -665,7 +665,7 @@ type TcpProxyRuleGetResponseMsg struct {
 func (m *TcpProxyRuleGetResponseMsg) Reset()                    { *m = TcpProxyRuleGetResponseMsg{} }
 func (m *TcpProxyRuleGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyRuleGetResponseMsg) ProtoMessage()               {}
-func (*TcpProxyRuleGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{19} }
+func (*TcpProxyRuleGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{19} }
 
 func (m *TcpProxyRuleGetResponseMsg) GetResponse() []*TcpProxyRuleGetResponse {
 	if m != nil {
@@ -685,7 +685,7 @@ type TcpProxyCbKeyHandle struct {
 func (m *TcpProxyCbKeyHandle) Reset()                    { *m = TcpProxyCbKeyHandle{} }
 func (m *TcpProxyCbKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbKeyHandle) ProtoMessage()               {}
-func (*TcpProxyCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{20} }
+func (*TcpProxyCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{20} }
 
 type isTcpProxyCbKeyHandle_KeyOrHandle interface{ isTcpProxyCbKeyHandle_KeyOrHandle() }
 
@@ -832,7 +832,7 @@ type TcpProxyCbSpec struct {
 func (m *TcpProxyCbSpec) Reset()                    { *m = TcpProxyCbSpec{} }
 func (m *TcpProxyCbSpec) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbSpec) ProtoMessage()               {}
-func (*TcpProxyCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{21} }
+func (*TcpProxyCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{21} }
 
 func (m *TcpProxyCbSpec) GetKeyOrHandle() *TcpProxyCbKeyHandle {
 	if m != nil {
@@ -1129,7 +1129,7 @@ type TcpProxyCbRequestMsg struct {
 func (m *TcpProxyCbRequestMsg) Reset()                    { *m = TcpProxyCbRequestMsg{} }
 func (m *TcpProxyCbRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbRequestMsg) ProtoMessage()               {}
-func (*TcpProxyCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{22} }
+func (*TcpProxyCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{22} }
 
 func (m *TcpProxyCbRequestMsg) GetRequest() []*TcpProxyCbSpec {
 	if m != nil {
@@ -1146,7 +1146,7 @@ type TcpProxyCbStatus struct {
 func (m *TcpProxyCbStatus) Reset()                    { *m = TcpProxyCbStatus{} }
 func (m *TcpProxyCbStatus) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbStatus) ProtoMessage()               {}
-func (*TcpProxyCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{23} }
+func (*TcpProxyCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{23} }
 
 func (m *TcpProxyCbStatus) GetTcpcbHandle() uint64 {
 	if m != nil {
@@ -1164,7 +1164,7 @@ type TcpProxyCbResponse struct {
 func (m *TcpProxyCbResponse) Reset()                    { *m = TcpProxyCbResponse{} }
 func (m *TcpProxyCbResponse) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbResponse) ProtoMessage()               {}
-func (*TcpProxyCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{24} }
+func (*TcpProxyCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{24} }
 
 func (m *TcpProxyCbResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1188,7 +1188,7 @@ type TcpProxyCbResponseMsg struct {
 func (m *TcpProxyCbResponseMsg) Reset()                    { *m = TcpProxyCbResponseMsg{} }
 func (m *TcpProxyCbResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbResponseMsg) ProtoMessage()               {}
-func (*TcpProxyCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{25} }
+func (*TcpProxyCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{25} }
 
 func (m *TcpProxyCbResponseMsg) GetResponse() []*TcpProxyCbResponse {
 	if m != nil {
@@ -1205,7 +1205,7 @@ type TcpProxyCbDeleteRequest struct {
 func (m *TcpProxyCbDeleteRequest) Reset()                    { *m = TcpProxyCbDeleteRequest{} }
 func (m *TcpProxyCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbDeleteRequest) ProtoMessage()               {}
-func (*TcpProxyCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{26} }
+func (*TcpProxyCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{26} }
 
 func (m *TcpProxyCbDeleteRequest) GetKeyOrHandle() *TcpProxyCbKeyHandle {
 	if m != nil {
@@ -1222,7 +1222,7 @@ type TcpProxyCbDeleteRequestMsg struct {
 func (m *TcpProxyCbDeleteRequestMsg) Reset()                    { *m = TcpProxyCbDeleteRequestMsg{} }
 func (m *TcpProxyCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbDeleteRequestMsg) ProtoMessage()               {}
-func (*TcpProxyCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{27} }
+func (*TcpProxyCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{27} }
 
 func (m *TcpProxyCbDeleteRequestMsg) GetRequest() []*TcpProxyCbDeleteRequest {
 	if m != nil {
@@ -1239,7 +1239,7 @@ type TcpProxyCbDeleteResponseMsg struct {
 func (m *TcpProxyCbDeleteResponseMsg) Reset()                    { *m = TcpProxyCbDeleteResponseMsg{} }
 func (m *TcpProxyCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbDeleteResponseMsg) ProtoMessage()               {}
-func (*TcpProxyCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{28} }
+func (*TcpProxyCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{28} }
 
 func (m *TcpProxyCbDeleteResponseMsg) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -1256,7 +1256,7 @@ type TcpProxyCbGetRequest struct {
 func (m *TcpProxyCbGetRequest) Reset()                    { *m = TcpProxyCbGetRequest{} }
 func (m *TcpProxyCbGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbGetRequest) ProtoMessage()               {}
-func (*TcpProxyCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{29} }
+func (*TcpProxyCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{29} }
 
 func (m *TcpProxyCbGetRequest) GetKeyOrHandle() *TcpProxyCbKeyHandle {
 	if m != nil {
@@ -1273,7 +1273,7 @@ type TcpProxyCbGetRequestMsg struct {
 func (m *TcpProxyCbGetRequestMsg) Reset()                    { *m = TcpProxyCbGetRequestMsg{} }
 func (m *TcpProxyCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbGetRequestMsg) ProtoMessage()               {}
-func (*TcpProxyCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{30} }
+func (*TcpProxyCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{30} }
 
 func (m *TcpProxyCbGetRequestMsg) GetRequest() []*TcpProxyCbGetRequest {
 	if m != nil {
@@ -1311,7 +1311,7 @@ type TcpProxyCbStats struct {
 func (m *TcpProxyCbStats) Reset()                    { *m = TcpProxyCbStats{} }
 func (m *TcpProxyCbStats) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbStats) ProtoMessage()               {}
-func (*TcpProxyCbStats) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{31} }
+func (*TcpProxyCbStats) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{31} }
 
 func (m *TcpProxyCbStats) GetBytesRcvd() uint64 {
 	if m != nil {
@@ -1479,7 +1479,7 @@ type TcpProxyCbGetResponse struct {
 func (m *TcpProxyCbGetResponse) Reset()                    { *m = TcpProxyCbGetResponse{} }
 func (m *TcpProxyCbGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbGetResponse) ProtoMessage()               {}
-func (*TcpProxyCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{32} }
+func (*TcpProxyCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{32} }
 
 func (m *TcpProxyCbGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1517,7 +1517,7 @@ type TcpProxyCbGetResponseMsg struct {
 func (m *TcpProxyCbGetResponseMsg) Reset()                    { *m = TcpProxyCbGetResponseMsg{} }
 func (m *TcpProxyCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TcpProxyCbGetResponseMsg) ProtoMessage()               {}
-func (*TcpProxyCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor22, []int{33} }
+func (*TcpProxyCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{33} }
 
 func (m *TcpProxyCbGetResponseMsg) GetResponse() []*TcpProxyCbGetResponse {
 	if m != nil {
@@ -1564,9 +1564,9 @@ func init() {
 	proto.RegisterEnum("halproto.TcpProxyActionType", TcpProxyActionType_name, TcpProxyActionType_value)
 }
 
-func init() { proto.RegisterFile("tcp_proxy.proto", fileDescriptor22) }
+func init() { proto.RegisterFile("tcp_proxy.proto", fileDescriptor38) }
 
-var fileDescriptor22 = []byte{
+var fileDescriptor38 = []byte{
 	// 2356 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x59, 0xdd, 0x52, 0x1b, 0xc9,
 	0x15, 0x46, 0x06, 0x0b, 0xa9, 0x85, 0x04, 0x6e, 0x8c, 0x3d, 0x80, 0x31, 0xf2, 0x78, 0x6d, 0x93,

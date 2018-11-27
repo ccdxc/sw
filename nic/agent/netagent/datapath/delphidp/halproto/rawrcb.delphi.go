@@ -23,7 +23,7 @@ type RawrCbKeyHandle struct {
 func (m *RawrCbKeyHandle) Reset()                    { *m = RawrCbKeyHandle{} }
 func (m *RawrCbKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbKeyHandle) ProtoMessage()               {}
-func (*RawrCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
+func (*RawrCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{0} }
 
 type isRawrCbKeyHandle_KeyOrHandle interface{ isRawrCbKeyHandle_KeyOrHandle() }
 
@@ -160,7 +160,7 @@ type RawrCbSpec struct {
 func (m *RawrCbSpec) Reset()                    { *m = RawrCbSpec{} }
 func (m *RawrCbSpec) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbSpec) ProtoMessage()               {}
-func (*RawrCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{1} }
+func (*RawrCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{1} }
 
 func (m *RawrCbSpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -359,7 +359,7 @@ type RawrCbRequestMsg struct {
 func (m *RawrCbRequestMsg) Reset()                    { *m = RawrCbRequestMsg{} }
 func (m *RawrCbRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbRequestMsg) ProtoMessage()               {}
-func (*RawrCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{2} }
+func (*RawrCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{2} }
 
 func (m *RawrCbRequestMsg) GetRequest() []*RawrCbSpec {
 	if m != nil {
@@ -376,7 +376,7 @@ type RawrCbStatus struct {
 func (m *RawrCbStatus) Reset()                    { *m = RawrCbStatus{} }
 func (m *RawrCbStatus) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbStatus) ProtoMessage()               {}
-func (*RawrCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{3} }
+func (*RawrCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{3} }
 
 func (m *RawrCbStatus) GetRawrcbHandle() uint64 {
 	if m != nil {
@@ -394,7 +394,7 @@ type RawrCbResponse struct {
 func (m *RawrCbResponse) Reset()                    { *m = RawrCbResponse{} }
 func (m *RawrCbResponse) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbResponse) ProtoMessage()               {}
-func (*RawrCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{4} }
+func (*RawrCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{4} }
 
 func (m *RawrCbResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -418,7 +418,7 @@ type RawrCbResponseMsg struct {
 func (m *RawrCbResponseMsg) Reset()                    { *m = RawrCbResponseMsg{} }
 func (m *RawrCbResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbResponseMsg) ProtoMessage()               {}
-func (*RawrCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{5} }
+func (*RawrCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{5} }
 
 func (m *RawrCbResponseMsg) GetResponse() []*RawrCbResponse {
 	if m != nil {
@@ -436,7 +436,7 @@ type RawrCbDeleteRequest struct {
 func (m *RawrCbDeleteRequest) Reset()                    { *m = RawrCbDeleteRequest{} }
 func (m *RawrCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbDeleteRequest) ProtoMessage()               {}
-func (*RawrCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{6} }
+func (*RawrCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{6} }
 
 func (m *RawrCbDeleteRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -460,7 +460,7 @@ type RawrCbDeleteRequestMsg struct {
 func (m *RawrCbDeleteRequestMsg) Reset()                    { *m = RawrCbDeleteRequestMsg{} }
 func (m *RawrCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbDeleteRequestMsg) ProtoMessage()               {}
-func (*RawrCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{7} }
+func (*RawrCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{7} }
 
 func (m *RawrCbDeleteRequestMsg) GetRequest() []*RawrCbDeleteRequest {
 	if m != nil {
@@ -477,7 +477,7 @@ type RawrCbDeleteResponseMsg struct {
 func (m *RawrCbDeleteResponseMsg) Reset()                    { *m = RawrCbDeleteResponseMsg{} }
 func (m *RawrCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbDeleteResponseMsg) ProtoMessage()               {}
-func (*RawrCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{8} }
+func (*RawrCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{8} }
 
 func (m *RawrCbDeleteResponseMsg) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -495,7 +495,7 @@ type RawrCbGetRequest struct {
 func (m *RawrCbGetRequest) Reset()                    { *m = RawrCbGetRequest{} }
 func (m *RawrCbGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbGetRequest) ProtoMessage()               {}
-func (*RawrCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{9} }
+func (*RawrCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{9} }
 
 func (m *RawrCbGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -519,7 +519,7 @@ type RawrCbGetRequestMsg struct {
 func (m *RawrCbGetRequestMsg) Reset()                    { *m = RawrCbGetRequestMsg{} }
 func (m *RawrCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbGetRequestMsg) ProtoMessage()               {}
-func (*RawrCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{10} }
+func (*RawrCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{10} }
 
 func (m *RawrCbGetRequestMsg) GetRequest() []*RawrCbGetRequest {
 	if m != nil {
@@ -535,7 +535,7 @@ type RawrCbStats struct {
 func (m *RawrCbStats) Reset()                    { *m = RawrCbStats{} }
 func (m *RawrCbStats) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbStats) ProtoMessage()               {}
-func (*RawrCbStats) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{11} }
+func (*RawrCbStats) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{11} }
 
 // RawrCbGetResponse captures all the information about a rawrcb
 // only if api_status indicates success, other fields are valid
@@ -549,7 +549,7 @@ type RawrCbGetResponse struct {
 func (m *RawrCbGetResponse) Reset()                    { *m = RawrCbGetResponse{} }
 func (m *RawrCbGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbGetResponse) ProtoMessage()               {}
-func (*RawrCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{12} }
+func (*RawrCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{12} }
 
 func (m *RawrCbGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -587,7 +587,7 @@ type RawrCbGetResponseMsg struct {
 func (m *RawrCbGetResponseMsg) Reset()                    { *m = RawrCbGetResponseMsg{} }
 func (m *RawrCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RawrCbGetResponseMsg) ProtoMessage()               {}
-func (*RawrCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{13} }
+func (*RawrCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{13} }
 
 func (m *RawrCbGetResponseMsg) GetResponse() []*RawrCbGetResponse {
 	if m != nil {
@@ -613,9 +613,9 @@ func init() {
 	proto.RegisterType((*RawrCbGetResponseMsg)(nil), "halproto.RawrCbGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("rawrcb.proto", fileDescriptor2) }
+func init() { proto.RegisterFile("rawrcb.proto", fileDescriptor33) }
 
-var fileDescriptor2 = []byte{
+var fileDescriptor33 = []byte{
 	// 1020 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x5b, 0x73, 0xdb, 0x44,
 	0x14, 0xae, 0x9b, 0xd4, 0x4d, 0x8e, 0xe3, 0x4b, 0x36, 0x69, 0xb2, 0x4e, 0xb8, 0x04, 0x41, 0x4b,

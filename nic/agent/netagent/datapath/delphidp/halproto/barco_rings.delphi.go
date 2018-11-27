@@ -19,7 +19,7 @@ type GetOpaqueTagAddrRequest struct {
 func (m *GetOpaqueTagAddrRequest) Reset()                    { *m = GetOpaqueTagAddrRequest{} }
 func (m *GetOpaqueTagAddrRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetOpaqueTagAddrRequest) ProtoMessage()               {}
-func (*GetOpaqueTagAddrRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
+func (*GetOpaqueTagAddrRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
 
 func (m *GetOpaqueTagAddrRequest) GetRingType() BarcoRings {
 	if m != nil {
@@ -35,7 +35,7 @@ type GetOpaqueTagAddrRequestMsg struct {
 func (m *GetOpaqueTagAddrRequestMsg) Reset()                    { *m = GetOpaqueTagAddrRequestMsg{} }
 func (m *GetOpaqueTagAddrRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*GetOpaqueTagAddrRequestMsg) ProtoMessage()               {}
-func (*GetOpaqueTagAddrRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{1} }
+func (*GetOpaqueTagAddrRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{1} }
 
 func (m *GetOpaqueTagAddrRequestMsg) GetRequest() []*GetOpaqueTagAddrRequest {
 	if m != nil {
@@ -52,7 +52,7 @@ type GetOpaqueTagAddrResponse struct {
 func (m *GetOpaqueTagAddrResponse) Reset()                    { *m = GetOpaqueTagAddrResponse{} }
 func (m *GetOpaqueTagAddrResponse) String() string            { return proto.CompactTextString(m) }
 func (*GetOpaqueTagAddrResponse) ProtoMessage()               {}
-func (*GetOpaqueTagAddrResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{2} }
+func (*GetOpaqueTagAddrResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{2} }
 
 func (m *GetOpaqueTagAddrResponse) GetOpaqueTagAddr() uint64 {
 	if m != nil {
@@ -75,7 +75,7 @@ type GetOpaqueTagAddrResponseMsg struct {
 func (m *GetOpaqueTagAddrResponseMsg) Reset()                    { *m = GetOpaqueTagAddrResponseMsg{} }
 func (m *GetOpaqueTagAddrResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*GetOpaqueTagAddrResponseMsg) ProtoMessage()               {}
-func (*GetOpaqueTagAddrResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{3} }
+func (*GetOpaqueTagAddrResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{3} }
 
 func (m *GetOpaqueTagAddrResponseMsg) GetResponse() []*GetOpaqueTagAddrResponse {
 	if m != nil {
@@ -93,7 +93,7 @@ type BarcoGetReqDescrEntryRequest struct {
 func (m *BarcoGetReqDescrEntryRequest) Reset()                    { *m = BarcoGetReqDescrEntryRequest{} }
 func (m *BarcoGetReqDescrEntryRequest) String() string            { return proto.CompactTextString(m) }
 func (*BarcoGetReqDescrEntryRequest) ProtoMessage()               {}
-func (*BarcoGetReqDescrEntryRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{4} }
+func (*BarcoGetReqDescrEntryRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{4} }
 
 func (m *BarcoGetReqDescrEntryRequest) GetRingType() BarcoRings {
 	if m != nil {
@@ -117,7 +117,7 @@ type BarcoGetReqDescrEntryRequestMsg struct {
 func (m *BarcoGetReqDescrEntryRequestMsg) Reset()                    { *m = BarcoGetReqDescrEntryRequestMsg{} }
 func (m *BarcoGetReqDescrEntryRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*BarcoGetReqDescrEntryRequestMsg) ProtoMessage()               {}
-func (*BarcoGetReqDescrEntryRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{5} }
+func (*BarcoGetReqDescrEntryRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{5} }
 
 func (m *BarcoGetReqDescrEntryRequestMsg) GetRequest() []*BarcoGetReqDescrEntryRequest {
 	if m != nil {
@@ -146,7 +146,7 @@ type BarcoSymmReqDescrMsg struct {
 func (m *BarcoSymmReqDescrMsg) Reset()                    { *m = BarcoSymmReqDescrMsg{} }
 func (m *BarcoSymmReqDescrMsg) String() string            { return proto.CompactTextString(m) }
 func (*BarcoSymmReqDescrMsg) ProtoMessage()               {}
-func (*BarcoSymmReqDescrMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{6} }
+func (*BarcoSymmReqDescrMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{6} }
 
 func (m *BarcoSymmReqDescrMsg) GetIlistAddr() uint64 {
 	if m != nil {
@@ -254,7 +254,7 @@ type BarcoASymReqDescrMsg struct {
 func (m *BarcoASymReqDescrMsg) Reset()                    { *m = BarcoASymReqDescrMsg{} }
 func (m *BarcoASymReqDescrMsg) String() string            { return proto.CompactTextString(m) }
 func (*BarcoASymReqDescrMsg) ProtoMessage()               {}
-func (*BarcoASymReqDescrMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{7} }
+func (*BarcoASymReqDescrMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{7} }
 
 func (m *BarcoASymReqDescrMsg) GetIlistAddr() uint64 {
 	if m != nil {
@@ -327,7 +327,7 @@ type BarcoGetReqDescrEntryResponse struct {
 func (m *BarcoGetReqDescrEntryResponse) Reset()                    { *m = BarcoGetReqDescrEntryResponse{} }
 func (m *BarcoGetReqDescrEntryResponse) String() string            { return proto.CompactTextString(m) }
 func (*BarcoGetReqDescrEntryResponse) ProtoMessage()               {}
-func (*BarcoGetReqDescrEntryResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{8} }
+func (*BarcoGetReqDescrEntryResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{8} }
 
 type isBarcoGetReqDescrEntryResponse_ReqDescrMsg interface{ isBarcoGetReqDescrEntryResponse_ReqDescrMsg() }
 
@@ -466,7 +466,7 @@ func (m *BarcoGetReqDescrEntryResponseMsg) Reset()         { *m = BarcoGetReqDes
 func (m *BarcoGetReqDescrEntryResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*BarcoGetReqDescrEntryResponseMsg) ProtoMessage()    {}
 func (*BarcoGetReqDescrEntryResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor6, []int{9}
+	return fileDescriptor2, []int{9}
 }
 
 func (m *BarcoGetReqDescrEntryResponseMsg) GetResponse() []*BarcoGetReqDescrEntryResponse {
@@ -484,7 +484,7 @@ type BarcoGetRingMetaRequest struct {
 func (m *BarcoGetRingMetaRequest) Reset()                    { *m = BarcoGetRingMetaRequest{} }
 func (m *BarcoGetRingMetaRequest) String() string            { return proto.CompactTextString(m) }
 func (*BarcoGetRingMetaRequest) ProtoMessage()               {}
-func (*BarcoGetRingMetaRequest) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{10} }
+func (*BarcoGetRingMetaRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{10} }
 
 func (m *BarcoGetRingMetaRequest) GetRingType() BarcoRings {
 	if m != nil {
@@ -501,7 +501,7 @@ type BarcoGetRingMetaRequestMsg struct {
 func (m *BarcoGetRingMetaRequestMsg) Reset()                    { *m = BarcoGetRingMetaRequestMsg{} }
 func (m *BarcoGetRingMetaRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*BarcoGetRingMetaRequestMsg) ProtoMessage()               {}
-func (*BarcoGetRingMetaRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{11} }
+func (*BarcoGetRingMetaRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{11} }
 
 func (m *BarcoGetRingMetaRequestMsg) GetRequest() []*BarcoGetRingMetaRequest {
 	if m != nil {
@@ -522,7 +522,7 @@ type BarcoGetRingMetaResponse struct {
 func (m *BarcoGetRingMetaResponse) Reset()                    { *m = BarcoGetRingMetaResponse{} }
 func (m *BarcoGetRingMetaResponse) String() string            { return proto.CompactTextString(m) }
 func (*BarcoGetRingMetaResponse) ProtoMessage()               {}
-func (*BarcoGetRingMetaResponse) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{12} }
+func (*BarcoGetRingMetaResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{12} }
 
 func (m *BarcoGetRingMetaResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -560,7 +560,7 @@ type BarcoGetRingMetaResponseMsg struct {
 func (m *BarcoGetRingMetaResponseMsg) Reset()                    { *m = BarcoGetRingMetaResponseMsg{} }
 func (m *BarcoGetRingMetaResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*BarcoGetRingMetaResponseMsg) ProtoMessage()               {}
-func (*BarcoGetRingMetaResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{13} }
+func (*BarcoGetRingMetaResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{13} }
 
 func (m *BarcoGetRingMetaResponseMsg) GetResponse() []*BarcoGetRingMetaResponse {
 	if m != nil {
@@ -586,9 +586,9 @@ func init() {
 	proto.RegisterType((*BarcoGetRingMetaResponseMsg)(nil), "halproto.BarcoGetRingMetaResponseMsg")
 }
 
-func init() { proto.RegisterFile("barco_rings.proto", fileDescriptor6) }
+func init() { proto.RegisterFile("barco_rings.proto", fileDescriptor2) }
 
-var fileDescriptor6 = []byte{
+var fileDescriptor2 = []byte{
 	// 826 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xdd, 0x6e, 0xea, 0x46,
 	0x10, 0x0e, 0x86, 0xf0, 0x33, 0x60, 0xca, 0x59, 0x35, 0x8a, 0x95, 0x16, 0x1d, 0xea, 0x73, 0x74,

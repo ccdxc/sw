@@ -23,7 +23,7 @@ type ProxyrCbKeyHandle struct {
 func (m *ProxyrCbKeyHandle) Reset()                    { *m = ProxyrCbKeyHandle{} }
 func (m *ProxyrCbKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbKeyHandle) ProtoMessage()               {}
-func (*ProxyrCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{0} }
+func (*ProxyrCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{0} }
 
 type isProxyrCbKeyHandle_KeyOrHandle interface{ isProxyrCbKeyHandle_KeyOrHandle() }
 
@@ -166,7 +166,7 @@ type ProxyrCbSpec struct {
 func (m *ProxyrCbSpec) Reset()                    { *m = ProxyrCbSpec{} }
 func (m *ProxyrCbSpec) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbSpec) ProtoMessage()               {}
-func (*ProxyrCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{1} }
+func (*ProxyrCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{1} }
 
 func (m *ProxyrCbSpec) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -407,7 +407,7 @@ type ProxyrCbRequestMsg struct {
 func (m *ProxyrCbRequestMsg) Reset()                    { *m = ProxyrCbRequestMsg{} }
 func (m *ProxyrCbRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbRequestMsg) ProtoMessage()               {}
-func (*ProxyrCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{2} }
+func (*ProxyrCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{2} }
 
 func (m *ProxyrCbRequestMsg) GetRequest() []*ProxyrCbSpec {
 	if m != nil {
@@ -424,7 +424,7 @@ type ProxyrCbStatus struct {
 func (m *ProxyrCbStatus) Reset()                    { *m = ProxyrCbStatus{} }
 func (m *ProxyrCbStatus) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbStatus) ProtoMessage()               {}
-func (*ProxyrCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{3} }
+func (*ProxyrCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{3} }
 
 func (m *ProxyrCbStatus) GetProxyrcbHandle() uint64 {
 	if m != nil {
@@ -442,7 +442,7 @@ type ProxyrCbResponse struct {
 func (m *ProxyrCbResponse) Reset()                    { *m = ProxyrCbResponse{} }
 func (m *ProxyrCbResponse) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbResponse) ProtoMessage()               {}
-func (*ProxyrCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{4} }
+func (*ProxyrCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{4} }
 
 func (m *ProxyrCbResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -466,7 +466,7 @@ type ProxyrCbResponseMsg struct {
 func (m *ProxyrCbResponseMsg) Reset()                    { *m = ProxyrCbResponseMsg{} }
 func (m *ProxyrCbResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbResponseMsg) ProtoMessage()               {}
-func (*ProxyrCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{5} }
+func (*ProxyrCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{5} }
 
 func (m *ProxyrCbResponseMsg) GetResponse() []*ProxyrCbResponse {
 	if m != nil {
@@ -484,7 +484,7 @@ type ProxyrCbDeleteRequest struct {
 func (m *ProxyrCbDeleteRequest) Reset()                    { *m = ProxyrCbDeleteRequest{} }
 func (m *ProxyrCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbDeleteRequest) ProtoMessage()               {}
-func (*ProxyrCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{6} }
+func (*ProxyrCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{6} }
 
 func (m *ProxyrCbDeleteRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -508,7 +508,7 @@ type ProxyrCbDeleteRequestMsg struct {
 func (m *ProxyrCbDeleteRequestMsg) Reset()                    { *m = ProxyrCbDeleteRequestMsg{} }
 func (m *ProxyrCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbDeleteRequestMsg) ProtoMessage()               {}
-func (*ProxyrCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{7} }
+func (*ProxyrCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{7} }
 
 func (m *ProxyrCbDeleteRequestMsg) GetRequest() []*ProxyrCbDeleteRequest {
 	if m != nil {
@@ -525,7 +525,7 @@ type ProxyrCbDeleteResponseMsg struct {
 func (m *ProxyrCbDeleteResponseMsg) Reset()                    { *m = ProxyrCbDeleteResponseMsg{} }
 func (m *ProxyrCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbDeleteResponseMsg) ProtoMessage()               {}
-func (*ProxyrCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{8} }
+func (*ProxyrCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{8} }
 
 func (m *ProxyrCbDeleteResponseMsg) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -543,7 +543,7 @@ type ProxyrCbGetRequest struct {
 func (m *ProxyrCbGetRequest) Reset()                    { *m = ProxyrCbGetRequest{} }
 func (m *ProxyrCbGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbGetRequest) ProtoMessage()               {}
-func (*ProxyrCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{9} }
+func (*ProxyrCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{9} }
 
 func (m *ProxyrCbGetRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -567,7 +567,7 @@ type ProxyrCbGetRequestMsg struct {
 func (m *ProxyrCbGetRequestMsg) Reset()                    { *m = ProxyrCbGetRequestMsg{} }
 func (m *ProxyrCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbGetRequestMsg) ProtoMessage()               {}
-func (*ProxyrCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{10} }
+func (*ProxyrCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{10} }
 
 func (m *ProxyrCbGetRequestMsg) GetRequest() []*ProxyrCbGetRequest {
 	if m != nil {
@@ -583,7 +583,7 @@ type ProxyrCbStats struct {
 func (m *ProxyrCbStats) Reset()                    { *m = ProxyrCbStats{} }
 func (m *ProxyrCbStats) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbStats) ProtoMessage()               {}
-func (*ProxyrCbStats) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{11} }
+func (*ProxyrCbStats) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{11} }
 
 // ProxyrCbGetResponse captures all the information about a proxyrcb
 // only if api_status indicates success, other fields are valid
@@ -597,7 +597,7 @@ type ProxyrCbGetResponse struct {
 func (m *ProxyrCbGetResponse) Reset()                    { *m = ProxyrCbGetResponse{} }
 func (m *ProxyrCbGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbGetResponse) ProtoMessage()               {}
-func (*ProxyrCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{12} }
+func (*ProxyrCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{12} }
 
 func (m *ProxyrCbGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -635,7 +635,7 @@ type ProxyrCbGetResponseMsg struct {
 func (m *ProxyrCbGetResponseMsg) Reset()                    { *m = ProxyrCbGetResponseMsg{} }
 func (m *ProxyrCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyrCbGetResponseMsg) ProtoMessage()               {}
-func (*ProxyrCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor36, []int{13} }
+func (*ProxyrCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{13} }
 
 func (m *ProxyrCbGetResponseMsg) GetResponse() []*ProxyrCbGetResponse {
 	if m != nil {
@@ -661,9 +661,9 @@ func init() {
 	proto.RegisterType((*ProxyrCbGetResponseMsg)(nil), "halproto.ProxyrCbGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("proxyrcb.proto", fileDescriptor36) }
+func init() { proto.RegisterFile("proxyrcb.proto", fileDescriptor30) }
 
-var fileDescriptor36 = []byte{
+var fileDescriptor30 = []byte{
 	// 1118 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x5d, 0x4f, 0x1b, 0x47,
 	0x17, 0x8e, 0xc1, 0x80, 0x39, 0xc6, 0x36, 0x0c, 0x09, 0x4c, 0x0c, 0x04, 0x67, 0xdf, 0x97, 0x96,

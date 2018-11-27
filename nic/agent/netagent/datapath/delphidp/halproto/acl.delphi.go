@@ -41,7 +41,7 @@ var AclAction_value = map[string]int32{
 func (x AclAction) String() string {
 	return proto.EnumName(AclAction_name, int32(x))
 }
-func (AclAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+func (AclAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
 
 // EthSelector has match criteria for non-IP packets
 type EthSelector struct {
@@ -56,7 +56,7 @@ type EthSelector struct {
 func (m *EthSelector) Reset()                    { *m = EthSelector{} }
 func (m *EthSelector) String() string            { return proto.CompactTextString(m) }
 func (*EthSelector) ProtoMessage()               {}
-func (*EthSelector) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+func (*EthSelector) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
 
 func (m *EthSelector) GetEthType() uint32 {
 	if m != nil {
@@ -109,7 +109,7 @@ type UDPSelector struct {
 func (m *UDPSelector) Reset()                    { *m = UDPSelector{} }
 func (m *UDPSelector) String() string            { return proto.CompactTextString(m) }
 func (*UDPSelector) ProtoMessage()               {}
-func (*UDPSelector) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{1} }
+func (*UDPSelector) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
 
 func (m *UDPSelector) GetSrcPortRange() *L4PortRange {
 	if m != nil {
@@ -154,7 +154,7 @@ type TCPSelector struct {
 func (m *TCPSelector) Reset()                    { *m = TCPSelector{} }
 func (m *TCPSelector) String() string            { return proto.CompactTextString(m) }
 func (*TCPSelector) ProtoMessage()               {}
-func (*TCPSelector) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{2} }
+func (*TCPSelector) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
 
 type isTCPSelector_TcpSyn interface{ isTCPSelector_TcpSyn() }
 type isTCPSelector_TcpAck interface{ isTCPSelector_TcpAck() }
@@ -594,7 +594,7 @@ type ICMPSelector struct {
 func (m *ICMPSelector) Reset()                    { *m = ICMPSelector{} }
 func (m *ICMPSelector) String() string            { return proto.CompactTextString(m) }
 func (*ICMPSelector) ProtoMessage()               {}
-func (*ICMPSelector) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{3} }
+func (*ICMPSelector) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
 
 func (m *ICMPSelector) GetIcmpCode() uint32 {
 	if m != nil {
@@ -640,7 +640,7 @@ type IPSelector struct {
 func (m *IPSelector) Reset()                    { *m = IPSelector{} }
 func (m *IPSelector) String() string            { return proto.CompactTextString(m) }
 func (*IPSelector) ProtoMessage()               {}
-func (*IPSelector) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{4} }
+func (*IPSelector) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
 
 type isIPSelector_L4Selectors interface{ isIPSelector_L4Selectors() }
 
@@ -844,7 +844,7 @@ type AclInternalSelector struct {
 func (m *AclInternalSelector) Reset()                    { *m = AclInternalSelector{} }
 func (m *AclInternalSelector) String() string            { return proto.CompactTextString(m) }
 func (*AclInternalSelector) ProtoMessage()               {}
-func (*AclInternalSelector) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{5} }
+func (*AclInternalSelector) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
 
 func (m *AclInternalSelector) GetFlowMiss() bool {
 	if m != nil {
@@ -927,7 +927,7 @@ type AclInternalActionInfo struct {
 func (m *AclInternalActionInfo) Reset()                    { *m = AclInternalActionInfo{} }
 func (m *AclInternalActionInfo) String() string            { return proto.CompactTextString(m) }
 func (*AclInternalActionInfo) ProtoMessage()               {}
-func (*AclInternalActionInfo) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{6} }
+func (*AclInternalActionInfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{6} }
 
 func (m *AclInternalActionInfo) GetMacSaRewriteEn() bool {
 	if m != nil {
@@ -1005,7 +1005,7 @@ type AclSelector struct {
 func (m *AclSelector) Reset()                    { *m = AclSelector{} }
 func (m *AclSelector) String() string            { return proto.CompactTextString(m) }
 func (*AclSelector) ProtoMessage()               {}
-func (*AclSelector) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{7} }
+func (*AclSelector) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7} }
 
 type isAclSelector_SegSelector interface{ isAclSelector_SegSelector() }
 type isAclSelector_PktSelector interface{ isAclSelector_PktSelector() }
@@ -1234,7 +1234,7 @@ type AclActionInfo struct {
 func (m *AclActionInfo) Reset()                    { *m = AclActionInfo{} }
 func (m *AclActionInfo) String() string            { return proto.CompactTextString(m) }
 func (*AclActionInfo) ProtoMessage()               {}
-func (*AclActionInfo) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{8} }
+func (*AclActionInfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8} }
 
 func (m *AclActionInfo) GetAction() AclAction {
 	if m != nil {
@@ -1291,7 +1291,7 @@ type AclSpec struct {
 func (m *AclSpec) Reset()                    { *m = AclSpec{} }
 func (m *AclSpec) String() string            { return proto.CompactTextString(m) }
 func (*AclSpec) ProtoMessage()               {}
-func (*AclSpec) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{9} }
+func (*AclSpec) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{9} }
 
 func (m *AclSpec) GetKeyOrHandle() *AclKeyHandle {
 	if m != nil {
@@ -1329,7 +1329,7 @@ type AclRequestMsg struct {
 func (m *AclRequestMsg) Reset()                    { *m = AclRequestMsg{} }
 func (m *AclRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*AclRequestMsg) ProtoMessage()               {}
-func (*AclRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{10} }
+func (*AclRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{10} }
 
 func (m *AclRequestMsg) GetRequest() []*AclSpec {
 	if m != nil {
@@ -1346,7 +1346,7 @@ type AclStatusEpd struct {
 func (m *AclStatusEpd) Reset()                    { *m = AclStatusEpd{} }
 func (m *AclStatusEpd) String() string            { return proto.CompactTextString(m) }
 func (*AclStatusEpd) ProtoMessage()               {}
-func (*AclStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{11} }
+func (*AclStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{11} }
 
 func (m *AclStatusEpd) GetHwTcamIdx() uint32 {
 	if m != nil {
@@ -1362,7 +1362,7 @@ type AclStatusCpd struct {
 func (m *AclStatusCpd) Reset()                    { *m = AclStatusCpd{} }
 func (m *AclStatusCpd) String() string            { return proto.CompactTextString(m) }
 func (*AclStatusCpd) ProtoMessage()               {}
-func (*AclStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{12} }
+func (*AclStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{12} }
 
 // AclStatus represents the operational status of an ACL entry
 type AclStatus struct {
@@ -1376,7 +1376,7 @@ type AclStatus struct {
 func (m *AclStatus) Reset()                    { *m = AclStatus{} }
 func (m *AclStatus) String() string            { return proto.CompactTextString(m) }
 func (*AclStatus) ProtoMessage()               {}
-func (*AclStatus) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{13} }
+func (*AclStatus) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{13} }
 
 type isAclStatus_QosClassPdStatus interface{ isAclStatus_QosClassPdStatus() }
 
@@ -1501,7 +1501,7 @@ type AclResponse struct {
 func (m *AclResponse) Reset()                    { *m = AclResponse{} }
 func (m *AclResponse) String() string            { return proto.CompactTextString(m) }
 func (*AclResponse) ProtoMessage()               {}
-func (*AclResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{14} }
+func (*AclResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{14} }
 
 func (m *AclResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1525,7 +1525,7 @@ type AclResponseMsg struct {
 func (m *AclResponseMsg) Reset()                    { *m = AclResponseMsg{} }
 func (m *AclResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*AclResponseMsg) ProtoMessage()               {}
-func (*AclResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{15} }
+func (*AclResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{15} }
 
 func (m *AclResponseMsg) GetResponse() []*AclResponse {
 	if m != nil {
@@ -1542,7 +1542,7 @@ type AclDeleteRequest struct {
 func (m *AclDeleteRequest) Reset()                    { *m = AclDeleteRequest{} }
 func (m *AclDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*AclDeleteRequest) ProtoMessage()               {}
-func (*AclDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{16} }
+func (*AclDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{16} }
 
 func (m *AclDeleteRequest) GetKeyOrHandle() *AclKeyHandle {
 	if m != nil {
@@ -1559,7 +1559,7 @@ type AclDeleteRequestMsg struct {
 func (m *AclDeleteRequestMsg) Reset()                    { *m = AclDeleteRequestMsg{} }
 func (m *AclDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*AclDeleteRequestMsg) ProtoMessage()               {}
-func (*AclDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{17} }
+func (*AclDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{17} }
 
 func (m *AclDeleteRequestMsg) GetRequest() []*AclDeleteRequest {
 	if m != nil {
@@ -1576,7 +1576,7 @@ type AclDeleteResponse struct {
 func (m *AclDeleteResponse) Reset()                    { *m = AclDeleteResponse{} }
 func (m *AclDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*AclDeleteResponse) ProtoMessage()               {}
-func (*AclDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{18} }
+func (*AclDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{18} }
 
 func (m *AclDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1593,7 +1593,7 @@ type AclDeleteResponseMsg struct {
 func (m *AclDeleteResponseMsg) Reset()                    { *m = AclDeleteResponseMsg{} }
 func (m *AclDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*AclDeleteResponseMsg) ProtoMessage()               {}
-func (*AclDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{19} }
+func (*AclDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{19} }
 
 func (m *AclDeleteResponseMsg) GetResponse() []*AclDeleteResponse {
 	if m != nil {
@@ -1611,7 +1611,7 @@ type AclGetRequest struct {
 func (m *AclGetRequest) Reset()                    { *m = AclGetRequest{} }
 func (m *AclGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*AclGetRequest) ProtoMessage()               {}
-func (*AclGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{20} }
+func (*AclGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{20} }
 
 func (m *AclGetRequest) GetKeyOrHandle() *AclKeyHandle {
 	if m != nil {
@@ -1627,7 +1627,7 @@ type AclGetRequestMsg struct {
 func (m *AclGetRequestMsg) Reset()                    { *m = AclGetRequestMsg{} }
 func (m *AclGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*AclGetRequestMsg) ProtoMessage()               {}
-func (*AclGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{21} }
+func (*AclGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{21} }
 
 func (m *AclGetRequestMsg) GetRequest() []*AclGetRequest {
 	if m != nil {
@@ -1643,7 +1643,7 @@ type AclStats struct {
 func (m *AclStats) Reset()                    { *m = AclStats{} }
 func (m *AclStats) String() string            { return proto.CompactTextString(m) }
 func (*AclStats) ProtoMessage()               {}
-func (*AclStats) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{22} }
+func (*AclStats) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{22} }
 
 // AclGetResponse captures all the information about a acl
 type AclGetResponse struct {
@@ -1656,7 +1656,7 @@ type AclGetResponse struct {
 func (m *AclGetResponse) Reset()                    { *m = AclGetResponse{} }
 func (m *AclGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*AclGetResponse) ProtoMessage()               {}
-func (*AclGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{23} }
+func (*AclGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{23} }
 
 func (m *AclGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1694,7 +1694,7 @@ type AclGetResponseMsg struct {
 func (m *AclGetResponseMsg) Reset()                    { *m = AclGetResponseMsg{} }
 func (m *AclGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*AclGetResponseMsg) ProtoMessage()               {}
-func (*AclGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{24} }
+func (*AclGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{24} }
 
 func (m *AclGetResponseMsg) GetResponse() []*AclGetResponse {
 	if m != nil {
@@ -1732,9 +1732,9 @@ func init() {
 	proto.RegisterEnum("halproto.AclAction", AclAction_name, AclAction_value)
 }
 
-func init() { proto.RegisterFile("acl.proto", fileDescriptor3) }
+func init() { proto.RegisterFile("acl.proto", fileDescriptor1) }
 
-var fileDescriptor3 = []byte{
+var fileDescriptor1 = []byte{
 	// 2088 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0xcb, 0x72, 0x1b, 0xc7,
 	0xd5, 0x16, 0x88, 0x0b, 0x81, 0x33, 0x24, 0x48, 0x36, 0x25, 0x99, 0xd6, 0xef, 0xdf, 0xa4, 0x27,
