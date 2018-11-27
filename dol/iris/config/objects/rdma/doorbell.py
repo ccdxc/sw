@@ -8,9 +8,12 @@ import model_sim.src.model_wrap as model_wrap
 
 class Doorbell(doorbell.Doorbell):
 
-    def Ring(self, test_spec, lgh=logger):
+    def Ring(self, test_spec = None, lgh=logger, upd_bits = 0):
         # Address
-        upd = getattr(test_spec, 'upd', 0xb)
+        if test_spec is None:
+            upd = upd_bits
+        else:
+            upd = getattr(test_spec, 'upd', 0xb)
         queue_type = self.ring.queue.queue_type.type
         lif_id = self.ring.queue.queue_type.lif.hw_lif_id
 

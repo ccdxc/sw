@@ -13,5 +13,6 @@ endpoints   :
     direct  : 2
     remote  : 4 # Remote TEPs
     rdma:
+        cq      : ref://store/specs/id=CQ_RDMA
         pd      : ref://store/specs/id=PD_RDMA
         slab    : ref://store/specs/id=SLAB_RDMA

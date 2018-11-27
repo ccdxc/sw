@@ -36,7 +36,7 @@ class RdmaRingObject(ring.RingObject):
         self.size = size
         self.desc_size = desc_size
         self.hw_ring_id = ring_id
-        logger.info("SetRingParams: host %d nic_resident %d eqe_base_addr: 0x%x" \
+        logger.info("SetRingParams: host %d nic_resident %d base_addr: 0x%x" \
                        " size %d desc_size %d hw_ring_id: %d" %\
                        (self.host, self.nic_resident, self.address, self.size, self.desc_size, self.hw_ring_id))
 
@@ -44,12 +44,13 @@ class RdmaRingObject(ring.RingObject):
     def Configure(self):
         pass
 
-    def Post(self, descriptor):
+    def Post(self, descriptor, debug = True):
         #if not self.initialized:
         #    self.queue.qstate.set_ring_base(self.address)
         #    self.queue.qstate.set_ring_size(self.size)
         # Bind the descriptor to the ring
-        logger.info('posting descriptor at pindex: %d..' %(self.queue.qstate.get_pindex(0)))
+        if debug is True:
+            logger.info('posting descriptor at pindex: %d..' %(self.queue.qstate.get_pindex(0)))
         descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_pindex(0)))
         # pass q_max_desc_size to the descriptor object so that it can check and assert to see 
         # if generated descritptor size is within the limits of q_max_desc_size to avoid
@@ -74,8 +75,9 @@ class RdmaRingObject(ring.RingObject):
         #if self.queue.queue_type.purpose == "rdma_sq":
         #    self.doorbell.Ring({})  # HACK
 
-    def Consume(self, descriptor):
-        logger.info("Consuming descriptor on Queue(%s) Ring at cindex: %d" % (self.queue.queue_type.purpose.upper(), self.queue.qstate.get_cindex(0)))
+    def Consume(self, descriptor, debug = True):
+        if debug is True:
+            logger.info("Consuming descriptor on Queue(%s) Ring at cindex: %d" % (self.queue.queue_type.purpose.upper(), self.queue.qstate.get_cindex(0)))
         if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
             descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_proxy_cindex()))
         elif self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_SEND":

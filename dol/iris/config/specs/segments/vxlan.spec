@@ -15,5 +15,6 @@ endpoints   :
     direct  : 0
     remote  : 4 # 1 EP per uplink
     rdma:
+        cq      : ref://store/specs/id=CQ_RDMA
         pd      : ref://store/specs/id=PD_RDMA
         slab    : ref://store/specs/id=SLAB_RDMA

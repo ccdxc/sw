@@ -586,9 +586,10 @@ class RdmaQstateObject(object):
             self.proxy_cindex_en = False
         self.Read()
 
-    def Write(self):
+    def Write(self, debug = True):
         if (GlobalOptions.dryrun): return
-        logger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
+        if debug is True:
+            logger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
         model_wrap.write_mem_pcie(self.addr, bytes(self.data), len(self.data))
 
     def WriteWithDelay(self):
@@ -614,14 +615,14 @@ class RdmaQstateObject(object):
                 count = count + 1
             logger.info("Qstate Write @0x%x Type: %s size: %d completed after %d secs" % (self.addr, self.queue_type, self.size, count))
 
-    def Read(self):
+    def Read(self, debug = True):
         if (GlobalOptions.dryrun):
             data = bytes(self.size)
             self.data = qt_params[self.queue_type]['state'](data)
             return
         self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
-        logger.ShowScapyObject(self.data)
-        logger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
+        if debug is True:
+            logger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
     
     def incr_pindex(self, ring, ring_size):
         assert(ring < 7)

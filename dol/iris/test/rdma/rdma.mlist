@@ -11,6 +11,15 @@ feature:
 
 modules:
     - module:
+        name    : RDMA_AQ_TX_NOP
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_nop
+        spec    : aq_tx_nop.testspec
+        ignore  : False
+        rtl     : True
+
+    - module:
         name    : RDMA_TX_SEND_ONLY
         enable  : True
         package : test.rdma

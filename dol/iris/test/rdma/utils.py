@@ -216,7 +216,42 @@ def ValidateReqRxCQChecks(tc, desc_name, num_completions = 1):
 
     return True
 
-#this should be used after driver/DOL synced cindex to HW, by ringing CQ doorbell(ring 0) with set_cindex option
+def ValidateAdminCQChecks(tc, desc_name, num_completions = 1):
+    tc.pvtdata.aq.cq.qstate.Read()
+    tc.pvtdata.aq_cq_post_qstate = tc.pvtdata.aq.cq.qstate.data
+    log_num_cq_wqes = getattr(tc.pvtdata.aq_cq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_cq_wqes) - 1
+
+    # verify that p_index is incremented by 1, as cqwqe is posted
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.aq_cq_pre_qstate, tc.pvtdata.aq_cq_post_qstate, 'proxy_pindex', ring0_mask, num_completions):
+        return False
+
+    # verify that color bit in CQWQE and CQCB are same
+    #logger.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.aq_cq_post_qstate, 'color', tc.descriptors.Get(desc_name).color):
+        return False
+
+    return True
+
+#these should be used after driver/DOL synced cindex to HW, by ringing CQ doorbell(ring 0) with set_cindex option
+def ValidatePostSyncAdminCQChecks(tc):
+    tc.pvtdata.aq.cq.qstate.Read()
+    tc.pvtdata.aq_cq_post_qstate = tc.pvtdata.aq.cq.qstate.data
+
+    # verify that c_index_0 is set to the same as proxy_pindex
+    if not VerifyFieldsEqual(tc, tc.pvtdata.aq_cq_post_qstate, 'c_index0', tc.pvtdata.aq_cq_post_qstate, 'proxy_pindex'):
+        return False
+
+    # verify that p_index1 is set to that of cindex1 //ARM
+    if not VerifyFieldsEqual(tc, tc.pvtdata.aq_cq_post_qstate, 'p_index1', tc.pvtdata.aq_cq_post_qstate, 'c_index1'):
+        return False
+
+    # verify that p_index2 is set to that of cindex2 //SARM
+    if not VerifyFieldsEqual(tc, tc.pvtdata.aq_cq_post_qstate, 'p_index2', tc.pvtdata.aq_cq_post_qstate, 'c_index2'):
+        return False
+
+    return True
+
 def ValidatePostSyncCQChecks(tc):
     rs = tc.config.rdmasession
     rs.lqp.sq_cq.qstate.Read()
@@ -348,6 +383,3 @@ def ValidateAsyncEQChecks(tc, num_wqes=1):
         return False
 
     return True
-
-
-

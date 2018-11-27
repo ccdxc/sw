@@ -1,7 +1,7 @@
 # RDMA QP Configuration Spec
 meta:
     id: QP_RDMA
-
+useAdmin: True
 rc:
     count           : 4
     svc_name        : "RC"

@@ -917,6 +917,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->mutable_rdma_data()->set_pt_base_addr(rdma_lif_pt_base_addr(hw_lif_id));
         rsp->mutable_rdma_data()->set_kt_base_addr(rdma_lif_kt_base_addr(hw_lif_id));
         rsp->mutable_rdma_data()->set_at_base_addr(rdma_lif_at_base_addr(hw_lif_id));
+        rsp->mutable_rdma_data()->set_barmap_base_addr(rdma_lif_barmap_base_addr(hw_lif_id));
     }
 
     return ret;

@@ -19,6 +19,8 @@ import rdma_pb2                 as rdma_pb2
 import iris.config.objects.slab      as slab
 import iris.config.objects.mr        as mr
 
+import iris.config.objects.rdma.adminapi    as adminapi
+
 from factory.objects.rdma.descriptor import RdmaSqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaSqDescriptorSend
 from factory.objects.rdma.descriptor import RdmaRqDescriptorBase
@@ -41,6 +43,7 @@ class QpObject(base.ConfigObjectBase):
         self.id = qp_id
         self.GID("QP%04d" % self.id)
         self.spec = spec
+        self.lif = pd.ep.intf.lif if self.remote is False else None
 
         self.pd = pd
         self.svc = spec.service
@@ -50,6 +53,16 @@ class QpObject(base.ConfigObjectBase):
         self.atomic_enabled = spec.atomic_enabled
         self.sq_in_nic = spec.sq_in_nic
         self.rq_in_nic = spec.rq_in_nic
+        self.flags = (spec.sq_in_nic << 13) | (spec.rq_in_nic << 14)
+        self.modify_qp_oper = 0
+        self.qstate = 0
+        self.q_key = 0
+        self.dst_qp = 0
+        self.sq_tbl_pos = -1
+        self.rq_tbl_pos = -1
+        self.rsq_tbl_pos = -1
+        self.rrq_tbl_pos = -1
+        self.HdrTemplate = None
 
         # we can use this tiny attribute to filter testcases
         self.tiny = False
@@ -80,7 +93,9 @@ class QpObject(base.ConfigObjectBase):
             
             if (self.sq is None or self.rq is None):
                 assert(0)
-        
+
+            self.cq_id = pd.ep.cqs.Get("CQ%04d" % self.id).id
+            self.eq_id = pd.ep.cqs.Get("CQ%04d" % self.id).eq_id
             #logger.info('QP: %s PD: %s Remote: %s intf: %s lif: %s' %(self.GID(), self.pd.GID(), self.remote, pd.ep.intf.GID(), pd.ep.intf.lif.GID()))
 
             self.tx = pd.ep.intf.lif.GetQt('TX')
@@ -90,30 +105,30 @@ class QpObject(base.ConfigObjectBase):
                 assert(0)
 
             # for now map both sq/rq cq to be same
-            #TODO: Until Yogesh's fix comes in for Unaligned write back, just allocate CQIDs as even number
-            #revert '* 2' 
-            self.sq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id * 2)
-            self.rq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id * 2)
+            self.sq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.cq_id)
+            self.rq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.cq_id)
             if (self.sq_cq is None or self.rq_cq is None):
                 assert(0)
     
             # allocating one EQ for one PD
-            self.eq = pd.ep.intf.lif.GetQ('RDMA_EQ', pd.id)  # PD id is the EQ number
+            self.eq = pd.ep.intf.lif.GetQ('RDMA_EQ', self.eq_id)
             if (self.eq is None):
                 assert(0)
     
             # create sq/rq slabs
-            self.sq_slab = slab.SlabObject(self.pd.ep, self.sq_size)
-            self.rq_slab = slab.SlabObject(self.pd.ep, self.rq_size)
+            self.sq_slab = slab.SlabObject(self.pd.ep.intf.lif, self.sq_size)
+            self.rq_slab = slab.SlabObject(self.pd.ep.intf.lif, self.rq_size)
+            self.hdr_slab = slab.SlabObject(self.pd.ep.intf.lif, 0)
             self.pd.ep.AddSlab(self.sq_slab)
             self.pd.ep.AddSlab(self.rq_slab)
+            self.pd.ep.AddSlab(self.hdr_slab)
 
             # create sq/rq mrs
             #self.sq_mr = mr.MrObject(self.pd, self.sq_slab)
             #self.rq_mr = mr.MrObject(self.pd, self.rq_slab)
             #self.pd.AddMr(self.sq_mr)
             #self.pd.AddMr(self.rq_mr)
-    
+
         self.Show()
 
         return
@@ -153,26 +168,154 @@ class QpObject(base.ConfigObjectBase):
         logger.info('RSQ num_wqes: %d wqe_size: %d' %(self.num_rsq_wqes, self.rsqwqe_size)) 
         if not self.remote:
             logger.info('SQ_CQ: %s RQ_CQ: %s' %(self.sq_cq.GID(), self.rq_cq.GID()))
+            logger.info('CQ ID: %d EQ ID: %d' %(self.cq_id, self.eq_id))
 
     def set_dst_qp(self, value):
-        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QPN
+        self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QPN
         self.dst_qp = value
-        halapi.ModifyQps([self])
+        logger.info(" RdmaQpUpdate Oper: SET_DEST_QPN dst_qp: %d " %
+                      (self.dst_qp))
+        if (GlobalOptions.dryrun): return
+
+        #adminapi.ModifyQps(self.lif, [self])
+        #self.modify_qp_oper = 0
 
     def set_q_key(self, value):
-        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QKEY
+        self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QKEY
         self.q_key = value
-        halapi.ModifyQps([self])
+        logger.info(" RdmaQpUpdate Oper: SET_QKEY q_key: %d "% (self.q_key))
+        if (GlobalOptions.dryrun): return
+
+        #adminapi.ModifyQps(self.lif, [self])
+        #self.modify_qp_oper = 0
 
     def set_q_state(self, value):
-        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_STATE
+        self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_STATE
         self.qstate = value
-        halapi.ModifyQps([self])
+        logger.info(" RdmaQpUpdate Oper: SET_STATE qstate: %d "% (self.qstate))
+        if (GlobalOptions.dryrun): return
+
+        adminapi.ModifyQps(self.lif, [self])
+        self.modify_qp_oper = 0
+
+    def set_pmtu(self, value = None):
+        self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_PATH_MTU
+        if value is not None:
+            self.pmtu = value
+        logger.info(" RdmaQpUpdate Oper: SET_PATH_MTU pmtu: %d "% (self.pmtu))
+        if (GlobalOptions.dryrun): return
+
+        #adminapi.ModifyQps(self.lif, [self])
+        #self.modify_qp_oper = 0
+
+    def set_rsq_wqes(self, flip = False):
+        self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_MAX_DEST_RD_ATOMIC
+        if flip:
+            temp = self.num_rrq_wqes
+            self.num_rrq_wqes = self.num_rsq_wqes
+            self.num_rsq_wqes = temp
+        pages = self.rsq_size + self.sq_slab.GetPageSize()
+        self.rsq_tbl_pos = self.pd.ep.intf.lif.GetRdmaTblPos(int(pages/self.sq_slab.GetPageSize()))
+        logger.info(" RdmaQpUpdate Oper: SET_MAX_DEST_RD_ATOMIC rsq_index: %d "%
+                        (self.rsq_tbl_pos))
+        if (GlobalOptions.dryrun): return
+
+        #adminapi.ModifyQps(self.lif, [self])
+        #self.modify_qp_oper = 0
+
+    def set_rrq_wqes(self, flip = False):
+        self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_MAX_QP_RD_ATOMIC
+        if flip:
+            temp = self.num_rrq_wqes
+            self.num_rrq_wqes = self.num_rsq_wqes
+        pages = self.rrq_size + self.sq_slab.GetPageSize()
+        self.rrq_tbl_pos = self.pd.ep.intf.lif.GetRdmaTblPos(int(pages/self.sq_slab.GetPageSize()))
+        logger.info(" RdmaQpUpdate Oper: SET_MAX_QP_RD_ATOMIC rrq_index: %d "%
+                        (self.rrq_tbl_pos))
+        if (GlobalOptions.dryrun): return
+
+        #adminapi.ModifyQps(self.lif, [self])
+        #self.modify_qp_oper = 0
+
+    def PrepareAdminRequestSpec(self, req_spec):
+        if not self.sq_in_nic:
+            self.sq_tbl_pos = self.lif.GetRdmaTblPos(len(self.sq_slab.phy_address))
+        else:
+            self.sq_tbl_pos = self.lif.GetHbmTblPos(len(self.sq_slab.phy_address))
+        if not self.rq_in_nic:
+            self.rq_tbl_pos = self.lif.GetRdmaTblPos(len(self.rq_slab.phy_address))
+        else:
+            self.rq_tbl_pos = self.lif.GetHbmTblPos(len(self.rq_slab.phy_address))
+
+        logger.info("QP: %s PD: %s Remote: %s HW_LIF: %d EP->Intf: %s SQ_TBL_POS: %d RQ_TBL_POS: %d" \
+                        " RSQ_TBL_POS: %d RRQ_TBL_POS: %d" %\
+                        (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id,
+                         self.pd.ep.intf.GID(), self.sq_tbl_pos, self.rq_tbl_pos,
+                         self.rsq_tbl_pos, self.rrq_tbl_pos))
+
+        if (GlobalOptions.dryrun): return
+
+        # op = IONIC_V1_ADMIN_CREATE_QP
+        req_spec.op = 2
+        req_spec.type_state = self.svc
+        req_spec.dbid_flags = self.lif.hw_lif_id
+        req_spec.id_ver = self.id
+        req_spec.pd_id = self.pd.id
+        req_spec.access_perms_flags = self.flags
+        req_spec.sq_cq_id = self.sq_cq.id
+        req_spec.sq_depth_log2 = self.__get_log_size(self.num_sq_wqes)
+        req_spec.sq_stride_log2 = self.__get_log_size(self.sqwqe_size)
+        req_spec.sq_page_size_log2 = self.__get_log_size(self.hostmem_pg_size)
+        req_spec.sq_tbl_index_xrcd_id = self.sq_tbl_pos
+        pt_size = len(self.sq_slab.phy_address)
+        req_spec.sq_map_count = 1 if self.sq_in_nic else pt_size
+        if self.sq_in_nic:
+            dma_addr = self.sq_tbl_pos * self.hostmem_pg_size
+        else:
+            dma_addr = self.sq_slab.GetDMATableSlab() if pt_size > 1 else self.sq_slab.phy_address[0]
+        req_spec.sq_dma_addr = dma_addr
+        req_spec.rq_cq_id = self.rq_cq.id
+        req_spec.rq_depth_log2 = self.__get_log_size(self.num_rq_wqes)
+        req_spec.rq_stride_log2 = self.__get_log_size(self.rqwqe_size)
+        req_spec.rq_page_size_log2 = self.__get_log_size(self.hostmem_pg_size)
+        req_spec.rq_tbl_index_srq_id = self.rq_tbl_pos
+        pt_size = len(self.rq_slab.phy_address)
+        req_spec.rq_map_count = 1 if self.rq_in_nic else pt_size
+        if self.rq_in_nic:
+            dma_addr = self.rq_tbl_pos * self.hostmem_pg_size
+        else:
+            dma_addr = self.rq_slab.GetDMATableSlab() if pt_size > 1 else self.rq_slab.phy_address[0]
+        req_spec.rq_dma_addr = dma_addr
+
+    def PrepareModAdminRequestSpec(self, req_spec):
+        # op = IONIC_V1_ADMIN_MODIFY_QP
+        req_spec.op = 9
+        req_spec.type_state = self.qstate
+        req_spec.dbid_flags = self.lif.hw_lif_id
+        req_spec.id_ver = self.id
+        req_spec.attr_mask = self.modify_qp_oper
+        req_spec.access_flags = self.flags
+        req_spec.pmtu = self.__get_log_size(self.pmtu)
+        req_spec.rsq_depth = self.__get_log_size(self.num_rsq_wqes)
+        req_spec.rsq_index = self.rsq_tbl_pos if self.rsq_tbl_pos > 0 else 0
+        req_spec.rrq_depth = self.__get_log_size(self.num_rrq_wqes)
+        req_spec.rrq_index = self.rrq_tbl_pos if self.rrq_tbl_pos > 0 else 0
+        if self.svc == 0:
+            req_spec.qkey_dest_qpn = self.dst_qp
+        else:
+            req_spec.qkey_dest_qpn = self.q_key
+        if self.HdrTemplate is not None:
+            req_spec.ah_id_len = (self.ah_handle | len(self.HdrTemplate) << 24)
+            req_spec.dma_addr = self.hdr_slab.phy_address[0]
 
     def PrepareHALRequestSpec(self, req_spec):
-        logger.info("QP: %s PD: %s Remote: %s HW_LIF: %d EP->Intf: %s" %\
+        self.sq_tbl_pos = self.pd.ep.intf.lif.GetRdmaTblPos(len(self.sq_slab.phy_address))
+        self.rq_tbl_pos = self.pd.ep.intf.lif.GetRdmaTblPos(len(self.rq_slab.phy_address))
+        logger.info("QP: %s PD: %s Remote: %s HW_LIF: %d EP->Intf: %s SQ_TBL_POS: %d RQ_TBL_POS: %d" \
+                        " RSQ_TBL_POS: %d RRQ_TBL_POS: %d" %\
                         (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id,
-                         self.pd.ep.intf.GID()))
+                         self.pd.ep.intf.GID(), self.sq_tbl_pos, self.rq_tbl_pos,
+                         self.rsq_tbl_pos, self.rrq_tbl_pos))
 
         if (GlobalOptions.dryrun): return
 
@@ -185,8 +328,6 @@ class QpObject(base.ConfigObjectBase):
             req_spec.rq_wqe_size = self.rqwqe_size
             req_spec.num_sq_wqes = self.num_sq_wqes
             req_spec.num_rq_wqes = self.num_rq_wqes
-            req_spec.num_rsq_wqes = self.num_rsq_wqes
-            req_spec.num_rrq_wqes = self.num_rrq_wqes
             req_spec.pd = self.pd.id
             req_spec.pmtu = self.pmtu
             req_spec.hostmem_pg_size = self.hostmem_pg_size
@@ -203,6 +344,8 @@ class QpObject(base.ConfigObjectBase):
             req_spec.rq_cq_num = self.rq_cq.id
             req_spec.sq_in_nic_memory = self.sq_in_nic
             req_spec.rq_in_nic_memory = self.rq_in_nic
+            req_spec.sq_table_index = self.sq_tbl_pos
+            req_spec.rq_table_index = self.rq_tbl_pos
     
         elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
 
@@ -210,54 +353,31 @@ class QpObject(base.ConfigObjectBase):
             req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
             req_spec.oper = self.modify_qp_oper
             if req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QPN:
+               logger.info(" RdmaQpUpdate Oper: SET_DEST_QPN dst_qp: %d " %
+                             (self.dst_qp))
                req_spec.dst_qp_num = self.dst_qp
             elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QKEY:
+               logger.info(" RdmaQpUpdate Oper: SET_QKEY ")
                req_spec.q_key = self.q_key
             elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV:
+               logger.info(" RdmaQpUpdate Oper: SET_AV")
                req_spec.header_template = bytes(self.HdrTemplate)
                req_spec.ahid = self.ah_handle
             elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_STATE:
+               logger.info(" RdmaQpUpdate Oper: SET_STATE")
                req_spec.qstate = self.qstate
+            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_MAX_QP_RD_ATOMIC:
+               logger.info(" RdmaQpUpdate Oper: SET_MAX_QP_RD_ATOMIC")
+               req_spec.rrq_depth = self.num_rrq_wqes
+               req_spec.rrq_index = self.rrq_tbl_pos
+            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_MAX_DEST_RD_ATOMIC:
+               logger.info(" RdmaQpUpdate Oper: SET_MAX_DEST_RD_ATOMIC")
+               req_spec.rsq_depth = self.num_rsq_wqes
+               req_spec.rsq_index = self.rsq_tbl_pos
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-
         if req_spec.__class__.__name__ == "RdmaQpSpec":  
-    
-            self.rsq_base_addr = resp_spec.rsq_base_addr
-            self.rrq_base_addr = resp_spec.rrq_base_addr
-            self.nic_sq_base_addr = resp_spec.nic_sq_base_addr
-            self.nic_rq_base_addr = resp_spec.nic_rq_base_addr
-            self.rdma_atomic_res_addr = resp_spec.rdma_atomic_res_addr
-            if self.sq_in_nic:
-                self.sq.SetRingParams('SQ', 0, True, True,
-                                  None,
-                                  self.nic_sq_base_addr,
-                                  self.num_sq_wqes, 
-                                  self.sqwqe_size)
-            else:
-                self.sq.SetRingParams('SQ', 0, True, False,
-                                  self.sq_slab.mem_handle,
-                                  self.sq_slab.address, 
-                                  self.num_sq_wqes, 
-                                  self.sqwqe_size)
-            if self.rq_in_nic:
-                self.rq.SetRingParams('RQ', 0, True, True,
-                                  None,
-                                  self.nic_rq_base_addr,
-                                  self.num_rq_wqes, 
-                                  self.rqwqe_size)
-            else:
-                self.rq.SetRingParams('RQ', 0, True, False,
-                                  self.rq_slab.mem_handle,
-                                  self.rq_slab.address,
-                                  self.num_rq_wqes, 
-                                  self.rqwqe_size)
-            logger.info("QP: %s PD: %s Remote: %s"
-                           "sq_base_addr: 0x%x rq_base_addr: 0x%x "
-                           "rsq_base_addr: 0x%x rrq_base_addr: 0x%x " %\
-                            (self.GID(), self.pd.GID(), self.remote,
-                             self.sq_slab.address, self.rq_slab.address,
-                             self.rsq_base_addr, self.rrq_base_addr))
+            self.SetupRings(resp_spec)
     
         elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
 
@@ -265,8 +385,49 @@ class QpObject(base.ConfigObjectBase):
                            "QP: %s PD: %s oper: %d" %\
                             (self.GID(), self.pd.GID(), req_spec.oper))
 
+    def SetupRings(self, resp_spec=None):
+        # Dev Cmd
+        if resp_spec:
+            self.nic_sq_base_addr = resp_spec.nic_sq_base_addr
+            self.nic_rq_base_addr = resp_spec.nic_rq_base_addr
+            self.rdma_atomic_res_addr = resp_spec.rdma_atomic_res_addr
+        else:
+            self.nic_sq_base_addr = self.lif.hbm_barmap_base + (self.sq_tbl_pos * self.hostmem_pg_size)
+            self.nic_rq_base_addr = self.lif.hbm_barmap_base + (self.rq_tbl_pos * self.hostmem_pg_size)
+            self.rdma_atomic_res_addr = self.lif.rdma_atomic_res_addr
 
-        #logger.ShowScapyObject(self.sq_cq.qstate.data)
+        logger.info("QP: %s PD: %s Remote: %s " %\
+                    (self.GID(), self.pd.GID(), self.remote))
+        if self.sq_in_nic:
+            logger.info("sq_base_addr: 0x%x " % (self.nic_sq_base_addr))
+            self.sq.SetRingParams('SQ', 0, True, True,
+                              None,
+                              self.nic_sq_base_addr,
+                              self.num_sq_wqes,
+                              self.sqwqe_size)
+        else:
+            logger.info("sq_base_addr: 0x%x " % (self.sq_slab.address))
+            self.sq.SetRingParams('SQ', 0, True, False,
+                              self.sq_slab.mem_handle,
+                              self.sq_slab.address,
+                              self.num_sq_wqes,
+                              self.sqwqe_size)
+        if self.rq_in_nic:
+            logger.info("rq_base_addr: 0x%x " % (self.nic_rq_base_addr))
+            self.rq.SetRingParams('RQ', 0, True, True,
+                              None,
+                              self.nic_rq_base_addr,
+                              self.num_rq_wqes,
+                              self.rqwqe_size)
+        else:
+            logger.info("rq_base_addr: 0x%x " % (self.rq_slab.address))
+            self.rq.SetRingParams('RQ', 0, True, False,
+                              self.rq_slab.mem_handle,
+                              self.rq_slab.address,
+                              self.num_rq_wqes,
+                              self.rqwqe_size)
+        logger.info("rsq_tbl_pos: %d rrq_tbl_pos: %d " %\
+                         (self.rsq_tbl_pos, self.rrq_tbl_pos))
 
     def IsFilterMatch(self, spec):
         logger.debug("Matching QID %d svc %d" %(self.id, self.svc))
@@ -330,13 +491,28 @@ class QpObject(base.ConfigObjectBase):
         # header_template size is 66. The address is maintained only to calculate
         # dcqcn_cb address.
         # 136 = [ 66 (header_template_t) + 1 (ah_size) + 64 (dcqcncb_t) ] 8 byte aligned
-        self.header_temp_addr = self.pd.ep.intf.lif.rdma_at_base_addr + (ah_handle * 136)
+        self.header_temp_addr = self.lif.rdma_at_base_addr + (ah_handle * 136)
 
-        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV
+        self.modify_qp_oper |= 1 << rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV
+        logger.info(" RdmaQpUpdate Oper: SET_AV ah_handle: %d "%
+                        (self.ah_handle))
 
         if (GlobalOptions.dryrun): return
 
-        halapi.ModifyQps([self])
+        # Configure Dcqcn CB
+        self.ReadDcqcnCb()
+        self.dcqcn_data.log_sq_size = self.__get_log_size(self.num_sq_wqes) 
+        self.dcqcn_data.rate_enforced = 4000
+        self.dcqcn_data.token_bucket_size = 32768
+        self.dcqcn_data.target_rate = 4000
+        self.dcqcn_data.alpha_value = 65535
+        self.dcqcn_data.g_val  = 65535
+        self.dcqcn_data.byte_counter_thr = 4194304
+        self.WriteDcqcnCb()
+
+        resmgr.HostMemoryAllocator.write(self.hdr_slab.mem_handle, bytes(self.HdrTemplate))
+        #adminapi.ModifyQps(self.lif, [self])
+        #self.modify_qp_oper = 0
 
         return
 
@@ -375,6 +551,14 @@ class QpObject(base.ConfigObjectBase):
         self.atomic_res_data = RdmaAtomicResState(model_wrap.read_mem(self.rdma_atomic_res_addr, 64))
         logger.ShowScapyObject(self.atomic_res_data)
         return
+
+    def __get_log_size(self, x):
+        power = 1
+        log = 0
+        while power < x:
+            power *= 2
+            log += 1
+        return log
 
 class RdmaDCQCNstate(scapy.Packet):
     name = "RdmaDCQCNstate"
@@ -429,6 +613,7 @@ class QpObjectHelper:
         self.qps = []
         self.perf_qps = []
         self.udqps = []
+        self.useAdmin = False
 
     def Generate(self, pd, spec):
         self.pd = pd
@@ -437,6 +622,7 @@ class QpObjectHelper:
         #RC QPs
         rc_spec = spec.rc
         count = rc_spec.count
+        self.useAdmin = spec.useAdmin
         logger.info("Creating %d %s Qps. for PD:%s" %\
                        (count, rc_spec.svc_name, pd.GID()))
         for i in range(count):
@@ -481,5 +667,12 @@ class QpObjectHelper:
             logger.info("skipping QP configuration for remote PD: %s" %(self.pd.GID()))
             return
         logger.info("Configuring %d QPs %d Perf QPs." % (len(self.qps), len(self.perf_qps)))
-        halapi.ConfigureQps(self.qps)
-        halapi.ConfigureQps(self.perf_qps)
+
+        if (GlobalOptions.dryrun): return
+
+        if self.useAdmin is True:
+            adminapi.ConfigureQps(self.qps[0].lif, self.qps)
+            adminapi.ConfigureQps(self.perf_qps[0].lif, self.perf_qps)
+        else:
+            halapi.ConfigureQps(self.qps)
+            halapi.ConfigureQps(self.perf_qps)

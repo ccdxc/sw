@@ -235,13 +235,87 @@ class RdmaAqDescriptorBase(Packet):
     fields_desc = [
         ByteField("op", 0),
         ByteField("type_state", 0),
-        ShortField("dbid_flags", 0),
-        IntField("id_ver", 0),
+        LEShortField("dbid_flags", 0),
+        LEIntField("id_ver", 0),
     ]
 
 class RdmaAqDescriptorNOP(Packet):
     fields_desc = [
         BitField("pad", 0, 448),
+    ]
+
+class RdmaAqDescriptorCQ(Packet):
+    fields_desc = [
+        LEIntField("eq_id", 0),
+        ByteField("depth_log2", 0),
+        ByteField("stride_log2", 0),
+        ByteField("dir_size_log2_rsvd", 0),
+        ByteField("page_size_log2", 0),
+        LongField("rsvd1", 0),
+        LongField("rsvd2", 0),
+        LongField("rsvd3", 0),
+        LongField("rsvd4", 0),
+        LEIntField("tbl_index", 0),
+        LEIntField("map_count", 0),
+        LELongField("dma_addr", 0),
+    ]
+
+class RdmaAqDescriptorMR(Packet):
+    fields_desc = [
+        LELongField("va", 0),
+        LELongField("length", 0),
+        LEIntField("pd_id", 0),
+        LEShortField("access_flags", 0),
+        BitField("rsvd", 0, 128),
+        ByteField("dir_size_log2", 0),
+        ByteField("page_size_log2", 0),
+        LEIntField("tbl_index", 0),
+        LEIntField("map_count", 0),
+        LELongField("dma_addr", 0),
+    ]
+
+class RdmaAqDescriptorQP(Packet):
+    fields_desc = [
+        LEIntField("pd_id", 0),
+        IntField("priv_flags", 0),
+        LEIntField("sq_cq_id", 0),
+        ByteField("sq_depth_log2", 0),
+        ByteField("sq_stride_log2", 0),
+        ByteField("sq_dir_size_log2_rsvd", 0),
+        ByteField("sq_page_size_log2", 0),
+        LEIntField("sq_tbl_index_xrcd_id", 0),
+        LEIntField("sq_map_count", 0),
+        LELongField("sq_dma_addr", 0),
+        LEIntField("rq_cq_id", 0),
+        ByteField("rq_depth_log2", 0),
+        ByteField("rq_stride_log2", 0),
+        ByteField("rq_dir_size_log2_rsvd", 0),
+        ByteField("rq_page_size_log2", 0),
+        LEIntField("rq_tbl_index_srq_id", 0),
+        LEIntField("rq_map_count", 0),
+        LELongField("rq_dma_addr", 0),
+    ]
+
+class RdmaAqDescriptorModQP(Packet):
+    fields_desc = [
+        IntField("attr_mask", 0),
+        IntField("access_flags", 0),
+        LEIntField("rq_psn", 0),
+        LEIntField("sq_psn", 0),
+        LEIntField("qkey_dest_qpn", 0),
+        LEIntField("rate_limit_kbps", 0),
+        ByteField("pmtu", 0),
+        ByteField("retry", 0),
+        ByteField("rnr_timer", 0),
+        ByteField("retry_timeout", 0),
+        ByteField("rsq_depth", 0),
+        ByteField("rrq_depth", 0),
+        LEShortField("pkey_id", 0),
+        LEIntField("ah_id_len", 0),
+        LEIntField("rsvd", 0),
+        LEIntField("rrq_index", 0),
+        LEIntField("rsq_index", 0),
+        LELongField("dma_addr", 0),
     ]
 
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
@@ -681,6 +755,91 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         self.id_ver = self.spec.fields.id_ver if hasattr(self.spec.fields, 'id_ver') else 0
         self.__create_desc()
 
+        """
+        Creates a Descriptor at "self.address"
+        :return:
+        """
+        if hasattr(self.spec.fields, 'nop'):
+           logger.info("Reading Admin NOOP")
+           nop = RdmaAqDescriptorNOP()
+           desc = self.desc/nop
+           self.__set_desc(desc)
+
+    def InitCQ(self, wqe):
+        self.wqe = wqe
+        self.op = wqe.op
+        self.type_state = 0
+        self.dbid_flags = wqe.dbid_flags
+        self.id_ver = wqe.id_ver
+        self.__create_desc()
+
+        logger.info("Reading Admin CQ Create")
+        cq = RdmaAqDescriptorCQ(eq_id = wqe.eq_id, depth_log2 = wqe.depth_log2,
+                        stride_log2 = wqe.stride_log2, page_size_log2 = wqe.page_size_log2,
+                        tbl_index = wqe.tbl_index, map_count = wqe.map_count,
+                        dma_addr = wqe.dma_addr)
+        desc = self.desc/cq
+        self.__set_desc(desc)
+
+    def InitMR(self, wqe):
+        self.wqe = wqe
+        self.op = wqe.op
+        self.type_state = 0
+        self.dbid_flags = wqe.dbid_flags
+        self.id_ver = wqe.id_ver
+        self.__create_desc()
+
+        logger.info("Reading Admin MR Create")
+        mr = RdmaAqDescriptorMR(va = wqe.va, length = wqe.length, pd_id = wqe.pd_id,
+                        page_size_log2 = wqe.page_size_log2, tbl_index = wqe.tbl_index,
+                        map_count = wqe.map_count, dma_addr = wqe.dma_addr)
+        desc = self.desc/mr
+        self.__set_desc(desc)
+
+    def InitQP(self, wqe):
+        self.wqe = wqe
+        self.op = wqe.op
+        self.type_state = wqe.type_state
+        self.dbid_flags = wqe.dbid_flags
+        self.id_ver = wqe.id_ver
+        self.__create_desc()
+
+        logger.info("Reading Admin QP Create")
+        qp = RdmaAqDescriptorQP(pd_id = wqe.pd_id, priv_flags = wqe.access_perms_flags,
+                        sq_cq_id = wqe.sq_cq_id, sq_depth_log2 = wqe.sq_depth_log2,
+                        sq_stride_log2 = wqe.sq_stride_log2,
+                        sq_dir_size_log2_rsvd = 0,
+                        sq_page_size_log2 = wqe.sq_page_size_log2,
+                        sq_tbl_index_xrcd_id = wqe.sq_tbl_index_xrcd_id,
+                        sq_map_count = wqe.sq_map_count, sq_dma_addr = wqe.sq_dma_addr,
+                        rq_cq_id = wqe.rq_cq_id, rq_depth_log2 = wqe.rq_depth_log2,
+                        rq_stride_log2 = wqe.rq_stride_log2,
+                        rq_dir_size_log2_rsvd = 0,
+                        rq_page_size_log2 = wqe.rq_page_size_log2,
+                        rq_tbl_index_srq_id = wqe.rq_tbl_index_srq_id,
+                        rq_map_count = wqe.rq_map_count, rq_dma_addr = wqe.rq_dma_addr)
+        desc = self.desc/qp
+        self.__set_desc(desc)
+
+    def InitModQP(self, wqe):
+        self.wqe = wqe
+        self.op = wqe.op
+        self.type_state = wqe.type_state
+        self.dbid_flags = wqe.dbid_flags
+        self.id_ver = wqe.id_ver
+        self.__create_desc()
+
+        logger.info("Reading Admin QP Modify")
+        mod_qp = RdmaAqDescriptorModQP(attr_mask = wqe.attr_mask, access_flags = wqe.access_flags,
+                                rq_psn = wqe.rq_psn, sq_psn = wqe.sq_psn, qkey_dest_qpn = wqe.qkey_dest_qpn,
+                                rate_limit_kbps = wqe.rate_limit_kbps, pmtu = wqe.pmtu, retry = wqe.retry,
+                                rnr_timer = wqe.rnr_timer, retry_timeout = wqe.retry_timeout,
+                                rsq_depth = wqe.rsq_depth, rrq_depth = wqe.rrq_depth, pkey_id = wqe.pkey_id,
+                                ah_id_len = wqe.ah_id_len, rrq_index = wqe.rrq_index,
+                                rsq_index = wqe.rsq_index, dma_addr = wqe.dma_addr)
+        desc = self.desc/mod_qp
+        self.__set_desc(desc)
+
     def __create_desc(self):
         self.desc = RdmaAqDescriptorBase(
             op=self.op,
@@ -691,32 +850,25 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
     def __set_desc(self, desc):
         self.desc = desc
 
-    def Write(self):
-        """
-        Creates a Descriptor at "self.address"
-        :return:
-        """
-        if hasattr(self.spec.fields, 'nop'):
-           logger.info("Reading Admin NOOP")
-           nop = RdmaAqDescriptorNOP()
-           desc = self.desc/nop
-
-        logger.info("Writing AQ Desciptor @0x%x = : %d " %
-                       (self.address, self.qid))
+    def Write(self, debug = False):
+        if debug is True:
+            logger.info("Writing AQ Desciptor @0x%x = op: %d type_state: %d dbid_flags: 0x%x id_ver: %d" %
+                       (self.address, self.op, self.type_state, self.dbid_flags, self.id_ver))
         # AQ is not NIC resident
         assert(self.mem_handle)
         resmgr.HostMemoryAllocator.write(self.mem_handle,
                                          bytes(self.desc))
 
-    def Read(self):
+    def Read(self, debug = False):
         """
         Reads a Descriptor from "self.address"
         :return:
         """
-        logger.info("Reading AQ Desciptor @ 0x%x " % (self.address))
         self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
+        if debug is True:
+            logger.info("Reading AQ Desciptor @ 0x%x phy_address: 0x%x" % (self.address, self.phy_address))
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
-        self.__set_desc(RdmaAqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaEqDescriptor()))))
+        self.__set_desc(RdmaAqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaAqDescriptorBase()))))
 
     def Show(self):
         logger.ShowScapyObject(self.desc)
@@ -756,7 +908,7 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
 
 
     def GetBuffer(self):
-        logger.info("GetBuffer() operator invoked on EQ descriptor")
+        logger.info("GetBuffer() operator invoked on AQ descriptor")
         # AQ is not associated with any buffer and hence simply create
         # default RDMABuffer object so that ebuf == abuf check passes
         return rdmabuffer.RdmaBufferObject()
@@ -1056,6 +1208,122 @@ class RdmaCqDescriptorSendObject(base.FactoryObjectBase):
         # default RDMABuffer object so that ebuf == abuf check passes
         return rdmabuffer.RdmaBufferObject()
 
+class RdmaCqDescriptorAdminObject(base.FactoryObjectBase):
+    def __init__(self):
+        super().__init__()
+        self.Clone(FactoryStore.templates.Get('DESC_RDMA_CQ_ADMIN'))
+
+    def Init(self, spec):
+        super().Init(spec)
+        self.old_sq_cindex = self.spec.fields.old_sq_cindex if hasattr(self.spec.fields, 'old_sq_cindex') else 0
+        self.old_rq_cq_cindex = self.spec.fields.old_rq_cq_cindex if hasattr(self.spec.fields, 'old_rq_cq_cindex') else 0
+        self.status = self.spec.fields.status if hasattr(self.spec.fields, 'status') else 0
+        self.qid = self.spec.fields.qid if hasattr(self.spec.fields, 'qid') else 0
+        self.type = self.spec.fields.type if hasattr(self.spec.fields, 'type') else 0 #CQE_TYPE_ADMIN
+        self.error = self.spec.fields.error if hasattr(self.spec.fields, 'error') else 0
+        self.color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
+        logger.info("CQ Descriptor type: %d" % self.type)
+        assert(self.type == 0)  #CQE_TYPE_ADMIN
+
+        self.__create_desc()
+
+    def __create_desc(self):
+        self.desc = RdmaCqDescriptorAdmin(
+            old_sq_cindex=self.old_sq_cindex,
+            old_rq_cq_cindex=self.old_rq_cq_cindex,
+            qid=self.qid,
+            status=self.status,
+            type=self.type,
+            error=self.error,
+            color=self.color)
+
+    def __set_desc(self, desc):
+        self.desc = desc
+
+    def Write(self, debug = False):
+        """
+        Creates a Descriptor at "self.address"
+        :return:
+        """
+        if debug is True:
+            logger.info("Writing CQ(Admin) Desciptor @0x%x = wrid: 0x%x " %
+                       (self.address, self.wrid))
+        resmgr.HostMemoryAllocator.write(self.mem_handle,
+                                         bytes(self.desc))
+
+    def Read(self, debug = False):
+        """
+        Reads a Descriptor from "self.address"
+        :return:
+        """
+        if debug is True:
+            logger.info("Reading CQ(Admin) Desciptor @0x%x = old_sq_cindex: %d " %
+                       (self.address, self.old_sq_cindex))
+        self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
+        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        self.__set_desc(RdmaCqDescriptorAdmin(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptorAdmin()))))
+
+    def Show(self):
+        logger.ShowScapyObject(self.desc)
+
+    def __eq__(self, other):
+        logger.info("__eq__ operator invoked on CQ(Admin) descriptor..")
+
+        logger.info('self(expected):')
+        self.Show()
+        logger.info('other(actual):')
+        other.Show()
+
+        if self.desc.error == 0 and other.desc.error == 0: #CQ_STATUS_SUCCESS
+            return self.desc == other.desc
+
+        logger.info('error is not 0\n')
+
+        if self.desc.error != other.desc.error:
+            return False
+
+        logger.info('error matched\n')
+
+        if self.desc.old_sq_cindex != other.desc.old_sq_cindex:
+            return False
+
+        logger.info('old_sq_cindex matched\n')
+
+        if self.desc.old_rq_cq_cindex != other.desc.old_rq_cq_cindex:
+            return False
+
+        logger.info('old_rq_cq_cindex matched\n')
+
+        if self.desc.qid != other.desc.qid:
+            return False
+
+        logger.info('qid matched\n')
+
+        if self.desc.type != other.desc.type:
+            return False
+
+        logger.info('type matched\n')
+
+        if self.desc.status != other.desc.status:
+            return False
+
+        logger.info('status matched\n')
+
+        if self.desc.color != other.desc.color:
+            return False
+
+        logger.info('color matched\n')
+
+        return True
+
+        #no need to compare other params as they are meaningful only incase of SUCCESS
+
+
+    def GetBuffer(self):
+        logger.info("GetBuffer() operator invoked on CQ(Admin) descriptor")
+        # CQ is not associated with any buffer and hence simply create
+        # default RDMABuffer object so that ebuf == abuf check passes
+        return rdmabuffer.RdmaBufferObject()
 
 
 class RdmaEqDescriptorObject(base.FactoryObjectBase):

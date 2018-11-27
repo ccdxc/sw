@@ -94,8 +94,11 @@ def TestCaseTeardown(tc):
     #Set the immdt_as_dbell property on the QP
     rs.lqp.rq.qstate.Read()
     rs.lqp.rq.qstate.data.immdt_as_dbell = 0
-    rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
+    rs.lqp.rq.qstate.data.proxy_cindex = 0;
+    rs.lqp.rq.qstate.data.spec_cindex = 0;
+    rs.lqp.rq.qstate.data.p_index0 = 0;
+    rs.lqp.rq.qstate.data.c_index0 = 0;
+    rs.lqp.rq.qstate.data.proxy_pindex = 0;
     rs.lqp.rq.qstate.WriteWithDelay();
 
     logger.info("RDMA TestCaseTeardown() Implementation.")

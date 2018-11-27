@@ -59,9 +59,9 @@ message RdmaQpSpec {
   uint32                   num_rq_wqes     = 6;    // Num RQWQEs
   uint32                   num_rsq_wqes    = 7;    // Num RSQWQEs
   uint32                   num_rrq_wqes    = 8;    // Num RRQWQEs
-  uint32                   pd              = 9;   // Protection domain
-  uint32                   pmtu            = 10;   // Path MTU
-  uint32                   hostmem_pg_size = 11;   // Host Memory Page Size
+  uint32                   pd              = 9;    // Protection domain
+  uint32                   pmtu            = 10;    // Path MTU
+  uint32                   hostmem_pg_size = 11;    // Host Memory Page Size
   RdmaServiceType          svc             = 12;   // RDMA service type
   bool                     atomic_enabled  = 13;   // enable Atomic Ops
   uint32                   sq_lkey         = 14;   // SQ's lkey
@@ -71,15 +71,17 @@ message RdmaQpSpec {
   bool                     immdt_as_dbell  = 18;   // Use immdt data to ring dbell
   bool                     sq_in_nic_memory= 19;   // Allocate SQ in NIC Memory
   // if sq_in_nic_memory and sq_base_addr == NULL, HAL will allocate
-  uint64                   sq_base_addr    = 20;   
+  uint64                   sq_base_addr    = 20;
   bool                     rq_in_nic_memory= 21;   // Allocate RQ in NIC Memory
   // if rq_in_nic_memory and rq_base_addr == NULL, HAL will allocate
-  uint64                   rq_base_addr    = 22;   
+  uint64                   rq_base_addr    = 22;
   fixed64                  if_handle       = 23;   // EP's/ENIC's interface
                                                    // handle
   repeated uint64          va_pages_phy_addr = 24;  // Virtual memory pages's
                                                        // phy addr
   uint32                   num_sq_pages      = 25;  // rq num PT entries
+  uint32                   sq_table_index    = 26;  // SQ PT Table Index
+  uint32                   rq_table_index    = 27;  // RQ PT Table Index
   //repeated uint64          rq_va_pages_phy_addr = 25;  // Virtual memory pages's
                                                        // phy addr
   //uint32                   num_rq_pages      = 26;  // rq num PT entries
@@ -150,6 +152,10 @@ message RdmaQpUpdateSpec {
   uint32                   ahid            = 9;
   uint32                   pmtu            = 10;
   uint32                   qstate          = 11;
+  uint32                   rsq_depth       = 12;   // Num RSQWQEs
+  uint32                   rrq_depth       = 13;   // Num RRQWQEs
+  uint32                   rsq_index       = 14;
+  uint32                   rrq_index       = 15;
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
@@ -207,7 +213,8 @@ message RdmaCqSpec {
   uint32                   wakeup_qid      = 11;   // Wake up QID
   uint32                   wakeup_ring_id  = 12;   // Wake up RING_ID
   bool                     host_addr       = 13;   // Host/NIC address
-  repeated uint64          cq_va_pages_phy_addr = 14;  // Virtual memory pages's
+  uint32                   table_index     = 14;   // CQ PT Table Index
+  repeated uint64          cq_va_pages_phy_addr = 15;  // Virtual memory pages's
                                                        // phy addr
 }
 
@@ -271,7 +278,8 @@ message RdmaMemRegSpec {
   uint32                   override_lif    = 12;   // Override LIF value
   bool                     override_lif_vld  = 13; // Override LIF valid
   bool                     host_addr         = 14; // Host/NIC Address
-  repeated uint64          va_pages_phy_addr = 15;  // Virtual memory pages's phy addr     
+  uint32                   table_index       = 15; // MR PT Index
+  repeated uint64          va_pages_phy_addr = 16;  // Virtual memory pages's phy addr
 }
 
 // RdmaMemRegRequestMsg is batched request used to create/update of Rdma QPs
@@ -300,6 +308,7 @@ message RdmaAllocLkeySpec {
   uint32                   rkey                 = 5;    // Rkey for this memory
   uint32                   num_pt_entries_rsvd  = 6;    // Size of PBL resources to be allocated
   bool                     host_addr            = 7;    // Host/NIC Address
+  uint32                   table_index          = 8;    // LKey Table Index
 }
 
 // RdmaAllocLkeyRequestMsg is batched request used to create/update of Rdma QPs
@@ -372,6 +381,7 @@ message RdmaAqRequestMsg {
 // RdmaQpResponse response to one RdmaAQSpec
 message RdmaAqResponse {
   types.ApiStatus     api_status       = 1;    // API status code
+  uint64              rdma_atomic_res_addr = 2; // RDMA atomic resource addr
 }
 
 // RdmaAQResponseMsg is response to RdmaAQRequestMsg

@@ -18,8 +18,13 @@ import iris.config.hal.api            as halapi
 import iris.config.hal.defs           as haldefs
 import iris.test.callbacks.eth.toeplitz as toeplitz
 
+import iris.config.objects.aq   as aqs
+import iris.config.objects.cq   as cqs
+import iris.config.objects.eq   as eq
+import iris.config.objects.slab   as slab
 import pdb
 
+from bitstring import BitArray
 import ctypes
 
 
@@ -45,6 +50,7 @@ class LifObject(base.ConfigObjectBase):
         self.qstate_base = {}
         self.promiscuous = False
         self.allmulticast = False
+        self.pds = []
 
         self.c_lib_name = getattr(spec, 'c_lib', None)
         if self.c_lib_name:
@@ -61,11 +67,17 @@ class LifObject(base.ConfigObjectBase):
             self.rdma_max_pt_entries = spec.rdma.max_pt_entries
             self.rdma_max_keys = spec.rdma.max_keys
             self.rdma_max_ahs = spec.rdma.max_ahs
+            self.hostmem_pg_size = spec.rdma.hostmem_pg_size
+            self.hbm_barmap_entries = (int(spec.rdma.hbm_barmap_size / spec.rdma.hostmem_pg_size))
+            self.rdma_tbl_pos = BitArray(length=self.rdma_max_pt_entries)
+            self.hbm_tbl_pos = BitArray(length=self.hbm_barmap_entries)
         else:
             self.enable_rdma = False
             self.rdma_max_pt_entries = 0
             self.rdma_max_keys = 0
             self.rdma_max_ahs = 0
+            self.hbm_barmap_entries = 0
+            self.hostmem_pg_size = 0
         self.rdma_pt_base_addr = 0
         self.rdma_kt_base_addr = 0
         self.rdma_at_base_addr = 0
@@ -85,12 +97,42 @@ class LifObject(base.ConfigObjectBase):
 
         # RDMA per LIF allocators
         if self.enable_rdma:
-            self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
-            self.aqid_allocator = objects.TemplateFieldObject("range/0/32")
-            self.cqid_allocator = objects.TemplateFieldObject("range/0/16384")
-            self.eqid_allocator = objects.TemplateFieldObject("range/0/256")
-            self.pd_allocator = objects.TemplateFieldObject("range/0/128")
-            self.mr_key_allocator = objects.TemplateFieldObject("range/1/16384")
+            # QP 0, 1 are special QPs
+            self.qpid_allocator = objects.TemplateFieldObject("range/2/" + str(spec.rdma.max_qp))
+            # AQ ID 0 is owned by ETH
+            self.aqid_allocator = objects.TemplateFieldObject("range/1/" + str(spec.rdma.max_aq))
+            # Reserve CQ 0, 1 for special QPs, AQ
+            self.cqid_allocator = objects.TemplateFieldObject("range/2/" + str(spec.rdma.max_cq))
+            self.eqid_allocator = objects.TemplateFieldObject("range/0/" + str(spec.rdma.max_eq))
+            self.pd_allocator = objects.TemplateFieldObject("range/0/" + str(spec.rdma.max_pd))
+            self.mr_key_allocator = objects.TemplateFieldObject("range/1/" + str(spec.rdma.max_mr))
+            self.slab_allocator = objects.TemplateFieldObject("range/0/2048")
+            self.kslab_allocator = objects.TemplateFieldObject("range/0/2048")
+
+            # Generate RDMA LIF owned resources
+            self.slabs = objects.ObjectDatabase()
+            self.obj_helper_slab = slab.SlabObjectHelper()
+            #slab_spec = spec.rdma.slab.Get(Store)
+            #self.obj_helper_slab.Generate(self, slab_spec)
+            #self.slabs.SetAll(self.obj_helper_slab.slabs)
+
+            # Create EQs for RDMA LIF
+            self.eqs = objects.ObjectDatabase()
+            self.obj_helper_eq = eq.EqObjectHelper()
+            self.obj_helper_eq.Generate(self, spec.rdma.max_eq, spec.rdma.max_eqe)
+            if len(self.obj_helper_eq.eqs):
+                self.eqs.SetAll(self.obj_helper_eq.eqs)
+
+            # Create CQ 0 for adminQ
+            logger.info("Creating 1 Cqs. for LIF:%s" % (self.GID()))
+            # Hardcode CQ 0 for AQ
+            cq_id = 0
+            self.cq = cqs.CqObject(None, cq_id, spec.rdma.max_cqe, spec.rdma.hostmem_pg_size, True, self)
+
+            # Create AdminQ
+            logger.info("Creating 1 Aqs. for LIF:%s" % (self.GID()))
+            aq_id = self.GetAqid()
+            self.aq = aqs.AqObject(self, aq_id, spec.rdma.max_aqe, spec.rdma.hostmem_pg_size)
 
         if hasattr(spec, 'rss'):
             self.rss_type = (haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4") |
@@ -124,11 +166,8 @@ class LifObject(base.ConfigObjectBase):
     def GetQpid(self):
         return self.qpid_allocator.get()
 
-    #TODO: Until Yogesh's fix comes in for Unaligned write back, just allocate CQIDs as even number
     def GetCqid(self):
-        cqid = self.cqid_allocator.get()
-        self.cqid_allocator.get()
-        return cqid
+        return self.cqid_allocator.get()
 
     def GetEqid(self):
         return self.eqid_allocator.get()
@@ -136,11 +175,53 @@ class LifObject(base.ConfigObjectBase):
     def GetAqid(self):
         return self.aqid_allocator.get()
 
+    def GetSlabid(self):
+        return self.slab_allocator.get()
+
+    def GetKSlabid(self):
+        return self.kslab_allocator.get()
+
     def GetPd(self):
         return self.pd_allocator.get()
 
     def GetMrKey(self):
         return self.mr_key_allocator.get()
+
+    def GetRdmaTblPos(self, num_pages):
+        if num_pages <= 0:
+            return
+        total_pages = int(num_pages)
+        if total_pages <= 8:
+            total_pages = 8
+        else:
+            total_pages = 1 << (total_pages - 1).bit_length()
+        logger.info("- LIF: %s Requested: %d Actual: %d page allocation in RDMA PT Table" %
+                        (self.GID(), num_pages, total_pages))
+        page_order = BitArray(length=total_pages)
+        page_order.set(False)
+        tbl_pos = self.rdma_tbl_pos.find(page_order)
+        assert(tbl_pos)
+        self.rdma_tbl_pos.set(True, range(tbl_pos[0], tbl_pos[0] + total_pages))
+
+        return tbl_pos[0]
+
+    def GetHbmTblPos(self, num_pages):
+        if num_pages <= 0:
+            return
+        total_pages = int(num_pages)
+        if total_pages <= 8:
+            total_pages = 8
+        else:
+            total_pages = 1 << (total_pages - 1).bit_length()
+        logger.info("- LIF: %s Requested: %d Actual: %d page allocation in NIC HBM barmap area" %
+                        (self.GID(), num_pages, total_pages))
+        page_order = BitArray(length=total_pages)
+        page_order.set(False)
+        tbl_pos = self.hbm_tbl_pos.find(page_order)
+        assert(tbl_pos)
+        self.hbm_tbl_pos.set(True, range(tbl_pos[0], tbl_pos[0] + total_pages))
+
+        return tbl_pos[0]
 
     def GetQt(self, type):
         return self.queue_types.Get(type)
@@ -175,10 +256,9 @@ class LifObject(base.ConfigObjectBase):
             # EQID 0 on LIF is used for Async events/errors across all PDs
             self.async_eq = self.GetQ('RDMA_EQ', 0)
             fail = self.async_eq is None
+            self.admin_eq = self.async_eq
 
-            # Get EQID 1, CQID 0 for Admin queue AQ 0
-            self.admin_eq = self.GetQ('RDMA_EQ', 1)
-            fail = fail or self.admin_eq is None
+            # Get EQID 0, CQID 0 for Admin queue AQ 0
             self.admin_cq = self.GetQ('RDMA_CQ', 0)
             fail = fail or self.admin_cq is None
             # AQ position in list is different from AQ qid
@@ -186,6 +266,12 @@ class LifObject(base.ConfigObjectBase):
             fail = fail or self.adminq is None
             if (fail is True):
                 assert(0)
+
+            self.obj_helper_slab.Configure()
+            if len(self.obj_helper_eq.eqs):
+                self.obj_helper_eq.Configure()
+            halapi.ConfigureCqs([self.cq])
+            halapi.ConfigureAqs([self.aq])
         return 0
 
     def Show(self):
@@ -239,8 +325,9 @@ class LifObject(base.ConfigObjectBase):
                self.rdma_pt_base_addr = resp_spec.rdma_data.pt_base_addr
                self.rdma_kt_base_addr = resp_spec.rdma_data.kt_base_addr
                self.rdma_at_base_addr = resp_spec.rdma_data.at_base_addr
-           logger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x AT-Base-Addr= 0x%x)" %
-                          (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr, self.rdma_at_base_addr))
+               self.hbm_barmap_base = resp_spec.rdma_data.barmap_base_addr
+           logger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x AT-Base-Addr= 0x%x BARMAP-Base-Addr= 0x%x)" %
+                          (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr, self.rdma_at_base_addr, self.hbm_barmap_base))
 
     def PrepareHALGetRequestSpec(self, req_spec):
         req_spec.key_or_handle.lif_id = self.id
@@ -295,6 +382,15 @@ class LifObject(base.ConfigObjectBase):
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
+    def RegisterPd(self, pd):
+        if self.enable_rdma:
+            logger.info("Registering PD: %s LIF %s" % (pd.GID(), self.GID()))
+            self.pds.append(pd)
+
+    def AddSlab(self, slab):
+        self.obj_helper_slab.AddSlab(slab)
+        self.slabs.Add(slab)
+
 class LifObjectHelper:
     def __init__(self):
         self.lifs = []
@@ -348,3 +444,13 @@ class LifObjectHelper:
         lif = self.lifs[self.aidx]
         self.aidx += 1
         return lif
+
+def GetMatchingObjects(selectors):
+    lif_store =  Store.objects.GetAllByClass(LifObject)
+    lifs = []
+    for lif in lif_store:
+        if lif.IsFilterMatch(selectors.lif):
+            logger.info("Selecting LIF : %s" % lif.GID())
+            lifs.append(lif)
+
+    return lifs

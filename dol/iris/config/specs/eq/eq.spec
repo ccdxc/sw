@@ -1,4 +1,4 @@
-# RDMA EQ Configuration Spec. One EQ for Lif/PD
+# RDMA EQ Configuration Spec. EQs per Lif defined as a LIF property
 meta:
     id: EQ_RDMA
 

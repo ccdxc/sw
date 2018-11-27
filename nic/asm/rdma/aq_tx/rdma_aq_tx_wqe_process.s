@@ -187,6 +187,7 @@ create_cq:
     //          setup the DMA for CQCB
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_CB)        
     add         r2, r0, d.{id_ver}.wx  //TODO: Need to optimize
+    phvwr       p.cqcb.cq_id, r2[23:0]
     AQ_TX_CQCB_ADDR_GET(r1, r2[23:0], K_CQCB_BASE_ADDR_HI)
 
     DMA_PHV2MEM_SETUP(r6, c1, cqcb, cqcb, r1)
@@ -198,9 +199,8 @@ create_cq:
     srl         r5, r3, CAPRI_LOG_SIZEOF_U64
     phvwrpair   p.cqcb.pt_base_addr, r5, p.cqcb.log_cq_page_size, d.cq.page_size_log2[4:0]
     phvwrpair   p.cqcb.log_wqe_size, d.cq.stride_log2[4:0], p.cqcb.log_num_wqes, d.cq.depth_log2[4:0]
-    add         r2, r0, d.{id_ver}.wx  //TODO: Need to optimize
-    phvwr       p.cqcb.cq_id, r2[23:0]
-    phvwr       p.cqcb.eq_id, d.cq.eq_id[23:0]
+    add         r2, r0, d.{cq.eq_id}.wx  //TODO: Need to optimize
+    phvwr       p.cqcb.eq_id, r2[23:0]
 
 //TODO:  host_addr should come from driver
     phvwr       p.cqcb.host_addr, 1
@@ -336,6 +336,8 @@ create_qp:
     phvwr       p.sqcb1.sqcb1_priv_oper_enable, d.qp.privileged
 
     phvwr       p.sqcb1.log_sqwqe_size, d.qp.sq_stride_log2[4:0]
+    //TODO: This should be enabled through modify_qp
+    phvwr       p.sqcb1.sqd_async_notify_enable, 1
     //SQCB2:
 
     phvwr       p.sqcb2.log_sq_size, d.qp.sq_depth_log2[4: 0]

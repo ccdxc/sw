@@ -143,7 +143,7 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint8_t sq_qtype,
                                                       uint8_t rq_qtype,
                                                       uint8_t aq_qtype,
-                                                      uint64_t barmap_base_addr,
+                                                      uint32_t barmap_base_addr,
                                                       uint32_t barmap_size)
 {
     hal_ret_t                    ret;

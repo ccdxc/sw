@@ -49,6 +49,9 @@ class RdmaSessionObject(base.ConfigObjectBase):
                                          self.session.IsIPV6(), True,
                                          self.ah_handle)
             self.lqp.set_dst_qp(self.rqp.id)
+            self.lqp.set_rsq_wqes()
+            self.lqp.set_rrq_wqes()
+            self.lqp.set_pmtu()
 
         if self.lqp.svc == 3:
             self.lqp.set_q_key(self.lqp.id) #we are using q_id as q_key
@@ -63,6 +66,9 @@ class RdmaSessionObject(base.ConfigObjectBase):
                                          self.session.IsIPV6(), False,
                                          self.ah_remote)
             self.rqp.set_dst_qp(self.lqp.id)
+            self.rqp.set_rsq_wqes(flip=True)
+            self.rqp.set_rrq_wqes(flip=True)
+            self.rqp.set_pmtu()
             self.rqp.set_q_state(3)
 
         pass
@@ -182,8 +188,6 @@ class RdmaSessionObjectHelper:
         if hasattr(ep, 'pds'):
             pds = ep.pds.GetAll()
             for pd in pds:
-                if pd.id in [0,1]:
-                   continue
                 qps = pd.qps.GetAll()
                 return qps
         else:
@@ -193,8 +197,6 @@ class RdmaSessionObjectHelper:
         if hasattr(ep, 'pds'):
             pds = ep.pds.GetAll()
             for pd in pds:
-                if pd.id in [0,1]:
-                   continue
                 qps = pd.perf_qps.GetAll()
                 return qps
         else:

@@ -158,6 +158,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.sq_qtype = entry_p->sq_qtype;
     tx_args.rq_qtype = entry_p->rq_qtype;
     tx_args.aq_qtype = entry_p->aq_qtype;
+    tx_args.barmap_base_addr = entry_p->barmap_base_addr;
+    tx_args.barmap_size = entry_p->barmap_size;
     pd_func_args.pd_txdma_table_entry_add = &tx_args;
 	ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TXDMA_TABLE_ADD, &pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -290,11 +292,30 @@ uint64_t rdma_lif_at_base_addr(uint32_t lif)
     return(ah_table_base_addr);
 }
 
-  hal_ret_t
+uint64_t rdma_lif_barmap_base_addr(uint32_t lif)
+{
+    sram_lif_entry_t    sram_lif_entry = {0};
+    uint64_t            barmap_base_addr;
+    hal_ret_t           rc;
+
+    rc = rdma_tx_sram_lif_entry_get(lif, &sram_lif_entry);
+    HAL_ASSERT(rc == HAL_RET_OK);
+    HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - barmap_base_addr_id {} "
+                    "rdma_en_qtype_mask {}\n",
+                    __FUNCTION__, __LINE__, lif,
+                    sram_lif_entry.barmap_base_addr,
+                    sram_lif_entry.rdma_en_qtype_mask);
+
+    barmap_base_addr = sram_lif_entry.barmap_base_addr;
+    barmap_base_addr <<= HBM_BARMAP_BASE_SHIFT;
+    return(barmap_base_addr);
+}
+
+hal_ret_t
 rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry;
-    uint32_t            pt_size, key_table_size, ah_table_size;
+    uint32_t            pt_size, key_table_size, ah_table_size, hbm_bar_size;
     uint32_t            total_size;
     uint64_t            base_addr;
     uint64_t            size;
@@ -318,10 +339,10 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     max_pt_entries  = spec.rdma_max_pt_entries();
 
     HAL_TRACE_DEBUG("({},{}): LIF {}: {}, max_CQ: {}, max_EQ: {}, "
-           "max_keys: {}, max_ahs: {}, max_pt: {} g_pt_base: {}",
+           "max_keys: {}, max_ahs: {}, max_pt: {}",
            __FUNCTION__, __LINE__, lif, spec.key_or_handle().lif_id(),
            max_cqs, max_eqs, max_keys,
-           max_ahs, max_pt_entries, g_pt_base[lif]);
+           max_ahs, max_pt_entries);
 
     memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
 
@@ -340,14 +361,14 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 
     // Fill the SQ info in sram_lif_entry
     sq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
-    HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}",
+    HAL_TRACE_DEBUG("({},{}): Lif {} sq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, sq_base_addr);
     HAL_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
     // Fill the RQ info in sram_lif_entry
     rq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
-    HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}",
+    HAL_TRACE_DEBUG("({},{}): Lif {} rq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, rq_base_addr);
     HAL_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
@@ -383,7 +404,10 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
         ah_table_size = ((ah_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
     }
 
-    total_size = pt_size + key_table_size + ah_table_size + HBM_PAGE_SIZE;
+    // For DOL, hardcode 8MB space as a makeshift barmap
+    hbm_bar_size = 8 * 1024 * 1024;
+
+    total_size = pt_size + key_table_size + ah_table_size + hbm_bar_size + HBM_PAGE_SIZE;
 
     base_addr = g_rdma_manager->HbmAlloc(total_size);
 
@@ -396,6 +420,9 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sram_lif_entry.ah_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
     sram_lif_entry.log_num_pt_entries = log2(max_pt_entries);
     size += ah_table_size;
+    sram_lif_entry.barmap_base_addr = size >> HBM_BARMAP_BASE_SHIFT;
+    size += hbm_bar_size;
+    sram_lif_entry.barmap_size = hbm_bar_size >> HBM_BARMAP_SIZE_SHIFT;
 
     // TODO: Fill prefetch data and add corresponding code
 
@@ -406,11 +433,12 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
 
     HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, ah_base_addr_page_id: {}, "
-                    "rdma_en_qtype_mask: {} sq_qtype: {} rq_qtype: {} aq_qtype: {}\n",
+                    "barmap_base: {} rdma_en_qtype_mask: {} sq_qtype: {} rq_qtype: {} aq_qtype: {}\n",
            __FUNCTION__, __LINE__,
            sram_lif_entry.pt_base_addr_page_id,
            sram_lif_entry.log_num_pt_entries,
            sram_lif_entry.ah_base_addr_page_id,
+           sram_lif_entry.barmap_base_addr,
            sram_lif_entry.rdma_en_qtype_mask,
            sram_lif_entry.sq_qtype,
            sram_lif_entry.rq_qtype,
@@ -634,8 +662,8 @@ rdma_alloc_lkey (RdmaAllocLkeySpec& spec, RdmaAllocLkeyResponse *rsp)
 
     rdma_key_entry_write(lif, lkey, lkey_entry_p);
 
-    HAL_TRACE_DEBUG("{}: lif_id: {}  g_pt_base: {:#x}, lkey_entry_p->pt_base: {:#x}\n",
-                    __FUNCTION__, lif, g_pt_base[lif], lkey_entry_p->pt_base);
+    HAL_TRACE_DEBUG("{}: lif_id: {}  lkey_entry_p->pt_base: {:#x}\n",
+                    __FUNCTION__, lif, lkey_entry_p->pt_base);
 
     if (spec.remote_access()) {
         rkey = spec.rkey();
@@ -766,8 +794,8 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     }
 
 
-    HAL_TRACE_DEBUG("{}: lif_id: {}  g_pt_base: {:#x}, lkey_entry_p->pt_base: {:#x}\n",
-                    __FUNCTION__, lif, g_pt_base[lif], lkey_entry_p->pt_base);
+    HAL_TRACE_DEBUG("{}: lif_id: {}  lkey_entry_p->pt_base: {:#x}\n",
+                    __FUNCTION__, lif, lkey_entry_p->pt_base);
     HAL_ASSERT(lkey_entry_p->pt_base % HBM_NUM_PT_ENTRIES_PER_CACHE_LINE == 0);
 
     pt_start_page_id = lkey_entry_p->base_va / spec.hostmem_pg_size();
@@ -793,12 +821,11 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     // Fill the PT with the physical addresses
     for (uint32_t i=pt_start_page_id; i<=pt_end_page_id; i++) {
         // write the physical page pointer address into pt entry
-        rdma_pt_entry_write(lif, g_pt_base[lif]+i, (uint64_t) spec.va_pages_phy_addr(i-pt_start_page_id));
+        rdma_pt_entry_write(lif, g_pt_base[lif] + i, (uint64_t) spec.va_pages_phy_addr(i-pt_start_page_id));
         HAL_TRACE_DEBUG("PT Entry Write: Lif {}: PT Idx: {} PhyAddr: {:#x}",
-                       lif, g_pt_base[lif]+i, spec.va_pages_phy_addr(i-pt_start_page_id));
+                       lif, g_pt_base[lif] + i, spec.va_pages_phy_addr(i-pt_start_page_id));
     }
 
-    //g_pt_base[lif] += num_pages;
     num_pt_entries = ((pt_end_page_id / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
     g_pt_base[lif] += num_pt_entries;
     HAL_TRACE_DEBUG("{}: End of MR PT index: {}", __FUNCTION__, g_pt_base[lif]);
@@ -1078,8 +1105,8 @@ hal_ret_t
 rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 {
     uint32_t     lif = spec.hw_lif_id();
-    uint32_t      num_sq_wqes, num_rq_wqes;
-    uint32_t      num_rrq_wqes, num_rsq_wqes;
+    uint32_t     num_sq_wqes, num_rq_wqes;
+    uint32_t     num_rrq_wqes, num_rsq_wqes;
     uint32_t     sqwqe_size, rqwqe_size;
     uint32_t     sq_size, rq_size;
     sqcb_t       sqcb;
@@ -1103,11 +1130,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     HAL_TRACE_DEBUG("{}: Inputs: qp_num: {} pd: {} svc: {} pmtu: {}",
                      __FUNCTION__, spec.qp_num(), spec.pd(), spec.svc(), spec.pmtu());
     HAL_TRACE_DEBUG("{}: Inputs: sq_wqe_size: {} num_sq_wqes: {} rq_wqe_size: {} "
-                    "num_rq_wqes: {} hostmem_pg_size: {} num_rrq_wqes: {} "
-                    "num_rsq_wqes: {} ", __FUNCTION__,
+                    "num_rq_wqes: {} hostmem_pg_size: {} ",
+                    __FUNCTION__,
                     spec.sq_wqe_size(), spec.num_sq_wqes(), spec.rq_wqe_size(),
-                    spec.num_rq_wqes( ), spec.hostmem_pg_size(), spec.num_rrq_wqes(),
-                    spec.num_rsq_wqes());
+                    spec.num_rq_wqes( ), spec.hostmem_pg_size());
     HAL_TRACE_DEBUG("{}: Inputs: sq_lkey: {} rq_lkey: {}", __FUNCTION__,
                     spec.sq_lkey(), spec.rq_lkey());
     HAL_TRACE_DEBUG("{}: Inputs: sq_cq_id: {} rq_cq_id: {}", __FUNCTION__,
@@ -1165,24 +1191,22 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
         /*
          * 1. Copy the VA translations to pt table.
-         * 2. Adjust the g_pt_base[lif] accordingly
-         * 3. Set the pt_base_addr
+         * 2. Set the pt_base_addr
          */
-
         sqcb_p->sqcb0.pt_base_addr =
             rdma_pt_addr_get(lif, g_pt_base[lif]) >> PT_BASE_ADDR_SHIFT;
         
         for (uint32_t i = 0; i < spec.num_sq_pages(); i++) {
             // write the physical page pointer address into pt entry
-            rdma_pt_entry_write(lif, g_pt_base[lif]+i, (uint64_t) spec.va_pages_phy_addr(i));
+            rdma_pt_entry_write(lif, g_pt_base[lif] + i, (uint64_t) spec.va_pages_phy_addr(i));
             HAL_TRACE_DEBUG("PT Entry Write: Lif {}: SQ PT Idx: {} PhyAddr: {:#x}",
-                            lif, g_pt_base[lif]+i, spec.va_pages_phy_addr(i));
+                            lif, g_pt_base[lif] + i, spec.va_pages_phy_addr(i));
         }
 
         uint32_t num_pt_entries = (( spec.num_sq_pages() / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
         g_pt_base[lif] += num_pt_entries;
-        
-        HAL_TRACE_DEBUG("{}: End of SQ PT index: {}", __FUNCTION__, g_pt_base[lif]);        
+
+        HAL_TRACE_DEBUG("{}: End of SQ PT index: {}", __FUNCTION__, g_pt_base[lif]);
     }
 
     sqcb_p->sqcb1.log_rrq_size = log2(num_rrq_wqes);
@@ -1288,10 +1312,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
         /*
          * 1. Copy the VA translations to pt table.
-         * 2. Adjust the g_pt_base[lif] accordingly
-         * 3. Set the pt_base_addr
+         * 2. Set the pt_base_addr
          */
-
         rqcb_p->rqcb0.pt_base_addr =
             rdma_pt_addr_get(lif, g_pt_base[lif]) >> PT_BASE_ADDR_SHIFT;
         rqcb_p->rqcb1.pt_base_addr = rqcb_p->rqcb0.pt_base_addr;
@@ -1306,8 +1328,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
         uint32_t num_pt_entries = (( num_rq_pages / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
         g_pt_base[lif] += num_pt_entries;
-        
-        HAL_TRACE_DEBUG("{}: End of RQ PT index: {}", __FUNCTION__, g_pt_base[lif]);              
+
+        HAL_TRACE_DEBUG("{}: End of RQ PT index: {}", __FUNCTION__, g_pt_base[lif]);
     }
 
     HAL_ASSERT(rqcb.rqcb0.pt_base_addr);
@@ -1505,6 +1527,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     rqcb_t       *rqcb_p = &rqcb;
     uint64_t     header_template_addr;
     uint64_t     pad_size;
+    uint64_t     rrq_base_addr, rsq_base_addr;
     uint8_t      state;
 
     pd::pd_capri_hbm_write_mem_args_t args = {0};
@@ -1524,6 +1547,10 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                     spec.tx_psn());
     HAL_TRACE_DEBUG("{}: Inputs: path_mtu: {}", __FUNCTION__,
                     spec.pmtu());
+    HAL_TRACE_DEBUG("{}: Inputs: rrq_depth: {} rrq_index: {}", __FUNCTION__,
+                    spec.rrq_depth(), spec.rrq_index());
+    HAL_TRACE_DEBUG("{}: Inputs: rsq_depth: {} rsq_index: {}", __FUNCTION__,
+                    spec.rsq_depth(), spec.rsq_index());
     HAL_TRACE_DEBUG("{}: Inputs: qstate: {}", __FUNCTION__,
                     spec.qstate());
 
@@ -1592,6 +1619,28 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             rqcb.rqcb1.log_pmtu = rqcb.rqcb0.log_pmtu;
             HAL_TRACE_DEBUG("{}: Update: Setting path_mtu to: {}", __FUNCTION__,
                             spec.pmtu());
+            break;
+
+        case rdma::RDMA_UPDATE_QP_OPER_SET_MAX_QP_RD_ATOMIC:
+            sqcb_p->sqcb1.log_rrq_size = log2(spec.rrq_depth());
+            sqcb_p->sqcb2.log_rrq_size = sqcb_p->sqcb1.log_rrq_size;
+            rrq_base_addr = rdma_pt_addr_get(lif, spec.rrq_index()) >> PT_BASE_ADDR_SHIFT;
+            HAL_ASSERT(rrq_base_addr);
+            HAL_ASSERT(rrq_base_addr % 8 == 0);
+            sqcb_p->sqcb1.rrq_base_addr = rrq_base_addr;
+            sqcb_p->sqcb2.rrq_base_addr = sqcb_p->sqcb1.rrq_base_addr;
+
+            break;
+
+        case rdma::RDMA_UPDATE_QP_OPER_SET_MAX_DEST_RD_ATOMIC:
+            rqcb_p->rqcb0.log_rsq_size = log2(spec.rsq_depth());
+            rqcb_p->rqcb1.log_rsq_size = rqcb_p->rqcb0.log_rsq_size;
+            rsq_base_addr = rdma_pt_addr_get(lif, spec.rsq_index()) >> PT_BASE_ADDR_SHIFT;
+            HAL_ASSERT(rsq_base_addr);
+            HAL_ASSERT(rsq_base_addr % 8 == 0);
+            rqcb_p->rqcb0.rsq_base_addr = rsq_base_addr;
+            rqcb_p->rqcb1.rsq_base_addr = rqcb_p->rqcb0.rsq_base_addr;
+
             break;
 
         case rdma::RDMA_UPDATE_QP_OPER_SET_AV:
@@ -1713,8 +1762,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     
     /*
      * 1. Copy the VA translations to pt table.
-     * 2. Adjust the g_pt_base[lif] accordingly
-     * 3. Set the pt_base_addr
+     * 2. Set the pt_base_addr
      */
 
     cqcb.pt_base_addr =
@@ -1729,7 +1777,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
 
     uint32_t num_pt_entries = (( spec.cq_va_pages_phy_addr_size() / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
     g_pt_base[lif] += num_pt_entries;
-        
+
     HAL_TRACE_DEBUG("{}: End of CQ PT index: {}", __FUNCTION__, g_pt_base[lif]);
     
     cqcb.log_cq_page_size = log2(spec.hostmem_pg_size());
@@ -1875,6 +1923,7 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     uint32_t     lif = spec.hw_lif_id();
     aqcb_t       aqcb;
     uint64_t     offset;
+    uint64_t     rdma_atomic_res_addr;
     //uint64_t     offset_verify;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -1892,12 +1941,6 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     aqcb.aqcb0.ring_header.total_rings = MAX_AQ_RINGS;
     aqcb.aqcb0.ring_header.host_rings = MAX_AQ_HOST_RINGS;
     
-    /*
-     * 1. Copy the VA translations to pt table.
-     * 2. Adjust the g_pt_base[lif] accordingly
-     * 3. Set the pt_base_addr
-     */
-
     aqcb.aqcb0.log_wqe_size = spec.log_wqe_size();
     aqcb.aqcb0.log_num_wqes = spec.log_num_wqes();
     aqcb.aqcb0.aq_id = spec.aq_num();
@@ -1925,6 +1968,14 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__,
                     lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_ADMINQ, spec.aq_num()));
 
+    pd::pd_get_start_offset_args_t off_args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    off_args.reg_name = "rdma-atomic-resource-addr";
+    pd_func_args.pd_get_start_offset = &off_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
+    rdma_atomic_res_addr = off_args.offset;
+
+    rsp->set_rdma_atomic_res_addr(rdma_atomic_res_addr);
     rsp->set_api_status(types::API_STATUS_OK);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 

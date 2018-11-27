@@ -5,9 +5,27 @@ meta:
 rdma:
     enable: True
 # max_pt_entries depends on slab-size and allignment. Please check HAL logs for rdma_memory_register to get this.
-    max_pt_entries: 32768 
+    max_pt_entries: 131072
     max_keys: 8192
     max_ahs: 1024
+    # Allocating 8MB for hbm barmap size
+    hbm_barmap_size: 8388608
+    # These values must match the corresponding values defined in the queue_types below
+    max_aq: 1
+    max_aqe: 64
+
+    max_qp: 256
+
+    max_cq: 32
+    max_cqe: 128
+# Idea is to allocate one eq for every 8 CQs + 1 (Async EQ)
+    max_eq: 8
+    max_eqe: 256
+
+    max_mr: 16384
+    max_pd: 256
+    hostmem_pg_size: 4096
+    slab    : ref://store/specs/id=SLAB_RDMA
 
 queue_types:
     - queue_type:
@@ -138,11 +156,11 @@ queue_types:
         type        : 5
         purpose     : LIF_QUEUE_PURPOSE_CQ
         size        : 64
-        count       : 64
+        count       : 32
         queues:
             - queue:
                 id          : Q0
-                count       : 64
+                count       : 32
                 rings:
                     - ring:
                         id          : CQ
@@ -168,11 +186,11 @@ queue_types:
         type        : 6
         purpose     : LIF_QUEUE_PURPOSE_EQ
         size        : 64
-        count       : 32
+        count       : 8
         queues:
             - queue:
                 id          : Q0
-                count       : 32
+                count       : 8
                 rings:
                     - ring:
                         id          : EQ

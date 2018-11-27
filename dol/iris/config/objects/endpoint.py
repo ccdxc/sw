@@ -16,8 +16,8 @@ from iris.config.store               import Store
 from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
 
-#import iris.config.objects.qp        as qp
 import iris.config.objects.pd        as pd
+import iris.config.objects.cq        as cq
 import iris.config.objects.slab      as slab
 
 class AgentEndpointObjectSpec:
@@ -307,6 +307,14 @@ class EndpointObject(base.ConfigObjectBase):
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
+    def CreateCqs(self, spec):
+        self.cqs = objects.ObjectDatabase()
+        self.obj_helper_cq = cq.CqObjectHelper()
+        self.obj_helper_cq.Generate(self, spec)
+        if len(self.obj_helper_cq.cqs):
+            self.cqs.SetAll(self.obj_helper_cq.cqs)
+        logger.debug("In CreateCqs, Endpoint %s" % (self.GID()))
+
     def CreatePds(self, spec):
         self.pds = objects.ObjectDatabase()
         self.obj_helper_pd = pd.PdObjectHelper()
@@ -314,8 +322,6 @@ class EndpointObject(base.ConfigObjectBase):
         self.pds.SetAll(self.obj_helper_pd.pds)
         logger.debug("In CreatePds, Endpoint %s" % (self.GID()))
         for eppd in self.obj_helper_pd.pds:
-            if eppd.id in [0,1]:
-               continue
             logger.debug("   Adding QPs for PD %s, Num of Qps %d" % (eppd.GID(), len(eppd.udqps)))
             pdudqps = eppd.udqps.GetAll()
             for qp in pdudqps:
@@ -323,6 +329,8 @@ class EndpointObject(base.ConfigObjectBase):
                 self.udqps.append(qp)
         logger.debug("   Total UDQPs in this endpoint: Qps %d" % (len(self.udqps)))
 
+    def ConfigureCqs(self):
+        self.obj_helper_cq.Configure()
 
     def ConfigurePds(self):
         self.obj_helper_pd.Configure()
@@ -332,7 +340,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.slab_allocator = objects.TemplateFieldObject("range/0/2048")
         self.slabs = objects.ObjectDatabase()
         self.obj_helper_slab = slab.SlabObjectHelper()
-        self.obj_helper_slab.Generate(self, spec)
+        self.obj_helper_slab.Generate(self.intf.lif, spec)
         self.slabs.SetAll(self.obj_helper_slab.slabs)
 
     def AddSlab(self, slab):
@@ -341,9 +349,6 @@ class EndpointObject(base.ConfigObjectBase):
 
     def ConfigureSlabs(self):
         self.obj_helper_slab.Configure()
-
-    def GetSlabid(self):
-        return self.slab_allocator.get()
 
     def GetNewSlab(self):
         self.last_slab_id += 1
@@ -402,6 +407,7 @@ class EndpointObjectHelper:
             for ep in self.local:
                 ep.ConfigureSlabs()
             for ep in self.eps:
+                ep.ConfigureCqs()
                 ep.ConfigurePds()
         return
 
@@ -486,6 +492,10 @@ class EndpointObjectHelper:
             self.local += self.classic
         return
 
+    def __create_cqs(self, spec):
+        for ep in self.eps:
+            ep.CreateCqs(spec)
+
     def __create_pds(self, spec):
         for ep in self.eps:
             ep.CreatePds(spec)
@@ -514,6 +524,11 @@ class EndpointObjectHelper:
             if spec.rdma.slab:
                 slab_spec = spec.rdma.slab.Get(Store)
                 self.__create_slabs(slab_spec)
+
+            # Create CQs before PDs
+            if spec.rdma.cq:
+                cq_spec = spec.rdma.cq.Get(Store)
+                self.__create_cqs(cq_spec)
 
             if spec.rdma.pd:
                 pd_spec = spec.rdma.pd.Get(Store)

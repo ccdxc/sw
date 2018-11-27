@@ -16,6 +16,8 @@ import rdma_pb2                 as rdma_pb2
 import iris.config.objects.slab      as slab
 import iris.config.objects.mr        as mr
 
+import iris.config.objects.rdma.adminapi    as adminapi
+
 from factory.objects.rdma.descriptor import RdmaSqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaSqDescriptorSend
 from factory.objects.rdma.descriptor import RdmaRqDescriptorBase
@@ -32,29 +34,42 @@ from factory.objects.rdma.descriptor import RdmaSge
 from infra.common.glopts import GlobalOptions
 
 class CqObject(base.ConfigObjectBase):
-    def __init__(self, pd, cq_id, spec):
+    def __init__(self, ep, cq_id, num_wqes, pg_sz, privileged = False, lif = None):
         super().__init__()
         self.Clone(Store.templates.Get('QSTATE_RDMA_CQ'))
-        self.pd = pd
-        self.remote = pd.remote
+        self.privileged = privileged
+        if privileged is True:
+            self.lif = lif
+            self.ep = None
+            self.remote = False
+        else:
+            self.lif = ep.intf.lif
+            self.ep = ep
+            self.remote = ep.remote
         self.id = cq_id
         self.GID("CQ%04d" % self.id)
-        self.spec = spec
+        # Every 8 CQs share a EQ
+        self.eq_id = int((self.id + 7) / 8)
 
-        self.hostmem_pg_size = spec.hostmem_pg_size
-        self.num_cq_wqes = self.__roundup_to_pow_2(spec.num_wqes)
+        self.hostmem_pg_size = pg_sz
+        self.num_cq_wqes = self.__roundup_to_pow_2(num_wqes)
         self.cqwqe_size = self.__get_cqwqe_size()
         self.cq_size = self.num_cq_wqes * self.cqwqe_size
 
         if not self.remote:
-            self.cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id)
+            self.cq = self.lif.GetQ('RDMA_CQ', self.id)
+            self.eq = self.lif.GetQ('RDMA_EQ', self.eq_id)
     
-            if (self.cq is None):
+            if (self.cq is None or self.eq is None):
                 assert(0)
 
             # create cq slab
-            self.cq_slab = slab.SlabObject(self.pd.ep, self.cq_size)
-            self.pd.ep.AddSlab(self.cq_slab)
+            if self.privileged is True:
+                self.cq_slab = slab.SlabObject(self.lif, self.cq_size, True)
+                self.lif.AddSlab(self.cq_slab)
+            else:
+                self.cq_slab = slab.SlabObject(self.ep.intf.lif, self.cq_size)
+                self.ep.AddSlab(self.cq_slab)
 
         self.Show()
 
@@ -71,25 +86,63 @@ class CqObject(base.ConfigObjectBase):
         return  self.__roundup_to_pow_2(len(RdmaCqDescriptorRecv()))
 
     def Show(self):
-        logger.info('CQ: %s PD: %s Remote: %s' %(self.GID(), self.pd.GID(), self.remote))
+        if self.privileged is True:
+            logger.info('CQ: %s LIF: %s Remote: %s' %(self.GID(), self.lif.GID(), self.remote))
+        else:
+            logger.info('CQ: %s EP: %s Remote: %s' %(self.GID(), self.ep.GID(), self.remote))
         logger.info('CQ num_wqes: %d wqe_size: %d, EQ-ID: %d' 
-                       %(self.num_cq_wqes, self.cqwqe_size, self.pd.id)) 
+                       %(self.num_cq_wqes, self.cqwqe_size, self.eq_id)) 
+
+    def PrepareAdminRequestSpec(self, req_spec):
+        self.tbl_pos = self.lif.GetRdmaTblPos(len(self.cq_slab.phy_address))
+        if self.privileged is True:
+            logger.info("CQ: %s LIF: %s TBL_POS: %d" %\
+                            (self.GID(), self.lif.GID(), self.tbl_pos))
+        else:
+            logger.info("CQ: %s EP: %s Remote: %s LIF: %d TBL_POS: %d" %\
+                            (self.GID(), self.ep.GID(), self.remote,
+                            self.lif.hw_lif_id, self.tbl_pos))
+        if (GlobalOptions.dryrun): return
+
+        # op = IONIC_V1_ADMIN_CREATE_CQ
+        req_spec.op = 1
+        req_spec.dbid_flags = self.lif.hw_lif_id
+        req_spec.id_ver = self.id
+        req_spec.eq_id = self.eq_id
+        req_spec.depth_log2 = self.__get_log_size(self.num_cq_wqes)
+        req_spec.stride_log2 = self.__get_log_size(self.cqwqe_size)
+        req_spec.page_size_log2 = self.__get_log_size(self.hostmem_pg_size)
+        req_spec.tbl_index = self.tbl_pos
+        pt_size = len(self.cq_slab.phy_address)
+        req_spec.map_count = pt_size
+        dma_addr = self.cq_slab.GetDMATableSlab() if pt_size > 1 else self.cq_slab.phy_address[0]
+        req_spec.dma_addr = dma_addr
 
     def PrepareHALRequestSpec(self, req_spec):
-        logger.info("CQ: %s PD: %s Remote: %s LIF: %d" %\
-                        (self.GID(), self.pd.GID(), self.remote, 
-                         self.pd.ep.intf.lif.hw_lif_id))
+        self.tbl_pos = self.lif.GetRdmaTblPos(len(self.cq_slab.phy_address))
+        if self.privileged is True:
+            logger.info("CQ: %s LIF: %s TBL_POS: %d" %\
+                            (self.GID(), self.lif.GID(), self.tbl_pos))
+        else:
+            logger.info("CQ: %s EP: %s Remote: %s LIF: %d TBL_POS: %d" %\
+                            (self.GID(), self.ep.GID(), self.remote,
+                            self.lif.hw_lif_id, self.tbl_pos))
         if (GlobalOptions.dryrun): return
+
         req_spec.cq_num = self.id
-        req_spec.eq_id = self.pd.id  # PD id is the EQ number
-        req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
+        req_spec.eq_id = self.eq_id
+        req_spec.hw_lif_id = self.lif.hw_lif_id
         req_spec.cq_wqe_size = self.cqwqe_size
         req_spec.num_cq_wqes = self.num_cq_wqes
         req_spec.host_addr = 1
         req_spec.hostmem_pg_size = self.hostmem_pg_size
         req_spec.cq_va_pages_phy_addr[:] = self.cq_slab.phy_address
+        req_spec.table_index = self.tbl_pos
 
     def ProcessHALResponse(self, req_spec, resp_spec):
+        self.SetupRings()
+
+    def SetupRings(self):
         self.cq.SetRingParams('CQ', 0, True, False,
                               self.cq_slab.mem_handle,
                               self.cq_slab.address, 
@@ -109,33 +162,54 @@ class CqObject(base.ConfigObjectBase):
                               self.cq_slab.address, 
                               0,
                               0)
-        logger.info("CQ: %s PD: %s Remote: %s LIF: %d cqcb_addr: 0x%x cq_base_addr: 0x%x" %\
-                        (self.GID(), self.pd.GID(), self.remote, 
-                         self.pd.ep.intf.lif.hw_lif_id, 
-                         self.cq.GetQstateAddr(), self.cq_slab.address))
+        if self.privileged is True:
+            logger.info("CQ: %s LIF: %s Remote: %s cqcb_addr: 0x%x cq_base_addr: 0x%x" %\
+                            (self.GID(), self.lif.hw_lif_id, self.remote,
+                            self.cq.GetQstateAddr(), self.cq_slab.address))
+        else:
+            logger.info("CQ: %s EP: %s Remote: %s LIF: %d cqcb_addr: 0x%x cq_base_addr: 0x%x" %\
+                            (self.GID(), self.ep.GID(), self.remote,
+                            self.lif.hw_lif_id,
+                            self.cq.GetQstateAddr(), self.cq_slab.address))
         #logger.ShowScapyObject(self.cq.qstate.data)
          
+    def __get_log_size(self, x):
+        power = 1
+        log = 0
+        while power < x:
+            power *= 2
+            log += 1
+        return log
+
 class CqObjectHelper:
     def __init__(self):
         self.cqs = []
+        self.useAdmin = False
 
-    def Generate(self, pd, spec):
-        self.pd = pd
-        if self.pd.remote:
-            logger.info("skipping CQ generation for remote PD: %s" %(pd.GID()))
+    def Generate(self, ep, spec):
+        self.ep = ep
+        if self.ep.remote:
+            logger.info("skipping CQ generation for remote EP: %s" %(ep.GID()))
             return
 
         count = spec.count
-        logger.info("Creating %d Cqs. for PD:%s" %\
-                       (count, pd.GID()))
+        self.useAdmin = spec.useAdmin
+        logger.info("Creating %d Cqs. for EP:%s useAdmin: %d" %\
+                       (count, ep.GID(), self.useAdmin))
         for i in range(count):
-            cq_id = i if pd.remote else pd.ep.intf.lif.GetCqid()
-            cq = CqObject(pd, cq_id, spec)
+            cq_id = i if ep.remote else ep.intf.lif.GetCqid()
+            cq = CqObject(ep, cq_id, spec.num_wqes, spec.hostmem_pg_size)
             self.cqs.append(cq)
 
     def Configure(self):
-        if self.pd.remote:
-            logger.info("skipping CQ configuration for remote PD: %s" %(self.pd.GID()))
+        if self.ep.remote:
+            logger.info("skipping CQ configuration for remote EP: %s" %(self.ep.GID()))
             return
-        logger.info("Configuring %d CQs." % len(self.cqs)) 
-        halapi.ConfigureCqs(self.cqs)
+        logger.info("Configuring %d CQs." % len(self.cqs))
+
+        if (GlobalOptions.dryrun): return
+
+        if self.useAdmin is True:
+            adminapi.ConfigureCqs(self.cqs[0].lif, self.cqs)
+        else:
+            halapi.ConfigureCqs(self.cqs)

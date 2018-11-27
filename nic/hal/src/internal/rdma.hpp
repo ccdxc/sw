@@ -66,6 +66,7 @@ extern hal_ret_t rdma_memory_window_alloc(RdmaMemWindowSpec& spec, RdmaMemWindow
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_at_base_addr(uint32_t lif_id);
+extern uint64_t rdma_lif_barmap_base_addr(uint32_t lif_id);
 extern uint8_t rdma_qp_state_from_ionic(uint8_t state);
 extern  hal_ret_t rdma_ah_create(RdmaAhSpec& spec, RdmaAhResponse *rsp);
 extern hal_ret_t rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp);
@@ -116,6 +117,8 @@ class RDMAManager {
 
 #define HBM_PAGE_SIZE 4096
 #define HBM_PAGE_SIZE_SHIFT 12
+#define HBM_BARMAP_BASE_SHIFT 23
+#define HBM_BARMAP_SIZE_SHIFT 23
 
 //pt_base_addr is 8-byte aligned as each entry in page table stores 64-bit address.
 //hence when pt_base_addr is encoded in various data structures, bottom 3 bits are not
@@ -153,6 +156,8 @@ typedef struct sram_lif_entry_s {
     uint32_t sq_qtype: 3;
     uint32_t rq_qtype: 3;
     uint32_t aq_qtype: 3;
+    uint32_t barmap_base_addr: 10;
+    uint32_t barmap_size: 8;
 } PACKED sram_lif_entry_t;
 
 typedef struct lif_init_attr_s {
