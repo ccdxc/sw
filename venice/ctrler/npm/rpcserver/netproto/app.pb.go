@@ -14,6 +14,7 @@
 		nat.proto
 		network.proto
 		port.proto
+		qos.proto
 		route.proto
 		security.proto
 		service.proto
@@ -102,6 +103,15 @@
 		PortStatus
 		PortList
 		PortEvent
+		QosClass
+		QosClassSpec
+		PFC
+		Scheduler
+		UplinkClassMap
+		Marking
+		QosClassStatus
+		QosClassList
+		QosClassEvent
 		Route
 		RouteSpec
 		RouteStatus

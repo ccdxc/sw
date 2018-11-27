@@ -1,0 +1,127 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for qos class
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imqos classs.
+
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// ---------------------------- QosClass API ----------------------------
+// QosClass controller api
+service QosClassApi {
+    // options for auto generating rest endpoints
+    // Allow only list and update methods
+    option(venice.naplesRestService) = {
+        Object: "QosClass",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/qos/classes"
+    };
+
+    rpc GetQosClass (api.ObjectMeta) returns (QosClass) {};
+    rpc ListQosClasses (api.ObjectMeta) returns (QosClassList) {};
+    rpc WatchQosClasses (api.ObjectMeta) returns (stream QosClassEvent) {};
+}
+
+// QosClass object
+message QosClass {
+    api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta      ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    QosClassSpec        Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    QosClassStatus      Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// QosClassSpec captures all the qos class level configuration
+message QosClassSpec {
+    // MTU for the QoS Class. Range 1500 - 9216
+    uint32 MTU                      = 1 [(gogoproto.jsontag) = "mtu,omitempty"];
+
+    // PFC Configuration for the class
+    PFC PFC                         = 2 [(gogoproto.jsontag) = "pfc,omitempty"];
+
+    // Qos Scheduling configuration
+    Scheduler Scheduler             = 3 [(gogoproto.jsontag) = "qos-scheduler,omitempty"];
+
+    // UplinkClassMap captures the policy for classification of the traffic from the network
+    UplinkClassMap UplinkClassMap   = 4 [(gogoproto.jsontag) = "uplink-class-map,omitempty"];
+
+    // Marking captures the policy fot the classification of traffic from host to the network
+    Marking Marking                 = 5 [(gogoproto.jsontag) = "marking,omitempty"];
+}
+
+// PFC specifies the pfc cos to respond to
+message PFC {
+    // PFC cos value for no drop classes. Range 0 - 7
+    uint32 COS              = 1 [(gogoproto.jsontag) = "cos,omitempty"];
+
+    // XOn Threshold for 2 - 4 MTUs. Range 3000 - 36864
+    uint32 XonThreshold     = 2 [(gogoproto.jsontag) = "xon-threshold,omitempty"];
+
+    // XOff Threshold for 2 - 8 MTUs, Range 3000 - 73728
+    uint32 XOffThreshold    = 3 [(gogoproto.jsontag) = "xoff-threshold,omitempty"];
+}
+
+message Scheduler {
+    enum Type {
+        SCHED_NONE      = 0;
+        SCHED_DWRR      = 1;
+        SCHED_STRICT    = 2;
+    }
+
+    // Type of QoS Scheduler. One of DWRR or Strict.
+    string SchedulerType        = 1 [(venice.check) = "StrEnum(QosScheduler.Type",
+                                     (gogoproto.jsontag) = "scheduler-type,omitempty"];
+
+    // Bandwidth Percentage for DWRR Scheduler. This captures bandwidth allocated.
+    uint32 BandwidthPercentage  = 2 [(gogoproto.jsontag) = "bandwidth-percentage,omitemtpy"];
+
+    // Bytes Per Second for Strict Scheduler. This captures rate limiting in bytes per second.
+    uint32 BytesPerSecond       = 3 [(gogoproto.jsontag) = "bytes-per-second,omitempty"];
+}
+
+message UplinkClassMap {
+    // Classify traffic based on the outer tag pcp value. Range 0 - 7
+    uint32 Dot1QPCP         = 1 [(gogoproto.jsontag) = "dot1q-pcp,omitempty"];
+
+    // Classify traffic based on the IP DSCP values. Range 0 - 63
+    repeated uint32 IPDSCP  = 2 [(gogoproto.jsontag) = "ip-dscp,omitempty"];
+}
+
+message Marking {
+    // Enable 802.1q PCP Rewrite
+    bool EnableDot1QPCPRewrite  = 1 [(gogoproto.jsontag) = "enable-dot1q-pcp-rewrite,omitempty"];
+
+    // Enable IP DSCP Rewrite
+    bool EnableIPDSCPRewrite    = 2 [(gogoproto.jsontag) = "enable-ip-dscp-rewrite,omitempty"];
+
+    // Rewrite value for the 802.1q tag. Range 0 - 7
+    uint32 Dot1QPCP             = 3 [(gogoproto.jsontag) = "dot1q-pcp,omitempty"];
+
+    // Rewrite value for the IP DSCP. Range 0 - 63
+    uint32 IPDSCP               = 4 [(gogoproto.jsontag) = "ip-dscp,omitempty"];
+}
+
+// QosClass Status
+message QosClassStatus {
+    // QosClassID in the datapath
+    uint64 QosClassID           = 1 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+message QosClassList {
+    repeated QosClass QoSClasses  = 1;
+}
+
+// qos class watch event
+message QosClassEvent {
+    api.EventType       EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    QosClass            QosClass    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "qos-class,omitempty"];
+}
