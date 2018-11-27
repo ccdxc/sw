@@ -237,9 +237,10 @@ message OflowFifoStats {
 // PacketBufferPortStats is container to capture all counters exposed by the buffering
 // module at the port level
 message PacketBufferPortStats {
-  qos.PacketBufferPort packet_buffer_port = 1;    // Port identifier
-  BufferStats          buffer_stats       = 2;    // PBC block statistics
-  OflowFifoStats       oflow_fifo_stats   = 3;    // Overflow fifo statistics
+  qos.PacketBufferPort   packet_buffer_port = 1;    // Port identifier
+  BufferStats            buffer_stats       = 2;    // PBC block statistics
+  OflowFifoStats         oflow_fifo_stats   = 3;    // Overflow fifo statistics
+  qos.QosClassQueueStats qos_queue_stats    = 4;    // Qos queue statistics
 }
 
 // PacketBufferStats captures all the statistics of the packet buffering module
