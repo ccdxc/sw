@@ -9,6 +9,7 @@
 #include "lif.hpp"
 #include "ethlif.hpp"
 #include "uplink.hpp"
+#include "platform/src/lib/nicmgr/include/nicmgr_utils.hpp"
 
 using namespace std;
 
@@ -68,12 +69,13 @@ Lif::Lif(EthLif * eth_lif)
 
     eth_lif_ = eth_lif;
 
-    NIC_LOG_INFO("Creating Lif: prom: {}, oob: {}, int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
-                    lif_info->receive_promiscuous,
-                    eth_lif_->IsOOBMnic(),
-                    eth_lif_->IsInternalManagementMnic(),
-                    eth_lif_->IsHostManagement(),
-                    lif_info->enable_rdma);
+    NIC_LOG_INFO("Creating Lif: {}, prom: {}, oob: {}, int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
+                 lif_info->name,
+                 lif_info->receive_promiscuous,
+                 eth_lif_->IsOOBMnic(),
+                 eth_lif_->IsInternalManagementMnic(),
+                 eth_lif_->IsHostManagement(),
+                 lif_info->enable_rdma);
 
     PopulateRequest(req_msg, &req);
 #if 0
@@ -120,6 +122,11 @@ Lif::Lif(EthLif * eth_lif)
             qstate_req->mutable_label()->set_label(qinfo.label);
         }
 #endif
+    }
+
+    if (!hal) {
+        NIC_LOG_ERR("FATAL: HAL is not UP yet.");
+        NIC_ASSERT(0);
     }
 
     status = hal->lif_create(req_msg, rsp_msg);
@@ -179,6 +186,7 @@ Lif::PopulateRequest(intf::LifRequestMsg &req_msg, intf::LifSpec **req_ptr)
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
+    req->set_name(lif_info->name);
     req->set_type(lif_info->type);
     req->set_hw_lif_id(lif_info->hw_lif_id);
     req->mutable_pinned_uplink_if_key_handle()->

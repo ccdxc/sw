@@ -34,7 +34,7 @@ int32_t LIFManagerBase::LIFRangeAlloc(int32_t start, uint32_t count) {
 
   for (uint32_t i = 0; i < count; i++) {
     // Accessing an entry will allocate it.
-    SDK_TRACE_PRINT("Allocating hw_lif_id: {}", base+i);
+    SDK_TRACE_DEBUG("Allocating hw_lif_id: %d", base+i);
     alloced_lifs_[base + i].lif_id = base + i;
   }
 

@@ -215,7 +215,7 @@
 /*****************************************************************************/
 #define LIF_STATS_TX_UCAST_OFFSET                   256
 #define LIF_STATS_TX_MCAST_OFFSET                   272
-#define LIF_STATS_TX_BCAST_OFFSET                   304
+#define LIF_STATS_TX_BCAST_OFFSET                   288
 #define LIF_STATS_TX_UCAST_DROP_OFFSET              320
 #define LIF_STATS_TX_MCAST_DROP_OFFSET              336
 #define LIF_STATS_TX_BCAST_DROP_OFFSET              352

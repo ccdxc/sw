@@ -23,6 +23,8 @@
 // Number of RSS indirection entries
 #define ETH_RSS_INDIR_LENGTH        128
 
+#define LIF_NAME_LEN 16
+
 using intf::LifSpec;
 using intf::LifResponse;
 using intf::LifDeleteRequest;
@@ -73,6 +75,7 @@ typedef struct lif_queue_info_s {
 typedef struct lif_s {
     hal_spinlock_t      slock;           // lock to protect this structure
     lif_id_t            lif_id;          // lif id assigned
+    char                name[LIF_NAME_LEN]; // LIF's name
     types::LifType      type;            // lif type
     intf::IfStatus      admin_status;    // admin status
     bool                vlan_strip_en;   // vlan strip enable

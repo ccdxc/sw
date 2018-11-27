@@ -24,5 +24,6 @@ MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/dos/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/telemetry/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/event/*.cc)
-MODULE_INCS     = ${NIC_CSR_INCS}
+MODULE_INCS     = ${NIC_CSR_INCS} \
+				  ${BLD_PROTOGEN_DIR}
 include ${MKDEFS}/post.mk

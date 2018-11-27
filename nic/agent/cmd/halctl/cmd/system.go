@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var systemShowCmd = &cobra.Command{
@@ -35,8 +36,8 @@ var systemClockShowCmd = &cobra.Command{
 
 var systemStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
-	Short: "show system statistics [fte | fte-txrx | table | api | pb | all] (Default: all)",
-	Long:  "show system statistics [fte | fte-txrx | table | api | pb | all] (Default: all)",
+	Short: "show system statistics [fte | fte-txrx | table | api | pb | intf | all] (Default: all)",
+	Long:  "show system statistics [fte | fte-txrx | table | api | pb | intf | all] (Default: all)",
 	Run:   systemStatsShowCmdHandler,
 }
 
@@ -237,13 +238,13 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewSystemClient(c.ClientConn)
 
 	// Check the args
 	table := false
 	fte := false
 	api := false
 	pb := false
+	intf := false
 	fteTxRx := false
 
 	if len(args) > 0 {
@@ -255,6 +256,8 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			api = true
 		} else if strings.Compare(args[0], "pb") == 0 {
 			pb = true
+		} else if strings.Compare(args[0], "intf") == 0 {
+			intf = true
 		} else if strings.Compare(args[0], "fte-txrx") == 0 {
 			fteTxRx = true
 		} else if strings.Compare(args[0], "all") == 0 {
@@ -262,6 +265,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			fte = true
 			api = true
 			pb = true
+			intf = true
 			fteTxRx = true
 		} else {
 			fmt.Printf("Invalid argument\n")
@@ -272,8 +276,16 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		fte = true
 		api = true
 		pb = true
+		intf = true
 		fteTxRx = true
 	}
+
+	if intf {
+		intfStatsShow(c)
+		return
+	}
+
+	client := halproto.NewSystemClient(c.ClientConn)
 
 	// HAL call
 	var empty *halproto.Empty
@@ -1127,4 +1139,143 @@ func threadDetailShow(ofile *os.File) {
 
 func threadDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	threadDetailShow(nil)
+}
+
+func intfStatsHeader() {
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 90)
+	fmt.Println(hdrLine)
+	fmt.Printf("%30s%23s%17s\n", "Rx", "|", "Tx")
+	fmt.Printf("%-11s%-10s%-10s%-10s%-10s | %-10s%-10s%-10s%-10s\n",
+		"Intf", "Ucast", "Mcast", "Bcast", "All", "Ucast", "Mcast", "Bcast", "All")
+	fmt.Println(hdrLine)
+}
+
+func intfUplinkShowOneResp(resp *halproto.PortGetResponse) {
+	portStr := fmt.Sprint(resp.GetSpec().GetKeyOrHandle().GetPortId())
+
+	intfStr := ""
+	if portStr == "9" {
+		intfStr += "Uplink-OOB"
+	} else {
+		intfStr += "Uplink-" + portStr
+	}
+
+	var rxUc uint64
+	var rxMc uint64
+	var rxBc uint64
+	var rxAll uint64
+	var txUc uint64
+	var txMc uint64
+	var txBc uint64
+	var txAll uint64
+
+	macStats := resp.GetStats().GetMacStats()
+	for _, s := range macStats {
+		switch s.GetType() {
+		case halproto.MacStatsType_FRAMES_RX_UNICAST:
+			rxUc = s.GetCount()
+		case halproto.MacStatsType_FRAMES_RX_MULTICAST:
+			rxMc = s.GetCount()
+		case halproto.MacStatsType_FRAMES_RX_BROADCAST:
+			rxBc = s.GetCount()
+		case halproto.MacStatsType_FRAMES_RX_ALL:
+			rxAll = s.GetCount()
+		case halproto.MacStatsType_FRAMES_TX_UNICAST:
+			txUc = s.GetCount()
+		case halproto.MacStatsType_FRAMES_TX_MULTICAST:
+			txMc = s.GetCount()
+		case halproto.MacStatsType_FRAMES_TX_BROADCAST:
+			txBc = s.GetCount()
+		case halproto.MacStatsType_FRAMES_TX_ALL:
+			txAll = s.GetCount()
+		default:
+			continue
+		}
+	}
+	fmt.Printf("%-11s%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d\n",
+		intfStr,
+		rxUc, rxMc, rxBc, rxAll,
+		txUc, txMc, txBc, txAll)
+
+}
+
+func uplinkStatsShow(c *rpckit.RPCClient) {
+	client := halproto.NewPortClient(c.ClientConn)
+	var req *halproto.PortGetRequest
+	req = &halproto.PortGetRequest{}
+	portGetReqMsg := &halproto.PortGetRequestMsg{
+		Request: []*halproto.PortGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.PortGet(context.Background(), portGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		intfUplinkShowOneResp(resp)
+	}
+}
+
+func intfLifShowOneResp(resp *halproto.LifGetResponse) {
+	status := resp.GetStatus()
+	hwLifID := status.GetHwLifId()
+	lifName := resp.GetSpec().GetName()
+	stats := resp.GetStats()
+	rxStats := stats.GetDataLifStats().GetRxStats()
+	txStats := stats.GetDataLifStats().GetTxStats()
+	if lifName == "" {
+		lifName += "lif-" + fmt.Sprint(hwLifID)
+	}
+	fmt.Printf("%-11s%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d\n",
+		lifName,
+		rxStats.GetUnicastFramesOk(),
+		rxStats.GetMulticastFramesOk(),
+		rxStats.GetBroadcastFramesOk(),
+		rxStats.GetFramesOk(),
+		txStats.GetUnicastFramesOk(),
+		txStats.GetMulticastFramesOk(),
+		txStats.GetBroadcastFramesOk(),
+		txStats.GetFramesOk())
+}
+
+func lifStatsShow(c *rpckit.RPCClient) {
+	client := halproto.NewInterfaceClient(c.ClientConn)
+	var req *halproto.LifGetRequest
+	req = &halproto.LifGetRequest{}
+	lifGetReqMsg := &halproto.LifGetRequestMsg{
+		Request: []*halproto.LifGetRequest{req},
+	}
+	// HAL call
+	respMsg, err := client.LifGet(context.Background(), lifGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Lif failed. %v\n", err)
+		return
+	}
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		intfLifShowOneResp(resp)
+	}
+}
+
+func intfStatsShow(c *rpckit.RPCClient) {
+	// Display Header
+	intfStatsHeader()
+
+	// Uplink Mac stats show
+	uplinkStatsShow(c)
+
+	// Lif Stats show
+	lifStatsShow(c)
+
 }

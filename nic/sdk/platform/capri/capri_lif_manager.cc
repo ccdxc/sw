@@ -59,7 +59,7 @@ LIFManager* LIFManager::factory(mpartition *mp,
 
     // Allocate 0th hw_lif_id
     uint32_t hw_lif_id = lm->LIFRangeAlloc(-1, 1);
-    SDK_TRACE_PRINT("Reserving hw_lif_id: {}", hw_lif_id);
+    SDK_TRACE_DEBUG("Reserving hw_lif_id: %d", hw_lif_id);
 
     return lm;
 }
@@ -126,7 +126,7 @@ int32_t LIFManager::WriteQStateImpl(
 }
 
 
-void 
+void
 LIFManager::set_program_info(program_info *pinfo)
 {
     pinfo_ = pinfo;

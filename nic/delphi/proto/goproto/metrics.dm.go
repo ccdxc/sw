@@ -78,33 +78,33 @@ type LifMetrics struct {
 
 	XRsvd__13 gometrics.Counter
 
-	TxUnicastPackets gometrics.Counter
-
 	TxUnicastBytes gometrics.Counter
 
-	TxMulticastPackets gometrics.Counter
+	TxUnicastPackets gometrics.Counter
 
 	TxMulticastBytes gometrics.Counter
 
-	TxBroadcastPackets gometrics.Counter
+	TxMulticastPackets gometrics.Counter
 
 	TxBroadcastBytes gometrics.Counter
+
+	TxBroadcastPackets gometrics.Counter
 
 	XRsvd__14 gometrics.Counter
 
 	XRsvd__15 gometrics.Counter
 
-	TxDropUnicastPackets gometrics.Counter
-
 	TxDropUnicastBytes gometrics.Counter
 
-	TxDropMulticastPackets gometrics.Counter
+	TxDropUnicastPackets gometrics.Counter
 
 	TxDropMulticastBytes gometrics.Counter
 
-	TxDropBroadcastPackets gometrics.Counter
+	TxDropMulticastPackets gometrics.Counter
 
 	TxDropBroadcastBytes gometrics.Counter
+
+	TxDropBroadcastPackets gometrics.Counter
 
 	TxDmaError gometrics.Counter
 
@@ -202,33 +202,33 @@ func (mtr *LifMetrics) Size() int {
 
 	sz += mtr.XRsvd__13.Size()
 
-	sz += mtr.TxUnicastPackets.Size()
-
 	sz += mtr.TxUnicastBytes.Size()
 
-	sz += mtr.TxMulticastPackets.Size()
+	sz += mtr.TxUnicastPackets.Size()
 
 	sz += mtr.TxMulticastBytes.Size()
 
-	sz += mtr.TxBroadcastPackets.Size()
+	sz += mtr.TxMulticastPackets.Size()
 
 	sz += mtr.TxBroadcastBytes.Size()
+
+	sz += mtr.TxBroadcastPackets.Size()
 
 	sz += mtr.XRsvd__14.Size()
 
 	sz += mtr.XRsvd__15.Size()
 
-	sz += mtr.TxDropUnicastPackets.Size()
-
 	sz += mtr.TxDropUnicastBytes.Size()
 
-	sz += mtr.TxDropMulticastPackets.Size()
+	sz += mtr.TxDropUnicastPackets.Size()
 
 	sz += mtr.TxDropMulticastBytes.Size()
 
-	sz += mtr.TxDropBroadcastPackets.Size()
+	sz += mtr.TxDropMulticastPackets.Size()
 
 	sz += mtr.TxDropBroadcastBytes.Size()
+
+	sz += mtr.TxDropBroadcastPackets.Size()
 
 	sz += mtr.TxDmaError.Size()
 
@@ -356,23 +356,23 @@ func (mtr *LifMetrics) Unmarshal() error {
 	mtr.XRsvd__13 = mtr.metrics.GetCounter(offset)
 	offset += mtr.XRsvd__13.Size()
 
-	mtr.TxUnicastPackets = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxUnicastPackets.Size()
-
 	mtr.TxUnicastBytes = mtr.metrics.GetCounter(offset)
 	offset += mtr.TxUnicastBytes.Size()
 
-	mtr.TxMulticastPackets = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxMulticastPackets.Size()
+	mtr.TxUnicastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxUnicastPackets.Size()
 
 	mtr.TxMulticastBytes = mtr.metrics.GetCounter(offset)
 	offset += mtr.TxMulticastBytes.Size()
 
-	mtr.TxBroadcastPackets = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxBroadcastPackets.Size()
+	mtr.TxMulticastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxMulticastPackets.Size()
 
 	mtr.TxBroadcastBytes = mtr.metrics.GetCounter(offset)
 	offset += mtr.TxBroadcastBytes.Size()
+
+	mtr.TxBroadcastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxBroadcastPackets.Size()
 
 	mtr.XRsvd__14 = mtr.metrics.GetCounter(offset)
 	offset += mtr.XRsvd__14.Size()
@@ -380,23 +380,23 @@ func (mtr *LifMetrics) Unmarshal() error {
 	mtr.XRsvd__15 = mtr.metrics.GetCounter(offset)
 	offset += mtr.XRsvd__15.Size()
 
-	mtr.TxDropUnicastPackets = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxDropUnicastPackets.Size()
-
 	mtr.TxDropUnicastBytes = mtr.metrics.GetCounter(offset)
 	offset += mtr.TxDropUnicastBytes.Size()
 
-	mtr.TxDropMulticastPackets = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxDropMulticastPackets.Size()
+	mtr.TxDropUnicastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxDropUnicastPackets.Size()
 
 	mtr.TxDropMulticastBytes = mtr.metrics.GetCounter(offset)
 	offset += mtr.TxDropMulticastBytes.Size()
 
-	mtr.TxDropBroadcastPackets = mtr.metrics.GetCounter(offset)
-	offset += mtr.TxDropBroadcastPackets.Size()
+	mtr.TxDropMulticastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxDropMulticastPackets.Size()
 
 	mtr.TxDropBroadcastBytes = mtr.metrics.GetCounter(offset)
 	offset += mtr.TxDropBroadcastBytes.Size()
+
+	mtr.TxDropBroadcastPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxDropBroadcastPackets.Size()
 
 	mtr.TxDmaError = mtr.metrics.GetCounter(offset)
 	offset += mtr.TxDmaError.Size()
@@ -595,35 +595,35 @@ func (mtr *LifMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.XRsvd__13.Size()
 
-	if fldName == "TxUnicastPackets" {
-		return offset
-	}
-	offset += mtr.TxUnicastPackets.Size()
-
 	if fldName == "TxUnicastBytes" {
 		return offset
 	}
 	offset += mtr.TxUnicastBytes.Size()
 
-	if fldName == "TxMulticastPackets" {
+	if fldName == "TxUnicastPackets" {
 		return offset
 	}
-	offset += mtr.TxMulticastPackets.Size()
+	offset += mtr.TxUnicastPackets.Size()
 
 	if fldName == "TxMulticastBytes" {
 		return offset
 	}
 	offset += mtr.TxMulticastBytes.Size()
 
-	if fldName == "TxBroadcastPackets" {
+	if fldName == "TxMulticastPackets" {
 		return offset
 	}
-	offset += mtr.TxBroadcastPackets.Size()
+	offset += mtr.TxMulticastPackets.Size()
 
 	if fldName == "TxBroadcastBytes" {
 		return offset
 	}
 	offset += mtr.TxBroadcastBytes.Size()
+
+	if fldName == "TxBroadcastPackets" {
+		return offset
+	}
+	offset += mtr.TxBroadcastPackets.Size()
 
 	if fldName == "XRsvd__14" {
 		return offset
@@ -635,35 +635,35 @@ func (mtr *LifMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.XRsvd__15.Size()
 
-	if fldName == "TxDropUnicastPackets" {
-		return offset
-	}
-	offset += mtr.TxDropUnicastPackets.Size()
-
 	if fldName == "TxDropUnicastBytes" {
 		return offset
 	}
 	offset += mtr.TxDropUnicastBytes.Size()
 
-	if fldName == "TxDropMulticastPackets" {
+	if fldName == "TxDropUnicastPackets" {
 		return offset
 	}
-	offset += mtr.TxDropMulticastPackets.Size()
+	offset += mtr.TxDropUnicastPackets.Size()
 
 	if fldName == "TxDropMulticastBytes" {
 		return offset
 	}
 	offset += mtr.TxDropMulticastBytes.Size()
 
-	if fldName == "TxDropBroadcastPackets" {
+	if fldName == "TxDropMulticastPackets" {
 		return offset
 	}
-	offset += mtr.TxDropBroadcastPackets.Size()
+	offset += mtr.TxDropMulticastPackets.Size()
 
 	if fldName == "TxDropBroadcastBytes" {
 		return offset
 	}
 	offset += mtr.TxDropBroadcastBytes.Size()
+
+	if fldName == "TxDropBroadcastPackets" {
+		return offset
+	}
+	offset += mtr.TxDropBroadcastPackets.Size()
 
 	if fldName == "TxDmaError" {
 		return offset
@@ -910,21 +910,15 @@ func (mtr *LifMetrics) SetXRsvd__13(val gometrics.Counter) error {
 	return nil
 }
 
-// SetTxUnicastPackets sets cunter in shared memory
-func (mtr *LifMetrics) SetTxUnicastPackets(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxUnicastPackets"))
-	return nil
-}
-
 // SetTxUnicastBytes sets cunter in shared memory
 func (mtr *LifMetrics) SetTxUnicastBytes(val gometrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxUnicastBytes"))
 	return nil
 }
 
-// SetTxMulticastPackets sets cunter in shared memory
-func (mtr *LifMetrics) SetTxMulticastPackets(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxMulticastPackets"))
+// SetTxUnicastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxUnicastPackets(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxUnicastPackets"))
 	return nil
 }
 
@@ -934,15 +928,21 @@ func (mtr *LifMetrics) SetTxMulticastBytes(val gometrics.Counter) error {
 	return nil
 }
 
-// SetTxBroadcastPackets sets cunter in shared memory
-func (mtr *LifMetrics) SetTxBroadcastPackets(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxBroadcastPackets"))
+// SetTxMulticastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxMulticastPackets(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxMulticastPackets"))
 	return nil
 }
 
 // SetTxBroadcastBytes sets cunter in shared memory
 func (mtr *LifMetrics) SetTxBroadcastBytes(val gometrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxBroadcastBytes"))
+	return nil
+}
+
+// SetTxBroadcastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxBroadcastPackets(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxBroadcastPackets"))
 	return nil
 }
 
@@ -958,21 +958,15 @@ func (mtr *LifMetrics) SetXRsvd__15(val gometrics.Counter) error {
 	return nil
 }
 
-// SetTxDropUnicastPackets sets cunter in shared memory
-func (mtr *LifMetrics) SetTxDropUnicastPackets(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxDropUnicastPackets"))
-	return nil
-}
-
 // SetTxDropUnicastBytes sets cunter in shared memory
 func (mtr *LifMetrics) SetTxDropUnicastBytes(val gometrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxDropUnicastBytes"))
 	return nil
 }
 
-// SetTxDropMulticastPackets sets cunter in shared memory
-func (mtr *LifMetrics) SetTxDropMulticastPackets(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxDropMulticastPackets"))
+// SetTxDropUnicastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxDropUnicastPackets(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxDropUnicastPackets"))
 	return nil
 }
 
@@ -982,15 +976,21 @@ func (mtr *LifMetrics) SetTxDropMulticastBytes(val gometrics.Counter) error {
 	return nil
 }
 
-// SetTxDropBroadcastPackets sets cunter in shared memory
-func (mtr *LifMetrics) SetTxDropBroadcastPackets(val gometrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("TxDropBroadcastPackets"))
+// SetTxDropMulticastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxDropMulticastPackets(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxDropMulticastPackets"))
 	return nil
 }
 
 // SetTxDropBroadcastBytes sets cunter in shared memory
 func (mtr *LifMetrics) SetTxDropBroadcastBytes(val gometrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxDropBroadcastBytes"))
+	return nil
+}
+
+// SetTxDropBroadcastPackets sets cunter in shared memory
+func (mtr *LifMetrics) SetTxDropBroadcastPackets(val gometrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxDropBroadcastPackets"))
 	return nil
 }
 

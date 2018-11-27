@@ -43,21 +43,21 @@ message LifMetrics {
     delphi.Counter __rsvd__12                = 32;
     delphi.Counter __rsvd__13                = 33;
 
-    delphi.Counter tx_unicast_packets        = 34;    // Unicast packets transmitted by LIF
-    delphi.Counter tx_unicast_bytes          = 35;    // Unicast bytes transmitted by LIF
-    delphi.Counter tx_multicast_packets      = 36;    // Multicast packets transmitted by LIF
-    delphi.Counter tx_multicast_bytes        = 37;    // Multicast bytes transmitted by LIF
-    delphi.Counter tx_broadcast_packets      = 38;    // Broadcast packets transmitted by LIF
-    delphi.Counter tx_broadcast_bytes        = 39;    // Broadcast bytes transmitted by LIF
+    delphi.Counter tx_unicast_bytes          = 34;    // Unicast bytes transmitted by LIF
+    delphi.Counter tx_unicast_packets        = 35;    // Unicast packets transmitted by LIF
+    delphi.Counter tx_multicast_bytes        = 36;    // Multicast bytes transmitted by LIF
+    delphi.Counter tx_multicast_packets      = 37;    // Multicast packets transmitted by LIF
+    delphi.Counter tx_broadcast_bytes        = 38;    // Broadcast bytes transmitted by LIF
+    delphi.Counter tx_broadcast_packets      = 39;    // Broadcast packets transmitted by LIF
     delphi.Counter __rsvd__14                = 40;
     delphi.Counter __rsvd__15                = 41;
 
-    delphi.Counter tx_drop_unicast_packets   = 42;    // Unicast packets dropped during transmit (per LIF)
-    delphi.Counter tx_drop_unicast_bytes     = 43;    // Unicast bytes dropped during transmit (per LIF)
-    delphi.Counter tx_drop_multicast_packets = 44;    // Multicast packets dropped during transmit (per LIF)
-    delphi.Counter tx_drop_multicast_bytes   = 45;    // Multicast bytes dropped during transmit (per LIF)
-    delphi.Counter tx_drop_broadcast_packets = 46;    // Broadcast packets dropped during transmit (per LIF)
-    delphi.Counter tx_drop_broadcast_bytes   = 47;    // Broadcast bytes dropped during transmit (per LIF)
+    delphi.Counter tx_drop_unicast_bytes     = 42;    // Unicast bytes dropped during transmit (per LIF)
+    delphi.Counter tx_drop_unicast_packets   = 43;    // Unicast packets dropped during transmit (per LIF)
+    delphi.Counter tx_drop_multicast_bytes   = 44;    // Multicast bytes dropped during transmit (per LIF)
+    delphi.Counter tx_drop_multicast_packets = 45;    // Multicast packets dropped during transmit (per LIF)
+    delphi.Counter tx_drop_broadcast_bytes   = 46;    // Broadcast bytes dropped during transmit (per LIF)
+    delphi.Counter tx_drop_broadcast_packets = 47;    // Broadcast packets dropped during transmit (per LIF)
     delphi.Counter tx_dma_error              = 48;    // Packet DMA errors
     delphi.Counter __rsvd__16                = 49;
 

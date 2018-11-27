@@ -788,6 +788,11 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     // consume the config
     lif->lif_id              = spec.key_or_handle().lif_id();
+    if (spec.name().size() + 1 > LIF_NAME_LEN) {
+        HAL_TRACE_ERR("LIF's name: {} len:{} is greater than static len.",
+                      spec.name(), spec.name().size() + 1);
+    }
+    strcpy(lif->name, spec.name().c_str());
     lif->type                = spec.type();
     lif->admin_status        = spec.admin_status();
     lif->hal_handle          = hal_alloc_handle();
@@ -1788,6 +1793,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     // fill in the config spec of this lif.
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_lif_id(lif->lif_id);
+    spec->set_name(lif->name);
     spec->set_admin_status(lif->admin_status);
     spec->set_enable_rdma(lif->enable_rdma);
     spec->set_rdma_max_keys(lif->rdma_max_keys);

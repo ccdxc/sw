@@ -1,0 +1,11 @@
+-I ../../../../..
+-I ../../../..
+-I ../../../../third-party/libev/include
+-I ../../../../build/aarch64/iris
+-I ../../../../build/aarch64/iris/gen/proto/nicmgr
+-I ../../../../build/aarch64/iris/gen/proto
+-I ../../../../sdk
+-I ../../../../sdk/include
+-I ../../../../include
+-I ../../../third-party/spdlog/include
+-std=c++11

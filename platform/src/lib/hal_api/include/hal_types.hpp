@@ -42,6 +42,7 @@ typedef struct hal_queue_info_s {
 typedef struct hal_lif_info_s {
     uint64_t id;
     uint64_t hw_lif_id;
+    std::string name;
     types::LifType type;
     Uplink *pinned_uplink;
     bool is_management;
@@ -58,8 +59,6 @@ typedef struct hal_lif_info_s {
     hal_queue_info_t queue_info[NUM_QUEUE_TYPES];
     uint64_t qstate_addr[NUM_QUEUE_TYPES];
 } hal_lif_info_t;
-
-
 
 enum HalEthQtype {
     HAL_ETH_QTYPE_RX = 0,

@@ -149,11 +149,11 @@ void Eth::Update()
 {
     int32_t     cosA = 1;
     int32_t     cosB = 0;
-    cosB = HalClient::GetTxTrafficClassCos(spec->qos_group, 
+    cosB = HalClient::GetTxTrafficClassCos(spec->qos_group,
                                            spec->uplink ? spec->uplink->GetPortNum() : 0);
     if (cosB < 0) {
         NIC_LOG_ERR("lif-{}: Failed to get cosB for group {}, uplink {}",
-                    hal_lif_info_.hw_lif_id, spec->qos_group, 
+                    hal_lif_info_.hw_lif_id, spec->qos_group,
                     spec->uplink ? spec->uplink->GetPortNum() : 0);
         return;
     }
@@ -209,6 +209,7 @@ Eth::Eth(HalClient *hal_client,
     qinfo[ETH_QTYPE_EQ].entries = (uint32_t)log2(spec->eq_count + spec->rdma_eq_count);
 
     hal_lif_info_.id = spec->lif_id;
+    hal_lif_info_.name = spec->if_name;
     hal_lif_info_.type = ConvertDevTypeToLifType(spec->eth_type);
     hal_lif_info_.pinned_uplink = spec->uplink;
     hal_lif_info_.hw_lif_id = spec->hw_lif_id;
@@ -233,9 +234,9 @@ Eth::Eth(HalClient *hal_client,
         }
     }
 
-    NIC_LOG_INFO("lif created: id:{}, hw_lif_id: {}, mnic_id: {}, stats_mem_addr {:#x}, rdma sqs: {}"
-                 " rqs: {} HAL: sqs: {} rqs: {}", hal_lif_info_.id, hal_lif_info_.hw_lif_id, mnic_id,
-                 stats_mem_addr, spec->rdma_sq_count, spec->rdma_rq_count,
+    NIC_LOG_INFO("lif created: name: {}, id:{}, hw_lif_id: {}, mnic_id: {}, stats_mem_addr {:#x}, rdma sqs: {}"
+                 " rqs: {} HAL: sqs: {} rqs: {}", hal_lif_info_.name, hal_lif_info_.id, hal_lif_info_.hw_lif_id,
+                 mnic_id, stats_mem_addr, spec->rdma_sq_count, spec->rdma_rq_count,
                  hal_lif_info_.queue_info[ETH_QTYPE_SQ].entries,
                  hal_lif_info_.queue_info[ETH_QTYPE_RQ].entries);
 

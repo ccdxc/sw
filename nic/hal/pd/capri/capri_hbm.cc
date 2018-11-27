@@ -51,7 +51,7 @@ capri_hbm_parse (capri_cfg_t *cfg)
     // makeup the full file path
     full_path =  cfg->cfg_path + "/" + cfg->pgm_name +
                      "/" + std::string("hbm_mem.json");
-    g_mpartition = sdk::platform::utils::mpartition::factory(full_path.c_str(), 
+    g_mpartition = sdk::platform::utils::mpartition::factory(full_path.c_str(),
                                                              CAPRI_HBM_BASE);
     if (!g_mpartition) {
         return HAL_RET_ERR;
@@ -101,15 +101,41 @@ reset_hbm_regions (void)
 {
     hal::hal_cfg_t      *hal_cfg;
     mpartition_region_t *reg;
+    uint8_t             tmp[1024], zeros[1024] = {0};
+    uint64_t            addr = 0;
 
     hal_cfg = (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
-    if (hal_cfg && (hal_cfg->platform == hal::HAL_PLATFORM_HAPS)) {
+    // if (hal_cfg && (hal_cfg->platform == hal::HAL_PLATFORM_HAPS)) {
+    if (hal_cfg && (hal_cfg->platform == hal::HAL_PLATFORM_HAPS ||
+                    hal_cfg->platform == hal::HAL_PLATFORM_HW)) {
         for (int i = 0; i < g_mpartition->num_regions(); i++) {
             reg = g_mpartition->region(i);
             if (reg->reset) {
-                HAL_TRACE_DEBUG("Resetting {} hbm region", reg->mem_reg_name);
-                hal::pd::asic_mem_write(g_mpartition->addr(reg->start_offset),
-                                        NULL, reg->size_kb * 1024);
+                if (hal_cfg->platform == hal::HAL_PLATFORM_HAPS) {
+                    // Reset only for haps
+                    HAL_TRACE_DEBUG("Resetting {} hbm region", reg->mem_reg_name);
+                    hal::pd::asic_mem_write(g_mpartition->addr(reg->start_offset),
+                                            NULL, reg->size_kb * 1024);
+                } else if (hal_cfg->platform == hal::HAL_PLATFORM_HW) {
+                    /*
+                     * Comparing for all "reset" regions is delaying HAL UP.
+                     * Nicmgr is getting dev cmds before that and Nicmgr cores as HalGRPCClient is NULL.
+                     * So just checking nicmgrqstate map.
+                     */
+                    if (!strcmp(reg->mem_reg_name, "nicmgrqstate_map")) {
+                        // Check if its all 0s for HW
+                        addr = reg->start_offset;
+                        for (uint64_t j = 0; j < reg->size_kb; j++) {
+                            hal::pd::asic_mem_read(addr, tmp, 1024, true);
+                            if (memcmp(tmp, zeros, 1024)) {
+                                HAL_TRACE_ERR("Fatal: HBM region {} has non-zero bytes.",
+                                              reg->mem_reg_name);
+                                HAL_ASSERT(0);
+                            }
+                            addr += 1024;
+                        }
+                    }
+                }
             }
         }
     }

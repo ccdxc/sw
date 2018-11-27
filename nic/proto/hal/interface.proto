@@ -126,25 +126,26 @@ message LifSpec {
   // key_or_handle is LIF's key or handle
   kh.LifKeyHandle            key_or_handle               = 2 [(gogoproto.moretags) = "venice:key"];
   kh.InterfaceKeyHandle      pinned_uplink_if_key_handle = 3 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}" ];
-  IfStatus                   admin_status                = 4;    // admin status of the interface
-  types.LifType              type                        = 5;    // LIF type
-  repeated LifQStateMapEntry lif_qstate_map              = 6;    // LIF -> Qstate map.
-  bool                       vlan_strip_en               = 7;    // LIF vlan strip enable
-  bool                       vlan_insert_en              = 8;    // Ingress vlan tag in p4plus_to_p4 hdr
-  bool                       enable_rdma                 = 9;    // RDMA: enable RDMA on LIF
-  bool                       is_management               = 10 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
-  PktFilter                  packet_filter               = 11;   // Packet filters
-  uint32                     hw_lif_id                   = 12;   // hw lif id. Zero will make Hal allocate it
-  uint32                     rdma_max_keys               = 13;   // RDMA: max key entries
-  uint32                     rdma_max_ahs                = 14;
-  uint32                     rdma_max_pt_entries         = 15;   // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate                  = 16;   // Initialize Qstate
-  LifRssSpec                 rss                         = 17;   // ETH: LIF RSS configuration
-  qos.PolicerSpec            tx_policer                  = 18;   // QOS Policer for tx traffic
-  qos.PolicerSpec            rx_policer                  = 19;   // QOS Policer for rx traffic
-  kh.QosClassKeyHandle       rx_qos_class                = 20;   // QOS class-of-service for Rx traffic.
-  kh.QosClassKeyHandle       tx_qos_class                = 21;   // QOS class-of-service for Tx traffic.
-  uint32                     rdma_barmap_size            = 22;   // RDMA: barmap size in bytes, rounded to power of 2
+  string                     name                        = 4;    // LIF's name
+  IfStatus                   admin_status                = 5;    // admin status of the interface
+  types.LifType              type                        = 6;    // LIF type
+  repeated LifQStateMapEntry lif_qstate_map              = 7;    // LIF -> Qstate map.
+  bool                       vlan_strip_en               = 8;    // LIF vlan strip enable
+  bool                       vlan_insert_en              = 9;    // Ingress vlan tag in p4plus_to_p4 hdr
+  bool                       enable_rdma                 = 10;    // RDMA: enable RDMA on LIF
+  bool                       is_management               = 11 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
+  PktFilter                  packet_filter               = 12;   // Packet filters
+  uint32                     hw_lif_id                   = 13;   // hw lif id. Zero will make Hal allocate it
+  uint32                     rdma_max_keys               = 14;   // RDMA: max key entries
+  uint32                     rdma_max_ahs                = 15;
+  uint32                     rdma_max_pt_entries         = 16;   // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate                  = 17;   // Initialize Qstate
+  LifRssSpec                 rss                         = 18;   // ETH: LIF RSS configuration
+  qos.PolicerSpec            tx_policer                  = 19;   // QOS Policer for tx traffic
+  qos.PolicerSpec            rx_policer                  = 20;   // QOS Policer for rx traffic
+  kh.QosClassKeyHandle       rx_qos_class                = 21;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle       tx_qos_class                = 22;   // QOS class-of-service for Tx traffic.
+  uint32                     rdma_barmap_size            = 23;   // RDMA: barmap size in bytes, rounded to power of 2
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
@@ -282,8 +283,8 @@ message LifDeleteResponseMsg {
 message LifTxStats {
   uint64           frames_ok           = 1;
   uint64           unicast_frames_ok   = 2;
-  uint64           multicast_brames_ok = 3;
-  uint64           broadcast_brames_ok = 4;
+  uint64           multicast_frames_ok = 3;
+  uint64           broadcast_frames_ok = 4;
   uint64           bytes_ok            = 5;
   uint64           unicast_bytes_ok    = 6;
   uint64           multicast_bytes_ok  = 7;
@@ -350,7 +351,6 @@ message LifStats {
 message LifGetRequest {
   // key_or_handle  is lif's unique identifier for retrieval
   kh.LifKeyHandle  key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
-  LifStats         stats          = 2;    // LIF statistics
 }
 
 message LifGetRequestMsg {
