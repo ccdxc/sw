@@ -39,6 +39,9 @@ static void ionic_rx_empty(struct rxque *rxq);
 static void ionic_rx_refill(struct rxque *rxq);
 static void ionic_setup_vlan(struct ifnet *ifp);
 
+static int ionic_addr_add(struct net_device *netdev, const u8 *addr);
+static int ionic_addr_del(struct net_device *netdev, const u8 *addr);
+
 struct lif_addr_work {
 	struct work_struct work;
 	struct lif *lif;
@@ -141,6 +144,30 @@ int ionic_reinit(struct net_device *netdev)
 
 	KASSERT(lif, ("lif is NULL"));
 	KASSERT(IONIC_CORE_LOCK_OWNED(lif), ("%s is not locked", lif->name));
+
+	ionic_down_link(lif->netdev);
+
+	/* Program the user specified MAC address. */
+	if (bcmp(IF_LLADDR(netdev), lif->dev_addr, ETHER_ADDR_LEN) != 0) {
+		IONIC_NETDEV_ERROR(lif->netdev, "Programming new MAC:%6D",
+			lif->dev_addr, ":");
+		err = ionic_addr_add(lif->netdev, IF_LLADDR(netdev));
+		if (err) {
+			IONIC_NETDEV_ERROR(lif->netdev, "Couldn't add new MAC %6D, err: %d",
+				lif->dev_addr, ":", err);
+		 } else {
+			err = ionic_addr_del(lif->netdev, lif->dev_addr);
+			if (err) {
+				IONIC_NETDEV_ERROR(lif->netdev, "Couldn't delete old MAC %6D, err: %d\n",
+					lif->dev_addr, ":", err);
+			}
+			/* 
+			 * XXX: Its possible that old address couldn't be deleted but 
+			 * 	new address is programmed, reinit?
+			 */
+			bcopy(IF_LLADDR(netdev), lif->dev_addr, ETHER_ADDR_LEN);
+		}
+	}
 
 	ionic_setup_vlan(netdev);
 
@@ -1589,9 +1616,15 @@ static void ionic_lif_deinit(struct lif *lif)
 		free_irq(lif->ionic->pdev->irq, lif);
 	}
 
+	if (lif->mc_addrs) {
+		free(lif->mc_addrs, M_IONIC);
+		lif->mc_addrs = NULL;
+	}
+
 	ifmedia_removeall(&lif->media);
 	if (lif->netdev)
 		ether_ifdetach(lif->netdev);
+
 	ionic_lif_adminq_deinit(lif, lif->adminqcq);
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
@@ -1828,7 +1861,7 @@ static void ionic_rx_fill(struct rxque *rxq)
 			db_ring = true;
 		}
 	 }
-	
+
 	/* If we haven't rung the doorbell, do it now. */
 	if (!db_ring)
 		ionic_rx_ring_doorbell(rxq, index);
@@ -2062,14 +2095,14 @@ static int ionic_station_set(struct lif *lif)
 	if (!is_zero_ether_addr(lif->dev_addr)) {
 		IONIC_NETDEV_ADDR_INFO(netdev, lif->dev_addr, "deleting station MAC addr");
 		ether_ifdetach(netdev);
-		ionic_lif_addr(lif, lif->dev_addr, false);
+		ionic_addr_del(lif->netdev, lif->dev_addr);
 	}
 	memcpy(lif->dev_addr, ctx.comp.station_mac_addr_get.addr,
 	       ETHER_ADDR_LEN);
 
 	IONIC_NETDEV_ADDR_INFO(netdev, lif->dev_addr, "adding station MAC addr");
-	/* XXX: handle user specified address. */
-	ionic_lif_addr(lif, lif->dev_addr, true);
+
+	ionic_addr_add(lif->netdev, lif->dev_addr);
 
 	ether_ifattach(netdev, lif->dev_addr);
 
