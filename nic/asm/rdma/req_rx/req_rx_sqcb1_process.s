@@ -164,12 +164,12 @@ read:
     // remaining_payload_bytes > pmtu
     slt            c1, r3, r2 // Branch Delay Slot
     IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_ONLY|REQ_RX_FLAG_LAST)
-    bcf            [c1 & c3], invalid_pyld_len
+    bcf            [c1 & c2], invalid_pyld_len
 
     // remaining_payload_bytes < 1
     slt            c1, r2, 1 // Branch Delay Slot
-    ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_LAST)
-    bcf            [c1 & c2], invalid_pyld_len
+    ARE_ALL_FLAGS_SET(c5, r1, REQ_RX_FLAG_LAST)
+    bcf            [c1 & c5], invalid_pyld_len
     nop            // Branch Delay Slot
 
     bcf            [c4], rrq_empty

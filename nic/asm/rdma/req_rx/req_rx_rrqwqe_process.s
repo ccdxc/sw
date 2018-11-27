@@ -308,15 +308,11 @@ implicit_nak:
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), K_CUR_SGE_OFFSET, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), K_CUR_SGE_ID
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
+    phvwrpair.e CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
+                CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
 
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
-
-    // set cmd_eop if skip_to_eop cmd exists and cq is not posted
-    setcf.e        c1, [c1 & !c2]
-    DMA_SKIP_CMD_SETUP_C(r3, 1 /* CMD_EOP */, 1 /* SKIP_TO_EOP */, c1)
 
 invalid_syndrome:
 invalid_rsp_msn:

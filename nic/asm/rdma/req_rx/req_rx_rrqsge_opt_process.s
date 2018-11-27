@@ -165,18 +165,14 @@ sge_loop:
 set_arg:
     phvwr.c5  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, last_pkt), 1
     phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
-
     phvwr     CAPRI_PHV_FIELD(TO_S4_SQCB1_WRITE_BACK_P, sge_opt), 1
 
     SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
-
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
 
 insufficient_sges:
 insufficient_sge_len:
-    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     b              set_arg
     CAPRI_SET_TABLE_0_VALID(0) // Branch Delay Slot
 

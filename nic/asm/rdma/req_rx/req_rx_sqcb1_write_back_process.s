@@ -114,8 +114,15 @@ post_bktrack_ring:
     DMA_HBM_PHV2MEM_SETUP(r6, db_data2, db_data2, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
     // c1 set to TRUE if no completion AND no payload bytes to skip
-    seq.c1         c1, K_REMAINING_PAYLOAD_BYTES, r0
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c1)
+    seq            c2, K_REMAINING_PAYLOAD_BYTES, r0
+    setcf          c3, [c1 & c2]
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c3)
+
+    // set cmd_eop if skip_to_eop cmd exists and cq is not posted
+    setcf          c3, [c1 & !c2]
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SKIP_TO_EOP)
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c3)
+
     tblwr          d.bktrack_in_progress, 1
 
 check_sq_drain:
