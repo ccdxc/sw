@@ -30,7 +30,7 @@ gen-patch: $(PCIUTILS)-orig $(PCIUTILS) clean-pciutils
 	-diff -uprN $(PCIUTILS)-orig $(PCIUTILS) > $(PCIUTILS_PATCH)
 
 build: $(PCIUTILS)
-	$(MAKE) -C $(PCIUTILS) PEN_TOP=$(TOPDIR)/../../ BUILD_ARCH=$(BUILD_ARCH)
+	$(MAKE) -C $(PCIUTILS) PEN_TOP=../$(TOPDIR) BUILD_ARCH=$(BUILD_ARCH)
 
 genprogs: $(GENPROGS)
 

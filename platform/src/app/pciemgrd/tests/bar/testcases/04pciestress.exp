@@ -9,7 +9,7 @@ vfe(V4) 17 vfs(V3) 18 prt_size(V2) 18 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
 BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
 0   0    mem   rw-   256K  0x0000000000000 0:01:00.0 0  
     PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
-    0    res   --p-  256K  0x0000000000000 0x13b000000
+    0    res   --p-  256K  0x0000000000000 0x0c4000000
 
 pciestress0:
 +----------------------------------------------------------------+

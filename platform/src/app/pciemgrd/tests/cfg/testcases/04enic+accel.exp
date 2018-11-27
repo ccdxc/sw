@@ -1234,7 +1234,7 @@ fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-03:00.0 ff00: 1dd8:1007
+03:00.0 1200: 1dd8:1007
 	Subsystem: 1dd8:4001
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
@@ -1283,7 +1283,7 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	Capabilities: [180 v1] #19
 	Capabilities: [1c0 v1] #26
 	Capabilities: [260 v1] #27
-00: d8 1d 07 10 00 00 10 00 00 00 00 ff 00 00 00 00
+00: d8 1d 07 10 00 00 10 00 00 00 00 12 00 00 00 00
 10: 04 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
 20: 00 00 00 00 00 00 00 00 00 00 00 00 d8 1d 01 40
 30: 00 00 00 00 40 00 00 00 00 00 00 00 00 01 00 00
