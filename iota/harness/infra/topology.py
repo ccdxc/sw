@@ -59,6 +59,7 @@ class Node(object):
     def GetNicType(self):
         return self.__inst.Resource.NICType
 
+
     def Name(self):
         return self.__name
     def Role(self):
@@ -187,6 +188,23 @@ class Topology(object):
 
     def Nodes(self):
         return self.__nodes.values()
+
+    def RestartNodes(self, node_names):
+        req = topo_pb2.NodeMsg()
+
+        for node_name in node_names:
+            if node_name not in self.__nodes:
+                Logger.error("Node %s not found" % node_name)
+                return types.status.FAILURE
+            msg = req.nodes.add()
+            msg.name = node_name
+
+        resp = api.ReloadNodes(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+
+        return types.status.SUCCESS
+
 
     def Setup(self, testsuite):
         Logger.info("Adding Nodes:")

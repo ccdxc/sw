@@ -79,11 +79,16 @@ def AddNodes(req):
     Logger.debug("Add Nodes:")
     return __rpc(req, gl_topo_svc_stub.AddNodes)
 
+def ReloadNodes(req):
+    Logger.debug("Reloading Nodes:")
+    return __rpc(req, gl_topo_svc_stub.ReloadNodes)
+
 def AddWorkloads(req):
-    store.AddWorkloads(req)
     global gl_topo_svc_stub
     Logger.debug("Add Workloads:")
-    return __rpc(req, gl_topo_svc_stub.AddWorkloads)
+    resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
+    store.AddWorkloads(resp)
+    return resp
 
 def DeleteWorkloads(req):
     store.DeleteWorkloads(req)
@@ -407,3 +412,6 @@ def CopyToNaples(node_name, files, dest_dir):
 def CopyFromNaples(node_name, files, dest_dir):
     return __CopyCommon(topo_svc.DIR_OUT, node_name,
                         "%s_naples" % node_name, files, dest_dir)
+
+def RestartNodes(nodes):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes)

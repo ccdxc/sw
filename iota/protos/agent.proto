@@ -31,4 +31,9 @@ service IotaAgentApi {
     // CheckClusterHealth returns the cluster health
     rpc CheckHealth(NodeHealth) returns  (NodeHealth) {};
 
+    // Save Node will save context on node for possible node reboot
+    rpc SaveNode (Node) returns (Node) {};
+
+    // Load Node will save, reboot and load context
+    rpc ReloadNode (Node) returns (Node) {};
 }

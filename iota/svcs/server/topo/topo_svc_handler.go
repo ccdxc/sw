@@ -80,7 +80,8 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 					IpAddress: node.IpAddress,
 					Name:      nodeName,
 				},
-				Os: node.Os,
+				Os:     node.Os,
+				SSHCfg: ts.SSHConfig,
 			}
 
 			ts.Nodes = append(ts.Nodes, &n)
@@ -185,6 +186,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 		ts.ProvisionedNodes[n.Name] = &testbed.TestNode{
 			Node:        n,
 			AgentClient: iota.NewIotaAgentApiClient(c.Client),
+			SSHCfg:      ts.SSHConfig,
 		}
 		newNodes = append(newNodes, ts.ProvisionedNodes[n.Name])
 	}
@@ -237,15 +239,54 @@ func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*io
 }
 
 // SaveNode save node personality for reboot
-func (*TopologyService) SaveNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+func (ts *TopologyService) SaveNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	resp := &iota.NodeMsg{}
 	return resp, nil
 }
 
 // ReloadNode saves and loads node personality
-func (*TopologyService) ReloadNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
-	resp := &iota.NodeMsg{}
-	return resp, nil
+func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+
+	rNodes := []*testbed.TestNode{}
+
+	for _, node := range req.Nodes {
+		if n, ok := ts.ProvisionedNodes[node.Name]; !ok {
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Reload on unprovisioned node : %v", node.GetName())
+			return req, nil
+		} else {
+			rNodes = append(rNodes, n)
+		}
+	}
+
+	reloadNodes := func(ctx context.Context) error {
+		pool, ctx := errgroup.WithContext(ctx)
+
+		for _, node := range rNodes {
+			node := node
+			pool.Go(func() error {
+				return node.ReloadNode()
+			})
+		}
+		return pool.Wait()
+	}
+
+	err := reloadNodes(context.Background())
+	if err != nil {
+		log.Errorf("TOPO SVC | ReloadNodes | ReloadNodes Call Failed. %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+	} else {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	}
+
+	for idx, node := range rNodes {
+		req.Nodes[idx] = node.RespNode
+		if node.RespNode.GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			req.ApiResponse.ErrorMsg = "Node :" + node.RespNode.GetName() + " : " + node.RespNode.GetNodeStatus().ErrorMsg + "\n"
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		}
+	}
+	return req, nil
 }
 
 // AddWorkloads adds a workload on a given node
@@ -315,10 +356,27 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		log.Errorf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
-		return req, nil
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+	} else {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	}
 
-	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	//Assoicate response
+	for _, node := range workloadNodes {
+		for _, respWload := range node.WorkloadResp.Workloads {
+			for index, reqWload := range req.Workloads {
+				if reqWload.GetNodeName() == node.Node.GetName() && reqWload.WorkloadName == respWload.WorkloadName {
+					req.Workloads[index] = respWload
+					if respWload.WorkloadStatus != nil && respWload.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+						req.ApiResponse.ErrorMsg = respWload.WorkloadStatus.ErrorMsg
+						log.Errorf("TOPO SVC | AddWorkloads | Workload add %v failed with  %v", respWload.GetWorkloadName(), req.ApiResponse.ErrorMsg)
+					}
+					break
+				}
+			}
+		}
+
+	}
 	return req, nil
 }
 
@@ -412,6 +470,9 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | Trigger | RunSerialTrigger Call Failed. %v", err)
+			//clean up
+			node.TriggerInfo = nil
+			node.TriggerResp = nil
 			return req, nil
 		}
 		/* Only one command sent anyway */

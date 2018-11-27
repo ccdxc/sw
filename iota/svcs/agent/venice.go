@@ -122,3 +122,13 @@ func (venice *veniceNode) CheckHealth(*iota.NodeHealth) (*iota.NodeHealth, error
 func (venice *veniceNode) NodeType() iota.PersonalityType {
 	return iota.PersonalityType_PERSONALITY_VENICE
 }
+
+//GetMsg node msg
+func (venice *veniceNode) GetMsg() *iota.Node {
+	return venice.nodeMsg
+}
+
+//GetWorkloadMsgs get workloads
+func (venice *veniceNode) GetWorkloadMsgs() []*iota.Workload {
+	return nil
+}

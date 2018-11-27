@@ -51,7 +51,7 @@ var workloadTypeMap = map[iota.WorkloadType]string{
 
 type dataNode struct {
 	iotaNode
-	entityMap     map[string]Workload.Workload
+	entityMap     map[string]iotaWorkload
 	hostEntityKey string
 }
 
@@ -76,6 +76,10 @@ type mellanoxNode struct {
 
 type broadcomNode struct {
 	dataNode
+}
+
+func (dnode *dataNode) GetMsg() *iota.Node {
+	return dnode.nodeMsg
 }
 
 func (dnode *dataNode) configureWorkloadInHntap(in *iota.Workload) error {
@@ -179,8 +183,9 @@ func (naples *naplesSimNode) setArpTimeouts() error {
 	return nil
 }
 
-func (dnode *dataNode) init() {
-	dnode.entityMap = make(map[string]Workload.Workload)
+func (dnode *dataNode) init(in *iota.Node) {
+	dnode.entityMap = make(map[string]iotaWorkload)
+	dnode.nodeMsg = in
 }
 
 func (naples *naplesSimNode) addNodeEntities(in *iota.Node) error {
@@ -199,7 +204,7 @@ func (naples *naplesSimNode) addNodeEntities(in *iota.Node) error {
 			return err
 		}
 		if wload != nil {
-			naples.entityMap[entityEntry.GetName()] = wload
+			naples.entityMap[entityEntry.GetName()] = iotaWorkload{workload: wload, name: entityEntry.GetName()}
 		}
 	}
 	return nil
@@ -208,7 +213,7 @@ func (naples *naplesSimNode) addNodeEntities(in *iota.Node) error {
 func (naples *naplesSimNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, err error) {
 
 	naples.iotaNode.name = in.GetName()
-	naples.dataNode.init()
+	naples.dataNode.init(in)
 	naples.logger.Println("Bring up request received for : " + in.GetName())
 
 	nodeuuid := ""
@@ -353,11 +358,15 @@ func (naples *naplesSimNode) configureWorkloadInHntap(in *iota.Workload) error {
 
 func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {
 
-	if err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), int(in.GetEncapVlan())); err != nil {
+	var intf string
+
+	if attachedIntf, err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), int(in.GetEncapVlan())); err != nil {
 		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
 		dnode.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
 		return resp, err
+	} else {
+		intf = attachedIntf
 	}
 
 	/* For SRIOV case, move the parent interface inside the workload so that it is not shared */
@@ -365,7 +374,9 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 		wload.MoveInterface(in.GetInterface())
 	}
 
-	resp := &iota.Workload{WorkloadStatus: apiSuccess}
+	resp := in
+	resp.WorkloadStatus = apiSuccess
+	resp.Interface = intf
 	return resp, nil
 }
 
@@ -394,12 +405,12 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 	}
 
 	wloadKey := in.GetWorkloadName()
-	var wload Workload.Workload
+	var iotaWload iotaWorkload
 	dnode.logger.Printf("Adding workload : %s", in.GetWorkloadName())
-	if wload, ok := dnode.entityMap[wloadKey]; ok {
+	if iotaWload, ok := dnode.entityMap[wloadKey]; ok {
 		msg := fmt.Sprintf("Trying to add workload %s, which already exists ", wloadKey)
 		dnode.logger.Error(msg)
-		return dnode.configureWorkload(wload, in)
+		return dnode.configureWorkload(iotaWload.workload, in)
 	}
 
 	wlType, ok := workloadTypeMap[in.GetWorkloadType()]
@@ -410,9 +421,9 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 		return resp, nil
 	}
 
-	wload = Workload.NewWorkload(wlType, in.GetWorkloadName(), dnode.name, dnode.logger)
+	iotaWload.workload = Workload.NewWorkload(wlType, in.GetWorkloadName(), dnode.name, dnode.logger)
 
-	if wload == nil {
+	if iotaWload.workload == nil {
 		msg := fmt.Sprintf("Trying to add workload of invalid type : %v", wlType)
 		dnode.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
@@ -420,14 +431,15 @@ func (dnode *dataNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 	}
 
 	dnode.logger.Printf("Setting up workload : %s", in.GetWorkloadName())
-	resp, err := dnode.setupWorkload(wload, in)
+	resp, err := dnode.setupWorkload(iotaWload.workload, in)
 
 	if err != nil || resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
-		wload.TearDown()
+		iotaWload.workload.TearDown()
 		return resp, nil
 	}
 
-	dnode.entityMap[wloadKey] = wload
+	iotaWload.workloadMsg = in
+	dnode.entityMap[wloadKey] = iotaWload
 	dnode.logger.Printf("Added workload : %s (%s)", in.GetWorkloadName(), in.GetWorkloadType())
 	return resp, nil
 }
@@ -441,29 +453,28 @@ func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, err
 	}
 
 	wloadKey := in.GetWorkloadName()
-	wload, _ := naples.dataNode.entityMap[wloadKey]
+	iotaWload, _ := naples.dataNode.entityMap[wloadKey]
 	/* Notify Hntap of the workload */
 	if err := naples.configureWorkloadInHntap(in); err != nil {
 		msg := fmt.Sprintf("Error in configuring workload to hntap %s", err.Error())
 		naples.logger.Error(msg)
 		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
 		delete(naples.entityMap, in.GetWorkloadName())
-		wload.TearDown()
+		iotaWload.workload.TearDown()
 		return resp, err
 
 	}
 
-	if err := wload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(),
+	if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(),
 		int(in.GetEncapVlan())); err != nil {
 		msg := fmt.Sprintf("Error in sending arp probe %s", err.Error())
 		naples.logger.Errorf(msg)
 		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
 		delete(naples.entityMap, in.GetWorkloadName())
-		wload.TearDown()
+		iotaWload.workload.TearDown()
 		return resp, err
 	}
 
-	resp = &iota.Workload{WorkloadStatus: apiSuccess}
 	return resp, nil
 }
 
@@ -480,7 +491,7 @@ func (dnode *dataNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, error)
 		return resp, nil
 	}
 
-	dnode.entityMap[wloadKey].TearDown()
+	dnode.entityMap[wloadKey].workload.TearDown()
 	delete(dnode.entityMap, wloadKey)
 	dnode.logger.Printf("Deleted workload : %s", in.GetWorkloadName())
 	resp := &iota.Workload{WorkloadStatus: apiSuccess}
@@ -513,12 +524,12 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		wloadKey := cmd.GetEntityName()
 
 		if in.TriggerOp == iota.TriggerOp_EXEC_CMDS {
-			cmdResp, cmdKey, err = dnode.entityMap[wloadKey].RunCommand(strings.Split(cmd.GetCommand(), " "),
+			cmdResp, cmdKey, err = dnode.entityMap[wloadKey].workload.RunCommand(strings.Split(cmd.GetCommand(), " "),
 				cmd.GetRunningDir(), cmd.GetForegroundTimeout(),
 				cmd.GetMode() == iota.CommandMode_COMMAND_BACKGROUND, true)
 
 		} else {
-			cmdResp, err = dnode.entityMap[wloadKey].StopCommand(cmd.Handle)
+			cmdResp, err = dnode.entityMap[wloadKey].workload.StopCommand(cmd.Handle)
 			cmdKey = cmd.Handle
 		}
 
@@ -570,6 +581,11 @@ func (naples *naplesSimNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth,
 }
 
 func (naples *naplesSimNode) Destroy(in *iota.Node) (*iota.Node, error) {
+
+	for _, wloadMsg := range naples.GetWorkloadMsgs() {
+		naples.DeleteWorkload(wloadMsg)
+	}
+
 	naples.iotaNode.Destroy(in)
 
 	if naples.container != nil {
@@ -644,7 +660,7 @@ func (naples *naplesHwNode) addNodeEntities(in *iota.Node) error {
 			return err
 		}
 		if wload != nil {
-			naples.entityMap[entityEntry.GetName()] = wload
+			naples.entityMap[entityEntry.GetName()] = iotaWorkload{workload: wload}
 		}
 	}
 	return nil
@@ -658,7 +674,7 @@ func (naples *naplesHwNode) getHwUUID(in *iota.Node) (uuid string, err error) {
 	}
 
 	cmd := []string{"cat", naplesHwUUIDFile}
-	cmdResp, _, _ := naplesEntity.RunCommand(cmd, "", 0, false, true)
+	cmdResp, _, _ := naplesEntity.workload.RunCommand(cmd, "", 0, false, true)
 	naples.logger.Printf("naples hw uuid out %s", cmdResp.Stdout)
 	naples.logger.Printf("naples hw uuid err %s", cmdResp.Stderr)
 	naples.logger.Printf("naples hw uuid exit code %d", cmdResp.ExitCode)
@@ -673,7 +689,7 @@ func (naples *naplesHwNode) getHwUUID(in *iota.Node) (uuid string, err error) {
 //Init initalize node type
 func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 
-	naples.init()
+	naples.init(in)
 	naples.iotaNode.name = in.GetName()
 	if in.GetNaplesConfig() == nil {
 		in.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{}}
@@ -724,18 +740,17 @@ func (naples *naplesHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, erro
 	}
 
 	wloadKey := in.GetWorkloadName()
-	wload, _ := naples.entityMap[wloadKey]
-	if err := wload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(),
+	iotaWload, _ := naples.entityMap[wloadKey]
+	if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(),
 		int(in.GetEncapVlan())); err != nil {
 		msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
 		naples.logger.Error(msg)
 		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
 		delete(naples.entityMap, in.GetWorkloadName())
-		wload.TearDown()
+		iotaWload.workload.TearDown()
 		return resp, err
 	}
 
-	resp = &iota.Workload{WorkloadStatus: apiSuccess}
 	return resp, nil
 }
 
@@ -767,7 +782,7 @@ func (dnode *dataNode) addNodeEntities(in *iota.Node) error {
 			return err
 		}
 		if wload != nil {
-			dnode.entityMap[entityEntry.GetName()] = wload
+			dnode.entityMap[entityEntry.GetName()] = iotaWorkload{workload: wload}
 		}
 	}
 	time.Sleep(1 * time.Second)
@@ -777,7 +792,7 @@ func (dnode *dataNode) addNodeEntities(in *iota.Node) error {
 //Init initalize node type
 func (mlx *mellanoxNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 
-	mlx.init()
+	mlx.init(in)
 	mlx.iotaNode.name = in.GetName()
 
 	if in.GetMellanoxConfig() == nil {
@@ -821,9 +836,9 @@ func (dnode *dataNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 // EntitiesHealthy checks workloads healthy
 func (dnode *dataNode) EntitiesHealthy() error {
 	for _, wl := range dnode.entityMap {
-		if !wl.IsHealthy() {
-			dnode.logger.Printf("Workload :%s down", wl.Name())
-			return errors.Errorf("Workload %s down", wl.Name())
+		if !wl.workload.IsHealthy() {
+			dnode.logger.Printf("Workload :%s down", wl.workload.Name())
+			return errors.Errorf("Workload %s down", wl.workload.Name())
 		}
 	}
 	return nil
@@ -847,7 +862,7 @@ func (dnode *dataNode) NodeType() iota.PersonalityType {
 //Init initalize node type
 func (brcm *broadcomNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 
-	brcm.init()
+	brcm.init(in)
 	brcm.iotaNode.name = in.GetName()
 
 	if in.GetBroadcomConfig() == nil {
@@ -876,4 +891,15 @@ func (brcm *broadcomNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
 		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
 		NodeInfo: &iota.Node_BroadcomConfig{BroadcomConfig: in.GetBroadcomConfig()}}, nil
+}
+
+func (dnode *dataNode) GetWorkloadMsgs() []*iota.Workload {
+	wloadMsgs := []*iota.Workload{}
+	for _, wl := range dnode.entityMap {
+		if wl.workloadMsg != nil {
+			wloadMsgs = append(wloadMsgs, wl.workloadMsg)
+		}
+	}
+
+	return wloadMsgs
 }

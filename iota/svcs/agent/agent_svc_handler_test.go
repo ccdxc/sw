@@ -41,6 +41,20 @@ func stubGetContainer(name string,
 	return stubNaplesContainer, nil
 }
 
+func RestartIOTAAgent() {
+	stubMode := false
+	StopIOTAAgent()
+	time.Sleep(1 * time.Second)
+	go StartIOTAAgent(&stubMode)
+	time.Sleep(1 * time.Second)
+	c, err := common.CreateNewGRPCClient("test-client", IOTAAgentListenURL)
+	if err != nil {
+		fmt.Println("Could not create a GRPC Client to the IOTA Agent Server")
+		os.Exit(1)
+	}
+	agentClient = iota.NewIotaAgentApiClient(c.Client)
+}
+
 func TestMain(m *testing.M) {
 	go func() {
 		stubMode := false
@@ -318,6 +332,8 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 	}
 
 	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
+	TestUtils.Assert(t, workloadResp.GetInterface() == workload.Interface+"_500", "Interface match")
+	TestUtils.Assert(t, workloadResp.GetMacAddress() == workload.MacAddress, "Mac match")
 
 	//Try to add again.
 	workloadResp, _ = agentClient.AddWorkload(context.Background(), &workload)
@@ -897,6 +913,189 @@ func TestAgentService_baremetal_Workload_Trigger(t *testing.T) {
 	}
 
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete node faild!")
+}
+
+func TestAgentService_Node_Naples_reload_invalid(t *testing.T) {
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples-junk"}
+
+	resp, err := agentClient.ReloadNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK, "Reload node succeded")
+}
+
+func TestAgentService_Node_Naples_Add_Save(t *testing.T) {
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",
+		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
+		VeniceIps: []string{"10.1.1.3/24"}}}
+
+	nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Delete Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
+		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
+		VeniceIps: []string{"10.1.1.3/24"}}}
+
+	resp, err := agentClient.AddNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	resp, err = agentClient.AddNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Duplicate add node success!")
+
+	iotaNodeHealth := &iota.NodeHealth{NodeName: "naples"}
+	if err != nil {
+		t.Errorf("Check health call failed. Err: %v", err)
+	}
+
+	iotaNodeHealth, err = agentClient.CheckHealth(context.Background(), iotaNodeHealth)
+	if err != nil {
+		t.Errorf("Check health call failed. Err: %v", err)
+	}
+	TestUtils.Assert(t, iotaNodeHealth.GetHealthCode() != iota.NodeHealth_HEALTH_OK, "Node health not ok!")
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	nodeResp, err = agentClient.SaveNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Save Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Save node faild!")
+
+	resp, err = agentClient.DeleteNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete node faild!")
+
+	RestartIOTAAgent()
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+
+	resp, err = agentClient.ReloadNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Reload node failed")
+
+	resp, err = agentClient.DeleteNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+}
+
+func TestAgentService_Node_Naples_Add_Save_with_workloads(t *testing.T) {
+	var workload iota.Workload
+
+	workload.WorkloadName = "test-workload"
+	workload.NodeName = "naples"
+	workload.Interface = "test"
+	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
+	workload.EncapVlan = 500
+	workload.PinnedPort = 1
+	workload.UplinkVlan = 100
+	workload.WorkloadImage = IotaWorkloadImage
+	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
+	workload.IpPrefix = "1.1.1.1/24"
+	hntapCfgTempFile = "test/hntap-cfg.json"
+
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",
+		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
+		VeniceIps: []string{"10.1.1.3/24"}}}
+
+	nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Delete Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
+		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
+		VeniceIps: []string{"10.1.1.3/24"}}}
+
+	resp, err := agentClient.AddNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	resp, err = agentClient.AddNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Duplicate add node success!")
+
+	iotaNodeHealth := &iota.NodeHealth{NodeName: "naples"}
+	if err != nil {
+		t.Errorf("Check health call failed. Err: %v", err)
+	}
+
+	workloadResp, _ := agentClient.AddWorkload(context.Background(), &workload)
+
+	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
+
+	iotaNodeHealth, err = agentClient.CheckHealth(context.Background(), iotaNodeHealth)
+	if err != nil {
+		t.Errorf("Check health call failed. Err: %v", err)
+	}
+	TestUtils.Assert(t, iotaNodeHealth.GetHealthCode() != iota.NodeHealth_HEALTH_OK, "Node health not ok!")
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	nodeResp, err = agentClient.SaveNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Save Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Save node faild!")
+
+	resp, err = agentClient.DeleteNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Delete node faild!")
+
+	RestartIOTAAgent()
+
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+
+	resp, err = agentClient.ReloadNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
+	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Reload node failed")
+
+	resp, err = agentClient.DeleteNode(context.Background(), iotaNode)
+	if err != nil {
+		t.Errorf("Add Node call failed. Err: %v", err)
+	}
+
 }
 
 func init() {

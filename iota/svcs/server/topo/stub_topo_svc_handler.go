@@ -42,14 +42,8 @@ func (ts *StubTopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) 
 	return req, nil
 }
 
-// SaveNode save node personality for reboot
-func (*StubTopologyService) SaveNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
-	resp := &iota.NodeMsg{}
-	return resp, nil
-}
-
 // ReloadNode saves and loads node personality
-func (*StubTopologyService) ReloadNode(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+func (*StubTopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	resp := &iota.NodeMsg{}
 	return resp, nil
 }

@@ -24,5 +24,6 @@ func (n *TestNode) AddWorkload(w *iota.Workload) error {
 		return fmt.Errorf("adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
 	}
 
+	n.WorkloadResp.Workloads = append(n.WorkloadResp.Workloads, resp)
 	return nil
 }

@@ -2,10 +2,12 @@ package agent
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -49,8 +51,13 @@ func (agent *Service) init() {
 		agent.logger.Println("Creating directory for command outputs..")
 		os.Mkdir(cmdOutDir, 0755)
 	}
-
 	Cmd.SetOutputDirectory(cmdOutDir)
+
+	dbDir := common.DstIotaDBDir
+	if _, err := os.Stat(dbDir); err != nil || !os.IsNotExist(err) {
+		agent.logger.Println("Creating directory for agent db ")
+		os.Mkdir(dbDir, 0755)
+	}
 
 	agent.logger.Println("Agent initialized...")
 }
@@ -59,6 +66,7 @@ func (agent *Service) init() {
 func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, error) {
 
 	agent.logger.Printf("Received add node :%v", in)
+
 	/* Check if the node running an instance */
 	if agent.node != nil {
 		msg := fmt.Sprintf("Node already has personality type : %s", agent.node.NodeType())
@@ -86,16 +94,115 @@ func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, e
 	return resp, nil
 }
 
+func gobFile(name string) string {
+	return name + ".gob"
+}
+
+func wloadsGobFile(name string) string {
+	return name + "_workloads.gob"
+}
+
 // SaveNode save node personality for reboot
-func (*Service) SaveNode(ctx context.Context, req *iota.Node) (*iota.Node, error) {
-	resp := &iota.Node{}
-	return resp, nil
+func (agent *Service) SaveNode(ctx context.Context, req *iota.Node) (*iota.Node, error) {
+	agent.logger.Printf("Received save node :%v", req)
+
+	/* Check if the node running an instance */
+	if agent.node == nil {
+		msg := fmt.Sprintf("No node personality assigned")
+		agent.logger.Error(msg)
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+	}
+
+	msg, _ := agent.node.GetMsg().Marshal()
+	err := writeGob(common.DstIotaDBDir+"/"+gobFile(agent.node.NodeName()), msg)
+	if err != nil {
+		msg := fmt.Sprintf("Saving Node failed %v", err)
+		agent.logger.Error(msg)
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+	}
+
+	workloadMsgs := agent.node.GetWorkloadMsgs()
+
+	if len(workloadMsgs) != 0 {
+		wloadGob := wloadsGobFile(agent.node.NodeName())
+		msgs := [][]byte{}
+		for _, wloadMsg := range workloadMsgs {
+			msg, _ := wloadMsg.Marshal()
+			msgs = append(msgs, msg)
+		}
+		err := writeGob(common.DstIotaDBDir+"/"+wloadGob, msgs)
+		if err != nil {
+			msg := fmt.Sprintf("Saving Node failed %v", err)
+			agent.logger.Error(msg)
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+		}
+
+	}
+
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
+}
+
+func (agent *Service) reloadWorkloads(ctx context.Context, req *iota.Node) error {
+	wloads := []*iota.Workload{}
+	//Read workload messages
+	var rawWloadmsg = [][]byte{}
+	wloadfile := common.DstIotaDBDir + "/" + wloadsGobFile(req.GetName())
+	if _, err := os.Stat(wloadfile); err == nil {
+		err = readGob(wloadfile, &rawWloadmsg)
+		if err != nil {
+			msg := fmt.Sprintf("reload node of type : %s failed : %v", req.GetType(), err.Error())
+			return errors.Wrap(err, msg)
+		}
+		for _, msg := range rawWloadmsg {
+			var wload = new(iota.Workload)
+			wload.Unmarshal(msg)
+			wloads = append(wloads, wload)
+		}
+	}
+	//Add workloads
+	for _, wload := range wloads {
+		if resp, err := agent.AddWorkload(ctx, wload); err != nil || resp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // ReloadNode saves and loads node personality
-func (*Service) ReloadNode(ctx context.Context, req *iota.Node) (*iota.Node, error) {
-	resp := &iota.Node{}
-	return resp, nil
+func (agent *Service) ReloadNode(ctx context.Context, req *iota.Node) (*iota.Node, error) {
+
+	/* Check if the node running an instance */
+	if agent.node != nil {
+		msg := fmt.Sprintf("Node already has personality type : %s", agent.node.NodeType())
+		agent.logger.Error(msg)
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+	}
+
+	var node = new(iota.Node)
+	rawmsg := []byte{}
+	err := readGob(common.DstIotaDBDir+"/"+gobFile((req.GetName())), &rawmsg)
+	if err != nil {
+		msg := fmt.Sprintf("reload node of type : %s failed : %v", req.GetType(), err.Error())
+		agent.logger.Error(msg)
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+	}
+
+	node.Unmarshal(rawmsg)
+
+	if resp, err := agent.AddNode(ctx, node); err != nil || resp.GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return resp, nil
+	}
+
+	if err := agent.reloadWorkloads(ctx, req); err != nil {
+		msg := fmt.Sprintf("reload workloads  failed : %v", err.Error())
+		agent.logger.Error(msg)
+		agent.node.Destroy(node)
+		agent.node = nil
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+	}
+
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }
 
 // DeleteNode remove the personaltiy set
@@ -233,4 +340,25 @@ func newIotaNode(nodeType iota.PersonalityType) IotaNode {
 	}
 
 	return nil
+}
+
+func writeGob(filePath string, object interface{}) error {
+	file, err := os.Create(filePath)
+	if err == nil {
+		encoder := gob.NewEncoder(file)
+		encoder.Encode(object)
+	}
+	file.Close()
+	return err
+}
+
+func readGob(filePath string, object interface{}) error {
+	fmt.Println("Read file : ", filePath)
+	file, err := os.Open(filePath)
+	if err == nil {
+		decoder := gob.NewDecoder(file)
+		err = decoder.Decode(object)
+	}
+	file.Close()
+	return err
 }

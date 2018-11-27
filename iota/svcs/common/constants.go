@@ -36,6 +36,9 @@ const (
 	// DstIotaEntitiesDir has all workload related data for each workload
 	DstIotaEntitiesDir = DstIotaAgentDir + "/entities"
 
+	// DstIotaDBDir has persistance for db.
+	DstIotaDBDir = DstIotaAgentDir + "/db"
+
 	//MakeClusterTimeout waits for 5 minutes for the cluster to be up
 	MakeClusterTimeout = time.Duration(time.Minute * 5)
 
