@@ -241,6 +241,7 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 		tlsProvider, err := GetDefaultTLSProvider(mysvcName)
 		if err != nil {
 			log.Errorf("Failed to instantiate TLS provider. Server name: %s, Err %v", mysvcName, err)
+			rpcServer.Stop()
 			return nil, err
 		}
 		rpcServer.tlsProvider = tlsProvider
@@ -252,6 +253,7 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 		tlsOptions, err := rpcServer.tlsProvider.GetServerOptions(mysvcName)
 		if err != nil {
 			log.Errorf("Failed to retrieve server TLS options. Server name: %s, Err %v", mysvcName, err)
+			rpcServer.Stop()
 			return nil, err
 		}
 		grpcOpts = append(grpcOpts, tlsOptions)
@@ -261,6 +263,7 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	server = grpc.NewServer(grpcOpts...)
 	if server == nil {
 		log.Errorf("Error creating grpc server")
+		rpcServer.Stop()
 		return nil, fmt.Errorf("Error creating grpc server")
 	}
 	rpcServer.GrpcServer = server
