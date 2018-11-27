@@ -405,22 +405,26 @@ static void sonic_crypto_qs_deinit(struct per_core_resource *res)
 	sonic_q_free(res->lif, &res->crypto_enc_seq_q);
 }
 
+static void sonic_ev_intr_deinit(struct per_core_resource *res)
+{
+	if (!res->evl)
+		return;
+
+	if (res->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+		sonic_intr_mask(&res->intr, true);
+		synchronize_irq(res->intr.vector);
+		devm_free_irq(res->lif->sonic->dev, res->intr.vector, res->evl);
+		res->intr.index = INTR_INDEX_NOT_ASSIGNED;
+	}
+	sonic_destroy_ev_list(res);
+}
+
 static void sonic_lif_per_core_resource_deinit(struct per_core_resource *res)
 {
 	if (!res)
 		return;
 
-	if (res->evl) {
-		if (res->intr.index != INTR_INDEX_NOT_ASSIGNED) {
-			sonic_intr_mask(&res->intr, true);
-#ifndef __FreeBSD__
-			synchronize_irq(res->intr.vector);
-#endif
-		}
-		devm_free_irq(res->lif->sonic->dev, res->intr.vector, NULL /*&qcq->napi*/);
-		sonic_destroy_ev_list(res);
-	}
-
+	sonic_ev_intr_deinit(res);
 	sonic_cpdc_qs_deinit(res);
 	sonic_crypto_qs_deinit(res);
 }
@@ -756,6 +760,43 @@ static int per_core_resource_request_irq(struct per_core_resource *res)
 				0, intr->name, res->evl);
 }
 
+static int sonic_ev_intr_init(struct per_core_resource *res, int ev_count)
+{
+	int err;
+
+	err = sonic_create_ev_list(res, ev_count);
+	if (err) {
+		OSAL_LOG_ERROR("Failed to create ev_list");
+		goto done;
+	}
+	err = sonic_intr_alloc(res->lif, &res->intr);
+	if (err) {
+		OSAL_LOG_ERROR("Failed to alloc interrupt");
+		res->intr.index = INTR_INDEX_NOT_ASSIGNED;
+		goto done;
+	}
+	err = sonic_bus_get_irq(res->lif->sonic, res->intr.index);
+	if (err < 0) {
+		OSAL_LOG_ERROR("Failed to get irq");
+		res->intr.index = INTR_INDEX_NOT_ASSIGNED;
+		goto done;
+	}
+	res->intr.vector = err;
+	err = 0;
+	sonic_intr_mask(&res->intr, true);
+	sonic_intr_mask_on_assertion(&res->intr);
+	sonic_intr_coal_set(&res->intr, 0);
+	sonic_intr_return_credits(&res->intr, 0, false, false);
+	err = per_core_resource_request_irq(res);
+	if (err) {
+		OSAL_LOG_ERROR("Failed to request irq");
+		goto done;
+	}
+
+done:
+	return err;
+}
+
 static int sonic_lif_per_core_resource_init(struct lif *lif,
 					    struct per_core_resource *res,
 					    int seq_q_count)
@@ -791,34 +832,10 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	if (err)
 		goto done;
 
-	err = sonic_create_ev_list(res, seq_q_count);
-	if (err) {
-		OSAL_LOG_ERROR("Failed to create ev_list");
+	err = sonic_ev_intr_init(res, seq_q_count);
+	if (err)
 		goto done;
-	}
-	err = sonic_intr_alloc(lif, &res->intr);
-	if (err) {
-		OSAL_LOG_ERROR("Failed to alloc interrupt");
-		res->intr.index = INTR_INDEX_NOT_ASSIGNED;
-		goto done;
-	}
-	err = sonic_bus_get_irq(lif->sonic, res->intr.index);
-	if (err < 0) {
-		OSAL_LOG_ERROR("Failed to get irq");
-		res->intr.index = INTR_INDEX_NOT_ASSIGNED;
-		goto done;
-	}
-	res->intr.vector = err;
-	err = 0;
-	sonic_intr_mask(&res->intr, true);
-	sonic_intr_mask_on_assertion(&res->intr);
-	sonic_intr_coal_set(&res->intr, 0);
-	sonic_intr_return_credits(&res->intr, 0, false, false);
-	err = per_core_resource_request_irq(res);
-	if (err) {
-		OSAL_LOG_ERROR("Failed to request irq");
-		goto done;
-	}
+
 	OSAL_LOG_NOTICE("Successully initialized per_core_resource");
 
 	res->initialized = true;

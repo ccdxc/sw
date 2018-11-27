@@ -242,26 +242,20 @@ sonic_get_intr_assert_addr(uint32_t intr_idx)
 {
 	identity_t *ident = sonic_get_identity();
 
-	OSAL_LOG_NOTICE("TODO: intr_assert_addr=0x%llx, intr_idx=0x%llx, intr_assert_stride=0x%llx",
-			(unsigned long long) ident->dev.intr_assert_addr,
-			(unsigned long long) intr_idx,
-			(unsigned long long) ident->dev.intr_assert_stride);
-#if 0
+	OSAL_LOG_DEBUG("intr_assert_addr=0x%llx, intr_idx=0x%llx, intr_assert_stride=0x%llx",
+		       (unsigned long long) ident->dev.intr_assert_addr,
+		       (unsigned long long) intr_idx,
+		       (unsigned long long) ident->dev.intr_assert_stride);
 	return ident->dev.intr_assert_addr + 
 		((uint64_t)intr_idx * ident->dev.intr_assert_stride);
-#else
-	return ident->dev.intr_assert_addr + 
-	  ((uint64_t)(intr_idx+0x600) * ident->dev.intr_assert_stride);
-	//((uint64_t)(intr_idx+768) * ident->dev.intr_assert_stride);
-#endif
 }
 
 uint32_t
 sonic_get_intr_assert_data(void)
 {
 	identity_t *ident = sonic_get_identity();
-	//return ident->dev.intr_assert_data;
-	return htonl(ident->dev.intr_assert_data);
+
+	return ident->dev.intr_assert_data;
 }
 
 uint64_t
