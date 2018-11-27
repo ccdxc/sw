@@ -38,7 +38,7 @@ extern "C" {
  * @cs_rsvd_2: specifies a 'reserved' field for future use.
  * @cs_next: specifies the address of the next sgl, when set to a valid sgl; a
  * NULL indicates the end of the list.
- * @cs_rsvd_3: specifies a 'reserved' field for future use.
+ * @cs_rsvd_swlink: 'reserved' field used for software linkage
  *
  */
 #define CPDC_SGL_TUPLE_LEN_MAX	65536
@@ -54,9 +54,15 @@ struct cpdc_sgl {
 	uint32_t cs_len_2;
 	uint32_t cs_rsvd_2;
 	uint64_t cs_next;	/* next sgl */
-	uint64_t cs_rsvd_3;
+	uint64_t cs_rsvd_swlink;
 } __attribute__((__packed__));
 
+#define CPDC_SGL_SWLINK_SET(sgl, linkage)	\
+	(sgl)->cs_rsvd_swlink = (uint64_t)(linkage)
+
+#define CPDC_SGL_SWLINK_GET(linkage, sgl)	\
+	linkage = (typeof(linkage))(sgl)->cs_rsvd_swlink
+        
 /**
  * struct cpdc_cmd - describes the operations (along with hints and other
  * constraints) to be performed in CPDC accelerator.

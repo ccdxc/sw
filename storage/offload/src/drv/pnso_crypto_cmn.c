@@ -36,9 +36,9 @@ crypto_pprint_aol(uint64_t aol_pa)
 
 		OSAL_LOG_DEBUG("%30s: 0x" PRIx64 "/0x" PRIx64,
 				"",
-				aol->ca_next, aol->ca_rsvd);
+				aol->ca_next, aol->ca_rsvd_swlink);
 
-		aol = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) : NULL;
+		CRYPTO_AOL_SWLINK_GET(aol, aol);
 	}
 }
 
@@ -150,8 +150,10 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 		total_len += aol->ca_len_0 + aol->ca_len_1 + aol->ca_len_2;
 		if (!svc_aol->aol)
 			svc_aol->aol = aol;
-		else
+                else {
 			aol_prev->ca_next = sonic_virt_to_phy(aol);
+			CRYPTO_AOL_SWLINK_SET(aol_prev, aol);
+		}
 		aol_prev = aol;
 	}
 
@@ -227,8 +229,10 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 			goto out;
 		}
 
-		if (aol_prev)
+		if (aol_prev) {
 			aol_prev->ca_next = sonic_virt_to_phy(aol_vec);
+			CRYPTO_AOL_SWLINK_SET(aol_prev, aol_vec);
+		}
 
 		aol_prev = aol_vec++;
 		cur_count++;
@@ -267,8 +271,7 @@ crypto_aol_put(const struct per_core_resource *pcr,
 
 	case MPOOL_TYPE_CRYPTO_AOL:
 		while (aol) {
-			aol_next = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) :
-						  NULL;
+			CRYPTO_AOL_SWLINK_GET(aol_next, aol);
 			pc_res_mpool_object_put(pcr, svc_aol->mpool_type, aol);
 			aol = aol_next;
 		}
