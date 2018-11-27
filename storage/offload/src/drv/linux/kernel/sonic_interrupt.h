@@ -38,8 +38,7 @@
 #include "sonic_dev.h"
 
 #define MAX_PER_CORE_EVENTS MAX_PER_QUEUE_SQ_ENTRIES
-//#define SONIC_ASYNC_BUDGET 10
-#define SONIC_ASYNC_BUDGET 1
+#define SONIC_ASYNC_BUDGET 10
 
 enum sonic_intr_bits {
 	/* mask (and mask-on-assert) values */

@@ -136,13 +136,14 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	struct sonic_event_list *evl = swd->evl;
 	unsigned long irqflags;
 	bool completed = false;
+	uint32_t evid = work_to_evid(evl, swd);
 
-	OSAL_LOG_NOTICE("sonic_ev_work_handler enter ...\n");
+	OSAL_LOG_NOTICE("sonic_ev_work_handler enter (evid %u)...\n", evid);
 
-	if (pnso_request_poller((void *) swd->data)) {
+	if (pnso_request_poller((void *) swd->data) == PNSO_OK) {
 		/* Done, release it */
 		spin_lock_irqsave(&evl->inuse_lock, irqflags);
-		clear_bit(work_to_evid(evl, swd), evl->inuse_evid_bmp);
+		clear_bit(evid, evl->inuse_evid_bmp);
 		swd->data = 0;
 		swd->loop_count = 0;
 		spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
@@ -150,9 +151,9 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	} else {
 		/* TODO: improve timeout handling */
 		if (swd->loop_count > 1000) {
-			OSAL_LOG_WARN("dropping work item due to excessive loops\n");
+			OSAL_LOG_WARN("dropping work item %u due to excessive loops\n", evid);
 			spin_lock_irqsave(&evl->inuse_lock, irqflags);
-			clear_bit(work_to_evid(evl, swd), evl->inuse_evid_bmp);
+			clear_bit(evid, evl->inuse_evid_bmp);
 			swd->data = 0;
 			swd->loop_count = 0;
 			spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
@@ -169,9 +170,9 @@ static void sonic_ev_work_handler(struct work_struct *work)
 		sonic_intr_return_credits(&evl->pc_res->intr, 1,
 					  true, false);
 		//sonic_intr_mask(&evl->pc_res->intr, false);
-		OSAL_LOG_NOTICE("... exit sonic_ev_work_handler, status success\n");
+		OSAL_LOG_NOTICE("... exit sonic_ev_work_handler evid %u, status success\n", evid);
 	} else {
-		OSAL_LOG_NOTICE("... exit sonic_ev_work_handler, status reenqueued\n");
+		OSAL_LOG_NOTICE("... exit sonic_ev_work_handler evid %u, status reenqueued\n", evid);
 	}
 }
 
@@ -195,7 +196,7 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 
 	xchg(&evl->armed, true);
 
-	//OSAL_LOG_WARN("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
+	//OSAL_LOG_NOTICE("... exit sonic_async_ev_isr, enqueued %d work items\n", npolled);
 
 	return IRQ_HANDLED;
 }
