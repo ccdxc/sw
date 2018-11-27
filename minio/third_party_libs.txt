@@ -32,3 +32,9 @@ nic/third-party/gflags/x86_64/*
 nic/third-party/gflags/aarch64/*
 
 nic/third-party/libz/*
+nic/third-party/libconfig/OBJS/x86_64/include/*
+nic/third-party/libconfig/OBJS/x86_64/lib/*
+nic/third-party/odp/OBJS/x86_64-OBJS/include/*
+nic/third-party/odp/OBJS/x86_64-OBJS/lib/*
+nic/third-party/ofp/OBJS/x86_64/include/*
+nic/third-party/ofp/OBJS/x86_64/lib/*
