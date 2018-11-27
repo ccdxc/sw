@@ -2,5 +2,4 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libagent_api.so
 MODULE_SOLIBS = ipc
-MODULE_ARCH   = x86_64
 include ${MKDEFS}/post.mk
