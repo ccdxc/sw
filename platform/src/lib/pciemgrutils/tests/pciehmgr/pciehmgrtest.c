@@ -11,8 +11,7 @@
 #include <sys/param.h>
 #ifdef BUILD_OS_Darwin
 #include <editline/readline.h>
-#endif
-#ifdef BUILD_OS_Linux
+#else
 #include <readline/readline.h>
 #endif
 

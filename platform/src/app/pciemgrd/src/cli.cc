@@ -153,9 +153,8 @@ construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
 static void
 getopt_reset(int optind_arg, int optreset_arg)
 {
-#ifdef BUILD_OS_Linux
     optind = 0;
-#endif
+
 #ifdef BUILD_OS_Darwin
     optind = optind_arg;
     optreset = optreset_arg;

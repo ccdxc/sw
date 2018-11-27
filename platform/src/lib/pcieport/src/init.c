@@ -117,7 +117,9 @@ pcieport_onetime_init(void)
         pi->already_init = 1;
         return 0;
     }
+#ifdef __aarch64__
     pciesys_loginfo("pcieport: full init\n");
+#endif
     pcieport_link_init();
     pi->init = 1;
     return 0;
