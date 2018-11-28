@@ -551,9 +551,13 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 
 	*desc_count = rounddown_pow_of_two(ring->ring_size /
 			res->lif->sonic->num_per_core_resources);
+#if 0
+	/*
+	 * Temporarily commented out for alpha-1, will soon be handled with ring accounting.
+	 */
 	if (*desc_count > status_q_count)
 		*desc_count = rounddown_pow_of_two(status_q_count);
-
+#endif
 	if (*desc_count > MAX_PER_QUEUE_SQ_ENTRIES)
 		*desc_count = MAX_PER_QUEUE_SQ_ENTRIES;
 
