@@ -296,8 +296,8 @@ struct ionic_v1_wqe {
 enum ionic_v1_op {
 	/* XXX during development, v0 and v1 ops can coexist, let v1 ops begin with opcode 16 */
 	IONIC_V1_OP_SEND = 16,
-	IONIC_V1_OP_SEND_IMM,
 	IONIC_V1_OP_SEND_INV,
+	IONIC_V1_OP_SEND_IMM,
 	IONIC_V1_OP_RDMA_READ,
 	IONIC_V1_OP_RDMA_WRITE,
 	IONIC_V1_OP_RDMA_WRITE_IMM,

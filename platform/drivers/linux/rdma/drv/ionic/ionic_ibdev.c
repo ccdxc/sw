@@ -582,6 +582,7 @@ static void ionic_pgtbl_unbuf(struct ionic_ibdev *dev,
 
 static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 {
+	struct ionic_ibdev *dev = to_ionic_ibdev(cq->ibcq.device);
 	struct ionic_v1_cqe *qcqe = ionic_queue_at_prod(&cq->q);
 
 	if (unlikely(cq->color != ionic_v1_cqe_color(qcqe)))
@@ -589,7 +590,7 @@ static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 
 	rmb();
 
-	dev_dbg(&cq->ibcq.device->dev, "poll cq prod %d\n", cq->q.prod);
+	dev_dbg(&dev->ibdev.dev, "poll cq %u prod %u\n", cq->cqid, cq->q.prod);
 	print_hex_dump_debug("cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     qcqe, BIT(cq->q.stride_log2), true);
 
@@ -2328,11 +2329,11 @@ err_mr:
 
 static int ionic_map_mr_page(struct ib_mr *ibmr, u64 dma)
 {
+	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
 
-	ionic_pgtbl_page(&mr->buf, dma);
-
-	return 0;
+	dev_dbg(&dev->ibdev.dev, "dma %#llx\n", dma);
+	return ionic_pgtbl_page(&mr->buf, dma);
 }
 
 static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
@@ -2342,7 +2343,7 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
 	int rc;
 
-	/* mr must be allocated using ib_allow_mr() */
+	/* mr must be allocated using ib_alloc_mr() */
 	if (unlikely(!mr->buf.tbl_limit))
 		return -EINVAL;
 
@@ -2352,6 +2353,7 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 		dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
 					mr->buf.tbl_size, DMA_TO_DEVICE);
 
+	dev_dbg(&dev->ibdev.dev, "sg %p nent %d\n", sg, sg_nents);
 	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, ionic_map_mr_page);
 
 	if (mr->buf.tbl_buf)
@@ -6200,7 +6202,7 @@ static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
 
 	*eqe = *qeqe;
 
-	dev_dbg(&eq->dev->ibdev.dev, "poll eq prod %d\n", eq->q.prod);
+	dev_dbg(&eq->dev->ibdev.dev, "poll eq prod %u\n", eq->q.prod);
 	print_hex_dump_debug("eqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     eqe, BIT(eq->q.stride_log2), true);
 
@@ -6861,12 +6863,10 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_qp = ident->dev.nrdmasqs_per_lif;
 	dev->dev_attr.max_qp_wr = 0xffff;
 	dev->dev_attr.device_cap_flags =
-		//IB_DEVICE_LOCAL_DMA_LKEY |
-		//IB_DEVICE_MEM_WINDOW |
-		//IB_DEVICE_XRC |
-		//IB_DEVICE_MEM_MGMT_EXTENSIONS |
-		//IB_DEVICE_MEM_WINDOW_TYPE_2A |
-		//IB_DEVICE_MEM_WINDOW_TYPE_2B |
+		IB_DEVICE_LOCAL_DMA_LKEY |
+		IB_DEVICE_MEM_WINDOW |
+		IB_DEVICE_MEM_MGT_EXTENSIONS |
+		IB_DEVICE_MEM_WINDOW_TYPE_2B |
 		0;
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
 	dev->dev_attr.max_sge = 6;

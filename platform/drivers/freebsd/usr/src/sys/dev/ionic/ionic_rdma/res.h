@@ -61,7 +61,7 @@ struct resid_bits {
  */
 int resid_init(struct resid_bits *resid, int size);
 
-/** resid_get() - Destroy a resid allocator.
+/** resid_destroy() - Destroy a resid allocator.
  * @resid:	Resid allocator.
  */
 static inline void resid_destroy(struct resid_bits *resid)
@@ -103,7 +103,7 @@ static inline int resid_get_wrap(struct resid_bits *resid, int wrap_id)
 	return rc;
 }
 
-/** resid_get_wrap() - Allocate an available resource id.
+/** resid_get() - Allocate an available resource id.
  * @resid:	Resid allocator.
  *
  * Return: Resource id, or negative error number.

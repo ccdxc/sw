@@ -56,12 +56,16 @@ int resid_get_shared(struct resid_bits *resid, int wrap_id,
 	int id;
 
 	id = find_next_zero_bit(resid->inuse, size, next_id);
-	if (id != size)
+	if (id != size) {
+		set_bit(id, resid->inuse);
 		return id;
+	}
 
 	id = find_next_zero_bit(resid->inuse, next_id, wrap_id);
-	if (id != next_id)
+	if (id != next_id) {
+		set_bit(id, resid->inuse);
 		return id;
+	}
 
 	return -ENOMEM;
 }
