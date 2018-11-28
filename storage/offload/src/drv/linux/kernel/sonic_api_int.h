@@ -40,6 +40,7 @@ accel_ring_t *sonic_get_accel_ring(uint32_t accel_ring_id);
 
 bool sonic_pnso_async_poll(uint64_t data);
 uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res);
+void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr);
 uint64_t sonic_get_per_core_intr_assert_addr(struct per_core_resource *pc_res);
 
 uint64_t sonic_hostpa_to_devpa(uint64_t hostpa);

@@ -29,6 +29,7 @@ SRCS= \
  src/drv/linux/kernel/sonic_bus_pci.c \
  src/drv/linux/kernel/sonic_dev.c \
  src/drv/linux/kernel/sonic_lif.c \
+ src/drv/linux/kernel/sonic_interrupt.c \
  src/drv/linux/kernel/sonic_main.c \
  src/drv/linux/kernel/sonic_api_int.c \
  src/osal/linux/kernel/osal_logger.c \

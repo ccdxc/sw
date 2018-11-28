@@ -5,6 +5,7 @@
  */
 
 #define LINUXKPI_PARAM_PREFIX pencake_
+#include <linux/delay.h>
 #include "osal.h"
 #include "pnso_api.h"
 #include "pnso_test.h"

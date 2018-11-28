@@ -31,9 +31,7 @@
  */
 
 #include <linux/interrupt.h>
-#include <linux/irq.h>
-#include <linux/mman.h>
-#include <linux/init.h>
+#include <linux/hardirq.h>
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/printk.h>
@@ -42,6 +40,7 @@
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_interrupt.h"
+#include "sonic_api_int.h"
 
 #define evid_to_db_pa(evl, id) (evl->db_base_pa + (sizeof(uint64_t) * (id)))
 #define db_pa_to_evid(evl, addr) (((dma_addr_t)(addr) - evl->db_base_pa) / sizeof(uint64_t))
@@ -93,7 +92,7 @@ static void sonic_put_evid(struct sonic_event_list *evl, u32 evid)
 	spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
 }
 
-int sonic_poll_ev_list(struct sonic_event_list *evl, int budget)
+static int sonic_poll_ev_list(struct sonic_event_list *evl, int budget)
 {
 	uint32_t id, first_id, next_id;
 	uint32_t loop_count = 0;
@@ -237,7 +236,6 @@ void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr)
 void sonic_destroy_ev_list(struct per_core_resource *pc_res)
 {
 	struct sonic_event_list *evl = pc_res->evl;
-	struct device *dev = pc_res->lif->sonic->dev;
 
 	if (!evl)
 		return;
@@ -251,7 +249,8 @@ void sonic_destroy_ev_list(struct per_core_resource *pc_res)
 	}
 
 	if (evl->work_data) {
-		devm_kfree(dev, evl->work_data);
+		devm_kfree(pc_res->lif->sonic->dev,
+			   evl->work_data);
 		evl->work_data = NULL;
 	}
 
@@ -262,7 +261,7 @@ void sonic_destroy_ev_list(struct per_core_resource *pc_res)
 		evl->db_base = 0;
 	}
 
-	devm_kfree(dev, evl);
+	devm_kfree(pc_res->lif->sonic->dev, evl);
 	pc_res->evl = NULL;
 }
 
