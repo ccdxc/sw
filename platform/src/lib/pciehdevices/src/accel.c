@@ -43,7 +43,7 @@ initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
     pciehbars_t *pbars = pciehdev_get_bars(pdev);
 
     pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_ACCEL);
-    pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
+    pciehcfg_setconf_classcode(pcfg, 0x120000); /* processing accelerator */
     pciehcfg_setconf_nintrs(pcfg, pres->intrc);
     pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
