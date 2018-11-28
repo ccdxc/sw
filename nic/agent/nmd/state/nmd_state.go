@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/exec"
 	"strings"
@@ -318,10 +319,19 @@ func (n *NMD) StartRestServer() error {
 
 	t2 := router.Methods("GET").Subrouter()
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
+	t2.HandleFunc(CmdEXECUrl, httputils.MakeHTTPHandler(NaplesCmdExecHandler))
 	t2.HandleFunc("/api/{*}", unknownAction)
-
-	t3 := router.Methods("GET").Subrouter()
-	t3.HandleFunc(CmdEXECUrl, httputils.MakeHTTPHandler(NaplesCmdExecHandler))
+	t2.HandleFunc("/debug/pprof/", pprof.Index)
+	t2.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	t2.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	t2.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	t2.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	t2.HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP)
+	t2.HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP)
+	t2.HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
+	t2.HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
+	t2.HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
+	t2.HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
 	router.Methods("DELETE").Subrouter().HandleFunc(CoresURL+"{*}", httputils.MakeHTTPHandler(NaplesCoreDeleteHandler))
 
@@ -345,6 +355,7 @@ func (n *NMD) StartRestServer() error {
 	n.Unlock()
 
 	log.Infof("Started NMD Rest server at %s", n.GetListenURL())
+	os.Setenv("PATH", os.Getenv("PATH")+":/platform/bin:/nic/bin:/platform/tools:/nic/tools")
 
 	// Launch the server
 	go n.httpServer.Serve(listener)
@@ -493,9 +504,6 @@ func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
 	parts := strings.Fields(req.Opts)
 	cmd := exec.Command(req.Executable, parts...)
-	os.Setenv("PATH", os.Getenv("PATH")+":/platform/bin:/nic/bin:/platform/tools:/nic/tools")
-	log.Infof("Naples Cmd Execute New env: [%s]", os.Environ())
-	cmd.Env = os.Environ()
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err

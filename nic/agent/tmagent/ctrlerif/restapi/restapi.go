@@ -3,8 +3,10 @@
 package restapi
 
 import (
+	"expvar"
 	"net"
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/gorilla/mux"
 
@@ -56,6 +58,18 @@ func NewRestServer(listenURL string) (*RestServer, error) {
 		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
 		subRouter(sub, &srv)
 	}
+	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/", pprof.Index)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/profile", pprof.Profile)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/trace", pprof.Trace)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
+	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
 	log.Infof("Starting server at %s", listenURL)
 
