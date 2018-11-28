@@ -106,6 +106,7 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 	struct buffer_list_iter *iter;
 	struct crypto_aol *aol_prev = NULL;
 	struct crypto_aol *aol;
+	struct buffer_addr_len addr_len;
 	uint32_t total_len;
 	pnso_error_t err = ENOMEM;
 
@@ -122,16 +123,20 @@ crypto_aol_packed_get(const struct per_core_resource *pcr,
 		}
 		memset(aol, 0, sizeof(*aol));
 		iter = buffer_list_iter_addr_len_get(iter,
-					CRYPTO_AOL_TUPLE_LEN_MAX,
-					&aol->ca_addr_0, &aol->ca_len_0);
-		if (iter)
+					CRYPTO_AOL_TUPLE_LEN_MAX, &addr_len);
+		BUFFER_ADDR_LEN_SET(aol->ca_addr_0, aol->ca_len_0, addr_len);
+
+		if (iter) {
 			iter = buffer_list_iter_addr_len_get(iter,
-					CRYPTO_AOL_TUPLE_LEN_MAX,
-					&aol->ca_addr_1, &aol->ca_len_1);
-		if (iter)
+					CRYPTO_AOL_TUPLE_LEN_MAX, &addr_len);
+			BUFFER_ADDR_LEN_SET(aol->ca_addr_1, aol->ca_len_1, addr_len);
+		}
+		if (iter) {
 			iter = buffer_list_iter_addr_len_get(iter,
-					CRYPTO_AOL_TUPLE_LEN_MAX,
-					&aol->ca_addr_2, &aol->ca_len_2);
+					CRYPTO_AOL_TUPLE_LEN_MAX, &addr_len);
+			BUFFER_ADDR_LEN_SET(aol->ca_addr_2, aol->ca_len_2, addr_len);
+		}
+
 		/*
 		 * Crypto requires ca_addr_0 to be populated for the entire AOL
 		 * to be valid. If it contains zero, then not only that we've
@@ -181,6 +186,7 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 	struct buffer_list_iter *iter;
 	struct crypto_aol *aol_prev = NULL;
 	struct crypto_aol *aol_vec;
+	struct buffer_addr_len addr_len;
 	uint32_t num_vec_elems;
 	uint32_t cur_count;
 	uint32_t total_len;
@@ -201,8 +207,9 @@ crypto_aol_vec_sparse_get(const struct per_core_resource *pcr,
 	cur_count = 0;
 	while (iter && (cur_count < num_vec_elems)) {
 		memset(aol_vec, 0, sizeof(*aol_vec));
-		iter = buffer_list_iter_addr_len_get(iter, block_size,
-					&aol_vec->ca_addr_0, &aol_vec->ca_len_0);
+		iter = buffer_list_iter_addr_len_get(iter, block_size, &addr_len);
+		BUFFER_ADDR_LEN_SET(aol_vec->ca_addr_0, aol_vec->ca_len_0, addr_len);
+
 		/*
 		 * Crypto requires ca_addr_0 to be populated for the entire AOL
 		 * to be valid. If it contains zero, then not only that we've

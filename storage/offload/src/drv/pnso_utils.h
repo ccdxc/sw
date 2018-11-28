@@ -28,6 +28,21 @@ struct buffer_list_iter {
 	uint64_t cur_addr;
 };
 
+/*
+ * Mostly used as intermediate repository prior to transfer to
+ * packed structure fields.
+ */
+struct buffer_addr_len {
+	uint64_t addr;
+	uint32_t len;
+};
+
+#define BUFFER_ADDR_LEN_SET(_addr, _len, _addr_len)	\
+	do {						\
+		_addr = _addr_len.addr;			\
+		_len  = _addr_len.len;			\
+	} while (0)
+
 pnso_error_t ring_spec_info_fill(uint32_t ring_id,
 				 struct ring_spec *spec,
 				 void *desc,
@@ -58,8 +73,7 @@ buffer_list_iter_init(struct buffer_list_iter *iter,
 struct buffer_list_iter *
 buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			      uint32_t max_len,
-			      uint64_t *ret_addr,
-			      uint32_t *ret_len);
+			      struct buffer_addr_len *ret_addr_len);
 pnso_error_t svc_interm_buf_list_get(struct service_info *svc_info);
 void svc_interm_buf_list_put(struct service_info *svc_info);
 
