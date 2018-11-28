@@ -684,7 +684,8 @@ bat_flush_batch(struct request_params *req_params)
 		goto out;
 	}
 
-	if (!batch_info->bi_mode_sync)
+	if ((batch_info->bi_flags & BATCH_BFLAG_MODE_POLL) ||
+		(batch_info->bi_flags & BATCH_BFLAG_MODE_ASYNC))
 		pcr->batch_info = NULL;
 
 	OSAL_LOG_DEBUG("exit!");
