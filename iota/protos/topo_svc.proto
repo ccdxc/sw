@@ -127,13 +127,16 @@ message Node {
 
         BroadcomConfig  broadcom_config = 9;
         
-        IntelConfig     intel_config = 10;
+        IntelConfig     intel_config    = 10;
     }
 
     // NodeStatus captures the details of the node action
     IotaAPIResponse     node_status     = 11;
 
     string              node_uuid       = 12;
+
+    // Optionally run a start up script during add or reload.
+    string              startup_script  = 13;
 }
 
 

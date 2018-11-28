@@ -31,7 +31,7 @@ const (
 	SSHPort = 22
 
 	// DstIotaAgentDir captures the top level dir where all the agent copies happen
-	DstIotaAgentDir = "/tmp/iota"
+	DstIotaAgentDir = "/var/iota"
 
 	// DstIotaEntitiesDir has all workload related data for each workload
 	DstIotaEntitiesDir = DstIotaAgentDir + "/entities"
@@ -74,13 +74,13 @@ var (
 
 	// CleanupCommands lists the clean up commands required to clean up an IOTA node.
 	CleanupCommands = []string{
-		`sudo /tmp/iota/INSTALL.sh --clean-only`,
+		`sudo /var/iota/INSTALL.sh --clean-only`,
 		`sudo systemctl stop pen-cmd`,
 		`sudo docker rm -fv $(docker ps -aq)`,
 		`sudo docker system prune -f`,
 		`sudo rm /etc/hosts`,
 		`sudo pkill iota*`,
-		`sudo rm -rf /tmp/iota*`,
+		`sudo rm -rf /var/iota*`,
 		`sudo docker ps`,
 		`sudo docker rmi -f \$(docker images -aq)`,
 		`sudo rm -rf /var/run/naples`,

@@ -4,4 +4,4 @@ killall memtun
 sleep 3
 ps -ax | grep memtun
 ifconfig tun0 1.0.0.1 1.0.0.2
-cd /naples/drivers-freebsd/ && kldload sys/modules/ionic/ionic.ko
+cd /naples/drivers/drivers-freebsd/ && kldload sys/modules/ionic/ionic.ko

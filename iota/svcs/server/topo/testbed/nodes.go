@@ -42,7 +42,7 @@ func (n *TestNode) RestartNode() error {
 	waitForNodeUp := func(timeout time.Duration) error {
 		cTimeout := time.After(time.Second * time.Duration(timeout))
 		for {
-			conn, _ := net.DialTimeout("tcp", net.JoinHostPort(n.Node.GetIpAddress(), "22"), 1)
+			conn, _ := net.DialTimeout("tcp", net.JoinHostPort(n.Node.GetIpAddress(), "22"), 2*time.Second)
 			if conn != nil {
 				log.Printf("Connected to host : ", n.Node.GetIpAddress())
 				conn.Close()

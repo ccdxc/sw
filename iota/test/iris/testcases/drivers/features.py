@@ -12,6 +12,12 @@ def Setup(tc):
     for node in tc.nodes:
         tc.node_intfs[node] = interface.GetNodeInterface(node)
 
+    if getattr(tc.args, 'restart', False):
+        ret = api.RestartNodes(tc.nodes)
+        if ret != api.types.status.SUCCESS:
+            api.Logger.error("Node restart failed")
+            return api.types.FAILURE
+
     test_type = getattr(tc.args, "test-type", interface.INTF_TEST_TYPE_HOST)
     ret = interface.ConfigureInterfaces(tc, test_type)
     if ret != api.types.status.SUCCESS:

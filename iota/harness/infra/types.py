@@ -46,4 +46,4 @@ HEADER_SHORT_SUMMARY = "-" * 100
 FORMAT_ALL_TESTSUITE_SUMMARY = "%-32s %-8s %-8s %-8s %-8s %-8s %-8s %-8s"
 
 
-HOST_TOOLS_DIR = "/tmp/iota/tools"
+HOST_TOOLS_DIR = "/var/iota/tools"

@@ -33,7 +33,7 @@ const (
 	mellanoxPciDevicePrefix = "Mellanox Technologies"
 	broadcomPciDevicePrefix = "Broadcom Limited"
 	bareMetalWorkloadName   = "bareMetalWorkload"
-	intelPciDevicePrefix = "Intel Corporation Ethernet Controller X710"
+	intelPciDevicePrefix    = "Intel Corporation Ethernet Controller X710"
 )
 
 var (
@@ -470,8 +470,8 @@ func (naples *naplesSimNode) AddWorkload(in *iota.Workload) (*iota.Workload, err
 
 	}
 
-	if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(),
-		int(in.GetEncapVlan())); err != nil {
+	//Set vlan 0 as interface is already set before
+	if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(), 0); err != nil {
 		msg := fmt.Sprintf("Error in sending arp probe %s", err.Error())
 		naples.logger.Errorf(msg)
 		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
@@ -694,6 +694,16 @@ func (naples *naplesHwNode) getHwUUID(in *iota.Node) (uuid string, err error) {
 //Init initalize node type
 func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 
+	if in.StartupScript != "" {
+		_, stdout, err := Utils.Run(strings.Split(in.StartupScript, " "), 0, false, true, nil)
+		if err != nil {
+			msg := fmt.Sprintf("Start up script failed %v up err : %v", err, stdout)
+			naples.logger.Error(msg)
+			// Don't return error as start up would have been completed before.
+			//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		}
+	}
+
 	naples.init(in)
 	naples.iotaNode.name = in.GetName()
 	if in.GetNaplesConfig() == nil {
@@ -746,8 +756,9 @@ func (naples *naplesHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, erro
 
 	wloadKey := in.GetWorkloadName()
 	iotaWload, _ := naples.entityMap[wloadKey]
+	//Set vlan 0 as interface is already set before
 	if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(),
-		int(in.GetEncapVlan())); err != nil {
+		0); err != nil {
 		msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
 		naples.logger.Error(msg)
 		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}

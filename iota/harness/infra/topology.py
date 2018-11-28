@@ -149,6 +149,10 @@ class Node(object):
                 nic_entity.type = topo_pb2.ENTITY_TYPE_NAPLES
                 nic_entity.name = self.__name + "_naples"
 
+        script = self.GetStartUpScript()
+        if script != None:
+            msg.startup_script = script
+
         return types.status.SUCCESS
 
     def ProcessResponse(self, resp):
@@ -173,6 +177,11 @@ class Node(object):
                     Logger.error("Check if IONIC driver is installed.")
                 sys.exit(1)
         return
+
+    def GetStartUpScript(self):
+        if self.IsNaplesHw():
+            return api.HOST_NAPLES_DIR + "/" + "nodeinit.sh"
+        return None
 
 class Topology(object):
     def __init__(self, spec):
@@ -206,6 +215,7 @@ class Topology(object):
                 return types.status.FAILURE
             msg = req.nodes.add()
             msg.name = node_name
+
 
         resp = api.ReloadNodes(req)
         if not api.IsApiResponseOk(resp):

@@ -104,3 +104,22 @@ testcases:
         args    :
             test-type    : host
             #capture_pcap : true
+    -   name    : UplinkIntf_TSO_AFTER_RESTART
+        testcase: testcases.drivers.features
+        disable : False
+        iterators :
+            type               : nested
+            mtu                : [ '8192']
+            tso_offload        : [ 'on']
+            #Sg seems to be on for TSO testing.
+            sg_offload         : [ 'on']
+            #TSO requires rx and tx cheksum
+            rx_check_sum       : [ 'on']
+            tx_check_sum       : [ 'on']
+            pktsize            : [  8192 ]
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            test-type    : host
+            restart      : true
+            #capture_pcap : true

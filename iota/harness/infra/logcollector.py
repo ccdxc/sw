@@ -8,7 +8,7 @@ import iota.harness.api as api
 from multiprocessing.dummy import Pool as ThreadPool 
 
 logdirs = [
-    "/tmp/iota/*",
+    "/var/iota/*",
     "/naples/memtun.log",
 ]
 
