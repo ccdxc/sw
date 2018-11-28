@@ -12,6 +12,10 @@
 #include "nic/include/hal.hpp"
 #include "nic/sdk/include/sdk/port_mac.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
+#include "nic/utils/events/recorder/recorder.hpp"
+#include "gen/proto/port.pb.h"
+#include "gen/proto/events.pb.h"
+#include "gen/proto/kh.pb.h"
 
 namespace linkmgr {
 
@@ -48,6 +52,17 @@ Status port_svc_init(delphi::SdkPtr sdk) {
     PortStatus::Mount(sdk, delphi::ReadWriteMode);
 
     HAL_TRACE_DEBUG("Linkmgr: Mounted port objects from delphi...");
+
+    // initialize events recorder; size of the shm. mem = 2048 bytes
+    g_linkmgr_svc.recorder = events_recorder::init("linkmgr.events",     // name; this should end with ".events"
+                                                   2048, // size of the shared memory
+                                                   "linkmgr", // component that records the event
+                                                   port::PortOperStatus_descriptor(), // list of event types
+                                                   std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
+    if (g_linkmgr_svc.recorder == nullptr) {
+        HAL_TRACE_ERR("events recorder init failed");
+        return Status::CANCELLED;
+    }
 
     return Status::OK;
 }
@@ -179,6 +194,9 @@ void
 port_event_notify (uint32_t port_num, port_event_t event,
                    port_speed_t port_speed)
 {
+    kh::PortKeyHandle port_key_handle;
+    port_key_handle.set_port_id(port_num);
+
     switch (event) {
     case port_event_t::PORT_EVENT_LINK_UP:
         HAL_TRACE_DEBUG("port: {}, Link UP", port_num);
@@ -186,6 +204,12 @@ port_event_notify (uint32_t port_num, port_event_t event,
                             port_num,
                             port::PORT_OPER_STATUS_UP,
                             sdk_port_speed_to_port_speed_spec(port_speed));
+        events_recorder_get()->event(
+                            events::INFO,
+                            port::PORT_OPER_STATUS_UP,
+                            "PortKeyHandle",
+                            port_key_handle,
+                            "Link UP");
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
@@ -194,6 +218,12 @@ port_event_notify (uint32_t port_num, port_event_t event,
                             port_num,
                             port::PORT_OPER_STATUS_DOWN,
                             sdk_port_speed_to_port_speed_spec(port_speed));
+        events_recorder_get()->event(
+                            events::WARNING,
+                            port::PORT_OPER_STATUS_DOWN,
+                            "PortKeyHandle",
+                            port_key_handle,
+                            "Link DOWN");
         break;
 
     default:

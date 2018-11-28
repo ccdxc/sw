@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = liblinkmgrdelphi.so
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/linkmgr_delphi.cc
-MODULE_SOLIBS   = delphisdk
+MODULE_SOLIBS   = delphisdk events_recorder
 MODULE_PREREQS = libhalproto.so
 include ${MKDEFS}/post.mk
 

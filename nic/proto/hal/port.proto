@@ -32,6 +32,10 @@ enum PortBreakoutMode {
 
 // PortOperStatus reflects the current status of the port
 enum PortOperStatus {
+  // enum_stringer will generate string values for the enum.
+  // events will be recorded with the string values rather integer enums.
+  option (gogoproto.goproto_enum_stringer) = false;
+  option (gogoproto.enum_stringer) = true;
   PORT_OPER_STATUS_NONE  = 0;
   PORT_OPER_STATUS_UP    = 1;    // port is linked up
   PORT_OPER_STATUS_DOWN  = 2;    // port link status is down
