@@ -579,8 +579,8 @@ def GetNetworks(objlist):
 
 def GetDscrAolObjectState(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = descriptor_aol_pb2.DescrAolStub(HalChannel)
-    __config(objlist, descriptor_aol_pb2.DescrAolRequestMsg,
+    stub = internal_pb2.DescrAolStub(HalChannel)
+    __config(objlist, internal_pb2.DescrAolRequestMsg,
              stub.DescrAolGet)
     return
 
