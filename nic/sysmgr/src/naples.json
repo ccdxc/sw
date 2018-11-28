@@ -38,4 +38,9 @@
     "command": "/nic/bin/tmagent -hostif lo",
     "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "nevtsproxy",
+    "command": "/nic/bin/nevtsproxy",
+    "dependencies": ["delphi"],
+    "flags": ["no_watchdog", "non_critical"]
 }]
