@@ -204,19 +204,11 @@ int ionic_set_dma_mask(struct ionic *ionic)
 	struct device *dev = ionic->dev;
 	int err;
 
-	/* Query system for DMA addressing limitation for the device.
-	 */
-
-	err = dma_set_mask(dev, DMA_BIT_MASK(64));
-	if (err) {
-		dev_err(dev, "No usable 64-bit DMA configuration, aborting\n");
-		return err;
-	}
-
-	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(64));
+	/* Query system for DMA addressing limitation for the device. */
+	err = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(52));
 	if (err)
-		dev_err(dev, "Unable to obtain 64-bit DMA "
-			"for consistent allocations, aborting\n");
+		dev_err(dev, "Unable to obtain 64-bit DMA for consistent allocations, aborting.  err=%d\n",
+			err);
 
 	return err;
 }
