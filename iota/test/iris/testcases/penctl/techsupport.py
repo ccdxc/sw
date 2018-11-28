@@ -7,7 +7,7 @@ import iota.test.iris.testcases.penctl.common as common
 
 def_tech_support_file_name = "naples-tech-support.tar.gz"
 def_tech_support_dir_name = "NaplesTechSupport"
-tech_support_dirs = ["cores", "events", "logs", "penctl.ver"]
+tech_support_dirs = ["cores", "events", "logs", "penctl.ver", "cmd_out"]
 def_tech_support_log_files = ["hal.log", "nicmgr.log", "pciemgrd.log", "asicrw.log", "linkmgr.log"]
 
 

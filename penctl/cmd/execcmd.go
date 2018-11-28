@@ -51,6 +51,7 @@ func execBinCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	s := strings.Replace(string(resp), `\n`, "\n", -1)
+	s = strings.Replace(s, "\\", "", -1)
 	if len(s) > 0 && s[0] == '"' {
 		s = s[1:]
 	}

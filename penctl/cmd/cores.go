@@ -25,9 +25,9 @@ var coreShowCmd = &cobra.Command{
 }
 
 var coreDeleteCmd = &cobra.Command{
-	Use:   "core",
-	Short: "Delete a core from Naples",
-	Long:  "\n---------------------------\n Delete a Core From Naples \n---------------------------\n",
+	Use:   "core-dump",
+	Short: "Delete a core dump from Naples",
+	Long:  "\n--------------------------------\n Delete a Core Dump From Naples \n--------------------------------\n",
 	RunE:  coreDeleteCmdHandler,
 }
 
@@ -71,7 +71,11 @@ func parseFiles(resp *http.Response) ([]string, error) {
 }
 
 func coreShowCmdHandler(cmd *cobra.Command, args []string) error {
-	resp, _ := restGetResp(revProxyPort, "cores/v1/naples/")
+	resp, err := restGetResp(revProxyPort, "cores/v1/naples/")
+	if err != nil {
+		return err
+	}
+
 	retS, err := parseFiles(resp)
 	if err != nil {
 		return err

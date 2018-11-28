@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -36,9 +35,18 @@ var tarFile string
 func init() {
 	sysCmd.AddCommand(showTechCmd)
 
-	showTechCmd.Flags().StringVarP(&cmdFile, "cmds", "c", "", "YML file with list of commands to run on Naples")
 	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create (without .tar.gz)")
 }
+
+var cmdToExecute = `
+Cmds:
+ -
+   cmd: /nic/tools/fwupdate -l
+   outputfile: fw_version.out
+ -
+   cmd: halctl show techsupport
+   outputfile: hal-cmds.txt
+`
 
 // NaplesCmds is the format of the yaml file used to run commands on Naples for tech-support
 type NaplesCmds struct {
@@ -162,62 +170,48 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Printf("\nLogs fetched\n")
 
-	if !cmd.Flags().Changed("cmds") {
-		cmdFile = "naples-tech-support-cmd.yml"
-	}
-	if _, err := os.Stat(cmdFile); !os.IsNotExist(err) {
-		if !cmd.Flags().Changed("cmds") {
-			cmdFile = "naples-tech-support-cmd.yml"
-		}
-		fmt.Printf("Executing commands")
-		//Execute cmds pointed to by YML file
-		cmdDestDir := destDir + "/cmd_out/"
-		createDestDir(cmdDestDir)
+	fmt.Printf("Executing commands")
+	//Execute cmds pointed to by YML file
+	cmdDestDir := destDir + "/cmd_out/"
+	createDestDir(cmdDestDir)
 
-		var naplesCmds NaplesCmds
-		source, err := ioutil.ReadFile(cmdFile)
+	var naplesCmds NaplesCmds
+	err = yaml.UnmarshalStrict([]byte(cmdToExecute), &naplesCmds)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	for _, naplesCmd := range naplesCmds.Cmds {
+		if naplesCmd.Outputfile == "" || naplesCmd.Cmd == "" {
+			fmt.Printf("\nMissing command attributes %+v\n", naplesCmd)
+			continue
+		}
+		cmd := strings.Fields(naplesCmd.Cmd)
+		opts := strings.Join(cmd[1:], " ")
+		v := &nmd.NaplesCmdExecute{
+			Executable: cmd[0],
+			Opts:       opts,
+		}
+		resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
 		if err != nil {
 			fmt.Println(err)
-			return err
 		}
-		err = yaml.UnmarshalStrict(source, &naplesCmds)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		for _, naplesCmd := range naplesCmds.Cmds {
-			if naplesCmd.Outputfile == "" || naplesCmd.Cmd == "" {
-				fmt.Printf("\nMissing command attributes %+v\n", naplesCmd)
-				continue
-			}
-			cmd := strings.Fields(naplesCmd.Cmd)
-			opts := strings.Join(cmd[1:], " ")
-			v := &nmd.NaplesCmdExecute{
-				Executable: cmd[0],
-				Opts:       opts,
-			}
-			resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+		if len(resp) > 3 {
+			fmt.Printf(".")
+			s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+			s = strings.Replace(s, "\\", "", -1)
+			file = cmdDestDir + "/" + naplesCmd.Outputfile
+			out, err := os.Create(file)
 			if err != nil {
 				fmt.Println(err)
 			}
-			if len(resp) > 3 {
-				fmt.Printf(".")
-				s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-				file = cmdDestDir + "/" + naplesCmd.Outputfile
-				out, err := os.Create(file)
-				if err != nil {
-					fmt.Println(err)
-				}
-				defer out.Close()
-				w := bufio.NewWriter(out)
-				w.WriteString("===" + cmd[0] + " " + opts + "===\n" + s)
-				w.Flush()
-			}
+			defer out.Close()
+			w := bufio.NewWriter(out)
+			w.WriteString("===" + cmd[0] + " " + opts + "===\n" + s)
+			w.Flush()
 		}
-		fmt.Printf("\nCommands executed\n")
-	} else {
-		fmt.Println("No commands to run")
 	}
+	fmt.Printf("\nCommands executed\n")
 
 	file = destDir + "/penctl.ver"
 	out, err = os.Create(file)

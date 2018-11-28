@@ -80,7 +80,7 @@ def CleanupCores(n):
     cores = GetCores(n)
     del_req = api.Trigger_CreateExecuteCommandsRequest()
     for core in cores:
-        AddPenctlCommand(del_req, n, "delete core --file %s" % core)
+        AddPenctlCommand(del_req, n, "delete core-dump --file %s" % core)
 
     if len(del_req.commands):
         del_resp = api.Trigger(del_req)

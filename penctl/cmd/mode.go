@@ -28,10 +28,11 @@ var modeManagedCmd = &cobra.Command{
 }
 
 var modeManagedShowCmd = &cobra.Command{
-	Use:   "mode",
-	Short: "Show mode of operation of Naples",
-	Long:  "\n-------------------------------------------------------------------\n Show mode of operation of Naples - host-managed vs venice-managed \n-------------------------------------------------------------------\n",
-	RunE:  modeManagedShowCmdHandler,
+	Use:    "mode",
+	Short:  "Show mode of operation of Naples",
+	Long:   "\n-------------------------------------------------------------------\n Show mode of operation of Naples - host-managed vs venice-managed \n-------------------------------------------------------------------\n",
+	RunE:   modeManagedShowCmdHandler,
+	Hidden: true,
 }
 
 type clusterAddresses []string
@@ -136,7 +137,6 @@ func modeManagedShowCmdHandler(cmd *cobra.Command, args []string) error {
 	json.Unmarshal(resp, &naplesCfg)
 	if tabularFormat {
 		fmt.Println(strings.Trim(strings.Replace(fmt.Sprintf("%+v", naplesCfg.Spec), " ", "\n", -1), "{}"))
-		fmt.Println("Mode:", nmd.MgmtMode_name[int32(naplesCfg.Spec.Mode)])
 	}
 	if verbose && tabularFormat {
 		fmt.Printf("%+v\n", naplesCfg.Spec)
