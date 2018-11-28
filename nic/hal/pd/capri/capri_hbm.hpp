@@ -126,6 +126,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_NMDPR_OBJS_BIG_RX     "big-rx-objs"
 #define CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS "ipsec-global-drop-stats"
 #define CAPRI_HBM_REG_TCP_PROXY_STATS       "tcp_proxy_stats"
+#define CAPRI_HBM_REG_TLS_PROXY_GLOBAL_STATS    "tls_proxy_global_stats"
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512
@@ -193,6 +194,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 #define P4PT_TCB_ISCSI_STATS_BASE 			"p4pt_tcb_iscsi_stats_base"
 #define P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE 	"p4pt_tcb_iscsi_read_latency_distribution_base"
 #define P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_BASE 	"p4pt_tcb_iscsi_write_latency_distribution_base"
+
+#define TLS_PROXY_GLOBAL_STATS          "tls_proxy_global_stats"
 
 typedef struct capri_descr_s {
         uint64_t        scratch[8];

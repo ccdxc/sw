@@ -142,6 +142,7 @@ tls_proxy_cfg_rule_action(tcp_proxy_tls_cfg_t *tls_cfg, proxy_flow_info_t *pfi)
     if(tls_cfg->ciphers.length() > 0) {
         pfi->u.tlsproxy.ciphers = tls_cfg->ciphers;
     }
+    pfi->u.tlsproxy.tls_proxy_side = tls_cfg->tls_proxy_side;
     pfi->u.tlsproxy.key_type = tls_cfg->asym_key_type;
     switch(tls_cfg->asym_key_type) {
     case types::CRYPTO_ASYM_KEY_TYPE_ECDSA:

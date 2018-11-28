@@ -412,6 +412,8 @@
 
 #define RNMDR_TLS_GC_TABLE_BASE         hbm_rnmdr_tls_gc_table_base
 
+#define TLS_PROXY_GLOBAL_STATS          tls_proxy_global_stats
+
 #define RNMDR_GC_PRODUCER_TCP           CAPRI_RNMDR_GC_TCP_RING_PRODUCER
 #define RNMDR_GC_PRODUCER_ARM           CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER
 #define RNMDR_GC_PER_PRODUCER_SHIFT     CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT

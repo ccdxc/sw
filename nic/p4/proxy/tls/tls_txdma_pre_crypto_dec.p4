@@ -438,7 +438,7 @@ metadata tpage_alloc_d_t tpage_alloc_d;
 metadata arq_pi_d_t arq_tx_pi_d;
 
 @pragma scratch_metadata
-metadata barco_shadow_params_d_t barco_shadow_params_d;
+metadata barco_shadow_params_d_t BARCO_SHADOW_SCRATCH;
 
 @pragma scratch_metadata
 metadata tlscb_config_aead_t TLSCB_CONFIG_AEAD_SCRATCH;

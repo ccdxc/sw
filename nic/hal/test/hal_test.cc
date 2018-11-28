@@ -2187,6 +2187,7 @@ public:
             in_addr_t                   dst_address_end,
             uint16_t                    dst_port_range_start,
             uint16_t                    dst_port_range_end,
+            tcp_proxy::TlsProxySide     proxy_side,
             uint32_t                    sign_key_idx,
             uint32_t                    decrypt_key_idx,
             uint32_t                    cert_idx)
@@ -2208,6 +2209,7 @@ public:
         /* TcpProxyRuleMatchSpec: TcpProxyAction - TCP only proxy */
         rule_match_spec->mutable_tcp_proxy_action()->set_tcp_proxy_action_type(tcp_proxy::TCP_PROXY_ACTION_TYPE_ENABLE);
         rule_match_spec->mutable_tcp_proxy_action()->set_proxy_type(types::PROXY_TYPE_TLS);
+        rule_match_spec->mutable_tcp_proxy_action()->mutable_tls()->set_tls_proxy_side(proxy_side);
 
         if (key_type == types::CRYPTO_ASYM_KEY_TYPE_ECDSA) {
             /* TLS ECDSA specific policy configuration */
@@ -2308,6 +2310,7 @@ public:
                 dst_range_end,
                 dst_port_range_start,
                 dst_port_range_end,
+                tcp_proxy::TLS_PROXY_SIDE_CLIENT,
                 sign_key_idx,
                 0,
                 cert_idx)) {
@@ -2359,6 +2362,7 @@ public:
                 dst_range_end,
                 dst_port_range_start,
                 dst_port_range_end,
+                tcp_proxy::TLS_PROXY_SIDE_SERVER,
                 sign_key_idx,
                 0,
                 cert_idx)) {
@@ -2411,6 +2415,7 @@ public:
                 dst_range_end,
                 dst_port_range_start,
                 dst_port_range_end,
+                tcp_proxy::TLS_PROXY_SIDE_CLIENT,
                 sign_key_idx,
                 decrypt_key_idx,
                 cert_idx)) {
@@ -2462,6 +2467,7 @@ public:
                 dst_range_end,
                 dst_port_range_start,
                 dst_port_range_end,
+                tcp_proxy::TLS_PROXY_SIDE_SERVER,
                 sign_key_idx,
                 decrypt_key_idx,
                 cert_idx)) {

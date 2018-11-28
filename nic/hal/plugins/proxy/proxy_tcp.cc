@@ -643,6 +643,8 @@ tcp_proxy_type_action(fte::ctx_t &ctx, proxy_flow_info_t *pfi)
     rc = get_rule_data((acl_rule_t *) rule);
     rule_cfg = RULE_MATCH_USER_DATA(rc, tcp_proxy_cfg_rule_t, ref_count);
 
+    pfi->proxy_type = rule_cfg->action.proxy_type;
+
     if (rule_cfg->action.proxy_type  == types::PROXY_TYPE_TCP) {
         /* FIXME: Unfortunately bypass TLS is currently a global knob and not
          * per flow
@@ -856,6 +858,14 @@ tcp_get_flow_encap_for_n2n_flow(const fte::ctx_t &ctx,
     flow_encap.encrypt_qid = pfi.qid1;
     flow_encap.decrypt_qid = pfi.qid2;
     flow_encap.is_server_ctxt = false;
+
+    if (pfi.proxy_type == types::PROXY_TYPE_TLS) {
+        if (pfi.u.tlsproxy.tls_proxy_side == tcp_proxy::TLS_PROXY_SIDE_SERVER) {
+            flow_encap.is_server_ctxt = true;
+            flow_encap.encrypt_qid = pfi.qid2;
+            flow_encap.decrypt_qid = pfi.qid1;
+        }
+    }
 
     return HAL_RET_OK;
 }

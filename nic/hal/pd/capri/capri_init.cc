@@ -257,6 +257,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].num_params = 2;
     symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_TX);
+    symbols[i].params[1].name = TLS_PROXY_GLOBAL_STATS;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_GLOBAL_STATS);
     i++;
 
     symbols[i].name = "tls-enc-read-tnmpr-alloc-idx.bin";
@@ -511,6 +513,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].num_params = 2;
     symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDPR_BIG_TX);
+    symbols[i].params[1].name = TLS_PROXY_GLOBAL_STATS;
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_GLOBAL_STATS);
     i++;
 
     symbols[i].name = "tls-dec-read-tnmpr-alloc-idx.bin";
@@ -985,6 +989,38 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
         CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE * CAPRI_HBM_RNMDR_ENTRY_SIZE * CAPRI_RNMDR_GC_TLS_RING_PRODUCER;
     symbols[i].params[1].name = TCP_PROXY_STATS;
     symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TCP_PROXY_STATS);
+    i++;
+
+    symbols[i].name = "tls-enc-bsq.bin";
+    symbols[i].num_params = 2;
+    symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                 BARCO_GCM0_PI_HBM_TABLE_OFFSET;
+    symbols[i].params[1].name = TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE;
+
+    /*
+     * The 'CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE' region is provisioned for 1KB out of
+     * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
+     * HBM memory from this region to store other TLS global resources.
+     */
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                 BARCO_MPP1_PI_HBM_TABLE_OFFSET;
+    i++;
+
+    symbols[i].name = "tls-dec-bsq.bin";
+    symbols[i].num_params = 2;
+    symbols[i].params[0].name = TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE;
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                BARCO_GCM1_PI_HBM_TABLE_OFFSET;
+    symbols[i].params[1].name = TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE;
+
+    /*
+     * The 'CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE' region is provisioned for 1KB out of
+     * which CAPRI_MAX_TLS_PAD_SIZE is used for Pad bytes. We'll use the remaining
+     * HBM memory from this region to store other TLS global resources.
+     */
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                 BARCO_MPP1_PI_HBM_TABLE_OFFSET;
     i++;
 
     HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);

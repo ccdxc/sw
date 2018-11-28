@@ -19,6 +19,9 @@ struct tx_table_s0_t0_d d;
 %%
 
    	.param		tls_dec_rx_bsq_dec_dummy_process
+    .param      TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE
+	.param      TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE
+    .param      tls_dec_free_barco_ci
 	
 tls_dec_post_crypto_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.stats_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
@@ -84,8 +87,8 @@ tls_dec_post_crypto_process:
 
 tls_dec_post_crypto_skip_bsq_dbell:
 
-    sne         c1, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_NONE
-    phvwri.c1   p.tls_global_phv_flags_l7_proxy_en, 1
+    sne         c2, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_NONE
+    phvwri.c2   p.tls_global_phv_flags_l7_proxy_en, 1
     seq         c2, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_SPAN
     phvwri.c2   p.tls_global_phv_flags_l7_proxy_type_span, 1
 
@@ -93,7 +96,11 @@ table_read_rx_bsq_dec:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_rx_bsq_dec_dummy_process,
                                  k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0],
                                  TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
-	nop.e
+    addui.!c1   r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addi.!c1    r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addui.c1    r5, r0, hiword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
+    addi.c1     r5, r0, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
+    CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_EN, tls_dec_free_barco_ci, r5, TABLE_SIZE_256_BITS)
     nop
 
 tls_dec_post_crypto_process_defer:

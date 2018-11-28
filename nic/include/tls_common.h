@@ -8,4 +8,7 @@
 #define TLS_SCHED_RING_TIMER          0x4
 #define TLS_SCHED_RING_ARM            0x5
 
+#define TLS_PROXY_GLOBAL_STATS_IDX(x)       (x << 3)
+#define TLS_PROXY_GLOBAL_STATS_TNMDPR_EMPTY TLS_PROXY_GLOBAL_STATS_IDX(0)
+
 #endif /* #ifndef __TLS_COMMON_H__ */

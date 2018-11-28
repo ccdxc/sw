@@ -19,6 +19,9 @@ struct tx_table_s0_t0_d d;
 %%
 
         .param          tls_enc_rx_bsq_enc_dummy_process
+	    .param          TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
+	    .param          TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE
+        .param          tls_enc_free_barco_ci
         
 tls_enc_post_crypto_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s7_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
@@ -85,9 +88,15 @@ tls_enc_post_crypto_process:
 
 	
 table_read_rx_bsq_enc: 
-    CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_DIS, tls_enc_rx_bsq_enc_dummy_process,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_enc_rx_bsq_enc_dummy_process,
         k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0],
         TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
+
+    addui.!c1   r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addi.!c1    r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addui.c1    r5, r0, hiword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
+    addi.c1     r5, r0, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
+    CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_EN, tls_enc_free_barco_ci, r5, TABLE_SIZE_256_BITS)
     nop
 
 tls_enc_post_crypto_process_defer:

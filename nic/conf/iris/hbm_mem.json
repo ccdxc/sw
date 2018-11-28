@@ -482,6 +482,12 @@
             "name": "eth_desc_cache",
             "size_kb" : 65536,
             "cache": "p4plus-all"
+        },
+        {
+            "name": "tls_proxy_global_stats",
+            "size_kb": 1,
+            "reset": true
         }
+
     ]
 }

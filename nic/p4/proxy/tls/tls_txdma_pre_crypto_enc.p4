@@ -236,6 +236,9 @@ metadata tls_stage_queue_brq_d_t tls_queue_brq_d;
 @pragma scratch_metadata
 metadata tls_stage_pre_crypto_stats_d_t tls_pre_crypto_stats_d;
 
+@pragma scratch_metadata
+metadata tnmdr_pidx_t TNMDR_PIDX_SCRATCH;
+
 @pragma pa_header_union ingress to_stage_1
 metadata to_stage_1_phv_t to_s1;
 
@@ -343,7 +346,7 @@ metadata tdesc_alloc_d_t tdesc_alloc_d;
 metadata tpage_alloc_d_t tpage_alloc_d;
 
 @pragma scratch_metadata
-metadata barco_shadow_params_d_t barco_shadow_params_d;
+metadata barco_shadow_params_d_t BARCO_SHADOW_SCRATCH;
 
 @pragma scratch_metadata
 metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
@@ -380,9 +383,9 @@ action tls_rx_serq(TLSCB_CONFIG_AEAD_PARAMS) {
 /*
  * Stage 2 table 1 action
  */
-action read_tnmdr(tnmdr_pidx) {
+action read_tnmdr(TNMDR_PIDX_ACTION_PARAMS) {
     // d for stage 2 table 1 read-tnmdr-idx
-    modify_field(read_tnmdr_d.tnmdr_pidx, tnmdr_pidx);
+    GENERATE_TNMDR_PIDX_D
 }
 
 /*

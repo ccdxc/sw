@@ -110,6 +110,7 @@ typedef struct tcp_proxy_tls_cfg_s {
     uint32_t                        cert_id;
     uint32_t                        trust_root_id;
     std::string                     ciphers;
+    tcp_proxy::TlsProxySide         tls_proxy_side;
     union {
         tls_proxy_tls_cfg_ecdsa_key_t   ecdsa_key;
         tls_proxy_tls_cfg_rsa_key_t     rsa_key;
@@ -354,6 +355,13 @@ tcp_proxy_cfg_rule_action_spec_extract (const tcp_proxy::TcpProxyAction& spec,
         action->u.tls_cfg.asym_key_type = spec.tls().asym_key_type();
         action->u.tls_cfg.cert_id = spec.tls().cert_id();
         action->u.tls_cfg.trust_root_id = spec.tls().trust_root_id();
+        if (spec.tls().tls_proxy_side() == tcp_proxy::TLS_PROXY_SIDE_NONE) {
+            action->u.tls_cfg.tls_proxy_side = tcp_proxy::TLS_PROXY_SIDE_CLIENT;
+        }
+        else {
+            action->u.tls_cfg.tls_proxy_side = spec.tls().tls_proxy_side();
+        }
+
         if(spec.tls().ciphers().length() > 0) {
             action->u.tls_cfg.ciphers = spec.tls().ciphers();
         }

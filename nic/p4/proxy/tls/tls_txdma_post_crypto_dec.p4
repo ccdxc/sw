@@ -6,6 +6,7 @@
 #define tx_table_s0_t0_action       read_tls_stg0
 #
 #define tx_table_s1_t0_action       tls_rx_bsq_dummy
+#define tx_table_s1_t1_action       tls_free_barco_slot
 
 #define tx_table_s2_t0_action       tls_rx_bsq
 #
@@ -203,6 +204,9 @@ metadata gc_token_t     GC_TOKEN_SCRATCH;
 @pragma scratch_metadata
 metadata stats_phv_t stats_scratch;
 
+@pragma scratch_metadata
+metadata barco_shadow_params_d_t BARCO_SHADOW_SCRATCH;
+
 /* *** PHV Unionization Begin *** */
 
 @pragma pa_header_union ingress to_stage_5
@@ -272,6 +276,15 @@ action tls_rx_bsq_dummy(TLSCB_1_PARAMS) {
     GENERATE_GLOBAL_K
 
     GENERATE_TLSCB_1_D
+}
+
+/* Stage 1 Table 1 action */
+action tls_free_barco_slot(BARCO_SHADOW_PARAMS) {
+
+    GENERATE_GLOBAL_K
+
+    /* D vector */
+    GENERATE_BARCO_SHADOW_PARAMS_D
 }
 
 

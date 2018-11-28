@@ -11,6 +11,7 @@
 #include "gen/proto/proxy.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "gen/proto/tcp_proxy.pb.h"
 
 using sdk::lib::indexer;
 using sdk::lib::ht_ctxt_t;
@@ -137,6 +138,7 @@ typedef struct tls_proxy_flow_info_s {
     uint32_t                 cert_id;
     std::string              ciphers;
     types::CryptoAsymKeyType key_type;
+    tcp_proxy::TlsProxySide  tls_proxy_side;
     union {
         tls_proxy_flow_info_ecdsa_keys_t ecdsa_keys;
         tls_proxy_flow_info_rsa_keys_t   rsa_keys;
@@ -148,7 +150,8 @@ typedef struct proxy_flow_info_s {
     flow_key_t          flow_key;                // Flow
     qid_t               qid1;                    // qid instance 1 (e.g. hflow)
     qid_t               qid2;                    // qid instance 2 (e.g. nflow)
-
+    
+    types::ProxyType    proxy_type;
     union {
         ipsec_flow_info_t           ipsec;
         tls_proxy_flow_info_t       tlsproxy;

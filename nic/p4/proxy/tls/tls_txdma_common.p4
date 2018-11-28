@@ -268,12 +268,13 @@ header_type barco_shadow_params_d_t {
 }
 
 #define BARCO_SHADOW_PARAMS    pi, ci, stat_qfull, stat_q_hwm, stat_rsvd
-#define GENERATE_BARCO_SHADOW_PARAMS_D                                           \
-    modify_field(barco_shadow_params_d.pi, pi);                              \
-    modify_field(barco_shadow_params_d.ci, ci);                              \
-    modify_field(barco_shadow_params_d.stat_qfull, stat_qfull);              \
-    modify_field(barco_shadow_params_d.stat_qfull, stat_q_hwm);              \
-    modify_field(barco_shadow_params_d.stat_rsvd, stat_rsvd);
+#define BARCO_SHADOW_SCRATCH    barco_shadow_params_d_scratch
+#define GENERATE_BARCO_SHADOW_PARAMS_D                                      \
+    modify_field(BARCO_SHADOW_SCRATCH.pi, pi);                              \
+    modify_field(BARCO_SHADOW_SCRATCH.ci, ci);                              \
+    modify_field(BARCO_SHADOW_SCRATCH.stat_qfull, stat_qfull);              \
+    modify_field(BARCO_SHADOW_SCRATCH.stat_qfull, stat_q_hwm);              \
+    modify_field(BARCO_SHADOW_SCRATCH.stat_rsvd, stat_rsvd);
 
 header_type tls_stage_pre_crypto_stats_d_t {
     fields {
@@ -373,14 +374,15 @@ header_type serq_entry_new_t {
 header_type tnmdr_pidx_t {
     fields {
         tnmdr_pidx                      : 32;
-        tnmdr_pidx_full                 : 1;
-        pad                             : 479;
+        tnmdr_pidx_full                 : 8;
+        pad                             : 24;
     }
 }
-#define TNMDR_PIDX_ACTION_PARAMS tnmdr_pidx, pad
+#define TNMDR_PIDX_ACTION_PARAMS tnmdr_pidx, tnmdr_pidx_full, pad
 #define TNMDR_PIDX_SCRATCH tnmdr_pidx_d
 #define GENERATE_TNMDR_PIDX_D                                                                           \
     modify_field(TNMDR_PIDX_SCRATCH.tnmdr_pidx, tnmdr_pidx);                                            \
+    modify_field(TNMDR_PIDX_SCRATCH.tnmdr_pidx_full, tnmdr_pidx_full);                                  \
     modify_field(TNMDR_PIDX_SCRATCH.pad, pad);
 
 
