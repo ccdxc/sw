@@ -6,17 +6,20 @@
  * @brief   This module defines OCI Subnet interface
  */
 
-#if !defined (__OCI_SUBNET_H_)
-#define __OCI_SUBNET_H_
+#if !defined (__OCI_SUBNET_HPP__)
+#define __OCI_SUBNET_HPP__
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/hal/apollo/include/api/oci.hpp"
+#include "nic/hal/apollo/include/api/oci_vcn.hpp"
 
 /**
  * @defgroup OCI_SUBNET - Subnet specific API definitions
  *
  * @{
  */
+
+#define OCI_MAX_SUBNET        (5 * OCI_MAX_VCN)
 
 /**
  * @brief Subnet Key
@@ -30,10 +33,10 @@ typedef struct oci_subnet_key_s {
  * @brief Subnet
  */
 typedef struct oci_subnet_s {
-    oci_subnet_key_t key;    /**< Subnet key */
-    ip_prefix_t pfx;         /**< Subnet CIDR block */
-    ip_addr_t vr_ip;         /**< Virtual Router IP */
-    mac_addr_t vr_mac;       /**< Virtual Router Mac */
+    oci_subnet_key_t    key;       /**< Subnet key */
+    ip_prefix_t         pfx;       /**< Subnet CIDR block */
+    ip_addr_t           vr_ip;     /**< Virtual Router IP */
+    mac_addr_t          vr_mac;    /**< Virtual Router Mac */
 } __PACK__ oci_subnet_t;
 
 /**
@@ -43,9 +46,7 @@ typedef struct oci_subnet_s {
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t oci_subnet_create (
-    _In_ oci_subnet_t *subnet);
-
+sdk_ret_t oci_subnet_create(_In_ oci_subnet_t *subnet);
 
 /**
  * @brief Delete Subnet
@@ -54,10 +55,9 @@ sdk_ret_t oci_subnet_create (
  *
  * @return #SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t oci_subnet_delete (
-    _In_ oci_subnet_key_t *subnet_key);
+sdk_ret_t oci_subnet_delete(_In_ oci_subnet_key_t *subnet_key);
 
 /**
  * @}
  */
-#endif /** __OCI_SUBNET_H_ */
+#endif /** __OCI_SUBNET_HPP__ */

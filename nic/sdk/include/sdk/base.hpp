@@ -38,7 +38,7 @@ namespace sdk {
 
 #define SDK_ASSERT_RETURN(cond, rv)                        \
 do {                                                       \
-    if (!(cond)) {                                         \
+    if (unlikely(!(cond))) {                               \
         SDK_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
         __ASSERT__(FALSE);                                 \
         return rv;                                         \
@@ -47,7 +47,7 @@ do {                                                       \
 
 #define SDK_ASSERT_RETURN_VOID(cond)                       \
 do {                                                       \
-    if (!(cond)) {                                         \
+    if (unlikely(!(cond))) {                               \
         SDK_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
         __ASSERT__(FALSE);                                 \
         return;                                            \
@@ -56,7 +56,7 @@ do {                                                       \
 
 #define SDK_ASSERT_GOTO(cond, label)                       \
 do {                                                       \
-    if (!(cond)) {                                         \
+    if (unlikely(!(cond))) {                               \
         SDK_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
         __ASSERT__(FALSE);                                 \
         goto label;                                        \
@@ -67,7 +67,15 @@ do {                                                       \
 
 #define SDK_ABORT(cond)                                    \
 do {                                                       \
-    if (!(cond)) {                                         \
+    if (unlikely(!(cond))) {                               \
+        abort();                                           \
+    }                                                      \
+} while (FALSE)
+
+#define SDK_ABORT_TRACE(cond, args...)                     \
+do {                                                       \
+    if (unlikely(!(cond))) {                               \
+        SDK_TRACE_ERR(args);                               \
         abort();                                           \
     }                                                      \
 } while (FALSE)

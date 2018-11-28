@@ -9,17 +9,8 @@
 #if !defined (__VCN_HPP_)
 #define __VCN_HPP_
 
-#include "nic/sdk/include/sdk/types.hpp"
-#include "nic/sdk/include/sdk/slab.hpp"
-#include "nic/sdk/include/sdk/indexer.hpp"
-#include "nic/sdk/include/sdk/ht.hpp"
+#include "nic/hal/apollo/api/api.hpp"
 #include "nic/hal/apollo/include/api/oci_vcn.hpp"
-
-using sdk::lib::ht;
-using sdk::lib::ht_ctxt_t;
-using sdk::lib::indexer;
-using sdk::lib::slab;
-using sdk::lib::hash_algo;
 
 namespace api {
 
@@ -68,7 +59,9 @@ public:
      * @param[in] vcn_key VCN key information
      * @return #SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t vcn_delete(_In_ oci_vcn_key_t *vcn_key);
+    sdk_ret_t vcn_delete(_In_ oci_vcn_key_t *key);
+
+    vcn_t *vcn_get(_In_ oci_vcn_key_t *key);
 
     /**
      * @brief   return vcn slab

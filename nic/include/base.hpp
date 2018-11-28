@@ -110,7 +110,6 @@ do {                                                       \
     }                                                      \
 } while (FALSE)
 
-
 #define HAL_ASSERT_RETURN(cond, rv)                        \
 do {                                                       \
     if (unlikely(!(cond))) {                               \

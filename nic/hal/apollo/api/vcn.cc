@@ -3,7 +3,7 @@
  *
  * @file    vcn.cc
  *
- * @brief   This file deals with OCI VCN API handling
+ * @brief   This file deals with OCI vcn API handling
  */
 
 #include <stdio.h>
@@ -15,7 +15,7 @@
 namespace api {
 
 /**
- * @defgroup OCI_VCN_DB - VCN database functionality
+ * @defgroup OCI_VCN_DB - vcn database functionality
  * @ingroup OCI_VCN
  * @{
  */
@@ -46,9 +46,9 @@ vcn_state::~vcn_state() {
 }
 
 /**
- * @brief Handle VCN create message
+ * @brief handle vcn create message
  *
- * @param[in] vcn VCN information
+ * @param[in] vcn vcn information
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
@@ -62,9 +62,9 @@ vcn_state::vcn_create(_In_ oci_vcn_t *oci_vcn) {
 }
 
 /**
- * @brief Handle VCN delete API
+ * @brief handle vcn delete API
  *
- * @param[in] vcn_key VCN key information
+ * @param[in] vcn_key vcn key information
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
@@ -80,9 +80,9 @@ vcn_state::vcn_delete(_In_ oci_vcn_key_t *vcn_key) {
 }
 
 /**
- * @brief Add VCN to database
+ * @brief add vcn to database
  *
- * @param[in] vcn VCN
+ * @param[in] vcn vcn
  */
 sdk_ret_t
 vcn_state::vcn_add_to_db(vcn_t *vcn) {
@@ -91,9 +91,9 @@ vcn_state::vcn_add_to_db(vcn_t *vcn) {
 }
 
 /**
- * @brief Delete VCN from database
+ * @brief delete vcn from database
  *
- * @param[in] vcn_key VCN key
+ * @param[in] vcn_key vcn key
  */
 vcn_t *
 vcn_state::vcn_del_from_db(oci_vcn_key_t *vcn_key) {
@@ -101,9 +101,9 @@ vcn_state::vcn_del_from_db(oci_vcn_key_t *vcn_key) {
 }
 
 /**
- * @brief Lookup VCN in database
+ * @brief Lookup vcn in database
  *
- * @param[in] vcn_key VCN key
+ * @param[in] vcn_key vcn key
  */
 vcn_t *
 vcn_state::vcn_find(oci_vcn_key_t *vcn_key) const {
@@ -111,9 +111,9 @@ vcn_state::vcn_find(oci_vcn_key_t *vcn_key) const {
 }
 
 /**
- * @brief Allocate VCN structure
+ * @brief Allocate vcn structure
  *
- * @return Pointer to the allocated internal VCN, NULL if no memory
+ * @return Pointer to the allocated internal vcn, NULL if no memory
  */
 vcn_t *
 vcn_state::vcn_alloc(void) {
@@ -121,10 +121,10 @@ vcn_state::vcn_alloc(void) {
 }
 
 /**
- * @brief Initialize internal VCN structure
+ * @brief Initialize internal vcn structure
  *
- * @param[in] vcn VCN structure to store the state
- * @param[in] oci_vcn VCN specific information
+ * @param[in] vcn vcn structure to store the state
+ * @param[in] oci_vcn vcn specific information
  */
 sdk_ret_t
 vcn_state::vcn_init(vcn_t *vcn, oci_vcn_t *oci_vcn) {
@@ -139,9 +139,9 @@ vcn_state::vcn_init(vcn_t *vcn, oci_vcn_t *oci_vcn) {
 }
 
 /**
- * @brief Allocate and initialize internal VCN structure
+ * @brief Allocate and initialize internal vcn structure
  *
- * @return Pointer to the allocated and initialized internal VCN,
+ * @return Pointer to the allocated and initialized internal vcn,
  *         NULL if no memory
  */
 vcn_t *
@@ -156,9 +156,9 @@ vcn_state::vcn_alloc_init(oci_vcn_t *oci_vcn) {
 }
 
 /**
- * @brief Cleanup state maintained for given VCN
+ * @brief cleanup state maintained for given vcn
  *
- * @param[in] vcn VCN
+ * @param[in] vcn vcn
  */
 void
 vcn_state::vcn_cleanup(vcn_t *vcn) {
@@ -168,9 +168,9 @@ vcn_state::vcn_cleanup(vcn_t *vcn) {
 }
 
 /**
- * @brief Free VCN structure
+ * @brief Free vcn structure
  *
- * @param[in] vcn VCN
+ * @param[in] vcn vcn
  */
 void
 vcn_state::vcn_free(vcn_t *vcn) {
@@ -178,9 +178,9 @@ vcn_state::vcn_free(vcn_t *vcn) {
 }
 
 /**
- * @brief Uninitialize and free internal VCN structure
+ * @brief Uninitialize and free internal vcn structure
  *
- * @param[in] vcn VCN
+ * @param[in] vcn vcn
  */
 void
 vcn_state::vcn_delete(_In_ vcn_t *vcn) {
@@ -192,9 +192,15 @@ vcn_state::vcn_delete(_In_ vcn_t *vcn) {
 /** @} */ // end of OCI_VCN_DB
 
 /**
- * @brief Create VCN
+ * @defgroup OCI_VCN_API - First level of SUBNET API handling
+ * @ingroup OCI_VCN
+ * @{
+ */
+
+/**
+ * @brief create vcn
  *
- * @param[in] vcn VCN information
+ * @param[in] vcn vcn information
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
@@ -210,9 +216,9 @@ oci_vcn_create (_In_ oci_vcn_t *vcn)
 }
 
 /**
- * @brief Delete VCN
+ * @brief delete vcn
  *
- * @param[in] vcn_key VCN key
+ * @param[in] vcn_key vcn key
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t

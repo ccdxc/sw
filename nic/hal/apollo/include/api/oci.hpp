@@ -89,7 +89,7 @@ typedef uint32_t  oci_vcn_id_t;
 typedef uint32_t  oci_subnet_id_t;
 typedef uint16_t  oci_vnic_id_t;
 typedef uint32_t  oci_rule_id_t;
-typedef uint32_t  oci_rsrc_pool_id_t;
+typedef uint32_t  oci_rsc_pool_id_t;
 typedef uint32_t  oci_epoch_t;
 
 /**
