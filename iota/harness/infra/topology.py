@@ -52,6 +52,8 @@ class Node(object):
             return topo_pb2.PERSONALITY_MELLANOX
         elif nic_type == 'broadcom':
             return topo_pb2.PERSONALITY_BROADCOM
+        elif nic_type == 'intel':
+            return topo_pb2.PERSONALITY_INTEL
         else:
             Logger.error("Unknown NIC Type : %s" % nic_type)
             sys.exit(1)
@@ -76,11 +78,15 @@ class Node(object):
         return self.__role == topo_pb2.PERSONALITY_MELLANOX
     def IsBroadcom(self):
         return self.__role == topo_pb2.PERSONALITY_BROADCOM
+    def IsIntel(self):
+        return self.__role == topo_pb2.PERSONALITY_INTEL
+    def IsThirdParty(self):
+        return self.IsMellanox() or self.IsBroadcom() or self.IsIntel()
     def IsWorkloadNode(self):
-        return self.IsNaples() or self.IsMellanox() or self.IsBroadcom()
+        return self.__role != topo_pb2.PERSONALITY_VENICE
 
     def UUID(self):
-        if self.IsMellanox() or self.IsBroadcom():
+        if self.IsThirdParty():
             return self.Name()
         return self.__uuid
 
@@ -122,7 +128,7 @@ class Node(object):
         else:
             msg.naples_config.control_intf = self.__control_intf
             msg.naples_config.control_ip = str(self.__control_ip)
-            if not self.IsNaplesHw() and not (self.IsMellanox() or self.IsBroadcom()):
+            if not self.IsNaplesHw() and not self.IsThirdParty():
                 msg.image = os.path.basename(testsuite.GetImages().naples)
             for data_intf in self.__data_intfs:
                 msg.naples_config.data_intfs.append(data_intf)
@@ -150,17 +156,19 @@ class Node(object):
         Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
         if self.IsMellanox():
             self.__host_intfs = resp.mellanox_config.host_intfs
-        if self.IsBroadcom():
+        elif self.IsBroadcom():
             self.__host_intfs = resp.broadcom_config.host_intfs
         elif self.IsNaples():
             self.__host_intfs = resp.naples_config.host_intfs
+        elif self.IsIntel():
+            self.__host_intfs = resp.intel_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
 
         if len(self.__host_intfs) == 0:
             if GlobalOptions.dryrun:
                 self.__host_intfs = ["dummy_intf0", "dummy_intf1"]
             else:
-                Logger.error("Interfaces not found on Host: ", self.__ip_addresss)
+                Logger.error("Interfaces not found on Host: ", self.MgmtIpAddress())
                 if self.IsNaples():
                     Logger.error("Check if IONIC driver is installed.")
                 sys.exit(1)

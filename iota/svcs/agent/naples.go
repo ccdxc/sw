@@ -33,6 +33,7 @@ const (
 	mellanoxPciDevicePrefix = "Mellanox Technologies"
 	broadcomPciDevicePrefix = "Broadcom Limited"
 	bareMetalWorkloadName   = "bareMetalWorkload"
+	intelPciDevicePrefix = "Intel Corporation Ethernet Controller X710"
 )
 
 var (
@@ -75,6 +76,10 @@ type mellanoxNode struct {
 }
 
 type broadcomNode struct {
+	dataNode
+}
+
+type intelNode struct {
 	dataNode
 }
 
@@ -891,6 +896,40 @@ func (brcm *broadcomNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
 		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
 		NodeInfo: &iota.Node_BroadcomConfig{BroadcomConfig: in.GetBroadcomConfig()}}, nil
+}
+
+//Init initalize node type
+func (intel *intelNode) Init(in *iota.Node) (resp *iota.Node, err error) {
+
+	intel.init(in)
+	intel.iotaNode.name = in.GetName()
+
+	if in.GetIntelConfig() == nil {
+		in.NodeInfo = &iota.Node_IntelConfig{IntelConfig: &iota.IntelConfig{}}
+	}
+
+	in.GetIntelConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(intelPciDevicePrefix)
+
+	intel.logger.Printf("Intel host interfaces : %v", in.GetIntelConfig().HostIntfs)
+	for _, intf := range in.GetIntelConfig().HostIntfs {
+		cmd := []string{"ifconfig", intf, "up"}
+		_, stdout, err := Utils.Run(cmd, 0, false, true, nil)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to bring interface %s up err : %s", intf, stdout)
+			intel.logger.Errorf(msg)
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		}
+	}
+
+	/* Finally add entity type */
+	if err := intel.addNodeEntities(in); err != nil {
+		intel.logger.Error("Adding node entities failed")
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
+	}
+
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
+		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
+		NodeInfo: &iota.Node_IntelConfig{IntelConfig: in.GetIntelConfig()}}, nil
 }
 
 func (dnode *dataNode) GetWorkloadMsgs() []*iota.Workload {
