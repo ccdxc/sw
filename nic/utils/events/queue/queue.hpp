@@ -21,6 +21,9 @@ public:
     // return the total number of writes performed on the underlying shared memory
     uint64_t get_total_writes();
 
+    // return the name of the underlying shared memory
+    const char* get_name();
+
     void print_queue_stats();
 private:
     shm* shm_;  // shared memory

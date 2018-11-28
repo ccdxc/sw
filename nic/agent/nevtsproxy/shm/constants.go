@@ -10,7 +10,7 @@ import (
 
 // GetSharedMemoryDirectory returns the shared memory directory used at the c++ events recorder library.
 func GetSharedMemoryDirectory() string {
-	return "/dev/shm/pen-events"
+	return "/dev/shm"
 }
 
 // GetSharedConstant gets a shared constant using cgo.

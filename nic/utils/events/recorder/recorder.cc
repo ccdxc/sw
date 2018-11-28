@@ -2,6 +2,7 @@
 #include "nic/utils/events/recorder/constants.h"
 #include "nic/utils/events/queue/queue.hpp"
 #include "gen/proto/events.pb.h"
+#include "nic/sdk/include/sdk/logger.hpp"
 #include <google/protobuf/any.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <stdio.h>
@@ -22,7 +23,7 @@ events_recorder *recorder;
 int events_recorder::init(const char* shm_name, int shm_size, const char *component, const ::google::protobuf::EnumDescriptor* event_types_descriptor)
 {
     if (!event_types_descriptor) {
-        printf("event_types descriptor is required\n");
+        SDK_TRACE_ERR("events_recorder {%s}: event_types enum descriptor is required", shm_name);
         return -1;
     }
 
@@ -31,27 +32,15 @@ int events_recorder::init(const char* shm_name, int shm_size, const char *compon
             shm_size = SHM_SIZE;
         }
 
-        std::string abs_shm_name = shm_name; // /dev/shm/{shm_name}
-
-        if (shm_name[0] != '/') {            // /dev/shm/pen-events/{shm_name}
-            std::string dir_path = "/dev/shm" + std::string(SHM_DIR);
-
-            // create /dev/shm/{SHM_DIR} if not exists
-            DIR *dir;
-            if ((dir = opendir(dir_path.c_str())) == nullptr && errno == ENOENT) { // not exists
-                int ret_val = mkdir(SHM_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); //0775
-                if (ret_val == -1) {
-                    return ret_val;
-                }
-            }
-
-            abs_shm_name =  std::string(SHM_DIR) + shm_name;
+        std::string abs_shm_name = shm_name;
+        if (shm_name[0] != '/') {
+            abs_shm_name =  std::string("/") + shm_name; // /dev/shm/{shm_name}
         }
 
         // create events queue
         events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(), shm_size, SHM_BUF_SIZE);
         if (!evts_queue) {
-            printf("failed to create events queue\n");
+            SDK_TRACE_ERR("events_recorder {%s}: failed to create events queue", shm_name);
             return -1;
         }
 
@@ -77,14 +66,14 @@ void events_recorder::deinit()
 int events_recorder::event(events::Severity severity, const int type, const char* kind, const ::google::protobuf::Message& key, const char* msg...)
 {
     if (!recorder) {
-        printf("recorder not created\n");
+        SDK_TRACE_ERR("events_recorder: recorder not created");
         return -1;
     }
 
     // this ensures the event type belongs to given descriptor
     const std::string event_type_str = ::google::protobuf::internal::NameOfEnum(recorder->event_types_descriptor, type);
     if (event_type_str.empty()) {
-        printf("event type does not exist: %d\n", type);
+        SDK_TRACE_ERR("events_recorder {%s}: event type {%d} does not exist", recorder->queue_->get_name(), type);
         return -1;
     }
 
@@ -121,7 +110,7 @@ int events_recorder::write_event(events::Event evt)
         return recorder->queue_->write_msg_size(buf, size);
     }
 
-    printf("requested buffer size (%d) not available\n", size);
+    SDK_TRACE_ERR("events_recorder {%s}: requested buffer size {%d} not available", recorder->queue_->get_name(), size);
     return -1;
 }
 

@@ -53,7 +53,7 @@ func TestReader(t *testing.T) {
 
 	// spin up multiple writers; each writer will create a shm of it's own and start writing events.
 	for i := 0; i < numWriters; i++ {
-		shmPath := filepath.Join(dir, uuid.NewV4().String())
+		shmPath := filepath.Join(dir, uuid.NewV4().String()) + ".events"
 		shmPathToIndex[shmPath] = i
 
 		sm, err := shm.CreateSharedMem(shmPath, shmSize)

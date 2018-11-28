@@ -2,6 +2,7 @@ package reader
 
 import (
 	"os"
+	"regexp"
 	"sync"
 	"time"
 
@@ -99,7 +100,8 @@ func (r *Reader) watchFileEvents() {
 				return
 			}
 
-			if event.Op == fsnotify.Create { // on file create event
+			// on file create event, start reader on those file that end with ".events"
+			if event.Op == fsnotify.Create {
 				// TODO: add retry
 				fs, err := os.Stat(event.Name)
 				if err != nil {
@@ -107,7 +109,13 @@ func (r *Reader) watchFileEvents() {
 					continue
 				}
 
-				if fs.Mode().IsRegular() {
+				ok, err := regexp.MatchString("^*.events$", fs.Name())
+				if err != nil {
+					log.Errorf("failed to match the file name with pattern {^*.events$} , err: %v", err)
+					continue
+				}
+
+				if fs.Mode().IsRegular() && ok {
 					r.startEvtsReader(event.Name)
 				}
 			}

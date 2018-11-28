@@ -55,6 +55,9 @@ public:
 
     // initialize/create an IPC instance
     ipc *factory(void);
+
+    // return the shared memory name
+    const char *get_name();
 private:
     int fd_;            // file descriptor of shared mem.
     void *mmap_addr_;   // memory mapped address

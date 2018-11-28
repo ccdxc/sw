@@ -9,6 +9,7 @@
 #include <errno.h>
 #include "nic/utils/ipc/ipc.hpp"
 #include "nic/utils/ipc/constants.h"
+#include "nic/sdk/include/sdk/logger.hpp"
 
 #define __STDC_FORMAT_MACROS
 #define ALIGN_64_MASK 0xfffffffffffffff8
@@ -19,15 +20,21 @@
 // sets up shared memory of given size, name, buffer size, etc.
 shm *shm::setup_shm(const char* name, int size, int num_inst, int buf_size)
 {
-    if (num_inst == 0 || buf_size >= size) {
+    if (num_inst == 0) {
+        SDK_TRACE_ERR("ipc {%s}: number of ipc instances must be >0", name);
         return nullptr;
     }
 
-    shm *inst = new(shm);
+    if (buf_size >= size) {
+        SDK_TRACE_ERR("ipc {%s}: buffer size should be less than the shared memory size", name);
+        return nullptr;
+    }
+
+    SDK_TRACE_PRINT("ipc {%s}: setting up shared memory with size: %d", name, size);
 
     int fd = shm_open(name, O_RDWR | O_CREAT, 0666);
     if (fd < 0) {
-        printf("err: failed to open shared memory: %d\n", errno);
+        SDK_TRACE_ERR("ipc {%s}: failed to create shared memory, errno: %d", name, errno);
         return nullptr;
     }
 
@@ -39,9 +46,12 @@ shm *shm::setup_shm(const char* name, int size, int num_inst, int buf_size)
 
     void *mmap_addr = mmap(0, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     if (mmap_addr == MAP_FAILED) {
+        SDK_TRACE_ERR("ipc {%s}: mmap failed", name);
         close(fd);
         return nullptr;
     }
+
+    shm *inst = new(shm);
 
     inst->fd_         = fd;
     inst->mmap_addr_  = mmap_addr;
@@ -71,6 +81,7 @@ void shm::tear_down_shm(void)
 ipc *shm::factory(void)
 {
     if (this->inst_count_ == this->max_inst_) {
+        SDK_TRACE_ERR("ipc: 0 instances left on the shared memory");
         return NULL;
     }
 
@@ -81,6 +92,12 @@ ipc *shm::factory(void)
     inst->init(addr, this->inst_count_, ipc_size, this->buf_size_);
     this->inst_count_++;
     return inst;
+}
+
+// returns the shared memory name
+const char *shm::get_name()
+{
+    return this->name_;
 }
 
 // initializes the ipc instance with defaults
@@ -108,6 +125,7 @@ uint8_t *ipc::get_buffer(int size)
     uint32_t offset;
 
     if (get_avail_size(*this->write_index_) == 0) {
+        SDK_TRACE_ERR("ipc: shm full, cannot get a buffer of requested size:", size);
         *this->err_count_ = *this->err_count_ + 1;
         return NULL;
     }

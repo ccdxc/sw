@@ -54,6 +54,12 @@ uint64_t events_queue::get_total_writes()
     return this->ipc_->get_total_writes();
 }
 
+// returns the name of the underlying shared memory
+const char* events_queue::get_name()
+{
+    return this->shm_->get_name();
+}
+
 // print queue stats (reader, writer indices, num buffers, etc.)
 void events_queue::print_queue_stats()
 {
@@ -61,3 +67,4 @@ void events_queue::print_queue_stats()
         this->ipc_->print_OVH_data();
     }
 }
+
