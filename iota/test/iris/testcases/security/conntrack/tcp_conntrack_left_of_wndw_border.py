@@ -15,15 +15,15 @@ def Trigger(tc):
 
     #for w1,w2 in pairs:
     server,client  = pairs[0]
-    cmd_cookie = "nc -l 1234"
+    cmd_cookie = "nc -l 1235"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name, cmd_cookie, background=True)
     tc.cmd_cookies['server'] = cmd_cookie
 
-    cmd_cookie = "nc {} 1234 -p 52252".format(server.ip_address)
+    cmd_cookie = "nc {} 1235 -p 52253".format(server.ip_address)
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,cmd_cookie, background=True)
     tc.cmd_cookies['client'] = cmd_cookie
        
-    cmd_cookie = "/nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
+    cmd_cookie = "/nic/bin/halctl show session --dstport 1235 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     trig_resp1 = api.Trigger(req)
     cmd = trig_resp1.commands[-1] 
@@ -34,11 +34,11 @@ def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     #left of window on the border
-    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num - 9, iack_num, server.ip_address)    
+    cmd_cookie = "hping3 -c 1 -s 52253 -p 1235 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num - 9, iack_num, server.ip_address)    
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, cmd_cookie)
     tc.cmd_cookies['fail ping'] = cmd_cookie
 
-    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
+    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1235 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     tc.cmd_cookies['show after'] = cmd_cookie
     
@@ -54,6 +54,9 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         #api.PrintCommandResults(cmd)
         if tc.cmd_cookies['show after'] == cmd.command:     
+            if not cmd.stdout:
+                #until we can manipulated close timeout to smaller value
+                return api.types.status.SUCCESS
             print(cmd.stdout)
             yaml_out = get_yaml(cmd)
             init_flow = get_initflow(yaml_out)

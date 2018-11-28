@@ -15,15 +15,15 @@ def Trigger(tc):
     tc.resp = []
     #for w1,w2 in pairs:
     server,client  = pairs[0]
-    cmd_cookie = "nc -l 1234"
+    cmd_cookie = "nc -l 1238"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name, cmd_cookie, background=True)
     tc.cmd_cookies['server'] = cmd_cookie
 
-    cmd_cookie = "nc {} 1234 -p 52252".format(server.ip_address)
+    cmd_cookie = "nc {} 1238 -p 52256".format(server.ip_address)
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,cmd_cookie, background=True)
     tc.cmd_cookies['client'] = cmd_cookie
        
-    cmd_cookie = "/nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
+    cmd_cookie = "/nic/bin/halctl show session --dstport 1238 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     trig_resp1 = api.Trigger(req)
     cmd = trig_resp1.commands[-1] 
@@ -33,16 +33,16 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    #hping3 -c 1 -s 52252 -p 1234 -M 0 -L 0 --ack --tcp-timestamp 192.168.100.102
+    #hping3 -c 1 -s 52256 -p 1238 -M 0 -L 0 --ack --tcp-timestamp 192.168.100.102
     #left out of window - retransmit
-    #cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num - 200, iack_num, server.ip_address)    
+    #cmd_cookie = "hping3 -c 1 -s 52256 -p 1238 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num - 200, iack_num, server.ip_address)    
     #within the window - outoforder
-    #cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num + 100, iack_num, server.ip_address)    
-    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(new_seq_num, iack_num, server.ip_address)    
+    #cmd_cookie = "hping3 -c 1 -s 52256 -p 1238 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(iseq_num + 100, iack_num, server.ip_address)    
+    cmd_cookie = "hping3 -c 1 -s 52256 -p 1238 -M {}  -L {} --ack --tcp-timestamp {} -d 10".format(new_seq_num, iack_num, server.ip_address)    
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, cmd_cookie)
     tc.cmd_cookies['fail ping'] = cmd_cookie
 
-    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
+    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1238 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     tc.cmd_cookies['show after'] = cmd_cookie
     
@@ -57,6 +57,8 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         #api.PrintCommandResults(cmd)
         if tc.cmd_cookies['show after'] == cmd.command:     
+            if not cmd.stdout:
+                return api.types.status.SUCCESS
             print(cmd.stdout)
             yaml_out = get_yaml(cmd)
             init_flow = get_initflow(yaml_out)

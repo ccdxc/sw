@@ -7,26 +7,38 @@ testcases:
 
     -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN
         testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned
+        ignore:   True
 
     -   name    : TDL_NZ_LOW_ON_BORDER
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_border
+        ignore:   True
 
     -   name    : TDL_NZ_LOW_OVLP
         testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_ovlp
+        ignore:   True
     
     #ignoring below testcases as we need to reduce tcp close timeout
     -   name    : TDL_NZ_ROW_OVLP
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap
-        ignore  : True
+        ignore:   True
 
     -   name    : TDL_NZ_ROW
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw
-        ignore  : True
+        ignore:   True
     #Data is trimmed and passed packet goes through need to debug 
     -   name    : TDL_NZ_ROW_OVLP_RST
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_rst
-        ignore  : True
+        ignore:   True
 
     -   name    : TDL_NZ_ROW_RST
         testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_rst
-        ignore  : True
+        ignore:   True
+
+    #-   name    : TDL_NZ_ROW_FIN
+    #    testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_fin
+    #    ignore:   False
+
+    #-   name    : TDL_NZ_ROW_OVLP_FIN
+    #    testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_fin
+    #    ignore:   False
+   

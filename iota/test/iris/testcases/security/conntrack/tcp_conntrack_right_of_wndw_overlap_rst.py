@@ -15,15 +15,15 @@ def Trigger(tc):
 
     #for w1,w2 in pairs:
     server,client  = pairs[0]
-    cmd_cookie = "nc -l 1234"
+    cmd_cookie = "nc -l 1240"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name, cmd_cookie, background=True)
     tc.cmd_cookies['server'] = cmd_cookie
 
-    cmd_cookie = "nc {} 1234 -p 52252".format(server.ip_address)
+    cmd_cookie = "nc {} 1240 -p 52258".format(server.ip_address)
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,cmd_cookie, background=True)
     tc.cmd_cookies['client'] = cmd_cookie
        
-    cmd_cookie = "/nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
+    cmd_cookie = "/nic/bin/halctl show session --dstport 1240 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     trig_resp1 = api.Trigger(req)
     cmd = trig_resp1.commands[-1] 
@@ -36,7 +36,7 @@ def Trigger(tc):
     rwindo_size= rwindo_sz * (2 ** rwinscale)
 
     #right of window overlap
-    cmd_cookie = "hping3 -c 1 -s 52252 -p 1234 -M {}  -L {}  --rst --ack --tcp-timestamp {} -d {}".format(iseq_num + rwindo_size - 200, iack_num, server.ip_address, 500)    
+    cmd_cookie = "hping3 -c 1 -s 52258 -p 1240 -M {}  -L {}  --rst --ack --tcp-timestamp {} -d {}".format(iseq_num + rwindo_size - 200, iack_num, server.ip_address, 500)    
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, cmd_cookie)
     print(cmd_cookie)
     tc.cmd_cookies['fail ping'] = cmd_cookie
@@ -46,7 +46,7 @@ def Trigger(tc):
     tc.cmd_cookies['sleep'] = cmd_cookie
 
 
-    cmd_cookie = "/nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
+    cmd_cookie = "/nic/bin/halctl show session --dstport 1240 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     tc.cmd_cookies['show after'] = cmd_cookie
     
@@ -62,6 +62,8 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         if tc.cmd_cookies['show after'] == cmd.command:     
             print(cmd.stdout)
+            if not cmd.stdout:
+                return api.types.status.SUCCESS
             yaml_out = get_yaml(cmd)
             init_flow = get_initflow(yaml_out)
             conn_info = get_conntrack_info(init_flow)

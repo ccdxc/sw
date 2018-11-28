@@ -22,8 +22,8 @@ def get_conntrackinfo(cmd):
             print('resp flow: seq_num {} ack_num {} iwindosz {} iwinscale {}'.format(rseq_num, rack_num, rwindosz, rwinscale))
             return iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindosz, rwinscale
         else:
-            return 0,0,0,0,0,0
-    return 0,0,0,0,0,0
+            return 0,0,0,0,0,0,0,0
+    return 0,0,0,0,0,0,0,0
 
 def get_yaml(cmd):
     yaml_out = yaml.load_all(cmd.stdout)
@@ -31,14 +31,42 @@ def get_yaml(cmd):
         if data is not None:
             return data
 
-def get_respflow(data):
-    return data['spec']['responderflow']
+def get_flowkey(flow):
+    return flow['flowkey']
 
-def get_initflow(data):
-    return data['spec']['initiatorflow']
+def get_flowinfo(flow):
+    return flow['flowdata']['flowinfo']
+
 
 def get_conntrack_info(flow):
     return flow['flowdata']['conntrackinfo']
 
 def get_exceptions(conn_info):
     return conn_info['exceptions']
+
+def get_flowstats(stats):
+    return stats['initiatorflowstats']
+
+def get_respflow(data):
+    return data['spec']['responderflow']
+
+def get_initflow(data):
+    return data['spec']['initiatorflow']
+    
+def get_initflowkey(data):
+    return get_flowkey(get_initflow(data))
+
+def get_respflowkey(data):
+    return get_flowkey(get_respflow(data))
+
+def get_initflowinfo(data):
+    return get_flowinfo(get_initflow(data))
+
+def get_respflowinfo(data):
+    return get_flowinfo(get_respflow(data))
+
+def get_initflowstats(data):
+    return get_flowstats(data['stats'])
+
+def get_respflowstats(data):
+    return get_flowstats(data['stats'])

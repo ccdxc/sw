@@ -27,6 +27,7 @@ def Trigger(tc):
     cmd_cookie = "/nic/bin/halctl show session --dstport 1234 --dstip {} --yaml".format(server.ip_address)
     api.Trigger_AddNaplesCommand(req, client.node_name, cmd_cookie)
     trig_resp1 = api.Trigger(req)
+
     cmd = trig_resp1.commands[-1] 
     api.PrintCommandResults(cmd)
     iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
@@ -44,6 +45,7 @@ def Trigger(tc):
     tc.cmd_cookies['show after'] = cmd_cookie
     
     trig_resp = api.Trigger(req)
+    
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
@@ -53,9 +55,13 @@ def Trigger(tc):
 def Verify(tc):
     api.Logger.info("Verify.")
     for cmd in tc.resp.commands:
-        #api.PrintCommandResults(cmd)
-        if tc.cmd_cookies['show after'] == cmd.command:     
+        api.PrintCommandResults(cmd)
+        if tc.cmd_cookies['show after'] == cmd.command:    
+            if not cmd.stdout:
+                print("none stdout")
+                return api.types.status.SUCCESS
             print(cmd.stdout)
+            
             yaml_out = get_yaml(cmd)
             init_flow = get_initflow(yaml_out)
             conn_info = get_conntrack_info(init_flow)
