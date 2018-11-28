@@ -661,12 +661,13 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
     uint32_t                                hash_idx = 0;
     l2seg_t                                 *infra_pi_l2seg = NULL;
     input_properties_swkey_t                key;
-    input_properties_otcam_swkey_mask_t     *key_mask = NULL;
+    input_properties_otcam_swkey_mask_t     key_mask;
     input_properties_actiondata             data;
     bool                                    direct_to_otcam = false;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
+    memset(&key_mask, 0, sizeof(key_mask));
 
     HAL_TRACE_DEBUG("Programming Input Props table ...");
 
@@ -674,12 +675,10 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
     // to avoid using tunnel_vnid and tunnel_type as key in
     // input_properties table for classic_nic mode.
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
-        key_mask = (input_properties_otcam_swkey_mask_t *)HAL_CALLOC(HAL_MEM_ALLOC_INP_PROP_KEY_MASK,
-                              sizeof(input_properties_otcam_swkey_mask_t));
-        key_mask->capri_intrinsic_lif_mask = 0xFFFF;
-        key_mask->vlan_tag_vid_mask = 0xFFFF;
-        key_mask->vlan_tag_valid_mask = 0xFF;
-        key_mask->entry_inactive_input_properties_mask = 0xFF;
+        key_mask.capri_intrinsic_lif_mask = 0xFFFF;
+        key_mask.vlan_tag_vid_mask = 0xFFFF;
+        key_mask.vlan_tag_valid_mask = 0xFF;
+        key_mask.entry_inactive_input_properties_mask = 0xFF;
         direct_to_otcam = true;
     }
 
@@ -726,10 +725,10 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
         if (is_upgrade) {
             sdk_ret = inp_prop_tbl->insert_withid(&key, &data,
                                                   l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id],
-                                                  key_mask);
+                                                  &key_mask);
         } else {
             // Insert
-            sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx, key_mask,
+            sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx, &key_mask,
                                            direct_to_otcam);
             l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id] = hash_idx;
         }
@@ -760,11 +759,11 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
         if (is_upgrade) {
             sdk_ret = inp_prop_tbl->insert_withid(&key, &data,
                                                   l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id],
-                                                  key_mask);
+                                                  &key_mask);
         } else {
             // Insert
             sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
-                                           key_mask, direct_to_otcam);
+                                           &key_mask, direct_to_otcam);
             // Add to priority array
             l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id] = hash_idx;
         }
@@ -794,11 +793,11 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
         if (is_upgrade) {
             sdk_ret = inp_prop_tbl->insert_withid(&key, &data,
                                                   l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id],
-                                                  key_mask);
+                                                  &key_mask);
         } else {
             // Insert
             sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
-                                           key_mask, direct_to_otcam);
+                                           &key_mask, direct_to_otcam);
             l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id] = hash_idx;
         }
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -821,11 +820,8 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
                         uplink_ifpc_id);
     }
 
-    if (key_mask) {
-        HAL_FREE(HAL_MEM_ALLOC_INP_PROP_KEY_MASK, key_mask);
-    }
-
 end:
+
     return ret;
 }
 
