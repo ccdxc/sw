@@ -73,14 +73,19 @@ enum ionic_mr_flags {
 	IONIC_MRF_ACCESS_MASK		= BIT(12) - 1,
 
 	/* bits that determine mr type */
+	IONIC_MRF_UKEY_EN		= BIT(13),
 	IONIC_MRF_IS_MW			= BIT(14),
 	IONIC_MRF_INV_EN		= BIT(15),
 
 	/* base flags combinations for mr types */
 	IONIC_MRF_USER_MR		= 0,
-	IONIC_MRF_PHYS_MR		= IONIC_MRF_INV_EN,
-	IONIC_MRF_MW_1			= IONIC_MRF_IS_MW,
-	IONIC_MRF_MW_2			= IONIC_MRF_IS_MW | IONIC_MRF_INV_EN,
+	IONIC_MRF_PHYS_MR		= (IONIC_MRF_UKEY_EN |
+					   IONIC_MRF_INV_EN),
+	IONIC_MRF_MW_1			= (IONIC_MRF_UKEY_EN |
+					   IONIC_MRF_IS_MW),
+	IONIC_MRF_MW_2			= (IONIC_MRF_UKEY_EN |
+					   IONIC_MRF_IS_MW |
+					   IONIC_MRF_INV_EN),
 };
 
 static inline int to_ionic_mr_flags(int access)
