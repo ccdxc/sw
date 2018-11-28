@@ -572,13 +572,18 @@
       "type": "object",
       "properties": {
         "protocol": {
-          "type": "string"
+          "type": "string",
+          "title": "Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.\nICMP Code will be fetched from its corresponding App Object"
         },
         "port": {
-          "type": "string"
+          "type": "string",
+          "title": "Port for the app"
+        },
+        "app-name": {
+          "type": "string",
+          "title": "Additional ALG configurations"
         }
-      },
-      "description": "TODO Add any ALG specfic match criteria here."
+      }
     },
     "netprotoIPSecPolicy": {
       "type": "object",

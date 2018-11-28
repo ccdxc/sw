@@ -25,8 +25,14 @@ message MatchSelector {
 
 }
 
-// TODO Add any ALG specfic match criteria here.
 message AppConfig {
+    // Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.
+    // ICMP Code will be fetched from its corresponding App Object
     string Protocol     = 1 [(gogoproto.jsontag) = "protocol,omitempty"];
+
+    // Port for the app
     string Port         = 2 [(gogoproto.jsontag) = "port,omitempty"];
+
+    // Additional ALG configurations
+    string AppName      = 3 [(gogoproto.jsontag) = "app-name,omitempty"];
 }

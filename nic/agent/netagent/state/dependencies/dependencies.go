@@ -199,6 +199,9 @@ func (s *StateDependencies) resolveObjectType(o interface{}) (api.TypeMeta, api.
 	case *netproto.SecurityProfile:
 		profile := o.(*netproto.SecurityProfile)
 		return profile.TypeMeta, profile.ObjectMeta, nil
+	case *netproto.App:
+		app := o.(*netproto.App)
+		return app.TypeMeta, app.ObjectMeta, nil
 	default:
 		log.Errorf("Invalid object type %v", o)
 		err := fmt.Errorf("invalid object type. %v", o)
@@ -285,6 +288,9 @@ func (s *StateDependencies) composeKeySelfLink(m *meta) (key, selfLink string, e
 		return
 	case "securityprofile":
 		selfLink = fmt.Sprintf("/api/security/profiles/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
+		return
+	case "app":
+		selfLink = fmt.Sprintf("/api/apps/%v/%v/%v", m.O.Tenant, m.O.Namespace, m.O.Name)
 		return
 	default:
 		log.Errorf("Invalid object type %v. Obj: %v", m.T, m.O)

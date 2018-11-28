@@ -554,6 +554,31 @@ func (ag *fakeAgent) DeleteSecurityProfile(tn, ns, name string) error {
 	return nil
 }
 
+// CreateApp creates an app. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateApp(profile *netproto.App) error {
+	return nil
+}
+
+// FindApp finds an app. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindApp(meta api.ObjectMeta) (*netproto.App, error) {
+	return nil, nil
+}
+
+// ListApp lists an app. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListApp() []*netproto.App {
+	return nil
+}
+
+// UpdateApp updates an app. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateApp(profile *netproto.App) error {
+	return nil
+}
+
+// DeleteApp deletes an app. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteApp(tn, ns, name string) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer  *rpckit.RPCServer
 	netdp       map[string]*netproto.Network

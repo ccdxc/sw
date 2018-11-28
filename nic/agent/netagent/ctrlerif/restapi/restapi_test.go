@@ -524,8 +524,31 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 
 	err = nagent.CreateSecurityProfile(&secProfile)
 	if err != nil {
-		log.Errorf("Failed to create security profile. {%v}", enic)
+		log.Errorf("Failed to create security profile. {%v}", secProfile)
 		return
+	}
+
+	app := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedApp",
+		},
+		Spec: netproto.AppSpec{
+			Protocol: []string{"udp/53"},
+			ALG: &netproto.ALG{
+				DNS: &netproto.DNS{
+					DropLargeDomainPackets: true,
+					QueryResponseTimeout:   "30s",
+				},
+			},
+		},
+	}
+
+	err = nagent.CreateApp(&app)
+	if err != nil {
+		log.Errorf("Failed to create app. %v", app)
 	}
 
 	return nil

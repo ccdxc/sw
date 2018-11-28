@@ -16,9 +16,9 @@
     "application/json"
   ],
   "paths": {
-    "/api/nat/bindings/": {
+    "/api/apps/": {
       "get": {
-        "summary": "List all NatBinding Objects",
+        "summary": "List all App Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -26,17 +26,17 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/netprotoNatBinding"
+                "$ref": "#/definitions/netprotoApp"
               }
             }
           }
         },
         "tags": [
-          "NatBinding"
+          "App"
         ]
       },
       "post": {
-        "summary": "Creates a NatBinding Object",
+        "summary": "Creates a App Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -58,18 +58,18 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoNatBinding"
+              "$ref": "#/definitions/netprotoApp"
             }
           }
         ],
         "tags": [
-          "NatBinding"
+          "App"
         ]
       }
     },
-    "/api/nat/bindings/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
+    "/api/apps/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
-        "summary": "Deletes a NatBinding Object",
+        "summary": "Deletes a App Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -104,191 +104,7 @@
           }
         ],
         "tags": [
-          "NatBinding"
-        ]
-      }
-    },
-    "/api/nat/policies/": {
-      "get": {
-        "summary": "List all NatPolicy Objects",
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/netprotoNatPolicy"
-              }
-            }
-          }
-        },
-        "tags": [
-          "NatPolicy"
-        ]
-      },
-      "post": {
-        "summary": "Creates a NatPolicy Object",
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/netprotoNatPolicy"
-            }
-          }
-        ],
-        "tags": [
-          "NatPolicy"
-        ]
-      }
-    },
-    "/api/nat/policies/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
-      "delete": {
-        "summary": "Deletes a NatPolicy Object",
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "type": "string"
-                },
-                "meta": {
-                  "$ref": "#/definitions/apiObjectMeta"
-                }
-              }
-            }
-          }
-        ],
-        "tags": [
-          "NatPolicy"
-        ]
-      }
-    },
-    "/api/nat/pools/": {
-      "get": {
-        "summary": "List all NatPool Objects",
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/netprotoNatPool"
-              }
-            }
-          }
-        },
-        "tags": [
-          "NatPool"
-        ]
-      },
-      "post": {
-        "summary": "Creates a NatPool Object",
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/netprotoNatPool"
-            }
-          }
-        ],
-        "tags": [
-          "NatPool"
-        ]
-      }
-    },
-    "/api/nat/pools/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
-      "delete": {
-        "summary": "Deletes a NatPool Object",
-        "operationId": "",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          },
-          "500": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/netprotoApiResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "type": "string"
-                },
-                "meta": {
-                  "$ref": "#/definitions/apiObjectMeta"
-                }
-              }
-            }
-          }
-        ],
-        "tags": [
-          "NatPool"
+          "App"
         ]
       }
     }
@@ -551,6 +367,35 @@
       },
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     },
+    "netprotoALG": {
+      "type": "object",
+      "properties": {
+        "dns": {
+          "$ref": "#/definitions/netprotoDNS"
+        },
+        "sip": {
+          "$ref": "#/definitions/netprotoSIP"
+        },
+        "sunrpc": {
+          "$ref": "#/definitions/netprotoRPC"
+        },
+        "ftp": {
+          "$ref": "#/definitions/netprotoFTP"
+        },
+        "msrpc": {
+          "$ref": "#/definitions/netprotoRPC"
+        },
+        "tftp": {
+          "$ref": "#/definitions/netprotoTFTP"
+        },
+        "rtsp": {
+          "$ref": "#/definitions/netprotoRTSP"
+        },
+        "icmp": {
+          "$ref": "#/definitions/netprotoICMP"
+        }
+      }
+    },
     "netprotoApiResponse": {
       "type": "object",
       "properties": {
@@ -568,324 +413,203 @@
         }
       }
     },
-    "netprotoAppConfig": {
+    "netprotoApp": {
       "type": "object",
       "properties": {
-        "protocol": {
-          "type": "string",
-          "title": "Protocol for the app. If the protocol is icmp, then the port field gets interpreted as ICMP Type.\nICMP Code will be fetched from its corresponding App Object"
+        "kind": {
+          "type": "string"
         },
-        "port": {
-          "type": "string",
-          "title": "Port for the app"
+        "api-version": {
+          "type": "string"
         },
-        "app-name": {
-          "type": "string",
-          "title": "Additional ALG configurations"
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoAppSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoAppStatus"
+        }
+      },
+      "title": "app object"
+    },
+    "netprotoAppEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "app": {
+          "$ref": "#/definitions/netprotoApp"
+        }
+      },
+      "title": "app watch event"
+    },
+    "netprotoAppEventList": {
+      "type": "object",
+      "properties": {
+        "appEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoAppEvent"
+          }
         }
       }
     },
-    "netprotoMatchSelector": {
+    "netprotoAppList": {
       "type": "object",
       "properties": {
-        "addresses": {
+        "apps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoApp"
+          }
+        }
+      },
+      "title": "list of apps"
+    },
+    "netprotoAppSpec": {
+      "type": "object",
+      "properties": {
+        "protocol": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range"
+          "title": "List of proto/port"
         },
-        "security-groups": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "Match on the security group"
+        "alg": {
+          "$ref": "#/definitions/netprotoALG",
+          "title": "ALG configuration if specified"
         },
-        "app-configs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoAppConfig"
-          },
-          "title": "Match on the App info"
+        "app-timeout": {
+          "type": "string",
+          "title": "AppTimeout is the app specific idle timeout. Specfied in pareable time, Eg: 10s, 1m30s or 1h45m15s and so on"
         }
       },
-      "title": "Common MatchSelector. ToDo Add ICMP Match criteria"
+      "title": "app spec"
     },
-    "netprotoNatBinding": {
+    "netprotoAppStatus": {
       "type": "object",
       "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/netprotoNatBindingSpec"
-        },
-        "status": {
-          "$ref": "#/definitions/netprotoNatBindingStatus"
-        }
-      }
-    },
-    "netprotoNatBindingEvent": {
-      "type": "object",
-      "properties": {
-        "event-type": {
-          "$ref": "#/definitions/apiEventType"
-        },
-        "nat-binding": {
-          "$ref": "#/definitions/netprotoNatBinding"
-        }
-      }
-    },
-    "netprotoNatBindingList": {
-      "type": "object",
-      "properties": {
-        "NatBindings": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoNatBinding"
-          }
-        }
-      },
-      "title": "list of nat bindings"
-    },
-    "netprotoNatBindingSpec": {
-      "type": "object",
-      "properties": {
-        "nat-pool": {
-          "type": "string",
-          "title": "Nat pool name from which the nat address is to allocated.\nBy default named references are scoped to the current namespace.\nShould specify namespace/poolName to allow pools to be shared across the namespaces. Required"
-        },
-        "ip-address": {
-          "type": "string",
-          "title": "Specify the IPAddress to be allocated from the nat pool. Required"
-        }
-      },
-      "description": "NatBindingSpec captures all nat binding configuration."
-    },
-    "netprotoNatBindingStatus": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64",
-          "title": "NatBinding ID in the datapath"
-        },
-        "nat-ip": {
-          "type": "string",
-          "title": "IP allocated by the datapath in the specified nat pool"
-        }
-      }
-    },
-    "netprotoNatPolicy": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/netprotoNatPolicySpec"
-        },
-        "status": {
-          "$ref": "#/definitions/netprotoNatPolicyStatus"
-        }
-      },
-      "title": "nat policy object"
-    },
-    "netprotoNatPolicyEvent": {
-      "type": "object",
-      "properties": {
-        "event-type": {
-          "$ref": "#/definitions/apiEventType"
-        },
-        "nat-policy": {
-          "$ref": "#/definitions/netprotoNatPolicy"
-        }
-      },
-      "title": "security group watch event"
-    },
-    "netprotoNatPolicyList": {
-      "type": "object",
-      "properties": {
-        "NatPolicies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoNatPolicy"
-          }
-        }
-      },
-      "title": "list of nat policies"
-    },
-    "netprotoNatPolicySpec": {
-      "type": "object",
-      "properties": {
-        "rules": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoNatRule"
-          }
-        }
-      }
-    },
-    "netprotoNatPolicyStatus": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64"
-        }
-      }
-    },
-    "netprotoNatPool": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/netprotoNatPoolSpec"
-        },
-        "status": {
-          "$ref": "#/definitions/netprotoNatPoolStatus"
-        }
-      },
-      "description": "Nat Pool Object."
-    },
-    "netprotoNatPoolEvent": {
-      "type": "object",
-      "properties": {
-        "event-type": {
-          "$ref": "#/definitions/apiEventType"
-        },
-        "natpool": {
-          "$ref": "#/definitions/netprotoNatPool"
-        }
-      },
-      "title": "nat pool watch event"
-    },
-    "netprotoNatPoolList": {
-      "type": "object",
-      "properties": {
-        "NatPools": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoNatPool"
-          }
-        }
-      },
-      "title": "list of nat pools"
-    },
-    "netprotoNatPoolSpec": {
-      "type": "object",
-      "properties": {
-        "ip-range": {
-          "type": "string",
-          "title": "Hyphen separated range of IP Addresses for the nat pool. Required"
-        }
-      },
-      "description": "NatPoolSpec captures all nat pool configuration."
-    },
-    "netprotoNatPoolStatus": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "NatBindings": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/netprotoNatPoolStatusNatBinding"
-          }
-        }
-      },
-      "title": "nat pool status"
-    },
-    "netprotoNatPoolStatusNatBinding": {
-      "type": "object",
-      "properties": {
-        "LocalAddress": {
-          "type": "string"
-        },
-        "LocalPort": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "GlobalAddress": {
-          "type": "string"
-        },
-        "GlobalPort": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "Protocol": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
-    "netprotoNatRule": {
-      "type": "object",
-      "properties": {
-        "source": {
-          "$ref": "#/definitions/netprotoMatchSelector",
-          "description": "Nat Rule From match selector."
-        },
-        "destination": {
-          "$ref": "#/definitions/netprotoMatchSelector",
-          "description": "Nat Rule To match selector."
-        },
-        "protocol": {
-          "type": "string",
-          "title": "IP Protocol"
-        },
-        "from-port": {
-          "type": "string",
-          "title": "From tcp/udp port. Can be a single port or a port range separated by a hyphen"
-        },
-        "to-port": {
-          "type": "string",
-          "title": "To tcp/udp port. Can be a single port or a port range separated by a hyphen"
-        },
-        "nat-pool": {
-          "type": "string",
-          "title": "NAT pool to use"
-        },
-        "action": {
-          "type": "string",
-          "enum": [
-            "SNAT",
-            "DNAT",
-            "SPAT",
-            "DPAT"
-          ],
-          "default": "SNAT",
-          "title": "Nat action"
-        },
-        "rule-id": {
+        "app-id": {
           "type": "string",
           "format": "uint64"
         }
       },
-      "title": "nat rule"
+      "title": "app status"
+    },
+    "netprotoDNS": {
+      "type": "object",
+      "properties": {
+        "drop-multi-question-packets": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Drop DNS Packets for multiple questions"
+        },
+        "drop-large-domain-packets": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Drop packets whose domain name \u003e 255"
+        },
+        "drop-long-label-packets": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Drop packets whose labels length \u003e 63"
+        },
+        "drop-multi-zone-packets": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Drop packets for num zones \u003e 1"
+        },
+        "max-msg-length": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Maximum allowed message length"
+        },
+        "query-response-timeout": {
+          "type": "string",
+          "title": "Timeout for query response in seconds, minutes, eg 1m, 45s"
+        }
+      },
+      "title": "DNS ALG configuration"
+    },
+    "netprotoFTP": {
+      "type": "object",
+      "properties": {
+        "allow-mismatch-ip-addresses": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Allow FTP packets with mismatched IP header address and payload"
+        }
+      },
+      "title": "FTP ALG configuration"
+    },
+    "netprotoICMP": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "title": "ICMP Code is sub-command for a given ICMP Type"
+        }
+      },
+      "title": "ICMP ALG configuration"
+    },
+    "netprotoRPC": {
+      "type": "object",
+      "properties": {
+        "program-id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "RPC Program identifier"
+        },
+        "map-entry-timeout": {
+          "type": "string",
+          "title": "Defines timeout in hours, minutes, eg 24h, 300m"
+        }
+      },
+      "title": "RPC ALG configuration for MSRPC and SunRPC"
+    },
+    "netprotoRTSP": {
+      "type": "object",
+      "title": "RTSP ALG configuration"
+    },
+    "netprotoSIP": {
+      "type": "object",
+      "properties": {
+        "media-inactivity-timeout": {
+          "type": "string",
+          "title": "Maximum timeout for a call to remain active without any media"
+        },
+        "max-call-duration": {
+          "type": "string",
+          "title": "Maximum length of call in hours, minutes, seconds, eg 1h, 15m, 45s"
+        },
+        "c-timeout": {
+          "type": "string",
+          "title": "Timeout for INVITE transaction in minutes, seconds, eg 1m, 45s"
+        },
+        "t1-timeout": {
+          "type": "string",
+          "title": "Timeout for T1 Interval in minutes, seconds, eg 1m, 45s"
+        },
+        "t4-timeout": {
+          "type": "string",
+          "title": "Timeout for T4 interval in minutes, seconds, eg 1m, 45s"
+        },
+        "dscp-code-point": {
+          "type": "integer",
+          "format": "int64",
+          "title": "DSCP traffic classification. 0 - 63"
+        }
+      },
+      "title": "SIP ALG configuration"
+    },
+    "netprotoTFTP": {
+      "type": "object",
+      "title": "TFTP ALG configuration"
     }
   }
 }

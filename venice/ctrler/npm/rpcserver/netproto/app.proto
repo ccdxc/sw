@@ -40,6 +40,8 @@ message AppSpec {
     repeated string Protocol    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "protocol,omitempty"];
     // ALG configuration if specified
     ALG             ALG         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
+    // AppTimeout is the app specific idle timeout. Specfied in pareable time, Eg: 10s, 1m30s or 1h45m15s and so on
+    string          AppTimeout  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "app-timeout,omitempty"];
 }
 
 message ALG {
@@ -50,6 +52,7 @@ message ALG {
     RPC     MSRPC   = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "msrpc,omitempty"];
     TFTP    TFTP    = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tftp,omitempty"];
     RTSP    RTSP    = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rtsp,omitempty"];
+    ICMP    ICMP    = 8 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp,omitemtpy"];
 }
 
 // DNS ALG configuration
@@ -118,6 +121,12 @@ message TFTP {
 // RTSP ALG configuration
 message RTSP {
 
+}
+
+// ICMP ALG configuration
+message ICMP {
+    // ICMP Code is sub-command for a given ICMP Type
+    uint32 Code = 1 [(gogoproto.jsontag) = "code,omitempty"];
 }
 
 // app status

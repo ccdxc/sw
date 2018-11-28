@@ -48,6 +48,8 @@ import (
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/system/ports/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "SecurityProfile"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/security/profiles/", &{{lower $crudObject}}{{title .}} )
+                        {{else if strEq $crudObject "App"}}
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/apps/", &{{lower $crudObject}}{{title .}} )
                         {{else}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}{{title .}} )
                         {{end}}
@@ -375,6 +377,28 @@ import (
                                                }
                        err := netutils.HTTPPost("http://"+agentRestURL+"/api/system/ports/", &{{lower .}}Data, &resp)
                        getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/system/ports/", &{{lower $crudObject}}List )
+
+                       {{else if strEq $crudObject "App"}}
+                                                 {{lower .}}Data := netproto.App{
+                                                     TypeMeta: api.TypeMeta{Kind: "App"},
+                                                     ObjectMeta: api.ObjectMeta{
+                                                         Tenant: "default",
+                                                         Namespace: "default",
+                                                         Name:   "test{{title .}}{{title $crudObject}}",
+                                                     },
+                                                     Spec: netproto.AppSpec{
+		                                                     ALG: &netproto.ALG {
+			                                                        DNS: &netproto.DNS{
+				                                                            DropMultiZonePackets: true,
+				                                                            DropLargeDomainPackets: true,
+				                                                            QueryResponseTimeout: "30s",
+			                                                        },
+		                                                     },
+	                                                   },
+                                                   }
+                      err := netutils.HTTPPost("http://"+agentRestURL+"/api/apps/", &{{lower .}}Data, &resp)
+                      getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/apps/", &{{lower $crudObject}}List )
+
 
                         {{else if strEq $crudObject "Tunnel"}}
                             postData := netproto.{{title $crudObject}}{
@@ -711,6 +735,40 @@ import (
                                         }
                                    }
                                    AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
+
+                                   {{else if strEq $crudObject "App"}}
+
+                                        var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
+                                        updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                          ALG: &netproto.ALG {
+                                                  DNS: &netproto.DNS{
+                                                          DropMultiZonePackets: true,
+                                                          DropLargeDomainPackets: true,
+                                                          QueryResponseTimeout: "30s",
+                                                  },
+                                          },
+                                        }
+                                        {{lower .}}Data := netproto.{{title $crudObject}}{
+                                            TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                            ObjectMeta: api.ObjectMeta{
+                                                Tenant: "default",
+                                                Name:   "preCreated{{title $crudObject}}",
+                                                Namespace: "default",
+                                            },
+                                            Spec: updated{{title $crudObject}}Spec,
+                                        }
+                                       err := netutils.HTTPPut("http://"+agentRestURL+"/api/apps/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                       AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
+
+                                       getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/apps/", &{{lower $crudObject}}List )
+                                       AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
+                                       for _, o := range {{lower $crudObject}}List{
+                                            if o.Name == "preCreated{{title $crudObject}}"{
+                                                    actual{{title $crudObject}}Spec = o.Spec
+                                                    break
+                                            }
+                                       }
+                                       AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
 
                                    {{else if strEq $crudObject "SecurityProfile"}}
 
@@ -1070,6 +1128,28 @@ import (
                         postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/system/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
                         err := netutils.HTTPDelete("http://"+agentRestURL+"/api/system/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/system/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
+
+                        {{else if strEq $crudObject "App"}}
+                        {{lower .}}Data := netproto.{{title $crudObject}}{
+                            TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                            ObjectMeta: api.ObjectMeta{
+                                Tenant: "default",
+                                Namespace: "default",
+                                Name: "test{{title .}}{{title $crudObject}}",
+                            },
+                            Spec:   netproto.AppSpec{
+                                ALG: &netproto.ALG {
+                                     DNS: &netproto.DNS{
+                                           DropMultiZonePackets: true,
+                                           DropLargeDomainPackets: true,
+                                           QueryResponseTimeout: "30s",
+                                     },
+                                },
+                            },
+                        }
+                        postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/apps/", &{{lower .}}Data, &resp)
+                        err := netutils.HTTPDelete("http://"+agentRestURL+"/api/apps/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/apps/", &{{lower $crudObject}}List )
 
                         {{else if strEq $crudObject "SecurityProfile"}}
                         {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -1504,6 +1584,8 @@ import (
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/system/ports/", &badPostData, &resp)
           {{else if strEq $crudObject "SecurityProfile"}}
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/profiles/", &badPostData, &resp)
+          {{else if strEq $crudObject "App"}}
+            err := netutils.HTTPPost("http://"+agentRestURL+"/api/apps/", &badPostData, &resp)
           {{end}}
           Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
         }
@@ -1554,6 +1636,8 @@ import (
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/system/ports/default/default/badObject", &badDelData, &resp)
        {{else if strEq $crudObject "SecurityProfile"}}
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/profiles/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "App"}}
+         err := netutils.HTTPDelete("http://"+agentRestURL+"/api/apps/default/default/badObject", &badDelData, &resp)
 
        {{end}}
        Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
@@ -1605,6 +1689,8 @@ import (
       err := netutils.HTTPPut("http://"+agentRestURL+"/api/system/ports/default/default/badObject", &badDelData, &resp)
    {{else if strEq $crudObject "SecurityProfile"}}
       err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/profiles/default/default/badObject", &badDelData, &resp)
+   {{else if strEq $crudObject "App"}}
+      err := netutils.HTTPPut("http://"+agentRestURL+"/api/apps/default/default/badObject", &badDelData, &resp)
    {{end}}
     Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
   }

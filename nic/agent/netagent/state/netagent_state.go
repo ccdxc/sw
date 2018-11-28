@@ -185,6 +185,7 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.TCPProxyPolicyDB = make(map[string]*netproto.TCPProxyPolicy)
 	na.PortDB = make(map[string]*netproto.Port)
 	na.SecurityProfileDB = make(map[string]*netproto.SecurityProfile)
+	na.AppDB = make(map[string]*netproto.App)
 	na.Solver = dependencies.NewDepSolver()
 }
 

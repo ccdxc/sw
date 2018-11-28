@@ -45,6 +45,7 @@ const (
 	SGPolicyID        = "securityGroupPolicyID"
 	TCPProxyPolicyID  = "tcpProxyPolicyID"
 	SecurityProfileID = "securityProfileID"
+	AppID             = "appID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -119,6 +120,7 @@ type NetAgent struct {
 	NatPoolLUT        map[string]*NatPoolRef               // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
 	HwIfDB            map[string]*netproto.Interface       // Has all the Uplinks and Lifs
 	PortDB            map[string]*netproto.Port            // HW Port DB
+	AppDB             map[string]*netproto.App             // App DB
 	SecurityProfileDB map[string]*netproto.SecurityProfile //Security Profile DB
 }
 
@@ -218,6 +220,11 @@ type CtrlerIntf interface {
 	ListSecurityProfile() []*netproto.SecurityProfile                           // lists SecurityProfile
 	UpdateSecurityProfile(profile *netproto.SecurityProfile) error              // updates an SecurityProfile
 	DeleteSecurityProfile(profile, ns, name string) error                       // deletes an SecurityProfile
+	CreateApp(app *netproto.App) error                                          // creates an App
+	FindApp(meta api.ObjectMeta) (*netproto.App, error)                         // finds an App
+	ListApp() []*netproto.App                                                   // lists App
+	UpdateApp(app *netproto.App) error                                          // updates an App
+	DeleteApp(app, ns, name string) error                                       // deletes an App
 	GetHwInterfaces() error                                                     // Gets all the uplinks created on the hal by nic mgr
 }
 

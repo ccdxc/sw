@@ -75,6 +75,7 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 		"/api/tcp/proxies/":           addTCPProxyPolicyAPIRoutes,
 		"/api/telemetry/flowexports/": addFlowExportPolicyAPIRoutes,
 		"/api/system/ports":           addPortAPIRoutes,
+		"/api/apps":                   addAppAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {
