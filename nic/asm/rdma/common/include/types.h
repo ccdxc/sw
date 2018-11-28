@@ -974,6 +974,7 @@ struct rsqwqe_t {
 #define KEY_ID_GET(_key_id_r, _key_addr_r) \
     srl     _key_id_r, _key_addr_r[5:0], LOG_SIZEOF_KEY_ENTRY_T
 
+#define DEFAULT_PKEY 0xffff
 
 struct key_entry_t {
     user_key: 8;

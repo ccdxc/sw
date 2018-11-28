@@ -76,7 +76,11 @@ resp_rx_rqcb_process:
     // see if number of WORK_NOT_DONE recirc packets in the pipeline has exceeded threshold.
     // if so, drop the packet for now
     slt     c2, d.work_not_done_recirc_cnt, WORK_NOT_DONE_RECIRC_CNT_MAX
-    bcf     [c1 | !c2], phv_drop
+
+    // see if received P_KEY is DEFAULT_PKEY
+    seq     c3, CAPRI_APP_DATA_BTH_P_KEY, DEFAULT_PKEY
+
+    bcf     [c1 | !c2 | !c3], phv_drop
 
 skip_roce_opt_parsing:
 

@@ -52,7 +52,7 @@ process_atomic:
     phvwr       CAPRI_PHV_FIELD(TO_S7_P, last_psn), d.psn
 
    // phv_p->bth.pkey = 0xffff
-   phvwr       p.bth.pkey, 0xffff  
+   phvwr       p.bth.pkey, DEFAULT_PKEY
     
     // prepare atomicaeth header
     phvwr       p.atomicaeth.orig_data, d.{atomic.orig_data}.dx
@@ -190,7 +190,7 @@ next:
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
 
     // phv_p->bth.pkey = 0xffff
-    phvwr       p.bth.pkey, 0xffff  
+    phvwr       p.bth.pkey, DEFAULT_PKEY
     
     phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, CURR_PSN
     phvwr       CAPRI_PHV_FIELD(TO_S7_P, last_psn), CURR_PSN

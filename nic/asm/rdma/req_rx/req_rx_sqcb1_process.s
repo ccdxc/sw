@@ -58,7 +58,11 @@ req_rx_sqcb1_process:
     // If number of work_not_done recirc packets are more than what can be handled,
     //  drop and let requester retry the requests
     slt             c2, d.work_not_done_recirc_cnt, WORK_NOT_DONE_RECIRC_CNT_MAX // Branch Delay Slot
-    bcf             [!c2], drop_packet
+
+    // see if received P_KEY is DEFAULT_PKEY
+    seq             c3, CAPRI_APP_DATA_BTH_P_KEY, DEFAULT_PKEY
+
+    bcf             [!c2 | !c3], drop_packet
 
     // If QP is not in RTS state, do not process any received packet. Branch to
     // check for drain state and process packets until number of acknowledged

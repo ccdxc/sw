@@ -413,7 +413,7 @@ op_type_end:
     tblmincri.c1    d.sq_cindex, d.log_sq_size, 1
 
     // phv_p->bth.pkey = 0xffff
-    phvwr          BTH_PKEY, 0xffff
+    phvwr          BTH_PKEY, DEFAULT_PKEY
 
     // store wqe_start_psn for backtrack from middle of multi-packet msg
     tblwr.c2       d.wqe_start_psn, d.tx_psn

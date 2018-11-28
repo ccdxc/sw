@@ -53,7 +53,7 @@ packets:
                 psn     : 0
                 se      : 0
                 m       : 0
-                p_key   : 55 # Same p_key as IN_PKT
+                p_key   : 65535
             payload: # CNP packet has 16 bytes reserved. Set to zero.
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO16/data
 

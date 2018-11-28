@@ -93,7 +93,7 @@ add_ack_header:
     phvwrpair   p.bth.opcode, r2, p.bth.dst_qp, d.dst_qp
 
     // phv_p->bth.pkey = 0xffff
-    phvwr       p.bth.pkey, 0xffff  
+    phvwr       p.bth.pkey, DEFAULT_PKEY
     
     // header_template
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
