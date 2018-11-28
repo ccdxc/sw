@@ -3,7 +3,7 @@ alias_group3:
   - alias: 'iter_high=100'
   - alias: 'iter_low=1'
 global_params:
-  per_core_qdepth: 32
+  per_core_qdepth: 512
   cpu_mask: 1
   block_size: '$1block'
 cp_hdr_formats:

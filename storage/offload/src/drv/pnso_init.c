@@ -21,10 +21,10 @@
 
 uint64_t pad_buffer;
 static bool pnso_initialized;
-static struct pnso_init_params pnso_initialized_params;
+static struct pc_res_init_params pc_initialized_params;
 
 static uint32_t
-seq_sq_descs_total_get(struct lif *lif);
+seq_sq_descs_max_get(struct lif *lif);
 
 static pnso_error_t
 pc_res_init(struct pc_res_init_params *pc_init,
@@ -44,7 +44,6 @@ pnso_init(struct pnso_init_params *pnso_init)
 {
 	struct lif			*lif = sonic_get_lif();
 	struct per_core_resource	*pcr;
-	struct pc_res_init_params	pc_init;
 	uint32_t			num_pc_res;
 	uint32_t			avail_bufs;
 	uint32_t			pc_num_bufs;
@@ -55,18 +54,27 @@ pnso_init(struct pnso_init_params *pnso_init)
 		return EAGAIN;
 
 	if (pnso_initialized) {
-		if ((pnso_init->per_core_qdepth ==
-		     pnso_initialized_params.per_core_qdepth) &&
+		if ((pnso_init->per_core_qdepth <=
+		     pc_initialized_params.max_seq_sq_descs) &&
 		    (pnso_init->block_size ==
-		     pnso_initialized_params.block_size))
+		     pc_initialized_params.pnso_init.block_size))
 			return PNSO_OK;
 		else
 			return EINVAL;
 	}
-	pnso_initialized_params = *pnso_init;
+
+	pc_initialized_params.pnso_init = *pnso_init;
+	pc_initialized_params.rmem_page_size = sonic_rmem_page_size_get();
+	if (!is_power_of_2(pnso_init->block_size) ||
+	    !is_power_of_2(pc_initialized_params.rmem_page_size)) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("block_size or rmem_page_size not power of 2! err: %d",
+				err);
+		goto out;
+	}
 
 	pad_buffer = osal_rmem_aligned_calloc(PNSO_MEM_ALIGN_PAGE,
-			PNSO_MEM_ALIGN_PAGE);
+					      pnso_init->block_size);
 	if (!osal_rmem_addr_valid(pad_buffer)) {
 		OSAL_LOG_ERROR("failed to allocate global pad buffer!");
 		err = ENOMEM;
@@ -74,11 +82,9 @@ pnso_init(struct pnso_init_params *pnso_init)
 	}
 	OSAL_LOG_DEBUG("pad buffer allocated: 0x" PRIx64, pad_buffer);
 
-	memset(&pc_init, 0, sizeof(pc_init));
-	pc_init.pnso_init = *pnso_init;
-	pc_init.rmem_page_size = sonic_rmem_page_size_get();
-	pc_init.max_seq_sq_descs = max((uint32_t)pnso_init->per_core_qdepth,
-				       seq_sq_descs_total_get(lif));
+	pc_initialized_params.max_seq_sq_descs =
+		max((uint32_t)pnso_init->per_core_qdepth,
+		     seq_sq_descs_max_get(lif));
 	/*
 	 * We use 2 passes to initialize per-core resources:
 	 * Pass 1: allocate accelerator desc resources including any
@@ -94,21 +100,21 @@ pnso_init(struct pnso_init_params *pnso_init)
 
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
-		err = pc_res_init(&pc_init, pcr);
+		err = pc_res_init(&pc_initialized_params, pcr);
 	}
 
 	/*
 	 * Calculate remaining total rmem bufs
 	 */
 	avail_bufs = sonic_rmem_avail_pages_get();
-	if (pc_init.pnso_init.block_size < pc_init.rmem_page_size)
-		avail_bufs = (pc_init.rmem_page_size /
-			      pc_init.pnso_init.block_size) *
+	if (pnso_init->block_size < pc_initialized_params.rmem_page_size)
+		avail_bufs = (pc_initialized_params.rmem_page_size /
+			      pnso_init->block_size) *
 			     avail_bufs;
 	else
 		avail_bufs = avail_bufs  /
-			     (pc_init.pnso_init.block_size /
-			      pc_init.rmem_page_size);
+			     (pnso_init->block_size /
+			      pc_initialized_params.rmem_page_size);
 	pc_num_bufs = avail_bufs / num_pc_res;
 	OSAL_LOG_DEBUG("avail_bufs %u pc_num_bufs %u", avail_bufs, pc_num_bufs);
 	if ((err == PNSO_OK) && (!avail_bufs || !pc_num_bufs)) {
@@ -124,7 +130,7 @@ pnso_init(struct pnso_init_params *pnso_init)
 	 */
 	for (i = 0; (err == PNSO_OK) && (i < num_pc_res); i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
-		err = pc_res_interm_buf_init(&pc_init, pcr, pc_num_bufs);
+		err = pc_res_interm_buf_init(&pc_initialized_params, pcr, pc_num_bufs);
 	}
 
 out:
@@ -156,7 +162,7 @@ pnso_deinit(void)
 	}
 
 	if (osal_rmem_addr_valid(pad_buffer))
-		osal_rmem_free(pad_buffer, PNSO_MEM_ALIGN_PAGE);
+		osal_rmem_free(pad_buffer, pc_initialized_params.pnso_init.block_size);
 
 	pnso_initialized = false;
 }
@@ -165,14 +171,6 @@ static pnso_error_t
 pc_res_init(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 {
 	pnso_error_t err;
-
-	if (!is_power_of_2(pc_init->pnso_init.block_size) ||
-			!is_power_of_2(pc_init->rmem_page_size)) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("block_size or rmem_page_size not power of 2! err: %d",
-				err);
-		goto out;
-	}
 
 	if (!sonic_rmem_avail_pages_get()) {
 		err = ENOMEM;
@@ -255,15 +253,15 @@ static enum sonic_queue_type seq_sq_tbl[] = {
 };
 
 static uint32_t
-seq_sq_descs_total_get(struct lif *lif)
+seq_sq_descs_max_get(struct lif *lif)
 {
-	uint32_t	total_descs = 0;
+	uint32_t	max_descs = 0;
 	int		i;
 
 	for (i = 0; i < ARRAY_SIZE(seq_sq_tbl); i++) {
-		total_descs +=
-			sonic_get_seq_sq_num_descs(lif, seq_sq_tbl[i]);
+		max_descs = max(max_descs,
+				sonic_get_seq_sq_num_descs(lif, seq_sq_tbl[i]));
 	}
 
-	return total_descs;
+	return max_descs;
 }
