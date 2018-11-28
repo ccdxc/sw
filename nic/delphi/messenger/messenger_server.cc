@@ -122,7 +122,7 @@ error MessangerServer::handleMountReq(int sockCtx, MessagePtr req, MessagePtr re
 }
 
 error MessangerServer::handleChangeReq(int sockCtx, MessagePtr req, MessagePtr resp) {
-    vector<ObjectData *> objReq;
+    vector<ObjectData> objReq;
     vector<ObjectData *> objResp;
 
     LogDebug("Got change Req: {}", req->DebugString().c_str());
@@ -134,7 +134,7 @@ error MessangerServer::handleChangeReq(int sockCtx, MessagePtr req, MessagePtr r
 
     // parse the incoming request
     for (int i = 0; i < req->objects_size(); i++) {
-        ObjectData *obj = req->mutable_objects(i);
+        auto obj = req->objects(i);
         objReq.push_back(obj);
     }
 

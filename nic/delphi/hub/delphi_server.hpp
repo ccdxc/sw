@@ -20,7 +20,7 @@ using namespace delphi::messenger;
 // DbSubtree is a sub tree of delphi database
 class DbSubtree {
 public:
-    map<string, ObjectData *>   objects;
+    map<string, ObjectDataPtr>   objects;
 };
 typedef std::shared_ptr<DbSubtree> DbSubtreePtr;
 
@@ -62,12 +62,12 @@ public:
         vector<ServiceInfoPtr> ListService();   // list all registered service
 
         // required by messenger::ServerHandler
-        error HandleChangeReq(int sockCtx, vector<ObjectData *> req, vector<ObjectData *> *resp);
+        error HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<ObjectData *> *resp);
         error HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsgPtr resp);
         error HandleSocketClosed(int sockCtx);
 
 private:
-    error          addObject(string kind,   string key, ObjectData *obj);
+    error          addObject(string kind,   string key, ObjectDataPtr obj);
     error          delObject(string kind,   string key);
     ServiceInfoPtr addService(string svcName, int sockCtx);
     ServiceInfoPtr findServiceName(string svcName);
@@ -83,7 +83,7 @@ private:
 
     MessangerServerPtr             msgServer;      // messenger server
     map<string, DbSubtreePtr>      subtrees;       // subtree per object kind
-    map<string, ObjectData *>      syncQueue;      // sync queue of pending objects
+    vector<ObjectDataPtr>          syncQueue;      // sync queue of pending objects
     ev::timer                      syncTimer;      // sync timer
     uint32_t                       currServiceId;  // service id we are currently allocating
     map<string, ServiceInfoPtr>    services;       // map of services indexed by name

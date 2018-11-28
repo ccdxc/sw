@@ -24,7 +24,7 @@ typedef std::shared_ptr<MountRespMsg> MountRespMsgPtr;
 // abstract class definition that handles server messages
 class ServerHandler {
 public:
-    virtual error HandleChangeReq(int sockCtx, vector<ObjectData *> req, vector<ObjectData *> *resp) = 0;
+    virtual error HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<ObjectData *> *resp) = 0;
     virtual error HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsgPtr resp) = 0;
     virtual error HandleSocketClosed(int sockCtx) = 0;
 };

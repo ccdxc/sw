@@ -60,8 +60,8 @@ DbSubtreePtr DelphiServer::GetSubtree(string kind) {
 }
 
 // addObject adds an object into a subtree based on kind
-error DelphiServer::addObject(string kind, string key, ObjectData *obj) {
-    std::map<string, ObjectData *>::iterator it;
+error DelphiServer::addObject(string kind, string key, ObjectDataPtr obj) {
+    std::map<string, ObjectDataPtr>::iterator it;
 
     // some error checking on the objects
     if ((kind == "") || (key == "") || (obj->meta().path() == "" ) || (obj->meta().handle() == 0)) {
@@ -76,7 +76,7 @@ error DelphiServer::addObject(string kind, string key, ObjectData *obj) {
     // add the object into a subtree
     it = subtree->objects.find(key);
     if (it != subtree->objects.end()) {
-        subtree->objects.erase (it);
+        subtree->objects.erase(it);
     }
     subtree->objects[key] = obj;
 
@@ -85,7 +85,7 @@ error DelphiServer::addObject(string kind, string key, ObjectData *obj) {
 
 // delObject deletes an object
 error DelphiServer::delObject(string kind, string key) {
-    std::map<string, ObjectData *>::iterator it;
+    std::map<string, ObjectDataPtr>::iterator it;
 
     // get the sub tree
     DbSubtreePtr subtree = this->GetSubtree(kind);
@@ -348,8 +348,8 @@ error DelphiServer::HandleMountReq(int sockCtx, MountReqMsgPtr req, MountRespMsg
         DbSubtreePtr subtree = this->GetSubtree(kind);
 
         // walk all objects for this kind and send them
-        for (map<string, ObjectData *>::iterator iter=subtree->objects.begin(); iter!=subtree->objects.end(); ++iter) {
-            ObjectData *obj = iter->second;
+        for (map<string, ObjectDataPtr>::iterator iter=subtree->objects.begin(); iter!=subtree->objects.end(); ++iter) {
+            ObjectDataPtr obj = iter->second;
             ObjectData *od = resp->add_objects();
             ObjectMeta *ometa = od->mutable_meta();
             ometa->CopyFrom(obj->meta());
@@ -385,21 +385,19 @@ error DelphiServer::HandleSocketClosed(int sockCtx) {
 }
 
 // HandleChangeReq handles change request from clients
-error DelphiServer::HandleChangeReq(int sockCtx, vector<ObjectData *> req, vector<ObjectData *> *resp) {
+error DelphiServer::HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<ObjectData *> *resp) {
     // FIXME: verify this client has mounted these objects read-write
 
     // handle each object
-    for (vector<ObjectData *>::iterator iter=req.begin(); iter!=req.end(); ++iter) {
-        string kind = (*iter)->meta().kind();
-        string key = (*iter)->meta().key();
-        std::map<string, ObjectData *>::iterator it;
+    for (vector<ObjectData>::iterator iter=req.begin(); iter!=req.end(); ++iter) {
+        string kind = iter->meta().kind();
+        string key = iter->meta().key();
 
         // create a new object instance
-        ObjectData *newObj = new ObjectData();
-        newObj->CopyFrom(*(*iter));
+        ObjectDataPtr newObj = make_shared<ObjectData>(*iter);
 
         // add or remove it from db
-        switch ((*iter)->op()) {
+        switch (iter->op()) {
         case SetOp:
         {
             error err = this->addObject(kind, key, newObj);
@@ -420,13 +418,13 @@ error DelphiServer::HandleChangeReq(int sockCtx, vector<ObjectData *> req, vecto
         }
         default:
         {
-            LogError("Invalid operation on object {}", (*iter)->DebugString());
+            LogError("Invalid operation on object {}", iter->DebugString());
             assert(0);
         }
         }
 
         // queue it for sync
-        this->syncQueue[(*iter)->meta().path()] = newObj;
+        this->syncQueue.push_back(newObj);
     }
 
     return error::OK();
@@ -453,9 +451,9 @@ void DelphiServer::syncTimerHandler(ev::timer &watcher, int revents) {
         vector<ObjectData *> objlist;
 
         // walk all objects in sync queue
-        for (map<string, ObjectData *>::iterator i=syncQueue.begin(); i!=syncQueue.end(); ++i) {
+        for (vector<ObjectDataPtr>::iterator i=syncQueue.begin(); i!=syncQueue.end(); ++i) {
             // dequeue from the sync queue
-            ObjectData *syncObj = i->second;
+            ObjectDataPtr syncObj = *i;
 
              // check if the service is interested in this object before doin anything else
             if (svc->HasMounted(syncObj->meta().kind(), syncObj->meta().key()) == false) {
@@ -474,6 +472,8 @@ void DelphiServer::syncTimerHandler(ev::timer &watcher, int revents) {
             msgServer->SendNotify(iter->first, objlist);
         }
     }
+
+    // clear the queue
     syncQueue.clear();
 
 }

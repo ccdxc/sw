@@ -27,7 +27,7 @@ public:
     int mountReq = 0;
     int changeReq = 0;
     vector<int> socklist;
-    error HandleChangeReq(int sockCtx, vector<ObjectData *> req, vector<ObjectData *> *resp) {
+    error HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<ObjectData *> *resp) {
         changeReq += req.size();
         return error::OK();
     };

@@ -113,8 +113,8 @@ TEST_F(DelphiServerTest, MountTest) {
 TEST_F(DelphiServerTest, BasicObjectTest) {
     MountReqMsgPtr mountReq = make_shared<MountReqMsg>();
     MountRespMsgPtr mountResp = make_shared<MountRespMsg>();
-    vector<ObjectData *> objReq;
-    vector<ObjectData *> objDelReq;
+    vector<ObjectData> objReq;
+    vector<ObjectData> objDelReq;
     vector<ObjectData *> objResp;
     const int num_objects = 5;
     error err;
@@ -129,7 +129,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
         meta->set_path(getPath("TestObject", key));
         meta->set_handle(i+1);
         obj.set_op(delphi::SetOp);
-        objReq.push_back(&obj);
+        objReq.push_back(obj);
         err = server->HandleChangeReq(1, objReq, &objResp);
         ASSERT_EQ(err, error::OK()) << "change request failed";
     }
@@ -137,7 +137,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
     // verify all the objects are created
     DbSubtreePtr subtree = server->GetSubtree("TestObject");
     ASSERT_EQ(subtree->objects.size(), num_objects) << "Not all objects are in the BD";
-    ASSERT_EQ(subtree->objects["TestKey-0"]->meta().handle(), 1) << "object has incorrect handle";
+    ASSERT_NE(subtree->objects["TestKey-0"]->meta().handle(), 0) << "object has incorrect handle";
 
     // send a mount request and verify we get all the objects back
     mountReq->set_servicename("TestService");
@@ -149,7 +149,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
     ASSERT_EQ(mountResp->objects().size(), num_objects) << "mount response had invalid number of objects";
 
     // create duplicate object with different handle and verify it overwrites the old object
-    vector<ObjectData *> objReq2;
+    vector<ObjectData> objReq2;
     ObjectData obj2;
     ObjectMeta *meta2 = obj2.mutable_meta();
     meta2->set_kind("TestObject");
@@ -157,7 +157,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
     meta2->set_path(getPath("TestObject", "TestKey-0"));
     meta2->set_handle(2);
     obj2.set_op(delphi::SetOp);
-    objReq2.push_back(&obj2);
+    objReq2.push_back(obj2);
     err = server->HandleChangeReq(1, objReq2, &objResp);
     ASSERT_EQ(err, error::OK()) << "change request failed";
     subtree = server->GetSubtree("TestObject");
@@ -169,6 +169,8 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
     meta2->set_key("TestKey-0");
     meta2->set_handle(2);
     meta2->set_path(getPath("TestObject", "TestKey-0"));
+    objReq2.clear();
+    objReq2.push_back(obj2);
     err = server->HandleChangeReq(1, objReq2, &objResp);
     ASSERT_NE(err, error::OK()) << "object add with no kind suceeded";
     meta2->set_kind("TestObject");
@@ -177,10 +179,14 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
     ASSERT_NE(err, error::OK()) << "object add with no key suceeded";
     meta2->set_key("TestKey-0");
     meta2->set_handle(0);
+    objReq2.clear();
+    objReq2.push_back(obj2);
     err = server->HandleChangeReq(1, objReq2, &objResp);
     ASSERT_NE(err, error::OK()) << "object add with no handle suceeded";
     meta2->set_handle(2);
     meta2->set_path("");
+    objReq2.clear();
+    objReq2.push_back(obj2);
     err = server->HandleChangeReq(1, objReq2, &objResp);
     ASSERT_NE(err, error::OK()) << "object add with no path suceeded";
 
@@ -194,7 +200,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
         meta->set_path(getPath("TestObject", key));
         meta->set_handle(i+1);
         obj.set_op(delphi::DeleteOp);
-        objDelReq.push_back(&obj);
+        objDelReq.push_back(obj);
         err = server->HandleChangeReq(1, objDelReq, &objResp);
         ASSERT_EQ(err, error::OK()) << "change request failed";
     }
