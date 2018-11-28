@@ -9,7 +9,6 @@ It is generated from these files:
 	acl.proto
 	cpucb.proto
 	debug.proto
-	descriptor_aol.proto
 	dos.proto
 	endpoint.proto
 	eplearn.proto
@@ -31,11 +30,7 @@ It is generated from these files:
 	nwsec.proto
 	port.proto
 	proxy.proto
-	proxyccb.proto
-	proxyrcb.proto
 	qos.proto
-	rawccb.proto
-	rawrcb.proto
 	rdma.proto
 	session.proto
 	system.proto
@@ -221,10 +216,6 @@ It has these top-level messages:
 	SchedulerActiveQRequestMsg
 	SchedulerActiveQResponse
 	SchedulerActiveQResponseMsg
-	DescrAolRequest
-	DescrAolRequestMsg
-	DescrAolSpec
-	DescrAolResponseMsg
 	ICMPMsg
 	DoSService
 	DoSSessionLimits
@@ -553,6 +544,67 @@ It has these top-level messages:
 	CryptoApiResponse
 	CryptoApiRequestMsg
 	CryptoApiResponseMsg
+	DescrAolRequest
+	DescrAolRequestMsg
+	DescrAolSpec
+	DescrAolResponseMsg
+	ProxycCbKeyHandle
+	ProxycCbSpec
+	ProxycCbRequestMsg
+	ProxycCbStatus
+	ProxycCbResponse
+	ProxycCbResponseMsg
+	ProxycCbDeleteRequest
+	ProxycCbDeleteRequestMsg
+	ProxycCbDeleteResponseMsg
+	ProxycCbGetRequest
+	ProxycCbGetRequestMsg
+	ProxycCbStats
+	ProxycCbGetResponse
+	ProxycCbGetResponseMsg
+	ProxyrCbKeyHandle
+	ProxyrCbSpec
+	ProxyrCbRequestMsg
+	ProxyrCbStatus
+	ProxyrCbResponse
+	ProxyrCbResponseMsg
+	ProxyrCbDeleteRequest
+	ProxyrCbDeleteRequestMsg
+	ProxyrCbDeleteResponseMsg
+	ProxyrCbGetRequest
+	ProxyrCbGetRequestMsg
+	ProxyrCbStats
+	ProxyrCbGetResponse
+	ProxyrCbGetResponseMsg
+	RawrCbKeyHandle
+	RawrCbSpec
+	RawrCbRequestMsg
+	RawrCbStatus
+	RawrCbResponse
+	RawrCbResponseMsg
+	RawrCbDeleteRequest
+	RawrCbDeleteRequestMsg
+	RawrCbDeleteResponseMsg
+	RawrCbGetRequest
+	RawrCbGetRequestMsg
+	RawrCbStats
+	RawrCbGetResponse
+	RawrCbGetResponseMsg
+	RawcCbKeyHandle
+	RawcCbSpec
+	RawcCbRequestMsg
+	RawcCbStatus
+	RawcCbResponse
+	RawcCbResponseMsg
+	RawcCbDeleteRequest
+	RawcCbDeleteRequestMsg
+	RawcCbDeleteResponse
+	RawcCbDeleteResponseMsg
+	RawcCbGetRequest
+	RawcCbGetRequestMsg
+	RawcCbStats
+	RawcCbGetResponse
+	RawcCbGetResponseMsg
 	Key
 	IpsecSAEncrypt
 	IpsecSADecrypt
@@ -922,34 +974,6 @@ It has these top-level messages:
 	ProxyGlobalCfgRequest
 	ProxyGlobalCfgRequestMsg
 	ProxyGlobalCfgResponseMsg
-	ProxycCbKeyHandle
-	ProxycCbSpec
-	ProxycCbRequestMsg
-	ProxycCbStatus
-	ProxycCbResponse
-	ProxycCbResponseMsg
-	ProxycCbDeleteRequest
-	ProxycCbDeleteRequestMsg
-	ProxycCbDeleteResponseMsg
-	ProxycCbGetRequest
-	ProxycCbGetRequestMsg
-	ProxycCbStats
-	ProxycCbGetResponse
-	ProxycCbGetResponseMsg
-	ProxyrCbKeyHandle
-	ProxyrCbSpec
-	ProxyrCbRequestMsg
-	ProxyrCbStatus
-	ProxyrCbResponse
-	ProxyrCbResponseMsg
-	ProxyrCbDeleteRequest
-	ProxyrCbDeleteRequestMsg
-	ProxyrCbDeleteResponseMsg
-	ProxyrCbGetRequest
-	ProxyrCbGetRequestMsg
-	ProxyrCbStats
-	ProxyrCbGetResponse
-	ProxyrCbGetResponseMsg
 	PolicerPPSSpec
 	PolicerBPSSpec
 	PolicerSpec
@@ -997,35 +1021,6 @@ It has these top-level messages:
 	CoppGetRequestMsg
 	CoppGetResponse
 	CoppGetResponseMsg
-	RawcCbKeyHandle
-	RawcCbSpec
-	RawcCbRequestMsg
-	RawcCbStatus
-	RawcCbResponse
-	RawcCbResponseMsg
-	RawcCbDeleteRequest
-	RawcCbDeleteRequestMsg
-	RawcCbDeleteResponse
-	RawcCbDeleteResponseMsg
-	RawcCbGetRequest
-	RawcCbGetRequestMsg
-	RawcCbStats
-	RawcCbGetResponse
-	RawcCbGetResponseMsg
-	RawrCbKeyHandle
-	RawrCbSpec
-	RawrCbRequestMsg
-	RawrCbStatus
-	RawrCbResponse
-	RawrCbResponseMsg
-	RawrCbDeleteRequest
-	RawrCbDeleteRequestMsg
-	RawrCbDeleteResponseMsg
-	RawrCbGetRequest
-	RawrCbGetRequestMsg
-	RawrCbStats
-	RawrCbGetResponse
-	RawrCbGetResponseMsg
 	RdmaQpSpec
 	RdmaQpRequestMsg
 	RdmaQpResponse

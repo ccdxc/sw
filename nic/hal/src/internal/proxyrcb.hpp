@@ -9,25 +9,25 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "gen/proto/proxyrcb.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/app_redir_shared.h"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
-using proxyrcb::ProxyrCbSpec;
-using proxyrcb::ProxyrCbStatus;
-using proxyrcb::ProxyrCbResponse;
-using proxyrcb::ProxyrCbKeyHandle;
-using proxyrcb::ProxyrCbRequestMsg;
-using proxyrcb::ProxyrCbResponseMsg;
-using proxyrcb::ProxyrCbDeleteRequestMsg;
-using proxyrcb::ProxyrCbDeleteResponseMsg;
-using proxyrcb::ProxyrCbGetRequest;
-using proxyrcb::ProxyrCbGetRequestMsg;
-using proxyrcb::ProxyrCbGetResponse;
-using proxyrcb::ProxyrCbGetResponseMsg;
+using internal::ProxyrCbSpec;
+using internal::ProxyrCbStatus;
+using internal::ProxyrCbResponse;
+using internal::ProxyrCbKeyHandle;
+using internal::ProxyrCbRequestMsg;
+using internal::ProxyrCbResponseMsg;
+using internal::ProxyrCbDeleteRequestMsg;
+using internal::ProxyrCbDeleteResponseMsg;
+using internal::ProxyrCbGetRequest;
+using internal::ProxyrCbGetRequestMsg;
+using internal::ProxyrCbGetResponse;
+using internal::ProxyrCbGetResponseMsg;
 
 namespace hal {
 
@@ -114,17 +114,6 @@ extern void *proxyrcb_get_handle_key_func(void *entry);
 extern uint32_t proxyrcb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool proxyrcb_compare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t proxyrcb_create(proxyrcb::ProxyrCbSpec& spec,
-                          proxyrcb::ProxyrCbResponse *rsp);
-
-hal_ret_t proxyrcb_update(proxyrcb::ProxyrCbSpec& spec,
-                          proxyrcb::ProxyrCbResponse *rsp);
-
-hal_ret_t proxyrcb_delete(proxyrcb::ProxyrCbDeleteRequest& req,
-                          proxyrcb::ProxyrCbDeleteResponseMsg *rsp);
-
-hal_ret_t proxyrcb_get(proxyrcb::ProxyrCbGetRequest& req,
-                       proxyrcb::ProxyrCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __PROXYRCB_HPP__

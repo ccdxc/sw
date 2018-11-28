@@ -22,18 +22,12 @@ import session_pb2          as session_pb2
 import nwsec_pb2            as nwsec_pb2
 import nw_pb2               as nw_pb2
 import telemetry_pb2        as telemetry_pb2
-import descriptor_aol_pb2   as descriptor_aol_pb2
 import acl_pb2              as acl_pb2
 import qos_pb2              as qos_pb2
 import proxy_pb2            as proxy_pb2
 import l4lb_pb2             as l4lb_pb2
-import internal_pb2      as crypto_apis_pb2
 import rdma_pb2             as rdma_pb2
 import cpucb_pb2            as cpucb_pb2
-import rawrcb_pb2           as rawrcb_pb2
-import rawccb_pb2           as rawccb_pb2
-import proxyrcb_pb2         as proxyrcb_pb2
-import proxyccb_pb2         as proxyccb_pb2
 import multicast_pb2        as multicast_pb2
 import system_pb2           as system_pb2
 import gft_pb2              as gft_pb2
@@ -310,85 +304,85 @@ def GetCpuCbs(objlist):
 
 def ConfigureRawrCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = rawrcb_pb2.RawrCbStub(HalChannel)
-    __config(objlist, rawrcb_pb2.RawrCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.RawrCbRequestMsg,
              stub.RawrCbCreate)
     return
 
 def UpdateRawrCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = rawrcb_pb2.RawrCbStub(HalChannel)
-    __config(objlist, rawrcb_pb2.RawrCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.RawrCbRequestMsg,
              stub.RawrCbUpdate)
     return
 
 def GetRawrCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = rawrcb_pb2.RawrCbStub(HalChannel)
-    __config(objlist, rawrcb_pb2.RawrCbGetRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.RawrCbGetRequestMsg,
              stub.RawrCbGet)
     return
 
 def ConfigureProxyrCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = proxyrcb_pb2.ProxyrCbStub(HalChannel)
-    __config(objlist, proxyrcb_pb2.ProxyrCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.ProxyrCbRequestMsg,
              stub.ProxyrCbCreate)
     return
 
 def UpdateProxyrCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = proxyrcb_pb2.ProxyrCbStub(HalChannel)
-    __config(objlist, proxyrcb_pb2.ProxyrCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.ProxyrCbRequestMsg,
              stub.ProxyrCbUpdate)
     return
 
 def GetProxyrCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = proxyrcb_pb2.ProxyrCbStub(HalChannel)
-    __config(objlist, proxyrcb_pb2.ProxyrCbGetRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.ProxyrCbGetRequestMsg,
              stub.ProxyrCbGet)
     return
 
 def ConfigureRawcCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = rawccb_pb2.RawcCbStub(HalChannel)
-    __config(objlist, rawccb_pb2.RawcCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.RawcCbRequestMsg,
              stub.RawcCbCreate)
     return
 
 def UpdateRawcCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = rawccb_pb2.RawcCbStub(HalChannel)
-    __config(objlist, rawccb_pb2.RawcCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.RawcCbRequestMsg,
              stub.RawcCbUpdate)
     return
 
 def GetRawcCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = rawccb_pb2.RawcCbStub(HalChannel)
-    __config(objlist, rawccb_pb2.RawcCbGetRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.RawcCbGetRequestMsg,
              stub.RawcCbGet)
     return
 
 def ConfigureProxycCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = proxyccb_pb2.ProxycCbStub(HalChannel)
-    __config(objlist, proxyccb_pb2.ProxycCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.ProxycCbRequestMsg,
              stub.ProxycCbCreate)
     return
 
 def UpdateProxycCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = proxyccb_pb2.ProxycCbStub(HalChannel)
-    __config(objlist, proxyccb_pb2.ProxycCbRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.InternalRequestMsg,
              stub.ProxycCbUpdate)
     return
 
 def GetProxycCbs(objlist):
     if not IsConfigAllowed(objlist): return
-    stub = proxyccb_pb2.ProxycCbStub(HalChannel)
-    __config(objlist, proxyccb_pb2.ProxycCbGetRequestMsg,
+    stub = internal_pb2.InternalStub(HalChannel)
+    __config(objlist, internal_pb2.ProxycCbGetRequestMsg,
              stub.ProxycCbGet)
     return
 

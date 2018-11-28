@@ -35,7 +35,7 @@ var IpsecProtocol_value = map[string]int32{
 func (x IpsecProtocol) String() string {
 	return proto.EnumName(IpsecProtocol_name, int32(x))
 }
-func (IpsecProtocol) EnumDescriptor() ([]byte, []int) { return fileDescriptor14, []int{0} }
+func (IpsecProtocol) EnumDescriptor() ([]byte, []int) { return fileDescriptor13, []int{0} }
 
 // Encryption algorithms
 type EncryptionAlgorithm int32
@@ -84,7 +84,7 @@ var EncryptionAlgorithm_value = map[string]int32{
 func (x EncryptionAlgorithm) String() string {
 	return proto.EnumName(EncryptionAlgorithm_name, int32(x))
 }
-func (EncryptionAlgorithm) EnumDescriptor() ([]byte, []int) { return fileDescriptor14, []int{1} }
+func (EncryptionAlgorithm) EnumDescriptor() ([]byte, []int) { return fileDescriptor13, []int{1} }
 
 // Authentication algorithms
 type AuthenticationAlgorithm int32
@@ -115,7 +115,7 @@ var AuthenticationAlgorithm_value = map[string]int32{
 func (x AuthenticationAlgorithm) String() string {
 	return proto.EnumName(AuthenticationAlgorithm_name, int32(x))
 }
-func (AuthenticationAlgorithm) EnumDescriptor() ([]byte, []int) { return fileDescriptor14, []int{2} }
+func (AuthenticationAlgorithm) EnumDescriptor() ([]byte, []int) { return fileDescriptor13, []int{2} }
 
 type IpsecSAActionType int32
 
@@ -142,7 +142,7 @@ var IpsecSAActionType_value = map[string]int32{
 func (x IpsecSAActionType) String() string {
 	return proto.EnumName(IpsecSAActionType_name, int32(x))
 }
-func (IpsecSAActionType) EnumDescriptor() ([]byte, []int) { return fileDescriptor14, []int{3} }
+func (IpsecSAActionType) EnumDescriptor() ([]byte, []int) { return fileDescriptor13, []int{3} }
 
 // Key object
 type Key struct {
@@ -155,7 +155,7 @@ type Key struct {
 func (m *Key) Reset()                    { *m = Key{} }
 func (m *Key) String() string            { return proto.CompactTextString(m) }
 func (*Key) ProtoMessage()               {}
-func (*Key) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{0} }
+func (*Key) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{0} }
 
 type isKey_KeyInfo interface{ isKey_KeyInfo() }
 
@@ -275,7 +275,7 @@ type IpsecSAEncrypt struct {
 func (m *IpsecSAEncrypt) Reset()                    { *m = IpsecSAEncrypt{} }
 func (m *IpsecSAEncrypt) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncrypt) ProtoMessage()               {}
-func (*IpsecSAEncrypt) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{1} }
+func (*IpsecSAEncrypt) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{1} }
 
 func (m *IpsecSAEncrypt) GetKeyOrHandle() *IpsecSAEncryptKeyHandle {
 	if m != nil {
@@ -389,7 +389,7 @@ type IpsecSADecrypt struct {
 func (m *IpsecSADecrypt) Reset()                    { *m = IpsecSADecrypt{} }
 func (m *IpsecSADecrypt) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecrypt) ProtoMessage()               {}
-func (*IpsecSADecrypt) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{2} }
+func (*IpsecSADecrypt) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{2} }
 
 func (m *IpsecSADecrypt) GetKeyOrHandle() *IpsecSADecryptKeyHandle {
 	if m != nil {
@@ -518,7 +518,7 @@ type IPSecSAEncryptGetSpec struct {
 func (m *IPSecSAEncryptGetSpec) Reset()                    { *m = IPSecSAEncryptGetSpec{} }
 func (m *IPSecSAEncryptGetSpec) String() string            { return proto.CompactTextString(m) }
 func (*IPSecSAEncryptGetSpec) ProtoMessage()               {}
-func (*IPSecSAEncryptGetSpec) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{3} }
+func (*IPSecSAEncryptGetSpec) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{3} }
 
 func (m *IPSecSAEncryptGetSpec) GetKeyOrHandle() *IpsecSAEncryptKeyHandle {
 	if m != nil {
@@ -714,7 +714,7 @@ type IPSecSADecryptGetSpec struct {
 func (m *IPSecSADecryptGetSpec) Reset()                    { *m = IPSecSADecryptGetSpec{} }
 func (m *IPSecSADecryptGetSpec) String() string            { return proto.CompactTextString(m) }
 func (*IPSecSADecryptGetSpec) ProtoMessage()               {}
-func (*IPSecSADecryptGetSpec) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{4} }
+func (*IPSecSADecryptGetSpec) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{4} }
 
 func (m *IPSecSADecryptGetSpec) GetKeyOrHandle() *IpsecSADecryptKeyHandle {
 	if m != nil {
@@ -916,7 +916,7 @@ type IpsecSAAction struct {
 func (m *IpsecSAAction) Reset()                    { *m = IpsecSAAction{} }
 func (m *IpsecSAAction) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAAction) ProtoMessage()               {}
-func (*IpsecSAAction) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{5} }
+func (*IpsecSAAction) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{5} }
 
 type isIpsecSAAction_SaHandle interface{ isIpsecSAAction_SaHandle() }
 
@@ -1041,7 +1041,7 @@ type IpsecRuleMatchSpec struct {
 func (m *IpsecRuleMatchSpec) Reset()                    { *m = IpsecRuleMatchSpec{} }
 func (m *IpsecRuleMatchSpec) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleMatchSpec) ProtoMessage()               {}
-func (*IpsecRuleMatchSpec) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{6} }
+func (*IpsecRuleMatchSpec) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{6} }
 
 func (m *IpsecRuleMatchSpec) GetRuleId() uint64 {
 	if m != nil {
@@ -1074,7 +1074,7 @@ type IpsecRuleSpec struct {
 func (m *IpsecRuleSpec) Reset()                    { *m = IpsecRuleSpec{} }
 func (m *IpsecRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleSpec) ProtoMessage()               {}
-func (*IpsecRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{7} }
+func (*IpsecRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{7} }
 
 func (m *IpsecRuleSpec) GetKeyOrHandle() *IpsecRuleKeyHandle {
 	if m != nil {
@@ -1105,7 +1105,7 @@ type IpsecRuleRequestMsg struct {
 func (m *IpsecRuleRequestMsg) Reset()                    { *m = IpsecRuleRequestMsg{} }
 func (m *IpsecRuleRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleRequestMsg) ProtoMessage()               {}
-func (*IpsecRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{8} }
+func (*IpsecRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{8} }
 
 func (m *IpsecRuleRequestMsg) GetRequest() []*IpsecRuleSpec {
 	if m != nil {
@@ -1122,7 +1122,7 @@ type IpsecRuleStatus struct {
 func (m *IpsecRuleStatus) Reset()                    { *m = IpsecRuleStatus{} }
 func (m *IpsecRuleStatus) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleStatus) ProtoMessage()               {}
-func (*IpsecRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{9} }
+func (*IpsecRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{9} }
 
 func (m *IpsecRuleStatus) GetHandle() uint64 {
 	if m != nil {
@@ -1140,7 +1140,7 @@ type IpsecRuleResponse struct {
 func (m *IpsecRuleResponse) Reset()                    { *m = IpsecRuleResponse{} }
 func (m *IpsecRuleResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleResponse) ProtoMessage()               {}
-func (*IpsecRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{10} }
+func (*IpsecRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{10} }
 
 func (m *IpsecRuleResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1164,7 +1164,7 @@ type IpsecRuleResponseMsg struct {
 func (m *IpsecRuleResponseMsg) Reset()                    { *m = IpsecRuleResponseMsg{} }
 func (m *IpsecRuleResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleResponseMsg) ProtoMessage()               {}
-func (*IpsecRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{11} }
+func (*IpsecRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{11} }
 
 func (m *IpsecRuleResponseMsg) GetResponse() []*IpsecRuleResponse {
 	if m != nil {
@@ -1181,7 +1181,7 @@ type IpsecRuleDeleteRequest struct {
 func (m *IpsecRuleDeleteRequest) Reset()                    { *m = IpsecRuleDeleteRequest{} }
 func (m *IpsecRuleDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleDeleteRequest) ProtoMessage()               {}
-func (*IpsecRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{12} }
+func (*IpsecRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{12} }
 
 func (m *IpsecRuleDeleteRequest) GetKeyOrHandle() *IpsecRuleKeyHandle {
 	if m != nil {
@@ -1198,7 +1198,7 @@ type IpsecRuleDeleteRequestMsg struct {
 func (m *IpsecRuleDeleteRequestMsg) Reset()                    { *m = IpsecRuleDeleteRequestMsg{} }
 func (m *IpsecRuleDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleDeleteRequestMsg) ProtoMessage()               {}
-func (*IpsecRuleDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{13} }
+func (*IpsecRuleDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{13} }
 
 func (m *IpsecRuleDeleteRequestMsg) GetRequest() []*IpsecRuleDeleteRequest {
 	if m != nil {
@@ -1215,7 +1215,7 @@ type IpsecRuleDeleteResponse struct {
 func (m *IpsecRuleDeleteResponse) Reset()                    { *m = IpsecRuleDeleteResponse{} }
 func (m *IpsecRuleDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleDeleteResponse) ProtoMessage()               {}
-func (*IpsecRuleDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{14} }
+func (*IpsecRuleDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{14} }
 
 func (m *IpsecRuleDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1232,7 +1232,7 @@ type IpsecRuleDeleteResponseMsg struct {
 func (m *IpsecRuleDeleteResponseMsg) Reset()                    { *m = IpsecRuleDeleteResponseMsg{} }
 func (m *IpsecRuleDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleDeleteResponseMsg) ProtoMessage()               {}
-func (*IpsecRuleDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{15} }
+func (*IpsecRuleDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{15} }
 
 func (m *IpsecRuleDeleteResponseMsg) GetResponse() []*IpsecRuleDeleteResponse {
 	if m != nil {
@@ -1249,7 +1249,7 @@ type IpsecRuleGetRequest struct {
 func (m *IpsecRuleGetRequest) Reset()                    { *m = IpsecRuleGetRequest{} }
 func (m *IpsecRuleGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleGetRequest) ProtoMessage()               {}
-func (*IpsecRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{16} }
+func (*IpsecRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{16} }
 
 func (m *IpsecRuleGetRequest) GetKeyOrHandle() *IpsecRuleKeyHandle {
 	if m != nil {
@@ -1266,7 +1266,7 @@ type IpsecRuleGetRequestMsg struct {
 func (m *IpsecRuleGetRequestMsg) Reset()                    { *m = IpsecRuleGetRequestMsg{} }
 func (m *IpsecRuleGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleGetRequestMsg) ProtoMessage()               {}
-func (*IpsecRuleGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{17} }
+func (*IpsecRuleGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{17} }
 
 func (m *IpsecRuleGetRequestMsg) GetRequest() []*IpsecRuleGetRequest {
 	if m != nil {
@@ -1285,7 +1285,7 @@ type IpsecRuleEntryStats struct {
 func (m *IpsecRuleEntryStats) Reset()                    { *m = IpsecRuleEntryStats{} }
 func (m *IpsecRuleEntryStats) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleEntryStats) ProtoMessage()               {}
-func (*IpsecRuleEntryStats) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{18} }
+func (*IpsecRuleEntryStats) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{18} }
 
 func (m *IpsecRuleEntryStats) GetNumTcpSessions() uint32 {
 	if m != nil {
@@ -1316,7 +1316,7 @@ type IpsecRuleStats struct {
 func (m *IpsecRuleStats) Reset()                    { *m = IpsecRuleStats{} }
 func (m *IpsecRuleStats) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleStats) ProtoMessage()               {}
-func (*IpsecRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{19} }
+func (*IpsecRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{19} }
 
 func (m *IpsecRuleStats) GetStats() []*IpsecRuleEntryStats {
 	if m != nil {
@@ -1336,7 +1336,7 @@ type IpsecRuleGetResponse struct {
 func (m *IpsecRuleGetResponse) Reset()                    { *m = IpsecRuleGetResponse{} }
 func (m *IpsecRuleGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleGetResponse) ProtoMessage()               {}
-func (*IpsecRuleGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{20} }
+func (*IpsecRuleGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{20} }
 
 func (m *IpsecRuleGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1374,7 +1374,7 @@ type IpsecRuleGetResponseMsg struct {
 func (m *IpsecRuleGetResponseMsg) Reset()                    { *m = IpsecRuleGetResponseMsg{} }
 func (m *IpsecRuleGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecRuleGetResponseMsg) ProtoMessage()               {}
-func (*IpsecRuleGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{21} }
+func (*IpsecRuleGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{21} }
 
 func (m *IpsecRuleGetResponseMsg) GetResponse() []*IpsecRuleGetResponse {
 	if m != nil {
@@ -1391,7 +1391,7 @@ type IpsecSAEncryptRequestMsg struct {
 func (m *IpsecSAEncryptRequestMsg) Reset()                    { *m = IpsecSAEncryptRequestMsg{} }
 func (m *IpsecSAEncryptRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptRequestMsg) ProtoMessage()               {}
-func (*IpsecSAEncryptRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{22} }
+func (*IpsecSAEncryptRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{22} }
 
 func (m *IpsecSAEncryptRequestMsg) GetRequest() []*IpsecSAEncrypt {
 	if m != nil {
@@ -1408,7 +1408,7 @@ type IpsecSAEncryptStatus struct {
 func (m *IpsecSAEncryptStatus) Reset()                    { *m = IpsecSAEncryptStatus{} }
 func (m *IpsecSAEncryptStatus) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptStatus) ProtoMessage()               {}
-func (*IpsecSAEncryptStatus) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{23} }
+func (*IpsecSAEncryptStatus) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{23} }
 
 func (m *IpsecSAEncryptStatus) GetIpsecSaHandle() uint64 {
 	if m != nil {
@@ -1426,7 +1426,7 @@ type IpsecSAEncryptResponse struct {
 func (m *IpsecSAEncryptResponse) Reset()                    { *m = IpsecSAEncryptResponse{} }
 func (m *IpsecSAEncryptResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptResponse) ProtoMessage()               {}
-func (*IpsecSAEncryptResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{24} }
+func (*IpsecSAEncryptResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{24} }
 
 func (m *IpsecSAEncryptResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1450,7 +1450,7 @@ type IpsecSAEncryptResponseMsg struct {
 func (m *IpsecSAEncryptResponseMsg) Reset()                    { *m = IpsecSAEncryptResponseMsg{} }
 func (m *IpsecSAEncryptResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptResponseMsg) ProtoMessage()               {}
-func (*IpsecSAEncryptResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{25} }
+func (*IpsecSAEncryptResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{25} }
 
 func (m *IpsecSAEncryptResponseMsg) GetResponse() []*IpsecSAEncryptResponse {
 	if m != nil {
@@ -1467,7 +1467,7 @@ type IpsecSAEncryptDeleteRequest struct {
 func (m *IpsecSAEncryptDeleteRequest) Reset()                    { *m = IpsecSAEncryptDeleteRequest{} }
 func (m *IpsecSAEncryptDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptDeleteRequest) ProtoMessage()               {}
-func (*IpsecSAEncryptDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{26} }
+func (*IpsecSAEncryptDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{26} }
 
 func (m *IpsecSAEncryptDeleteRequest) GetKeyOrHandle() *IpsecSAEncryptKeyHandle {
 	if m != nil {
@@ -1485,7 +1485,7 @@ func (m *IpsecSAEncryptDeleteRequestMsg) Reset()         { *m = IpsecSAEncryptDe
 func (m *IpsecSAEncryptDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptDeleteRequestMsg) ProtoMessage()    {}
 func (*IpsecSAEncryptDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor14, []int{27}
+	return fileDescriptor13, []int{27}
 }
 
 func (m *IpsecSAEncryptDeleteRequestMsg) GetRequest() []*IpsecSAEncryptDeleteRequest {
@@ -1503,7 +1503,7 @@ type IpsecSAEncryptDeleteResponse struct {
 func (m *IpsecSAEncryptDeleteResponse) Reset()                    { *m = IpsecSAEncryptDeleteResponse{} }
 func (m *IpsecSAEncryptDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptDeleteResponse) ProtoMessage()               {}
-func (*IpsecSAEncryptDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{28} }
+func (*IpsecSAEncryptDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{28} }
 
 func (m *IpsecSAEncryptDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1521,7 +1521,7 @@ func (m *IpsecSAEncryptDeleteResponseMsg) Reset()         { *m = IpsecSAEncryptD
 func (m *IpsecSAEncryptDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptDeleteResponseMsg) ProtoMessage()    {}
 func (*IpsecSAEncryptDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor14, []int{29}
+	return fileDescriptor13, []int{29}
 }
 
 func (m *IpsecSAEncryptDeleteResponseMsg) GetResponse() []*IpsecSAEncryptDeleteResponse {
@@ -1539,7 +1539,7 @@ type IpsecSAEncryptGetRequest struct {
 func (m *IpsecSAEncryptGetRequest) Reset()                    { *m = IpsecSAEncryptGetRequest{} }
 func (m *IpsecSAEncryptGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptGetRequest) ProtoMessage()               {}
-func (*IpsecSAEncryptGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{30} }
+func (*IpsecSAEncryptGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{30} }
 
 func (m *IpsecSAEncryptGetRequest) GetKeyOrHandle() *IpsecSAEncryptKeyHandle {
 	if m != nil {
@@ -1556,7 +1556,7 @@ type IpsecSAEncryptGetRequestMsg struct {
 func (m *IpsecSAEncryptGetRequestMsg) Reset()                    { *m = IpsecSAEncryptGetRequestMsg{} }
 func (m *IpsecSAEncryptGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptGetRequestMsg) ProtoMessage()               {}
-func (*IpsecSAEncryptGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{31} }
+func (*IpsecSAEncryptGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{31} }
 
 func (m *IpsecSAEncryptGetRequestMsg) GetRequest() []*IpsecSAEncryptGetRequest {
 	if m != nil {
@@ -1574,7 +1574,7 @@ type IpsecSAEncryptGetResponse struct {
 func (m *IpsecSAEncryptGetResponse) Reset()                    { *m = IpsecSAEncryptGetResponse{} }
 func (m *IpsecSAEncryptGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptGetResponse) ProtoMessage()               {}
-func (*IpsecSAEncryptGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{32} }
+func (*IpsecSAEncryptGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{32} }
 
 func (m *IpsecSAEncryptGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1604,7 +1604,7 @@ type IpsecSAEncryptGetResponseMsg struct {
 func (m *IpsecSAEncryptGetResponseMsg) Reset()                    { *m = IpsecSAEncryptGetResponseMsg{} }
 func (m *IpsecSAEncryptGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSAEncryptGetResponseMsg) ProtoMessage()               {}
-func (*IpsecSAEncryptGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{33} }
+func (*IpsecSAEncryptGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{33} }
 
 func (m *IpsecSAEncryptGetResponseMsg) GetResponse() []*IpsecSAEncryptGetResponse {
 	if m != nil {
@@ -1621,7 +1621,7 @@ type IpsecSADecryptRequestMsg struct {
 func (m *IpsecSADecryptRequestMsg) Reset()                    { *m = IpsecSADecryptRequestMsg{} }
 func (m *IpsecSADecryptRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptRequestMsg) ProtoMessage()               {}
-func (*IpsecSADecryptRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{34} }
+func (*IpsecSADecryptRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{34} }
 
 func (m *IpsecSADecryptRequestMsg) GetRequest() []*IpsecSADecrypt {
 	if m != nil {
@@ -1638,7 +1638,7 @@ type IpsecSADecryptStatus struct {
 func (m *IpsecSADecryptStatus) Reset()                    { *m = IpsecSADecryptStatus{} }
 func (m *IpsecSADecryptStatus) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptStatus) ProtoMessage()               {}
-func (*IpsecSADecryptStatus) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{35} }
+func (*IpsecSADecryptStatus) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{35} }
 
 func (m *IpsecSADecryptStatus) GetIpsecSaHandle() uint64 {
 	if m != nil {
@@ -1656,7 +1656,7 @@ type IpsecSADecryptResponse struct {
 func (m *IpsecSADecryptResponse) Reset()                    { *m = IpsecSADecryptResponse{} }
 func (m *IpsecSADecryptResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptResponse) ProtoMessage()               {}
-func (*IpsecSADecryptResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{36} }
+func (*IpsecSADecryptResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{36} }
 
 func (m *IpsecSADecryptResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1680,7 +1680,7 @@ type IpsecSADecryptResponseMsg struct {
 func (m *IpsecSADecryptResponseMsg) Reset()                    { *m = IpsecSADecryptResponseMsg{} }
 func (m *IpsecSADecryptResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptResponseMsg) ProtoMessage()               {}
-func (*IpsecSADecryptResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{37} }
+func (*IpsecSADecryptResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{37} }
 
 func (m *IpsecSADecryptResponseMsg) GetResponse() []*IpsecSADecryptResponse {
 	if m != nil {
@@ -1697,7 +1697,7 @@ type IpsecSADecryptDeleteRequest struct {
 func (m *IpsecSADecryptDeleteRequest) Reset()                    { *m = IpsecSADecryptDeleteRequest{} }
 func (m *IpsecSADecryptDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptDeleteRequest) ProtoMessage()               {}
-func (*IpsecSADecryptDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{38} }
+func (*IpsecSADecryptDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{38} }
 
 func (m *IpsecSADecryptDeleteRequest) GetKeyOrHandle() *IpsecSADecryptKeyHandle {
 	if m != nil {
@@ -1715,7 +1715,7 @@ func (m *IpsecSADecryptDeleteRequestMsg) Reset()         { *m = IpsecSADecryptDe
 func (m *IpsecSADecryptDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*IpsecSADecryptDeleteRequestMsg) ProtoMessage()    {}
 func (*IpsecSADecryptDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor14, []int{39}
+	return fileDescriptor13, []int{39}
 }
 
 func (m *IpsecSADecryptDeleteRequestMsg) GetRequest() []*IpsecSADecryptDeleteRequest {
@@ -1733,7 +1733,7 @@ type IpsecSADecryptDeleteResponse struct {
 func (m *IpsecSADecryptDeleteResponse) Reset()                    { *m = IpsecSADecryptDeleteResponse{} }
 func (m *IpsecSADecryptDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptDeleteResponse) ProtoMessage()               {}
-func (*IpsecSADecryptDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{40} }
+func (*IpsecSADecryptDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{40} }
 
 func (m *IpsecSADecryptDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1751,7 +1751,7 @@ func (m *IpsecSADecryptDeleteResponseMsg) Reset()         { *m = IpsecSADecryptD
 func (m *IpsecSADecryptDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*IpsecSADecryptDeleteResponseMsg) ProtoMessage()    {}
 func (*IpsecSADecryptDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor14, []int{41}
+	return fileDescriptor13, []int{41}
 }
 
 func (m *IpsecSADecryptDeleteResponseMsg) GetResponse() []*IpsecSADecryptDeleteResponse {
@@ -1769,7 +1769,7 @@ type IpsecSADecryptGetRequest struct {
 func (m *IpsecSADecryptGetRequest) Reset()                    { *m = IpsecSADecryptGetRequest{} }
 func (m *IpsecSADecryptGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptGetRequest) ProtoMessage()               {}
-func (*IpsecSADecryptGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{42} }
+func (*IpsecSADecryptGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{42} }
 
 func (m *IpsecSADecryptGetRequest) GetKeyOrHandle() *IpsecSADecryptKeyHandle {
 	if m != nil {
@@ -1786,7 +1786,7 @@ type IpsecSADecryptGetRequestMsg struct {
 func (m *IpsecSADecryptGetRequestMsg) Reset()                    { *m = IpsecSADecryptGetRequestMsg{} }
 func (m *IpsecSADecryptGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptGetRequestMsg) ProtoMessage()               {}
-func (*IpsecSADecryptGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{43} }
+func (*IpsecSADecryptGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{43} }
 
 func (m *IpsecSADecryptGetRequestMsg) GetRequest() []*IpsecSADecryptGetRequest {
 	if m != nil {
@@ -1804,7 +1804,7 @@ type IpsecSADecryptGetResponse struct {
 func (m *IpsecSADecryptGetResponse) Reset()                    { *m = IpsecSADecryptGetResponse{} }
 func (m *IpsecSADecryptGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptGetResponse) ProtoMessage()               {}
-func (*IpsecSADecryptGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{44} }
+func (*IpsecSADecryptGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{44} }
 
 func (m *IpsecSADecryptGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1834,7 +1834,7 @@ type IpsecSADecryptGetResponseMsg struct {
 func (m *IpsecSADecryptGetResponseMsg) Reset()                    { *m = IpsecSADecryptGetResponseMsg{} }
 func (m *IpsecSADecryptGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*IpsecSADecryptGetResponseMsg) ProtoMessage()               {}
-func (*IpsecSADecryptGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{45} }
+func (*IpsecSADecryptGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor13, []int{45} }
 
 func (m *IpsecSADecryptGetResponseMsg) GetResponse() []*IpsecSADecryptGetResponse {
 	if m != nil {
@@ -1896,9 +1896,9 @@ func init() {
 	proto.RegisterEnum("halproto.IpsecSAActionType", IpsecSAActionType_name, IpsecSAActionType_value)
 }
 
-func init() { proto.RegisterFile("ipsec.proto", fileDescriptor14) }
+func init() { proto.RegisterFile("ipsec.proto", fileDescriptor13) }
 
-var fileDescriptor14 = []byte{
+var fileDescriptor13 = []byte{
 	// 2252 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x59, 0xcb, 0x73, 0xd3, 0xda,
 	0x19, 0x8f, 0xe3, 0xc4, 0x71, 0xbe, 0xc4, 0x46, 0x39, 0x79, 0x09, 0x87, 0x10, 0x5f, 0x71, 0xcb,

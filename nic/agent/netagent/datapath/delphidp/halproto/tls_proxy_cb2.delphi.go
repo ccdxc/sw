@@ -23,7 +23,7 @@ type TlsProxyCbKeyHandle struct {
 func (m *TlsProxyCbKeyHandle) Reset()                    { *m = TlsProxyCbKeyHandle{} }
 func (m *TlsProxyCbKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbKeyHandle) ProtoMessage()               {}
-func (*TlsProxyCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{0} }
+func (*TlsProxyCbKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{0} }
 
 type isTlsProxyCbKeyHandle_KeyOrHandle interface{ isTlsProxyCbKeyHandle_KeyOrHandle() }
 
@@ -163,7 +163,7 @@ type TlsProxyCbSpec struct {
 func (m *TlsProxyCbSpec) Reset()                    { *m = TlsProxyCbSpec{} }
 func (m *TlsProxyCbSpec) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbSpec) ProtoMessage()               {}
-func (*TlsProxyCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{1} }
+func (*TlsProxyCbSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{1} }
 
 func (m *TlsProxyCbSpec) GetKeyOrHandle() *TlsProxyCbKeyHandle {
 	if m != nil {
@@ -411,7 +411,7 @@ type TlsProxyCbRequestMsg struct {
 func (m *TlsProxyCbRequestMsg) Reset()                    { *m = TlsProxyCbRequestMsg{} }
 func (m *TlsProxyCbRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbRequestMsg) ProtoMessage()               {}
-func (*TlsProxyCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{2} }
+func (*TlsProxyCbRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{2} }
 
 func (m *TlsProxyCbRequestMsg) GetRequest() []*TlsProxyCbSpec {
 	if m != nil {
@@ -428,7 +428,7 @@ type TlsProxyCbStatus struct {
 func (m *TlsProxyCbStatus) Reset()                    { *m = TlsProxyCbStatus{} }
 func (m *TlsProxyCbStatus) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbStatus) ProtoMessage()               {}
-func (*TlsProxyCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{3} }
+func (*TlsProxyCbStatus) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{3} }
 
 func (m *TlsProxyCbStatus) GetTlsProxyCbHandle() uint64 {
 	if m != nil {
@@ -446,7 +446,7 @@ type TlsProxyCbResponse struct {
 func (m *TlsProxyCbResponse) Reset()                    { *m = TlsProxyCbResponse{} }
 func (m *TlsProxyCbResponse) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbResponse) ProtoMessage()               {}
-func (*TlsProxyCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{4} }
+func (*TlsProxyCbResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{4} }
 
 func (m *TlsProxyCbResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -470,7 +470,7 @@ type TlsProxyCbResponseMsg struct {
 func (m *TlsProxyCbResponseMsg) Reset()                    { *m = TlsProxyCbResponseMsg{} }
 func (m *TlsProxyCbResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbResponseMsg) ProtoMessage()               {}
-func (*TlsProxyCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{5} }
+func (*TlsProxyCbResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{5} }
 
 func (m *TlsProxyCbResponseMsg) GetResponse() []*TlsProxyCbResponse {
 	if m != nil {
@@ -487,7 +487,7 @@ type TlsProxyCbDeleteRequest struct {
 func (m *TlsProxyCbDeleteRequest) Reset()                    { *m = TlsProxyCbDeleteRequest{} }
 func (m *TlsProxyCbDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbDeleteRequest) ProtoMessage()               {}
-func (*TlsProxyCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{6} }
+func (*TlsProxyCbDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{6} }
 
 func (m *TlsProxyCbDeleteRequest) GetKeyOrHandle() *TlsProxyCbKeyHandle {
 	if m != nil {
@@ -504,7 +504,7 @@ type TlsProxyCbDeleteRequestMsg struct {
 func (m *TlsProxyCbDeleteRequestMsg) Reset()                    { *m = TlsProxyCbDeleteRequestMsg{} }
 func (m *TlsProxyCbDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbDeleteRequestMsg) ProtoMessage()               {}
-func (*TlsProxyCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{7} }
+func (*TlsProxyCbDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{7} }
 
 func (m *TlsProxyCbDeleteRequestMsg) GetRequest() []*TlsProxyCbDeleteRequest {
 	if m != nil {
@@ -521,7 +521,7 @@ type TlsProxyCbDeleteResponseMsg struct {
 func (m *TlsProxyCbDeleteResponseMsg) Reset()                    { *m = TlsProxyCbDeleteResponseMsg{} }
 func (m *TlsProxyCbDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbDeleteResponseMsg) ProtoMessage()               {}
-func (*TlsProxyCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{8} }
+func (*TlsProxyCbDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{8} }
 
 func (m *TlsProxyCbDeleteResponseMsg) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -538,7 +538,7 @@ type TlsProxyCbGetRequest struct {
 func (m *TlsProxyCbGetRequest) Reset()                    { *m = TlsProxyCbGetRequest{} }
 func (m *TlsProxyCbGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbGetRequest) ProtoMessage()               {}
-func (*TlsProxyCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{9} }
+func (*TlsProxyCbGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{9} }
 
 func (m *TlsProxyCbGetRequest) GetKeyOrHandle() *TlsProxyCbKeyHandle {
 	if m != nil {
@@ -555,7 +555,7 @@ type TlsProxyCbGetRequestMsg struct {
 func (m *TlsProxyCbGetRequestMsg) Reset()                    { *m = TlsProxyCbGetRequestMsg{} }
 func (m *TlsProxyCbGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbGetRequestMsg) ProtoMessage()               {}
-func (*TlsProxyCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{10} }
+func (*TlsProxyCbGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{10} }
 
 func (m *TlsProxyCbGetRequestMsg) GetRequest() []*TlsProxyCbGetRequest {
 	if m != nil {
@@ -571,7 +571,7 @@ type TlsProxyCbStats struct {
 func (m *TlsProxyCbStats) Reset()                    { *m = TlsProxyCbStats{} }
 func (m *TlsProxyCbStats) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbStats) ProtoMessage()               {}
-func (*TlsProxyCbStats) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{11} }
+func (*TlsProxyCbStats) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{11} }
 
 // TlsProxyCbGetResponse captures all the information about a tls_proxy_cb
 // only if api_status indicates success, other fields are valid
@@ -585,7 +585,7 @@ type TlsProxyCbGetResponse struct {
 func (m *TlsProxyCbGetResponse) Reset()                    { *m = TlsProxyCbGetResponse{} }
 func (m *TlsProxyCbGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbGetResponse) ProtoMessage()               {}
-func (*TlsProxyCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{12} }
+func (*TlsProxyCbGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{12} }
 
 func (m *TlsProxyCbGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -623,7 +623,7 @@ type TlsProxyCbGetResponseMsg struct {
 func (m *TlsProxyCbGetResponseMsg) Reset()                    { *m = TlsProxyCbGetResponseMsg{} }
 func (m *TlsProxyCbGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyCbGetResponseMsg) ProtoMessage()               {}
-func (*TlsProxyCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor37, []int{13} }
+func (*TlsProxyCbGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{13} }
 
 func (m *TlsProxyCbGetResponseMsg) GetResponse() []*TlsProxyCbGetResponse {
 	if m != nil {
@@ -649,9 +649,9 @@ func init() {
 	proto.RegisterType((*TlsProxyCbGetResponseMsg)(nil), "halproto.TlsProxyCbGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("tls_proxy_cb2.proto", fileDescriptor37) }
+func init() { proto.RegisterFile("tls_proxy_cb2.proto", fileDescriptor32) }
 
-var fileDescriptor37 = []byte{
+var fileDescriptor32 = []byte{
 	// 1078 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x5b, 0x53, 0xdb, 0x46,
 	0x14, 0x8e, 0xb8, 0x18, 0x7c, 0x7c, 0x81, 0x2c, 0x21, 0x2c, 0xa6, 0x04, 0xa3, 0xb6, 0xa9, 0x5f,

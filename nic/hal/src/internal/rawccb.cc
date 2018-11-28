@@ -153,7 +153,7 @@ add_rawccb_to_db (rawccb_t *rawccb)
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t
-rawccb_create (RawcCbSpec& spec, RawcCbResponse *rsp)
+rawccb_create (internal::RawcCbSpec& spec, internal::RawcCbResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     rawccb_t                *rawccb = NULL;
@@ -223,7 +223,7 @@ cleanup:
 // process a RAWC CB update request
 //------------------------------------------------------------------------------
 hal_ret_t
-rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
+rawccb_update (internal::RawcCbSpec& spec, internal::RawcCbResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     rawccb_t*               rawccb;
@@ -272,7 +272,7 @@ rawccb_update (RawcCbSpec& spec, RawcCbResponse *rsp)
 // process a RAWC CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-rawccb_get (RawcCbGetRequest& req, RawcCbGetResponseMsg *resp)
+rawccb_get (internal::RawcCbGetRequest& req, internal::RawcCbGetResponseMsg *resp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     rawccb_t                rrawccb;
@@ -343,7 +343,7 @@ rawccb_get (RawcCbGetRequest& req, RawcCbGetResponseMsg *resp)
 // process a RAWC CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-rawccb_delete (rawccb::RawcCbDeleteRequest& req, rawccb::RawcCbDeleteResponse *rsp)
+rawccb_delete (internal::RawcCbDeleteRequest& req, internal::RawcCbDeleteResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     rawccb_t*               rawccb;

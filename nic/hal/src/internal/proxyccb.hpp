@@ -9,7 +9,7 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "gen/proto/proxyccb.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/app_redir_shared.h"
@@ -17,18 +17,18 @@
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
-using proxyccb::ProxycCbSpec;
-using proxyccb::ProxycCbStatus;
-using proxyccb::ProxycCbResponse;
-using proxyccb::ProxycCbKeyHandle;
-using proxyccb::ProxycCbRequestMsg;
-using proxyccb::ProxycCbResponseMsg;
-using proxyccb::ProxycCbDeleteRequestMsg;
-using proxyccb::ProxycCbDeleteResponseMsg;
-using proxyccb::ProxycCbGetRequest;
-using proxyccb::ProxycCbGetRequestMsg;
-using proxyccb::ProxycCbGetResponse;
-using proxyccb::ProxycCbGetResponseMsg;
+using internal::ProxycCbSpec;
+using internal::ProxycCbStatus;
+using internal::ProxycCbResponse;
+using internal::ProxycCbKeyHandle;
+using internal::ProxycCbRequestMsg;
+using internal::ProxycCbResponseMsg;
+using internal::ProxycCbDeleteRequestMsg;
+using internal::ProxycCbDeleteResponseMsg;
+using internal::ProxycCbGetRequest;
+using internal::ProxycCbGetRequestMsg;
+using internal::ProxycCbGetResponse;
+using internal::ProxycCbGetResponseMsg;
 
 namespace hal {
 
@@ -102,17 +102,6 @@ extern bool proxyccb_compare_handle_key_func(void *key1, void *key2);
 extern types::AppRedirType proxyccb_tcpcb_l7_proxy_type_eval(uint32_t flow_id);
 extern types::AppRedirType proxyccb_tlscb_l7_proxy_type_eval(uint32_t flow_id);
 
-hal_ret_t proxyccb_create(proxyccb::ProxycCbSpec& spec,
-                          proxyccb::ProxycCbResponse *rsp);
-
-hal_ret_t proxyccb_update(proxyccb::ProxycCbSpec& spec,
-                          proxyccb::ProxycCbResponse *rsp);
-
-hal_ret_t proxyccb_delete(proxyccb::ProxycCbDeleteRequest& req,
-                          proxyccb::ProxycCbDeleteResponseMsg *rsp);
-
-hal_ret_t proxyccb_get(proxyccb::ProxycCbGetRequest& req,
-                       proxyccb::ProxycCbGetResponseMsg *rsp);
 
 }    // namespace hal
 

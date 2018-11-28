@@ -9,25 +9,25 @@
 #include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "gen/proto/rawccb.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/app_redir_shared.h"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
-using rawccb::RawcCbSpec;
-using rawccb::RawcCbStatus;
-using rawccb::RawcCbResponse;
-using rawccb::RawcCbKeyHandle;
-using rawccb::RawcCbRequestMsg;
-using rawccb::RawcCbResponseMsg;
-using rawccb::RawcCbDeleteRequestMsg;
-using rawccb::RawcCbDeleteResponseMsg;
-using rawccb::RawcCbGetRequest;
-using rawccb::RawcCbGetRequestMsg;
-using rawccb::RawcCbGetResponse;
-using rawccb::RawcCbGetResponseMsg;
+using internal::RawcCbSpec;
+using internal::RawcCbStatus;
+using internal::RawcCbResponse;
+using internal::RawcCbKeyHandle;
+using internal::RawcCbRequestMsg;
+using internal::RawcCbResponseMsg;
+using internal::RawcCbDeleteRequestMsg;
+using internal::RawcCbDeleteResponseMsg;
+using internal::RawcCbGetRequest;
+using internal::RawcCbGetRequestMsg;
+using internal::RawcCbGetResponse;
+using internal::RawcCbGetResponseMsg;
 
 namespace hal {
 
@@ -98,17 +98,6 @@ extern void *rawccb_get_handle_key_func(void *entry);
 extern uint32_t rawccb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool rawccb_compare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t rawccb_create(rawccb::RawcCbSpec& spec,
-                        rawccb::RawcCbResponse *rsp);
-
-hal_ret_t rawccb_update(rawccb::RawcCbSpec& spec,
-                        rawccb::RawcCbResponse *rsp);
-
-hal_ret_t rawccb_delete(rawccb::RawcCbDeleteRequest& req,
-                        rawccb::RawcCbDeleteResponse *rsp);
-
-hal_ret_t rawccb_get(rawccb::RawcCbGetRequest& req,
-                     rawccb::RawcCbGetResponseMsg *rsp);
 }    // namespace hal
 
 #endif    // __RAWCCB_HPP__

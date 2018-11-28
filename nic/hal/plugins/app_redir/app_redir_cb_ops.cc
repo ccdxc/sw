@@ -5,6 +5,7 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "app_redir.hpp"
 #include "app_redir_cb_ops.hpp"
+#include "nic/hal/src/internal/internal.hpp"
 
 namespace hal {
 namespace app_redir {

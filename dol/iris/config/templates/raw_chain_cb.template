@@ -2,8 +2,8 @@
 meta:
     id: RAWCCB
     grpc:
-        package                       : rawccb
-        service                       : RawcCb
+        package                       : internal 
+        service                       : Internal 
         apis:
             create:
                 name                  : RawcCbCreate

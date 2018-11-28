@@ -70,6 +70,30 @@ service Internal {
 
   //CryptoApi
   rpc CryptoApiInvoke (CryptoApiRequestMsg) returns (CryptoApiResponseMsg) {}
+
+  // DescrAol  
+  rpc DescrAolGet (DescrAolRequestMsg) returns (DescrAolResponseMsg) {}
+
+  rpc ProxycCbCreate (ProxycCbRequestMsg) returns (ProxycCbResponseMsg) {}
+  rpc ProxycCbUpdate (ProxycCbRequestMsg) returns (ProxycCbResponseMsg) {}
+  rpc ProxycCbDelete (ProxycCbDeleteRequestMsg) returns (ProxycCbDeleteResponseMsg) {}
+  rpc ProxycCbGet (ProxycCbGetRequestMsg) returns (ProxycCbGetResponseMsg) {}
+
+  rpc ProxyrCbCreate (ProxyrCbRequestMsg) returns (ProxyrCbResponseMsg) {}
+  rpc ProxyrCbUpdate (ProxyrCbRequestMsg) returns (ProxyrCbResponseMsg) {}
+  rpc ProxyrCbDelete (ProxyrCbDeleteRequestMsg) returns (ProxyrCbDeleteResponseMsg) {}
+  rpc ProxyrCbGet (ProxyrCbGetRequestMsg) returns (ProxyrCbGetResponseMsg) {}
+
+  rpc RawrCbCreate (RawrCbRequestMsg) returns (RawrCbResponseMsg) {}
+  rpc RawrCbUpdate (RawrCbRequestMsg) returns (RawrCbResponseMsg) {}
+  rpc RawrCbDelete (RawrCbDeleteRequestMsg) returns (RawrCbDeleteResponseMsg) {}
+  rpc RawrCbGet (RawrCbGetRequestMsg) returns (RawrCbGetResponseMsg) {}
+
+  rpc RawcCbCreate (RawcCbRequestMsg) returns (RawcCbResponseMsg) {}
+  rpc RawcCbUpdate (RawcCbRequestMsg) returns (RawcCbResponseMsg) {}
+  rpc RawcCbDelete (RawcCbDeleteRequestMsg) returns (RawcCbDeleteResponseMsg) {}
+  rpc RawcCbGet (RawcCbGetRequestMsg) returns (RawcCbGetResponseMsg) {}
+
 }
 
 message ProgramAddressReq {
@@ -1173,5 +1197,486 @@ message CryptoApiRequestMsg {
 
 message CryptoApiResponseMsg {
     repeated CryptoApiResponse      response            = 1;
+}
+
+message DescrAolRequest {
+  fixed64               descr_aol_handle            = 1;    // Handle to the AOL Descriptor
+}
+
+message DescrAolRequestMsg {
+  repeated DescrAolRequest request                  = 1;    // batched request
+}
+
+
+message DescrAolSpec {
+  types.ApiStatus       api_status                  = 1;    // API status code
+  fixed64               descr_aol_handle            = 2;    // Handle to the AOL Descriptor
+  fixed64               Address1                    = 3;    // Address 1
+  fixed32               Offset1                     = 4;    // Offset 1
+  fixed32               Length1                     = 5;    // Length 1
+  fixed64               Address2                    = 6;    // Address 2
+  fixed32               Offset2                     = 7;    // Offset 2
+  fixed32               Length2                     = 8;    // Length 2
+  fixed64               Address3                    = 9;    // Address 3
+  fixed32               Offset3                     = 10;    // Offset 3
+  fixed32               Length3                     = 11;    // Length 3
+  fixed64               next_descr_aol_handle       = 12;    // Handle to the next chained AOL Descriptor
+}
+
+message DescrAolResponseMsg {
+  repeated DescrAolSpec    response                 = 1;    // batched request
+}
+
+// ProxycCbKeyHandle is used to operate on a proxyccb either by its key or handle
+message ProxycCbKeyHandle {
+  oneof key_or_handle {
+    uint32     proxyccb_id          = 1;    // unique proxyccb id allocated by app
+    fixed64    proxyccb_handle      = 2;    // proxyccb handle returned by HAL
+  }
+}
+
+// ProxycCbSpec captures all the proxyccb level configuration
+message ProxycCbSpec {
+  ProxycCbKeyHandle     key_or_handle              = 1;    // proxyccb being created/updated
+  uint32                pi                         = 2;
+  uint32                ci                         = 3;
+  uint32                proxyccb_flags             = 4;
+  uint64                my_txq_base                = 5;
+  uint32                my_txq_ring_size_shift     = 6;
+  uint32                my_txq_entry_size_shift    = 7;
+  uint64                chain_txq_base             = 8;    // next service chain TxQ base
+  uint64                chain_txq_ring_indices_addr= 9;
+  uint32                chain_txq_ring_size_shift  = 10;
+  uint32                chain_txq_entry_size_shift = 11;
+  uint32                chain_txq_lif              = 12;
+  uint32                chain_txq_qtype            = 13;
+  uint32                chain_txq_qid              = 14;
+  uint32                chain_txq_ring             = 15;
+  uint32                redir_span                 = 16;
+  
+  /*
+   * 64-bit statistic counters
+   */
+  uint64                stat_pkts_chain            = 17;
+  uint64                stat_pkts_discard          = 18;
+  
+  /*
+   * 32-bit saturating statistic counters
+   */
+  uint32                stat_cb_not_ready          = 19;
+  uint32                stat_my_txq_empty          = 20;
+  uint32                stat_aol_err               = 21;
+  uint32                stat_txq_full              = 22;
+  uint32                stat_desc_sem_free_full    = 23;
+  uint32                stat_page_sem_free_full    = 24;
+}
+
+// ProxycCbRequestMsg is batched add or modify proxyccb request
+message ProxycCbRequestMsg {
+  repeated ProxycCbSpec  request = 1;    // batched request
+}
+
+// ProxycCbStatus is the operational status of a given proxyccb
+message ProxycCbStatus {
+  fixed64    proxyccb_handle = 1;    // id of proxyccb returned by HAL
+}
+
+// ProxycCbResponse is response to ProxycCbSpec
+message ProxycCbResponse {
+  types.ApiStatus        api_status      = 1;    // API status code
+  ProxycCbStatus         proxyccb_status = 2;    // proxyccb status, if api succeeded
+}
+
+// ProxycCbResponseMsg is batched response to ProxycCbRequestMsg
+message ProxycCbResponseMsg {
+  repeated ProxycCbResponse  response = 1;    // batched response
+}
+
+// ProxycCbDeleteRequest is used to delete a proxyccb
+message ProxycCbDeleteRequest {
+  ProxycCbKeyHandle       key_or_handle = 1;    // ProxycCb key or handle
+}
+
+// ProxycCbDeleteRequestMsg is used to delete a batch of proxyccbs
+message ProxycCbDeleteRequestMsg {
+  repeated ProxycCbDeleteRequest  request = 1;    // batched delete request
+}
+
+// ProxycCbDeleteResponseMsg is batched response to ProxycCbDeleteRequestMsg
+message ProxycCbDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// ProxycCbGetRequest is used to get information about a proxyccb
+message ProxycCbGetRequest {
+  ProxycCbKeyHandle         key_or_handle = 1;    // ProxycCb key or handle
+}
+
+// ProxycCbGetRequestMsg is batched GET requests for proxyccbs
+message ProxycCbGetRequestMsg {
+  repeated ProxycCbGetRequest  request = 1;    // batched get request
+}
+
+// ProxycCbStats is the statistics object for each proxyccb
+message ProxycCbStats {
+}
+
+// ProxycCbGetResponse captures all the information about a proxyccb
+// only if api_status indicates success, other fields are valid
+message ProxycCbGetResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+  ProxycCbSpec       spec       = 2;    // proxyccb configuration
+  ProxycCbStatus     status     = 3;    // operational state of proxyccb
+  ProxycCbStats      stats      = 4;    // stats of the proxyccb
+}
+
+// ProxycCbGetResponseMsg is batched response to ProxycCbGetRequestMsg
+message ProxycCbGetResponseMsg {
+  repeated ProxycCbGetResponse  response = 1;    // batch get response
+}
+
+// ProxyrCbKeyHandle is used to operate on a proxyrcb either by its key or handle
+message ProxyrCbKeyHandle {
+  oneof key_or_handle {
+    uint32     proxyrcb_id          = 1;    // unique proxyrcb id allocated by app
+    fixed64    proxyrcb_handle      = 2;    // proxyrcb handle returned by HAL
+  }
+}
+
+// ProxyrCbSpec captures all the proxyrcb level configuration
+message ProxyrCbSpec {
+  types.ObjectMeta      meta                       = 1;    // common object meta
+  ProxyrCbKeyHandle     key_or_handle              = 2;    // proxyrcb being created/updated
+  uint32                pi                         = 3;
+  uint32                ci                         = 4;
+  uint32                proxyrcb_flags             = 5;
+  uint64                my_txq_base                = 6;
+  uint32                my_txq_ring_size_shift     = 7;
+  uint32                my_txq_entry_size_shift    = 8;
+  uint64                chain_rxq_base             = 9;    // next service chain RxQ base
+  uint64                chain_rxq_ring_indices_addr= 10;
+  uint32                chain_rxq_ring_size_shift  = 11;
+  uint32                chain_rxq_entry_size_shift = 12;
+  uint32                chain_rxq_ring_index_select= 13;
+  uint32                redir_span                 = 14;
+  
+  types.IPAddress       ip_sa                      = 15;
+  types.IPAddress       ip_da                      = 16;
+  uint32                sport                      = 17;
+  uint32                dport                      = 18;
+  uint32                vrf                        = 19;
+  uint32                af                         = 20;
+  types.IPProtocol      ip_proto                   = 21;
+  uint32                dir                        = 22;
+  uint32                role                       = 23;
+  uint32                rev_cb_id                  = 24;
+
+  /*
+   * 64-bit statistic counters
+   */
+  uint64                stat_pkts_redir            = 25;
+  uint64                stat_pkts_discard          = 26;
+  
+  /*
+   * 32-bit saturating statistic counters
+   */
+  uint32                stat_cb_not_ready          = 27;
+  uint32                stat_null_ring_indices_addr= 28;
+  uint32                stat_aol_err               = 29;
+  uint32                stat_rxq_full              = 30;
+  uint32                stat_txq_empty             = 31;
+  uint32                stat_sem_alloc_full        = 32;
+  uint32                stat_sem_free_full         = 33;
+}
+
+// ProxyrCbRequestMsg is batched add or modify proxyrcb request
+message ProxyrCbRequestMsg {
+  repeated ProxyrCbSpec  request = 1;    // batched request
+}
+
+// ProxyrCbStatus is the operational status of a given proxyrcb
+message ProxyrCbStatus {
+  fixed64    proxyrcb_handle = 1;    // id of proxyrcb returned by HAL
+}
+
+// ProxyrCbResponse is response to ProxyrCbSpec
+message ProxyrCbResponse {
+  types.ApiStatus        api_status      = 1;    // API status code
+  ProxyrCbStatus         proxyrcb_status = 2;    // proxyrcb status, if api succeeded
+}
+
+// ProxyrCbResponseMsg is batched response to ProxyrCbRequestMsg
+message ProxyrCbResponseMsg {
+  repeated ProxyrCbResponse  response = 1;    // batched response
+}
+
+// ProxyrCbDeleteRequest is used to delete a proxyrcb
+message ProxyrCbDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  ProxyrCbKeyHandle       key_or_handle = 2;    // ProxyrCb key or handle
+}
+
+// ProxyrCbDeleteRequestMsg is used to delete a batch of proxyrcbs
+message ProxyrCbDeleteRequestMsg {
+  repeated ProxyrCbDeleteRequest  request = 1;    // batched delete request
+}
+
+// ProxyrCbDeleteResponseMsg is batched response to ProxyrCbDeleteRequestMsg
+message ProxyrCbDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// ProxyrCbGetRequest is used to get information about a proxyrcb
+message ProxyrCbGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  ProxyrCbKeyHandle         key_or_handle = 2;    // ProxyrCb key or handle
+}
+
+// ProxyrCbGetRequestMsg is batched GET requests for proxyrcbs
+message ProxyrCbGetRequestMsg {
+  repeated ProxyrCbGetRequest  request = 1;    // batched get request
+}
+
+// ProxyrCbStats is the statistics object for each proxyrcb
+message ProxyrCbStats {
+}
+
+// ProxyrCbGetResponse captures all the information about a proxyrcb
+// only if api_status indicates success, other fields are valid
+message ProxyrCbGetResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+  ProxyrCbSpec       spec       = 2;    // proxyrcb configuration
+  ProxyrCbStatus     status     = 3;    // operational state of proxyrcb
+  ProxyrCbStats      stats      = 4;    // stats of the proxyrcb
+}
+
+// ProxyrCbGetResponseMsg is batched response to ProxyrCbGetRequestMsg
+message ProxyrCbGetResponseMsg {
+  repeated ProxyrCbGetResponse  response = 1;    // batch get response
+}
+
+// RawrCbKeyHandle is used to operate on a rawrcb either by its key or handle
+message RawrCbKeyHandle {
+  oneof key_or_handle {
+    uint32     rawrcb_id          = 1;    // unique rawrcb id allocated by app
+    fixed64    rawrcb_handle      = 2;    // rawrcb handle returned by HAL
+  }
+}
+
+// RawrCbSpec captures all the rawrcb level configuration
+message RawrCbSpec {
+  types.ObjectMeta      meta                       = 1;    // common object meta
+  RawrCbKeyHandle       key_or_handle              = 2;    // rawrcb being created/updated
+  uint32                rawrcb_flags               = 3;
+  uint64                chain_rxq_base             = 4;    // next service chain RxQ base
+  uint64                chain_rxq_ring_indices_addr= 5;
+  uint32                chain_rxq_ring_size_shift  = 6;
+  uint32                chain_rxq_entry_size_shift = 7;
+  uint32                chain_rxq_ring_index_select= 8;
+  uint64                chain_txq_base             = 9;    // next service chain TxQ base
+  uint64                chain_txq_ring_indices_addr= 10;
+  uint32                chain_txq_ring_size_shift  = 11;
+  uint32                chain_txq_entry_size_shift = 12;
+  uint32                chain_txq_ring_index_select= 13;
+  uint32                chain_txq_lif              = 14;
+  uint32                chain_txq_qtype            = 15;
+  uint32                chain_txq_qid              = 16;
+  
+  /*
+   * 64-bit statistic counters
+   */
+  uint64                stat_pkts_redir            = 17;
+  uint64                stat_pkts_discard          = 18;
+  
+  /*
+   * 32-bit saturating statistic counters
+   */
+  uint32                stat_cb_not_ready          = 19;
+  uint32                stat_qstate_cfg_err        = 20;
+  uint32                stat_pkt_len_err           = 21;
+  uint32                stat_rxq_full              = 22;
+  uint32                stat_txq_full              = 23;
+  uint32                stat_desc_sem_alloc_full   = 24;
+  uint32                stat_mpage_sem_alloc_full  = 25;
+  uint32                stat_ppage_sem_alloc_full  = 26;
+  uint32                stat_sem_free_full         = 27;
+}
+
+// RawrCbRequestMsg is batched add or modify rawrcb request
+message RawrCbRequestMsg {
+  repeated RawrCbSpec    request = 1;    // batched request
+}
+
+// RawrCbStatus is the operational status of a given rawrcb
+message RawrCbStatus {
+  fixed64    rawrcb_handle = 1;    // id of rawrcb returned by HAL
+}
+
+// RawrCbResponse is response to RawrCbSpec
+message RawrCbResponse {
+  types.ApiStatus        api_status      = 1;    // API status code
+  RawrCbStatus           rawrcb_status   = 2;    // rawrcb status, if api succeeded
+}
+
+// RawrCbResponseMsg is batched response to RawrCbRequestMsg
+message RawrCbResponseMsg {
+  repeated RawrCbResponse    response = 1;    // batched response
+}
+
+// RawrCbDeleteRequest is used to delete a rawrcb
+message RawrCbDeleteRequest {
+  types.ObjectMeta        meta          = 1;    // object meta
+  RawrCbKeyHandle         key_or_handle = 2;    // RawrCb key or handle
+}
+
+// RawrCbDeleteRequestMsg is used to delete a batch of rawrcbs
+message RawrCbDeleteRequestMsg {
+  repeated RawrCbDeleteRequest    request = 1;    // batched delete request
+}
+
+// RawrCbDeleteResponseMsg is batched response to RawrCbDeleteRequestMsg
+message RawrCbDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// RawrCbGetRequest is used to get information about a rawrcb
+message RawrCbGetRequest {
+  types.ObjectMeta          meta          = 1;    // object meta
+  RawrCbKeyHandle       key_or_handle = 2;    // RawrCb key or handle
+}
+
+// RawrCbGetRequestMsg is batched GET requests for rawrcbs
+message RawrCbGetRequestMsg {
+  repeated RawrCbGetRequest    request = 1;    // batched get request
+}
+
+// RawrCbStats is the statistics object for each rawrcb
+message RawrCbStats {
+}
+
+// RawrCbGetResponse captures all the information about a rawrcb
+// only if api_status indicates success, other fields are valid
+message RawrCbGetResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+  RawrCbSpec         spec       = 2;    // rawrcb configuration
+  RawrCbStatus       status     = 3;    // operational state of rawrcb
+  RawrCbStats        stats      = 4;    // stats of the rawrcb
+}
+
+// RawrCbGetResponseMsg is batched response to RawrCbGetRequestMsg
+message RawrCbGetResponseMsg {
+  repeated RawrCbGetResponse    response = 1;    // batch get response
+}
+
+
+// RawcCbKeyHandle is used to operate on a rawccb either by its key or handle
+message RawcCbKeyHandle {
+  oneof key_or_handle {
+    uint32     rawccb_id          = 1;    // unique rawccb id allocated by app
+    fixed64    rawccb_handle      = 2;    // rawccb handle returned by HAL
+  }
+}
+
+// RawcCbSpec captures all the rawccb level configuration
+message RawcCbSpec {
+  RawcCbKeyHandle       key_or_handle              = 1;    // rawccb being created/updated
+  uint32                pi                         = 2;
+  uint32                ci                         = 3;
+  uint32                rawccb_flags               = 4;
+  uint64                my_txq_base                = 5;
+  uint32                my_txq_ring_size_shift     = 6;
+  uint32                my_txq_entry_size_shift    = 7;
+  uint64                chain_txq_base             = 8;    // next service chain TxQ base
+  uint64                chain_txq_ring_indices_addr= 9;
+  uint32                chain_txq_ring_size_shift  = 10;
+  uint32                chain_txq_entry_size_shift = 11;
+  uint32                chain_txq_lif              = 12;
+  uint32                chain_txq_qtype            = 13;
+  uint32                chain_txq_qid              = 14;
+  uint32                chain_txq_ring             = 15;
+  
+  /*
+   * 64-bit statistic counters
+   */
+  uint64                stat_pkts_chain            = 16;
+  uint64                stat_pkts_discard          = 17;
+
+  /*
+   * 32-bit saturating statistic counters
+   */
+  uint32                stat_cb_not_ready          = 18;
+  uint32                stat_my_txq_empty          = 19;
+  uint32                stat_aol_err               = 20;
+  uint32                stat_txq_full              = 21;
+  uint32                stat_desc_sem_free_full    = 22;
+  uint32                stat_page_sem_free_full    = 23;
+}
+
+// RawcCbRequestMsg is batched add or modify rawccb request
+message RawcCbRequestMsg {
+  repeated RawcCbSpec    request = 1;    // batched request
+}
+
+// RawcCbStatus is the operational status of a given rawccb
+message RawcCbStatus {
+  fixed64    rawccb_handle = 1;    // id of rawccb returned by HAL
+}
+
+// RawcCbResponse is response to RawcCbSpec
+message RawcCbResponse {
+  types.ApiStatus        api_status      = 1;    // API status code
+  RawcCbStatus           rawccb_status   = 2;    // rawccb status, if api succeeded
+}
+
+// RawcCbResponseMsg is batched response to RawcCbRequestMsg
+message RawcCbResponseMsg {
+  repeated RawcCbResponse    response = 1;    // batched response
+}
+
+// RawcCbDeleteRequest is used to delete a rawccb
+message RawcCbDeleteRequest {
+  RawcCbKeyHandle         key_or_handle = 1;    // RawcCb key or handle
+}
+
+// RawcCbDeleteRequestMsg is used to delete a batch of rawccbs
+message RawcCbDeleteRequestMsg {
+  repeated RawcCbDeleteRequest    request = 1;    // batched delete request
+}
+
+message RawcCbDeleteResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+}
+
+// RawcCbDeleteResponseMsg is batched response to RawcCbDeleteRequestMsg
+message RawcCbDeleteResponseMsg {
+  repeated RawcCbDeleteResponse response = 1;
+}
+
+// RawcCbGetRequest is used to get information about a rawccb
+message RawcCbGetRequest {
+  RawcCbKeyHandle       key_or_handle = 1;    // RawcCb key or handle
+}
+
+// RawcCbGetRequestMsg is batched GET requests for rawccbs
+message RawcCbGetRequestMsg {
+  repeated RawcCbGetRequest    request = 1;    // batched get request
+}
+
+// RawcCbStats is the statistics object for each rawccb
+message RawcCbStats {
+}
+
+// RawcCbGetResponse captures all the information about a rawccb
+// only if api_status indicates success, other fields are valid
+message RawcCbGetResponse {
+  types.ApiStatus    api_status = 1;    // API status code
+  RawcCbSpec         spec       = 2;    // rawccb configuration
+  RawcCbStatus       status     = 3;    // operational state of rawccb
+  RawcCbStats        stats      = 4;    // stats of the rawccb
+}
+
+// RawcCbGetResponseMsg is batched response to RawcCbGetRequestMsg
+message RawcCbGetResponseMsg {
+  repeated RawcCbGetResponse    response = 1;    // batch get response
 }
 

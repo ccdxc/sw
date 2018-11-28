@@ -277,13 +277,14 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
 // process a RAWR CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
+rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponseMsg *rsp_msg)
 {
     hal_ret_t               ret = HAL_RET_OK;
     rawrcb_t                rrawrcb;
     rawrcb_t*               rawrcb;
     pd::pd_rawrcb_get_args_t    pd_rawrcb_args;
     pd::pd_func_args_t          pd_func_args = {0};
+    RawrCbGetResponse *rsp = rsp_msg->add_response();
 
     auto kh = req.key_or_handle();
 
@@ -349,7 +350,7 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
 // process a RAWR CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-rawrcb_delete (rawrcb::RawrCbDeleteRequest& req, rawrcb::RawrCbDeleteResponseMsg *rsp)
+rawrcb_delete (internal::RawrCbDeleteRequest& req, internal::RawrCbDeleteResponseMsg *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     rawrcb_t*               rawrcb;

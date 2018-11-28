@@ -193,7 +193,7 @@ add_proxyccb_to_db (proxyccb_t *proxyccb)
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t
-proxyccb_create (ProxycCbSpec& spec, ProxycCbResponse *rsp)
+proxyccb_create (internal::ProxycCbSpec& spec, internal::ProxycCbResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     proxyccb_t              *proxyccb = NULL;
@@ -264,7 +264,7 @@ cleanup:
 // process a PROXYC CB update request
 //------------------------------------------------------------------------------
 hal_ret_t
-proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
+proxyccb_update (internal::ProxycCbSpec& spec, internal::ProxycCbResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     proxyccb_t              *proxyccb;
@@ -315,7 +315,7 @@ proxyccb_update (ProxycCbSpec& spec, ProxycCbResponse *rsp)
 // process a PROXYC CB get request
 //------------------------------------------------------------------------------
 hal_ret_t
-proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponseMsg *resp)
+proxyccb_get (internal::ProxycCbGetRequest& req, internal::ProxycCbGetResponseMsg *resp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     proxyccb_t              rproxyccb;
@@ -387,7 +387,7 @@ proxyccb_get (ProxycCbGetRequest& req, ProxycCbGetResponseMsg *resp)
 // process a PROXYC CB delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-proxyccb_delete (proxyccb::ProxycCbDeleteRequest& req, proxyccb::ProxycCbDeleteResponseMsg *rsp)
+proxyccb_delete (internal::ProxycCbDeleteRequest& req, internal::ProxycCbDeleteResponseMsg *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
     proxyccb_t              *proxyccb;

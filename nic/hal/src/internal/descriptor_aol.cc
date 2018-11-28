@@ -4,7 +4,6 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/internal/descriptor_aol.hpp"
@@ -12,7 +11,7 @@
 namespace hal {
 
 hal_ret_t
-descraol_get(DescrAolRequest& request, DescrAolResponseMsg *resp_msg)
+descraol_get(internal::DescrAolRequest& request, internal::DescrAolResponseMsg *resp_msg)
 {
     pd::pd_descr_aol_t      pd_descr, *pd_descr_ptr;
     hal_ret_t               ret = HAL_RET_OK;

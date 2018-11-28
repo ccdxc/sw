@@ -21,7 +21,6 @@
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
 #include "nic/hal/svc/rdma_svc.hpp"
-#include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
@@ -29,8 +28,6 @@
 
 #include "gen/hal/svc/telemetry_svc_gen.hpp"
 #include "gen/hal/svc/nw_svc_gen.hpp"
-#include "gen/hal/svc/proxyccb_svc_gen.hpp"
-#include "gen/hal/svc/proxyrcb_svc_gen.hpp"
 #include "gen/hal/svc/vrf_svc_gen.hpp"
 #include "gen/hal/svc/l2segment_svc_gen.hpp"
 #include "gen/hal/svc/internal_svc_gen.hpp"
@@ -39,12 +36,8 @@
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
 #include "gen/hal/svc/dos_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"
-#include "gen/hal/svc/descriptor_aol_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
-#include "gen/hal/svc/rawccb_svc_gen.hpp"
-#include "gen/hal/svc/proxyrcb_svc_gen.hpp"
-#include "gen/hal/svc/proxyccb_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
 #include "gen/hal/svc/gft_svc_gen.hpp"
 #include "gen/hal/svc/nat_svc_gen.hpp"
@@ -94,13 +87,8 @@ svc_reg (const std::string& server_addr,
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
     ServerBuilder            server_builder;
-    DescrAolServiceImpl      descraol_svc;
     ProxyServiceImpl         proxy_svc;
     CpuCbServiceImpl         cpucb_svc;
-    RawrCbServiceImpl        rawrcb_svc;
-    RawcCbServiceImpl        rawccb_svc;
-    ProxyrCbServiceImpl      proxyrcb_svc;
-    ProxycCbServiceImpl      proxyccb_svc;
     EventServiceImpl         event_svc;
     MulticastServiceImpl     multicast_svc;
     GftServiceImpl           gft_svc;
@@ -131,15 +119,10 @@ svc_reg (const std::string& server_addr,
         server_builder.RegisterService(&nwsec_svc);
         server_builder.RegisterService(&dos_svc);
         server_builder.RegisterService(&qos_svc);
-        server_builder.RegisterService(&descraol_svc);
         server_builder.RegisterService(&proxy_svc);
         server_builder.RegisterService(&acl_svc);
         server_builder.RegisterService(&telemetry_svc);
         server_builder.RegisterService(&cpucb_svc);
-        server_builder.RegisterService(&rawrcb_svc);
-        server_builder.RegisterService(&rawccb_svc);
-        server_builder.RegisterService(&proxyrcb_svc);
-        server_builder.RegisterService(&proxyccb_svc);
         server_builder.RegisterService(&event_svc);
         server_builder.RegisterService(&multicast_svc);
         server_builder.RegisterService(&system_svc);

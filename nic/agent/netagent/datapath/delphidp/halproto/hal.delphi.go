@@ -52,7 +52,7 @@ var HalState_value = map[string]int32{
 func (x HalState) String() string {
 	return proto.EnumName(HalState_name, int32(x))
 }
-func (HalState) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{0} }
+func (HalState) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{0} }
 
 type HalStatus struct {
 	Meta  *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
@@ -156,7 +156,7 @@ type HalStatusReactor interface {
 func (m *HalStatus) Reset()                    { *m = HalStatus{} }
 func (m *HalStatus) String() string            { return proto.CompactTextString(m) }
 func (*HalStatus) ProtoMessage()               {}
-func (*HalStatus) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{0} }
+func (*HalStatus) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{0} }
 
 func (m *HalStatus) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -178,9 +178,9 @@ func init() {
 	proto.RegisterEnum("hal.HalState", HalState_name, HalState_value)
 }
 
-func init() { proto.RegisterFile("hal.proto", fileDescriptor11) }
+func init() { proto.RegisterFile("hal.proto", fileDescriptor10) }
 
-var fileDescriptor11 = []byte{
+var fileDescriptor10 = []byte{
 	// 260 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xcc, 0x48, 0xcc, 0xd1,
 	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xce, 0x48, 0xcc, 0x91, 0xe2, 0x49, 0x49, 0xcd, 0x29,

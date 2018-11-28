@@ -30,7 +30,6 @@
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
 #include "nic/hal/svc/rdma_svc.hpp"
-#include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/hal/svc/accel_rgroup_svc.hpp"
@@ -46,18 +45,12 @@
 #include "gen/hal/svc/telemetry_svc_gen.hpp"
 #include "gen/hal/svc/tls_proxy_cb2_svc_gen.hpp"
 #include "gen/hal/svc/internal_svc_gen.hpp"
-#include "gen/hal/svc/proxyccb_svc_gen.hpp"
-#include "gen/hal/svc/proxyrcb_svc_gen.hpp"
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
 #include "gen/hal/svc/nat_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"
-#include "gen/hal/svc/descriptor_aol_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/ipsec_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
-#include "gen/hal/svc/rawccb_svc_gen.hpp"
-#include "gen/hal/svc/proxyrcb_svc_gen.hpp"
-#include "gen/hal/svc/proxyccb_svc_gen.hpp"
 #include "gen/hal/svc/tcp_proxy_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
 #include "gen/hal/svc/gft_svc_gen.hpp"
@@ -96,14 +89,9 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     AclServiceImpl           acl_svc;
     TelemetryServiceImpl     telemetry_svc;
     TlsProxyCbServiceImpl    tls_proxy_cb_svc;
-    DescrAolServiceImpl      descraol_svc;
     ProxyServiceImpl         proxy_svc;
     IpsecServiceImpl         ipsec_svc;
     CpuCbServiceImpl         cpucb_svc;
-    RawrCbServiceImpl        rawrcb_svc;
-    RawcCbServiceImpl        rawccb_svc;
-    ProxyrCbServiceImpl      proxyrcb_svc;
-    ProxycCbServiceImpl      proxyccb_svc;
     TcpProxyServiceImpl      tcp_proxy_svc;
     EventServiceImpl         event_svc;
     AccelRGroupServiceImpl   accel_rgroup_svc;
@@ -122,14 +110,9 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&debug_svc);
         server_builder->RegisterService(&table_svc);
         server_builder->RegisterService(&nic_svc);
-        server_builder->RegisterService(&descraol_svc);
         server_builder->RegisterService(&proxy_svc);
         //server_builder->RegisterService(&ipsec_svc);
         server_builder->RegisterService(&cpucb_svc);
-        server_builder->RegisterService(&rawrcb_svc);
-        server_builder->RegisterService(&rawccb_svc);
-        server_builder->RegisterService(&proxyrcb_svc);
-        server_builder->RegisterService(&proxyccb_svc);
         server_builder->RegisterService(&tcp_proxy_svc);
         server_builder->RegisterService(&tls_proxy_cb_svc);
         server_builder->RegisterService(&event_svc);

@@ -10,25 +10,25 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "gen/proto/rawrcb.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/app_redir_shared.h"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
-using rawrcb::RawrCbSpec;
-using rawrcb::RawrCbStatus;
-using rawrcb::RawrCbResponse;
-using rawrcb::RawrCbKeyHandle;
-using rawrcb::RawrCbRequestMsg;
-using rawrcb::RawrCbResponseMsg;
-using rawrcb::RawrCbDeleteRequestMsg;
-using rawrcb::RawrCbDeleteResponseMsg;
-using rawrcb::RawrCbGetRequest;
-using rawrcb::RawrCbGetRequestMsg;
-using rawrcb::RawrCbGetResponse;
-using rawrcb::RawrCbGetResponseMsg;
+using internal::RawrCbSpec;
+using internal::RawrCbStatus;
+using internal::RawrCbResponse;
+using internal::RawrCbKeyHandle;
+using internal::RawrCbRequestMsg;
+using internal::RawrCbResponseMsg;
+using internal::RawrCbDeleteRequestMsg;
+using internal::RawrCbDeleteResponseMsg;
+using internal::RawrCbGetRequest;
+using internal::RawrCbGetRequestMsg;
+using internal::RawrCbGetResponse;
+using internal::RawrCbGetResponseMsg;
 
 namespace hal {
 
@@ -105,17 +105,17 @@ extern void *rawrcb_get_handle_key_func(void *entry);
 extern uint32_t rawrcb_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool rawrcb_compare_handle_key_func(void *key1, void *key2);
 
-hal_ret_t rawrcb_create(rawrcb::RawrCbSpec& spec,
-                        rawrcb::RawrCbResponse *rsp);
+hal_ret_t rawrcb_create(internal::RawrCbSpec& spec,
+                        internal::RawrCbResponse *rsp);
 
-hal_ret_t rawrcb_update(rawrcb::RawrCbSpec& spec,
-                        rawrcb::RawrCbResponse *rsp);
+hal_ret_t rawrcb_update(internal::RawrCbSpec& spec,
+                        internal::RawrCbResponse *rsp);
 
-hal_ret_t rawrcb_delete(rawrcb::RawrCbDeleteRequest& req,
-                        rawrcb::RawrCbDeleteResponseMsg *rsp);
+hal_ret_t rawrcb_delete(internal::RawrCbDeleteRequest& req,
+                        internal::RawrCbDeleteResponseMsg *rsp);
 
-hal_ret_t rawrcb_get(rawrcb::RawrCbGetRequest& req,
-                     rawrcb::RawrCbGetResponse *rsp);
+hal_ret_t rawrcb_get(internal::RawrCbGetRequest& req,
+                     internal::RawrCbGetResponse *rsp);
 }    // namespace hal
 
 #endif    // __RAWRCB_HPP__

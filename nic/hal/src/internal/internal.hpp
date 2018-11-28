@@ -109,6 +109,57 @@ hal_ret_t   cryptokey_delete(internal::CryptoKeyDeleteRequest &request,
 hal_ret_t cryptoapi_invoke(internal::CryptoApiRequest &req,
         internal::CryptoApiResponse *resp);
 
+hal_ret_t descraol_get(internal::DescrAolRequest& request,
+                       internal::DescrAolResponseMsg *response);
+
+hal_ret_t proxyccb_create(internal::ProxycCbSpec& spec,
+                          internal::ProxycCbResponse *rsp);
+
+hal_ret_t proxyccb_update(internal::ProxycCbSpec& spec,
+                          internal::ProxycCbResponse *rsp);
+
+hal_ret_t proxyccb_delete(internal::ProxycCbDeleteRequest& req,
+                          internal::ProxycCbDeleteResponseMsg *rsp);
+
+hal_ret_t proxyccb_get(internal::ProxycCbGetRequest& req,
+                       internal::ProxycCbGetResponseMsg *rsp);
+
+hal_ret_t proxyrcb_create(internal::ProxyrCbSpec& spec,
+                          internal::ProxyrCbResponse *rsp);
+
+hal_ret_t proxyrcb_update(internal::ProxyrCbSpec& spec,
+                          internal::ProxyrCbResponse *rsp);
+    
+hal_ret_t proxyrcb_delete(internal::ProxyrCbDeleteRequest& req,
+                          internal::ProxyrCbDeleteResponseMsg *rsp);
+    
+hal_ret_t proxyrcb_get(internal::ProxyrCbGetRequest& req,
+                       internal::ProxyrCbGetResponseMsg *rsp);
+
+hal_ret_t rawrcb_create(internal::RawrCbSpec& spec,
+                        internal::RawrCbResponse *rsp);
+
+hal_ret_t rawrcb_update(internal::RawrCbSpec& spec,
+                        internal::RawrCbResponse *rsp);
+    
+hal_ret_t rawrcb_delete(internal::RawrCbDeleteRequest& req,
+                        internal::RawrCbDeleteResponseMsg *rsp);
+    
+hal_ret_t rawrcb_get(internal::RawrCbGetRequest& req,
+                     internal::RawrCbGetResponseMsg *rsp);
+
+hal_ret_t rawccb_create(internal::RawcCbSpec& spec,
+                        internal::RawcCbResponse *rsp);
+
+hal_ret_t rawccb_update(internal::RawcCbSpec& spec,
+                        internal::RawcCbResponse *rsp);
+
+hal_ret_t rawccb_delete(internal::RawcCbDeleteRequest& req,
+                        internal::RawcCbDeleteResponse *rsp);
+
+hal_ret_t rawccb_get(internal::RawcCbGetRequest& req,
+                     internal::RawcCbGetResponseMsg *rsp);
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

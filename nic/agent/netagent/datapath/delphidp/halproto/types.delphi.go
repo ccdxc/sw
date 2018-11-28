@@ -262,7 +262,7 @@ var IPProtocol_value = map[string]int32{
 func (x IPProtocol) String() string {
 	return proto.EnumName(IPProtocol_name, int32(x))
 }
-func (IPProtocol) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{0} }
+func (IPProtocol) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{0} }
 
 // ICMP message types
 // TBD - add more here !!
@@ -285,7 +285,7 @@ var ICMPMsgType_value = map[string]int32{
 func (x ICMPMsgType) String() string {
 	return proto.EnumName(ICMPMsgType_name, int32(x))
 }
-func (ICMPMsgType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{1} }
+func (ICMPMsgType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{1} }
 
 // API return codes (more descriptive than protobuf enums)
 type ApiStatus int32
@@ -463,7 +463,7 @@ var ApiStatus_value = map[string]int32{
 func (x ApiStatus) String() string {
 	return proto.EnumName(ApiStatus_name, int32(x))
 }
-func (ApiStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{2} }
+func (ApiStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{2} }
 
 // Types of Vrfs
 type VrfType int32
@@ -491,7 +491,7 @@ var VrfType_value = map[string]int32{
 func (x VrfType) String() string {
 	return proto.EnumName(VrfType_name, int32(x))
 }
-func (VrfType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{3} }
+func (VrfType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{3} }
 
 // Types of L2 segments
 type L2SegmentType int32
@@ -516,7 +516,7 @@ var L2SegmentType_value = map[string]int32{
 func (x L2SegmentType) String() string {
 	return proto.EnumName(L2SegmentType_name, int32(x))
 }
-func (L2SegmentType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{4} }
+func (L2SegmentType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{4} }
 
 // Supported wire encaps for the L2 segments
 type EncapType int32
@@ -550,7 +550,7 @@ var EncapType_value = map[string]int32{
 func (x EncapType) String() string {
 	return proto.EnumName(EncapType_name, int32(x))
 }
-func (EncapType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{5} }
+func (EncapType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{5} }
 
 // IP address families
 type IPAddressFamily int32
@@ -575,7 +575,7 @@ var IPAddressFamily_value = map[string]int32{
 func (x IPAddressFamily) String() string {
 	return proto.EnumName(IPAddressFamily_name, int32(x))
 }
-func (IPAddressFamily) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{6} }
+func (IPAddressFamily) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{6} }
 
 type IPAddressType int32
 
@@ -614,7 +614,7 @@ var IPAddressType_value = map[string]int32{
 func (x IPAddressType) String() string {
 	return proto.EnumName(IPAddressType_name, int32(x))
 }
-func (IPAddressType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{7} }
+func (IPAddressType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{7} }
 
 // Types of lif
 type LifType int32
@@ -648,7 +648,7 @@ var LifType_value = map[string]int32{
 func (x LifType) String() string {
 	return proto.EnumName(LifType_name, int32(x))
 }
-func (LifType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{8} }
+func (LifType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{8} }
 
 // Types of Work Ring
 type WRingType int32
@@ -778,7 +778,7 @@ var WRingType_value = map[string]int32{
 func (x WRingType) String() string {
 	return proto.EnumName(WRingType_name, int32(x))
 }
-func (WRingType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{9} }
+func (WRingType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{9} }
 
 // Types of Proxy Service
 type ProxyType int32
@@ -830,7 +830,7 @@ var ProxyType_value = map[string]int32{
 func (x ProxyType) String() string {
 	return proto.EnumName(ProxyType_name, int32(x))
 }
-func (ProxyType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{10} }
+func (ProxyType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{10} }
 
 // Types of Cryptographic Asymmetric keys
 type CryptoAsymKeyType int32
@@ -852,7 +852,7 @@ var CryptoAsymKeyType_value = map[string]int32{
 func (x CryptoAsymKeyType) String() string {
 	return proto.EnumName(CryptoAsymKeyType_name, int32(x))
 }
-func (CryptoAsymKeyType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{11} }
+func (CryptoAsymKeyType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{11} }
 
 // Types of Cryptographic keys
 type CryptoKeyType int32
@@ -889,7 +889,7 @@ var CryptoKeyType_value = map[string]int32{
 func (x CryptoKeyType) String() string {
 	return proto.EnumName(CryptoKeyType_name, int32(x))
 }
-func (CryptoKeyType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{12} }
+func (CryptoKeyType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{12} }
 
 // Types of Barco Rings
 type BarcoRings int32
@@ -956,7 +956,7 @@ var BarcoRings_value = map[string]int32{
 func (x BarcoRings) String() string {
 	return proto.EnumName(BarcoRings_name, int32(x))
 }
-func (BarcoRings) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{13} }
+func (BarcoRings) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{13} }
 
 type AppRedirType int32
 
@@ -980,7 +980,7 @@ var AppRedirType_value = map[string]int32{
 func (x AppRedirType) String() string {
 	return proto.EnumName(AppRedirType_name, int32(x))
 }
-func (AppRedirType) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{14} }
+func (AppRedirType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{14} }
 
 // Types of CPU CB/QIDs
 type CpucbId int32
@@ -1017,7 +1017,7 @@ var CpucbId_value = map[string]int32{
 func (x CpucbId) String() string {
 	return proto.EnumName(CpucbId_name, int32(x))
 }
-func (CpucbId) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{15} }
+func (CpucbId) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{15} }
 
 // FTE Span Match Selectors
 type FTESpanMatchSelector int32
@@ -1072,7 +1072,7 @@ var FTESpanMatchSelector_value = map[string]int32{
 func (x FTESpanMatchSelector) String() string {
 	return proto.EnumName(FTESpanMatchSelector_name, int32(x))
 }
-func (FTESpanMatchSelector) EnumDescriptor() ([]byte, []int) { return fileDescriptor38, []int{16} }
+func (FTESpanMatchSelector) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{16} }
 
 // common meta object that is part of all other top level objects
 // TODO: should we add last updated timestamp, revision etc. here ?
@@ -1083,7 +1083,7 @@ type ObjectMeta struct {
 func (m *ObjectMeta) Reset()                    { *m = ObjectMeta{} }
 func (m *ObjectMeta) String() string            { return proto.CompactTextString(m) }
 func (*ObjectMeta) ProtoMessage()               {}
-func (*ObjectMeta) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{0} }
+func (*ObjectMeta) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{0} }
 
 func (m *ObjectMeta) GetVrfId() uint64 {
 	if m != nil {
@@ -1101,7 +1101,7 @@ type EncapInfo struct {
 func (m *EncapInfo) Reset()                    { *m = EncapInfo{} }
 func (m *EncapInfo) String() string            { return proto.CompactTextString(m) }
 func (*EncapInfo) ProtoMessage()               {}
-func (*EncapInfo) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{1} }
+func (*EncapInfo) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{1} }
 
 func (m *EncapInfo) GetEncapType() EncapType {
 	if m != nil {
@@ -1129,7 +1129,7 @@ type IPAddress struct {
 func (m *IPAddress) Reset()                    { *m = IPAddress{} }
 func (m *IPAddress) String() string            { return proto.CompactTextString(m) }
 func (*IPAddress) ProtoMessage()               {}
-func (*IPAddress) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{2} }
+func (*IPAddress) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{2} }
 
 type isIPAddress_V4OrV6 interface{ isIPAddress_V4OrV6() }
 
@@ -1245,7 +1245,7 @@ type IPRange struct {
 func (m *IPRange) Reset()                    { *m = IPRange{} }
 func (m *IPRange) String() string            { return proto.CompactTextString(m) }
 func (*IPRange) ProtoMessage()               {}
-func (*IPRange) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{3} }
+func (*IPRange) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{3} }
 
 func (m *IPRange) GetLowIpaddr() *IPAddress {
 	if m != nil {
@@ -1270,7 +1270,7 @@ type IPPrefix struct {
 func (m *IPPrefix) Reset()                    { *m = IPPrefix{} }
 func (m *IPPrefix) String() string            { return proto.CompactTextString(m) }
 func (*IPPrefix) ProtoMessage()               {}
-func (*IPPrefix) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{4} }
+func (*IPPrefix) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{4} }
 
 func (m *IPPrefix) GetAddress() *IPAddress {
 	if m != nil {
@@ -1297,7 +1297,7 @@ type IPSubnet struct {
 func (m *IPSubnet) Reset()                    { *m = IPSubnet{} }
 func (m *IPSubnet) String() string            { return proto.CompactTextString(m) }
 func (*IPSubnet) ProtoMessage()               {}
-func (*IPSubnet) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{5} }
+func (*IPSubnet) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{5} }
 
 type isIPSubnet_Subnet interface{ isIPSubnet_Subnet() }
 
@@ -1417,7 +1417,7 @@ type AddressRange struct {
 func (m *AddressRange) Reset()                    { *m = AddressRange{} }
 func (m *AddressRange) String() string            { return proto.CompactTextString(m) }
 func (*AddressRange) ProtoMessage()               {}
-func (*AddressRange) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{6} }
+func (*AddressRange) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{6} }
 
 type isAddressRange_Range interface{ isAddressRange_Range() }
 
@@ -1537,7 +1537,7 @@ type Address struct {
 func (m *Address) Reset()                    { *m = Address{} }
 func (m *Address) String() string            { return proto.CompactTextString(m) }
 func (*Address) ProtoMessage()               {}
-func (*Address) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{7} }
+func (*Address) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{7} }
 
 type isAddress_Address interface{ isAddress_Address() }
 
@@ -1657,7 +1657,7 @@ type IPAddressObj struct {
 func (m *IPAddressObj) Reset()                    { *m = IPAddressObj{} }
 func (m *IPAddressObj) String() string            { return proto.CompactTextString(m) }
 func (*IPAddressObj) ProtoMessage()               {}
-func (*IPAddressObj) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{8} }
+func (*IPAddressObj) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{8} }
 
 type isIPAddressObj_Formats interface{ isIPAddressObj_Formats() }
 
@@ -1777,7 +1777,7 @@ type L4PortRange struct {
 func (m *L4PortRange) Reset()                    { *m = L4PortRange{} }
 func (m *L4PortRange) String() string            { return proto.CompactTextString(m) }
 func (*L4PortRange) ProtoMessage()               {}
-func (*L4PortRange) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{9} }
+func (*L4PortRange) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{9} }
 
 func (m *L4PortRange) GetPortLow() uint32 {
 	if m != nil {
@@ -1799,7 +1799,7 @@ type Empty struct {
 func (m *Empty) Reset()                    { *m = Empty{} }
 func (m *Empty) String() string            { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()               {}
-func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{10} }
+func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{10} }
 
 type DropReasons struct {
 	DropMalformedPkt                bool `protobuf:"varint,1,opt,name=drop_malformed_pkt,json=dropMalformedPkt" json:"drop_malformed_pkt,omitempty"`
@@ -1832,7 +1832,7 @@ type DropReasons struct {
 func (m *DropReasons) Reset()                    { *m = DropReasons{} }
 func (m *DropReasons) String() string            { return proto.CompactTextString(m) }
 func (*DropReasons) ProtoMessage()               {}
-func (*DropReasons) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{11} }
+func (*DropReasons) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{11} }
 
 func (m *DropReasons) GetDropMalformedPkt() bool {
 	if m != nil {
@@ -2021,7 +2021,7 @@ type EgressDropReasons struct {
 func (m *EgressDropReasons) Reset()                    { *m = EgressDropReasons{} }
 func (m *EgressDropReasons) String() string            { return proto.CompactTextString(m) }
 func (*EgressDropReasons) ProtoMessage()               {}
-func (*EgressDropReasons) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{12} }
+func (*EgressDropReasons) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{12} }
 
 func (m *EgressDropReasons) GetDropOutputMapping() bool {
 	if m != nil {
@@ -2080,7 +2080,7 @@ type RuleMatch struct {
 func (m *RuleMatch) Reset()                    { *m = RuleMatch{} }
 func (m *RuleMatch) String() string            { return proto.CompactTextString(m) }
 func (*RuleMatch) ProtoMessage()               {}
-func (*RuleMatch) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{13} }
+func (*RuleMatch) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{13} }
 
 func (m *RuleMatch) GetSrcAddress() []*IPAddressObj {
 	if m != nil {
@@ -2153,7 +2153,7 @@ type RuleMatch_L4PortAppInfo struct {
 func (m *RuleMatch_L4PortAppInfo) Reset()                    { *m = RuleMatch_L4PortAppInfo{} }
 func (m *RuleMatch_L4PortAppInfo) String() string            { return proto.CompactTextString(m) }
 func (*RuleMatch_L4PortAppInfo) ProtoMessage()               {}
-func (*RuleMatch_L4PortAppInfo) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{13, 0} }
+func (*RuleMatch_L4PortAppInfo) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{13, 0} }
 
 func (m *RuleMatch_L4PortAppInfo) GetDstPortRange() []*L4PortRange {
 	if m != nil {
@@ -2177,7 +2177,7 @@ type RuleMatch_ICMPAppInfo struct {
 func (m *RuleMatch_ICMPAppInfo) Reset()                    { *m = RuleMatch_ICMPAppInfo{} }
 func (m *RuleMatch_ICMPAppInfo) String() string            { return proto.CompactTextString(m) }
 func (*RuleMatch_ICMPAppInfo) ProtoMessage()               {}
-func (*RuleMatch_ICMPAppInfo) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{13, 1} }
+func (*RuleMatch_ICMPAppInfo) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{13, 1} }
 
 func (m *RuleMatch_ICMPAppInfo) GetIcmpType() uint32 {
 	if m != nil {
@@ -2201,7 +2201,7 @@ type RuleMatch_ICMPv6AppInfo struct {
 func (m *RuleMatch_ICMPv6AppInfo) Reset()                    { *m = RuleMatch_ICMPv6AppInfo{} }
 func (m *RuleMatch_ICMPv6AppInfo) String() string            { return proto.CompactTextString(m) }
 func (*RuleMatch_ICMPv6AppInfo) ProtoMessage()               {}
-func (*RuleMatch_ICMPv6AppInfo) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{13, 2} }
+func (*RuleMatch_ICMPv6AppInfo) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{13, 2} }
 
 func (m *RuleMatch_ICMPv6AppInfo) GetIcmpv6Type() uint32 {
 	if m != nil {
@@ -2224,7 +2224,7 @@ type RuleMatch_ESPInfo struct {
 func (m *RuleMatch_ESPInfo) Reset()                    { *m = RuleMatch_ESPInfo{} }
 func (m *RuleMatch_ESPInfo) String() string            { return proto.CompactTextString(m) }
 func (*RuleMatch_ESPInfo) ProtoMessage()               {}
-func (*RuleMatch_ESPInfo) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{13, 3} }
+func (*RuleMatch_ESPInfo) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{13, 3} }
 
 func (m *RuleMatch_ESPInfo) GetSpi() uint32 {
 	if m != nil {
@@ -2246,7 +2246,7 @@ type RuleMatch_AppMatch struct {
 func (m *RuleMatch_AppMatch) Reset()                    { *m = RuleMatch_AppMatch{} }
 func (m *RuleMatch_AppMatch) String() string            { return proto.CompactTextString(m) }
 func (*RuleMatch_AppMatch) ProtoMessage()               {}
-func (*RuleMatch_AppMatch) Descriptor() ([]byte, []int) { return fileDescriptor38, []int{13, 4} }
+func (*RuleMatch_AppMatch) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{13, 4} }
 
 type isRuleMatch_AppMatch_App interface{ isRuleMatch_AppMatch_App() }
 
@@ -2454,9 +2454,9 @@ func init() {
 	proto.RegisterEnum("halproto.FTESpanMatchSelector", FTESpanMatchSelector_name, FTESpanMatchSelector_value)
 }
 
-func init() { proto.RegisterFile("types.proto", fileDescriptor38) }
+func init() { proto.RegisterFile("types.proto", fileDescriptor33) }
 
-var fileDescriptor38 = []byte{
+var fileDescriptor33 = []byte{
 	// 3630 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x59, 0xdd, 0x72, 0xe3, 0x46,
 	0x76, 0x16, 0x29, 0x89, 0x22, 0x9b, 0xa2, 0xd4, 0xc2, 0x68, 0x24, 0x8e, 0xe6, 0x9f, 0x33, 0xb6,

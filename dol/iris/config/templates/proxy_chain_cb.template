@@ -2,8 +2,8 @@
 meta:
     id: PROXYCCB
     grpc:
-        package                       : proxyccb
-        service                       : ProxycCb
+        package                       : internal 
+        service                       : Internal 
         apis:
             create:
                 name                  : ProxycCbCreate

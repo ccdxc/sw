@@ -23,7 +23,7 @@ type ProxyKeyHandle struct {
 func (m *ProxyKeyHandle) Reset()                    { *m = ProxyKeyHandle{} }
 func (m *ProxyKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*ProxyKeyHandle) ProtoMessage()               {}
-func (*ProxyKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{0} }
+func (*ProxyKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{0} }
 
 type isProxyKeyHandle_KeyOrHandle interface{ isProxyKeyHandle_KeyOrHandle() }
 
@@ -133,7 +133,7 @@ type ProxySpec struct {
 func (m *ProxySpec) Reset()                    { *m = ProxySpec{} }
 func (m *ProxySpec) String() string            { return proto.CompactTextString(m) }
 func (*ProxySpec) ProtoMessage()               {}
-func (*ProxySpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{1} }
+func (*ProxySpec) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{1} }
 
 func (m *ProxySpec) GetVrfKeyHandle() *VrfKeyHandle {
 	if m != nil {
@@ -171,7 +171,7 @@ type ProxyRequestMsg struct {
 func (m *ProxyRequestMsg) Reset()                    { *m = ProxyRequestMsg{} }
 func (m *ProxyRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyRequestMsg) ProtoMessage()               {}
-func (*ProxyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{2} }
+func (*ProxyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{2} }
 
 func (m *ProxyRequestMsg) GetRequest() []*ProxySpec {
 	if m != nil {
@@ -188,7 +188,7 @@ type ProxyStatus struct {
 func (m *ProxyStatus) Reset()                    { *m = ProxyStatus{} }
 func (m *ProxyStatus) String() string            { return proto.CompactTextString(m) }
 func (*ProxyStatus) ProtoMessage()               {}
-func (*ProxyStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{3} }
+func (*ProxyStatus) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{3} }
 
 func (m *ProxyStatus) GetProxyHandle() uint64 {
 	if m != nil {
@@ -206,7 +206,7 @@ type ProxyResponse struct {
 func (m *ProxyResponse) Reset()                    { *m = ProxyResponse{} }
 func (m *ProxyResponse) String() string            { return proto.CompactTextString(m) }
 func (*ProxyResponse) ProtoMessage()               {}
-func (*ProxyResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{4} }
+func (*ProxyResponse) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{4} }
 
 func (m *ProxyResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -230,7 +230,7 @@ type ProxyResponseMsg struct {
 func (m *ProxyResponseMsg) Reset()                    { *m = ProxyResponseMsg{} }
 func (m *ProxyResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyResponseMsg) ProtoMessage()               {}
-func (*ProxyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{5} }
+func (*ProxyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{5} }
 
 func (m *ProxyResponseMsg) GetResponse() []*ProxyResponse {
 	if m != nil {
@@ -247,7 +247,7 @@ type ProxyDisableRequest struct {
 func (m *ProxyDisableRequest) Reset()                    { *m = ProxyDisableRequest{} }
 func (m *ProxyDisableRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxyDisableRequest) ProtoMessage()               {}
-func (*ProxyDisableRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{6} }
+func (*ProxyDisableRequest) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{6} }
 
 func (m *ProxyDisableRequest) GetKeyOrHandle() *ProxyKeyHandle {
 	if m != nil {
@@ -264,7 +264,7 @@ type ProxyDisableRequestMsg struct {
 func (m *ProxyDisableRequestMsg) Reset()                    { *m = ProxyDisableRequestMsg{} }
 func (m *ProxyDisableRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyDisableRequestMsg) ProtoMessage()               {}
-func (*ProxyDisableRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{7} }
+func (*ProxyDisableRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{7} }
 
 func (m *ProxyDisableRequestMsg) GetRequest() []*ProxyDisableRequest {
 	if m != nil {
@@ -281,7 +281,7 @@ type ProxyDisableResponseMsg struct {
 func (m *ProxyDisableResponseMsg) Reset()                    { *m = ProxyDisableResponseMsg{} }
 func (m *ProxyDisableResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyDisableResponseMsg) ProtoMessage()               {}
-func (*ProxyDisableResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{8} }
+func (*ProxyDisableResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{8} }
 
 func (m *ProxyDisableResponseMsg) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -298,7 +298,7 @@ type ProxyGetRequest struct {
 func (m *ProxyGetRequest) Reset()                    { *m = ProxyGetRequest{} }
 func (m *ProxyGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGetRequest) ProtoMessage()               {}
-func (*ProxyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{9} }
+func (*ProxyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{9} }
 
 func (m *ProxyGetRequest) GetKeyOrHandle() *ProxyKeyHandle {
 	if m != nil {
@@ -315,7 +315,7 @@ type ProxyGetRequestMsg struct {
 func (m *ProxyGetRequestMsg) Reset()                    { *m = ProxyGetRequestMsg{} }
 func (m *ProxyGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGetRequestMsg) ProtoMessage()               {}
-func (*ProxyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{10} }
+func (*ProxyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{10} }
 
 func (m *ProxyGetRequestMsg) GetRequest() []*ProxyGetRequest {
 	if m != nil {
@@ -331,7 +331,7 @@ type ProxyStats struct {
 func (m *ProxyStats) Reset()                    { *m = ProxyStats{} }
 func (m *ProxyStats) String() string            { return proto.CompactTextString(m) }
 func (*ProxyStats) ProtoMessage()               {}
-func (*ProxyStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{11} }
+func (*ProxyStats) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{11} }
 
 // ProxyGetResponse captures all the information about a proxy
 // only if api_status indicates success, other fields are valid
@@ -345,7 +345,7 @@ type ProxyGetResponse struct {
 func (m *ProxyGetResponse) Reset()                    { *m = ProxyGetResponse{} }
 func (m *ProxyGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGetResponse) ProtoMessage()               {}
-func (*ProxyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{12} }
+func (*ProxyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{12} }
 
 func (m *ProxyGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -383,7 +383,7 @@ type ProxyGetResponseMsg struct {
 func (m *ProxyGetResponseMsg) Reset()                    { *m = ProxyGetResponseMsg{} }
 func (m *ProxyGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGetResponseMsg) ProtoMessage()               {}
-func (*ProxyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{13} }
+func (*ProxyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{13} }
 
 func (m *ProxyGetResponseMsg) GetResponse() []*ProxyGetResponse {
 	if m != nil {
@@ -400,7 +400,7 @@ type IpsecFlowConfig struct {
 func (m *IpsecFlowConfig) Reset()                    { *m = IpsecFlowConfig{} }
 func (m *IpsecFlowConfig) String() string            { return proto.CompactTextString(m) }
 func (*IpsecFlowConfig) ProtoMessage()               {}
-func (*IpsecFlowConfig) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{14} }
+func (*IpsecFlowConfig) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{14} }
 
 func (m *IpsecFlowConfig) GetEncrypt() bool {
 	if m != nil {
@@ -423,7 +423,7 @@ type TlsProxyECDSAKeys struct {
 func (m *TlsProxyECDSAKeys) Reset()                    { *m = TlsProxyECDSAKeys{} }
 func (m *TlsProxyECDSAKeys) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyECDSAKeys) ProtoMessage()               {}
-func (*TlsProxyECDSAKeys) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{15} }
+func (*TlsProxyECDSAKeys) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{15} }
 
 func (m *TlsProxyECDSAKeys) GetSignKeyIdx() uint32 {
 	if m != nil {
@@ -440,7 +440,7 @@ type TlsProxyRSAKeys struct {
 func (m *TlsProxyRSAKeys) Reset()                    { *m = TlsProxyRSAKeys{} }
 func (m *TlsProxyRSAKeys) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyRSAKeys) ProtoMessage()               {}
-func (*TlsProxyRSAKeys) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{16} }
+func (*TlsProxyRSAKeys) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{16} }
 
 func (m *TlsProxyRSAKeys) GetSignKeyIdx() uint32 {
 	if m != nil {
@@ -470,7 +470,7 @@ type TlsProxyFlowConfig struct {
 func (m *TlsProxyFlowConfig) Reset()                    { *m = TlsProxyFlowConfig{} }
 func (m *TlsProxyFlowConfig) String() string            { return proto.CompactTextString(m) }
 func (*TlsProxyFlowConfig) ProtoMessage()               {}
-func (*TlsProxyFlowConfig) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{17} }
+func (*TlsProxyFlowConfig) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{17} }
 
 type isTlsProxyFlowConfig_Keys interface{ isTlsProxyFlowConfig_Keys() }
 
@@ -620,7 +620,7 @@ type ProxyFlowConfigRequest struct {
 func (m *ProxyFlowConfigRequest) Reset()                    { *m = ProxyFlowConfigRequest{} }
 func (m *ProxyFlowConfigRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxyFlowConfigRequest) ProtoMessage()               {}
-func (*ProxyFlowConfigRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{18} }
+func (*ProxyFlowConfigRequest) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{18} }
 
 func (m *ProxyFlowConfigRequest) GetSpec() *ProxySpec {
 	if m != nil {
@@ -678,7 +678,7 @@ type ProxyFlowConfigRequestMsg struct {
 func (m *ProxyFlowConfigRequestMsg) Reset()                    { *m = ProxyFlowConfigRequestMsg{} }
 func (m *ProxyFlowConfigRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyFlowConfigRequestMsg) ProtoMessage()               {}
-func (*ProxyFlowConfigRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{19} }
+func (*ProxyFlowConfigRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{19} }
 
 func (m *ProxyFlowConfigRequestMsg) GetRequest() []*ProxyFlowConfigRequest {
 	if m != nil {
@@ -696,7 +696,7 @@ type ProxyGetFlowInfoRequest struct {
 func (m *ProxyGetFlowInfoRequest) Reset()                    { *m = ProxyGetFlowInfoRequest{} }
 func (m *ProxyGetFlowInfoRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGetFlowInfoRequest) ProtoMessage()               {}
-func (*ProxyGetFlowInfoRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{20} }
+func (*ProxyGetFlowInfoRequest) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{20} }
 
 func (m *ProxyGetFlowInfoRequest) GetSpec() *ProxySpec {
 	if m != nil {
@@ -726,7 +726,7 @@ type ProxyGetFlowInfoRequestMsg struct {
 func (m *ProxyGetFlowInfoRequestMsg) Reset()                    { *m = ProxyGetFlowInfoRequestMsg{} }
 func (m *ProxyGetFlowInfoRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGetFlowInfoRequestMsg) ProtoMessage()               {}
-func (*ProxyGetFlowInfoRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{21} }
+func (*ProxyGetFlowInfoRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{21} }
 
 func (m *ProxyGetFlowInfoRequestMsg) GetRequest() []*ProxyGetFlowInfoRequest {
 	if m != nil {
@@ -748,7 +748,7 @@ type ProxyGetFlowInfoResponse struct {
 func (m *ProxyGetFlowInfoResponse) Reset()                    { *m = ProxyGetFlowInfoResponse{} }
 func (m *ProxyGetFlowInfoResponse) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGetFlowInfoResponse) ProtoMessage()               {}
-func (*ProxyGetFlowInfoResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{22} }
+func (*ProxyGetFlowInfoResponse) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{22} }
 
 func (m *ProxyGetFlowInfoResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -806,7 +806,7 @@ type ProxyGetFlowInfoResponseMsg struct {
 func (m *ProxyGetFlowInfoResponseMsg) Reset()                    { *m = ProxyGetFlowInfoResponseMsg{} }
 func (m *ProxyGetFlowInfoResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGetFlowInfoResponseMsg) ProtoMessage()               {}
-func (*ProxyGetFlowInfoResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{23} }
+func (*ProxyGetFlowInfoResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{23} }
 
 func (m *ProxyGetFlowInfoResponseMsg) GetResponse() []*ProxyGetFlowInfoResponse {
 	if m != nil {
@@ -824,7 +824,7 @@ type ProxyGlobalCfgRequest struct {
 func (m *ProxyGlobalCfgRequest) Reset()                    { *m = ProxyGlobalCfgRequest{} }
 func (m *ProxyGlobalCfgRequest) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGlobalCfgRequest) ProtoMessage()               {}
-func (*ProxyGlobalCfgRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{24} }
+func (*ProxyGlobalCfgRequest) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{24} }
 
 func (m *ProxyGlobalCfgRequest) GetProxyType() ProxyType {
 	if m != nil {
@@ -848,7 +848,7 @@ type ProxyGlobalCfgRequestMsg struct {
 func (m *ProxyGlobalCfgRequestMsg) Reset()                    { *m = ProxyGlobalCfgRequestMsg{} }
 func (m *ProxyGlobalCfgRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGlobalCfgRequestMsg) ProtoMessage()               {}
-func (*ProxyGlobalCfgRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{25} }
+func (*ProxyGlobalCfgRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{25} }
 
 func (m *ProxyGlobalCfgRequestMsg) GetRequest() []*ProxyGlobalCfgRequest {
 	if m != nil {
@@ -865,7 +865,7 @@ type ProxyGlobalCfgResponseMsg struct {
 func (m *ProxyGlobalCfgResponseMsg) Reset()                    { *m = ProxyGlobalCfgResponseMsg{} }
 func (m *ProxyGlobalCfgResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ProxyGlobalCfgResponseMsg) ProtoMessage()               {}
-func (*ProxyGlobalCfgResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{26} }
+func (*ProxyGlobalCfgResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor24, []int{26} }
 
 func (m *ProxyGlobalCfgResponseMsg) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -904,9 +904,9 @@ func init() {
 	proto.RegisterType((*ProxyGlobalCfgResponseMsg)(nil), "halproto.ProxyGlobalCfgResponseMsg")
 }
 
-func init() { proto.RegisterFile("proxy.proto", fileDescriptor25) }
+func init() { proto.RegisterFile("proxy.proto", fileDescriptor24) }
 
-var fileDescriptor25 = []byte{
+var fileDescriptor24 = []byte{
 	// 1222 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x57, 0x6f, 0x53, 0xdb, 0x46,
 	0x13, 0x47, 0x18, 0xdb, 0xf2, 0xda, 0x06, 0x72, 0x4f, 0x02, 0xc6, 0x3c, 0x09, 0x8e, 0xda, 0x69,

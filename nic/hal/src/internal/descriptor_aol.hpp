@@ -8,16 +8,13 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/hal/iris/include/hal_state.hpp"
-#include "gen/proto/descriptor_aol.pb.h"
+#include "gen/proto/internal.pb.h"
 
-using descraol::DescrAolSpec;
-using descraol::DescrAolRequest;
-using descraol::DescrAolRequestMsg;
-using descraol::DescrAolResponseMsg;
+using internal::DescrAolSpec;
+using internal::DescrAolRequest;
+using internal::DescrAolRequestMsg;
+using internal::DescrAolResponseMsg;
 
 namespace hal {
-hal_ret_t descraol_get(descraol::DescrAolRequest& request,
-                       descraol::DescrAolResponseMsg *response);
 }
 #endif /* __DESCRIPTOR_AOL_HPP__ */
